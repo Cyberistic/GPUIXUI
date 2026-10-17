@@ -197,10 +197,25 @@ export const validateAll: <A>(
 ) => (value: unknown) => Effect.Effect<ReadonlyArray<string>>;
 ```
 
-Implementation: `Schema.decodeUnknownEffect(schema)(value)`; on
-`SchemaError`, read `.message` (already formatted by the runtime's default
-formatter) for `validate`, and walk `error.issue` composites for `validateAll`.
-Never re-implement message formatting; never expose the raw issue to users.
+Implementation: `Schema.decodeUnknownResult(schema, options)`; message text is
+always `SchemaIssue.makeFormatterDefault()`'s, so a check's `message` annotation
+reaches the user verbatim and a raw issue never does. Never re-implement message
+formatting; never expose the raw issue to users.
+
+Three details settled at implementation time (2026-10-17), each with a test:
+
+1. **`errors: "all"`.** The runtime's default parse options stop at the **first**
+   failing field, so a struct with two bad fields yields one issue, not two.
+   `validateAll` therefore decodes with `errors: "all"`; `validate` keeps the
+   default, which is why the two functions legitimately disagree.
+2. **`validate` reads the walk, not `error.message`.** The runtime's message
+   keeps the field's JSON pointer (`…\n  at ["email"]`), which a form has no use
+   for. `validate` is the head of the same walk `validateAll` performs, so the
+   two can never disagree on text.
+3. **`Pointer` and `Encoding` are transparent.** A struct field arrives as
+   `Pointer(path, issue)` and a `Schema.Class` adds an outer `Encoding` node; the
+   walk recurses through both and drops the path. `Composite` is the only node
+   whose children are all reported.
 
 `logic.test.ts`: a `Schema.NonEmptyString` with a custom `message` annotation
 returns exactly that message for `""`; a valid value returns `None`; a struct

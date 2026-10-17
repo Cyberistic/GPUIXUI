@@ -71,7 +71,7 @@ the `@gpuixui/tokens/react` provider
   - [ ] `packages/components` package, token/primitives adapters, native test harness
     - [x] Package scaffold (package.json, tsconfig, vitest config, README)
     - [x] `internal/collection.ts` (index arithmetic), `internal/key.ts` (key predicates)
-    - [ ] `internal/theme.ts` adapter over the landed token API (plan 110 §6)
+    - [x] `internal/theme.ts` adapter over the landed token API (plan 110 §6) — the tokens workstream is merged into this branch
     - [ ] Native test harness (`internal/test-root.tsx`, `runtime.test.tsx`) — needs a supported host, see Blockers
   - [ ] Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List
     - [x] `internal/collection.ts` (List single-selection core, shared with Tabs/menus)
@@ -87,6 +87,11 @@ the `@gpuixui/tokens/react` provider
   - [ ] Choice inputs: Search input, Combobox
     - [x] Logic: `combobox/logic.ts` (ranking + selection)
   - [ ] Feedback: Toast system, inline validation (`Field`)
+    - [x] `toast/model.ts` + test (the `ToastInput` boundary type and the queued `Toast`)
+    - [x] `toast/store.ts` + test (queue, monotonic ids, `FiberMap` timers, `TestClock`)
+    - [x] `validation/logic.ts` + test (`validate` / `validateAll` over schema issues)
+    - [ ] `toast/provider.tsx` + `viewport.tsx` (render layer; needs the theme seam)
+    - [ ] `field.tsx` (needs `@gpuixui/primitives` `Input`/`Label`)
   - [ ] Date / time picker (design in plan 116 §5; not started)
   - [ ] Tier 2 verification matrix and inventory sync check (plan 117)
 `[ ]` Verify every component in both themes
@@ -147,22 +152,15 @@ until `packages/primitives` and a newer `@gpuix/react` land. Plans 110 §1/§7 a
 Related: the reference clone must not be treated as the API of the pinned
 dependency anywhere in this repo, and `package.json` pins must stay explicit.
 
-`[!]` **Two sessions were writing this worktree at once** (observed 2026-10-17).
-A second components session rewrote `src/internal/theme.ts` and left an
-untracked `src/toast/{model,store}.ts` while this session was committing, so
-`nub run --filter @gpuixui/components check-types` currently fails on those three
-files only (all other files are clean):
-
-- `src/toast/store.ts:169` — `Layer.scoped` does not exist in Effect 4.0.5; use
-  `Layer.effect`, which runs its effect in the layer's own scope.
-- `src/toast/store.ts:163` and `:167` — `push` returns a `SchemaError`-carrying
-  effect, so the service member's error type cannot be `never`.
-- `src/toast/model.ts` — same `never` mismatch on the `SchemaError` channel.
-
-The toast files were left untouched: another writer owns them right now.
-`packages/components/src/internal/theme.test.ts` was retargeted to the surviving
-`elevation`/`focusRing` exports after the rewrite removed `withAlpha`/`tone`.
-Recommendation: the supervisor must serialise writers per tree.
+`[!]` **Two sessions have written this worktree at once** (observed 2026-10-17).
+The supervisor's duplicate tick started a second components session; both wrote
+at once, the theme seam was rewritten mid-commit, and the toast files were left
+untracked while the other session committed. **Resolved for now:** the theme seam
+(`internal/theme.ts` +
+`theme.test.ts`) and the toast domain (`toast/model.ts`, `toast/store.ts`) and
+`validation/logic.ts` all typecheck and pass on this commit. The residual risk is
+a lost write, not a broken tree, and the fix is the supervisor's: serialise
+writers per worktree (recorded under Interlocks).
 
 ## Interlocks (cross-workstream dependencies)
 
@@ -170,7 +168,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 | Need | Owner | Status |
 | ---- | ----- | ------ |
-| `@gpuixui/tokens` roles in plan 110 §6 — **landed**; adapter maps to it | tokens-theme | aligned |
+| `@gpuixui/tokens` roles in plan 110 §6 | tokens-theme | **resolved** — the workstream is merged into `agent/components`; `internal/theme.ts` is the seam over it |
+| Serialise writers per worktree: the supervisor's duplicate tick ran two components sessions in one tree and interleaved their commits | repo tooling | pending |
 | Decide the GPUix version: stay on 0.10.0 and implement dismiss layers/focus locally, or ship a release that includes `Dialog`/`Button`/`DismissableLayer` (0.10.0 is the latest published) | owner / playground | pending |
 | Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) so the local `tone()` helper can be deleted | tokens-theme | pending |
 | `alpha(color, amount)` helper so the local `withAlpha()` can be deleted | tokens-theme | pending |
