@@ -18,10 +18,11 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[x]` Verified a real run on `opencode-go-braven/deepseek-v4.1-flash`
 `[x]` Supervisor: 30-minute tick, ≥5 agents, one worktree each, idempotent and crash-safe
 `[x]` Scheduler installed (launchd agent + daemon driver; see `.agents/slop/README.md`)
+`[x]` Model fallback chain with limit detection, one active model for the whole swarm, and an hourly recovery probe (see `scripts/README.md`)
 `[ ]` Enforce one live session per worktree: the `opencode run` loop currently
 starts a new session before the previous one closes (evidence:
-`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`)
-`[x]` Model fallback chain with limit detection, one active model for the whole swarm, and an hourly recovery probe (see `scripts/README.md`)
+`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`; the guard is
+planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ---
 
@@ -49,9 +50,9 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 14/17
+`[x]` `[███████░░░]` 18/26
 
-`[x]` Write and index the tokens/theme plan set (plans 010–019, 050)
+`[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -68,6 +69,8 @@ prebuilt `dist` (plan 016)
 `elevationShadow(theme, level)` (plan 018)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
+`[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
+platform toggle (plan 051)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Add motion tokens (durations/easings); three `primitives` call sites held
 `120`/`700` as literals (plan 019)
@@ -75,10 +78,18 @@ prebuilt `dist` (plan 016)
 019)
 `[x]` Document the layering model (tree order, no portal in 0.10.0) and the
 deliberate token omissions (plan 050; completes plan 202 §2.3–2.4)
+`[x]` Reconcile the two `tokens` branches into one — motion tokens (019) and
+platform type styles (051) now live on one branch (plan 053)
+`[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
+runtime, and record the licence review for any bundled family — plan 052, native
+proof blocked by B1 (rescued from the abandoned `agent/fonts` branch)
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
-(owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
-`references` symlink in `.gitignore` (owner: repo tooling)
+`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
+docs platform toggle (macOS / Linux / Windows / Default) built on
+`platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
+**symlink** — a `references/` rule does not match a symlink, so every worktree
+shows it as untracked (owner: repo tooling; `packages/README.md` already lists
+`tokens`)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
 directly and delete their structural copies of the theme and role list, their
 local focus-ring helpers (`primitives/src/core/style.ts`,
@@ -96,13 +107,20 @@ none of them — only `FloatingLayer`/`floatingRootStyle`, the `<anchored>` host
 element and `AnimatePresence`; `createPortal` is an unreleased changeset. The
 layering rule and the no-portal limitation are documented in `docs/tokens.md`
 (plan 050). Owner: `components`
+`[ ]` Cross-team: `components` still carries a whole structural copy of the
+package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
+it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
+`components`)
 `[ ]` Cross-team: `LICENSES/adabraka-ui.md` (MIT, `Copyright (c) 2025 Adabraka
 Team`, "token structure referenced, no assets copied") — plan 202 §7, not this
 workstream's path. Owner: licensing
-`[ ]` Cross-team: this branch is current with `origin/master` and green
-(21 commits, plans 010–019 + 050 complete). The integration owner merges
-`agent/tokens-theme` into `main` so the shared `TODO.md`, `COMPONENTS.md` and
-plan index carry the tokens rows; this agent was instructed not to push `main`
+`[x]` Promoted plans 010–019 and 051 to `main` (`458fe10`), then merged `main`
+back (plan 053) so motion tokens (019) and platform type styles (051) are one
+branch; `main` compiles `@gpuixui/tokens` from source, so `primitives`,
+`components` and `docs-site` can drop their structural copies
+`[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
+so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows;
+this agent was instructed not to push `main`
 
 ## Phase C — Tier 1–2 components
 

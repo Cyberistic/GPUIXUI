@@ -32,6 +32,8 @@ Blocks are reserved so concurrent workstreams do not collide:
 
 ## The plan set
 
+### `tokens-theme` (block `010–019`, plus one overflow plan)
+
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [010](./010-phase-b-design-tokens.md) | Phase B: design tokens and theming | B | Phase A audit | done |
@@ -45,9 +47,23 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | done |
 | [050](./050-docs-layering-and-omissions.md) | The layering model and the deliberate token omissions | B | 011, 017–019 | done |
-| [051](./051-platform-type-styles.md) | Platform type styles (`platformTypes`, `platformTheme`) | B | 011, 016 | done |
-| [052](./052-register-font.md) | `registerFont`: the library's own typefaces in the native runtime | B | 011, 051 | blocked (B1) |
+| [051](./051-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
+| [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | blocked (B1) |
 | [053](./053-reconcile-tokens-branches.md) | Reconcile the two `tokens` branches into one | B | 010–019, 050–052 | done |
+
+Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
+`docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
+agent that owns its paths. The block was full at 019 (`010–019` in the table
+above) and 020–049 belongs to primitives, icons and Phase C, so the overflow
+plans take the free `050–099` block: 050 layering, 051 platform type, 052 font
+registration (rescued from the abandoned `agent/fonts` branch, `6fc7641`, with
+its step 1 answered from the pinned runtime's source), and 053 the reconciliation
+of this workstream's two branches.
+
+### Reference adoption (block `200–299`)
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
 | `200` | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | `020`, `030`, `110–117` | planned |
 | `201` | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | planned |
 | `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | planned |
@@ -55,15 +71,11 @@ Blocks are reserved so concurrent workstreams do not collide:
 | `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |
 | `205` | Implement the "not provided by GPUix" cluster | C/E | `200`, `201`, `203`, `030`, `110–117` | planned |
 
-Plans 010–019 and 050 are the `tokens-theme` workstream. They own
-`packages/tokens`, `docs/tokens.md` and `docs/design-system.md`; every other plan
-belongs to the agent that owns its paths. The `020–049` block belongs to
-primitives, icons and Phase C; a tokens follow-up uses `050–099`, which is free.
-
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
-> (`010–014`, `020–040`, `100–130`, `410–412`) live on their own branches and are
-> merged into `main` as each workstream completes; this index is the union.
+> (`010–019`, `020–040`, `050–053`, `100–130`, `410–412`) live on their own
+> branches and are merged into `main` as each workstream completes; this index is
+> the union.
 
 ## How to use a plan
 

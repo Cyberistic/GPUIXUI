@@ -21,6 +21,7 @@ and the strongest honest alternative.
 | Motion tokens | done | yes (motion props only: `width`, `height`, `opacity`, `top`/`right`/`bottom`/`left`, `borderRadius`) | `theme.motion` holds six millisecond levels (`none`, `step`, `fast`, `normal`, `slow`, `pulse`) and four easings; `motionTransition` converts to the runtime's seconds. Replaces the `120`/`700` literals in `primitives`. No `transition`/`animation`/`transform` and no reduced-motion query — a theme overrides the levels to `0`. Docs in `docs/tokens.md`. |
 | Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring; overlay/menu animation is unavailable. Docs in `docs/tokens.md`; plan 017 corrected the earlier claim that the runtime supports outlines. |
 | Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land. |
+| Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests. Native visual check of the sans sentinel pending the playground (B1). |
 | Native theme gallery | todo | yes | `apps/playground`; visual evidence for the rows above. Owner: playground workstream. |
 
 ---

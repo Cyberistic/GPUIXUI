@@ -42,7 +42,7 @@ All paths relative to the `tokens-theme` worktree.
 | `packages/tokens/src/platforms.ts` | **Keep from `master`** (new file) |
 | `packages/tokens/src/motion.ts`, `motion.test.ts`, `motion.example.ts` | **Keep from this branch** (new files) |
 | `packages/tokens/src/platforms.test.ts`, `platforms.example.ts` | **Keep from `master`** (new files) |
-| `packages/tokens/src/theme.test.ts` | **Union**: this branch's motion-override + theme-completeness tests **and** `master`'s `platformTheme` tests |
+| `packages/tokens/src/theme.test.ts` | **Union**: this branch's motion-override + theme-completeness tests; `master`'s `platformTheme` tests live in `platforms.test.ts` and stay there |
 | `packages/tokens/README.md` | Union: keep the **Motion** section, add the **Platform type** section; merge the **Limitations** list so it carries both (drop the stale "no motion tokens yet" line — motion exists) |
 | `docs/tokens.md` | Union: keep **Motion** and **Layering**; add **Platform type** under Typography; keep `motion` in the `Theme` interface and the motion merge rule; keep this branch's newer **Limitations** list (breakpoints, `shadowXs`/`shadowXl`, no stacking scale) **and** `master`'s platform limitations; add `platformTheme`/`platformTypes`/`currentPlatform`/`systemUiFont` to the import block and the verification note |
 | `docs/design-system.md` | Union: keep this branch's motion paragraph and the Layering link; add `master`'s platform-type paragraph in §5 |
@@ -87,8 +87,15 @@ Stop and report if:
   prove the failure by temporarily reverting the resolver for one side.
 - The four-theme group guard (`508d2cc`) must still pass: `motion` is a group on
   every shipped theme after the merge.
-- `scripts/verify-two-directions.sh` is run for the two theme-field assertions
-  the resolution could have dropped.
+
+### Two-direction evidence (executed 2026-10-17, plan 053)
+
+- Removing the `motion` merge from `extendTheme` fails `theme.test.ts`
+  ("keeps every group through a real override") and `motion.test.ts`.
+- Making `platformTheme` stop applying the platform families fails
+  `platforms.test.ts` (`changes only the families and the name`, the
+  high-contrast case and the mono-role case).
+- With both restored, all 212 tests pass.
 
 ## 6. Acceptance criteria
 

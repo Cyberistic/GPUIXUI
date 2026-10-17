@@ -155,6 +155,34 @@ Apply it while the control is focused. A mouse press shows the ring too, because
 the runtime has no `:focus-visible` equivalent. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+## Platform type
+
+`platformTypes` decides each platform's families once; `platformTheme` turns one
+into a real theme by deriving it with `extendTheme`, so nothing about the base
+theme changes except the two families.
+
+| Platform | `sans` | `mono` |
+| -------- | ------ | ------ |
+| macOS (`darwin`) | `.SystemUIFont` | `Menlo` |
+| Linux (`linux`) | `.SystemUIFont` | `DejaVu Sans Mono` |
+| Windows (`win32`) | `.SystemUIFont` | `Consolas` |
+| `default` | `.SystemUIFont` | `Menlo` |
+
+`sans` is GPUI's system UI font sentinel on every platform — GPUI resolves it to
+the operating system's own UI font. `currentPlatform` is the platform this code
+runs on (`default` in a browser or on an OS the library does not know) and
+`systemMonoFamily` is its mono family.
+
+```tsx
+import { platformTheme, themes } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+<ThemeProvider theme={platformTheme(themes.dark, "win32")} />;
+```
+
+A runnable example lives in
+[`src/platforms.example.ts`](./src/platforms.example.ts).
+
 ## For documentation sites
 
 `colorRoles` lists every semantic role in documentation order, typed as
@@ -191,10 +219,18 @@ persisted theme at its own boundary, where `Schema` belongs.
 ## Limitations
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
+- A platform style changes font families only. Per-platform control metrics have
+  no evidence in GPUix 0.10.0, so a consumer layers `density` with
+  `extendTheme` instead.
+- `.SystemUIFont` is verified against GPUI's documentation of the name, not yet
+  visually in the native runtime (B1 blocks the playground gallery).
 - There is no runtime theme schema; theme objects authored in TypeScript are
   trusted at compile time. Persisted themes are decoded by the application.
-- No OS appearance detection; the app selects the mode and contrast.
-- No motion tokens yet. Tracked in `TODO.md`.
+- No OS appearance detection; the app selects the mode and contrast, and also
+  which platform style to render.
+- No `transition`, `animation`, `transform` or colour interpolation: motion can
+  only animate the seven `MotionStyle` properties, and there is no
+  reduced-motion query, so a theme that wants none overrides the levels to `0`.
 - Exports point at `src/`: the package is private, so a consumer compiles it
   directly and no build step is required. Phase G flips `exports` to `dist` when
   the package is published.
