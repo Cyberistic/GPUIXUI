@@ -5,7 +5,9 @@
  * has not arrived, a spinner for work in progress, and a tooltip that explains
  * a metric without occupying the card. The tooltip's trigger is a plain host
  * element because the runtime's trigger must be focusable; a themed `Box` does
- * not forward `tabIndex`.
+ * not forward `tabIndex`. It is a named `img`, not a bare focus stop, so the
+ * description reaches assistive technology and the info icon reads as a thing
+ * (plan `071`).
  */
 
 import { Icon } from "@gpuixui/icons";
@@ -43,6 +45,8 @@ export const FeedbackExample = (): ReactElement => {
             >
               <div
                 testId="feedback-example-tooltip-trigger"
+                role="img"
+                aria-label="Revenue definition"
                 tabIndex={0}
                 style={{
                   display: "flex",

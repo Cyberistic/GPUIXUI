@@ -245,4 +245,30 @@ describe("Tooltip", () => {
         2 * Number(style.borderWidth),
     );
   });
+
+  it("makes a string tip the trigger's description and a named tooltip node", () => {
+    // The bug guarded (plan 071): the tip was painted but absent from the
+    // accessibility tree, and its text was never associated with the trigger.
+    const parts = elementChildren(
+      renderTooltip({ content: "A hint", children: null }, testTheme),
+    );
+    const trigger = expectSome(Arr.get(parts, 0));
+    const tip = expectSome(Arr.get(parts, 1));
+    expect(expectSome(elementProp(trigger, "aria-description"))).toBe("A hint");
+    expect(expectSome(elementProp(tip, "role"))).toBe("tooltip");
+    expect(expectSome(elementProp(tip, "aria-label"))).toBe("A hint");
+  });
+
+  it("exposes non-string content as a tooltip node without inventing a name", () => {
+    const parts = elementChildren(
+      renderTooltip({ content: <div />, children: null }, testTheme),
+    );
+    const trigger = expectSome(Arr.get(parts, 0));
+    const tip = expectSome(Arr.get(parts, 1));
+    expect(expectSome(elementProp(tip, "role"))).toBe("tooltip");
+    expect(elementProp(trigger, "aria-description")).toStrictEqual(
+      Option.none(),
+    );
+    expect(elementProp(tip, "aria-label")).toStrictEqual(Option.none());
+  });
 });

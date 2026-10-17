@@ -306,6 +306,12 @@ retired once both branches are one
       resolver had no branch. Empty stars now take `destructive` and a chosen
       one keeps `primary` (the `RadioGroup` rule); measured in the element tree
       and the runtime (`<svg>` tint), both directions proven (plan 070)
+`[x]` `packages/primitives`: **`Tooltip` content reached no assistive
+      technology** — the tip painted but produced no accessibility node, and the
+      trigger carried no description. A string tip is now the trigger's
+      `aria-description` and the open tip is a named `role="tooltip"` node; the
+      feedback example's info icon is a named `role="img"` so the keyboard path
+      works (plan 071)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family
@@ -333,6 +339,13 @@ retired once both branches are one
       the component landed on the primitives branch (plan 065) with its
       in-package page at `packages/primitives/docs/checkbox-group.mdx`; the
       existing `checkbox.mdx` on `agent/docs-site` predates it.
+
+`[ ]` **examples/basic-app** (owner: primitives workstream, outside
+      `packages/primitives`): the info-icon tooltip trigger is a bare `Box`,
+      which forwards neither `tabIndex` nor a role — the tip is hover-only and
+      absent from the accessibility tree. Replace it with the focusable, named
+      `div role="img" aria-label=...` shape that plan 071 used in the feedback
+      example.
 
 `[x]` **resolved (D18)**: `COMPONENTS.md`'s extra Tier 1 rows — Slider, Range
       slider, Meter, Number Field, OTP Field, Toggle, Rating — are claimed by

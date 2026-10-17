@@ -28,6 +28,7 @@ import {
   type Ref,
 } from "react";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import { readWindowSize, useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
@@ -105,30 +106,45 @@ export interface TooltipHandlers {
   readonly onOpenChange?: (open: boolean) => void;
 }
 
-/** The element tree `Tooltip` renders. Pure in its arguments. */
+/**
+ * The element tree `Tooltip` renders. Pure in its arguments.
+ *
+ * A string tip is also the trigger's **description**: the runtime has no
+ * `aria-describedby`, but it does expose `aria-description` and maps
+ * `role="tooltip"`, so a screen-reader user hears the explanation on focus and
+ * can reach the open tip as its own node (plan `071`). Non-string content is
+ * painted and made a `tooltip` node, but is not given an invented name.
+ */
 export const renderTooltip = (
   { content, children, side, align = "start", delay, testId }: TooltipProps,
   theme: PrimitiveTheme,
   handlers: TooltipHandlers = {},
-): ReactElement => (
-  <GpuixTooltip
-    delayDuration={delay}
-    style={tooltipRootStyle}
-    ref={handlers.ref}
-    onOpenChange={handlers.onOpenChange}
-  >
-    <TooltipTrigger asChild>{children}</TooltipTrigger>
-    <TooltipContent
-      side={side}
-      align={align}
-      collisionPadding={FLOATING_MARGIN}
-      style={tooltipStyle(theme)}
-      testId={testId}
+): ReactElement => {
+  const description = P.isString(content) ? content : undefined;
+  return (
+    <GpuixTooltip
+      delayDuration={delay}
+      style={tooltipRootStyle}
+      ref={handlers.ref}
+      onOpenChange={handlers.onOpenChange}
     >
-      {content}
-    </TooltipContent>
-  </GpuixTooltip>
-);
+      <TooltipTrigger asChild aria-description={description}>
+        {children}
+      </TooltipTrigger>
+      <TooltipContent
+        role="tooltip"
+        aria-label={description}
+        side={side}
+        align={align}
+        collisionPadding={FLOATING_MARGIN}
+        style={tooltipStyle(theme)}
+        testId={testId}
+      >
+        {content}
+      </TooltipContent>
+    </GpuixTooltip>
+  );
+};
 
 /** The trigger's measured vertical extent. */
 interface TooltipBox {

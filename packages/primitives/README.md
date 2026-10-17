@@ -77,6 +77,7 @@ none paints a literal and none scripts hover or press
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once; a label beside a control is inert, so `CheckboxGroup` makes the whole row one interactive element instead of pairing a box with a `Text` |
+| `aria-describedby` | absent | `Tooltip` writes a string tip onto the trigger as `aria-description` and exposes the open tip as a named `role="tooltip"` node; the trigger still owns its role and name, and a non-string tip has no description (plan `071`) |
 | scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
 | `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |

@@ -16,6 +16,8 @@ import { Icon, Tooltip } from "@gpuixui/primitives";
 
 <Tooltip content="Booked revenue, net of refunds." side="bottom">
   <div
+    role="img"
+    aria-label="Revenue definition"
     tabIndex={0}
     style={{ display: "flex", padding: 2 }}
   >
@@ -24,9 +26,11 @@ import { Icon, Tooltip } from "@gpuixui/primitives";
 </Tooltip>;
 ```
 
-The child must be a single **focusable host element**. `Tooltip`'s trigger clones
-its child with the hover and focus handlers, so a component that does not forward
-those props (including this package's `Box`) will not open the tip.
+The child must be a single **focusable host element with a role and a name**.
+`Tooltip`'s trigger clones its child with the hover and focus handlers, so a
+component that does not forward those props (including this package's `Box`)
+will not open the tip — and a bare focus stop with no role produces no
+accessibility node at all.
 
 ## Placement
 
@@ -71,9 +75,17 @@ dismisses it. A click dismisses it.
 
 ## Accessibility
 
-- The tip is painted text, not an associated description: GPUix 0.10.0 has no
-  `aria-describedby`. A button whose only name is inside a tooltip is unnamed to
-  assistive technology, so give the control its own `label`.
+- **A string tip is the trigger's description.** GPUix 0.10.0 has no
+  `aria-describedby`, but it exposes `aria-description`; the wrapper writes the
+  string content there, so a screen reader announces the explanation when the
+  trigger takes focus, even while the tip is closed.
+- **The open tip is its own node.** The content carries `role="tooltip"` and,
+  for a string, an `aria-label` with the same text — measured in the runtime
+  (plan `071`). Non-string content is painted and becomes a `tooltip` node, but
+  the wrapper does not invent a name for it; pass a string to have it announced.
+- The trigger must be focusable **and** named. A bare `div tabIndex={0}` gets
+  focus but produces no accessibility node, so it cannot carry the description;
+  give it a role (`role="img"` for an info icon) and an `aria-label`.
 - A tooltip is **supplementary**: the same information must be reachable without
   hovering (visible text, or the control's name).
 - There is no `focusVisible` state, so a mouse-opened and a keyboard-opened tip
@@ -93,16 +105,19 @@ dismisses it. A click dismisses it.
   (padding + one caption line + border), which is exact for the tip this wrapper
   paints and for `whiteSpace: nowrap`; a multi-line tip is a popover. A `side`
   you pass yourself is never flipped.
-- No `aria-describedby` association.
+- No `aria-describedby` association: the content is the trigger's
+  `aria-description` instead, which is a description but not a reference.
+- A non-string tip has no description on the trigger and no name of its own.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
 - Open/close timing is GPUix's; this wrapper only sets the delay.
 
 ## Verification
 
-- `src/components/Select.test.tsx` — the wrapper's theme spec, the root hug and
-  the default `align` at the render seam, and the tip-height estimate checked
-  against `tooltipStyle`.
+- `src/components/Select.test.tsx` — the wrapper's theme spec, the root hug, the
+  default `align` at the render seam, the tip-height estimate checked against
+  `tooltipStyle`, and the description/name mapping for string and non-string
+  content (plan `071`).
 - `src/core/floating.test.ts` — the shared side rule, including a preferred
   `top` and its fallback below.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
@@ -113,8 +128,11 @@ dismisses it. A click dismisses it.
   **Placement (067):** at the top edge the tip opens below its trigger
   (`8 >= 30` fails without the decision), a tip with room above stays above, and
   the painted height equals the estimate.
+  **Description (071):** the trigger's accessibility node carries the content as
+  its description while the tip is closed, and the open tip is a named `Tooltip`
+  node — the failing direction had neither.
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
-  hover.
+  hover and on keyboard focus, and its trigger announces the description.
 
 ```sh
 nub run --filter @gpuixui/primitives test

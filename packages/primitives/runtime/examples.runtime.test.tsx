@@ -115,6 +115,29 @@ it("opens the feedback example's tooltip on hover", async () => {
   expect(runtime.allText()).toContain("Booked revenue, net of refunds.");
 });
 
+it("reaches the feedback example's tooltip by keyboard, with its description", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "feedback");
+  const trigger = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Image", label: "Revenue definition" }),
+    () => expect.fail("the tooltip trigger produced no accessibility node"),
+  );
+  expect(trigger.aria?.description).toBe("Booked revenue, net of refunds.");
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe(
+    "feedback-example-tooltip-trigger",
+  );
+  expect(runtime.allText()).toContain("Booked revenue, net of refunds.");
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), {
+        role: "Tooltip",
+        label: "Booked revenue, net of refunds.",
+      }),
+    ),
+  ).toBe(true);
+});
+
 it("announces the icons example's labelled status icon", async () => {
   const runtime = await openWindow();
   renderExample(runtime, "icons");

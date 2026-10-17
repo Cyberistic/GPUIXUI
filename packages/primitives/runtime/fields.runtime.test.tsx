@@ -846,6 +846,40 @@ it("opens a Tooltip on hover and dismisses it on click", async () => {
   expect(runtime.allText()).not.toContain("A hint");
 });
 
+it("announces a string Tooltip as the trigger's description and names the open tip", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" side="bottom" testId="tip">
+        <div
+          testId="trigger"
+          role="img"
+          aria-label="Revenue definition"
+          tabIndex={0}
+          style={{ width: 20, height: 20 }}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  // The bug guarded (plan 071): the tip used to be painted but absent from the
+  // accessibility tree, and the trigger carried no description.
+  const trigger = Option.getOrElse(
+    a11yNode(runtime.a11y(), {
+      role: "Image",
+      label: "Revenue definition",
+    }),
+    () => expect.fail("the trigger produced no accessibility node"),
+  );
+  expect(trigger.aria?.description).toBe("A hint");
+  runtime.hover("trigger");
+  runtime.flush();
+  const tip = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Tooltip", label: "A hint" }),
+    () => expect.fail("the open tip produced no accessibility node"),
+  );
+  expect(tip.aria?.role).toBe("Tooltip");
+});
+
 it("opens a Tooltip when its trigger takes keyboard focus", async () => {
   const runtime = await openWindow();
   runtime.render(
