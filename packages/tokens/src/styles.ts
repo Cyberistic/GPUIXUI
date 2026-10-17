@@ -57,8 +57,16 @@ export const controlHeight = (theme: Theme, size: ControlSize): number =>
 export const controlPaddingX = (theme: Theme, size: ControlSize): number =>
   theme.density.controlPaddingX[size];
 
-/** The four status colour families a component can announce. */
-export type StatusTone = "info" | "success" | "warning" | "destructive";
+/** Every status colour family, in documentation order. */
+export const statusTones = [
+  "info",
+  "success",
+  "warning",
+  "destructive",
+] as const;
+
+/** The status colour families a component can announce. */
+export type StatusTone = (typeof statusTones)[number];
 
 /** The soft status roles an Alert, Badge or Toast spreads. */
 export interface StatusToneStyle {

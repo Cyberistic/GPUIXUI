@@ -29,9 +29,11 @@ import {
   highContrastThemes,
   lightTheme,
   motionTransition,
+  platformNames,
   platformStyles,
   platformTypes,
   statusTone,
+  statusTones,
   systemUiFont,
   textRoles,
   textStyle,
@@ -760,6 +762,11 @@ import { textRoles, typography } from "@gpuixui/tokens";
 const rows = textRoles.map((role) => ({ role, ...typography[role] }));
 ```
 
+`statusTones` and `platformNames` index the remaining catalogues: the four status
+families in documentation order, and the four platform variants in toggle order
+(macOS · Linux · Windows · Default). A docs table or a platform toggle iterates
+them instead of retyping names.
+
 ## Verification
 
 Contrast is enforced by `packages/tokens/src/color.test.ts`:
@@ -782,8 +789,10 @@ It also fails if a soft status surface is indistinguishable from `background` or
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
-the type table to `textRoles` order and content, so this page cannot drift from
-the implementation. The same file holds `docs/design-system.md`'s numeric claims
+the type table to `textRoles` order and content, the status-tone table to
+`statusTones` order and content, and the platform rows to `platformNames` order,
+so this page cannot drift from the implementation. The same file holds
+`docs/design-system.md`'s numeric claims
 — the identity metrics, role count, theme surfaces, type summary and the
 spacing, density, radius, icon and avatar scales — so the rationale cannot drift
 from the package either.

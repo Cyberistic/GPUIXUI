@@ -13,7 +13,7 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import packageJson from "../package.json";
-import { getPlatformTheme, platformStyles } from "./index.js";
+import { getPlatformTheme, platformNames, platformStyles } from "./index.js";
 
 interface ExportTarget {
   readonly subpath: string;
@@ -38,12 +38,9 @@ describe("package exports", () => {
   });
 
   it("exposes the platform style table and its resolver", () => {
-    expect(Object.keys(platformStyles).toSorted()).toEqual([
-      "darwin",
-      "default",
-      "linux",
-      "win32",
-    ]);
+    expect(Object.keys(platformStyles).toSorted()).toEqual(
+      [...platformNames].toSorted(),
+    );
     expect(getPlatformTheme("win32", "dark").name).toContain("Windows");
   });
 

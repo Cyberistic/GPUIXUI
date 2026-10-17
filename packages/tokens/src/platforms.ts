@@ -23,7 +23,7 @@ import type {
   PlatformType,
 } from "./platform-types.js";
 
-export { systemUiFont } from "./platform-types.js";
+export { platformNames, systemUiFont } from "./platform-types.js";
 export type {
   PlatformName,
   PlatformStyle,

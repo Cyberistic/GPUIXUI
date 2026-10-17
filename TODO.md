@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 31/43
+`[x]` `[███████░░░]` 32/44
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -85,6 +85,9 @@ drift from the implementation (plan 058)
 `[x]` Guard `docs/design-system.md`'s numeric claims — identity metrics, role
 count, theme surfaces, type summary, spacing, density, radii, icon/avatar
 tiers — against the implementation (plan 062)
+`[x]` Ship `platformNames` and `statusTones` as ordered documentation indexes,
+derive `PlatformName`/`StatusTone` from them, and guard the unguarded status
+table in `docs/tokens.md` (plan 064)
 `[x]` Expose `textRoles` and guard it against the `Typography` interface
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input

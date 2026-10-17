@@ -24,10 +24,10 @@ import {
 } from "./elevation.js";
 import { motion } from "./motion.js";
 import {
+  platformNames,
   platformStyles,
   platformTypes,
   systemUiFont,
-  type PlatformName,
 } from "./platforms.js";
 import {
   avatarSize,
@@ -38,6 +38,7 @@ import {
   radius,
   spacing,
 } from "./scale.js";
+import { statusTones } from "./styles.js";
 import { highContrastThemes, themes } from "./theme.js";
 import { textRoles, typography } from "./typography.js";
 
@@ -209,13 +210,6 @@ describe("docs/tokens.md numeric tables", () => {
   });
 });
 
-const platformNames: ReadonlyArray<PlatformName> = [
-  "darwin",
-  "linux",
-  "win32",
-  "default",
-];
-
 describe("docs/tokens.md platform table", () => {
   it("lists every shipped platform variant", () => {
     platformNames.forEach((platform) => {
@@ -223,6 +217,14 @@ describe("docs/tokens.md platform table", () => {
         `| \`${platform}\` (${platformTypes[platform].label}) |`,
       );
     });
+  });
+
+  it("lists the variants in toggle order", () => {
+    const positions = platformNames.map((platform) =>
+      markdown.indexOf(`| \`${platform}\` (`),
+    );
+    expect(positions).not.toContain(-1);
+    expect(positions).toEqual(positions.toSorted((a, b) => a - b));
   });
 
   it("states each variant's real type, shape, density and accent", () => {
@@ -236,6 +238,24 @@ describe("docs/tokens.md platform table", () => {
         `| \`${platform}\` (${platformTypes[platform].label}) | \`${systemUiFont}\` | \`${platformTypes[platform].mono}\` | ${variantRadius.sm} / ${variantRadius.md} / ${variantRadius.lg} / ${variantRadius.xl} | \`${density}\` | \`${light}\` | \`${dark}\` |`,
       );
     });
+  });
+});
+
+describe("docs/tokens.md status table", () => {
+  it("lists every tone with its solid, soft and text roles", () => {
+    statusTones.forEach((tone) => {
+      expect(markdown, tone).toContain(
+        `| \`${tone}\` | \`${tone}\` / \`${tone}Foreground\` | \`${tone}Soft\` | \`${tone}SoftForeground\` | \`${tone}Text\` |`,
+      );
+    });
+  });
+
+  it("lists the tones in documentation order", () => {
+    const positions = statusTones.map((tone) =>
+      markdown.indexOf(`| \`${tone}\` | \`${tone}\` / \`${tone}Foreground\` |`),
+    );
+    expect(positions).not.toContain(-1);
+    expect(positions).toEqual(positions.toSorted((a, b) => a - b));
   });
 });
 

@@ -60,6 +60,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [061](./061-react-entry-consumer-jsx.md) | The React entry must not inherit the consumer's JSX runtime | B/F | 011, 016 | done |
 | [062](./062-design-system-truth-guard.md) | Hold the design-system narrative to the implementation | F | 056, 058, 059 | done |
 | [063](./063-platform-style-variants.md) | Platform style variants: macOS, Linux, Windows and Default | B | 051, 053, 056–062 | done |
+| [064](./064-documentation-indexes.md) | Documentation indexes for platforms and status tones | F | 014, 015, 059, 063 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -101,7 +102,12 @@ platform-style requirement MISSION.md added on 2026-10-17: the platform table
 stops being a font-only choice and becomes four editable style variants
 (macOS, Linux, Windows, Default) built from the identity through `extendTheme`,
 with the high-contrast colour set winning over platform resemblance and the
-contrast floors enforced on every variant.
+contrast floors enforced on every variant. 064 closes the last two catalogues
+that were still retyped by hand: `platformNames` (the macOS · Linux · Windows ·
+Default order the docs toggle and the tables need) and `statusTones` (the four
+status families), both derived types, so a fifth platform or tone cannot be
+added to the union while a table silently omits it; the status table in
+`docs/tokens.md` was unguarded and is now held to the index.
 
 ### Reference adoption (block `200–299`)
 

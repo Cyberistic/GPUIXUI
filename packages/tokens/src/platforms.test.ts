@@ -13,11 +13,11 @@ import { describe, expect, it } from "vitest";
 import { colorRoles } from "./color.js";
 import {
   currentPlatform,
+  platformNames,
   platformStyles,
   platformTypes,
   systemMonoFamily,
   systemUiFont,
-  type PlatformName,
   type PlatformStyle,
 } from "./platforms.js";
 import {
@@ -45,22 +45,26 @@ import {
 } from "./testing/contrast.js";
 import { typography } from "./typography.js";
 
-const platforms: ReadonlyArray<PlatformName> = [
-  "darwin",
-  "linux",
-  "win32",
-  "default",
-];
 const variants = ["darwin", "linux", "win32"] as const;
 const modes = ["light", "dark"] as const;
 
 describe("platformTypes", () => {
+  it("indexes every platform once, in toggle order", () => {
+    expect(platformNames).toEqual(["darwin", "linux", "win32", "default"]);
+    expect(new Set(platformNames).size).toBe(platformNames.length);
+    expect(Object.keys(platformStyles).toSorted()).toEqual(
+      [...platformNames].toSorted(),
+    );
+  });
+
   it("describes every platform the library knows, and nothing else", () => {
-    expect(Object.keys(platformTypes).toSorted()).toEqual(platforms.toSorted());
+    expect(Object.keys(platformTypes).toSorted()).toEqual(
+      [...platformNames].toSorted(),
+    );
   });
 
   it("names each platform with a label and one family per role", () => {
-    platforms.forEach((platform) => {
+    platformNames.forEach((platform) => {
       const type = platformTypes[platform];
       expect(type.label, platform).not.toBe("");
       expect(type.sans, platform).not.toBe("");
@@ -69,13 +73,13 @@ describe("platformTypes", () => {
   });
 
   it("uses the system UI sentinel for sans", () => {
-    platforms.forEach((platform) => {
+    platformNames.forEach((platform) => {
       expect(platformTypes[platform].sans, platform).toBe(systemUiFont);
     });
   });
 
   it("names a single family, never a comma stack", () => {
-    platforms.forEach((platform) => {
+    platformNames.forEach((platform) => {
       expect(platformTypes[platform].mono, platform).not.toContain(",");
     });
   });
@@ -89,7 +93,7 @@ describe("platformTypes", () => {
 
 describe("currentPlatform", () => {
   it("is one of the known platforms", () => {
-    expect(platforms).toContain(currentPlatform);
+    expect(platformNames).toContain(currentPlatform);
   });
 
   it("resolves the monospace family the process should use", () => {
@@ -107,7 +111,7 @@ describe("the default typography", () => {
 describe("platformStyles", () => {
   it("ships one style per known platform", () => {
     expect(Object.keys(platformStyles).toSorted()).toEqual(
-      platforms.toSorted(),
+      [...platformNames].toSorted(),
     );
   });
 
@@ -141,7 +145,7 @@ describe("platformStyles", () => {
   });
 
   it("derives the family table from the one style per platform", () => {
-    platforms.forEach((platform) => {
+    platformNames.forEach((platform) => {
       expect(platformTypes[platform], platform).toBe(
         platformStyles[platform].types,
       );

@@ -6,8 +6,8 @@ import {
   controlHeight,
   controlPaddingX,
   statusTone,
+  statusTones,
   textStyle,
-  type StatusTone,
 } from "./styles.js";
 import {
   darkTheme,
@@ -18,13 +18,6 @@ import {
 import type { ControlSize } from "./scale.js";
 
 const sizes: readonly ControlSize[] = ["sm", "md", "lg"];
-
-const tones: readonly StatusTone[] = [
-  "info",
-  "success",
-  "warning",
-  "destructive",
-];
 
 describe("textStyle", () => {
   it("uses the sans family for prose roles", () => {
@@ -92,7 +85,7 @@ const toneThemes = [
 describe("statusTone", () => {
   it("resolves every tone to its soft roles in every theme", () => {
     toneThemes.forEach(([label, theme]) => {
-      tones.forEach((tone) => {
+      statusTones.forEach((tone) => {
         const style = statusTone(theme, tone);
         expect(style.background, `${label} ${tone}`).toBe(
           theme.colors[`${tone}Soft`],
@@ -111,14 +104,14 @@ describe("statusTone", () => {
   });
 
   it("gives the four tones four distinct surfaces", () => {
-    const backgrounds = tones.map(
+    const backgrounds = statusTones.map(
       (tone) => statusTone(lightTheme, tone).background,
     );
-    expect(new Set(backgrounds).size).toBe(tones.length);
+    expect(new Set(backgrounds).size).toBe(statusTones.length);
   });
 
   it("does not reuse the light tones in dark mode", () => {
-    tones.forEach((tone) => {
+    statusTones.forEach((tone) => {
       expect(statusTone(lightTheme, tone)).not.toEqual(
         statusTone(darkTheme, tone),
       );
@@ -126,7 +119,7 @@ describe("statusTone", () => {
   });
 
   it("follows a high-contrast theme", () => {
-    tones.forEach((tone) => {
+    statusTones.forEach((tone) => {
       const style = statusTone(highContrastLightTheme, tone);
       expect(style.background).toBe(
         highContrastLightTheme.colors[`${tone}Soft`],
