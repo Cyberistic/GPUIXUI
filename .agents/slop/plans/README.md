@@ -104,6 +104,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [305](./305-theme-axis-indexes.md) | The last two unions without an ordered index | F | 067, 068, 096, 304 | done |
 | [306](./306-inactive-control-state.md) | The inactive control: a readable label and an edge that holds its shape | F | 014, 056–062, 071, 073, 076, 084, 086–088, 094, 095, 097 | done |
 | [307](./307-inactive-label-soft-fills.md) | The inactive label inside a status panel | F | 090–093, 306 | done |
+| [308](./308-soft-edge-surfaces.md) | The soft status edge on the surfaces a badge sits on | F | 090–095, 300, 306 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -602,6 +603,19 @@ four fills to the inactive contract (144 → 148 pairs); every shipped set alrea
 clears 3:1 / 4.5:1 there (3.41 at the lowest, light `destructiveSoft`), so no
 colour moves, and the public checker now reports an edited theme that erases the
 label on its own status panel.
+
+308 closes the rationale plan 300 left half-measured. 300 declined a fill pair
+for a soft chip on a row wash because the chip is "bounded by its designed
+`xSoftBorder` edge", but the edge was measured only on its own fill, so the
+boundary a reader actually sees was unmeasured on every surface a badge sits on.
+The audit found the macOS light `warningSoftBorder` at **1.036:1** and the Linux
+light one at **1.042:1** on their own pressed washes — with the fill also at
+1.00–1.04:1, a warning Badge in a pressed row had no visible boundary at all.
+The four edges join the `divider` class on the eight surfaces a chip occupies
+(148 → 180 pairs), the identity light warning edge moves one designed step
+(`#FCD47B` → `#EFC055`: 1.246–1.265:1 on the three platform pressed washes,
+1.319:1 on its own fill), and every other shipped set already clears the floor,
+so no other colour moves.
 
 ### Reference adoption (block `200–299`)
 
