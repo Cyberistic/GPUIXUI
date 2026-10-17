@@ -1,0 +1,87 @@
+---
+title: Tooltip
+description: A short label on hover or keyboard focus — a themed wrapper over GPUix's Tooltip.
+---
+
+`Tooltip` reuses `@gpuix/react/tooltip` for the anchored layer, the open delay
+and dismissal, and themes the tip to the popover surface and caption type. It is
+a wrapper, not a reimplementation.
+
+## Usage
+
+```tsx
+import { Icon, Tooltip } from "@gpuixui/primitives";
+
+<Tooltip content="Booked revenue, net of refunds." side="bottom">
+  <div
+    tabIndex={0}
+    style={{ display: "flex", padding: 2 }}
+  >
+    <Icon name="info" color={colour} size="sm" />
+  </div>
+</Tooltip>;
+```
+
+The child must be a single **focusable host element**. `Tooltip`'s trigger clones
+its child with the hover and focus handlers, so a component that does not forward
+those props (including this package's `Box`) will not open the tip.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
+| `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
+| `side` | `FloatingSide` | `"top"` | preferred placement |
+| `align` | `FloatingAlign` | GPUix's default | alignment against the trigger |
+| `delay` | `number` | provider default | hover delay in milliseconds |
+| `testId` | `string` | — | locator on the **tip** |
+
+## Keyboard
+
+Owned by GPUix: the tip opens when its trigger takes keyboard focus, and Escape
+dismisses it. A click dismisses it.
+
+## Accessibility
+
+- The tip is painted text, not an associated description: GPUix 0.10.0 has no
+  `aria-describedby`. A button whose only name is inside a tooltip is unnamed to
+  assistive technology, so give the control its own `label`.
+- A tooltip is **supplementary**: the same information must be reachable without
+  hovering (visible text, or the control's name).
+- There is no `focusVisible` state, so a mouse-opened and a keyboard-opened tip
+  look identical.
+
+## Theming
+
+`tooltipStyle` uses the `popover` surface, `radius.sm`, `elevation.overlay`, the
+`caption` type and one spacing step of inset; content is `whiteSpace: nowrap`.
+
+## Limitations
+
+- The trigger must be a focusable host element (above).
+- No `aria-describedby` association.
+- No wrapping or rich content: a paragraph is a popover, not a tooltip.
+- No arrow/caret and no touch-long-press behaviour.
+- Open/close timing is GPUix's; this wrapper only sets the delay.
+
+## Verification
+
+- `src/components/Select.test.tsx` / `fields.test.tsx` — the wrapper's theme
+  spec at the render seam.
+- `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
+  dismisses on click, keeps its content inside the anchoring frame, and paints
+  the popover role.
+- `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
+  hover.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Button** — the usual icon-only trigger; give it a `label`.
+- **Select** — the other headless GPUix wrapper this package themes.
+- **Text** — use visible help text when the information is essential.

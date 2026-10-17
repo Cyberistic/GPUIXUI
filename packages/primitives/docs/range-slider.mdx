@@ -1,0 +1,109 @@
+---
+title: RangeSlider
+description: Two values — the ends of one interval — on a single track.
+---
+
+`RangeSlider` is a minimum and a maximum on one track: a price band, a time
+window, a size range. It is a **second component**, not a mode of `Slider`,
+because its accessibility contract is different: the group contains two
+sliders, each with its own value and tab stop.
+
+## Usage
+
+```tsx
+import { RangeSlider, Stack, Text } from "@gpuixui/primitives";
+import { useState } from "react";
+
+const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
+
+<Stack direction="column" gap="sm">
+  <Text role="caption" tone="muted">${price[0]} – ${price[1]}</Text>
+  <RangeSlider
+    label="Budget"
+    value={price}
+    onChange={setPrice}
+    step={5}
+    formatValue={(value) => `$${value}`}
+  />
+</Stack>;
+```
+
+The value is always `[start, end]` in that order. A press picks the nearer end;
+a press beyond both thumbs picks the end it passed. The ends can touch but never
+cross.
+
+## Variants, sizes and states
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `readonly [number, number]` | — | controlled span |
+| `defaultValue` | `readonly [number, number]` | `[min, max]` | uncontrolled start |
+| `onChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
+| `min` / `max` | `number` | `0` / `100` | the closed range |
+| `step` | `number` | `1` | quantisation; `0` is continuous |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
+| `disabled` | `boolean` | `false` | both thumbs leave the tab order |
+| `invalid` | `boolean` | `false` | destructive fill and thumb borders |
+| `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
+| `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
+| `style` | `StyleDesc` | — | merged last, on the track |
+| `testId` | `string` | — | stable locator for the track |
+
+## Keyboard
+
+Each thumb is its own tab stop and answers:
+
+| Key | Effect on the focused thumb |
+| --- | --------------------------- |
+| `ArrowRight` / `ArrowUp` | + one step |
+| `ArrowLeft` / `ArrowDown` | − one step |
+| `PageUp` / `PageDown` | ± ten steps |
+| `Home` / `End` | `min` / `max`, clamped at the other thumb |
+
+A press moves native focus to the thumb it grabbed, so the arrows that follow
+act on the end the user is holding. The focused thumb paints the ring.
+
+## Accessibility
+
+- The group is `role="group"` with `aria-label`; each thumb is `role="slider"`
+  (AccessKit `Slider` and `Group`, verified in the real renderer).
+- Each thumb announces its own value through `aria-valuetext`. There is no
+  `aria-valuenow`/`min`/`max` in GPUix 0.10.0, so the two values reach a screen
+  reader but the range does not.
+- The default names — `"Budget minimum"`, `"Budget maximum"` — are derived from
+  `label`, so a group with one name is never two unnamed sliders.
+
+## Theming
+
+Same resolver as `Slider`: `colors.muted` rail, `colors.primary` fill, thumb
+`colors.input` with a `colors.primary` border, `focusRing` for focus. The end
+values are painted as two fills; the second fill is the length between the ends.
+
+## Limitations
+
+- **No pointer capture** — a drag stops updating when the pointer leaves the
+  track; press-to-position and the keyboard are the precise paths.
+- **No `aria-valuenow`/`min`/`max`** (above).
+- The thumbs cannot be given custom glyphs in this version; they are the same
+  pill as `Slider`'s.
+
+## Verification
+
+- `src/core/value.test.ts` — span ordering, the crossing guard, the nearest-end
+  rule (including both thumbs at one value).
+- `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
+  crossing result, per-thumb rings, disabled tab stops.
+- `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
+  the end; focus follows the grabbed thumb; an arrow moves only that end; a
+  start driven past the end stops on it. Measured 2026-10-17 (plan 053 §11).
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Slider** — one value.
+- **Meter** — a measurement inside a range.
+- **Input** — when an exact number matters more than a gesture.

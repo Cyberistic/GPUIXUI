@@ -1,0 +1,33 @@
+{
+  "name": "@gpuixui/icons",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Icon markup, sizing and accessibility rules for the GPUixUI component library.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuixui/tokens": "workspace:*"
+  },
+  "peerDependencies": {
+    "@gpuix/react": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

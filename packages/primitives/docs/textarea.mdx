@@ -1,0 +1,93 @@
+---
+title: TextArea
+description: A multi-line text field sized in rows.
+---
+
+`TextArea` is `Input`'s multi-line sibling: the same field contract on the
+runtime's native `<textarea>`. It deliberately **does not accept `onSubmit`** —
+with that handler set, GPUix turns Enter into a submit and the newline never
+arrives (plan 046).
+
+## Usage
+
+```tsx
+import { Label, TextArea, labelledBy } from "@gpuixui/primitives";
+
+const notes = "Description";
+
+<Label>{notes}</Label>
+<TextArea
+  {...labelledBy(notes)}
+  value={value}
+  onChange={setValue}
+  minRows={3}
+  maxRows={8}
+  fullWidth
+/>;
+```
+
+## API
+
+`TextArea` takes every `FieldProps` except `onSubmit`, plus:
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `minRows` | `number` | runtime default | minimum visible rows |
+| `maxRows` | `number` | runtime default | rows after which the field scrolls |
+
+Shared props: `value`, `defaultValue`, `onChange`, `placeholder`, `readOnly`,
+`disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `style`,
+`testId`.
+
+Its height is rows, not a control height, so the component re-bases vertical
+padding to the density's horizontal padding step to keep the text inset square.
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| typing | native editing; changes reach `onChange` |
+| Enter | inserts a newline — never submits |
+
+Submit-on-Enter is a single-line interaction: use `Input` when that is what you
+mean.
+
+## Accessibility
+
+- The native element is announced as a multi-line text input.
+- The name comes from `label`; there is no `aria-labelledby`.
+- `invalid` is visual; put the message beside the field in words.
+- As with `Input`, there is no `aria-describedby`.
+
+## Theming
+
+The same `fieldChrome` and native text theme as `Input`; only the height model
+changes.
+
+## Limitations
+
+- **No `onSubmit`** — by design; see plan 046.
+- No rich text, no markdown preview, no character counter.
+- No auto-grow beyond `maxRows`: past it the field scrolls.
+- `disabled` is read-only at the host plus tab-order and handler guards, because
+  GPUix has no `disabled` prop (plan 025); assistive technology hears a
+  read-only field.
+
+## Verification
+
+- `src/components/fields.test.tsx` — rows, chrome and the absence of `onSubmit`
+  in the public props.
+- `runtime/fields.runtime.test.tsx` — height follows `rows`; a newline is
+  accepted; the probe in plan 046 measured that adding `onSubmit` costs the
+  newline, which is why it is not in the type.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Input** — one line, with Enter-to-submit.
+- **Label** — the visible name.
+- **ScrollArea** — a different kind of bounded scroll region.

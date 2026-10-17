@@ -1,0 +1,168 @@
+import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
+import {
+  SELECTION_STATES,
+  selectionBoxStyle,
+  selectionMarkColor,
+  switchThumbStyle,
+  switchTrackStyle,
+  type SelectionSpec,
+} from "./selection.js";
+import { testTheme } from "./testing/theme.fixture.js";
+
+/**
+ * Guards the three-state selection paint.
+ *
+ * The bug this is aimed at: a checkbox whose mark is invisible in one state, or
+ * a switch whose thumb and track are painted the same colour in the checked
+ * state so the state cannot be read. Both are one wrong role away, and neither
+ * the compiler nor a DOM-free test can see them unless the roles are asserted
+ * directly.
+ */
+
+const spec = (over: Partial<SelectionSpec> = {}): SelectionSpec => ({
+  state: "unchecked",
+  size: "md",
+  accent: "primary",
+  ...over,
+});
+
+describe("selectionBoxStyle", () => {
+  it("leaves an unchecked box unfilled, on the input border role", () => {
+    const style = selectionBoxStyle(spec(), testTheme);
+    expect(style.backgroundColor).toBeUndefined();
+    expect(style.borderColor).toBe(testTheme.colors.input);
+  });
+
+  it("fills a checked box with the accent and makes the mark legible", () => {
+    const style = selectionBoxStyle(spec({ state: "checked" }), testTheme);
+    expect(style.backgroundColor).toBe(testTheme.colors.primary);
+    expect(style.borderColor).toBe(testTheme.colors.primary);
+    expect(style.color).toBe(testTheme.colors.primaryForeground);
+    expect(style.color).not.toBe(style.backgroundColor);
+  });
+
+  it("treats indeterminate as filled, not as a third fill", () => {
+    const checked = selectionBoxStyle(spec({ state: "checked" }), testTheme);
+    const mixed = selectionBoxStyle(
+      spec({ state: "indeterminate" }),
+      testTheme,
+    );
+    expect(mixed.backgroundColor).toBe(checked.backgroundColor);
+    expect(mixed.borderColor).toBe(checked.borderColor);
+  });
+
+  it("paints a filled box in the accent and leaves an empty one unpainted", () => {
+    const empty = selectionBoxStyle(spec(), testTheme);
+    const filledStates = Arr.filter(
+      SELECTION_STATES,
+      (state) => state !== "unchecked",
+    );
+    const filledPaint = Arr.map(
+      filledStates,
+      (state) => selectionBoxStyle(spec({ state }), testTheme).backgroundColor,
+    );
+    expect(empty.backgroundColor).toBeUndefined();
+    expect(
+      Arr.every(filledPaint, (bg) => bg === testTheme.colors.primary),
+    ).toBe(true);
+  });
+
+  it("switches the border to the destructive role when invalid", () => {
+    expect(
+      selectionBoxStyle(spec({ invalid: true }), testTheme).borderColor,
+    ).toBe(testTheme.colors.destructive);
+  });
+
+  it("paints the focus ring on a focused box, and only then", () => {
+    const focused = selectionBoxStyle(spec({ focused: true }), testTheme);
+    expect(focused.boxShadow?.color).toBe(testTheme.colors.ring);
+    expect(focused.boxShadow?.spreadRadius).toBe(testTheme.borderWidth.strong);
+    expect(selectionBoxStyle(spec(), testTheme).boxShadow).toBeUndefined();
+  });
+
+  it("gives a filled box pointer feedback that is not its resting fill", () => {
+    const style = selectionBoxStyle(spec({ state: "checked" }), testTheme);
+    expect(style.hover?.backgroundColor).not.toBe(style.backgroundColor);
+    expect(style.hover?.backgroundColor).toBeDefined();
+  });
+
+  it("removes pointer feedback while disabled", () => {
+    const style = selectionBoxStyle(spec({ disabled: true }), testTheme);
+    expect(style.opacity).toBeLessThan(1);
+    expect(style.cursor).toBe("not-allowed");
+    expect(style.hover?.borderColor).toBe(testTheme.colors.input);
+  });
+
+  it("honours a destructive accent over the brand", () => {
+    const style = selectionBoxStyle(
+      spec({ state: "checked", accent: "destructive" }),
+      testTheme,
+    );
+    expect(style.backgroundColor).toBe(testTheme.colors.destructive);
+  });
+
+  it("sizes the box from the theme's icon scale, so it aligns with the label", () => {
+    expect(selectionBoxStyle(spec({ size: "lg" }), testTheme).width).toBe(
+      testTheme.iconSize.lg,
+    );
+  });
+});
+
+describe("selectionMarkColor", () => {
+  it("uses the accent foreground when filled", () => {
+    expect(selectionMarkColor(spec({ state: "checked" }), testTheme)).toBe(
+      testTheme.colors.primaryForeground,
+    );
+  });
+
+  it("warns in the destructive role when invalid and empty", () => {
+    expect(selectionMarkColor(spec({ invalid: true }), testTheme)).toBe(
+      testTheme.colors.destructive,
+    );
+  });
+});
+
+describe("switch", () => {
+  it("fills the track and contrasts the thumb when checked", () => {
+    const on = switchTrackStyle(spec({ state: "checked" }), testTheme);
+    expect(on.backgroundColor).toBe(testTheme.colors.primary);
+    const thumb = switchThumbStyle(spec({ state: "checked" }), testTheme);
+    expect(thumb.backgroundColor).toBe(testTheme.colors.primaryForeground);
+    expect(thumb.backgroundColor).not.toBe(on.backgroundColor);
+  });
+
+  it("moves the thumb across the pill without measuring it", () => {
+    expect(switchTrackStyle(spec(), testTheme).justifyContent).toBe(
+      "flex-start",
+    );
+    expect(
+      switchTrackStyle(spec({ state: "checked" }), testTheme).justifyContent,
+    ).toBe("flex-end");
+  });
+
+  it("keeps the thumb a whole pixel inside the track", () => {
+    const track = switchTrackStyle(spec({ size: "lg" }), testTheme);
+    const thumb = switchThumbStyle(spec({ size: "lg" }), testTheme);
+    expect(Number(thumb.width)).toBeLessThan(Number(track.height));
+    expect(Arr.every([thumb.width, thumb.height], Number.isInteger)).toBe(true);
+  });
+
+  it("takes the destructive border when invalid, like a checkbox", () => {
+    // The bug guarded: `invalid` reached the spec and was dropped, while
+    // `docs/switch.mdx` promised the destructive role.
+    expect(
+      switchTrackStyle(spec({ invalid: true }), testTheme).borderColor,
+    ).toBe(testTheme.colors.destructive);
+    expect(switchTrackStyle(spec(), testTheme).borderColor).toBe(
+      testTheme.colors.input,
+    );
+  });
+
+  it("paints the focus ring on a focused track, and only then", () => {
+    expect(
+      switchTrackStyle(spec({ focused: true }), testTheme).boxShadow?.color,
+    ).toBe(testTheme.colors.ring);
+    expect(switchTrackStyle(spec(), testTheme).boxShadow).toBeUndefined();
+  });
+});

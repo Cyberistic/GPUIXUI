@@ -1,0 +1,80 @@
+---
+title: Stack
+description: Children laid out along one axis, spaced by the theme scale.
+---
+
+`Stack` is flexbox in one direction with a theme-owned gap. `direction` is
+required — a default direction is how a row silently becomes a column. It is a
+layout, not a scroll container or a list.
+
+## Usage
+
+```tsx
+import { Stack, Text, Button } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="sm">
+  <Text role="h3">Danger zone</Text>
+  <Stack direction="row" gap="sm" justify="end">
+    <Button variant="outline">Cancel</Button>
+    <Button variant="destructive">Delete</Button>
+  </Stack>
+</Stack>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `direction` | `"row" \| "column"` | — (required) | the main axis |
+| `gap` | spacing step | none | distance between children, from `spacing` |
+| `align` | `start \| center \| end \| stretch \| baseline` | runtime default (`stretch`) | cross-axis alignment |
+| `justify` | `start \| center \| end \| between \| around` | runtime default | main-axis distribution |
+| `wrap` | `boolean` | `false` | allows wrapping to a second line |
+| `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
+| `fullWidth` / `fullHeight` | `boolean` | `false` | `100%` on that axis |
+| `style` | `StyleDesc` | — | merged last |
+| `children` | `ReactNode` | — | content |
+| `testId` | `string` | — | stable locator |
+
+Spacing steps are the theme's: `2xs xs sm md lg xl 2xl 3xl 4xl 5xl`. There is no
+pixel `gap` prop; a call site cannot introduce a one-off spacing value.
+
+## Keyboard
+
+Not focusable. Tab order follows the children's own order.
+
+## Accessibility
+
+No role. A row of related controls is `ButtonGroup` (which sets `role="group"`);
+a navigation landmark is application-level.
+
+## Theming
+
+`stackStyle` in `src/core/layout.ts` resolves the axis, gap and alignment. The
+only value it reads is `theme.spacing[gap]`; alignment names map to the runtime's
+flex strings in one table.
+
+## Limitations
+
+- No responsive breakpoints: the runtime has no media queries, so a layout
+  change is application state, not a prop.
+- No `order`, `basis` or per-child flex control; use a child `Box` with `grow`.
+- No CSS class or selector hooks — styling is per element.
+
+## Verification
+
+- `src/core/layout.test.ts` — every direction, align, justify and gap resolves
+  to the expected `StyleDesc`.
+- `runtime/layout.runtime.test.tsx` — row and column gaps equal the theme step
+  in a real frame.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Box** — a surface to put in the stack.
+- **Grid** — two dimensions.
+- **Spacer** — push siblings apart without a magic margin.

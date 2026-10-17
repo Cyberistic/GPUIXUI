@@ -1,0 +1,16 @@
+{
+  "extends": "../config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@gpuix/react",
+    "lib": ["ESNext", "DOM"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": [
+    "src/**/*",
+    "runtime/**/*",
+    "examples/**/*",
+    "vitest.runtime.config.ts"
+  ]
+}

@@ -5,7 +5,7 @@
 | Phase | B (foundation) — the convention every stateful component follows |
 | Owner | components workstream (owns `packages/components`); primitives owns the Tier 1 helpers |
 | Depends on | `200-adopt-compound-part-api.md` (the public API the state model serves), `020-gpuix-runtime-capability.md` §3.1.3 (pure-logic tests run today) |
-| Status | components half done — 2026-10-17 (`core/runtime.ts`, doc §7, ADR 0005, PLAN D10); the `packages/testing` helper is pending its owner |
+| Status | components half done — 2026-10-17 (`core/runtime.ts`, doc §7, ADR 0005, PLAN D26); the `packages/testing` helper is pending its owner |
 | Source | `references/base-gpui/docs/component-architecture.md`, `src/*/runtime.rs`, `src/*/context.rs`, `src/*/tests/` (1,000+ window-free tests) |
 
 This plan is self-contained. It produces a **convention, one shared hook and its

@@ -1,0 +1,106 @@
+---
+title: Input
+description: A single-line text field, controlled or uncontrolled.
+---
+
+`Input` is the runtime's native `<input>` with the shared field chrome. The
+native element holds the text; `onChange` reports every edit and `value` pushes an
+external value back in. The controlled/uncontrolled decision is
+`core/state.ts`'s, so an input and a checkbox cannot disagree about which value
+wins.
+
+## Usage
+
+```tsx
+import { Input, Label, labelledBy } from "@gpuixui/primitives";
+
+const email = "Contact email";
+
+<Label description="Where notifications are delivered.">{email}</Label>
+<Input
+  {...labelledBy(email)}
+  value={value}
+  onChange={setValue}
+  placeholder="you@example.com"
+  fullWidth
+/>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `string` | — | controlled text; omit to let the field keep its own draft |
+| `defaultValue` | `string` | `""` | initial text when uncontrolled |
+| `onChange` | `(value: string) => void` | none | called after each edit that changed the value |
+| `onSubmit` | `(event) => void` | none | Enter; the raw runtime event |
+| `placeholder` | `string` | none | empty-state text |
+| `readOnly` | `boolean` | `false` | accepts focus and selection, refuses edits |
+| `disabled` | `boolean` | `false` | read-only, out of the tab order, de-emphasised; no edit, submit or ring |
+| `autoFocus` | `boolean` | `false` | takes focus on mount; required for keys to arrive |
+| `invalid` | `boolean` | `false` | border and focus ring take the destructive role |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
+| `fullWidth` | `boolean` | `false` | `width: 100%` |
+| `label` | `string` | none | accessible name; pair with a visible `Label` |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| typing | native editing; every change reaches `onChange` |
+| Enter | reaches `onSubmit` with the runtime event |
+| Tab | moves focus with the runtime's own order |
+
+There is no `onKeyDown` prop; a shortcut belongs to the application's window key
+handler, not to a field.
+
+## Accessibility
+
+- The native element is announced as `TextInput`.
+- The name comes from `label`; there is no `aria-labelledby`, so a visible
+  `Label` is not associated by reference.
+- `invalid` is a border colour, not an announced error. Put the message in a
+  `Text role="caption" tone="destructive"` beside the field.
+- `readOnly` remains focusable and selectable, which is the platform contract.
+- A `disabled` field is read-only at the host (GPUix has no `disabled` prop), so
+  assistive technology hears a read-only field, not a disabled one. It is out of
+  the tab order and its handlers are guarded, so keyboard and pointer users
+  cannot edit or submit it.
+
+## Theming
+
+`fieldChrome` uses `fieldVariant` (the `input` role) and the density metrics;
+`fieldTextStyle` and `nativeTextTheme` set the font, caret and selection colours
+the native element paints with. Focus uses the shared shadow ring.
+
+## Limitations
+
+- No `type`, `maxLength`, `inputMode` or `pattern`: the component exposes a
+  string field, not every native attribute. Validate with `Schema` at the
+  boundary.
+- `disabled` is emulated: the runtime exposes no `disabled` host prop (plan
+  025). The component forwards `readOnly`, drops the field from the tab order
+  and guards its handlers; the accessibility difference is the limitation above.
+- No masks, formatting or prefix/suffix slots.
+- No `aria-describedby`; help text is adjacent content, not associated.
+
+## Verification
+
+- `src/core/state.test.ts` — controlled/uncontrolled transitions.
+- `src/components/fields.test.tsx` — chrome, invalid state and host props.
+- `runtime/fields.runtime.test.tsx` — runtime keystrokes reach `onChange` with
+  the accumulated text; Enter reaches `onSubmit`; a controlled field reports each
+  edit.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **TextArea** — the multi-line field.
+- **Label** — the visible name and its description.
+- **Select** — a choice instead of free text.

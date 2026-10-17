@@ -41,10 +41,13 @@
     "catalog": {
       "@effect/platform-node": "4.0.5",
       "@effect/vitest": "4.0.5",
+      "@gpuix/react": "0.10.0",
+      "@types/react": "^19.2.0",
       "alchemy": "2.0.0-beta.83",
       "effect": "4.0.5",
       "oxfmt": "^0.57.0",
       "oxlint": "^1.78.0",
+      "react": "^19.2.4",
       "typescript": "^7",
       "vitest": "^5.0.3"
     }

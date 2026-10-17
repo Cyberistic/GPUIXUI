@@ -1,0 +1,83 @@
+---
+title: Label
+description: A control's visible name, with a required marker and a description.
+---
+
+`Label` renders the **visible** name of a field. It is not associated with the
+control by reference — GPUix 0.10.0 has no `aria-labelledby` — so the control
+carries its own `aria-label` through its `label` prop. `labelledBy(name)` builds
+that prop from the same string.
+
+## Usage
+
+```tsx
+import { Input, Label, labelledBy } from "@gpuixui/primitives";
+
+const name = "Workspace name";
+
+<Label description="Shown on invitations and in the app switcher.">
+  {name}
+</Label>
+<Input {...labelledBy(name)} fullWidth />;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `required` | `boolean` | `false` | appends a destructive `*`; **visual only** |
+| `invalid` | `boolean` | `false` | paints the name in the destructive role |
+| `description` | `string` | none | a caption line under the name |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+| `children` | `ReactNode` | — | the name |
+
+`labelledBy(name): { label: string }` returns the prop every control reads, so a
+caller spreads it into an `Input`, `TextArea`, `Select`, `Checkbox`, `Switch` or
+`RadioGroup` instead of spelling the name twice.
+
+## Keyboard
+
+Not focusable. A label that responds to a click is a button.
+
+## Accessibility
+
+- The visible name is an accessibility `Label` node.
+- The control's own `label` prop is its accessible name; there is **no
+  `aria-labelledby`**, so the two are separate nodes. A test asserts both exist
+  (`fields.runtime.test.tsx`).
+- `required` is a mark, not `aria-required`; validation must also be expressed in
+  words and in the control's `invalid` state.
+- `invalid` is colour plus the field's border; it is not announced by itself.
+
+## Theming
+
+The name uses the `label` role and the `foreground` (or `destructive`) role; the
+description uses `caption` + `mutedForeground`. The required star is
+`destructive`. No literal size or colour.
+
+## Limitations
+
+- No click-to-focus: the runtime has no `for`/`htmlFor`, and the label cannot
+  move focus to another element.
+- No association by reference (above) — the name is written in two places when
+  both the visible label and the control's name are needed. `labelledBy` keeps
+  the *control* side to one object, not the pair.
+- `required` does not validate anything. Validate with `Schema` at the boundary.
+
+## Verification
+
+- `src/components/fields.test.tsx` — name, description, required and invalid
+  resolve as specified.
+- `runtime/fields.runtime.test.tsx` — the visible `Label` and the control's
+  `TextInput` name are both present in the accessibility dump.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Input**, **TextArea**, **Select** — the controls that take `label`.
+- **Text** — the typographic primitive underneath.

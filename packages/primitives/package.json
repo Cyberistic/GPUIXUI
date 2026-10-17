@@ -1,0 +1,40 @@
+{
+  "name": "@gpuixui/primitives",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Foundational render primitives and Tier 1 components for GPUixUI.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./core": {
+      "types": "./src/core/index.ts",
+      "default": "./src/core/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:runtime": "vitest run --config vitest.runtime.config.ts"
+  },
+  "dependencies": {
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/tokens": "workspace:*"
+  },
+  "peerDependencies": {
+    "@gpuix/react": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@gpuix/react": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

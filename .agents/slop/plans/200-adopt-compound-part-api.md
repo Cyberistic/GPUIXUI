@@ -167,7 +167,7 @@ Landed 2026-10-17:
 - `docs/component-api.md` — rules §1–6, Tier 1 and Tier 2 parts tables (every
   inventory record is listed), planned parts, and the landed deviations in §8.
 - `.agents/adr/0004-compound-part-api.md` (renumbered: 0001–0003 are the runtime
-  ADRs) and `PLAN.md` D9.
+  ADRs) and `PLAN.md` D25.
 - `LICENSES/base-gpui.md` — MIT, `Copyright (c) 2026 Luke Tandjung`, commit
   `64b2233`, design reference only.
 - `packages/components/src/inventory.test.ts` gained two contract checks: the

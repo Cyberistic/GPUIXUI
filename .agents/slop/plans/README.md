@@ -114,6 +114,40 @@ Interlocks this workstream depends on and does not own:
 here because plan 140's locally built `darwin-x64` binding is in the store, so the
 component side is no longer waiting on primitives:
 
+### `primitives`, `icons` and Tier 1 (block `020–049`)
+
+Owns `packages/primitives`, `packages/icons` and the Tier 1 rows. The table is
+the authority on order; the file names carry the detail.
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [020](./020-gpuix-runtime-capability.md) | GPUix runtime capability map and verification strategy | A | — | done (recon) — runtime verification is unblocked by plan 140 |
+| [021](./021-primitives-consume-tokens.md) | `packages/primitives` consumes `@gpuixui/tokens` directly | B | 016, 017, 018, 030 | done — `Theme` re-exported; `focusRing`/`elevationShadow` replace the local copies |
+| [022](./022-swarm-single-writer.md) | One writer per worktree — the swarm is running duplicate agents | infra | — | **BLOCKER B3 — read §3 before writing anything** |
+| [023](./023-primitives-alpha-from-tokens.md) | `alpha` comes from `@gpuixui/tokens` | B | 014, 021 | done — the local copy is deleted; `core/index.ts` re-exports the tokens helper |
+| [024](./024-icons-size-scale-from-tokens.md) | `packages/icons` takes its size scale from tokens | B | 021, 031 | done — `ICON_SIZES` is tokens' `iconSize` |
+| [025](./025-fields-disabled.md) | A real disabled state for `Input`/`TextArea` | C | 030, 041, 046 | done — read-only + tab-order + handler guards |
+| [030](./030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | implemented — all 19 Tier 1 components + `core/`; docs-site pages pending |
+| [031](./031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | done — 47 icons, both-direction tests |
+| [040](./040-phase-c-tier1.md) | Phase C: Tier 1 foundational components | C | 030, 031 | done in-package — docs-site pages pending |
+| [041](./041-tier1-runtime-verification.md) | Tier 1 in the real GPUix runtime | C | 030, 031, 040, 140 | done — 46 runtime tests |
+| [042](./042-tier1-theme-verification.md) | Tier 1 in both themes, and a live theme switch | C | 030, 040, 041 | done — 5 runtime tests |
+| [043](./043-presentational-testid.md) | `testId` parity for the presentational primitives | C | 030, 041 | done |
+| [044](./044-radio-skip-disabled.md) | A radio group must skip disabled options | C | 030, 041 | done |
+| [045](./045-labelledby-prop.md) | `labelledBy` must return the prop the controls read | C | 030, 040 | done |
+| [046](./046-textarea-no-submit.md) | `TextArea` must not accept `onSubmit` | C | 030, 040, 041 | done |
+| [047](./047-tier1-docs-and-examples.md) | Tier 1 docs pages and runnable examples | C | 030, 031, 040, 041 | done |
+| [048](./048-tier1-fixable-limitations.md) | Three fixable Tier 1 limitations | C | 030, 040, 041, 047 | done |
+| [049](./049-radio-group-focus-contract.md) | The radio group's focus contract, and a `Switch` prop that did nothing | C | 030, 040, 041, 044, 048 | done |
+| [053](./053-value-controls.md) | Value controls: `Slider`, `RangeSlider`, `Meter` | C | 030, 040, 041, 047, 049 | done |
+| [054](./054-remaining-tier1-controls.md) | The remaining Tier 1 rows: `NumberField`, `OTPField`, `Toggle`, `Rating` | C | 053 | done (implementation) |
+| [055](./055-tier1-theme-axes.md) | Tier 1 under high contrast, density and platform type | F | 030, 041, 042, 051 | done — 4 runtime tests |
+
+Cross-cutting records: `.agents/adr/0001-native-smoke-host.md` (the 0.10.0
+binding gap), `0002-two-gpuix-versions.md` (the 0.5.1 legacy probe),
+`0003-darwin-x64-source-build.md` (the locally built binding and the provenance
+of every `verified 0.10.0` verdict).
+
 ### `tokens-theme` (block `010–019`, plus one overflow plan)
 
 | Plan | Title | Phase | Depends on | Status |

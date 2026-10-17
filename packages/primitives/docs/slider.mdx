@@ -1,0 +1,119 @@
+---
+title: Slider
+description: A value on a track, by click, drag or keyboard.
+---
+
+`Slider` is one value inside a closed range. GPUix 0.10.0 publishes **no slider
+host element** (plan 020 §1.5), so the track, the fill and the thumb are this
+package's: a `div` tree, the arithmetic in `core/value.ts` and the paint in
+`core/style.ts`. It is not a disguised `<input type="range">` — there is no such
+thing in the runtime.
+
+## Usage
+
+```tsx
+import { Slider, Stack, Text } from "@gpuixui/primitives";
+import { useState } from "react";
+
+const [quality, setQuality] = useState(62);
+
+<Stack direction="column" gap="sm">
+  <Text role="caption" tone="muted">Quality · {quality}%</Text>
+  <Slider
+    label="Quality"
+    value={quality}
+    onChange={setQuality}
+    formatValue={(value) => `${value}%`}
+  />
+</Stack>;
+```
+
+Omit `value` to let the slider own its state (`defaultValue` sets the start).
+
+## Variants, sizes and states
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | — | controlled value |
+| `defaultValue` | `number` | `min` | uncontrolled start |
+| `onChange` | `(value: number) => void` | — | called only when the value changed |
+| `min` / `max` | `number` | `0` / `100` | the closed range |
+| `step` | `number` | `1` | quantisation; `0` is continuous (arrows move 1% of the span) |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb `iconSize`, track `density.controlHeight` |
+| `disabled` | `boolean` | `false` | out of the tab order, half opacity, no pointer or keys |
+| `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
+| `label` | `string` | none | accessible name |
+| `formatValue` | `(value: number) => string` | `String` | the announced text |
+| `style` | `StyleDesc` | — | merged last, on the track |
+| `testId` | `string` | — | stable locator for the track |
+
+Out-of-range values are clamped, and a value between steps snaps to the step
+measured from `min`. `NaN` reads as `min`, never as a full track.
+
+## Keyboard
+
+| Key | Effect |
+| --- | ------ |
+| `ArrowRight` / `ArrowUp` | + one step |
+| `ArrowLeft` / `ArrowDown` | − one step |
+| `PageUp` / `PageDown` | ± ten steps |
+| `Home` / `End` | `min` / `max` |
+
+Any other key is left alone, so a slider inside a form does not swallow it. The
+slider is a single tab stop, and the focus ring is painted on the thumb.
+
+## Accessibility
+
+- Role: `slider` (AccessKit `Slider` — verified in the real renderer).
+- The value is announced through **`aria-valuetext`**; GPUix 0.10.0 has no
+  `aria-valuenow`, `aria-valuemin` or `aria-valuemax`, so a screen reader hears
+  the value but not the range. Give the slider a `label`, and a `formatValue`
+  when the number alone is ambiguous (`"62%"`, `"$40"`).
+- A disabled slider has no tab stop, so it is skipped rather than announced as
+  a control that cannot be used.
+
+## Theming
+
+The track is `colors.muted`, the fill `colors.primary` (or `colors.destructive`
+when invalid), and the thumb `colors.input` with a `colors.primary` border. The
+track's height is `density.controlHeight[size]`, the thumb `iconSize[size]`, its
+border `borderWidth.strong`, and the focus ring is `@gpuixui/tokens`'
+`focusRing`. Nothing in the component names a literal.
+
+## Pointer behaviour
+
+A press anywhere on the track moves the value to the point under the pointer —
+the usable span is inset by half a thumb at each end, so the thumb's centre lands
+exactly on the pointer and on the ends without hanging off the track. A drag
+keeps updating while the pointer is over the track.
+
+## Limitations
+
+- **No pointer capture.** A drag that leaves the track stops receiving moves;
+  clicking the track and the whole keyboard contract still work. The runtime
+  exposes no capture API, so this is stated rather than faked.
+- **No `aria-valuenow`/`min`/`max`** (above).
+- The thumb cannot rotate or transform; GPUix has no `transform`, and the
+  position is a flex layout, not a `translate`.
+
+## Verification
+
+- `src/core/value.test.ts` — clamping, snapping (no binary-float tails),
+  fractions, the key contract, the pointer mapping, the crossing rule.
+- `src/core/style.test.ts` — the inset/negative-margin geometry, the hit-test
+  children, the fill fraction, the ring.
+- `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint.
+- `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
+  centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
+  by Tab. Measured 2026-10-17; plan 053 §11 records the probes.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **RangeSlider** — two ends of one interval.
+- **Meter** — a measurement, not an input.
+- **Progress** — task completion, not a value in a range.
