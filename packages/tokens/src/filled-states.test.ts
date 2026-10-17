@@ -16,6 +16,10 @@
  */
 import { describe, expect, it } from "vitest";
 import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
+import {
+  getPlatformRecipeTheme,
+  platformRecipeNames,
+} from "./platform-recipes.js";
 import { platformNames, platformStyles } from "./platforms.js";
 import {
   getPlatformTheme,
@@ -50,6 +54,12 @@ const themes: ReadonlyArray<{ readonly label: string; readonly theme: Theme }> =
           theme: getPlatformTheme(platform, mode, contrast),
         })),
       ),
+    ),
+    ...platformRecipeNames.flatMap((recipe) =>
+      modes.map((mode) => ({
+        label: `${recipe} ${mode}`,
+        theme: getPlatformRecipeTheme(recipe, mode),
+      })),
     ),
   ];
 
@@ -149,6 +159,22 @@ describe("filled control states", () => {
             platformStyles[platform].colors[mode][role],
             `${platform} ${mode} ${role}`,
           ).toBeDefined();
+        });
+      });
+    });
+  });
+
+  it("gives every recipe its filled-state roles", () => {
+    platformRecipeNames.forEach((recipe) => {
+      modes.forEach((mode) => {
+        families.forEach((family) => {
+          (["", "Hover", "Active"] as const).forEach((suffix) => {
+            const role = `${family}${suffix}` as const;
+            expect(
+              getPlatformRecipeTheme(recipe, mode).colors[role],
+              `${recipe} ${mode} ${role}`,
+            ).toBeDefined();
+          });
         });
       });
     });

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 96/125
+`[x]` `[████████░░]` 97/126
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -206,6 +206,10 @@ half was the identity graphite/iris instead of `#202020`/`#4CC2FF`; the recipe
 data now names the Windows dark colours, a regression test compares every dark
 role with the Windows variant, and the docs no longer claim an era accent in
 dark (plan 328)
+`[x]` Hold the two shipped recipes to the filled-state matrix — `filled-states`
+iterated the identity and three platform variants but not XP/Aero, so a recipe
+could collapse a family's hover/press while the suite stayed green; the loop and
+a presence case now cover both recipes in both modes (plan 329)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
