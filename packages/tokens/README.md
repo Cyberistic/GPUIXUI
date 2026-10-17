@@ -2,7 +2,8 @@
 
 The single source of truth for colour, typography, spacing, radii, density,
 elevation, border widths and icon sizes in GPUIXUI. Light and dark themes are
-designed, not inverted, and every component reads semantic roles from here.
+designed, not inverted — each with a high-contrast variant — and every component
+reads semantic roles from here.
 
 - Core entry `@gpuixui/tokens` — pure data and pure functions, no runtime
   dependencies.
@@ -78,6 +79,20 @@ export const brandTheme = createTheme({
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts).
 
+## High contrast
+
+Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
+essential boundaries. It reuses the same 37 roles, so no component changes.
+
+```ts
+import { getTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("dark", "high");
+```
+
+`getTheme(mode)` is unchanged and returns the default theme. A selection example
+lives in [`src/high-contrast.example.ts`](./src/high-contrast.example.ts).
+
 ## Boundaries
 
 - No imports from any other workspace package.
@@ -100,8 +115,8 @@ persisted theme at its own boundary, where `Schema` belongs.
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
 - There is no runtime theme schema; theme objects authored in TypeScript are
   trusted at compile time. Persisted themes are decoded by the application.
-- No OS appearance detection; the app selects the mode.
-- No high-contrast theme or motion tokens yet. Tracked in `TODO.md`.
+- No OS appearance detection; the app selects the mode and contrast.
+- No motion tokens yet. Tracked in `TODO.md`.
 
 ## Scripts
 

@@ -45,13 +45,14 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 6/7
+`[x]` `[██████████]` 7/8
 
-`[x]` Write and index the tokens/theme plan set (plans 010–012)
+`[x]` Write and index the tokens/theme plan set (plans 010–013)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
 the `@gpuixui/tokens/react` provider
+`[x]` Add high-contrast (AAA) light and dark themes (`getTheme(mode, "high")`)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`

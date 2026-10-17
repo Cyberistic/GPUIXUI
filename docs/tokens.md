@@ -17,9 +17,13 @@ import {
   darkTheme,
   extendTheme,
   getTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  highContrastThemes,
   lightTheme,
   textStyle,
   type Theme,
+  type ThemeContrast,
   type ThemeMode,
 } from "@gpuixui/tokens";
 ```
@@ -94,6 +98,62 @@ import { palette } from "@gpuixui/tokens";
 | `red` | 50 `#FFF1F1` · 100 `#FFE0E0` · 200 `#FFC6C6` · 300 `#FF9E9E` · 400 `#FF6B6B` · 500 `#E5484D` · 600 `#CC3439` · 700 `#A5262B` · 800 `#7E1D21` · 900 `#5C1619` · 950 `#3A0B0D` |
 | `green` | 50 `#ECFDF3` · 100 `#D3F9E2` · 200 `#A8F0C6` · 300 `#6FE0A3` · 400 `#3BC97F` · 500 `#1FA968` · 600 `#158754` · 700 `#116A43` · 800 `#0E5135` · 900 `#0A3A26` · 950 `#042015` |
 | `amber` | 50 `#FFF8E8` · 100 `#FFEFC6` · 200 `#FFDE8A` · 300 `#FFC94D` · 400 `#F5B01F` · 500 `#D99400` · 600 `#B57600` · 700 `#8E5B00` · 800 `#6B4500` · 900 `#4B3100` · 950 `#2A1B00` |
+
+## High contrast
+
+Each mode has a high-contrast variant for accessibility. It is an ordinary
+`Theme` — the same 37 roles and the same type, spacing, radius, density, border
+width and icon scales — with colour values chosen to meet stricter floors: AAA
+body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
+essential boundaries. Changing values rather than roles is why no component has
+to know the variant exists.
+
+```ts
+import { getTheme, highContrastThemes } from "@gpuixui/tokens";
+
+getTheme("dark", "high"); // highContrastThemes.dark
+getTheme("light"); // the default light theme, unchanged
+```
+
+| Role | HC light | HC dark | Use |
+| ---- | -------- | ------- | --- |
+| `background` | `#FFFFFF` | `#000000` | window and application canvas |
+| `foreground` | `#000000` | `#FFFFFF` | default text |
+| `card` | `#FFFFFF` | `#0D0D0D` | raised content surface |
+| `cardForeground` | `#000000` | `#FFFFFF` | text on `card` |
+| `popover` | `#FFFFFF` | `#141414` | menus, popovers and dialogs |
+| `popoverForeground` | `#000000` | `#FFFFFF` | text on `popover` |
+| `primary` | `#3B2C8F` | `#C7CBFF` | primary action |
+| `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
+| `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
+| `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
+| `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
+| `mutedForeground` | `#1F1F1F` | `#E0E0E0` | secondary text |
+| `accent` | `#E0E3FF` | `#1C1547` | tinted emphasis surface |
+| `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
+| `destructive` | `#7E1D21` | `#FF9E9E` | destructive action |
+| `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
+| `success` | `#0E5135` | `#6FE0A3` | success |
+| `successForeground` | `#FFFFFF` | `#000000` | text on `success` |
+| `warning` | `#F5B01F` | `#FFC94D` | warning |
+| `warningForeground` | `#000000` | `#000000` | text on `warning` |
+| `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
+| `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
+| `input` | `#FFFFFF` | `#0D0D0D` | input field background |
+| `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
+| `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
+| `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
+| `selection` | `#7567F24D` | `#C7CBFF4D` | text selection wash (30% alpha) |
+| `overlay` | `#000000A6` | `#000000CC` | modal scrim |
+| `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
+| `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
+| `selected` | `#E0E3FF` | `#1C1547` | selected row or item |
+| `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
+| `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface |
+| `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
+| `skeleton` | `#D6D6D6` | `#3D3D3D` | loading placeholder |
+| `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb |
+| `shadow` | `#00000040` | `#000000B3` | elevation tint |
 
 ## Typography
 
@@ -215,8 +275,11 @@ interface Theme {
 ```
 
 `lightTheme`, `darkTheme`, `themes` and `getTheme(mode)` are the built-ins.
-`createTheme(config)` starts from `themes[config.mode]`; `extendTheme(base,
-overrides)` derives from any theme.
+Each mode also has a high-contrast variant (`highContrastLightTheme`,
+`highContrastDarkTheme`, `highContrastThemes`) reachable through
+`getTheme(mode, "high")`. `createTheme(config)` starts from `themes[config.mode]`;
+`extendTheme(base, overrides)` derives from any theme, including a high-contrast
+one.
 
 ```ts
 import { createTheme, extendTheme, darkTheme } from "@gpuixui/tokens";
@@ -314,16 +377,18 @@ Contrast is enforced by `packages/tokens/src/color.test.ts`:
 nub run --filter @gpuixui/tokens test
 ```
 
-The test covers both themes and fails if a semantic text/surface pair drops
-below its floor (7:1 for primary body pairs, 4.5:1 for secondary and on-colour
-text, 3:1 for focus and essential boundaries). Palette edits must keep it green.
+The test covers every shipped colour set — light, dark and both high-contrast
+variants — and fails if a semantic text/surface pair drops below its floor (7:1
+for primary body pairs and all high-contrast text, 4.5:1 for secondary and
+on-colour text in the default themes, 3:1 for focus and essential boundaries in
+the default themes, 4.5:1 in the high-contrast variants). Palette edits must keep
+it green.
 
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
 - No `letterSpacing` in the runtime.
-- No OS appearance detection.
-- No high-contrast (AAA) theme yet.
+- No OS appearance detection; the application selects the mode and contrast.
 - No motion tokens yet; no component consumes them.
 - Native visual proof is the playground's theme gallery, not this document. See
   `TODO.md`.

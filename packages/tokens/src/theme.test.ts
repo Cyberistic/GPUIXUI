@@ -5,12 +5,16 @@
  */
 import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
+import { resolveTheme } from "./high-contrast.example.js";
 import { densityPresets, type BoxShadow } from "./index.js";
 import {
   createTheme,
   darkTheme,
   extendTheme,
   getTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  highContrastThemes,
   lightTheme,
   themes,
 } from "./index.js";
@@ -26,6 +30,45 @@ describe("built-in themes", () => {
   it("carries the matching mode", () => {
     expect(lightTheme.mode).toBe("light");
     expect(darkTheme.mode).toBe("dark");
+  });
+});
+
+describe("high-contrast themes", () => {
+  it("maps modes to the high-contrast themes", () => {
+    expect(getTheme("light", "high")).toBe(highContrastLightTheme);
+    expect(getTheme("dark", "high")).toBe(highContrastDarkTheme);
+    expect(getTheme("light", "default")).toBe(lightTheme);
+    expect(highContrastThemes.light).toBe(highContrastLightTheme);
+    expect(highContrastThemes.dark).toBe(highContrastDarkTheme);
+  });
+
+  it("keeps the light/dark mode of its canvas", () => {
+    expect(highContrastLightTheme.mode).toBe("light");
+    expect(highContrastDarkTheme.mode).toBe("dark");
+  });
+
+  it("is named so a preview can label it", () => {
+    expect(highContrastLightTheme.name).toBe("High contrast light");
+    expect(highContrastDarkTheme.name).toBe("High contrast dark");
+  });
+
+  it("composes through the normal extension mechanism", () => {
+    const custom = extendTheme(highContrastLightTheme, {
+      colors: { primary: "#123456" },
+      density: "compact",
+    });
+    expect(custom.mode).toBe("light");
+    expect(custom.colors.primary).toBe("#123456");
+    expect(custom.colors.background).toBe(
+      highContrastLightTheme.colors.background,
+    );
+    expect(custom.density.name).toBe("compact");
+  });
+
+  it("is selected by the accessibility preference", () => {
+    expect(resolveTheme("dark", true)).toBe(highContrastDarkTheme);
+    expect(resolveTheme("dark", false)).toBe(darkTheme);
+    expect(resolveTheme("light", true)).toBe(highContrastLightTheme);
   });
 });
 

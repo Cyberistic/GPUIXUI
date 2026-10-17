@@ -74,6 +74,11 @@ test enforce it. On-colour text switches with the surface — primary text is no
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
 
+Each mode also has a **high-contrast variant** that raises secondary and
+on-colour text to 7:1 and focus rings and essential boundaries to 4.5:1, using
+pure black and white canvases. It is a value variant of the same roles, so no
+component changes; see §9 and §11.
+
 There is no automatic OS appearance detection: GPUix exposes no appearance
 query. The application chooses `lightTheme` or `darkTheme` and passes the
 result.
@@ -158,14 +163,14 @@ on a wrapping element instead of faking it.
 
 Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 
-| Pair class | Floor |
-| ---------- | ----- |
-| body text on background/card/popover | 7:1 |
-| secondary text, on-colour text, placeholder | 4.5:1 |
-| focus ring and essential boundaries | 3:1 |
+| Pair class | Default | High contrast |
+| ---------- | ------- | ------------- |
+| body text on background/card/popover | 7:1 | 7:1 |
+| secondary text, on-colour text, placeholder | 4.5:1 | 7:1 |
+| focus ring and essential boundaries | 3:1 | 4.5:1 |
 
-The test runs for both themes and is part of the normal test suite. It can fail:
-a palette edit that reduces contrast fails the gate.
+The test runs for every shipped colour set and is part of the normal test suite.
+It can fail: a palette edit that reduces contrast fails the gate.
 
 Not covered, deliberately:
 
@@ -174,7 +179,9 @@ Not covered, deliberately:
   required;
 - colour as the only status signal — status components pair colour with text or
   an icon;
-- high-contrast/forced-colours modes — no AAA theme yet, tracked in `TODO.md`.
+- forced-colours and OS-level high-contrast modes — the library ships an
+  in-app high-contrast theme, but GPUix exposes no OS accessibility query to
+  detect a system override automatically.
 
 GPUix exposes accessibility roles and names (`role`, `aria-label`,
 `aria-description`, `aria-selected`, `aria-expanded`). Components use them; the
@@ -198,7 +205,7 @@ The extension mechanism is deliberately small:
 
 - `createTheme({ mode, ...overrides })` — start from a built-in theme.
 - `extendTheme(base, overrides)` — derive from any theme, including another
-  brand theme.
+  brand theme or a high-contrast theme.
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
 
@@ -215,7 +222,6 @@ roles in the tokens package, not fork components.
 - No component-level token catalogue. Semantic roles plus scales are enough; a
   per-component token file would duplicate the same decisions.
 - No theme editor or theme marketplace.
-- No high-contrast theme yet.
 - No motion tokens yet. Motion is a component concern until a second consumer
   needs shared durations/easings.
 - No web preview pretending to be native. The playground is the visual proof.

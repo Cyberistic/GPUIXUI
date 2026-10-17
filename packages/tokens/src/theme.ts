@@ -1,4 +1,10 @@
-import { darkColors, lightColors, type ThemeColors } from "./color.js";
+import {
+  darkColors,
+  highContrastDarkColors,
+  highContrastLightColors,
+  lightColors,
+  type ThemeColors,
+} from "./color.js";
 import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
 import {
   borderWidth,
@@ -177,8 +183,58 @@ export const themes: Readonly<Record<ThemeMode, Theme>> = {
   dark: darkTheme,
 };
 
-/** Return the built-in theme for a mode. */
-export const getTheme = (mode: ThemeMode): Theme => themes[mode];
+/** Contrast variants the library ships, independent of light/dark mode. */
+export type ThemeContrast = "default" | "high";
+
+/** The high-contrast light theme. */
+export const highContrastLightTheme: Theme = {
+  name: "High contrast light",
+  mode: "light",
+  colors: highContrastLightColors,
+  typography,
+  spacing,
+  radius,
+  density: defaultDensity,
+  elevation: lightElevation,
+  borderWidth,
+  iconSize,
+};
+
+/** The high-contrast dark theme. */
+export const highContrastDarkTheme: Theme = {
+  name: "High contrast dark",
+  mode: "dark",
+  colors: highContrastDarkColors,
+  typography,
+  spacing,
+  radius,
+  density: defaultDensity,
+  elevation: darkElevation,
+  borderWidth,
+  iconSize,
+};
+
+/** High-contrast themes by mode. */
+export const highContrastThemes: Readonly<Record<ThemeMode, Theme>> = {
+  light: highContrastLightTheme,
+  dark: highContrastDarkTheme,
+};
+
+/**
+ * Return a built-in theme for a mode and contrast level. The default contrast
+ * keeps the existing behaviour, so `getTheme("dark")` is unchanged.
+ *
+ * @example
+ * ```ts
+ * const accessible = getTheme("dark", "high");
+ * ```
+ */
+export function getTheme(
+  mode: ThemeMode,
+  contrast: ThemeContrast = "default",
+): Theme {
+  return contrast === "high" ? highContrastThemes[mode] : themes[mode];
+}
 
 /**
  * Derive a theme from a base theme without mutating it.
