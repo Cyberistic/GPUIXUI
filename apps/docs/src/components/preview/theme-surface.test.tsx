@@ -7,7 +7,7 @@ import {
   platformTheme,
   darkTheme,
 } from "@gpuixui/tokens";
-import { previewMode, previewVars } from "./theme-surface";
+import { parsePreviewState, previewVars } from "./theme-surface";
 
 /**
  * Guards the token surface behind every labelled preview (plan 434). The
@@ -15,11 +15,11 @@ import { previewMode, previewVars } from "./theme-surface";
  * that reads only part of the theme — the latter would silently ignore the real
  * per-platform values when `packages/tokens` ships them.
  *
- * Plan 444 adds the mode rule: a dark docs page used to paint light previews
- * because the surface took `next-themes`' pre-hydration `undefined` and never
- * re-rendered. The three cases below pin both halves of the fix — the server
- * render stays light (or React hydrates mismatched HTML) and the hydrated
- * render follows the docs.
+ * Plans 444/445 add the state rule: a dark page used to paint light previews
+ * and a `?platform=win32` link kept Menlo, because the MDX subtree lost the
+ * providers' mount-time updates. `parsePreviewState` decodes the state the
+ * providers publish on `<html>`; the cases below pin every outcome, including
+ * the server snapshot the hydration render must match.
  */
 
 const vars = previewVars(lightTheme);
@@ -27,18 +27,41 @@ const vars = previewVars(lightTheme);
 const source = (file: string): string =>
   readFileSync(fileURLToPath(new URL(file, import.meta.url)), "utf8");
 
-describe("previewMode", () => {
-  it("paints the docs' dark palette once hydrated", () => {
-    expect(previewMode(true, "dark")).toBe("dark");
+describe("parsePreviewState", () => {
+  it("reads a shared platform link in dark mode", () => {
+    expect(parsePreviewState("win32|dark")).toEqual({
+      platform: "win32",
+      mode: "dark",
+    });
   });
 
-  it("stays light before hydration so the client render matches the HTML", () => {
-    expect(previewMode(false, "dark")).toBe("light");
+  it("reads the server snapshot the hydration render must match", () => {
+    expect(parsePreviewState("default|light")).toEqual({
+      platform: "default",
+      mode: "light",
+    });
   });
 
-  it("falls back to light when the mode is unknown or light", () => {
-    expect(previewMode(true, undefined)).toBe("light");
-    expect(previewMode(true, "light")).toBe("light");
+  it("keeps every platform and both modes", () => {
+    expect(parsePreviewState("linux|dark")).toEqual({
+      platform: "linux",
+      mode: "dark",
+    });
+    expect(parsePreviewState("darwin|light")).toEqual({
+      platform: "darwin",
+      mode: "light",
+    });
+  });
+
+  it("falls back to the shipped default for a corrupt attribute", () => {
+    expect(parsePreviewState("|")).toEqual({
+      platform: "default",
+      mode: "light",
+    });
+    expect(parsePreviewState("nonsense|nonsense")).toEqual({
+      platform: "default",
+      mode: "light",
+    });
   });
 });
 

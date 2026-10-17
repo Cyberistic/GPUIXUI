@@ -1,8 +1,11 @@
 import { platformTypes } from "@gpuixui/tokens";
-import { usePlatform } from "@/platform/platform-provider";
 import { IllustrativeApproximation } from "./approximation-banner";
 import { previewsBySlug } from "./approximations";
-import { PreviewSurface, usePreviewTheme } from "./theme-surface";
+import {
+  PreviewSurface,
+  usePreviewState,
+  usePreviewTheme,
+} from "./theme-surface";
 
 /**
  * The Theming page's live proof that the platform toggle reaches every
@@ -11,7 +14,7 @@ import { PreviewSurface, usePreviewTheme } from "./theme-surface";
  * the package does not ship.
  */
 export function PlatformPreviews() {
-  const { platform } = usePlatform();
+  const { platform } = usePreviewState();
   const theme = usePreviewTheme();
 
   return (

@@ -3,12 +3,12 @@ import {
   elevationShadow,
   platformTheme,
   themes,
+  type PlatformName,
   type Theme,
   type TextStyle,
   type ThemeMode,
 } from "@gpuixui/tokens";
-import { useTheme } from "fumadocs-ui/provider/base";
-import { usePlatform } from "@/platform/platform-provider";
+import { isPlatformName } from "@/platform/platform";
 
 /**
  * The CSS custom properties a labelled preview may read. `previewVars` maps the
@@ -80,33 +80,60 @@ export const previewVars = (theme: Theme): PreviewStyle => ({
   ...shadowVars(theme),
 });
 
+/** What the page chrome is showing: the active platform and colour mode. */
+export interface PreviewState {
+  readonly platform: PlatformName;
+  readonly mode: ThemeMode;
+}
+
+/** The state the server sent; a preview hydrates from this, not from a guess. */
+const SERVER_STATE = "default|light";
+const SEPARATOR = "|";
+
 /**
- * `next-themes` cannot know the resolved mode until the client mounts, and the
- * MDX body is rendered behind `use(page.load())`, so a surface that only reads
- * the context keeps the server's `undefined` for good (plan 444). This snapshot
- * is `false` in the server and hydration renders — matching the HTML — and
- * React re-renders once on the client with `true`.
+ * The providers publish their resolved state on `<html>`: `data-platform` and
+ * the next-themes `dark` class. Reading them is what keeps a preview from
+ * disagreeing with the chrome around it — the MDX subtree's first render loses
+ * the providers' mount-time updates (plans 444, 445).
  */
-const subscribeToMount = () => () => {};
-const clientMounted = () => true;
-const serverMounted = () => false;
+const documentState = (): string =>
+  `${document.documentElement.dataset.platform ?? "default"}${SEPARATOR}${
+    document.documentElement.classList.contains("dark") ? "dark" : "light"
+  }`;
 
-/** The mode a preview paints: light until hydration, then the docs' mode. */
-export const previewMode = (
-  mounted: boolean,
-  resolved: string | undefined,
-): ThemeMode => (mounted && resolved === "dark" ? "dark" : "light");
+/** Decode the published state; a corrupt attribute is the shipped default. */
+export const parsePreviewState = (snapshot: string): PreviewState => {
+  const [platform = "", mode = ""] = snapshot.split(SEPARATOR);
+  return {
+    platform: isPlatformName(platform) ? platform : "default",
+    mode: mode === "dark" ? "dark" : "light",
+  };
+};
 
-/** The active theme: the docs' mode resolved through the chosen platform. */
-export function usePreviewTheme(): Theme {
-  const { resolvedTheme } = useTheme();
-  const { platform } = usePlatform();
-  const mounted = useSyncExternalStore(
-    subscribeToMount,
-    clientMounted,
-    serverMounted,
+const subscribeToDocument = (onChange: () => void): (() => void) => {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class", "data-platform"],
+  });
+  return () => observer.disconnect();
+};
+
+/** The live preview state; the server snapshot is the HTML the server sent. */
+export function usePreviewState(): PreviewState {
+  return parsePreviewState(
+    useSyncExternalStore(
+      subscribeToDocument,
+      documentState,
+      () => SERVER_STATE,
+    ),
   );
-  return platformTheme(themes[previewMode(mounted, resolvedTheme)], platform);
+}
+
+/** The active theme: the published mode resolved through the platform. */
+export function usePreviewTheme(): Theme {
+  const { platform, mode } = usePreviewState();
+  return platformTheme(themes[mode], platform);
 }
 
 /** The token surface every preview paints on; it reads no doc-site colour. */

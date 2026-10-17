@@ -145,6 +145,9 @@ for the release gate rather than pretended here.
     `/docs/theming` paints all five preview surfaces `#11141A`.
 - **Not asserted in Node:** the hydration ordering, for the reason in §4. A
   `TODO.md` row records adding this to the release browser gate.
+- **Superseded in part by 445:** the mount gate fixed the mode but not the
+  platform; both now come from the document state the providers publish, with
+  one parser and one subscription.
 - **Verified:** docs suite (37 files, 211 tests), `check-types`, docs build,
   `smoke:build` (66 pages) and the repository gate green.
 
