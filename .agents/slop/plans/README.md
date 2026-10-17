@@ -48,6 +48,7 @@ sequencing set; the docs-site workstream owns the `4xx` range.
 | `412-preview-strategy.md` | Honest native-preview mechanism (`docs/preview-strategy.md`) | A–F | 001; playground | Phase B implemented — tiers N/S/A/X and label tests pass; screenshots wait on the playground |
 | `413-docs-page-metadata.md` | Per-page document metadata (title, description, OpenGraph, canonical) | B | 410 | landed |
 | `414-copyable-component-source.md` | Copyable real source on component pages via Fumadocs `<include>`, guarded by a test | B–C | 410, 411, 412 | implemented |
+| `415-api-type-table.md` | The API type table: verified in this app, landed, and guarded (`@internal`, optionality, unresolved names) | B–C | 410, 411 | implemented |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

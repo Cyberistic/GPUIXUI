@@ -259,6 +259,16 @@ export default defineConfig({
 | T7 | Document the template | `apps/docs/README.md` "Adding a component page" section | T1–T6 |
 | T8 | Gates | `nub run check`, `lint`, `test`; commit | T1–T7 |
 
+**Status of T4 (2026-10-17):** implemented by plan 415 without the deferred
+`props-table.tsx` — the remark path is the implementation, and it is verified in
+this app: a real `<auto-type-table>` on `api-reference.mdx` renders a Fumadocs
+`TypeTable` with one row per prop, `src/lib/type-table.test.ts` pins the tsdoc
+contract (`@internal` hidden by default, optional props optional, unknown name →
+nothing) against the app's own generator
+(`src/lib/type-table-generator.ts`), and `src/content-references.test.ts` fails
+when a page's type-table `name` does not resolve. See
+[`415-api-type-table.md`](./415-api-type-table.md).
+
 ## 8. Commands and expected results
 
 ```sh
@@ -306,6 +316,11 @@ both runs.
 
 ## 10. STOP conditions
 
+- **Answered (plan 415):** `fumadocs-typescript` in `5.5.2` **does** support this
+  Vite/TanStack Start app. A real `<auto-type-table>` renders a Fumadocs
+  `TypeTable` in the dev server and the build, so no `PropsTable` fallback is
+  needed. The one thing to avoid is a single-line inline `type` string, whose
+  tsdoc tags are ignored.
 - `fumadocs-typescript` in `5.5.2` does not support a **Vite/macro** setup (only
   Next's remark pipeline) and cannot generate tables in this app. Then: keep the
   metadata + index + `ComponentState` (they do not depend on it), and render prop
