@@ -40,6 +40,9 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `lg` | `density.controlHeight.lg` | `density.controlPaddingX.lg` |
 
 - `square` — equal width and height, no horizontal padding: an icon-only button.
+- `radius` — the corner radius on the theme's scale (`none`, `sm`, `md`, `lg`,
+  `xl`, `full`). Defaults to `md`; an attached `ButtonGroup` supplies `none` so
+  its buttons share one clipped surface.
 - `fullWidth` — stretches to its parent.
 - `disabled` — refuses click and keys, and leaves the tab order.
 - `loading` — shows a spinner, announces `Loading`, refuses activation, and
@@ -52,6 +55,7 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `variant` | `ButtonVariant` | `"primary"` | the paint from `core/variants.ts` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `square` | `boolean` | `false` | icon-only geometry |
+| `radius` | `RadiusStep` | `"md"` | corner radius; an attached `ButtonGroup` supplies `"none"` |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
@@ -90,9 +94,9 @@ import { Button, Stack } from "@gpuixui/primitives";
 
 ## Theming
 
-`controlStyle` resolves fill, text, border, hover, active, disabled and focus
-from the theme; `buttonVariants` maps each variant to colour **roles**, never
-colours. Size and padding come from `density`.
+`controlStyle` resolves fill, text, border, radius, hover, active, disabled and
+focus from the theme; `buttonVariants` maps each variant to colour **roles**,
+never colours. Size and padding come from `density`.
 
 ## Limitations
 
@@ -105,8 +109,8 @@ colours. Size and padding come from `density`.
 ## Verification
 
 - `src/core/keyboard.test.ts` — the Enter/Space/held rules as pure decisions.
-- `src/components/Button.test.tsx` — tree-level props, busy blocking and the
-  loading description.
+- `src/components/Button.test.tsx` — tree-level props, busy blocking, the
+  loading description, and the `radius` resolution with its `md` default.
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name.

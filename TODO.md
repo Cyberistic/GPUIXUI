@@ -360,6 +360,14 @@ retired once both branches are one
       `stepNumber` now trims its clamped result to 12 decimal places; typed
       precision and bounds are unchanged. 4 core + 1 runtime tests, both
       directions proven (plan 077)
+`[x]` `packages/primitives`: **an attached `ButtonGroup` left every button
+      rounded** — the clip rounds only the group's boundary, so two contiguous
+      buttons met with a rounded notch, and the docs' "hidden by the clip" claim
+      was false (the source also told readers to pass a `radius` prop that did
+      not exist). `Button` gains `radius`; an attached group provides `"none"`
+      through React context, the group supplies the clipped rounded ends, and
+      an explicit per-button `radius` wins. 1 element + 2 runtime tests, both
+      directions proven (plan 078)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

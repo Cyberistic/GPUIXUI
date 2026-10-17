@@ -209,6 +209,75 @@ it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", 
   expect(await gapOf("separated")).toBe(testTheme.spacing.sm);
 });
 
+it("squares the buttons of an attached group so a shared edge has no notch", async () => {
+  // The bug guarded (plan 078): every child kept radius.md inside a zero-gap
+  // group, so two attached buttons met with a rounded notch between them; the
+  // clip only rounds the group's own boundary.
+  const radiusOf = (runtime: Runtime, id: string): unknown =>
+    Option.getOrUndefined(
+      Option.map(
+        runtime.element(id),
+        (element) => element.style["borderRadius"],
+      ),
+    );
+  const attached = await openWindow();
+  attached.render(
+    <Surface>
+      <ButtonGroup mode="attached" testId="g" label="Alignment">
+        <Button testId="a">Left</Button>
+        <Button testId="b">Center</Button>
+        <Button testId="c">Right</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  expect(["a", "b", "c"].map((id) => radiusOf(attached, id))).toStrictEqual([
+    0, 0, 0,
+  ]);
+  expect(radiusOf(attached, "g")).toBe(testTheme.radius.md);
+  expect(
+    Option.getOrUndefined(
+      Option.map(attached.element("g"), (element) => element.style["overflow"]),
+    ),
+  ).toBe("hidden");
+
+  const separated = await openWindow();
+  separated.render(
+    <Surface>
+      <ButtonGroup mode="separated" testId="g" label="Alignment">
+        <Button testId="a">Left</Button>
+        <Button testId="b">Center</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  expect(["a", "b"].map((id) => radiusOf(separated, id))).toStrictEqual([
+    testTheme.radius.md,
+    testTheme.radius.md,
+  ]);
+});
+
+it("lets an explicit radius win over the group's shape", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ButtonGroup mode="attached" testId="g" label="Alignment">
+        <Button testId="a" radius="sm">
+          Left
+        </Button>
+        <Button testId="b">Center</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  const radiusOf = (id: string): unknown =>
+    Option.getOrUndefined(
+      Option.map(
+        runtime.element(id),
+        (element) => element.style["borderRadius"],
+      ),
+    );
+  expect(radiusOf("a")).toBe(testTheme.radius.sm);
+  expect(radiusOf("b")).toBe(0);
+});
+
 it("names a ButtonGroup for assistive technology", async () => {
   const runtime = await openWindow();
   runtime.render(

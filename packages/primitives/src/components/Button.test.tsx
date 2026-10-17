@@ -19,6 +19,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyleRecord,
   hostTag,
 } from "./testing/element.js";
 
@@ -110,5 +111,15 @@ describe("Button", () => {
     );
     expect(Option.isSome(idle) && Option.isSome(focused)).toBe(true);
     expect(focused).not.toStrictEqual(idle);
+  });
+
+  it("takes a corner radius, and keeps the theme default without one", () => {
+    // The bug guarded: an attached ButtonGroup asks its buttons to be square
+    // (plan 078); the resolver must honour that and still default to md.
+    const radiusOf = (element: ReactElement): unknown =>
+      Option.getOrUndefined(hostStyleRecord(element))?.["borderRadius"];
+    expect(radiusOf(resting({ radius: "none" }))).toBe(0);
+    expect(radiusOf(resting({}))).toBe(testTheme.radius.md);
+    expect(radiusOf(resting({ radius: "lg" }))).toBe(testTheme.radius.lg);
   });
 });

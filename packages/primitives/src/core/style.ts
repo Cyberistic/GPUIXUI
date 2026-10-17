@@ -65,6 +65,8 @@ export interface ControlSpec {
   readonly size: ControlSize;
   /** Equal width and height, and no horizontal padding: an icon-only control. */
   readonly square?: boolean;
+  /** Corner radius, on the theme's scale. Defaults to `md`. */
+  readonly radius?: RadiusStep;
   readonly fullWidth?: boolean;
   readonly disabled?: boolean;
   /** Validation failed: the border and ring switch to the destructive role. */
@@ -101,7 +103,7 @@ export const controlStyle = (
     justifyContent: "center",
     gap: theme.spacing[CONTROL_GAP],
     height,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius[spec.radius ?? "md"],
     fontSize: label.fontSize,
     lineHeight: label.lineHeight,
     fontWeight: label.fontWeight,

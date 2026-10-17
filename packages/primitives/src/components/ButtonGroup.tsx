@@ -4,13 +4,17 @@
  * `attached` removes the gap so the buttons read as a single segmented control;
  * `separated` keeps the theme's gap. The runtime has no `:first-child`/`:last-child`
  * and a component cannot restyle a child's `borderRadius` without cloning it, so
- * `attached` rounds the **group** and clips it rather than reshaping each button.
- * Pass `square`/`radius` to the buttons when you need the ends alone rounded.
+ * `attached` asks every `Button` to be square (through `GroupShapeContext`) and
+ * rounds and clips the **group** instead. The clip supplies the outer corners,
+ * so no shared edge has a double-rounded notch (measured: plan `078`). A
+ * button's explicit `radius` still wins.
  */
 
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import * as Option from "effect/Option";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { GroupShapeContext } from "./group-shape.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -66,5 +70,17 @@ export const renderButtonGroup = (
 };
 
 /** A row of related buttons. */
-export const ButtonGroup = (props: ButtonGroupProps): ReactElement =>
-  renderButtonGroup(props, useTheme());
+export const ButtonGroup = (props: ButtonGroupProps): ReactElement => {
+  const theme = useTheme();
+  return (
+    <GroupShapeContext.Provider
+      value={
+        props.mode === "separated"
+          ? Option.none()
+          : Option.some("none" as const)
+      }
+    >
+      {renderButtonGroup(props, theme)}
+    </GroupShapeContext.Provider>
+  );
+};

@@ -19,8 +19,9 @@ import * as Option from "effect/Option";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import { controlFocusStyle, controlStyle } from "../core/style.js";
-import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
+import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
+import { useGroupShape } from "./group-shape.js";
 import { mergeStyle, textOf } from "./internal.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -32,6 +33,11 @@ export interface ButtonProps {
   readonly size?: ControlSize;
   /** Equal width and height, for an icon-only button. */
   readonly square?: boolean;
+  /**
+   * Corner radius. Defaults to the theme's `md`; an attached `ButtonGroup`
+   * supplies `none` so its buttons share one clipped surface.
+   */
+  readonly radius?: RadiusStep;
   readonly fullWidth?: boolean;
   readonly disabled?: boolean;
   /** Busy: shows a spinner and blocks activation, but stays focusable. */
@@ -70,6 +76,7 @@ export const renderButton = (
     variant: buttonVariants[variant],
     size,
     square: props.square,
+    radius: props.radius,
     fullWidth: props.fullWidth,
     disabled: props.disabled,
   };
@@ -126,9 +133,14 @@ export const renderButton = (
 export const Button = (props: ButtonProps): ReactElement => {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
-  return renderButton(props, theme, {
-    focused,
-    onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
-  });
+  const shape = useGroupShape();
+  return renderButton(
+    { ...props, radius: props.radius ?? Option.getOrUndefined(shape) },
+    theme,
+    {
+      focused,
+      onFocus: () => setFocused(true),
+      onBlur: () => setFocused(false),
+    },
+  );
 };

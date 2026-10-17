@@ -23,13 +23,16 @@ import { Button, ButtonGroup } from "@gpuixui/primitives";
 
 | `mode` | Gap | Shape |
 | ------ | --- | ----- |
-| `attached` (default) | 0 | group radius `md`, `overflow: hidden` |
-| `separated` | `gap` step (`sm` default) | buttons keep their own radius |
+| `attached` (default) | 0 | group radius `md`, `overflow: hidden`; buttons are square, so the clip supplies the rounded ends |
+| `separated` | `gap` step (`sm` default) | buttons keep their own `radius` (`md` by default) |
 
 The runtime has no `:first-child`/`:last-child` selector and a component cannot
-restyle a child without cloning it, so `attached` rounds the **container**. The
-middle buttons' own radii are hidden by the clip; if you need only the ends
-rounded, pass per-button styles yourself.
+restyle a child without cloning it, so `attached` cannot round only the ends. It
+asks every `Button` to be **square** through a React context and rounds and clips
+the **group** instead: the clip supplies the outer corners, and two adjacent
+buttons meet on a straight shared edge instead of two rounded corners with a
+notch between them. Pass `radius` to a single button when it needs a different
+shape; an explicit value wins over the group's.
 
 ## API
 
@@ -62,7 +65,9 @@ The gap uses `spacing[gap]`; the group radius is `radius.md`. No literal.
 
 ## Limitations
 
-- No child reshaping: only the container is rounded and clipped.
+- The shape rule reaches `Button` children only (through `GroupShapeContext`); a
+  `Toggle` or another control in the group keeps its own radius. A pressed set
+  belongs in `ToggleGroup`, which owns that paint.
 - The name must be passed as `label`; there is no automatic association with a
   heading.
 - No overflow behaviour: a group wider than its parent does not collapse into a
@@ -72,9 +77,13 @@ The gap uses `spacing[gap]`; the group radius is `radius.md`. No literal.
 
 - `src/components/presentational.test.tsx` — attached and separated geometry
   plus `role="group"`, and the `label` → `aria-label` contract.
-- `runtime/controls.runtime.test.tsx` — attached children are 0px apart,
-  separated children are the theme's `sm` gap; a labelled group is an
-  accessibility `Group` with that name.
+- `src/components/Button.test.tsx` — `radius` resolves to the theme step, and
+  defaults to `md` (plan `078`).
+- `runtime/controls.runtime.test.tsx` — attached children are 0px apart and
+  paint `borderRadius: 0` while the group paints `radius.md` with `overflow:
+  hidden`; separated children keep `radius.md`; an explicit per-button `radius`
+  wins; a labelled group is an accessibility `Group` with that name. Measured
+  2026-10-17 (plan `078`).
 
 ```sh
 nub run --filter @gpuixui/primitives test
