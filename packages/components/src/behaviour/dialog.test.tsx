@@ -80,6 +80,7 @@ describe("Dialog", () => {
 
     expect(dialog.renderer.findByTestId("dialog")).toBeDefined();
     expect(dialog.renderer.getAllText()).toContain("This cannot be undone.");
+    expect(dialog.renderer.findByType("svg")).toHaveLength(1);
 
     dialog.unmount();
   });

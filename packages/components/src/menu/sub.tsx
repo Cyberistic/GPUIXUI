@@ -15,6 +15,7 @@
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import {
@@ -37,7 +38,7 @@ import {
   type PartsContract,
 } from "../internal/parts.js";
 import { useMergedRef } from "../internal/ref.js";
-import { textStyle, useTheme } from "../internal/theme.js";
+import { useTheme } from "../internal/theme.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -156,14 +157,11 @@ export const MenuSubTrigger = ({
       }}
       trailing={
         trailing ?? (
-          <text
-            style={{
-              ...textStyle(theme, "caption"),
-              color: theme.colors.mutedForeground,
-            }}
-          >
-            ▸
-          </text>
+          <Icon
+            name="chevron-right"
+            color={theme.colors.mutedForeground}
+            size="sm"
+          />
         )
       }
     >

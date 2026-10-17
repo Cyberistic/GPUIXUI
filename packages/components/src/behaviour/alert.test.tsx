@@ -147,6 +147,8 @@ describe("Alert", () => {
       </Alert>,
     );
 
+    expect(alert.renderer.findByType("svg")).toHaveLength(1);
+
     clickCentreOf(alert, "alert-dismiss");
 
     expect(onDismiss).toHaveBeenCalledTimes(1);

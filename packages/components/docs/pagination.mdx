@@ -29,10 +29,10 @@ const [page, setPage] = useState(1);
 | Part | Responsibility |
 | ---- | -------------- |
 | `Pagination` | the `role="navigation"` root, its name, the clamped page and the window |
-| `PaginationPrevious` | the "‹ Prev" control; leaves the tab order on the first page |
+| `PaginationPrevious` | the "Prev" control with a leading chevron; leaves the tab order on the first page |
 | `PaginationList` | the page window: page buttons and the ellipses for gaps |
 | `PaginationItem` | one page number; the current page is primary and non-pressable |
-| `PaginationNext` | the "Next ›" control; leaves the tab order on the last page |
+| `PaginationNext` | the "Next" control with a trailing chevron; leaves the tab order on the last page |
 | `PaginationEllipsis` | the non-focusable `…` that stands in for omitted pages |
 
 The root derives the window once, so a caller never re-implements the stable-width

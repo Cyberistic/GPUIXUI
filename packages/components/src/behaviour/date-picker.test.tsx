@@ -83,6 +83,7 @@ describe("DatePicker", () => {
 
     expect(picker.renderer.findByTestId("date-month")).toBeDefined();
     expect(picker.renderer.findByText("October 2026")).toBeDefined();
+    expect(picker.renderer.findByType("svg")).toHaveLength(3);
     expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
 
     picker.unmount();

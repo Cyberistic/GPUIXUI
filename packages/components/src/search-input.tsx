@@ -16,6 +16,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
@@ -54,7 +55,7 @@ export interface SearchInputState {
   readonly focused: boolean;
 }
 
-/** A search field with a leading glyph and a conditional clear control. */
+/** A search field with a leading search icon and a conditional clear control. */
 export const SearchInput = ({
   value: valueProp,
   defaultValue = "",
@@ -113,15 +114,7 @@ export const SearchInput = ({
         resolveStyle(style, state),
       )}
     >
-      <text
-        style={{
-          ...textStyle(theme, "body"),
-          color: theme.colors.mutedForeground,
-          userSelect: "none",
-        }}
-      >
-        ⌕
-      </text>
+      <Icon name="search" color={theme.colors.mutedForeground} size="md" />
       <input
         {...rest}
         ref={setInput}
@@ -180,7 +173,7 @@ export const SearchInput = ({
             },
           }}
         >
-          <text>✕</text>
+          <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
         </div>
       )}
     </div>

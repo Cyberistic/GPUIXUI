@@ -322,6 +322,10 @@ Allowed imports once needed, with only these props used:
 import { Button, IconButton, Input, Label, Icon, Spinner, Skeleton } from "@gpuixui/primitives";
 ```
 
+A component-owned fixed mark (close, clear, chevron, check, status) is an
+`Icon` from `@gpuixui/icons`; plan 324 owns that migration and keeps the icon out
+of the accessibility tree unless it is the only carrier of meaning.
+
 `Button` accepts `variant?: "primary" | "secondary" | "ghost" | "danger"`,
 `size?: "sm" | "md" | "lg"`, `disabled`, `onClick`, `style`. `Input` accepts
 `value`, `placeholder`, `onChange`, `onSubmit`, `autoFocus`, `disabled`,

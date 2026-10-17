@@ -35,6 +35,7 @@ import {
   type FloatingContentProps,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -349,14 +350,11 @@ export const ComboboxTrigger = ({
       >
         {display}
       </text>
-      <text
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        ▾
-      </text>
+      <Icon
+        name="chevron-down"
+        color={theme.colors.mutedForeground}
+        size="sm"
+      />
     </HeadlessTrigger>
   );
 };
@@ -566,15 +564,12 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
         })}
       </div>
       {selected ? (
-        <text
-          aria-label="Selected"
-          style={{
-            ...textStyle(theme, "caption"),
-            color: theme.colors.primary,
-          }}
-        >
-          ✓
-        </text>
+        <Icon
+          name="check"
+          color={theme.colors.primary}
+          size="sm"
+          label="Selected"
+        />
       ) : null}
     </HeadlessItem>
   );

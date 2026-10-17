@@ -412,7 +412,7 @@ describe("DropdownMenu", () => {
     expect(
       menu.renderer.findByTestId("hidden")?.customProps?.["aria-selected"],
     ).toBe(false);
-    expect(menu.renderer.getAllText()).not.toContain("✓");
+    expect(menu.renderer.findByType("svg")).toHaveLength(0);
 
     clickCentreOf(menu, "hidden");
 
@@ -421,7 +421,7 @@ describe("DropdownMenu", () => {
     expect(
       menu.renderer.findByTestId("hidden")?.customProps?.["aria-selected"],
     ).toBe(true);
-    expect(menu.renderer.getAllText()).toContain("✓");
+    expect(menu.renderer.findByType("svg")).toHaveLength(1);
 
     menu.unmount();
   });

@@ -15,6 +15,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import {
@@ -233,7 +234,7 @@ export interface MenuCheckboxItemState {
   readonly highlighted: boolean;
 }
 
-/** A menu row that represents an on/off setting. Shows `✓` when checked. */
+/** A menu row that represents an on/off setting. Shows a check icon when checked. */
 export const MenuCheckboxItem = ({
   checked,
   onCheckedChange,
@@ -272,18 +273,19 @@ export const MenuCheckboxItem = ({
       }}
       leading={
         leading ?? (
-          <text
-            aria-label={checked ? "Checked" : "Not checked"}
+          <div
             style={{
-              ...textStyle(theme, "caption"),
-              color: checked
-                ? theme.colors.accent
-                : theme.colors.mutedForeground,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               width: theme.iconSize.md,
+              height: theme.iconSize.md,
             }}
           >
-            {checked ? "✓" : ""}
-          </text>
+            {checked ? (
+              <Icon name="check" color={theme.colors.accent} size="sm" />
+            ) : null}
+          </div>
         )
       }
       trailing={trailing}

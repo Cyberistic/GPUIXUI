@@ -17,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -286,7 +287,7 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
             },
           }}
         >
-          <text>✕</text>
+          <Icon name="x" color={theme.colors.mutedForeground} size="xs" />
         </div>
       )}
     </div>

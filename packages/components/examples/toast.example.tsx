@@ -87,8 +87,8 @@ const SavePanel = () => {
           paddingBottom: theme.spacing.lg,
         }}
       >
-        Toasts dismiss themselves; the ✕ cancels one early and an action runs
-        before its toast closes.
+        Toasts dismiss themselves; the dismiss control cancels one early and an
+        action runs before its toast closes.
       </text>
     </Card>
   );

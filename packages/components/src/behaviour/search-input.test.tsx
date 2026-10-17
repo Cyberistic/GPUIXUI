@@ -63,10 +63,12 @@ describe("SearchInput", () => {
     const search = renderComponent(<Search />);
 
     expect(search.renderer.findByTestId("search-clear")).toBeUndefined();
+    expect(search.renderer.findByType("svg")).toHaveLength(1);
 
     type(search, "a");
 
     expect(search.renderer.findByTestId("search-clear")).toBeDefined();
+    expect(search.renderer.findByType("svg")).toHaveLength(2);
 
     search.unmount();
   });

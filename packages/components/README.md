@@ -4,14 +4,14 @@ Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
 Plans for this package and every component it holds are in
-`.agents/slop/plans/` (110–139, 157–158, 300–320). Read those before adding a
+`.agents/slop/plans/` (110–139, 157–158, 300–324). Read those before adding a
 component.
 
 ## Boundary
 
-Allowed imports, in full: `effect`, `@gpuixui/tokens`, `@gpuixui/primitives`
-(only where a behavioural primitive is genuinely needed — see plan 110 §7),
-`@gpuix/react` and its subpaths, and `react`.
+Allowed imports, in full: `effect`, `@gpuixui/tokens`, `@gpuixui/icons`,
+`@gpuixui/primitives` (only where a behavioural primitive is genuinely needed —
+see plan 110 §7), `@gpuix/react` and its subpaths, and `react`.
 
 Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 `node:*` in component source (the inventory test is the sole repository-check
@@ -69,6 +69,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: true `center` and a one-shot flip off the trigger when GPUix's snap would cover it (plan 323) |
 | `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
+| `@gpuixui/icons` | every component-owned fixed mark (close, clear, chevron, check, toast tone) — plan 324 |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
 

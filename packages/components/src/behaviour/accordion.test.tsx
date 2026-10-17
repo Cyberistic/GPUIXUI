@@ -59,6 +59,8 @@ describe("Accordion", () => {
   it("opens the clicked section and closes the previous one", () => {
     const faq = renderComponent(<Faq />);
 
+    expect(faq.renderer.findByType("svg")).toHaveLength(3);
+    expect(faq.renderer.getAllText()).not.toContain("⌄");
     expect(faq.renderer.findByTestId("content-one")).toBeDefined();
     expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
 

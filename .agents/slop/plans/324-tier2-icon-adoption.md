@@ -199,3 +199,22 @@ Stop and report with evidence if:
 - Docs and `COMPONENTS.md` no longer claim the marks are text.
 - `nub install`, `check-types`, `test`, `test:behaviour`, `check`, `lint` and
   `test` pass, or an unrelated gate failure is recorded with exact evidence.
+
+## 8. Result
+
+Landed 2026-10-18.
+
+- `@gpuixui/icons` is a workspace dependency of `packages/components`; the
+  lockfile records it.
+- 14 component families now paint `Icon` marks: Alert, Dialog, Drawer, Toast,
+  SearchInput, Accordion, Dropdown/Context menu rows, Combobox, DatePicker,
+  TimePicker, TagInput, HotkeyRecorder, Pagination and Carousel.
+- Native assertions were added inside the existing suites, so the inventory test
+  counts stay at **451** behaviour tests and **308** unit tests.
+- Both-direction proof: replacing SearchInput's leading icon with the old
+  `<text>⌕</text>` failed 6 of its 7 tests (`expected [] to have a length of 1`);
+  restoring the icon made all 7 pass.
+- Gates run green on this host: `nub run check`, `nub run lint`, `nub run test`,
+  `nub run --filter @gpuixui/components check-types`, `nub run --filter
+  @gpuixui/components test`, and `nub run --filter @gpuixui/components
+  test:behaviour` (43 files, 451 tests).

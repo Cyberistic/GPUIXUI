@@ -17,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   Children,
   createContext,
@@ -257,6 +258,7 @@ export const CarouselControl = ({
   disabled = false,
   ...rest
 }: CarouselControlProps) => {
+  const theme = useTheme();
   const { active, count, loop, step } = useCarousel();
   const atEdge = direction === "next" ? active >= count - 1 : active <= 0;
   const name =
@@ -269,7 +271,11 @@ export const CarouselControl = ({
       disabled={disabled || count === 0 || (atEdge && !loop)}
       onClick={() => step(direction === "next" ? 1 : -1)}
     >
-      <text>{direction === "next" ? "›" : "‹"}</text>
+      <Icon
+        name={direction === "next" ? "chevron-right" : "chevron-left"}
+        color={theme.colors.mutedForeground}
+        size="md"
+      />
     </Button>
   );
 };

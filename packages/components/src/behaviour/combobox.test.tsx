@@ -243,6 +243,7 @@ describe("Combobox", () => {
         "aria-selected"
       ],
     ).toBe(false);
+    expect(picker.renderer.findByType("svg")).toHaveLength(2);
     clickCentreOf(picker, "combobox-option-camera");
     await settle();
 

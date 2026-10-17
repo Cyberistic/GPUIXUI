@@ -16,6 +16,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import { createContext, useContext, useMemo } from "react";
 import { Button } from "./internal/button.js";
@@ -142,7 +143,12 @@ export const PaginationPrevious = ({
         style,
       )}
     >
-      ‹ Prev
+      <Icon
+        name="chevron-left"
+        color={theme.colors.mutedForeground}
+        size="sm"
+      />
+      <text>Prev</text>
     </Button>
   );
 };
@@ -171,7 +177,12 @@ export const PaginationNext = ({ style, ...rest }: PaginationNextProps) => {
         style,
       )}
     >
-      Next ›
+      <text>Next</text>
+      <Icon
+        name="chevron-right"
+        color={theme.colors.mutedForeground}
+        size="sm"
+      />
     </Button>
   );
 };

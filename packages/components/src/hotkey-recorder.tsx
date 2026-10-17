@@ -17,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import * as Option from "effect/Option";
 import { useRef, useState } from "react";
 import { acceleratorOf } from "./hotkey/logic.js";
@@ -206,7 +207,7 @@ export const HotkeyRecorder = ({
             },
           }}
         >
-          <text>✕</text>
+          <Icon name="x" color={theme.colors.mutedForeground} size="xs" />
         </div>
       )}
     </div>

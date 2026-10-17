@@ -5,7 +5,8 @@
  * plus a boolean, because single mode has to decide what "opening another"
  * means and multiple mode has to preserve the order sections were opened in.
  *
- * The indicator is a glyph swap (`⌄`/`⌃`), not a rotation: `@gpuix/native@0.10.0`
+ * The indicator swaps `chevron-down` for `chevron-up`, not a rotation:
+ * `@gpuix/native@0.10.0`
  * has no `transform` in `StyleDesc` (see `host.ts:121-237`).
  */
 
@@ -16,6 +17,7 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -486,15 +488,11 @@ export const AccordionTrigger = ({
       >
         {children}
       </div>
-      <text
-        aria-label={open ? "Collapse" : "Expand"}
-        style={{
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-        }}
-      >
-        {open ? "⌃" : "⌄"}
-      </text>
+      <Icon
+        name={open ? "chevron-up" : "chevron-down"}
+        color={theme.colors.mutedForeground}
+        size="sm"
+      />
     </div>
   );
 };
@@ -557,7 +555,7 @@ export const accordionMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "the indicator is a glyph swap: 0.10.0's StyleDesc has no transform",
+    "the chevron swaps direction: 0.10.0's StyleDesc has no transform",
     "sections mount and unmount instantly; no height animation",
   ],
   docs: "docs/accordion.mdx",

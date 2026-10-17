@@ -54,12 +54,8 @@ describe("HotkeyRecorder", () => {
     empty.unmount();
 
     const bound = renderComponent(<Harness initial="ctrl+k" />);
-    expect(bound.renderer.getAllText()).toEqual([
-      "Ctrl",
-      "K",
-      "✕",
-      "Elsewhere",
-    ]);
+    expect(bound.renderer.getAllText()).toEqual(["Ctrl", "K", "Elsewhere"]);
+    expect(bound.renderer.findByType("svg")).toHaveLength(1);
     expect(bound.renderer.findByText("Ctrl")?.parentId).toBeDefined();
     bound.unmount();
   });

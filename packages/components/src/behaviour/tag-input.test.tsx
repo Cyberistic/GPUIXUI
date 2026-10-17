@@ -80,7 +80,8 @@ describe("TagInput", () => {
   it("renders the chips and the field, named as a group", () => {
     const tags = renderComponent(<Harness initial={["design", "docs"]} />);
 
-    expect(tags.renderer.getAllText()).toEqual(["design", "✕", "docs", "✕"]);
+    expect(tags.renderer.getAllText()).toEqual(["design", "docs"]);
+    expect(tags.renderer.findByType("svg")).toHaveLength(2);
 
     tags.unmount();
   });
@@ -117,7 +118,7 @@ describe("TagInput", () => {
     type(tags, "design");
     tags.renderer.simulateKeystrokes("enter");
 
-    expect(tags.renderer.getAllText()).toEqual(["design", "✕"]);
+    expect(tags.renderer.getAllText()).toEqual(["design"]);
 
     tags.unmount();
   });

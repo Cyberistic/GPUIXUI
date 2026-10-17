@@ -3,9 +3,9 @@ title: Search input
 description: A single-line search field with a clear affordance.
 ---
 
-`SearchInput` is the field a filter bar uses: a leading glyph, the text, and a
-clear control that appears only when there is something to clear. It reports
-every keystroke and never debounces.
+`SearchInput` is the field a filter bar uses: a leading search icon, the text,
+and a clear control that appears only when there is something to clear. It
+reports every keystroke and never debounces.
 
 ```tsx
 import { SearchInput } from "@gpuixui/components/search-input";
@@ -23,7 +23,7 @@ import { SearchInput } from "@gpuixui/components/search-input";
 | Part | Responsibility |
 | ---- | -------------- |
 | the field | text editing; `onChange` and `onValueChange` fire on every edit |
-| the glyph | a static `⌕` marker, not interactive |
+| the icon | a static `search` mark, not interactive |
 | the clear control | `aria-label="Clear search"`, shown only when the text is non-empty |
 
 There is no separate label part: put a **Field** around it when the search needs
@@ -82,7 +82,6 @@ inner `<input>`.
   both hide the policy and break the repo's clock rule.
 - No search history, no suggestions and no shortcut binding (`⌘F` belongs to the
   app).
-- The glyph is text until an icon set lands.
 
 ## Verification
 

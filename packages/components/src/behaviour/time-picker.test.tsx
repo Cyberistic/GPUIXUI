@@ -202,6 +202,8 @@ describe("TimePicker", () => {
       <Time defaultValue="09:30" clearable onValueChange={onValueChange} />,
     );
 
+    expect(filled.renderer.findByType("svg")).toHaveLength(1);
+
     clickCentreOf(filled, "time-clear");
 
     expect(onValueChange.mock.calls.at(-1)).toEqual([null]);

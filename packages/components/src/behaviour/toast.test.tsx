@@ -142,6 +142,7 @@ describe("Toast", () => {
 
     expect(page.renderer.getAllText()).toContain("Saved changes");
     expect(page.renderer.getAllText()).toContain("3 files");
+    expect(page.renderer.findByType("svg")).toHaveLength(2);
 
     page.unmount();
   });

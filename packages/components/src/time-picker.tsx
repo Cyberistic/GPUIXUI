@@ -22,6 +22,7 @@
 
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
+import { Icon } from "@gpuixui/icons";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { Match } from "effect";
 import * as Option from "effect/Option";
@@ -418,7 +419,7 @@ export const TimePickerClear = ({
         },
       }}
     >
-      <text>✕</text>
+      <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
     </div>
   );
 };

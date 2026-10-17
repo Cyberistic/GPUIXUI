@@ -80,6 +80,7 @@ describe("Drawer", () => {
 
     expect(drawer.renderer.findByTestId("drawer")).toBeDefined();
     expect(drawer.renderer.getAllText()).toContain("Narrow the result set.");
+    expect(drawer.renderer.findByType("svg")).toHaveLength(1);
 
     drawer.unmount();
   });

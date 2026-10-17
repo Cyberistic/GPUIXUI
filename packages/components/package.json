@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@gpuix/react": "0.10.0",
+    "@gpuixui/icons": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
     "effect": "catalog:"
   },

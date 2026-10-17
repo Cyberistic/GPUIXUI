@@ -133,6 +133,9 @@ importers:
       '@gpuix/react':
         specifier: 0.10.0
         version: 0.10.0(react@19.3.1)
+      '@gpuixui/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens

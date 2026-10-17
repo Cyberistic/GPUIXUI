@@ -17,6 +17,7 @@
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import {
   createContext,
   useCallback,
@@ -286,7 +287,7 @@ export const DrawerContent = ({
                 right: theme.spacing.lg,
               }}
             >
-              <text>✕</text>
+              <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
             </IconButton>
           ) : null}
         </div>
