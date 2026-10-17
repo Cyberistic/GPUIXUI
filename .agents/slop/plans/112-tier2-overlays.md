@@ -13,23 +13,81 @@ z-order. Read §1 before writing code.
 
 ---
 
-## 1. What GPUix gives us (verified in the reference source)
+## 1. What GPUix 0.10.0 actually gives us (measured; supersedes the first draft)
 
-| Need | GPUix answer | Evidence |
-| ---- | ------------ | -------- |
-| Full-window overlay above everything | `<anchored fill="window" deferred priority={0} occlude={modal}>` wrapped by `DialogPortal` | `packages/react/src/components/dialog.tsx:116-147` |
-| Escape closes only the top layer | `DismissableLayer` + `pushDismissLayer` | `components/floating.tsx:152-174` |
-| Focus in on open, out on close, in stack order | `DialogPopup` `initialFocus` / `finalFocus`, defaults to trigger then previous focus | `dialog.tsx:177-219` |
-| Tab stays inside a modal | `DialogPopup` `onKeyDown` calls `renderer.focusNextWithin/focusPreviousWithin` | `dialog.tsx:206-214` |
-| Anchored positioning with collision handling | `FloatingLayer` (`side`, `align`, `sideOffset`, `collisionPadding`) | `components/floating.tsx:276-320`, exported from `@gpuix/react/floating` |
-| Outside-click dismissal | `onMouseDownOutside` on the focused content node | `select.tsx:307-315` |
-| Backdrop dim | a `div` with `position:"absolute", inset 0` painting the overlay colour | `dialog.tsx:152-167` |
-| Accessible name | `aria-label` only. **No `aria-labelledby`.** | `packages/native/js/host.ts:493-515` |
+The first draft of this section was written against the reference clone. Every row
+below was re-measured against the installed `@gpuix/react@0.10.0` and
+`@gpuix/native@0.10.0` on 2026-10-17, and **four of the draft's seven rows were
+false**. Read this before writing a line of overlay code.
+
+| Need | 0.10.0 answer | Evidence |
+| ---- | ------------- | -------- |
+| `Dialog` + parts, `DialogPortal/Backdrop/Popup/Close` | **absent** | `@gpuix/react`'s exports list: `Select`, `Combobox`, `Tooltip`, `motion`, host elements only |
+| `DismissableLayer`, `pushDismissLayer` | **absent** | same export list; only the reference clone has them |
+| `useControllableState` | **absent** from `@gpuix/react/floating` | `floating.d.ts` exports `FloatingLayer`, `floatingRootStyle`, `mergeStyles`, `renderSlot`, `resolveStyle`, `setRefs` only → use `internal/controllable.ts` |
+| Full-window overlay via `anchored fill="window"` | **absent** — `anchored` has no `fill` | `AnchoredProps`: `position`, `side`, `align`, `gap`, `anchor`, `offset`, `fit`, `snapMargin`, `deferred`, `priority`, `occlude` |
+| Anchored positioning with collision handling | present, but **not modal** | `FloatingLayer` renders one `anchored` wrapping one `div`; it cannot dim or block the window |
+| Outside-press detection | present | `onMouseDownOutside` on any host element |
+| Backdrop dim | build it: a `div` with `position:"absolute"`, insets `0`, `backgroundColor: colors.overlay` | `StyleDesc.position/top/right/bottom/left` |
+| Escape dismiss | **our job**: handle `Escape` on the focused content node | keys fired on a focused node reach an ancestor's `onKeyDown` (measured for List, plan 111 §7) |
+| Tab stays inside a modal | present | `renderer.focusNextWithin(id)` / `focusPreviousWithin(id)` |
+| Focus in on open, out on close | **our job**: `renderer.focusElement(id)` + restore the previously focused id | `getFocusedElementId()` / `focusElement(id)` |
+| Window size, for a full-window overlay | present | `useWindowSize()` from `@gpuix/react` |
+| Window-level key handlers | present but **not needed** | `renderer.setWindowKeyEvents`, `WindowKeyEventHandlers`; the content node's own `onKeyDown` is simpler and per-layer |
 
 **Documented limitation (record it, do not work around it):** GPUix has no
 `aria-labelledby`, so a dialog is named through `aria-label`. `DialogTitle`
 still renders a heading, and screen-reader users hear the name from the label.
 Every docs page states this and the example passes a label.
+
+## 1b. Amendment, 2026-10-17: the overlays are ours to build
+
+§1's draft told the executor to lean on `Dialog`/`DismissableLayer` and to "not
+re-implement focus, escape, tab-trapping or portal painting". In 0.10.0 there is
+nothing to lean on: all four are absent. The build order becomes:
+
+1. `src/internal/dismiss-layer.ts` — a module-level stack of the open overlay
+   layers, last in wins: `pushDismissLayer(onDismiss): () => void` and
+   `dismissTopLayer(): boolean`. Escape calls the top layer's handler and stops;
+   a layer that is not topmost ignores Escape. A stack, not a context, because
+   two dialogs opened from the same subtree must dismiss outside-in.
+2. `src/dialog.tsx` — the parts of §2 with local implementations:
+   - the root owns `open`/`defaultOpen`/`onOpenChange` through
+     `internal/controllable.ts`;
+   - the overlay is a `div` with `position:"absolute"` and insets `0`, painting
+     `colors.overlay` with `pointerEvents:"auto"`, sized from `useWindowSize()`
+     when the app's tree is not itself the window root;
+   - the surface is centred by the overlay's `alignItems`/`justifyContent`;
+   - focus: on open, focus the content node (`tabIndex={-1}`, `autoFocus`) and
+     remember `getFocusedElementId()`; on close, `focusElement` the remembered id
+     when it is still mounted;
+   - Tab: `focusNextWithin(contentId)` / `focusPreviousWithin(contentId)` on the
+     content node's `onKeyDown`;
+   - Escape: the content node's `onKeyDown` offers the event to
+     `dismissTopLayer()`;
+   - outside press: `onMouseDownOutside` on the content node (does **not** restore
+     focus — the press gives focus to whatever was pressed);
+   - role and name: `role="dialog"`, `aria-label={label}`, `aria-modal` is not
+     available in 0.10.0 — the docs state it.
+3. `src/popover.tsx` and `src/menus` then reuse the same dismiss stack on top of
+   `FloatingLayer` (plan 114) instead of a modal overlay.
+
+**Probe before building (STOP if any answer surprises you).** Each of these is one
+behaviour test in `src/behaviour/zz-probe.test.tsx`, deleted after the answers are
+recorded in this plan:
+
+- does `position:"absolute"` with insets `0` cover the window when the dialog is
+  rendered inside a nested, non-positioned container, or does it resolve against
+  that container (and therefore need explicit `useWindowSize()` dimensions)?
+- does a later sibling paint above an earlier one, so the overlay needs no z-index
+  equivalent?
+- does `pointerEvents:"auto"` on the overlay actually stop a click reaching a
+  button behind it (assert the button's handler did **not** run)?
+- does `renderer.focusElement` on a `tabIndex={-1}` node give it focus and deliver
+  keys to its `onKeyDown`?
+- does `focusNextWithin(contentId)` wrap, or stop at the last focusable child?
+
+The answers belong in this file, under this list, before §2 is implemented.
 
 ---
 
@@ -80,7 +138,12 @@ Surface style: `display:"flex",flexDirection:"column",gap:space.lg`,
 `backgroundColor:colors.popover`, `borderRadius:radius.lg`,
 `borderWidth:1,borderColor:colors.border`, `boxShadow:elevation.lg`,
 `padding:space.xl`, `width:"100%"`, `maxWidth:{sm:360,md:480,lg:640}`,
-`pointerEvents:"auto"`, `keyboardFocusDim:false`.
+`pointerEvents:"auto"`.
+
+**Corrected 2026-10-17:** `keyboardFocusDim` **does not exist** in 0.10.0's
+`StyleDesc` (plan 110 §6, verified in `dist/host.d.ts`), so it is not written
+anywhere in this component set; the earlier draft's per-element opt-out is
+unavailable and the note is dropped rather than guessed at.
 
 Close button: 24×24, `position:"absolute",top:space.lg,right:space.lg`,
 `borderRadius:radius.sm`, hover `backgroundColor:colors.accent`. Its glyph
@@ -142,7 +205,8 @@ export const PopoverContent: FC<PopoverContentProps>;
 ```
 
 `PopoverContent` renders `DismissableLayer` → `FloatingLayer` with:
-- `autoFocus`, `tabIndex={-1}`, `keyboardFocusDim:false` so keys reach it;
+- `autoFocus`, `tabIndex={-1}` so keys reach it (`keyboardFocusDim` does not
+  exist in 0.10.0 — corrected 2026-10-17);
 - `onMouseDownOutside` → close **without** restoring focus (the press gives
   focus to what was pressed; restoring would steal it);
 - `onKeyDown`: `Escape` is handled by `DismissableLayer`; `Tab` closes the

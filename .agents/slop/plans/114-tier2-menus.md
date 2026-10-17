@@ -115,8 +115,9 @@ export { MenuItem as DropdownMenuItem, MenuCheckboxItem as DropdownMenuCheckboxI
 ```
 
 Content: `DismissableLayer` → `FloatingLayer` with `autoFocus`, `tabIndex={-1}`,
-`role:"menu"`, `keyboardFocusDim:false`, `minWidth:180`,
-`onMouseDownOutside` closes without stealing focus, surface = `colors.surface`,
+`role:"menu"`, `minWidth:180` (`keyboardFocusDim` does not exist in 0.10.0 —
+corrected 2026-10-17), `onMouseDownOutside` closes without stealing focus,
+surface = `colors.popover`,
 `borderRadius:radius.md`, `borderWidth:1`, `borderColor:colors.border`,
 `boxShadow:elevation.md`, `padding:space.xs`.
 Keyboard on content: `ArrowDown/ArrowUp` → `move`; `Home/End`; `Enter/Space` →

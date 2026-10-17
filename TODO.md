@@ -63,12 +63,12 @@ the `@gpuixui/tokens/react` provider
 
 ## Phase C — Tier 1–2 components
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[~]` `[██░░░░░░░░]` 1/3
 
 `[ ]` Tier 1 foundational components (code + test + example + docs + inventory)
 `[~]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–117)
-  - [ ] `packages/components` package, token/primitives adapters, native test harness
+  - [x] `packages/components` package, token/primitives adapters, native test harness
     - [x] Package scaffold (package.json, tsconfig, vitest config, README)
     - [x] `internal/collection.ts` (index arithmetic), `internal/key.ts` (key predicates)
     - [x] `internal/theme.ts` adapter over the landed token API (plan 110 §6) — the tokens workstream is merged into this branch
@@ -76,7 +76,7 @@ the `@gpuixui/tokens/react` provider
     - [x] `internal/test-root.tsx` (`renderComponent`) — renders under a theme; runs here now that the native binding loads
     - [x] `internal/a11y.ts` — the accessibility dump normalised for assertions (role case, `value` vs `label`)
     - [x] Behaviour suites under a second config (`src/behaviour/`, `test:behaviour`): a static GPUix import fails to *load* on an unsupported host, so `describe.skipIf` cannot gate them (plan 117 §5a/§5c). **The split stays**: the suites now run here, on hosts with a binding
-  - [ ] Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List
+  - [x] Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List (plan 111)
     - [x] `internal/collection.ts` (List single-selection core, shared with Tabs/menus)
     - [x] Card: `src/card.tsx`, behaviour suite, example, docs page, inventory record — **verified natively** (5/5, `nub run --filter @gpuixui/components test:behaviour`)
     - [x] Badge: `src/badge.tsx` + `toneSurface` in the theme seam, behaviour suite (7/7), example, docs page, inventory record
@@ -86,10 +86,12 @@ the `@gpuixui/tokens/react` provider
     - [x] EmptyState: `src/empty-state.tsx`, behaviour suite (6/6), example, docs page, inventory record
     - [x] List / ListItem: `src/list.tsx` over `internal/collection.ts`, behaviour suite (12/12: real focus, wrap over disabled rows, controlled), example, docs page, inventory record
   - [ ] Overlays: Dialog, Confirmation dialog, Popover
-    - [ ] `internal/dismiss-layer.ts` + `internal/button-props.ts` (0.10.0 has neither)
-    - [ ] Plans 112/113 reference `keyboardFocusDim` and `focusVisible`, which 0.10.0's `StyleDesc` does not have — correct the plans before writing the styles
-    - [ ] `StyleDesc` has per-side border *widths* but a single `borderColor`; a separator that needs its own colour uses a 1px `div` or `borderColor` (as `CardFooter` does). Correct plan 111's footer row.
-    - [ ] Fix plan 112's `DialogContent` to name the surface focus through `aria-label` only (no `aria-labelledby` in 0.10.0 either)
+    - [x] Plan 112 §1/§1b re-measured against 0.10.0 and corrected: there is **no** `Dialog`, `DismissableLayer`, `pushDismissLayer` or `anchored fill="window"`, so the overlays are local implementations over host elements
+    - [ ] Plan 112 §1b's five overlay probes (coverage of `position:"absolute"`, sibling paint order, `pointerEvents:"auto"`, `focusElement` on a `tabIndex={-1}` node, `focusNextWithin` wrap) — answers recorded in the plan before `dialog.tsx` is written
+    - [ ] `internal/dismiss-layer.ts` (the layer stack that decides which Escape dismisses) + `dialog.tsx`
+    - [x] Plans 112/113 reference `keyboardFocusDim` and `focusVisible`, which 0.10.0's `StyleDesc` does not have — corrected in the plans before any overlay style was written
+    - [x] `StyleDesc` has per-side border *widths* but a single `borderColor`; a separator that needs its own colour uses a 1px `div` or `borderColor` (as `CardFooter` does). Plan 111's footer row uses `borderColor`.
+    - [x] Plan 112's `DialogContent` names the surface through `aria-label` only (0.10.0 has no `aria-labelledby`; verified in `AnchoredProps`/`HostProps`)
   - [ ] Disclosure and navigation: Tabs, Accordion, Collapsible, Breadcrumb, Pagination
     - [x] Logic: `accordion/logic.ts`, `breadcrumb/logic.ts`, `pagination/logic.ts`
   - [ ] Menus: Dropdown, Context, Command

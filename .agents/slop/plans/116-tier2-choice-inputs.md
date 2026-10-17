@@ -39,8 +39,9 @@ Behaviour:
 - Layout: `flexDirection:"row"`, `alignItems:"center"`, height
   `controlHeight(theme, "md")`, `paddingX:space.md`, `gap:space.md`,
   `backgroundColor:colors.background`, `borderWidth:1`, `borderColor:colors.input`,
-  `borderRadius:radius.md`; focused style via `focusVisible` outline
-  `focusRing(tokens)`.
+  `borderRadius:radius.md`; focused style via `focusRing(theme)` — the zero-blur
+  `boxShadow` spread by `colors.ring`, because 0.10.0 has **no** `focusVisible` or
+  `outline*` (corrected 2026-10-17).
 
 `search-input.test.tsx`:
 1. Typing "gpui" produces `onValueChange("g")`, … final `"gpui"` — assert the

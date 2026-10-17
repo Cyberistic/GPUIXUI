@@ -27,8 +27,8 @@ workstream declares in its own section below.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [110](./110-package-components.md) | `packages/components`: package, boundaries, token/primitives contract, test harness | C | tokens, primitives | written |
-| [111](./111-tier2-foundation-parts.md) | Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List | C-1 | 110 | written |
+| [110](./110-package-components.md) | `packages/components`: package, boundaries, token/primitives contract, test harness | C | tokens, primitives | done — §7 amended for the local `Button`/`IconButton` stand-in |
+| [111](./111-tier2-foundation-parts.md) | Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List | C-1 | 110 | done — all six verified in the real renderer |
 | [112](./112-tier2-overlays.md) | Overlays: Dialog, Confirmation dialog, Popover | C-2 | 110, 111 | written |
 | [113](./113-tier2-disclosure-navigation.md) | Disclosure and navigation: Tabs, Accordion, Collapsible, Breadcrumb, Pagination | C-3 | 110, 111 | written |
 | [114](./114-tier2-menus.md) | Menus: Dropdown, Context, Command | C-4 | 110, 111, 112 | written |
@@ -44,10 +44,14 @@ Interlocks this workstream depends on and does not own:
 - a decision on the GPUix version: 0.10.0 is the latest published release and is
   behind the reference clone, so it ships no `Dialog`, `Button` or
   `DismissableLayer` (evidence in `TODO.md` → Blockers).
-- **B3 — one writer per tree:** a second live session (`ses_eb7f0966…`) writes
-  this worktree alongside the supervisor's session, so component work is paused
-  until the fix in plan 022 §5 (root cause) and plan 118 (this worktree's
-  measurement) lands. Owner: `scripts/`.
+- **B3 — one writer per tree:** resolved in this worktree 2026-10-17 08:56 — the
+  stale turn committed and stood down, and the count has read `1` since. The
+  permanent fix (pinned `--session`, session counting in `agent_alive`) is still
+  plan `022` §5 / plan `118` §4, owner `scripts/`.
+
+**Foundation parts are done**, which unblocks C-2 onwards. The behaviour suites run
+here because plan 140's locally built `darwin-x64` binding is in the store, so the
+component side is no longer waiting on primitives:
 
 ### Tokens and theme workstream
 
