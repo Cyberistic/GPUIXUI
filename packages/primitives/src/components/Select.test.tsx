@@ -71,6 +71,12 @@ describe("Select", () => {
     expect(disabled.color).toBe(testTheme.colors.disabledForeground);
   });
 
+  it("keeps each option at its own height inside a capped list", () => {
+    // Without this the rows shrink to fit a capped list instead of the list
+    // scrolling (measured: 30 rows squashed into 748 px — plan 068 §6).
+    expect(selectItemStyle(testTheme)(rest).flexShrink).toBe(0);
+  });
+
   it("gives an invalid trigger the destructive border", () => {
     const trigger = selectTriggerStyle(
       { variant: fieldVariant, size: "md", invalid: true },
@@ -101,6 +107,17 @@ describe("Select", () => {
       2 * Number(content.borderWidth);
     expect(selectListHeight(2, testTheme)).toBe(paintedHeight(2));
     expect(selectListHeight(0, testTheme)).toBe(paintedHeight(0));
+  });
+
+  it("caps a list taller than its space and makes it scroll", () => {
+    // A short list must not gain a scrollbar; a long one must not run off the
+    // window (measured: plan 068).
+    const natural = selectContentStyle(testTheme, 100);
+    expect(natural.maxHeight).toBeUndefined();
+    expect(natural.overflowY).toBeUndefined();
+    const capped = selectContentStyle(testTheme, 100, 300);
+    expect(capped.maxHeight).toBe(300);
+    expect(capped.overflowY).toBe("scroll");
   });
 
   it("maps the options to the labels the trigger shows", () => {

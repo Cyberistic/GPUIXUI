@@ -101,6 +101,12 @@ option, and the row gap — the same numbers `selectContentStyle` and
 `selectItemStyle` paint. When neither side has room, the side with more room
 wins (the runtime still clamps). An explicit `side` skips the decision.
 
+A list **taller than the space it chose** is capped to exactly that space and
+scrolls. Without the cap a 30-option list painted a 908 px layer from `y 8`, with
+its last option at `y 888` in an 800 px window and no way to reach it (plan
+`068` §1). Rows keep their height inside the cap (`flexShrink: 0`), so the list
+scrolls instead of squashing the options.
+
 ## Limitations
 
 - **Options are data.** No option groups, no rich option content, no compound
@@ -108,8 +114,14 @@ wins (the runtime still clamps). An explicit `side` skips the decision.
 - **The width is measured, not live.** A resize while the list is closed is
   picked up the next time it opens; there is no resize observer in 0.10.0.
 - **The side uses an estimated list height.** It is exact for the styles this
-  package paints, and a test pins the estimate to them; a list taller than both
-  available spaces is clamped, not scrolled or flipped.
+  package paints, and a test pins the estimate to them; when neither side has
+  room, the list is capped to the roomier one and scrolls.
+- **The keyboard does not scroll the list.** GPUix's Select owns the highlight
+  and exposes no active-index signal, so the wrapper cannot follow it. Measured:
+  29 Down presses moved the highlight to "Option 28" and Enter committed it
+  while the capped list stayed at offset `0` — an option beyond the fold can be
+  committed without being seen. The wheel and the pointer reach every option;
+  treat a long list as a job for a combobox (Tier 2).
 - The list's dismissal and positioning are GPUix's; this package cannot change
   the open animation or the outside-click rules.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
@@ -121,11 +133,12 @@ wins (the runtime still clamps). An explicit `side` skips the decision.
 
 - `src/components/Select.test.tsx` — trigger chrome, list surface, item states,
   the measured `minWidth` (present with a width, absent without), the decoded
-  role/name/expanded/selected props the wrapper passes down, and the list-height
-  estimate checked against the styles it mirrors.
+  role/name/expanded/selected props the wrapper passes down, the list-height
+  estimate checked against the styles it mirrors, the capped content style, and
+  the non-shrinking row.
 - `src/core/floating.test.ts` — the side decision: fits below, does not fit
-  below but fits above, the collision margin, an exact fit, and the
-  more-room fallback.
+  below but fits above, the collision margin, an exact fit, the more-room
+  fallback, a preferred side, and the space on each side.
 - `runtime/fields.runtime.test.tsx` — measured 2026-10-17: a closed Select is a
   named `ComboBox` with `expanded: false` and the placeholder as its value;
   opening flips `expanded` to `true` and paints a named `ListBox` of named
@@ -136,7 +149,11 @@ wins (the runtime still clamps). An explicit `side` skips the decision.
   px under both a 108 px and a 900 px trigger). **Placement (066):** a select at
   the bottom of a 760 px column opens its list entirely above the trigger
   (`792 <= 740` fails without the decision), a select with room opens below, and
-  the painted list height equals the estimate the decision used.
+  the painted list height equals the estimate the decision used. **Long lists
+  (068):** a 30-option list is capped to the window margin, is a scroller, the
+  wheel moves its offset, and the last option is reachable after scrolling
+  (without the cap the layer is 916 px tall); dropping `overflowY` leaves it
+  unscrollable, and dropping `flexShrink` squashes the rows instead.
 
 
 ```sh

@@ -24,7 +24,11 @@ export type { KeyName, KeyPhase, Orientation } from "./keyboard.js";
 export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";
 
-export { decideVerticalSide, FLOATING_MARGIN } from "./floating.js";
+export {
+  availableOn,
+  decideVerticalSide,
+  FLOATING_MARGIN,
+} from "./floating.js";
 export type { PlacementRequest, VerticalSide } from "./floating.js";
 
 export {

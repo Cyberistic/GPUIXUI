@@ -286,6 +286,15 @@ retired once both branches are one
       `decideVerticalSide` with `Select` (a `preferred` side keeps tooltips
       above by default). Estimated height pinned to `tooltipStyle`; two runtime
       tests, both directions proven (plan 067)
+`[x]` `packages/primitives`: **`Select`'s list ran off the window** — nothing
+      capped it, so 30 options painted a 908 px layer from `y 8` and left the
+      last option at `y 888` in an 800 px window, unreachable. The list is now
+      capped to the free space on its side and scrolls; option rows are
+      `flexShrink: 0` so they keep their height instead of squashing. Measured
+      cap + wheel scroll + last option reachable, with three regression
+      directions (plan 068). **Limitation recorded:** GPUix owns the highlight
+      and exposes no active index, so the keyboard does not scroll the list
+      (29 Down presses committed "Option 28" at offset `0`)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

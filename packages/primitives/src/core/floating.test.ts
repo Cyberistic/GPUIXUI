@@ -8,7 +8,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { decideVerticalSide, type PlacementRequest } from "./floating.js";
+import {
+  availableOn,
+  decideVerticalSide,
+  type PlacementRequest,
+} from "./floating.js";
 
 const room = (overrides: Partial<PlacementRequest> = {}): PlacementRequest => ({
   triggerTop: 400,
@@ -72,5 +76,11 @@ describe("decideVerticalSide", () => {
         room({ preferred: "top", triggerTop: 8, triggerBottom: 40 }),
       ),
     ).toBe("bottom");
+  });
+
+  it("reports the space on each side, inside the margin", () => {
+    // below = 800 - 8 - 432 = 360; above = 400 - 8 = 392.
+    expect(availableOn(room(), "bottom")).toBe(360);
+    expect(availableOn(room(), "top")).toBe(392);
   });
 });

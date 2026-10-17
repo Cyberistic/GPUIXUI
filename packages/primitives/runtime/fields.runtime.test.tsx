@@ -410,6 +410,22 @@ const selectTriggerOf = (runtime: Runtime, testId: string) => {
   );
 };
 
+/** The list element's id: the parent of a painted option's row. */
+const selectListId = (runtime: Runtime, option: string): number =>
+  Option.getOrElse(
+    Option.flatMap(
+      Arr.findFirst(runtime.all(), (element) => element.text === option),
+      (item) =>
+        Option.flatMap(Option.fromNullishOr(item.parentId), (row) =>
+          Option.flatMap(
+            Option.fromNullishOr(runtime.renderer.getElement(row)),
+            (element) => Option.fromNullishOr(element.parentId),
+          ),
+        ),
+    ),
+    () => expect.fail(`the list painted no ${option} option`),
+  );
+
 /** The painted box of the open list: the grandparent of a painted option. */
 const selectListBounds = (runtime: Runtime, option: string): Bounds =>
   Option.getOrElse(
@@ -564,6 +580,53 @@ it("opens a Select's list below a trigger with room", async () => {
   );
   const list = selectListBounds(runtime, "Apple");
   expect(list.y).toBeGreaterThanOrEqual(trigger.y + trigger.height);
+});
+
+it("caps a long Select list to the window and scrolls it", async () => {
+  // The bug guarded: nothing capped the list, so 30 options painted a 908 px
+  // layer from y 8 and left the last option at y 888 in an 800 px window, with
+  // no scroller to reach it (plan 068).
+  const runtime = await openWindow();
+  const options = Array.from({ length: 30 }, (_, index) => ({
+    value: `option-${index}`,
+    label: `Option ${index}`,
+  }));
+  runtime.render(
+    <Surface>
+      <Select testId="sel" label="Many" placeholder="Pick" options={options} />
+    </Surface>,
+  );
+  const triggerElement = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(triggerElement);
+  runtime.flush();
+  const list = selectListBounds(runtime, "Option 0");
+  expect(list.y + list.height).toBeLessThanOrEqual(800 - 8);
+  expect(list.height).toBeLessThan(selectListHeight(30, testTheme));
+  const lastOption = (): Bounds =>
+    Option.getOrElse(
+      Option.flatMap(
+        Arr.findFirst(runtime.all(), (element) => element.text === "Option 29"),
+        (element) => runtime.boundsOfId(element.id),
+      ),
+      () => expect.fail("the last option vanished"),
+    );
+  // Rows keep their height instead of shrinking inside the capped list.
+  expect(lastOption().y + lastOption().height).toBeGreaterThan(
+    list.y + list.height,
+  );
+  const listId = selectListId(runtime, "Option 0");
+  const before = runtime.renderer.getScrollOffset(listId);
+  expect(before).not.toBeNull();
+  runtime.renderer.nativeSimulateScrollWheel(list.x + 20, list.y + 50, 0, -400);
+  runtime.flush();
+  const after = runtime.renderer.getScrollOffset(listId);
+  expect(
+    Option.getOrElse(Option.fromNullishOr(after?.[1]), () => 0),
+  ).toBeLessThan(Option.getOrElse(Option.fromNullishOr(before?.[1]), () => 0));
+  // The last option is reachable inside the capped list after scrolling.
+  const last = lastOption();
+  expect(last.y).toBeGreaterThanOrEqual(list.y);
+  expect(last.y + last.height).toBeLessThanOrEqual(list.y + list.height);
 });
 
 it("opens a Tooltip below a trigger at the window's top edge", async () => {

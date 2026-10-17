@@ -37,7 +37,12 @@ import { controlStyle, surfaceStyle, type ControlSpec } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
-import { decideVerticalSide, FLOATING_MARGIN } from "../core/floating.js";
+import {
+  availableOn,
+  decideVerticalSide,
+  FLOATING_MARGIN,
+  type PlacementRequest,
+} from "../core/floating.js";
 import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -81,15 +86,21 @@ export const selectTriggerStyle =
 
 /**
  * The list: the popover surface, one step of padding, at least as wide as the
- * trigger.
+ * trigger, and capped when the options do not fit the window.
  *
  * `minWidth` is the trigger's measured width. A percentage cannot express it:
  * `minWidth: "100%"` resolves against the anchored layer, not the trigger,
  * which painted a 57 px list under a 900 px field (plan 062 §0).
+ *
+ * `maxHeight` is the free space on the chosen side; the content then scrolls,
+ * because the runtime clamps an over-tall layer against the window with no way
+ * to reach its far end (measured: a 30-option list painted 908 px from y 8 and
+ * left the last option at y 888 in an 800 px window — plan 068).
  */
 export const selectContentStyle = (
   theme: PrimitiveTheme,
   minWidth?: number,
+  maxHeight?: number,
 ): StyleDesc => ({
   ...surfaceStyle(
     { tone: "popover", radius: "md", border: true, elevation: "overlay" },
@@ -98,6 +109,9 @@ export const selectContentStyle = (
   padding: theme.spacing.xs,
   gap: theme.spacing["2xs"],
   ...(minWidth === undefined ? {} : { minWidth }),
+  ...(maxHeight === undefined
+    ? {}
+    : { maxHeight, overflowY: "scroll" as const }),
 });
 
 /** An item's paint, from the three states the runtime reports. */
@@ -107,6 +121,7 @@ export const selectItemStyle =
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    flexShrink: 0,
     height: theme.density.controlHeight.sm,
     paddingLeft: theme.spacing.sm,
     paddingRight: theme.spacing.sm,
@@ -157,6 +172,8 @@ export interface SelectPlacement {
   readonly side?: FloatingSide;
   /** The gap kept between the list and the window edge. */
   readonly collisionPadding: number;
+  /** The free space on that side, when the list is taller than it. */
+  readonly maxHeight?: number;
 }
 
 /** What the renderer does with the wrapper's own state. */
@@ -230,7 +247,11 @@ export const renderSelect = (
         aria-label={label}
         side={placement.side}
         collisionPadding={placement.collisionPadding}
-        style={selectContentStyle(theme, placement.minWidth)}
+        style={selectContentStyle(
+          theme,
+          placement.minWidth,
+          placement.maxHeight,
+        )}
       >
         {Arr.map(options, (option) => (
           <SelectItem
@@ -283,19 +304,29 @@ export const Select = (props: SelectProps): ReactElement => {
       bottom: bounds.y + bounds.height,
     });
   }, [renderer, open, props.size, props.fullWidth, viewport.height]);
+  const request = Option.map(
+    Option.fromNullishOr(triggerBox),
+    (box): PlacementRequest => ({
+      triggerTop: box.top,
+      triggerBottom: box.bottom,
+      layerHeight: selectListHeight(props.options.length, theme),
+      viewportHeight: viewport.height,
+      margin: FLOATING_MARGIN,
+    }),
+  );
   const side =
     props.side ??
-    Option.getOrUndefined(
-      Option.map(Option.fromNullishOr(triggerBox), (box) =>
-        decideVerticalSide({
-          triggerTop: box.top,
-          triggerBottom: box.bottom,
-          layerHeight: selectListHeight(props.options.length, theme),
-          viewportHeight: viewport.height,
-          margin: FLOATING_MARGIN,
-        }),
-      ),
-    );
+    Option.getOrUndefined(Option.map(request, decideVerticalSide));
+  const verticalSide = side === "top" || side === "bottom" ? side : undefined;
+  const maxHeight = Option.getOrUndefined(
+    Option.flatMap(request, (measurement) => {
+      if (verticalSide === undefined) return Option.none();
+      const space = availableOn(measurement, verticalSide);
+      return measurement.layerHeight > space
+        ? Option.some(Math.max(space, 0))
+        : Option.none();
+    }),
+  );
   return renderSelect(
     props,
     theme,
@@ -312,6 +343,7 @@ export const Select = (props: SelectProps): ReactElement => {
       minWidth: triggerBox?.width,
       side,
       collisionPadding: FLOATING_MARGIN,
+      maxHeight,
     },
   );
 };

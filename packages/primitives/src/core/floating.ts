@@ -61,3 +61,21 @@ export const decideVerticalSide = ({
   if (layerHeight <= otherSpace) return other;
   return preferredSpace >= otherSpace ? preferred : other;
 };
+
+/**
+ * The pixels between the trigger and the window margin on `side`.
+ *
+ * A layer taller than this would be clamped by the runtime with no way to reach
+ * the far end, so it becomes a capped scroll container at exactly this height.
+ * The side decision uses the same subtraction, so both agree (plan 068).
+ */
+export const availableOn = (
+  request: Pick<
+    PlacementRequest,
+    "triggerTop" | "triggerBottom" | "viewportHeight" | "margin"
+  >,
+  side: VerticalSide,
+): number =>
+  side === "top"
+    ? request.triggerTop - request.margin
+    : request.viewportHeight - request.margin - request.triggerBottom;
