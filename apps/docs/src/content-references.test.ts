@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { missingPartSources } from "./component-meta/contract";
 import { generator } from "./lib/type-table-generator";
 import { components } from "./component-meta/registry";
 
@@ -237,6 +238,18 @@ describe("content references", () => {
                     : `${component.sourcePath} is not included`,
               },
             ];
+      });
+    expect(report(missing)).toEqual([]);
+  });
+
+  it("shows every compound part's real source, not just the entry file", () => {
+    const missing = components
+      .filter((component) => component.parts.length > 0)
+      .flatMap((component) => {
+        const page = `components/${component.slug}.mdx`;
+        return missingPartSources(component, targetsOn(page), (sourcePath) =>
+          resolve(repoRoot, sourcePath),
+        ).map((detail) => ({ page, detail }));
       });
     expect(report(missing)).toEqual([]);
   });

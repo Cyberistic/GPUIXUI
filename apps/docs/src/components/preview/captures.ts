@@ -22,6 +22,11 @@ export interface CaptureProvenance {
   readonly command: string;
   /** ISO-8601 capture time. */
   readonly capturedAt: string;
+  /**
+   * `interaction` for a before/after pair or a recording of a live gesture,
+   * `still` otherwise. Absent means `still`, so older sidecars stay valid.
+   */
+  readonly kind?: "still" | "interaction";
 }
 
 /**
@@ -54,8 +59,11 @@ export const captureFor = (screenshot: string): Capture | undefined => {
 };
 
 /**
- * The only caption a screenshot may show. Auditable against the exact text in
- * `docs/preview-strategy.md` §"The four honest tiers".
+ * The only caption a capture may show. A still proves a resting layout; an
+ * interaction artefact proves a gesture, never a live surface. Auditable
+ * against the exact text in `docs/preview-strategy.md`.
  */
 export const captureCaption = (provenance: CaptureProvenance): string =>
-  `Captured from GPUix — ${provenance.platform}, GPUix ${provenance.gpuixVersion}, ${provenance.commit}`;
+  `${
+    provenance.kind === "interaction" ? "Recorded in" : "Captured from"
+  } GPUix — ${provenance.platform}, GPUix ${provenance.gpuixVersion}, ${provenance.commit}`;

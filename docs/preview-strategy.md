@@ -14,6 +14,7 @@ names it.
 | ---- | ---------- | --------------------- | --------------- |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
+| **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
 | **A** | A browser approximation of the component's documented layout | `Illustrative approximation — not GPUix. Run it in the playground for real behaviour.` | Only for static layout/typography/spacing; never for an interaction presented as native |
 | **X** | Source plus a limitation notice | `Not verified in the GPUix runtime — <reason>` | When the runtime does not support the behaviour, or it is not yet verified |
 
@@ -46,12 +47,17 @@ capture script:
 
 - path: `apps/docs/public/screenshots/<slug>/<state>.png`
 - sidecar: `apps/docs/public/screenshots/<slug>/provenance.json` with
-  `{ platform, gpuixVersion, commit, command, capturedAt }`
+  `{ platform, gpuixVersion, commit, command, capturedAt, kind? }`; `kind` is
+  `"interaction"` for a before/after pair or recording and defaults to `"still"`
 - the caption is `Captured from GPUix — <platform>, GPUix <version>, <commit>`,
-  built only from the sidecar; the docs site never invents these values
+  or `Recorded in GPUix — …` for an interaction artefact, built only from the
+  sidecar; the docs site never invents these values
 - if the registry lists a screenshot whose sidecar is absent, no screenshot is
   rendered at all: the page reports the missing sidecar rather than taking a
   caption from the file name
+- a still capture proves the resting layout only. A `stateful` or `workspace`
+  page must say which interaction it does **not** prove and point at the
+  playground screen; a still is never captioned as a recording.
 
 The capture script is owned by the playground workstream (`TODO.md`).
 

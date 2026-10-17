@@ -30,6 +30,9 @@ const record = (
   summary: "A demo component.",
   packageName: "@gpuixui/primitives",
   sourcePath: null,
+  parts: [],
+  pattern: "static",
+  persistence: null,
   dependencies: [],
   related: [],
   playgroundScreen: null,
@@ -134,6 +137,21 @@ describe("screenshot provenance", () => {
     expect(caption).toContain("darwin-x64");
     expect(caption).toContain("abc1234");
     expect(caption).not.toContain("screenshots/demo/default.png");
+    expect(caption).not.toContain("Recorded in");
+  });
+
+  it("labels an interaction artefact as recorded, not as a still capture", () => {
+    const html = renderToStaticMarkup(
+      <NativeScreenshot
+        src="/screenshots/demo/resize.png"
+        provenance={{ ...provenance, kind: "interaction" }}
+        alt="Demo resized by GPUix"
+      />,
+    );
+    expect(html).toContain(
+      "Recorded in GPUix — darwin-x64, GPUix 0.1.0, abc1234",
+    );
+    expect(html).not.toContain("Captured from GPUix");
   });
 
   it("never prints a platform, version or commit the sidecar omits", () => {

@@ -28,6 +28,23 @@ export const GpuixSupport = Schema.Literals([
   "unverified",
 ]);
 
+/**
+ * Selects the extra page sections a record needs (plan 427 §4). A compound or
+ * workspace component is not a single file with one API, so it opts into a
+ * larger contract rather than bending the single-component template.
+ */
+export const Pattern = Schema.Literals(["static", "stateful", "workspace"]);
+
+/** One exported sub-component of a compound record. */
+export class ComponentPart extends Schema.Class<ComponentPart>("ComponentPart")(
+  {
+    /** The exported name, e.g. `Panel`. */
+    name: Schema.NonEmptyString,
+    /** Repo-relative path to the file that exports it. */
+    sourcePath: Schema.NonEmptyString,
+  },
+) {}
+
 export class ComponentMeta extends Schema.Class<ComponentMeta>("ComponentMeta")(
   {
     /** URL segment under `/docs/components/<slug>`. */
@@ -44,6 +61,18 @@ export class ComponentMeta extends Schema.Class<ComponentMeta>("ComponentMeta")(
     packageName: Schema.String,
     /** Repo-relative path to the component source the API table reads. */
     sourcePath: Schema.OptionFromNullOr(Schema.String),
+    /**
+     * The compound sub-components this record exports. Empty for a single
+     * component; `entries.ts` supplies the default so no record repeats it.
+     */
+    parts: Schema.Array(ComponentPart),
+    /** The page/preview contract this record follows. */
+    pattern: Pattern,
+    /**
+     * The persistence contract the consumer owns (layout JSON, storage key
+     * shape). `null` unless the pattern needs one; the renderer stores nothing.
+     */
+    persistence: Schema.OptionFromNullOr(Schema.String),
     dependencies: Schema.Array(Schema.String),
     /** Slugs of related records; each must exist. */
     related: Schema.Array(Schema.String),

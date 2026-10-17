@@ -15,6 +15,15 @@ interface PlannedOptions {
   readonly related?: readonly string[];
   /** Overrides the tier's default package when a component lives in its own package. */
   readonly packageName?: string;
+  /** The exported sub-components of a compound record (plan 427). */
+  readonly parts?: readonly {
+    readonly name: string;
+    readonly sourcePath: string;
+  }[];
+  /** Defaults to `static`: one file, one API. */
+  readonly pattern?: ComponentMetaInput["pattern"];
+  /** Defaults to `null`: the component owns no storage contract. */
+  readonly persistence?: string | null;
 }
 
 const groupOf = (tier: Tier): string =>
@@ -39,6 +48,9 @@ const planned = (
   summary,
   packageName: options.packageName ?? packageOf(tier),
   sourcePath: null,
+  parts: options.parts ?? [],
+  pattern: options.pattern ?? "static",
+  persistence: options.persistence ?? null,
   dependencies: [],
   related: options.related ?? [],
   playgroundScreen: null,
@@ -183,27 +195,23 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  {
-    slug: "button",
-    title: "Buttons",
-    tier: "1",
-    group: "foundational",
-    status: "wip",
-    gpuix: "yes",
-    summary: "Triggers an action; the primary interactive control.",
-    packageName: "@gpuixui/primitives",
-    sourcePath: "packages/primitives/src/components/Button.tsx",
-    dependencies: [],
-    related: ["button-group"],
-    playgroundScreen: null,
-    screenshots: [],
-    limitations: [
-      "No focusVisible: the focus ring cannot distinguish pointer from keyboard focus.",
-      "No aria-disabled, aria-pressed or toggle state; a disabled button leaves the tab order.",
-      "An icon-only button must pass label; the component cannot infer one.",
-      "No native button element: the runtime renders a div with role and handlers.",
-    ],
-  },
+  delivered(
+    "button",
+    "Buttons",
+    "1",
+    "Triggers an action; the primary interactive control.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Button.tsx",
+      related: ["button-group"],
+      limitations: [
+        "No focusVisible: the focus ring cannot distinguish pointer from keyboard focus.",
+        "No aria-disabled, aria-pressed or toggle state; a disabled button leaves the tab order.",
+        "An icon-only button must pass label; the component cannot infer one.",
+        "No native button element: the runtime renders a div with role and handlers.",
+      ],
+    },
+  ),
   delivered(
     "button-group",
     "Button groups",

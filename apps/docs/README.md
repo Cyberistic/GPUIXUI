@@ -71,7 +71,9 @@ runtime-mounted example. Copy their shape.
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
    `COMPONENTS.md` row exactly** — `registry.test.ts` proves the two agree.
    Start `status: "planned"`, `gpuix: "unverified"`; a delivered component moves
-   to `wip`/`done` only with a real `sourcePath`.
+   to `wip`/`done` only with a real `sourcePath`. The `planned`/`delivered`
+   helpers default `parts` to `[]`, `pattern` to `"static"` and `persistence` to
+   `null`; a compound or workspace record overrides them (plan 427).
 2. Add `content/docs/components/<slug>.mdx` using the template below, and add
    the slug to `content/docs/components/meta.json`. `registry.test.ts` asserts
    that sidebar equals `index` plus every non-planned slug, so a forgotten
@@ -117,6 +119,27 @@ description: Triggers an action; the primary interactive control.
 
 <RelatedComponents slug="button" />
 ```
+
+A compound or workspace record owes extra sections, in the order below. The
+required list is `sectionsFor(pattern)` in `src/component-meta/contract.ts`, and
+`component-pages.test.ts` applies it to every finished record.
+
+```mdx
+## State and ownership
+
+## Anatomy
+
+## Persistence
+```
+
+- `stateful` (a data grid, a split host, tabs) adds **State and ownership**
+  directly after **Composition**. It names the state the component owns and the
+  state the consumer owns.
+- `workspace` (panels, docking, a workspace) also adds **Anatomy** directly
+  after **Usage** and **Persistence** directly after **State and ownership**.
+  **Anatomy** names the parts and the one-way ownership relationship;
+  **Persistence** names the serialised shape and says the app writes it — the
+  renderer stores nothing.
 
 The section list is a contract, not a suggestion: `src/component-pages.test.ts`
 fails when a page for a component that is no longer `planned` is missing a
@@ -232,6 +255,8 @@ source does not get a page.
 capture sidecars (`src/components/preview/select-preview.ts`):
 
 - a listed screenshot **with** its `provenance.json` → the real capture (tier S);
+  a sidecar with `kind: "interaction"` is captioned `Recorded in GPUix — …`
+  instead of `Captured from GPUix — …`;
 - otherwise a `playgroundScreen` → the run instructions (tier N);
 - otherwise the "not verified" notice (tier X).
 

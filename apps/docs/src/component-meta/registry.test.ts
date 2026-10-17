@@ -1,7 +1,10 @@
 import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
+import { exportedNames } from "../lib/source-exports";
+import { registryViolations } from "./contract";
 import { components } from "./registry";
 import { decodeComponentMeta } from "./schema";
 
@@ -140,5 +143,111 @@ describe("component registry", () => {
         .map((entry) => entry.slug),
     ];
     expect(sidebar.pages).toEqual(expected);
+  });
+});
+
+/**
+ * The compound/workspace rules (plan 427 §3). No such record exists yet, so the
+ * fixtures below are the only way these contracts can fail before the first
+ * data-grid or docking page — and they use real package files, not invented
+ * paths.
+ */
+describe("compound record contract", () => {
+  const base: (typeof components)[number] = {
+    slug: "demo",
+    title: "Demo",
+    tier: "3",
+    group: "data",
+    status: "planned",
+    gpuix: "unverified",
+    summary: "A demo record.",
+    packageName: "@gpuixui/components",
+    sourcePath: null,
+    parts: [],
+    pattern: "static",
+    persistence: null,
+    dependencies: [],
+    related: [],
+    playgroundScreen: null,
+    screenshots: [],
+    limitations: [],
+  };
+
+  const root = fileURLToPath(new URL("../../../../", import.meta.url));
+  const exportCache = new Map<string, ReadonlyArray<string>>();
+  const isExported = (packageName: string, name: string): boolean => {
+    const directory = join(
+      root,
+      "packages",
+      packageName.replace("@gpuixui/", ""),
+      "src",
+    );
+    const names =
+      exportCache.get(directory) ??
+      (existsSync(directory) ? exportedNames(directory) : []);
+    exportCache.set(directory, names);
+    return names.includes(name);
+  };
+
+  it("leaves the new fields at their defaults on every existing record", () => {
+    const wrong = components
+      .filter(
+        (entry) =>
+          entry.pattern !== "static" ||
+          entry.parts.length > 0 ||
+          entry.persistence !== null,
+      )
+      .map((entry) => entry.slug);
+    expect(wrong).toEqual([]);
+  });
+
+  it("holds every real record to the compound contract", () => {
+    expect(registryViolations(components, isExported)).toEqual([]);
+  });
+
+  it("requires a playground screen on a workspace record", () => {
+    expect(
+      registryViolations(
+        [{ ...base, pattern: "workspace", playgroundScreen: null }],
+        () => true,
+      ),
+    ).toEqual(["demo: a workspace pattern requires a playgroundScreen"]);
+  });
+
+  it("rejects a part the package does not export", () => {
+    expect(
+      registryViolations(
+        [
+          {
+            ...base,
+            parts: [
+              {
+                name: "NotARealExport",
+                sourcePath: "packages/components/src/card.tsx",
+              },
+            ],
+          },
+        ],
+        isExported,
+      ),
+    ).toEqual(["demo: NotARealExport is not exported by @gpuixui/components"]);
+  });
+
+  it("accepts a real part and a workspace record with a screen", () => {
+    expect(
+      registryViolations(
+        [
+          {
+            ...base,
+            pattern: "workspace",
+            playgroundScreen: "Workspace gallery",
+            parts: [
+              { name: "Card", sourcePath: "packages/components/src/card.tsx" },
+            ],
+          },
+        ],
+        isExported,
+      ),
+    ).toEqual([]);
   });
 });

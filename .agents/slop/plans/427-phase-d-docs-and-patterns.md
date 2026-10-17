@@ -201,7 +201,25 @@ fixture record/page, then the real one.
   route (`/docs/patterns/settings-form`, 200) verified.
 - **Two directions proven:** renaming `## State` to `## Ownership` made the
   contract fail with `settings-form: missing "## State"`; restoring it passed.
-- **Parts A–C are not started**: `packages/data-grid` and `packages/docking`
-  do not exist, so the compound template and Tier 3–4 pages wait (STOP
-  condition §9).
+- **Parts A–C contracts: implemented (2026-10-17).** A record now carries
+  `parts`, `pattern` and `persistence` (defaults `[]`, `"static"`, `null`,
+  supplied by the `planned`/`delivered` helpers so no existing record changed).
+  `src/component-meta/contract.ts` owns the rules: `sectionsFor(pattern)` (the
+  conditional page template), `missingPartSources` (a compound page must include
+  every part), and `registryViolations` (a workspace record needs a playground
+  screen; every part must be a real package export). The README template
+  documents the three extra sections. A capture sidecar may now say
+  `kind: "interaction"`, which renders `Recorded in GPUix — …` instead of
+  `Captured from GPUix — …`; `docs/preview-strategy.md` documents the rule.
+  `nub run --filter docs test`: 22 files, 129 tests pass; type-check and build
+  green.
+- **Two directions proven:** setting a delivered record to
+  `pattern: "stateful"` failed `component-pages.test.ts` with `badge: missing
+  "State and ownership"`; adding a real `parts` entry failed both
+  `registry.test.ts` (`NotARealExport is not exported`) and
+  `content-references.test.ts` (`card.tsx is not included`); reverting restored
+  green.
+- **Parts A–C pages remain blocked** on `packages/data-grid` and
+  `packages/docking`, which do not exist (STOP condition §9). No placeholder
+  record or page was added.
 

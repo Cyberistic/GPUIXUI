@@ -2,6 +2,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import {
+  missingPartSources,
+  missingSections,
+  sectionsFor,
+} from "./component-meta/contract";
 import { components } from "./component-meta/registry";
 
 /**
@@ -13,28 +18,22 @@ import { components } from "./component-meta/registry";
  *
  * The template itself lives in `apps/docs/README.md`; the first test makes the
  * README and this list agree, the second makes every finished component's page
- * follow it.
+ * follow it. A compound or workspace record owes extra sections (plan 427),
+ * so the required list is a function of the record's `pattern`.
  */
 
 const pageDirectory = fileURLToPath(
   new URL("../content/docs/components/", import.meta.url),
 );
 const readme = fileURLToPath(new URL("../README.md", import.meta.url));
+const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
-/** Every section the template requires, in a documented order (see README). */
-const sections = [
-  "Usage",
-  "Variants",
-  "Sizes",
-  "States",
-  "Composition",
-  "API reference",
-  "Keyboard and focus",
-  "Theming",
-  "Accessibility and limitations",
-  "Source",
-  "Related",
-] as const;
+const patterns = ["static", "stateful", "workspace"] as const;
+
+/** Every section any pattern can require, in first-documented order. */
+const documentedSections = [
+  ...new Set(patterns.flatMap((pattern) => sectionsFor(pattern))),
+];
 
 const headings = (document: string): ReadonlyArray<string> =>
   document
@@ -54,11 +53,11 @@ const frontmatter = (document: string): Readonly<Record<string, string>> =>
   );
 
 describe("component page template", () => {
-  it("documents every required section in the template", () => {
+  it("documents every section any pattern can require", () => {
     const documented = headings(readFileSync(readme, "utf8"));
-    expect(sections.filter((section) => !documented.includes(section))).toEqual(
-      [],
-    );
+    expect(
+      documentedSections.filter((section) => !documented.includes(section)),
+    ).toEqual([]);
   });
 
   it("keeps a finished page's title and description equal to its registry record", () => {
@@ -92,15 +91,13 @@ describe("component page template", () => {
           join(pageDirectory, `${component.slug}.mdx`),
           "utf8",
         );
-        const missingSections = sections.filter(
-          (section) => !headings(body).includes(section),
-        );
+        const missing = missingSections(component.pattern, headings(body));
         const missingBlocks = [
           `<ComponentState slug="${component.slug}"`,
           `<NativePreview slug="${component.slug}"`,
         ].filter((block) => !body.includes(block));
         return [
-          ...missingSections.map(
+          ...missing.map(
             (section) => `${component.slug}: missing section "${section}"`,
           ),
           ...missingBlocks.map(
@@ -109,5 +106,63 @@ describe("component page template", () => {
         ];
       });
     expect(problems).toEqual([]);
+  });
+});
+
+describe("compound page contract", () => {
+  const stateful = sectionsFor("stateful");
+  const workspace = sectionsFor("workspace");
+
+  it("puts each extra section where the template documents it", () => {
+    expect(stateful.indexOf("State and ownership")).toBe(
+      stateful.indexOf("Composition") + 1,
+    );
+    expect(workspace.indexOf("Anatomy")).toBe(workspace.indexOf("Usage") + 1);
+    expect(workspace.indexOf("Persistence")).toBe(
+      workspace.indexOf("State and ownership") + 1,
+    );
+  });
+
+  it("fails a stateful page that omits the state section", () => {
+    expect(missingSections("stateful", sectionsFor("static"))).toEqual([
+      "State and ownership",
+    ]);
+  });
+
+  it("fails a workspace page that omits anatomy and persistence", () => {
+    expect(missingSections("workspace", stateful)).toEqual([
+      "Anatomy",
+      "Persistence",
+    ]);
+  });
+
+  it("fails a compound page that includes its entry file but not its parts", () => {
+    const parts = [
+      {
+        name: "Card",
+        sourcePath: "packages/components/src/card.tsx",
+      },
+      {
+        name: "Badge",
+        sourcePath: "packages/components/src/badge.tsx",
+      },
+    ];
+    const absolute = (sourcePath: string) => join(repoRoot, sourcePath);
+
+    expect(
+      missingPartSources(
+        { parts },
+        [absolute("packages/components/src/card.tsx")],
+        absolute,
+      ),
+    ).toEqual(["Badge (packages/components/src/badge.tsx) is not included"]);
+
+    expect(
+      missingPartSources(
+        { parts },
+        parts.map((part) => absolute(part.sourcePath)),
+        absolute,
+      ),
+    ).toEqual([]);
   });
 });

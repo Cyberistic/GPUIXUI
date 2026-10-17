@@ -444,7 +444,13 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Document every delivered Tier 2 component (plan 425) — 22 pages with generated props, real source and their own examples; 42 component pages total
 `[x]` Prose truth pass over the non-component pages (plan 426) — `layouts`, `examples`, `getting-started` and `installation` now describe the landed packages and the real `basic-app`; `prose-truth.test.ts` fails on the old claims and guards future drift
 `[x]` First real pattern page (plan 427 Part D) — `patterns/settings-form.mdx` documents `examples/basic-app` with its real source, the verification table and `pattern-pages.test.ts`; Plans index and sidebar updated
-`[ ]` Plan 427 Parts A–C — extend the metadata schema and page template for compound/workspace components, then add Tier 3–4 pages and interaction previews when `packages/data-grid` and `packages/docking` land
+`[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
+      `pattern`, `persistence`), the conditional page template, the
+      part-source and `kind: "interaction"` preview guards are landed
+      (`component-meta/contract.ts`, `registry.test.ts`,
+      `component-pages.test.ts`, `content-references.test.ts`,
+      `preview.test.tsx`); Tier 3–4 pages and the first compound record still
+      wait on `packages/data-grid` / `packages/docking`
 
 ## Cross-team tasks raised by the docs-site workstream
 
@@ -459,6 +465,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables — `@gpuixui/tokens` (root entry) is consumed by the docs site; plan 416 renders the colour and type tables from it
 `[x]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables — `ButtonProps` generates the real 14-row table on the Buttons page (plan 422); the contract is executable in `apps/docs/src/lib/type-table.fixture.tsx` / `type-table.test.ts` (plan 415)
 `[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5) — the sidecar contract (`provenance.json` beside each PNG) is now enforced by `preview.test.tsx`, so a capture without it will not render
+`[ ]` **Components/examples**: provide one real composed source for the confirmation flow (`ConfirmDialog` + a form + `Toast`) and one for the command palette (`CommandMenu` + `Dialog`) — plan 427's remaining pattern pages cannot land until a runnable composition exists; do not write a page from separate component examples and call it a pattern
 `[x]` Docs site: the first real component page — Buttons shows its source via `<include>`, generates its API table from `ButtonProps`, sits in `content/docs/components/meta.json` and the sitemap, and relates to a planned component without a 404 link (plan 422)
 `[ ]` Primitives: the `packages/primitives/docs/tooltip.mdx` usage snippet imports `Icon` from `@gpuixui/primitives`; it lives in `@gpuixui/icons`. The docs-site page was corrected during the truth pass (plan 424); fix the package page too
 `[x]` Canonical and OpenGraph URLs are absolute — resolved in the docs workstream by plan 418: `SITE_URL` defaults to the deploy domain (`docs.gpuixui.dev`) and is overridable with `VITE_SITE_URL`; no change to `packages/deploy` was needed
