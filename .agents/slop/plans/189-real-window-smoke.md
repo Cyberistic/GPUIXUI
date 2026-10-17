@@ -51,6 +51,7 @@ the live suite covers the mechanisms those channels are not needed for:
 | `live-overlay` | `overlay` | the modal trigger opens a painted surface centred in the window, and Escape closes it (`open=false last=escape`) |
 | `live-docking` | `docking` | dragging the Notes tab onto the editor pane's right edge splits it: `panel-1=notes@notes` and `split-1=` appear in the live tree signature |
 | `live-primitives` | `components` | the **shipped** `Button` activates, a disabled `Button` refuses the click, and the shipped `Toggle` reports `pressed=true` |
+| `live-table` | `table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls (`[0,-300]`), and the selection survives the scroll |
 
 Colour, style-report and accessibility assertions stay where their channels
 exist: the `TestRenderer` suite (`theme-*`, `a11y-tree`). The live run is
@@ -191,7 +192,7 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
 ## 8. Acceptance criteria
 
 - `nub run --filter playground smoke:live` exits `0` on this host, writes
-  `.artifacts/live-report.json` and seven screenshots.
+  `.artifacts/live-report.json` and eight screenshots.
 - The same command exits `2` (not `1`) when no display is available.
 - §9 records: the window size, each scenario's checks, the exit codes, and each
   mutation's failing label.
@@ -201,8 +202,8 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
 ## 9. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
 
 `nub run --filter playground smoke:live` — **6/6 scenarios**,
-`layout=input=overlay=scroll=panel=docking=components=verified`, exit `0`,
-~4 s, seven real-window screenshots under `.artifacts/live/` and
+`layout=input=overlay=scroll=panel=docking=components=table=verified`, exit
+`0`, ~5 s, eight real-window screenshots under `.artifacts/live/` and
 `.artifacts/live-report.json`.
 
 **The window opens on this host.** `renderer.init` created a 1100 × 720 window
@@ -260,10 +261,18 @@ Two-direction proofs (file restored after each run):
 | L6 | make the modal's Escape branch record `last=ignored` instead of closing | exit `1`, *Escape closes the focused surface*: got `open=true … last=ignored` |
 | L7 | make `zoneAt` always return the centre edge | exit `1`, *the edge drop created a group for it*: the signature showed `editor=main.ts,notes@notes` (a merge, no split) |
 | L8 | drop `disabled` from the probe's Delete button | exit `1`, *a disabled Button refuses the click*: got `activations=2` |
+| L9 | make the virtual row's click select `-1` | exit `1`, *a painted virtual row is hit-testable*: got `none` |
 
 L1 and L2 surface as errored scenarios rather than a failed label because the
 scenario waits for the result of the interaction; a mutation that mounted the
 *wrong* view would fail the title check instead.
+
+**A virtual list is hit-testable and scrolls in the window.** Clicking a painted
+`<virtual-list>` row selected `r3`; the list's own offset went `[0, 0]` →
+`[0, -300]` under a viewport wheel, and the selection survived the scroll. The
+scenario's `onVisibleRange` readouts did **not** move (`start=0 end=9` after two
+scrolls), so a live app derives its window from the painted rows or the offset —
+the same conclusion plan `185` reached for a component-owned window.
 
 **The shipped components work in a real window.** `live-primitives` mounts
 `@gpuixui/primitives` through the shipped token theme: clicking the `Button`

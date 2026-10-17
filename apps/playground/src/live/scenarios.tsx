@@ -21,6 +21,7 @@ import { modalScenario } from "../scenarios/modal.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { primitivesActionsScenario } from "../scenarios/primitives.js";
 import { scrollScenario } from "../scenarios/scroll.js";
+import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { scenarios } from "../scenarios/index.js";
 
 /** Window size the runner opens. A check compares the shell against it. */
@@ -386,6 +387,51 @@ const primitives: LiveScenario = {
     }),
 };
 
+const table: LiveScenario = {
+  id: "live-table",
+  title: "Live table: a virtualized row click and a live scroll",
+  capability: "table",
+  view: virtualizedTableScenario.view,
+  ready: "vtable-row-0",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("vtable-row-3");
+      yield* settle;
+      const picked = yield* textOf(ctx, "vtable-selected");
+      yield* ctx.expectContains(
+        "a painted virtual row is hit-testable",
+        picked,
+        "r3",
+      );
+
+      const before = yield* ctx.expectSome(
+        "the virtual list reports an offset",
+        Option.fromNullishOr(yield* ctx.host.scrollOffset("vtable")),
+      );
+      yield* ctx.expectEqual("the list starts at the top", before.y, 0);
+
+      yield* ctx.host.wheel("vtable-viewport", 0, -300);
+      yield* settle;
+      const after = yield* ctx.expectSome(
+        "the virtual list still reports an offset",
+        Option.fromNullishOr(yield* ctx.host.scrollOffset("vtable")),
+      );
+      yield* ctx.expectEqual(
+        "the wheel moves a virtual list in a live window",
+        after.y < 0,
+        true,
+      );
+      const kept = yield* textOf(ctx, "vtable-selected");
+      yield* ctx.expectContains(
+        "the selection survives the scroll",
+        kept,
+        "r3",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${table.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -395,4 +441,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   overlay,
   docking,
   primitives,
+  table,
 ];
