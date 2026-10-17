@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 73/97
+`[x]` `[████████░░]` 74/98
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -367,6 +367,18 @@ the result (66 failures light, 32 dark); `contrast` now selects the base through
 `[x]` Ship `themeModes` / `themeContrasts` as ordered indexes and derive the
 unions and guards from them — the last two unions without an index, retyped in
 sixteen test loops, so a third mode would have shipped untested (plan 305)
+`[x]` Make the inactive state readable and shaped — a disabled `Select` item
+painted `disabledForeground` on `popover` at 1.99:1 (Linux dark) and 2.26:1
+(identity dark), the designed pair measured 2.09:1, `disabled` was exactly
+`muted`/`hover`, and nothing held the edge; `inactive` is a 3:1 / 4.5:1 floor on
+nine surfaces and `border` on `disabled`/`muted` joins the divider class
+(plan 306)
+`[ ]` Cross-team: `primitives` and `components` replace `opacity: 0.5` disabled
+dimming with the designed `disabled` / `disabledForeground` pair plus the
+`border` edge — an alpha composite makes the label's readability depend on the
+surface behind it (a disabled primary action measures 2.25:1 on the light canvas)
+and the `Select` item already paints the role (plan 306; owner: those
+workstreams)
 `[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
