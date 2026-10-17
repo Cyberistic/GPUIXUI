@@ -125,16 +125,16 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `warningForeground` | `#2A1B00` | `#2A1B00` | text on `warning` |
 | `info` | `#2559D6` | `#9FBEFF` | informational status, distinct from `primary` |
 | `infoForeground` | `#FFFFFF` | `#11141A` | text and icons on `info` |
-| `infoSoft` | `#DEE9FF` | `#16356F` | soft informational surface |
+| `infoSoft` | `#D6E3FF` | `#16356F` | soft informational surface |
 | `infoSoftForeground` | `#152F6B` | `#EFF4FF` | text and icons on `infoSoft` |
 | `infoSoftBorder` | `#A6BEF3` | `#3F5E9A` | edge around `infoSoft` |
-| `successSoft` | `#C2F4D6` | `#0A3E28` | soft success surface |
+| `successSoft` | `#B8EDCE` | `#0A3E28` | soft success surface |
 | `successSoftForeground` | `#0A3A26` | `#ECFDF3` | text and icons on `successSoft` |
 | `successSoftBorder` | `#8ED3AF` | `#1A6D46` | edge around `successSoft` |
-| `warningSoft` | `#FFE3A3` | `#4B3100` | soft warning surface |
+| `warningSoft` | `#FFDF9A` | `#4B3100` | soft warning surface |
 | `warningSoftForeground` | `#2A1B00` | `#FFF8E8` | text and icons on `warningSoft` |
 | `warningSoftBorder` | `#FCD47B` | `#815F17` | edge around `warningSoft` |
-| `destructiveSoft` | `#FFE0E0` | `#66191B` | soft destructive surface |
+| `destructiveSoft` | `#FFD6D6` | `#66191B` | soft destructive surface |
 | `destructiveSoftForeground` | `#5C1619` | `#FFF1F1` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
 | `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
@@ -220,8 +220,13 @@ row measured 4.22:1 on macOS light, 4.24:1 on Linux light and 4.36:1 on Windows
 light, and high-contrast light measured 5.83:1 on `active` and 6.70:1 on
 `accent`/`selected` until plan `083` moved the two warning steps. A soft surface
 is a surface in its own right: it is held to 1.05:1 against
-`background`, `card` and `popover`, so an Alert, Badge or Toast stays
-perceivable on every shipped canvas, platform variants included.
+`background`, `card`, `popover` and `muted`, so an Alert, Badge or Toast stays
+perceivable on every shipped canvas, platform variants included. The `muted`
+panel is the sidebar and settings-group surface, and it is the composition that
+forced the list: the platform light variants change it and inherit the tints, so
+a status badge sat at 1.023:1 on Linux light, 1.036:1 on macOS light and 1.043:1
+on Windows light until plan `300` moved the four light tints one small step
+deeper.
 
 The edge is a role, not a mixture: `xSoftBorder` is designed per tone and
 measured on the fill it borders at the divider floor — 1.05:1 in the default
@@ -1131,7 +1136,10 @@ the high-contrast variants. The boundary is also measured on the `muted` panel,
 the four washes and the four soft status fills, because an unchecked checkbox or
 a field keeps its `borderStrong` edge while the row moves or inside an Alert.
 It also fails if a soft status surface is indistinguishable from `background`,
-`card` or `popover` (floor 1.05:1), or if a loading skeleton is indistinguishable
+`card`, `popover` or the `muted` quiet panel (floor 1.05:1) — a status badge or
+small Alert in a sidebar sat at 1.023:1 on Linux light, 1.036:1 on macOS light
+and 1.043:1 on Windows light until plan `300` moved the four light tints one step
+deeper — or if a loading skeleton is indistinguishable
 on any surface or row wash it fills (also 1.05:1), if a decorative `border` is imperceptible on
 those surfaces, on the `secondary`, `hover`, `active` and `accent` fills a
 bordered control paints, or on the four soft status fills a status panel

@@ -307,7 +307,7 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
 | focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, and essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills | 3:1 | 4.5:1 |
-| soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
+| soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft`) | 1.05:1 | 3:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`selected` washes | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
@@ -317,7 +317,12 @@ The test runs for every shipped colour set — platform variants included, each 
 its own canvas — and is part of the normal test suite. The modal scrim is
 measured composited rather than as a value: `overlay` over the four base
 surfaces, which caught the AAA dark backdrop painting **1.000:1** on its own
-canvas until plan `099` gave it a light veil.
+canvas until plan `099` gave it a light veil. A soft status surface is measured on
+the quiet panel as well as the canvas, card and popover: a status badge or small
+Alert in a sidebar is a real composition, and the platform light variants change
+`muted` while inheriting the identity's pastel tints — macOS, Linux and Windows
+light measured 1.036:1, 1.023:1 and 1.043:1 until plan `300` moved the four light
+tints one small step deeper.
 It can fail: a palette edit that reduces contrast fails the gate. The same check
 is public: `themeContrastFailures(theme)` returns every pair an edited theme
 misses, so a brand theme or copied platform style can be held to these floors in
