@@ -405,6 +405,15 @@ retired once both branches are one
       runtime upgrade, before implementing (evidence:
       `docs/gpuix-capabilities.md` §5).
 
+`[ ]` **components workstream**: plan `201` §2.3 tells the thin context to call
+      `useControllableState` from `@gpuix/react/floating`, but that function is
+      **not re-exported** in 0.10.0 — it is internal to
+      `dist/components/floating` and the public `./floating` module exports only
+      `FloatingLayer` + the style helpers. The plan's own STOP condition applies:
+      keep one controlled/uncontrolled rule in our `core/state.ts` (primitives)
+      or export a local hook (components), and do not import the internal path
+      (evidence: `docs/gpuix-capabilities.md` §2).
+
 `[ ]` **components workstream**: a visible label is still inert beside a
       **standalone** Tier 1 `Checkbox`/`Switch`. GPUix has no
       `htmlFor`/`aria-labelledby`, the control keeps its name in `label`, and a

@@ -5,7 +5,7 @@
 | Phase | B (foundation) — the convention every stateful component follows |
 | Owner | components workstream (owns `packages/components`); primitives owns the Tier 1 helpers |
 | Depends on | `200-adopt-compound-part-api.md` (the public API the state model serves), `020-gpuix-runtime-capability.md` §3.1.3 (pure-logic tests run today) |
-| Status | planned |
+| Status | planned — **§2.3 is wrong for 0.10.0**: `useControllableState` is defined in `dist/components/floating` but **not re-exported** from `./floating` or the root, so it is not a public API (plan `203`, `docs/gpuix-capabilities.md` §2). The plan's own STOP condition applies; keep the rule in our `core/state.ts` or a local hook |
 | Source | `references/base-gpui/docs/component-architecture.md`, `src/*/runtime.rs`, `src/*/context.rs`, `src/*/tests/` (1,000+ window-free tests) |
 
 This plan is self-contained. It produces a **convention, one shared hook and its
