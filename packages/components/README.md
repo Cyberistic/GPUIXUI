@@ -27,6 +27,10 @@ Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 | `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |
 | `src/empty-state.tsx` | EmptyState: the centred "nothing here yet" panel |
 | `src/list.tsx` | List / ListItem: rows with a roving tab stop and single selection |
+| `src/dialog.tsx` | Dialog: an anchored window veil, focus-in/return, Tab trap, Escape |
+| `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
+| `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
+| `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |

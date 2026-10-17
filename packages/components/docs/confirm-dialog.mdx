@@ -1,0 +1,105 @@
+---
+title: Confirmation dialog
+description: The safe workflow for an action that cannot be undone.
+---
+
+`ConfirmDialog` is the dialog the rest of the library reaches for when an action
+is irreversible. It is not a styled box: it encodes two safety decisions.
+
+- **Cancel holds initial focus**, so Enter on an untouched dialog cancels.
+- **Confirm does not close the dialog.** The caller owns the async work and closes
+  through `open` when it succeeds, so a failure can stay visible.
+
+```tsx
+import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
+
+<ConfirmDialog
+  open={open}
+  onOpenChange={setOpen}
+  title="Archive this project?"
+  description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+  confirmLabel="Archive project"
+  tone="danger"
+  loading={saving}
+  onConfirm={archive}
+/>;
+```
+
+## Behaviour
+
+| Step | What happens |
+| ---- | ------------ |
+| open | focus lands on **Cancel**, not on the destructive action |
+| `Enter` untouched | cancels: `onOpenChange(false)`, `onConfirm` not called |
+| Confirm clicked | `onConfirm()` exactly once; the dialog stays open |
+| `loading` | both actions disabled, `…` shown, Escape and outside press ignored |
+| close | the caller sets `open` to `false` after its work succeeds |
+
+The `loading` state keeps the dialog open on purpose: point it at a promise the
+caller owns, and render the failure in the body or as an alert inside it.
+
+## Controlled only
+
+`ConfirmDialog` has no uncontrolled mode. A confirmation exists to gate work, and
+the component cannot know when that work finished — so `open` and `onOpenChange`
+are required.
+
+## Keyboard
+
+| Key | Effect |
+| --- | ------ |
+| `Enter` | activates the focused action — Cancel on open |
+| `Tab` / `Shift+Tab` | cycle the two actions (the dialog traps focus) |
+| `Escape` | cancels, unless `loading` |
+
+## Tones
+
+`tone="default"` uses the primary button; `tone="danger"` uses the destructive
+variant (`colors.destructive` on `colors.destructiveForeground`). The title and
+description are unchanged: the wording, not the colour, carries the consequence.
+
+## Accessibility and limitations
+
+- The dialog's accessible name is `title`; the description is the body text.
+- No `aria-modal`/`aria-labelledby` in `@gpuix/native@0.10.0` — the same
+  limitation as **Dialog**, with the evidence on that page.
+- The busy indicator is a `…` text glyph, not a spinner: no `Spinner` primitive
+  exists yet.
+- There is no built-in async runner. The caller owns the promise, the loading
+  flag and the close; that is deliberate, so a failed save is never hidden by a
+  dialog that closed itself.
+
+## API
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `open` | `boolean` (required) | — |
+| `onOpenChange` | `(open: boolean) => void` (required) | — |
+| `title` | `string` (required) | — |
+| `description` | `string` (required) | — |
+| `confirmLabel` | `string` | `"Confirm"` |
+| `cancelLabel` | `string` | `"Cancel"` |
+| `tone` | `"default" \| "danger"` | `"default"` |
+| `loading` | `boolean` | `false` |
+| `onConfirm` | `() => void` (required) | — |
+| `children` | `ReactNode` | — |
+
+`children` renders between the description and the actions — a checkbox
+("I understand"), a warning detail, or a field.
+
+## Verification
+
+`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (5 tests):
+Cancel-focused-on-open, Enter cancelling without confirming, confirm reporting
+once and leaving the dialog open, both actions and Escape inert while loading, and
+the danger tone reading the destructive roles.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Dialog** — the general modal, for forms and non-destructive flows.
+- **Alert** — the in-flow notice after the action completes.
+- **Toast** — a transient confirmation that does not block.

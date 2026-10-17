@@ -89,69 +89,131 @@ recorded in this plan:
 
 The answers belong in this file, under this list, before §2 is implemented.
 
+## 1c. Probe answers (measured 2026-10-17, `@gpuix/native@0.10.0`, 1280×800)
+
+The probe rendered a nested `page > nested (200px tall) > overlay` tree inside the
+real test renderer. Its one assertion was deliberately `toBe("PROBE")` so the
+run printed the measurements. All five questions are answered, and **one answer
+changes the design**: a modal veil must be an `anchored`, not an absolutely
+positioned `div`.
+
+| Question | Answer | Evidence |
+| -------- | ------ | -------- |
+| absolute insets `0` inside a nested container | **resolves against the immediate parent**, not the window: bounds `x:20, y:20, width:1240, height:200` (the parent's box). The height is the parent's 200, not the window's 800, so an absolute veil cannot cover the window from a nested position | probe 1 |
+| explicit absolute size larger than the parent | the element keeps the parent's origin and **does** paint beyond the parent's height (800×600 at `x:20, y:20` inside a 200px parent), so nothing clips it — but it still cannot be *positioned* at the window origin from a nested parent | probe 2 |
+| later sibling paints above an earlier one | **yes**: a click at the shared point reached the overlay and not the earlier sibling behind it; with `pointerEvents:"none"` the same click reached the sibling. No z-index equivalent is needed | probe 1 |
+| `pointerEvents:"auto"` blocks the hit | **yes**: the click logged `veil` and never `behind`; with `"none"` it logged `behind` | probe 2 |
+| `focusElement` on a `tabIndex={-1}` node | **yes**: `getFocusedElementId()` returned the content node and `simulateKeystrokes("escape")` reached its `onKeyDown` | probe 1+2 |
+| `focusNextWithin(contentId)` wrap | **yes**: focus went first → second → first (ids `2, 3, 2`) | probe 1+2 |
+| **`<anchored position={{x:0,y:0}}>`** | **window coordinates, independent of the parent**: bounds `x:0, y:0, width:1280, height:800` while nested in a 200px container, and it **blocks hits behind** it (the click logged `veil`, never `behind`) | probe 2 |
+| click bubbling | a click on the surface logged `surface` then `veil`: events bubble to ancestor handlers | probe 2 |
+| `getWindowSize()` under test | `{ width: 1280, height: 800 }` | probe 2 |
+
+**Design consequence.** The modal veil is
+`<anchored position={{x:0,y:0}} occlude>` wrapping a full-window `div` sized from
+`useWindowSize()`; `position:"absolute"` is not used for it. The anchored element
+is the only measured way to paint and hit-test at window coordinates from an
+arbitrary nested mount point, because `@gpuix/react@0.10.0` exports no portal.
+Probe files were deleted after recording these answers.
+
 ---
 
 ## 2. `src/dialog.tsx`
 
 ```tsx
-export {
-  Dialog,            // re-exported GPUix root (open/defaultOpen/onOpenChange/modal/disablePointerDismissal)
-  DialogTrigger,
-  DialogClose,
-} from "@gpuix/react";
+export interface DialogProps {
+  open?: boolean;              // controlled
+  defaultOpen?: boolean;       // uncontrolled, default false
+  onOpenChange?: (open: boolean) => void;
+  dismissible?: boolean;       // default true: Escape and an outside press close
+  children?: ReactNode;
+}
+export const Dialog: FC<DialogProps>;            // context + controllable open
 
-export type DialogSize = "sm" | "md" | "lg";       // maxWidth 360 / 480 / 640
+export const DialogTrigger: FC<ButtonProps>;     // local Button; toggles open
+export const DialogClose: FC<ButtonProps>;       // local Button; closes
 
-export interface DialogContentProps extends Props {
+export type DialogSize = "sm" | "md" | "lg";     // maxWidth 360 / 480 / 640
+
+export interface DialogContentProps extends Omit<Props, "children"> {
   size?: DialogSize;          // default "md"
   label: string;              // required: accessible name (aria-label)
   showClose?: boolean;        // default true
-  initialFocus?: FocusTarget<PublicInstance>;
-  finalFocus?: FocusTarget<PublicInstance>;
+  children?: ReactNode;
 }
 export const DialogContent: FC<DialogContentProps>;
 
 export const DialogHeader: FC<Props>;   // column, gap space.xs
-export const DialogTitle: FC<Props>;    // GPUix DialogTitle + heading style
+export const DialogTitle: FC<Props>;    // heading level 2
 export const DialogDescription: FC<Props>; // muted, sm
 export const DialogFooter: FC<Props>;   // row, justify flex-end, gap space.md
 ```
 
-`DialogContent` composes, in this exact order:
+`DialogContent` composes, in this exact order (corrected 2026-10-17: §1c measured
+that the veil must be an `anchored`; there is no `DialogPortal`):
 
 ```tsx
-<DialogPortal>
-  <DialogBackdrop style={{ backgroundColor: tokens.colors.overlay }} />
-  <DialogPopup
-    aria-label={label}
-    initialFocus={initialFocus}
-    finalFocus={finalFocus}
-    style={{ /* surface */ }}
+const { width, height } = useWindowSize();
+
+<anchored
+  position={{ x: 0, y: 0 }}
+  occlude
+  style={{ position: "absolute" }}
+>
+  <div
+    testId="dialog-backdrop"
+    style={{
+      width, height,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: space["3xl"],
+      backgroundColor: colors.overlay,
+      pointerEvents: "auto",
+    }}
   >
-    {children}
-    {showClose && <DialogClose aria-label="Close" testId="dialog-close" style={closeStyle}>…</DialogClose>}
-  </DialogPopup>
-</DialogPortal>
+    <div
+      role="dialog"
+      aria-label={label}
+      tabIndex={-1}
+      ref={contentRef}
+      onMouseDownOutside={closeOnOutsidePress}
+      onKeyDown={handleKeys}
+      testId={testId ?? "dialog-content"}
+      style={{ /* surface */ }}
+    >
+      {children}
+      {showClose && <IconButton label="Close" testId="dialog-close" … />}
+    </div>
+  </div>
+</anchored>
 ```
 
 Surface style: `display:"flex",flexDirection:"column",gap:space.lg`,
-`backgroundColor:colors.popover`, `borderRadius:radius.lg`,
-`borderWidth:1,borderColor:colors.border`, `boxShadow:elevation.lg`,
-`padding:space.xl`, `width:"100%"`, `maxWidth:{sm:360,md:480,lg:640}`,
-`pointerEvents:"auto"`.
+`backgroundColor:colors.popover`, `borderRadius:radius.xl`,
+`borderWidth:1,borderColor:colors.border`, `boxShadow:elevation(theme,"lg")`,
+`padding:space["2xl"]`, `width:"100%"`, `maxWidth:{sm:360,md:480,lg:640}`,
+`maxHeight: height - 2 * space["3xl"]`, `overflow:"scroll"`,
+`position:"relative"`, `pointerEvents:"auto"`.
 
 **Corrected 2026-10-17:** `keyboardFocusDim` **does not exist** in 0.10.0's
 `StyleDesc` (plan 110 §6, verified in `dist/host.d.ts`), so it is not written
 anywhere in this component set; the earlier draft's per-element opt-out is
 unavailable and the note is dropped rather than guessed at.
 
-Close button: 24×24, `position:"absolute",top:space.lg,right:space.lg`,
-`borderRadius:radius.sm`, hover `backgroundColor:colors.accent`. Its glyph
-is a `text` `"×"` for v1 (no icon set dependency yet; note it in the docs and
-swap to `Icon` when `packages/icons` lands).
+Close button: an `IconButton` with `label="Close"`, `testId="dialog-close"`,
+`position:"absolute", top:space.lg, right:space.lg`. Its glyph is a `text`
+`"✕"` for v1 (no icon set dependency yet; note it in the docs and swap to `Icon`
+when `packages/icons` lands).
 
-**Do not re-implement** focus, escape, tab-trapping or portal painting. If a
-behaviour is missing, add it to the interlock list and report; do not fork GPUix.
+Focus, escape, tab trapping and the veil are implemented here, on top of the
+measured primitives — not re-implemented GPUix behaviours, because 0.10.0 ships
+none of them:
+
+- on open, remember `getFocusedElementId()` and `focusElement(contentId)`;
+- on close (unmount), restore that id when `getElementBounds(id) !== null`;
+- `Escape` → `dismissTopLayer(event)`; the root pushed its close handler on open;
+- `Tab` / `Shift+Tab` → `focusNextWithin(contentId)` / `focusPreviousWithin(contentId)`;
+- outside press → `dismissTopLayer(event)` (the press has already moved focus).
+
 
 ## 3. `src/confirm-dialog.tsx`
 
@@ -177,17 +239,20 @@ export interface ConfirmDialogProps {
 Behaviour (each bullet is a test):
 - Opens as a `Dialog` with `label={title}`.
 - **Initial focus is Cancel.** Safe default: Enter on an untouched dialog cancels.
-  Implement with `initialFocus={() => cancelRef.current?.id ?? null}`.
+  Implemented by focusing the Cancel button's native id in a layout effect that
+  runs after `DialogContent`'s own focus-in (child effects run first), because
+  0.10.0 has no `initialFocus` contract to hand a ref to (STOP 1 below records
+  this deviation from the first draft).
 - Cancel closes and calls `onOpenChange(false)`; it does **not** call `onConfirm`.
 - Confirm calls `onConfirm` once, then closes only when the caller does (the
   caller owns async work through `open`). Document this: the dialog does not
   close itself on confirm, so a failed save can keep it open with the error.
-- `loading`: confirm shows a `Spinner`, both buttons are `disabled`,
-  `Escape` and backdrop dismissal are suppressed (`disablePointerDismissal`),
-  and the confirm button stays focusable (`focusableWhenDisabled`) so focus is
-  not lost.
-- `tone="danger"`: confirm uses the `danger` button variant and a destructive
-  icon-less emphasis; the title is unchanged.
+- `loading`: the confirm button shows a `…` text glyph before its label (no
+  `Spinner` exists yet), both buttons are `disabled`, and the root gets
+  `dismissible={!loading}` so `Escape` and the backdrop press do nothing.
+- `tone="danger"`: confirm uses the `danger` button variant; the title is
+  unchanged.
+
 
 ## 4. `src/popover.tsx`
 
@@ -204,27 +269,30 @@ export interface PopoverContentProps extends FloatingContentProps {
 export const PopoverContent: FC<PopoverContentProps>;
 ```
 
-`PopoverContent` renders `DismissableLayer` → `FloatingLayer` with:
+`PopoverContent` renders `FloatingLayer` (corrected 2026-10-17: there is no
+`DismissableLayer`; the dismiss stack is `internal/dismiss-layer.ts`) with:
 - `autoFocus`, `tabIndex={-1}` so keys reach it (`keyboardFocusDim` does not
   exist in 0.10.0 — corrected 2026-10-17);
 - `onMouseDownOutside` → close **without** restoring focus (the press gives
   focus to what was pressed; restoring would steal it);
-- `onKeyDown`: `Escape` is handled by `DismissableLayer`; `Tab` closes the
-  popover and lets focus move (do not `preventDefault`).
+- `onKeyDown`: `Escape` → `dismissTopLayer(event)`; `Tab` closes the popover and
+  lets focus move (no trapping).
 - Surface style identical to the dialog minus the shadow: `colors.popover`,
-  `borderRadius:radius.md`, `borderWidth:1`, `borderColor:colors.border`,
-  `boxShadow:elevation.md`, `padding:space.lg`, `minWidth:200`.
+  `borderRadius:radius.lg`, `borderWidth:1`, `borderColor:colors.border`,
+  `boxShadow:elevation(theme,"md")`, `padding:space.lg`, `minWidth:200`.
 
-`PopoverTrigger` uses `buttonProps()` from `@gpuix/react` and sets
-`aria-expanded`, `aria-haspopup:"dialog"`, `tabIndex:0`. Clicking while open
-closes; pressing outside closes and must not immediately re-open (GPUix solves
-this in Select with a one-tick flag — copy that technique, it is proven).
+`PopoverTrigger` uses the local `Button` and sets `aria-expanded`,
+`aria-haspopup:"dialog"`, `tabIndex:0`. Clicking while open closes. A press
+outside closes and must not immediately re-open: copy Select's proven one-tick
+flag (`dismissedByOutsidePress` + `triggerPressedWhileOpen`, reset through
+`queueMicrotask`) — it is the only measured fix for the mousedown→click loop.
+
 
 ## 5. Tests
 
 `src/dialog.test.tsx` — render with a trigger; use `renderComponent`.
 1. Click the trigger → dialog text appears; `findByType("anchored")` includes a
-   `fill:"window"` node.
+   node at `{x:0,y:0}`, and the backdrop measures the full window.
 2. Focus enters the popup: `getFocusedElementId()` is non-null and equals the
    popup's id (or a descendant).
 3. `simulateKeyDown("escape")` closes it; text gone.
@@ -234,7 +302,10 @@ this in Select with a one-tick flag — copy that technique, it is proven).
    something".
 6. After close, focus returns to the trigger.
 7. `label` appears as `aria-label` in the tree JSON.
-8. Both themes: content background equals the theme's `colors.popover`.
+8. Both themes: content background equals the theme's `colors.popover`, the
+   backdrop equals `colors.overlay`.
+9. `dismissible={false}`: neither Escape nor a backdrop press closes it.
+
 
 `src/confirm-dialog.test.tsx`
 1. Opens with focus on Cancel (`getFocusedElementId()` equals the cancel id).
@@ -284,9 +355,12 @@ Expected: exits 0; the three new suites ran and are not skipped.
 
 ## 8. STOP conditions
 
-1. `DialogPopup` `initialFocus` cannot target a ref'd element (it takes
-   `FocusTarget`), so the Cancel-first guarantee is not implementable → STOP
-   and report; do not silently change the safe default.
+1. ~~`DialogPopup` `initialFocus` cannot target a ref'd element~~ — resolved
+   2026-10-17: 0.10.0 has no `DialogPopup`; `DialogContent` focuses itself and
+   `ConfirmDialog` focuses Cancel afterwards. If that ordering ever stops
+   holding (focus lands on the content, not Cancel), STOP and report — do not
+   silently change the safe default.
+
 2. Focus does not return to the trigger after close in the native test renderer
    → this is a runtime bug; report both runs, do not add a manual
    `focusElement` workaround.
@@ -298,9 +372,9 @@ Expected: exits 0; the three new suites ran and are not skipped.
 
 ## 9. Acceptance criteria
 
-- [ ] Dialog, ConfirmDialog, Popover implemented with the APIs above.
-- [ ] Every test bullet in §5 exists and can fail.
-- [ ] Focus-in, focus-return, Escape, backdrop, outside-click and Tab behaviour
+- [x] Dialog, ConfirmDialog, Popover implemented with the APIs above.
+- [x] Every test bullet in §5 exists and can fail.
+- [x] Focus-in, focus-return, Escape, backdrop, outside-click and Tab behaviour
       proven in the native test renderer.
-- [ ] Examples + docs pages + `COMPONENTS.md` rows for the three components.
-- [ ] Limitation (no `aria-labelledby`) documented with evidence.
+- [x] Examples + docs pages + `COMPONENTS.md` rows for the three components.
+- [x] Limitation (no `aria-labelledby`) documented with evidence.

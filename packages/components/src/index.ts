@@ -10,5 +10,8 @@ export * from "./alert.js";
 export * from "./avatar.js";
 export * from "./badge.js";
 export * from "./card.js";
+export * from "./confirm-dialog.js";
+export * from "./dialog.js";
 export * from "./empty-state.js";
 export * from "./list.js";
+export * from "./popover.js";

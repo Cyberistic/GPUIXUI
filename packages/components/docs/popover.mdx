@@ -1,0 +1,102 @@
+---
+title: Popover
+description: A floating panel anchored to the control that opened it.
+---
+
+`Popover` floats a surface next to its trigger without making the rest of the
+window modal. Positioning is GPUix's own `anchored` layer, so it flips and snaps
+to stay inside the window; the component owns the open state, the dismissal rules
+and the trigger's re-open guard.
+
+```tsx
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@gpuixui/components/popover";
+
+<Popover>
+  <PopoverTrigger>Columns</PopoverTrigger>
+  <PopoverContent side="bottom" align="end">
+    <ColumnToggles />
+  </PopoverContent>
+</Popover>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Popover` | open state and the positioning root the anchored layer measures |
+| `PopoverTrigger` | a button that toggles the popover, `aria-expanded` and `aria-haspopup="dialog"` included |
+| `PopoverContent` | the floating surface, rendered only while open |
+
+`PopoverContent` takes `side` (`top`/`right`/`bottom`/`left`, default `"bottom"`),
+`align` (`start`/`center`/`end`, default `"start"`), `sideOffset` (default `6`) and
+`collisionPadding` (default `8`, the margin kept from the window edge when the
+layer flips).
+
+## Dismissal
+
+| Action | Result |
+| ------ | ------ |
+| `Escape` | closes, and returns focus to the trigger |
+| `Tab` | closes and lets focus move on — a popover is not modal |
+| press outside | closes without moving focus (the press already gave it) |
+| press inside | does nothing |
+| click the trigger while open | closes it |
+
+The popover is a layer in the same dismiss stack as `Dialog`, so pressing outside
+both closes the popover first and leaves the dialog open. The trigger records
+whether it was open at **mouse-down**, which is what stops a press on the trigger
+from closing and then immediately re-opening the popover on the following click.
+
+## Controlled and uncontrolled
+
+```tsx
+<Popover defaultOpen>…</Popover>;                       // remembers
+<Popover open={open} onOpenChange={setOpen}>…</Popover>; // app remembers
+```
+
+## Focus and keyboard
+
+Focus moves into the surface on open, so keys reach its content without a click.
+The surface is a tab stop (`tabIndex={-1}`) but not a trap: Tab leaves and closes
+it. The trigger is an ordinary button: `Enter`/`Space` toggle it.
+
+## Theming
+
+The surface paints `colors.popover` / `colors.popoverForeground`,
+`radius.lg`, `borderWidth.thin` in `colors.border`, the `md` elevation and
+`spacing.lg` padding, with a 200px minimum width.
+
+## Accessibility and limitations
+
+- `aria-expanded` on the trigger; `aria-haspopup="dialog"` because the surface is
+  a panel, not a menu.
+- **No `aria-controls`/`aria-labelledby`**: `@gpuix/native@0.10.0` exposes no
+  relationship properties (see `HostProps` in `@gpuix/native/dist/host.d.ts`), so
+  the link between trigger and surface is positional, not semantic.
+- Positioning is the runtime's anchored layer: there is no arrow, no custom anchor
+  element, and no separate backdrop. Keep a popover's content short; for a form
+  that must block the window, use **Dialog**.
+- A press outside hands focus to whatever was pressed, so focus is not restored to
+  the trigger in that path. Escape is the keyboard path that restores it.
+
+## Verification
+
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (8 tests): opens
+below the trigger by measured bounds, honours `side="right"`, Escape closing and
+restoring focus, an outside press closing without the following click re-opening
+it, a press inside keeping it open, Tab closing it, and a controlled popover
+reporting `onOpenChange` while staying as the consumer says.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Dialog** — a modal surface when the window itself must be blocked.
+- **Dropdown menu** — a list of actions anchored to a trigger.
+- **Badge** — a common read-only element inside a popover body.

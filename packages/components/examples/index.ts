@@ -12,8 +12,11 @@ import { AlertExample } from "./alert.example.js";
 import { AvatarExample } from "./avatar.example.js";
 import { BadgeExample } from "./badge.example.js";
 import { CardExample } from "./card.example.js";
+import { ConfirmDialogExample } from "./confirm-dialog.example.js";
+import { DialogExample } from "./dialog.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { ListExample } from "./list.example.js";
+import { PopoverExample } from "./popover.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
@@ -21,6 +24,9 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   avatar: AvatarExample,
   badge: BadgeExample,
   card: CardExample,
+  "confirm-dialog": ConfirmDialogExample,
+  dialog: DialogExample,
   "empty-state": EmptyStateExample,
   list: ListExample,
+  popover: PopoverExample,
 };
