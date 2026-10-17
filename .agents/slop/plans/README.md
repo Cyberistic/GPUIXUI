@@ -70,6 +70,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [071](./071-contrast-contract.md) | A contrast contract the consumer can run | F | 013, 014, 057, 059, 063 | done |
 | [072](./072-palette-table-guard.md) | Guard the palette ramps in `docs/tokens.md` | F | 058, 066 | done |
 | [073](./073-declared-contrast.md) | A theme declares its contrast level | F | 013, 063, 071 | done |
+| [074](./074-contrast-state-and-overlay-surfaces.md) | The state washes and floating surfaces the contrast contract never checked | F | 059, 063, 071, 073 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -181,7 +182,15 @@ and the one check that exists to catch a broken high-contrast theme measured it
 against the default floors. A resolved `Theme` now records the floor set it is
 designed against, beside `mode`; both functions default to that declaration, and
 `docs/tokens.md`'s `Theme` block is held to the interface so a new field cannot
-land undocumented.
+land undocumented. 074 closes the contract's last blind spot: the list claimed
+to hold every documented pair, but it measured the focus ring only against the
+canvas, card and popover, status text only against `background` and `card`, and
+the control boundary only against `background`, `card` and `input`. Focus and
+selection co-occur in every row-based component, so the ring is painted on the
+`hover`/`active`/`selected` washes; a control or a status label inside a dialog,
+popover or toast is painted on `popover`. The eight missing pairs already pass
+in all four colour sets, so no colour moves — the gate now catches a palette
+edit that would have shipped a focused selected row with no visible focus.
 
 ### Reference adoption (block `200–299`)
 
