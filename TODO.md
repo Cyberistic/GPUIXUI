@@ -56,9 +56,9 @@ the `@gpuixui/tokens/react` provider
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`); Fumadocs Theming page from `docs/tokens.md` (owner: `docs-site`);
-add `tokens` to `packages/README.md` and ignore the `references` symlink in
-`.gitignore` (owner: repo tooling)
+`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
+(owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
+`references` symlink in `.gitignore` (owner: repo tooling)
 
 ## Phase C — Tier 1–2 components
 
