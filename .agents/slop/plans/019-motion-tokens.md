@@ -312,3 +312,23 @@ Two-direction proof for the ms→seconds rule: change `duration` to
 - [ ] `TODO.md` ticks the motion item and records the consumer interlock.
 - [ ] `nub run check`, `nub run lint`, `nub run test` exit 0.
 - [ ] Committed on `agent/tokens-theme` and pushed.
+
+## 8. Addendum — the group-completeness guard
+
+Adding a group touches five places (`Theme`, `ThemeOverrides`, `extendTheme`,
+four themes). `theme.test.ts` gained a `describe("theme completeness")` block in
+the same change:
+
+- the four shipped themes must share a key set (no hardcoded list, so a
+  legitimate new group added to all four needs no test edit);
+- `extendTheme` keeps the set under a real override, not only under `{}`;
+- the reference set must contain `motion`.
+
+**Two-direction proof (run and captured):** removing `motion` from
+`highContrastDarkTheme` fails the guard (`high-contrast dark` key set) and the
+motion-sharing test; restoring it passes. 199 tests.
+
+This was originally filed as a separate plan `020`; the plan index reserves
+`020–049` for primitives, icons and Phase C, so it is folded in here rather than
+colliding with `020-gpuix-runtime-capability.md`.
+

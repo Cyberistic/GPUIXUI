@@ -11,7 +11,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Harness — the supervisor that keeps the swarm alive
 
-`[x]` `[█████████░]` 5/6
+`[x]` `[█████████░]` 6/7
 
 `[x]` Repo on `proserver` with the required shape, mission, rules and plan index
 `[x]` opencode 2.0.31 installed with the provider credentials and a trimmed config
@@ -21,6 +21,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[ ]` Enforce one live session per worktree: the `opencode run` loop currently
 starts a new session before the previous one closes (evidence:
 `.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`)
+`[x]` Model fallback chain with limit detection, one active model for the whole swarm, and an hourly recovery probe (see `scripts/README.md`)
 
 ---
 
@@ -50,7 +51,7 @@ starts a new session before the previous one closes (evidence:
 
 `[x]` `[████████░░]` 14/17
 
-`[x]` Write and index the tokens/theme plan set (plans 010–020)
+`[x]` Write and index the tokens/theme plan set (plans 010–019)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -70,7 +71,8 @@ prebuilt `dist` (plan 016)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Add motion tokens (durations/easings); three `primitives` call sites held
 `120`/`700` as literals (plan 019)
-`[x]` Guard that all four shipped themes carry every theme group (plan 020)
+`[x]` Guard that all four shipped themes carry every theme group (part of plan
+019)
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
@@ -125,3 +127,10 @@ components take enter/exit transitions from `motionTransition` (owner:
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`)
+
+## Swarm-owned blockers (fix these)
+
+- **B1** GPUix native bindings fail to install (blocks the playground + every native smoke test).
+- **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
+
+Both are specified in ; each fix starts with a plan under .
