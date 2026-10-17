@@ -14,6 +14,9 @@
     "label",
     "text-input",
     "text-area",
-    "select"
+    "checkbox",
+    "radio-group",
+    "select",
+    "switch"
   ]
 }

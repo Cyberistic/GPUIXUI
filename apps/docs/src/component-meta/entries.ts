@@ -263,13 +263,38 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  planned(
+  delivered(
     "checkbox",
     "Checkboxes",
     "1",
     "Toggles a single independent option.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/primitives/src/components/Checkbox.tsx",
+      related: ["switch", "radio-group"],
+      limitations: [
+        "No aria-checked: state is announced through aria-valuetext.",
+        "No label-inside-the-control composition.",
+        "No partial-state animation and no custom mark.",
+      ],
+    },
   ),
-  planned("radio-group", "Radio groups", "1", "Selects one option from a set."),
+  delivered(
+    "radio-group",
+    "Radio groups",
+    "1",
+    "Selects one option from a set.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/primitives/src/components/RadioGroup.tsx",
+      related: ["checkbox", "select"],
+      limitations: [
+        "Options are data: no compound item or rich child content.",
+        "No type-ahead selection.",
+        "An option description is not associated for assistive technology.",
+      ],
+    },
+  ),
   delivered("select", "Selects", "1", "Selects one value from a list.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Select.tsx",
@@ -281,7 +306,16 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       "No search or type-ahead, and no multi-select.",
     ],
   }),
-  planned("switch", "Switches", "1", "Toggles a setting on or off."),
+  delivered("switch", "Switches", "1", "Toggles a setting on or off.", {
+    gpuix: "partial",
+    sourcePath: "packages/primitives/src/components/Switch.tsx",
+    related: ["checkbox", "radio-group"],
+    limitations: [
+      "No aria-checked and no on/off text inside the control.",
+      "No slide animation: the thumb jumps between two positions.",
+      "No loading or pending state; disable it while a request is in flight.",
+    ],
+  }),
   planned(
     "progress",
     "Progress",

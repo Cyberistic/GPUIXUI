@@ -1,0 +1,108 @@
+---
+title: Checkboxes
+description: Toggles a single independent option.
+---
+
+<ComponentState slug="checkbox" />
+
+<NativePreview slug="checkbox" />
+
+`Checkbox` is a square selection control for an independent choice. It shares
+one three-state paint (`unchecked`, `checked`, `indeterminate`) with `Switch` and
+`RadioGroup` through `core/selection.ts`, so they cannot drift apart.
+
+## Usage
+
+```tsx
+import { Checkbox } from "@gpuixui/primitives";
+
+<Checkbox
+  checked={email}
+  onChange={setEmail}
+  label="Email notifications"
+/>;
+```
+
+An indeterminate parent:
+
+```tsx
+<Checkbox
+  checked={email && push}
+  indeterminate={!email !== !push}
+  onChange={(next) => {
+    setEmail(next);
+    setPush(next);
+  }}
+  label="All channels"
+/>;
+```
+
+## Variants
+
+`accent` is `primary` (default) or `destructive`. The three paint states are
+`unchecked`, `checked` and `indeterminate`; they are shared with the other
+selection controls, not reimplemented here.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; the box side comes from the theme's
+`iconSize` scale. Radius comes from `radius.sm`.
+
+## States
+
+- controlled (`checked`) or uncontrolled (`defaultChecked`);
+- `indeterminate` paints a dash and announces `mixed`; it overrides the paint,
+  not the value — activation still toggles the underlying boolean;
+- `disabled` refuses pointer and keys and leaves the tab order;
+- `invalid` gives the empty box a destructive border.
+
+## Composition
+
+The selection example builds notification preferences with an indeterminate
+"all channels" parent:
+
+<include lang="tsx" meta='title="packages/primitives/examples/selection.example.tsx"'>
+  ../../../../../packages/primitives/examples/selection.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Checkbox.tsx" name="CheckboxProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| Space | toggles on key **up** |
+| Enter | toggles on key **down** |
+| held key | repeat events do nothing |
+| Tab | reaches the box when it is not disabled |
+
+## Theming
+
+`selectionBoxStyle` resolves the box side from `iconSize`, the radius from
+`radius.sm`, the border from `input`/`destructive`, the fill from the accent role
+and the mark from `selectionMarkColor`. Hover and press are declared in
+`style.hover`/`style.active`, not scripted. Disabled adds half opacity and removes
+pointer feedback.
+
+## Accessibility and limitations
+
+- Role: `CheckBox` in the runtime's accessibility tree.
+- State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
+  `mixed`), because GPUix 0.10.0 has no `aria-checked`.
+- `disabled` removes the tab stop; there is no `aria-disabled`.
+- The visible name is a separate `Label`; `label` is the accessible name, and
+  there is no `aria-labelledby`.
+- No label-inside-the-control composition, no partial-state animation and no
+  custom mark.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Checkbox.tsx"'>
+  ../../../../../packages/primitives/src/components/Checkbox.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="checkbox" />

@@ -1,0 +1,92 @@
+---
+title: Switches
+description: Toggles a setting on or off.
+---
+
+<ComponentState slug="switch" />
+
+<NativePreview slug="switch" />
+
+`Switch` is the "takes effect now" control: a track and a thumb, announced with
+the switch role. It shares `core/selection.ts`'s metrics with `Checkbox`, so the
+two line up on the same row, but they mean different things — a checkbox is a
+choice submitted with a form, a switch is applied immediately.
+
+## Usage
+
+```tsx
+import { Switch } from "@gpuixui/primitives";
+
+<Switch
+  checked={paused}
+  onChange={setPaused}
+  label="Pause all notifications"
+/>;
+```
+
+## Variants
+
+`accent` is `primary` (default) or `destructive`; that is the colour of the
+on-track fill. There is no separate label-inside variant and no on/off text
+inside the control.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; the track height comes from the theme's
+`iconSize` scale, and the thumb is positioned inside the track.
+
+## States
+
+Controlled (`checked`) or uncontrolled (`defaultChecked`), plus `disabled`
+(refuses pointer and keys, leaves the tab order) and `invalid` (the track takes
+the destructive role). There is no loading or pending state — disable the switch
+while a request is in flight.
+
+## Composition
+
+The selection example uses a switch for an immediately-applied preference:
+
+<include lang="tsx" meta='title="packages/primitives/examples/selection.example.tsx"'>
+  ../../../../../packages/primitives/examples/selection.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Switch.tsx" name="SwitchProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| Space | toggles on key **up** |
+| Enter | toggles on key **down** |
+| held key | repeat events do nothing |
+| Tab | reaches the switch when it is not disabled |
+
+## Theming
+
+`switchTrackStyle` and `switchThumbStyle` resolve both parts from the same
+selection spec. The thumb is positioned by the track's `justifyContent`, not a
+pixel offset, because the runtime has no `transform` — so it cannot drift out of
+the pill. Disabled adds half opacity and removes feedback.
+
+## Accessibility and limitations
+
+- Role: `Switch`. State is announced through **`aria-valuetext`**
+  (`checked` / `unchecked`); there is no `aria-checked` in 0.10.0.
+- `disabled` removes the tab stop; no `aria-disabled`.
+- The name comes from `label`; there is no `aria-labelledby`, so pair it with a
+  visible `Label` or a text row.
+- No on/off text inside the control, and no slide animation: the thumb jumps
+  between the two `justifyContent` values.
+- No loading or pending state.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Switch.tsx"'>
+  ../../../../../packages/primitives/src/components/Switch.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="switch" />

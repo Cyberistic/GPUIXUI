@@ -1,0 +1,101 @@
+---
+title: Radio groups
+description: Selects one option from a set.
+---
+
+<ComponentState slug="radio-group" />
+
+<NativePreview slug="radio-group" />
+
+`RadioGroup` is a data-driven radio group. The group owns the roving index and
+the arrow contract, so options arrive as `RadioOption[]` rather than compound
+children — a deviation from shadcn's shape recorded as decision D18 in
+`PLAN.md`.
+
+## Usage
+
+```tsx
+import { RadioGroup } from "@gpuixui/primitives";
+
+<RadioGroup
+  label="Digest cadence"
+  value={cadence}
+  onChange={setCadence}
+  options={[
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly", description: "Every Monday." },
+    { value: "never", label: "Never" },
+  ]}
+/>;
+```
+
+## Variants
+
+`RadioOption` is `{ value, label, description?, disabled? }`; there is no
+compound item component and no rich child content. `accent` is `primary`
+(default) or `destructive`.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; the circle follows the same
+`selectionBoxStyle` family as a checkbox of the same size. `orientation` is
+`vertical` (default) or `horizontal` and also chooses the arrow axis.
+
+## States
+
+The group can be disabled as a whole, or an individual option can be disabled;
+disabled options are skipped by the arrows and are not tab stops. Selection is
+controlled (`value`) or uncontrolled (`defaultValue`).
+
+## Composition
+
+The selection example pairs a radio group with checkboxes and a switch:
+
+<include lang="tsx" meta='title="packages/primitives/examples/selection.example.tsx"'>
+  ../../../../../packages/primitives/examples/selection.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/RadioGroup.tsx" name="RadioGroupProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| ↑ / ↓ (vertical) | move the selection, wrapping, skipping disabled options |
+| ← / → (horizontal) | the same on the horizontal axis |
+| Home / End | jump to the first / last enabled option and select it |
+| Enter / Space | select the active option |
+| Tab | moves to the group as **one** stop; the active option holds it |
+
+Arrows and Home/End **select** as they move, matching the platform radio
+contract rather than moving focus alone.
+
+## Theming
+
+The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
+`radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
+same size are the same square/circle family. Gaps use `spacing.sm`.
+
+## Accessibility and limitations
+
+- Roles: `RadioGroup` and `RadioButton` in AccessKit. The group's name comes from
+  `label`.
+- Each option announces its selected state through **`aria-valuetext`**
+  (`checked` / `unchecked`); there is no `aria-checked`.
+- An option's own `label` is its accessible name; the visible text beside the
+  circle is a separate `Text`.
+- Options are data: no compound item, no rich child content.
+- No type-ahead selection.
+- A `description` is not associated with the option for assistive technology.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/RadioGroup.tsx"'>
+  ../../../../../packages/primitives/src/components/RadioGroup.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="radio-group" />
