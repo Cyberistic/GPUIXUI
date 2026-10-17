@@ -174,6 +174,23 @@ Apply it while the control is focused. A mouse press shows the ring too, because
 the runtime has no `:focus-visible` equivalent. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+## Selection and scrollbars
+
+`selectionStyle(theme)` maps the translucent `selection` role to the runtime's
+inherited `selectionColor`; apply it once on the app root. Chrome that must not
+be selectable sets `userSelect: "none"`. A runnable example lives in
+[`src/selection.example.ts`](./src/selection.example.ts).
+
+```tsx
+import { selectionStyle } from "@gpuixui/tokens";
+
+<div style={selectionStyle(theme)}>{children}</div>;
+```
+
+The native scrollbar cannot be tinted in GPUix 0.10.0 — `scrollbarColor` and
+`scrollbarWidth` are unreleased on `main` — so `theme.colors.scrollbar` is
+reserved for the release that exposes them.
+
 ## Platform styles
 
 The variants in `platformNames` are full token themes, not docs-only CSS:

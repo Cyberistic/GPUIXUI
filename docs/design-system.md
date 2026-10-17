@@ -208,7 +208,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
-| text selection | `selection` translucent wash |
+| text selection | `selection` wash via `selectionColor`; `userSelect: "none"` opts chrome out |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface; a tone from untrusted data narrows with `isStatusTone` |
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
@@ -273,6 +273,8 @@ design system cannot compensate for a missing role.
 | no `letterSpacing` | no display tracking or all-caps tracking |
 | no OS appearance query | the app owns the mode |
 | no `outline*`, no `focusVisible`, one `boxShadow` | the focus ring is a spread shadow; overlays and menus cannot animate |
+| `selectionColor` and `userSelect` inherit | set the selection wash once on the app root; chrome opts out locally |
+| no `scrollbarColor`/`scrollbarWidth` in 0.10.0 | a scroll thumb cannot be tinted, so `scrollbar` is reserved |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; tests restrict roles to hex |

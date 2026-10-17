@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { alpha } from "./color.js";
+import { appRootStyle, chromeStyle } from "./selection.example.js";
 import { statusToneStyles } from "./status-tone.example.js";
 import { statusTextStyles } from "./status-text.example.js";
 import {
   controlHeight,
   controlPaddingX,
+  selectionStyle,
   statusTone,
   statusTones,
   textStyle,
@@ -158,5 +160,29 @@ describe("status tone example", () => {
     );
     expect(style.text.color).toBe(lightTheme.colors.warningSoftForeground);
     expect(style.text.fontSize).toBe(lightTheme.typography.label.fontSize);
+  });
+});
+
+describe("selectionStyle", () => {
+  it("maps the theme's wash to the runtime's selection property", () => {
+    expect(selectionStyle(lightTheme)).toEqual({
+      selectionColor: lightTheme.colors.selection,
+    });
+  });
+
+  it("follows the active theme", () => {
+    [darkTheme, highContrastLightTheme].forEach((theme) => {
+      expect(selectionStyle(theme).selectionColor).toBe(theme.colors.selection);
+    });
+    expect(selectionStyle(darkTheme).selectionColor).not.toBe(
+      selectionStyle(lightTheme).selectionColor,
+    );
+  });
+});
+
+describe("selection example", () => {
+  it("sets the wash on the root and opts chrome out", () => {
+    expect(appRootStyle(lightTheme)).toEqual(selectionStyle(lightTheme));
+    expect(chromeStyle.userSelect).toBe("none");
   });
 });

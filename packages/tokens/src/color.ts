@@ -177,7 +177,7 @@ export interface ThemeColors {
   readonly placeholder: string;
   /** Focus ring. */
   readonly ring: string;
-  /** Text selection wash. Translucent, so text stays legible. */
+  /** Text selection wash for `selectionColor`. Translucent, so text stays legible. */
   readonly selection: string;
   /** Modal scrim. */
   readonly overlay: string;
@@ -195,7 +195,10 @@ export interface ThemeColors {
   readonly disabledForeground: string;
   /** Loading placeholder. */
   readonly skeleton: string;
-  /** Scrollbar thumb. */
+  /**
+   * Scrollbar thumb tint. Reserved in GPUix 0.10.0: the platform paints the
+   * scrollbar and exposes no tint.
+   */
   readonly scrollbar: string;
   /** Elevation tint. */
   readonly shadow: string;

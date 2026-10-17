@@ -150,3 +150,26 @@ export function focusRing(theme: Theme): FocusRing {
     },
   };
 }
+
+/** The inherited text-selection style. */
+export interface SelectionStyle {
+  /** The theme's translucent selection wash. */
+  readonly selectionColor: string;
+}
+
+/**
+ * The text-selection style for a subtree.
+ *
+ * GPUix's `selectionColor` and `userSelect` inherit, so an application sets the
+ * wash once on its root; a chrome subtree that must not be selectable sets
+ * `userSelect: "none"` itself. The wash is translucent, so selected text keeps
+ * the theme's foreground contrast.
+ *
+ * @example
+ * ```tsx
+ * <div style={selectionStyle(theme)}>{children}</div>
+ * ```
+ */
+export function selectionStyle(theme: Theme): SelectionStyle {
+  return { selectionColor: theme.colors.selection };
+}

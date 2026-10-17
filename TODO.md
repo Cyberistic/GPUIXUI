@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 36/51
+`[x]` `[██████░░░░]` 37/56
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -101,6 +101,9 @@ choice narrows through the union owner instead of a retyped guard (plan 067)
 `isStatusTone` — so a stored density and a payload tone narrow through the
 package too; the private string check in `theme.ts` is gone and the preset
 names are no longer retyped in `scale.test.ts` (plan 068)
+`[x]` Name the runtime's reach for the last two unapplied roles: ship
+`selectionStyle` for the inherited `selectionColor`, and re-document
+`scrollbar` as reserved because 0.10.0 exposes no tint (plan 069)
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)
@@ -140,7 +143,10 @@ Default) switches every preview through `getPlatformTheme`, keeps the choice in
 shareable page state and remembers it across navigation; document it under
 Theming as an illustrative browser approximation (owner: `docs-site`; plan 063)
 `[ ]` Cross-team: a native visual per-platform comparison built on
-`getPlatformTheme` (owner: `playground`; plan 063); ignore the `references`
+`getPlatformTheme` (owner: `playground`; plan 063)
+`[ ]` Cross-team: `playground` paints the selection wash through
+`selectionStyle` in the theme gallery, so `selectionColor` is verified in the
+runtime rather than only in the type and docs (owner: `playground`; plan 069); ignore the `references`
 **symlink** — a `references/` rule does not match a symlink, so every worktree
 shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `tokens`)

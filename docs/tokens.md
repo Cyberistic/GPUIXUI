@@ -35,6 +35,7 @@ import {
   platformNames,
   platformStyles,
   platformTypes,
+  selectionStyle,
   statusTone,
   statusTones,
   systemUiFont,
@@ -116,7 +117,7 @@ it can never be confused with `primary`.
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#66707F` | `#7C8595` | placeholder text |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
-| `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha) |
+| `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#EEF1F5` | `#222730` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
@@ -125,7 +126,7 @@ it can never be confused with `primary`.
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface |
 | `disabledForeground` | `#A1A9B7` | `#545D6C` | disabled text |
 | `skeleton` | `#E1E5EC` | `#2A303B` | loading placeholder |
-| `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb |
+| `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#191D2526` | `#00000080` | elevation tint |
 
 ### Palette ramps
@@ -271,7 +272,7 @@ getTheme("light"); // the default light theme, unchanged
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
-| `selection` | `#7567F24D` | `#C7CBFF4D` | text selection wash (30% alpha) |
+| `selection` | `#7567F24D` | `#C7CBFF4D` | text selection wash (30% alpha; `selectionColor`) |
 | `overlay` | `#000000A6` | `#000000CC` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
@@ -280,7 +281,7 @@ getTheme("light"); // the default light theme, unchanged
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface |
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
 | `skeleton` | `#D6D6D6` | `#3D3D3D` | loading placeholder |
-| `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb |
+| `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#00000040` | `#000000B3` | elevation tint |
 
 ## Typography
@@ -660,6 +661,47 @@ border box and takes no space in layout.
 A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).
 
+## Text selection
+
+GPUix 0.10.0 exposes `selectionColor` and `userSelect` as inherited `StyleDesc`
+properties, so native text selection is themeable. `selectionStyle(theme)` maps
+the `selection` role to the property:
+
+```tsx
+import { selectionStyle } from "@gpuixui/tokens";
+
+<div style={selectionStyle(theme)}>{children}</div>;
+```
+
+Both selection properties inherit down the tree, so an application sets the wash
+once on its root; chrome that must not be selectable — a toolbar, a tab strip,
+window controls — sets `userSelect: "none"` on its own subtree. The wash is
+translucent (24% in the default themes, 30% at high contrast), so selected text
+keeps the foreground's contrast.
+
+```tsx
+import { selectionStyle } from "@gpuixui/tokens";
+
+const chrome = { userSelect: "none" } as const;
+
+<div style={selectionStyle(theme)}>
+  <div style={chrome}>Toolbar</div>
+  <text>Selectable content</text>
+</div>;
+```
+
+A runnable example lives in
+[`src/selection.example.ts`](../packages/tokens/src/selection.example.ts).
+
+### Scrollbars
+
+The opposite case. GPUix 0.10.0 exposes no `scrollbarColor` or `scrollbarWidth`
+— both exist only as unreleased changesets on GPUix's `main` — so a scroll
+container's thumb, where the platform draws one, is not ours to tint.
+`theme.colors.scrollbar` is therefore **reserved**: a custom scroll indicator the
+application draws can use it, but the native thumb cannot. No helper is shipped
+for a style the pinned runtime does not read.
+
 ## Theme API
 
 ```ts
@@ -912,6 +954,10 @@ see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
 - No `outline*` and no `focusVisible` in the runtime (GPUix 0.10.0): the focus
   ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
   `borderRadius` only because a shadow does.
+- No scrollbar tint: GPUix 0.10.0 exposes no `scrollbarColor` or
+  `scrollbarWidth` (both are unreleased on GPUix main), so `scrollbar` is
+  reserved for the release that does. Text selection **is** supported through
+  `selectionColor`; see [Text selection](#text-selection).
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
   only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.

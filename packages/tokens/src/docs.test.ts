@@ -260,6 +260,18 @@ describe("docs/tokens.md status table", () => {
   });
 });
 
+describe("docs/tokens.md runtime reach", () => {
+  it("names the application point for native text selection", () => {
+    expect(markdown).toContain("`selectionColor`");
+    expect(markdown).toContain("`userSelect`");
+  });
+
+  it("records the scrollbar tint the pinned runtime lacks", () => {
+    expect(markdown).toContain("`scrollbarColor`");
+    expect(markdown).toContain("`scrollbarWidth`");
+  });
+});
+
 describe("docs/tokens.md public values", () => {
   it("names every value the package exports", () => {
     // A name counts only as a whole identifier: `motion` inside

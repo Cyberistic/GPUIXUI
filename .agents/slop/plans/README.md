@@ -65,6 +65,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [066](./066-public-value-coverage.md) | Name every public value; author a platform style | F | 056–065 | done |
 | [067](./067-persisted-choice-guards.md) | Narrowing guards for the persisted theme choices | F | 063, 064, 066 | done |
 | [068](./068-density-and-tone-guards.md) | The last two unions a consumer narrows: density and status tone | F | 064, 066, 067 | done |
+| [069](./069-selection-and-scrollbar-reach.md) | Selection and scrollbar: what the pinned runtime reaches | F | 017, 018, 060 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -139,7 +140,16 @@ is gone — it accepted `"spacious "` and then produced `undefined` metrics thro
 `extendTheme` — and `scale.test.ts` no longer retypes the preset names. Both
 guards narrow `unknown` and are documented under Density, Status tones and Theme
 API; the example file resolves a stored density and a payload tone, so the
-fallback path runs in the suite rather than being sketched.
+fallback path runs in the suite rather than being sketched. 069 is the last
+truth pass over the role catalogue: the pinned `@gpuix/native@0.10.0` does
+declare `selectionColor` and `userSelect` (inherited `StyleDesc` properties), so
+`selectionStyle(theme)` now maps the `selection` role to the property the
+runtime actually reads, and the reference names the opt-out. The same pinned
+types have **no** `scrollbarColor`/`scrollbarWidth` — both are unreleased
+changesets on GPUix main — so `scrollbar` is re-described as reserved instead of
+a paintable thumb, and no helper ships for a style the runtime ignores. Both
+claims are guarded in `docs.test.ts`, because the failure mode is a reference
+that silently stops saying how a token is applied.
 
 ### Reference adoption (block `200–299`)
 
