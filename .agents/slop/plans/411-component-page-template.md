@@ -330,6 +330,28 @@ catch this defect (the wrong name was declared too) and was written, shown not t
 catch it, and dropped rather than kept as dead weight. From the first merged
 component the `sourcePath` check (7) subsumes it: the path contains the package.
 
+### 9b. Page contract (`component-pages.test.ts`, 2026-10-17)
+
+`registry.test.ts` proves a finished component *has* a page; nothing read the
+page. `src/component-pages.test.ts` now makes the template a contract:
+
+- every required section (`Usage`, `Variants`, `Sizes`, `States`, `Composition`,
+  `API reference`, `Keyboard and focus`, `Theming`, `Accessibility and
+  limitations`, `Source`, `Related`) is listed in the template in
+  `apps/docs/README.md`;
+- every finished component's page carries each of those headings and the
+  `<ComponentState slug>` and `<NativePreview slug>` blocks.
+
+`## Composition` was **missing from the template** — `MISSION.md` requires
+composition examples on every component page — so the template gained it, and a
+component with no variants still gets the section (write "none", so a reader can
+tell "not documented" from "does not apply").
+
+Both directions were shown: removing `## Composition` from the README fails
+`documents every required section in the template` (reporting `Composition`), and
+a stub page for a temporarily-`wip` component fails with one line per missing
+section (both edits reverted).
+
 ## 10. STOP conditions
 
 - **Answered (plan 415):** `fumadocs-typescript` in `5.5.2` **does** support this

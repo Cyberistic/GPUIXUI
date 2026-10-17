@@ -13,7 +13,7 @@ type Support = ComponentMetaInput["gpuix"];
 interface PlannedOptions {
   readonly gpuix?: Support;
   readonly related?: readonly string[];
-  /** Overrides the tier's default package; `registry.test.ts` checks it against `PLAN.md`. */
+  /** Overrides the tier's default package when a component lives in its own package. */
   readonly packageName?: string;
 }
 

@@ -65,13 +65,15 @@ description: Triggers an action; the primary interactive control.
 
 ## States
 
+## Composition
+
+## API reference
+
 ## Keyboard and focus
 
 ## Theming
 
 ## Accessibility and limitations
-
-## API reference
 
 ## Source
 
@@ -79,6 +81,13 @@ description: Triggers an action; the primary interactive control.
 
 <RelatedComponents slug="button" />
 ```
+
+The section list is a contract, not a suggestion: `src/component-pages.test.ts`
+fails when a page for a component that is no longer `planned` is missing a
+section, its `<ComponentState slug>` block or its `<NativePreview slug>` block,
+and when this template stops listing one. A component with no variants or sizes
+still gets the section — say "none" rather than deleting it, so a reader can
+tell the difference between "not documented" and "does not apply".
 
 Prop tables use `fumadocs-typescript`'s remark plugin: write
 `<auto-type-table path="./relative/path.ts" name="ButtonProps" />` in the MDX
