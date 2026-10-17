@@ -379,7 +379,7 @@ acceptance number is the actual run: List 22 → 29, behaviour 232 → 239).
 - `TODO.md`: add under "Tier 2 hardening after the inventory closed":
   `- [x] List type-ahead over the shared type-ahead core — plan 130`.
 - `.agents/slop/plans/README.md`: add the 130 row with the final counts.
-- `packages/components/README.md`: no change (it does not name type-ahead).
+- `packages/components/README.md`: the `list.tsx` row mentions type-ahead.
 - `README.md`: no change (component count is unchanged).
 
 ## 9. STOP conditions
