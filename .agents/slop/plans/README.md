@@ -131,7 +131,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–193` is used; `194+` continues
+playground shell and the feasibility probes. `100–194` is used; `195+` continues
 in the same block.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -185,6 +185,7 @@ in the same block.
 | [191](./191-live-selection.md) | Text selection in a real window | B→F | 100, 163, 189, 190 | **landed**: three async selection verbs, a pure drag-geometry helper and `live-selection` — a real drag copies three text nodes, a `userSelect: none` anchor selects nothing, a crossing drag skips the chrome, and `clearSelection`/a click empty it; 9 checks, live `9 → 10`, exit `0`; ending the drag inside the last line fails `exit 1` with the partial copy (§7) |
 | [192](./192-live-motion.md) | Motion in a real window: the paused clock and a mid-tween frame | B→F | 100, 157, 186, 189, 190 | **landed**: `live-motion` — the paused clock collapses a 240 px sidebar to exactly 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and the `AnimatePresence` exit holds; 25 checks, live `10 → 11`, exit `0`; `fastForwardMotion(0)` fails `exit 1` with 0 px. **`onExitComplete` fires twice live** for one exit (headless: once), so handlers must be idempotent; live `bounds` now returns `null` for a removed element (§7) |
 | [193](./193-live-context-menu.md) | The right click and a context menu in a real window | B→F | 100, 164, 187, 189, 190 | **landed**: `AsyncSmokeHost.rightClick` over `mouse.click(button: 2)` and `live-context-menu` — a right click opens at the pointer (1 px), a disabled row is inert, Copy closes, outside/Escape dismiss, a child click bubbles, and a scrolled-container right click keeps the placement with an item below the viewport still hittable; 31 checks, live `11 → 12`, exit `0`; sending button 0 fails `exit 1` (§7) |
+| [194](./194-in-window-float.md) | Detachable tabs as in-window floating panels | B→D | 100, 110, 120, 140, 162, 164, 172, 177, 184 | planned — tear a tab out of a dock strip, drag a clamped absolute float above the dock, re-dock it, restore it; new `float` capability |
 
 Cross-cutting records:
 
