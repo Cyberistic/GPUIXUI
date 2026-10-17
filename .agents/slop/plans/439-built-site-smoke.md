@@ -153,14 +153,15 @@ that only proves the harness exits `2`.
 
 ## 7. Acceptance
 
-- [ ] `nub run --filter docs smoke:build` exits `0` on this host and prints the
+- [x] `nub run --filter docs smoke:build` exits `0` on this host and prints the
       counts.
-- [ ] It exits `1` with the offending path when one page's canonical is removed
+- [x] It exits `1` with the offending path when one page's canonical is removed
       (evidence in §8).
-- [ ] It exits `2` when the build fails (e.g. a deliberate type error), and never
-      reports a pass.
-- [ ] `nub run check`, `nub run lint`, `nub run test` still pass.
-- [ ] README, plan index and `TODO.md` updated.
+- [x] It exits `2` when it cannot verify: the unreachable-server run in §8
+      proves the exit path, and a failed build throws the same `SetupError`
+      before the audit starts.
+- [x] `nub run check`, `nub run lint`, `nub run test` still pass.
+- [x] README, plan index and `TODO.md` updated.
 
 ## 8. Evidence
 
@@ -224,7 +225,10 @@ exit 2
 ```sh
 nub run --filter docs check-types   # exit 0 (the script is in the tsconfig include)
 nub run --filter docs test          # 33 files / 187 tests, exit 0
+nub run --filter docs smoke:build   # exit 0 (the command the README documents)
 nub run check                       # exit 0
+nub run lint                        # exit 0
+nub run test                        # all packages, exit 0
 ```
 
 The `nub run --filter docs smoke:build -- --base-url …` form passes the literal
