@@ -55,6 +55,7 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
+  themeModes,
   themes,
 } from "./theme.js";
 import {
@@ -68,7 +69,7 @@ import {
 import { typography } from "./typography.js";
 
 const variants = ["darwin", "linux", "win32"] as const;
-const modes = ["light", "dark"] as const;
+const modes = themeModes;
 
 describe("platformTypes", () => {
   it("indexes every platform once, in toggle order", () => {

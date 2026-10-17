@@ -16,6 +16,8 @@ import {
   controlSizes,
   densityNames,
   densityPresets,
+  getTheme,
+  highContrastDarkTheme,
   highContrastThemes,
   isControlSize,
   isDensityName,
@@ -27,11 +29,14 @@ import {
   platformNames,
   statusTone,
   statusTones,
+  themeContrasts,
+  themeModes,
   themes,
 } from "./index.js";
 import {
   resolveControlSize,
   resolveStatusTone,
+  themeFromStoredChoice,
   themeWithDensity,
 } from "./persisted-choices.example.js";
 
@@ -54,12 +59,7 @@ describe("isPlatformName", () => {
 
 describe("isThemeMode", () => {
   it("accepts the mode of every shipped theme", () => {
-    Object.keys(themes).forEach((mode) =>
-      expect(isThemeMode(mode), mode).toBe(true),
-    );
-    Object.keys(highContrastThemes).forEach((mode) =>
-      expect(isThemeMode(mode), mode).toBe(true),
-    );
+    themeModes.forEach((mode) => expect(isThemeMode(mode), mode).toBe(true));
   });
 
   it("rejects casing, whitespace and non-strings", () => {
@@ -71,13 +71,38 @@ describe("isThemeMode", () => {
 
 describe("isThemeContrast", () => {
   it("accepts both contrast variants getTheme resolves", () => {
-    expect(isThemeContrast("default")).toBe(true);
-    expect(isThemeContrast("high")).toBe(true);
+    themeContrasts.forEach((contrast) =>
+      expect(isThemeContrast(contrast), contrast).toBe(true),
+    );
   });
 
   it("rejects casing, aliases and non-strings", () => {
     ["", "Default", "High", "high-contrast", "aaa", ...nonStrings].forEach(
       (value) => expect(isThemeContrast(value), String(value)).toBe(false),
+    );
+  });
+});
+
+describe("theme indexes", () => {
+  it("lists every mode and contrast the package ships", () => {
+    expect(Object.keys(themes)).toEqual([...themeModes]);
+    expect(Object.keys(highContrastThemes)).toEqual([...themeModes]);
+    themeModes.forEach((mode) =>
+      themeContrasts.forEach((contrast) =>
+        expect(getTheme(mode, contrast).contrast, `${mode} ${contrast}`).toBe(
+          contrast,
+        ),
+      ),
+    );
+  });
+
+  it("gives every mode both contrast variants", () => {
+    themeModes.forEach((mode) =>
+      themeContrasts.forEach((contrast) => {
+        const theme = getTheme(mode, contrast);
+        expect(theme.mode, `${mode} ${contrast}`).toBe(mode);
+        expect(theme.contrast, `${mode} ${contrast}`).toBe(contrast);
+      }),
     );
   });
 });
@@ -148,5 +173,17 @@ describe("persisted choices", () => {
   it("resolves a stored size to a shipped one", () => {
     expect(resolveControlSize("lg")).toBe("lg");
     expect(resolveControlSize("large")).toBe("md");
+  });
+
+  it("resolves a stored mode and contrast to a shipped theme", () => {
+    expect(themeFromStoredChoice({ mode: "dark", contrast: "high" })).toBe(
+      highContrastDarkTheme,
+    );
+    expect(themeFromStoredChoice({ mode: "dark", contrast: "high" }).mode).toBe(
+      "dark",
+    );
+    expect(themeFromStoredChoice({ mode: "sepia", contrast: "ultra" })).toBe(
+      lightTheme,
+    );
   });
 });

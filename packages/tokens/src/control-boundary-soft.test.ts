@@ -17,6 +17,8 @@ import {
   getPlatformTheme,
   getTheme,
   themeContrastFailures,
+  themeContrasts,
+  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -29,19 +31,18 @@ const softFills = [
   "destructiveSoft",
 ] as const;
 
-const variants: ReadonlyArray<readonly [string, Theme]> = (
-  ["light", "dark"] as const
-).flatMap((mode) =>
-  (["default", "high"] as const).flatMap((contrast) => [
-    [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-    ...platforms.map(
-      (platform) =>
-        [
-          `${platform} ${mode} ${contrast}`,
-          getPlatformTheme(platform, mode, contrast),
-        ] as const,
-    ),
-  ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
+  (mode) =>
+    themeContrasts.flatMap((contrast) => [
+      [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
+      ...platforms.map(
+        (platform) =>
+          [
+            `${platform} ${mode} ${contrast}`,
+            getPlatformTheme(platform, mode, contrast),
+          ] as const,
+      ),
+    ]),
 );
 
 const softPairs = contrastPairs.filter(
@@ -103,7 +104,7 @@ describe("the control boundary inside a soft status surface", () => {
   });
 
   it("holds the high-contrast boundary to its floor on the soft fills", () => {
-    (["light", "dark"] as const).forEach((mode) => {
+    themeModes.forEach((mode) => {
       expect(
         contrastRatio(
           getTheme(mode, "high").colors.borderStrong,

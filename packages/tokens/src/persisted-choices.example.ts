@@ -1,8 +1,11 @@
 import {
   extendTheme,
+  getTheme,
   isControlSize,
   isDensityName,
   isStatusTone,
+  isThemeContrast,
+  isThemeMode,
   type ControlSize,
   type DensityName,
   type StatusTone,
@@ -35,3 +38,16 @@ export const resolveControlSize = (value: unknown): ControlSize =>
 /** Resolve a tone from a payload; an unknown family falls back to `info`. */
 export const resolveStatusTone = (value: unknown): StatusTone =>
   isStatusTone(value) ? value : fallbackTone;
+
+/**
+ * Resolve a stored mode and contrast to a shipped theme. An unknown half keeps
+ * the readable default rather than selecting a theme that does not exist.
+ */
+export const themeFromStoredChoice = (stored: {
+  readonly mode: unknown;
+  readonly contrast: unknown;
+}): Theme =>
+  getTheme(
+    isThemeMode(stored.mode) ? stored.mode : "light",
+    isThemeContrast(stored.contrast) ? stored.contrast : "default",
+  );

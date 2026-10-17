@@ -44,7 +44,7 @@ const row = (firstCell: string): string => {
   return line;
 };
 
-const floorRow = (contrast: "default" | "high"): string => {
+const floorRow = (contrast: keyof typeof contrastFloors): string => {
   const floors = contrastFloors[contrast];
   return [
     floors.body,

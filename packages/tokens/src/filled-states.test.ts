@@ -18,15 +18,16 @@ import { platformNames, platformStyles } from "./platforms.js";
 import {
   getPlatformTheme,
   getTheme,
+  themeContrasts,
+  themeModes,
   type Theme,
-  type ThemeContrast,
 } from "./theme.js";
 
 const families = ["primary", "secondary", "destructive"] as const;
 
-const modes = ["light", "dark"] as const;
+const modes = themeModes;
 
-const contrasts: readonly ThemeContrast[] = ["default", "high"];
+const contrasts = themeContrasts;
 
 const realPlatforms = platformNames.filter(
   (platform) => platform !== "default",

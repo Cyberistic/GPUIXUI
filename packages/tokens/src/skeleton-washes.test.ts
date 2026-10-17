@@ -17,6 +17,8 @@ import {
   getTheme,
   palette,
   themeContrastFailures,
+  themeContrasts,
+  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -32,19 +34,18 @@ const surfaces = [
   "selected",
 ] as const;
 
-const variants: ReadonlyArray<readonly [string, Theme]> = (
-  ["light", "dark"] as const
-).flatMap((mode) =>
-  (["default", "high"] as const).flatMap((contrast) => [
-    [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-    ...platforms.map(
-      (platform) =>
-        [
-          `${platform} ${mode} ${contrast}`,
-          getPlatformTheme(platform, mode, contrast),
-        ] as const,
-    ),
-  ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
+  (mode) =>
+    themeContrasts.flatMap((contrast) => [
+      [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
+      ...platforms.map(
+        (platform) =>
+          [
+            `${platform} ${mode} ${contrast}`,
+            getPlatformTheme(platform, mode, contrast),
+          ] as const,
+      ),
+    ]),
 );
 
 const skeletonPairs = contrastPairs.filter(
@@ -96,7 +97,7 @@ describe("the loading skeleton on a row surface", () => {
   });
 
   it("holds the high-contrast skeletons off the pressed wash", () => {
-    (["light", "dark"] as const).forEach((mode) => {
+    themeModes.forEach((mode) => {
       const theme = getTheme(mode, "high");
       expect(
         contrastRatio(theme.colors.skeleton, theme.colors.active),

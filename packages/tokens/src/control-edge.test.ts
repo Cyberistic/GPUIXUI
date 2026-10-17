@@ -18,6 +18,7 @@ import {
   getPlatformTheme,
   getTheme,
   themeContrastFailures,
+  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -30,7 +31,7 @@ const themes: ReadonlyArray<readonly [string, Theme]> = [
   ["high-contrast dark", getTheme("dark", "high")],
   ...(["darwin", "linux", "win32"] as const).flatMap(
     (platform): ReadonlyArray<readonly [string, Theme]> =>
-      (["light", "dark"] as const).map((mode) => [
+      themeModes.map((mode) => [
         `${platform} ${mode}`,
         getPlatformTheme(platform, mode),
       ]),

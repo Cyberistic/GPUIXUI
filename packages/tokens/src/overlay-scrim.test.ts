@@ -21,6 +21,7 @@ import {
   overlaySurfaces,
   overlayWashPairs,
   themeContrastFailures,
+  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -30,7 +31,7 @@ const shipped: ReadonlyArray<readonly [string, Theme]> = [
   ["high-contrast light", highContrastLightTheme],
   ["high-contrast dark", highContrastDarkTheme],
   ...(["darwin", "linux", "win32"] as const).flatMap((platform) =>
-    (["light", "dark"] as const).map(
+    themeModes.map(
       (mode) =>
         [`${platform} ${mode}`, getPlatformTheme(platform, mode)] as const,
     ),

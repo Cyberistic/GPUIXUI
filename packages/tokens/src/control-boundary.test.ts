@@ -17,6 +17,8 @@ import {
   getTheme,
   lightTheme,
   themeContrastFailures,
+  themeContrasts,
+  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -30,19 +32,18 @@ const boundarySurfaces = [
   "selected",
 ] as const;
 
-const variants: ReadonlyArray<readonly [string, Theme]> = (
-  ["light", "dark"] as const
-).flatMap((mode) =>
-  (["default", "high"] as const).flatMap((contrast) => [
-    [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-    ...platforms.map(
-      (platform) =>
-        [
-          `${platform} ${mode} ${contrast}`,
-          getPlatformTheme(platform, mode, contrast),
-        ] as const,
-    ),
-  ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
+  (mode) =>
+    themeContrasts.flatMap((contrast) => [
+      [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
+      ...platforms.map(
+        (platform) =>
+          [
+            `${platform} ${mode} ${contrast}`,
+            getPlatformTheme(platform, mode, contrast),
+          ] as const,
+      ),
+    ]),
 );
 
 const boundaryPairs = contrastPairs.filter(

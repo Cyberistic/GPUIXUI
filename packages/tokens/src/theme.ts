@@ -33,8 +33,15 @@ import {
 } from "./scale.js";
 import { typography, type TextStyle, type Typography } from "./typography.js";
 
+/**
+ * Theme modes the library ships, in documentation order. `ThemeMode` derives
+ * from this list, so a new mode must also gain a value in `themes` and
+ * `highContrastThemes`.
+ */
+export const themeModes = ["light", "dark"] as const;
+
 /** Theme modes the library ships. */
-export type ThemeMode = "light" | "dark";
+export type ThemeMode = (typeof themeModes)[number];
 
 /**
  * A complete, resolved design theme. Every field is plain data, so a theme can
@@ -253,16 +260,23 @@ export const themes: Readonly<Record<ThemeMode, Theme>> = {
   dark: darkTheme,
 };
 
+/**
+ * Contrast variants the library ships, in documentation order. `ThemeContrast`
+ * derives from this list, so a new variant must also gain a set of floors and a
+ * theme per mode.
+ */
+export const themeContrasts = ["default", "high"] as const;
+
 /** Contrast variants the library ships, independent of light/dark mode. */
-export type ThemeContrast = "default" | "high";
+export type ThemeContrast = (typeof themeContrasts)[number];
 
 /** Narrow unknown input to a theme mode. Not a theme decoder. */
 export const isThemeMode = (value: unknown): value is ThemeMode =>
-  value === "light" || value === "dark";
+  themeModes.some((mode) => mode === value);
 
 /** Narrow unknown input to a contrast variant. Not a theme decoder. */
 export const isThemeContrast = (value: unknown): value is ThemeContrast =>
-  value === "default" || value === "high";
+  themeContrasts.some((contrast) => contrast === value);
 
 /** The high-contrast light theme. */
 export const highContrastLightTheme: Theme = {
