@@ -111,7 +111,7 @@ A complete, executed example lives in
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 47 roles, so no component changes.
+essential boundaries. It reuses the same 49 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";

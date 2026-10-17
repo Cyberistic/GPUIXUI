@@ -48,7 +48,9 @@ const pairs: readonly Pair[] = [
   ["mutedForeground", "muted", "secondary"],
   ["secondaryForeground", "secondary", "secondary"],
   ["primaryForeground", "primary", "secondary"],
+  ["primaryForeground", "primaryHover", "secondary"],
   ["destructiveForeground", "destructive", "secondary"],
+  ["destructiveForeground", "destructiveHover", "secondary"],
   ["successForeground", "success", "secondary"],
   ["warningForeground", "warning", "secondary"],
   ["infoForeground", "info", "secondary"],
@@ -181,6 +183,13 @@ describe("colour roles", () => {
 
   it("indexes every role in documentation order", () => {
     expect(colorRoles).toEqual(Object.keys(lightColors));
+  });
+
+  it("moves every filled surface away from its resting role", () => {
+    colourSets.forEach(({ label, colors }) => {
+      expect(colors.primaryHover, label).not.toBe(colors.primary);
+      expect(colors.destructiveHover, label).not.toBe(colors.destructive);
+    });
   });
 
   it("indexes each role exactly once, with a value in every theme", () => {

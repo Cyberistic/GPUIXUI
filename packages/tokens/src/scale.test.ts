@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  avatarSize,
   densityPresets,
   spacing,
   type ControlSize,
@@ -36,6 +37,21 @@ describe("spacing scale", () => {
   it("never uses a negative value", () => {
     Object.values(spacing).forEach((value) => {
       expect(value).toBeGreaterThanOrEqual(0);
+    });
+  });
+});
+
+describe("avatar size scale", () => {
+  it("increases strictly from xs to lg", () => {
+    expect(avatarSize.sm).toBeGreaterThan(avatarSize.xs);
+    expect(avatarSize.md).toBeGreaterThan(avatarSize.sm);
+    expect(avatarSize.lg).toBeGreaterThan(avatarSize.md);
+  });
+
+  it("gives every size a positive whole number of pixels", () => {
+    Object.values(avatarSize).forEach((diameter) => {
+      expect(Number.isInteger(diameter)).toBe(true);
+      expect(diameter).toBeGreaterThan(0);
     });
   });
 });

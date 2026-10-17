@@ -9,12 +9,14 @@ import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
 import { motion, type Motion, type MotionEasings } from "./motion.js";
 import { platformTypes, type PlatformName } from "./platforms.js";
 import {
+  avatarSize,
   borderWidth,
   defaultDensity,
   densityPresets,
   iconSize,
   radius,
   spacing,
+  type AvatarSize,
   type BorderWidth,
   type Density,
   type DensityName,
@@ -54,6 +56,8 @@ export interface Theme {
   readonly borderWidth: BorderWidth;
   /** Icon sizes. */
   readonly iconSize: IconSize;
+  /** Avatar diameters. */
+  readonly avatarSize: AvatarSize;
 }
 
 /**
@@ -108,6 +112,8 @@ export interface ThemeOverrides {
   readonly borderWidth?: Partial<BorderWidth>;
   /** Override icon sizes. */
   readonly iconSize?: Partial<IconSize>;
+  /** Override individual avatar diameters. */
+  readonly avatarSize?: Partial<AvatarSize>;
 }
 
 /** Input to {@link createTheme}: a mode plus overrides. */
@@ -187,6 +193,7 @@ export const lightTheme: Theme = {
   motion,
   borderWidth,
   iconSize,
+  avatarSize,
 };
 
 /** The default dark theme. */
@@ -202,6 +209,7 @@ export const darkTheme: Theme = {
   motion,
   borderWidth,
   iconSize,
+  avatarSize,
 };
 
 /** Themes by mode, for application mode switches. */
@@ -226,6 +234,7 @@ export const highContrastLightTheme: Theme = {
   motion,
   borderWidth,
   iconSize,
+  avatarSize,
 };
 
 /** The high-contrast dark theme. */
@@ -241,6 +250,7 @@ export const highContrastDarkTheme: Theme = {
   motion,
   borderWidth,
   iconSize,
+  avatarSize,
 };
 
 /** High-contrast themes by mode. */
@@ -289,6 +299,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     motion: mergeMotion(base.motion, overrides.motion),
     borderWidth: { ...base.borderWidth, ...overrides.borderWidth },
     iconSize: { ...base.iconSize, ...overrides.iconSize },
+    avatarSize: { ...base.avatarSize, ...overrides.avatarSize },
   };
 }
 

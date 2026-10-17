@@ -50,6 +50,8 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [051](./051-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
 | [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | blocked (upstream: not in 0.10.0) |
 | [053](./053-reconcile-tokens-branches.md) | Reconcile the two `tokens` branches into one | B | 010–019, 050–052 | done |
+| [054](./054-avatar-size-scale.md) | The avatar diameter scale | B | 011, 016 | done |
+| [055](./055-filled-control-hover-roles.md) | Designed hover roles for filled controls | B | 011, 013–016 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -60,6 +62,12 @@ registration (rescued from the abandoned `agent/fonts` branch, `6fc7641`; its
 step 1 was first answered from `references/gpuix` main and then re-checked
 against the pinned runtime, which **does not expose the API** — see the plan's
 decision section), and 053 the reconciliation of this workstream's two branches.
+054 and 055 close the last two open `components` interlocks on the package: the
+avatar diameter scale (`components/TODO.md` interlocks, row *"An avatar diameter
+scale"*) and the designed filled-control hover roles (the `primaryHover` /
+`destructiveHover` row). The earlier interlock rows — the soft status pairs, the
+`alpha` helper and the `info` role — were already shipped by plan 014 and only
+need the consumer to drop its structural copy.
 
 ### Reference adoption (block `200–299`)
 

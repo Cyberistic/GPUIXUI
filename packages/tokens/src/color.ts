@@ -109,6 +109,8 @@ export interface ThemeColors {
   readonly primary: string;
   /** Text and icons on `primary`. */
   readonly primaryForeground: string;
+  /** Primary action background while hovered. */
+  readonly primaryHover: string;
   /** Secondary action background. */
   readonly secondary: string;
   /** Text and icons on `secondary`. */
@@ -125,6 +127,8 @@ export interface ThemeColors {
   readonly destructive: string;
   /** Text and icons on `destructive`. */
   readonly destructiveForeground: string;
+  /** Destructive action background while hovered. */
+  readonly destructiveHover: string;
   /** Success background and indicator. */
   readonly success: string;
   /** Text and icons on `success`. */
@@ -199,6 +203,7 @@ export const lightColors = {
   popoverForeground: palette.neutral[900],
   primary: palette.iris[600],
   primaryForeground: palette.neutral[0],
+  primaryHover: palette.iris[700],
   secondary: palette.neutral[100],
   secondaryForeground: palette.neutral[800],
   muted: palette.neutral[100],
@@ -207,6 +212,7 @@ export const lightColors = {
   accentForeground: palette.iris[800],
   destructive: palette.red[600],
   destructiveForeground: palette.neutral[0],
+  destructiveHover: palette.red[700],
   success: palette.green[600],
   successForeground: palette.neutral[0],
   warning: palette.amber[400],
@@ -250,6 +256,7 @@ export const darkColors = {
   popoverForeground: palette.neutral[50],
   primary: palette.iris[300],
   primaryForeground: palette.neutral[950],
+  primaryHover: palette.iris[200],
   secondary: palette.neutral[800],
   secondaryForeground: palette.neutral[200],
   muted: palette.neutral[850],
@@ -258,6 +265,7 @@ export const darkColors = {
   accentForeground: palette.iris[200],
   destructive: palette.red[400],
   destructiveForeground: palette.red[950],
+  destructiveHover: palette.red[300],
   success: palette.green[400],
   successForeground: palette.green[950],
   warning: palette.amber[300],
@@ -292,7 +300,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 47 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 49 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries.
  */
 export const highContrastLightColors = {
@@ -304,6 +312,7 @@ export const highContrastLightColors = {
   popoverForeground: "#000000",
   primary: "#3B2C8F",
   primaryForeground: "#FFFFFF",
+  primaryHover: palette.iris[900],
   secondary: "#E8E8E8",
   secondaryForeground: "#000000",
   muted: "#F2F2F2",
@@ -312,6 +321,7 @@ export const highContrastLightColors = {
   accentForeground: "#2E2370",
   destructive: "#7E1D21",
   destructiveForeground: "#FFFFFF",
+  destructiveHover: palette.red[900],
   success: "#0E5135",
   successForeground: "#FFFFFF",
   warning: "#F5B01F",
@@ -346,7 +356,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 47 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 49 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}.
  */
 export const highContrastDarkColors = {
@@ -358,6 +368,7 @@ export const highContrastDarkColors = {
   popoverForeground: "#FFFFFF",
   primary: "#C7CBFF",
   primaryForeground: "#000000",
+  primaryHover: palette.iris[100],
   secondary: "#2E2E2E",
   secondaryForeground: "#FFFFFF",
   muted: "#1A1A1A",
@@ -366,6 +377,7 @@ export const highContrastDarkColors = {
   accentForeground: "#E0E3FF",
   destructive: "#FF9E9E",
   destructiveForeground: "#000000",
+  destructiveHover: palette.red[200],
   success: "#6FE0A3",
   successForeground: "#000000",
   warning: "#FFC94D",
@@ -449,6 +461,7 @@ export const colorRoles = [
   "popoverForeground",
   "primary",
   "primaryForeground",
+  "primaryHover",
   "secondary",
   "secondaryForeground",
   "muted",
@@ -457,6 +470,7 @@ export const colorRoles = [
   "accentForeground",
   "destructive",
   "destructiveForeground",
+  "destructiveHover",
   "success",
   "successForeground",
   "warning",

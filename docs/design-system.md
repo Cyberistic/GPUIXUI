@@ -77,7 +77,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite at low alpha | black at high alpha |
 
-Both themes expose exactly the same 47 roles; the type system and the colour
+Both themes expose exactly the same 49 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -147,6 +147,11 @@ and the spacing scale stay fixed, so a density switch cannot reflow text
 unexpectedly. Components read `controlHeight(theme, size)` and
 `controlPaddingX(theme, size)` instead of hardcoding numbers.
 
+Icon and avatar sizes are **fixed tiers**, not density metrics: icons run
+12/14/16/20/24 and avatars 20/26/32/40, read by name from `theme.iconSize` and
+`theme.avatarSize`. A person chip is a size tier, not a spacing decision, so it
+does not move when the workspace gets denser.
+
 ## 7. Radii, borders and elevation
 
 Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.
@@ -184,7 +189,7 @@ the mounting rule and its no-portal limitation are documented once, under
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces |
+| hover | `hover` wash on ghost and subtle surfaces; filled actions step to `primaryHover` / `destructiveHover` (opaque, contrast-checked) instead of compositing an alpha fill |
 | pressed | `active` wash |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |

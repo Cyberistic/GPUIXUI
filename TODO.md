@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 18/26
+`[x]` `[████████░░]` 20/26
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -72,6 +72,10 @@ prebuilt `dist` (plan 016)
 `[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
 platform toggle (plan 051)
 `[x]` Add the design-system rows to `COMPONENTS.md`
+`[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
+its local `DIAMETER` (plan 054)
+`[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls
+stop faking hover with an alpha fill (plan 055)
 `[x]` Add motion tokens (durations/easings); three `primitives` call sites held
 `120`/`700` as literals (plan 019)
 `[x]` Guard that all four shipped themes carry every theme group (part of plan
@@ -114,6 +118,12 @@ layering rule and the no-portal limitation are documented in `docs/tokens.md`
 package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
 it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
 `components`)
+`[ ]` Cross-team: plans 054 and 055 close the last token interlocks —
+`avatarSize` replaces `components`' local `DIAMETER` literal, and
+`primaryHover` / `destructiveHover` replace the `HOVER_ALPHA` fill; the soft
+status pairs, `alpha` and `info` were already shipped by plan 014. `components`
+deletes `tone()`, `withAlpha`, `HOVER_ALPHA` and the borrowed `accent` pair when
+it imports the package directly (owner: `components`)
 `[ ]` Cross-team: `LICENSES/adabraka-ui.md` (MIT, `Copyright (c) 2025 Adabraka
 Team`, "token structure referenced, no assets copied") — plan 202 §7, not this
 workstream's path. Owner: licensing

@@ -131,6 +131,13 @@ describe("extendTheme", () => {
     );
   });
 
+  it("overrides one avatar diameter and keeps the others", () => {
+    const custom = extendTheme(lightTheme, { avatarSize: { lg: 44 } });
+    expect(custom.avatarSize.lg).toBe(44);
+    expect(custom.avatarSize.md).toBe(lightTheme.avatarSize.md);
+    expect(lightTheme.avatarSize.lg).toBe(40);
+  });
+
   it("does not mutate the base theme", () => {
     const before = JSON.stringify(lightTheme);
     extendTheme(lightTheme, {

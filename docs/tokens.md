@@ -55,10 +55,12 @@ intent, so a brand theme changes values without touching component source.
 `border` is decorative; `borderStrong` is the essential control boundary held
 to 3:1.
 
-There are 47 roles. The four status families — `info`, `success`, `warning` and
+There are 49 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have a solid role with a readable foreground and a soft
-pair (`xSoft` / `xSoftForeground`) for alerts, badges and toasts. `info` is blue,
-not iris, so it can never be confused with `primary`.
+pair (`xSoft` / `xSoftForeground`) for alerts, badges and toasts. A filled
+action also has a designed hover — `primaryHover` and `destructiveHover` — so a
+component never composites an alpha fill over whatever surface sits behind it.
+`info` is blue, not iris, so it can never be confused with `primary`.
 
 | Role | Light | Dark | Use |
 | ---- | ----- | ---- | --- |
@@ -70,6 +72,7 @@ not iris, so it can never be confused with `primary`.
 | `popoverForeground` | `#191D25` | `#F6F8FA` | text on `popover` |
 | `primary` | `#5F4BDB` | `#A7A9FF` | primary action |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
+| `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `muted` | `#EEF1F5` | `#222730` | quiet surface |
@@ -78,6 +81,7 @@ not iris, so it can never be confused with `primary`.
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
 | `destructive` | `#CC3439` | `#FF6B6B` | destructive action |
 | `destructiveForeground` | `#FFFFFF` | `#3A0B0D` | text on `destructive` |
+| `destructiveHover` | `#A5262B` | `#FF9E9E` | destructive action while hovered |
 | `success` | `#158754` | `#3BC97F` | success |
 | `successForeground` | `#FFFFFF` | `#042015` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
@@ -174,7 +178,7 @@ A runnable example spreads the result onto a container and its text; see
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 47 roles and the same type, spacing, radius, density, border
+`Theme` — the same 49 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -197,6 +201,7 @@ getTheme("light"); // the default light theme, unchanged
 | `popoverForeground` | `#000000` | `#FFFFFF` | text on `popover` |
 | `primary` | `#3B2C8F` | `#C7CBFF` | primary action |
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
+| `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
@@ -205,6 +210,7 @@ getTheme("light"); // the default light theme, unchanged
 | `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
 | `destructive` | `#7E1D21` | `#FF9E9E` | destructive action |
 | `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
+| `destructiveHover` | `#5C1619` | `#FFC6C6` | destructive action while hovered |
 | `success` | `#0E5135` | `#6FE0A3` | success |
 | `successForeground` | `#FFFFFF` | `#000000` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
@@ -486,7 +492,7 @@ paints over its siblings; the strongest honest alternative is to keep the overla
 as the last child of the surface it covers. This is a component-level
 consequence, not something tokens can fix.
 
-## Borders and icons
+## Borders, icons and avatars
 
 | Token | Pixels |
 | ----- | ------ |
@@ -497,6 +503,15 @@ consequence, not something tokens can fix.
 | `iconSize.md` | 16 |
 | `iconSize.lg` | 20 |
 | `iconSize.xl` | 24 |
+| `avatarSize.xs` | 20 |
+| `avatarSize.sm` | 26 |
+| `avatarSize.md` | 32 |
+| `avatarSize.lg` | 40 |
+
+Icon and avatar sizes are fixed tiers read by name, not density-dependent
+metrics: a 26px person chip is not a density decision. See
+[Spacing](#spacing) and [Density](#density) for the scales that density does
+move.
 
 ## Focus
 
@@ -543,6 +558,7 @@ interface Theme {
   motion: Motion;
   borderWidth: BorderWidth;
   iconSize: IconSize;
+  avatarSize: AvatarSize;
 }
 ```
 
@@ -572,7 +588,8 @@ export const scoped = extendTheme(darkTheme, {
 Merge rules:
 
 - groups are partial: omitted values inherit from the base;
-- colour, spacing, radius, border width and icon overrides merge key by key;
+- colour, spacing, radius, border width, icon and avatar overrides merge key by
+  key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight;
 - elevation levels **replace** the whole shadow array;
@@ -680,8 +697,10 @@ nub run --filter @gpuixui/tokens test
 The test covers every shipped colour set — light, dark and both high-contrast
 variants — and fails if a semantic text/surface pair drops below its floor (7:1
 for primary body pairs, soft status text and all high-contrast text; 4.5:1 for
-secondary and on-colour text in the default themes; 3:1 for focus and essential
-boundaries in the default themes; 4.5:1 for them in the high-contrast variants).
+secondary and on-colour text in the default themes, including text on a hovered
+filled action, which is held to the same floor as text on the resting fill; 3:1
+for focus and essential boundaries in the default themes; 4.5:1 for them in the
+high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background` or
 `card` (floor 1.05:1). Palette edits must keep it green.
 
