@@ -262,6 +262,11 @@ retired once both branches are one
       therefore shows as untracked, and a `git add -A` at the root would commit a
       symlink to an absolute path outside the repo. Ignore `references` without
       the trailing slash.
+`[ ]` **root**: `README.md` still says "Phase A (audit and feasibility). The
+      first deliverable is the plan set" while plans `020`-`059`, tokens,
+      primitives, icons, `packages/testing` and `apps/playground` have landed.
+      Refresh the status, layout and tooling ledger (owner: whoever owns the
+      root ledger; recorded here because it is outside the primitives paths).
 
 `[!]` **swarm runner**: one writer per worktree. Add
       `opencode run --session swarm-<ws>` to the generated runner, count live
