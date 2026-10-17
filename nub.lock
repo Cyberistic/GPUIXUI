@@ -102,6 +102,9 @@ importers:
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@gpuixui/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@gpuixui/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives

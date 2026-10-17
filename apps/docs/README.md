@@ -56,8 +56,11 @@ renderer (the browser's GPU backend) and exports one document per scene:
   `preview/scene-views.tsx` holds the compositions. A registry record opts in
   with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
   and `scene-contract.test.ts` fails when a scene's expected text no longer
-  occurs in its view. Live scenes ship for Buttons, Tabs, Dropdown menus and
-  Dialogs.
+  occurs in its view. Live scenes ship for Buttons, Tabs, Dropdown menus,
+  Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable
+  containers, Skeletons and Loading indicators. A page with neither a live scene
+  nor an illustration must be one of the reasons `scene-contract.test.ts` lists
+  (plan 458) — a new gap fails the suite instead of shipping silently.
 - `vite.preview.config.ts` builds it to `public/gpuix-preview/` (gitignored,
   ~20 MB). `build` and `dev` run `build:preview` first. The published browser
   entry uses Bun's `with { type: "file" }`, so the config names the two

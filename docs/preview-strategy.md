@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Popovers, Command menus); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -185,10 +185,21 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. Six scenes ship today — Button, Tabs, Dropdown menu, Dialog,
-  Popover and Command menu — chosen because an interaction is exactly what a
-  static preview cannot show. Two more interaction records cannot open without a
-  pointer yet, so they stay at their native tier until the component exposes the
-  missing prop: `ContextMenu` paints at its internal `{ x: 0, y: 0 }` point with
-  no prop to set it, and `DatePicker` owns its open state with no `defaultOpen`.
-  Both asks are recorded in `TODO.md`; a scene is never faked.
+  blank frame. **Eleven scenes ship today** — Button, Tabs, Dropdown menu,
+  Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
+  containers, Skeleton and Loading indicators — chosen because a still cannot
+  prove the point: an open overlay and its focus entry, a grouped palette, real
+  SVG markup tinted by the theme, wheel scrolling, or a pulse. Five records
+  remain with neither a live scene nor an illustration, each for a measured
+  reason and never for convenience:
+  - **Context menu** paints at its internal `{ x: 0, y: 0 }` point and has no
+    prop to set it;
+  - **Date picker**, **Combobox** and **Select** own their open state behind a
+    wrapper with no `open`/`defaultOpen`, although GPUix's own primitives expose
+    one (`Select` already has a tier-A resting preview, so only its open state is
+    missing);
+  - **Tooltip**'s wrapper has no open state, and a headless check cannot prove a
+    hover-opened tip is in GPUI's tree;
+  - **Toast** must push on mount and race its own dismissal, and its provider
+    pulls the Effect runtime into the shared scene bundle every scene loads.
+  The API asks are recorded in `TODO.md`; a scene is never faked.

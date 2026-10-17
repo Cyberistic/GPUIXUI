@@ -24,6 +24,7 @@ import {
   CommandMenu,
   type CommandAction,
 } from "@gpuixui/components/command-menu";
+import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +44,18 @@ import {
   TabsList,
   TabsTrigger,
 } from "@gpuixui/components/tabs";
-import { Box, Button, Stack, Text } from "@gpuixui/primitives";
+import { Icon } from "@gpuixui/icons";
+import {
+  Box,
+  Button,
+  Checkbox,
+  ScrollArea,
+  Skeleton,
+  Spinner,
+  Stack,
+  Text,
+  useTheme,
+} from "@gpuixui/primitives";
 import { useState, type ReactElement } from "react";
 import type { LiveScene } from "./scenes";
 
@@ -243,6 +255,155 @@ const CommandMenuScene = (): ReactElement => {
   );
 };
 
+const ConfirmDialogScene = (): ReactElement => {
+  const [open, setOpen] = useState(true);
+  const [notify, setNotify] = useState(true);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Projects</Text>
+      <Text role="caption" tone="muted">
+        The confirmation opens with the scene: Cancel holds focus, the danger
+        tone paints, and the body control below is the caller's own.
+      </Text>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Archive this project?"
+        description="Website redesign disappears from everyone's sidebar. Its 18 open tasks stay attached, no files are deleted, and it can be restored for 30 days."
+        confirmLabel="Archive project"
+        tone="danger"
+        onConfirm={noop}
+      >
+        <Checkbox
+          checked={notify}
+          onChange={setNotify}
+          label="Notify 4 collaborators"
+        />
+      </ConfirmDialog>
+    </Stack>
+  );
+};
+
+const ICON_STEPS = ["xs", "sm", "md", "lg", "xl"] as const;
+
+const ICON_GALLERY = [
+  { name: "search", label: "Search" },
+  { name: "settings", label: "Settings" },
+  { name: "folder", label: "Folder" },
+  { name: "check", label: "Done" },
+  { name: "warning", label: "Warning" },
+  { name: "trash", label: "Delete" },
+] as const;
+
+const IconScene = (): ReactElement => {
+  const theme = useTheme();
+  return (
+    <Stack direction="column" gap="lg">
+      <Stack direction="column" gap="2xs">
+        <Text role="h3">Icon set</Text>
+        <Text role="caption" tone="muted">
+          The real `@gpuixui/icons` SVG markup, tinted by the theme.
+        </Text>
+      </Stack>
+      <Stack direction="row" gap="lg" align="center">
+        {ICON_STEPS.map((step) => (
+          <Stack key={step} direction="column" gap="2xs" align="center">
+            <Icon
+              name="star-filled"
+              size={step}
+              color={theme.colors.mutedForeground}
+            />
+            <Text role="caption" tone="muted">
+              {step}
+            </Text>
+          </Stack>
+        ))}
+      </Stack>
+      <Stack direction="row" gap="xl" wrap>
+        {ICON_GALLERY.map((icon) => (
+          <Stack key={icon.name} direction="row" gap="xs" align="center">
+            <Icon name={icon.name} size="md" color={theme.colors.foreground} />
+            <Text role="caption">{icon.label}</Text>
+          </Stack>
+        ))}
+      </Stack>
+    </Stack>
+  );
+};
+
+const LOG_ROWS = [
+  "09:41  Loaded workspace",
+  "09:42  Restored 3 panels",
+  "09:43  Indexed 1,204 files",
+  "09:44  Theme changed to dark",
+  "09:45  Saved layout",
+  "09:46  Opened settings",
+  "09:47  Checked for updates",
+  "09:48  Uploaded screenshot",
+  "09:49  Signed in as cyberistic",
+  "09:50  Closed 2 tabs",
+] as const;
+
+const ScrollAreaScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Stack direction="column" gap="2xs">
+      <Text role="h3">Activity log</Text>
+      <Text role="caption" tone="muted">
+        Ten rows in a bounded container: wheel or trackpad scrolls the real
+        surface.
+      </Text>
+    </Stack>
+    <ScrollArea axis="vertical" style={{ height: 120 }}>
+      <Stack direction="column" gap="2xs">
+        {LOG_ROWS.map((row) => (
+          <Text key={row} role="caption">
+            {row}
+          </Text>
+        ))}
+      </Stack>
+    </ScrollArea>
+  </Stack>
+);
+
+const SkeletonScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Loading profile</Text>
+    <Stack direction="row" gap="sm" align="center">
+      <Skeleton circle width={40} height={40} />
+      <Stack direction="column" gap="2xs" grow>
+        <Skeleton width={180} />
+        <Skeleton width={120} />
+      </Stack>
+    </Stack>
+    <Stack direction="column" gap="2xs">
+      <Skeleton />
+      <Skeleton />
+      <Skeleton width="60%" />
+    </Stack>
+  </Stack>
+);
+
+const SpinnerScene = (): ReactElement => {
+  const theme = useTheme();
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Saving changes</Text>
+      <Stack direction="row" gap="sm" align="center">
+        <Spinner size={theme.iconSize.lg} label="Saving" />
+        <Text role="body" tone="muted">
+          Writing 3 files…
+        </Text>
+      </Stack>
+      <Stack direction="row" gap="sm" align="center">
+        <Spinner size={theme.iconSize.md} accent="muted" label="Uploading" />
+        <Text role="body" tone="muted">
+          Uploading screenshot…
+        </Text>
+      </Stack>
+    </Stack>
+  );
+};
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -251,6 +412,11 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     dialog: DialogScene,
     popover: PopoverScene,
     "command-menu": CommandMenuScene,
+    "confirm-dialog": ConfirmDialogScene,
+    icon: IconScene,
+    "scroll-area": ScrollAreaScene,
+    skeleton: SkeletonScene,
+    spinner: SpinnerScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

@@ -449,12 +449,12 @@ const main = async (): Promise<number> => {
 };
 
 // A hung CDP command must not keep the command alive forever; the gate reports
-// "could not verify" rather than hanging a release check. Six scenes and six
-// page loads fit in this budget; the per-iframe wait is up to 60s.
+// "could not verify" rather than hanging a release check. Eleven scenes and
+// eleven page loads fit in this budget; the per-iframe wait is up to 60s.
 setTimeout(() => {
-  console.error("smoke: not verified — the check did not finish in 240s");
+  console.error("smoke: not verified — the check did not finish in 420s");
   process.exit(2);
-}, 240_000).unref();
+}, 420_000).unref();
 
 main().then(
   (code) => {

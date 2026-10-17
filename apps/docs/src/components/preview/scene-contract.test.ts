@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { components } from "@/component-meta/registry";
@@ -29,7 +29,48 @@ const interactionScenes = new Map([
   ["dialog", "dialog"],
   ["popover", "popover"],
   ["command-menu", "command-menu"],
+  ["confirm-dialog", "confirm-dialog"],
 ]);
+
+/**
+ * Pages that carry neither a live scene nor a tier-A illustration, with the
+ * measured reason (plan 458). A new page that falls into that hole, or a record
+ * that gains a scene while still listed here, fails the guard — the list is the
+ * claim that every remaining gap is an API or evidence limit, not an omission.
+ */
+const noLiveScene = new Map([
+  [
+    "combobox",
+    "the wrapper owns the popup's open state and exposes no defaultOpen",
+  ],
+  [
+    "context-menu",
+    "the surface paints at an internal point no prop can set (plan 457)",
+  ],
+  ["date-picker", "the picker owns its open state and exposes no defaultOpen"],
+  [
+    "toast",
+    "a scene must race the toast's own dismissal, and its provider pulls the Effect runtime into every scene",
+  ],
+  [
+    "tooltip",
+    "the wrapper exposes no open state, and a headless check cannot prove a hover-opened tip",
+  ],
+]);
+
+const pagesDirectory = new URL(
+  "../../../content/docs/components/",
+  import.meta.url,
+);
+
+/** Whether a component page renders a tier-A illustration. */
+const hasIllustration = (slug: string): boolean => {
+  const file = new URL(`${slug}.mdx`, pagesDirectory);
+  return (
+    existsSync(fileURLToPath(file)) &&
+    readFileSync(fileURLToPath(file), "utf8").includes("<ComponentPreview")
+  );
+};
 
 describe("live scene table", () => {
   it("has a unique key for every scene", () => {
@@ -70,6 +111,17 @@ describe("interaction records", () => {
         : [`${entry.slug}: ${entry.liveScene}`],
     );
     expect(wrong).toEqual([]);
+  });
+
+  it("leave a delivered page without live or illustrated preview only for a measured reason", () => {
+    const gaps = components.flatMap((entry) =>
+      entry.sourcePath !== null &&
+      entry.liveScene === null &&
+      !hasIllustration(entry.slug)
+        ? [entry.slug]
+        : [],
+    );
+    expect(gaps.toSorted()).toEqual([...noLiveScene.keys()].toSorted());
   });
 });
 

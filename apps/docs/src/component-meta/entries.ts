@@ -149,6 +149,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     packageName: "@gpuixui/icons",
     sourcePath: "packages/icons/src/Icon.tsx",
     api: ["IconProps"],
+    liveScene: "icon",
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/icons.runtime.test.tsx",
@@ -258,6 +259,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/ScrollArea.tsx",
       api: ["ScrollAreaProps"],
+      liveScene: "scroll-area",
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/layout.runtime.test.tsx",
@@ -506,6 +508,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Skeleton.tsx",
       api: ["SkeletonProps"],
+      liveScene: "skeleton",
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/loading.runtime.test.tsx",
@@ -528,6 +531,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Spinner.tsx",
       api: ["SpinnerProps"],
+      liveScene: "spinner",
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/loading.runtime.test.tsx",
@@ -913,6 +917,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/confirm-dialog.tsx",
       api: ["ConfirmDialogProps"],
+      liveScene: "confirm-dialog",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/confirm-dialog.test.tsx",

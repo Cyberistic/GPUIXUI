@@ -13,6 +13,11 @@ export const LIVE_SCENES = [
   "dialog",
   "popover",
   "command-menu",
+  "confirm-dialog",
+  "icon",
+  "scroll-area",
+  "skeleton",
+  "spinner",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -33,4 +38,9 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   dialog: "Delete this workspace?",
   popover: "Show columns",
   "command-menu": "Go to Components",
+  "confirm-dialog": "Archive this project?",
+  icon: "Icon set",
+  "scroll-area": "Activity log",
+  skeleton: "Loading profile",
+  spinner: "Saving changes",
 };

@@ -32,6 +32,7 @@
     "@gpuix/react": "catalog:",
     "@gpuixui/components": "workspace:*",
     "@gpuixui/config": "workspace:*",
+    "@gpuixui/icons": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@tailwindcss/vite": "4.3.3",
     "@types/mdx": "2.0.14",
