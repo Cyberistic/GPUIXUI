@@ -26,7 +26,7 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 | Namespace | Responsibility |
 | --------- | -------------- |
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
-| `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union |
+| `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union — plus the async twins `AsyncSmokeHost`, `AsyncSmokeScenario`, `runAsyncScenarios` and `SmokeHostError` |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 | `Native`  | `createHost(renderer)`, the structural `NativeRenderer` port, and the lookups (`find`, `allElements`, `boundsOf`, `hitBoundsOf`, `centerOf`, `subtreeText`, `focusedElement`) |
 
@@ -87,6 +87,26 @@ export const layoutScenario: Smoke.SmokeScenario = {
 
 Every `expect*` records a `passed` check when it holds and fails with
 `SmokeAssertionError` when it does not, so a failed check is data in the report.
+
+## The live (async) host
+
+A real window is driven through a promise API (`@gpuix/native/automation`), so
+its host verbs are effects. `runAsyncScenarios` takes an `AsyncSmokeHost` and
+returns the **same** `SmokeReport`, which is what lets a live run reuse
+`Report.formatReport` and `Report.exitCode` instead of inventing a second log.
+
+`AsyncSmokeHost` is deliberately **smaller** than `SmokeHost`: bounds, text,
+painted text, input (click/hover/keys/wheel/drag), `waitFor`, scroll offsets,
+screenshots and the motion clock. That is the automation protocol's surface. It
+has no style report, accessibility dump, list anchor or focus query, so those
+assertions stay with the synchronous `TestRenderer` suite rather than being
+approximated.
+
+A verb that throws becomes `SmokeHostError` (`verb` names the call) and is
+recorded as an `errored` check — never a silent pass and never a failed
+assertion. `waitFor(testId)` waits until an element exists, which a live runner
+needs because the protocol has no frame boundary: input returns after a tick
+while React commits on a later frame.
 
 ## Development
 
