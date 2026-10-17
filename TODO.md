@@ -360,6 +360,14 @@ owner: those workstreams)
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now
 `{ …geometry, alpha }` (owner: those workstreams; plan 085)
+`[ ]` Cross-team: `primitives` paints Tooltip and Select with
+`elevation: "overlay"` — the reserved, empty level — so `elevationShadow`
+returns `undefined` and both floating surfaces ship with no shadow, against the
+design system's "`md` for menus, popovers and tooltips"
+(`src/components/Tooltip.tsx:77`, `src/components/Select.tsx:112`; the
+`core/style.test.ts` case asserts the empty result instead of a shadow). They
+should read `"md"` and the test should assert the shadow (owner: `primitives`;
+plan 060 reserved the level; verified against this branch's `elevationShadow`)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
