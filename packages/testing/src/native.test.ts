@@ -90,6 +90,8 @@ class FakeRenderer implements NativeRenderer {
     nodes: { a: { aria: { role: "Button" } } },
   };
   style: unknown = { backgroundColor: "#101010", fontSize: 13 };
+  retained = 0;
+  syntax: ReadonlyArray<number> = [0, 0, 0];
   readonly calls: Array<string> = [];
 
   findByTestId(testId: string): NativeElement | undefined {
@@ -203,8 +205,6 @@ class FakeRenderer implements NativeRenderer {
   clockFastForward(deltaMs: number): number {
     return deltaMs;
   }
-  retained = 0;
-  syntax: ReadonlyArray<number> = [0, 0, 0];
   getRetainedElementCount(): number {
     return this.retained;
   }
