@@ -101,6 +101,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [302](./302-platform-type-bridge.md) | The removed `platformTheme` and its merged consumer | F | 051, 063, primitives `021`/`055` on `master` | done |
 | [303](./303-inventory-truth-guard.md) | The inventory row that still called `overlay` exempt | F | 056, 062, 099 | done |
 | [304](./304-create-theme-contrast-selection.md) | `createTheme` starts from the contrast variant it names | F | 013, 071, 073, 301 | done |
+| [305](./305-theme-axis-indexes.md) | The last two unions without an ordered index | F | 067, 068, 096, 304 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -554,6 +555,19 @@ keeps the claim, which is what `applyPlatformStyle` relies on. The default call
 is unchanged, the name follows the selected variant, and the suite rebuilds all
 four shipped variants from their own `mode`/`contrast` and holds each to
 `themeContrastFailures`.
+
+305 closes the index gap plans 067, 068 and 096 left behind. Every persisted
+union gained an ordered index beside its narrowing guard — `platformNames`,
+`densityNames`, `statusTones`, `controlSizes` — except `ThemeMode` and
+`ThemeContrast`, which shipped guards built from literal comparisons. The cost
+was not cosmetic: sixteen suites wrote `["light", "dark"]` and `["default",
+"high"]` by hand, so a third mode would have compiled (the `themes` record
+demands a value) while every contrast audit kept testing two. `themeModes` and
+`themeContrasts` now own both axes, the unions derive from them, and the guards
+scan them, so a new member is one edit at the union owner. Every suite iterates
+the indexes, `guards.test.ts` holds the indexes to the shipped records and
+proves every mode has both variants, and `themeFromStoredChoice` executes the
+persisted mode/contrast path the docs describe.
 
 ### Reference adoption (block `200–299`)
 
