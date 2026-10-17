@@ -2,7 +2,7 @@
 
 **Owner:** primitives workstream (`packages/primitives`).
 **Depends on:** 030, 040, 041, 047, 049, 061 (the selection paint), 056 (the data-driven group precedent).
-**Status:** planned.
+**Status:** done (2026-10-17) — see §6 for the measured contract and both proofs.
 
 ---
 
