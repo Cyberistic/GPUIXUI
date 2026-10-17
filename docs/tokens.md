@@ -60,6 +60,60 @@ import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 The core entry has no React dependency. `react` is an optional peer of the
 `./react` entry only.
 
+## Types
+
+Every public type export, in alphabetical order. The section that owns a value
+also owns its shape; this index exists so a consumer typing a config, a platform
+style or a contract check can find the name without reading the source. A type
+missing here is not public.
+
+| Type | Purpose |
+| ---- | ------- |
+| `AvatarSize` | Avatar diameters for `xs` to `lg`. |
+| `BorderWidth` | Divider and focus-ring thickness. |
+| `BoxShadow` | The runtime's five-field shadow; `elevationShadow` returns one. |
+| `ContrastFailure` | One documented pair a theme misses, with its floor and ratio. |
+| `ContrastPair` | A `[foreground, background, pairClass]` contract row. |
+| `ContrastPairClass` | The floor class a pair is held to. |
+| `ControlSize` | `"sm"`, `"md"` or `"lg"`, derived from `controlSizes`. |
+| `Density` | Resolved control heights, padding and row height for a preset. |
+| `DensityName` | A preset name from `densityNames`. |
+| `DensityOverrides` | Partial density metrics; they merge size by size. |
+| `Elevation` | Elevation levels keyed by `ElevationLevel`. |
+| `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`. |
+| `ElevationShape` | A level's geometry plus the alpha applied to `shadow`. |
+| `FocusRing` | `{ boxShadow }` for the focus ring. |
+| `FontWeight` | `400`, `500`, `600` or `700`. |
+| `IconSize` | Icon sizes for `xs` to `xl`. |
+| `Motion` | Six timing levels and four easing phases. |
+| `MotionEasing` | A cubic-bezier control-point tuple. |
+| `MotionEasings` | The `standard`, `enter`, `exit` and `linear` curves. |
+| `MotionLevel` | A timing level name, `none` to `pulse`. |
+| `MotionPhase` | `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
+| `MotionTransition` | Transition properties in the runtime's seconds. |
+| `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
+| `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
+| `PlatformStyle` | Editable platform data: types, structure, colours and elevation. |
+| `PlatformStyleStructure` | Radii, density and motion shared by both modes. |
+| `PlatformType` | The label and sans/mono families of one platform. |
+| `Radius` | The corner-radius scale. |
+| `SelectionStyle` | `{ selectionColor }` for inherited text selection. |
+| `Spacing` | The spacing scale shared by padding, margin and gap. |
+| `StatusTone` | `"info"`, `"success"`, `"warning"` or `"destructive"`. |
+| `StatusToneStyle` | The four roles a soft status surface needs. |
+| `TextRole` | A key of `textRoles`, excluding the family fields. |
+| `TextStyle` | Font size, line height and weight for one role. |
+| `TextStyleProperties` | A resolved role for `StyleDesc`, family included. |
+| `Theme` | A complete resolved theme. |
+| `ThemeColors` | The 62 semantic colour roles. |
+| `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
+| `ThemeContrast` | `"default"` or `"high"`. |
+| `ThemeMode` | `"light"` or `"dark"`. |
+| `ThemeOverrides` | A partial theme for `extendTheme`. |
+| `ThemeProviderProps` | Props for `ThemeProvider`. |
+| `Typography` | The sans/mono families and ten type roles. |
+| `TypographyOverrides` | Partial families and roles; roles merge field by field. |
+
 ## Colour roles
 
 Components use semantic roles, never ramp shades. The role names describe
