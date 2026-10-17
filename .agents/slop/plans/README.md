@@ -27,7 +27,7 @@ licensing, docs site).
 | [013](./013-high-contrast-theme.md) | High-contrast accessibility themes | B | 011 | done |
 | [014](./014-status-tones-and-colour-helpers.md) | Status tones and colour helpers | B | 011, 013 | done |
 | [015](./015-colour-role-index.md) | Colour role index for documentation | B | 011, 013, 014 | done |
-| [016](./016-tokens-consumable-exports.md) | `@gpuixui/tokens` resolvable without a prebuilt `dist` | B | 011 | in progress |
+| [016](./016-tokens-consumable-exports.md) | `@gpuixui/tokens` resolvable without a prebuilt `dist` | B | 011 | done |
 | [017](./017-focus-ring-and-docs-truth.md) | Focus ring helper and the focus documentation truth pass | B | 011, 016 | in progress |
 
 Plans 010–017 are the `tokens-theme` workstream. They own `packages/tokens`,

@@ -151,6 +151,9 @@ persisted theme at its own boundary, where `Schema` belongs.
   trusted at compile time. Persisted themes are decoded by the application.
 - No OS appearance detection; the app selects the mode and contrast.
 - No motion tokens yet. Tracked in `TODO.md`.
+- Exports point at `src/`: the package is private, so a consumer compiles it
+  directly and no build step is required. Phase G flips `exports` to `dist` when
+  the package is published.
 
 ## Scripts
 
@@ -159,3 +162,7 @@ nub run --filter @gpuixui/tokens check-types
 nub run --filter @gpuixui/tokens test
 nub run --filter @gpuixui/tokens build
 ```
+
+`build` emits `dist/` (JavaScript plus declarations) to validate the package on
+its own; consumers never need it and `packages/tokens/src/exports.test.ts` fails
+if an `exports` target points back at a build directory.

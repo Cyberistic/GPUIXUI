@@ -48,9 +48,9 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 9/11
+`[x]` `[█████████░]` 10/12
 
-`[x]` Write and index the tokens/theme plan set (plans 010–015)
+`[x]` Write and index the tokens/theme plan set (plans 010–016)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -58,6 +58,8 @@ the `@gpuixui/tokens/react` provider
 `[x]` Add high-contrast (AAA) light and dark themes (`getTheme(mode, "high")`)
 `[x]` Add status tone roles plus `alpha` and `statusTone` helpers
 `[x]` Expose `colorRoles` for the docs site's generated token tables
+`[x]` Make `@gpuixui/tokens` resolvable from source so a clean checkout needs no
+prebuilt `dist` (plan 016)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`
@@ -66,6 +68,9 @@ the `@gpuixui/tokens/react` provider
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
 `references` symlink in `.gitignore` (owner: repo tooling)
+`[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
+directly and delete their structural copies of the theme and role list, now that
+the package resolves from source (owner: those workstreams; plan 016)
 
 ## Phase C — Tier 1–2 components
 
