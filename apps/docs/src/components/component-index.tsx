@@ -7,6 +7,7 @@ import {
   type ComponentGroup,
 } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
+import { supportLegend, supportMeaning } from "@/component-meta/support";
 
 const card =
   "flex flex-col gap-1 rounded-lg border border-fd-border bg-fd-card p-3";
@@ -64,6 +65,7 @@ function Card({ component }: { component: ComponentMetaInput }) {
           <span
             className="rounded-md border border-fd-border px-2 py-0.5 text-xs text-fd-muted-foreground"
             data-gpuix={component.gpuix}
+            title={supportMeaning[component.gpuix]}
           >
             {component.gpuix}
           </span>
@@ -131,6 +133,15 @@ export function ComponentIndex() {
           className="text-sm text-fd-muted-foreground"
         >
           {visibleCount} of {components.length} components
+        </p>
+        <p className="text-sm text-fd-muted-foreground">
+          The second badge is the inventory's GPUix-support word:{" "}
+          {supportLegend.map(({ value, meaning }, index) => (
+            <span key={value}>
+              <code>{value}</code> {meaning}
+              {index < supportLegend.length - 1 ? " · " : ""}
+            </span>
+          ))}
         </p>
       </div>
 

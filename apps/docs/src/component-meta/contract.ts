@@ -106,18 +106,20 @@ export const apiDrift = (
 
 /**
  * Status coherence for a record. The inventory (`COMPONENTS.md`) owns the
- * status itself; this checks that a `done` row is credible (verified support,
- * and a documented limitation when support is only partial) and that the other
+ * status itself; this checks that a `done` row is credible (a native suite, and
+ * a documented limitation when support is only partial) and that the other
  * states carry the evidence they claim.
+ *
+ * `done` does not require GPUix to have written the primitive: a component the
+ * library implements itself (`gpuix: "ours"`) is `done` once its suite drives it
+ * in the real renderer (plans 432, 443).
  */
 export const statusViolations = (
   records: readonly ComponentMetaInput[],
 ): readonly string[] =>
   records.flatMap((record) => [
-    ...(record.status === "done" &&
-    record.gpuix !== "yes" &&
-    record.gpuix !== "partial"
-      ? [`${record.slug}: done requires verified GPUix support`]
+    ...(record.status === "done" && record.runtime === null
+      ? [`${record.slug}: done requires a native suite`]
       : []),
     ...(record.status === "done" &&
     record.gpuix === "partial" &&

@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { bySlug, components, groups } from "@/component-meta/registry";
+import { supportLegend } from "@/component-meta/support";
 import {
   ComponentIndex,
   filterGroups,
@@ -45,6 +46,15 @@ describe("component index", () => {
     Arr.forEach(groups, (group) => {
       expect(html).toContain(`Tier ${group.tier}`);
     });
+  });
+
+  it("translates every GPUix-support word in the legend", () => {
+    Arr.forEach(supportLegend, ({ value }) => {
+      expect(html).toContain(`<code>${value}</code>`);
+    });
+    expect(
+      html.match(/<code>(?:yes|partial|reuse|ours|no|unverified)<\/code>/g),
+    ).toHaveLength(supportLegend.length);
   });
 
   it("links only to components that have a page", () => {

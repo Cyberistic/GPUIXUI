@@ -193,6 +193,7 @@ Cross-cutting records:
 | [`440-landing-showcase.md`](./440-landing-showcase.md) | The landing page shows the design system: real light/dark palettes, platform families, tier counts and the five preview tiers, all derived from tokens/registry | F | 410, 411, 416, 429, 434 | implemented — no colour literal, no hard-coded count; four two-direction proofs; 190 docs tests, build and built-site crawl green (§5) |
 | [`441-api-reference-index.md`](./441-api-reference-index.md) | `/docs/api-reference` becomes a generated index of every documented component's real props types | F | 410, 411, 414, 415, 425, 435 | implemented — 49 records declare 55 props types; `apiDrift` + component default enforce page ⇄ registry, 198 tests; four two-direction proofs (§10) |
 | [`442-props-type-search.md`](./442-props-type-search.md) | A props type name (`ButtonProps`) reaches its component page from ⌘K | F | 419, 431, 441 | implemented — types are indexed; two new search tests, both proven to fail when the names are dropped; built `/api/search` verified (§8) |
+| [`443-gpuix-support-column.md`](./443-gpuix-support-column.md) | The registry mirrors the inventory's GPUix-support column (`ours`/`reuse` included) | F | 411, 429, 432, 435 | implemented — 9 records corrected, the guard reads `COMPONENTS.md`; two-direction proofs in §8 |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

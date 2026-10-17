@@ -20,10 +20,18 @@ export const Status = Schema.Literals([
   "unsupported",
 ]);
 
-/** Whether the real GPUix runtime supports the component's behaviour. */
+/**
+ * What GPUix already provides, in the inventory's own words (plan 443). The
+ * registry mirrors the `GPUix support` column of `COMPONENTS.md` rather than
+ * re-interpreting it: `reuse` means the component wraps GPUix's own primitive
+ * and `ours` means the behaviour is implemented in this library. `unverified`
+ * is the inventory's `?`, and `no` is its `unsupported`.
+ */
 export const GpuixSupport = Schema.Literals([
   "yes",
   "partial",
+  "reuse",
+  "ours",
   "no",
   "unverified",
 ]);

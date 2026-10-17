@@ -57,6 +57,44 @@ const statusWord = (value: string): string | undefined => {
   return ["planned", "wip", "done"].includes(value) ? value : undefined;
 };
 
+/**
+ * The GPUix-support words `COMPONENTS.md` may carry, and the registry value each
+ * one means (plan 443). A parenthetical is dropped before lookup, so
+ * `yes (a bar, no host element)` is `yes`. An unlisted word is a failure, not a
+ * guess: a new word means a human decides what the docs say.
+ */
+const inventorySupportWords: Readonly<Record<string, string>> = {
+  yes: "yes",
+  partial: "partial",
+  reuse: "reuse",
+  ours: "ours",
+  no: "no",
+  unsupported: "no",
+  "?": "unverified",
+};
+
+/** The registry support word a `COMPONENTS.md` cell means, or `undefined`. */
+const supportWord = (cell: string): string | undefined =>
+  inventorySupportWords[cell.split("(")[0]?.trim() ?? ""];
+
+/** Title → GPUix-support word for one inventory tier table. */
+const inventorySupport = (heading: string): ReadonlyMap<string, string> => {
+  const section = componentsMarkdown
+    .split(`## ${heading}`)[1]
+    ?.split("\n## ")[0];
+  if (section === undefined) return new Map();
+  return new Map(
+    section.split("\n").flatMap((line) => {
+      const cells = line.split("|").map((cell) => cell.trim());
+      const name = cells[1];
+      const support = supportWord(cells[3] ?? "");
+      return name === undefined || support === undefined
+        ? []
+        : [[normalize(name), support] as const];
+    }),
+  );
+};
+
 /** Title → status for one inventory tier table, keyed like the title test. */
 const inventoryStatuses = (heading: string): ReadonlyMap<string, string> => {
   const section = componentsMarkdown
@@ -116,6 +154,44 @@ describe("component registry", () => {
           : [`${entry.slug}: inventory ${expected}, registry ${entry.status}`];
     });
     expect(mismatches).toEqual([]);
+  });
+
+  it("takes every GPUix support word from its COMPONENTS.md row", () => {
+    const inventory = new Map([
+      ...inventorySupport("Tier 1 — foundational"),
+      ...inventorySupport("Tier 2 — composition and feedback"),
+    ]);
+    const mismatches = components.flatMap((entry) => {
+      const expected = inventory.get(normalize(entry.title));
+      return expected === undefined
+        ? [`${entry.slug}: no COMPONENTS.md support row`]
+        : expected === entry.gpuix
+          ? []
+          : [`${entry.slug}: inventory ${expected}, registry ${entry.gpuix}`];
+    });
+    expect(mismatches).toEqual([]);
+  });
+
+  it("maps every inventory support word to exactly one registry value", () => {
+    const expected = {
+      yes: "yes",
+      "yes (a bar, no host element)": "yes",
+      partial: "partial",
+      reuse: "reuse",
+      ours: "ours",
+      no: "no",
+      unsupported: "no",
+      "?": "unverified",
+    };
+    expect(
+      Object.fromEntries(
+        Object.keys(expected).map((cell) => [cell, supportWord(cell)]),
+      ),
+    ).toEqual(expected);
+  });
+
+  it("rejects a support word the inventory introduced without the docs", () => {
+    expect(supportWord("maybe")).toBeUndefined();
   });
 
   it("orders entries by tier then group so grouping stays correct", () => {
@@ -322,17 +398,20 @@ describe("status contract", () => {
     related: [],
     playgroundScreen: null,
     screenshots: [],
-    runtime: null,
+    runtime: {
+      command: "nub run --filter @gpuixui/components test:behaviour",
+      testFile: "packages/components/src/behaviour/card.test.tsx",
+    },
     limitations: [],
   };
 
-  it("accepts done with verified support and a source", () => {
-    expect(statusViolations([base])).toEqual([]);
+  it("accepts done when a native suite proves it, even for a primitive we wrote", () => {
+    expect(statusViolations([{ ...base, gpuix: "ours" }])).toEqual([]);
   });
 
-  it("rejects done without verified GPUix support", () => {
-    expect(statusViolations([{ ...base, gpuix: "unverified" }])).toEqual([
-      "demo: done requires verified GPUix support",
+  it("rejects done without a native suite", () => {
+    expect(statusViolations([{ ...base, runtime: null }])).toEqual([
+      "demo: done requires a native suite",
     ]);
   });
 

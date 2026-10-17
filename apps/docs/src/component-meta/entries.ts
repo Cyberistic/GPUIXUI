@@ -275,7 +275,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "1",
     "Triggers an action; the primary interactive control.",
     {
-      gpuix: "yes",
+      gpuix: "ours",
       sourcePath: "packages/primitives/src/components/Button.tsx",
       api: ["ButtonProps"],
       runtime: nativeSuite(
@@ -420,7 +420,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     },
   ),
   delivered("select", "Selects", "1", "Selects one value from a list.", {
-    gpuix: "yes",
+    gpuix: "reuse",
     sourcePath: "packages/primitives/src/components/Select.tsx",
     api: ["SelectProps"],
     runtime: nativeSuite(
@@ -478,7 +478,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     },
   ),
   delivered("tooltip", "Tooltips", "1", "Labels a control on hover or focus.", {
-    gpuix: "yes",
+    gpuix: "reuse",
     sourcePath: "packages/primitives/src/components/Tooltip.tsx",
     api: ["TooltipProps"],
     runtime: nativeSuite(
@@ -543,7 +543,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "1",
     "Selects one value by click, drag or keyboard.",
     {
-      gpuix: "yes",
+      gpuix: "ours",
       sourcePath: "packages/primitives/src/components/Slider.tsx",
       api: ["SliderProps"],
       runtime: nativeSuite(
@@ -565,7 +565,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "1",
     "Selects the two ends of an interval on one track.",
     {
-      gpuix: "yes",
+      gpuix: "ours",
       sourcePath: "packages/primitives/src/components/Slider.tsx",
       api: ["RangeSliderProps"],
       runtime: nativeSuite(
@@ -609,7 +609,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "1",
     "A numeric field with steps, bounds and formatting.",
     {
-      gpuix: "yes",
+      gpuix: "ours",
       sourcePath: "packages/primitives/src/components/NumberField.tsx",
       api: ["NumberFieldProps"],
       runtime: nativeSuite(
@@ -632,7 +632,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "1",
     "A one-time code in length cells, held as one string.",
     {
-      gpuix: "yes",
+      gpuix: "ours",
       sourcePath: "packages/primitives/src/components/OTPField.tsx",
       api: ["OTPFieldProps"],
       runtime: nativeSuite(
@@ -650,7 +650,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     },
   ),
   delivered("toggle", "Toggle", "1", "A button whose pressed state persists.", {
-    gpuix: "yes",
+    gpuix: "ours",
     sourcePath: "packages/primitives/src/components/Toggle.tsx",
     api: ["ToggleProps"],
     runtime: nativeSuite(
@@ -666,7 +666,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     ],
   }),
   delivered("rating", "Rating", "1", "A whole-number star rating, or none.", {
-    gpuix: "yes",
+    gpuix: "ours",
     sourcePath: "packages/primitives/src/components/Rating.tsx",
     api: ["RatingProps"],
     runtime: nativeSuite(

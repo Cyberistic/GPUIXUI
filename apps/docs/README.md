@@ -119,13 +119,16 @@ runtime-mounted example. Copy their shape.
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
    `COMPONENTS.md` row exactly** — `registry.test.ts` proves the two agree.
    Start `status: "planned"`, `gpuix: "unverified"`; a delivered component moves
-   to `wip`/`done` only with a real `sourcePath` and **the exact status word its
-   `COMPONENTS.md` row carries** — the same test parses the inventory table and
-   fails on any difference (plan 429). A `done` record with `gpuix: "partial"`
-   must carry at least one documented limitation; `done` never sits on
-   `unverified` support. The `planned`/`delivered` helpers default `parts` to
-   `[]`, `pattern` to `"static"` and `persistence` to `null`; a compound or
-   workspace record overrides them (plan 427). A `delivered` record also names
+   to `wip`/`done` only with a real `sourcePath` and **the exact status and
+   GPUix-support words its `COMPONENTS.md` row carries** — `registry.test.ts`
+   parses the inventory table and fails on any difference (plans 429 and 443).
+   That means `ours` and `reuse` are real values: the page prints the word with
+   its meaning (`src/component-meta/support.ts`), so a reader is never told
+   "GPUix provides it" about a primitive this library wrote. A `done` record
+   must carry its native `runtime` suite, and partial support also needs a
+   documented limitation. The `planned`/`delivered` helpers default `parts` to `[]`, `pattern` to
+   `"static"` and `persistence` to `null`; a compound or workspace record
+   overrides them (plan 427). A `delivered` record also names
    its props types in `api` — `api: ["ButtonProps"]` — because
    `/docs/api-reference` is generated from the registry, and
    `content-references.test.ts` fails when that set and the page's prop tables
