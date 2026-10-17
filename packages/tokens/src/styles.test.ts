@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { alpha } from "./color.js";
 import { appRootStyle, chromeStyle } from "./selection.example.js";
 import { statusToneStyles } from "./status-tone.example.js";
 import { statusTextStyles } from "./status-text.example.js";
@@ -96,7 +95,7 @@ describe("statusTone", () => {
           theme.colors[`${tone}SoftForeground`],
         );
         expect(style.border, `${label} ${tone}`).toBe(
-          alpha(theme.colors[tone], 0.3),
+          theme.colors[`${tone}SoftBorder`],
         );
         expect(style.text, `${label} ${tone}`).toBe(
           theme.colors[`${tone}Text`],
@@ -156,7 +155,7 @@ describe("status tone example", () => {
     const style = statusToneStyles(lightTheme, "warning");
     expect(style.container.backgroundColor).toBe(lightTheme.colors.warningSoft);
     expect(style.container.borderColor).toBe(
-      alpha(lightTheme.colors.warning, 0.3),
+      lightTheme.colors.warningSoftBorder,
     );
     expect(style.text.color).toBe(lightTheme.colors.warningSoftForeground);
     expect(style.text.fontSize).toBe(lightTheme.typography.label.fontSize);

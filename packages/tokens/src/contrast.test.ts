@@ -273,7 +273,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(105);
+    expect(contrastPairs.length).toBe(109);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);

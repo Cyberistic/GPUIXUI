@@ -1,5 +1,5 @@
 /**
- * Guards `docs/tokens.md` against drift: its colour tables repeat the 54
+ * Guards `docs/tokens.md` against drift: its colour tables repeat the 58
  * semantic roles for both default and high-contrast themes, so a palette or
  * role edit that is not mirrored in the docs would ship a catalogue that
  * disagrees with the theme. The test parses the documented rows and compares
@@ -14,19 +14,25 @@
  * per-platform mono families and the icon-to-label gap, so the rationale cannot
  * name a family or a spacing value the package does not ship.
  *
- * The figures the catalogue quotes in prose — the status ratios, the
- * design-system's warning figure and the selection wash percentage — are
+ * The figures the catalogue quotes in prose — the status ratios, the soft
+ * status edge and the mixture it replaced, the design-system's warning figure
+ * and the selection wash percentage — are
  * derived here from `contrastRatio`, `contrastFloors` and the alpha byte
- * (plan 075), and the `xText` surfaces from `contrastPairs`, so a palette, floor
- * or contract edit cannot leave a sentence quoting the old values.
+ * (plans 075 and 090), and the `xText` surfaces from `contrastPairs`, so a
+ * palette, floor or contract edit cannot leave a sentence quoting the old value.
  *
  * `node:fs` is used deliberately: this is a documentation test over the tree's
  * own files, and the tokens package ships zero runtime dependencies by design.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { colorRoles, palette } from "./color.js";
-import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
+import { alpha, colorRoles, palette } from "./color.js";
+import {
+  compositeOver,
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
+} from "./contrast.js";
 import {
   elevationShadow,
   type BoxShadow,
@@ -285,7 +291,7 @@ describe("docs/tokens.md status table", () => {
   it("lists every tone with its solid, soft and text roles", () => {
     statusTones.forEach((tone) => {
       expect(markdown, tone).toContain(
-        `| \`${tone}\` | \`${tone}\` / \`${tone}Foreground\` | \`${tone}Soft\` | \`${tone}SoftForeground\` | \`${tone}Text\` |`,
+        `| \`${tone}\` | \`${tone}\` / \`${tone}Foreground\` | \`${tone}Soft\` | \`${tone}SoftForeground\` | \`${tone}SoftBorder\` | \`${tone}Text\` |`,
       );
     });
   });
@@ -329,6 +335,20 @@ describe("docs/tokens.md quoted figures", () => {
       `${contrastFloors.default.boundary}:1 non-text floor, and light \`success\` is ` +
       `${contrastRatio(light.success, light.background).toFixed(2)}:1, under the ` +
       `${contrastFloors.default.secondary}:1 text floor.`;
+
+    expect(markdownProse).toContain(sentence);
+  });
+
+  it("quotes the high-contrast soft edge and the mixture it replaced", () => {
+    const high = highContrastThemes.light.colors;
+    const mixed = compositeOver(alpha(high.warning, 0.3), high.warningSoft);
+    const sentence =
+      "At high contrast the edge is designed, not mixed: " +
+      `\`warningSoftBorder\` (\`${high.warningSoftBorder}\`) is ` +
+      `${contrastRatio(high.warningSoftBorder, high.warningSoft).toFixed(2)}:1 on ` +
+      `\`warningSoft\`, where the 30% mixture it replaced measured ` +
+      `${contrastRatio(mixed, high.warningSoft).toFixed(2)}:1, under the ` +
+      `${contrastFloors.high.divider}:1 divider floor.`;
 
     expect(markdownProse).toContain(sentence);
   });

@@ -54,6 +54,18 @@ const surfacePairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The designed edge around each soft status surface. It is a decorative border
+ * on its own fill, so the divider floor applies: 1.05:1 by default and 3:1 at
+ * high contrast, where the 30% mixture it replaced measured 1.12:1.
+ */
+const softBorderPairs: readonly ContrastPair[] = [
+  ["infoSoftBorder", "infoSoft", "divider"],
+  ["successSoftBorder", "successSoft", "divider"],
+  ["warningSoftBorder", "warningSoft", "divider"],
+  ["destructiveSoftBorder", "destructiveSoft", "divider"],
+];
+
+/**
  * The state washes a row paints behind its own text: pointer hover, press, the
  * accent a selectable row uses on hover, and the selected fill. Secondary text
  * sits on all four, so the `secondary` floor applies to each.
@@ -179,9 +191,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * and the floating surface, the focus ring on every surface a focused control
  * can sit on, status text on a floating surface, the functional control
  * boundary on a floating surface, a quiet panel and the state washes, the soft
- * status surfaces and the loading skeleton a canvas must distinguish, and the
- * decorative dividers that must stay visible, including on the fills a bordered
- * control paints.
+ * status surfaces and the loading skeleton a canvas must distinguish, the
+ * designed edge around each soft status surface, and the decorative dividers
+ * that must stay visible, including on the fills a bordered control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ...bodyTextPairs,
@@ -229,6 +241,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...primaryTextPairs,
   ...secondaryTextPairs,
   ...surfacePairs,
+  ...softBorderPairs,
   ["border", "background", "divider"],
   ["border", "card", "divider"],
   ["border", "popover", "divider"],
@@ -410,7 +423,8 @@ export const selectionWashPairs: readonly ContrastPair[] =
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
  * secondary text and the wash's own perceivability on those surfaces, the
- * loading skeleton measured on the surfaces it fills, the control edge measured
+ * loading skeleton measured on the surfaces it fills, the designed edge around
+ * each soft status surface measured on its own fill, the control edge measured
  * on the fills a bordered control paints, and the functional boundary measured
  * on the quiet panel and state washes a bounded control sits on. The level
  * defaults to the one the theme declares, so a high-contrast theme is checked

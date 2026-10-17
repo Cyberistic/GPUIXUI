@@ -146,7 +146,7 @@ const density = isDensityName(storedDensity) ? storedDensity : "comfortable";
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 54 roles, so no component changes.
+essential boundaries. It reuses the same 58 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";
@@ -206,6 +206,9 @@ soft status surfaces and the loading skeleton at 1.05:1 against `background`,
 contrast) on the plain surfaces and on the `secondary`, `hover`, `active` and
 `accent` fills a bordered control paints, so an Alert, Badge or Toast, a loading
 placeholder, every divider and every outlined control's edge stay perceivable.
+Each soft status surface has a designed edge (`xSoftBorder`) held to the divider
+floor on that surface, so the 30% mixture that measured 1.12:1 at high contrast
+cannot return.
 Four shipped sets had the divider equal to the fill it sits on (1.00:1) until
 plan 080, so an edge vanished exactly while a control was pressed. Every shipped
 theme passes it —
@@ -215,18 +218,20 @@ lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 ## Status tones
 
 The four status families — `info`, `success`, `warning` and `destructive` — each
-have a solid role with a readable foreground, a soft pair for alerts, badges and
-toasts, and an `xText` role for labels, icons and indicator dots on a plain
-surface or the `hover`/`active`/`accent`/`selected` wash a row paints. `statusTone` resolves the soft surface, its readable foreground, a
-30%-alpha edge and the text role; `alpha` turns any hex role into a translucent
-one. A tone from a payload is unknown until `isStatusTone` narrows it.
+have a solid role with a readable foreground, a soft pair with a designed edge
+for alerts, badges and toasts, and an `xText` role for labels, icons and
+indicator dots on a plain surface or the
+`hover`/`active`/`accent`/`selected` wash a row paints. `statusTone` resolves the
+soft surface, its readable foreground, its designed edge and the text role;
+`alpha` turns any hex role into a translucent one. A tone from a payload is
+unknown until `isStatusTone` narrows it.
 
 ```ts
 import { alpha, statusTone } from "@gpuixui/tokens";
 
 const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
-tone.border; // alpha(theme.colors.info, 0.3)
+tone.border; // theme.colors.infoSoftBorder
 ```
 
 A runnable example lives in

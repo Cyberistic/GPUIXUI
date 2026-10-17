@@ -110,6 +110,12 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states the soft status edge is a measured role", () => {
+    expect(readme).toContain(
+      "Each soft status surface has a designed edge (`xSoftBorder`) held to the divider floor on that surface",
+    );
+  });
+
   it("lists every motion level, including the zero one", () => {
     const levelNames = Object.entries(motion)
       .filter(([, value]) => typeof value === "number")

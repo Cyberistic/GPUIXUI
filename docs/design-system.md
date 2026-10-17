@@ -55,14 +55,14 @@ palette (raw ramps)  →  semantic roles  →  component composition
 
 The four status families — `info`, `success`, `warning`, `destructive` — each
 carry a solid role with a readable foreground, a soft pair (`xSoft`,
-`xSoftForeground`) for alerts, badges and toasts, and a text role (`xText`) for
-labels, icons and indicator dots on a plain surface or the wash a row paints.
-`info` has its own blue ramp, so an informational message can never be mistaken
-for a primary action. A component names a status family and reads its roles; it
-never mixes a readable text colour out of a solid status colour at runtime, and
-never special-cases a mode to make a tint readable. The solid roles are fills: light
-`warning` is 1.78:1 against the canvas, so it is never the colour of text or a
-dot.
+`xSoftForeground`) with a designed edge (`xSoftBorder`) for alerts, badges and
+toasts, and a text role (`xText`) for labels, icons and indicator dots on a plain
+surface or the wash a row paints. `info` has its own blue ramp, so an
+informational message can never be mistaken for a primary action. A component
+names a status family and reads its roles; it never mixes a readable text colour
+out of a solid status colour at runtime, and never special-cases a mode to make a
+tint readable. The solid roles are fills: light `warning` is 1.78:1 against the
+canvas, so it is never the colour of text or a dot.
 
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library. A brand that also uses its accent as text overrides
@@ -84,7 +84,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite tint | black tint |
 
-Both themes expose exactly the same 54 roles; the type system and the colour
+Both themes expose exactly the same 58 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -234,7 +234,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` wash via `selectionColor`; body and secondary text keep their floors through the composited wash on every surface a glyph is selected on, and the wash itself stays perceivable; `userSelect: "none"` opts chrome out |
-| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone` |
+| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair and designed edge through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone` |
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
 so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
@@ -277,6 +277,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 1.05:1 | 1.05:1 |
 | focus ring on `background`/`card`/`popover`/`muted`/`accent` and the `hover`/`active`/`selected` washes, and essential boundaries on `popover`, `muted` and the four state washes | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
+| soft status edge (`xSoftBorder` on `xSoft`) | 1.05:1 | 3:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover` and the `secondary`/`hover`/`active`/`accent` fills a bordered control paints | 1.05:1 | 3:1 |
 

@@ -1,4 +1,3 @@
-import { alpha } from "./color.js";
 import type { BoxShadow } from "./elevation.js";
 import type { ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
@@ -81,7 +80,7 @@ export interface StatusToneStyle {
   readonly background: string;
   /** Readable text and icons for that surface (`xSoftForeground`). */
   readonly foreground: string;
-  /** The tone's solid colour at 30% alpha, for the surface edge. */
+  /** The designed edge around the surface (`xSoftBorder`). */
   readonly border: string;
   /**
    * Status text and indicators drawn on a plain surface — `background`, `card`
@@ -113,7 +112,7 @@ export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
   return {
     background: theme.colors[`${tone}Soft`],
     foreground: theme.colors[`${tone}SoftForeground`],
-    border: alpha(theme.colors[tone], 0.3),
+    border: theme.colors[`${tone}SoftBorder`],
     text: theme.colors[`${tone}Text`],
   };
 }

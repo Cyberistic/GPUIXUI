@@ -72,14 +72,15 @@ control paints `border` on the fill behind it —
 an outline toggle that is on — so the divider is held to its floor on those
 fills too, not only on the plain surfaces.
 
-There are 54 roles. The four status families — `info`, `success`, `warning` and
-`destructive` — each have three tonalities: a solid fill with a readable
-foreground on it, a soft pair (`xSoft` / `xSoftForeground`) for alerts, badges
-and toasts, and a text role (`xText`) for status labels, icons and indicator
-dots drawn on `background`, `card` or `popover`. A filled action also has a
-designed hover — `primaryHover` and `destructiveHover` — so a component never
-composites an alpha fill over whatever surface sits behind it. `info` is blue,
-not iris, so it can never be confused with `primary`.
+There are 58 roles. The four status families — `info`, `success`, `warning` and
+`destructive` — each have three tonalities and a designed edge: a solid fill with
+a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
+edge (`xSoftBorder`) for alerts, badges and toasts, and a text role (`xText`) for
+status labels, icons and indicator dots drawn on `background`, `card` or
+`popover`. A filled action also has a designed hover — `primaryHover` and
+`destructiveHover` — so a component never composites an alpha fill over whatever
+surface sits behind it. `info` is blue, not iris, so it can never be confused
+with `primary`.
 
 The same fill-versus-text split applies to the brand action. `primary` is a
 surface: it carries `primaryForeground`, and it is measured only as a fill.
@@ -118,12 +119,16 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `infoForeground` | `#FFFFFF` | `#11141A` | text and icons on `info` |
 | `infoSoft` | `#DEE9FF` | `#16356F` | soft informational surface |
 | `infoSoftForeground` | `#173A88` | `#DEE9FF` | text and icons on `infoSoft` |
+| `infoSoftBorder` | `#A6BEF3` | `#3F5E9A` | edge around `infoSoft` |
 | `successSoft` | `#C2F4D6` | `#0C452D` | soft success surface |
 | `successSoftForeground` | `#0E5135` | `#D3F9E2` | text and icons on `successSoft` |
+| `successSoftBorder` | `#8ED3AF` | `#1A6D46` | edge around `successSoft` |
 | `warningSoft` | `#FFE3A3` | `#4B3100` | soft warning surface |
 | `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
+| `warningSoftBorder` | `#FCD47B` | `#815F17` | edge around `warningSoft` |
 | `destructiveSoft` | `#FFE0E0` | `#6B1A1D` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
+| `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
 | `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
@@ -189,12 +194,12 @@ role for the case the other two cannot serve: a status label, icon or indicator
 dot drawn directly on a surface — `background`, `card`, `popover` or one of the
 state washes a row paints (`hover`, `active`, `accent`, `selected`).
 
-| Tone | Solid fill | Soft surface | Text on the soft surface | Text on a plain surface |
-| ---- | ---------- | ------------ | ----------------------- | ----------------------- |
-| `info` | `info` / `infoForeground` | `infoSoft` | `infoSoftForeground` | `infoText` |
-| `success` | `success` / `successForeground` | `successSoft` | `successSoftForeground` | `successText` |
-| `warning` | `warning` / `warningForeground` | `warningSoft` | `warningSoftForeground` | `warningText` |
-| `destructive` | `destructive` / `destructiveForeground` | `destructiveSoft` | `destructiveSoftForeground` | `destructiveText` |
+| Tone | Solid fill | Soft surface | Text on the soft surface | Edge on the soft surface | Text on a plain surface |
+| ---- | ---------- | ------------ | ----------------------- | ------------------------ | ----------------------- |
+| `info` | `info` / `infoForeground` | `infoSoft` | `infoSoftForeground` | `infoSoftBorder` | `infoText` |
+| `success` | `success` / `successForeground` | `successSoft` | `successSoftForeground` | `successSoftBorder` | `successText` |
+| `warning` | `warning` / `warningForeground` | `warningSoft` | `warningSoftForeground` | `warningSoftBorder` | `warningText` |
+| `destructive` | `destructive` / `destructiveForeground` | `destructiveSoft` | `destructiveSoftForeground` | `destructiveSoftBorder` | `destructiveText` |
 
 The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
 1.78:1 against `background` and 1.89:1 against `card`, under the 3:1 non-text
@@ -210,8 +215,15 @@ is a surface in its own right: it is held to 1.05:1 against
 `background`, `card` and `popover`, so an Alert, Badge or Toast stays
 perceivable on every shipped canvas, platform variants included.
 
-`statusTone(theme, tone)` resolves the soft surface, its readable foreground, a
-30%-alpha edge from the solid role, and the plain-surface text role:
+The edge is a role, not a mixture: `xSoftBorder` is designed per tone and
+measured on the fill it borders at the divider floor — 1.05:1 in the default
+themes and 3:1 at high contrast. At high contrast the edge is designed, not
+mixed: `warningSoftBorder` (`#8E5B00`) is 4.41:1 on `warningSoft`, where the 30%
+mixture it replaced measured 1.12:1, under the 3:1 divider floor. Because it is a
+role, a copied platform style edits it with the rest of the palette.
+
+`statusTone(theme, tone)` resolves the soft surface, its readable foreground, its
+designed edge, and the plain-surface text role:
 
 ```ts
 import { statusTone } from "@gpuixui/tokens";
@@ -219,7 +231,7 @@ import { statusTone } from "@gpuixui/tokens";
 const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
-tone.border; // alpha(theme.colors.info, 0.3)
+tone.border; // theme.colors.infoSoftBorder
 tone.text; // theme.colors.infoText — labels and dots on plain surfaces and row washes
 ```
 
@@ -242,7 +254,7 @@ does the same for a status label and an indicator dot on a plain surface.
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 54 roles and the same type, spacing, radius, density, border
+`Theme` — the same 58 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -285,12 +297,16 @@ getTheme("light"); // the default light theme, unchanged
 | `infoForeground` | `#FFFFFF` | `#000000` | text and icons on `info` |
 | `infoSoft` | `#C5D8FF` | `#152F6B` | soft informational surface |
 | `infoSoftForeground` | `#0C1D42` | `#DEE9FF` | text and icons on `infoSoft` |
+| `infoSoftBorder` | `#1B45AC` | `#6E9CFF` | edge around `infoSoft` |
 | `successSoft` | `#A8F0C6` | `#0A3A26` | soft success surface |
 | `successSoftForeground` | `#042015` | `#D3F9E2` | text and icons on `successSoft` |
+| `successSoftBorder` | `#116A43` | `#3BC97F` | edge around `successSoft` |
 | `warningSoft` | `#FFDE8A` | `#4B3100` | soft warning surface |
 | `warningSoftForeground` | `#2A1B00` | `#FFEFC6` | text and icons on `warningSoft` |
+| `warningSoftBorder` | `#8E5B00` | `#D99400` | edge around `warningSoft` |
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
+| `destructiveSoftBorder` | `#A5262B` | `#FF6B6B` | edge around `destructiveSoft` |
 | `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
@@ -1054,6 +1070,9 @@ bordered control paints (1.05:1, and 3:1 at high contrast), or if body text over
 the composited `selection` wash drops below its body floor on any surface a glyph
 is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
 `popover` and `input`, with the selected row at the secondary floor.
+Each soft surface also has a role for its edge (`xSoftBorder`), held to the same
+divider floor on that fill; the 30% mixture it replaced measured 1.12:1 on the
+high-contrast light `warning` surface, under the 3:1 that theme requires.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
 `card` and `popover`, so a placeholder never disappears into the card it fills.
 Brand-toned text is checked on the six surfaces a link paints — `background`,

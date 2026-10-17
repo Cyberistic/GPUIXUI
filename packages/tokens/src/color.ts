@@ -147,18 +147,26 @@ export interface ThemeColors {
   readonly infoSoft: string;
   /** Text and icons on `infoSoft`. */
   readonly infoSoftForeground: string;
+  /** Designed edge around `infoSoft`, held to the divider floor on that fill. */
+  readonly infoSoftBorder: string;
   /** Soft success surface. */
   readonly successSoft: string;
   /** Text and icons on `successSoft`. */
   readonly successSoftForeground: string;
+  /** Designed edge around `successSoft`, held to the divider floor on that fill. */
+  readonly successSoftBorder: string;
   /** Soft warning surface. */
   readonly warningSoft: string;
   /** Text and icons on `warningSoft`. */
   readonly warningSoftForeground: string;
+  /** Designed edge around `warningSoft`, held to the divider floor on that fill. */
+  readonly warningSoftBorder: string;
   /** Soft destructive surface. */
   readonly destructiveSoft: string;
   /** Text and icons on `destructiveSoft`. */
   readonly destructiveSoftForeground: string;
+  /** Designed edge around `destructiveSoft`, held to the divider floor on that fill. */
+  readonly destructiveSoftBorder: string;
   /** Informational status text and indicators on plain surfaces and row washes. */
   readonly infoText: string;
   /** Success status text and indicators on plain surfaces and row washes. */
@@ -242,12 +250,16 @@ export const lightColors = {
   infoForeground: palette.neutral[0],
   infoSoft: palette.blue[100],
   infoSoftForeground: palette.blue[800],
+  infoSoftBorder: "#A6BEF3",
   successSoft: "#C2F4D6",
   successSoftForeground: palette.green[800],
+  successSoftBorder: "#8ED3AF",
   warningSoft: "#FFE3A3",
   warningSoftForeground: palette.amber[900],
+  warningSoftBorder: "#FCD47B",
   destructiveSoft: palette.red[100],
   destructiveSoftForeground: palette.red[800],
+  destructiveSoftBorder: "#F0ACAE",
   infoText: palette.blue[700],
   successText: palette.green[700],
   warningText: palette.amber[800],
@@ -306,12 +318,16 @@ export const darkColors = {
   infoForeground: palette.neutral[950],
   infoSoft: "#16356F",
   infoSoftForeground: palette.blue[100],
+  infoSoftBorder: "#3F5E9A",
   successSoft: "#0C452D",
   successSoftForeground: palette.green[100],
+  successSoftBorder: "#1A6D46",
   warningSoft: palette.amber[900],
   warningSoftForeground: palette.amber[100],
+  warningSoftBorder: "#815F17",
   destructiveSoft: "#6B1A1D",
   destructiveSoftForeground: palette.red[100],
+  destructiveSoftBorder: "#983235",
   infoText: palette.blue[200],
   successText: palette.green[200],
   warningText: palette.amber[200],
@@ -336,7 +352,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 54 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 58 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries.
  */
 export const highContrastLightColors = {
@@ -367,12 +383,16 @@ export const highContrastLightColors = {
   infoForeground: "#FFFFFF",
   infoSoft: palette.blue[200],
   infoSoftForeground: palette.blue[950],
+  infoSoftBorder: palette.blue[700],
   successSoft: palette.green[200],
   successSoftForeground: palette.green[950],
+  successSoftBorder: palette.green[700],
   warningSoft: palette.amber[200],
   warningSoftForeground: palette.amber[950],
+  warningSoftBorder: palette.amber[700],
   destructiveSoft: palette.red[200],
   destructiveSoftForeground: palette.red[950],
+  destructiveSoftBorder: palette.red[700],
   infoText: palette.blue[900],
   successText: palette.green[900],
   warningText: palette.amber[900],
@@ -397,7 +417,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 54 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 58 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it (plan 080), and
  * the selection wash is a darker tint so white text keeps the body floor on the
@@ -431,12 +451,16 @@ export const highContrastDarkColors = {
   infoForeground: "#000000",
   infoSoft: palette.blue[900],
   infoSoftForeground: palette.blue[100],
+  infoSoftBorder: palette.blue[400],
   successSoft: palette.green[900],
   successSoftForeground: palette.green[100],
+  successSoftBorder: palette.green[400],
   warningSoft: palette.amber[900],
   warningSoftForeground: palette.amber[100],
+  warningSoftBorder: palette.amber[500],
   destructiveSoft: palette.red[900],
   destructiveSoftForeground: palette.red[100],
+  destructiveSoftBorder: palette.red[400],
   infoText: palette.blue[100],
   successText: palette.green[100],
   warningText: palette.amber[100],
@@ -534,12 +558,16 @@ export const colorRoles = [
   "infoForeground",
   "infoSoft",
   "infoSoftForeground",
+  "infoSoftBorder",
   "successSoft",
   "successSoftForeground",
+  "successSoftBorder",
   "warningSoft",
   "warningSoftForeground",
+  "warningSoftBorder",
   "destructiveSoft",
   "destructiveSoftForeground",
+  "destructiveSoftBorder",
   "infoText",
   "successText",
   "warningText",
