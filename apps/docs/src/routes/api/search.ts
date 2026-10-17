@@ -1,13 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createFromSource } from "fumadocs-core/search/server";
-import { source } from "@/lib/source";
-
-const server = createFromSource(source);
+import { parseSearchLimit, search } from "@/lib/search";
 
 export const Route = createFileRoute("/api/search")({
   server: {
     handlers: {
-      GET: async ({ request }) => server.GET(request),
+      GET: async ({ request }) => {
+        const url = new URL(request.url);
+        return Response.json(
+          await search(
+            url.searchParams.get("query") ?? "",
+            parseSearchLimit(url.searchParams.get("limit")),
+          ),
+        );
+      },
     },
   },
 });

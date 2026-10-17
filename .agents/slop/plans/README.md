@@ -85,6 +85,7 @@ B1, so it is planned, not done.
 | `416-docs-identity-from-tokens.md` | Docs identity from `@gpuixui/tokens`: the palette pinned by test, generated colour/type tables, theming + typography truth | B/F | 410, 011–018 | implemented |
 | `417-component-index-filter.md` | Searchable component index: local title/summary filter, live count, empty state | B/F | 411, 410 | implemented |
 | `418-absolute-urls-and-sitemap.md` | Absolute canonical URLs, generated `sitemap.xml` and `robots.txt`, one `VITE_SITE_URL` | B/F | 410, 413 | implemented |
+| `419-search-component-registry.md` | Index the component registry in `/api/search` so ⌘K finds component names from any page | B/F | 411, 410, 417 | implemented |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
