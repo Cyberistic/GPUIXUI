@@ -21,6 +21,7 @@ verified, its provenance recorded, and its notices preserved.
 | `inventory.md` | one row per dependency and reference: name, version/commit, licence, use, obligations |
 | `provenance.md` | one row per adapted implementation: source, commit, what changed, licence |
 | `NOTICE` | the notices our package must redistribute |
+| `adabraka-ui.md` | the first reference record: the limits-checklist structure used by `docs/gpuix-capabilities.md` (MIT, no source copied) |
 
 ## Non-negotiables
 
@@ -33,5 +34,7 @@ verified, its provenance recorded, and its notices preserved.
 - A package that cannot be licensed compatibly is not a dependency — replace it
   or reimplement it.
 
-Nothing is recorded yet: Phase A produces the first inventory, because a
-licence inventory written after the code is a rewrite.
+The inventory is not written yet — Phase A produces the first full pass, because
+a licence inventory written after the code is a rewrite. The first per-reference
+record (`adabraka-ui.md`) landed with the capability map; every later reference
+adds its own file and a row here.
