@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` (C-row), `115` (Field) |
-| Status | planned |
+| Status | done — 8 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned part: `InlineEdit`); `COMPONENTS.md` → Tier 2 → Inline edit |
 
 This plan is self-contained. It adds `InlineEdit` at the Tier 2 bar.
@@ -124,3 +124,19 @@ Stop and report if:
 - Eight native tests, both themes, no literal colours or sizes.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/inline-edit.tsx` — one part. `Enter` genuinely arrives twice (keyDown and
+  submit) in 0.10.0, so a `finished` ref makes an edit finish once. Focus after a
+  commit is applied in a layout effect keyed on `editing`, because the display is
+  a new element after the swap; a blur commit deliberately does not refocus.
+- `src/behaviour/inline-edit.test.tsx` — 8 tests, including a controlled edit
+  state and a disabled display.
+- Example, docs page, inventory record, `COMPONENTS.md` row and the contract's
+  §8 table updated.
+- **Both directions:** making Escape commit fails 4 tests; dropping the
+  "changed draft" guard fails the unchanged/disabled test. Restored: 8 native
+  green.

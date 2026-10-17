@@ -233,6 +233,7 @@ parts.
 | Form | `Form` (render prop; one part) | `Form` | plan 308 |
 | Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
 | Countdown | `Countdown` | — | plan 312 |
+| Inline edit | `InlineEdit` (render display/input swap; one part) | — | plan 313 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
