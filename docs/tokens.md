@@ -219,7 +219,8 @@ Each mode has a high-contrast variant for accessibility. It is an ordinary
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
-to know the variant exists.
+to know the variant exists. It also declares `contrast: "high"`, so the checks
+that read a theme default to the floor set it was built for.
 
 ```ts
 import { getTheme, highContrastThemes } from "@gpuixui/tokens";
@@ -376,8 +377,13 @@ const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
 });
 ```
 
-`applyPlatformStyle(base, style, contrast?)` takes the base theme's contrast
-level, so a copied style never overrides a high-contrast palette.
+`applyPlatformStyle(base, style, contrast = base.contrast)` reads the level the
+base declares, so a copied style never overrides a high-contrast palette unless
+the caller asks it to:
+
+```ts
+applyPlatformStyle(getTheme("dark", "high"), contosoStyle); // keeps the AAA palette
+```
 
 ### Authoring a platform style
 
@@ -710,6 +716,7 @@ type ThemeMode = "light" | "dark";
 interface Theme {
   name: string;
   mode: ThemeMode;
+  contrast: ThemeContrast;
   colors: ThemeColors;
   typography: Typography;
   spacing: Spacing;
@@ -722,6 +729,11 @@ interface Theme {
   avatarSize: AvatarSize;
 }
 ```
+
+`contrast` is the floor set the theme is designed against — `"default"` or
+`"high"` — carried beside `mode` so a check never has to guess. `extendTheme`
+keeps the base level; `{ contrast: "high" }` declares a new one, which is a claim
+until `themeContrastFailures` proves it.
 
 `lightTheme`, `darkTheme`, `themes` and `getTheme(mode)` are the built-ins.
 Each mode also has a high-contrast variant (`highContrastLightTheme`,
@@ -767,6 +779,8 @@ Merge rules:
 - `density` accepts a preset name or partial metrics; a partial override keeps
   the base preset name;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
+- `contrast` defaults to the base's declaration; an override is a claim the
+  extension mechanism does not check;
 - nothing is mutated. The returned theme may share untouched token objects. The
   contract is no mutation, not deep cloning.
 
@@ -778,15 +792,18 @@ the same floors as the shipped ones:
 ```ts
 import { themeContrastFailures } from "@gpuixui/tokens";
 
-themeContrastFailures(brandTheme); // [] when every documented pair clears its floor
-themeContrastFailures(highContrastBrand, "high");
+themeContrastFailures(brandTheme); // [] at the level brandTheme declares
+themeContrastFailures(brandTheme, "high"); // the same theme against the AAA floors
 ```
 
-`themeContrastFailures(theme, contrast?)` measures `contrastPairs` against
-`contrastFloors` and returns one entry per missed pair, naming the foreground,
-background, pair class, floor and measured ratio. The selection wash is measured
-as it paints: the foreground over `compositeOver(selection, background)` and
-over `compositeOver(selection, card)`, reported with `wash: "selection"`.
+`themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
+against `contrastFloors`. The default is the level the theme declares, so a
+high-contrast theme is checked against 7:1 without a second argument; naming a
+level asks a stricter question of a theme that does not claim it. It returns one
+entry per missed pair, naming the foreground, background, pair class, floor and
+measured ratio. The selection wash is measured as it paints: the foreground over
+`compositeOver(selection, background)` and over
+`compositeOver(selection, card)`, reported with `wash: "selection"`.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
@@ -955,7 +972,11 @@ Both suites import `contrastPairs` and `contrastFloors` from `src/contrast.ts`,
 so the documented contract and the tests that enforce it are one description,
 and `contrast.test.ts` proves the public checker passes every shipped theme and
 names the pairs a brand theme, an opaque selection wash or a malformed role
-misses.
+misses. It also proves the checker reads the level a theme declares: a
+high-contrast theme with a 5.33:1 secondary role is reported at the 7:1 floors
+without a second argument. `docs.test.ts` holds the `Theme` block above to the
+interface, so a field cannot ship undocumented, and requires the two signatures
+that carry the declaration.
 
 `packages/tokens/src/guards.test.ts` proves each narrowing guard accepts every
 shipped member — `default` included — and rejects casing, aliases, whitespace and

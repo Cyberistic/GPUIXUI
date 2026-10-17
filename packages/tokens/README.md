@@ -150,9 +150,11 @@ lives in [`src/high-contrast.example.ts`](./src/high-contrast.example.ts).
 
 ## Checking a theme
 
-`themeContrastFailures(theme, contrast?)` returns every documented pair the
-theme misses, so a brand theme or an edited platform style is held to the same
-floors as the shipped ones:
+`themeContrastFailures(theme, contrast = theme.contrast)` returns every
+documented pair the theme misses. The `Theme` records the floor set it is
+designed against, so a high-contrast theme is checked at 7:1 with no second
+argument, and a brand theme or edited platform style is held to the same floors
+as the shipped ones:
 
 ```ts
 import { themeContrastFailures } from "@gpuixui/tokens";

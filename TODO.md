@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 39/55
+`[x]` `[███████░░░]` 40/56
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -127,6 +127,9 @@ the same floors the library's own suites enforce, selection wash included
 (plan 071)
 `[x]` Guard the palette ramps in `docs/tokens.md` — the last hand-written value
 table without a drift test (plan 072)
+`[x]` Make a theme declare its contrast level so `applyPlatformStyle` and
+`themeContrastFailures` default to the floors it was designed against, and hold
+the reference's `Theme` block to the interface (plan 073)
 `[x]` Make `@gpuixui/tokens/react` consumable under a GPUix `jsxImportSource`
 with no tsconfig shim — the entry uses `createElement` and carries no JSX; a
 consumer-config type check guards it (plan 061)

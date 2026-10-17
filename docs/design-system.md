@@ -88,7 +88,8 @@ on amber cannot reach 4.5:1.
 Each mode also has a **high-contrast variant** that raises secondary and
 on-colour text to 7:1 and focus rings and essential boundaries to 4.5:1, using
 pure black and white canvases. It is a value variant of the same roles, so no
-component changes; see §9 and §11.
+component changes; it also declares `contrast: "high"`, so the contract in §9 is
+the one its own themes are checked against. See §9 and §11.
 
 There is no automatic OS appearance detection: GPUix exposes no appearance
 query. The application chooses `lightTheme` or `darkTheme` and passes the
@@ -312,13 +313,19 @@ resolving the theme; the package owns those unions, so no consumer should retype
 them. A whole theme object from a file is a different boundary: decode it with
 the application's `Schema`.
 
+A theme carries its contrast level the way it carries its mode: `extendTheme`
+keeps the base's declaration and `applyPlatformStyle` and
+`themeContrastFailures` default to it, so the short call is the safe one. A
+declaration is a claim; `themeContrastFailures` is what proves it.
+
 Overrides merge by group; typography merges field by field, motion timing by
 timing and easing by easing; elevation levels are replaced as whole arrays; the
 mode is immutable. Nothing mutates the base, so a theme can be created once at
 startup and shared.
 
-Verify an edited theme with `themeContrastFailures(theme, contrast)`; an empty
-array is the library's guarantee, and a non-empty one names every pair that
+Verify an edited theme with `themeContrastFailures(theme)` — it checks at the
+level the theme declares, so a high-contrast theme needs no second argument. An
+empty array is the library's guarantee, and a non-empty one names every pair that
 needs fixing.
 
 A brand may change any value but should not remove roles: every component
