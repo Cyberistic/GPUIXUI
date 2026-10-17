@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import appCss from "@/styles/app.css?url";
+import { PlatformProvider } from "@/platform/platform-provider";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -32,7 +33,9 @@ function RootComponent() {
       </head>
       <body className="flex min-h-screen flex-col">
         <RootProvider>
-          <Outlet />
+          <PlatformProvider>
+            <Outlet />
+          </PlatformProvider>
         </RootProvider>
         <Scripts />
       </body>

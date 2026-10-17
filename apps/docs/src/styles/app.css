@@ -60,3 +60,14 @@ html > body[data-scroll-locked] {
   --color-fd-ring: #a7a9ff;
   --color-fd-overlay: #000000a6;
 }
+
+/*
+ * Platform styles (plan 420). The provider writes `--platform-mono` from
+ * `@gpuixui/tokens`; a browser can render that family. The UI face is GPUI's
+ * `.SystemUIFont` sentinel and resolves only in the native runtime, so the docs
+ * do not pretend to switch it.
+ */
+html[data-platform] {
+  --font-mono:
+    var(--platform-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}

@@ -55,6 +55,19 @@ capture script:
 
 The capture script is owned by the playground workstream (`TODO.md`).
 
+## Platform styles in previews
+
+Every preview renders with the site's active platform style (plan 420): the
+toggle in the navigation writes `?platform=darwin|linux|win32|default`, and the
+provider applies `platformTheme(theme, platform)` from `@gpuixui/tokens`. A
+screenshot capture records its platform in the sidecar and keeps that caption;
+the toggle does not relabel a macOS capture as Windows.
+
+A browser approximation may show the mono family a platform style resolves to,
+because a browser can render it. It must not claim to show `.SystemUIFont`: that
+sentinel resolves only inside GPUI, so the UI face of a browser approximation is
+still an approximation of the docs site, not of the native window.
+
 ## How source is reproduced
 
 Tier **X** shows "source plus a limitation notice", and tier **N/S** pages carry
