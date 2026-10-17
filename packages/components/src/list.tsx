@@ -575,6 +575,7 @@ export const ListItem = ({
   trailing,
   children,
   onFocus,
+  onClick,
   style,
   ref,
   ...rest
@@ -632,7 +633,14 @@ export const ListItem = ({
         noteFocus(value);
         onFocus?.(event);
       }}
-      onClick={disabled ? undefined : (event) => activate(value, event)}
+      onClick={
+        disabled
+          ? undefined
+          : (event) => {
+              onClick?.(event);
+              activate(value, event);
+            }
+      }
       style={mergeStyles(
         {
           display: "flex",

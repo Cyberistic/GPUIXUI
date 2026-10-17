@@ -17,7 +17,8 @@
  * list click that ran nothing; a disabled row that activated anyway; and an
  * arrow move that activated the old row instead of the reached one.
  *
- * A caller `ref` on a row was also discarded in favour of the internal one.
+ * A caller `ref` on a row was also discarded in favour of the internal one, and
+ * so was a caller `onClick`.
  *
  * Type-ahead: typing a prefix moved nothing, a repeated letter did not advance,
  * a disabled row won the match, an uppercase letter never matched, a missed
@@ -218,6 +219,29 @@ describe("List", () => {
     expect(list.renderer.findByTestId("row-a")?.style.backgroundColor).toBe(
       darkTheme.colors.selected,
     );
+
+    list.unmount();
+  });
+
+  it("runs a caller onClick once before selecting the row", () => {
+    const onClick = vi.fn();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" defaultValue="a">
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" onClick={onClick}>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    clickCentreOf(list, "row-b");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(
+      list.renderer.findByTestId("row-b")?.customProps?.["aria-selected"],
+    ).toBe(true);
 
     list.unmount();
   });
