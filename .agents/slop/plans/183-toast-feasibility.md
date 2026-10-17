@@ -191,8 +191,12 @@ Run each mutation, keep the failing output, restore the file:
 | change the dismiss `onClick` to a no-op | check 9 (`dismiss removes only its card`) |
 | change the short card's `durationMs` to `5000` | check 17 (`the auto-dismiss timer fired`) |
 | remove `role="status"` from the viewport | check 20 (`Status` node) |
-| remove `pointerEvents: "auto"` from the card | checks 9 and 11 (the dismiss click never reaches the card) |
+| viewport `pointerEvents: "none"` → `"auto"` | check 12 (`the viewport's empty strip does not block the page`) |
 | change `right: 24` to `left: 24` | check 3 (right inset) |
+
+Measured exception: removing the **card's** `pointerEvents: "auto"` does **not**
+fail — a card that paints a fill is hit-testable anyway. Do not encode it as a
+proof; §7 records it as the measured nuance.
 
 If a mutation fails a *different* check than the one named, record the actual
 check in §7 rather than editing the table to fit.
