@@ -11,6 +11,8 @@
 
 import type { StyleDesc } from "@gpuix/react";
 import { alpha } from "@gpuixui/tokens";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 
 export const SELECTION_STATES = [
@@ -228,4 +230,34 @@ export const radioDotStyle = (
     borderRadius: theme.radius.full,
     backgroundColor: selectionMarkColor(spec, theme),
   };
+};
+
+/**
+ * The item a group should start its roving index on.
+ *
+ * The selection wins **only when it can be focused**: a selected but disabled
+ * option must not become the tab stop, or every item ends up with `tabIndex`
+ * `-1`/`undefined` and `Tab` skips the whole group. The fallback is the first
+ * enabled option; an all-disabled group reports index 0 and makes no item
+ * focusable.
+ */
+export interface SelectableOption {
+  readonly value: string;
+  readonly disabled?: boolean;
+}
+
+export const initialActiveIndex = <Item extends SelectableOption>(
+  options: ReadonlyArray<Item>,
+  value: string,
+): number => {
+  const indexOf = (matches: (option: Item) => boolean): number =>
+    Option.getOrElse(Arr.findFirstIndex(options, matches), () => -1);
+  const selected = indexOf(
+    (option) => option.value === value && option.disabled !== true,
+  );
+  if (selected >= 0) return selected;
+  return Math.max(
+    indexOf((option) => option.disabled !== true),
+    0,
+  );
 };

@@ -28,6 +28,7 @@ import {
   decideMove,
 } from "../core/keyboard.js";
 import {
+  initialActiveIndex,
   radioDotStyle,
   selectionBoxStyle,
   type SelectionAccent,
@@ -88,19 +89,7 @@ export interface RadioGroupHandlers {
 }
 
 /** The index the item at `value` sits at, or the first enabled one. */
-export const initialActiveIndex = (
-  options: ReadonlyArray<RadioOption>,
-  value: string,
-): number => {
-  const indexOf = (matches: (option: RadioOption) => boolean): number =>
-    Option.getOrElse(Arr.findFirstIndex(options, matches), () => -1);
-  const selected = indexOf((option) => option.value === value);
-  if (selected >= 0) return selected;
-  return Math.max(
-    indexOf((option) => option.disabled !== true),
-    0,
-  );
-};
+export { initialActiveIndex };
 
 const itemState = (option: RadioOption, value: string): SelectionState =>
   option.value === value && value !== "" ? "checked" : "unchecked";

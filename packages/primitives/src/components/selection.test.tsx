@@ -32,6 +32,7 @@ import {
   hostHandler,
   hostProp,
   hostTag,
+  elementChildren,
 } from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
@@ -216,6 +217,30 @@ describe("RadioGroup", () => {
         "",
       ),
     ).toBe(1);
+  });
+
+  it("never makes a selected-but-disabled option the tab stop", () => {
+    const mixed = [
+      { value: "a", label: "A", disabled: true },
+      { value: "b", label: "B" },
+    ];
+    const element = renderRadioGroup(
+      { options: mixed },
+      testTheme,
+      text("a"),
+      initialActiveIndex(mixed, "a"),
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const items = elementChildren(element);
+    expect(
+      hostProp(expectSome(Option.fromNullishOr(items[0])), "tabIndex"),
+    ).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        hostProp(expectSome(Option.fromNullishOr(items[1])), "tabIndex"),
+      ),
+    ).toBe(0);
   });
 
   it("reports selection state through value text, not aria-checked", () => {

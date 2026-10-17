@@ -36,6 +36,13 @@ export type { NumberRange } from "./number.js";
 export { clampRating, decideRating, ratingTabStop } from "./rating.js";
 
 export {
+  isPressed,
+  nextSelection,
+  TOGGLE_GROUP_TYPES,
+} from "./toggle-group.js";
+export type { ToggleGroupOption, ToggleGroupType } from "./toggle-group.js";
+
+export {
   applyOtpInput,
   decideOtpKey,
   normalizeOtp,
@@ -77,6 +84,7 @@ export type {
 } from "./layout.js";
 
 export {
+  initialActiveIndex,
   radioDotStyle,
   SELECTION_ACCENTS,
   SELECTION_STATES,
@@ -86,6 +94,7 @@ export {
   switchTrackStyle,
 } from "./selection.js";
 export type {
+  SelectableOption,
   SelectionAccent,
   SelectionSpec,
   SelectionState,

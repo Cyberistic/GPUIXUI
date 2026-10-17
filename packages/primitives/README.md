@@ -56,7 +56,7 @@ subpaths; the package root needs a native binding.
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
 **Text** `Text` `Label`
-**Actions** `Button` `ButtonGroup` `Toggle`
+**Actions** `Button` `ButtonGroup` `Toggle` `ToggleGroup`
 **Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
 **Selection** `Checkbox` `RadioGroup` `Switch` `Rating`
 **Value** `Slider` `RangeSlider` `Meter`

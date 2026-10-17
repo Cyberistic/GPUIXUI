@@ -37,6 +37,11 @@ const SCREENS = [
     headline: "Export settings",
   },
   { id: "otp", root: "otp-example", headline: "Two-factor verification" },
+  {
+    id: "toggleGroup",
+    root: "toggle-group-example",
+    headline: "Document toolbar",
+  },
 ] as const;
 
 const renderExample = (
@@ -193,6 +198,27 @@ it("verifies the one-time-code example and repaints its status", async () => {
   runtime.click("otp-example-verify");
   expect(
     Arr.some(runtime.allText(), (line) => line.startsWith("Verified.")),
+  ).toBe(true);
+});
+
+it("switches the toggle-group example's mode and formatting set", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "toggleGroup");
+  const announced = (label: string): string =>
+    Option.getOrElse(a11yValueOf(runtime.a11y(), { label }), () =>
+      expect.fail(`${label} announced no state`),
+    );
+  expect(announced("Align left")).toBe("pressed");
+  runtime.click("toggle-group-example-align-centre");
+  expect(announced("Align centre")).toBe("pressed");
+  expect(announced("Align left")).toBe("not pressed");
+  expect(announced("Bold")).toBe("pressed");
+  runtime.click("toggle-group-example-format-italic");
+  expect(announced("Italic")).toBe("pressed");
+  expect(
+    Arr.some(runtime.allText(), (line) =>
+      line.startsWith("Align centre · Formatting bold, italic"),
+    ),
   ).toBe(true);
 });
 

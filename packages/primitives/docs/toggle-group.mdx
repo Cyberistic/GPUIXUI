@@ -1,0 +1,158 @@
+---
+title: ToggleGroup
+description: A set of pressed buttons — a segmented control or a formatting group.
+---
+
+`ToggleGroup` is a row (or column) of buttons with a pressed set. It is the
+control for **modes** — text alignment, density, view — and for **formatting** —
+bold, italic, underline. It is not a `RadioGroup` (a radio cannot be unselected
+and its paint is a circle) and not a `ButtonGroup` (layout only, no selection).
+
+Two selection rules, one component:
+
+| `type` | Rule | Example |
+| ------ | ---- | ------- |
+| `single` | at most one pressed value; re-pressing the active item changes nothing | text alignment |
+| `multiple` | each press adds or removes that value independently | bold / italic / underline |
+
+## Usage
+
+```tsx
+import { ToggleGroup } from "@gpuixui/primitives";
+import { useState } from "react";
+
+const [align, setAlign] = useState("left");
+const [format, setFormat] = useState<ReadonlyArray<string>>(["bold"]);
+
+<ToggleGroup
+  type="single"
+  label="Alignment"
+  options={[
+    { value: "left", label: "Align left" },
+    { value: "centre", label: "Align centre" },
+    { value: "right", label: "Align right" },
+  ]}
+  value={align}
+  onChange={setAlign}
+/>;
+
+<ToggleGroup
+  type="multiple"
+  label="Formatting"
+  options={[
+    { value: "bold", label: "Bold" },
+    { value: "italic", label: "Italic" },
+    { value: "underline", label: "Underline", disabled: true },
+  ]}
+  value={format}
+  onChange={setFormat}
+/>;
+```
+
+Omit `value` to let the group own its selection; `defaultValue` sets the start
+(`"left"` for `single`, `["bold"]` for `multiple`). `onChange` fires only when
+the selection actually changed.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `type` | `"single" \| "multiple"` | required | which selection rule applies |
+| `options` | `ReadonlyArray<{ value, label, disabled? }>` | required | the items, in visual order |
+| `value` / `defaultValue` | `string` for `single`, `readonly string[]` for `multiple` | — | controlled selection, or the uncontrolled start |
+| `onChange` | `(value) => void` | — | the new selection, only on a real change |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | flex direction and arrow axis |
+| `variant` | `"default" \| "outline"` | `"default"` | `Toggle`'s two rest paints |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | control height and padding from the density scale |
+| `disabled` | `boolean` | `false` | every item inert and out of the tab order |
+| `label` | `string` | none | the group's accessible name |
+| `style` | `StyleDesc` | — | merged over the group container, not its items |
+| `testId` | `string` | — | the group's locator; items become `${testId}-${value}` |
+
+Each item paints exactly like a standalone `Toggle`: rest from
+`toggleVariants[variant].rest`, pressed from `toggleVariants[variant].pressed`
+(the accent role), and the shared focus ring while it holds focus.
+
+## Keyboard
+
+The group is **one tab stop** — the selected item (`single`) or the item that
+last held focus (`multiple`). Tab moves into the group once and out again.
+
+| Key | `single` | `multiple` |
+| --- | -------- | ---------- |
+| `←` `↑` | move focus **and** select the previous item, wrapping | move focus only |
+| `→` `↓` | move focus **and** select the next item, wrapping | move focus only |
+| `Home` / `End` | focus and select the first / last enabled item | focus the first / last enabled item |
+| `Enter` | select on key **down** | toggle on key **down** |
+| `Space` | select on key **up** | toggle on key **up** |
+| a held key | ignored | ignored |
+
+A disabled option is skipped by every movement and never receives focus; a
+disabled group has no tab stop at all. Clicking an item selects or toggles it,
+except the active item in `single` mode, which is a no-op.
+
+## Accessibility
+
+- The group is a named `group` (AccessKit `Group`); each item is a named
+  `button` (`Button`) whose accessible name is the option's `label`.
+- **GPUix 0.10.0 has no `aria-pressed`** and no `aria-selected` for buttons, so
+  the pressed state is announced through `aria-valuetext` — `"pressed"` /
+  `"not pressed"` — exactly like `Toggle`, `Checkbox` and `Switch`. A screen
+  reader therefore hears a button with a value, not a pressed button. There is
+  also no single-select semantic in AccessKit for buttons; the group name says
+  what the set is for.
+- There is no `aria-labelledby`, so a visible heading cannot name the group by
+  reference: put its words in `label`.
+
+## Theming
+
+Items read `core/variants.ts`' `toggleVariants` and the shared control resolver,
+so pressed, hover and focus are three distinct states and no literal colour
+appears here. The pressed fill is `colors.accent` / `colors.accentForeground`
+(the theme's "selected surface"); the outline variant adds `colors.border`.
+Sizes and the group gap come from `density` and `spacing["2xs"]`. Both themes
+and the high-contrast palettes switch the whole group because it paints only
+theme roles.
+
+## Limitations
+
+- No `aria-pressed` (above); the value text is the honest channel.
+- The group has no container chrome: it is a flex row of buttons. Wrap it in a
+  `Box` when you want a rounded segmented container, as `ButtonGroup` does for
+  attached buttons.
+- No per-item style or arbitrary children: options are data (the `RadioGroup`
+  decision, D16/D25). Use `Toggle` when an item needs an icon, a count or a
+  custom paint.
+- No `loading` state — a mode switch is instant; disable the group while a
+  request is in flight.
+- Pressing Space cannot be `preventDefault`ed in 0.10.0 (no
+  `defaultPrevented`, no prevent API), so a group inside a scroll container may
+  also scroll on Space.
+
+## Verification
+
+- `src/core/toggle-group.test.ts` — single replaces and returns the same array
+  on a re-press (no spurious `onChange`); multiple appends, removes and
+  preserves a value the options do not contain.
+- `src/components/ToggleGroup.test.tsx` — named group and buttons, value text
+  and no `aria-pressed`, one tab stop in both modes, disabled item out of the
+  tab order with its press refused, axis, accent paint, Enter/Space/click
+  activation and the per-item `testId`.
+- `runtime/toggle-group.runtime.test.tsx` — measured 2026-10-17 (plan 056 §9):
+  a real click selects and unpresses the previous item; multiple toggles
+  independently; Enter down and Space up activate once; an arrow moves focus
+  **and** selection in `single` but only focus in `multiple`; a disabled item is
+  skipped (wrapping past the ends); `focusNext` enters on the selected item and
+  leaves the group on the next Tab; a disabled group is skipped and inert.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Toggle** — one pressed button, for arbitrary children.
+- **ButtonGroup** — layout only (attached or separated), no selection.
+- **RadioGroup** — one choice from a set, announced as radios.
+- **Checkbox** — independent choices in a form.

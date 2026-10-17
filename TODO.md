@@ -219,6 +219,12 @@ retired once both branches are one
       pages and examples. `OTPField`'s multi-character fill is proven as a pure
       rule; a real clipboard paste is unverifiable in 0.10.0 (no `onPaste`, no
       clipboard simulation) and is documented as such
+`[x]` `packages/primitives`: `ToggleGroup` — the segmented control and
+      formatting set the inventory already claimed as a "merged variant" but
+      never had. Single/multiple selection, a roving tab stop, arrows that
+      select in `single` and only move focus in `multiple`, disabled skipping
+      (plan 056). Also fixed the selected-but-disabled radio leaving its group
+      with no tab stop (regression test in `selection.test.tsx`)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family
