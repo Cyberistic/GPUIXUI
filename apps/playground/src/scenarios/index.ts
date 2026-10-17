@@ -19,6 +19,7 @@ import { focusScenario } from "./focus.js";
 import { overlayScenario } from "./overlay.js";
 import { scrollScenario } from "./scroll.js";
 import { panelScenario } from "./panel.js";
+import { motionScenario } from "./motion.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
@@ -49,12 +50,13 @@ export const CORE_CAPABILITIES = [
   "theme",
 ] as const;
 
-/** The Tier 3/4 capabilities the feasibility probes cover (plans `130`, `152`–`154`). */
+/** The Tier 3/4 capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`). */
 export const PROBE_CAPABILITIES = [
   "table",
   "tree",
   "log",
   "workspace",
+  "motion",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -68,6 +70,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   floatingScenario,
   scrollScenario,
   panelScenario,
+  motionScenario,
   virtualListScenario,
   tableSelectSortScenario,
   tableColumnResizeScenario,

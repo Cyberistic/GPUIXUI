@@ -55,7 +55,7 @@ describe("scenarioProblems", () => {
   it("accepts the real registry, including the Tier 3/4 probes", () => {
     expect(scenarioProblems(scenarios)).toEqual([]);
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
-      expect.arrayContaining(["table", "workspace"]),
+      expect.arrayContaining(["table", "workspace", "motion"]),
     );
   });
 

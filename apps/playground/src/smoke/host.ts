@@ -168,4 +168,11 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
     }),
   screenshot: (absolutePath) => renderer.captureScreenshot(absolutePath),
   advance: (ms) => renderer.advanceTime(ms),
+  pauseMotion: () => renderer.clockPause(),
+  fastForwardMotion: (ms) => {
+    const now = renderer.clockFastForward(ms);
+    renderer.dispatchNativeEvents();
+    renderer.flush();
+    return now;
+  },
 });

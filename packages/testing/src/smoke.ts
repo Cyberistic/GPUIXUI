@@ -27,6 +27,7 @@ export const CAPABILITIES = [
   "floating",
   "scroll",
   "panel",
+  "motion",
   "virtual-list",
   "table",
   "tree",
@@ -188,7 +189,15 @@ export interface SmokeHost {
   ) => void;
   readonly scrollOffset: (testId: string) => Offset | null;
   readonly screenshot: (absolutePath: string) => void;
+  /** Advances GPUI's dispatcher and timers. Not motion time; see `pauseMotion`. */
   readonly advance: (ms: number) => void;
+  /**
+   * Freezes the motion clock and returns its current time in milliseconds.
+   * Animations stop interpolating until `fastForwardMotion` moves the clock.
+   */
+  readonly pauseMotion: () => number;
+  /** Moves the frozen motion clock forward and repaints; returns the new time. */
+  readonly fastForwardMotion: (ms: number) => number;
 }
 
 /** A failed check, as data. */

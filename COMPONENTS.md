@@ -44,8 +44,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
+| motion | `motion-collapse` | verified |
 
-The suite is **20/20 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **21/21 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -65,6 +66,18 @@ focused element's `onKeyDown` — the command-palette / application-menu path.
 `shell-navigation` adds the shell's own rule: a flex child needs `minHeight: 0`
 before `overflowY: "scroll"` can make it scroll, which is what keeps the
 15-entry sidebar reachable in the 720px window.
+
+`motion-collapse` measures the native tween that collapsible sidebars, drawers,
+accordions and toasts depend on. The paused motion clock
+(`TestRenderer.clockPause` + `clockFastForward`) makes it exact: 80 ms into a
+200 ms linear width tween moved the laid-out edge **96 px of 240**, the inner
+pane kept its **240 px** width while the outer container clipped it (no
+reflow), and `AnimatePresence` kept a leaving toast mounted until the native
+exit settled. Two caveats: `onMotionComplete` reaches React only after
+`dispatchNativeEvents()` (the same requirement as `focusNext`), and the
+published `motion.div` prop type omits `testId`/`role`/`aria-*`, so an animated
+surface is not directly addressable by a smoke test or an accessible role
+without a typed wrapper.
 
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
@@ -212,7 +225,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Empty states | todo | ? | `div` + `<text>` + Icons. |
 | Alerts | todo | ? | `div` + `<text>` + Icons. |
 | Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |
-| Toasts / notifications | todo | ? | `AnimatePresence` + `createPortal` + `<anchored>` are published primitives; the toast system is ours. |
+| Toasts / notifications | todo | ? | `AnimatePresence` + `createPortal` + `<anchored>` are published primitives; the toast system is ours. `motion-collapse` measured the exit contract: a leaving child stays mounted until the native exit target settles (`onExitComplete`), and `onMotionComplete` needs `dispatchNativeEvents`. |
 | Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. Focus entry, the Tab trap and focus return are measured natively by `modal-focus-trap` (playground plan `155`). |
 | Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
 | Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. Focus in/out and “Escape closes only the popover” are measured natively (`modal-focus-trap`). Placement (`floating-placement`): `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is short by half the panel size** and `fit="snap"` clamps without flipping, so a near-bottom popover must choose `side="top"` itself. |
@@ -269,7 +282,7 @@ carries an evidenced limitation. The capability evidence lives in
 | --------- | ------ | ------------- | ------------------- |
 | Resizable split panes | todo | ? | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). |
 | Panel groups | todo | ? | Composition over split panes. |
-| Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow). |
+| Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. |
 | Tabbed panels | todo | ? | Tabs + panels. |
 | Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. |
 | Docking layouts | todo | ? | Composition over split panes + tabs. |

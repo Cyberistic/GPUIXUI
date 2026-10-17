@@ -34,6 +34,8 @@ export const nullHost: SmokeHost = {
   scrollOffset: () => null,
   screenshot: () => {},
   advance: () => {},
+  pauseMotion: () => 0,
+  fastForwardMotion: () => 0,
 };
 
 /** Builds a scenario whose `title` is derived from its id. */

@@ -80,6 +80,7 @@ in the same block.
 | [154](./154-log-viewer-probe.md) | The log-viewer probe (Tier 4 feasibility) | B→D | 130, 140, 152 | **landed**: `log-viewer` — starts at the tail, re-anchors on appends; `alignment`/`followTail` overlap and no snap-back after scroll (§8) |
 | [155](./155-modal-focus-semantics.md) | Modal focus and nested-overlay semantics (Tier 2 feasibility) | B→C | 120, 140, 117 | **landed**: `modal-focus-trap` — focus entry/return via `renderer.focusElement`, the Tab trap wraps inside the surface, a nested popover's Escape closes only the popover; 19/19 green (§8) |
 | [156](./156-floating-placement.md) | Floating-layer placement and collision (Tier 2 feasibility) | B→C | 120, 140, 155 | **landed**: `floating-placement` — `side`/`gap`/`align=start` are exact; **`align=center` is off by half the panel** and `fit=snap` clamps but does not flip; 20/20 green (§8) |
+| [157](./157-motion-collapse.md) | Native motion: the collapsible sidebar and the exit tween | B→C/D | 110, 120, 140 | **landed**: `motion-collapse` — the paused motion clock makes a width tween exact (96 px of 240 at 80 ms), the inner pane does not reflow, `AnimatePresence` retains the exit child; `onMotionComplete` needs `dispatchNativeEvents`; **21/21** green (§8) |
 
 Cross-cutting records:
 
