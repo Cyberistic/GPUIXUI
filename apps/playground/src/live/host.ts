@@ -11,12 +11,26 @@
  * anchors are deliberately absent: those assertions belong to the
  * `TestRenderer` suite, which can observe them.
  */
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
+import * as Arr from "effect/Array";
 import type { App, Locator } from "@gpuix/native/automation";
 import { Smoke } from "@gpuixui/testing";
 
 /** How long a live scenario waits for an element a click should have mounted. */
 const WAIT_FOR_MS = 5_000;
+
+/**
+ * One frame between a drag's events.
+ *
+ * A live drag that sends its moves back to back does **not** resize: the
+ * component's press state has not committed when the next move arrives, so the
+ * moves are ignored (measured: `split=320` uncapped vs `400` paced). Pacing each
+ * move by a frame is what a real pointer does anyway.
+ */
+const DRAG_FRAME_MS = 40;
+
+/** Moves in a synthetic drag when the caller does not choose. */
+const DRAG_STEPS = 6;
 
 /** Lifts one protocol call, naming the verb if it rejects. */
 const verb = <A>(
@@ -72,9 +86,34 @@ export const createHost = (app: App): Smoke.AsyncSmokeHost => ({
   wheel: (testId, deltaX, deltaY) =>
     verb(`wheel ${testId}`, () => at(app, testId).wheel(deltaX, deltaY)),
   drag: (testId, deltaX, deltaY, steps) =>
-    verb(`drag ${testId}`, () =>
-      at(app, testId).dragBy(deltaX, deltaY, { steps }),
-    ),
+    Effect.gen(function* () {
+      const start = yield* verb(`drag ${testId} start`, () =>
+        at(app, testId).center(),
+      );
+      const total = steps ?? DRAG_STEPS;
+      yield* verb(`drag ${testId} down`, () => app.mouse.down(start));
+      yield* Effect.forEach(
+        Arr.range(1, total),
+        (step) =>
+          Effect.gen(function* () {
+            yield* Effect.sleep(Duration.millis(DRAG_FRAME_MS));
+            yield* verb(`drag ${testId} move`, () =>
+              app.mouse.move(
+                {
+                  x: start.x + (deltaX * step) / total,
+                  y: start.y + (deltaY * step) / total,
+                },
+                { pressedButton: 0 },
+              ),
+            );
+          }),
+        { concurrency: 1, discard: true },
+      );
+      yield* Effect.sleep(Duration.millis(DRAG_FRAME_MS));
+      yield* verb(`drag ${testId} up`, () =>
+        app.mouse.up({ x: start.x + deltaX, y: start.y + deltaY }),
+      );
+    }),
   scrollOffset: (testId) =>
     verb(`scrollOffset ${testId}`, () =>
       idOf(app, testId).then((elementId) =>

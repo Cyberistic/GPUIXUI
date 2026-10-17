@@ -46,7 +46,8 @@ the live suite covers the mechanisms those channels are not needed for:
 | ------------- | ---------- | ------ |
 | `live-shell` | `layout` | the window opens at the requested size; `app-shell` bounds equal it; clicking `nav-text-native` paints that scenario's title in `stage-title` and its own text in the stage; `Enter` on `nav-input-edit` switches the stage; a screenshot is written |
 | `live-input` | `input` | clicking `nav-input-edit` mounts the field; `fill("hi")` makes the readout read `value=hi`; `Enter` sets `submits=1`; a screenshot is written |
-| `live-scroll` | `scroll` | the virtual-list scenario's container scrolls under the wheel (`getScrollOffset` moves, `deltaY` negative), a later row's text becomes painted, and the offset is read from the live renderer |
+| `live-scroll` | `scroll` | the `scroll-container` scenario's view starts at offset `0`, a `-200` wheel moves it down, and `onScroll` reports the delta |
+| `live-panel` | `panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees |
 
 Colour, style-report and accessibility assertions stay where their channels
 exist: the `TestRenderer` suite (`theme-*`, `a11y-tree`). The live run is
@@ -196,9 +197,9 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
 
 ## 9. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
 
-`nub run --filter playground smoke:live` — **3/3 scenarios**, `layout=input=scroll=verified`,
-exit `0`, ~1.5 s, three real-window screenshots under `.artifacts/live/` and
-`.artifacts/live-report.json`.
+`nub run --filter playground smoke:live` — **4/4 scenarios**,
+`layout=input=scroll=panel=verified`, exit `0`, ~2 s, four real-window
+screenshots under `.artifacts/live/` and `.artifacts/live-report.json`.
 
 **The window opens on this host.** `renderer.init` created a 1100 × 720 window
 and `render` reported `[gpuix] mount complete` — the earlier "no display
@@ -218,6 +219,14 @@ made `input-readout` read `value=hi`; `Enter` set `submits=1`.
 `deltaY` of `-200` scrolled it (`y < 0`), and `onScroll` reported `delta=-200`
 — the same sign convention the `TestRenderer` suite records.
 
+**A paced divider drag resizes a live pane.** Pressing `panel-divider` and moving
+`+80` px in six frame-spaced steps took the split `320 → 400`, `onResize`
+reported `split=400`, and pane A's painted width agreed within 2 px. The trap
+is pacing: the same six moves sent **back to back** did nothing (`split=320`),
+because the component's press state had not committed when the next move
+arrived. The live host waits one frame (40 ms) between a drag's events; a real
+pointer does that anyway.
+
 **Two rules the runner depends on.**
 
 - The renderer must be built with `createRenderer()`. A bare
@@ -227,8 +236,9 @@ made `input-readout` read `value=hi`; `Enter` set `submits=1`.
 - The automation protocol has **no frame boundary**. `simulateClick` returns
   after a tick while React commits on a later frame; without a ~120 ms settle (or
   a `waitFor` on the element a click should have mounted) the next read returns
-  the previous frame's text. This was the first failure of all three scenarios
-  and is why `AsyncSmokeHost` has `waitFor`.
+  the previous frame's text. This was the first failure of all three input
+  scenarios and is why `AsyncSmokeHost` has `waitFor`. The same rule decides
+  drag pacing (above).
 
 **The no-window path exits `2`.** Forcing `renderer.init` to throw printed
 `live smoke: no real window (open)`, the cause, and `exit 2: the live suite
@@ -242,6 +252,7 @@ Two-direction proofs (file restored after each run):
 | L2 | remove the nav entry's `onKeyDown` | exit `1`, scenario `errored`: `host waitFor input-field` timed out (Enter mounted nothing) |
 | L3 | make `input-field` `readOnly` | exit `1`, *typing reaches onChange in the live editor*: got `value= submits=0 area=` |
 | L4 | remove `overflowY: "scroll"` from `scroll-view` | exit `1`, *scroll-view reports an offset*: got `none` |
+| L5 | make the divider's `onMouseDown` forget the press | exit `1`, *the drag grew the pane by 80*: got `split=320` |
 
 L1 and L2 surface as errored scenarios rather than a failed label because the
 scenario waits for the result of the interaction; a mutation that mounted the

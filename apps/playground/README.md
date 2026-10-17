@@ -59,6 +59,9 @@ copies make every hook throw. `@gpuix/react@0.10.0` accepts `^19.0.0`.
 | `1`  | at least one scenario failed — a real regression |
 | `2`  | the runtime is unsupported here, or nothing ran — **no evidence** |
 
+Both scripts run the built CLI from the **repo root**, so artifacts always land
+in `apps/playground/.artifacts` regardless of which entrypoint you use.
+
 **Observe the code from the built CLI, not through `nub run`.** nub 0.9.6
 collapses any non-zero child exit to `1`, so `nub run --filter playground smoke`
 reports `1` even when the suite said `2`:
@@ -664,6 +667,7 @@ live pass is citable evidence rather than a second log format.
 | `live-shell` | `app-shell` fills the 1100 × 720 window; clicking a sidebar entry mounts that view and paints its own text; `Enter` on a focused entry switches the stage |
 | `live-input` | a click focuses the field, `h i` reaches `onChange` (`value=hi`), and `Enter` reaches `onSubmit` (`submits=1`) |
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
+| `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).
@@ -676,6 +680,8 @@ Two rules the runner needs, both measured:
 - the automation protocol has **no frame boundary**, so every scenario settles
   (~120 ms) or `waitFor`s the element a click should have mounted before it
   reads. `simulateClick` returning is not the same as React having committed.
+  The same rule paces a drag: six moves sent back to back left the split at
+  `320`, and the same six one frame apart took it to `400`.
 
 Exit codes match the headless suite: `0` passed, `1` a failed check, `2` no
 window (CI, a locked session, a missing binding) — and no report is written on

@@ -16,6 +16,7 @@ import * as Option from "effect/Option";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { inputScenario } from "../scenarios/input.js";
+import { panelScenario } from "../scenarios/panel.js";
 import { scrollScenario } from "../scenarios/scroll.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -190,9 +191,46 @@ const scroll: LiveScenario = {
     }),
 };
 
+const panel: LiveScenario = {
+  id: "live-panel",
+  title: "Live panel: pointer capture holds through a divider drag",
+  capability: "panel",
+  view: panelScenario.view,
+  ready: "panel-divider",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const before = yield* textOf(ctx, "panel-readout");
+      yield* ctx.expectContains("the split starts at 320", before, "split=320");
+
+      yield* ctx.host.drag("panel-divider", 80, 0, 6);
+      yield* settle;
+      const grown = yield* textOf(ctx, "panel-readout");
+      yield* ctx.expectContains(
+        "the drag grew the pane by 80",
+        grown,
+        "split=400",
+      );
+
+      const pane = yield* ctx.host.bounds("panel-pane-a");
+      const box = yield* ctx.expectSome(
+        "pane A is painted",
+        Option.fromNullishOr(pane),
+      );
+      yield* ctx.expectNear(
+        "the measured pane matches the readout",
+        box.width,
+        400,
+        2,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${panel.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
   input,
   scroll,
+  panel,
 ];
