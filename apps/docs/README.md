@@ -82,6 +82,10 @@ Prop tables use `fumadocs-typescript`'s remark plugin: write
 and annotate the real props type with tsdoc (`@internal` hides a prop). The
 table is generated at build time from the component source, so it cannot drift.
 
+The page's `<title>`, `description`, `og:title`, `og:description` and canonical
+link come from its frontmatter through `src/lib/page-meta.ts`, so a new page
+never inherits the site title.
+
 ## Previews
 
 `<NativePreview slug>` picks the strongest honest tier from the record plus the

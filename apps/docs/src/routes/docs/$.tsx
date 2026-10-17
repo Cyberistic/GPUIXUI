@@ -11,6 +11,7 @@ import {
 import { Suspense, use } from "react";
 import { useMDXComponents } from "@/components/mdx";
 import { baseOptions } from "@/lib/layout.shared";
+import { docsPageHead, docsPageMeta } from "@/lib/page-meta";
 import { docs, source } from "@/lib/source";
 
 export const Route = createFileRoute("/docs/$")({
@@ -21,6 +22,8 @@ export const Route = createFileRoute("/docs/$")({
     await docs.getPage(data.path)?.preload();
     return data;
   },
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : docsPageHead(loaderData.meta),
 });
 
 const serverLoader = createServerFn({ method: "GET" })
@@ -31,6 +34,7 @@ const serverLoader = createServerFn({ method: "GET" })
 
     return {
       path: page.path,
+      meta: docsPageMeta(page),
       pageTree: await source.serializePageTree(source.getPageTree()),
     };
   });
