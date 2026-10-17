@@ -64,8 +64,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | toast | `toast-lifecycle` | verified |
 | grid | `grid-wide-table` | verified |
 | layers | `nested-layer-dismiss` | verified |
+| scroller | `message-scroller` | verified |
 
-The suite is **59/59 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **60/60 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **15/15 green
@@ -634,7 +635,7 @@ in-package and an end-to-end native verdict.
 | Badges | todo | ? | `div` + `<text>`. |
 | Avatars | todo | ? | `<img>` provides the image; the fallback/initials surface is ours. |
 | Lists / list items | todo | ? | `div` rows; `<virtual-list>` for long collections. |
-| Message scroller | todo | ? | Behaviour ported from **shadcn/ui's Message Scroller** (credited in `LICENSES/`): follows new content while pinned, leaves the reader alone when they scroll up, jump-to-latest with an unread count, streaming rows. `<virtual-list>` + scroll handles; the pin/stream state machine is ours. Plan `206`. **Variable message heights are supported** — `variable-rows` (plan `198`) measures exact stacking, an in-place height change reflowing the rows below by the delta, and exact jumps. |
+| Message scroller | todo | partial (probe) | Behaviour ported from **shadcn/ui's Message Scroller** (credited in `LICENSES/`): follows new content while pinned, leaves the reader alone when they scroll up, jump-to-latest with an unread count, streaming rows. `<virtual-list>` + scroll handles; the pin/stream state machine is ours. Plan `206`. **Variable message heights are supported** — `variable-rows` (plan `198`) measures exact stacking, an in-place height change reflowing the rows below by the delta, and exact jumps. **Measured (`message-scroller`, plan `300`):** `<virtual-list>` has **no `onScroll`**, and `onVisibleRange`'s payload is a built-window range with overdraw that lags one gesture — `endIndex >= count` stayed pinned through a 400 px scroll up and yanked on the next append. The exact pin source is `renderer.getListScrollTop(id)` read **inside** the range handler (post-scroll); the runtime follows neither an append nor a growing row, so the component scrolls to `scrollToItem(list, count)` only while pinned. A 24 px threshold and a short history are measured too. |
 | Empty states | todo | ? | `div` + `<text>` + Icons. |
 | Alerts | todo | ? | `div` + `<text>` + Icons. |
 | Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |

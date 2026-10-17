@@ -131,8 +131,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–199` is now **full**; the
-next playground plan takes a free block (`300–399`).
+playground shell and the feasibility probes. `100–199` is **full**; the next
+playground plan takes a free block (`300–399`).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -191,6 +191,7 @@ next playground plan takes a free block (`300–399`).
 | [197](./197-live-observation-surface.md) | The renderer is the live observation surface (part 2): highlights and list anchors | F | 100, 110, 140, 171, 185, 189, 190 | **landed**: `AsyncSmokeHost` gains `highlights`/`scrollToItem`/`listScrollTop`; `live-highlights` proves four document washes, rects inside their line, clear/restore and document-wide match numbering after a row-90 jump; `live-table` proves `[0,0,258] → [120,0,258]`. Live `13 → 14`, exit `0`; both directions exit `1` (§11). Records the measured limits: the live tree has **no `style`** and `GpuixRenderer` **no a11y method** |
 | [198](./198-variable-row-heights.md) | Variable row heights and expandable rows in a virtual list | D | 100, 110, 120, 140, 152, 165, 166, 186 | **landed**: `variable-rows` — 20/40/60 px rows stack exactly (y `0/20/60/120/140/180`), eight fill the 300 px viewport, a `60 → 120` expansion moves the rows below by exactly `+60` with the anchor still `[0,0,300]`, collapsing restores, `scrollToItem(30)` and `scrollIntoView(45)` stay exact, and a wheel's in-row offset stays inside its row. Suite `58 → 59`, exit `0`; expected `+40` fails `exit 1` (§7) |
 | [199](./199-live-hover.md) | Hover in a real window: enter/leave and the grace close | F | 100, 110, 120, 140, 156, 159, 189, 196 | **landed**: `live-preview` — the first live `hover`; a real `mouse.move` opens the card, the pointer reaches its body, the fire-time check holds past the 200 ms close, a control clicks, leaving closes from the **last hovered child**, re-enter cancels and a final leave closes. Measured: the card enter + trigger leave arrive in **one React batch** live, so the log (not `prev`/`last`) is the order. Live `14 → 15`, exit `0`; skipping the body hover fails `exit 1` (§7) |
+| [300](./300-message-scroller-feasibility.md) | Tier 3 feasibility: a message scroller — pin, no-yank, streaming and jump-to-latest | D | 100, 110, 120, 140, 152, 166, 183, 198, 206 | **landed**: `message-scroller` — `<virtual-list>` has **no `onScroll`**, and the `onVisibleRange` payload is a built-window range with overdraw that lags one gesture (`endIndex >= count` stayed pinned through a 400 px scroll up and yanked on the next append). The exact pin source is `renderer.getListScrollTop(id)` read inside the handler; a single 400 px wheel up unpins, an append while unpinned leaves the anchor untouched and counts unread, jump-to-latest re-pins, a streamed last row keeps the tail at the viewport bottom, a 10 px scroll stays inside the 24 px threshold, and a 3-row history has no affordance. 51 checks, suite `59 → 60`, exit `0`; the stale-payload mutation fails `exit 1`, and removing the growth effect fails `52,0 ≠ 52,20` (§8) |
 
 Cross-cutting records:
 

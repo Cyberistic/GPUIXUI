@@ -69,7 +69,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (57/57 green); -> 2 on a host with no binding
+# -> 0 here (60/60 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -413,6 +413,31 @@ The recipe for Expandable rows: declare each row's height (state, not a
 measurement pass), let the list reflow, and persist the anchor as before — no
 `estimatedItemHeight` tuning is needed for correctness, only for the scrollbar's
 rough scale. A component does **not** need to scroll by hand after an expansion.
+
+## Message scroller (plan `300`)
+
+`message-scroller` is the chat/stream contract plan `206` defines: follow new
+content while the reader is at the end, leave them alone when they are not, and
+offer a way back. The runtime makes it narrower than the browser version, and
+the probe pins the recipe.
+
+| Question | Measured |
+| -------- | -------- |
+| Opening at the latest message | a mount-time `renderer.scrollToItem(list, count)` (the at-end sentinel) anchors `[50, 0, 300]` for 60 × 30 px rows and paints rows 51–60 — no `alignment`/`followTail` needed |
+| Is there a scroll event on `<virtual-list>`? | **no `onScroll`**. The only signal is `onVisibleRange` |
+| Is the range payload a pin source? | **no**: it is a built-window range with overdraw, and it lags one gesture. After a 400 px scroll up from the tail it still reported `endIndex = 66`, so `endIndex >= count` stayed pinned and the next append **yanked** the reader |
+| The exact pin source | `renderer.getListScrollTop(listId)` read **inside** `onVisibleRange` returns the post-scroll anchor (`[42, 20, 300]` in the same gesture). Call it as a method — extracting it unbound throws `Cannot read properties of undefined (reading 'native')` |
+| Does the runtime follow an append? | **no** — with the app's follow effect removed, appending at the tail left the anchor unmoved; the component scrolls to `scrollToItem(list, count)` while pinned |
+| Append while unpinned | anchor untouched (`[42,20,300]` before and after), the new tail is not painted, and the unread count increments; no yank |
+| Jump to latest | `scrollToItem(list, count)` lands on the new max scroll exactly and re-pins; unread clears |
+| Streaming a pinned last row | growing the row 30 → 40 → 50 re-pins: the anchor moves `52,0 → 52,10 → 52,20` so the tail's bottom stays on the viewport bottom |
+| Threshold | a 10 px scroll up stays pinned at 24 px; a 400 px scroll up does not |
+| Short history | 3 × 30 px in a 300 px viewport: anchor `[0,0,300]`, the sentinel scroll is a no-op, every row paints, and no affordance appears |
+
+The recipe: derive `pinned` with `distanceFromEnd = contentHeight −
+scrollTop(anchor) − viewportHeight` (`scenarios/scroller-state.ts`), read the
+anchor in the range handler, and re-scroll only while pinned on append **and**
+on last-row growth. Do not build a timer to compensate for the lagging payload.
 
 ## Search highlights (plan `171`)
 
@@ -838,19 +863,18 @@ pretend otherwise.
 
 ## Evidence on this host
 
-The suite is **56/56 green** here (`exit 0`):
+The suite is **60/60 green** here (`exit 0`):
 
 ```
-56/56 scenarios passed · capabilities: layout=verified text=verified
+60/60 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified docking=verified command=verified
-content=verified drag=verified
-selection=verified menu=verified components=verified search=verified
-terminal=verified chart=verified toast=verified grid=verified
-layers=verified
+content=verified drag=verified selection=verified menu=verified
+components=verified search=verified terminal=verified chart=verified
+toast=verified grid=verified layers=verified scroller=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -925,6 +949,8 @@ src/scenarios/virtual-tree.tsx a 328-node flattened tree inside <virtual-list>
 src/scenarios/scroll-into-view.tsx keyboard follow and the two scroll routes
 src/scenarios/search.tsx  painted highlights, find controls and the virtual match index
 src/scenarios/drag-autoscroll.tsx held edge scroll, capture and the drop index
+src/scenarios/message-scroller.tsx pin/no-yank/stream/jump over a virtual list
+src/scenarios/scroller-state.ts the pure anchor → distance-from-end → pinned rules
 src/scenarios/tab-overflow.tsx horizontal pan, tab-strip overflow and reveal
 src/scenarios/tab-focus.tsx     clipped tab stops and the roving strip
 src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible sidebar
@@ -977,7 +1003,10 @@ narrower. Each deviation is deliberate and measured:
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
   the pinned-grid probe, the collapsible-height probe, the nested-layer probe
   and the variable-row-height probe pass in real GPUix 0.10.0 on this host
-  (59/59), with a written report and screenshots.
+  (60/60), with a written report and screenshots. The **message-scroller** probe
+  (plan `300`) proves the chat/stream pin contract: the live anchor inside
+  `onVisibleRange`, a follow on append and on a growing row, no yank while
+  unpinned, jump-to-latest, the threshold and a short history.
   The **real-window** suite (`smoke:live`) is 15/15 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
