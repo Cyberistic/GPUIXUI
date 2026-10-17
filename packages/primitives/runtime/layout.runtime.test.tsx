@@ -12,6 +12,7 @@
  */
 
 import { expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
@@ -21,7 +22,7 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { Density } from "../src/core/theme.js";
-import type { Bounds, Runtime } from "./harness.js";
+import { a11yNodes, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const next = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;
@@ -215,6 +216,31 @@ it("addresses a Text element by the testId the caller gave it", async () => {
   );
   expect(Option.isSome(runtime.element("caption"))).toBe(true);
   expect(runtime.allText()).toContain("Note");
+});
+
+it("exposes heading and code semantics from the type role", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Text role="h1">Page title</Text>
+      <Text role="h2">Section</Text>
+      <Text role="code">inline()</Text>
+      <Text role="body">Plain copy</Text>
+    </Surface>,
+  );
+  const node = (role: string, value: string) =>
+    Option.getOrElse(
+      Arr.findFirst(
+        a11yNodes(runtime.a11y()),
+        (candidate) =>
+          candidate.aria?.role === role && candidate.aria?.value === value,
+      ),
+      () => expect.fail(`no ${role} node with the value ${value}`),
+    ).aria;
+  expect(node("Heading", "Page title")?.level).toBe(1);
+  expect(node("Heading", "Section")?.level).toBe(2);
+  expect(node("Code", "inline()")?.role).toBe("Code");
+  expect(node("Label", "Plain copy")?.role).toBe("Label");
 });
 
 it("paints a Label's name and its description", async () => {

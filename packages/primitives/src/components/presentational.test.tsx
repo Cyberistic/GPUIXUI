@@ -22,7 +22,7 @@ import { renderSeparator, renderSpacer } from "./Separator.js";
 import { renderSkeleton } from "./Skeleton.js";
 import { renderSpinner } from "./Spinner.js";
 import { renderGrid, renderStack } from "./Stack.js";
-import { renderText } from "./Text.js";
+import { renderText, textSemantics } from "./Text.js";
 import {
   elementProp,
   expectSome,
@@ -173,6 +173,30 @@ describe("type", () => {
     expect(numberIn(element, "fontSize")).toStrictEqual(
       Option.some(testTheme.typography.h2.fontSize),
     );
+  });
+
+  it("derives the host semantics from the role", () => {
+    expect(textSemantics("h1")).toStrictEqual({
+      role: "heading",
+      "aria-level": 1,
+    });
+    expect(textSemantics("h3")).toStrictEqual({
+      role: "heading",
+      "aria-level": 3,
+    });
+    expect(textSemantics("code")).toStrictEqual({ role: "code" });
+    expect(textSemantics("codeBlock")).toStrictEqual({ role: "code" });
+    expect(textSemantics("display")).toStrictEqual({});
+    expect(textSemantics("body")).toStrictEqual({});
+    const heading = renderText({ role: "h2" }, testTheme);
+    expect(expectSome(hostProp(heading, "role"))).toBe("heading");
+    expect(expectSome(hostProp(heading, "aria-level"))).toBe(2);
+    expect(
+      expectSome(hostProp(renderText({ role: "code" }, testTheme), "role")),
+    ).toBe("code");
+    expect(
+      hostProp(renderText({ role: "body" }, testTheme), "role"),
+    ).toStrictEqual(Option.none());
   });
 
   it("clamps after a line count and truncates on one line", () => {

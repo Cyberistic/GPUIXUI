@@ -233,6 +233,10 @@ retired once both branches are one
       runtime does not derive a button name from painted text, so every text
       button was unnamed. Text-only children now become the name, an explicit
       `label` wins, and non-text content stays unnamed (plan 058)
+`[x]` `packages/primitives`: `Text` semantics — the docs claimed the runtime
+      exposed no heading, but `<text role="heading" aria-level>` maps. `h1`-`h3`
+      are now headings with levels and `code` is `Code`; `display` stays flat
+      (plan 059)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

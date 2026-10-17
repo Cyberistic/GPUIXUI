@@ -5,8 +5,9 @@ description: One run of type, named by a theme role and a semantic tone.
 
 `Text` names a role from the theme's type scale and a tone that decides its
 colour. It adds no behaviour: the runtime has one `text` host element, so every
-typographic role is the same element with a different resolved `StyleDesc`. It is
-not a heading element in the accessibility tree — see Limitations.
+typographic role is the same element with a different resolved `StyleDesc`. The
+role also decides the **accessibility semantics**: `h1`-`h3` are headings with a
+level, and `code`/`codeBlock` are code. Other roles stay static text.
 
 ## Usage
 
@@ -69,11 +70,20 @@ there is no copy command binding in the component.
 
 ## Accessibility
 
-`Text` is a plain text node. GPUix's `<text>` has no heading level, no paragraph
-role and no semantics beyond its string; the `role` prop is **visual only**.
-A screen-reader user hears the words in reading order, not a document outline.
-If a heading level matters, the application must supply the semantics with a host
-element the runtime exposes — and 0.10.0 exposes no heading element.
+The runtime exposes every `<text>` as a `Label` carrying its string. `Text`
+adds the outline semantics the role implies, from one table (`textSemantics`,
+plan `059`):
+
+| `role` | Host attributes | AccessKit |
+| ------ | --------------- | --------- |
+| `h1`, `h2`, `h3` | `role="heading"`, `aria-level={1,2,3}` | `Heading` with that level and the text as its value |
+| `code`, `codeBlock` | `role="code"` | `Code` |
+| `display`, `body`, `bodyStrong`, `label`, `caption` | none | `Label` (the runtime default) |
+
+`display` is deliberately not a heading: it is a visual scale, and the page's
+outline level is the app's decision — use `h1` for the page title. A screen
+reader therefore hears a real document outline when the roles are used honestly,
+and a flat list of labels otherwise.
 
 ## Theming
 
@@ -83,8 +93,10 @@ selection by accident; turn it on for content.
 
 ## Limitations
 
-- No heading semantics (above). Do not claim a `role="h2"` is announced as a
-  heading.
+- `display` carries no heading level (above); use `h1` when the large text is
+  the page title.
+- No paragraph grouping: each `Text` is its own node; there is no semantic
+  container the runtime maps to a paragraph.
 - No rich text: one run, one role. Composition is several `Text` nodes in a
   `Stack`.
 - No responsive type scale or fluid sizing.
@@ -95,8 +107,10 @@ selection by accident; turn it on for content.
 - `src/core/variants.test.ts` — every role resolves from the theme.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
   selectable.
-- `runtime/layout.runtime.test.tsx` — the string is painted and its box height
-  equals the role's line height.
+- `runtime/layout.runtime.test.tsx` — the string is painted, its box height
+  equals the role's line height, and each role's measured semantics match the
+  table above: `h1`/`h2` are `Heading` nodes with level 1/2 and their text as
+  the value, `code` is a `Code` node, `body` stays a `Label` (plan `059`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

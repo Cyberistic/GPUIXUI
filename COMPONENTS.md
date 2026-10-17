@@ -172,7 +172,7 @@ carries an evidenced limitation. The capability evidence lives in
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
-| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. |
+| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041/059):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Semantics (059):** `h1`-`h3` are real `Heading` nodes with level 1-3 and the text as their value; `code`/`codeBlock` are `Code`; `display` and the remaining roles keep the runtime's `Label`. |
 | Icons | wip | yes | [icon](packages/icons/docs/icon.mdx) · icons | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. |
 | Separators | wip | yes | [separator](packages/primitives/docs/separator.mdx) · layout | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
 | Spacers | wip | yes | [spacer](packages/primitives/docs/spacer.mdx) · layout | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |
@@ -202,12 +202,13 @@ carries an evidenced limitation. The capability evidence lives in
 | Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, state rides on `aria-valuetext`. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (133 tests in
-14 files after plan 058's accessible names; 130 at 057, 128 at 056, 119 at 055,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (134 tests in
+14 files after plan 059's text semantics; 133 at 058, 130 at 057, 128 at 056, 119 at 055,
 115 at the 054 OTPField, 54 at the 041 baseline, 68 after 049, 82 after 053, 90
 after NumberField, 97 after Toggle, 106 after Rating, locally built GPUix 0.10.0
 binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan 056
-§12, plan 057 §8 and plan 058 §8. The examples suite mounts every example in
+§12, plan 057 §8, plan 058 §8 and plan 059 §8. The examples suite mounts every
+example in
 `packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
