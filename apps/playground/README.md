@@ -22,7 +22,8 @@ command surface probe (`command-palette`), the tabbed-pane probe
 (`workspace-panes`), the docking probe (`docking-layout`), the app-level
 shortcut probe (`window-key-shortcut`), the chart probe (`chart-svg`), the
 markdown probe
-(`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the shell
+(`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the
+collapsible-height probe (`collapsible-height`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -62,7 +63,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (53/53 green); -> 2 on a host with no binding
+# -> 0 here (54/54 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -603,12 +604,35 @@ Same caveat as every Tier 2 probe: this is the mechanism, not `@gpuixui/componen
 Mount the real `ToastProvider`/`ToastViewport` once that package is on the
 integration branch.
 
+## Collapsible sections (plan `186`)
+
+`collapsible-height` measures the recipe an animated, state-preserving
+Accordion/Collapsible needs. The shipped `CollapsibleContent` unmounts while
+closed because its TODO assumed the body could not be measured; that premise is
+false.
+
+| Fact | Measured |
+| ---- | -------- |
+| measurement API | there is **no `onLayout`** in `@gpuix/native@0.10.0`. The route is `ref` → `PublicInstance.id` → `renderer.getElementBounds(id)` |
+| first paint | a `useLayoutEffect` measure returns the content's natural **140 px at mount, while the body is already clipped to `height: 0`** — a `defaultOpen` section can animate on its first open with no flash |
+| height tween | `motion.div` interpolates `height` exactly under the paused clock: 56 px at 80 ms of a 200 ms/140 px linear tween, 140 px at 200 ms. Read it through the following sibling's `y` — the motion surface has no `testId` |
+| the clip | content stays laid out at 140 px, but a click at a collapsed button's own painted centre does **not** activate it; deleting `overflow: "hidden"` lets the same click through. No `pointerEvents` guard is needed |
+| state | a draft typed while open survives collapse, re-open and a second collapse — the content is never unmounted. Unmounting it fails the first check (`collapse-content` is absent) |
+| completion | `onMotionComplete` fires once per height tween (`1`, `2`, `3`), with no stale completion; the measured target is stable across the cycle |
+| keyboard | `Enter` on key down re-opens through the same toggle (the trigger is a focused tab stop) |
+
+The recipe: keep the body mounted under an `overflow: "hidden"` motion
+container, measure the content `div`, animate the container's height, and
+re-measure on open and on a width change — a fixed-height probe cannot measure
+text rewrap while collapsed. The remaining limitation is the motion wrapper's
+missing `testId`/`role`/`aria-*` (plan `157`).
+
 ## Evidence on this host
 
-The suite is **53/53 green** here (`exit 0`):
+The suite is **54/54 green** here (`exit 0`):
 
 ```
-53/53 scenarios passed · capabilities: layout=verified text=verified
+54/54 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -740,8 +764,9 @@ narrower. Each deviation is deliberate and measured:
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
   probe, the terminal-grid probe, the chart probe, the markdown probe, the
-  toast-viewport probe, the shell probe and the pinned-grid probe pass in real
-  GPUix 0.10.0 on this host (53/53), with a written report and screenshots.
+  toast-viewport probe, the shell probe, the pinned-grid probe and the
+  collapsible-height probe pass in real
+  GPUix 0.10.0 on this host (54/54), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
