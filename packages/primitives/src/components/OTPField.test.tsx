@@ -128,6 +128,47 @@ describe("OTPField", () => {
     ).toBeDefined();
   });
 
+  it("is one tab stop, on the first empty cell while unfocused", () => {
+    // The bug guarded: six cells used to be six tab stops, so Tab walked the
+    // whole code before reaching the next control (plan 076).
+    const element = render({ length: 4 }, "12");
+    const stops = cellsOf(element).map((input) =>
+      Option.getOrUndefined(hostProp(input, "tabIndex")),
+    );
+    expect(stops).toStrictEqual([-1, -1, 0, -1]);
+  });
+
+  it("puts the one tab stop on the last cell of a full code, or on the focused cell", () => {
+    const full = render({ length: 3 }, "123");
+    expect(
+      cellsOf(full).map((input) =>
+        Option.getOrUndefined(hostProp(input, "tabIndex")),
+      ),
+    ).toStrictEqual([-1, -1, 0]);
+
+    const focused = render({ length: 3 }, "12", {
+      ...idle,
+      focusedIndex: Option.some(0),
+    });
+    expect(
+      cellsOf(focused).map((input) =>
+        Option.getOrUndefined(hostProp(input, "tabIndex")),
+      ),
+    ).toStrictEqual([0, -1, -1]);
+  });
+
+  it("keeps a stale focused index inside the field when the length shrinks", () => {
+    const stale = render({ length: 2 }, "12", {
+      ...idle,
+      focusedIndex: Option.some(5),
+    });
+    expect(
+      cellsOf(stale).map((input) =>
+        Option.getOrUndefined(hostProp(input, "tabIndex")),
+      ),
+    ).toStrictEqual([-1, 0]);
+  });
+
   it("paints the destructive border on every cell when invalid", () => {
     const element = render({ length: 3, invalid: true }, "1");
     cellsOf(element).forEach((input) => {

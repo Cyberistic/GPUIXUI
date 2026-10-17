@@ -19,6 +19,7 @@ import {
   normalizeOtp,
   otpCells,
   otpLength,
+  otpTabStop,
 } from "./otp.js";
 
 describe("normalizeOtp", () => {
@@ -40,6 +41,23 @@ describe("otpCells", () => {
     expect(otpCells("12", 4)).toStrictEqual(["1", "2", "", ""]);
     expect(otpCells("", 3)).toStrictEqual(["", "", ""]);
     expect(otpCells("abcdef", 3)).toStrictEqual(["a", "b", "c"]);
+  });
+});
+
+describe("otpTabStop", () => {
+  it("stops on the first empty cell", () => {
+    expect(otpTabStop("", 6)).toBe(0);
+    expect(otpTabStop("12", 6)).toBe(2);
+  });
+
+  it("stops on the last cell of a full code, never outside it", () => {
+    expect(otpTabStop("123456", 6)).toBe(5);
+    expect(otpTabStop("1234567", 6)).toBe(5);
+  });
+
+  it("resolves a nonsense length through otpLength", () => {
+    expect(otpTabStop("", 0)).toBe(0);
+    expect(otpTabStop("12", Number.NaN)).toBe(0);
   });
 });
 

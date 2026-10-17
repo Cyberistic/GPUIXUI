@@ -53,6 +53,17 @@ export const otpCells = (
   );
 };
 
+/**
+ * The one cell `Tab` enters at when the field is not focused.
+ *
+ * A code is one control, not `length` controls (plan `076`), so only one cell may
+ * carry a tab stop: the first empty cell, which is where the next character
+ * belongs. A full code leaves the stop on the last cell rather than outside the
+ * field. While a cell holds focus the component uses that cell instead.
+ */
+export const otpTabStop = (value: string, length: number): number =>
+  Math.min(Str.length(normalizeOtp(value, length)), otpLength(length) - 1);
+
 /** A cell index clamped into the field. */
 const indexOf = (index: number, length: number): number =>
   Math.min(

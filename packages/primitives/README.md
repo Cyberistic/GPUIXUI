@@ -123,7 +123,7 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **16 files, 175 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **16 files, 181 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -141,7 +141,8 @@ disabled tab stop (plan 065), a rating's failed validation painted on the
 empty stars only (plan 070), a labelled scroll region scrolled by
 PageDown/arrow/Home/End through the runtime while an `Input` inside it kept its
 arrow keys (plan 072), and `InfoTip` opening on hover and on `focusNext` with
-its name, description and painted focus ring (plan 073).
+its name, description and painted focus ring (plan 073), and an `OTPField` that
+is one roving tab stop instead of six (plan 076).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

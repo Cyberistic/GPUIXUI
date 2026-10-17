@@ -348,6 +348,12 @@ retired once both branches are one
       keyboard and counted in the placement estimate, and the group is a named
       a11y node (plan 075; 5 core + 2 element + 4 runtime tests, both failing
       directions measured)
+`[x]` `packages/primitives`: **`OTPField` was six tab stops** — measured: Tab
+      walked `otp-cell-1…6` before reaching the next control, so a form with a
+      code step appeared to stall. The field is now **one** roving stop: the
+      focused cell while focused, otherwise the first empty cell (the last when
+      the code is full); typing moves it with the caret. 3 core + 3 element + 2
+      runtime tests, both directions proven (plan 076)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

@@ -58,11 +58,18 @@ code longer than `length` is truncated rather than partially applied.
 
 | Key | Effect |
 | --- | ------ |
+| `Tab` | enters the field at the first empty cell (the last when the code is full) and leaves it from the focused cell |
 | any character | replaces the cell, then focus advances |
 | `ArrowLeft` / `ArrowRight` | previous / next cell |
 | `Home` / `End` | first / last cell |
 | `Backspace` | deletes the current character; in an empty cell, clears the one before and moves there |
 | `Delete` | deletes the current character (native) |
+
+The field is **one tab stop**, not `length` stops (plan `076`): Tab enters where
+typing continues and the next Tab leaves the code, so a form does not appear to
+stall for five presses. While a cell holds focus it is the stop; once the field
+is left, the resting stop is derived from the value. Arrows, Home/End and typing
+are how a keyboard user moves inside the code.
 
 The key contract runs on **key up**. GPUix's text editor consumes
 Left/Right/Home/End/Backspace/Delete on key down, so those keys never reach the
@@ -80,6 +87,8 @@ and does not delete a second character.
   `aria-label` written from the group's `label`; a `Label` beside the field is
   the visible name.
 - A disabled field is `readOnly` and every cell is out of the tab order.
+- The code is one tab stop, so assistive technology and the Tab order see one
+  control with `length` named inputs inside it.
 - The code itself is the native input text; there is no `aria-valuetext` on a
   cell, so the value is not announced twice.
 
@@ -110,16 +119,19 @@ No literal colour, size or radius is named.
 
 - `src/core/otp.test.ts` — normalisation and truncation, cell padding, one-char
   replacement and advance, accumulated-text stripping, multi-character fill,
-  range clamping, Backspace and navigation rules.
+  range clamping, Backspace and navigation rules, and the resting tab stop
+  (first empty cell, last cell when full, nonsense lengths).
 - `src/components/OTPField.test.tsx` — `length` named inputs, per-cell handlers,
   click-to-pick, autoFocus on the first cell, one ring, destructive borders,
-  square geometry, disabled guards.
+  square geometry, disabled guards, and **exactly one `tabIndex={0}`** on the
+  first empty / focused cell.
 - `runtime/otp.runtime.test.tsx` — six digits **typed one at a time** fill six
   cells and complete once; focus advances and moves back with the arrow keys;
   Backspace clears backwards on an empty cell and only one character on a
   filled one; the a11y tree has a `Group` and six `TextInput`s; invalid paints
   every cell; one ring, painted from mount with `autoFocus`; disabled refuses
-  input and leaves the tab order. Measured 2026-10-17 (plans 054 §9 and 064 §6).
+  input and leaves the tab order; **Tab enters the code once and leaves it**
+  (plan `076`). Measured 2026-10-17 (plans 054 §9, 064 §6 and 076 §7).
 
 ```sh
 nub run --filter @gpuixui/primitives test

@@ -14,6 +14,10 @@
  * forward from the cell that received it — a behaviour identical to typing the
  * same characters quickly.
  *
+ * **One tab stop for the whole field** (plan `076`): the focused cell while it
+ * has focus, otherwise the first empty cell. Tab enters where typing continues
+ * and the next Tab leaves; six cells must not be six stops.
+ *
  * **The key contract runs on key up.** The native text editor consumes
  * Left/Right/Home/End/Backspace/Delete on key down; only their key-up events
  * reach the element (measured 2026-10-17). A held arrow therefore moves one
@@ -33,6 +37,7 @@ import {
   normalizeOtp,
   otpCells,
   otpLength,
+  otpTabStop,
   type OtpEdit,
 } from "../core/otp.js";
 import { nativeTextTheme, otpCellStyle, otpGroupStyle } from "../core/style.js";
@@ -101,6 +106,17 @@ export const renderOtpField = (
   const limit = otpLength(props.length ?? 6);
   const disabled = props.disabled === true;
   const cells = otpCells(state.current, limit);
+  /**
+   * One tab stop for the whole field (plan `076`): the cell that holds focus,
+   * or — when the field is unfocused — the first empty cell. Both are clamped,
+   * because a `length` change must never leave every cell at `-1`.
+   */
+  const tabStop = Option.getOrElse(
+    Option.map(focus.focusedIndex, (index) =>
+      Math.min(Math.max(index, 0), limit - 1),
+    ),
+    () => otpTabStop(state.current, limit),
+  );
   return (
     <div
       role="group"
@@ -120,7 +136,7 @@ export const renderOtpField = (
           value={cell}
           readOnly={disabled}
           autoFocus={!disabled && index === 0 ? props.autoFocus : undefined}
-          tabIndex={disabled ? -1 : 0}
+          tabIndex={disabled || index !== tabStop ? -1 : 0}
           theme={nativeTextTheme(theme)}
           aria-label={otpCellLabel(props.label, index)}
           style={otpCellStyle(

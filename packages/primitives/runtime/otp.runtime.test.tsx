@@ -201,6 +201,50 @@ it("rings only the cell the caret is in", async () => {
   expect(ringed).toHaveLength(1);
 });
 
+/**
+ * The bug guarded (plan `076`): every cell used to carry `tabIndex={0}`, so a
+ * code was six tab stops and Tab appeared to stall for five presses. The field
+ * must be one stop, on the cell where typing continues.
+ */
+it("is one tab stop: Tab enters at the first empty cell and the next Tab leaves", async () => {
+  const runtime = await mount(
+    <Stack direction="row">
+      <Button testId="before" label="Before" onActivate={() => {}}>
+        Before
+      </Button>
+      <OTPField testId="otp" label="Verification code" />
+      <Button testId="after" label="After" onActivate={() => {}}>
+        After
+      </Button>
+    </Stack>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("otp-cell-1");
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("after");
+});
+
+it("moves its one tab stop with the caret", async () => {
+  const runtime = await mount(
+    <Stack direction="row">
+      <Button testId="before" label="Before" onActivate={() => {}}>
+        Before
+      </Button>
+      <OTPField testId="otp" label="Verification code" defaultValue="12" />
+      <Button testId="after" label="After" onActivate={() => {}}>
+        After
+      </Button>
+    </Stack>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("otp-cell-3");
+  runtime.type("3");
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("after");
+});
+
 it("refuses input and leaves the tab order while disabled", async () => {
   const field = recorder();
   const runtime = await mount(
