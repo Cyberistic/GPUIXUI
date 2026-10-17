@@ -17,6 +17,7 @@ import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
 import { contextMenuScenario } from "./context-menu.js";
 import { virtualizedTreeScenario } from "./virtual-tree.js";
+import { scrollIntoViewScenario } from "./scroll-into-view.js";
 import { textSelectionScenario } from "./text-selection.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
@@ -103,6 +104,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   dragTargetsScenario,
   contextMenuScenario,
   virtualizedTreeScenario,
+  scrollIntoViewScenario,
   textSelectionScenario,
   shellNavigationScenario,
   virtualizedTableScenario,

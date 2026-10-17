@@ -218,6 +218,29 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
         return offset === null ? null : { x: offset[0], y: offset[1] };
       },
     }),
+  scrollIntoView: (testId) =>
+    Option.match(elementId(renderer, testId), {
+      onNone: () => {},
+      onSome: (id) => renderer.scrollIntoView(id),
+    }),
+  scrollToItem: (testId, index) =>
+    Option.match(elementId(renderer, testId), {
+      onNone: () => {},
+      onSome: (id) => renderer.scrollToItem(id, index),
+    }),
+  listScrollTop: (testId) =>
+    Option.match(
+      Option.flatMap(elementId(renderer, testId), (id) =>
+        Option.fromNullishOr(renderer.getListScrollTop(id)),
+      ),
+      {
+        onNone: () => null,
+        onSome: ([index, offset, height]) =>
+          index === undefined || offset === undefined || height === undefined
+            ? null
+            : [index, offset, height],
+      },
+    ),
   screenshot: (absolutePath) => renderer.captureScreenshot(absolutePath),
   advance: (ms) => renderer.advanceTime(ms),
   pauseMotion: () => renderer.clockPause(),

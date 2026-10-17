@@ -63,6 +63,9 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "virtualized-tree",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "scroll-into-view",
+    );
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
       expect.arrayContaining([
         "select",

@@ -259,6 +259,17 @@ export interface SmokeHost {
   readonly selectedText: () => string | null;
   readonly clearSelection: () => void;
   readonly scrollOffset: (testId: string) => Offset | null;
+  /** Scrolls the element `testId` into view (the renderer's own method). */
+  readonly scrollIntoView: (testId: string) => void;
+  /** Scrolls a `<virtual-list>` `testId` to the row at `index`. */
+  readonly scrollToItem: (testId: string, index: number) => void;
+  /**
+   * A `<virtual-list>`'s logical anchor `[itemIndex, offsetInItemPx,
+   * viewportHeightPx]`, or `null` for a non-list element.
+   */
+  readonly listScrollTop: (
+    testId: string,
+  ) => readonly [number, number, number] | null;
   readonly screenshot: (absolutePath: string) => void;
   /** Advances GPUI's dispatcher and timers. Not motion time; see `pauseMotion`. */
   readonly advance: (ms: number) => void;
