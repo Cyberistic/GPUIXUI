@@ -11,7 +11,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { IconButton } from "../internal/button.js";
 import {
   elevation,
@@ -48,12 +48,23 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   const theme = useTheme();
   const { dismiss, pause, resume } = useToast();
   const palette = tone(theme, asTone(toast.tone));
+  const held = useRef({ hover: false, focus: false });
+
+  /** Pause while either reason holds; resume only when the last one leaves. */
+  const setHeld = (reason: "hover" | "focus", value: boolean): void => {
+    const before = held.current.hover || held.current.focus;
+    held.current[reason] = value;
+    const after = held.current.hover || held.current.focus;
+    if (before === after) return;
+    if (after) pause(toast.id);
+    else resume(toast.id);
+  };
 
   return (
     <div
       testId={`toast-${toast.id}`}
-      onMouseEnter={() => pause(toast.id)}
-      onMouseLeave={() => resume(toast.id)}
+      onMouseEnter={() => setHeld("hover", true)}
+      onMouseLeave={() => setHeld("hover", false)}
       style={{
         display: "flex",
         flexDirection: "row",
@@ -128,6 +139,8 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
           size="sm"
           testId="toast-dismiss"
           onClick={() => dismiss(toast.id)}
+          onFocus={() => setHeld("focus", true)}
+          onBlur={() => setHeld("focus", false)}
         >
           <text>✕</text>
         </IconButton>

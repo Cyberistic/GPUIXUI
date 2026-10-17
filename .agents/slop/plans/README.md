@@ -41,6 +41,7 @@ workstream declares in its own section below.
 | [121](./121-accordion-keyboard.md) | Accordion header keyboard navigation | C/F | 111, 113 | done — 4 upsert tests + 4 native tests; both-direction proof |
 | [122](./122-context-menu-keyboard.md) | Context menu keyboard opening and focus return | C/F | 112, 114 | done — 5 native tests; both-direction proof |
 | [123](./123-toast-pause.md) | Toast pause on hover (timing adjustable) | C/F | 115, 117 | done — 3 store tests + 1 real-time native test; both-direction proof |
+| [124](./124-toast-focus-hold.md) | Toast timers respect keyboard focus, not only the pointer | C/F | 115, 123 | done — 2 native tests (Toast: 10); both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

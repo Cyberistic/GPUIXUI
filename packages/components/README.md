@@ -43,7 +43,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
 | `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover |
-| `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store, with hover pause/resume |
+| `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store, with pointer/focus pause/resume |
 | `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
 | `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |

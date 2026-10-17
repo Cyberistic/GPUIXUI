@@ -5,7 +5,8 @@
  * painting in the wrong order (the newest must be below the oldest); dismissing
  * one toast removing another; `dismissAll` leaving a card behind; the viewport
  * swallowing clicks on the page behind it; and a toast painted with the wrong
- * theme surface.
+ * theme surface. It also guards a toast that auto-dismissed while keyboard focus
+ * was on its own dismiss control, dropping the user's focus with it.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -219,6 +220,60 @@ describe("Toast", () => {
     expect(page.renderer.findByTestId("toast-1")).toBeDefined();
 
     hoverCentreOf(page, "elsewhere");
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+
+    page.unmount();
+  });
+
+  it("pauses auto-dismiss while keyboard focus is on the dismiss control", async () => {
+    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
+
+    clickCentreOf(page, "push");
+    await settle();
+
+    const dismiss = page.renderer.findByTestId("toast-dismiss");
+    expect(dismiss).toBeDefined();
+    page.renderer.focusElement(dismiss?.id ?? -1);
+
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+    page.renderer.focusElement(
+      page.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+
+    page.unmount();
+  });
+
+  it("keeps the hold when the pointer leaves while focus stays inside", async () => {
+    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
+
+    clickCentreOf(page, "push");
+    await settle();
+
+    hoverCentreOf(page, "toast-1");
+    page.renderer.focusElement(
+      page.renderer.findByTestId("toast-dismiss")?.id ?? -1,
+    );
+    hoverCentreOf(page, "elsewhere");
+
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+    page.renderer.focusElement(
+      page.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
