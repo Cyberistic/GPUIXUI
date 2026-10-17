@@ -9,6 +9,7 @@
  */
 
 import type { ThemeColors } from "./color.js";
+import { statusTones } from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
 /** The floor class a documented pair belongs to. */
@@ -88,6 +89,35 @@ const softBorderPairs: readonly ContrastPair[] = [
   ["warningSoftBorder", "warningSoft", "divider"],
   ["destructiveSoftBorder", "destructiveSoft", "divider"],
 ];
+
+/**
+ * The surfaces a soft status chip occupies. A Badge sits on the plain surfaces,
+ * the quiet panel and the four washes a row paints, so the chip's designed edge
+ * is the boundary a reader sees — its fill is deliberately close to the row
+ * wash (plan 300), which makes the edge the shape.
+ */
+const softBorderSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+  "hover",
+  "active",
+  "accent",
+  "selected",
+] as const;
+
+/** Each soft status edge measured on the surfaces a chip sits on. */
+export const softBorderSurfacePairs: readonly ContrastPair[] =
+  statusTones.flatMap((tone) =>
+    softBorderSurfaces.map(
+      (background): ContrastPair => [
+        `${tone}SoftBorder`,
+        background,
+        "divider",
+      ],
+    ),
+  );
 
 /**
  * The soft status fills a plain divider is painted on. An Alert or Toast can
@@ -296,7 +326,8 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * status fills a control sits in, the soft
  * status surfaces and the loading skeleton a canvas, a quiet panel or a row wash
  * must distinguish, the
- * designed edge around each soft status surface, the plain divider on those
+ * designed edge around each soft status surface, measured on its own fill and
+ * on the eight surfaces a chip sits on, the plain divider on those
  * soft fills, the decorative dividers
  * that must stay visible, including on the fills a bordered control paints and
  * on the inactive fill a disabled control keeps its shape with, and the inactive
@@ -361,6 +392,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...secondaryTextPairs,
   ...surfacePairs,
   ...softBorderPairs,
+  ...softBorderSurfacePairs,
   ...softDividerPairs,
   ["border", "background", "divider"],
   ["border", "card", "divider"],

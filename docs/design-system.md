@@ -315,7 +315,7 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
 | focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, and essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
-| soft status edge (`xSoftBorder` on `xSoft`) | 1.05:1 | 3:1 |
+| soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`selected` washes | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |

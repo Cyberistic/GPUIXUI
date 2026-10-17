@@ -252,8 +252,13 @@ divider and every outlined control's edge stay perceivable. The inherited dark
 on Linux until plan 095 darkened it and the soft `destructive` fill one step
 while keeping the surface floor.
 Each soft status surface has a designed edge (`xSoftBorder`) held to the divider
-floor on that surface, so the 30% mixture that measured 1.12:1 at high contrast
-cannot return.
+floor on that surface and on the eight surfaces a chip sits on — the canvas, card
+and popover, the `muted` panel and the `hover`/`active`/`accent`/`selected`
+washes — because the fill is deliberately close to a row wash and the edge is the
+shape a reader sees. The light warning edge measured 1.036:1 on the macOS light
+pressed wash and 1.042:1 on the Linux light one until plan 308 moved it to
+`#EFC055`, and the 30% mixture that measured 1.12:1 at high contrast cannot
+return.
 Four shipped sets had the divider equal to the fill it sits on (1.00:1) until
 plan 080, so an edge vanished exactly while a control was pressed. Every shipped
 theme passes it —

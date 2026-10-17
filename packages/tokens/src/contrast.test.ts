@@ -131,6 +131,7 @@ import {
   selectionSoftWashPairs,
   selectionSurfaces,
   selectionWashPairs,
+  softBorderSurfacePairs,
   themeContrastFailures,
   type Theme,
   type ThemeContrast,
@@ -340,8 +341,28 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(148);
+    expect(contrastPairs.length).toBe(180);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
+    expect(softBorderSurfacePairs.length).toBe(32);
+    expect(
+      softBorderSurfacePairs.map(([foreground, background]) => [
+        foreground,
+        background,
+      ]),
+    ).toEqual(
+      ["info", "success", "warning", "destructive"].flatMap((tone) =>
+        [
+          "background",
+          "card",
+          "popover",
+          "muted",
+          "hover",
+          "active",
+          "accent",
+          "selected",
+        ].map((surface) => [`${tone}SoftBorder`, surface]),
+      ),
+    );
     expect(inactivePairs.length).toBe(13);
     expect(inactivePairs.map(([, background]) => background)).toEqual([
       "disabled",

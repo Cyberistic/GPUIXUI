@@ -133,7 +133,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `successSoftBorder` | `#8ED3AF` | `#1A6D46` | edge around `successSoft` |
 | `warningSoft` | `#FFDF9A` | `#4B3100` | soft warning surface |
 | `warningSoftForeground` | `#2A1B00` | `#FFF8E8` | text and icons on `warningSoft` |
-| `warningSoftBorder` | `#FCD47B` | `#815F17` | edge around `warningSoft` |
+| `warningSoftBorder` | `#EFC055` | `#815F17` | edge around `warningSoft` |
 | `destructiveSoft` | `#FFD6D6` | `#66191B` | soft destructive surface |
 | `destructiveSoftForeground` | `#5C1619` | `#FFF1F1` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
@@ -229,11 +229,18 @@ on Windows light until plan `300` moved the four light tints one small step
 deeper.
 
 The edge is a role, not a mixture: `xSoftBorder` is designed per tone and
-measured on the fill it borders at the divider floor — 1.05:1 in the default
-themes and 3:1 at high contrast. At high contrast the edge is designed, not
-mixed: `warningSoftBorder` (`#8E5B00`) is 4.41:1 on `warningSoft`, where the 30%
-mixture it replaced measured 1.12:1, under the 3:1 divider floor. Because it is a
-role, a copied platform style edits it with the rest of the palette.
+measured on the fill it borders and on the eight surfaces a chip sits on
+(`background`, `card`, `popover`, the `muted` panel and the `hover`, `active`,
+`accent` and `selected` washes) at the divider floor: 1.05:1 in the default
+themes and 3:1 at high contrast. The outer pair is not academic: a Badge's fill
+is deliberately close to a row wash, so the edge is the shape a reader sees. The
+light warning edge sat at 1.036:1 on the macOS light pressed wash and 1.042:1 on
+the Linux light one until plan `308` moved it one step (`#FCD47B` → `#EFC055`,
+1.246:1 and 1.254:1 on those washes and 1.319:1 on its own fill). At high
+contrast the edge is designed, not mixed: `warningSoftBorder` (`#8E5B00`) is
+4.41:1 on `warningSoft`, where the 30% mixture it replaced measured 1.12:1,
+under the 3:1 divider floor. Because it is a role, a copied platform style edits
+it with the rest of the palette.
 
 `statusTone(theme, tone)` resolves the soft surface, its readable foreground, its
 designed edge, and the plain-surface text role:
@@ -980,7 +987,9 @@ soft status fills (`ringSoftPairs`), the
 functional control boundary on the `muted` panel, those washes and the four soft
 status fills (`controlBoundarySoftPairs`), the selection
 wash — body and secondary text through it, and the wash's own perceivability —
-the soft status surfaces, the plain divider on those fills, and the decorative
+the soft status surfaces, the designed edge on its own fill and on the eight
+surfaces a chip sits on (`softBorderSurfacePairs`), the plain divider on those
+fills, and the decorative
 dividers — including on the `secondary`, `hover`, `active` and `accent` fills a
 bordered control paints.
 The default is the
@@ -1207,9 +1216,14 @@ on Windows dark, 1.023:1 on the identity and 1.047:1 on Linux dark, and identity
 dark's `destructiveSoft` (`#6B1A1D`) 1.040:1, under the 1.05:1 divider floor.
 The two soft fills move one step darker and keep the surface floor on every
 canvas.
-Each soft surface also has a role for its edge (`xSoftBorder`), held to the same
-divider floor on that fill; the 30% mixture it replaced measured 1.12:1 on the
-high-contrast light `warning` surface, under the 3:1 that theme requires.
+Each soft surface also has a role for its edge (`xSoftBorder`), held to the
+divider floor on that fill and on the eight surfaces a chip sits on —
+`background`, `card` and `popover`, the `muted` panel and the four row washes —
+so the shape a badge shows is measured where it is painted; the light warning
+edge measured 1.036:1 on the macOS light pressed wash and 1.042:1 on the Linux
+light one until plan `308` moved it, and the 30% mixture it replaced measured
+1.12:1 on the high-contrast light `warning` surface, under the 3:1 that theme
+requires.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
 `card`, `popover`, `muted`, `hover`, `active` and `selected`, so a placeholder
 never disappears into the card it fills or the row it sits in. The audit found
@@ -1319,7 +1333,8 @@ reported with `wash: "overlay"` (plan `099`).
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs` and
 `overlayWashPairs` measure the painted roles — `inactivePairs` is the nine-surface
-inactive list and `disabled` is measured as its own fill — and
+inactive list, `softBorderSurfacePairs` the eight-surface chip edge and `disabled`
+is measured as its own fill — and
 `contrast.test.ts` keeps a
 declared exemption list for the two that are not pairs: `scrollbar` (reserved; the
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 75/99
+`[x]` `[████████░░]` 76/100
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -378,6 +378,12 @@ action can be disabled, but `disabledForeground` was measured on the nine
 surfaces of plan 306, not the four soft status fills; the four pairs
 (`inactiveSoftPairs`) already pass in every shipped set, so no colour moves and
 an edited theme can no longer erase a disabled "Retry" (plan 307)
+`[x]` Hold the soft status edge where a chip is actually painted — plan 300
+declined a fill pair on a row wash because the designed `xSoftBorder` is the
+shape, but the edge was measured only on its own fill, so the macOS light
+warning edge measured 1.036:1 and the Linux light one 1.042:1 on their pressed
+washes and a warning Badge there had no visible boundary at all; the four edges
+are divider pairs on the eight surfaces a chip sits on (plan 308)
 `[ ]` Cross-team: `primitives` and `components` replace `opacity: 0.5` disabled
 dimming with the designed `disabled` / `disabledForeground` pair plus the
 `border` edge — an alpha composite makes the label's readability depend on the

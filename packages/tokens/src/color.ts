@@ -283,7 +283,7 @@ export const lightColors = {
   successSoftBorder: "#8ED3AF",
   warningSoft: "#FFDF9A",
   warningSoftForeground: palette.amber[950],
-  warningSoftBorder: "#FCD47B",
+  warningSoftBorder: "#EFC055",
   destructiveSoft: "#FFD6D6",
   destructiveSoftForeground: palette.red[900],
   destructiveSoftBorder: "#F0ACAE",

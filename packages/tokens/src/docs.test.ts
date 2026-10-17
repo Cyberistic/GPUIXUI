@@ -341,7 +341,9 @@ describe("docs/tokens.md quoted figures", () => {
 
   it("states the soft edge floor in the catalogue", () => {
     const sentence =
-      "measured on the fill it borders at the divider floor — " +
+      "measured on the fill it borders and on the eight surfaces a chip sits on " +
+      "(`background`, `card`, `popover`, the `muted` panel and the `hover`, `active`, " +
+      "`accent` and `selected` washes) at the divider floor: " +
       `${contrastFloors.default.divider}:1 in the default themes and ` +
       `${contrastFloors.high.divider}:1 at high contrast.`;
 
@@ -787,7 +789,7 @@ describe("docs/design-system.md", () => {
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, and essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| soft status edge (\`xSoftBorder\` on \`xSoft\`) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
