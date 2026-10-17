@@ -110,12 +110,12 @@ Layout (all values from `useTokens()`):
 
 | Part | Style |
 | ---- | ----- |
-| Card | `display:"flex"`, `flexDirection:"column"`, `backgroundColor: color.card`, `borderRadius: radius.lg`, `overflow:"hidden"`; outline: `borderWidth:1,borderColor:color.border`; elevated: `boxShadow: elevation.popover`; plain: neither |
-| Header | `display:"flex",flexDirection:"column",gap:space(1),padding:space(4),paddingBottom:space(3)` |
-| Title | `fontSize:font.size.lg,fontWeight:font.weight.semibold,color:color.foreground` |
-| Description | `fontSize:font.size.sm,color:color.mutedForeground,lineHeight:1.5` |
-| Content | `display:"flex",flexDirection:"column",gap:space(3),padding:space(4)` |
-| Footer | `display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"flex-end",gap:space(2),padding:space(3),borderTopWidth:1,borderTopColor:color.border` |
+| Card | `display:"flex"`, `flexDirection:"column"`, `backgroundColor: colors.card`, `borderRadius: radius.lg`, `overflow:"hidden"`; outline: `borderWidth:1,borderColor:colors.border`; elevated: `boxShadow: elevation.md`; plain: neither |
+| Header | `display:"flex",flexDirection:"column",gap:space.xs,padding:space.xl,paddingBottom:space.lg` |
+| Title | `fontSize:font.size.lg,fontWeight:font.weight.semibold,color:colors.foreground` |
+| Description | `fontSize:font.size.sm,color:colors.mutedForeground,lineHeight:1.5` |
+| Content | `display:"flex",flexDirection:"column",gap:space.lg,padding:space.xl` |
+| Footer | `display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"flex-end",gap:space.md,padding:space.lg,borderTopWidth:1,borderTopColor:colors.border` |
 
 Every part merges `props.style` last.
 
@@ -150,23 +150,24 @@ export interface BadgeProps extends Props { variant?: BadgeVariant; size?: Badge
 
 | size | height | paddingX | fontSize |
 | ---- | ------ | -------- | -------- |
-| sm | 18 | space(2) | font.size.xs |
-| md | 22 | space(2) | font.size.sm |
+| sm | 18 | space.md | font.size.xs |
+| md | 22 | space.md | font.size.sm |
 
 `borderRadius: radius.full`, `alignItems:"center"`, `flexDirection:"row"`,
 `fontWeight:medium`, `whiteSpace:"nowrap"`.
 
-Tone map (fill / text / optional border):
+| variant | background | color | border |
+| ------- | ---------- | ----- | ------ |
+| neutral | `colors.muted` | `colors.mutedForeground` | none |
+| primary | `colors.primary` | `colors.primaryForeground` | none |
+| success | `tone("success").bg` | `tone("success").fg` | `tone("success").border` |
+| warning | `tone("warning").bg` | `tone("warning").fg` | `tone("warning").border` |
+| danger | `tone("danger").bg` | `tone("danger").fg` | `tone("danger").border` |
+| info | `tone("info").bg` | `tone("info").fg` | `tone("info").border` |
+| outline | transparent | `colors.mutedForeground` | `colors.border` |
 
-| variant | background | color |
-| ------- | ---------- | ----- |
-| neutral | `color.muted` | `color.foreground` |
-| primary | `color.primary` | `color.primaryForeground` |
-| success | `color.successSoft` | `color.success` |
-| warning | `color.warningSoft` | `color.warning` |
-| danger | `color.destructiveSoft` | `color.destructive` |
-| info | `color.infoSoft` | `color.info` |
-| outline | transparent | `color.mutedForeground` + `borderWidth:1,borderColor:color.border` |
+Test every row; the soft rows must change between themes, which proves the
+`tone` helper is reading the theme rather than a constant.
 
 **Test:** each variant maps to its token pair (table-driven over all seven);
 `variant="outline"` has a border and no background; the two sizes produce the
@@ -210,13 +211,13 @@ one part → one letter; no letters → `"?"`; use `Arr`/`Option`/`Str`, and
 lowercase input is uppercased. Each case fails if the rule regresses.
 
 Rendering: `div` with `borderRadius: radius.full`, `overflow:"hidden"`,
-width/height from size, `backgroundColor: color.muted`,
+width/height from size, `backgroundColor: colors.muted`,
 `alignItems/justifyContent: center`. With `src`: `<img src objectFit="cover"
 alt={name} style={{width:"100%",height:"100%"}}/>`. Without: `<text>` initials in
-`color.foreground`, fontSize = size * 0.4. `status`: a `div` dot at
+`colors.foreground`, fontSize = size * 0.4. `status`: a `div` dot at
 `position:"absolute",right:-1,bottom:-1`, 10px, `borderRadius:full`,
-`borderWidth:2,borderColor:color.card`, fill by status
-(online=`success`, away=`warning`, busy=`destructive`, offline=`textFaint`).
+`borderWidth:2,borderColor:colors.card`, fill by status
+(online=`success`, away=`warning`, busy=`destructive`, offline=`mutedForeground`).
 Avatar root gets `"aria-label": name`, `role: "img"`, `position:"relative"`.
 
 **Test:** image branch requests an `img` element with `src`; fallback branch
@@ -245,11 +246,11 @@ export interface AlertProps extends Props {
 }
 ```
 
-Root: `display:"flex",flexDirection:"row",gap:space(3),padding:space(3),
-borderRadius:radius.md`, background `*Soft`, `borderWidth:1`,
+Root: `display:"flex",flexDirection:"row",gap:space.lg,padding:space.lg,
+borderRadius:radius.md`, background `tone(t).bg`, `borderWidth:1`,
 `borderColor: tone colour`, `role:"alert"`. Content column `flexGrow:1`, gap 1.
 Title `fontSize:sm,fontWeight:semibold,color:tone colour`. Body
-`fontSize:sm,color:color.foreground`. When `onDismiss`, an `IconButton` labelled
+`fontSize:sm,color:colors.foreground`. When `onDismiss`, an `IconButton` labelled
 `dismissLabel` with `testId="alert-dismiss"`.
 
 **Test:** each tone sets its own background/border/text colour; dismiss button
@@ -278,8 +279,8 @@ export interface EmptyStateProps extends Props {
 ```
 
 `display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-gap:space(3),padding:space(8)`. Title `fontSize:md,fontWeight:semibold,color:text`.
-Description `fontSize:sm,color:textMuted,textAlign:"center",maxWidth:360`.
+gap:space.lg,padding:space."3xl"`. Title `fontSize:md,fontWeight:semibold,color:text`.
+Description `fontSize:sm,color:colors.mutedForeground,textAlign:"center",maxWidth:360`.
 No border, no fill: it lives inside a Card or panel that supplies the surface.
 
 **Test:** renders title/description/action; omitting optional parts does not
@@ -329,12 +330,12 @@ Behaviour:
 - Selecting a disabled item is impossible from either path.
 
 Styling: `List` `display:"flex",flexDirection:"column"`; `ListItem`
-`flexDirection:"row",alignItems:"center",gap:space(3),paddingX:space(3)`,
+`flexDirection:"row",alignItems:"center",gap:space.lg,paddingX:space.lg`,
 height `dense ? 32 : 40`, `borderRadius:radius.sm`, `cursor:"pointer"` only when
-selectable. State style: `hover.backgroundColor = color.accent`,
-selected `backgroundColor = color.muted`, disabled `opacity:0.5`.
+selectable. State style: `hover.backgroundColor = colors.accent`,
+selected `backgroundColor = colors.muted`, disabled `opacity:0.5`.
 `ListItemTitle` `fontSize:sm,color:text`; `ListItemDescription`
-`fontSize:xs,color:textMuted,textOverflow:"ellipsis",whiteSpace:"nowrap"`.
+`fontSize:xs,color:colors.mutedForeground,textOverflow:"ellipsis",whiteSpace:"nowrap"`.
 
 **Test:**
 - list mode renders `role:"list"` and items `"listitem"`, no tab stop.

@@ -25,7 +25,7 @@ export const SearchInput;
 ```
 
 Behaviour:
-- An `Input` with a leading `"⌕"` glyph (`text`, `color.mutedForeground`,
+- An `Input` with a leading `"⌕"` glyph (`text`, `colors.mutedForeground`,
   `userSelect:"none"`) and a trailing clear button that appears only when the
   value is non-empty.
 - Typing fires `onChange` **and** `onValueChange` with the new text.
@@ -33,12 +33,12 @@ Behaviour:
   `onClear` (only when non-empty; otherwise it does nothing, so it does not
   swallow the key from an enclosing dialog).
 - Clear button: 18×18, `borderRadius:radius.sm`, `aria-label:"Clear search"`,
-  `testId:"search-clear"`, hover `color.accent`; clicking clears, focuses the
+  `testId:"search-clear"`, hover `colors.accent`; clicking clears, focuses the
   input again, and fires `onClear`.
 - Controlled and uncontrolled both work; `defaultValue` seeds the field.
 - Layout: `flexDirection:"row"`, `alignItems:"center"`, height
-  `control("md")`, `paddingX:space(2)`, `gap:space(2)`,
-  `backgroundColor:color.background`, `borderWidth:1`, `borderColor:color.input`,
+  `controlHeight(theme, "md")`, `paddingX:space.md`, `gap:space.md`,
+  `backgroundColor:colors.background`, `borderWidth:1`, `borderColor:colors.input`,
   `borderRadius:radius.md`; focused style via `focusVisible` outline
   `focusRing(tokens)`.
 
@@ -131,18 +131,18 @@ Composition:
   produced the visible order — **verify this in a test**; if GPUix re-orders
   after the predicate, replace the predicate with a pre-filtered `items` array
   (documented fallback, one-line change).
-- `ComboboxTrigger` styled as a field: height `control("md")`,
-  `borderWidth:1, borderColor:color.input`, `borderRadius:radius.md`,
-  `paddingX:space(2)`, `justifyContent:"space-between"`; label from the selected
+- `ComboboxTrigger` styled as a field: height `controlHeight(theme, "md")`,
+  `borderWidth:1, borderColor:colors.input`, `borderRadius:radius.md`,
+  `paddingX:space.md`, `justifyContent:"space-between"`; label from the selected
   option(s), placeholder when empty, trailing `"▾"`.
 - `ComboboxInput` inside the popup (search field), `autoFocus` is handled by
   GPUix.
 - `ComboboxContent` = `FloatingLayer` surface (popover tokens, radius md,
-  border, shadow, `maxHeight:280`, `overflowY:"scroll"`, padding `space(1)`).
+  border, shadow, `maxHeight:280`, `overflowY:"scroll"`, padding `space.xs`).
 - `ComboboxItem` renders label + optional description; state style uses
   `highlighted`/`selected` from GPUix's `ComboboxItemState`; disabled gets
   `opacity:0.5`. Row shape matches plan 111's `ListItem` so the two look alike.
-- `ComboboxEmpty` renders `emptyLabel` in `color.mutedForeground`, centred.
+- `ComboboxEmpty` renders `emptyLabel` in `colors.mutedForeground`, centred.
 - Multiple mode: selected rows show a `"✓"` and `onValueChange` receives an
   array.
 
@@ -158,7 +158,7 @@ Composition:
 6. A disabled option is visible but cannot be selected by click or Enter.
 7. `Escape` closes the popup; focus returns to the trigger.
 8. Ranking: typing "ca" puts `Calendar` before `Vacation` (the guarded bug).
-9. Both themes: popup background equals `color.popover`.
+9. Both themes: popup background equals `colors.popover`.
 
 ## 4. Examples and docs
 

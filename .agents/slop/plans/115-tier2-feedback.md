@@ -145,15 +145,15 @@ Implementation notes, in order:
 
 ## 5. `toast/viewport.tsx`
 
-- `ToastViewport`: `position:"absolute", right:space(4), bottom:space(4)`,
-  `display:"flex", flexDirection:"column", gap:space(2)`,
+- `ToastViewport`: `position:"absolute", right:space.xl, bottom:space.xl`,
+  `display:"flex", flexDirection:"column", gap:space.md`,
   `pointerEvents:"none"`, `width:380`, `zIndex` is not available in GPUix —
   stacking is paint order, so the viewport must be the last child of the app
   root. Document that.
-- Each toast: `pointerEvents:"auto"`, `color.popover` surface, `borderWidth:1`,
-  `borderColor:color.border`, `borderRadius:radius.md`,
-  `boxShadow:elevation.popover`, `padding:space(3)`, `flexDirection:"row"`,
-  `gap:space(3)`, plus a 3px left bar in the tone colour (`div`).
+- Each toast: `pointerEvents:"auto"`, `colors.popover` surface, `borderWidth:1`,
+  `borderColor:colors.border`, `borderRadius:radius.md`,
+  `boxShadow:elevation.md`, `padding:space.lg`, `flexDirection:"row"`,
+  `gap:space.lg`, plus a 3px left bar in the tone colour (`div`).
 - Content: title `sm/semibold/foreground`; description `xs/mutedForeground`;
   dismiss `IconButton` (`aria-label:"Dismiss"`, `testId:"toast-dismiss"`).
 - Tone glyphs: info `"i"`, success `"✓"`, warning `"!"`, danger `"✕"` in the
@@ -168,7 +168,7 @@ Implementation notes, in order:
 5. The viewport itself does not block clicks on the page behind it: a button
    outside the toast area still receives a click at its centre
    (`pointerEvents:"none"` proven).
-6. Both themes: toast background equals the theme `color.popover`.
+6. Both themes: toast background equals the theme `colors.popover`.
 
 ## 6. Inline validation — files
 
@@ -215,14 +215,14 @@ export const Field;
 export const FieldInput: FC<InputProps & { invalid?: boolean }>;
 ```
 
-- `Field` lays out label → control → description/error, gap `space(1)`.
-- `FieldLabel` renders `required` as a trailing `"*"` in `color.destructive`
+- `Field` lays out label → control → description/error, gap `space.xs`.
+- `FieldLabel` renders `required` as a trailing `"*"` in `colors.destructive`
   and keeps the accessible name clean by putting `required` in
   `aria-description` rather than the label text.
-- `FieldError` is `role:"alert"`, `fontSize:xs`, `color.destructive`, and
+- `FieldError` is `role:"alert"`, `fontSize:xs`, `colors.destructive`, and
   replaces the description slot while present (one message, not both).
 - `FieldInput` passes `aria-description={error ?? description}` to the GPUix
-  `<input>` and paints `borderColor:color.destructive` when `invalid`.
+  `<input>` and paints `borderColor:colors.destructive` when `invalid`.
   **Documented limitation:** GPUix has no `aria-describedby`, so the association
   is a description, not an id reference.
 - `Field` does not own the value or run validation automatically. The consumer

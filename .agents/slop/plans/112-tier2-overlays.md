@@ -53,17 +53,17 @@ export interface DialogContentProps extends Props {
 }
 export const DialogContent: FC<DialogContentProps>;
 
-export const DialogHeader: FC<Props>;   // column, gap space(1)
+export const DialogHeader: FC<Props>;   // column, gap space.xs
 export const DialogTitle: FC<Props>;    // GPUix DialogTitle + heading style
 export const DialogDescription: FC<Props>; // muted, sm
-export const DialogFooter: FC<Props>;   // row, justify flex-end, gap space(2)
+export const DialogFooter: FC<Props>;   // row, justify flex-end, gap space.md
 ```
 
 `DialogContent` composes, in this exact order:
 
 ```tsx
 <DialogPortal>
-  <DialogBackdrop style={{ backgroundColor: tokens.color.overlay }} />
+  <DialogBackdrop style={{ backgroundColor: tokens.colors.overlay }} />
   <DialogPopup
     aria-label={label}
     initialFocus={initialFocus}
@@ -76,14 +76,14 @@ export const DialogFooter: FC<Props>;   // row, justify flex-end, gap space(2)
 </DialogPortal>
 ```
 
-Surface style: `display:"flex",flexDirection:"column",gap:space(3)`,
-`backgroundColor:color.popover`, `borderRadius:radius.lg`,
-`borderWidth:1,borderColor:color.border`, `boxShadow:elevation.dialog`,
-`padding:space(5)`, `width:"100%"`, `maxWidth:{sm:360,md:480,lg:640}`,
+Surface style: `display:"flex",flexDirection:"column",gap:space.lg`,
+`backgroundColor:colors.popover`, `borderRadius:radius.lg`,
+`borderWidth:1,borderColor:colors.border`, `boxShadow:elevation.lg`,
+`padding:space.xl`, `width:"100%"`, `maxWidth:{sm:360,md:480,lg:640}`,
 `pointerEvents:"auto"`, `keyboardFocusDim:false`.
 
-Close button: 24×24, `position:"absolute",top:space(3),right:space(3)`,
-`borderRadius:radius.sm`, hover `backgroundColor:color.accent`. Its glyph
+Close button: 24×24, `position:"absolute",top:space.lg,right:space.lg`,
+`borderRadius:radius.sm`, hover `backgroundColor:colors.accent`. Its glyph
 is a `text` `"×"` for v1 (no icon set dependency yet; note it in the docs and
 swap to `Icon` when `packages/icons` lands).
 
@@ -147,9 +147,9 @@ export const PopoverContent: FC<PopoverContentProps>;
   focus to what was pressed; restoring would steal it);
 - `onKeyDown`: `Escape` is handled by `DismissableLayer`; `Tab` closes the
   popover and lets focus move (do not `preventDefault`).
-- Surface style identical to the dialog minus the shadow: `color.popover`,
-  `borderRadius:radius.md`, `borderWidth:1`, `borderColor:color.border`,
-  `boxShadow:elevation.popover`, `padding:space(3)`, `minWidth:200`.
+- Surface style identical to the dialog minus the shadow: `colors.popover`,
+  `borderRadius:radius.md`, `borderWidth:1`, `borderColor:colors.border`,
+  `boxShadow:elevation.md`, `padding:space.lg`, `minWidth:200`.
 
 `PopoverTrigger` uses `buttonProps()` from `@gpuix/react` and sets
 `aria-expanded`, `aria-haspopup:"dialog"`, `tabIndex:0`. Clicking while open
@@ -170,15 +170,15 @@ this in Select with a one-tick flag — copy that technique, it is proven).
    something".
 6. After close, focus returns to the trigger.
 7. `label` appears as `aria-label` in the tree JSON.
-8. Both themes: content background equals the theme's `color.popover`.
+8. Both themes: content background equals the theme's `colors.popover`.
 
 `src/confirm-dialog.test.tsx`
 1. Opens with focus on Cancel (`getFocusedElementId()` equals the cancel id).
 2. Enter immediately → `onConfirm` not called, `onOpenChange(false)` called.
 3. Click Confirm → `onConfirm` called exactly once.
 4. `loading` → confirm is disabled (click does nothing) and Escape does not close.
-5. `tone="danger"` → confirm's style colour equals `color.destructiveForeground` on a
-   `color.destructive` fill.
+5. `tone="danger"` → confirm's style colour equals `colors.destructiveForeground` on a
+   `colors.destructive` fill.
 
 `src/popover.test.tsx`
 1. Click trigger → content appears and is positioned below it

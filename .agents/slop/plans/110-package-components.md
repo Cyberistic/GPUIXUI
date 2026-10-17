@@ -156,67 +156,105 @@ export default defineConfig({
 ## 6. The token contract
 
 `src/internal/theme.ts` is the **only** file in the package allowed to import
-`@gpuixui/tokens`. Every component calls `useTokens()` and the derived helpers
-below. This is the whole point: when the token surface changes, one file changes.
+`@gpuixui/tokens`. It re-exports the token package's own helpers plus a small
+tone helper, so components never touch raw token fields twice and a token
+change lands in one file.
 
-Role names follow the shadcn/ui semantic vocabulary (the DX reference the
-mission names), adapted where GPUix paints through JS style objects rather than
-CSS variables. `foreground` replaces `text`, `card`/`popover` replace a single
-`surface`, and three interaction values are explicit because a `StyleDesc` state
-style needs a concrete colour.
-
-| Role | Used for |
-| ---- | -------- |
-| `color.background` / `foreground` | page base and body copy |
-| `color.card` / `cardForeground` | card and panel surfaces |
-| `color.popover` / `popoverForeground` | dialogs, popovers, menus, toasts |
-| `color.primary` / `primaryForeground` / `primaryHover` | primary actions, active page |
-| `color.secondary` / `secondaryForeground` | secondary actions |
-| `color.muted` / `mutedForeground` | subtle fills (badge, avatar, skeleton), meta copy |
-| `color.accent` / `accentForeground` | hover and keyboard-active rows |
-| `color.destructive` / `destructiveForeground` / `destructiveSoft` | destructive actions, errors |
-| `color.success` / `successSoft` | success alerts, toasts |
-| `color.warning` / `warningSoft` | warnings |
-| `color.info` / `infoSoft` | informational alerts |
-| `color.border` / `borderStrong` | separators, outlines, card edges |
-| `color.input` | input borders |
-| `color.ring` | focus outline |
-| `color.overlay` | dialog backdrop (an rgba colour) |
-| `color.selection` | text-selection wash |
-| `space(step: 1..8)` | 4px-based spacing scale (4, 8, 12, 16, 20, 24, 32, 40) |
-| `radius.sm/md/lg/full` | 4 / 6 / 10 / 999 |
-| `font.size.xs/sm/md/lg/xl` | 12 / 13 / 15 / 18 / 22 |
-| `font.weight.normal/medium/semibold/bold` | 400 / 500 / 600 / 700 |
-| `font.lineHeight.tight/normal` | 1.25 / 1.5 multipliers |
-| `control(size)` | 28 / 32 / 38 for `"sm" | "md" | "lg"` |
-| `elevation.popover/dialog` | `BoxShadow` values (GPUix native type) |
-| `motion.fast/normal` | seconds, for `MotionTransition.duration` |
-
-`theme.ts` exports:
+Verified surface of `@gpuixui/tokens` (read `packages/tokens/src/*.ts` at
+implementation time; it is another workstream's package and may have moved on):
 
 ```ts
-export interface ComponentTokens {
-  readonly appearance: "light" | "dark";
-  readonly color: { /* the roles above, all strings */ };
-  readonly space: (step: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8) => number;
-  readonly radius: { readonly sm: number; readonly md: number; readonly lg: number; readonly full: number };
-  readonly font: {
-    readonly size: { readonly xs: number; readonly sm: number; readonly md: number; readonly lg: number; readonly xl: number };
-    readonly weight: { readonly normal: number; readonly medium: number; readonly semibold: number; readonly bold: number };
-    readonly lineHeight: { readonly tight: number; readonly normal: number };
-  };
-  readonly control: (size: "sm" | "md" | "lg") => number;
-  readonly elevation: {
-    readonly popover: BoxShadow | readonly BoxShadow[];
-    readonly dialog: BoxShadow | readonly BoxShadow[];
-  };
-  readonly motion: { readonly fast: number; readonly normal: number };
+// from "@gpuixui/tokens"
+interface Theme {
+  readonly name: string;
+  readonly mode: "light" | "dark";
+  readonly colors: ThemeColors;      // semantic roles, see below
+  readonly typography: Typography;   // sans, mono + roles display/h1/h2/h3/body/bodyStrong/label/caption/code/codeBlock
+  readonly spacing: Spacing;         // "2xs" 2 · xs 4 · sm 6 · md 8 · lg 12 · xl 16 · 2xl 24 · 3xl 32 · 4xl 48 · 5xl 64
+  readonly radius: Radius;           // none 0 · sm 4 · md 6 · lg 8 · xl 12 · full 9999
+  readonly density: Density;         // name, controlHeight{sm,md,lg}, controlPaddingX{sm,md,lg}, rowHeight
+  readonly elevation: Elevation;    // sm / md / lg / overlay, each a BoxShadow[]
+  readonly borderWidth: { thin: 1; strong: 2 };
+  readonly iconSize: { xs:12; sm:14; md:16; lg:20; xl:24 };
 }
+// helpers
+textStyle(theme, role): { fontSize; lineHeight; fontWeight; fontFamily }
+controlHeight(theme, size): number
+controlPaddingX(theme, size): number
 
-export function useTokens(): ComponentTokens;
-/** `outlineWidth/Color/Offset` for a keyboard-focus look. */
-export function focusRing(tokens: ComponentTokens): StyleDesc;
+// from "@gpuixui/tokens/react"
+ThemeProvider({ theme, children }): ReactElement
+useTheme(): Theme      // light theme when no provider
 ```
+
+Semantic colour roles (`theme.colors`): `background`, `foreground`, `card`,
+`cardForeground`, `popover`, `popoverForeground`, `primary`, `primaryForeground`,
+`secondary`, `secondaryForeground`, `muted`, `mutedForeground`, `accent`,
+`accentForeground`, `destructive`, `destructiveForeground`, `success`,
+`successForeground`, `warning`, `warningForeground`, `border`, `borderStrong`,
+`input`, `inputForeground`, `placeholder`, `ring`, `selection`, `overlay`,
+`hover`, `active`, `selected`, `selectedForeground`, `disabled`,
+`disabledForeground`, `skeleton`, `scrollbar`, `shadow`.
+
+### The adapter's own additions
+
+Three things components need that tokens does not ship. Each is small, tested,
+and documented as an interlock (see below):
+
+```ts
+/** `#RRGGBB` → `#RRGGBBAA`. A colour the parser does not recognise is returned
+ *  unchanged, so a non-hex token renders solid rather than transparent. */
+export const withAlpha: (color: string, alpha: "12" | "30" | "4D" | "80") => string;
+
+export type Tone = "info" | "success" | "warning" | "danger";
+export interface ToneStyle { readonly fg: string; readonly bg: string; readonly border: string }
+/** The soft-fill status palette used by Alert, Badge and Toast. */
+export const tone: (theme: Theme, tone: Tone) => ToneStyle;
+
+/** `outlineWidth/Color/Offset` for a keyboard-focus look, from `colors.ring`. */
+export const focusRing: (theme: Theme) => StyleDesc;
+```
+
+`tone` is defined as: `bg = withAlpha(colors[c], "12")`, `border =
+withAlpha(colors[c], "4D")`, `fg = colors[c]` for `success` and `danger`, and
+`fg = colors.accentForeground` / `bg = colors.accent` for `info` (there is no
+`info` role). `warning` in **light** mode uses `colors.warningForeground`,
+because the light `warning` role (`amber[400]`) does not reach readable contrast
+on a pale tint; dark mode uses `colors.warning`. Every branch is covered by a
+test in both modes.
+
+**Interlocks to record in `TODO.md`** (tokens owns them; this package must not
+edit them):
+
+- a soft tone pair per status (`info`, `infoSoft`, `successSoft`,
+  `warningSoft`, `destructiveSoft`, plus their readable foregrounds) so `tone`
+  can be deleted;
+- an `alpha(color, amount)` helper so `withAlpha` can be deleted;
+- an `info` status role so Alert/Badge/Toast stop borrowing `accent`.
+
+**Literal colours are still forbidden in every component file.** The adapter is
+the only place a hex literal may appear, and only inside `withAlpha`'s parsing.
+
+### Shorthand used by plans 111–116
+
+The component plans write styles compactly. Expand exactly like this:
+
+| Shorthand | Real form |
+| --------- | --------- |
+| `space.xs` `space.sm` `space.md` `space.lg` `space.xl` `space."2xl"` `space."3xl"` | `theme.spacing.xs` … `theme.spacing["3xl"]` (4, 6, 8, 12, 16, 24, 32) |
+| `radius.sm/md/lg/xl/full` | `theme.radius.sm/md/lg/xl/full` (4, 6, 8, 12, 9999) |
+| `colors.<role>` | `theme.colors.<role>` |
+| `tone(x).fg/.bg/.border` | `tone(theme, x)` from §6 |
+| `elevation.sm/md/lg` | `theme.elevation.sm/md/lg` (a `BoxShadow[]`) |
+| `controlHeight(theme, "md")` | the tokens helper of the same name |
+| `type.caption` `type.label` `type.body` `type.h3` | `textStyle(theme, "caption" \| "label" \| "body" \| "h3")` |
+| `font.size.xs/sm/md/lg/xl` | the `fontSize` of `type.caption/label/body/h3/display` |
+| `font.weight.medium/semibold/bold` | the `fontWeight` of the matching role, or a literal 500/600/700 |
+| `borderWidth:1` | `theme.borderWidth.thin`; `2` → `theme.borderWidth.strong` |
+
+Prefer `textStyle(theme, role)` wholesale over picking `fontSize` and
+`fontWeight` separately: it also sets the family and line height, which is what
+makes prose and code roles render correctly.
 
 **Interlock rule.** If `packages/tokens` does not yet export a role: read its
 `src/index.ts`, map the nearest equivalent in `theme.ts`, and add a line to the

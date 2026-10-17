@@ -85,16 +85,16 @@ export interface MenuCheckboxItemProps extends MenuItemProps {
 export const MenuItem, MenuCheckboxItem, MenuSeparator, MenuLabel, MenuGroup;
 ```
 
-Row: height `control("sm")`, `paddingX:space(2)`, radius `sm`,
-`flexDirection:"row"`, `alignItems:"center"`, `gap:space(2)`, fontSize `sm`.
-States via `StateStyle`: hover `backgroundColor:color.surfaceHover`; active
+Row: height `controlHeight(theme, "sm")`, `paddingX:space.md`, radius `sm`,
+`flexDirection:"row"`, `alignItems:"center"`, `gap:space.md`, fontSize `sm`.
+States via `StateStyle`: hover `backgroundColor:colors.surfaceHover`; active
 (highlighted by keyboard) same as hover **plus** a 2px left inset bar in
-`color.accent` (`boxShadow` inset is not needed — a 2px `div` is simpler);
-disabled `opacity:0.5`; destructive `color:color.destructive` and hover
-`backgroundColor:color.destructiveSoft`.
-`MenuSeparator`: 1px `color.border`, `marginY:space(1)`.
-`MenuLabel`: fontSize `xs`, `color:textFaint`, `paddingX:space(2)`,
-`paddingY:space(1)`, `userSelect:"none"`.
+`colors.accent` (`boxShadow` inset is not needed — a 2px `div` is simpler);
+disabled `opacity:0.5`; destructive `color:colors.destructive` and hover
+`backgroundColor:`tone("danger").bg``.
+`MenuSeparator`: 1px `colors.border`, `marginY:space.xs`.
+`MenuLabel`: fontSize `xs`, `color:colors.mutedForeground`, `paddingX:space.md`,
+`paddingY:space.xs`, `userSelect:"none"`.
 `MenuCheckboxItem` shows a `text` `"✓"` when checked (no icon dependency yet),
 `"aria-selected": checked`, and `onSelect` toggles.
 
@@ -116,9 +116,9 @@ export { MenuItem as DropdownMenuItem, MenuCheckboxItem as DropdownMenuCheckboxI
 
 Content: `DismissableLayer` → `FloatingLayer` with `autoFocus`, `tabIndex={-1}`,
 `role:"menu"`, `keyboardFocusDim:false`, `minWidth:180`,
-`onMouseDownOutside` closes without stealing focus, surface = `color.surface`,
-`borderRadius:radius.md`, `borderWidth:1`, `borderColor:color.border`,
-`boxShadow:elevation.popover`, `padding:space(1)`.
+`onMouseDownOutside` closes without stealing focus, surface = `colors.surface`,
+`borderRadius:radius.md`, `borderWidth:1`, `borderColor:colors.border`,
+`boxShadow:elevation.md`, `padding:space.xs`.
 Keyboard on content: `ArrowDown/ArrowUp` → `move`; `Home/End`; `Enter/Space` →
 activate active item; `Escape` handled by the layer; `Tab` closes the menu and
 lets focus move. After `move`, call `renderer.focusElement(itemId)` so focus and
@@ -201,7 +201,7 @@ export const CommandMenu;
 4. Clicking an item fires it; clicking a disabled item does nothing.
 5. `Escape` closes; outside press closes; pressing the open trigger closes
    (does not flicker open again).
-6. A destructive item's text colour equals `color.destructive`; a checkbox item
+6. A destructive item's text colour equals `colors.destructive`; a checkbox item
    shows `✓` only when checked and calls `onCheckedChange(true/false)`.
 7. Separator/label render and are not focusable (not in the tab order).
 8. Both themes: content background equals the theme surface.

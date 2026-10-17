@@ -42,11 +42,11 @@ A11y/behaviour:
 - `TabsContent` renders only when `value === active`. `role:"tabpanel"`;
   GPUix has no `aria-controls`/`aria-labelledby`, so the panel gets
   `aria-label` from the trigger's value (`"aria-label": value`) — documented.
-- Indicator: the active trigger gets `backgroundColor:color.surface`,
-  `color:color.text`, radius `sm`; inactive `color:textMuted`; the list has
-  `backgroundColor:color.background`, `borderWidth:1`, `borderColor:color.border`,
-  `borderRadius:radius.md`, `padding:space(1)`, `gap:space(1)`.
-  Trigger height = `tokens.control("md")`, paddingX `space(3)`, fontSize `sm`.
+- Indicator: the active trigger gets `backgroundColor:colors.surface`,
+  `color:colors.foreground`, radius `sm`; inactive `color:colors.mutedForeground`; the list has
+  `backgroundColor:colors.background`, `borderWidth:1`, `borderColor:colors.border`,
+  `borderRadius:radius.md`, `padding:space.xs`, `gap:space.xs`.
+  Trigger height = `tokens.controlHeight(theme, "md")`, paddingX `space.lg`, fontSize `sm`.
 
 Logic: `src/tabs/logic.ts` is only the activation rule; the index math stays in
 `collection.ts`. Test the activation rule there, the rest in the component test.
@@ -124,8 +124,8 @@ guarded bug ("opening a second section did not close the first in single mode").
 open; `aria-expanded` on each trigger; disabled item does not open; content
 unmounts when closed; controlled mode.
 
-Styling: items separated by `borderBottomWidth:1,borderColor:color.border`
-(last one excepted); trigger is a full-width button, height `control("lg")`,
+Styling: items separated by `borderBottomWidth:1,borderColor:colors.border`
+(last one excepted); trigger is a full-width button, height `controlHeight(theme, "lg")`,
 `justifyContent:"space-between"`, a `text` chevron `"⌄"` that rotates is **not**
 possible without transform support — use `"⌄"` / `"⌃"` glyph swap (GPUix
 `StyleDesc` has no `transform`; evidence: `packages/native/js/host.ts:121-237`).
@@ -142,7 +142,7 @@ export interface BreadcrumbLinkProps extends Props { onSelect?: () => void; curr
 
 - `BreadcrumbLink` behaves as a button (`buttonProps`), `onSelect`, `tabIndex:0`;
   `current` renders as plain text (`BreadcrumbPage` is the same thing without
-  interaction). Separator default is a `text` `"/"` in `color.textFaint`.
+  interaction). Separator default is a `text` `"/"` in `colors.mutedForeground`.
 - `Breadcrumb` with `maxItems` collapses the middle. Logic in
   `src/breadcrumb/logic.ts`:
 
@@ -212,8 +212,8 @@ page is a no-op; ellipsis is not a button; keyboard Tab reaches only enabled
 buttons.
 
 Styling: 28–32px square buttons, radius `sm`, active page
-`backgroundColor:color.primary` + `color:color.onPrimary`, others
-`color:textMuted` with `hover.backgroundColor:color.surfaceHover`.
+`backgroundColor:colors.primary` + `color:colors.onPrimary`, others
+`color:colors.mutedForeground` with `hover.backgroundColor:colors.surfaceHover`.
 
 ---
 
