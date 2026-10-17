@@ -17,6 +17,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import type { GpuixRenderer } from "@gpuix/native";
+import { AutomationError } from "@gpuix/native/automation";
 import type { App, Locator } from "@gpuix/native/automation";
 import { Smoke } from "@gpuixui/testing";
 import { testIdOf } from "./focus.js";
@@ -57,6 +58,19 @@ const idOf = (app: App, testId: string): Promise<number> =>
 
 const at = (app: App, testId: string): Locator => app.getByTestId(testId);
 
+/**
+ * The protocol's answer for an element that exists but never painted.
+ *
+ * A retained-but-unpainted node has no bounds (`<canvas>` is the measured
+ * case), and the window's own `bounds` reports that as `NotFound` rather than
+ * as a painted box. `SmokeHost.bounds` models "not painted" as `null`, so the
+ * adapter converts exactly that answer and leaves every other failure typed.
+ */
+const isUnpainted = (cause: unknown): boolean =>
+  cause instanceof AutomationError &&
+  cause.code === "NotFound" &&
+  cause.message === "Element has no painted bounds";
+
 /** A `Smoke.AsyncSmokeHost` over a connected automation `App`. */
 export const createHost = (
   app: App,
@@ -80,7 +94,20 @@ export const createHost = (
       );
       return yield* Option.match(Arr.head(nodes), {
         onNone: () => Effect.succeed(null),
-        onSome: () => verb(`bounds ${testId}`, () => at(app, testId).bounds()),
+        onSome: () =>
+          Effect.tryPromise({
+            try: () => at(app, testId).bounds(),
+            catch: (cause) => cause,
+          }).pipe(
+            Effect.catchIf(isUnpainted, () => Effect.succeed(null)),
+            Effect.mapError(
+              (cause) =>
+                new Smoke.SmokeHostError({
+                  verb: `bounds ${testId}`,
+                  cause,
+                }),
+            ),
+          ),
       });
     }),
   focused: () =>

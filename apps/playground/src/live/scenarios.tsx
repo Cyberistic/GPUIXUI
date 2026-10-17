@@ -32,6 +32,7 @@ import { scrollScenario } from "../scenarios/scroll.js";
 import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
+import { messageScrollerScenario } from "../scenarios/message-scroller.js";
 import { scenarios } from "../scenarios/index.js";
 
 /** Window size the runner opens. A check compares the shell against it. */
@@ -1355,6 +1356,204 @@ const highlights: LiveScenario = {
     }),
 };
 
+const scroller: LiveScenario = {
+  id: "live-scroller",
+  title: "Live scroller: pin, no-yank and jump in a window",
+  capability: "scroller",
+  view: messageScrollerScenario.view,
+  ready: "ms-count",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const anchor = (label: string) =>
+        Effect.gen(function* () {
+          return yield* ctx.expectSome(
+            label,
+            Option.fromNullishOr(yield* ctx.host.listScrollTop("ms-list")),
+          );
+        });
+      const painted = (message: number) =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.contains(lines, `message ${message}`),
+        );
+
+      // 1. A real window opens the chat at its latest message.
+      const opening = yield* anchor("the live list reports an anchor");
+      yield* ctx.expectEqual(
+        "the live scroller opens at the max scroll",
+        `${opening[0]},${opening[1]}`,
+        "50,0",
+      );
+      yield* ctx.expectEqual(
+        "the live scroller opens pinned",
+        yield* textOf(ctx, "ms-pin"),
+        "true",
+      );
+      yield* ctx.expectEqual(
+        "the live tail is painted",
+        yield* painted(60),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live affordance is absent while pinned",
+        (yield* ctx.host.bounds("ms-jump")) === null,
+        true,
+      );
+
+      // 2. A pinned append follows through the automation input path.
+      yield* ctx.host.click("ms-append");
+      yield* settle;
+      const appended = yield* anchor(
+        "the appended live list reports an anchor",
+      );
+      yield* ctx.expectEqual(
+        "the live append reached React",
+        yield* textOf(ctx, "ms-count"),
+        "61",
+      );
+      yield* ctx.expectEqual(
+        "the live pinned append follows",
+        `${appended[0]},${appended[1]}`,
+        "51,0",
+      );
+      yield* ctx.expectEqual(
+        "the live appended row is painted",
+        yield* painted(61),
+        true,
+      );
+
+      // 3. A real wheel unpins.
+      yield* ctx.host.wheel("ms-viewport", 0, 400);
+      yield* settle;
+      const scrolled = yield* anchor(
+        "the scrolled live list reports an anchor",
+      );
+      yield* ctx.expectEqual(
+        "the live wheel unpins the reader",
+        yield* textOf(ctx, "ms-pin"),
+        "false",
+      );
+      yield* ctx.expectEqual(
+        "the live anchor records the wheel",
+        `${scrolled[0]},${scrolled[1]}`,
+        "37,20",
+      );
+      yield* ctx.expectEqual(
+        "the live affordance is painted while unpinned",
+        (yield* ctx.host.bounds("ms-jump")) === null,
+        false,
+      );
+
+      // 4. An append while unpinned must not move the reader.
+      yield* ctx.host.click("ms-append");
+      yield* settle;
+      const held = yield* anchor("the unpinned live list reports an anchor");
+      yield* ctx.expectEqual(
+        "the live unpinned append leaves the anchor untouched",
+        `${held[0]},${held[1]}`,
+        "37,20",
+      );
+      yield* ctx.expectEqual(
+        "the live unpinned append increments unread",
+        yield* textOf(ctx, "ms-unread"),
+        "1",
+      );
+      yield* ctx.expectEqual(
+        "the live new tail is not painted",
+        (yield* ctx.host.bounds("ms-row-62")) === null,
+        true,
+      );
+
+      // 5. Jump to latest re-pins in a real window.
+      yield* ctx.host.click("ms-jump");
+      yield* settle;
+      const jumped = yield* anchor("the jumped live list reports an anchor");
+      yield* ctx.expectEqual(
+        "the live jump re-pins",
+        yield* textOf(ctx, "ms-pin"),
+        "true",
+      );
+      yield* ctx.expectEqual(
+        "the live jump clears unread",
+        yield* textOf(ctx, "ms-unread"),
+        "0",
+      );
+      yield* ctx.expectEqual(
+        "the live jump lands on the new max scroll",
+        `${jumped[0]},${jumped[1]}`,
+        "52,0",
+      );
+      yield* ctx.expectEqual(
+        "the live jumped tail is painted",
+        yield* painted(62),
+        true,
+      );
+
+      // 6. A streamed last row keeps the tail on the viewport bottom.
+      yield* ctx.host.click("ms-stream");
+      yield* settle;
+      yield* ctx.host.click("ms-stream");
+      yield* settle;
+      const streamed = yield* anchor(
+        "the streamed live list reports an anchor",
+      );
+      yield* ctx.expectEqual(
+        "the live streamed row grew",
+        yield* textOf(ctx, "ms-last-height"),
+        "50",
+      );
+      yield* ctx.expectEqual(
+        "the live stream moves the anchor with the row",
+        `${streamed[0]},${streamed[1]}`,
+        "52,20",
+      );
+      const tail = yield* boxOf(ctx, "ms-row-62");
+      const viewport = yield* boxOf(ctx, "ms-viewport");
+      yield* ctx.expectNear(
+        "the live streamed tail stays on the viewport bottom",
+        tail.y + tail.height,
+        viewport.y + viewport.height,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live stream stays pinned",
+        yield* textOf(ctx, "ms-pin"),
+        "true",
+      );
+
+      // 7. A short history paints everything and offers nothing.
+      yield* ctx.host.click("ms-reset");
+      yield* settle;
+      const short = yield* anchor("the short live history reports an anchor");
+      yield* ctx.expectEqual(
+        "the short live history reached React",
+        yield* textOf(ctx, "ms-count"),
+        "3",
+      );
+      yield* ctx.expectEqual(
+        "the short live history has nowhere to scroll",
+        `${short[0]},${short[1]}`,
+        "0,0",
+      );
+      yield* ctx.expectEqual(
+        "the short live history is pinned",
+        yield* textOf(ctx, "ms-pin"),
+        "true",
+      );
+      yield* ctx.expectEqual(
+        "every short live row is painted",
+        yield* painted(3),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "a short live history offers no jump",
+        (yield* ctx.host.bounds("ms-jump")) === null,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${scroller.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -1372,4 +1571,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   table,
   highlights,
   preview,
+  scroller,
 ];

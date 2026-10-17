@@ -69,10 +69,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 The suite is **60/60 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **15/15 green
+(`nub run --filter playground smoke:live`, plan `189`) and is **16/16 green
 here**: `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
-`selection`, `menu`, `docking`, `float`, `components`, `table`, `search` and
-`preview` are confirmed there too
+`selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
+`preview` and `scroller` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its

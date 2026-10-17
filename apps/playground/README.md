@@ -606,7 +606,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `15/15`.
+exact, and focus/Escape and the close button hold. The live suite is `16/16`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -770,7 +770,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 59-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 60-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -793,6 +793,7 @@ live pass is citable evidence rather than a second log format.
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, the selection survives, and `getListScrollTop` reports the logical anchor exactly — `[0, 0, h]` at rest, `[120, 0, h]` after `scrollToItem(120)` |
 | `live-preview` | the **first live hover** scenario: a real mouse move over the trigger opens the card (`open=true`), the pointer reaches the card body and the fire-time presence check keeps it open past the 200 ms grace close (`closes=0`), a control inside the hover-opened card clicks, leaving closes through the last hovered child (`reason=action`), a re-enter inside the delay cancels, and a final leave closes from the trigger (`closes=2`). The card enter and trigger leave arrive in **one batch** live, so the `prev`/`last` readout collapses them — the append-only log keeps both |
 | `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
+| `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).
@@ -1007,16 +1008,18 @@ narrower. Each deviation is deliberate and measured:
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history.
-  The **real-window** suite (`smoke:live`) is 15/15 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 16/16 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
-  with its exact anchor, a painted **find** probe and a **live hover** card — including the modal's
+  with its exact anchor, a painted **find** probe, a **live hover** card and
+  the **message scroller** — including the modal's
   Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
   with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
   frame (plan `192`), a pointer-placed menu in a scrolled container (plan
   `193`), a tab torn out into a floating panel (plan `195`), highlights plus
-  `getListScrollTop` read from the renderer (plan `197`), and a live hover card
-  with its grace close (plan `199`).
+  `getListScrollTop` read from the renderer (plan `197`), a live hover card
+  with its grace close (plan `199`), and the scroller's pin/no-yank/jump/stream
+  path through the automation protocol (plan `301`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
