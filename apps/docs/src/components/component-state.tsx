@@ -34,12 +34,6 @@ export function ComponentState({ slug }: { slug: string }) {
       <dd>
         <code>{record.packageName}</code>
       </dd>
-      {record.dependencies.length > 0 ? (
-        <>
-          <dt className="text-fd-muted-foreground">Dependencies</dt>
-          <dd>{record.dependencies.join(", ")}</dd>
-        </>
-      ) : null}
       {record.limitations.length > 0 ? (
         <>
           <dt className="text-fd-muted-foreground">Limitations</dt>

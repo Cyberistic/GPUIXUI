@@ -113,6 +113,8 @@ description: Triggers an action; the primary interactive control.
 
 ## Accessibility and limitations
 
+## Dependencies
+
 ## Source
 
 ## Related
@@ -153,6 +155,24 @@ deleting it, so a reader can tell the difference between "not documented" and
 `<RelatedComponents>` links a related record only when it is no longer
 `planned`; a planned record renders as a plain "(planned)" label, because a link
 would 404. `src/components/related-components.test.tsx` guards that rule.
+
+## Dependencies
+
+The `Dependencies` section states what the component needs, and it is not
+hand-written: it renders `<ComponentDependencies slug="…" />`, which reads the
+record's `dependencies`. That list is **derived from the component's real entry
+file** by `src/lib/source-imports.ts` (plan 428):
+
+- the entry file's non-relative module imports are the modules (React and
+  `@gpuix/react` are the peer packages every component has, so the block states
+  them once instead of listing them 42 times);
+- a relative import that resolves to another delivered record's `sourcePath` is
+  recorded as that record's slug and rendered as a **Composes** link; a relative
+  import into `internal/`, `core/`, `menu/`, `toast/` or `combobox/` is a private
+  helper and is not a dependency;
+- `src/component-meta/dependencies.test.ts` re-derives every record and fails
+  with the expected list when an import and the docs disagree. Fix it by copying
+  the expected list into the record; never loosen the test.
 
 Prop tables use `fumadocs-typescript`'s remark plugin: write
 `<auto-type-table path="./relative/path.ts" name="ButtonProps" />` in the MDX

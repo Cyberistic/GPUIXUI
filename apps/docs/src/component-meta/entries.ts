@@ -94,6 +94,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Text.tsx",
+      dependencies: [],
       related: ["label", "icon"],
       limitations: [
         "No heading semantics: the role is visual only.",
@@ -107,6 +108,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "yes",
     packageName: "@gpuixui/icons",
     sourcePath: "packages/icons/src/Icon.tsx",
+    dependencies: [],
     related: ["text", "button"],
     limitations: [
       "Monochrome only: no two-tone, duotone or brand marks.",
@@ -122,6 +124,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Separator.tsx",
+      dependencies: ["text"],
       related: ["spacer", "stack"],
       limitations: [
         "No dashed or dotted style: the runtime paints solid borders.",
@@ -138,6 +141,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Separator.tsx",
+      dependencies: ["text"],
       related: ["stack", "separator"],
       limitations: [
         "A flexible spacer needs a parent with a definite main-axis size.",
@@ -154,6 +158,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Stack.tsx",
+      dependencies: [],
       related: ["box", "spacer"],
       limitations: [
         "No responsive breakpoints: the runtime has no media queries.",
@@ -170,6 +175,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Box.tsx",
+      dependencies: [],
       related: ["stack", "separator"],
       limitations: [
         "No role, tabIndex or event props: compose a host element for semantics.",
@@ -186,6 +192,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/ScrollArea.tsx",
+      dependencies: [],
       related: ["box", "stack"],
       limitations: [
         "No scrollbar tint or width control in GPUix 0.10.0.",
@@ -203,6 +210,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Button.tsx",
+      dependencies: ["spinner"],
       related: ["button-group"],
       limitations: [
         "No focusVisible: the focus ring cannot distinguish pointer from keyboard focus.",
@@ -220,6 +228,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/ButtonGroup.tsx",
+      dependencies: [],
       related: ["button", "separator"],
       limitations: [
         "No child reshaping: only the container is rounded and clipped.",
@@ -231,6 +240,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("label", "Labels", "1", "Names a control for sighted users.", {
     gpuix: "partial",
     sourcePath: "packages/primitives/src/components/Label.tsx",
+    dependencies: ["stack", "text"],
     related: ["text-input", "text"],
     limitations: [
       "No aria-labelledby: the visible label and the control name are separate nodes.",
@@ -246,6 +256,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Input.tsx",
+      dependencies: [],
       related: ["label", "text-area"],
       limitations: [
         "No type, maxLength, inputMode or pattern.",
@@ -263,6 +274,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/TextArea.tsx",
+      dependencies: ["text-input"],
       related: ["text-input", "label"],
       limitations: [
         "No onSubmit by design: with it, Enter would stop inserting newlines.",
@@ -279,6 +291,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Checkbox.tsx",
+      dependencies: ["@gpuixui/icons"],
       related: ["switch", "radio-group"],
       limitations: [
         "No aria-checked: state is announced through aria-valuetext.",
@@ -295,6 +308,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/RadioGroup.tsx",
+      dependencies: ["effect/Array", "effect/Option", "text"],
       related: ["checkbox", "select"],
       limitations: [
         "Options are data: no compound item or rich child content.",
@@ -306,7 +320,11 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("select", "Selects", "1", "Selects one value from a list.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Select.tsx",
-    dependencies: ["@gpuix/react/select"],
+    dependencies: [
+      "@gpuix/react/floating",
+      "@gpuix/react/select",
+      "effect/Array",
+    ],
     related: ["radio-group", "label"],
     limitations: [
       "Options are data: no groups, rich content or compound escape hatch.",
@@ -317,6 +335,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("switch", "Switches", "1", "Toggles a setting on or off.", {
     gpuix: "partial",
     sourcePath: "packages/primitives/src/components/Switch.tsx",
+    dependencies: [],
     related: ["checkbox", "radio-group"],
     limitations: [
       "No aria-checked and no on/off text inside the control.",
@@ -332,6 +351,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Progress.tsx",
+      dependencies: [],
       related: ["spinner", "skeleton"],
       limitations: [
         "No aria-valuenow: the value is announced through aria-valuetext.",
@@ -343,7 +363,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("tooltip", "Tooltips", "1", "Labels a control on hover or focus.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Tooltip.tsx",
-    dependencies: ["@gpuix/react/tooltip"],
+    dependencies: ["@gpuix/react/floating", "@gpuix/react/tooltip"],
     related: ["button", "select"],
     limitations: [
       "No aria-describedby: the tip is not an associated description.",
@@ -359,6 +379,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Skeleton.tsx",
+      dependencies: [],
       related: ["spinner", "progress"],
       limitations: [
         "No shimmer sweep: the runtime has no moving-gradient motion.",
@@ -375,6 +396,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Spinner.tsx",
+      dependencies: ["effect/Array"],
       related: ["progress", "skeleton"],
       limitations: [
         "Cannot rotate: the runtime's motion has no rotation.",
@@ -427,6 +449,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/card.tsx",
+      dependencies: ["@gpuix/react/floating", "effect"],
       related: ["list", "empty-state"],
       limitations: [
         "The surface clips overflow, so a scroller belongs in CardContent.",
@@ -438,6 +461,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("badge", "Badges", "2", "A compact status or count label.", {
     gpuix: "yes",
     sourcePath: "packages/components/src/badge.tsx",
+    dependencies: ["@gpuix/react/floating", "effect"],
     related: ["alert", "avatar"],
     limitations: [
       "No dismiss, icon slot or count animation.",
@@ -452,6 +476,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/avatar.tsx",
+      dependencies: ["@gpuix/react/floating", "effect"],
       related: ["badge", "list"],
       limitations: [
         "No image loading or error state; a missing file does not restore initials.",
@@ -468,6 +493,12 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/list.tsx",
+      dependencies: [
+        "@gpuix/react/floating",
+        "effect",
+        "effect/Array",
+        "effect/Option",
+      ],
       related: ["card", "badge"],
       limitations: [
         "Single selection only: no multi-select, type-ahead or reorder.",
@@ -491,6 +522,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/empty-state.tsx",
+      dependencies: ["@gpuix/react/floating"],
       related: ["card", "list"],
       limitations: [
         "The 360px wrap width is a component constant, not a token.",
@@ -507,6 +539,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/alert.tsx",
+      dependencies: ["@gpuix/react/floating"],
       related: ["toast", "badge"],
       limitations: [
         "The live-region announcement cannot be verified headlessly.",
@@ -523,6 +556,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/field.tsx",
+      dependencies: ["@gpuix/react/floating", "effect/Option"],
       related: ["alert", "toast"],
       limitations: [
         "No aria-describedby, aria-invalid or aria-required in 0.10.0.",
@@ -539,6 +573,12 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/toast/provider.tsx",
+      dependencies: [
+        "effect",
+        "effect/Fiber",
+        "effect/ManagedRuntime",
+        "effect/Stream",
+      ],
       related: ["alert", "dialog"],
       limitations: [
         "No aria-live or aria-atomic; the viewport is a status region.",
@@ -555,6 +595,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dialog.tsx",
+      dependencies: ["@gpuix/react/floating", "effect"],
       related: ["confirm-dialog", "popover"],
       limitations: [
         "No aria-modal or aria-labelledby; the name is the required label.",
@@ -571,6 +612,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/confirm-dialog.tsx",
+      dependencies: ["dialog", "effect"],
       related: ["dialog", "alert"],
       limitations: [
         "No aria-modal or aria-labelledby (same as Dialog).",
@@ -587,6 +629,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/popover.tsx",
+      dependencies: ["@gpuix/react/floating", "effect"],
       related: ["dialog", "dropdown-menu"],
       limitations: [
         "No aria-haspopup, aria-controls or aria-labelledby.",
@@ -603,6 +646,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dropdown-menu.tsx",
+      dependencies: ["@gpuix/react/floating"],
       related: ["context-menu", "command-menu"],
       limitations: [
         "No aria-haspopup, aria-controls or aria-checked in 0.10.0.",
@@ -619,6 +663,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/context-menu.tsx",
+      dependencies: ["@gpuix/react/floating"],
       related: ["dropdown-menu", "command-menu"],
       limitations: [
         "No onContextMenu: opens from onAuxClick + isRightClick.",
@@ -635,6 +680,12 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/command-menu.tsx",
+      dependencies: [
+        "dialog",
+        "effect/Array",
+        "effect/Option",
+        "effect/String",
+      ],
       related: ["dialog", "combobox"],
       limitations: [
         "No aria-activedescendant or aria-controls in 0.10.0.",
@@ -646,6 +697,12 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("tabs", "Tabs", "2", "Switches between sibling views in place.", {
     gpuix: "partial",
     sourcePath: "packages/components/src/tabs.tsx",
+    dependencies: [
+      "@gpuix/react/floating",
+      "effect",
+      "effect/Array",
+      "effect/Option",
+    ],
     related: ["accordion", "list"],
     limitations: [
       "No aria-orientation, aria-controls or aria-labelledby in 0.10.0.",
@@ -661,6 +718,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/accordion.tsx",
+      dependencies: ["@gpuix/react/floating", "effect/Array", "effect/Option"],
       related: ["collapsible", "tabs"],
       limitations: [
         "No aria-controls in 0.10.0; the relationship is positional.",
@@ -677,6 +735,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/collapsible.tsx",
+      dependencies: ["@gpuix/react/floating"],
       related: ["accordion", "card"],
       limitations: [
         "No aria-controls in 0.10.0.",
@@ -693,6 +752,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/breadcrumb.tsx",
+      dependencies: ["@gpuix/react/floating", "effect/Array"],
       related: ["tabs", "pagination"],
       limitations: [
         "No aria-current in 0.10.0; the current page is text plus colour.",
@@ -709,6 +769,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/pagination.tsx",
+      dependencies: ["@gpuix/react/floating", "effect/Array"],
       related: ["breadcrumb", "list"],
       limitations: [
         "No aria-current=page in 0.10.0; the current page uses aria-selected.",
@@ -725,6 +786,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/search-input.tsx",
+      dependencies: ["@gpuix/react/floating"],
       related: ["combobox", "inline-validation"],
       limitations: [
         "No debounce: debouncing is the consumer's policy.",
@@ -741,6 +803,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/combobox.tsx",
+      dependencies: ["effect/Array", "effect/Option"],
       related: ["search-input", "list"],
       limitations: [
         "No aria-activedescendant in 0.10.0.",
@@ -757,6 +820,13 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/date-picker.tsx",
+      dependencies: [
+        "effect",
+        "effect/Array",
+        "effect/DateTime",
+        "effect/Option",
+        "popover",
+      ],
       related: ["popover", "inline-validation"],
       limitations: [
         "No aria-current; today is marked by a border.",

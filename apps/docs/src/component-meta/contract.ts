@@ -18,6 +18,7 @@ const BASE_SECTIONS = [
   "Keyboard and focus",
   "Theming",
   "Accessibility and limitations",
+  "Dependencies",
   "Source",
   "Related",
 ] as const;

@@ -2,6 +2,7 @@ import { TypeTable } from "fumadocs-ui/components/type-table";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 import { ComponentIndex } from "./component-index";
+import { ComponentDependencies } from "./component-dependencies";
 import { ComponentState } from "./component-state";
 import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { NativePreview } from "./preview/native-preview";
@@ -17,6 +18,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TypeTable,
     ComponentIndex,
     ComponentState,
+    ComponentDependencies,
     RelatedComponents,
     NativePreview,
     IllustrativeApproximation,

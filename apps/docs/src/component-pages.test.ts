@@ -95,6 +95,7 @@ describe("component page template", () => {
         const missingBlocks = [
           `<ComponentState slug="${component.slug}"`,
           `<NativePreview slug="${component.slug}"`,
+          `<ComponentDependencies slug="${component.slug}"`,
         ].filter((block) => !body.includes(block));
         return [
           ...missing.map(

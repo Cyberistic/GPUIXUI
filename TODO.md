@@ -418,7 +418,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–426)
 
-`[x]` `[██████████]` 24/25
+`[x]` `[██████████]` 25/26
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -444,6 +444,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Document every delivered Tier 2 component (plan 425) — 22 pages with generated props, real source and their own examples; 42 component pages total
 `[x]` Prose truth pass over the non-component pages (plan 426) — `layouts`, `examples`, `getting-started` and `installation` now describe the landed packages and the real `basic-app`; `prose-truth.test.ts` fails on the old claims and guards future drift
 `[x]` First real pattern page (plan 427 Part D) — `patterns/settings-form.mdx` documents `examples/basic-app` with its real source, the verification table and `pattern-pages.test.ts`; Plans index and sidebar updated
+`[x]` Every component page states its dependencies (plan 428) — the list is derived from each record's real entry file, rendered by `<ComponentDependencies>`, and re-derived by `dependencies.test.ts`; all 42 pages carry the section
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed
@@ -454,7 +455,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[x]` `[███░░░░░░░]` 4/16
+`[x]` `[████░░░░░░]` 4/17
 
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
 `[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
@@ -468,6 +469,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[ ]` **Components/examples**: provide one real composed source for the confirmation flow (`ConfirmDialog` + a form + `Toast`) and one for the command palette (`CommandMenu` + `Dialog`) — plan 427's remaining pattern pages cannot land until a runnable composition exists; do not write a page from separate component examples and call it a pattern
 `[x]` Docs site: the first real component page — Buttons shows its source via `<include>`, generates its API table from `ButtonProps`, sits in `content/docs/components/meta.json` and the sitemap, and relates to a planned component without a 404 link (plan 422)
 `[ ]` Primitives: the `packages/primitives/docs/tooltip.mdx` usage snippet imports `Icon` from `@gpuixui/primitives`; it lives in `@gpuixui/icons`. The docs-site page was corrected during the truth pass (plan 424); fix the package page too
+`[ ]` **Primitives**: declare `effect` as a runtime dependency — `RadioGroup`, `Select` and `Spinner` import `effect/Array` / `effect/Option` at runtime, but `packages/primitives/package.json` lists `effect` only in `devDependencies`. Found while deriving the docs dependency lists (plan 428)
 `[x]` Canonical and OpenGraph URLs are absolute — resolved in the docs workstream by plan 418: `SITE_URL` defaults to the deploy domain (`docs.gpuixui.dev`) and is overridable with `VITE_SITE_URL`; no change to `packages/deploy` was needed
 `[ ]` Owner: the Alchemy deploy path (`nub run deploy:docs`) is unverified — it needs Cloudflare credentials and lives in `packages/deploy`. The stand-down path is verified locally (plan 410 §3)
 `[ ]` Repo: `README.md` still says "Phase A (audit and feasibility)" although Phase B tokens and the docs site are implemented; update the ledger to match `TODO.md`
