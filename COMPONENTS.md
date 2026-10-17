@@ -10,18 +10,79 @@ Status: `todo` · `wip` · `done` · `blocked (reason)` · `unsupported (evidenc
 Every row also records **GPUix support** and, when it is not `yes`, the evidence
 and the strongest honest alternative.
 
+## How the two evidence columns are decided
+
+The **GPUix support** column answers *does GPUix already provide this
+primitive?* — `yes`, `?` (unknown or partly documented) or `unsupported` — read
+from the published `@gpuix/react` / `@gpuix/native` 0.10.0 types by the
+reference-adoption workstream (plan `203`). It describes the runtime's API
+surface, not our status.
+
+**Measured native evidence** is separate, and it is what a `done` row needs. It
+comes from the native smoke suite in this repo, run **on this host** against the
+pinned `@gpuix/native@0.10.0` built from the pinned source with
+`gpui_macos/runtime_shaders` (ADR 0003). Reproduce it with:
+
+```sh
+nub run --filter playground build && nub apps/playground/dist/smoke/run.js
+```
+
+| Capability | Scenario | Verdict |
+| ---------- | -------- | ------- |
+| layout | `layout-flex`, `shell-navigation` | verified |
+| text | `text-native` | verified |
+| input | `input-edit` | verified |
+| focus | `focus-traversal` | verified |
+| overlay | `overlay-dialog` | verified |
+| modal | `modal-focus-trap` | verified |
+| floating | `floating-placement` | verified |
+| scroll | `scroll-container` | verified |
+| panel | `panel-resize` | verified |
+| virtual-list | `virtual-list-window` | verified |
+| table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
+| tree | `tree-view` | verified |
+| log | `log-viewer` | verified |
+| workspace | `workspace-tab-drag` | verified |
+| theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
+
+The suite is **20/20 green here** (exit `0`, `.artifacts/smoke-report.json`).
+What it settled, and what changed the plans: focus/blur events **do** work on
+0.10.0 (they never did on 0.5.1); component code **can** move native focus
+through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
+`focusPreviousWithin` cycle within a container, which is the dialog's Tab trap
+(the trap wraps: `content → a → b → open-popover → close → content`);
+Escape in a nested layer closes only that layer; **`<anchored align="center">`
+is off by half the panel size** (it ends the panel at the anchor's centre line)
+and `fit="snap"` clamps a layer inside the window **without flipping it**, so a
+bottom-side menu can cover its trigger; synthetic wheel scrolling
+**does** work
+(`deltaY` negative scrolls down, the opposite of the DOM); a `<virtual-list>`
+**retains** every row but **paints** a window (~9 of 5 000); an `<anchored>`
+paints no surface of its own, so overlay handlers belong on the content div;
+`autoFocus` takes native focus without dispatching `onFocus`; and the app-level
+window key handler (`render({ onKeyDown })`) receives a keystroke after the
+focused element's `onKeyDown` — the command-palette / application-menu path.
+`shell-navigation` adds the shell's own rule: a flex child needs `minHeight: 0`
+before `overflowY: "scroll"` can make it scroll, which is what keeps the
+15-entry sidebar reachable in the 720px window.
+
+Two further sources are recorded and are **never** the basis for a `done` row:
+`verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
+run by `apps/playground/legacy-probe`; ADR 0002) and `docs` (the upstream
+README/types document it, but no run has confirmed it here).
+
 ## Design system
 
 | Capability | Status | GPUix support | Notes / limitations |
 | ---------- | ------ | ------------- | ------------------- |
-| Design tokens | wip | yes (inline style values) | 47 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark; `colorRoles` indexes the roles for generated doc tables; elevation resolves to the single shadow the runtime paints (`elevationShadow`); WCAG floors in the test suite. Native visual proof pending the playground gallery. |
-| Theme extension | wip | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. Provider test is a server render; native switch pending. |
-| High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; contrast test covers both variants. Docs in `docs/tokens.md`. |
-| Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. Docs in `docs/tokens.md`. |
-| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring; overlay/menu animation is unavailable. Docs in `docs/tokens.md`; plan 017 corrected the earlier claim that the runtime supports outlines. |
-| Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land. |
-| Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests. Native visual check of the sans sentinel pending the playground (B1). |
-| Native theme gallery | todo | yes | `apps/playground`; visual evidence for the rows above. Owner: playground workstream. |
+| Design tokens | done | yes (inline style values) | 47 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark. `theme-color-roles` proves every role paints its exact value in dark, light and high contrast, and that the palette switch re-paints; `theme-type-and-shadow` proves every type role, `focusRing` and `elevationShadow` reach the renderer. |
+| Theme extension | done | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. The gallery mounts through `ThemeProvider` and the switch re-renders the subtree natively. |
+| High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; `theme-color-roles` asserts all 47 roles in high contrast and that its colour set differs from dark and light. Docs in `docs/tokens.md`. |
+| Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. The soft roles are covered by `theme-color-roles`. |
+| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the runtime, and `focus-traversal` the events. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. |
+| Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land, and by the playground shell. |
+| Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests; `theme-type-and-shadow` proves the resolved family and size reach the renderer. |
+| Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`). |
 
 ---
 
@@ -118,7 +179,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Stack / layout primitives | wip | yes | [stack](packages/primitives/docs/stack.mdx) · [docs](apps/docs/content/docs/components/stack.mdx) · [grid](packages/primitives/docs/grid.mdx) · layout | **Runtime (041):** row and column gaps equal the theme step. The runtime's grid is **numeric only** (`columns`, `rowHeight`); there is no auto-flow and no named areas. |
 | Boxes / containers | wip | yes | [box](packages/primitives/docs/box.mdx) · [docs](apps/docs/content/docs/components/box.mdx) · layout | **Runtime (041):** padding equals the theme's step; density moves height and leaves colour alone. Every primitive merges a caller's `style` last; `Box` is where an app overrides a surface. |
 | Scrollable containers | wip | partial | [scroll-area](packages/primitives/docs/scroll-area.mdx) · [docs](apps/docs/content/docs/components/scroll-area.mdx) · layout | **Runtime (041/048):** a wheel with `deltaY -100` leaves the offset at `y -100`, and a caller's `onScroll` receives that delta. **No `scrollbarColor`, no `scrollbarWidth`, no fade mask** in 0.10.0, so the thumb is platform-themed and cannot be tinted; there is no absolute offset (`onScrollChange`). |
-| Buttons | wip | ours | [button](packages/primitives/docs/button.mdx) · [docs page](apps/docs/content/docs/components/button.mdx) · form | **Runtime (041):** a hit-tested click activates once; Enter on key **down**, Space on key **up**, a held key ignored; `disabled` refuses both; `loading` refuses both and announces `Loading`. `@gpuix/react` publishes **no `./button`**, so the keyboard contract is this package's. The docs page (plan 422) renders the real props table, source and form example; its preview is tier X until the playground captures it. |
+| Buttons | wip | ours | [button](packages/primitives/docs/button.mdx) · [docs page](apps/docs/content/docs/components/button.mdx) · form | **Runtime (041):** a hit-tested click activates once; Enter on key **down**, Space on key **up**, a held key ignored; `disabled` refuses both; `loading` refuses both and announces `Loading`. `@gpuix/react` publishes **no `./button`**, so the keyboard contract is this package's. The docs page (plan 422) renders the real props table, source and form example; its preview is tier V (plan 432), naming this suite until a capture exists. |
 | Button groups | wip | yes | [button-group](packages/primitives/docs/button-group.mdx) · [docs](apps/docs/content/docs/components/button-group.mdx) · form | **Runtime (041/048):** attached children are 0px apart, separated ones the theme's `sm` gap. `role="group"` with `aria-label` from `label`; `attached` rounds and clips the group — it does not reshape each child (no `:first-child`, no child cloning). |
 | Labels | wip | partial | [label](packages/primitives/docs/label.mdx) · [docs](apps/docs/content/docs/components/label.mdx) · form | **Runtime (041):** the visible name is an a11y `Label`; the control's own `label` is the `TextInput`'s name. There is **no `aria-labelledby`**, so `labelledBy(name)` returns the control's `label` prop (045). |
 | Text inputs | wip | yes | [input](packages/primitives/docs/input.mdx) · [docs](apps/docs/content/docs/components/text-input.mdx) · form | **Runtime (041):** runtime keystrokes reach `onChange` with the accumulated text; Enter reaches `onSubmit`; a controlled field reports each edit. The native `<input>` holds its text; `core/state.ts` decides controlled/uncontrolled. |
@@ -169,11 +230,11 @@ result.
 | Empty states | done | yes | [docs](apps/docs/content/docs/components/empty-state.mdx) · title + optional description/action/icon, no surface of its own; 6 native behaviour tests including a real click on the action. Wrap width is a component constant (no measure token) |
 | Inline validation | done | partial | [docs](apps/docs/content/docs/components/inline-validation.mdx) · `Field`/`FieldLabel`/`FieldDescription`/`FieldError`/`FieldInput` with schema-message `validate`/`validateAll`; 5 native behaviour tests + validation logic suite, both themes. No `aria-describedby`/`aria-invalid` in 0.10.0; the caller owns the value and when validation runs |
 | Toasts / notifications | done | yes | [docs](apps/docs/content/docs/components/toast.mdx) · Effect store (`SubscriptionRef` + `FiberMap`), bounded queue, monotonic ids, auto-dismiss tested with `TestClock`, stale-timer regression; 7 native behaviour tests. No `zIndex` (render the viewport last), no progress bar, no pause-on-hover |
-| Dialogs | done | partial | [docs](apps/docs/content/docs/components/dialog.mdx) · local overlay over an `anchored` veil at window coordinates (0.10.0 ships no Dialog parts and no portal); 12 native behaviour tests + 5 dismiss-stack logic tests. No `aria-modal`/`aria-labelledby` in 0.10.0 — named through the required `label` |
+| Dialogs | done | partial | [docs](apps/docs/content/docs/components/dialog.mdx) · local overlay over an `anchored` veil at window coordinates (0.10.0 ships no Dialog parts and no portal); 12 native behaviour tests + 5 dismiss-stack logic tests. No `aria-modal`/`aria-labelledby` in 0.10.0 — named through the required `label`. Focus entry, the Tab trap and focus return are measured natively by `modal-focus-trap` (playground plan 155) |
 | Confirmation dialogs | done | partial | [docs](apps/docs/content/docs/components/confirm-dialog.mdx) · Cancel holds initial focus (Enter cancels); confirm never closes the dialog itself, the caller does; `loading` disables both actions and suppresses Escape/backdrop; 5 native behaviour tests. Busy indicator is a `…` glyph until a Spinner exists |
-| Popovers | done | yes | [docs](apps/docs/content/docs/components/popover.mdx) · anchored through GPUix's `FloatingLayer`; Escape restores focus, Tab and outside presses do not; share the dismiss stack with Dialog and a mouse-down re-open guard; 8 native behaviour tests, both themes |
-| Dropdown menus | done | partial | [docs](apps/docs/content/docs/components/dropdown-menu.mdx) · anchored `FloatingLayer` surface with a shared row/highlight core; arrow/Home/End wrap and skip disabled rows, Enter activates and restores focus, checkbox and destructive rows; 9 native behaviour tests, both themes. No submenus, no type-ahead, `aria-selected` instead of `aria-checked` in 0.10.0 |
-| Context menus | done | partial | [docs](apps/docs/content/docs/components/context-menu.mdx) · pointer-positioned `anchored` surface over the shared rows; 6 native behaviour tests (right click opens, land within 12px of the pointer, select runs once, second right click moves it). 0.10.0 has no `onContextMenu` — `onAuxClick` + `isRightClick`; no keyboard path to open and no portal |
+| Popovers | done | yes | [docs](apps/docs/content/docs/components/popover.mdx) · anchored through GPUix's `FloatingLayer`; Escape restores focus, Tab and outside presses do not; share the dismiss stack with Dialog and a mouse-down re-open guard; 8 native behaviour tests, both themes. Placement (`floating-placement`, playground plan 156): `side`/`sideOffset`/`align="start"` are exact; `align="center"` is short by half the panel and `fit="snap"` clamps without flipping, so a near-bottom popover must choose `side="top"` itself |
+| Dropdown menus | done | partial | [docs](apps/docs/content/docs/components/dropdown-menu.mdx) · anchored `FloatingLayer` surface with a shared row/highlight core; arrow/Home/End wrap and skip disabled rows, Enter activates and restores focus, checkbox and destructive rows; 9 native behaviour tests, both themes. No submenus, no type-ahead, `aria-selected` instead of `aria-checked` in 0.10.0. `align="center"` needs the half-panel offset and a near-bottom menu must pick `side="top"`: `fit="snap"` does not flip (`floating-placement`) |
+| Context menus | done | partial | [docs](apps/docs/content/docs/components/context-menu.mdx) · pointer-positioned `anchored` surface over the shared rows; 6 native behaviour tests (right click opens, land within 12px of the pointer, select runs once, second right click moves it). 0.10.0 has no `onContextMenu` — `onAuxClick` + `isRightClick`; no keyboard path to open and no portal. The surface sits at the pointer with an explicit `position`, so the `align="center"` defect does not apply; the window-edge snap still does (`floating-placement`) |
 | Command menus | done | partial | [docs](apps/docs/content/docs/components/command-menu.mdx) · dialog-hosted searchable palette composing Dialog and `menu/logic.ts`; input keeps focus while the highlight moves; 8 native behaviour tests. Substring filter only (no fuzzy), `aria-activedescendant` unavailable, input is the host element until primitives lands |
 | Tabs | done | partial | [docs](apps/docs/content/docs/components/tabs.mdx) · roving tab stop on the selected trigger, arrow wrap skipping disabled tabs, Home/End, automatic and manual activation; 8 native behaviour tests, both themes. 0.10.0 has no `aria-orientation`/`aria-controls`, so the panel is named by its value |
 | Accordions | done | yes | [docs](apps/docs/content/docs/components/accordion.mdx) · single (with `collapsible`) and multiple modes over a tagged-union state; divider order, disabled sections, glyph indicator; 8 native behaviour tests + 15 transition tests. No arrow-key movement between headers, no height animation; no `transform` for a rotating chevron |
@@ -213,8 +274,8 @@ result.
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
-| Virtualized tables | todo | ? | `<virtual-list>` rows can host a grid; there is no table element. |
-| Tree views | todo | ? | `<virtual-list>` + indentation; hierarchical virtualization is ours. |
+| Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. |
+| Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. GPUix cannot move native focus from component code, so a roving-tabindex contract is still ours. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
@@ -242,8 +303,8 @@ result.
 | Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |
 | Inspector panels | todo | ? | Property panels + panels. |
 | Property editors | todo | ? | Fieldset + inputs. |
-| File trees | todo | ? | Tree views + `<virtual-list>`. |
-| Log viewers | todo | ? | `<virtual-list>` + `<text>`; text search/highlight hooks exist. |
+| File trees | todo | ? | Tree views (verified) + `<virtual-list>`; hierarchical virtualization is ours. |
+| Log viewers | todo | yes (probe) | `log-viewer`: `<virtual-list alignment="bottom" followTail>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up then appending does **not** snap back, so a follow toggle is app state plus a scroll. `<text>`; text search/highlight hooks exist. |
 | Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
 | Multi-pane editing layouts | todo | ? | Composition over split panes + editors. |

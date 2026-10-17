@@ -75,7 +75,11 @@ unmet.
 | D16 | Component tests assert on the **decoded element tree** (`src/components/testing/element.ts`), not a render | The harness decodes `ReactElement` props with `Schema` at the boundary rather than reading `any`, so the strongest offline check is also a typed one. The real runtime is covered separately by `test:runtime` | 2026-10-17 |
 | D17 | `Select` and `Tooltip` are **themed wrappers** over `@gpuix/react/select`/`/tooltip` | GPUix already publishes headless, shadcn-shaped versions; reimplementing them would duplicate the open state, positioning, delay and dismissal for no gain (plan 020 §1.5) | 2026-10-17 |
 | D18 | `RadioGroup` takes its options **as data**, not compound children | The group owns the roving index and the arrow contract; a compound API moves that logic into a context each child reads — strictly more code for the same behaviour. Recorded as a deviation from shadcn's shape in `COMPONENTS.md` | 2026-10-17 |
-| D19 | Runtime verification runs against a **locally-built `darwin-x64` GPUix 0.10.0 binding** (`runtime_shaders` feature), not the published binary | GPUix publishes no `darwin-x64` artifact for 0.10.0 and this host has no Aqua session. Plan 140's script builds the same version and source revision at `node_modules/@gpuix/native/gpuix-native.darwin-x64.node`; `packages/primitives` and `apps/playground` run against it. The artifact is gitignored, so a clean checkout has no binding until the script runs; published-binary confirmation stays a CI task | 2026-10-17 |
+| D19 | Runtime verification runs against a **locally-built `darwin-x64` GPUix 0.10.0 binding** (`runtime_shaders` feature), not the published binary | GPUix publishes no `darwin-x64` artifact for 0.10.0 and this host has no Aqua session. Plan 140's script builds the same version and source revision at `node_modules/@gpuix/native/gpuix-native.darwin-x64.node`; `packages/primitives` and `apps/playground` run against it. The artifact is gitignored, so a clean checkout has no binding until the script runs; the smoke suite is 11/11 green on it, and published-binary confirmation stays a CI task (ADR 0003) | 2026-10-17 |
+| D20 | The native smoke suite reports **exit 2 "unverified"** when the host has no GPUix binding; no capability is `verified` without a report | Faking or skipping the run would poison every `done` row; a stale report must never be mistaken for a fresh one (ADR 0001, plan 120) | 2026-10-17 |
+| D21 | GPUix's wasm browser build is **not** native evidence; it is a docs-embedding candidate the docs-site workstream evaluates separately | It is a real GPUix renderer but a browser canvas; `MISSION.md` forbids implying a browser preview is native (D10) | 2026-10-17 |
+| D22 | A labelled `legacy-probe` runs GPUix `0.5.1` (the last `darwin-x64` release) only to measure the underlying primitives | `0.5.1` runs here but never delivers focus/blur events, so it can never be the library's runtime; it informs the capability map, not component status (ADR 0002) | 2026-10-17 |
+| D23 | The theme gallery asserts the **runtime's own style report** (`SmokeHost.paintedStyle`, schema-decoded at the adapter), and is the docs' native evidence source for the token layer; screenshots are artifacts, never assertions | A screenshot diff cannot say which token painted a pixel and is brittle across GPU/theme changes; the style report names the authored value, so a token that never reached the renderer fails by name (plan 150) | 2026-10-17 |
 
 ## 5. Open questions
 
@@ -83,14 +87,21 @@ Tracked here until an ADR answers them. Each plan that resolves one moves the
 answer into §4 or an ADR.
 
 - Which GPUix primitives actually exist for layout, input, focus, overlays and
-  panels? — **answered** by `.agents/slop/plans/020-gpuix-runtime-capability.md`
-  §1; the §1.5 list of what GPUix already ships decides reuse vs. reimplement.
+  panels? — **answered by measurement** (plan `140` §4, this host, 0.10.0;
+  plan `020` §1). Layout, text, input, focus/blur, overlays, wheel scroll,
+  panel resizing, virtual-list painting, tables and workspace tabs are
+  supported. The surprises that changed plans: focus/blur **do** work (they
+  never did on 0.5.1); `autoFocus` sets native focus without dispatching
+  `onFocus`; a synthetic `"tab"` keystroke does not traverse in the
+  `TestRenderer` (`focusNext` does); wheel `deltaY` is negative to scroll down;
+  a `<virtual-list>` retains every row but paints only a window; an `<anchored>`
+  paints no surface of its own, so overlay handlers go on the content div.
 - Can a GPUix rendering surface be embedded in the Fumadocs site, or is the
   companion playground the only honest preview? — **answered as a default** in
-  D10 / plan 412: playground + screenshots. `@gpuix/native@0.10.0` ships a wasm
-  renderer, so a *real* GPUix surface in the browser stays a conditional upgrade;
-  it needs nightly Rust, ~19 MB Wasm and COOP/COEP, and the deploy headers would
-  have to allow it.
+  D10 / plan 412: playground + screenshots. GPUix ships a wasm browser build
+  (`@gpuix/native/wasm`), so a *real* GPUix surface in the browser stays a
+  conditional upgrade; it needs nightly Rust, ~19 MB Wasm and COOP/COEP, and the
+  deploy headers would have to allow it.
 - What is the original package name and branding identity? — **still open**, and
   now blocking nothing but release metadata. `@gpuixui/*` remains the working
   scope (D4).
