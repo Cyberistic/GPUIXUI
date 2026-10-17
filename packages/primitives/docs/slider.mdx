@@ -84,14 +84,16 @@ border `borderWidth.strong`, and the focus ring is `@gpuixui/tokens`'
 
 A press anywhere on the track moves the value to the point under the pointer —
 the usable span is inset by half a thumb at each end, so the thumb's centre lands
-exactly on the pointer and on the ends without hanging off the track. A drag
-keeps updating while the pointer is over the track.
+exactly on the pointer and on the ends without hanging off the track. Only the
+**primary button** starts a gesture: a right or middle click neither moves the
+value nor takes focus.
+
+A drag keeps updating **after the pointer leaves the track** — the runtime
+captures the pressed element (measured, plan 063) — and clamps at `min`/`max`.
+Releasing ends the gesture; a plain hover never moves the value.
 
 ## Limitations
 
-- **No pointer capture.** A drag that leaves the track stops receiving moves;
-  clicking the track and the whole keyboard contract still work. The runtime
-  exposes no capture API, so this is stated rather than faked.
 - **No `aria-valuenow`/`min`/`max`** (above).
 - The thumb cannot rotate or transform; GPUix has no `transform`, and the
   position is a flex layout, not a `translate`.
@@ -105,7 +107,9 @@ keeps updating while the pointer is over the track.
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
-  by Tab. Measured 2026-10-17; plan 053 §11 records the probes.
+  by Tab, a drag that leaves the track keeps tracking and clamps at both ends,
+  and a right/middle click is refused. Measured 2026-10-17; plans 053 §11 and
+  063 §6 record the probes.
 
 ```sh
 nub run --filter @gpuixui/primitives test

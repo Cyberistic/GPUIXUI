@@ -75,7 +75,7 @@ none paints a literal and none scripts hover or press
 | `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
-| pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |
+| pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
 | scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
@@ -118,14 +118,16 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **14 files, 140 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **14 files, 145 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
 the paint (plan 055), a tooltip measured against its trigger in a column and a
 row (plan 060), a radio group's failed validation measured on the circles (plan
-061), and a select's list measured against its trigger's width (plan 062).
+061), a select's list measured against its trigger's width (plan 062), and a
+slider drag measured outside the track with the non-primary buttons refused
+(plan 063).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

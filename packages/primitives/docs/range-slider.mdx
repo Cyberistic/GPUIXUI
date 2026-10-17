@@ -29,8 +29,9 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
 ```
 
 The value is always `[start, end]` in that order. A press picks the nearer end;
-a press beyond both thumbs picks the end it passed. The ends can touch but never
-cross.
+a press beyond both thumbs picks the end it passed. The runtime captures the
+press, so a dragged thumb keeps tracking after the pointer leaves the track. The
+ends can touch but never cross.
 
 ## Variants, sizes and states
 
@@ -61,7 +62,9 @@ Each thumb is its own tab stop and answers:
 | `Home` / `End` | `min` / `max`, clamped at the other thumb |
 
 A press moves native focus to the thumb it grabbed, so the arrows that follow
-act on the end the user is holding. The focused thumb paints the ring.
+act on the end the user is holding. The focused thumb paints the ring. Only the
+**primary button** starts a press: a right or middle click moves neither end and
+takes no focus.
 
 ## Accessibility
 
@@ -81,8 +84,6 @@ values are painted as two fills; the second fill is the length between the ends.
 
 ## Limitations
 
-- **No pointer capture** — a drag stops updating when the pointer leaves the
-  track; press-to-position and the keyboard are the precise paths.
 - **No `aria-valuenow`/`min`/`max`** (above).
 - The thumbs cannot be given custom glyphs in this version; they are the same
   pill as `Slider`'s.
@@ -95,7 +96,9 @@ values are painted as two fills; the second fill is the length between the ends.
   crossing result, per-thumb rings, disabled tab stops.
 - `runtime/value.runtime.test.tsx` — a real press at 10% moves the start, at 90%
   the end; focus follows the grabbed thumb; an arrow moves only that end; a
-  start driven past the end stops on it. Measured 2026-10-17 (plan 053 §11).
+  start dragged past the end stops on it; a dragged end keeps tracking outside
+  the track; a right click is refused. Measured 2026-10-17 (plans 053 §11 and
+  063 §6).
 
 ```sh
 nub run --filter @gpuixui/primitives test

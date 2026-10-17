@@ -254,6 +254,13 @@ retired once both branches are one
       `getElementBounds`, refreshed on open and on a size/fullWidth change) and
       passes a numeric `minWidth`; the dead percentage is gone. Measured in the
       runtime, both directions proven (plan 062)
+`[x]` `packages/primitives`: **a slider drag is captured, and only the primary
+      button may start one.** The docs claimed "no pointer capture" but the
+      runtime captures the pressed element (the playground's `panel-resize`
+      already proved it); a right or middle click also moved the value and
+      focused a range thumb. The gesture is now `button === 0`, five runtime
+      tests cover the captured drag and the refusal, and every false claim is
+      corrected (plan 063)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

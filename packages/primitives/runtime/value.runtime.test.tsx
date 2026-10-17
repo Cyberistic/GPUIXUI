@@ -195,6 +195,58 @@ it("rings the focused thumb and clears it when focus leaves", async () => {
   expect(ringed()).toBe(false);
 });
 
+it("keeps tracking a drag after the pointer leaves the track", async () => {
+  // The guarded behaviour: the runtime captures the pressed element, so a drag
+  // is not limited to the track's own paint box. Without the move handler (or
+  // with a handler that checks where the pointer is), leaving the track would
+  // freeze the value at the last inside position.
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider testId="s" label="Volume" defaultValue={25} onChange={onChange} />,
+  );
+  const box = boundsOf(runtime, "s");
+  const start = pointAt(runtime, "s", 0.25);
+  runtime.mouseDownAt(start.x, start.y);
+  const end = pointAt(runtime, "s", 0.6);
+  runtime.mouseMoveAt(end.x, box.y + box.height + 80, 0);
+  runtime.mouseUpAt(end.x, box.y + box.height + 80);
+  expect(seen.at(-1)).toBe(60);
+  expect(announced(runtime, "Volume")).toBe("60");
+});
+
+it("clamps a drag that runs past either end", async () => {
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider testId="s" label="Volume" defaultValue={50} onChange={onChange} />,
+  );
+  const box = boundsOf(runtime, "s");
+  const middle = pointAt(runtime, "s", 0.5);
+  runtime.mouseDownAt(middle.x, middle.y);
+  runtime.mouseMoveAt(box.x + box.width + 120, middle.y, 0);
+  expect(seen.at(-1)).toBe(100);
+  runtime.mouseMoveAt(box.x - 120, middle.y, 0);
+  expect(seen.at(-1)).toBe(0);
+  runtime.mouseUpAt(box.x - 120, middle.y);
+});
+
+it("refuses a non-primary press, and a left click still moves the value", async () => {
+  // The bug guarded: a press on any button started a gesture, so a right or
+  // middle click moved the value (measured 25 → 75 in plan 063 §0.2).
+  const { seen, onChange } = values();
+  const runtime = await mount(
+    <Slider testId="s" label="Volume" defaultValue={25} onChange={onChange} />,
+  );
+  const point = pointAt(runtime, "s", 0.75);
+  runtime.renderer.nativeSimulateMouseDown(point.x, point.y, 2);
+  runtime.renderer.nativeSimulateMouseUp(point.x, point.y, 2);
+  runtime.renderer.nativeSimulateMouseDown(point.x, point.y, 1);
+  runtime.renderer.nativeSimulateMouseUp(point.x, point.y, 1);
+  expect(seen).toStrictEqual([]);
+  expect(announced(runtime, "Volume")).toBe("25");
+  runtime.clickAt(point.x, point.y);
+  expect(seen.at(-1)).toBe(75);
+});
+
 it("moves the nearer end of a range when its track is pressed", async () => {
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,
@@ -231,6 +283,34 @@ it("focuses the thumb it moved, and an arrow moves only that end", async () => {
   expect(announced(runtime, "Price minimum")).toBe("20");
 });
 
+it("keeps dragging a range end after the pointer leaves the track", async () => {
+  const runtime = await mount(
+    <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,
+  );
+  const box = boundsOf(runtime, "r");
+  const start = pointAt(runtime, "r", 0.2);
+  runtime.mouseDownAt(start.x, start.y);
+  const end = pointAt(runtime, "r", 0.4);
+  runtime.mouseMoveAt(end.x, box.y + box.height + 80, 0);
+  runtime.mouseUpAt(end.x, box.y + box.height + 80);
+  expect(announced(runtime, "Price minimum")).toBe("40");
+  expect(announced(runtime, "Price maximum")).toBe("60");
+});
+
+it("refuses a non-primary press on a range and moves no focus", async () => {
+  // The guarded bug: a right click moved the nearer end and called
+  // `focusElement` on its thumb (measured to `"Price maximum"` in plan 063 §0.2).
+  const runtime = await mount(
+    <RangeSlider testId="r" label="Price" defaultValue={[20, 60] as const} />,
+  );
+  const point = pointAt(runtime, "r", 0.9);
+  runtime.renderer.nativeSimulateMouseDown(point.x, point.y, 2);
+  runtime.renderer.nativeSimulateMouseUp(point.x, point.y, 2);
+  expect(announced(runtime, "Price minimum")).toBe("20");
+  expect(announced(runtime, "Price maximum")).toBe("60");
+  expect(runtime.focusedElement()).toStrictEqual(Option.none());
+});
+
 it("never lets the two ends cross", async () => {
   const runtime = await mount(
     <RangeSlider testId="r" label="Price" defaultValue={[0, 0] as const} />,
@@ -242,8 +322,10 @@ it("never lets the two ends cross", async () => {
   expect(announced(runtime, "Price maximum")).toBe("90");
   // A start dragged past the end stops on it instead of swapping the pair.
   const left = pointAt(runtime, "r", 0.01);
-  runtime.clickAt(left.x, left.y);
-  runtime.keyDown("r", "end");
+  runtime.mouseDownAt(left.x, left.y);
+  const past = pointAt(runtime, "r", 0.95);
+  runtime.mouseMoveAt(past.x, past.y, 0);
+  runtime.mouseUpAt(past.x, past.y);
   expect(announced(runtime, "Price minimum")).toBe("90");
   expect(announced(runtime, "Price maximum")).toBe("90");
 });

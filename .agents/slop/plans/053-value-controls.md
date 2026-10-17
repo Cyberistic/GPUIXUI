@@ -46,6 +46,10 @@ GPUix source (`references/gpuix`, Apache-2.0):
    pointer is over the track. Clicking anywhere on the track and the whole
    keyboard contract still work; drag beyond the track does not. This is a
    documented limitation, not something to fake.
+   **Wrong — corrected by plan 063 §13:** the runtime captures the pressed
+   element; a drag does keep tracking outside the track. The slider's own drag
+   was implemented correctly; only this assumption and the docs built on it were
+   wrong.
 4. GPUI hit-tests to the deepest element and does not bubble an unhandled press
    (measured in plan 041 §9 for the `Switch` thumb). The rail, fill and thumbs
    therefore need `pointerEvents: "none"` so the track/group receives the event;
@@ -377,6 +381,8 @@ all three within **1 px** (the assertion allows 2 px for layout rounding).
   claim in this workstream.
 - A drag that leaves the track is not tested because the runtime has no pointer
   capture; the limitation is documented, not simulated.
+  **Wrong — see §13:** the runtime does capture; plan 063 adds the missing
+  drag tests and corrects the documentation.
 
 ## 12. Acceptance
 
@@ -391,3 +397,25 @@ all three within **1 px** (the assertion allows 2 px for layout rounding).
   docs-site page land — the same bar as every other Tier 1 row).
 - `TODO.md` records the ownership decision and ticks the three implementation
   tasks; `PLAN.md` gains D18.
+
+## 13. Correction (plan 063, 2026-10-17)
+
+This plan's §2.3 and §11.5 claimed the runtime has no pointer capture. That was
+an assumption, never measured. Two measurements correct it:
+
+1. **A drag is captured.** A press at 25 % of a slider, a move to 60 % **80 px
+   below the track**, and a release reported `60`; a move past the right edge
+   reported `100` and past the left edge `0`. The same held for a range thumb.
+   The runtime arms capture on the pressed element from the left button; the
+   playground's `panel-resize` scenario had already measured it (plan `140` §4,
+   ADR 0002). The component's `onMouseDown`/`onMouseMove`/`onMouseUp` drag was
+   therefore already correct — the limitation, the docs built on it and the
+   missing tests were the defect.
+2. **A non-primary press moved the value.** `onPointerDown` did not inspect
+   `event.button`, so a right or middle click set the value (25 → 75 measured)
+   and a range's right click also moved native focus to `"Price maximum"`. The
+   gesture now requires `button === 0`; `Button`, `Checkbox`, `Switch` and
+   `Toggle` were already correct because they listen to `onClick`, which the
+   runtime sends for the primary button only (`onAuxClick` carries the rest).
+
+Plan 063 records the fix, the five new runtime tests, and both-direction proofs.

@@ -103,8 +103,11 @@ export interface Runtime {
   /**
    * A native mouse move at window coordinates.
    *
-   * GPUI delivers a move to whatever is under the pointer; `pressedButton` is
-   * how a drag reports the button it is holding (0 is the primary button).
+   * A move with no `pressedButton` goes to whatever is under the pointer; a
+   * press arms GPUI's capture, so a move with a held button is routed to the
+   * pressed element **even outside its bounds** — that is how a drag keeps
+   * tracking (measured, plan 063 §0). `pressedButton` is the button it holds
+   * (0 is the primary button).
    */
   readonly mouseMoveAt: (x: number, y: number, pressedButton?: number) => void;
   /** A native mouse release at window coordinates — the end of a drag. */

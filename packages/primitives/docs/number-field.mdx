@@ -88,9 +88,9 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
   before the value reaches the field.
 - **No `type="number"`, `inputMode` or `maxLength`.** The host input takes
   `value`, `placeholder`, `readOnly`, `theme` and its events — nothing else.
-- **No drag-to-scrub.** The runtime has the coordinates and bounds for it, but a
-  scrub that keeps tracking outside the field would need pointer capture, which
-  does not exist; the steppers are the honest gesture.
+- **No drag-to-scrub.** A scrub could keep tracking outside the field — the
+  runtime captures the pressed element (measured in plan 063) — but the gesture
+  is not implemented; the steppers are the honest input for now.
 - **`autoFocus` paints no ring on mount.** The runtime focuses the input without
   dispatching a focus event, so the wrapper's ring appears at the next focus
   change (a click or Tab). The same is true of `Input`.

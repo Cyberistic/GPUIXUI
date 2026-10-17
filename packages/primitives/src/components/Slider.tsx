@@ -7,12 +7,14 @@
  * file owns only what is irreducible here — reading the track's box from the
  * renderer so a pointer becomes a value, the drag flag, and focus.
  *
- * **Two runtime limits are structural, not defects:**
+ * A gesture is the **primary button** only. The runtime captures the pointer on
+ * the pressed element, so a drag keeps updating after it leaves the track and
+ * clamps at the ends (measured, plan 063 §0); `event.button`/`pressedButton`
+ * are the runtime's own 0/1/2 encoding.
  *
- * - there is no pointer capture, so a drag only tracks while the pointer is
- *   over the track (a click anywhere on it and the keyboard always work);
- * - there is no `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the value
- *   reaches assistive technology through `aria-valuetext` only.
+ * **One runtime limit is structural, not a defect:** there is no
+ * `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the value reaches
+ * assistive technology through `aria-valuetext` only.
  *
  * `RangeSlider` is a different ARIA contract from `Slider` — two sliders in one
  * group rather than one slider with an array value — so it is a second
@@ -327,7 +329,7 @@ export const Slider = (props: SliderProps): ReactElement => {
       trackId.current = instance?.id ?? null;
     },
     onPointerDown: (event) => {
-      if (props.disabled === true) return;
+      if (props.disabled === true || event.button !== 0) return;
       dragging.current = true;
       apply(event);
     },
@@ -401,7 +403,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         else thumbIds.current.set(index, instance.id);
       },
       onPointerDown: (event) => {
-        if (props.disabled === true) return;
+        if (props.disabled === true || event.button !== 0) return;
         const span = spanOf(state.value.current, range);
         Option.match(
           pointerOf(event, renderer, trackId.current, range, inset),
