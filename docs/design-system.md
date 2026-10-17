@@ -194,7 +194,9 @@ Two border roles:
   outline toggle that is on — so the floor covers those fills as well, and a
   pointer state never turns the fill into the divider's own value.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
-  against the canvas so a control is perceivable without relying on fill alone.
+  against the canvas, the `muted` panel and the `hover`/`active`/`accent`/
+  `selected` washes a row paints, so a checkbox or field is perceivable without
+  relying on fill alone.
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 `md` for menus and popovers, `lg` for dialogs and the command palette. The
@@ -269,7 +271,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted` and the `hover`/`active` washes | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
-| focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover` | 3:1 | 4.5:1 |
+| focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover`, `muted` and the four state washes | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover` and the `secondary`/`hover`/`active`/`accent` fills a bordered control paints | 1.05:1 | 3:1 |

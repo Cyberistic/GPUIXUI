@@ -182,9 +182,12 @@ until plan 079. Status text is checked on the same four washes, so a status dot
 in a list, table or menu row is readable on the fill it sits on: every light set
 had a warning label under 4.5:1 on the pressed wash (macOS 4.22:1, Linux 4.24:1,
 Windows 4.36:1) and high-contrast light was 5.83:1 on `active` and 6.70:1 on
-`accent`/`selected` until plan 083 moved the two warning steps. The same list
-holds
-the soft status surfaces and the loading skeleton at 1.05:1 against `background`,
+`accent`/`selected` until plan 083 moved the two warning steps. The functional
+control boundary is checked on the `muted` panel and the same four washes, so a
+checkbox or field inside a row keeps its `borderStrong` edge: the identity light
+set measured 2.62:1 on the pressed wash, macOS light 2.52:1, and high-contrast
+dark 4.15:1 until plan 084 moved five boundary values. The same list holds the
+soft status surfaces and the loading skeleton at 1.05:1 against `background`,
 `card` and `popover`, and the decorative `border` at 1.05:1 (3:1 at high
 contrast) on the plain surfaces and on the `secondary`, `hover`, `active` and
 `accent` fills a bordered control paints, so an Alert, Badge or Toast, a loading

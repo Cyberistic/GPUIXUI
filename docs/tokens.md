@@ -63,7 +63,9 @@ The core entry has no React dependency. `react` is an optional peer of the
 Components use semantic roles, never ramp shades. The role names describe
 intent, so a brand theme changes values without touching component source.
 `border` is decorative; `borderStrong` is the essential control boundary held
-to 3:1. A bordered control paints `border` on the fill behind it —
+to 3:1 (4.5:1 at high contrast) on the plain surfaces, the `muted` panel and the
+`hover`/`active`/`accent`/`selected` washes a bounded control sits on. A bordered
+control paints `border` on the fill behind it —
 `secondary` at rest, `hover`/`active` while the pointer moves, and `accent` for
 an outline toggle that is on — so the divider is held to its floor on those
 fills too, not only on the plain surfaces.
@@ -125,7 +127,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
-| `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
+| `borderStrong` | `#737C8C` | `#77808F` | essential control boundaries, including on row washes |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#66707F` | `#7C8595` | placeholder text |
@@ -292,7 +294,7 @@ getTheme("light"); // the default light theme, unchanged
 | `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#6E7683` | `#8A8A8A` | dividers and decorative borders |
-| `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
+| `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
@@ -828,9 +830,10 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 `themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
 against `contrastFloors`. The list holds text pairs, secondary text and status
 text on the state washes (`hover`, `active`, `accent` and `selected`), the other
-status pairs, the selection wash, the soft status surfaces and the decorative
-dividers — including on the `secondary`, `hover`, `active` and `accent` fills a
-bordered control paints.
+status pairs, the functional control boundary on the `muted` panel and those
+washes, the selection wash, the soft status surfaces and the decorative dividers
+— including on the `secondary`, `hover`, `active` and `accent` fills a bordered
+control paints.
 The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
@@ -991,7 +994,9 @@ muted text on `background`, `card` and `popover`, secondary text on the `hover`,
 `active`, `accent` and `selected` washes a row paints behind a description, and
 status text (`xText`) on `background`, `card`, `popover` and those four washes;
 3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
-the high-contrast variants).
+the high-contrast variants. The boundary is also measured on the `muted` panel
+and the four washes, because an unchecked checkbox or a field keeps its
+`borderStrong` edge while the row moves.
 It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
 those surfaces or on the `secondary`, `hover`, `active` and `accent` fills a
@@ -1022,8 +1027,11 @@ plan `081` darkened those three wash bases. Status text is held to the same
 washes: every light set had a warning label below its floor on the pressed fill
 — macOS 4.22:1, Linux 4.24:1, Windows 4.36:1 — and high-contrast light shipped
 at 5.83:1 on `active` and 6.70:1 on `accent`/`selected`, so plan `083` moved the
-light `warningText` to `#6B4500` and the high-contrast one to `#4B3100`. Palette
-edits must keep it green.
+light `warningText` to `#6B4500` and the high-contrast one to `#4B3100`. The
+functional control boundary is held to them too: a checkbox edge in a pressed
+row measured 2.52:1 on macOS light and 2.62:1 on the identity, 2.80–2.81 in the
+dark identity and 4.15:1 at high-contrast dark, so plan `084` moved five
+boundary values one step. Palette edits must keep it green.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,
 `active` and `selected` washes, because focus and selection co-occur in rows;
@@ -1031,8 +1039,9 @@ secondary text is measured on `hover`, `active`, `accent` and `selected`, becaus
 a list row, a combobox option and a menu item paint those washes behind a
 description; status text (`xText`) is measured on those four washes as well as on
 `popover`, so a status label inside a hovered, pressed or selected row or a
-dialog is covered; the `borderStrong` boundary is also measured on `popover`, so
-a control there is perceivable.
+dialog is covered; the `borderStrong` boundary is measured on `popover`, the
+`muted` panel and those four washes, so a checkbox or field in a quiet panel, a
+hovered, pressed, selectable or selected row still shows its edge.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

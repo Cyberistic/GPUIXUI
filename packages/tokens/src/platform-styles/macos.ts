@@ -11,7 +11,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * (`#48484A`), so an outlined control's edge clears the floor on the washes it
  * paints (plan 080). The accent's readable text step is `#0055B3` light and
  * `#64B5FF` dark: the fill's `#0071E3` measures 4.21:1 on the canvas and
- * `#0A84FF` 3.82:1 on a dark card (plan 082).
+ * `#0A84FF` 3.82:1 on a dark card (plan 082). The light boundary is Apple's
+ * secondary label grey (`#6E6E73`), so a checkbox in a row keeps its edge on
+ * every wash (plan 084).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -28,7 +30,7 @@ export const macosPlatformStyle = {
       muted: "#ECECF0",
       mutedForeground: "#5A5A5F",
       border: "#D1D1D6",
-      borderStrong: "#8A8A8E",
+      borderStrong: "#6E6E73",
       input: "#FFFFFF",
       inputForeground: "#1D1D1F",
       hover: "#E8E8ED",

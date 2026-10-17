@@ -77,6 +77,25 @@ const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
 );
 
 /**
+ * The surfaces a bounded control sits on beyond the plain ones: the quiet panel
+ * that groups fields and checkboxes, and the four washes a row paints. A
+ * checkbox in a hovered, pressed, selectable or selected row paints its
+ * `borderStrong` edge against that fill, so the boundary floor applies.
+ */
+const controlBoundarySurfaces = [
+  "muted",
+  "hover",
+  "active",
+  "accent",
+  "selected",
+] as const;
+
+const controlBoundaryPairs: readonly ContrastPair[] =
+  controlBoundarySurfaces.map(
+    (background): ContrastPair => ["borderStrong", background, "boundary"],
+  );
+
+/**
  * The surfaces brand-toned text is painted on: the plain surfaces, the quiet
  * grouping panel a sidebar link sits on, and the two washes the Link variant
  * paints behind its own label.
@@ -115,10 +134,11 @@ const statusTextWashPairs: readonly ContrastPair[] = statusTextTones.flatMap(
  * Every documented pair — text, status, surface and divider — including
  * secondary text and status text on the state washes, brand-toned text on the
  * plain surfaces and washes a link paints, the focus ring on the washes a
- * focused row paints, the status text and control boundary on a floating
- * surface, the soft status surfaces and the loading skeleton a canvas must
- * distinguish, and the decorative dividers that must stay visible, including on
- * the fills a bordered control paints.
+ * focused row paints, status text on a floating surface, the functional control
+ * boundary on a floating surface, a quiet panel and the state washes, the soft
+ * status surfaces and the loading skeleton a canvas must distinguish, and the
+ * decorative dividers that must stay visible, including on the fills a bordered
+ * control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ["foreground", "background", "body"],
@@ -167,6 +187,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["borderStrong", "card", "boundary"],
   ["borderStrong", "input", "boundary"],
   ["borderStrong", "popover", "boundary"],
+  ...controlBoundaryPairs,
   ...primaryTextPairs,
   ["ring", "background", "boundary"],
   ["ring", "card", "boundary"],
@@ -305,11 +326,12 @@ export const selectionPairs: readonly ContrastPair[] = [
  * Every documented pair a theme misses — text, status, secondary text and status
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
- * loading skeleton measured on the surfaces it fills, and the control edge
- * measured on the fills a bordered control paints. The level defaults to the one
- * the theme declares, so a high-contrast theme is checked against its own
- * floors. An empty array is the library's guarantee; a consumer test asserts
- * exactly that:
+ * loading skeleton measured on the surfaces it fills, the control edge measured
+ * on the fills a bordered control paints, and the functional boundary measured
+ * on the quiet panel and state washes a bounded control sits on. The level
+ * defaults to the one the theme declares, so a high-contrast theme is checked
+ * against its own floors. An empty array is the library's guarantee; a consumer
+ * test asserts exactly that:
  *
  * @example
  * ```ts

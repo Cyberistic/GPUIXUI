@@ -459,7 +459,7 @@ describe("docs/tokens.md theme contract", () => {
 describe("docs/tokens.md contrast surfaces", () => {
   it("names the washes and the floating surface the contract covers", () => {
     const sentence =
-      "The focus ring is measured on the canvas, card and popover and on the `hover`, `active` and `selected` washes, because focus and selection co-occur in rows; secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on those four washes as well as on `popover`, so a status label inside a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is also measured on `popover`, so a control there is perceivable.";
+      "The focus ring is measured on the canvas, card and popover and on the `hover`, `active` and `selected` washes, because focus and selection co-occur in rows; secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on those four washes as well as on `popover`, so a status label inside a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is measured on `popover`, the `muted` panel and those four washes, so a checkbox or field in a quiet panel, a hovered, pressed, selectable or selected row still shows its edge.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -620,7 +620,7 @@ describe("docs/design-system.md", () => {
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| focus ring and essential boundaries, including the ring on the \`hover\`/\`active\`/\`selected\` washes and a control boundary on \`popover\` | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
+      `| focus ring and essential boundaries, including the ring on the \`hover\`/\`active\`/\`selected\` washes and a control boundary on \`popover\`, \`muted\` and the four state washes | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` and the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,

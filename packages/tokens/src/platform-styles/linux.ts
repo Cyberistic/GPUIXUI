@@ -7,7 +7,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * dark selection wash uses the light accent as its base so white text keeps the
  * body floor on the fills a row paints (plan 081). The accent's readable text
  * step is `#12488F` light and `#99C1F1` dark; the fill's `#1C71D8` is 3.51:1 on
- * the pressed wash (plan 082).
+ * the pressed wash (plan 082). The dark boundary is one step lighter so a
+ * checkbox edge clears the floor on the selected row (plan 084).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -51,7 +52,7 @@ export const linuxPlatformStyle = {
       muted: "#303030",
       mutedForeground: "#C0BFBC",
       border: "#3F3F3F",
-      borderStrong: "#9A9996",
+      borderStrong: "#A09F9C",
       input: "#303030",
       inputForeground: "#FFFFFF",
       hover: "#3A3A3A",

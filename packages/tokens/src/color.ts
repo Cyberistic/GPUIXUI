@@ -169,7 +169,7 @@ export interface ThemeColors {
   readonly destructiveText: string;
   /** Dividers and decorative borders. */
   readonly border: string;
-  /** Essential control boundaries, held to a non-text contrast floor. */
+  /** Control boundaries on plain surfaces, a quiet panel and row washes. */
   readonly borderStrong: string;
   /** Input field background. */
   readonly input: string;
@@ -252,7 +252,7 @@ export const lightColors = {
   warningText: palette.amber[800],
   destructiveText: palette.red[700],
   border: "#D6DAE1",
-  borderStrong: "#848E9E",
+  borderStrong: palette.neutral[500],
   input: palette.neutral[0],
   inputForeground: palette.neutral[900],
   placeholder: "#66707F",
@@ -315,7 +315,7 @@ export const darkColors = {
   warningText: palette.amber[200],
   destructiveText: palette.red[200],
   border: "#343B47",
-  borderStrong: "#6B7484",
+  borderStrong: "#77808F",
   input: palette.neutral[900],
   inputForeground: palette.neutral[100],
   placeholder: "#7C8595",
@@ -440,7 +440,7 @@ export const highContrastDarkColors = {
   warningText: palette.amber[100],
   destructiveText: palette.red[100],
   border: "#8A8A8A",
-  borderStrong: "#A0A0A0",
+  borderStrong: "#AAAAAA",
   input: "#0D0D0D",
   inputForeground: "#FFFFFF",
   placeholder: "#B0B0B0",

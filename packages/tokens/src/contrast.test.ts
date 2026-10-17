@@ -42,6 +42,13 @@
  * light measured 5.83:1 on `active` and 6.70:1 on `accent`/`selected`, under the
  * AAA 7:1 floor. All four tones join all four washes, and the two warning steps
  * move (`#8E5B00` → `#6B4500` light, `#6B4500` → `#4B3100` high contrast).
+ *
+ * Plan 084 closes the last functional boundary measured only on plain surfaces:
+ * `borderStrong` is the edge of a field and of an unchecked checkbox, and those
+ * controls sit on a quiet panel and inside rows whose fill changes. Six shipped
+ * sets were below the non-text floor there — identity light 2.62:1 on `active`,
+ * macOS light 2.52:1, identity dark 2.80–2.81, Linux dark 2.97 on `selected`,
+ * and high-contrast dark 4.15 under its 4.5. Five values move one step.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -231,7 +238,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(96);
+    expect(contrastPairs.length).toBe(101);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 

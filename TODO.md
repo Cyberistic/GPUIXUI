@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 51/67
+`[x]` `[███████░░░]` 52/68
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -273,6 +273,10 @@ canvas and macOS dark 2.84:1 on `active` while every suite stayed green; the
 pressed row measured 4.22:1 on macOS light, 4.24:1 on Linux and 4.36:1 on
 Windows, and high-contrast light 5.83:1 on `active`, under the floors; the four
 tones join the four washes and the two warning steps move (plan 083)
+`[x]` Hold the essential control boundary on the quiet panel and the state
+washes — a checkbox edge in a pressed row measured 2.52:1 on macOS light, 2.62:1
+on the identity and 4.15:1 at high-contrast dark; five values move one step
+(plan 084)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
