@@ -58,6 +58,7 @@ is the authority on order, not the file name.
 | [053](053-value-controls.md) | Value controls: `Slider`, `RangeSlider`, `Meter` — owner claimed | C | 030, 040, 041, 047, 049 | **done** — one value-maths core, thumb geometry, element-tree and runtime suites, docs pages and a composed example; measured in §11 |
 | [054](054-remaining-tier1-controls.md) | The remaining unclaimed Tier 1 rows: `NumberField`, `OTPField`, `Toggle`, `Rating` | C | 053 | **done (implementation)** — all four landed with docs, examples and runtime proofs; OTPField's key contract runs on key up and a real clipboard paste is documented as unverified (§9) |
 | [055](055-tier1-theme-axes.md) | Tier 1 under the remaining theme axes: high contrast, density, platform type | F | 030, 041, 042, 051 | **done** — 4 runtime tests (13 files / 119), green in both directions; measured in §7 |
+| [056](056-toggle-group.md) | `ToggleGroup`: a real segmented control, and the disabled radio tab stop | C | 030, 041, 047, 049, 054 | **done** — data-driven single/multiple group, one roving tab stop, measured click/arrow/activation/disabled contracts; §7-§12 record the fix and the two-direction proofs. `COMPONENTS.md` now has a real row and Button groups no longer claims it |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |
