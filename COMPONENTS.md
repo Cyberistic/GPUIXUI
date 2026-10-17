@@ -14,7 +14,7 @@ and the strongest honest alternative.
 
 | Capability | Status | GPUix support | Notes / limitations |
 | ---------- | ------ | ------------- | ------------------- |
-| Design tokens | wip | yes (inline style values) | 47 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark; 171 tests incl. WCAG floors. Native visual proof pending the playground gallery. |
+| Design tokens | wip | yes (inline style values) | 47 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark; `colorRoles` indexes the roles for generated doc tables; 173 tests incl. WCAG floors. Native visual proof pending the playground gallery. |
 | Theme extension | wip | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. Provider test is a server render; native switch pending. |
 | High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; contrast test covers both variants. Docs in `docs/tokens.md`. |
 | Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. Docs in `docs/tokens.md`. |

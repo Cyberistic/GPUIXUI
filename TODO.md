@@ -48,15 +48,16 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 8/10
+`[x]` `[█████████░]` 9/11
 
-`[x]` Write and index the tokens/theme plan set (plans 010–014)
+`[x]` Write and index the tokens/theme plan set (plans 010–015)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
 the `@gpuixui/tokens/react` provider
 `[x]` Add high-contrast (AAA) light and dark themes (`getTheme(mode, "high")`)
 `[x]` Add status tone roles plus `alpha` and `statusTone` helpers
+`[x]` Expose `colorRoles` for the docs site's generated token tables
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`

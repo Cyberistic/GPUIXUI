@@ -423,3 +423,69 @@ export function alpha(color: string, amount: number): string {
   const hex = byte.toString(16).padStart(2, "0");
   return `#${match[1]}${hex}`.toUpperCase();
 }
+
+/**
+ * Every semantic colour role, in the order the token documentation lists them.
+ * A documentation site iterates this to build colour tables against any theme
+ * without an unsafe cast.
+ *
+ * @example
+ * ```ts
+ * import { colorRoles, themes } from "@gpuixui/tokens";
+ *
+ * const rows = colorRoles.map((role) => ({
+ *   role,
+ *   light: themes.light.colors[role],
+ *   dark: themes.dark.colors[role],
+ * }));
+ * ```
+ */
+export const colorRoles = [
+  "background",
+  "foreground",
+  "card",
+  "cardForeground",
+  "popover",
+  "popoverForeground",
+  "primary",
+  "primaryForeground",
+  "secondary",
+  "secondaryForeground",
+  "muted",
+  "mutedForeground",
+  "accent",
+  "accentForeground",
+  "destructive",
+  "destructiveForeground",
+  "success",
+  "successForeground",
+  "warning",
+  "warningForeground",
+  "info",
+  "infoForeground",
+  "infoSoft",
+  "infoSoftForeground",
+  "successSoft",
+  "successSoftForeground",
+  "warningSoft",
+  "warningSoftForeground",
+  "destructiveSoft",
+  "destructiveSoftForeground",
+  "border",
+  "borderStrong",
+  "input",
+  "inputForeground",
+  "placeholder",
+  "ring",
+  "selection",
+  "overlay",
+  "hover",
+  "active",
+  "selected",
+  "selectedForeground",
+  "disabled",
+  "disabledForeground",
+  "skeleton",
+  "scrollbar",
+  "shadow",
+] as const satisfies readonly (keyof ThemeColors)[];

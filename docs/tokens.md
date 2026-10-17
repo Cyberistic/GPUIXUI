@@ -14,6 +14,7 @@ with a different `Theme` object.
 ```ts
 import {
   alpha,
+  colorRoles,
   createTheme,
   darkTheme,
   extendTheme,
@@ -440,6 +441,30 @@ const theme = useTheme();
   </text>
 </div>;
 ```
+
+## For documentation sites
+
+A docs site can generate its tables from the package instead of retyping values.
+Import the core entry only: it is pure data with no runtime dependency, and the
+site never needs `@gpuixui/tokens/react`.
+
+`colorRoles` lists every semantic role in documentation order, typed as
+`keyof ThemeColors`, so a table row can read any shipped theme without a cast:
+
+```ts
+import { colorRoles, highContrastThemes, themes } from "@gpuixui/tokens";
+
+const rows = colorRoles.map((role) => ({
+  role,
+  light: themes.light.colors[role],
+  dark: themes.dark.colors[role],
+  highContrastLight: highContrastThemes.light.colors[role],
+  highContrastDark: highContrastThemes.dark.colors[role],
+}));
+```
+
+The other groups are already plain data with their own keys: `typography`,
+`spacing`, `radius`, `densityPresets`, `borderWidth`, `iconSize` and `palette`.
 
 ## Verification
 

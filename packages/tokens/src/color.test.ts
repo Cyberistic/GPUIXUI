@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import {
   alpha,
+  colorRoles,
   darkColors,
   highContrastDarkColors,
   highContrastLightColors,
@@ -176,6 +177,19 @@ describe("colour roles", () => {
     );
     expect(highContrastLightColors.background).not.toBe(lightColors.background);
     expect(highContrastDarkColors.background).not.toBe(darkColors.background);
+  });
+
+  it("indexes every role in documentation order", () => {
+    expect(colorRoles).toEqual(Object.keys(lightColors));
+  });
+
+  it("indexes each role exactly once, with a value in every theme", () => {
+    expect(new Set(colorRoles).size).toBe(colorRoles.length);
+    colourSets.forEach(({ label, colors }) => {
+      colorRoles.forEach((role) => {
+        expect(colors[role], `${label}.${role}`).toBeDefined();
+      });
+    });
   });
 });
 

@@ -111,6 +111,22 @@ tone.border; // alpha(theme.colors.info, 0.3)
 A runnable example lives in
 [`src/status-tone.example.ts`](./src/status-tone.example.ts).
 
+## For documentation sites
+
+`colorRoles` lists every semantic role in documentation order, typed as
+`keyof ThemeColors`, so a docs site can build colour tables from the package
+instead of retyping values:
+
+```ts
+import { colorRoles, themes } from "@gpuixui/tokens";
+
+const rows = colorRoles.map((role) => ({
+  role,
+  light: themes.light.colors[role],
+  dark: themes.dark.colors[role],
+}));
+```
+
 ## Boundaries
 
 - No imports from any other workspace package.
