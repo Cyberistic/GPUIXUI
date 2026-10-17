@@ -408,6 +408,14 @@ retired once both branches are one
       `focusRing(theme)` while focused or open, is named `${testId}-trigger`,
       and `SelectTriggerState` carries `focused`. 2 offline + 5 runtime tests,
       4 failing in the old direction (plan 083)
+`[x]` `packages/primitives`: **the focus-ring matrix** — plan 083's bug class (a
+      focusable control that forgets its ring) had no cross-control guard.
+      Seventeen `it.each` cases prove Button, Toggle, Checkbox, Switch, Input,
+      TextArea, NumberField, OTPField, Select, Rating, ToggleGroup, RadioGroup,
+      CheckboxGroup, Slider, RangeSlider, InfoTip and ScrollArea each paint
+      exactly one `focusRing`, of the exact value, inside the control. 17/17
+      green; both the zero-ring and the two-ring direction fail as they should
+      (plan 084)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

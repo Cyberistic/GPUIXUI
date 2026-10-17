@@ -205,8 +205,8 @@ carries an evidenced limitation. The capability evidence lives in
 | Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. **Invalid (070):** `invalid` paints the empty stars `destructive` and leaves a chosen one on the brand role (the decoded element tree and the runtime `<svg>` tint agree). Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, and no `aria-invalid` — state rides on `aria-valuetext` and the error is paint only. **Style by state (080):** `RatingState` (`disabled`, `invalid`). **Per-item (081):** `starStyle` over `RatingStarState` (`index` 1-based, `filled`, `disabled`, `readOnly`, `invalid`, `focused`) styles each star; stars derive `${testId}-star-N`, and the runtime case proves the paint follows a click. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (204 tests in
-18 files at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (221 tests in
+19 files at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
 175 at plan 073; 172 at plan 072, 167 at plan 071 and 165 at plan 070, including plan 069's
 three Select scroll tests and plan 070's rating validation; 161 after plan 068's long-list cap;
 160 after plan 067's tooltip placement;
@@ -220,8 +220,15 @@ binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan
 §12, plan 057 §8, plan 058 §8, plan 059 §8, plan 060 §6, plan 061 §6, plan 062
 §6, plan 065 §6, plan 066 §6, plan 067 §6, plan 068 §6, plan 069 §6, plan 070 §6,
 plan 072 §6, plan 073 §6, plan 076 §7, plan 077 §7, plan 078 §7, plan 079 §8,
-plan 080 §8, plan 081 §8, plan 082 §6 and plan 083 §6. The examples suite mounts every
+plan 080 §8, plan 081 §8, plan 082 §6, plan 083 §6 and plan 084 §6. The examples suite mounts every
 example in `packages/primitives/examples/` (plan 047).
+
+**Focus matrix (084):** `runtime/focus-ring.runtime.test.tsx` holds every
+focusable Tier 1 control — Button, Toggle, Checkbox, Switch, Input, TextArea,
+NumberField, OTPField, Select, Rating, ToggleGroup, RadioGroup, CheckboxGroup,
+Slider, RangeSlider, InfoTip and ScrollArea — to one invariant: focusing it
+paints **exactly one** `focusRing`, of the exact value, inside the control. 17
+cases; the matrix fails when a control paints none (plan 083's bug) or two.
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
 active palette, and re-rendering with the dark palette repaints every asserted
