@@ -28,8 +28,13 @@ live platform toggle. The stacked windows *are* the pitch.
 
 ## Page structure
 
-1. **Hero** — wordmark + one line; three stacked windows with a live platform switch
-   (macOS / Windows / Linux); a single CTA into the docs.
+1. **Hero** — wordmark + one line; three windows **stacked as a physical deck** that
+   auto-shuffles **macOS → Windows 11 → Linux/Arch** on a slow cadence (each card lifts,
+   rotates slightly and slides to the back). The hero line tracks the top card —
+   "Certified on macOS" → "Certified on Windows 11" → "Certified on Linux/Arch" — so the
+   copy and the window always agree. Hover pauses the shuffle; the platform switch
+   overrides it and pauses it; `prefers-reduced-motion` stops the shuffle and leaves the
+   switch. A single CTA into the docs.
 2. **The licence card** — the library's promise as a "licence": components, both themes,
    three platforms, native runtime, documented limits. A copyable card component that
    doubles as a real component in the library.
@@ -74,10 +79,13 @@ live platform toggle. The stacked windows *are* the pitch.
 
 ## Acceptance
 
-- [ ] The hero switches macOS ↔ Windows ↔ Linux and the **same** component is shown in all
-      three, with real captures or a clear label.
+- [ ] The hero stacks the three windows and **auto-shuffles**, with the hero line tracking
+      the top card; hover pauses, the platform switch overrides and pauses, and
+      `prefers-reduced-motion` stops the shuffle.
+- [ ] The **same** component is shown in all three, with real captures or a clear label.
 - [ ] The licence card is a real component, reused in the library.
-- [ ] The XP/Aero and Omarchy theme recipes are reachable from the three-platforms section.
+- [ ] The three-platform section shows the **default** macOS / Windows 11 / Linux-Arch
+      styles; the XP/Aero and Omarchy recipes live in a separate "Make it yours" section.
 - [ ] Reduced-motion, keyboard and contrast checks pass; no console errors.
 - [ ] The bundle budget is met and recorded.
 - [ ] Attribution footer lists every reference with its licence.
