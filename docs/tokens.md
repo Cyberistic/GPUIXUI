@@ -802,8 +802,7 @@ contrastFloors.high; // { body: 7, secondary: 7, boundary: 4.5 }
 ```
 
 The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).
-This is a check for a consumer's own test suite, not a runtime validator: a theme
-authored in TypeScript is still trusted at compile time.
+This is a check for a consumer's own test suite, not a runtime validator.
 
 No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
