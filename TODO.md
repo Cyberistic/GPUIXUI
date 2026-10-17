@@ -160,7 +160,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Theming and typography pages generated from the package (plan 416) — all 47 colour roles and 10 text roles render from `@gpuixui/tokens`, and the pinned runtime's missing `registerFont` is documented
 `[x]` Searchable component index (plan 417) — title/summary filter with live count and empty state; verified hydrated in headless Chrome (`combobox` → 1 of 64, `zzz` → 0, clear → 64)
 `[x]` Absolute canonical/OpenGraph URLs, generated `/sitemap.xml` and `/robots.txt` (plan 418) — `SITE_URL` defaults to the deploy domain and accepts `VITE_SITE_URL`; verified against the dev server (16 `<url>` entries, absolute canonical on `/docs/installation`)
-`[x]` Working search (server route + UI) — `/api/search?query=button` returns real results
+`[x]` Working search (server route + UI) — `/api/search?query=installation` returns the Installation page and `/api/search` with no query returns `[]`; the dialog was exercised in headless Chrome (typing `installation` lists the page, Escape closes)
 `[x]` Information architecture pages (`content/docs/**`) + landing page — guarded by `src/content.test.ts`
 `[x]` Component metadata contract, registry test, generated index (plan 411)
 `[x]` Preview components + `docs/preview-strategy.md` (plan 412) — tier selection and screenshot provenance are enforced; a capture without its sidecar is never shown
