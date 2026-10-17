@@ -29,20 +29,36 @@ is the authority on order, not the file name.
 | [030](030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | **implemented** — all 19 Tier 1 components + `core/` + element-tree suites; docs pages and `examples/basic-app` pending; read §9 (the §2.2/§3 file lists are superseded by the shipped tree) |
 | [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | **done** (45 icons, 18 tests proven in both directions; on-screen paint unverified — 020 §3) |
 | [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | **in progress** — code + tests + inventory done; example, docs pages and runtime verification outstanding |
+| [041](041-tier1-runtime-verification.md) | Tier 1 in the real GPUix runtime (primitives workstream) | C | 030, 031, 040, **140** | **implemented** — `test:runtime` suites in `packages/primitives` + `packages/icons`; read §9 for what was observed |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |
 | — | `apps/docs` Fumadocs site (docs-site) | B–F | — | not written here |
 
-### Prerequisite for the whole swarm: the runtime is not runnable here
+### The runtime blocker (D7 / B1) is fixed — read plan 140 before claiming anything
 
-`020-gpuix-runtime-capability.md` §3 records the measured evidence: this box is
-**Intel macOS**, GPUix publishes **no `darwin-x64` native binary**, and this SSH
-session has **no Aqua session** (`NSScreen.screens` is empty), so even the older
-`darwin-x64` build cannot open a window. **No component interaction can be
-verified on this machine today.** Its §3.1 lists the three honest verification
-paths in strength order. Every component row stays `wip` until path 1 (wasm in
-headless Chrome) or path 2 (a GUI session / a source build) succeeds.
+`020-gpuix-runtime-capability.md` §3 recorded the measured evidence that this box
+is **Intel macOS**, GPUix publishes **no `darwin-x64` native binary**, and this
+SSH session has **no Aqua session** — so no GPUix component could be rendered,
+clicked or focused here.
+
+That changed on 2026-10-17. **`140-gpuix-native-darwin-x64-build.md`
+(playground workstream) built `@gpuix/native@0.10.0` from source on this host**
+with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional), and the
+playground's native suite is **11/11 green** against it: layout, text, input,
+focus, overlay, scroll, panel, virtual-list, table and workspace are all
+`verified 0.10.0`, with nine screenshots and `smoke-report.json` as evidence.
+
+Two consequences for this workstream:
+
+- the artifact is present in every worktree's `node_modules` (one shareable
+  store), so `packages/primitives` and `packages/icons` can run the **real**
+  `TestRenderer` — see `041-tier1-runtime-verification.md`;
+- the verdict's provenance is a **locally-built** binding, and `nub run test`
+  still runs on a host without any binding. A row may only cite the runtime when
+  this workstream's `test:runtime` run produced the observation, and the
+  gold-standard confirmation on the *published* binary is the CI task in
+  `TODO.md` (playground workstream).
 
 ### Prerequisite for the whole swarm: one writer per worktree
 
