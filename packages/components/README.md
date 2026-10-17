@@ -32,18 +32,18 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
 | `src/dropdown-menu.tsx`, `src/menu/*` | DropdownMenu over the shared row registry, rows and menu surface |
-| `src/context-menu.tsx` | ContextMenu: the same rows at the pointer (`onAuxClick` + `isRightClick`) |
+| `src/context-menu.tsx` | ContextMenu: the same rows at the pointer (`onAuxClick` + `isRightClick`) or at the trigger from `Shift+F10` |
 | `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts` |
 | `src/tabs.tsx` | Tabs: roving tab stop, automatic/manual activation, arrow wrap |
 | `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a body that unmounts |
-| `src/accordion.tsx` | Accordion: single (collapsible) and multiple modes over a tagged union |
+| `src/accordion.tsx` | Accordion: single (collapsible) and multiple modes over a tagged union, with arrow/Home/End header movement |
 | `src/breadcrumb.tsx` | Breadcrumb: a declarative trail with `maxItems` collapsing |
 | `src/pagination.tsx` | Pagination: a stable-width page window with disabled edges |
 | `src/field.tsx` | Field: label, control, one message slot; the inline-validation surface |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
 | `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover |
-| `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store |
+| `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store, with hover pause/resume |
 | `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
 | `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
