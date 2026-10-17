@@ -385,6 +385,15 @@ retired once both branches are one
       `optionStyle`/`rowStyle`/`itemStyle`/`thumbStyle`/`starStyle`/`cellStyle`
       and a `Select` `triggerStyle`; each state includes the item's identity
       (plan 081; 8 element-tree + 4 runtime tests, both directions proven)
+`[x]` `packages/primitives`: **`Text`'s `clamp` was decided by whichever
+      identical string the runtime laid out first** — the runtime keeps one
+      shaped text layout per string/font/width for the whole window and
+      `lineClamp` is not in that key, so a clamped copy clipped an innocent
+      plain `Text` (measured `36 / 36` px) and was ignored when a plain copy
+      came first (`108 / 108` px). `clamp` is now the element's own `maxHeight`
+      (`clamp × the role's lineHeight`) plus `overflow: hidden`, which cannot
+      leak; a hard cut without an ellipsis is the recorded trade. 3 offline + 5
+      runtime tests, both leak directions measured (plan 082)
 `[x]` `packages/primitives`: **the capability reference** — `docs/gpuix-capabilities.md`
       answers "does GPUix provide this?" row by row with verdict, evidence and
       workaround, and separates the published 0.10.0 surface from the features

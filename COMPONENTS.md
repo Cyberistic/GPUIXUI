@@ -175,7 +175,7 @@ carries an evidenced limitation. The capability evidence lives in
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
-| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041/059):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Semantics (059):** `h1`-`h3` are real `Heading` nodes with level 1-3 and the text as their value; `code`/`codeBlock` are `Code`; `display` and the remaining roles keep the runtime's `Label`. |
+| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041/059):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Semantics (059):** `h1`-`h3` are real `Heading` nodes with level 1-3 and the text as their value; `code`/`codeBlock` are `Code`; `display` and the remaining roles keep the runtime's `Label`. **Clamp (082):** a multi-line clamp is **not** the runtime's `lineClamp` — the runtime keeps one shaped text layout per string/font/width for the whole window and `lineClamp` is not in that key, so measured, a clamped copy followed by a plain copy of the same string painted `36 / 36` px (the plain text was clipped) and the reverse painted `108 / 108` px (the clamp was ignored). `clamp` is now the element's own `maxHeight` (`clamp × the role's lineHeight`) plus `overflow: hidden`, which cannot leak; the honest trade is a hard cut with no ellipsis. `runtime/text.runtime.test.tsx` proves 1/2/3 lines and both leak directions. |
 | Icons | wip | yes | [icon](packages/icons/docs/icon.mdx) · icons | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. |
 | Separators | wip | yes | [separator](packages/primitives/docs/separator.mdx) · layout | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
 | Spacers | wip | yes | [spacer](packages/primitives/docs/spacer.mdx) · layout | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |
@@ -205,8 +205,8 @@ carries an evidenced limitation. The capability evidence lives in
 | Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. **Invalid (070):** `invalid` paints the empty stars `destructive` and leaves a chosen one on the brand role (the decoded element tree and the runtime `<svg>` tint agree). Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, and no `aria-invalid` — state rides on `aria-valuetext` and the error is paint only. **Style by state (080):** `RatingState` (`disabled`, `invalid`). **Per-item (081):** `starStyle` over `RatingStarState` (`index` 1-based, `filled`, `disabled`, `readOnly`, `invalid`, `focused`) styles each star; stars derive `${testId}-star-N`, and the runtime case proves the paint follows a click. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (194 tests in
-17 files at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (199 tests in
+18 files at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
 175 at plan 073; 172 at plan 072, 167 at plan 071 and 165 at plan 070, including plan 069's
 three Select scroll tests and plan 070's rating validation; 161 after plan 068's long-list cap;
 160 after plan 067's tooltip placement;
@@ -219,7 +219,8 @@ NumberField, 97 after Toggle, 106 after Rating, locally built GPUix 0.10.0
 binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan 056
 §12, plan 057 §8, plan 058 §8, plan 059 §8, plan 060 §6, plan 061 §6, plan 062
 §6, plan 065 §6, plan 066 §6, plan 067 §6, plan 068 §6, plan 069 §6, plan 070 §6,
-plan 072 §6, plan 073 §6, plan 076 §7, plan 077 §7, plan 078 §7, plan 079 §8 and plan 080 §8. The examples suite mounts every
+plan 072 §6, plan 073 §6, plan 076 §7, plan 077 §7, plan 078 §7, plan 079 §8,
+plan 080 §8, plan 081 §8 and plan 082 §6. The examples suite mounts every
 example in `packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the

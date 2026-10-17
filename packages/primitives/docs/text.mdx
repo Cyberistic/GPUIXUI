@@ -57,7 +57,7 @@ a font size.
 | `tone` | `TextTone` | `"default"` | colour role |
 | `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
-| `clamp` | `number` | none | clip after N lines |
+| `clamp` | `number` | none | hard-clip after N lines (a value below 1 is ignored) |
 | `selectable` | `boolean` | `false` | `userSelect: "text"`; off for chrome, on for content |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
@@ -91,8 +91,22 @@ and a flat list of labels otherwise.
 role. `userSelect` defaults to `"none"` so chrome does not accept a text
 selection by accident; turn it on for content.
 
+`clamp` is a **height cap, not the runtime's `lineClamp`**: `maxHeight` is
+`clamp × typography[role].lineHeight` and `overflow` is `"hidden"`. The runtime
+caches one shaped text layout per string/font/width for the whole window and its
+`lineClamp` is not part of that key, so a clamp written that way leaks to every
+identical string at the same width (plan `082`). The cap is per element, so it
+cannot leak, and the line count follows the role's own leading rather than a
+hard-coded pixel value.
+
 ## Limitations
 
+- `clamp` is a **hard cut with no ellipsis**. It stops at the line boundary; the
+  runtime's ellipsizing `lineClamp` cannot be used, because the shared text
+  layout would apply one component's clamp to another component's identical
+  string (measured in plan `082`: clamped-then-plain painted `36 / 36` px, and
+  plain-then-clamped painted `108 / 108` px). Use `truncate` when one line with
+  an ellipsis is what you want.
 - `display` carries no heading level (above); use `h1` when the large text is
   the page title.
 - No paragraph grouping: each `Text` is its own node; there is no semantic
@@ -101,12 +115,19 @@ selection by accident; turn it on for content.
   `Stack`.
 - No responsive type scale or fluid sizing.
 - `truncate` needs a bounded width to truncate against.
+- `clamp` needs a bounded width to know how many lines the text would take;
+  the cap is a maximum, so shorter text keeps its natural height.
 
 ## Verification
 
 - `src/core/variants.test.ts` — every role resolves from the theme.
+- `src/core/style.test.ts` — the clamp payload (`maxHeight`, `overflow`, no
+  `lineClamp`) and the values it refuses.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
   selectable.
+- `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,
+  both directions of the shared-layout regression, and the full string in the
+  accessibility tree (plan `082`).
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and each role's measured semantics match the
   table above: `h1`/`h2` are `Heading` nodes with level 1/2 and their text as

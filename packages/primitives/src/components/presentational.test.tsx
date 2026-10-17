@@ -201,11 +201,15 @@ describe("type", () => {
 
   it("clamps after a line count and truncates on one line", () => {
     const clamped = renderText({ clamp: 3 }, testTheme);
-    expect(numberIn(clamped, "lineClamp")).toStrictEqual(Option.some(3));
+    expect(numberIn(clamped, "maxHeight")).toStrictEqual(
+      Option.some(3 * testTheme.typography.body.lineHeight),
+    );
+    expect(expectSome(stringIn(clamped, "overflow"))).toBe("hidden");
     expect(expectSome(stringIn(clamped, "whiteSpace"))).toBe("normal");
+    expect(numberIn(clamped, "lineClamp")).toStrictEqual(Option.none());
     const truncated = renderText({ truncate: true }, testTheme);
     expect(expectSome(stringIn(truncated, "whiteSpace"))).toBe("nowrap");
-    expect(stringIn(truncated, "lineClamp")).toStrictEqual(Option.none());
+    expect(numberIn(truncated, "maxHeight")).toStrictEqual(Option.none());
   });
 
   it("hands a control its name, because GPUix has no aria-labelledby", () => {

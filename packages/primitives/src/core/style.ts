@@ -237,6 +237,20 @@ export interface TextSpec {
 /** Roles whose family is the monospace face. */
 const MONO_ROLES: ReadonlyArray<TextRole> = ["code", "codeBlock"];
 
+/**
+ * The line count a clamp can enforce, or `None` for a value that cannot.
+ *
+ * `Math.trunc` rather than rounding: `clamp={2.7}` is "at most two lines", the
+ * same reading as a CSS `line-clamp`. Zero, negative and non-finite values are
+ * refused instead of collapsing the element.
+ */
+const clampLines = (clamp: number | undefined): Option.Option<number> =>
+  Option.flatMap(Option.fromNullishOr(clamp), (value) =>
+    Number.isFinite(value) && value >= 1
+      ? Option.some(Math.trunc(value))
+      : Option.none(),
+  );
+
 export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
   const role = theme.typography[spec.role];
   const style: StyleDesc = {
@@ -254,9 +268,14 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     style.whiteSpace = "nowrap";
     style.textOverflow = "ellipsis";
   }
-  if (spec.clamp !== undefined) {
+  const lines = clampLines(spec.clamp);
+  if (Option.isSome(lines)) {
+    // The runtime's `lineClamp` is not part of its text-layout cache key, so the
+    // first layout of a string decides the clamp for every identical copy at the
+    // same width (plan 082). A per-element height cap cannot leak.
     style.whiteSpace = "normal";
-    style.lineClamp = spec.clamp;
+    style.maxHeight = lines.value * role.lineHeight;
+    style.overflow = "hidden";
   }
   return style;
 };

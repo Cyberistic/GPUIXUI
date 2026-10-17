@@ -126,6 +126,7 @@ verdict, the evidence, and the honest workaround.
 | `clip-path` | **not supported** | no field | `overflow: "hidden"` + radius; an SVG mask |
 | Blend modes | **not supported** | no `mixBlendMode` field | pre-composited colours |
 | Text shadow | **not supported** | the text style has no shadow field | layered `<text>` only for display type |
+| Multi-line clamp (`lineClamp`) | **partial — shared between identical strings** | measured on this host (plan `082`): the runtime keeps one shaped text layout per string/font/width for the whole window, and `lineClamp` is applied to that layout without being part of the key. A 120 px body text measured `36 / 36 px` when a clamped copy was laid out before a plain copy of the same string (the plain text was clipped to two lines) and `108 / 108 px` when the plain copy came first (the clamp did nothing); a different string was unaffected | clamp with the element's own `maxHeight` + `overflow: "hidden"`; `truncate` (one line, ellipsis) is unaffected because the wrap mode is part of the key |
 | Sticky positioning | **not supported** | `position` is relative/absolute/fixed; "fixed" lays out like absolute because there is no scrolling document | track `onScroll` deltas and position the element yourself |
 | Scroll snap | **not supported** | no `scrollSnap*` fields | snap programmatically at scroll end |
 | Container or element queries | **not supported** | no field; responsiveness is window-level (`useWindowSize`, `useWindowInsets`) and measurement is `renderer.getElementBounds` | own the measurement and branch in JS |
@@ -184,7 +185,9 @@ Text is selectable (with `userSelect` and `selectionColor`), but there is no
 rich-text editing, no editable code surface, no clipboard, and the native input
 has no `type`/`min`/`max`/`step`/`maxLength`. Parsing, clamping and draft state
 are component code. `Enter` submits an `<input>`; on a `<textarea>` it only
-submits when `onSubmit` is set, at the cost of the newline.
+submits when `onSubmit` is set, at the cost of the newline. A multi-line clamp
+is **not** `lineClamp` for the reason in §3: it is a per-element `maxHeight` plus
+`overflow: hidden`, so it cuts without an ellipsis.
 
 ## 5. Documented on `main`, absent from published 0.10.0
 

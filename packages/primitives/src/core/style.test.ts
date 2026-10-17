@@ -262,8 +262,27 @@ describe("textStyle", () => {
     expect(truncated.whiteSpace).toBe("nowrap");
     expect(truncated.textOverflow).toBe("ellipsis");
     const clamped = text({ role: "body", tone: "default", clamp: 2 });
-    expect(clamped.lineClamp).toBe(2);
+    // The runtime's `lineClamp` is shared between identical strings, so the cap
+    // is the element's own height (plan 082).
+    expect(clamped.lineClamp).toBeUndefined();
     expect(clamped.whiteSpace).toBe("normal");
+    expect(clamped.maxHeight).toBe(2 * testTheme.typography.body.lineHeight);
+    expect(clamped.overflow).toBe("hidden");
+  });
+
+  it("caps a clamp on the role's own line height", () => {
+    const clamped = text({ role: "codeBlock", tone: "default", clamp: 3 });
+    expect(clamped.maxHeight).toBe(
+      3 * testTheme.typography.codeBlock.lineHeight,
+    );
+  });
+
+  it("refuses a clamp that would collapse the text", () => {
+    Arr.forEach([0, -2, Number.NaN, Number.POSITIVE_INFINITY], (clamp) => {
+      const style = text({ role: "body", tone: "default", clamp });
+      expect(style.maxHeight).toBeUndefined();
+      expect(style.overflow).toBeUndefined();
+    });
   });
 
   it("switches font family for code roles", () => {
