@@ -72,6 +72,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [073](./073-declared-contrast.md) | A theme declares its contrast level | F | 013, 063, 071 | done |
 | [074](./074-contrast-state-and-overlay-surfaces.md) | The state washes and floating surfaces the contrast contract never checked | F | 059, 063, 071, 073 | done |
 | [075](./075-quoted-contrast-figures.md) | The contrast figures the catalogue quotes | F | 056–059, 071–074 | done |
+| [076](./076-contrast-surface-and-divider-pairs.md) | The soft surfaces and dividers the contrast contract never checked | F | 013, 014, 059, 063, 071–075 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -205,7 +206,17 @@ four `xText` rows still described the pre-074 contract (no `popover`), and
 `#7F7F7F`. The guards build each sentence from `contrastRatio`,
 `contrastFloors` and the alpha byte, and the `xText` surfaces from
 `contrastPairs`, so the next palette, floor or contract edit has to take the
-documents with it.
+documents with it. 076 closes the two checks the suites ran but the public
+contract did not: the 1.05:1 perceivability floor on the soft status surfaces,
+and the high-contrast decorative divider. That gap was hiding a real defect —
+platform styles changed the canvas but inherited the identity's soft tints, so
+nine shipped pairs sat below the library's own floor, the worst being Linux
+dark's `destructiveSoft` at 1.005:1 on its card. Five identity soft values move
+to tints that clear every shipped canvas with margin, the soft surfaces and the
+divider become `surface` and `divider` pairs in `contrastPairs`, and
+`themeContrastFailures` now returns them, so an edited platform style is held to
+the same guarantee. The pair count moves from 48 to 63, and both documents
+derive the new rows and counts from the implementation.
 
 ### Reference adoption (block `200–299`)
 
