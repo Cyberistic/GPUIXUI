@@ -111,6 +111,19 @@ export const brandTheme = createTheme({
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts).
 
+## Persisted choices
+
+A stored preference or a URL parameter arrives as `unknown`. `isPlatformName`,
+`isThemeMode` and `isThemeContrast` narrow it, so a consumer never retypes a
+union; a whole theme object loaded from a file is still the application’s
+`Schema` boundary.
+
+```ts
+import { isPlatformName } from "@gpuixui/tokens";
+
+const platform = isPlatformName(stored) ? stored : "default";
+```
+
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
