@@ -25,6 +25,11 @@ import {
   type RadioGroupFocus,
   type RadioOption,
 } from "./RadioGroup.js";
+import {
+  renderCheckboxGroup,
+  type CheckboxGroupHandlers,
+  type CheckboxGroupFocus,
+} from "./CheckboxGroup.js";
 import { renderSwitch } from "./Switch.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
@@ -32,6 +37,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyle,
   hostStyleString,
   hostTag,
   elementChildren,
@@ -55,6 +61,17 @@ const checked = (value: boolean): ValueState<boolean> =>
   initValueState(Option.some(value), false);
 const text = (value: string): ValueState<string> =>
   initValueState(Option.some(value), "");
+const selection = (
+  values: ReadonlyArray<string>,
+): ValueState<ReadonlyArray<string>> => initValueState(Option.some(values), []);
+const groupFocus: CheckboxGroupFocus = {
+  focusedIndex: Option.none(),
+  onFocus: vi.fn(),
+  onBlur: vi.fn(),
+};
+const groupHandlers = (
+  onToggle: (value: string) => void = vi.fn(),
+): CheckboxGroupHandlers => ({ onToggle, onToggleAll: vi.fn() });
 
 const options: ReadonlyArray<RadioOption> = [
   { value: "alpha", label: "Alpha" },
@@ -290,5 +307,124 @@ describe("RadioGroup", () => {
     expect(expectSome(hostStyleString(firstCircle, "borderColor"))).toBe(
       testTheme.colors.input,
     );
+  });
+});
+
+describe("CheckboxGroup", () => {
+  const options = [
+    { value: "email", label: "Email", description: "A digest." },
+    { value: "push", label: "Push" },
+  ] as const;
+
+  const render = (
+    props: Partial<Parameters<typeof renderCheckboxGroup>[0]> = {},
+    values: ReadonlyArray<string> = ["email"],
+    focus: CheckboxGroupFocus = groupFocus,
+    handlers: CheckboxGroupHandlers = groupHandlers(),
+  ) =>
+    renderCheckboxGroup(
+      { options, ...props },
+      testTheme,
+      selection(values),
+      focus,
+      handlers,
+    );
+
+  const row = (element: ReturnType<typeof render>, index: number) =>
+    expectSome(Arr.get(elementChildren(element), index));
+
+  const box = (element: ReturnType<typeof render>, index: number) =>
+    expectSome(Arr.get(elementChildren(row(element, index)), 0));
+
+  it("names the group and gives every row the checkbox contract", () => {
+    const element = render({ label: "Channels" });
+    expect(expectSome(hostProp(element, "role"))).toBe("group");
+    expect(expectSome(hostProp(element, "aria-label"))).toBe("Channels");
+    expect(expectSome(hostProp(row(element, 0), "role"))).toBe("checkbox");
+    expect(expectSome(hostProp(row(element, 0), "aria-label"))).toBe("Email");
+    expect(expectSome(hostProp(row(element, 0), "aria-valuetext"))).toBe(
+      "checked",
+    );
+    expect(expectSome(hostProp(row(element, 1), "aria-valuetext"))).toBe(
+      "unchecked",
+    );
+    expect(hostProp(row(element, 0), "aria-checked")).toStrictEqual(
+      Option.none(),
+    );
+  });
+
+  it("renders the select-all parent with the state derived from the options", () => {
+    const partial = render({ selectAll: "All channels" });
+    expect(expectSome(hostProp(row(partial, 0), "aria-label"))).toBe(
+      "All channels",
+    );
+    expect(expectSome(hostProp(row(partial, 0), "aria-valuetext"))).toBe(
+      "mixed",
+    );
+    const all = render({ selectAll: "All channels" }, ["email", "push"]);
+    expect(expectSome(hostProp(row(all, 0), "aria-valuetext"))).toBe("checked");
+  });
+
+  it("makes the row, not a nested box, the hit area and the tab stop", () => {
+    const onToggle = vi.fn();
+    const element = render({ selectAll: "All channels" }, [], groupFocus, {
+      onToggle,
+      onToggleAll: vi.fn(),
+    });
+    // The parent row is index 0, so "Email" is index 1.
+    expect(expectSome(hostProp(row(element, 1), "tabIndex"))).toBe(0);
+    expectSome(hostHandler(row(element, 1), "onClick"))(keyEvent("space"));
+    expect(onToggle).toHaveBeenCalledWith("email");
+  });
+
+  it("takes a disabled row and a disabled group out of the tab order", () => {
+    const oneDisabled = render(
+      {
+        options: [
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push", disabled: true },
+        ],
+        selectAll: "All channels",
+      },
+      [],
+    );
+    expect(hostProp(row(oneDisabled, 2), "tabIndex")).toStrictEqual(
+      Option.none(),
+    );
+    const disabled = render({ disabled: true, selectAll: "All channels" });
+    expect(
+      Arr.every(
+        Arr.map(elementChildren(disabled), (child) =>
+          hostProp(child, "tabIndex"),
+        ),
+        Option.isNone,
+      ),
+    ).toBe(true);
+  });
+
+  it("paints every empty box destructive under invalid, and a selected one on its accent", () => {
+    const element = render({ invalid: true, selectAll: "All channels" });
+    // The parent is mixed (one of two selected) and keeps its accent, like a
+    // chosen radio; the unselected option takes the error border.
+    expect(expectSome(hostStyleString(box(element, 0), "borderColor"))).toBe(
+      testTheme.colors.primary,
+    );
+    expect(expectSome(hostStyleString(box(element, 1), "borderColor"))).toBe(
+      testTheme.colors.primary,
+    );
+    expect(expectSome(hostStyleString(box(element, 2), "borderColor"))).toBe(
+      testTheme.colors.destructive,
+    );
+  });
+
+  it("paints the ring on the focused row's box", () => {
+    const element = render({}, [], {
+      ...groupFocus,
+      focusedIndex: Option.some(1),
+    });
+    expect(hostStyle(box(element, 0), "boxShadow")).toStrictEqual(
+      Option.none(),
+    );
+    expect(Option.isSome(hostStyle(box(element, 1), "boxShadow"))).toBe(true);
   });
 });

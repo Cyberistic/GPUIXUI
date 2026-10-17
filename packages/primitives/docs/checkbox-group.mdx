@@ -1,0 +1,154 @@
+---
+title: Checkbox Group
+description: Several checkboxes that make up one selection, with an optional select-all parent.
+---
+
+`CheckboxGroup` is a data-driven set of checkboxes for one value — the multi-select
+counterpart of `RadioGroup`. It owns two things a consumer would otherwise write
+by hand: the **select-all tri-state** and a row whose **visible label is part of
+the control**.
+
+It is not a `Checkbox` with extra props: a lone yes/no is `Checkbox`. It is not a
+form wrapper either — there is no validation orchestration and no submit; that is
+the Tier 2 `Field`/`Form` work.
+
+## Usage
+
+```tsx
+import { CheckboxGroup } from "@gpuixui/primitives";
+
+<CheckboxGroup
+  label="Notification channels"
+  selectAll="All channels"
+  value={channels}
+  onChange={setChannels}
+  options={[
+    {
+      value: "email",
+      label: "Email",
+      description: "A digest to your account address.",
+    },
+    { value: "push", label: "Push" },
+  ]}
+/>;
+```
+
+Uncontrolled, with no parent row:
+
+```tsx
+<CheckboxGroup
+  label="Formatting"
+  defaultValue={["bold"]}
+  options={[
+    { value: "bold", label: "Bold" },
+    { value: "italic", label: "Italic" },
+  ]}
+/>
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `options` | `CheckboxGroupOption[]` | required | `value`, `label`, optional `description` and `disabled` |
+| `value` | `readonly string[]` | — | controlled selection; omit to let the group keep its own |
+| `defaultValue` | `readonly string[]` | `[]` | initial selection when uncontrolled |
+| `onChange` | `(value: readonly string[]) => void` | none | the next set, only when it changed |
+| `selectAll` | `string` | none | renders one parent row with this visible name and a derived state |
+| `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | row flow |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
+| `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
+| `disabled` | `boolean` | `false` | disables every row, the parent included |
+| `invalid` | `boolean` | `false` | every **empty** box takes the destructive border |
+| `label` | `string` | none | the group's accessible name |
+| `style` | `StyleDesc` | — | merged last on the group |
+| `testId` | `string` | — | names the group; rows become `${testId}-${value}` and the parent `${testId}-all` |
+
+### The select-all parent
+
+Its state is derived from the **enabled** options:
+
+| Selected among enabled options | Parent announces | Press does |
+| ------------------------------ | ---------------- | ---------- |
+| all | `checked` | clears every enabled value |
+| none | `unchecked` | selects every enabled value |
+| some | `mixed` | selects the rest |
+
+A **disabled** option's value is never changed by the parent in either
+direction: the user has no way to toggle it here, so the group must not decide
+it for them. A group with no enabled option renders the parent disabled.
+
+### Values
+
+The selection is an array in **selection order**: a toggle appends the newly
+selected value, and select-all appends the missing enabled values in option
+order. A press that changes nothing does not call `onChange`.
+
+## Keyboard
+
+| Key | Contract |
+| ---- | -------- |
+| Tab | moves to the **next row**; every enabled row is its own tab stop, as a checkbox group is on the platform |
+| Shift+Tab | moves to the previous row |
+| Space | toggles the focused row on key **up** |
+| Enter | toggles the focused row on key **down** |
+| held key | repeat events do nothing |
+| arrows | **not handled** — arrows do not move between checkboxes on the platform |
+
+## Accessibility
+
+- The group is a named `group`; each row is a `checkbox` named by its `label`.
+- State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
+  `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
+- The **whole row** — box, label and description — is one interactive element and
+  one tab stop. This is deliberate: the runtime has no `aria-labelledby`/`htmlFor`,
+  so a separate `Text` beside a control is inert to the pointer and to assistive
+  technology. Nesting a focusable box inside a clickable row would be two
+  interactive elements in one.
+- `disabled` removes the row's tab stop; there is no `aria-disabled`.
+- `option.description` is painted as visible supporting text, not wired as
+  `aria-describedby` (unsupported).
+
+## Theming
+
+Each row paints through `core/selection.ts`, the same resolver `Checkbox`,
+`RadioGroup` and `Switch` use: box side from `iconSize`, radius from `radius.sm`,
+empty border from `input` (or `destructive` when `invalid`), fill from the accent
+role, mark from `selectionMarkColor`. Hover and press are declared in
+`style.hover`/`style.active`; disabled adds half opacity and removes pointer
+feedback. Focus paints `colors.ring` on the box, not on the row, so the ring sits
+on the control the way it does in `Checkbox`.
+
+## Limitations
+
+- No `aria-checked`; state rides on `aria-valuetext` (above).
+- No arrow-key movement between rows (deliberate; the platform contract is Tab).
+- No mixed/indeterminate **option** state: only the select-all parent is
+  tri-state. An option is checked or unchecked.
+- No per-option `testId` override; ids are derived from the group's `testId`.
+- No `aria-labelledby`, so `label` is written once on the group and each row
+  carries its own option label.
+
+## Verification
+
+- `src/core/checkbox-group.test.ts` — toggling, the parent tri-state over enabled
+  options only, select-all that leaves a disabled value alone, and the identity
+  no-op.
+- `src/components/selection.test.tsx` — the group/row roles, `aria-valuetext`,
+  tab stops, the error border and the focus ring at the render seam.
+- `runtime/checkbox-group.runtime.test.tsx` — a hit-tested press anywhere on the
+  row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
+  value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a
+  disabled row, and the painted error border and ring.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Checkbox** — a single yes/no.
+- **RadioGroup** — one choice from a set.
+- **ToggleGroup** — a segmented control or a formatting set.
+- **Label** — the visible name of a single field.

@@ -34,6 +34,7 @@ never as a promise.
 | [number-field](number-field.mdx) | `NumberField` | [number-field](../examples/number-field.example.tsx) |
 | [otp-field](otp-field.mdx) | `OTPField` | [otp](../examples/otp.example.tsx) |
 | [checkbox](checkbox.mdx) | `Checkbox` | [selection](../examples/selection.example.tsx) |
+| [checkbox-group](checkbox-group.mdx) | `CheckboxGroup` | [selection](../examples/selection.example.tsx) |
 | [radio-group](radio-group.mdx) | `RadioGroup` | [selection](../examples/selection.example.tsx) |
 | [switch](switch.mdx) | `Switch` | [selection](../examples/selection.example.tsx) |
 | [rating](rating.mdx) | `Rating` | [rating](../examples/rating.example.tsx) |

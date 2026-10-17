@@ -58,6 +58,14 @@ export type { TextAreaProps } from "./TextArea.js";
 export { Checkbox, checkboxState, selectionValueText } from "./Checkbox.js";
 export type { CheckboxProps } from "./Checkbox.js";
 
+export { CheckboxGroup } from "./CheckboxGroup.js";
+export type {
+  CheckboxGroupFocus,
+  CheckboxGroupHandlers,
+  CheckboxGroupOption,
+  CheckboxGroupProps,
+} from "./CheckboxGroup.js";
+
 export { Switch } from "./Switch.js";
 export type { SwitchProps } from "./Switch.js";
 

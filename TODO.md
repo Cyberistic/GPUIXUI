@@ -266,6 +266,12 @@ retired once both branches are one
       stayed false and the field looked unfocused. It now starts from the prop;
       five runtime tests prove the ring on mount and that it clears on blur, and
       the limitation is deleted from the docs (plan 064)
+`[x]` `packages/primitives`: **`CheckboxGroup`** — the inventory's "Checkbox
+      Group" variant had no component; the example hand-rolled the parent
+      maths. Data-driven rows, one interactive element per option (the visible
+      label is the hit area and the tab stop), an optional select-all parent
+      with a derived mixed state, and a core rule that never clears a disabled
+      option (plan 065)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

@@ -19,19 +19,16 @@ import { Checkbox } from "@gpuixui/primitives";
 />;
 ```
 
-An indeterminate parent:
+An indeterminate **parent** over a set of options is `CheckboxGroup`'s job — it
+derives the tri-state and never clears a disabled option:
 
 ```tsx
-<Checkbox
-  checked={email && push}
-  indeterminate={!email !== !push}
-  onChange={(next) => {
-    setEmail(next);
-    setPush(next);
-  }}
-  label="All channels"
-/>;
+import { CheckboxGroup } from "@gpuixui/primitives";
+
+<CheckboxGroup label="Channels" selectAll="All channels" options={channels} />;
 ```
+
+`Checkbox` itself paints `indeterminate` when a caller owns that state.
 
 ## API
 
@@ -83,7 +80,8 @@ paints the selection ring (`colors.ring`, spread by `borderWidth.strong`).
 
 - No `aria-checked` (above).
 - No label-inside-the-control composition: pair it with a `Label` or use the
-  `label` prop for the accessible name only.
+  `label` prop for the accessible name only. `CheckboxGroup` owns the labelled
+  row when several checkboxes share one value.
 - No partial-state animation and no custom mark.
 
 ## Verification
@@ -104,4 +102,5 @@ nub run --filter @gpuixui/primitives test:runtime
 
 - **Switch** — an immediate on/off with a different intent.
 - **RadioGroup** — one choice from a set.
+- **CheckboxGroup** — several checkboxes that make up one selection.
 - **Label** — the visible name.

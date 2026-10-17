@@ -2,21 +2,20 @@
  * Selection example: notification preferences.
  *
  * The three selection controls in the roles they actually differ in — a
- * checkbox group with an indeterminate parent, a radio group for cadence, and a
- * switch for an immediate pause. Each is controlled by the caller, so the
+ * checkbox group with a derived select-all parent, a radio group for cadence,
+ * and a switch for an immediate pause. Each is controlled by the caller, so the
  * example demonstrates the API a real settings screen uses.
  */
 
 import { useState, type ReactElement } from "react";
 import {
   Box,
-  Checkbox,
+  CheckboxGroup,
   RadioGroup,
   Separator,
   Stack,
   Switch,
   Text,
-  useTheme,
 } from "../src/index.js";
 
 /** A labelled row: the control and the sentence that explains it. */
@@ -40,15 +39,11 @@ const Row = ({
   </Stack>
 );
 
-/** Notification preferences: checkboxes, a radio group and a switch. */
+/** Notification preferences: a channel set, a radio group and a switch. */
 export const SelectionExample = (): ReactElement => {
-  const theme = useTheme();
-  const [email, setEmail] = useState(true);
-  const [push, setPush] = useState(false);
+  const [channels, setChannels] = useState<readonly string[]>(["email"]);
   const [cadence, setCadence] = useState("daily");
   const [paused, setPaused] = useState(false);
-  const all = email && push;
-  const none = !email && !push;
 
   return (
     <Box
@@ -62,43 +57,24 @@ export const SelectionExample = (): ReactElement => {
       <Stack direction="column" gap="md">
         <Text role="h3">Notifications</Text>
 
-        <Checkbox
-          checked={all}
-          indeterminate={!all && !none}
-          onChange={(next) => {
-            setEmail(next);
-            setPush(next);
-          }}
-          label="All channels"
+        <CheckboxGroup
+          label="Notification channels"
+          selectAll="All channels"
+          value={channels}
+          onChange={setChannels}
+          options={[
+            {
+              value: "email",
+              label: "Email",
+              description: "A digest to your account address.",
+            },
+            {
+              value: "push",
+              label: "Push",
+              description: "Delivered by the desktop application.",
+            },
+          ]}
         />
-        <Text role="caption" tone="muted">
-          {all
-            ? "Every channel is on."
-            : none
-              ? "No channel is on."
-              : "Some channels are on."}
-        </Text>
-
-        <Stack
-          direction="column"
-          gap="sm"
-          style={{ paddingLeft: theme.spacing.lg }}
-        >
-          <Row title="Email" description="A digest to your account address.">
-            <Checkbox
-              checked={email}
-              onChange={setEmail}
-              label="Email notifications"
-            />
-          </Row>
-          <Row title="Push" description="Delivered by the desktop application.">
-            <Checkbox
-              checked={push}
-              onChange={setPush}
-              label="Push notifications"
-            />
-          </Row>
-        </Stack>
 
         <Separator orientation="horizontal" />
 

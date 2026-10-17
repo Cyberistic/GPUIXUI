@@ -43,6 +43,15 @@ export {
 export type { ToggleGroupOption, ToggleGroupType } from "./toggle-group.js";
 
 export {
+  enabledValues,
+  groupParentState,
+  isGroupSelected,
+  toggleGroupAll,
+  toggleGroupValue,
+} from "./checkbox-group.js";
+export type { CheckboxGroupOption } from "./checkbox-group.js";
+
+export {
   applyOtpInput,
   decideOtpKey,
   normalizeOtp,
