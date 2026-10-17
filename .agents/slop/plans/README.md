@@ -90,6 +90,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [091](./091-selection-in-soft-surfaces.md) | Selection inside a soft status surface | F | 014, 063, 071, 081, 087, 090 | done |
 | [092](./092-control-boundary-soft-fills.md) | The control boundary on the soft status fills | F | 084, 090, 091 | done |
 | [093](./093-ring-on-soft-fills.md) | The focus ring on the soft status fills | F | 086, 090, 092 | done |
+| [094](./094-skeleton-on-row-washes.md) | The loading skeleton on the row washes | F | 078, 079, 087, 093 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -428,6 +429,16 @@ while it sits directly on a soft status fill. No shipped set fails — identity
 light `warningSoft` at 3.37:1 is the tightest — so no colour moves; the four
 fills join the `boundary` class (113 → 117 pairs) so an edited theme cannot make
 a focused control lose its only focus indicator there.
+
+094 closes the last painted surface the audits of plans `076` and `078` left
+unguarded: the loading skeleton was measured on the canvas, card and popover, but
+a skeleton row is hovered, pressed and selected like any other, and it also sits
+in the `muted` panel of a sidebar list. Seventeen shipped pairs were under
+1.05:1, ten of them exactly **1.000:1** — the identity and high-contrast
+skeletons *were* the `active` fill — so a pressed loading row erased the
+placeholder. The four surfaces join the `surface` class (117 → 121 pairs) and the
+skeleton moves one ramp step in seven sets; no wash moves, because washes are
+shared by five other contracts.
 
 ### Reference adoption (block `200–299`)
 
