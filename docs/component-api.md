@@ -65,9 +65,7 @@ a public state object instead:
 ```tsx
 <TabsTrigger
   value="billing"
-  style={(state) => ({
-    color: state.active ? colors.accent : colors.mutedForeground,
-  })}
+  style={(state) => ({ opacity: state.active ? 1 : 0.85 })}
 />
 ```
 
