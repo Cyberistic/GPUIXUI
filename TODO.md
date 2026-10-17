@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 91/120
+`[x]` `[████████░░]` 92/121
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -180,6 +180,10 @@ every shipped set passes, so no colour moves and the contract grows 261 → 262
 `applyPlatformStyle(highBase, style, "default")` keyed its contrast declaration
 off `Object.keys`, so an all-undefined colour object inherited the AAA palette
 but declared `default`; the predicate reads defined values now (plan 323)
+`[x]` Name every public type in `docs/tokens.md` — 24 of the 44 exported types,
+including `ThemeOverrides`, `PlatformRecipeName` and the contrast contract's
+`ContrastPair`, were absent while the value-coverage test stayed green; a
+module-walk guard now holds the type index to the entry modules (plan 324)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

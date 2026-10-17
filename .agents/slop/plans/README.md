@@ -120,6 +120,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [321](./321-total-theme-merges.md) | Total theme merges: an explicit `undefined` must inherit | F | 011, 085, 089, 097, 304, 310, 311 | done |
 | [322](./322-skeleton-accent-wash.md) | The loading skeleton on the accent a selectable row hovers | F | 071, 078, 094, 300, 309, 312, 314, 316 | done |
 | [323](./323-undefined-platform-colour.md) | An `undefined` platform colour is not a colour override | F | 301, 310, 311, 321 | done |
+| [324](./324-public-type-index.md) | Name every public type in the reference | F | 066, 071, 086, 311 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -836,6 +837,20 @@ palette. The predicate now reads defined values, so an undefined colour is not a
 override and the base's level stays; one defined colour still declares `default`.
 `platform-claim.test.ts` states both directions, and no theme, style or pair
 changes.
+
+324 closes the type half of plan 066. The catalogue promised “if a token is not
+here, it is not public”, but its coverage guard enumerated `Object.keys` of the
+runtime namespace, so it could only see values. Types do not exist at runtime:
+a walk of the two entry modules — following `export *` and named re-exports —
+finds **44** public types, and **24** were absent from the reference, including
+`ThemeOverrides` (the extension mechanism's own input), `PlatformRecipeName`
+(plan 311's resolver parameter), `ThemeConfig`, `DensityOverrides` and the three
+contrast-contract types (`ContrastPair`, `ContrastPairClass`,
+`ContrastFailure`). A consumer had to infer each from a signature. `docs/tokens.md`
+now has a `## Types` index naming all 44 once, alphabetically, and
+`public-types.test.ts` compares the table with the module walk in both
+directions, so a new export cannot ship unnamed and a stale row cannot linger.
+No value, token, pair or floor changes.
 
 ### Reference adoption (block `200–299`)
 
