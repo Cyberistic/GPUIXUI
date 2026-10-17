@@ -30,5 +30,6 @@ consume API metadata and examples; nothing in `packages/` may import from it.
 | ------- | ------- |
 | `config` | Shared TypeScript configuration (`tsconfig.base.json`) |
 | `deploy` | Alchemy stack declaring the docs site's Cloudflare resources |
+| `testing` | Platform-free half of the native smoke suite: check/scenario model, report, runtime preflight (consumed from `dist`, no `@gpuix/*` import) |
 
 The rest are Phase B/C deliverables, created by their plans in dependency order.

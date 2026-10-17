@@ -19,6 +19,7 @@ apps/docs          Fumadocs documentation + showcase
 apps/playground    Native GPUix playground and smoke tests
 packages/config    Shared TypeScript and tooling configuration
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources
+packages/testing   Platform-free smoke suite: checks, runner, report, preflight
 docs/              Design-system and architecture documents (source of truth)
 examples/          Runnable example apps
 references/        Read-only clones of the reference repos (gitignored)
