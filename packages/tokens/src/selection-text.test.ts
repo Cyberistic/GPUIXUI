@@ -17,6 +17,7 @@ import {
   getPlatformTheme,
   getTheme,
   selectionPairs,
+  selectionSurfaces,
   themeContrastFailures,
   type Theme,
 } from "./index.js";
@@ -59,7 +60,19 @@ const measure = (
 
 describe("the selection wash on painted surfaces", () => {
   it("documents one pair per surface a selected glyph paints on", () => {
+    expect(selectionSurfaces).toEqual([
+      "background",
+      "card",
+      "muted",
+      "hover",
+      "active",
+      "accent",
+      "popover",
+      "input",
+      "selected",
+    ]);
     expect(selectionPairs.map(([, background]) => background)).toEqual([
+      ...surfaces,
       ...surfaces,
     ]);
     expect(selectionPairs.map(([foreground]) => foreground)).toEqual([
@@ -72,6 +85,15 @@ describe("the selection wash on painted surfaces", () => {
       "popoverForeground",
       "inputForeground",
       "selectedForeground",
+      "mutedForeground",
+      "mutedForeground",
+      "mutedForeground",
+      "mutedForeground",
+      "mutedForeground",
+      "mutedForeground",
+      "mutedForeground",
+      "mutedForeground",
+      "mutedForeground",
     ]);
   });
 
@@ -119,6 +141,12 @@ describe("the selection wash on painted surfaces", () => {
       "hover",
       "active",
       "selected",
+      "muted",
+      "hover",
+      "active",
+      "accent",
+      "popover",
+      "selected",
     ]);
     expect(
       failures.map(({ foreground, pairClass, floor }) => ({
@@ -130,6 +158,12 @@ describe("the selection wash on painted surfaces", () => {
       { foreground: "foreground", pairClass: "body", floor: 7 },
       { foreground: "foreground", pairClass: "body", floor: 7 },
       { foreground: "selectedForeground", pairClass: "secondary", floor: 7 },
+      { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
+      { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
+      { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
+      { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
+      { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
+      { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
     ]);
   });
 });

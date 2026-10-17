@@ -211,7 +211,8 @@ export interface ThemeColors {
  *
  * The divider sits a half-step off the fill ladder (`#D6DAE1`, between neutral
  * 200 and 300) so a bordered control's edge stays visible on the fill it paints
- * (plan 080).
+ * (plan 080). `mutedForeground` is neutral 700 rather than 600 so secondary text
+ * keeps the secondary floor when it is selected on a pressed row (plan 087).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -227,7 +228,7 @@ export const lightColors = {
   secondary: palette.neutral[100],
   secondaryForeground: palette.neutral[800],
   muted: palette.neutral[100],
-  mutedForeground: palette.neutral[600],
+  mutedForeground: palette.neutral[700],
   accent: palette.iris[50],
   accentForeground: palette.iris[800],
   destructive: palette.red[600],
@@ -274,7 +275,8 @@ export const lightColors = {
  * Dark theme semantic roles. Designed, not an inversion of the light theme.
  * The divider sits a half-step off the fill ladder (`#343B47`, between neutral
  * 800 and 700) so a bordered control's edge stays visible on the fill it paints
- * (plan 080).
+ * (plan 080). `mutedForeground` is neutral 300 rather than 400 so secondary text
+ * keeps the secondary floor when it is selected on a pressed row (plan 087).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -290,7 +292,7 @@ export const darkColors = {
   secondary: palette.neutral[800],
   secondaryForeground: palette.neutral[200],
   muted: palette.neutral[850],
-  mutedForeground: palette.neutral[400],
+  mutedForeground: palette.neutral[300],
   accent: palette.iris[900],
   accentForeground: palette.iris[200],
   destructive: palette.red[400],

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 54/72
+`[x]` `[███████░░░]` 55/73
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -286,6 +286,10 @@ every shipped hex is unchanged (plan 085)
 no stated exemption, and the focus ring missed the `muted` panel and the
 `accent` wash a focused row paints; both are closed, and a new guard fails a role
 that is neither measured nor argued (plan 086)
+`[x]` Hold selected secondary text to its floor through the selection wash —
+identity light measured 4.06:1 and identity dark 3.49:1 on a pressed row, and
+seven shipped sets failed — and guard the wash's own perceivability so the fix
+cannot erase the highlight; seven secondary greys move one step (plan 087)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now

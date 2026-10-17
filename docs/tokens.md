@@ -36,7 +36,9 @@ import {
   platformStyles,
   platformTypes,
   selectionPairs,
+  selectionSurfaces,
   selectionStyle,
+  selectionWashPairs,
   statusTone,
   statusTones,
   systemUiFont,
@@ -102,7 +104,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `muted` | `#EEF1F5` | `#222730` | quiet surface |
-| `mutedForeground` | `#545D6C` | `#A1A9B7` | secondary text |
+| `mutedForeground` | `#3D4552` | `#CBD1DB` | secondary text |
 | `accent` | `#EEF0FF` | `#2E2370` | tinted emphasis surface |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
 | `destructive` | `#CC3439` | `#FF6B6B` | destructive action |
@@ -731,7 +733,14 @@ translucent (24% in the default themes, 30% at high contrast), so selected text
 keeps the body contrast on every surface a glyph can be selected on:
 `background`, `card`, `muted`, `hover`, `active` and `accent` with `foreground`;
 `popover` with `popoverForeground`; `input` with `inputForeground`; and `selected`
-with `selectedForeground` at the secondary floor. `selectionPairs` lists them.
+with `selectedForeground` at the secondary floor. Secondary text is held to the
+secondary floor through the same wash on all nine surfaces (`mutedForeground`),
+because a row description, a card caption or a message timestamp is selected
+with the body copy around it. `selectionSurfaces` is the list of surfaces,
+`selectionPairs` holds the body and secondary text pairs, and
+`selectionWashPairs` holds the wash itself to the 1.05:1 perceivability floor on
+each surface, so a highlight that is technically readable but invisible fails
+the check too.
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";
@@ -851,7 +860,8 @@ text on the state washes (`hover`, `active`, `accent` and `selected`), the other
 status pairs, the focus ring on the plain surfaces, the `muted` panel, the
 `accent` wash and the three state washes a focused control can sit on, the
 functional control boundary on the `muted` panel and those washes, the selection
-wash, the soft status surfaces and the decorative dividers
+wash — body and secondary text through it, and the wash's own perceivability —
+the soft status surfaces and the decorative dividers
 — including on the `secondary`, `hover`, `active` and `accent` fills a bordered
 control paints.
 The default is the
@@ -859,11 +869,14 @@ level the theme declares, so a high-contrast theme is checked against 7:1 withou
 a second argument; naming a level asks a stricter question of a theme that does
 not claim it. It returns one entry per missed pair, naming the two roles, the
 pair class, the floor and the measured ratio. The selection wash is measured as
-it paints, with the role each surface uses for its own text: the foreground over
+it paints, with both text roles each surface carries: the body role over
 `compositeOver(selection, background)`, `card`, `muted`, `hover`, `active` and
 `accent`; `popoverForeground` over `popover`; `inputForeground` over `input`; and
-`selectedForeground` over `selected` at the secondary floor — reported with
-`wash: "selection"`. `selectionPairs` is the list.
+`selectedForeground` over `selected`; and `mutedForeground` on all nine surfaces
+at the secondary floor — reported with `wash: "selection"`. `selectionPairs` is
+the text list. The wash itself is compared with each surface it paints on, so a
+highlight that has become imperceptible is reported as well;
+`selectionWashPairs` is that list.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
@@ -1076,16 +1089,24 @@ washes as well as on `popover`, so a status label inside a hovered, pressed or
 selected row or a dialog is covered; the `borderStrong` boundary is measured on
 `popover`, the `muted` panel and those four washes, so a checkbox or field in a
 quiet panel, a hovered, pressed, selectable or selected row still shows its edge.
+Text selection is measured in both directions: `selectionPairs` holds the body
+role each surface uses and `mutedForeground` on all nine `selectionSurfaces` to
+their floors, and `selectionWashPairs` holds the wash itself to the 1.05:1
+perceivability floor on each, because a highlight can be readable and still be
+invisible. Windows dark and both high-contrast sets already cleared the secondary
+floor through the wash; the other seven moved their secondary grey one step away
+from the canvas (plan `087`).
 
-Every colour role is accounted for: `contrastPairs` and `selectionPairs` measure
-the painted roles, and `contrast.test.ts` keeps a declared exemption list for the
+Every colour role is accounted for: `contrastPairs`, `selectionPairs` and
+`selectionWashPairs` measure the painted roles, and `contrast.test.ts` keeps a
+declared exemption list for the
 five that are not pairs — `disabled` and `disabledForeground` (WCAG exempts
 inactive controls, and the design system requires a visible dim rather than a
 floor), `overlay` (a scrim, whose job is to obscure), `scrollbar` (reserved; the
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`084` closed.
+plans `076`–`087` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
@@ -1107,7 +1128,8 @@ and `contrast.test.ts` proves the public checker passes every shipped theme and
 names the pairs a brand theme, an opaque selection wash, an invisible soft
 surface, a vanished divider or a malformed role misses. It also proves the
 checker reads the level a theme declares: a
-high-contrast theme with a 5.33:1 secondary role is reported at the 7:1 floors
+high-contrast theme whose secondary text is 6.70:1 on its pressed wash is
+reported at the 7:1 floors
 without a second argument. `docs.test.ts` holds the `Theme` block above to the
 interface, so a field cannot ship undocumented, and requires the two signatures
 that carry the declaration.

@@ -352,8 +352,22 @@ describe("docs/tokens.md quoted figures", () => {
       "selected on: `background`, `card`, `muted`, `hover`, `active` and `accent` " +
       "with `foreground`; `popover` with `popoverForeground`; `input` with " +
       "`inputForeground`; and `selected` with `selectedForeground` at the " +
-      "secondary floor. `selectionPairs` lists them.";
+      "secondary floor.";
     expect(markdownProse).toContain(sentence);
+
+    const secondary =
+      "Secondary text is held to the secondary floor through the same wash on " +
+      "all nine surfaces (`mutedForeground`), because a row description, a card " +
+      "caption or a message timestamp is selected with the body copy around it.";
+    expect(markdownProse).toContain(secondary);
+
+    [
+      "`selectionSurfaces` is the list of surfaces",
+      "`selectionPairs` holds the body and secondary text pairs",
+      "`selectionWashPairs` holds the wash itself",
+    ].forEach((claim) => {
+      expect(markdownProse, claim).toContain(claim);
+    });
   });
 
   it("states the wash strength in both colour tables", () => {
@@ -622,6 +636,8 @@ describe("docs/design-system.md", () => {
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\` and the \`hover\`/\`active\`/\`selected\` washes, and essential boundaries on \`popover\`, \`muted\` and the four state washes | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

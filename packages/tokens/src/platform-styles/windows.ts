@@ -5,7 +5,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * square control corners, comfortable controls and crisp shadows. `sans` stays
  * GPUI's system sentinel; `mono` is the family Windows installs. The dark
  * selection wash uses the light accent as its base so white text keeps the body
- * floor on the fills a row paints (plan 081). The accent's readable text step is
+ * floor on the fills a row paints (plan 081). The light secondary grey is one
+ * step darker so secondary text keeps its floor through the selection wash on
+ * the pressed row (plan 087). The accent's readable text step is
  * `#005BA1` light and `#76D0FF` dark; the fill's `#0067C0` is 4.30:1 on the
  * pressed wash (plan 082). Elevation levels apply their own alpha to the
  * `shadow` tint, so a copied style retints all three by editing one role
@@ -24,7 +26,7 @@ export const windowsPlatformStyle = {
       card: "#FFFFFF",
       popover: "#FFFFFF",
       muted: "#EDEDED",
-      mutedForeground: "#5C5C5C",
+      mutedForeground: "#4A4A4A",
       border: "#D6D6D6",
       borderStrong: "#767676",
       input: "#FFFFFF",

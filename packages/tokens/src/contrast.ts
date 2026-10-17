@@ -326,23 +326,72 @@ export interface ContrastFailure {
   readonly ratio: number;
 }
 
-/** The surfaces a selected glyph is painted on, with the role each one uses. */
+/**
+ * The surfaces a selected glyph is painted on: the plain surfaces, the quiet
+ * panel, the field, the three state washes and a selected row. A wash measured
+ * only on the canvas leaves the other eight unprotected.
+ */
+export const selectionSurfaces = [
+  "background",
+  "card",
+  "muted",
+  "hover",
+  "active",
+  "accent",
+  "popover",
+  "input",
+  "selected",
+] as const;
+
+const selectionForegrounds: Readonly<
+  Record<(typeof selectionSurfaces)[number], keyof ThemeColors>
+> = {
+  background: "foreground",
+  card: "foreground",
+  muted: "foreground",
+  hover: "foreground",
+  active: "foreground",
+  accent: "foreground",
+  popover: "popoverForeground",
+  input: "inputForeground",
+  selected: "selectedForeground",
+};
+
+/**
+ * Every text pair a selected glyph paints: the role each surface uses for its
+ * own text on the left, and secondary text on the right. A row description or a
+ * message timestamp is selected with the body copy around it, so it carries the
+ * secondary floor through the same wash.
+ */
 export const selectionPairs: readonly ContrastPair[] = [
-  ["foreground", "background", "body"],
-  ["foreground", "card", "body"],
-  ["foreground", "muted", "body"],
-  ["foreground", "hover", "body"],
-  ["foreground", "active", "body"],
-  ["foreground", "accent", "body"],
-  ["popoverForeground", "popover", "body"],
-  ["inputForeground", "input", "body"],
-  ["selectedForeground", "selected", "secondary"],
+  ...selectionSurfaces.map(
+    (surface): ContrastPair => [
+      selectionForegrounds[surface],
+      surface,
+      surface === "selected" ? "secondary" : "body",
+    ],
+  ),
+  ...selectionSurfaces.map(
+    (surface): ContrastPair => ["mutedForeground", surface, "secondary"],
+  ),
 ];
+
+/**
+ * The surfaces a selection wash must stay visible on. Each entry pairs the
+ * translucent `selection` role with the surface it paints on; the check
+ * composites the two, so a theme whose highlight has become imperceptible fails
+ * the `surface` floor even when every glyph is readable.
+ */
+export const selectionWashPairs: readonly ContrastPair[] =
+  selectionSurfaces.map(
+    (surface): ContrastPair => ["selection", surface, "surface"],
+  );
 
 /**
  * Every documented pair a theme misses — text, status, secondary text and status
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
+ * secondary text and the wash's own perceivability on those surfaces, the
  * loading skeleton measured on the surfaces it fills, the control edge measured
  * on the fills a bordered control paints, and the functional boundary measured
  * on the quiet panel and state washes a bounded control sits on. The level
@@ -403,5 +452,26 @@ export function themeContrastFailures(
           ];
     },
   );
-  return [...pairFailures, ...washFailures];
+  const washVisibilityFailures: ReadonlyArray<ContrastFailure> =
+    selectionWashPairs.flatMap(([foreground, background, pairClass]) => {
+      const painted = compositeOver(
+        theme.colors.selection,
+        theme.colors[background],
+      );
+      const ratio = contrastRatio(painted, theme.colors[background]);
+      const floor = floors[pairClass];
+      return ratio >= floor
+        ? []
+        : [
+            {
+              foreground,
+              background,
+              wash: "selection" as const,
+              pairClass,
+              floor,
+              ratio,
+            },
+          ];
+    });
+  return [...pairFailures, ...washFailures, ...washVisibilityFailures];
 }

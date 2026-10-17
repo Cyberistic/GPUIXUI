@@ -71,6 +71,8 @@ import {
   highContrastLightTheme,
   lightTheme,
   selectionPairs,
+  selectionSurfaces,
+  selectionWashPairs,
   themeContrastFailures,
   type Theme,
   type ThemeContrast,
@@ -162,9 +164,10 @@ describe("themeContrastFailures", () => {
   });
 
   it("reads the level a theme declares, not a laxer default", () => {
-    // `#6B6B6B` is 5.33:1 on the AAA canvas (under 7:1) but 4.76:1 on the AAA
-    // muted surface, so only the declared high-contrast floors catch it.
-    expect(quietHighContrastFailures).toHaveLength(8);
+    // `#444444` clears 4.5:1 on every surface — including through the selection
+    // wash — but misses 7:1 on the pressed wash (6.70:1) and on all nine
+    // selected pairs, so only the declared high-contrast floors catch it.
+    expect(quietHighContrastFailures).toHaveLength(10);
     expect(
       quietHighContrastFailures.every(
         ({ foreground, floor }) =>
@@ -178,17 +181,24 @@ describe("themeContrastFailures", () => {
 
   it("names every pair a brand theme misses, and only those", () => {
     const failures = themeContrastFailures(quietBrandTheme);
-    expect(failures).toHaveLength(8);
+    const plain = failures.filter(({ wash }) => wash === undefined);
+    const selected = failures.filter(({ wash }) => wash === "selection");
+
+    expect(plain).toHaveLength(8);
+    expect(selected).toHaveLength(9);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
     ).toBe(true);
-    expect(failures.map(({ background }) => background).toSorted()).toEqual(
+    expect(
+      [...new Set(failures.map(({ background }) => background))].toSorted(),
+    ).toEqual(
       [
         "active",
         "accent",
         "background",
         "card",
         "hover",
+        "input",
         "muted",
         "popover",
         "selected",
@@ -225,14 +235,26 @@ describe("themeContrastFailures", () => {
       ["popoverForeground", "popover"],
       ["inputForeground", "input"],
       ["selectedForeground", "selected"],
+      ...selectionSurfaces.map((surface) => ["mutedForeground", surface]),
     ]);
   });
 
-  it("accepts a transparent wash, because it paints the base", () => {
+  it("reports a wash that paints nothing as invisible", () => {
     const transparent = extendTheme(getTheme("light"), {
       colors: { selection: "#00000000" },
     });
-    expect(themeContrastFailures(transparent)).toEqual([]);
+    // The glyph pairs pass trivially — the wash is the surface — so the only
+    // failures are the wash's own perceivability pairs, one per surface.
+    expect(themeContrastFailures(transparent)).toEqual(
+      selectionWashPairs.map(([foreground, background, pairClass]) => ({
+        foreground,
+        background,
+        wash: "selection" as const,
+        pairClass,
+        floor: contrastFloors.default.surface,
+        ratio: 1,
+      })),
+    );
   });
 
   it("reports a role it cannot measure instead of skipping it", () => {
@@ -248,6 +270,9 @@ describe("themeContrastFailures", () => {
   it("covers every documented pair", () => {
     expect(contrastPairs.length).toBe(103);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
+    expect(selectionPairs.length).toBe(18);
+    expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
+    expect(selectionWashPairs.length).toBe(9);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {
@@ -382,11 +407,10 @@ describe("contract completeness", () => {
   ] as const;
 
   const measuredRoles = new Set<string>(
-    [...contrastPairs, ...selectionPairs].flatMap(
+    [...contrastPairs, ...selectionPairs, ...selectionWashPairs].flatMap(
       ([foreground, background]) => [foreground, background],
     ),
   );
-  measuredRoles.add("selection");
 
   it("every role is measured or exempt", () => {
     const unaccounted = colorRoles.filter(

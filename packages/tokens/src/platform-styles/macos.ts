@@ -6,7 +6,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * up to `#409CFF` — the accent at its hovered weight — because `#0A84FF` is
  * 2.50:1 on the pressed-row wash, under the 3:1 boundary floor. The dark
  * secondary grey and pressed wash are set so row descriptions clear 4.5:1 on
- * both pointer washes (plan 079). `sans` stays GPUI's system sentinel; `mono` is
+ * both pointer washes (plan 079) and through the selection wash (plan 087).
+ * `sans` stays GPUI's system sentinel; `mono` is
  * the family macOS installs. The dark divider is Apple's separator grey
  * (`#48484A`), so an outlined control's edge clears the floor on the washes it
  * paints (plan 080). The accent's readable text step is `#0055B3` light and
@@ -29,7 +30,7 @@ export const macosPlatformStyle = {
       card: "#FFFFFF",
       popover: "#FFFFFF",
       muted: "#ECECF0",
-      mutedForeground: "#5A5A5F",
+      mutedForeground: "#48484A",
       border: "#D1D1D6",
       borderStrong: "#6E6E73",
       input: "#FFFFFF",
@@ -56,7 +57,7 @@ export const macosPlatformStyle = {
       card: "#2C2C2E",
       popover: "#2C2C2E",
       muted: "#2C2C2E",
-      mutedForeground: "#AEAEB2",
+      mutedForeground: "#C7C7CC",
       border: "#48484A",
       borderStrong: "#8E8E93",
       input: "#1C1C1E",

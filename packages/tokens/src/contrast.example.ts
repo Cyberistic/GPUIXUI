@@ -21,13 +21,13 @@ export const quietBrandTheme = extendTheme(getTheme("light"), {
 export const quietBrandFailures = themeContrastFailures(quietBrandTheme);
 
 /**
- * A theme that declares the high-contrast floors and then loses them: 6.58:1
- * against the white canvas, under the 7:1 it was built for, while still passing
- * the default floors on every state wash.
+ * A theme that declares the high-contrast floors and then loses them: 6.70:1 on
+ * the pressed wash and 6.65:1 through the selection wash, under the 7:1 it was
+ * built for, while still passing the default floors on every pair.
  */
 export const quietHighContrastTheme = extendTheme(highContrastLightTheme, {
   name: "Quiet AAA",
-  colors: { mutedForeground: "#5D5D5D" },
+  colors: { mutedForeground: "#444444" },
 });
 
 /**

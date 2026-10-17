@@ -174,9 +174,15 @@ themeContrastFailures(brandTheme); // []
 the parts, and the selection wash is measured as it paints on every surface a
 glyph is selected on: the neutral surfaces with `foreground`, `popover` and
 `input` with their own text roles, and `selected` with `selectedForeground` at
-the secondary floor. High-contrast dark shipped at 6.48:1 on `hover` and 5.49:1
-on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on `active`, until
-plan 081 darkened the three wash bases. The focus ring is
+the secondary floor. Secondary text is measured through the same wash on all
+nine surfaces (`mutedForeground`), because a row description, a card caption or
+a timestamp is selected with the body copy: seven shipped sets were under
+4.5:1 there — identity light 4.06:1 and identity dark 3.49:1 on a pressed row —
+until plan 087 moved their secondary grey. `selectionWashPairs` also holds the
+wash itself to 1.05:1 against each surface, so a highlight cannot be made
+invisible to satisfy a text floor. High-contrast dark shipped at 6.48:1 on `hover`
+and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
+`active`, until plan 081 darkened the three wash bases. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught. Secondary text is
 checked on `hover`, `active`, `accent` and `selected` too, so a row description

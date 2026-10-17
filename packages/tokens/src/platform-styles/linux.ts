@@ -5,7 +5,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * dark), warm grey surfaces, roomier corners and slightly longer transitions.
  * `sans` stays GPUI's system sentinel; `mono` is the family GNOME installs. The
  * dark selection wash uses the light accent as its base so white text keeps the
- * body floor on the fills a row paints (plan 081). The accent's readable text
+ * body floor on the fills a row paints (plan 081). The dark secondary grey is
+ * one step lighter so secondary text keeps its floor through the selection wash
+ * on the selected row (plan 087). The accent's readable text
  * step is `#12488F` light and `#99C1F1` dark; the fill's `#1C71D8` is 3.51:1 on
  * the pressed wash (plan 082). The dark boundary is one step lighter so a
  * checkbox edge clears the floor on the selected row (plan 084). Elevation
@@ -25,7 +27,7 @@ export const linuxPlatformStyle = {
       card: "#FFFFFF",
       popover: "#FFFFFF",
       muted: "#EBEBEA",
-      mutedForeground: "#5E5C58",
+      mutedForeground: "#4A4844",
       border: "#D4D2CF",
       borderStrong: "#77767B",
       input: "#FFFFFF",
@@ -52,7 +54,7 @@ export const linuxPlatformStyle = {
       card: "#303030",
       popover: "#303030",
       muted: "#303030",
-      mutedForeground: "#C0BFBC",
+      mutedForeground: "#D6D5D2",
       border: "#3F3F3F",
       borderStrong: "#A09F9C",
       input: "#303030",

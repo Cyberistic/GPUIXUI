@@ -83,6 +83,15 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states that secondary text and the wash itself are checked through selection", () => {
+    expect(readme).toContain(
+      "Secondary text is measured through the same wash on all nine surfaces (`mutedForeground`)",
+    );
+    expect(readme).toContain(
+      `\`selectionWashPairs\` also holds the wash itself to ${contrastFloors.default.surface}:1 against each surface`,
+    );
+  });
+
   it("states the fills a bordered control paints its edge on", () => {
     expect(readme).toContain(
       "the `secondary`, `hover`, `active` and `accent` fills a bordered control paints",

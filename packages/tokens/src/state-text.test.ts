@@ -78,8 +78,9 @@ describe("secondary text on the state washes", () => {
       // The pre-079 secondary grey: readable on the canvas, too quiet on a row.
       colors: { mutedForeground: "#A1A1A6" },
     });
-    const failures = themeContrastFailures(regressed).filter(({ background }) =>
-      washNames.some((wash) => wash === background),
+    const failures = themeContrastFailures(regressed).filter(
+      ({ background, wash }) =>
+        wash === undefined && washNames.some((name) => name === background),
     );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
