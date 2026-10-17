@@ -84,6 +84,12 @@ else
 fi
 rm -f "$CRON_TMP"
 
+# Model fallback chain — seed the active-model state every workstream loop reads,
+# and report which rungs actually have a credential.
+/bin/bash "$REPO/scripts/swarm-model.sh" current >/dev/null
+echo "swarm model chain:"
+/bin/bash "$REPO/scripts/swarm-model.sh" rungs
+
 # Daemon driver — the one that actually ticks on a headless box. Started now so
 # the swarm is supervised without waiting for a graphical login, and ensured on
 # every shell login by the hook below so a reboot recovers on its own.

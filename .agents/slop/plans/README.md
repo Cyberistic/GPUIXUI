@@ -17,7 +17,22 @@ Naming: `NNN-kebab-title.md`, numbered in dependency order. One plan per phase,
 one per package, plus a plan for each cross-cutting concern (native smoke test,
 licensing, docs site).
 
+**Number blocks.** Plans are counted across every worktree (see `PLAN.md` D7).
+Blocks are reserved so concurrent workstreams do not collide:
+
+| Block | Reserved for |
+| ----- | ------------ |
+| `010–019` | tokens and theming |
+| `020–049` | primitives, icons, Phase C |
+| `050–099` | free |
+| `100–199` | packages, apps, smoke test |
+| `200–299` | reference adoption and gap sequencing |
+| `300–399` | free |
+| `400–499` | docs site |
+
 ## The plan set
+
+### `tokens-theme` (block `010–019`, plus one overflow plan)
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -31,11 +46,30 @@ licensing, docs site).
 | [017](./017-focus-ring-and-docs-truth.md) | Focus ring helper and the focus documentation truth pass | B | 011, 016 | done |
 | [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | in progress |
-| [020](./020-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
+| [051](./051-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
 
-Plans 010–020 are the `tokens-theme` workstream. They own `packages/tokens`,
+Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
-agent that owns its paths.
+agent that owns its paths. The block was full at 019 (`010–019` in the table
+above) and 020–049 belongs to primitives, icons and Phase C, so 051 takes the
+first free block — as the tokens workstream's docs-layering plan (050) does.
+
+### Reference adoption (block `200–299`)
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| `200` | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | `020`, `030`, `110–117` | planned |
+| `201` | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | planned |
+| `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | planned |
+| `203` | Adopt `adabraka-ui`'s GPUI limits map as `docs/gpuix-capabilities.md`, re-verified against GPUix 0.10.0 | A | `020`, `110` | planned |
+| `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |
+| `205` | Implement the "not provided by GPUix" cluster | C/E | `200`, `201`, `203`, `030`, `110–117` | planned |
+
+> The `200` block was written by the reference-adoption executor on
+> 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
+> (`010–019`, `020–040`, `051`, `100–130`, `410–412`) live on their own branches
+> and are merged into `main` as each workstream completes; this index is the
+> union.
 
 ## How to use a plan
 

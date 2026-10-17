@@ -11,16 +11,18 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Harness — the supervisor that keeps the swarm alive
 
-`[x]` `[█████████░]` 5/6
+`[x]` `[█████████░]` 6/7
 
 `[x]` Repo on `proserver` with the required shape, mission, rules and plan index
 `[x]` opencode 2.0.31 installed with the provider credentials and a trimmed config
 `[x]` Verified a real run on `opencode-go-braven/deepseek-v4.1-flash`
 `[x]` Supervisor: 30-minute tick, ≥5 agents, one worktree each, idempotent and crash-safe
 `[x]` Scheduler installed (launchd agent + daemon driver; see `.agents/slop/README.md`)
+`[x]` Model fallback chain with limit detection, one active model for the whole swarm, and an hourly recovery probe (see `scripts/README.md`)
 `[ ]` Enforce one live session per worktree: the `opencode run` loop currently
 starts a new session before the previous one closes (evidence:
-`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`)
+`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`; the guard is
+planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ---
 
@@ -72,9 +74,11 @@ platform toggle (plan 051)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[ ]` Add motion tokens (durations/easings) once a component consumes them
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
-(owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
-`references` symlink in `.gitignore` (owner: repo tooling)
+`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
+docs platform toggle (macOS / Linux / Windows / Default) built on
+`platformTypes` + `platformTheme` (owner: `docs-site`); add `tokens` to
+`packages/README.md` and ignore the `references` symlink in `.gitignore`
+(owner: repo tooling)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
 directly and delete their structural copies of the theme and role list, their
 local focus-ring helpers (`primitives/src/core/style.ts`,
@@ -125,3 +129,10 @@ it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`)
+
+## Swarm-owned blockers (fix these)
+
+- **B1** GPUix native bindings fail to install (blocks the playground + every native smoke test).
+- **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
+
+Both are specified in ; each fix starts with a plan under .
