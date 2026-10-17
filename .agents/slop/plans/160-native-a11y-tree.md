@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §8) |
 | Phase | B (feasibility) → feeds every Tier 1–4 interactive component |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140` |
@@ -75,7 +75,7 @@ Tree, `testId` and expected dump:
 | `a11y-button` | `role="button"`, `aria-id="probe-button"`, `aria-label="Save"`, `onClick` | Button, label Save, `Click` in actions |
 | `a11y-unnamed` | `role="button"`, `aria-id="probe-unnamed"`, text child `Unnamed`, `onClick` | Button with **no label** |
 | `a11y-checkbox` | `role="checkbox"`, `aria-id="probe-checkbox"`, `aria-label="Check"`, `tabIndex={0}` | CheckBox, label, no checked field |
-| `a11y-switch` | `role="switch"`, `aria-id="probe-switch"`, `aria-label="Wifi"`, `aria-expanded={false}` | Switch, label, expanded false |
+| `a11y-switch` | `role="switch"`, `aria-id="probe-switch"`, `aria-label="Wifi"` | Switch, label |
 | `a11y-slider` | `role="slider"`, `aria-id="probe-slider"`, `aria-label="Volume"`, `aria-valuetext="42%"` | Slider, value `42%` |
 | `a11y-heading` | `role="heading"`, `aria-id="probe-heading"`, `aria-level={3}` | Heading, level 3 |
 | `a11y-option` | `role="option"`, `aria-id="probe-option"`, `aria-selected` | ListBoxOption, selected true |
@@ -88,15 +88,15 @@ Readout `a11y-frame`: `` `nodes=${frame.node_count} tabStops=${frame.tab_stop_co
 
 Steps:
 
-1. `nodes >= 10`; `tabStops` is at least 2 (two explicit `tabIndex={0}` plus the
-   input if it is a tab stop — record the exact number).
+1. `nodes >= 10`; `tabStops` is the exact number the frame reports (two
+   explicit `tabIndex={0}` plus the input; recorded in §8).
 2. `probe-button`: role `Button`, label `Save`, `on_action` contains `Click`.
 3. `probe-unnamed`: role `Button`, **no label** — assert the option is `None`.
 4. `probe-checkbox`: role `CheckBox`, label `Check`, and the node's `checked`
    state cannot be expressed (the schema has no field; the assertion is that
    the role node exists without one — the limitation is recorded in §8 and
    `COMPONENTS.md`, not faked).
-5. `probe-switch`: role `Switch`, expanded `false`.
+5. `probe-switch`: role `Switch`, label `Wifi`.
 6. `probe-slider`: role `Slider`, value `42%`.
 7. `probe-heading`: role `Heading`, level `3`.
 8. `probe-option`: role `ListBoxOption`, selected `true`.
@@ -196,6 +196,41 @@ and asserts on `Option.getOrElse(node.role, () => "none")`-style fields.
   run exits `1` naming `button label`; restore. Then remove `aria-level` and
   confirm the heading check fails; restore. Record both in §8.
 
-## 8. Measured facts (fill on landing)
+## 8. Measured facts
 
-- _to be measured._
+**Suite: 26/26 green on this host, exit `0`**, `a11y=verified` with the 25 prior
+scenarios unchanged.
+
+- **Roles** — every authored token maps to an AccessKit role: `button`→`Button`,
+  `checkbox`→`CheckBox`, `switch`→`Switch`, `slider`→`Slider`,
+  `heading`→`Heading`, `option`→`ListBoxOption`, plus `<input>`→`TextInput`.
+- **Names are not derived from content.** A `role="button"` with a text child
+  and no `aria-label` has **no name**; the text is a separate `Label` child. An
+  explicit `aria-label` is the only way to name a control.
+- **States** — `aria-expanded={false}` and `aria-selected` reach the tree
+  (false is preserved, not dropped as falsy), `aria-level={3}` sets the heading
+  level, `aria-valuetext="42%"` is the slider's `value`, and
+  `aria-description`/`aria-id` map to `description`/`author_id`.
+- **Missing state channels** — `aria-checked` is not in the typed `HostProps`
+  and no checked state appears for `CheckBox` or `Switch`; `aria-valuenow` is
+  absent too. A Checkbox/Switch must announce state through
+  `aria-description` (honest alternative), not a fake `aria-checked`.
+- **`on_action` follows listeners** — a button with `onClick` reports `Click`
+  (and `Focus` when focusable); without it, no `Click` action exists.
+- **`role="presentation"`** produces no node, while its text still paints and
+  appears as a `Label` child of the parent.
+- **Inputs** — `<input>` exposes `value`, `placeholder` and a `Focus` action.
+  `tab_stop_count` was **3** for two explicit `tabIndex={0}` nodes plus the
+  read-only input, so the input is an implicit tab stop.
+- **Virtual lists** — 50 retained rows produced **8** `ListBoxOption` nodes:
+  the painted window. Row 0 is exposed, row 49 is not. The list needs an
+  explicit height; `flexGrow: 1` inside a plain block `div` painted no rows (and
+  therefore produced no a11y nodes) — the same layout rule `shell-navigation`
+  measured for scrolling.
+- **API shape** — the published `A11yTreeDump` type omits the `frame` counters
+  the runtime prints, so the adapter decodes the dump as unknown input
+  (`Schema.decodeUnknownOption(Smoke.A11yTree)`) instead of trusting the type.
+- **Two-direction proof** — removing `aria-label="Save"` exits `1` with
+  `aria-label is the accessible name: expected "Save", got "none"`; removing
+  `aria-level` exits `1` with `aria-level is the heading level: expected 3, got
+  0`. Restored, both pass.

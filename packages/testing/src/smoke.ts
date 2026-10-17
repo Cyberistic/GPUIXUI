@@ -28,6 +28,7 @@ export const CAPABILITIES = [
   "select",
   "combobox",
   "tooltip",
+  "a11y",
   "scroll",
   "panel",
   "motion",
@@ -155,6 +156,47 @@ export class StyleSnapshot extends Schema.Class<StyleSnapshot>("StyleSnapshot")(
 ) {}
 
 /**
+ * One node's `aria` report from the runtime's accessibility dump.
+ *
+ * Keys mirror the dump, like `BoxShadowSnapshot` mirrors `boxShadow`: the
+ * runtime, not this package, is the source of truth for what AccessKit holds.
+ * `placeholder` and the states are optional because the runtime omits what the
+ * authored props did not set.
+ */
+export class A11yNode extends Schema.Class<A11yNode>("A11yNode")({
+  author_id: Schema.OptionFromOptional(Schema.String),
+  role: Schema.OptionFromOptional(Schema.String),
+  label: Schema.OptionFromOptional(Schema.String),
+  description: Schema.OptionFromOptional(Schema.String),
+  value: Schema.OptionFromOptional(Schema.String),
+  placeholder: Schema.OptionFromOptional(Schema.String),
+  selected: Schema.OptionFromOptional(Schema.Boolean),
+  expanded: Schema.OptionFromOptional(Schema.Boolean),
+  level: Schema.OptionFromOptional(Schema.Number),
+  on_action: Schema.OptionFromOptional(Schema.Array(Schema.String)),
+}) {}
+
+/** The painted frame's accessibility counters. */
+export class A11yFrame extends Schema.Class<A11yFrame>("A11yFrame")({
+  node_count: Schema.Number,
+  tab_stop_count: Schema.Number,
+}) {}
+
+/**
+ * The runtime's accessibility dump.
+ *
+ * Nodes are keyed by ephemeral ids; a scenario addresses one by the authored
+ * `aria-id` (`author_id`), never by a key. A node without `aria` is structural.
+ */
+export class A11yTree extends Schema.Class<A11yTree>("A11yTree")({
+  frame: A11yFrame,
+  nodes: Schema.Record(
+    Schema.String,
+    Schema.Struct({ aria: Schema.OptionFromOptional(A11yNode) }),
+  ),
+}) {}
+
+/**
  * The only way a scenario touches the runtime.
  *
  * `apps/playground` adapts a real renderer to this interface; a scenario never
@@ -175,6 +217,8 @@ export interface SmokeHost {
    * so a scenario asserts on tokens, never on an untyped style record.
    */
   readonly paintedStyle: (testId: string) => StyleSnapshot | null;
+  /** The last painted frame's accessibility tree, decoded at the adapter. */
+  readonly a11y: () => A11yTree | null;
   readonly focused: () => string | null;
   readonly click: (testId: string) => void;
   readonly clickWindow: (x: number, y: number) => void;

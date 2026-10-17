@@ -108,6 +108,12 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
         ),
       ),
     ),
+  // The published `A11yTreeDump` type omits the `frame` counters the runtime
+  // prints, so the dump is decoded as unknown input instead of trusted.
+  a11y: () =>
+    Option.getOrNull(
+      Schema.decodeUnknownOption(Smoke.A11yTree)(renderer.getA11yTree()),
+    ),
   focused: () =>
     Option.match(
       Option.flatMap(

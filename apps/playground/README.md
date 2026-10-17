@@ -175,16 +175,36 @@ function — static children render every item regardless of the query. And a
 Tooltip trigger closes on click (mousedown → close, click → close), so focus
 that arrives from a click does not leave it open; hover is the supported path.
 
+## Accessibility (plan `160`)
+
+`a11y-tree` reads the last painted frame's AccessKit dump and turns the
+library's accessibility claims into a test:
+
+| Fact | Result |
+| ---- | ------ |
+| roles | `button`→`Button`, `checkbox`→`CheckBox`, `switch`→`Switch`, `slider`→`Slider`, `heading`→`Heading`, `option`→`ListBoxOption`, `<input>`→`TextInput` |
+| names | **not derived from text**: a button with a text child and no `aria-label` has no accessible name |
+| states | `aria-expanded` (including `false`), `aria-selected`, `aria-level`, `aria-valuetext`, `aria-description`, `aria-id` all reach the dump |
+| missing | **no checked state** for CheckBox/Switch (`aria-checked` is not in the typed props); no `valuenow`; no `labelledby`/`describedby` |
+| actions | `on_action` follows the native listeners: a `Click` action exists only with `onClick` |
+| presentation | produces no node; its text still paints as a `Label` |
+| virtual list | 8 of 50 retained rows are exposed — the a11y tree follows the **painted** window |
+
+The honest consequence: every control must pass `aria-label`, and a
+Checkbox/Switch announces its state through `aria-description` until GPUix
+exposes a checked channel.
+
 ## Evidence on this host
 
-The suite is **25/25 green** here (`exit 0`):
+The suite is **26/26 green** here (`exit 0`):
 
 ```
-25/25 scenarios passed · capabilities: layout=verified text=verified
+26/26 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
-scroll=verified panel=verified virtual-list=verified table=verified
-tree=verified log=verified theme=verified workspace=verified
+a11y=verified scroll=verified panel=verified virtual-list=verified
+table=verified tree=verified log=verified theme=verified
+workspace=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -197,6 +217,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | popups | Select and Combobox open, commit and close under synthetic input, including native keys after `autoFocus`; Select returns focus to its trigger on every close. `nativeSimulateMouseMove` delivers enter/leave, so a hover tooltip is measurable; its close is a JS timer, not the GPUI clock |
+| a11y | the AccessKit dump maps every typed ARIA token to a role; names come only from `aria-label`; CheckBox/Switch have no checked state; the tree follows the painted virtual window |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -230,6 +251,7 @@ src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
 src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/popups.tsx    Select, Combobox and Tooltip in the runtime
+src/scenarios/a11y.tsx      the AccessKit dump: roles, names, states, window
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -262,10 +284,11 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The fourteen core capabilities (including the token gallery, the modal
-  contract, floating placement and the three published popups), the Tier 3/4
-  probes and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
-  (25/25), with a written report and screenshots.
+- The fifteen core capabilities (including the token gallery, the modal
+  contract, floating placement, the three published popups and the
+  accessibility tree), the Tier 3/4 probes and the app-level shortcut probe pass
+  in real GPUix 0.10.0 on this host (26/26), with a written report and
+  screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
@@ -279,6 +302,9 @@ narrower. Each deviation is deliberate and measured:
   `expected … "open=false value=Beta", got "open=false value=none"`,
   `autoHighlight={false}` fails the Combobox commit, and replacing the tooltip
   hover with a click fails the open check — all exit `1` (plan `159` §8).
+  Dropping `aria-label` from the probe button fails with
+  `expected "Save", got "none"`, and dropping `aria-level` fails the heading
+  with `expected 3, got 0` (plan `160` §8).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

@@ -47,9 +47,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
+| a11y | `a11y-tree` | verified |
 | motion | `motion-collapse` | verified |
 
-The suite is **25/25 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **26/26 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -113,6 +114,24 @@ render every item regardless of the query. And a click closes a Tooltip trigger
 (mousedown → onMouseDown closes, then the click), so focus that arrives *from a
 click* does not leave the tooltip open — hover is the supported open path.
 
+`a11y-tree` is the runtime verdict for the accessibility claims, read from the
+painted frame's AccessKit dump. What actually holds: every authored ARIA token
+maps to an AccessKit role (`button`→`Button`, `checkbox`→`CheckBox`,
+`slider`→`Slider`, `heading`→`Heading`, `option`→`ListBoxOption`), and
+`aria-label`, `aria-description`, `aria-id`, `aria-expanded` (including
+`false`), `aria-selected`, `aria-valuetext` and `aria-level` all reach it.
+`on_action` follows the native listeners — a `Click` action exists only when the
+element has an `onClick`. What does not hold: **an accessible name is never
+derived from the element's text**, so every control needs an explicit
+`aria-label`; a **CheckBox or Switch exposes no checked/toggled state**
+(`aria-checked` is not even in the typed props); a Slider has only
+`aria-valuetext`, no `valuenow`/`min`/`max`; and `role="presentation"` produces
+no node while its text still paints as a `Label`. A `<virtual-list>`'s
+AccessKit nodes follow the **painted window** (8 of 50 rows), so an off-window
+grid row or tree node is invisible to assistive technology — the same trade the
+paint window already makes. Explicit `tabIndex={0}` rows and an `<input>` each
+count as a tab stop in the frame.
+
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
 run by `apps/playground/legacy-probe`; ADR 0002) and `docs` (the upstream
@@ -173,11 +192,12 @@ occlusion, not menu semantics); Toasts / notifications (`AnimatePresence` +
 custom drawing (**unverified** — the README's Supported Elements table marks it
 "Custom drawing (planned)").
 
-**Cross-cutting, verified, partial:** AccessKit `role`, `aria-label`,
-`aria-description`, `aria-id`, `aria-expanded`, `aria-selected`,
+**Cross-cutting, verified, partial** (runtime: `a11y-tree`): AccessKit `role`,
+`aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`,
 `aria-valuetext`, `aria-level`; native `tabIndex` / `autoFocus` and renderer
 `focusElement` / `focusNext` / `focusPrevious` / `focusNextWithin`. There is **no**
-`aria-checked`, `aria-valuenow`, `aria-labelledby` or `aria-describedby`.
+`aria-checked`, `aria-valuenow`, `aria-labelledby` or `aria-describedby`, and an
+accessible name is **not** computed from the element's text.
 
 ### Not provided — needs real implementation
 
@@ -226,20 +246,20 @@ carries an evidenced limitation. The capability evidence lives in
 | Stack / layout primitives | todo | yes | flexbox + grid provided. API-shape work, not implementation. |
 | Boxes / containers | todo | yes | `div`. API-shape work, not implementation. |
 | Scrollable containers | todo | yes | `overflow: "scroll"` gives a native scroll container. API-shape work, not implementation. |
-| Buttons | todo | ? | `Button` is on `references/gpuix` `main` but **not in published 0.10.0** (verified). Our own keyboard contract is required — plan `030` §3.4. Variants merged here: Floating action button and Copy button (adabraka `floating_action_button`, `copy_button`). |
+| Buttons | todo | ? | `Button` is on `references/gpuix` `main` but **not in published 0.10.0** (verified). Our own keyboard contract is required — plan `030` §3.4. A `role="button"` surface must pass `aria-label`: the runtime does **not** derive the name from its text (`a11y-tree`). Variants merged here: Floating action button and Copy button (adabraka `floating_action_button`, `copy_button`). |
 | Button groups | todo | ? | Variants merged here: Toggle Group (base-gpui `ToggleGroup`) and Segmented control (adabraka `segmented_nav`) — pressed-state variants, not separate rows. |
-| Labels | todo | ? | `<text>` exists; control association needs `aria-labelledby`, which GPUix does not expose (verified). |
+| Labels | todo | ? | `<text>` exists; control association needs `aria-labelledby`, which GPUix does not expose (verified, and the `a11y-tree` dump confirms no such field). Compose the name into `aria-label` on the control instead. |
 | Text inputs | todo | yes | `<input>` host element. API-shape work, not implementation. |
 | Text areas | todo | yes | `<textarea>` host element. API-shape work, not implementation. |
-| Checkboxes | todo | ? | No checkbox host element; `aria-checked` is unsupported. Variant merged here: Checkbox Group (base-gpui `CheckboxGroup`). |
+| Checkboxes | todo | ? | No checkbox host element; `aria-checked` is unsupported and the AccessKit node exposes **no checked state** (`a11y-tree`). Honest alternative: announce "checked"/"unchecked" through `aria-description`, and give the control an explicit `aria-label` (names are not derived from text). A true state needs an upstream GPUix change. Variant merged here: Checkbox Group (base-gpui `CheckboxGroup`). |
 | Radio groups | todo | ? | No radio host element; roving-focus keyboard contract is ours. |
 | Selects | todo | yes | `Select` + parts published and measured natively (`select-choose`): open, choose, keyboard, Escape and outside dismissal all work; focus returns to the trigger. API-shape work, not implementation. |
-| Switches | todo | ? | Distinct from Toggle (on/off state vs momentary pressed mode). |
+| Switches | todo | ? | Distinct from Toggle (on/off state vs momentary pressed mode). The `Switch` role exists but, like Checkbox, exposes **no checked state**; announce it through `aria-description` (`a11y-tree`). |
 | Progress | todo | ? | `div` + width/opacity `motion`. |
 | Tooltips | todo | yes | `Tooltip` + parts published and measured natively (`tooltip-open`): opens on mouse enter, closes on leave, content paints; a click closes the trigger. API-shape work, not implementation. Placement facts are the shared `floating` probe: `align="center"` is off by half the panel, `fit=snap` does not flip. |
 | Skeletons | todo | ? | `div` + opacity `motion` (GPUix animates opacity only — verified). |
 | Loading indicators | todo | ? | **No rotation** in `motion` (verified); use an indeterminate sweep (width/left) or a discrete step cycle. |
-| Slider | todo | ? | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
+| Slider | todo | ? | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. The `Slider` role exposes only `aria-valuetext` (no `valuenow`/`min`/`max`), so set a formatted value string on every change (`a11y-tree`). |
 | Range slider | todo | ? | Two-thumb variant of Slider; its own runtime for min/max ordering and thumb crossing. No host element. |
 | Meter | todo | ? | Distinct from Progress: a value in a range, not task completion. No host element. |
 | Number Field | todo | ? | `<input>` exists (API-shape for the text part); stepper buttons, drag-to-scrub, clamping and locale formatting are ours. |
@@ -302,7 +322,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
-| Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. |
+| Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). |
 | Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `roving-focus` proved component code can move focus between rows with `renderer.focusElement`, so a roving-tabindex tree is buildable. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
@@ -350,7 +370,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `onFileDrop` handles file drops only. |
 | Notification centre | todo | ? | Composition over toasts + panels. |
 | Multi-step forms | todo | ? | Variant merged here: Form (adabraka `form`) — partial coverage; validation orchestration is the Tier 2 Form row. |
-| Virtualized hierarchical data | todo | ? | Tree views + `<virtual-list>`; hierarchical virtualization is ours. |
+| Virtualized hierarchical data | todo | ? | Tree views + `<virtual-list>`; hierarchical virtualization is ours. Only the painted window reaches the accessibility tree, so a keyboard-focusable row outside it is invisible to assistive technology (`a11y-tree`). |
 | Advanced filtering / query builders | todo | ? | Composition over inputs + menus. |
 | QR code | todo | ? | Render the matrix as a grid of `div`s or one `<svg>`; both are provided. The encoder is ours (dependency not yet chosen). |
 | File upload | todo | ? | Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists. |
