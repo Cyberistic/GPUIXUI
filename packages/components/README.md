@@ -4,7 +4,8 @@ Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
 Plans for this package and every component it holds are in
-`.agents/slop/plans/` (110–134). Read those before adding a component.
+`.agents/slop/plans/` (110–139, 157–158, 300–308). Read those before adding a
+component.
 
 ## Boundary
 
@@ -40,6 +41,9 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/breadcrumb.tsx` | Breadcrumb: a declarative trail with `maxItems` collapsing |
 | `src/pagination.tsx` | Pagination: a stable-width page window with disabled edges |
 | `src/field.tsx` | Field: label, control, one message slot; the inline-validation surface |
+| `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
+| `src/form.tsx` | Form: owned-value schema validation, one alert summary, decoded `onSubmit` |
+| `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
 | `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover, with bounded selection and a clear action (the day half) |
