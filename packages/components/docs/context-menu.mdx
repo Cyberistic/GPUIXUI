@@ -71,12 +71,15 @@ pointer point, which is why this component uses `anchored` directly.
 | `ArrowDown` / `ArrowUp` | next/previous enabled row, wrapping |
 | `Home` / `End` | first/last enabled row |
 | `Enter` / `Space` | runs the highlighted row and closes |
+| Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
 | `Escape` | closes; a keyboard-opened menu returns focus to the trigger |
 | `Tab` | closes and moves on |
 
 The trigger is a tab stop (unless disabled). The surface takes focus on open. The
 highlighted row is the focused row, exactly as in **Dropdown menu**. An outside
-press closes the menu without running anything.
+press closes the menu without running anything. Type-ahead follows the same rules:
+a 500 ms, case-insensitive prefix search over enabled labels (see **Dropdown
+menu → Type-ahead**).
 
 Focus returns to the trigger on `Escape` and on activation only when the menu was
 opened from the keyboard; a pointer-opened menu leaves focus where the pointer
@@ -97,19 +100,19 @@ match the row it represents.
   is documented rather than announced.
 - There is no portal. The surface is a sibling of the trigger painted at window
   coordinates, so it is correct visually but not clipped by a scroll container.
-- No submenus and no type-ahead in v1; the shared reasons are in `menu/logic.ts`.
+- No submenus in v1; the shared reasons are in `menu/logic.ts`.
 - `Shift+F10` opens at the trigger's bottom-left, not at a text caret; a
   keyboard-opened menu returns focus to its trigger on Escape and activation.
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (11 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (12 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
 opening, `Shift+F10` opening at the trigger's bottom-left with focus in the menu,
-keyboard activation running a row, Escape returning focus to the trigger, and a
-disabled trigger ignoring `Shift+F10`.
+keyboard activation running a row, Escape returning focus to the trigger, a
+disabled trigger ignoring `Shift+F10`, and type-ahead jumping to a row.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

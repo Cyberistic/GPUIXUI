@@ -308,7 +308,7 @@ export const dropdownMenuMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no type-ahead: a correct one needs a timed buffer, which belongs to the Effect clock rule in plan 114 §2",
+    "type-ahead is a case-insensitive 500 ms prefix search with no fuzzy scoring; a composed label needs textValue",
     "no submenus in v1",
     "the checkbox row uses aria-selected and a text ✓ because 0.10.0 has no aria-checked and no icon set",
   ],

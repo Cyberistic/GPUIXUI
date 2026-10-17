@@ -12,6 +12,10 @@
  * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
  * the closed trigger did nothing. A caller `ref` on the trigger was discarded in
  * favour of the internal one.
+ *
+ * Type-ahead regression: typing a prefix selected nothing, a disabled row could
+ * win the match, a repeated letter did not advance, the buffer never expired so a
+ * later search inherited the old prefix, and Shift+R never matched `Rename`.
  */
 
 import * as Option from "effect/Option";
@@ -85,6 +89,35 @@ const FileActions = ({
     </div>
   );
 };
+
+/** A menu whose labels share a first letter, for the type-ahead cycle. */
+const Searchable = ({
+  onSelect,
+}: {
+  readonly onSelect: (action: string) => void;
+}) => (
+  <div
+    style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+  >
+    <DropdownMenu>
+      <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="Searchable actions">
+        <DropdownMenuItem testId="rename" onSelect={() => onSelect("rename")}>
+          Rename
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          testId="duplicate"
+          onSelect={() => onSelect("duplicate")}
+        >
+          Duplicate
+        </DropdownMenuItem>
+        <DropdownMenuItem testId="delete" onSelect={() => onSelect("delete")}>
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+);
 
 /** Focus the trigger, as Tab would. */
 const focusTrigger = (root: ComponentTestRoot): void => {
@@ -350,6 +383,84 @@ describe("DropdownMenu", () => {
     menu.renderer.simulateKeystrokes("down");
     menu.renderer.simulateKeystrokes("down");
     expect(focusedTestId(menu)).toEqual(Option.some("delete"));
+
+    menu.unmount();
+  });
+
+  it("jumps to a row from a typed prefix", () => {
+    const menu = renderComponent(<Searchable onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+
+    menu.renderer.simulateKeystrokes("r e");
+
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.unmount();
+  });
+
+  it("advances on a repeated letter and wraps", () => {
+    const menu = renderComponent(<Searchable onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+
+    menu.renderer.simulateKeystrokes("d");
+    expect(focusedTestId(menu)).toEqual(Option.some("duplicate"));
+
+    menu.renderer.simulateKeystrokes("d");
+    expect(focusedTestId(menu)).toEqual(Option.some("delete"));
+
+    menu.renderer.simulateKeystrokes("d");
+    expect(focusedTestId(menu)).toEqual(Option.some("duplicate"));
+
+    menu.unmount();
+  });
+
+  it("skips a disabled row when matching", () => {
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+
+    // `Duplicate` starts with "du" but is disabled, so "du" matches nothing and
+    // the highlight stays on the row the first letter reached.
+    menu.renderer.simulateKeystrokes("d u");
+    expect(focusedTestId(menu)).toEqual(Option.some("delete"));
+
+    menu.unmount();
+  });
+
+  it("matches shifted text case-insensitively", () => {
+    const menu = renderComponent(<Searchable onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+
+    menu.renderer.simulateKeystrokes("shift-r");
+
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.unmount();
+  });
+
+  it("starts a new search after the type-ahead window", async () => {
+    const menu = renderComponent(<Searchable onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+
+    menu.renderer.simulateKeystrokes("d e");
+    expect(focusedTestId(menu)).toEqual(Option.some("delete"));
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    menu.renderer.simulateKeystrokes("r");
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.unmount();
+  });
+
+  it("clears an unmatched prefix so the next letter searches afresh", () => {
+    const menu = renderComponent(<Searchable onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+
+    menu.renderer.simulateKeystrokes("z");
+    expect(focusedTestId(menu)).toEqual(Option.some("menu"));
+
+    menu.renderer.simulateKeystrokes("r");
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
 
     menu.unmount();
   });

@@ -12,6 +12,7 @@
 import type { Props, PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import {
   useCallback,
   useLayoutEffect,
@@ -37,6 +38,12 @@ export interface MenuItemProps extends Props {
   readonly leading?: ReactNode;
   /** Slot after the label: a shortcut. */
   readonly trailing?: ReactNode;
+  /**
+   * The text type-ahead matches when `children` is not a plain string (for
+   * example a label with a badge beside it). A row whose text cannot be derived
+   * is not searched.
+   */
+  readonly textValue?: string;
   /**
    * Whether activating the row closes the menu. Default `true`; a checkbox row
    * sets `false`, because toggling several settings in one visit is the point.
@@ -107,6 +114,7 @@ export const MenuItem = ({
   tone = "default",
   leading,
   trailing,
+  textValue,
   closeOnSelect = true,
   children,
   onFocus,
@@ -138,10 +146,18 @@ export const MenuItem = ({
 
   const run = useCallback(() => action.current(), []);
 
+  // Type-ahead matches the row's text. A composed label must say what it is.
+  const searchable = textValue ?? (P.isString(children) ? children : "");
+
   useLayoutEffect(() => {
     if (instance === undefined) return;
-    return register({ id: instance.id, disabled, activate: run });
-  }, [disabled, instance, register, run]);
+    return register({
+      id: instance.id,
+      disabled,
+      label: searchable,
+      activate: run,
+    });
+  }, [disabled, instance, register, run, searchable]);
 
   const active =
     instance !== undefined && Option.contains(activeId, instance.id);

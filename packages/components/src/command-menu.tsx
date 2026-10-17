@@ -21,7 +21,12 @@ import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
 import { Dialog, DialogContent } from "./dialog.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { MenuLabel, menuRowStyle } from "./menu/item.js";
-import { move, type MenuAction, type MenuState } from "./menu/logic.js";
+import {
+  move,
+  type MenuAction,
+  type MenuItemSpec,
+  type MenuState,
+} from "./menu/logic.js";
 
 /** One runnable command. */
 export interface CommandAction {
@@ -55,10 +60,13 @@ const defaultFilter = (action: CommandAction, query: string): boolean =>
   Str.includes(normalise(query))(normalise(action.label));
 
 /** The specs `menu/logic.ts` navigates over: filtered position and disabled. */
-const specs = (actions: ReadonlyArray<CommandAction>) =>
+const specs = (
+  actions: ReadonlyArray<CommandAction>,
+): ReadonlyArray<MenuItemSpec> =>
   Arr.map(actions, (action, index) => ({
     id: index,
     disabled: action.disabled === true,
+    label: action.label,
   }));
 
 /** The enabled index to start on, or `None` when every match is disabled. */

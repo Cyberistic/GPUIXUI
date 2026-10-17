@@ -65,6 +65,7 @@ hover does not move the highlight; clicked rows activate directly.
 | `ArrowDown` / `ArrowUp` | moves to the next/previous enabled row, wrapping |
 | `Home` / `End` | first/last enabled row |
 | `Enter` / `Space` | runs the highlighted row and closes |
+| Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
 | `Escape` | closes and returns focus to the trigger |
 | `Tab` | closes and lets focus move on — a menu is not modal |
 
@@ -73,10 +74,37 @@ an extra arrow press. A pointer click leaves focus on the menu surface with no
 row highlighted, which is the desktop menu convention; the first arrow key then
 picks the first enabled row.
 
-Disabled rows are skipped by every arrow key and by `Home`/`End`, and a click on
-one does nothing. There is no type-ahead in v1: a correct one needs a timed
-buffer, which the component would have to host on the Effect clock rather than a
-`setTimeout`. Recorded in `dropdownMenuMeta.limitations`.
+Disabled rows are skipped by every arrow key, by `Home`/`End` and by type-ahead,
+and a click on one does nothing.
+
+## Type-ahead
+
+Typing a letter jumps to the next enabled row whose label starts with the typed
+prefix, so `Re` reaches **Rename** and `De` reaches **Delete**. The prefix is
+case-insensitive, ignores surrounding whitespace and is matched from the start of
+the label — not as a fuzzy substring.
+
+- The prefix lives for **500 ms** after the last keystroke. A later letter starts
+  a fresh search instead of extending an old one.
+- Typing the same letter again within the window advances to the next row that
+  starts with it, wrapping at the end — so `D`, `D`, `D` cycles every D row.
+- A prefix that matches nothing leaves the highlight where it was and clears the
+  buffer, so the next letter searches afresh.
+- A row whose `children` is not a plain string (a label with a badge beside it)
+  is matched through `textValue`:
+
+```tsx
+import { Badge } from "@gpuixui/components/badge";
+
+<DropdownMenuItem textValue="Rename" onSelect={rename}>
+  Rename <Badge>draft</Badge>
+</DropdownMenuItem>;
+```
+
+The window is a timestamp comparison, not a `setTimeout`: the buffer records the
+monotonic time of its last keystroke and the next keystroke decides whether it has
+expired. Nothing has to run while the menu is idle, so the component owns no
+timer and no provider.
 
 ## Dismissal
 
@@ -132,17 +160,19 @@ with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
   `aria-level`. The checkbox row therefore uses `aria-selected`, and the link
   between trigger and surface is positional.
 - No submenus in v1.
-- No type-ahead (see above).
+- Type-ahead is a prefix match with no fuzzy scoring, and it ignores a label that
+  is not plain text unless `textValue` is set.
 - A hover does not preview a highlight; the pointer activates on click.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (13
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (19
 tests): the `menu` role, keyboard opening on the first/last enabled row, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
-dismissal, checkbox toggling and its check mark, the destructive colour, and the
-surface in both themes.
+dismissal, checkbox toggling and its check mark, the destructive colour, the
+surface in both themes, and type-ahead (prefix, repeat cycling, disabled skip,
+Shift, window expiry, unmatched-prefix reset).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

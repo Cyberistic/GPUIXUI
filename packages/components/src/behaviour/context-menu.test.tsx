@@ -6,6 +6,9 @@
  * parent's origin instead of the pointer; a selected action not running, or
  * running twice; and a second right click leaving the old point in place. A
  * caller `ref` on the trigger was also discarded in favour of the internal one.
+ *
+ * Type-ahead regression: typing in the pointer-positioned menu selected nothing,
+ * although it shares the Dropdown menu's rows.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -271,6 +274,18 @@ describe("ContextMenu", () => {
     row.renderer.simulateKeystrokes("shift-f10");
     row.renderer.simulateKeystrokes("escape");
     expect(focusedTestId(row)).toEqual(Option.some("row"));
+
+    row.unmount();
+  });
+
+  it("jumps to a row from a typed prefix", () => {
+    const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
+    const origin = rowOrigin(row);
+
+    rightClickAt(row, origin.x + 40, origin.y + 30);
+    row.renderer.simulateKeystrokes("c");
+
+    expect(focusedTestId(row)).toEqual(Option.some("copy"));
 
     row.unmount();
   });

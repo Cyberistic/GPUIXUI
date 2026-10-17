@@ -15,14 +15,21 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { initial, move as moveActive, type MenuAction } from "./logic.js";
+import { monotonicNanos } from "../internal/clock.js";
+import {
+  initial,
+  matchPrefix,
+  move as moveActive,
+  type MenuAction,
+  type MenuItemSpec,
+} from "./logic.js";
+import { idle, press, type TypeaheadBuffer } from "./typeahead.js";
 
-/** One registered row: its host id and what activating it does. */
-export interface MenuRow {
-  readonly id: number;
-  readonly disabled: boolean;
+/** One registered row: its host id, its searchable text and what activating it does. */
+export interface MenuRow extends MenuItemSpec {
   /** Run the row's action. The row closes the menu itself after it. */
   readonly activate: () => void;
 }
@@ -41,6 +48,11 @@ export interface MenuContextValue {
   readonly focusRow: (id: number) => void;
   /** Apply one keyboard action to the highlight. */
   readonly step: (action: MenuAction) => void;
+  /**
+   * Type the next character: the highlight jumps to the next row matching the
+   * accumulated prefix. A prefix that matches nothing clears the buffer.
+   */
+  readonly typeahead: (char: string) => void;
   /** Run the active row, if there is one. */
   readonly activateActive: () => void;
   /**
@@ -72,7 +84,7 @@ const upsert = (
   return Option.match(existing, {
     onNone: () => Arr.append(rows, row),
     onSome: (current) =>
-      current.disabled === row.disabled
+      current.disabled === row.disabled && current.label === row.label
         ? rows
         : Arr.map(rows, (candidate) =>
             candidate.id === row.id ? row : candidate,
@@ -92,6 +104,8 @@ export const useMenuState = (
   const [activeId, setActiveId] = useState<Option.Option<number>>(
     initial.activeId,
   );
+  /** The typed prefix. A ref: nothing renders it, and it expires by timestamp. */
+  const buffer = useRef<TypeaheadBuffer>(idle);
 
   const register = useCallback((row: MenuRow) => {
     setRows((current) => upsert(current, row));
@@ -119,6 +133,24 @@ export const useMenuState = (
       Option.match(moveActive({ activeId }, rows, action).activeId, {
         onNone: () => undefined,
         onSome: focusRow,
+      });
+    },
+    [activeId, focusRow, rows],
+  );
+
+  const typeahead = useCallback(
+    (char: string) => {
+      const next = press(buffer.current, char, monotonicNanos());
+      Option.match(matchPrefix(rows, activeId, next.text), {
+        onNone: () => {
+          // The latest letter matched nothing: start a new search rather than
+          // poisoning every later keystroke with an unmatched prefix.
+          buffer.current = idle;
+        },
+        onSome: (id) => {
+          buffer.current = next;
+          focusRow(id);
+        },
       });
     },
     [activeId, focusRow, rows],
@@ -154,6 +186,7 @@ export const useMenuState = (
       noteFocus,
       focusRow,
       step,
+      typeahead,
       activateActive,
       close,
     }),
@@ -166,6 +199,7 @@ export const useMenuState = (
       register,
       rows,
       step,
+      typeahead,
     ],
   );
 };

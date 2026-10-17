@@ -20,7 +20,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 
 | Area | State |
 | ---- | ----- |
-| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the merged host ref, the a11y-dump reader and the behaviour-suite render helper |
+| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the merged host ref, the a11y-dump reader, the monotonic clock read and the behaviour-suite render helper |
 | `src/runtime.test.tsx` | the native-renderer guard (plan 117 §5b) |
 | `src/card.tsx` | Card and its five parts — verified natively |
 | `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
@@ -31,8 +31,8 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/dialog.tsx` | Dialog: an anchored window veil, focus-in/return, Tab trap, Escape |
 | `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
-| `src/dropdown-menu.tsx`, `src/menu/*` | DropdownMenu over the shared row registry, rows and menu surface |
-| `src/context-menu.tsx` | ContextMenu: the same rows at the pointer (`onAuxClick` + `isRightClick`) or at the trigger from `Shift+F10` |
+| `src/dropdown-menu.tsx`, `src/menu/*` | DropdownMenu over the shared row registry, rows, type-ahead buffer and menu surface |
+| `src/context-menu.tsx` | ContextMenu: the same rows and type-ahead at the pointer (`onAuxClick` + `isRightClick`) or at the trigger from `Shift+F10` |
 | `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts` |
 | `src/tabs.tsx` | Tabs: roving tab stop, automatic/manual activation, arrow wrap |
 | `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a body that unmounts |

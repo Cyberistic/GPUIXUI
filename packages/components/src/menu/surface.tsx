@@ -11,7 +11,8 @@
 
 import type { EventPayload, Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Match } from "effect";
+import { Match, pipe } from "effect";
+import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import { dismissTopLayer } from "../internal/dismiss-layer.js";
 import {
@@ -22,6 +23,7 @@ import {
   isLast,
   isTab,
   isUp,
+  typedChar,
 } from "../internal/key.js";
 import {
   elevation,
@@ -56,18 +58,26 @@ export const menuKeyHandler = (
   menu: MenuContextValue,
 ): ((event: EventPayload) => void) => {
   const step = (event: EventPayload): void => {
-    Match.value(event).pipe(
-      Match.when(isDown, () => menu.step({ _tag: "Move", delta: 1 })),
-      Match.when(isUp, () => menu.step({ _tag: "Move", delta: -1 })),
-      Match.when(isFirst, () => menu.step({ _tag: "First" })),
-      Match.when(isLast, () => menu.step({ _tag: "Last" })),
-      Match.when(isActivation, menu.activateActive),
-      Match.when(isDismiss, (value) => {
-        dismissTopLayer(value);
+    pipe(
+      typedChar(event),
+      Option.match({
+        // A typed letter jumps to a row; it never also runs a named-key rule.
+        onSome: menu.typeahead,
+        onNone: () =>
+          Match.value(event).pipe(
+            Match.when(isDown, () => menu.step({ _tag: "Move", delta: 1 })),
+            Match.when(isUp, () => menu.step({ _tag: "Move", delta: -1 })),
+            Match.when(isFirst, () => menu.step({ _tag: "First" })),
+            Match.when(isLast, () => menu.step({ _tag: "Last" })),
+            Match.when(isActivation, menu.activateActive),
+            Match.when(isDismiss, (value) => {
+              dismissTopLayer(value);
+            }),
+            // A menu is not modal: Tab closes it and lets focus move on.
+            Match.when(isTab, () => menu.close("leave")),
+            Match.orElse(() => undefined),
+          ),
       }),
-      // A menu is not modal: Tab closes it and lets focus move on.
-      Match.when(isTab, () => menu.close("leave")),
-      Match.orElse(() => undefined),
     );
   };
   return step;

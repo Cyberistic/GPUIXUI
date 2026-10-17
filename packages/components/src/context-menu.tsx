@@ -331,7 +331,7 @@ export const contextMenuMeta = {
   limitations: [
     "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",
-    "no submenus and no type-ahead, as with DropdownMenu",
+    "no submenus, as with DropdownMenu; type-ahead follows the same rules there",
   ],
   docs: "docs/context-menu.mdx",
   example: "examples/context-menu.example.tsx",

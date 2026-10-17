@@ -5,6 +5,10 @@
  * wrapping to the first; a keyboard move highlighted a disabled row, so Enter
  * did nothing while the highlight said it would; and focusing a row that is not
  * in the menu left the previous highlight in place with a stale id.
+ *
+ * Type-ahead: a repeated letter stayed on the first match instead of advancing, a
+ * disabled row won the match, matching was case-sensitive, and an empty prefix
+ * matched every row because every label starts with an empty string.
  */
 
 import { describe, expect, it } from "vitest";
@@ -12,6 +16,7 @@ import * as Option from "effect/Option";
 import {
   initial,
   isActive,
+  matchPrefix,
   move,
   resolveActiveIndex,
   type MenuItemSpec,
@@ -19,9 +24,13 @@ import {
 } from "./logic.js";
 
 const rows = (
-  spec: ReadonlyArray<readonly [number, boolean?]>,
+  spec: ReadonlyArray<readonly [number, boolean?, string?]>,
 ): ReadonlyArray<MenuItemSpec> =>
-  spec.map(([id, disabled]) => ({ id, disabled: disabled ?? false }));
+  spec.map(([id, disabled, label]) => ({
+    id,
+    disabled: disabled ?? false,
+    label: label ?? `row ${id}`,
+  }));
 
 const four = rows([[101], [102], [103], [104]]);
 
@@ -137,6 +146,73 @@ describe("resolveActiveIndex", () => {
   it("is none when nothing is active or the row is gone", () => {
     expect(resolveActiveIndex(initial, four)).toEqual(Option.none());
     expect(resolveActiveIndex({ activeId: Option.some(999) }, four)).toEqual(
+      Option.none(),
+    );
+  });
+});
+
+describe("matchPrefix", () => {
+  const actions = rows([
+    [201, false, "Rename"],
+    [202, false, "Duplicate"],
+    [203, false, "Delete"],
+    [204, false, "Open"],
+    [205, false, "Copy path"],
+  ]);
+
+  it("selects the first enabled row starting with the prefix", () => {
+    expect(matchPrefix(actions, Option.none(), "d")).toEqual(Option.some(202));
+    expect(matchPrefix(actions, Option.none(), "c")).toEqual(Option.some(205));
+  });
+
+  it("advances to the next match and wraps", () => {
+    expect(matchPrefix(actions, Option.some(202), "d")).toEqual(
+      Option.some(203),
+    );
+    expect(matchPrefix(actions, Option.some(203), "d")).toEqual(
+      Option.some(202),
+    );
+  });
+
+  it("skips a disabled match", () => {
+    const withDisabled = rows([
+      [301, false, "Delete"],
+      [302, true, "Duplicate"],
+      [303, false, "Dismiss"],
+    ]);
+    expect(matchPrefix(withDisabled, Option.some(301), "d")).toEqual(
+      Option.some(303),
+    );
+    expect(matchPrefix(withDisabled, Option.none(), "du")).toEqual(
+      Option.none(),
+    );
+  });
+
+  it("matches case-insensitively and trims both sides", () => {
+    expect(matchPrefix(actions, Option.none(), "RE")).toEqual(Option.some(201));
+    expect(matchPrefix(actions, Option.none(), "  re ")).toEqual(
+      Option.some(201),
+    );
+  });
+
+  it("is none when nothing matches", () => {
+    expect(matchPrefix(actions, Option.some(201), "z")).toEqual(Option.none());
+  });
+
+  it("is none for an empty prefix, even though every label starts with it", () => {
+    expect(matchPrefix(actions, Option.none(), "")).toEqual(Option.none());
+    expect(matchPrefix(actions, Option.some(201), "   ")).toEqual(
+      Option.none(),
+    );
+  });
+
+  it("never matches a row with an empty label", () => {
+    const untitled = rows([
+      [401, false, ""],
+      [402, false, "Save"],
+    ]);
+    expect(matchPrefix(untitled, Option.none(), "s")).toEqual(Option.some(402));
+    expect(matchPrefix(rows([[501, false, ""]]), Option.none(), " ")).toEqual(
       Option.none(),
     );
   });
