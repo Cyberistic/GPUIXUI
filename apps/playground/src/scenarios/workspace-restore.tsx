@@ -42,6 +42,9 @@ interface RestoreAnchor {
   readonly offset: number;
 }
 
+/** The fields a save/restore round trip owns; the anchor comes from the list. */
+type Editable = Pick<WorkspaceState, "split" | "tabsA" | "tabsB" | "active">;
+
 /**
  * The list, plus the one-shot scroll a restore asks for.
  *
@@ -126,41 +129,34 @@ const WorkspaceRestoreProbe = () => {
   );
   const [generation, setGeneration] = useState(0);
 
-  const patch = (
-    fields: Partial<
-      Pick<WorkspaceState, "split" | "tabsA" | "tabsB" | "active">
-    >,
-  ) =>
-    setLive(
-      (state) =>
-        new WorkspaceState({
-          split: fields.split ?? state.split,
-          tabsA: fields.tabsA ?? state.tabsA,
-          tabsB: fields.tabsB ?? state.tabsB,
-          active: fields.active ?? state.active,
-          anchorIndex: state.anchorIndex,
-          anchorOffset: state.anchorOffset,
-        }),
-    );
+  const next = (
+    state: WorkspaceState,
+    fields: Partial<Editable>,
+  ): WorkspaceState =>
+    new WorkspaceState({
+      split: fields.split ?? state.split,
+      tabsA: fields.tabsA ?? state.tabsA,
+      tabsB: fields.tabsB ?? state.tabsB,
+      active: fields.active ?? state.active,
+      anchorIndex: state.anchorIndex,
+      anchorOffset: state.anchorOffset,
+    });
+
+  const patch = (fields: Partial<Editable>) =>
+    setLive((state) => next(state, fields));
 
   const move = (id: string, from: string) =>
     setLive((state) =>
       from === "a"
-        ? new WorkspaceState({
-            split: state.split,
+        ? next(state, {
             tabsA: state.tabsA.filter((tab) => tab !== id),
             tabsB: [...state.tabsB, id],
             active: id,
-            anchorIndex: state.anchorIndex,
-            anchorOffset: state.anchorOffset,
           })
-        : new WorkspaceState({
-            split: state.split,
+        : next(state, {
             tabsA: [...state.tabsA, id],
             tabsB: state.tabsB.filter((tab) => tab !== id),
             active: id,
-            anchorIndex: state.anchorIndex,
-            anchorOffset: state.anchorOffset,
           }),
     );
 

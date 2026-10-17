@@ -10,7 +10,8 @@
  *
  * The last step records the honesty note the docking plan needs: with no
  * storage primitive, panel state does not survive a remount; persistence is the
- * app boundary's job (Effect `FileSystem`/`Config`).
+ * app boundary's job (Effect `FileSystem`/`Config`). `workspace-restore` (plan
+ * `167`) measures the restore contract that follows from that.
  */
 import { useState } from "react";
 import { Effect, Option } from "effect";
