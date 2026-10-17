@@ -89,6 +89,7 @@ in the same block.
 | [163](./163-text-selection.md) | Native text selection and copy | B→D/E | 100, 110, 120, 140, 161 | **landed**: `text-selection` — cross-element selection joins with newlines; `<code>`/`<diff>` copy is chrome-free; an anchor inside `userSelect: "none"` selects **nothing**, a cross-selection skips it; 29/29 green (§8) |
 | [164](./164-native-context-menus.md) | Native context menus: right click, pointer placement and dismissal | B→C/D | 100, 110, 120, 140, 155, 156, 162 | **landed**: `context-menu-pointer` — right click is `onAuxClick` + `isRightClick` (no `button`, no `onClick`), a pointer-positioned `<anchored>` is exact even inside a **scrolled** container (no offset, no clipping), `shift-f10` arrives as `key=f10` and focus returns; 30/30 green (§8) |
 | [165](./165-virtualized-tree.md) | A virtualized tree (file tree / hierarchical data) | B→D/E | 152, 153, 158 | **landed**: `virtualized-tree` — a flattened 8×40 tree inside `<virtual-list>`: 16 px indentation per depth survives virtualization, expand/collapse (8 ↔ 48 rows) repaints the window, clicks and arrows move **native focus** by roving index, an off-window focused row stays painted and still receives the next key; 31/31 green (§8) |
+| [166](./166-scroll-into-view.md) | Scroll a virtual row into view | B→D | 152, 158, 165 | planned — measures `scrollIntoView(element)` vs `scrollToItem(list, index)` inside `<virtual-list>`, and whether focus survives the scroll |
 
 Cross-cutting records:
 
