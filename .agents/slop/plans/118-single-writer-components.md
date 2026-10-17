@@ -115,6 +115,38 @@ Consequences for this workstream:
 2. A doc-only edit is not `packages/components` code and does not reintroduce the
    collision, which is why this measurement lands in the plan and in `TODO.md`.
 
+### The deadlock in §3 + STOP 1, and the resolution
+
+As written, the plan contradicts itself:
+
+- §3 keeps **the stale session** as the one remaining writer ("exactly one writer
+  remains (the stale session)").
+- STOP 1 forbids resuming until the §5 count is `1` — but the stale session's own
+  liveness is what keeps the count at `2` while the rotating turn is replaced.
+
+Read literally, no session may write and the workstream idles. That is worse than
+either single-writer choice, because the swarm keeps paying for ticks that produce
+nothing. The tie-breaker should be *which session the supervisor can see and
+replace*:
+
+| Candidate | Replacement | Verdict |
+| --------- | ----------- | ------- |
+| the rotating `run-components.sh` turn | the loop starts a fresh turn as soon as this one returns | **this one writes** |
+| the stale turn (`ses_eb7f0966…`, 07:12) | nothing restarts it; only the coordinator can end it | this one **stands down** |
+
+**Recommendation:** while the duplicate exists, the rotating turn owns
+`packages/components` and the stale turn stops writing and reports. The invariant
+is then "exactly one writer" in fact, even though `session_v2` still counts two —
+which is precisely why the count alone must not gate resumption. The permanent fix
+stays plan 022 §5; until then, treat `session_v2` as advisory and the *commits* as
+the record of who wrote.
+
+**This session stands down.** It is `ses_eb7f0966…` (07:12) — the stale turn. It
+has committed and pushed everything it produced (`bd215f9`, `7786193`, `f424b1e`,
+`ab000ab`, `79403ee`), left no uncommitted work, and will not write
+`packages/components` further. If a later measurement still lists it as live, it
+is idle, and the coordinator may end it.
+
 ## 6. STOP conditions
 
 Plan 022 §7 applies. Additional:
