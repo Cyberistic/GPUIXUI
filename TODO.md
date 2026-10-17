@@ -216,3 +216,5 @@ and retires the now-redundant `agent/tokens-platform` worktree (its branch is
 - **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
 
 Both are specified in ; each fix starts with a plan under .
+
+- **Docs: platform toggle (macOS / Linux / Windows / Default)** — every component preview switches platform style; the styles are real editable token themes in packages/tokens, not docs-only CSS (see MISSION.md).
