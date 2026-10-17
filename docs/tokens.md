@@ -811,7 +811,9 @@ const rows = textRoles.map((role) => ({ role, ...typography[role] }));
 `statusTones` and `platformNames` index the remaining catalogues: the four status
 families in documentation order, and the four platform variants in toggle order
 (macOS · Linux · Windows · Default). A docs table or a platform toggle iterates
-them instead of retyping names.
+them instead of retyping names, and parses its `platform` parameter with
+`isPlatformName`, so a stale or hand-edited URL falls back to the default rather
+than an invalid theme.
 
 ## Verification
 
@@ -842,6 +844,10 @@ so this page cannot drift from the implementation. The same file holds
 — the identity metrics, role count, theme surfaces, type summary and the
 spacing, density, radius, icon and avatar scales — so the rationale cannot drift
 from the package either.
+
+`packages/tokens/src/guards.test.ts` proves each narrowing guard accepts every
+shipped member — `default` included — and rejects casing, aliases, whitespace and
+non-strings.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table and every
 variant: each platform has a label and both families, `sans` is the GPUI
