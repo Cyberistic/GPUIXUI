@@ -76,8 +76,8 @@ inside the control.**
 | Path | Action |
 | ---- | ------ |
 | `packages/primitives/runtime/focus-ring.runtime.test.tsx` | **new**: the seventeen-case matrix and its two helpers |
-| `packages/primitives/docs/README.md` | the verification commands' note — the runtime suite now includes the matrix (if it lists suites) |
-| `COMPONENTS.md` | the `Runtime (041)` count paragraph and the Tier 1 focus law |
+| `packages/primitives/README.md` | the runtime-status paragraph: 19 files / 221 tests, the select ring and the matrix |
+| `COMPONENTS.md` | the `Runtime (041)` count paragraph, the focus matrix note |
 | `TODO.md` | add and tick the task |
 | `.agents/slop/plans/README.md` | index this plan as **done** |
 
