@@ -206,7 +206,7 @@ retired once both branches are one
       - [x] CommandMenu parts — plan 301
       - [x] Combobox parts — plan 302
       - [x] DatePicker + TimePicker parts — plan 303
-    - [~] Typed-by-position children — plan 304: the parent children narrowed to `PartChildren` (elements/conditionals, not text) plus a family-scoped render check; part identity cannot be a compile error in React 19's JSX types (owner: components)
+    - [x] Typed-by-position children — plan 304: `PartChildren` (elements/conditionals, never text) plus a family-scoped render check on 32 parents; part identity cannot be a compile error in React 19's JSX types, recorded in `docs/component-api.md` §1 (owner: components)
     - [ ] Expose `style` as `StateStyle<PartState>` or `children(state)` on the parts that draw an interaction state, so a consumer can style state without copying the component (owner: components)
     - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
 `[x]` Verify every component in both themes

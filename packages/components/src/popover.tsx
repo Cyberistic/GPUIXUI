@@ -35,14 +35,19 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  type ReactNode,
   type RefObject,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
-import { useMergedRef } from "./internal/ref.js";
 import { isDismiss, isTab } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
 
 /** The rules a {@link PopoverContent} follows; throws outside a {@link Popover}. */
@@ -74,7 +79,7 @@ export interface PopoverProps {
   /** The uncontrolled starting state. Default `false`. */
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -99,6 +104,8 @@ export const Popover = ({
     () => ({ open, setOpen, trigger, dismissedByOutsidePress }),
     [open, setOpen],
   );
+
+  assertParts(popoverRoot, children);
 
   return (
     <PopoverContext.Provider value={context}>
@@ -236,6 +243,20 @@ export const PopoverContent = ({
       {children}
     </FloatingLayer>
   );
+};
+
+/** Every part of Popover, so a misplaced sibling is named. */
+const popoverParts: ReadonlyArray<PartComponent> = [
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+];
+
+const popoverRoot: PartsContract = {
+  parent: "Popover",
+  family: popoverParts,
+  accepts: [PopoverTrigger, PopoverContent],
+  hint: "Put PopoverTrigger and PopoverContent directly inside Popover.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

@@ -25,15 +25,27 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
   type RefObject,
 } from "react";
 import { pushDismissLayer } from "../internal/dismiss-layer.js";
 import { claimEvent } from "../internal/event-claim.js";
 import { isDown, isLeft, isRight, isUp } from "../internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "../internal/parts.js";
 import { useMergedRef } from "../internal/ref.js";
 import { textStyle, useTheme } from "../internal/theme.js";
-import { MenuItem, type MenuItemProps } from "./item.js";
+import {
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuItem,
+  MenuLabel,
+  MenuSeparator,
+  type MenuItemProps,
+} from "./item.js";
 import {
   MenuContext,
   useMenuContext,
@@ -65,7 +77,7 @@ const useSubContext = (): SubContextValue => {
 
 /** {@link MenuSub} props. */
 export interface MenuSubProps {
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -80,6 +92,7 @@ export const MenuSub = ({ children }: MenuSubProps) => {
     () => ({ open, setOpen, trigger, focusEdge }),
     [open],
   );
+  assertParts(menuSub, children);
 
   return <SubContext.Provider value={value}>{children}</SubContext.Provider>;
 };
@@ -163,10 +176,10 @@ export const MenuSubTrigger = ({
 const SUBMENU_GAP = 4;
 
 /** {@link MenuSubContent} props: the secondary menu surface. */
-export interface MenuSubContentProps extends Props {
+export interface MenuSubContentProps extends Omit<Props, "children"> {
   /** The submenu's accessible name. */
   readonly label?: string;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -185,6 +198,7 @@ export const MenuSubContent = ({
   const renderer = useGpuix().renderer;
   const { open, setOpen, trigger, focusEdge } = useSubContext();
   const parent = useMenuContext();
+  assertParts(menuSubContent, children);
   const parentClose = parent.close;
   const parentClaim = parent.claimSubmenu;
   const restoreFocus = useRef(false);
@@ -339,4 +353,37 @@ export const MenuSubContent = ({
       </anchored>
     </MenuContext.Provider>
   );
+};
+
+/** Every part of a submenu, so a misplaced sibling is named. */
+const subParts: ReadonlyArray<PartComponent> = [
+  MenuSub,
+  MenuSubTrigger,
+  MenuSubContent,
+  MenuItem,
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuLabel,
+  MenuSeparator,
+];
+
+const menuSub: PartsContract = {
+  parent: "MenuSub",
+  family: subParts,
+  accepts: [MenuSubTrigger, MenuSubContent],
+  hint: "Put the submenu trigger and its content directly inside MenuSub.",
+};
+
+const menuSubContent: PartsContract = {
+  parent: "MenuSubContent",
+  family: subParts,
+  accepts: [
+    MenuItem,
+    MenuCheckboxItem,
+    MenuGroup,
+    MenuLabel,
+    MenuSeparator,
+    MenuSub,
+  ],
+  hint: "Put rows, groups, labels, separators and nested submenus directly inside MenuSubContent.",
 };

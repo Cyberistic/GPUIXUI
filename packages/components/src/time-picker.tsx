@@ -34,6 +34,12 @@ import {
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import {
   addMinutes,
   clampSegment,
   composeIsoTime,
@@ -100,7 +106,7 @@ export interface TimePickerProps {
   readonly disabled?: boolean;
   /** Base id for the parts: `<testId>-hours`, `-minutes`, `-clear`. Default `"time-picker"`. */
   readonly testId?: string;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 const SEGMENT_WIDTH = 26;
@@ -223,6 +229,8 @@ export const TimePicker = ({
   const hasValue = Option.isSome(
     Option.flatMap(Option.fromNullishOr(selected), parseIsoTime),
   );
+
+  assertParts(timePickerRoot, children);
 
   return (
     <TimePickerContext.Provider
@@ -394,6 +402,21 @@ export const TimePickerClear = ({
       <text>✕</text>
     </div>
   );
+};
+
+/** Every part of TimePicker, so a misplaced sibling is named. */
+const timePickerParts: ReadonlyArray<PartComponent> = [
+  TimePicker,
+  TimePickerSegment,
+  TimePickerSeparator,
+  TimePickerClear,
+];
+
+const timePickerRoot: PartsContract = {
+  parent: "TimePicker",
+  family: timePickerParts,
+  accepts: [TimePickerSegment, TimePickerSeparator, TimePickerClear],
+  hint: "Put the segments, separator and clear control directly inside TimePicker.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

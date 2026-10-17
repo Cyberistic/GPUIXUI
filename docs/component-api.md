@@ -18,7 +18,7 @@ history. No landed component currently deviates.
 | Rule | Status |
 | ---- | ------ |
 | Compound parts (§1) | **adopted** — Card, Dialog, Tabs, Accordion, menus, Alert and the rest export their parts |
-| Typed-by-position children (§1) | **target** — a misplaced part throws the parts error at render; compile-time narrowing is a `TODO.md` follow-up |
+| Typed-by-position children (§1) | **adopted with a render check** — `PartChildren` narrows children to elements and conditionals (text is a compile error); part identity is enforced by `internal/parts.ts` at render, because React 19's JSX types are not nominal (plan 304 §2) |
 | Controlled/uncontrolled names (§2) | **adopted** — `value`/`defaultValue`/`onValueChange` across the landed components |
 | State-aware `style`/`children(state)` (§3) | **target** — parts read the theme tokens directly today; no part exposes a state callback yet (`TODO.md` follow-up) |
 | Shared keyboard contract (§4) | **adopted per component** — `packages/primitives`' keyboard module is not yet a dependency of this package (interlock) |
@@ -31,9 +31,18 @@ history. No landed component currently deviates.
   `<Tabs><TabsList><TabsTrigger/><TabsList/><TabsContent/></Tabs>`.
 - A component with one styled region exports **one part** (`Badge`, `Avatar`);
   it does not grow a `Root` that exists only to satisfy this rule.
-- Children are typed **by position**: a `TabsContent` inside a `TabsList` is a
-  compile error. The parent narrows `children` with a part union and a dev-time
-  check; it never matches `React.Children` by string.
+- Children are typed **by position**, as far as React allows. A parent declares
+  `children?: PartChildren` — elements and conditional slots, never text — and
+  installs one family-scoped `assertParts` check. A part of the same component
+  used in a parent that does not host it throws with both names
+  (`TabsContent cannot be used inside TabsList. …`); decoration — a `Button`, a
+  `Badge`, a `div`, text — is not a misplaced part and stays allowed.
+- **Part identity cannot be a compile error.** React 19 types every JSX
+  expression as `React.JSX.Element` — `ReactElement<any, any>` — so any element
+  satisfies a part-typed slot; a `TabsContent` inside a `TabsList` typechecks
+  (measured with `tsc`, plan 304 §2). The check therefore runs at render, where
+  `element.type` is still the component reference. Never match `React.Children`
+  by string.
 - The root part owns the controlled-state props; a part never duplicates them.
 
 ## 2. Controlled and uncontrolled — one rule, one place

@@ -38,6 +38,12 @@ import {
 } from "./internal/collection.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import {
   isActivation,
   isDown,
   isEnter,
@@ -203,9 +209,10 @@ const report = (props: ListProps, next: ReadonlyArray<string>): void =>
   );
 
 /** The props shared by every selection mode. */
-interface ListBaseProps extends Props {
+interface ListBaseProps extends Omit<Props, "children"> {
   /** Row height `rowHeight` instead of `rowHeight + spacing.md`. */
   readonly dense?: boolean;
+  readonly children?: PartChildren;
 }
 
 /** The modes that can run a row action. */
@@ -265,6 +272,7 @@ export const List = (props: ListProps) => {
     onActivate,
     dense = false,
     onKeyDown,
+    children,
     style,
     ...rest
   } = props;
@@ -525,6 +533,8 @@ export const List = (props: ListProps) => {
     [activate, active, dense, noteFocus, register, rows, selectable, selected],
   );
 
+  assertParts(listRoot, children);
+
   return (
     <ListContext.Provider value={context}>
       <div
@@ -542,13 +552,15 @@ export const List = (props: ListProps) => {
           },
           style,
         )}
-      />
+      >
+        {children}
+      </div>
     </ListContext.Provider>
   );
 };
 
 /** {@link ListItem} props. */
-export interface ListItemProps extends Props {
+export interface ListItemProps extends Omit<Props, "children"> {
   /** Stable id, and the value a selection reports. */
   readonly value: string;
   /**
@@ -563,6 +575,7 @@ export interface ListItemProps extends Props {
   readonly leading?: ReactNode;
   /** Slot after the text: a badge, a shortcut. */
   readonly trailing?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** One row of a {@link List}. Its text parts are {@link ListItemTitle} and
@@ -621,6 +634,7 @@ export const ListItem = ({
     tabbable,
     (candidate) => candidate === value,
   );
+  assertParts(listItem, children);
 
   return (
     <div
@@ -743,6 +757,28 @@ export const ListItemDescription = ({ style, ...rest }: Props) => {
       )}
     />
   );
+};
+
+/** Every part of List, so a misplaced sibling is named. */
+const listParts: ReadonlyArray<PartComponent> = [
+  List,
+  ListItem,
+  ListItemTitle,
+  ListItemDescription,
+];
+
+const listRoot: PartsContract = {
+  parent: "List",
+  family: listParts,
+  accepts: [ListItem],
+  hint: "Put ListItem rows directly inside List.",
+};
+
+const listItem: PartsContract = {
+  parent: "ListItem",
+  family: listParts,
+  accepts: [ListItemTitle, ListItemDescription],
+  hint: "Put ListItemTitle and ListItemDescription directly inside ListItem.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

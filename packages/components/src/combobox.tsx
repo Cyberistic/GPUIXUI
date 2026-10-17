@@ -48,6 +48,12 @@ import {
 import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
 import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import {
   controlHeight,
   elevationShadow,
   textStyle,
@@ -96,7 +102,7 @@ export interface ComboboxProps {
   /** Default `false`: one value and the popup closes on select. */
   readonly multiple?: boolean;
   readonly disabled?: boolean;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** Narrow the public selection to the runtime's value shape. */
@@ -179,6 +185,8 @@ export const Combobox = ({
 
   const visible = filterOptions(options, query);
   const items = Arr.map(visible, (option) => option.value);
+
+  assertParts(comboboxRoot, children);
 
   const labelFor = (value: string): string =>
     Option.match(optionOf(options, value), {
@@ -351,6 +359,7 @@ export interface ComboboxContentProps extends FloatingContentProps {
   readonly align?: "start" | "center" | "end";
   /** The gap between trigger and surface. Default `4`. */
   readonly sideOffset?: number;
+  readonly children?: PartChildren;
 }
 
 /** The popup. It renders while the combobox is open, anchored by GPUix. */
@@ -365,6 +374,7 @@ export const ComboboxContent = ({
 }: ComboboxContentProps) => {
   const theme = useTheme();
   const { noteOutsidePress } = useCombobox();
+  assertParts(comboboxContent, children);
 
   return (
     <HeadlessContent
@@ -566,6 +576,31 @@ export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
 };
 
 export type { ComboboxOption } from "./combobox/logic.js";
+
+/** Every part of Combobox, so a misplaced sibling is named. */
+const comboboxParts: ReadonlyArray<PartComponent> = [
+  Combobox,
+  ComboboxTrigger,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+];
+
+const comboboxRoot: PartsContract = {
+  parent: "Combobox",
+  family: comboboxParts,
+  accepts: [ComboboxTrigger, ComboboxContent],
+  hint: "Put ComboboxTrigger and ComboboxContent directly inside Combobox.",
+};
+
+const comboboxContent: PartsContract = {
+  parent: "ComboboxContent",
+  family: comboboxParts,
+  accepts: [ComboboxInput, ComboboxList, ComboboxEmpty],
+  hint: "Put ComboboxInput, ComboboxList and ComboboxEmpty directly inside ComboboxContent.",
+};
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const comboboxMeta = {

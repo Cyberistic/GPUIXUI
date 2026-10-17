@@ -22,7 +22,6 @@ import {
   useLayoutEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import {
   initial,
@@ -38,6 +37,12 @@ import {
   type ValueItem,
 } from "./internal/collection.js";
 import { isActivation, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
@@ -93,8 +98,8 @@ const useAccordionItemContext = (): AccordionItemContextValue => {
 };
 
 /** Props every mode shares. */
-interface AccordionCommonProps extends Props {
-  readonly children?: ReactNode;
+interface AccordionCommonProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
 }
 
 /** {@link Accordion} props: one of two genuinely different state shapes. */
@@ -194,6 +199,8 @@ const AccordionFrame = ({
     }),
     [jumpTo, moveFrom, onToggle, registerTrigger, rows, state],
   );
+
+  assertParts(accordionRoot, children);
 
   return (
     <AccordionContext.Provider value={context}>
@@ -301,10 +308,11 @@ export const Accordion = (props: AccordionProps) => {
 };
 
 /** {@link AccordionItem} props. */
-export interface AccordionItemProps extends Props {
+export interface AccordionItemProps extends Omit<Props, "children"> {
   /** Stable id and the value the root reports. */
   readonly value: string;
   readonly disabled?: boolean;
+  readonly children?: PartChildren;
 }
 
 /** One section: a trigger and the content it reveals. */
@@ -323,6 +331,7 @@ export const AccordionItem = ({
     [disabled, value],
   );
   const isLast = Option.contains(lastValue, value);
+  assertParts(accordionItem, children);
 
   return (
     <AccordionItemContext.Provider value={item}>
@@ -498,6 +507,28 @@ export const AccordionContent = ({ style, children, ...rest }: Props) => {
       {children}
     </div>
   );
+};
+
+/** Every part of Accordion, so a misplaced sibling is named. */
+const accordionParts: ReadonlyArray<PartComponent> = [
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+];
+
+const accordionRoot: PartsContract = {
+  parent: "Accordion",
+  family: accordionParts,
+  accepts: [AccordionItem],
+  hint: "Put AccordionItem sections directly inside Accordion.",
+};
+
+const accordionItem: PartsContract = {
+  parent: "AccordionItem",
+  family: accordionParts,
+  accepts: [AccordionTrigger, AccordionContent],
+  hint: "Put AccordionTrigger and AccordionContent directly inside AccordionItem.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

@@ -24,11 +24,16 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isMenuKey } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { focusRing, useTheme } from "./internal/theme.js";
 import {
@@ -43,6 +48,7 @@ import {
   useMenuState,
   type MenuCloseReason,
 } from "./menu/state.js";
+import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
 import { MenuSurface } from "./menu/surface.js";
 
 /** A point in window coordinates. */
@@ -82,7 +88,7 @@ export interface ContextMenuProps {
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -159,6 +165,8 @@ export const ContextMenu = ({
     () => ({ open, openAt, openFromKeyboard, setTrigger, setOpen, point }),
     [open, openAt, openFromKeyboard, point, setOpen, setTrigger],
   );
+
+  assertParts(contextMenuRoot, children);
 
   return (
     <ContextMenuContext.Provider value={context}>
@@ -263,10 +271,10 @@ export const ContextMenuTrigger = ({
 };
 
 /** {@link ContextMenuContent} props. */
-export interface ContextMenuContentProps extends Props {
+export interface ContextMenuContentProps extends Omit<Props, "children"> {
   /** The menu's accessible name. Default `"Context menu"`. */
   readonly label?: string;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -282,6 +290,7 @@ export const ContextMenuContent = ({
   ...rest
 }: ContextMenuContentProps) => {
   const { open, point } = useContextMenuContext();
+  assertParts(contextMenuContent, children);
 
   if (!open) return null;
 
@@ -333,6 +342,42 @@ export type {
   MenuSubProps as ContextMenuSubProps,
   MenuSubTriggerProps as ContextMenuSubTriggerProps,
 } from "./menu/sub.js";
+
+/** Every part of the context menu, so a misplaced sibling is named. */
+const contextMenuParts: ReadonlyArray<PartComponent> = [
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  MenuItem,
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuLabel,
+  MenuSeparator,
+  MenuSub,
+  MenuSubTrigger,
+  MenuSubContent,
+];
+
+const contextMenuRoot: PartsContract = {
+  parent: "ContextMenu",
+  family: contextMenuParts,
+  accepts: [ContextMenuTrigger, ContextMenuContent],
+  hint: "Put ContextMenuTrigger and ContextMenuContent directly inside ContextMenu.",
+};
+
+const contextMenuContent: PartsContract = {
+  parent: "ContextMenuContent",
+  family: contextMenuParts,
+  accepts: [
+    MenuItem,
+    MenuCheckboxItem,
+    MenuGroup,
+    MenuLabel,
+    MenuSeparator,
+    MenuSub,
+  ],
+  hint: "Put rows, groups, labels, separators and submenus directly inside ContextMenuContent.",
+};
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const contextMenuMeta = {

@@ -21,6 +21,12 @@ import {
   type ReactNode,
 } from "react";
 import { controlHeight, textStyle, useTheme } from "../internal/theme.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "../internal/parts.js";
 import { useMergedRef } from "../internal/ref.js";
 import { useMenuContext } from "./state.js";
 
@@ -288,8 +294,14 @@ export const MenuLabel = ({ style, ...rest }: Props) => {
 };
 
 /** A labelled group of rows. */
-export const MenuGroup = ({ style, ...rest }: Props) => {
+export interface MenuGroupProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
+
+/** A labelled group of rows. */
+export const MenuGroup = ({ children, style, ...rest }: MenuGroupProps) => {
   const theme = useTheme();
+  assertParts(menuGroup, children);
   return (
     <div
       role="group"
@@ -302,6 +314,24 @@ export const MenuGroup = ({ style, ...rest }: Props) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
+};
+
+/** Every row part, so a misplaced sibling is named. */
+const menuRowParts: ReadonlyArray<PartComponent> = [
+  MenuItem,
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuLabel,
+  MenuSeparator,
+];
+
+const menuGroup: PartsContract = {
+  parent: "menu group",
+  family: menuRowParts,
+  accepts: [MenuItem, MenuCheckboxItem, MenuLabel, MenuSeparator],
+  hint: "Put rows, labels and separators directly inside the group.",
 };

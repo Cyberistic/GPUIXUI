@@ -31,11 +31,16 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import {
@@ -83,7 +88,7 @@ export interface DialogProps {
    * dialog doing uninterruptible work sets it `false`.
    */
   readonly dismissible?: boolean;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -121,6 +126,8 @@ export const Dialog = ({
     () => ({ open, setOpen }),
     [open, setOpen],
   );
+
+  assertParts(dialogRoot, children);
 
   return (
     <DialogContext.Provider value={context}>{children}</DialogContext.Provider>
@@ -170,7 +177,7 @@ export interface DialogContentProps extends Omit<Props, "children"> {
    * dialog put focus on Cancel instead of on the destructive action.
    */
   readonly initialFocus?: () => number | null;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** The surface's look: the popover role, a border, the largest elevation. */
@@ -216,6 +223,7 @@ export const DialogContent = ({
   const { open, setOpen } = useDialogContext();
   const renderer = useGpuix().renderer;
   const window = useWindowSize();
+  assertParts(dialogContent, children);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);
@@ -343,8 +351,18 @@ export const DialogContent = ({
 };
 
 /** The surface's heading block: title, description and any meta row. */
-export const DialogHeader = ({ style, ...rest }: Props) => {
+export interface DialogHeaderProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
+
+/** The surface's heading block: title, description and any meta row. */
+export const DialogHeader = ({
+  children,
+  style,
+  ...rest
+}: DialogHeaderProps) => {
   const theme = useTheme();
+  assertParts(dialogHeader, children);
   return (
     <div
       {...rest}
@@ -357,7 +375,9 @@ export const DialogHeader = ({ style, ...rest }: Props) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
@@ -409,6 +429,45 @@ export const DialogFooter = ({ style, ...rest }: Props) => {
       )}
     />
   );
+};
+
+/** Every part of Dialog, so a misplaced sibling is named. */
+const dialogParts: ReadonlyArray<PartComponent> = [
+  Dialog,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+];
+
+const dialogRoot: PartsContract = {
+  parent: "Dialog",
+  family: dialogParts,
+  accepts: [DialogTrigger, DialogContent, DialogClose],
+  hint: "Put DialogTrigger and DialogContent directly inside Dialog.",
+};
+
+const dialogContent: PartsContract = {
+  parent: "DialogContent",
+  family: dialogParts,
+  accepts: [
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+  ],
+  hint: "Put the header, title, description, footer and close control inside DialogContent.",
+};
+
+const dialogHeader: PartsContract = {
+  parent: "DialogHeader",
+  family: dialogParts,
+  accepts: [DialogTitle, DialogDescription],
+  hint: "Put DialogTitle and DialogDescription directly inside DialogHeader.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

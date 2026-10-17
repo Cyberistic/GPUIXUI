@@ -15,6 +15,12 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { createContext, useContext } from "react";
 import { IconButton } from "./internal/button.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { textStyle, tone, toneSurface, useTheme } from "./internal/theme.js";
 
 /** The four status tones an alert can carry. */
@@ -39,9 +45,10 @@ const useAlert = (): AlertContextValue => {
 };
 
 /** {@link Alert} props. */
-export interface AlertProps extends Props {
+export interface AlertProps extends Omit<Props, "children"> {
   /** Default `"info"`. */
   readonly tone?: AlertTone;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -56,6 +63,7 @@ export const Alert = ({
 }: AlertProps) => {
   const theme = useTheme();
   const { fg } = tone(theme, value);
+  assertParts(alertRoot, children);
 
   return (
     <AlertContext.Provider value={{ tone: value, foreground: fg }}>
@@ -106,11 +114,18 @@ export const AlertIcon = ({ style, ...rest }: AlertIconProps) => {
 };
 
 /** {@link AlertContent} props. */
-export type AlertContentProps = Props;
+export interface AlertContentProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
 
 /** The growing column between the glyph and the dismiss control. */
-export const AlertContent = ({ style, ...rest }: AlertContentProps) => {
+export const AlertContent = ({
+  children,
+  style,
+  ...rest
+}: AlertContentProps) => {
   const theme = useTheme();
+  assertParts(alertContent, children);
 
   return (
     <div
@@ -124,7 +139,9 @@ export const AlertContent = ({ style, ...rest }: AlertContentProps) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
@@ -192,6 +209,36 @@ export const AlertDismiss = ({
     ✕
   </IconButton>
 );
+
+/** Every part of Alert, so a misplaced sibling is named. */
+const alertParts: ReadonlyArray<PartComponent> = [
+  Alert,
+  AlertIcon,
+  AlertContent,
+  AlertTitle,
+  AlertDescription,
+  AlertDismiss,
+];
+
+const alertRoot: PartsContract = {
+  parent: "Alert",
+  family: alertParts,
+  accepts: [
+    AlertIcon,
+    AlertContent,
+    AlertTitle,
+    AlertDescription,
+    AlertDismiss,
+  ],
+  hint: "Put the icon, content and dismiss control directly inside Alert.",
+};
+
+const alertContent: PartsContract = {
+  parent: "AlertContent",
+  family: alertParts,
+  accepts: [AlertTitle, AlertDescription],
+  hint: "Put AlertTitle and AlertDescription directly inside AlertContent.",
+};
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const alertMeta = {

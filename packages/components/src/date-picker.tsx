@@ -35,7 +35,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import {
   addDays,
@@ -69,6 +68,12 @@ import {
   isRight,
   isUp,
 } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
@@ -130,7 +135,7 @@ export interface DatePickerProps {
    * it when a test or a server boundary needs a fixed day.
    */
   readonly today?: string;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** The day the picker calls today, at UTC midnight. */
@@ -192,6 +197,8 @@ export const DatePicker = ({
     setSelected(null);
     closeToTrigger();
   }, [closeToTrigger, setSelected]);
+
+  assertParts(datePickerRoot, children);
 
   return (
     <DatePickerContext.Provider
@@ -307,6 +314,7 @@ export interface DatePickerContentProps extends FloatingContentProps {
   readonly align?: "start" | "center" | "end";
   /** The gap between trigger and surface. Default `6`. */
   readonly sideOffset?: number;
+  readonly children?: PartChildren;
 }
 
 /** The popup. Focus stays on the grid's day cell rather than the surface. */
@@ -319,6 +327,7 @@ export const DatePickerContent = ({
   ...rest
 }: DatePickerContentProps) => {
   const theme = useTheme();
+  assertParts(datePickerContent, children);
 
   return (
     <PopoverContent
@@ -629,6 +638,28 @@ export const DatePickerCalendar = ({
       ) : null}
     </>
   );
+};
+
+/** Every part of DatePicker, so a misplaced sibling is named. */
+const datePickerParts: ReadonlyArray<PartComponent> = [
+  DatePicker,
+  DatePickerTrigger,
+  DatePickerContent,
+  DatePickerCalendar,
+];
+
+const datePickerRoot: PartsContract = {
+  parent: "DatePicker",
+  family: datePickerParts,
+  accepts: [DatePickerTrigger, DatePickerContent],
+  hint: "Put DatePickerTrigger and DatePickerContent directly inside DatePicker.",
+};
+
+const datePickerContent: PartsContract = {
+  parent: "DatePickerContent",
+  family: datePickerParts,
+  accepts: [DatePickerCalendar],
+  hint: "Put DatePickerCalendar directly inside DatePickerContent.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

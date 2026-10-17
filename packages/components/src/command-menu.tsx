@@ -30,6 +30,12 @@ import {
 import { Dialog, DialogContent } from "./dialog.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
 import { MenuLabel, menuRowStyle } from "./menu/item.js";
 import { fuzzyMatches, rankByGroup } from "./menu/fuzzy.js";
@@ -86,7 +92,7 @@ export interface CommandMenuProps {
   readonly actions: ReadonlyArray<CommandAction>;
   /** Replace the default ranked fuzzy match; accepted rows keep declaration order. */
   readonly filter?: (action: CommandAction, query: string) => boolean;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** The default: rank a subsequence match within each declared group. */
@@ -190,6 +196,8 @@ export const CommandMenu = ({
     else if (isFirst(event)) step({ _tag: "First" });
     else if (isLast(event)) step({ _tag: "Last" });
   };
+
+  assertParts(commandMenuRoot, children);
 
   return (
     <CommandMenuContext.Provider
@@ -406,6 +414,22 @@ export const CommandMenuEmpty = ({ children }: CommandMenuEmptyProps) => {
       {children ?? "No matching commands"}
     </text>
   );
+};
+
+/** Every part of CommandMenu, so a misplaced sibling is named. */
+const commandMenuParts: ReadonlyArray<PartComponent> = [
+  CommandMenu,
+  CommandMenuInput,
+  CommandMenuList,
+  CommandMenuItem,
+  CommandMenuEmpty,
+];
+
+const commandMenuRoot: PartsContract = {
+  parent: "CommandMenu",
+  family: commandMenuParts,
+  accepts: [CommandMenuInput, CommandMenuList, CommandMenuEmpty],
+  hint: "Put the input, list and empty state directly inside CommandMenu.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

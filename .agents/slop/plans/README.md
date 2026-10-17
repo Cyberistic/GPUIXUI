@@ -77,7 +77,7 @@ workstream declares in its own section below.
 | [301](./301-command-menu-parts.md) | CommandMenu becomes a compound part | F | 200, 201, 114, 133 | done — the `docs/component-api.md` §9 deviation |
 | [302](./302-combobox-parts.md) | Combobox becomes a compound part | F | 200, 201, 116, 138 | done — the `docs/component-api.md` §9 deviation |
 | [303](./303-date-time-picker-parts.md) | DatePicker and TimePicker become compound parts | F | 200, 201, 119, 127, 132 | done — the §9 deviation; formalises the TimePicker field shape |
-| [304](./304-typed-by-position-children.md) | Typed-by-position children: the render check and the measured compile-time limit | F | 200, 201, 158, 300–303 | in progress — plan first; React 19 cannot type part identity at compile time, so the check is at render plus a `PartChildren` narrowing |
+| [304](./304-typed-by-position-children.md) | Typed-by-position children: the render check and the measured compile-time limit | F | 200, 201, 158, 300–303 | done — 32 family-scoped checks across 19 modules, `PartChildren` narrowing, 6 unit + 7 native tests (behaviour 298); part identity is not expressible in React 19's JSX types |
 
 Interlocks this workstream depends on and does not own:
 

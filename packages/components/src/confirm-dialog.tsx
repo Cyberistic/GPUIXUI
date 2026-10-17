@@ -13,7 +13,7 @@
  */
 
 import { Match } from "effect";
-import { useRef, type ReactNode } from "react";
+import { useRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
 import {
   Dialog,
@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./dialog.js";
+import type { PartChildren } from "./internal/parts.js";
 import { Button } from "./internal/button.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 
@@ -51,7 +52,7 @@ export interface ConfirmDialogProps {
   readonly loading?: boolean;
   readonly onConfirm: () => void;
   /** Extra dialog body between the description and the actions. */
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**

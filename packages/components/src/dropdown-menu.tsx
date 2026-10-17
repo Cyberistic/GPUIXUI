@@ -26,16 +26,21 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  type ReactNode,
   type RefObject,
 } from "react";
-import { textStyle, useTheme } from "./internal/theme.js";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isEventClaimed } from "./internal/event-claim.js";
-import { useMergedRef } from "./internal/ref.js";
 import { isActivation, isDown, isUp } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
+import { textStyle, useTheme } from "./internal/theme.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -49,6 +54,7 @@ import {
   useMenuState,
   type MenuCloseReason,
 } from "./menu/state.js";
+import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
 import { menuKeyHandler, menuSurfaceStyle } from "./menu/surface.js";
 
 /** The rules a {@link DropdownMenuContent} follows. */
@@ -82,7 +88,7 @@ export interface DropdownMenuProps {
   /** The uncontrolled starting state. Default `false`. */
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -160,6 +166,8 @@ export const DropdownMenu = ({
     [open, setOpen],
   );
 
+  assertParts(dropdownRoot, children);
+
   return (
     <DropdownContext.Provider value={context}>
       <MenuContext.Provider value={menu}>
@@ -228,6 +236,7 @@ export interface DropdownMenuContentProps extends FloatingContentProps {
   readonly align?: "start" | "center" | "end";
   /** The gap between trigger and surface. Default `4`. */
   readonly sideOffset?: number;
+  readonly children?: PartChildren;
 }
 
 /** The menu surface, rendered while the menu is open. */
@@ -247,6 +256,7 @@ export const DropdownMenuContent = ({
   const { open, pendingFocus } = useDropdownContext();
   const menu = useMenuContext();
   const keys = menuKeyHandler(menu);
+  assertParts(dropdownContent, children);
 
   // Rows register in child layout effects, which run before this one. If the
   // root has not published them yet, the effect runs again when `rows` changes.
@@ -314,6 +324,42 @@ export type {
   MenuCheckboxItemProps as DropdownMenuCheckboxItemProps,
   MenuItemProps as DropdownMenuItemProps,
 } from "./menu/item.js";
+
+/** Every part of the dropdown menu, so a misplaced sibling is named. */
+const dropdownParts: ReadonlyArray<PartComponent> = [
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  MenuItem,
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuLabel,
+  MenuSeparator,
+  MenuSub,
+  MenuSubTrigger,
+  MenuSubContent,
+];
+
+const dropdownRoot: PartsContract = {
+  parent: "DropdownMenu",
+  family: dropdownParts,
+  accepts: [DropdownMenuTrigger, DropdownMenuContent],
+  hint: "Put DropdownMenuTrigger and DropdownMenuContent directly inside DropdownMenu.",
+};
+
+const dropdownContent: PartsContract = {
+  parent: "DropdownMenuContent",
+  family: dropdownParts,
+  accepts: [
+    MenuItem,
+    MenuCheckboxItem,
+    MenuGroup,
+    MenuLabel,
+    MenuSeparator,
+    MenuSub,
+  ],
+  hint: "Put rows, groups, labels, separators and submenus directly inside DropdownMenuContent.",
+};
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const dropdownMenuMeta = {

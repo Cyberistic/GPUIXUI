@@ -22,6 +22,12 @@ import {
 } from "react";
 import { collapse, type Crumb } from "./breadcrumb/logic.js";
 import { isActivation } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 
 /** The rules a breadcrumb part follows; throws outside a root. */
@@ -43,11 +49,12 @@ const useBreadcrumbContext = (): BreadcrumbContextValue => {
 };
 
 /** {@link Breadcrumb} props. */
-export interface BreadcrumbProps extends Props {
+export interface BreadcrumbProps extends Omit<Props, "children"> {
   /** Rendered entries to keep; fewer than 3 is clamped to 3. */
   readonly maxItems?: number;
   /** The separator between entries. Default `/`. */
   readonly separator?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** The trail's root: a labelled navigation landmark and the collapse budget. */
@@ -59,6 +66,7 @@ export const Breadcrumb = ({
   ...rest
 }: BreadcrumbProps) => {
   const context: BreadcrumbContextValue = { maxItems, separator };
+  assertParts(breadcrumbRoot, children);
 
   return (
     <BreadcrumbContext.Provider value={context}>
@@ -119,12 +127,22 @@ const Ellipsis = () => {
   );
 };
 
+/** {@link BreadcrumbList} props. */
+export interface BreadcrumbListProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
+
 /** The horizontal row of crumbs. Collapses its middle when `maxItems` is set. */
-export const BreadcrumbList = ({ style, children, ...rest }: Props) => {
+export const BreadcrumbList = ({
+  style,
+  children,
+  ...rest
+}: BreadcrumbListProps) => {
   const theme = useTheme();
   const { maxItems, separator } = useBreadcrumbContext();
   const fallback = separator ?? <BreadcrumbSeparator />;
   const parsed = entries(children, fallback);
+  assertParts(breadcrumbList, children);
   const crumbs: ReadonlyArray<Crumb<Entry>> =
     maxItems === undefined
       ? Arr.map(parsed, (item) => ({ kind: "item", item }))
@@ -163,8 +181,18 @@ export const BreadcrumbList = ({ style, children, ...rest }: Props) => {
 };
 
 /** One entry in the trail. */
-export const BreadcrumbItem = ({ style, ...rest }: Props) => {
+export interface BreadcrumbItemProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
+
+/** One entry in the trail. */
+export const BreadcrumbItem = ({
+  children,
+  style,
+  ...rest
+}: BreadcrumbItemProps) => {
   const theme = useTheme();
+  assertParts(breadcrumbItem, children);
   return (
     <div
       role="listitem"
@@ -178,7 +206,9 @@ export const BreadcrumbItem = ({ style, ...rest }: Props) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
@@ -282,6 +312,37 @@ export const BreadcrumbSeparator = ({ style, ...rest }: Props) => {
       /
     </text>
   );
+};
+
+/** Every part of Breadcrumb, so a misplaced sibling is named. */
+const breadcrumbParts: ReadonlyArray<PartComponent> = [
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+];
+
+const breadcrumbRoot: PartsContract = {
+  parent: "Breadcrumb",
+  family: breadcrumbParts,
+  accepts: [BreadcrumbList],
+  hint: "Put BreadcrumbList directly inside Breadcrumb.",
+};
+
+const breadcrumbList: PartsContract = {
+  parent: "BreadcrumbList",
+  family: breadcrumbParts,
+  accepts: [BreadcrumbItem, BreadcrumbSeparator],
+  hint: "Put BreadcrumbItem and BreadcrumbSeparator directly inside BreadcrumbList.",
+};
+
+const breadcrumbItem: PartsContract = {
+  parent: "BreadcrumbItem",
+  family: breadcrumbParts,
+  accepts: [BreadcrumbLink, BreadcrumbPage],
+  hint: "Put BreadcrumbLink or BreadcrumbPage directly inside BreadcrumbItem.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

@@ -11,6 +11,12 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import {
   elevationShadow,
   textStyle,
   useTheme,
@@ -21,9 +27,10 @@ import {
 export type CardVariant = "outline" | "elevated" | "plain";
 
 /** {@link Card} props. */
-export interface CardProps extends Props {
+export interface CardProps extends Omit<Props, "children"> {
   /** Default `"outline"`. */
   readonly variant?: CardVariant;
+  readonly children?: PartChildren;
 }
 
 /** The rules a variant adds to the base surface. */
@@ -39,8 +46,14 @@ const surface = (theme: Theme, variant: CardVariant) =>
   );
 
 /** A bordered or elevated surface that groups related content. */
-export const Card = ({ variant = "outline", style, ...rest }: CardProps) => {
+export const Card = ({
+  variant = "outline",
+  children,
+  style,
+  ...rest
+}: CardProps) => {
   const theme = useTheme();
+  assertParts(cardRoot, children);
   return (
     <div
       {...rest}
@@ -55,13 +68,21 @@ export const Card = ({ variant = "outline", style, ...rest }: CardProps) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
 /** The block above the content: a title, a description and any meta row. */
-export const CardHeader = ({ style, ...rest }: Props) => {
+export interface CardHeaderProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
+
+/** The block above the content: a title, a description and any meta row. */
+export const CardHeader = ({ children, style, ...rest }: CardHeaderProps) => {
   const theme = useTheme();
+  assertParts(cardHeaderContract, children);
   return (
     <div
       {...rest}
@@ -75,7 +96,9 @@ export const CardHeader = ({ style, ...rest }: Props) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
@@ -154,6 +177,32 @@ export const CardFooter = ({ style, ...rest }: Props) => {
       )}
     />
   );
+};
+
+/** Every part of Card, so a misplaced sibling is named. */
+const cardParts: ReadonlyArray<PartComponent> = [
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+];
+
+/** The root hosts the three regions. */
+const cardRoot: PartsContract = {
+  parent: "Card",
+  family: cardParts,
+  accepts: [CardHeader, CardContent, CardFooter],
+  hint: "Put the header, content and footer directly inside Card.",
+};
+
+/** The header hosts the title and the description; any other content is a meta row. */
+const cardHeaderContract: PartsContract = {
+  parent: "CardHeader",
+  family: cardParts,
+  accepts: [CardTitle, CardDescription],
+  hint: "Put CardTitle and CardDescription directly inside CardHeader.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

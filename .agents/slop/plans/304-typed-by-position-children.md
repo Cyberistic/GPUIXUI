@@ -116,7 +116,7 @@ Add a module-local `const <component>Parts: ReadonlyArray<PartComponent>` and ca
 | ---- | ------ | ----------------------------- | ------------ |
 | `card.tsx` | `Card` | `CardHeader`, `CardContent`, `CardFooter` | header/content/footer at the root |
 | `card.tsx` | `CardHeader` | `CardTitle`, `CardDescription` | title/description in the header |
-| `alert.tsx` | `Alert` | `AlertIcon`, `AlertContent`, `AlertDismiss` | icon/content/dismiss at the root |
+| `alert.tsx` | `Alert` | `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` | icon/content/dismiss at the root |
 | `alert.tsx` | `AlertContent` | `AlertTitle`, `AlertDescription` | title/description in the content |
 | `list.tsx` | `List` | `ListItem` | rows at the root |
 | `list.tsx` | `ListItem` | `ListItemTitle`, `ListItemDescription` | title/description in the row |
@@ -128,7 +128,7 @@ Add a module-local `const <component>Parts: ReadonlyArray<PartComponent>` and ca
 | `breadcrumb.tsx` | `Breadcrumb` | `BreadcrumbList` | the list at the root |
 | `breadcrumb.tsx` | `BreadcrumbList` | `BreadcrumbItem`, `BreadcrumbSeparator` | items and separators in the list |
 | `breadcrumb.tsx` | `BreadcrumbItem` | `BreadcrumbLink`, `BreadcrumbPage` | link/page in the item |
-| `pagination.tsx` | `Pagination` | `PaginationPrevious`, `PaginationList`, `PaginationNext` | controls at the root |
+| `pagination.tsx` | `Pagination` | `PaginationPrevious`, `PaginationList`, `PaginationNext`, plus a bare `PaginationItem`/`PaginationEllipsis` | controls at the root |
 | `dialog.tsx` | `Dialog` | `DialogTrigger`, `DialogContent`, `DialogClose` | trigger/content at the root |
 | `dialog.tsx` | `DialogContent` | `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose` | header/footer in the content |
 | `dialog.tsx` | `DialogHeader` | `DialogTitle`, `DialogDescription` | title/description in the header |
@@ -167,7 +167,7 @@ description stay open — they host forms and arbitrary markup.
 | `packages/components/src/internal/parts.ts` | **new** — `PartComponent`, `PartChildren`, `PartsContract`, `assertParts` |
 | `packages/components/src/internal/parts.test.ts` | **new** — unit suite over React elements (see §8) |
 | `packages/components/src/behaviour/parts.test.tsx` | **new** — real-renderer suite through an error boundary |
-| the 16 component modules in §4 | family arrays, one `assertParts` call per parent, `PartChildren` on the parent props, `children` destructured and rendered explicitly where it currently rides on `...rest` |
+| the 19 component modules in §4 | family arrays, one `assertParts` call per parent, `PartChildren` on the parent props, `children` destructured and rendered explicitly where it currently rides on `...rest` |
 | `packages/components/src/index.ts` | export `type PartChildren` |
 | `packages/components/docs/<each component>.mdx` | one line only where the page shows composition that the check now rejects; otherwise unchanged |
 | `docs/component-api.md` | §1 rewritten to the measured rule; adoption table row moves to "adopted with a runtime check"; evidence in §1 |
@@ -216,7 +216,7 @@ only honest assertion). Cases:
 1. `TabsContent` inside `TabsList` → caught message names both;
 2. `AccordionContent` directly inside `Accordion` → caught;
 3. `BreadcrumbLink` directly in `BreadcrumbList` → caught;
-4. `AlertTitle` directly in `Alert` → caught;
+4. `AlertDismiss` inside `AlertContent` → caught;
 5. `DropdownMenuTrigger` inside `DropdownMenuContent` → caught;
 6. `DatePickerCalendar` directly in `DatePicker` → caught;
 7. a valid composition of each touched family renders with no error (a single
@@ -259,4 +259,25 @@ Stop and report if:
 
 ## 11. Result
 
-Filled in when the plan lands.
+Landed 2026-10-17:
+
+- `internal/parts.ts` — `PartComponent`, `PartChildren` (elements and
+  conditionals, never text), `PartsContract`, `assertParts`; family-scoped, so
+  decoration is still allowed and a misplaced family part is rejected with both
+  names plus the fix.
+- 32 `assertParts` sites across the 19 modules in §4; each module owns its family
+  array and hints.
+- `PartChildren` now types those parents' children; `src/index.ts` exports it.
+  `docs/component-api.md` §1 records the measured React 19 limit (JSX element
+  identity is `any`) instead of claiming a compile error that cannot happen.
+- **Two legitimately open compositions measured while running the suite** and
+  allowed: `Alert` hosts `AlertTitle`/`AlertDescription` directly (the tone
+  tests compose them without `AlertContent`), and `Pagination` hosts a bare
+  `PaginationItem`/`PaginationEllipsis` (an item outside the window reads the
+  root's page). Everything else uses the §4 sets.
+- Tests: `internal/parts.test.ts` (6 unit cases, 228 unit total) and
+  `behaviour/parts.test.tsx` (7 real-renderer cases through an error boundary;
+  behaviour 298 = 291 kept + 7). Both directions: deleting the `TabsList` check,
+  and adding `TabsContent` to its accepts, each fail "rejects TabsContent inside
+  TabsList"; restored.
+- Gates: `check-types`, `test`, `test:behaviour`, `check`, `lint`, `fmt` green.

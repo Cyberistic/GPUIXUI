@@ -44,6 +44,12 @@ import {
 } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import {
   controlHeight,
   focusRing,
   textStyle,
@@ -119,7 +125,7 @@ const rowAt = (
   Option.flatMap(index, (position) => Arr.get(rows, position));
 
 /** {@link Tabs} props. */
-export interface TabsProps extends Props {
+export interface TabsProps extends Omit<Props, "children"> {
   /** The controlled selected value. `undefined` means uncontrolled. */
   readonly value?: string;
   /** The uncontrolled starting value. Default `""`, no tab selected. */
@@ -129,6 +135,7 @@ export interface TabsProps extends Props {
   readonly orientation?: TabsOrientation;
   /** Default `"automatic"`: moving focus selects. */
   readonly activation?: TabsActivation;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -285,6 +292,8 @@ export const Tabs = ({
     ],
   );
 
+  assertParts(tabsRoot, children);
+
   return (
     <TabsContext.Provider value={context}>
       <div
@@ -305,20 +314,23 @@ export const Tabs = ({
 };
 
 /** {@link TabsList} props: the rail, optionally named for assistive technology. */
-export interface TabsListProps extends Props {
+export interface TabsListProps extends Omit<Props, "children"> {
   /** The tab list's accessible name. */
   readonly label?: string;
+  readonly children?: PartChildren;
 }
 
 /** The row of triggers. Owns the arrow, Home and End keys. */
 export const TabsList = ({
   label,
   onKeyDown,
+  children,
   style,
   ...rest
 }: TabsListProps) => {
   const theme = useTheme();
   const { orientation, moveBy, jumpTo, selectActive } = useTabsContext();
+  assertParts(tabsList, children);
 
   const direction = (event: EventPayload): Option.Option<1 | -1> =>
     orientation === "horizontal"
@@ -370,7 +382,9 @@ export const TabsList = ({
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
@@ -497,6 +511,28 @@ export const TabsContent = ({ value, style, ...rest }: TabsContentProps) => {
       )}
     />
   );
+};
+
+/** Every part of Tabs, so a misplaced sibling is named. */
+const tabsParts: ReadonlyArray<PartComponent> = [
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+];
+
+const tabsRoot: PartsContract = {
+  parent: "Tabs",
+  family: tabsParts,
+  accepts: [TabsList, TabsContent],
+  hint: "Put TabsList and TabsContent directly inside Tabs.",
+};
+
+const tabsList: PartsContract = {
+  parent: "TabsList",
+  family: tabsParts,
+  accepts: [TabsTrigger],
+  hint: "Put TabsTrigger directly inside TabsList; put TabsContent beside it.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

@@ -13,7 +13,13 @@
 import type { InputProps, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import {
   controlHeight,
   focusRing,
@@ -40,7 +46,7 @@ export interface FieldProps extends Props {
   /** The message to show; also paints the control as invalid. */
   readonly error?: string;
   readonly required?: boolean;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** One labelled field. Compose a {@link FieldInput} or any other control. */
@@ -55,6 +61,7 @@ export const Field = ({
 }: FieldProps) => {
   const theme = useTheme();
   const context: FieldContextValue = { label, description, error, required };
+  assertParts(fieldRoot, children);
 
   return (
     <FieldContext.Provider value={context}>
@@ -221,6 +228,22 @@ export const FieldInput = ({
       )}
     />
   );
+};
+
+/** Every part of Field, so a misplaced sibling is named. */
+const fieldParts: ReadonlyArray<PartComponent> = [
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+  FieldInput,
+];
+
+const fieldRoot: PartsContract = {
+  parent: "Field",
+  family: fieldParts,
+  accepts: [FieldInput],
+  hint: "Field renders its label and message itself; put only the control inside it.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

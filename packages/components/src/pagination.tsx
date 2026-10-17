@@ -15,6 +15,12 @@ import { mergeStyles } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import { createContext, useContext, useMemo } from "react";
 import { Button } from "./internal/button.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
 import { pageWindow, type PageItem } from "./pagination/logic.js";
 
@@ -42,7 +48,7 @@ const usePagination = (): PaginationContextValue => {
 };
 
 /** {@link Pagination} props. */
-export interface PaginationProps extends Props {
+export interface PaginationProps extends Omit<Props, "children"> {
   /** The current page, 1-based. Clamped into `[1, pageCount]`. */
   readonly page: number;
   /** How many pages exist. Zero or fewer renders nothing. */
@@ -52,6 +58,7 @@ export interface PaginationProps extends Props {
   readonly siblingCount?: number;
   /** Keep the first and last page visible. Default `true`. */
   readonly showEdges?: boolean;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -77,6 +84,8 @@ export const Pagination = ({
   );
 
   if (pageCount <= 0) return null;
+
+  assertParts(paginationRoot, children);
 
   return (
     <PaginationContext.Provider
@@ -265,6 +274,31 @@ export const PaginationEllipsis = ({
       …
     </text>
   );
+};
+
+/** Every part of Pagination, so a misplaced sibling is named. */
+const paginationParts: ReadonlyArray<PartComponent> = [
+  Pagination,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationList,
+  PaginationItem,
+  PaginationEllipsis,
+];
+
+const paginationRoot: PartsContract = {
+  parent: "Pagination",
+  family: paginationParts,
+  accepts: [
+    PaginationPrevious,
+    PaginationList,
+    PaginationNext,
+    // A bare item is supported: it reads the root's page and can stand outside
+    // the window (the measurement in `pagination.test.tsx` relies on it).
+    PaginationItem,
+    PaginationEllipsis,
+  ],
+  hint: "Put PaginationPrevious, PaginationList and PaginationNext directly inside Pagination.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

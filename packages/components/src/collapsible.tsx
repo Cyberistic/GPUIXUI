@@ -9,9 +9,15 @@
 
 import type { EventPayload, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isActivation } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 
 /** The rules a collapsible part follows; throws outside a root. */
@@ -40,7 +46,7 @@ export interface CollapsibleProps {
   /** The uncontrolled starting state. Default `false`. */
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** The open state shared by a trigger and its content. */
@@ -56,6 +62,7 @@ export const Collapsible = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+  assertParts(collapsibleRoot, children);
 
   return (
     <CollapsibleContext.Provider value={{ open, setOpen }}>
@@ -163,6 +170,20 @@ export const CollapsibleContent = ({ style, children, ...rest }: Props) => {
       {children}
     </div>
   );
+};
+
+/** Every part of Collapsible, so a misplaced sibling is named. */
+const collapsibleParts: ReadonlyArray<PartComponent> = [
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+];
+
+const collapsibleRoot: PartsContract = {
+  parent: "Collapsible",
+  family: collapsibleParts,
+  accepts: [CollapsibleTrigger, CollapsibleContent],
+  hint: "Put CollapsibleTrigger and CollapsibleContent directly inside Collapsible.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
