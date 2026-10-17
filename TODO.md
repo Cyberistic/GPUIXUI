@@ -223,7 +223,7 @@ retired once both branches are one
     - [x] Carousel — plan 315: 8 native tests; both-direction proof
     - [x] Hotkey-recorder input — plan 316 (consumes plan 310): 8 capture + 8 native tests; both-direction proof
     - [ ] Preview Card — plan 317
-    - [ ] Color picker — plan 318 (discrete swatches: 0.10.0 has no gradients)
+    - [x] Color picker — plan 318 (discrete swatches: 0.10.0 has no gradients): 8 hex + 8 native tests; both-direction proof
     - [ ] Mention input — plan 319
     - [ ] Navigation Menu — plan 320
 `[x]` Verify every component in both themes

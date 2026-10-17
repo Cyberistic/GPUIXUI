@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §2 (A15), `310` (keycaps in the docs examples) |
-| Status | planned |
+| Status | done — 8 hex + 8 native tests; both-direction proof |
 | Source | `COMPONENTS.md` → Tier 2 → Color picker; plan `205` A15 |
 
 This plan is self-contained. It adds `ColorPicker` at the Tier 2 bar — **as a
@@ -140,3 +140,20 @@ fail. Never mark the selected swatch: native test 3 fails. Restore after each.
   evidence and name the strongest alternative that was shipped.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/color/hex.ts` — `HexColor` (a branded `Schema` string), `normalizeHex`,
+  `isHexColor` and `sameHex`. Theme swatch values are uppercase hex, so
+  normalisation is what makes a pressed swatch compare equal to a stored value.
+- `src/color-picker.tsx` — one part: the theme swatch grid, the HEX field
+  (normalise on `Enter`/blur, `destructive` border and `aria-description` for an
+  invalid draft, revert on blur) and a preview. No square, with the gradient
+  evidence in the docs.
+- The test suite replaces the field's text with a real `cmd-a` selection, since
+  the runtime's test input supports selection and replacement.
+- **Both directions:** removing the invalid guard commits junk in 5 native tests;
+  returning the input unnormalised fails the hex tests. Restored: 8 hex + 8
+  native green.

@@ -91,7 +91,7 @@ workstream declares in its own section below.
 | [315](./315-carousel.md) | Carousel: discrete slide stepping (no transform in 0.10.0) | C | 200, 201, 205 | done — 8 native tests; both-direction proof |
 | [316](./316-hotkey-recorder.md) | Hotkey recorder over the shared accelerator model | C | 200, 201, 310 | done — 8 capture + 8 native tests; both-direction proof |
 | [317](./317-preview-card.md) | Preview card: hover/focus preview on the anchored layer | C | 200, 201, 112, 114 | planned |
-| [318](./318-color-picker.md) | Color picker: discrete swatches and HEX (no gradients in 0.10.0) | C | 200, 201, 205 | planned |
+| [318](./318-color-picker.md) | Color picker: discrete swatches and HEX (no gradients in 0.10.0) | C | 200, 201, 205 | done — 8 hex + 8 native tests; both-direction proof |
 | [319](./319-mention-input.md) | Mention input: ranked `@` suggestions over an anchored list | C | 200, 201, 116, 112 | planned |
 | [320](./320-navigation-menu.md) | Navigation menu: one open panel, roving triggers | C | 200, 201, 112, 114, 113 | planned |
 

@@ -234,6 +234,7 @@ parts.
 | Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
 | Countdown | `Countdown` | — | plan 312 |
 | Inline edit | `InlineEdit` (render display/input swap; one part) | — | plan 313 |
+| Color picker | `ColorPicker` (swatches + HEX; one part) | — | plan 318 |
 | Hotkey-recorder input | `HotkeyRecorder` | — | plan 316 |
 | Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | — | plan 315 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |

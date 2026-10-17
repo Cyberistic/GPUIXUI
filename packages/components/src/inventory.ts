@@ -14,6 +14,7 @@ import { breadcrumbMeta } from "./breadcrumb.js";
 import { carouselMeta } from "./carousel.js";
 import { cardMeta } from "./card.js";
 import { collapsibleMeta } from "./collapsible.js";
+import { colorPickerMeta } from "./color-picker.js";
 import { comboboxMeta } from "./combobox.js";
 import { commandMenuMeta } from "./command-menu.js";
 import { confirmDialogMeta } from "./confirm-dialog.js";
@@ -68,6 +69,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   carouselMeta,
   cardMeta,
   collapsibleMeta,
+  colorPickerMeta,
   comboboxMeta,
   commandMenuMeta,
   confirmDialogMeta,

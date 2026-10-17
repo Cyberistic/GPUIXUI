@@ -1,0 +1,109 @@
+---
+title: Color picker
+description: Discrete swatches and HEX entry — not a saturation square.
+---
+
+`ColorPicker` chooses a colour from a keyboard-reachable swatch grid or by typing
+a HEX value, with a preview of the current colour. It is **not** a
+saturation/value square, and that is an honest limitation, not an omission.
+
+## Why there is no saturation square
+
+The classic square is built from two gradients: white→hue horizontally and
+transparent→black vertically.
+
+`@gpuix/native@0.10.0` supports **two-stop linear gradients only** and no radial
+gradient (verified, plan 203). A square drawn without them would be a decorative
+placeholder presented as a control, which the project's rules forbid. The
+strongest honest alternative is what ships: a discrete swatch grid plus a HEX
+field that accepts any colour.
+
+## Usage
+
+```tsx
+import { ColorPicker } from "@gpuixui/components";
+
+const [accent, setAccent] = useState("#3b82f6");
+
+<ColorPicker
+  label="Accent colour"
+  value={accent}
+  onValueChange={setAccent}
+  swatches={["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"]}
+/>;
+```
+
+The runnable build is `examples/color-picker.example.tsx`, which the native
+playground mounts.
+
+## The value
+
+- The public value is always lowercase `#rrggbb`.
+- Typed input accepts `#abc`, `abc`, `#AABBCC` and `AABBCC`, and normalises on
+  commit; `#abcd` and `#aabbccdd` are refused (no alpha in v1).
+- A commit happens on `Enter` or blur. An invalid draft is marked with a
+  `destructive` border and `aria-description="Invalid hex colour"`, and blur
+  reverts it to the committed value.
+- A swatch press commits immediately.
+- Default swatches are six theme colours (`primary`, `secondary`, `accent`,
+  `muted`, `destructive`, `foreground`), so a custom theme changes them.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `label` | `string` | — | The group's accessible name. |
+| `value` | `string` | — | Controlled hex; `undefined` means uncontrolled. |
+| `defaultValue` | `string` | `"#000000"` | Uncontrolled starting value. |
+| `onValueChange` | `(value: string) => void` | — | A swatch press or a valid commit. |
+| `swatches` | `ReadonlyArray<string>` | six theme colours | The grid, in order. |
+| `disabled` | `boolean` | `false` | Swatches leave the tab order; the field is read-only. |
+| `style` | `StateStyle<ColorPickerState>` | — | `{ disabled, valid }`. |
+
+With a `testId`, the parts are addressable as `${testId}-swatch-${index}`,
+`${testId}-hex` and `${testId}-preview`.
+
+## Theming
+
+Swatches are the colours you pass (defaults from the theme); the grid uses
+`border`/`foreground` for selected edges, the field uses `background`,
+`inputForeground`, `border`/`destructive` and `focusRing`, and the preview uses
+`border`. A custom theme changes the defaults and the shell — see
+[Theming](/docs/theming).
+
+## Accessibility
+
+- The root is a named `group`.
+- Every swatch is a `role="button"` named by its hex value, with `aria-selected`
+  on the current one; selected swatches also carry the strong border.
+- The field is a real input named "<label> hex value"; an invalid draft is
+  described through `aria-description` (`0.10.0` supports it).
+- Disabled is `tabIndex={-1}` plus `readOnly` and dimming: there is no
+  `aria-disabled` in `0.10.0`.
+
+## Limitations
+
+- **No saturation/value square** (two-stop linear gradients only).
+- No alpha, HSL/RGB numeric fields or eyedropper in v1.
+- HEX only: named colours and `rgb()` strings are not parsed.
+- Validation is on commit; there is no live preview of an invalid draft.
+- The swatch grid is a flat list; no hue strip or custom-swatch editing.
+
+## Verification
+
+`src/color/hex.test.ts` (8 pure tests) covers shorthand, case, a missing hash,
+alpha refusal, invalid input and equivalence.
+`src/behaviour/color-picker.test.tsx` (8 native tests) covers the parts, the
+theme swatches, a swatch press and selection, a typed shorthand, an invalid
+draft, blur commit/revert, disabled, and a style callback in both themes.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Field** — validate a text value with a message slot.
+- **Badge** — show the chosen colour on a real surface.
+- **Slider** — numeric ranges, if a future picker adds HSL.
