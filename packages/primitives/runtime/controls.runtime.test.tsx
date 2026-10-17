@@ -131,6 +131,9 @@ it("refuses to activate a loading Button, and still announces itself busy", asyn
   runtime.keyDown("b", "enter");
   expect(calls()).toBe(0);
   expect(descriptions(runtime)).toContain("Loading");
+  expect(
+    Option.isSome(a11yNode(runtime.a11y(), { role: "Button", label: "Save" })),
+  ).toBe(true);
 });
 
 it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", async () => {

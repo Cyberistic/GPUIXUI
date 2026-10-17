@@ -117,7 +117,7 @@ nub run --filter @gpuixui/primitives test:runtime
 # Test Files  6 passed (6)
 #      Tests  54 passed (54)
 #   Duration  12.08s
-# (51 when this plan landed; three a11y-role assertions were added afterwards.)
+# (51 when this plan landed; later a11y/testId tests raised the total.)
 ```
 
 `runtime/theme.runtime.test.tsx`, 5 tests:

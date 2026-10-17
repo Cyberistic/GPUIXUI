@@ -197,8 +197,8 @@ nub run --filter @gpuixui/primitives test:runtime
 #      Tests  54 passed (54)
 ```
 
-(46 when this plan landed; 042 added 5 theme tests and 043 added one `testId`
-test, and the a11y-role assertions below added two more.)
+(46 when this plan landed; later plans added the theme, `testId` and
+a11y-role tests.)
 
 ### Accessibility roles the tree actually reports
 
