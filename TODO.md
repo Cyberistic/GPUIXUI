@@ -145,7 +145,7 @@ the `@gpuixui/tokens/react` provider
     - [x] List row activation on Enter and click — plan 134
     - [x] Submenu pointer activation and ContextMenu submenus — plan 135
     - [x] SearchInput ref and TabsTrigger onBlur forwarding — plan 136
-    - [~] ListItem caller `onClick` forwarding — plan 137
+    - [x] ListItem caller `onClick` forwarding — plan 137
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

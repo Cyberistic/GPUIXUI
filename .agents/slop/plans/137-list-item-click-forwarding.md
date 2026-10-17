@@ -3,7 +3,8 @@
 - **Phase:** C/F (Tier 2 hardening)
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 111 (List), 134 (activation), 136 (forwarding sweep)
-- **Status:** planned.
+- **Status:** done, 2026-10-17. 1 native test (List 37, behaviour 277);
+  both-direction proof recorded in §8.
 
 `ListItem` spreads `...rest` and then writes its own `onClick`, so a caller's
 `onClick` never runs. It is the last part in the package that replaces a standard
@@ -86,3 +87,9 @@ nub run test                                          # exit 0
 ```
 
 ## 8. Deviations, recorded during implementation
+
+1. **Both-direction proof, recorded from the actual run.** Removing
+   `onClick?.(event)` made *runs a caller onClick once before selecting the row*
+   fail with `expected "vi.fn()" to be called 1 times, but got 0 times`; the
+   first failure left the root mounted and cascaded into the rest of the suite.
+   Restored; List 37/37.
