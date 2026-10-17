@@ -233,6 +233,11 @@ mouse press shows the ring too: there is no `:focus-visible` to distinguish a Ta
 from a click. A design that needs that distinction must keep a press from
 focusing the control (that limitation is real and is not worked around).
 
+A row's metadata keeps its `mutedForeground` role on every wash the row paints —
+`hover` and `active` for pointer state, `accent` where a selectable row hovers,
+and `selected` when it is selected. That is why the secondary floor covers the
+washes, not only the plain surfaces: a description is read while the row moves.
+
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.
 
@@ -247,7 +252,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
 | body text on background/card/popover/input | 7:1 | 7:1 |
-| secondary text (`mutedForeground` on plain surfaces), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
+| secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover` | 4.5:1 | 7:1 |
 | text selection (`foreground` over the composited `selection` wash) | 7:1 | 7:1 |

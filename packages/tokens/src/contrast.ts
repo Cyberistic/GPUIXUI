@@ -54,11 +54,22 @@ const surfacePairs: readonly ContrastPair[] = [
 ];
 
 /**
- * Every documented pair — text, status, surface and divider — including the
- * focus ring on the washes a focused row paints, the status text and control
- * boundary on a floating surface, the soft status surfaces and the loading
- * skeleton a canvas must distinguish, and the decorative dividers that must
- * stay visible.
+ * The state washes a row paints behind its own text: pointer hover, press, the
+ * accent a selectable row uses on hover, and the selected fill. Secondary text
+ * sits on all four, so the `secondary` floor applies to each.
+ */
+const stateWashes = ["hover", "active", "accent", "selected"] as const;
+
+const secondaryTextPairs: readonly ContrastPair[] = stateWashes.map(
+  (background): ContrastPair => ["mutedForeground", background, "secondary"],
+);
+
+/**
+ * Every documented pair — text, status, surface and divider — including
+ * secondary text on the state washes, the focus ring on the washes a focused
+ * row paints, the status text and control boundary on a floating surface, the
+ * soft status surfaces and the loading skeleton a canvas must distinguish, and
+ * the decorative dividers that must stay visible.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ["foreground", "background", "body"],
@@ -109,6 +120,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["ring", "background", "boundary"],
   ["ring", "card", "boundary"],
   ["ring", "popover", "boundary"],
+  ...secondaryTextPairs,
   ...surfacePairs,
   ["border", "background", "divider"],
   ["border", "card", "divider"],
@@ -227,9 +239,10 @@ export interface ContrastFailure {
 const selectionSurfaces = ["background", "card"] as const;
 
 /**
- * Every documented pair a theme misses — text, status, selection, surface and
- * divider — including the selection wash measured over `background` and `card`
- * and the loading skeleton measured on the surfaces it fills. The level defaults
+ * Every documented pair a theme misses — text, status, secondary text on the
+ * state washes, selection, surface and divider — including the selection wash
+ * measured over `background` and `card` and the loading skeleton measured on the
+ * surfaces it fills. The level defaults
  * to the one the theme declares, so a high-contrast theme is checked against its
  * own floors. An empty array is the library's guarantee; a consumer test asserts
  * exactly that:

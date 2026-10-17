@@ -21,6 +21,12 @@
  * skeleton. It is the fill of a mission-named state, and the same audit found
  * platform styles changing the canvas while inheriting the identity's skeleton —
  * Linux dark's `skeleton` measured 1.004:1 on its own card.
+ *
+ * Plan 079 closes secondary text on the state washes. `mutedForeground` is
+ * painted inside rows whose background changes with hover, press, the accent a
+ * selectable row uses and selection, but the list measured it only on the plain
+ * surfaces; macOS dark's secondary text was 4.41:1 on `hover` and 3.55:1 on
+ * `active`, under the 4.5:1 the design system states.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -128,7 +134,7 @@ describe("themeContrastFailures", () => {
   it("reads the level a theme declares, not a laxer default", () => {
     // `#6B6B6B` is 5.33:1 on the AAA canvas (under 7:1) but 4.76:1 on the AAA
     // muted surface, so only the declared high-contrast floors catch it.
-    expect(quietHighContrastFailures).toHaveLength(4);
+    expect(quietHighContrastFailures).toHaveLength(8);
     expect(
       quietHighContrastFailures.every(
         ({ foreground, floor }) =>
@@ -142,12 +148,21 @@ describe("themeContrastFailures", () => {
 
   it("names every pair a brand theme misses, and only those", () => {
     const failures = themeContrastFailures(quietBrandTheme);
-    expect(failures).toHaveLength(4);
+    expect(failures).toHaveLength(8);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
     ).toBe(true);
     expect(failures.map(({ background }) => background).toSorted()).toEqual(
-      ["background", "card", "muted", "popover"].toSorted(),
+      [
+        "active",
+        "accent",
+        "background",
+        "card",
+        "hover",
+        "muted",
+        "popover",
+        "selected",
+      ].toSorted(),
     );
     expect(
       failures.every(
@@ -195,7 +210,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(66);
+    expect(contrastPairs.length).toBe(70);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 

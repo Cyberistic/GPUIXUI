@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 46/61
+`[x]` `[████████░░]` 47/62
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -241,6 +241,8 @@ branch; `main` compiles `@gpuixui/tokens` from source, so `primitives`,
 `[x]` Guard the loading skeleton on every canvas — Linux dark's `skeleton`
 measured 1.004:1 on its card — join it to the surface floor and give each dark
 platform style its own value (plan 078)
+`[x]` Hold secondary text on the `hover`/`active`/`accent`/`selected` washes to
+the contrast floors — macOS dark measured 4.41:1 and 3.55:1 (plan 079)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is

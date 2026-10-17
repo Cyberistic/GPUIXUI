@@ -444,8 +444,25 @@ describe("docs/tokens.md theme contract", () => {
 describe("docs/tokens.md contrast surfaces", () => {
   it("names the washes and the floating surface the contract covers", () => {
     const sentence =
-      "The focus ring is measured on the canvas, card and popover and on the `hover`, `active` and `selected` washes, because focus and selection co-occur in rows; status text (`xText`) and the `borderStrong` boundary are also measured on `popover`, so a status label or a control inside a dialog, popover or toast is covered.";
+      "The focus ring is measured on the canvas, card and popover and on the `hover`, `active` and `selected` washes, because focus and selection co-occur in rows; secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) and the `borderStrong` boundary are also measured on `popover`, so a status label or a control inside a dialog, popover or toast is covered.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
+  });
+
+  it("names every wash the secondary text pairs are held against", () => {
+    const washes = [
+      ...new Set(
+        contrastPairs
+          .filter(([foreground]) => foreground === "mutedForeground")
+          .map(([, background]) => background),
+      ),
+    ].filter((background) =>
+      ["hover", "active", "accent", "selected"].includes(background),
+    );
+
+    expect(washes).toEqual(["hover", "active", "accent", "selected"]);
+    washes.forEach((wash) => {
+      expect(markdown, wash).toContain(`\`${wash}\``);
+    });
   });
 
   it("names every surface the surface pairs are held against", () => {
@@ -566,7 +583,7 @@ describe("docs/design-system.md", () => {
   it("states the floors the contrast checker enforces", () => {
     const rows = [
       `| body text on background/card/popover/input | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
-      `| secondary text (\`mutedForeground\` on plain surfaces), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (\`foreground\` over the composited \`selection\` wash) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,

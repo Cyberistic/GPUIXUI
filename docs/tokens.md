@@ -803,7 +803,8 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 ```
 
 `themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
-against `contrastFloors`. The list holds text pairs, status pairs, the selection
+against `contrastFloors`. The list holds text pairs, secondary text on the state
+washes (`hover`, `active`, `accent` and `selected`), status pairs, the selection
 wash, the soft status surfaces and the decorative dividers. The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
@@ -957,9 +958,11 @@ variants — and fails if a semantic text/surface pair drops below its floor (7:
 for primary body pairs, typed input text, soft status text and all high-contrast
 text; 4.5:1 for secondary and on-colour text in the default themes, including
 text on a hovered filled action, ghost text on the `hover` and `active` washes,
-muted text on `background`, `card` and `popover`, and status text (`xText`) on
-`background`, `card` and `popover`; 3:1 for focus and essential boundaries in
-the default themes; 4.5:1 for them in the high-contrast variants).
+muted text on `background`, `card` and `popover`, secondary text on the `hover`,
+`active`, `accent` and `selected` washes a row paints behind a description, and
+status text (`xText`) on `background`, `card` and `popover`; 3:1 for focus and
+essential boundaries in the default themes; 4.5:1 for them in the high-contrast
+variants).
 It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
 those surfaces (1.05:1, and 3:1 at high contrast), or if body text over the
@@ -968,14 +971,17 @@ A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
 `card` and `popover`, so a placeholder never disappears into the card it fills.
 Every platform variant is checked on its own canvas, not the identity's, so a
 style that moves `background` or `card` is held to the status tints and skeleton
-it inherits.
-Palette edits must keep it green.
+it inherits. The same loop holds secondary text on each variant's washes: macOS
+dark shipped at 4.41:1 on `hover` and 3.55:1 on `active` until plan `079` moved
+its secondary grey and pressed wash. Palette edits must keep it green.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,
 `active` and `selected` washes, because focus and selection co-occur in rows;
-status text (`xText`) and the `borderStrong` boundary are also measured on
-`popover`, so a status label or a control inside a dialog, popover or toast is
-covered.
+secondary text is measured on `hover`, `active`, `accent` and `selected`, because
+a list row, a combobox option and a menu item paint those washes behind a
+description; status text (`xText`) and the `borderStrong` boundary are also
+measured on `popover`, so a status label or a control inside a dialog, popover or
+toast is covered.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

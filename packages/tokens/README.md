@@ -165,7 +165,10 @@ themeContrastFailures(brandTheme); // []
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
 the parts, and the selection wash is measured as it paints. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
-washes, so a ring that vanishes on a selected row is caught. The same list holds
+washes, so a ring that vanishes on a selected row is caught. Secondary text is
+checked on `hover`, `active`, `accent` and `selected` too, so a row description
+stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
+until plan 079. The same list holds
 the soft status surfaces and the loading skeleton at 1.05:1 against `background`,
 `card` and `popover`, and the decorative `border` at 1.05:1 (3:1 at high
 contrast), so an Alert, Badge or Toast, a loading placeholder and every divider

@@ -18,6 +18,11 @@
  * identity's grey while the card changed, so Linux dark's `skeleton` measured
  * 1.004:1 on its own card. The surface pairs now include it, and each real
  * variant carries its own dark neutral, so the generic loop guards it too.
+ *
+ * Plan 079 adds secondary text on the state washes: macOS dark's
+ * `mutedForeground` measured 4.41:1 on `hover` and 3.55:1 on `active`. The four
+ * washes are pairs now and the variant's values moved, so the generic loop
+ * guards them on every platform's own canvas.
  */
 
 import { describe, expect, it } from "vitest";
