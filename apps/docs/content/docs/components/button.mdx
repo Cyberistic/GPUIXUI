@@ -1,0 +1,151 @@
+---
+title: Buttons
+description: Triggers an action; the primary interactive control.
+---
+
+<ComponentState slug="button" />
+
+<NativePreview slug="button" />
+
+`Button` is the action primitive. Published `@gpuix/react` 0.10.0 ships no
+button, so the keyboard contract belongs to this library: Enter activates on key
+down, Space on key up, and a repeating key never fires. It renders a `div` with
+the button role — the runtime has no native button element.
+
+## Usage
+
+```tsx
+import { Button, Stack } from "@gpuixui/primitives";
+
+const save = () => {
+  // persist the draft
+};
+
+<Stack direction="row" gap="sm">
+  <Button variant="outline">Cancel</Button>
+  <Button variant="primary" onActivate={save}>
+    Save changes
+  </Button>
+</Stack>;
+```
+
+The primary action is the one that commits; secondary and ghost actions sit
+beside it. A busy action keeps its place and shows a spinner instead of
+disappearing:
+
+```tsx
+<Button variant="primary" loading={saving} onActivate={save}>
+  Create project
+</Button>
+```
+
+## Variants
+
+| `variant` | Rest | Hover / press |
+| --------- | ---- | ------------- |
+| `primary` (default) | `primary` fill, `primaryForeground` text | fill at 90% / 80% alpha |
+| `secondary` | `secondary` fill, `secondaryForeground` text | fill at 90% / 80% alpha |
+| `outline` | no fill, `foreground` text, `border` outline | `hover` / `active` wash |
+| `ghost` | no fill or border, `foreground` text | `hover` / `active` wash |
+| `destructive` | `destructive` fill, `destructiveForeground` text | fill at 90% / 80% alpha |
+| `link` | `primary` text, no fill | `hover` wash plus an underline |
+
+Variants come from `core/variants.ts`; they name colour **roles**, never colours,
+so a theme change repaints every variant at once.
+
+## Sizes
+
+`size` selects both height and horizontal padding from the theme's density:
+
+| `size` | Height | Horizontal padding |
+| ------ | ------ | ------------------ |
+| `sm` | `density.controlHeight.sm` | `density.controlPaddingX.sm` |
+| `md` (default) | `density.controlHeight.md` | `density.controlPaddingX.md` |
+| `lg` | `density.controlHeight.lg` | `density.controlPaddingX.lg` |
+
+Two modifiers change the box without adding a variant:
+
+- `square` — equal width and height, no horizontal padding: an icon-only button.
+- `fullWidth` — stretches to its parent (`width: 100%`).
+
+## States
+
+| State | What happens |
+| ----- | ------------ |
+| hover / press | the variant's pointer feedback; GPUIx applies `style.hover` / `style.active` natively |
+| focus | a zero-offset ring in the `ring` role, merged over the resting style |
+| `disabled` | 50% opacity, `not-allowed` cursor, no hover or press, refuses activation, leaves the tab order |
+| `loading` | shows a small `Spinner`, announces `Loading`, refuses activation, **stays focusable** |
+
+A disabled button is removed from the tab order instead of pretending to be
+disabled; a loading button keeps its tab stop so keyboard focus is not lost
+mid-action.
+
+## Composition
+
+`ButtonGroup` owns the spacing and the group's accessible name; the buttons keep
+their own variants and states. The real, runtime-mounted form example shows the
+whole action area in context — cancel, a busy primary action, and the progress
+state it produces:
+
+<include lang="tsx" meta='title="packages/primitives/examples/form.example.tsx"'>
+  ../../../../../packages/primitives/examples/form.example.tsx
+</include>
+
+That composition is mounted by
+`packages/primitives/runtime/examples.runtime.test.tsx`:
+
+```sh
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Button.tsx" name="ButtonProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| Enter | activates on key **down** |
+| Space | activates on key **up** |
+| held key | repeat events never activate |
+
+`disabled` and `loading` refuse both. Focus is drawn by the component itself
+because GPUix 0.10.0 has no `focusVisible` — the ring therefore appears for a
+mouse press as well as for Tab. The runtime's `EventPayload` has no
+`preventDefault`, so a Space key down cannot be swallowed; inside a scroll
+container the runtime may also scroll.
+
+## Theming
+
+`controlStyle` resolves the fill, text, border, hover, active, disabled and focus
+styles from the active `PrimitiveTheme`; `buttonVariants` maps each variant to
+semantic colour roles. Height and padding come from `density`, the label type
+from `typography.label`, corners from `radius.md` and the border width from
+`borderWidth.thin`. There is no colour, space or radius literal in the component.
+A different density changes the numbers and leaves the palette alone.
+
+## Accessibility and limitations
+
+- Role: `button`. The accessible name comes from `label` or from the button's
+  text content.
+- `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
+- There is no `aria-disabled`, `aria-pressed` or toggle state. A disabled button
+  leaves the tab order, which is the strongest truthful alternative.
+- An icon-only button must pass `label`; the component cannot infer a name.
+- There is no native button element: the runtime renders a `div` with role,
+  tab stop and key handlers.
+- No `focusVisible`: pointer focus and keyboard focus look the same.
+- No `preventDefault`: a Space press cannot be consumed, so a surrounding
+  scroll container may also react.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Button.tsx"'>
+  ../../../../../packages/primitives/src/components/Button.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="button" />

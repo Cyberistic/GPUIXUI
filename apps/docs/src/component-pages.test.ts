@@ -42,12 +42,46 @@ const headings = (document: string): ReadonlyArray<string> =>
     .filter((line) => line.startsWith("## "))
     .map((line) => line.slice("## ".length).trim());
 
+/** The simple `key: value` frontmatter every component page uses. */
+const frontmatter = (document: string): Readonly<Record<string, string>> =>
+  Object.fromEntries(
+    (document.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "")
+      .split("\n")
+      .flatMap((line) => {
+        const field = line.match(/^([a-zA-Z]+):\s*(.*)$/);
+        return field === null ? [] : [[field[1] ?? "", field[2] ?? ""]];
+      }),
+  );
+
 describe("component page template", () => {
   it("documents every required section in the template", () => {
     const documented = headings(readFileSync(readme, "utf8"));
     expect(sections.filter((section) => !documented.includes(section))).toEqual(
       [],
     );
+  });
+
+  it("keeps a finished page's title and description equal to its registry record", () => {
+    const mismatches = components
+      .filter((component) => component.status !== "planned")
+      .flatMap((component) => {
+        const meta = frontmatter(
+          readFileSync(join(pageDirectory, `${component.slug}.mdx`), "utf8"),
+        );
+        return [
+          meta.title === component.title
+            ? []
+            : [
+                `${component.slug}: page title "${meta.title ?? ""}" != "${component.title}"`,
+              ],
+          meta.description === component.summary
+            ? []
+            : [
+                `${component.slug}: page description "${meta.description ?? ""}" != "${component.summary}"`,
+              ],
+        ].flat();
+      });
+    expect(mismatches).toEqual([]);
   });
 
   it("gives every finished component's page the template's blocks and sections", () => {

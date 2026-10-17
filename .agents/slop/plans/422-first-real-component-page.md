@@ -247,9 +247,39 @@ nub run --filter docs dev
 - [ ] `TODO.md` rows are ticked and the plan index is current.
 - [ ] Evidence: merge commit, gate output, two-direction proof, browser URLs.
 
-### §10.1 Evidence (filled by the executor)
+### §10.1 Evidence (measured 2026-10-17)
 
-- Merge:
-- Gates:
-- Two-direction proof:
-- Browser check:
+- **Merge:** `origin/agent/primitives` into `agent/docs-site` (merge commit
+  `a184dad`), after `origin/master` (`5f66a24`). Ledger conflicts were resolved
+  by keeping both workstreams' rows; `PLAN.md` now records the locally-built
+  binding as D19 and the primitives decisions as D12–D18. The primitives branch
+  had dropped the seven unimplemented Tier 1 rows (Slider, Range slider, Meter,
+  Number Field, OTP Field, Toggle, Rating) from `COMPONENTS.md`; they were
+  restored so `registry.test.ts` and the inventory agree again.
+- **Gates:**
+  - `nub run --filter docs test` → **19 files, 100 tests passed**
+    (was 18/97 before the page and the related-link guard).
+  - `nub run --filter docs check-types` → pass; 14 real `ButtonProps` rows are
+    generated (`type-table-Button.tsx-ButtonProps-*`).
+  - `nub run --filter docs build` → exit 0 (two pre-existing Fumadocs CSS
+    pseudo-element warnings, unchanged).
+  - `nub run check` → test-quality, lint, format and every workspace type-check
+    pass.
+  - `nub run lint` → pass.
+  - `nub run test` → `apps/docs` 19 files/100 tests, `packages/primitives`
+    16 files/156 tests, `packages/icons` 3 files/18 tests, tokens pass.
+- **Two-direction proof:**
+  1. renamed `## Keyboard and focus` to `## Keyboard` → `component-pages.test.ts`
+     failed with `button: missing section "Keyboard and focus"` (1 failed,
+     99 passed); restored → 100 passed.
+  2. flipped the related-record condition so a planned record linked again →
+     `related-components.test.tsx` failed (received
+     `<a href="/docs/components/button-group">`); restored → 100 passed.
+- **Browser check** (`nub run --filter docs dev`, `curl --compressed`):
+  `/docs/components/button` → 200; the page contains `data-component-state="button"`,
+  `data-status="wip"`, the tier-X preview text, the real form example
+  (`form-example-save`), all 14 ButtonProps rows, the `Button.tsx` include and
+  the planned related label `data-related-planned="button-group"`;
+  `/sitemap.xml` contains the URL; the sidebar links it; `/api/search?query=buttons`
+  returns the page. No screenshot or playground screen exists, so the preview
+  correctly stays tier X.

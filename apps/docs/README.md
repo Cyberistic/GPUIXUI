@@ -62,9 +62,15 @@ no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
 
 ## Adding a component page
 
+The first real page is `content/docs/components/button.mdx` (plan 422). It shows
+the whole chain: a `wip` registry record, generated status and preview blocks, a
+real `ButtonProps` API table, the real component source and the runtime-mounted
+form example. Copy its shape.
+
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
    `COMPONENTS.md` row exactly** — `registry.test.ts` proves the two agree.
-   Start `status: "planned"`, `gpuix: "unverified"`.
+   Start `status: "planned"`, `gpuix: "unverified"`; a delivered component moves
+   to `wip`/`done` only with a real `sourcePath`.
 2. Add `content/docs/components/<slug>.mdx` using the template below, and add
    the slug to `content/docs/components/meta.json`. `registry.test.ts` asserts
    that sidebar equals `index` plus every non-planned slug, so a forgotten
@@ -114,9 +120,15 @@ description: Triggers an action; the primary interactive control.
 The section list is a contract, not a suggestion: `src/component-pages.test.ts`
 fails when a page for a component that is no longer `planned` is missing a
 section, its `<ComponentState slug>` block or its `<NativePreview slug>` block,
-and when this template stops listing one. A component with no variants or sizes
-still gets the section — say "none" rather than deleting it, so a reader can
-tell the difference between "not documented" and "does not apply".
+and when this template stops listing one. It also fails when the page's
+frontmatter `title`/`description` drift from the registry record. A component
+with no variants or sizes still gets the section — say "none" rather than
+deleting it, so a reader can tell the difference between "not documented" and
+"does not apply".
+
+`<RelatedComponents>` links a related record only when it is no longer
+`planned`; a planned record renders as a plain "(planned)" label, because a link
+would 404. `src/components/related-components.test.tsx` guards that rule.
 
 Prop tables use `fumadocs-typescript`'s remark plugin: write
 `<auto-type-table path="./relative/path.ts" name="ButtonProps" />` in the MDX
