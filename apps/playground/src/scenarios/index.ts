@@ -74,6 +74,7 @@ import {
   primitivesEntryScenario,
 } from "./primitives-advanced.js";
 import { messageScrollerScenario } from "./message-scroller.js";
+import { scaleCostScenario } from "./scale.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -116,6 +117,7 @@ export const PROBE_CAPABILITIES = [
   "preview",
   "grid",
   "scroller",
+  "scale",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -180,6 +182,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   markdownScenario,
   toastScenario,
   messageScrollerScenario,
+  scaleCostScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

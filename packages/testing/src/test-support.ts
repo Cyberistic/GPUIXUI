@@ -55,6 +55,8 @@ export const nullHost: SmokeHost = {
   advance: () => {},
   pauseMotion: () => 0,
   fastForwardMotion: () => 0,
+  retainedElements: () => null,
+  syntaxCache: () => null,
 };
 
 /** The async twin of {@link nullHost}: answers every verb with its empty value. */

@@ -203,6 +203,14 @@ class FakeRenderer implements NativeRenderer {
   clockFastForward(deltaMs: number): number {
     return deltaMs;
   }
+  retained = 0;
+  syntax: ReadonlyArray<number> = [0, 0, 0];
+  getRetainedElementCount(): number {
+    return this.retained;
+  }
+  getSyntaxCacheStats(): ReadonlyArray<number> {
+    return this.syntax;
+  }
 }
 
 const rendererOf = () => new FakeRenderer();
@@ -383,5 +391,18 @@ describe("runtime reports", () => {
     expect(host.focused()).toBe("panel");
     renderer.focusedId = 1;
     expect(host.focused()).toBeNull();
+  });
+
+  it("forwards the retained count and decodes the syntax counters", () => {
+    const renderer = rendererOf();
+    renderer.retained = 42;
+    renderer.syntax = [3, 1, 2];
+    const host = createHost(renderer);
+    expect(host.retainedElements()).toBe(42);
+    expect(host.syntaxCache()?.hits).toBe(3);
+    expect(host.syntaxCache()?.misses).toBe(1);
+    expect(host.syntaxCache()?.documents).toBe(2);
+    renderer.syntax = [3, 1];
+    expect(host.syntaxCache()).toBeNull();
   });
 });

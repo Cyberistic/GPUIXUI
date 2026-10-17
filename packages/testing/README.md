@@ -63,6 +63,13 @@ way a physical keyboard does — `simulateKeystrokes("space")` does not.
 deliberately — a runtime that changed its style report is a defect a scenario
 must see, never something to coerce.
 
+`retainedElements()` and `syntaxCache()` expose the renderer's two cost
+counters: the number of host nodes the retained tree holds, and the
+process-wide syntax cache's `[hits, misses, documents]`, decoded into
+`SyntaxCacheStats` (a malformed tuple is `null`, never a half-filled object).
+The syntax counters are **cumulative across the process**, so a scenario asserts
+deltas around a change it makes itself, never an absolute count.
+
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and
 fails with a label naming the id via `ctx.expectSome`.

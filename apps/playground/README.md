@@ -69,7 +69,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (60/60 green); -> 2 on a host with no binding
+# -> 0 here (61/61 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -862,12 +862,32 @@ mask, so a typed secret is held, announced and painted in clear. A password
 field is an app-owned OS prompt, not a component; the shipped library must not
 pretend otherwise.
 
+## The cost model (plan `302`)
+
+`scale-cost` reads the renderer's own two counters — `getRetainedElementCount`
+and `getSyntaxCacheStats` — so the library's virtualized data and highlighted
+text have a measured cost, not an assumed one.
+
+| Question | Measured |
+| -------- | -------- |
+| Does `<virtual-list>` window *retained* host nodes? | **no.** 2,000 rows retain 6,012 nodes; 100 rows retain 312; the 1,900-row delta is exactly 5,700 = **3 host nodes per row** (div, text, runtime text node). Only ~15 rows paint. Window at the app level when rows can grow unbounded |
+| Does scrolling leak or recycle nodes? | neither: the count after `scrollToItem(1000)` is identical to the count before it, and jumping back and forth leaves no residue |
+| Do two identical `<code>` blocks parse twice? | no: **one miss + one hit**, one cached document |
+| Does a theme switch reparse? | **no** — the cache key excludes colour; all three counters are unchanged after switching to the light palette |
+| Does an idle frame do anything? | no: an unchanged element short-circuits before the cache is even consulted |
+| What does editing the source cost? | exactly one miss + one hit + one document per changed document; the previous documents stay cached |
+
+Two rules for components: keep a code string referentially stable across
+renders (an inline template containing a render counter defeats the cache), and
+do not assume virtualization makes an arbitrarily large model free — it
+windows paint, not host retention.
+
 ## Evidence on this host
 
-The suite is **60/60 green** here (`exit 0`):
+The suite is **61/61 green** here (`exit 0`):
 
 ```
-60/60 scenarios passed · capabilities: layout=verified text=verified
+61/61 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -876,6 +896,7 @@ theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
 toast=verified grid=verified layers=verified scroller=verified
+scale=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -952,6 +973,7 @@ src/scenarios/search.tsx  painted highlights, find controls and the virtual matc
 src/scenarios/drag-autoscroll.tsx held edge scroll, capture and the drop index
 src/scenarios/message-scroller.tsx pin/no-yank/stream/jump over a virtual list
 src/scenarios/scroller-state.ts the pure anchor → distance-from-end → pinned rules
+src/scenarios/scale.tsx     retained host nodes, the syntax cache and a theme switch
 src/scenarios/tab-overflow.tsx horizontal pan, tab-strip overflow and reveal
 src/scenarios/tab-focus.tsx     clipped tab stops and the roving strip
 src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible sidebar
@@ -1004,10 +1026,13 @@ narrower. Each deviation is deliberate and measured:
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
   the pinned-grid probe, the collapsible-height probe, the nested-layer probe
   and the variable-row-height probe pass in real GPUix 0.10.0 on this host
-  (60/60), with a written report and screenshots. The **message-scroller** probe
+  (61/61), with a written report and screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
-  unpinned, jump-to-latest, the threshold and a short history.
+  unpinned, jump-to-latest, the threshold and a short history. The
+  **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
+  counters: 3 host nodes per virtual row, no leak across jumps, a shared
+  document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) is 16/16 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table

@@ -54,6 +54,7 @@ export const CAPABILITIES = [
   "grid",
   "layers",
   "scroller",
+  "scale",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -387,7 +388,20 @@ export interface SmokeHost {
   readonly pauseMotion: () => number;
   /** Moves the frozen motion clock forward and repaints; returns the new time. */
   readonly fastForwardMotion: (ms: number) => number;
+  /** Host elements the retained tree holds, reachable from the root or not. */
+  readonly retainedElements: () => number | null;
+  /** The process-wide syntax cache counters, or `null` when the host has none. */
+  readonly syntaxCache: () => SyntaxCacheStats | null;
 }
+
+/** The process-wide syntax cache counters: `[hits, misses, documents]`. */
+export class SyntaxCacheStats extends Schema.Class<SyntaxCacheStats>(
+  "SyntaxCacheStats",
+)({
+  hits: Schema.Number,
+  misses: Schema.Number,
+  documents: Schema.Number,
+}) {}
 
 /** A failed check, as data. */
 export class SmokeAssertionError extends Schema.TaggedError<SmokeAssertionError>()(

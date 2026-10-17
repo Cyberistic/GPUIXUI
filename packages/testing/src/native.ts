@@ -23,6 +23,7 @@ import {
   type Offset,
   type SmokeHost,
   StyleSnapshot,
+  SyntaxCacheStats,
 } from "./smoke.js";
 
 /** The renderer's element shape, as much of it as the adapter reads. */
@@ -83,6 +84,8 @@ export interface NativeRenderer {
   advanceTime(milliseconds: number): void;
   clockPause(): number;
   clockFastForward(deltaMs: number): number;
+  getRetainedElementCount(): number;
+  getSyntaxCacheStats(): ReadonlyArray<number>;
 }
 
 /** The element carrying `testId`, or `None` when the runtime holds no such node. */
@@ -177,6 +180,13 @@ export const focusedElement = (
   );
 
 const DRAG_STEPS = 8;
+
+/** The runtime reports the cache counters as `[hits, misses, documents]`. */
+const SyntaxCacheTuple = Schema.Tuple([
+  Schema.Number,
+  Schema.Number,
+  Schema.Number,
+]);
 
 const withCenter = (
   renderer: NativeRenderer,
@@ -365,4 +375,15 @@ export const createHost = (renderer: NativeRenderer): SmokeHost => ({
     renderer.flush();
     return now;
   },
+  retainedElements: () => renderer.getRetainedElementCount(),
+  syntaxCache: () =>
+    Option.getOrNull(
+      Option.map(
+        Schema.decodeUnknownOption(SyntaxCacheTuple)(
+          renderer.getSyntaxCacheStats(),
+        ),
+        ([hits, misses, documents]) =>
+          new SyntaxCacheStats({ hits, misses, documents }),
+      ),
+    ),
 });
