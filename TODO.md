@@ -530,6 +530,14 @@ that is on and deletes the `alpha(accent, 0.9/0.8)` hover and press in
 `packages/primitives/src/core/variants.ts` (`togglePressedBase`); the two roles
 are designed, platform-specific and measured in both modes now, and the outlined
 toggle's `border` edge is held on both (plan 327; owner: `primitives`)
+`[ ]` Cross-team: `components` gives the neutral Badge a visible chip fill —
+`badge.tsx` paints `muted` behind `mutedForeground`, but `muted` is a surface
+role: on the identity light theme it measures 1.036:1 on `background`, 1.027:1
+on `card`, and 1.000:1 on the `muted` panel it sits on again, so the pill has no
+shape. `secondary`/`secondaryForeground` is the designed neutral fill and clears
+the surface floor on all four panels (1.064–1.133:1), or the chip can keep
+`muted` and paint the designed `border` edge (owner: `components`; found while
+auditing plan 328)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now
