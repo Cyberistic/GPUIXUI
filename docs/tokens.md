@@ -487,6 +487,15 @@ the shape above is the one the library tests, not a sketch.
 shipped variants use, so a copied file cannot take a path the library does not
 test.
 
+### The deprecated `platformTheme` bridge
+
+`platformTheme(base, platform)` is the pre-063 helper: it changes the two font
+families and the display name, and nothing else. It stays exported, marked
+deprecated, because the `primitives` package still imports it; it applies no
+colour, radius, density or shadow, so it is a type choice, not a style variant.
+Use `getPlatformTheme(platform, mode, contrast)` for a real variant. The alias is
+removed when `primitives` migrates (recorded in `TODO.md`).
+
 The docs platform toggle and a native build call the same function, so a preview
 cannot show a theme the runtime cannot produce.
 

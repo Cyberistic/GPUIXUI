@@ -27,6 +27,11 @@ story.
 
 ## 1. Design
 
+> **STOP hit (plan 302).** `master`'s `packages/primitives` imports the removed
+> `platformTheme` in its runtime theme-axes suite and teaches it in
+> `docs/theme-provider.mdx`. Plan 302 restores it as a deprecated type-only
+> alias and records the remaining primitives migration rows.
+
 ### 1.1 One platform table, two concerns
 
 A new `packages/tokens/src/platform-types.ts` owns the shapes and the GPUI

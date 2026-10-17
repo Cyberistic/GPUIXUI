@@ -336,6 +336,10 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 <ThemeProvider theme={getPlatformTheme("win32", "dark")} />;
 ```
 
+`platformTheme(base, platform)` is the deprecated pre-063 bridge: families and
+name only, kept for the `primitives` package until it migrates. New code uses
+`getPlatformTheme`.
+
 High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
 applies only the families and shape, because a platform accent must not drop the
 AAA floors. To ship your own look, copy a style file and apply it, or extend the

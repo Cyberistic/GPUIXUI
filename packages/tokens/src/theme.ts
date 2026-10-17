@@ -9,6 +9,7 @@ import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
 import { motion, type Motion, type MotionEasings } from "./motion.js";
 import {
   platformStyles,
+  platformTypes,
   type PlatformName,
   type PlatformStyle,
 } from "./platforms.js";
@@ -355,6 +356,30 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
 export function createTheme(config: ThemeConfig): Theme {
   const { mode, ...overrides } = config;
   return extendTheme(themes[mode], overrides);
+}
+
+/**
+ * Change only the two font families of a theme for a platform.
+ *
+ * @deprecated Plan 063 replaced this with {@link applyPlatformStyle} and
+ * {@link getPlatformTheme}: a platform variant is a full style (families,
+ * radii, density, motion, surfaces, accent, shadows), not a font decision.
+ * This alias keeps the pre-063 contract — same colours, scales, mode, density
+ * and elevation; only the families and the name change — for the `primitives`
+ * workstream, which still imports it. It will be removed when that workstream
+ * migrates; do not use it in new code.
+ *
+ * @example
+ * ```tsx
+ * <ThemeProvider theme={platformTheme(themes.dark, "win32")} />
+ * ```
+ */
+export function platformTheme(base: Theme, platform: PlatformName): Theme {
+  const { label, sans, mono } = platformTypes[platform];
+  return extendTheme(base, {
+    name: `${base.name} · ${label}`,
+    typography: { sans, mono },
+  });
 }
 
 const platformOverrides = (

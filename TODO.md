@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 69/88
+`[x]` `[████████░░]` 70/94
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -352,6 +352,10 @@ and hold it to the divider floor on its own fill (plan 090)
 selectable, and identity light `successSoftForeground` measured 5.83:1 through
 the wash while Windows dark's wash over `destructiveSoft` measured 1.005:1 — and
 add the four soft fills to the selection contract (plan 091)
+`[x]` Keep the platform-type helper additive for the merged primitives consumer
+— `platformTheme(base, platform)` returns as a deprecated families-and-name-only
+bridge, held to its pre-063 contract, after plan 063 deleted it while `master`'s
+primitives runtime suite still imports it (plan 302)
 `[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
@@ -368,6 +372,16 @@ design system's "`md` for menus, popovers and tooltips"
 `core/style.test.ts` case asserts the empty result instead of a shadow). They
 should read `"md"` and the test should assert the shadow (owner: `primitives`;
 plan 060 reserved the level; verified against this branch's `elevationShadow`)
+`[ ]` Cross-team: `primitives` migrates off the deprecated `platformTheme`
+bridge — its `runtime/theme-axes.runtime.test.tsx` imports it and
+`docs/theme-provider.mdx` teaches it; both move to `getPlatformTheme(platform,
+mode)` and the bridge is then deleted from tokens (owner: `primitives`; plan 302)
+`[ ]` Cross-team: `primitives` updates its theme fixture to this branch's token
+generation — `src/core/testing/theme.fixture.ts` still declares the 47-role
+palette (62 ship now), an elevation level as `{ …, color }` (it is `{ …,
+alpha }` since plan 085) and a `Theme` without `contrast`, `motion` or
+`avatarSize`, so it cannot type-check against the merged package (owner:
+`primitives`; plans 019, 054, 073, 085, 302)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is

@@ -98,6 +98,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [099](./099-modal-scrim-perceivability.md) | The modal scrim must be perceivable on every surface it covers | F | 013, 071, 073, 076, 086, 087, 094 | done |
 | [300](./300-soft-status-quiet-panel.md) | The soft status surface on the quiet panel | F | 014, 063, 071, 076, 090, 094 | done |
 | [301](./301-applied-style-contrast-claim.md) | An applied platform style must declare the contrast it carries | F | 063, 071, 073 | done |
+| [302](./302-platform-type-bridge.md) | The removed `platformTheme` and its merged consumer | F | 051, 063, primitives `021`/`055` on `master` | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
