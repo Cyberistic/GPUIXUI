@@ -118,6 +118,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [319](./319-input-text-surfaces.md) | Typed text on every surface a field sits on | F | 059, 071–095, 300, 306–318 | done |
 | [320](./320-soft-body-text.md) | Default body text on the soft status fills | F | 071, 074, 088, 300, 306–319 | done |
 | [321](./321-total-theme-merges.md) | Total theme merges: an explicit `undefined` must inherit | F | 011, 085, 089, 097, 304, 310, 311 | done |
+| [322](./322-skeleton-accent-wash.md) | The loading skeleton on the accent a selectable row hovers | F | 071, 078, 094, 300, 309, 312, 314, 316 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -813,6 +814,17 @@ typography, motion and density merges now route through one `mergeDefined`
 helper that copies only defined entries; a defined value still wins, a preset
 density name still selects the preset, and elevation keeps its replace-a-level
 semantics for a defined array. No token value moves.
+
+322 closes the last row wash the skeleton list omitted. Plans 312, 314 and 316
+established that `accent` is the fill a **selectable** list row paints on hover
+(`list.tsx`), and plan 094 had already held the skeleton on `hover`, `active` and
+`selected`, so a placeholder row inside a selectable list could sit on the one
+wash the list did not cover. Unlike a soft status chip, the skeleton has no
+designed edge to keep its shape, so a copied style could erase it while
+`themeContrastFailures` returned `[]`. `skeletonSurfaces` gains `accent` between
+`active` and `selected` (261 → 262 pairs); a probe over the identity themes, every
+shipped platform variant and both recipes in both modes found every set already
+clears 1.05:1, so no colour moves.
 
 ### Reference adoption (block `200–299`)
 
