@@ -25,14 +25,14 @@ export default defineConfig({
     react(),
   ],
   // Fumadocs ships ESM that the dep optimizer mis-bundles for SSR; keep it out
-  // of pre-bundling and let it be transformed instead (fumadocs.dev FAQ).
+  // of pre-bundling and bundle it instead, so it shares the app's React copy
+  // (fumadocs.dev FAQ; Vite 8 moved `ssr.noExternal` to `resolve.noExternal`).
   optimizeDeps: {
     exclude: ["fumadocs-ui", "fumadocs-core", "fumadocs-mdx"],
   },
-  ssr: {
-    noExternal: ["fumadocs-ui", "fumadocs-core"],
-  },
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    dedupe: ["react", "react-dom"],
+    noExternal: ["fumadocs-ui", "fumadocs-core", "fumadocs-mdx"],
   },
 });
