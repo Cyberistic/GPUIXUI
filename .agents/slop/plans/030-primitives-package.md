@@ -383,3 +383,30 @@ unused import — eroding by the minute, and not worth a second writer racing fo
 
 **Complete and not to be redone:** `packages/icons` (18 tests, each proven in
 both directions) and the plan set in this directory.
+
+---
+
+## 10. Delivered state (2026-10-17)
+
+The tree was reconciled and finished: `nub run check` and `nub run test` are
+green from the worktree root (`packages/primitives` 136 tests, `packages/icons`
+18, `examples/basic-app` type-checks). What exists:
+
+- `core/`: `theme`, `style` (spec → `StyleDesc`), `variants`, `keyboard`,
+  `state`, `layout`, `selection`, `loading`, `color` — each with a suite.
+- `components/`: all 19 Tier 1 components, plus `ThemeProvider` and
+  `testing/element.ts`, the Schema-decoded element-tree reader the suites assert
+  through (D11 in `PLAN.md`).
+- `examples/basic-app`: the Tier 1 set composed into one settings workflow.
+- `packages/primitives/README.md`: the theme port, density, the component list
+  and the runtime-verification gap.
+
+What remains, and who owns it: **docs pages** (docs-site), **runtime
+verification** — render, hit-test, focus order, scroll offset, the a11y tree
+(playground, tracked in `TODO.md`), and the **tokens hand-off** (the example's
+`src/theme.ts` is a stand-in until `@gpuixui/tokens` lands). Every Tier 1
+`COMPONENTS.md` row is `wip` and says why.
+
+Proven in both directions: the RadioGroup arrow-select wiring
+(`src/components/selection.test.tsx` fails when `renderRadioGroup` stops calling
+`handlers.onSelect`, passes when it does).

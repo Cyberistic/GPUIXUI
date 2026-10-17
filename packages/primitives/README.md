@@ -86,6 +86,12 @@ and `core/selection.ts`; none paints a literal and none scripts hover or press
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`.
 
+**What the element-tree suites cannot reach:** a component *function* is a React
+hook holder, so a test cannot call `Button(props)` — it asserts on the render
+function (`renderButton`, `renderCheckbox`, …) instead. The glue in between
+(which resolved state the wrapper hands the renderer) is therefore held by the
+type checker and by the native runtime, not by these suites.
+
 **Not yet verified:** anything that needs the runtime to paint or dispatch —
 layout, hit-testing, focus order, the scroll offset, the actual ARIA tree.
 GPUix publishes no `darwin-x64` binary and this environment has no GUI session

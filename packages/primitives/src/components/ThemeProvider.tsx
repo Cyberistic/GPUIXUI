@@ -14,6 +14,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Density, PrimitiveTheme } from "../core/index.js";
+import { withDensity } from "./internal.js";
 
 const ThemeContext = createContext<PrimitiveTheme | null>(null);
 
@@ -52,9 +53,7 @@ export const ThemeProvider = ({
   density,
   children,
 }: ThemeProviderProps): ReactElement => (
-  <ThemeContext.Provider
-    value={density === undefined ? theme : { ...theme, density }}
-  >
+  <ThemeContext.Provider value={withDensity(theme, density)}>
     {children}
   </ThemeContext.Provider>
 );

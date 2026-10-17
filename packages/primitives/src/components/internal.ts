@@ -16,12 +16,25 @@ import {
   withValue,
   type ValueState,
 } from "../core/state.js";
+import type { Density, PrimitiveTheme } from "../core/theme.js";
 
 /** The caller's style wins, property by property. */
 export const mergeStyle = (
   base: StyleDesc,
   override: StyleDesc | undefined,
 ): StyleDesc => (override === undefined ? base : { ...base, ...override });
+
+/**
+ * The theme a provider hands down.
+ *
+ * Density moves numbers and never colour, so the override swaps the `density`
+ * group and nothing else — and an absent override returns the theme *itself*,
+ * so a re-render cannot silently clone a palette.
+ */
+export const withDensity = (
+  theme: PrimitiveTheme,
+  density: Density | undefined,
+): PrimitiveTheme => (density === undefined ? theme : { ...theme, density });
 
 /** Whether a control holds focus, and the handlers that track it. */
 export interface FocusState {
