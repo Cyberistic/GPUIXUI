@@ -34,9 +34,10 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[████████░░]` 8/10 plans-and-harness
+`[~]` `[████████░░]` 8/12 plans-and-harness
 
 `[x]` Plans `100`–`130` written and indexed for the playground workstream
+`[~]` **Blocker B1: build the `darwin-x64` GPUix binding from source** per plan `140` — the blocking `xcrun metal` step is optional (`gpui_macos/runtime_shaders`); Rust 1.97.1 + the zed tree are staged in `.agents/slop/scratch/gpuix-build/`, the one-line feature change is applied, and the release build is running. If it succeeds, the smoke suite produces a real report on this host; if not, the fallback records the exact failure and the CI-runner task below
 `[x]` Record the build host's missing 0.10 binding as ADR 0001 (evidence + consequence)
 `[x]` Probe GPUix 0.5.1 on this host: it runs (real window, layout/input/overlay/panel/virtual-list/programmatic scroll) and it never delivers focus or wheel-scroll events — ADR 0002
 `[x]` Establish the GPUix capability map from docs/types and measured probes (layout, input, focus, overlay, scroll, panel, virtual-list, Tier 3/4)
@@ -47,6 +48,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[ ]` **Blocked: run the 0.10 native smoke suite on a supported host** (Apple Silicon Mac / x64 Windows / x64 Linux) and paste the report into `COMPONENTS.md` — no supported host on this machine (ADR 0001/0002)
 `[ ]` Wire the playground to `@gpuixui/tokens` once the tokens workstream lands (replace `src/theme.ts`)
 `[ ]` Replace the jj-based `scripts/verify-two-directions.sh` with a git implementation (outside this workstream)
+`[ ]` **Fallback if B1's source build fails (plan `140` §4.8):** add `.github/workflows/native-smoke.yml` running `nub run --filter playground smoke` on `macos-14` (Apple Silicon — a supported host per ADR 0001 §3) and paste the report. The repo is public, so the runners are free. **Outside this workstream** (`.github/` is not `apps/playground`/`packages/testing`); owner: whoever owns CI/platform
 
 #### Process — one writer per tree
 
