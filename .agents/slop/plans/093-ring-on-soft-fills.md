@@ -5,7 +5,7 @@
 | Phase | F (accessibility truth) |
 | Owner | **tokens-theme workstream** (`packages/tokens`, `docs/tokens.md`, `docs/design-system.md`) |
 | Depends on | plans `086` (the ring surfaces), `090` (the soft status edge), `092` (the control boundary on the soft fills) |
-| Status | planned |
+| Status | done |
 
 Self-contained. A weaker executor can follow it in order.
 
@@ -186,19 +186,32 @@ Record the exact failure text in §8.
 | `contrast.test.ts` pair count | unit | a pair added or removed without updating the stated total |
 | `docs.test.ts` sentence and §9 row | unit | a document that stops naming a surface the contract checks |
 
-## 8. Outcome
+## 8. Outcome (executed on this host, 2026-10-17)
 
-Filled in after execution; the numbers and the commands that produced them are
-recorded here, not predicted.
+- `contrastPairs` now holds **117** pairs: 113 + `ring` on `infoSoft`,
+  `successSoft`, `warningSoft` and `destructiveSoft`; no colour moved.
+- Floors after the pairs landed (measured): identity light `warningSoft` at
+  **3.37:1** is the tightest default pair; the dark platform styles sit at
+  3.89–7.36; both high-contrast sets clear the 4.5:1 AAA floor at 5.53–8.47.
+- Two-direction proof (`nub run --filter @gpuixui/tokens test`):
+  - removing `...ringSoftPairs` failed **3** tests: `expected 113 to be 117`,
+    the checker pair test (`expected [] to deeply equal [ …(4) ]`) and the
+    four-pair test (`expected [] to have a length of 4 but got +0`);
+  - setting identity dark `ring` to its `successSoft` value failed the
+    shipped-theme test with
+    `identity dark default: ring on infoSoft at 1.0743858456114062` (four pairs
+    at 1:1);
+  - restored, the package suite is green: **31 files, 1520 tests**.
+- `nub run check`, `nub run lint` and `nub run test` all pass.
 
 ## 9. Acceptance
 
-- [ ] `ringSoftPairs` is public (via `contrastPairs`) and reported by
+- [x] `ringSoftPairs` is public (via `contrastPairs`) and reported by
       `themeContrastFailures`.
-- [ ] Every shipped theme clears the boundary floor on all four soft fills, and
+- [x] Every shipped theme clears the boundary floor on all four soft fills, and
       both high-contrast sets clear 4.5:1.
-- [ ] The checker names the four soft fills when a theme regresses.
-- [ ] `docs/tokens.md`, `docs/design-system.md`, the package README and
+- [x] The checker names the four soft fills when a theme regresses.
+- [x] `docs/tokens.md`, `docs/design-system.md`, the package README and
       `COMPONENTS.md` name the surfaces and the counts.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
-- [ ] The plan index row is marked done and the `TODO.md` row is ticked.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] The plan index row is marked done and the `TODO.md` row is ticked.

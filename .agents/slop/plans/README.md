@@ -89,7 +89,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [090](./090-soft-status-border-role.md) | The soft status edge: a designed role, held to its floor | F | 014, 057, 071, 076, 083, 086 | done |
 | [091](./091-selection-in-soft-surfaces.md) | Selection inside a soft status surface | F | 014, 063, 071, 081, 087, 090 | done |
 | [092](./092-control-boundary-soft-fills.md) | The control boundary on the soft status fills | F | 084, 090, 091 | done |
-| [093](./093-ring-on-soft-fills.md) | The focus ring on the soft status fills | F | 086, 090, 092 | planned |
+| [093](./093-ring-on-soft-fills.md) | The focus ring on the soft status fills | F | 086, 090, 092 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
