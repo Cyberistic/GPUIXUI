@@ -244,6 +244,10 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * designed edge around each soft status surface, the plain divider on those
  * soft fills, and the decorative dividers
  * that must stay visible, including on the fills a bordered control paints.
+ *
+ * The filled families are measured at rest, hover and pressed. The neutral
+ * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
+ * generic `hover`/`active` washes a ghost or outline control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ...bodyTextPairs,
@@ -257,10 +261,14 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...ringPairs,
   ...ringSoftPairs,
   ["secondaryForeground", "secondary", "secondary"],
+  ["secondaryForeground", "secondaryHover", "secondary"],
+  ["secondaryForeground", "secondaryActive", "secondary"],
   ["primaryForeground", "primary", "secondary"],
   ["primaryForeground", "primaryHover", "secondary"],
+  ["primaryForeground", "primaryActive", "secondary"],
   ["destructiveForeground", "destructive", "secondary"],
   ["destructiveForeground", "destructiveHover", "secondary"],
+  ["destructiveForeground", "destructiveActive", "secondary"],
   ["successForeground", "success", "secondary"],
   ["warningForeground", "warning", "secondary"],
   ["infoForeground", "info", "secondary"],

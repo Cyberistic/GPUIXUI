@@ -17,7 +17,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * every wash (plan 084). Elevation levels apply their own alpha to the `shadow`
  * tint, so a copied style retints all three by editing one role (plan 085).
  * The dark skeleton is one step off the pressed wash, so a loading row keeps its
- * placeholder visible (plan 094).
+ * placeholder visible (plan 094). The filled-control hover and pressed steps are
+ * designed opaque roles, not an alpha composite, and each keeps Apple's blue and
+ * grey families (plan 097).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -41,9 +43,12 @@ export const macosPlatformStyle = {
       active: "#DCDCE2",
       secondary: "#E8E8ED",
       secondaryForeground: "#1D1D1F",
+      secondaryHover: "#DEDEE3",
+      secondaryActive: "#D1D1D6",
       primary: "#0071E3",
       primaryForeground: "#FFFFFF",
       primaryHover: "#0063CC",
+      primaryActive: "#004C99",
       primaryText: "#0055B3",
       accent: "#E7F1FF",
       accentForeground: "#0055B3",
@@ -69,9 +74,12 @@ export const macosPlatformStyle = {
       skeleton: "#525254",
       secondary: "#3A3A3C",
       secondaryForeground: "#F5F5F7",
+      secondaryHover: "#434345",
+      secondaryActive: "#4C4C4E",
       primary: "#0A84FF",
       primaryForeground: "#000000",
       primaryHover: "#409CFF",
+      primaryActive: "#64B5FF",
       primaryText: "#64B5FF",
       accent: "#1C3A57",
       accentForeground: "#A8D4FF",

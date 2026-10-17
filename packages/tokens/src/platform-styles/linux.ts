@@ -16,7 +16,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * all three by editing one role (plan 085). The dark soft destructive fill is a
  * step darker so the light-accent wash stays visible on it (plan 091).
  * The dark skeleton is one step off the pressed wash, so a loading row keeps its
- * placeholder visible (plan 094).
+ * placeholder visible (plan 094). The filled-control hover and pressed steps are
+ * designed opaque roles in Adwaita's blue and grey families, not alpha
+ * composites (plan 097).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -40,9 +42,12 @@ export const linuxPlatformStyle = {
       active: "#DEDDDB",
       secondary: "#E8E7E6",
       secondaryForeground: "#1D1D1D",
+      secondaryHover: "#DEDDDB",
+      secondaryActive: "#D4D3D1",
       primary: "#1C71D8",
       primaryForeground: "#FFFFFF",
       primaryHover: "#1A65C0",
+      primaryActive: "#16518D",
       primaryText: "#12488F",
       accent: "#E1ECFA",
       accentForeground: "#12488F",
@@ -68,9 +73,12 @@ export const linuxPlatformStyle = {
       skeleton: "#585858",
       secondary: "#3A3A3A",
       secondaryForeground: "#FFFFFF",
+      secondaryHover: "#434343",
+      secondaryActive: "#4D4D4D",
       primary: "#78AEED",
       primaryForeground: "#000000",
       primaryHover: "#99C1F1",
+      primaryActive: "#A9CCF5",
       primaryText: "#99C1F1",
       accent: "#1B3A5C",
       accentForeground: "#A8CBF0",

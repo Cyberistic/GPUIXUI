@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 64/83
+`[x]` `[████████░░]` 65/84
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -322,6 +322,11 @@ floor (plan 095)
 stored control size narrows through the package, and the two test files stop
 retyping `"sm" | "md" | "lg"`; a preset-coverage test fails if a size joins the
 index without a metric in every density preset (plan 096)
+`[x]` Complete the filled-control state matrix — `primaryActive`,
+`secondaryHover`, `secondaryActive` and `destructiveActive` — so a filled
+control's hover and press are editable, measured fills instead of an alpha
+composite over the backdrop; the neutral fill's fake hover measured 1.009:1 and
+the light primary's press moved *lighter* than its hover (plan 097)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)
@@ -329,6 +334,10 @@ and hold it to the divider floor on its own fill (plan 090)
 selectable, and identity light `successSoftForeground` measured 5.83:1 through
 the wash while Windows dark's wash over `destructiveSoft` measured 1.005:1 — and
 add the four soft fills to the selection contract (plan 091)
+`[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
+filled controls and delete the `filled()` alpha helper, `withAlpha` and
+`HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
+owner: those workstreams)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now

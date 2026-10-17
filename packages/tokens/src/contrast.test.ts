@@ -308,7 +308,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(125);
+    expect(contrastPairs.length).toBe(129);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
@@ -443,7 +443,7 @@ describe("contract completeness", () => {
   /**
    * The roles no pair measures, each with the reason it is not a pair. A role
    * that is neither here nor measured fails `every role is measured or exempt`,
-   * so a 55th role cannot ship unmeasured.
+   * so a new role cannot ship unmeasured.
    */
   const exempt = [
     [

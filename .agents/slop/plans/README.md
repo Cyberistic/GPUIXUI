@@ -93,6 +93,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [094](./094-skeleton-on-row-washes.md) | The loading skeleton on the row washes | F | 078, 079, 087, 093 | done |
 | [095](./095-soft-fill-divider.md) | The decorative divider on the soft status fills | F | 076, 080, 090, 094 | done |
 | [096](./096-control-size-index.md) | The control size index and its narrowing guard | F | 011, 016, 067, 068, 089 | done |
+| [097](./097-filled-control-states.md) | Designed hover and pressed roles for every filled control | F | 011, 014, 055, 063, 071, 080, 084 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -462,6 +463,23 @@ ordered index, `ControlSize` derives from it, and `isControlSize` narrows an
 and a preset-coverage test fails if a size is added to the index without a metric
 in every density preset. The persisted-choice example resolves a stored size, so
 the fallback path runs in the suite.
+
+097 closes the filled-control state matrix plan 055 left half-built. Plan 055's
+decision declined a neutral hover role and every pressed pair because "the
+secondary and ghost variants already read the generic `hover` / `active`
+washes" — but the consumer's `filled()` helper composites `alpha(fill, 0.9)` /
+`alpha(fill, 0.8)` for all three filled variants, so the state took its colour
+from whatever sat behind the control. The measured result was worse than a
+missing token: the light primary's hover (`#6E5CDE`) was *lighter* than its
+resting fill (`#5F4BDB`) and its press lighter still, the dark primary's hover
+moved the wrong way too, and the neutral fill's hover was a 1.009:1 change (1–2
+RGB) — an invisible state. Four roles complete the matrix — `primaryActive`,
+`secondaryHover`, `secondaryActive` and `destructiveActive` — as opaque steps
+away from the canvas in both modes, with platform-specific primary and neutral
+values in all three real styles, measured against their on-colour foregrounds
+(129 contrast pairs). `filled-states.test.ts` proves presence, perceivability,
+direction and platform ownership on all sixteen shipped themes, and the generic
+washes are documented as the ghost/outline mechanism they always were.
 
 ### Reference adoption (block `200–299`)
 

@@ -73,15 +73,18 @@ control paints `border` on the fill behind it —
 an outline toggle that is on — so the divider is held to its floor on those
 fills too, not only on the plain surfaces.
 
-There are 58 roles. The four status families — `info`, `success`, `warning` and
+There are 62 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
 a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
 edge (`xSoftBorder`) for alerts, badges and toasts, and a text role (`xText`) for
 status labels, icons and indicator dots drawn on `background`, `card` or
-`popover`. A filled action also has a designed hover — `primaryHover` and
-`destructiveHover` — so a component never composites an alpha fill over whatever
-surface sits behind it. `info` is blue, not iris, so it can never be confused
-with `primary`.
+`popover`. Every filled action has designed hover and pressed steps —
+`primaryHover`/`primaryActive`, `secondaryHover`/`secondaryActive` and
+`destructiveHover`/`destructiveActive` — so a component never composites an
+alpha fill over whatever surface sits behind it. The generic `hover` and
+`active` roles are different: they are the washes a ghost or outline control
+paints, not the fill of a filled control. `info` is blue, not iris, so it can
+never be confused with `primary`.
 
 The same fill-versus-text split applies to the brand action. `primary` is a
 surface: it carries `primaryForeground`, and it is measured only as a fill.
@@ -102,9 +105,12 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `primary` | `#5F4BDB` | `#A7A9FF` | primary action |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
+| `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |
 | `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links and icons on plain surfaces |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
+| `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
+| `secondaryActive` | `#CBD1DB` | `#545D6C` | secondary action while pressed |
 | `muted` | `#EEF1F5` | `#222730` | quiet surface |
 | `mutedForeground` | `#3D4552` | `#CBD1DB` | secondary text |
 | `accent` | `#EEF0FF` | `#2E2370` | tinted emphasis surface |
@@ -112,6 +118,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `destructive` | `#CC3439` | `#FF6B6B` | destructive action |
 | `destructiveForeground` | `#FFFFFF` | `#3A0B0D` | text on `destructive` |
 | `destructiveHover` | `#A5262B` | `#FF9E9E` | destructive action while hovered |
+| `destructiveActive` | `#7E1D21` | `#FFC6C6` | destructive action while pressed |
 | `success` | `#158754` | `#3BC97F` | success |
 | `successForeground` | `#FFFFFF` | `#042015` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
@@ -255,7 +262,7 @@ does the same for a status label and an indicator dot on a plain surface.
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 58 roles and the same type, spacing, radius, density, border
+`Theme` — the same 62 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -280,9 +287,12 @@ getTheme("light"); // the default light theme, unchanged
 | `primary` | `#3B2C8F` | `#C7CBFF` | primary action |
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
 | `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
+| `primaryActive` | `#1C1547` | `#EEF0FF` | primary action while pressed |
 | `primaryText` | `#3B2C8F` | `#E0E3FF` | brand-toned text, links and icons on plain surfaces |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
+| `secondaryHover` | `#D6D6D6` | `#3D3D3D` | secondary action while hovered |
+| `secondaryActive` | `#B8B8B8` | `#4A4A4A` | secondary action while pressed |
 | `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
 | `mutedForeground` | `#1F1F1F` | `#E0E0E0` | secondary text |
 | `accent` | `#E0E3FF` | `#1C1547` | tinted emphasis surface |
@@ -290,6 +300,7 @@ getTheme("light"); // the default light theme, unchanged
 | `destructive` | `#7E1D21` | `#FF9E9E` | destructive action |
 | `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
 | `destructiveHover` | `#5C1619` | `#FFC6C6` | destructive action while hovered |
+| `destructiveActive` | `#3A0B0D` | `#FFE0E0` | destructive action while pressed |
 | `success` | `#0E5135` | `#6FE0A3` | success |
 | `successForeground` | `#FFFFFF` | `#000000` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
@@ -1085,7 +1096,7 @@ The test covers every shipped colour set — light, dark and both high-contrast
 variants — and fails if a semantic text/surface pair drops below its floor (7:1
 for primary body pairs, typed input text, soft status text and all high-contrast
 text; 4.5:1 for secondary and on-colour text in the default themes, including
-text on a hovered filled action, ghost text on the `hover` and `active` washes,
+text on a hovered or pressed filled action, ghost text on the `hover` and `active` washes,
 muted text on `background`, `card` and `popover`, secondary text on the `hover`,
 `active`, `accent` and `selected` washes a row paints behind a description, and
 status text (`xText`) on `background`, `card`, `popover` and those four washes;
@@ -1154,6 +1165,17 @@ not academic: an avatar's fallback initials sit on `muted`, and a date picker's
 month header sits on its `popover`. Both clear the body floor with margin in
 every shipped set, so no value moves; the pairs exist so an edited theme cannot
 break them silently.
+
+The filled-control states are designed roles, not alpha composites. Before plan
+`097` a consumer painted `alpha(primary, 0.9)` for hover and `alpha(primary, 0.8)`
+for press, so the state took its colour from whatever sat behind the button: the
+light primary's hover came out *lighter* than its resting fill and its press
+lighter still, while the neutral secondary fill's hover moved 1.009:1 — a 1–2
+RGB change that no pointer user can see. Each filled family now steps through
+`x` → `xHover` → `xActive` with opaque, editable values; the on-colour foreground
+is held to the secondary floor on all three steps in every shipped theme, and
+`filled-states.test.ts` proves the direction follows the mode — darker in light,
+lighter in dark.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and

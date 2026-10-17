@@ -124,8 +124,14 @@ describe("colour roles", () => {
 
   it("moves every filled surface away from its resting role", () => {
     colourSets.forEach(({ label, colors }) => {
-      expect(colors.primaryHover, label).not.toBe(colors.primary);
-      expect(colors.destructiveHover, label).not.toBe(colors.destructive);
+      const families = ["primary", "secondary", "destructive"] as const;
+      families.forEach((family) => {
+        expect(colors[`${family}Hover`], label).not.toBe(colors[family]);
+        expect(colors[`${family}Active`], label).not.toBe(colors[family]);
+        expect(colors[`${family}Active`], label).not.toBe(
+          colors[`${family}Hover`],
+        );
+      });
     });
   });
 

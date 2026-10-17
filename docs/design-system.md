@@ -84,7 +84,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite tint | black tint |
 
-Both themes expose exactly the same 58 roles; the type system and the colour
+Both themes expose exactly the same 62 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -229,8 +229,8 @@ the mounting rule and its no-portal limitation are documented once, under
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces; filled actions step to `primaryHover` / `destructiveHover` (opaque, contrast-checked) instead of compositing an alpha fill |
-| pressed | `active` wash |
+| hover | `hover` wash on ghost and subtle surfaces; filled actions step to their family's `xHover` (opaque, contrast-checked) instead of compositing an alpha fill |
+| pressed | `active` wash on ghost and subtle surfaces; filled actions step to `xActive`, one step past their hover |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every surface and row wash a placeholder fills — the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground` |
 | link | `primaryText` on the plain surfaces and the `hover`/`active` washes a link paints; `primary` is a fill and is never the colour of text |
@@ -247,6 +247,16 @@ runtime can draw. The component applies it while it holds focus, which means a
 mouse press shows the ring too: there is no `:focus-visible` to distinguish a Tab
 from a click. A design that needs that distinction must keep a press from
 focusing the control (that limitation is real and is not worked around).
+
+A filled control steps through its own family — `x` → `xHover` → `xActive` — so
+the state is an editable, measured fill, not a translucent tint that takes its
+colour from the surface behind it. `primary`, `secondary` and `destructive` each
+carry the full trio, and the on-colour foreground is held to its floor on all
+three. The generic `hover` and `active` roles are the washes a ghost or outline
+control paints; they are not a filled control's states. The neutral fill needs
+its own roles most: `secondary` is only just distinguishable from the canvas, so
+a 90% alpha "hover" changed it by 1.009:1, and the press came out lighter than
+the hover.
 
 A row's metadata keeps its `mutedForeground` role on every wash the row paints —
 `hover` and `active` for pointer state, `accent` where a selectable row hovers,

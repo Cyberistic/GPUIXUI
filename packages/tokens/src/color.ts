@@ -111,12 +111,18 @@ export interface ThemeColors {
   readonly primaryForeground: string;
   /** Primary action background while hovered. */
   readonly primaryHover: string;
+  /** Primary action background while pressed. */
+  readonly primaryActive: string;
   /** Brand-toned text, links and icons on plain surfaces. */
   readonly primaryText: string;
   /** Secondary action background. */
   readonly secondary: string;
   /** Text and icons on `secondary`. */
   readonly secondaryForeground: string;
+  /** Secondary action background while hovered. */
+  readonly secondaryHover: string;
+  /** Secondary action background while pressed. */
+  readonly secondaryActive: string;
   /** Quiet surface for disabled areas and subtle grouping. */
   readonly muted: string;
   /** Secondary text on `muted` and on `background`. */
@@ -131,6 +137,8 @@ export interface ThemeColors {
   readonly destructiveForeground: string;
   /** Destructive action background while hovered. */
   readonly destructiveHover: string;
+  /** Destructive action background while pressed. */
+  readonly destructiveActive: string;
   /** Success background and indicator. */
   readonly success: string;
   /** Text and icons on `success`. */
@@ -191,9 +199,9 @@ export interface ThemeColors {
   readonly selection: string;
   /** Modal scrim. */
   readonly overlay: string;
-  /** Hover wash for ghost and subtle surfaces. */
+  /** Hover wash for ghost and subtle surfaces; a filled control uses `xHover`. */
   readonly hover: string;
-  /** Pressed wash for ghost and subtle surfaces. */
+  /** Pressed wash for ghost and subtle surfaces; a filled control uses `xActive`. */
   readonly active: string;
   /** Selected row or item background. */
   readonly selected: string;
@@ -224,7 +232,8 @@ export interface ThemeColors {
  * The soft status foregrounds are the family's darkest step so an alert's text
  * keeps the body floor through the selection wash (plan 091). The skeleton is
  * one ramp step darker than the pressed wash so a loading row never erases it
- * (plan 094).
+ * (plan 094). The filled-control hover and pressed steps are designed opaque
+ * roles, so no state composites an alpha fill (plan 097).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -236,9 +245,12 @@ export const lightColors = {
   primary: palette.iris[600],
   primaryForeground: palette.neutral[0],
   primaryHover: palette.iris[700],
+  primaryActive: palette.iris[800],
   primaryText: palette.iris[700],
   secondary: palette.neutral[100],
   secondaryForeground: palette.neutral[800],
+  secondaryHover: palette.neutral[200],
+  secondaryActive: palette.neutral[300],
   muted: palette.neutral[100],
   mutedForeground: palette.neutral[700],
   accent: palette.iris[50],
@@ -246,6 +258,7 @@ export const lightColors = {
   destructive: palette.red[600],
   destructiveForeground: palette.neutral[0],
   destructiveHover: palette.red[700],
+  destructiveActive: palette.red[800],
   success: palette.green[600],
   successForeground: palette.neutral[0],
   warning: palette.amber[400],
@@ -299,6 +312,8 @@ export const lightColors = {
  * plan 084 left it, so a checkbox or field inside an Alert or Toast keeps its
  * edge on all four soft status fills (plan 092). The skeleton is one ramp step
  * lighter than the pressed wash so a loading row never erases it (plan 094).
+ * The filled-control hover and pressed steps lighten away from the canvas
+ * (plan 097).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -310,9 +325,12 @@ export const darkColors = {
   primary: palette.iris[300],
   primaryForeground: palette.neutral[950],
   primaryHover: palette.iris[200],
+  primaryActive: palette.iris[100],
   primaryText: palette.iris[200],
   secondary: palette.neutral[800],
   secondaryForeground: palette.neutral[200],
+  secondaryHover: palette.neutral[700],
+  secondaryActive: palette.neutral[600],
   muted: palette.neutral[850],
   mutedForeground: palette.neutral[300],
   accent: palette.iris[900],
@@ -320,6 +338,7 @@ export const darkColors = {
   destructive: palette.red[400],
   destructiveForeground: palette.red[950],
   destructiveHover: palette.red[300],
+  destructiveActive: palette.red[200],
   success: palette.green[400],
   successForeground: palette.green[950],
   warning: palette.amber[300],
@@ -362,7 +381,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 58 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 62 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
  * skeleton is a perceivable step off the pressed wash (plan 094).
  */
@@ -376,9 +395,12 @@ export const highContrastLightColors = {
   primary: "#3B2C8F",
   primaryForeground: "#FFFFFF",
   primaryHover: palette.iris[900],
+  primaryActive: palette.iris[950],
   primaryText: palette.iris[800],
   secondary: "#E8E8E8",
   secondaryForeground: "#000000",
+  secondaryHover: "#D6D6D6",
+  secondaryActive: "#B8B8B8",
   muted: "#F2F2F2",
   mutedForeground: "#1F1F1F",
   accent: "#E0E3FF",
@@ -386,6 +408,7 @@ export const highContrastLightColors = {
   destructive: "#7E1D21",
   destructiveForeground: "#FFFFFF",
   destructiveHover: palette.red[900],
+  destructiveActive: palette.red[950],
   success: "#0E5135",
   successForeground: "#FFFFFF",
   warning: "#F5B01F",
@@ -428,7 +451,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 58 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 62 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it (plan 080), and
  * the selection wash is a darker tint so white text keeps the body floor on the
@@ -445,9 +468,12 @@ export const highContrastDarkColors = {
   primary: "#C7CBFF",
   primaryForeground: "#000000",
   primaryHover: palette.iris[100],
+  primaryActive: palette.iris[50],
   primaryText: palette.iris[100],
   secondary: "#2E2E2E",
   secondaryForeground: "#FFFFFF",
+  secondaryHover: "#3D3D3D",
+  secondaryActive: "#4A4A4A",
   muted: "#1A1A1A",
   mutedForeground: "#E0E0E0",
   accent: "#1C1547",
@@ -455,6 +481,7 @@ export const highContrastDarkColors = {
   destructive: "#FF9E9E",
   destructiveForeground: "#000000",
   destructiveHover: palette.red[200],
+  destructiveActive: palette.red[100],
   success: "#6FE0A3",
   successForeground: "#000000",
   warning: "#FFC94D",
@@ -552,9 +579,12 @@ export const colorRoles = [
   "primary",
   "primaryForeground",
   "primaryHover",
+  "primaryActive",
   "primaryText",
   "secondary",
   "secondaryForeground",
+  "secondaryHover",
+  "secondaryActive",
   "muted",
   "mutedForeground",
   "accent",
@@ -562,6 +592,7 @@ export const colorRoles = [
   "destructive",
   "destructiveForeground",
   "destructiveHover",
+  "destructiveActive",
   "success",
   "successForeground",
   "warning",

@@ -15,7 +15,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * levels apply their own alpha to the `shadow` tint, so a copied style retints
  * all three by editing one role (plan 085).
  * The dark skeleton is one step off the pressed wash, so a loading row keeps its
- * placeholder visible (plan 094).
+ * placeholder visible (plan 094). The filled-control hover and pressed steps are
+ * designed opaque roles in Fluent's blue and grey families, not alpha composites
+ * (plan 097).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -39,9 +41,12 @@ export const windowsPlatformStyle = {
       active: "#E0E0E0",
       secondary: "#EDEDED",
       secondaryForeground: "#1A1A1A",
+      secondaryHover: "#E0E0E0",
+      secondaryActive: "#D6D6D6",
       primary: "#0067C0",
       primaryForeground: "#FFFFFF",
       primaryHover: "#005BA1",
+      primaryActive: "#004E8C",
       primaryText: "#005BA1",
       accent: "#E5F1FB",
       accentForeground: "#004A8F",
@@ -67,9 +72,12 @@ export const windowsPlatformStyle = {
       skeleton: "#525252",
       secondary: "#383838",
       secondaryForeground: "#FFFFFF",
+      secondaryHover: "#424242",
+      secondaryActive: "#4C4C4C",
       primary: "#4CC2FF",
       primaryForeground: "#000000",
       primaryHover: "#76D0FF",
+      primaryActive: "#9BDDFF",
       primaryText: "#76D0FF",
       accent: "#0F3554",
       accentForeground: "#9CD9FF",
