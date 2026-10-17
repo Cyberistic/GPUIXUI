@@ -38,6 +38,7 @@ import {
   type ValueItem,
 } from "./internal/collection.js";
 import { isActivation, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   focusRing,
@@ -355,6 +356,7 @@ export const AccordionTrigger = ({
   onBlur,
   style,
   children,
+  ref,
   ...rest
 }: Props) => {
   const theme = useTheme();
@@ -372,6 +374,7 @@ export const AccordionTrigger = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
     // The native id only exists after commit, and it is what `moveFrom` focuses.
@@ -400,7 +403,7 @@ export const AccordionTrigger = ({
       role="button"
       aria-expanded={open}
       {...rest}
-      ref={attach}
+      ref={setElement}
       tabIndex={disabled ? -1 : 0}
       onClick={
         disabled

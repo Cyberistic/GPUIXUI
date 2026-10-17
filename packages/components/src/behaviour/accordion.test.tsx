@@ -6,10 +6,13 @@
  * an open section when another was toggled; a disabled section opened anyway;
  * `aria-expanded` disagreed with the visible body; a controlled accordion
  * changed its own open set when the consumer said no; and arrow movement either
- * landed on a disabled header or opened the section it moved to.
+ * landed on a disabled header or opened the section it moved to. A caller `ref`
+ * on a header was discarded in favour of the internal one.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef } from "react";
 import * as Option from "effect/Option";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -248,6 +251,37 @@ describe("Accordion", () => {
 
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
     expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+
+    faq.unmount();
+  });
+
+  it("feeds both the internal and the caller's header ref", () => {
+    const ref = createRef<PublicInstance>();
+    const faq = renderComponent(
+      <Accordion type="multiple">
+        <AccordionItem value="one">
+          <AccordionTrigger ref={ref} testId="trigger-one">
+            One
+          </AccordionTrigger>
+          <AccordionContent>
+            <text>Body one</text>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="two">
+          <AccordionTrigger testId="trigger-two">Two</AccordionTrigger>
+          <AccordionContent>
+            <text>Body two</text>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>,
+    );
+
+    expect(ref.current?.id).toBe(faq.renderer.findByTestId("trigger-one")?.id);
+
+    // The internal ref still carries header movement.
+    faq.renderer.focusElement(ref.current?.id ?? -1);
+    faq.renderer.simulateKeystrokes("down");
+    expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
 
     faq.unmount();
   });

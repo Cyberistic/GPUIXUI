@@ -325,4 +325,32 @@ describe("DropdownMenu", () => {
 
     menu.unmount();
   });
+
+  it("feeds both the internal and the caller's row ref", () => {
+    const ref = createRef<PublicInstance>();
+    const menu = renderComponent(
+      <DropdownMenu>
+        <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+        <DropdownMenuContent testId="menu" label="File actions">
+          <DropdownMenuItem ref={ref} testId="rename" onSelect={vi.fn()}>
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem testId="delete" onSelect={vi.fn()}>
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+
+    clickCentreOf(menu, "trigger");
+
+    expect(ref.current?.id).toBe(menu.renderer.findByTestId("rename")?.id);
+
+    // The internal row ref still carries the highlight.
+    menu.renderer.simulateKeystrokes("down");
+    menu.renderer.simulateKeystrokes("down");
+    expect(focusedTestId(menu)).toEqual(Option.some("delete"));
+
+    menu.unmount();
+  });
 });

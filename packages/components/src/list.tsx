@@ -36,6 +36,7 @@ import {
   nextEnabled,
   type CollectionItem,
 } from "./internal/collection.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   isActivation,
   isDown,
@@ -510,6 +511,7 @@ export const ListItem = ({
   children,
   onFocus,
   style,
+  ref,
   ...rest
 }: ListItemProps) => {
   const theme = useTheme();
@@ -533,6 +535,7 @@ export const ListItem = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
     // Registration needs the native id, which only exists after the element is
@@ -553,7 +556,7 @@ export const ListItem = ({
       role={selectable ? "option" : "listitem"}
       {...(selectable ? { "aria-selected": isSelected } : {})}
       {...rest}
-      ref={attach}
+      ref={setElement}
       tabIndex={selectable ? (isTabbable ? 0 : -1) : undefined}
       onFocus={(event) => {
         noteFocus(value);

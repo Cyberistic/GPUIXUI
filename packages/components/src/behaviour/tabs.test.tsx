@@ -5,10 +5,13 @@
  * painted with the wrong theme role; arrow keys that moved the highlight but not
  * real focus (or did not wrap); manual activation that selected on focus anyway,
  * so Enter was meaningless; a disabled tab that could be focused or clicked; and
- * a controlled tab set that changed its own panel when the consumer said no.
+ * a controlled tab set that changed its own panel when the consumer said no. A
+ * caller `ref` on a trigger was discarded in favour of the internal one.
  */
 
 import * as Option from "effect/Option";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -200,6 +203,31 @@ describe("Tabs", () => {
     );
 
     expect(tabs.renderer.findByTestId("panel-other")).toBeUndefined();
+
+    tabs.unmount();
+  });
+
+  it("feeds both the internal and the caller's trigger ref", () => {
+    const ref = createRef<PublicInstance>();
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile">
+        <TabsList testId="list">
+          <TabsTrigger ref={ref} testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+          <TabsTrigger testId="tab-danger" value="danger">
+            Danger
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+
+    expect(ref.current?.id).toBe(tabs.renderer.findByTestId("tab-profile")?.id);
+
+    // The internal ref still carries the roving tab stop.
+    focusTab(tabs, "tab-profile");
+    tabs.renderer.simulateKeystrokes("right");
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
 
     tabs.unmount();
   });

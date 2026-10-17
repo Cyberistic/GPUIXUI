@@ -11,10 +11,14 @@
  * that includes a disabled row, Shift+Arrow moving focus without extending, and
  * Cmd/Ctrl+A doing nothing in multiple mode (or reporting a change in single
  * mode).
+ *
+ * A caller `ref` on a row was also discarded in favour of the internal one.
  */
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   clickCentreOf,
@@ -509,6 +513,29 @@ describe("List", () => {
     expect(onValueChange).toHaveBeenCalledWith(["c"]);
     expect(isSelected(list, "row-a")).toBe(true);
     expect(isSelected(list, "row-c")).toBe(false);
+
+    list.unmount();
+  });
+
+  it("feeds both the internal and the caller's row ref", () => {
+    const ref = createRef<PublicInstance>();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem ref={ref} testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b">
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    expect(ref.current?.id).toBe(list.renderer.findByTestId("row-a")?.id);
+
+    // The internal ref still carries the roving tab stop.
+    list.renderer.focusElement(ref.current?.id ?? -1);
+    list.renderer.simulateKeystrokes("down");
+    expect(focusedTestId(list)).toEqual(Option.some("row-b"));
 
     list.unmount();
   });

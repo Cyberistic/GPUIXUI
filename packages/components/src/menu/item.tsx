@@ -20,6 +20,7 @@ import {
   type ReactNode,
 } from "react";
 import { controlHeight, textStyle, useTheme } from "../internal/theme.js";
+import { useMergedRef } from "../internal/ref.js";
 import { useMenuContext } from "./state.js";
 
 /** How much emphasis a row carries. `destructive` asks before it is used. */
@@ -111,6 +112,7 @@ export const MenuItem = ({
   onFocus,
   onClick,
   style,
+  ref,
   ...rest
 }: MenuItemProps) => {
   const theme = useTheme();
@@ -132,6 +134,7 @@ export const MenuItem = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setRow = useMergedRef<PublicInstance | null>(attach, ref);
 
   const run = useCallback(() => action.current(), []);
 
@@ -147,7 +150,7 @@ export const MenuItem = ({
     <div
       role="menuitem"
       {...rest}
-      ref={attach}
+      ref={setRow}
       tabIndex={disabled ? -1 : 0}
       onFocus={(event) => {
         if (instance !== undefined) noteFocus(instance.id);

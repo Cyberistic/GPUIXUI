@@ -42,6 +42,7 @@ import {
   isRight,
   isUp,
 } from "./internal/key.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   focusRing,
@@ -387,6 +388,7 @@ export const TabsTrigger = ({
   onClick,
   onFocus,
   style,
+  ref,
   ...rest
 }: TabsTriggerProps) => {
   const theme = useTheme();
@@ -399,6 +401,7 @@ export const TabsTrigger = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
     if (instance === undefined) return;
@@ -413,7 +416,7 @@ export const TabsTrigger = ({
       role="tab"
       aria-selected={isSelected}
       {...rest}
-      ref={attach}
+      ref={setElement}
       tabIndex={disabled ? -1 : isTabbable ? 0 : -1}
       onFocus={(event) => {
         noteFocus(value);

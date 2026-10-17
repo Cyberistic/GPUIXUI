@@ -74,9 +74,13 @@ not collect it (plan 117 §5a–§5c).
 1. Read the matching plan in `.agents/slop/plans/`.
 2. One file per component family, one named export per part, JSDoc on every
    export, `style` merged last so a consumer can override it.
-3. Put anything worth testing without a renderer in `<component>/logic.ts`.
-4. Test it twice: logic tests beside the code (`src/<name>.test.ts`), and a
+3. A part that needs the host instance internally (focus, trap, registration)
+   takes `ref` out of its props and composes it with `internal/ref.ts`'s
+   `useMergedRef`. The last `ref` spread onto a host element wins, so spreading
+   props and then passing the internal ref silently drops the caller's.
+4. Put anything worth testing without a renderer in `<component>/logic.ts`.
+5. Test it twice: logic tests beside the code (`src/<name>.test.ts`), and a
    behaviour suite in `src/behaviour/<name>.test.tsx` that renders through
    `internal/test-root.tsx` — real clicks, keys, focus, text and bounds.
-5. Ship an example (`examples/<name>.example.tsx`), a docs page
+6. Ship an example (`examples/<name>.example.tsx`), a docs page
    (`docs/<name>.mdx`) and an inventory record, in the same commit.

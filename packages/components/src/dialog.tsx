@@ -36,6 +36,7 @@ import {
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { useMergedRef } from "./internal/ref.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import {
   elevation,
@@ -208,6 +209,7 @@ export const DialogContent = ({
   onMouseDownOutside,
   style,
   testId = "dialog-content",
+  ref,
   ...rest
 }: DialogContentProps) => {
   const theme = useTheme();
@@ -218,6 +220,10 @@ export const DialogContent = ({
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);
   }, []);
+  const setContentElement = useMergedRef<PublicInstance | null>(
+    contentRef,
+    ref,
+  );
   const previousFocus = useRef<number | null>(null);
   const initialFocusRef = useRef(initialFocus);
   useLayoutEffect(() => {
@@ -294,7 +300,7 @@ export const DialogContent = ({
           aria-label={label}
           tabIndex={-1}
           {...rest}
-          ref={contentRef}
+          ref={setContentElement}
           testId={testId}
           onMouseDownOutside={(event) => {
             onMouseDownOutside?.(event);
