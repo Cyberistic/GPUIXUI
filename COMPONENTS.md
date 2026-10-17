@@ -64,7 +64,8 @@ Grouped by tier. The GPUix primitive each will be built on is in the row's Notes
 
 - **Tier 1:** Labels (association needs `aria-labelledby` — unsupported), Button
   groups, Checkboxes, Radio groups, Switches, Progress, Skeletons, Loading
-  indicators, Slider, Meter, Number Field, OTP Field, Toggle, Rating.
+  indicators, Slider, Range slider, Meter, Number Field, OTP Field, Toggle,
+  Rating.
 - **Tier 2:** Cards, Badges, Avatars, Lists / list items, Empty states, Alerts,
   Inline validation, Toasts / notifications, Dialogs, Confirmation dialogs,
   Popovers, Dropdown menus, Context menus, Command menus, Tabs, Accordions,
@@ -118,6 +119,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Skeletons | todo | ? | `div` + opacity `motion` (GPUix animates opacity only — verified). |
 | Loading indicators | todo | ? | **No rotation** in `motion` (verified); use an indeterminate sweep (width/left) or a discrete step cycle. |
 | Slider | todo | ? | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
+| Range slider | todo | ? | Two-thumb variant of Slider; its own runtime for min/max ordering and thumb crossing. No host element. |
 | Meter | todo | ? | Distinct from Progress: a value in a range, not task completion. No host element. |
 | Number Field | todo | ? | `<input>` exists (API-shape for the text part); stepper buttons, drag-to-scrub, clamping and locale formatting are ours. |
 | OTP Field | todo | ? | `<input>` exists; segmented rendering, paste distribution and keyboard movement are ours. |

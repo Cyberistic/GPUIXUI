@@ -43,6 +43,7 @@ with `role` + `aria-selected` / `aria-valuetext` and record the gap.
 | A5 | Labels | `<text>` | — | — |
 | A6 | Button groups | `div` + Button keyboard | Button (`030`) | — |
 | A7 | Slider | `div` + pointer + keyboard | A1 (roving model) | — |
+| A7b | Range slider | A7 + two-thumb runtime | A7 | — |
 | A8 | Meter | `div` + `<text>` | — | — |
 | A9 | Rating | `div` + roving focus | A2 | — |
 | A10 | Number Field | `<input>` + stepper `div`s + pointer scrub | A7 (scrub is a slider) | — |
