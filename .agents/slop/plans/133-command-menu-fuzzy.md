@@ -4,7 +4,9 @@
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 114 (CommandMenu), 117 (inventory gate), 129 (the type-ahead
   scoring precedent)
-- **Status:** in progress, 2026-10-17.
+- **Status:** done, 2026-10-17. 12 fuzzy logic tests + 4 native tests
+  (CommandMenu 8 → 12); docs and inventory updated. Both-direction proof and one
+  intended assertion change in §9.
 
 `CommandMenu` filters with a case-insensitive **substring**: typing `opfl` finds
 nothing even though it is the initials of "**Op**en **f**i**l**e". Every desktop
@@ -323,4 +325,25 @@ Record actual counts and any deviation in §9.
 
 ## 9. Deviations, recorded during implementation
 
-(fill in during implementation.)
+1. **The existing `op` test gained a legitimate match.** Fuzzy matching now finds
+   "Export as PDF" for `op` (the `o` of "Export", the `p` of "PDF"). §7 STOP 4
+   anticipated no extra matches; that expectation was wrong about the feature.
+   The assertion now states the fuzzy rule (`Export` present, `Toggle sidebar`
+   and `Save` absent) and the test still guards the ordering it was written for.
+2. **Both-direction proof, recorded from the actual runs.**
+   - The old substring default made *matches a non-contiguous query by initials*
+     fail with `expected [ 'No matching commands', … ] to include 'Open file'`.
+   - Dropping the sort from `rankByGroup` made *runs the best-ranked row, not the
+     first declared* fail with `expected false to be true` on
+     `command-open`'s `aria-selected` (the first declared `reopen` won).
+   - Sorting globally instead of per group made *keeps groups in declaration
+     order while ranking inside them* fail with `expected 0 to be greater than 2`
+     (`File` painted before `Navigation`).
+   All restored; the logic suite passed 12/12 and the CommandMenu suite 12/12.
+3. **Actual counts.** Logic 211 → 223 (12 new). Behaviour 259 → 263: CommandMenu
+   8 → 12.
+4. **The group-order fixture needed a later group that scores higher for the
+   query.** `Go to line` scores 10 for `o` (the second `o` is never consumed
+   once the query is satisfied) and `Open file` scores 18, so a global sort puts
+   the `File` group first — exactly the failure the test must catch.
+
