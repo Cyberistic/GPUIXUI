@@ -102,6 +102,13 @@ Evidence and reasoning:
   stand it down when that variable is set (Alchemy's own documented contract in
   `alchemy/src/Cloudflare/Workers/Sources/Vite.ts`), so both standalone `vite build`
   and Alchemy deploys work without double-injecting the plugin.
+  **Verified (2026-10-17):** `ALCHEMY_CLOUDFLARE_VITE_INJECTED=1 nub run --filter
+  docs build` exits 0 with the app's plugin stood down — the MDX, Tailwind,
+  TanStack Start and React plugins still produce `dist/client` and
+  `dist/server/server.js`. It does not emit `dist/server/wrangler.json`: the
+  Cloudflare plugin writes that, and in a real Alchemy run the injected plugin is
+  present. The end-to-end deploy (`nub run deploy:docs`) is **not** verified here —
+  it needs Cloudflare credentials and is the owner's path (`TODO.md`).
 - SSR (not a client-only SPA) gives server-side search (`/api/search` via
   `fumadocs-core/search/server`) and real HTML for SEO, which a documentation site
   wants. TanStack Start's `prerender` can be enabled later for speed if needed.
