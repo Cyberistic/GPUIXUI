@@ -8,9 +8,12 @@ source of truth for what is left to do. `COMPONENTS.md` is the inventory.
 
 ## Status
 
-Phase A (audit and feasibility). **The first deliverable is the plan set** in
-`.agents/slop/plans/` — indexed in `.agents/slop/plans/README.md`. No
-implementation work starts before those plans exist.
+Phase C — Tier 1–2 components. **Tier 2 is complete in `packages/components`**:
+22 components/areas, each with a native behaviour suite, at least one working
+example, a docs page and an inventory record checked against `COMPONENTS.md`.
+The design tokens and theming layer (light, dark, high-contrast, density) is
+landed. Tier 1, data presentation, workspace and specialised components are
+tracked in `TODO.md`.
 
 ## Layout
 
@@ -19,6 +22,8 @@ apps/docs          Fumadocs documentation + showcase
 apps/playground    Native GPUix playground and smoke tests
 packages/config    Shared TypeScript and tooling configuration
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources
+packages/tokens     Design tokens, themes and the React theme provider
+packages/components Tier 2 composition and feedback components
 docs/              Design-system and architecture documents (source of truth)
 examples/          Runnable example apps
 references/        Read-only clones of the reference repos (gitignored)
