@@ -32,7 +32,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 
 ## The plan set
 
-### `tokens-theme` (block `010–019`, plus overflow plans `050–053`)
+### `tokens-theme` (block `010–019`, plus overflow plans `050–099`)
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -68,6 +68,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [069](./069-selection-and-scrollbar-reach.md) | Selection and scrollbar: what the pinned runtime reaches | F | 017, 018, 060 | done |
 | [070](./070-install-path-and-claim-guards.md) | Install-path truth and the last unguarded design-system claims | F | 062, 065, 066 | done |
 | [071](./071-contrast-contract.md) | A contrast contract the consumer can run | F | 013, 014, 057, 059, 063 | done |
+| [072](./072-palette-table-guard.md) | Guard the palette ramps in `docs/tokens.md` | F | 058, 066 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -165,7 +166,13 @@ into `src/contrast.ts`, and `themeContrastFailures(theme, contrast?)` returns
 every pair — including the composited selection wash — that misses its floor, so
 an edited theme is held to the library's guarantee in one assertion. Both suites
 now consume the same public list and table, so the contract the docs state and
-the tests that enforce it cannot drift.
+the tests that enforce it cannot drift. 072 closes the last hand-written value
+table in the catalogue that no test held: the palette ramps. `color.test.ts`
+already proved the palette holds paintable hex, but the values printed in
+`docs/tokens.md` could disagree with the export while every suite stayed green.
+The guard builds each documented row from `palette` and requires it, so a ramp
+edit and a document edit cannot land apart; every value table in the page is now
+built from the implementation one way.
 
 ### Reference adoption (block `200–299`)
 
