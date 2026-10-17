@@ -28,6 +28,13 @@ source, so the page and the record cannot disagree. The docs build fails if an
 include points at a file that does not exist, and `content-references.test.ts`
 fails if a finished component's page omits its source.
 
+This is the mechanism producing a real table, on a real type from this
+repository — the capture-provenance record the screenshot pipeline writes
+(`apps/docs/src/components/preview/captures.ts`). A component page points the
+same tag at the component's props type:
+
+<auto-type-table path="../../src/components/preview/captures.ts" name="CaptureProvenance" />
+
 <Callout>
 The tables appear as components publish their props types with tsdoc. Until a
 component does, its page says the prop table is unavailable rather than

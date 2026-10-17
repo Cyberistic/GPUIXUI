@@ -92,9 +92,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–413)
 
-`[x]` `[█████████░]` 9/11
+`[x]` `[██████████]` 10/12
 
-`[x]` Write and index the docs-site plans (410, 411, 412, 413, 414)
+`[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
 `[x]` Docs identity: light/dark themes from the tokens theme — provisional HSL roles in `app.css`, reconciled with the tokens workstream later
 `[x]` Working search (server route + UI) — `/api/search?query=button` returns real results
@@ -103,6 +103,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Preview components + `docs/preview-strategy.md` (plan 412) — tier selection and screenshot provenance are enforced; a capture without its sidecar is never shown
 `[x]` Per-page document metadata (plan 413) — every page's title, description, OpenGraph tags and canonical URL come from its frontmatter; verified against the dev server in both directions (`<title>GPUIXUI</title>` before, `<title>Installation — GPUIXUI</title>` after)
 `[x]` Copyable real source (plan 414) — component pages include the real file with Fumadocs' built-in `<include>` instead of a custom component; `content-references.test.ts` guards broken paths, missing regions, silent self-closing tags, `auto-type-table` paths and a finished component's page omitting its source
+`[x]` API metadata (plan 415) — the generator is verified in this app, a real table renders on `api-reference.mdx`, and `type-table.test.ts` pins the props-type contract (`@internal` hidden, optionality, unknown name → nothing); the generator's cache ignores options, so no type is generated twice with different options
 `[ ]` Document the first real component page (needs the primitives/components workstream)
 `[ ]` Docs truth pass against the implementation (Phase F) — needs the component pages
 
@@ -117,7 +118,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[ ]` Repo: AGENTS/PLAN name an integration branch `main`, but only `master` exists and the shared checkout is on it — confirm the name before workstreams merge. `agent/docs-site` is green and ready to integrate; it was not merged because the shared checkout had uncommitted edits from another agent
 `[ ]` **Supervisor: two writers in one worktree.** A docs-site loop session (`run-docs-site.sh` → `opencode run`) and the interactive docs-site session wrote `workspaces/docs-site` at the same time on 2026-10-17 08:38–08:52: the loop committed the other session's in-flight edit together with its own work, and reverted a line of it mid-run. Evidence in `.agents/slop/docs-site-concurrency.md`. Per AGENTS §6 this session stopped the loop (both pids) to become the single writer. Fix: treat a live writer as owning the tree — either track interactive sessions, or refuse to start a workstream whose tree has uncommitted changes from a different pid. Owner: whoever owns `scripts/swarm-supervisor.sh`
 `[ ]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables
-`[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables
+`[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables — the contract is now executable in `apps/docs/src/lib/type-table.fixture.tsx` / `type-table.test.ts` (plan 415): exported type, tsdoc per prop, `@internal` for hidden props, `?` for optional
 `[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5) — the sidecar contract (`provenance.json` beside each PNG) is now enforced by `preview.test.tsx`, so a capture without it will not render
 `[ ]` Docs site: the first real component page — it must show its source via `<include>` and include it in `content/docs/components/meta.json`. The copyable-source mechanism itself landed with plan 414; the page waits on the primitives/components workstream
 `[ ]` Owner: the site's canonical link and OpenGraph tags are relative (`/docs/installation`); an absolute URL needs the deploy domain (`packages/deploy/alchemy.run.docs.ts`), which is outside this workstream — plan 413 §7

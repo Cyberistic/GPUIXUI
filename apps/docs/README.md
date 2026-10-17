@@ -110,6 +110,34 @@ block as any other fence:
 not exist, names a region the file does not contain, is written self-closing, or
 if a component that is no longer `planned` has a page without its real source.
 
+## API tables
+
+Prop tables are generated from the component's **real TypeScript** by
+`fumadocs-typescript`'s remark plugin; the generator lives in
+`src/lib/type-table-generator.ts` and is wired in `source.config.ts` (that file
+may only export collections, which is why the generator is separate). The
+mechanism is verified in this app: `api-reference.mdx` renders a table from a
+real type, and the dev server emits one row per prop
+(`type-table-<file>-<Type>-<prop>`).
+
+The contract a component props type must satisfy (`src/lib/type-table.fixture.tsx`
+is its executable form, pinned by `src/lib/type-table.test.ts`):
+
+1. The type is **exported** from a real `.ts`/`.tsx` file the page can reach.
+2. Every public prop carries tsdoc text; the table shows it in the row.
+3. A prop that must not appear on the site carries `@internal` — hidden by
+   default, shown only when a page asks for `allowInternal`.
+4. An optional prop uses `?`, so the table marks it optional.
+
+Two gotchas the tests exist to catch:
+
+- an unknown type `name`, or a props type in a single-line inline `type` string,
+  generates **nothing** and no error — `content-references.test.ts` fails on the
+  first;
+- the generator's file cache is keyed by `${path}:${name}:${content}`, so it does
+  **not** distinguish options: never generate the same type twice with different
+  options (e.g. `allowInternal`) in one build. No page does.
+
 The page's `<title>`, `description`, `og:title`, `og:description` and canonical
 link come from its frontmatter through `src/lib/page-meta.ts`, so a new page
 never inherits the site title.
