@@ -445,8 +445,10 @@ const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;
  *
  * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
  * `#RRGGBB` gains an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced.
- * A colour the parser does not recognise is returned unchanged, so a non-hex
- * value stays solid rather than becoming transparent.
+ * A `NaN` amount — a computed fraction with no value — returns the colour
+ * unchanged, the same fallback as an unparseable colour. A colour the parser
+ * does not recognise is returned unchanged, so a non-hex value stays solid
+ * rather than becoming transparent.
  *
  * @example
  * ```ts
@@ -454,6 +456,9 @@ const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;
  * ```
  */
 export function alpha(color: string, amount: number): string {
+  if (Number.isNaN(amount)) {
+    return color;
+  }
   const match = hexColor.exec(color);
   if (match === null) {
     return color;

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 43/59
+`[x]` `[██████████]` 44/60
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -146,6 +146,9 @@ that printed `#808080` for a `#7F7F7F` composite (plan 075)
 dividers it never checked, and fix the nine shipped platform pairs below the
 1.05:1 floor — Linux dark's `destructiveSoft` measured 1.005:1 on its own card
 (plan 076)
+`[x]` Make `alpha` total for a computed fraction — `alpha(color, NaN)` emitted
+`#2559D6NaN`, which the runtime ignores; a non-clampable amount now returns the
+colour unchanged (plan 077)
 `[x]` Guard the palette ramps in `docs/tokens.md` — the last hand-written value
 table without a drift test (plan 072)
 `[x]` Make a theme declare its contrast level so `applyPlatformStyle` and

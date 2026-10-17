@@ -184,6 +184,11 @@ describe("alpha", () => {
     expect(alpha("#FFF", 0.5)).toBe("#FFF");
   });
 
+  it("returns the colour unchanged for an amount it cannot clamp", () => {
+    expect(alpha("#2559D6", Number.NaN)).toBe("#2559D6");
+    expect(alpha("#2559D64D", Number.NaN)).toBe("#2559D64D");
+  });
+
   it("normalises the result to upper case", () => {
     expect(alpha("#2559d6", 0.3)).toBe("#2559D64D");
   });

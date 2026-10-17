@@ -153,7 +153,8 @@ import { palette } from "@gpuixui/tokens";
 an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced. `amount` is clamped
 to `0…1` and rounded to the nearest byte. A colour the parser does not recognise
 is returned unchanged, so a non-hex value stays solid rather than becoming
-transparent.
+transparent. A `NaN` amount returns the colour unchanged for the same reason: a
+computed fraction with no value must not erase a role.
 
 ```ts
 import { alpha } from "@gpuixui/tokens";
