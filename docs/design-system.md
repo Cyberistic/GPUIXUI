@@ -328,7 +328,9 @@ Colour is checked, not assumed. The token suite enforces:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
-| body text on `background`/`card`/`muted`/`popover`/`input` and the `hover`/`active` washes | 7:1 | 7:1 |
+| body text on `background`/`card`/`muted`/`popover`/`input` and the `hover`/`active`/`accent`/`selected` washes | 7:1 | 7:1 |
+| a menu row's label (`popoverForeground` on `hover`/`active`) | 7:1 | 7:1 |
+| selected row label (`selectedForeground` on `selected` and, while hovered or pressed, on `hover`/`active`) | 4.5:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
@@ -345,7 +347,7 @@ Colour is checked, not assumed. The token suite enforces:
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`selected` washes | 1.05:1 | 1.05:1 |
-| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`popover`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on

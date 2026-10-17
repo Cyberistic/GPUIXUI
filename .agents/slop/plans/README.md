@@ -108,6 +108,8 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [309](./309-state-fills-on-panels.md) | The state fills on the panel they paint on | F | 063, 076–095, 300, 306–308 | done |
 | [310](./310-platform-edit-example-contract.md) | The copy-and-own platform example the contract rejects | F | 063, 098, 301, 309 | done |
 | [311](./311-platform-recipe-styles.md) | Platform recipe styles: Windows XP (Luna) and Aero | F | 063, 071, 097, 301, 309, 310 | done |
+| [312](./312-row-text-on-washes.md) | The row's own text on the washes it paints | F | 059, 071–095, 300, 306–309 | done |
+| [313](./313-ledger-role-count.md) | The ledger's second role count | F | 015, 056–066, 303, 311 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -673,6 +675,27 @@ approximation, because 0.10.0 has no backdrop blur, inset shadow or gradient.
 Recipe B of plan 433 (Omarchy's live system theme) stays out of this plan: its
 own STOP condition requires the on-disk palette contract to be verified on a
 real Linux host, which this workstream does not have.
+
+312 closes the last text roles the contract measured only on plain surfaces: the
+default label of a list or menu row. Plans 079, 083 and 086 added secondary
+text, status text and the focus ring to the four row washes, but not the role a
+row's own title uses. A selectable list row paints `foreground` on `accent`
+(hover) and on `selected`, a selected row under the pointer keeps its inherited
+`selectedForeground` on `accent`/`active`, and a menu row paints
+`popoverForeground` on `hover`/`active`. `ListItemTitle` overriding the row's
+inherited colour is why the selected title is `foreground`, not
+`selectedForeground` — the composition the earlier audits did not see. All ten
+shipped sets clear their floors (7.47:1 at the tightest), so no colour moves;
+the six pairs plus the field edge on its own `input` fill bring
+`contrastPairs` from 232 to 239.
+
+313 closes the ledger contradiction plan 311 left: the Design tokens row stated
+`62 semantic roles` and, later in the same sentence, “the current **58**” — the
+count before the four soft edges landed. `inventory.test.ts` guarded the first
+phrase but not a second count written as prose, so the ledger was false while
+every gate stayed green. The sentence now names no count, and a guard holds every
+numeric role phrase in the row to `colorRoles.length`; the TODO row that still
+called the gallery's target a `54`-role package is corrected at the same time.
 
 ### Reference adoption (block `200–299`)
 

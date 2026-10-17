@@ -341,7 +341,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(232);
+    expect(contrastPairs.length).toBe(239);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(
@@ -474,19 +474,20 @@ describe("themeContrastFailures", () => {
       "popover",
       "muted",
       "disabled",
+      "input",
       "secondary",
       "hover",
       "active",
       "accent",
     ]);
     expect(failures.every(({ floor }) => floor === 3)).toBe(true);
-    // Only the three white surfaces are the border's own value; the control
+    // Only the four white surfaces are the border's own value; the control
     // fills are merely under the floor a white divider misses.
     expect(
       failures
         .filter(({ ratio }) => ratio === 1)
         .map(({ background }) => background),
-    ).toEqual(["background", "card", "popover"]);
+    ).toEqual(["background", "card", "popover", "input"]);
   });
 
   it("checks the focus ring on every surface a focused control sits on", () => {

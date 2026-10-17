@@ -337,6 +337,29 @@ const statusTextWashPairs: readonly ContrastPair[] = statusTextTones.flatMap(
 );
 
 /**
+ * The default text roles a row paints on the washes it paints behind them. A
+ * selectable list row uses `accent` on hover and `selected` when selected, a
+ * selected row keeps its inherited `selectedForeground` while hovered or
+ * pressed, and a menu row paints `popoverForeground` on `hover`/`active`.
+ */
+const rowTextPairs: readonly ContrastPair[] = [
+  ["foreground", "accent", "body"],
+  ["foreground", "selected", "body"],
+  ["popoverForeground", "hover", "body"],
+  ["popoverForeground", "active", "body"],
+  ["selectedForeground", "hover", "secondary"],
+  ["selectedForeground", "active", "secondary"],
+];
+
+/**
+ * The field edge. A text field paints `border` on the `input` fill, so the
+ * divider floor applies to the pair a reader uses to find the field.
+ */
+const fieldEdgePairs: readonly ContrastPair[] = [
+  ["border", "input", "divider"],
+];
+
+/**
  * The surfaces default body text (`foreground`) is painted on: the canvas and
  * the card, the quiet panel an avatar's fallback initials sit on, the floating
  * surface a date picker's month header sits on, and the hover and pressed
@@ -374,7 +397,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * that must stay visible, including on the fills a bordered control paints and
  * on the inactive fill a disabled control keeps its shape with, and the inactive
  * label an unavailable control, menu item or row paints on its fill, the plain
- * surfaces and the state washes.
+ * surfaces and the state washes. The default text role of a list or menu row is
+ * measured on the washes the row paints, and a text field's edge is measured on
+ * the `input` fill it sits on.
  *
  * The filled families are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
@@ -425,6 +450,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["destructiveText", "card", "secondary"],
   ["destructiveText", "popover", "secondary"],
   ...statusTextWashPairs,
+  ...rowTextPairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],
@@ -446,6 +472,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["border", "popover", "divider"],
   ["border", "muted", "divider"],
   ["border", "disabled", "divider"],
+  ...fieldEdgePairs,
   ...controlFillPairs,
   ...stateFillSurfacePairs,
 ];
@@ -728,7 +755,10 @@ const washVisibilityFailures = (
  * accent and selected fills and the three filled families at rest, hover and
  * press — against the canvas, card, popover and quiet panel it paints on,
  * because the identity light panel was the same value as its `hover`,
- * `secondary`, `accent` and `selected` fills. The level
+ * `secondary`, `accent` and `selected` fills. It measures a row's own default
+ * text on the washes it paints and the field edge on its `input` fill, so a
+ * selected list title or a menu row cannot lose its label on its own state
+ * fill. The level
  * defaults to the one the theme declares, so a high-contrast theme is checked
  * against its own floors. An empty array is the library's guarantee; a consumer
  * test asserts exactly that:

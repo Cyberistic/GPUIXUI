@@ -1059,7 +1059,9 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 
 `themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
 against `contrastFloors`. The list holds text pairs, secondary text and status
-text on the state washes (`hover`, `active`, `accent` and `selected`), the other
+text on the state washes (`hover`, `active`, `accent` and `selected`), the
+default label of a list or menu row on the washes it paints, the field edge on
+its `input` fill, the other
 status pairs, the focus ring on the plain surfaces, the `muted` panel, the
 `accent` wash, the three state washes a focused control can sit on and the four
 soft status fills (`ringSoftPairs`), the
@@ -1070,7 +1072,7 @@ the soft status surfaces, the designed edge on its own fill and on the eight
 surfaces a chip sits on (`softBorderSurfacePairs`), the plain divider on those
 fills, and the decorative
 dividers — including on the `secondary`, `hover`, `active` and `accent` fills a
-bordered control paints.
+bordered control paints, and on the `input` fill a field sits on.
 The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
@@ -1342,11 +1344,25 @@ set cleared it. The edge is now `#868FA0`, which clears the floor on all four
 soft fills. Palette edits must keep it green.
 
 Default body text is measured on `background`, `card`, the `muted` panel,
-`popover` and the `hover`/`active` washes. The panel and the floating surface are
-not academic: an avatar's fallback initials sit on `muted`, and a date picker's
-month header sits on its `popover`. Both clear the body floor with margin in
-every shipped set, so no value moves; the pairs exist so an edited theme cannot
-break them silently.
+`popover` and the `hover`/`active`/`accent`/`selected` washes; typed text is
+`inputForeground` on the `input` fill. The panel and the floating surface are not
+academic: an avatar's fallback initials sit on `muted`, and a date picker's month
+header sits on its `popover`. The row washes are not either: a selectable list
+row paints `accent` on hover and `selected` when selected, and its title is
+`foreground` on both — a `ListItemTitle` sets its own colour, so it overrides
+the `selectedForeground` the row inherits. Every pair clears the body floor with
+margin in every shipped set, so no value moves; the pairs exist so an edited
+theme cannot break them silently.
+
+The other two row text roles have their own pairs. A menu row paints
+`popoverForeground` on `hover`/`active`, and a selected row under the pointer
+keeps its inherited `selectedForeground` on `accent`/`active`; the latter takes
+the secondary floor, matching `selectedForeground` on `selected`. The tightest
+shipped values are `foreground` on `selected` at **7.47:1** (Linux dark) and
+`selectedForeground` on `active` at **5.21:1** (macOS light), so no colour moves.
+A text field's edge is `border` on its own `input` fill, measured at the divider
+floor; the weakest shipped set is Linux dark at **1.25:1**, above the 1.05:1
+floor. These seven pairs take `contrastPairs` from 232 to 239.
 
 The filled-control states are designed roles, not alpha composites. Before plan
 `097` a consumer painted `alpha(primary, 0.9)` for hover and `alpha(primary, 0.8)`

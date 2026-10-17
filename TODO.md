@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 79/103
+`[x]` `[████████░░]` 81/107
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -113,6 +113,24 @@ weight through layout bounds, not the retained style — `paintedStyle` reads
 `getElement().style`, so it shows what was authored rather than what painted; a
 native probe on the pinned 0.10.0 paints a three-line `lineHeight` 20/60 block at
 76/196px, which bounds can prove (owner: `playground`)
+`[x]` Hold the default label of a list or menu row to its floor on the washes it
+paints — a selected title is `foreground` on `selected`, a hovered row is
+`foreground` on `accent`, a selected row under the pointer is
+`selectedForeground` on `hover`/`active`, and a menu row is `popoverForeground`
+on `hover`/`active`; all ten shipped sets pass (7.47:1 at the tightest), the
+field edge on `input` joins them, and the checker grows 232 → 239 pairs
+(plan 312)
+`[x]` Guard the ledger's second role count — the Design tokens row said `62
+semantic roles` and “the current 58” in one sentence after plan 311 added four
+roles; every numeric role phrase in the row is now held to `colorRoles.length`
+(plan 313)
+`[ ]` Cross-team: `primitives` paints an unchecked checkbox/switch border with
+`theme.colors.input`, a **background** role — `input` is `#FFFFFF` in every
+light set, so an unchecked box on a white card measures 1.000:1 and has no
+visible edge (`primitives/src/core/selection.ts` `emptyBorder`, used at
+`selectionBoxStyle` and `switchTrackStyle`). It should paint the designed
+`borderStrong` control boundary, which plan 084 already holds to 3:1 (4.5:1 at
+AAA) on the quiet panel and the row washes (owner: `primitives`; plans 084, 312)
 `[ ]` Cross-team: `docs-site` moves the platform toggle from the pre-063
 `platformTheme(base, platform)` API to `getPlatformTheme(platform, mode,
 contrast)`, deletes its structural `packages/tokens` copy (still the 47-role
@@ -252,7 +270,7 @@ of its local role array, so an eleventh role cannot be silently omitted (owner:
 mapping from `tsconfig.check.json` / `tsconfig.build.json`, now that the tokens
 React entry carries no JSX (owner: `playground`; plan 061)
 `[ ]` Cross-team: `playground` re-runs the theme gallery against the current
-54-role package — the last green run was the 47-role package, and the newest
+role set — the last green run predates the newest roles, and the newest
 roles (the four `xText` roles, `primaryHover`/`destructiveHover` and
 `primaryText`) are contrast-tested but not painted natively; the
 `Design tokens` row then moves from `wip` to `done` (owner: `playground`; plans

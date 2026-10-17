@@ -11,6 +11,10 @@
  *
  * `node:fs` is used deliberately: this is a documentation test over the tree's
  * own ledger, and the tokens package ships zero runtime dependencies by design.
+ *
+ * Plan 313 found the row's second role count stale (`62 semantic roles` beside
+ * “the current 58” after plan 311 added four), so every `<number> role` phrase in
+ * the row is now held to `colorRoles.length`, not just the opening count.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -66,6 +70,17 @@ describe("COMPONENTS.md design-system rows", () => {
     expect(row("High-contrast theme")).toContain(
       `same ${colorRoles.length} roles`,
     );
+  });
+
+  it("states only the shipped role count, however it is written", () => {
+    const tokens = row("Design tokens");
+    const counts = [
+      ...tokens.matchAll(/(\d+)[-\s]roles?\b/g),
+      ...tokens.matchAll(/(\d+)\s+semantic\s+roles\b/g),
+      ...tokens.matchAll(/\bcurrent\s+(\d+)\b/g),
+    ].map((match) => Number(match[1]));
+    expect(counts.length).toBeGreaterThan(0);
+    counts.forEach((count) => expect(count).toBe(colorRoles.length));
   });
 
   it("states the contract's pair counts from the pair lists", () => {

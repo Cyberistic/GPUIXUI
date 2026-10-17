@@ -683,7 +683,7 @@ describe("docs/tokens.md contrast surfaces", () => {
 
   it("states where default body text is measured", () => {
     const sentence =
-      "Default body text is measured on `background`, `card`, the `muted` panel, `popover` and the `hover`/`active` washes. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. Both clear the body floor with margin in every shipped set, so no value moves; the pairs exist so an edited theme cannot break them silently.";
+      "Default body text is measured on `background`, `card`, the `muted` panel, `popover` and the `hover`/`active`/`accent`/`selected` washes; typed text is `inputForeground` on the `input` fill. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. The row washes are not either: a selectable list row paints `accent` on hover and `selected` when selected, and its title is `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides the `selectedForeground` the row inherits. Every pair clears the body floor with margin in every shipped set, so no value moves; the pairs exist so an edited theme cannot break them silently.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -820,7 +820,9 @@ describe("docs/design-system.md", () => {
 
   it("states the floors the contrast checker enforces", () => {
     const rows = [
-      `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\` and the \`hover\`/\`active\` washes | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| selected row label (\`selectedForeground\` on \`selected\` and, while hovered or pressed, on \`hover\`/\`active\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
@@ -836,7 +838,7 @@ describe("docs/design-system.md", () => {
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
@@ -877,6 +879,8 @@ describe("docs/design-system.md", () => {
       "popover",
       "hover",
       "active",
+      "accent",
+      "selected",
     ]);
     surfaces.forEach((surface) => {
       expect(designSystem.includes(`\`${surface}\``), surface).toBe(true);

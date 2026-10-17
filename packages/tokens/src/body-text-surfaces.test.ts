@@ -11,6 +11,11 @@
  * colour moves. The pairs exist so a brand theme or a copied platform style that
  * darkens its quiet panel or floating surface is caught, and removing either
  * surface from the list makes the matching regression below fail.
+ *
+ * Plan 312 extends the same role to the row washes: a selected list row's title
+ * is `foreground` on `selected` (`ListItemTitle` overrides the row's inherited
+ * `selectedForeground`) and a hovered selectable row paints `foreground` on
+ * `accent`.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -53,6 +58,8 @@ describe("default body text surfaces", () => {
       "popover",
       "hover",
       "active",
+      "accent",
+      "selected",
     ]);
   });
 
