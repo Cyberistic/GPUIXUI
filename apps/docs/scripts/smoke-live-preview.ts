@@ -288,8 +288,10 @@ interface PageSurface {
 
 /**
  * Open a docs page, click its live-preview control and read the iframe.
- * The SSR markup ships the control before React attaches its handler, so the
- * click waits for hydration and retries while the iframe boots.
+ * The SSR markup ships the control before React attaches its handler, so a
+ * click can land before hydration and do nothing. The loop therefore keeps
+ * offering the click until the iframe exists — a single click made the check
+ * fail at random on the first page it reached (plan 457 §9).
  */
 const openPageSurface = async (
   session: Session,
@@ -297,23 +299,9 @@ const openPageSurface = async (
 ): Promise<PageSurface> => {
   await session.navigate(page);
   await sleep(2_500);
-  const clicked = await session.evaluate(`(async () => {
-    for (let attempt = 0; attempt < 80; attempt += 1) {
-      const button = [...document.querySelectorAll("button")].find(
-        (candidate) => candidate.textContent === "Load live preview",
-      );
-      if (button !== undefined) {
-        button.click();
-        return true;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    }
-    return false;
-  })()`);
-  if (clicked !== true) return { state: "no-control" };
-
   const embedded = await session.evaluate(`(async () => {
-    for (let attempt = 0; attempt < 120; attempt += 1) {
+    let sawControl = false;
+    for (let attempt = 0; attempt < 240; attempt += 1) {
       const frame = document.querySelector('iframe[title^="Live GPUix surface"]');
       const state = frame?.contentDocument?.documentElement?.dataset.gpuix;
       if (state === "ready") {
@@ -330,9 +318,16 @@ const openPageSurface = async (
           reason: frame?.contentDocument?.documentElement?.dataset.reason,
         });
       }
+      const button = [...document.querySelectorAll("button")].find(
+        (candidate) => candidate.textContent === "Load live preview",
+      );
+      if (button !== undefined) {
+        sawControl = true;
+        button.click();
+      }
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    return JSON.stringify({ state: "timeout" });
+    return JSON.stringify({ state: sawControl ? "timeout" : "no-control" });
   })()`);
   return JSON.parse(String(embedded)) as PageSurface;
 };
@@ -395,15 +390,11 @@ const main = async (): Promise<number> => {
 
     // The surface working on its own is not the feature: the page must load it
     // on request, with the docs' platform and mode, and the iframe must reach
-    // GPUI. Every scene's page is driven, then the Theming page with the
-    // Windows platform in the URL.
-    const pageScenes = [
-      { slug: "button", scene: "button" },
-      { slug: "tabs", scene: "tabs" },
-      { slug: "dropdown-menu", scene: "dropdown-menu" },
-      { slug: "dialog", scene: "dialog" },
-    ] as const;
-    for (const { slug, scene: key } of pageScenes) {
+    // GPUI. Every scene's page is driven — the slug equals the scene key, which
+    // `scene-contract.test.ts` pins — then the Theming page with the Windows
+    // platform in the URL.
+    for (const scene of LIVE_SCENES) {
+      const slug = scene;
       const componentPage = await openPageSurface(
         session,
         `${baseUrl}/docs/components/${slug}`,
@@ -414,7 +405,7 @@ const main = async (): Promise<number> => {
         );
         return 1;
       }
-      if (!(componentPage.src ?? "").includes(`scene=${key}`)) {
+      if (!(componentPage.src ?? "").includes(`scene=${scene}`)) {
         console.error(
           `FAIL live surface: /docs/components/${slug} lost its scene (${componentPage.src ?? ""})`,
         );
@@ -458,11 +449,12 @@ const main = async (): Promise<number> => {
 };
 
 // A hung CDP command must not keep the command alive forever; the gate reports
-// "could not verify" rather than hanging a release check.
+// "could not verify" rather than hanging a release check. Six scenes and six
+// page loads fit in this budget; the per-iframe wait is up to 60s.
 setTimeout(() => {
-  console.error("smoke: not verified — the check did not finish in 120s");
+  console.error("smoke: not verified — the check did not finish in 240s");
   process.exit(2);
-}, 120_000).unref();
+}, 240_000).unref();
 
 main().then(
   (code) => {

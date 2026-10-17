@@ -11,6 +11,8 @@ export const LIVE_SCENES = [
   "tabs",
   "dropdown-menu",
   "dialog",
+  "popover",
+  "command-menu",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -29,4 +31,6 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   tabs: "Notifications",
   "dropdown-menu": "Duplicate",
   dialog: "Delete this workspace?",
+  popover: "Show columns",
+  "command-menu": "Go to Components",
 };

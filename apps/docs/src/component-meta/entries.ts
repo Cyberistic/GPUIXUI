@@ -936,6 +936,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "yes",
       sourcePath: "packages/components/src/popover.tsx",
       api: ["PopoverProps"],
+      liveScene: "popover",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/popover.test.tsx",
@@ -1006,6 +1007,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/command-menu.tsx",
       api: ["CommandMenuProps"],
+      liveScene: "command-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/command-menu.test.tsx",

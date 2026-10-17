@@ -21,6 +21,10 @@ import {
   DialogTrigger,
 } from "@gpuixui/components/dialog";
 import {
+  CommandMenu,
+  type CommandAction,
+} from "@gpuixui/components/command-menu";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -29,13 +33,18 @@ import {
   DropdownMenuTrigger,
 } from "@gpuixui/components/dropdown-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@gpuixui/components/popover";
+import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@gpuixui/components/tabs";
 import { Box, Button, Stack, Text } from "@gpuixui/primitives";
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import type { LiveScene } from "./scenes";
 
 const ButtonScene = (): ReactElement => (
@@ -146,12 +155,102 @@ const DialogScene = (): ReactElement => (
   </Stack>
 );
 
+const PopoverScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Projects</Text>
+    <Text role="caption" tone="muted">
+      The column chooser opens with the scene, so the real anchored surface is
+      visible without a pointer.
+    </Text>
+    <Popover defaultOpen>
+      <PopoverTrigger variant="secondary">Columns</PopoverTrigger>
+      <PopoverContent side="bottom" align="start">
+        <Stack direction="column" gap="2xs">
+          <Text role="label">Show columns</Text>
+          <Button variant="primary" size="sm" aria-pressed>
+            Name ✓
+          </Button>
+          <Button variant="primary" size="sm" aria-pressed>
+            Owner ✓
+          </Button>
+          <Button variant="ghost" size="sm" aria-pressed={false}>
+            Status ·
+          </Button>
+          <Button variant="ghost" size="sm" aria-pressed={false}>
+            Updated ·
+          </Button>
+        </Stack>
+      </PopoverContent>
+    </Popover>
+  </Stack>
+);
+
+const noop = (): void => undefined;
+
+const commandActions: ReadonlyArray<CommandAction> = [
+  {
+    id: "go-components",
+    label: "Go to Components",
+    group: "Navigation",
+    shortcut: "⌘1",
+    perform: noop,
+  },
+  {
+    id: "go-tokens",
+    label: "Go to Tokens",
+    group: "Navigation",
+    shortcut: "⌘2",
+    perform: noop,
+  },
+  {
+    id: "new-file",
+    label: "New file",
+    group: "File",
+    shortcut: "⌘N",
+    perform: noop,
+  },
+  {
+    id: "save",
+    label: "Save",
+    group: "File",
+    shortcut: "⌘S",
+    perform: noop,
+  },
+  {
+    id: "reset-zoom",
+    label: "Reset zoom",
+    group: "View",
+    disabled: true,
+    perform: noop,
+  },
+];
+
+const CommandMenuScene = (): ReactElement => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Workspace</Text>
+      <Text role="caption" tone="muted">
+        The palette opens with the scene, so the grouped commands and their
+        shortcuts are visible without a pointer.
+      </Text>
+      <CommandMenu
+        open={open}
+        onOpenChange={setOpen}
+        actions={commandActions}
+      />
+    </Stack>
+  );
+};
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
     tabs: TabsScene,
     "dropdown-menu": DropdownMenuScene,
     dialog: DialogScene,
+    popover: PopoverScene,
+    "command-menu": CommandMenuScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

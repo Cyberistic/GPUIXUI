@@ -22,6 +22,8 @@ const interactionScenes = new Map([
   ["tabs", "tabs"],
   ["dropdown-menu", "dropdown-menu"],
   ["dialog", "dialog"],
+  ["popover", "popover"],
+  ["command-menu", "command-menu"],
 ]);
 
 describe("live scene table", () => {
@@ -53,6 +55,15 @@ describe("interaction records", () => {
         ? []
         : [`${slug}: ${record?.liveScene}`];
     });
+    expect(wrong).toEqual([]);
+  });
+
+  it("use the scene key as the page slug the smoke derives", () => {
+    const wrong = components.flatMap((entry) =>
+      entry.liveScene === null || entry.liveScene === entry.slug
+        ? []
+        : [`${entry.slug}: ${entry.liveScene}`],
+    );
     expect(wrong).toEqual([]);
   });
 });

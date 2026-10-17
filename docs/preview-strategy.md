@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Popovers, Command menus); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -34,8 +34,9 @@ reader can interact with without leaving the page. It is not evidence that the
 desktop binary, the native window or the published native binding works — that
 is tier N/S/V. A live scene is built from the real package code:
 `@gpuixui/primitives` (Button) and `@gpuixui/components` (Tabs, Dropdown menu,
-Dialog). An interactive scene opens in the state it documents — the menu and the
-dialog start open — so the surface proves the real composition without a pointer.
+Dialog, Popover, Command menu). An interactive scene opens in the state it
+documents — a menu, a dialog, a popover or the command palette starts open — so
+the surface proves the real composition without a pointer.
 `smoke:preview` proves every scene's text reached GPUI's tree in headless Chrome.
 Its output is a canvas, so browser assistive technology cannot read it: the
 page's accessibility notes and source remain the accessible description, and the
@@ -184,5 +185,10 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. Four scenes ship today — Button, Tabs, Dropdown menu and Dialog —
-  chosen because an interaction is exactly what a static preview cannot show.
+  blank frame. Six scenes ship today — Button, Tabs, Dropdown menu, Dialog,
+  Popover and Command menu — chosen because an interaction is exactly what a
+  static preview cannot show. Two more interaction records cannot open without a
+  pointer yet, so they stay at their native tier until the component exposes the
+  missing prop: `ContextMenu` paints at its internal `{ x: 0, y: 0 }` point with
+  no prop to set it, and `DatePicker` owns its open state with no `defaultOpen`.
+  Both asks are recorded in `TODO.md`; a scene is never faked.

@@ -481,7 +481,8 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` The component index finds what the registry proves (plan 454) — the filter matches documented props types and limitations, and the built-site smoke queries a component's prose so a production index that lost the component pages fails the gate
 `[x]` **Live GPUix surface previews (plan 455)** — the published 0.10.0 wasm renderer runs the real Button scene behind a labelled click-to-load iframe on the Buttons and Theming pages; the native tier stays beneath it, `smoke:preview` proves the scene reaches GPUI's tree in headless Chrome (real time), the page wiring, and that `?platform=win32` reaches the renderer
 `[x]` Live scenes for the rest of the delivered components — one per interaction record first (Tabs, Dropdown menu, Dialog), each with its own `LIVE_SCENES` key, a real composition and a smoke assertion; the tier-A list and the components' platform-styled previews stay as they are — plan 456: four scenes with a JSX-free expectation table, the per-page iframe check, and a readiness probe for the renderer's window handle
-`[ ]` More live scenes once each has a real composition: Command menu, Context menu, Popover, Date picker. Each is a key, an expectation, a view and a page record; `scene-contract.test.ts` and `smoke:preview` already cover the wiring
+`[x]` Live scenes for Popover and Command menu (plan 457) — six scenes total; the smoke derives its page URLs from `LIVE_SCENES` and a contract test pins `slug === scene`
+`[ ]` Live scenes for Context menu and Date picker — blocked on the component API: `ContextMenu` needs a `point` prop (its surface is fixed at the internal `{ x: 0, y: 0 }`) and `DatePicker` needs `defaultOpen`; owner: `components`; a scene is never faked
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` A props type name (`ButtonProps`) reaches its component page from search (plan 442)
@@ -541,6 +542,8 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 ## Cross-team tasks raised by the docs-site workstream
 
 `[~]` `[███░░░░░░░]` 6/23
+
+`[ ]` **Components**: expose the two props the remaining live scenes need — `ContextMenu.point` (its surface paints at an internal `{ x: 0, y: 0 }` set only by the trigger's aux click) and `DatePicker.defaultOpen` (it owns its open state). Plans 457 and the preview strategy record why both stay at their native tier until then
 
 `[ ]` **Deploy: confirm the production host serves `/gpuix-preview/`** — the live surface adds a 19.1 MB wasm asset to `apps/docs/public/` (under Workers' 25 MiB per-asset limit). Run `smoke:preview --base-url <deploy>` once the deploy path is verified; owner: packages/deploy, with `docs-site` verifying.
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
