@@ -7,7 +7,16 @@
  */
 
 import { useState } from "react";
-import { Combobox, type ComboboxOption } from "../src/combobox.js";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+  type ComboboxOption,
+  type ComboboxSelection,
+} from "../src/combobox.js";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
@@ -23,6 +32,28 @@ const labels: ReadonlyArray<ComboboxOption> = [
   { value: "vacation", label: "Vacation", description: "Time off" },
   { value: "desk", label: "Desk booking", description: "Workspace" },
 ];
+
+/** One picker composed from the parts; both cards use the same shape. */
+const Picker = ({
+  label,
+  multiple,
+  options,
+  onValueChange,
+}: {
+  readonly label: string;
+  readonly multiple?: boolean;
+  readonly options: ReadonlyArray<ComboboxOption>;
+  readonly onValueChange: (value: ComboboxSelection) => void;
+}) => (
+  <Combobox multiple={multiple} options={options} onValueChange={onValueChange}>
+    <ComboboxTrigger label={label} />
+    <ComboboxContent>
+      <ComboboxInput label={`Search ${label.toLowerCase()}`} />
+      <ComboboxList label={label} />
+      <ComboboxEmpty />
+    </ComboboxContent>
+  </Combobox>
+);
 
 /** Two comboboxes: one value, then several. */
 export const ComboboxExample = () => {
@@ -63,10 +94,9 @@ export const ComboboxExample = () => {
           >
             Assign reviewer
           </text>
-          <Combobox
+          <Picker
             label="Assign reviewer"
             options={reviewers}
-            defaultValue={undefined}
             onValueChange={(value) =>
               setReviewer(typeof value === "string" ? value : null)
             }
@@ -87,7 +117,7 @@ export const ComboboxExample = () => {
           >
             Labels
           </text>
-          <Combobox
+          <Picker
             label="Labels"
             multiple
             options={labels}

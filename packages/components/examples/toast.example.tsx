@@ -49,12 +49,19 @@ const SavePanel = () => {
         </Button>
         <Button
           onClick={() =>
-            toast.push({
-              title: "Draft restored",
-              description: "Undo puts the previous copy back.",
-              tone: "info",
-              duration: Duration.seconds(6),
-            })
+            toast.push(
+              {
+                title: "Draft restored",
+                description: "The previous copy is in the editor.",
+                tone: "info",
+                duration: Duration.seconds(6),
+                action: { label: "Undo" },
+              },
+              {
+                onAction: () =>
+                  toast.push({ title: "Restore undone", tone: "success" }),
+              },
+            )
           }
         >
           Restore draft
@@ -80,7 +87,8 @@ const SavePanel = () => {
           paddingBottom: theme.spacing.lg,
         }}
       >
-        Toasts dismiss themselves; the ✕ cancels one early.
+        Toasts dismiss themselves; the ✕ cancels one early and an action runs
+        before its toast closes.
       </text>
     </Card>
   );

@@ -30,7 +30,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../collapsible.js";
-import { CommandMenu } from "../command-menu.js";
+import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+} from "../command-menu.js";
 import { ConfirmDialog } from "../confirm-dialog.js";
 import {
   ContextMenu,
@@ -41,7 +46,18 @@ import {
 import { EmptyState } from "../empty-state.js";
 import { darkTheme, lightTheme, type Theme } from "../internal/theme.js";
 import { List, ListItem, ListItemTitle } from "../list.js";
+import {
+  MessageScroller,
+  MessageScrollerItem,
+  MessageScrollerJumpToLatest,
+  MessageScrollerViewport,
+} from "../message-scroller.js";
 import { SearchInput } from "../search-input.js";
+import {
+  TimePicker,
+  TimePickerSegment,
+  TimePickerSeparator,
+} from "../time-picker.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -234,6 +250,26 @@ describe("theme matrix", () => {
     );
   });
 
+  it("TimePicker takes its field surface and text from the theme", () => {
+    bothThemes(
+      () => (
+        <TimePicker testId="time" defaultValue="09:30">
+          <TimePickerSegment segment="hours" />
+          <TimePickerSeparator />
+          <TimePickerSegment segment="minutes" />
+        </TimePicker>
+      ),
+      (root, theme) => {
+        expect(root.renderer.findByTestId("time")?.style.backgroundColor).toBe(
+          theme.colors.input,
+        );
+        expect(root.renderer.findByTestId("time-hours")?.style.color).toBe(
+          theme.colors.inputForeground,
+        );
+      },
+    );
+  });
+
   it("ContextMenu takes its surface from the theme", () => {
     bothThemes(
       () => (
@@ -252,6 +288,26 @@ describe("theme matrix", () => {
     );
   });
 
+  it("MessageScroller takes its viewport surface from the theme", () => {
+    bothThemes(
+      () => (
+        <MessageScroller label="Conversation">
+          <MessageScrollerViewport testId="transcript" style={{ height: 80 }}>
+            <MessageScrollerItem>
+              <text>Hello</text>
+            </MessageScrollerItem>
+          </MessageScrollerViewport>
+          <MessageScrollerJumpToLatest />
+        </MessageScroller>
+      ),
+      (root, theme) => {
+        expect(
+          root.renderer.findByTestId("transcript")?.style.backgroundColor,
+        ).toBe(theme.colors.background);
+      },
+    );
+  });
+
   it("CommandMenu takes its dialog surface from the theme", () => {
     bothThemes(
       () => (
@@ -259,7 +315,11 @@ describe("theme matrix", () => {
           open
           onOpenChange={() => undefined}
           actions={[{ id: "save", label: "Save", perform: () => undefined }]}
-        />
+        >
+          <CommandMenuInput />
+          <CommandMenuList />
+          <CommandMenuEmpty />
+        </CommandMenu>
       ),
       (root, theme) => {
         expect(

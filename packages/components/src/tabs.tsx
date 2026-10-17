@@ -14,7 +14,11 @@
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -42,6 +46,13 @@ import {
   isRight,
   isUp,
 } from "./internal/key.js";
+import { useMergedRef } from "./internal/ref.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import {
   controlHeight,
   focusRing,
@@ -118,7 +129,7 @@ const rowAt = (
   Option.flatMap(index, (position) => Arr.get(rows, position));
 
 /** {@link Tabs} props. */
-export interface TabsProps extends Props {
+export interface TabsProps extends Omit<Props, "children"> {
   /** The controlled selected value. `undefined` means uncontrolled. */
   readonly value?: string;
   /** The uncontrolled starting value. Default `""`, no tab selected. */
@@ -128,6 +139,7 @@ export interface TabsProps extends Props {
   readonly orientation?: TabsOrientation;
   /** Default `"automatic"`: moving focus selects. */
   readonly activation?: TabsActivation;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -284,6 +296,8 @@ export const Tabs = ({
     ],
   );
 
+  assertParts(tabsRoot, children);
+
   return (
     <TabsContext.Provider value={context}>
       <div
@@ -304,20 +318,23 @@ export const Tabs = ({
 };
 
 /** {@link TabsList} props: the rail, optionally named for assistive technology. */
-export interface TabsListProps extends Props {
+export interface TabsListProps extends Omit<Props, "children"> {
   /** The tab list's accessible name. */
   readonly label?: string;
+  readonly children?: PartChildren;
 }
 
 /** The row of triggers. Owns the arrow, Home and End keys. */
 export const TabsList = ({
   label,
   onKeyDown,
+  children,
   style,
   ...rest
 }: TabsListProps) => {
   const theme = useTheme();
   const { orientation, moveBy, jumpTo, selectActive } = useTabsContext();
+  assertParts(tabsList, children);
 
   const direction = (event: EventPayload): Option.Option<1 | -1> =>
     orientation === "horizontal"
@@ -369,15 +386,30 @@ export const TabsList = ({
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
 /** {@link TabsTrigger} props. */
-export interface TabsTriggerProps extends Props {
+export interface TabsTriggerProps extends Omit<Props, "style"> {
   /** The value this trigger selects. Must match a {@link TabsContent}. */
   readonly value: string;
   readonly disabled?: boolean;
+  /** A style, or a function of the trigger's state. */
+  readonly style?: StateStyle<TabsTriggerState>;
+}
+
+/** What a trigger draws: its selection, input state and axis. */
+export interface TabsTriggerState {
+  /** Selected (`aria-selected`). */
+  readonly active: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  /** The tab the last arrow/Home/End gesture landed on. */
+  readonly highlighted: boolean;
+  readonly orientation: TabsOrientation;
 }
 
 /** One tab. Focusable only when selected, or when the selection is disabled. */
@@ -386,11 +418,21 @@ export const TabsTrigger = ({
   disabled = false,
   onClick,
   onFocus,
+  onBlur,
   style,
+  ref,
   ...rest
 }: TabsTriggerProps) => {
   const theme = useTheme();
-  const { selected, tabbable, register, select, noteFocus } = useTabsContext();
+  const {
+    selected,
+    active,
+    orientation,
+    tabbable,
+    register,
+    select,
+    noteFocus,
+  } = useTabsContext();
   const [focused, setFocused] = useState(false);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
@@ -399,6 +441,7 @@ export const TabsTrigger = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
     if (instance === undefined) return;
@@ -407,20 +450,30 @@ export const TabsTrigger = ({
 
   const isSelected = selected === value;
   const isTabbable = Option.contains(tabbable, value);
+  const state: TabsTriggerState = {
+    active: isSelected,
+    disabled,
+    focused,
+    highlighted: Option.contains(active, value),
+    orientation,
+  };
 
   return (
     <div
       role="tab"
       aria-selected={isSelected}
       {...rest}
-      ref={attach}
+      ref={setElement}
       tabIndex={disabled ? -1 : isTabbable ? 0 : -1}
       onFocus={(event) => {
         noteFocus(value);
         setFocused(true);
         onFocus?.(event);
       }}
-      onBlur={() => setFocused(false)}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
       onClick={
         disabled
           ? undefined
@@ -456,7 +509,7 @@ export const TabsTrigger = ({
               },
           ...(focused ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     />
   );
@@ -490,6 +543,28 @@ export const TabsContent = ({ value, style, ...rest }: TabsContentProps) => {
       )}
     />
   );
+};
+
+/** Every part of Tabs, so a misplaced sibling is named. */
+const tabsParts: ReadonlyArray<PartComponent> = [
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+];
+
+const tabsRoot: PartsContract = {
+  parent: "Tabs",
+  family: tabsParts,
+  accepts: [TabsList, TabsContent],
+  hint: "Put TabsList and TabsContent directly inside Tabs.",
+};
+
+const tabsList: PartsContract = {
+  parent: "TabsList",
+  family: tabsParts,
+  accepts: [TabsTrigger],
+  hint: "Put TabsTrigger directly inside TabsList; put TabsContent beside it.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

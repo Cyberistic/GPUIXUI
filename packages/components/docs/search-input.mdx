@@ -63,6 +63,16 @@ The container paints `colors.background`, a `borderWidth.thin` border in
 `colors.accent` hover. Focus draws the zero-blur `colors.ring` ring, because
 0.10.0 has no `outline`.
 
+## Style by state
+
+`SearchInput.style` takes a `StyleDesc` or a function of `SearchInputState`
+(`{ disabled, focused }`); the style is applied to the field surface, not the
+inner `<input>`.
+
+```tsx
+<SearchInput style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })} />
+```
+
 ## Accessibility and limitations
 
 - The input carries the caller's `aria-label` (or the field's label); the clear
@@ -76,10 +86,13 @@ The container paints `colors.background`, a `borderWidth.thin` border in
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (6 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (7 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
-text, clearing and returning focus, Enter submitting, Escape clearing once, and
-the controlled contract.
+text, clearing and returning focus, Enter submitting, Escape clearing once, the
+controlled contract, and a caller `ref` composed with the internal one.
+
+The field merges its own focus ref with the caller's, so `ref` receives the same
+`<input>` instance that clearing focuses.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

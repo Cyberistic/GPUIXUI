@@ -4,7 +4,8 @@
  * The menu is uncontrolled — it remembers whether it is open — while the
  * "Show hidden" checkbox is app state, because the row behind the menu shows the
  * effect. A menu action is an ordinary callback: the component does not own what
- * "Delete" means.
+ * "Delete" means. Keyboard opens (`Enter`, `ArrowDown`, `ArrowUp`) land on the
+ * first/last action.
  */
 
 import { useState } from "react";
@@ -15,6 +16,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../src/dropdown-menu.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
@@ -72,6 +76,20 @@ export const DropdownMenuExample = () => {
             >
               Show hidden files
             </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent label="Share">
+                <DropdownMenuItem onSelect={() => setLastAction("Copy link")}>
+                  Copy link
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setLastAction("Email a link")}
+                >
+                  Email a link
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               tone="destructive"

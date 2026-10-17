@@ -1,0 +1,121 @@
+---
+title: Mention input
+description: `@name` autocompletion in a text field.
+---
+
+`MentionInput` opens a ranked suggestion list when the text contains an open
+`@` token and inserts the chosen name. The token rules are pure
+(`src/mention/logic.ts`); the field owns the text and the highlight, and the
+consumer declares the candidate `MentionInputItem`s.
+
+## Usage
+
+```tsx
+import {
+  MentionInput,
+  MentionInputItem,
+  MentionInputList,
+} from "@gpuixui/components";
+
+<MentionInput
+  label="Comment"
+  value={comment}
+  onValueChange={setComment}
+  onMention={(name) => notify(name)}
+>
+  <MentionInputList>
+    {people.map((person) => (
+      <MentionInputItem key={person} value={person} />
+    ))}
+  </MentionInputList>
+</MentionInput>;
+```
+
+The runnable build is `examples/mention-input.example.tsx`, which the native
+playground mounts.
+
+## Token rules
+
+| Text | Result |
+| ---- | ------ |
+| `"@"` | opens with an empty query |
+| `"hi @"` | opens with an empty query |
+| `"hi @an"` | query `"an"` |
+| `"email@example"` | no mention (no whitespace before `@`) |
+| `"@a b"` | no mention (whitespace ends the token) |
+| `"@a @b"` | the last token |
+
+Ranking is case-insensitive: **prefix matches first**, then substring matches,
+each in declaration order, capped by `maxVisible` (default 6). Insertion
+replaces the `@query` token with `@value` plus one space, and reports both
+`onValueChange` and `onMention`.
+
+## Key and pointer behaviour
+
+| Action | Result |
+| ------ | ------ |
+| `ArrowDown` / `ArrowUp` | moves the highlight, wrapping |
+| `Enter` | inserts the highlighted name (arrives as the input's submit event) |
+| Press a row | inserts that name |
+| `Escape` | closes the list, text unchanged |
+| Typing a query with no matches | closes the list |
+| `Tab` | not claimed: the platform moves focus out of the field |
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `MentionInput` | a `role="group"` field wrapping a real `<input>` | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, `onMention?`, `maxVisible?`, `disabled?`, children |
+| `MentionInputList` | anchored suggestion surface, labelled "Mentions" | children (`MentionInputItem`s) |
+| `MentionInputItem` | a selected button row | `value` (required), `label?` (defaults to `@value`), `style?` |
+
+The list renders nothing while there is no query or no match.
+
+## Theming
+
+The field uses `background`, `border`, `radius.md`, `controlHeight(theme, "md")`
+and `focusRing`; the list uses `popover`, `border` and `radius.md`; the
+highlighted row uses `accent`/`accentForeground`. A custom theme changes both —
+see [Theming](/docs/theming).
+
+## Accessibility
+
+- The field is a real input named by `label`, so typing, selection and focus are
+  native.
+- Suggestion rows are buttons with `aria-selected` on the highlighted one; the
+  surface is a named group.
+- `role="listbox"` and `role="option"` are **dropped** by
+  `@gpuix/native@0.10.0`'s accessibility dump (measured), so the list is not
+  announced as a listbox. There is no `aria-activedescendant` either.
+- Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` can pick a row; the
+  input's `Tab` behaviour is the platform's.
+
+## Limitations
+
+- **The query comes from the text, not the caret.** `0.10.0` exposes no caret
+  position, so the component assumes typing at the end. Mid-string editing is not
+  supported; an `@` inside a word is deliberately ignored.
+- **A space typed while the list is open is consumed by the runtime** before the
+  field sees it (measured in the test renderer). Escape or picking a row closes
+  the list; there is no "type a space to dismiss" path.
+- No async or remote candidates — the items you declare are the candidate set.
+- No `role="listbox"`/`option` in the dump, no `aria-activedescendant`.
+- Fixed `"Mentions"` label for the surface.
+
+## Verification
+
+`src/mention/logic.test.ts` (12 pure tests) covers query detection, replacement
+and ranking. `src/behaviour/mention-input.test.tsx` (9 native tests) covers
+opening, narrowing, arrow movement, Enter insertion, row presses, Escape,
+no-match closing, the two callbacks firing once, and a disabled field.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Combobox** — choose from options without typing a token.
+- **Tag input** — free-form tokens, no suggestions.
+- **Text inputs** — the field this builds on.

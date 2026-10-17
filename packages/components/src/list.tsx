@@ -1,10 +1,11 @@
 /**
- * List and ListItem: a vertical collection of rows, optionally single-selectable
- * with a roving tab stop.
+ * List and ListItem: a vertical collection of rows, optionally single- or
+ * multi-selectable with a roving tab stop.
  *
  * This is the keyboard and selection foundation the menus and tabs reuse: the
  * item registry `internal/collection.ts` is shared, and the navigation rules live
- * there rather than here.
+ * there rather than here. The multiple-selection arithmetic lives in
+ * `list/selection.ts` for the same reason.
  *
  * Two measured facts shape the implementation (probe, 2026-10-17):
  *
@@ -16,7 +17,11 @@
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -35,31 +40,48 @@ import {
   nextEnabled,
   type CollectionItem,
 } from "./internal/collection.js";
-import { useControllableState } from "./internal/controllable.js";
-import { isActivation, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import { useMergedRef } from "./internal/ref.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import {
+  isActivation,
+  isDown,
+  isEnter,
+  isFirst,
+  isLast,
+  isSelectAll,
+  isUp,
+  typedChar,
+} from "./internal/key.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
+import { useTypeahead } from "./internal/typeahead.js";
+import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 
 /** Whether the list only presents rows, or also tracks a selection. */
-export type ListSelectionMode = "none" | "single";
+export type ListSelectionMode = "none" | "single" | "multiple";
 
-/** One registered row: its value, whether it accepts input, and its native id. */
+/** One registered row: its value, whether it accepts input, its native id, and
+ *  the text type-ahead searches. */
 interface Row {
   readonly value: string;
   readonly disabled: boolean;
   readonly nativeId: number;
+  readonly label: string;
 }
 
 /** The rules a {@link ListItem} follows; throws when there is no list above it. */
 interface ListContextValue {
   readonly selectable: boolean;
   readonly dense: boolean;
-  readonly selected: string;
+  readonly selected: ReadonlyArray<string>;
   readonly active: Option.Option<string>;
   readonly tabbable: Option.Option<string>;
-  /** Select `value` if it is enabled. */
-  readonly select: (value: string) => void;
   /** Focus and select `value` if it is enabled — what a click does. */
-  readonly activate: (value: string) => void;
+  readonly activate: (value: string, event: EventPayload) => void;
   /** Note that `value` now holds focus, so keys move on from it. */
   readonly noteFocus: (value: string) => void;
   /** Register a row; returns the unregister function. */
@@ -88,7 +110,9 @@ const upsert = (rows: ReadonlyArray<Row>, row: Row): ReadonlyArray<Row> =>
       // that registration would otherwise trigger.
       onNone: () => Arr.append(rows, row),
       onSome: (current) =>
-        current.disabled === row.disabled && current.nativeId === row.nativeId
+        current.disabled === row.disabled &&
+        current.nativeId === row.nativeId &&
+        current.label === row.label
           ? rows
           : Arr.map(rows, (candidate) =>
               candidate.value === row.value ? row : candidate,
@@ -117,20 +141,29 @@ const rowAt = (
   Option.flatMap(index, (position) => Arr.get(rows, position));
 
 /**
- * Which row owns the tab stop: the active row, else the selected one, else the
- * first row that accepts input. Exactly one row is tabbable, which is what makes
- * a list a single stop rather than one stop per row.
+ * Which row owns the tab stop: the active row, else the first selected one in
+ * declaration order, else the first row that accepts input. Exactly one row is
+ * tabbable, which is what makes a list a single stop rather than one stop per
+ * row.
  */
 const tabbableValue = (
   rows: ReadonlyArray<Row>,
   active: Option.Option<string>,
-  selected: string,
+  selected: ReadonlyArray<string>,
   selectable: boolean,
 ): Option.Option<string> =>
   pipe(
     active,
     Option.orElse(() =>
-      selectable && selected !== "" ? Option.some(selected) : Option.none(),
+      selectable
+        ? Option.map(
+            Arr.findFirst(
+              rows,
+              (row) => !row.disabled && Arr.contains(row.value)(selected),
+            ),
+            (row) => row.value,
+          )
+        : Option.none(),
     ),
     Option.orElse(() =>
       Option.map(
@@ -140,44 +173,134 @@ const tabbableValue = (
     ),
   );
 
-/** {@link List} props. */
-export interface ListProps extends Props {
-  /** Default `"none"`: rows are presented, nothing is selectable. */
-  readonly selectionMode?: ListSelectionMode;
-  /** The controlled selected value. */
-  readonly value?: string;
-  readonly defaultValue?: string;
-  readonly onValueChange?: (value: string) => void;
+/**
+ * The public value in one internal shape: zero or more selected values.
+ * `undefined` is React's controlled/uncontrolled discriminator, so it is
+ * converted to `Option` at the call site rather than leaking further.
+ */
+const controlledValues = (
+  props: ListProps,
+): ReadonlyArray<string> | undefined =>
+  Match.value(props).pipe(
+    Match.when({ selectionMode: "multiple" }, (p) => p.value),
+    Match.when({ selectionMode: "single" }, (p) =>
+      Option.getOrUndefined(Option.map(Option.fromNullishOr(p.value), Arr.of)),
+    ),
+    Match.orElse(() => undefined),
+  );
+
+/** The public initial value in the same internal shape. */
+const initialValues = (props: ListProps): ReadonlyArray<string> =>
+  Match.value(props).pipe(
+    Match.when({ selectionMode: "multiple" }, (p) => p.defaultValue ?? []),
+    Match.when({ selectionMode: "single" }, (p) =>
+      Option.match(Option.fromNullishOr(p.defaultValue), {
+        onNone: () => Arr.empty<string>(),
+        onSome: (value) => (value === "" ? Arr.empty<string>() : Arr.of(value)),
+      }),
+    ),
+    Match.orElse(() => Arr.empty<string>()),
+  );
+
+/** Report an internal selection in the shape the current mode promises. */
+const report = (props: ListProps, next: ReadonlyArray<string>): void =>
+  Match.value(props).pipe(
+    Match.when({ selectionMode: "multiple" }, (p) => p.onValueChange?.(next)),
+    Match.when({ selectionMode: "single" }, (p) =>
+      p.onValueChange?.(next[0] ?? ""),
+    ),
+    Match.orElse(() => undefined),
+  );
+
+/** The props shared by every selection mode. */
+interface ListBaseProps extends Omit<Props, "children"> {
   /** Row height `rowHeight` instead of `rowHeight + spacing.md`. */
   readonly dense?: boolean;
+  readonly children?: PartChildren;
 }
+
+/** The modes that can run a row action. */
+interface Activatable {
+  /**
+   * Run the row's action: `Enter` on the active row, a double click in single
+   * mode, or a click with no selection mode. Disabled rows never activate. A
+   * multiple-selection list has no activation.
+   */
+  readonly onActivate?: (value: string) => void;
+}
+
+/** {@link List} props: the value shape follows the selection mode. */
+export type ListProps =
+  | (ListBaseProps &
+      Activatable & {
+        readonly selectionMode?: "none";
+        readonly value?: never;
+        readonly defaultValue?: never;
+        readonly onValueChange?: never;
+      })
+  | (ListBaseProps &
+      Activatable & {
+        readonly selectionMode: "single";
+        readonly value?: string;
+        readonly defaultValue?: string;
+        readonly onValueChange?: (value: string) => void;
+      })
+  | (ListBaseProps & {
+      readonly selectionMode: "multiple";
+      /** A multiple list toggles rows; it has no activation action. */
+      readonly onActivate?: never;
+      readonly value?: ReadonlyArray<string>;
+      readonly defaultValue?: ReadonlyArray<string>;
+      readonly onValueChange?: (values: ReadonlyArray<string>) => void;
+    });
 
 /**
  * A vertical list of rows. With `selectionMode="single"` it is a `listbox`: arrow
  * keys move a roving tab stop, Home/End jump, Enter/Space select, and a click
- * selects the row it lands on. A disabled row is skipped by every path.
+ * selects the row it lands on. `selectionMode="multiple"` keeps that keyboard
+ * model and adds the desktop modifiers: a plain click selects one row, Cmd/Ctrl
+ * toggles, Shift extends the range from the anchor, and Shift+Arrow extends from
+ * the keyboard. A disabled row is skipped by every path. A single or
+ * `selectionMode="none"` list may also pass `onActivate` to run a row action.
  */
-export const List = ({
-  selectionMode = "none",
-  value,
-  defaultValue = "",
-  onValueChange,
-  dense = false,
-  onKeyDown,
-  style,
-  ...rest
-}: ListProps) => {
+export const List = (props: ListProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
-  const selectable = selectionMode === "single";
+  // The four selection props are read through `props` so the mode narrows them;
+  // this destructure only strips them from the host props.
+  const {
+    selectionMode: _selectionMode,
+    value: _value,
+    defaultValue: _defaultValue,
+    onValueChange: _onValueChange,
+    onActivate,
+    dense = false,
+    onKeyDown,
+    children,
+    style,
+    ...rest
+  } = props;
+  const selectionMode = props.selectionMode ?? "none";
+  const selectable = selectionMode !== "none";
+  const multiple = selectionMode === "multiple";
 
-  const [selected, setSelected] = useControllableState({
-    value,
-    defaultValue,
-    onChange: onValueChange,
-  });
+  const controlled = Option.fromNullishOr(controlledValues(props));
+  const [uncontrolled, setUncontrolled] = useState<ReadonlyArray<string>>(() =>
+    initialValues(props),
+  );
+  const selected = Option.getOrElse(controlled, () => uncontrolled);
+  const [anchor, setAnchor] = useState<Option.Option<string>>(Option.none());
   const [active, setActive] = useState<Option.Option<string>>(Option.none());
   const [rows, setRows] = useState<ReadonlyArray<Row>>([]);
+
+  const commit = useCallback(
+    (next: ReadonlyArray<string>) => {
+      if (sameValues(next, selected)) return;
+      if (Option.isNone(controlled)) setUncontrolled(next);
+      report(props, next);
+    },
+    [controlled, props, selected],
+  );
 
   const register = useCallback(
     (row: Row) => {
@@ -206,14 +329,34 @@ export const List = ({
     setActive(Option.some(value));
   }, []);
 
+  /**
+   * Move focus one enabled row. A plain move re-anchors; a Shift move in
+   * multiple mode selects the range from the anchor to the row it reached.
+   */
   const moveBy = useCallback(
-    (delta: 1 | -1) => {
+    (delta: 1 | -1, extend: boolean) => {
       pipe(
         rowAt(rows, nextEnabled(items(rows), indexOf(rows, active), delta)),
-        Option.match({ onNone: () => undefined, onSome: focusRow }),
+        Option.match({
+          onNone: () => undefined,
+          onSome: (row) => {
+            focusRow(row);
+            if (!extend || !multiple) {
+              setAnchor(Option.some(row.value));
+              return;
+            }
+            commit(
+              range(
+                rows,
+                Option.getOrElse(anchor, () => row.value),
+                row.value,
+              ),
+            );
+          },
+        }),
       );
     },
-    [active, focusRow, rows],
+    [active, anchor, commit, focusRow, multiple, rows],
   );
 
   const jumpTo = useCallback(
@@ -222,7 +365,13 @@ export const List = ({
         edge === "first" ? firstEnabled(items(rows)) : lastEnabled(items(rows));
       pipe(
         rowAt(rows, index),
-        Option.match({ onNone: () => undefined, onSome: focusRow }),
+        Option.match({
+          onNone: () => undefined,
+          onSome: (row) => {
+            focusRow(row);
+            setAnchor(Option.some(row.value));
+          },
+        }),
       );
     },
     [focusRow, rows],
@@ -238,33 +387,72 @@ export const List = ({
     [rows],
   );
 
+  /** The keyboard activation: select one, or toggle one in multiple mode. */
   const select = useCallback(
     (target: string) => {
       pipe(
         enabledRow(target),
         Option.match({
           onNone: () => undefined,
-          onSome: (row) => setSelected(row.value),
+          onSome: (row) => {
+            setAnchor(Option.some(row.value));
+            commit(multiple ? toggle(selected, row.value) : Arr.of(row.value));
+          },
         }),
       );
     },
-    [enabledRow, setSelected],
+    [commit, enabledRow, multiple, selected],
   );
 
+  /**
+   * A click: focus the row, then apply the pointer contract. In multiple mode
+   * Cmd/Ctrl toggles and Shift takes the range from the anchor; a plain click
+   * replaces the selection, the desktop file-list convention.
+   */
   const activate = useCallback(
-    (target: string) => {
+    (target: string, event: EventPayload) => {
       pipe(
         enabledRow(target),
         Option.match({
           onNone: () => undefined,
           onSome: (row) => {
             focusRow(row);
-            if (selectable) select(target);
+            if (!selectable) {
+              onActivate?.(row.value);
+              return;
+            }
+            const extend = multiple && event.modifiers?.shift === true;
+            const additive =
+              multiple &&
+              (event.modifiers?.cmd === true || event.modifiers?.ctrl === true);
+            if (extend) {
+              commit(
+                range(
+                  rows,
+                  Option.getOrElse(anchor, () => row.value),
+                  row.value,
+                ),
+              );
+              return;
+            }
+            setAnchor(Option.some(row.value));
+            commit(additive ? toggle(selected, row.value) : Arr.of(row.value));
+            if (!multiple) onActivate?.(row.value);
           },
         }),
       );
     },
-    [enabledRow, focusRow, select, selectable],
+    [
+      anchor,
+      commit,
+      enabledRow,
+      focusRow,
+      multiple,
+      onActivate,
+      rows,
+      selectable,
+      selected,
+    ],
   );
 
   const selectActive = useCallback(() => {
@@ -277,15 +465,61 @@ export const List = ({
     );
   }, [active, select]);
 
+  /** Run the active row's action; a disabled or missing row does nothing. */
+  const activateActive = useCallback(() => {
+    pipe(
+      Option.flatMap(active, enabledRow),
+      Option.match({
+        onNone: () => undefined,
+        onSome: (row) => onActivate?.(row.value),
+      }),
+    );
+  }, [active, enabledRow, onActivate]);
+
+  /** Cmd/Ctrl+A: select every enabled row and anchor at the first of them. */
+  const selectEveryRow = useCallback(() => {
+    if (!multiple) return;
+    const next = selectAll(rows);
+    pipe(
+      Arr.head(next),
+      Option.match({
+        onNone: () => undefined,
+        onSome: (value) => setAnchor(Option.some(value)),
+      }),
+    );
+    commit(next);
+  }, [commit, multiple, rows]);
+
+  const typeahead = useTypeahead(rows, indexOf(rows, active), (row) => {
+    focusRow(row);
+    // A typed jump re-anchors, exactly like an arrow move, so a following
+    // Shift+click extends from the row the user reached.
+    setAnchor(Option.some(row.value));
+  });
+
   const handleKeyDown = (event: EventPayload): void => {
     if (!selectable) return;
-    Match.value(event).pipe(
-      Match.when(isActivation, selectActive),
-      Match.when(isDown, () => moveBy(1)),
-      Match.when(isUp, () => moveBy(-1)),
-      Match.when(isFirst, () => jumpTo("first")),
-      Match.when(isLast, () => jumpTo("last")),
-      Match.orElse(() => undefined),
+    const extend = multiple && event.modifiers?.shift === true;
+    pipe(
+      typedChar(event),
+      Option.match({
+        // A typed letter jumps to a row; it never also runs a named-key rule.
+        onSome: typeahead,
+        onNone: () =>
+          Match.value(event).pipe(
+            Match.when(isEnter, () => {
+              if (selectable) selectActive();
+              activateActive();
+            }),
+            Match.when(isActivation, selectActive),
+            Match.when(isSelectAll, selectEveryRow),
+            Match.when(isDown, () => moveBy(1, extend)),
+            Match.when(isUp, () => moveBy(-1, extend)),
+            Match.when(isFirst, () => jumpTo("first")),
+            Match.when(isLast, () => jumpTo("last")),
+            Match.orElse(() => undefined),
+          ),
+      }),
     );
   };
 
@@ -296,23 +530,14 @@ export const List = ({
       selected,
       active,
       tabbable: tabbableValue(rows, active, selected, selectable),
-      select,
       activate,
       noteFocus,
       register,
     }),
-    [
-      activate,
-      active,
-      dense,
-      noteFocus,
-      register,
-      rows,
-      select,
-      selectable,
-      selected,
-    ],
+    [activate, active, dense, noteFocus, register, rows, selectable, selected],
   );
+
+  assertParts(listRoot, children);
 
   return (
     <ListContext.Provider value={context}>
@@ -331,33 +556,55 @@ export const List = ({
           },
           style,
         )}
-      />
+      >
+        {children}
+      </div>
     </ListContext.Provider>
   );
 };
 
 /** {@link ListItem} props. */
-export interface ListItemProps extends Props {
+export interface ListItemProps extends Omit<Props, "children" | "style"> {
   /** Stable id, and the value a selection reports. */
   readonly value: string;
+  /**
+   * The text type-ahead matches. Rows are composed from {@link ListItemTitle}
+   * and {@link ListItemDescription}, so the list cannot read the text off
+   * `children`; omit this and the row is skipped by type-ahead.
+   */
+  readonly textValue?: string;
   /** Skipped by the arrow keys and by clicks. */
   readonly disabled?: boolean;
   /** Slot before the text: an avatar, an icon. */
   readonly leading?: ReactNode;
   /** Slot after the text: a badge, a shortcut. */
   readonly trailing?: ReactNode;
+  readonly children?: PartChildren;
+  /** A style, or a function of the row's state. */
+  readonly style?: StateStyle<ListItemState>;
+}
+
+/** What a row draws: the roving focus, the selection and input state. */
+export interface ListItemState {
+  /** The row the list's roving focus is on. */
+  readonly active: boolean;
+  readonly disabled: boolean;
+  readonly selected: boolean;
 }
 
 /** One row of a {@link List}. Its text parts are {@link ListItemTitle} and
  *  {@link ListItemDescription}. */
 export const ListItem = ({
   value,
+  textValue,
   disabled = false,
   leading,
   trailing,
   children,
   onFocus,
+  onClick,
   style,
+  ref,
   ...rest
 }: ListItemProps) => {
   const theme = useTheme();
@@ -381,33 +628,52 @@ export const ListItem = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
     // Registration needs the native id, which only exists after the element is
     // committed; `instance` is state, so this effect re-runs once it arrives.
     if (instance === undefined) return;
-    return register({ value, disabled, nativeId: instance.id });
-  }, [disabled, instance, register, value]);
+    return register({
+      value,
+      disabled,
+      nativeId: instance.id,
+      label: textValue ?? "",
+    });
+  }, [disabled, instance, register, textValue, value]);
 
-  const isSelected = selectable && selected === value;
+  const isSelected = selectable && Arr.contains(value)(selected);
   const isActive = Option.exists(active, (candidate) => candidate === value);
   const isTabbable = Option.exists(
     tabbable,
     (candidate) => candidate === value,
   );
+  const state: ListItemState = {
+    active: isActive,
+    disabled,
+    selected: isSelected,
+  };
+  assertParts(listItem, children);
 
   return (
     <div
       role={selectable ? "option" : "listitem"}
       {...(selectable ? { "aria-selected": isSelected } : {})}
       {...rest}
-      ref={attach}
+      ref={setElement}
       tabIndex={selectable ? (isTabbable ? 0 : -1) : undefined}
       onFocus={(event) => {
         noteFocus(value);
         onFocus?.(event);
       }}
-      onClick={disabled ? undefined : () => activate(value)}
+      onClick={
+        disabled
+          ? undefined
+          : (event) => {
+              onClick?.(event);
+              activate(value, event);
+            }
+      }
       style={mergeStyles(
         {
           display: "flex",
@@ -438,7 +704,7 @@ export const ListItem = ({
           // the active one, keyboard or click.
           ...(isActive ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     >
       {leading === undefined ? null : (
@@ -512,6 +778,28 @@ export const ListItemDescription = ({ style, ...rest }: Props) => {
   );
 };
 
+/** Every part of List, so a misplaced sibling is named. */
+const listParts: ReadonlyArray<PartComponent> = [
+  List,
+  ListItem,
+  ListItemTitle,
+  ListItemDescription,
+];
+
+const listRoot: PartsContract = {
+  parent: "List",
+  family: listParts,
+  accepts: [ListItem],
+  hint: "Put ListItem rows directly inside List.",
+};
+
+const listItem: PartsContract = {
+  parent: "ListItem",
+  family: listParts,
+  accepts: [ListItemTitle, ListItemDescription],
+  hint: "Put ListItemTitle and ListItemDescription directly inside ListItem.",
+};
+
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const listMeta = {
   name: "Lists / list items",
@@ -519,7 +807,10 @@ export const listMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "single selection only: no multi-select, no typeahead, no drag reorder",
+    "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
+    "type-ahead matches an explicit ListItem textValue, not rendered children",
+    "activation is a callback on single/none lists: no href or link role, and a multiple list has no activation",
+    "no drag reorder or virtualisation",
   ],
   docs: "docs/list.mdx",
   example: "examples/list.example.tsx",

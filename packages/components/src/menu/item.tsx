@@ -10,8 +10,13 @@
  */
 
 import type { Props, PublicInstance } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import {
   useCallback,
   useLayoutEffect,
@@ -20,13 +25,20 @@ import {
   type ReactNode,
 } from "react";
 import { controlHeight, textStyle, useTheme } from "../internal/theme.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "../internal/parts.js";
+import { useMergedRef } from "../internal/ref.js";
 import { useMenuContext } from "./state.js";
 
 /** How much emphasis a row carries. `destructive` asks before it is used. */
 export type MenuItemTone = "default" | "destructive";
 
 /** {@link MenuItem} props. */
-export interface MenuItemProps extends Props {
+export interface MenuItemProps extends Omit<Props, "style"> {
   /** Runs on click or Enter/Space, then closes the menu. */
   readonly onSelect?: () => void;
   readonly disabled?: boolean;
@@ -37,10 +49,25 @@ export interface MenuItemProps extends Props {
   /** Slot after the label: a shortcut. */
   readonly trailing?: ReactNode;
   /**
+   * The text type-ahead matches when `children` is not a plain string (for
+   * example a label with a badge beside it). A row whose text cannot be derived
+   * is not searched.
+   */
+  readonly textValue?: string;
+  /**
    * Whether activating the row closes the menu. Default `true`; a checkbox row
    * sets `false`, because toggling several settings in one visit is the point.
    */
   readonly closeOnSelect?: boolean;
+  /** A style, or a function of the row's state. */
+  readonly style?: StateStyle<MenuItemState>;
+}
+
+/** What a row draws: the menu highlight and its input state. */
+export interface MenuItemState {
+  readonly disabled: boolean;
+  /** The row the menu's highlight is on (the highlight is real focus). */
+  readonly highlighted: boolean;
 }
 
 /** The row's own look, shared by actions, checkbox rows and the Command menu. */
@@ -106,17 +133,21 @@ export const MenuItem = ({
   tone = "default",
   leading,
   trailing,
+  textValue,
   closeOnSelect = true,
   children,
   onFocus,
   onClick,
+  onMouseEnter,
   style,
+  ref,
   ...rest
 }: MenuItemProps) => {
   const theme = useTheme();
   // Only stable members here: the context object changes whenever a row
   // registers, and depending on it would re-register in a loop.
-  const { activeId, register, noteFocus, close } = useMenuContext();
+  const { activeId, register, noteFocus, close, closeSubmenu } =
+    useMenuContext();
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -132,22 +163,32 @@ export const MenuItem = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setRow = useMergedRef<PublicInstance | null>(attach, ref);
 
   const run = useCallback(() => action.current(), []);
 
+  // Type-ahead matches the row's text. A composed label must say what it is.
+  const searchable = textValue ?? (P.isString(children) ? children : "");
+
   useLayoutEffect(() => {
     if (instance === undefined) return;
-    return register({ id: instance.id, disabled, activate: run });
-  }, [disabled, instance, register, run]);
+    return register({
+      id: instance.id,
+      disabled,
+      label: searchable,
+      activate: run,
+    });
+  }, [disabled, instance, register, run, searchable]);
 
   const active =
     instance !== undefined && Option.contains(activeId, instance.id);
+  const state: MenuItemState = { disabled, highlighted: active };
 
   return (
     <div
       role="menuitem"
       {...rest}
-      ref={attach}
+      ref={setRow}
       tabIndex={disabled ? -1 : 0}
       onFocus={(event) => {
         if (instance !== undefined) noteFocus(instance.id);
@@ -158,7 +199,17 @@ export const MenuItem = ({
         onClick?.(event);
         action.current();
       }}
-      style={mergeStyles(menuRowStyle(theme, tone, active, disabled), style)}
+      onMouseEnter={(event) => {
+        // Moving onto another row leaves the submenu that belonged to the row
+        // the pointer came from. A SubTrigger re-opens its own in the same
+        // event, so React's batch ends on `true`.
+        closeSubmenu();
+        onMouseEnter?.(event);
+      }}
+      style={mergeStyles(
+        menuRowStyle(theme, tone, active, disabled),
+        resolveStyle(style, state),
+      )}
     >
       <Row leading={leading} trailing={trailing}>
         {children}
@@ -168,9 +219,18 @@ export const MenuItem = ({
 };
 
 /** {@link MenuCheckboxItem} props: a row that toggles a setting. */
-export interface MenuCheckboxItemProps extends MenuItemProps {
+export interface MenuCheckboxItemProps extends Omit<MenuItemProps, "style"> {
   readonly checked: boolean;
   readonly onCheckedChange: (checked: boolean) => void;
+  /** A style, or a function of the checkbox row's state. */
+  readonly style?: StateStyle<MenuCheckboxItemState>;
+}
+
+/** What a checkbox row draws. */
+export interface MenuCheckboxItemState {
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly highlighted: boolean;
 }
 
 /** A menu row that represents an on/off setting. Shows `✓` when checked. */
@@ -178,17 +238,33 @@ export const MenuCheckboxItem = ({
   checked,
   onCheckedChange,
   onSelect,
+  disabled = false,
   leading,
   trailing,
   children,
+  style,
+  ref,
   ...rest
 }: MenuCheckboxItemProps) => {
   const theme = useTheme();
+  const { activeId } = useMenuContext();
+  const instance = useRef<PublicInstance | null>(null);
+  const attach = useCallback((next: PublicInstance | null) => {
+    instance.current = next;
+  }, []);
+  const setRow = useMergedRef<PublicInstance | null>(attach, ref);
+  const highlighted =
+    instance.current !== null && Option.contains(activeId, instance.current.id);
+  const state: MenuCheckboxItemState = { checked, disabled, highlighted };
+
   return (
     <MenuItem
       role="menuitemcheckbox"
       aria-selected={checked}
       {...rest}
+      ref={setRow}
+      disabled={disabled}
+      style={resolveStyle(style, state)}
       closeOnSelect={false}
       onSelect={() => {
         onSelect?.();
@@ -260,8 +336,14 @@ export const MenuLabel = ({ style, ...rest }: Props) => {
 };
 
 /** A labelled group of rows. */
-export const MenuGroup = ({ style, ...rest }: Props) => {
+export interface MenuGroupProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
+
+/** A labelled group of rows. */
+export const MenuGroup = ({ children, style, ...rest }: MenuGroupProps) => {
   const theme = useTheme();
+  assertParts(menuGroup, children);
   return (
     <div
       role="group"
@@ -274,6 +356,24 @@ export const MenuGroup = ({ style, ...rest }: Props) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
+};
+
+/** Every row part, so a misplaced sibling is named. */
+const menuRowParts: ReadonlyArray<PartComponent> = [
+  MenuItem,
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuLabel,
+  MenuSeparator,
+];
+
+const menuGroup: PartsContract = {
+  parent: "menu group",
+  family: menuRowParts,
+  accepts: [MenuItem, MenuCheckboxItem, MenuLabel, MenuSeparator],
+  hint: "Put rows, labels and separators directly inside the group.",
 };

@@ -3,18 +3,36 @@
  *
  * The bugs these guard: previous/next staying pressable at the first and last
  * page; `onPageChange` reporting an index instead of the page number, or firing
- * on the current page; an ellipsis that was a focus stop; and a current page that
- * was not painted with the primary role.
+ * on the current page; an ellipsis that was a focus stop; a current page that
+ * was not painted with the primary role; and a root that ignored the parts the
+ * caller composed.
  */
 
 import { describe, expect, it, vi } from "vitest";
 import { darkTheme, lightTheme } from "../internal/theme.js";
+import { clickCentreOf } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
   type TestTheme,
 } from "../internal/test-root.js";
-import { Pagination } from "../pagination.js";
+import {
+  Pagination,
+  PaginationItem,
+  PaginationList,
+  PaginationNext,
+  PaginationPrevious,
+  type PaginationProps,
+} from "../pagination.js";
+
+/** The default composition a caller writes. */
+const Pager = (props: PaginationProps) => (
+  <Pagination {...props}>
+    <PaginationPrevious />
+    <PaginationList />
+    <PaginationNext />
+  </Pagination>
+);
 
 /** The button element a visible label sits in. */
 const buttonFor = (root: ComponentTestRoot, label: string) => {
@@ -38,7 +56,7 @@ const clickLabel = (root: ComponentTestRoot, label: string): void => {
 describe("Pagination", () => {
   it("disables previous on the first page and next on the last", () => {
     const first = renderComponent(
-      <Pagination page={1} pageCount={10} onPageChange={vi.fn()} />,
+      <Pager page={1} pageCount={10} onPageChange={vi.fn()} />,
     );
 
     expect(buttonFor(first, "‹ Prev")?.customProps?.tabIndex).toBe(-1);
@@ -47,7 +65,7 @@ describe("Pagination", () => {
     first.unmount();
 
     const last = renderComponent(
-      <Pagination page={10} pageCount={10} onPageChange={vi.fn()} />,
+      <Pager page={10} pageCount={10} onPageChange={vi.fn()} />,
     );
 
     expect(buttonFor(last, "‹ Prev")?.customProps?.tabIndex).toBe(0);
@@ -59,7 +77,7 @@ describe("Pagination", () => {
   it("reports the page number a click lands on", () => {
     const onPageChange = vi.fn();
     const pager = renderComponent(
-      <Pagination page={5} pageCount={10} onPageChange={onPageChange} />,
+      <Pager page={5} pageCount={10} onPageChange={onPageChange} />,
     );
 
     clickLabel(pager, "4");
@@ -72,7 +90,7 @@ describe("Pagination", () => {
   it("does nothing when the current page is pressed", () => {
     const onPageChange = vi.fn();
     const pager = renderComponent(
-      <Pagination page={5} pageCount={10} onPageChange={onPageChange} />,
+      <Pager page={5} pageCount={10} onPageChange={onPageChange} />,
     );
 
     clickLabel(pager, "5");
@@ -85,7 +103,7 @@ describe("Pagination", () => {
   it("steps with previous and next", () => {
     const onPageChange = vi.fn();
     const pager = renderComponent(
-      <Pagination page={5} pageCount={10} onPageChange={onPageChange} />,
+      <Pager page={5} pageCount={10} onPageChange={onPageChange} />,
     );
 
     clickLabel(pager, "‹ Prev");
@@ -98,7 +116,7 @@ describe("Pagination", () => {
 
   it("leaves the ellipsis out of the tab order", () => {
     const pager = renderComponent(
-      <Pagination page={5} pageCount={10} onPageChange={vi.fn()} />,
+      <Pager page={5} pageCount={10} onPageChange={vi.fn()} />,
     );
     const ellipsis = pager.renderer.findByText("…");
 
@@ -111,7 +129,7 @@ describe("Pagination", () => {
   it("activates a page from Enter on the focused button", () => {
     const onPageChange = vi.fn();
     const pager = renderComponent(
-      <Pagination page={5} pageCount={10} onPageChange={onPageChange} />,
+      <Pager page={5} pageCount={10} onPageChange={onPageChange} />,
     );
     pager.renderer.focusElement(buttonFor(pager, "4")?.id ?? -1);
 
@@ -124,12 +142,7 @@ describe("Pagination", () => {
 
   it("renders nothing when there are no pages", () => {
     const pager = renderComponent(
-      <Pagination
-        testId="pager"
-        page={1}
-        pageCount={0}
-        onPageChange={vi.fn()}
-      />,
+      <Pager testId="pager" page={1} pageCount={0} onPageChange={vi.fn()} />,
     );
 
     expect(pager.renderer.findByTestId("pager")).toBeUndefined();
@@ -140,7 +153,7 @@ describe("Pagination", () => {
   it("paints the current page with the primary role in both themes", () => {
     const assertTheme = (theme: TestTheme, primary: string): void => {
       const pager = renderComponent(
-        <Pagination page={5} pageCount={10} onPageChange={vi.fn()} />,
+        <Pager page={5} pageCount={10} onPageChange={vi.fn()} />,
         theme,
       );
 
@@ -152,5 +165,46 @@ describe("Pagination", () => {
 
     assertTheme("dark", darkTheme.colors.primary);
     assertTheme("light", lightTheme.colors.primary);
+  });
+
+  it("renders the parts in the order the caller composed them", () => {
+    const pager = renderComponent(
+      <Pagination page={5} pageCount={10} onPageChange={vi.fn()}>
+        <PaginationPrevious />
+        <PaginationItem page={7} />
+        <PaginationList />
+        <PaginationNext />
+      </Pagination>,
+    );
+
+    const texts = pager.renderer.getAllText();
+    expect(texts.indexOf("‹ Prev")).toBeGreaterThanOrEqual(0);
+    expect(texts.indexOf("7")).toBeGreaterThan(texts.indexOf("‹ Prev"));
+    expect(texts.indexOf("7")).toBeLessThan(texts.indexOf("1"));
+    expect(texts.indexOf("Next ›")).toBeGreaterThan(texts.indexOf("10"));
+
+    pager.unmount();
+  });
+
+  it("lets an item outside the list read the root's page", () => {
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={5} pageCount={10} onPageChange={onPageChange}>
+        <PaginationList />
+        <PaginationItem page={5} testId="extra-current" />
+        <PaginationItem page={7} testId="extra-next" />
+      </Pagination>,
+    );
+
+    clickCentreOf(pager, "extra-current");
+    expect(onPageChange).not.toHaveBeenCalled();
+    expect(
+      pager.renderer.findByTestId("extra-current")?.style.backgroundColor,
+    ).toBe(darkTheme.colors.primary);
+
+    clickCentreOf(pager, "extra-next");
+    expect(onPageChange).toHaveBeenCalledWith(7);
+
+    pager.unmount();
   });
 });

@@ -77,6 +77,17 @@ a `borderWidth.thin` border in `colors.border`, `radius.md`, and swaps the borde
 to `colors.destructive` when invalid. A neutral focused input takes the focus
 ring; an invalid one keeps the destructive border instead.
 
+## Style by state
+
+`FieldInput.style` takes a `StyleDesc` or a function of `FieldInputState`
+(`{ disabled, focused, invalid }`).
+
+```tsx
+<FieldInput
+  style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })}
+/>
+```
+
 ## Accessibility and limitations
 
 - The input's accessible name is the field's label; the message is passed as

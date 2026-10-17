@@ -5,10 +5,13 @@
  * window; a click reaching a control behind the modal; focus staying outside the
  * dialog or failing to return to the opener; Escape or a backdrop press closing
  * the wrong overlay; Tab escaping a modal; a dialog that cannot be made
- * uninterruptible; and a surface that ignores the theme.
+ * uninterruptible; and a surface that ignores the theme. A caller `ref` on the
+ * content was discarded in favour of the internal one.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef } from "react";
 import { Button } from "../internal/button.js";
 import {
   Dialog,
@@ -252,6 +255,23 @@ describe("Dialog", () => {
     clickCentreOf(dialog, "dialog-close");
 
     expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
+
+    dialog.unmount();
+  });
+
+  it("feeds both the internal and the caller's content ref", () => {
+    const ref = createRef<PublicInstance>();
+    const dialog = renderComponent(
+      <Dialog defaultOpen>
+        <DialogContent ref={ref} label="Delete workspace" testId="dialog">
+          <DialogTitle>Delete workspace</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    );
+
+    expect(ref.current?.id).toBe(dialog.renderer.findByTestId("dialog")?.id);
+    // The internal ref still focuses the surface.
+    expect(focusedTestId(dialog)).toEqual(Option.some("dialog"));
 
     dialog.unmount();
   });

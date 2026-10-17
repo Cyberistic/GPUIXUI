@@ -8,10 +8,20 @@
  */
 
 import type { EventPayload, Props } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
+import { createContext, useContext, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isActivation } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 
 /** The rules a collapsible part follows; throws outside a root. */
@@ -40,7 +50,7 @@ export interface CollapsibleProps {
   /** The uncontrolled starting state. Default `false`. */
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** The open state shared by a trigger and its content. */
@@ -56,6 +66,7 @@ export const Collapsible = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+  assertParts(collapsibleRoot, children);
 
   return (
     <CollapsibleContext.Provider value={{ open, setOpen }}>
@@ -72,6 +83,19 @@ export const Collapsible = ({
   );
 };
 
+/** {@link CollapsibleTrigger} props. */
+export interface CollapsibleTriggerProps extends Omit<Props, "style"> {
+  /** A style, or a function of the trigger's state. */
+  readonly style?: StateStyle<CollapsibleTriggerState>;
+}
+
+/** What the trigger draws: the section's open state and its own focus. */
+export interface CollapsibleTriggerState {
+  readonly open: boolean;
+  readonly closed: boolean;
+  readonly focused: boolean;
+}
+
 /** A button that opens and closes its section. */
 export const CollapsibleTrigger = ({
   onClick,
@@ -80,10 +104,15 @@ export const CollapsibleTrigger = ({
   onBlur,
   style,
   ...rest
-}: Props) => {
+}: CollapsibleTriggerProps) => {
   const theme = useTheme();
   const { open, setOpen } = useCollapsibleContext();
   const [focused, setFocused] = useState(false);
+  const state: CollapsibleTriggerState = {
+    open,
+    closed: !open,
+    focused,
+  };
 
   const toggle = (): void => setOpen(!open);
 
@@ -128,7 +157,7 @@ export const CollapsibleTrigger = ({
           active: { backgroundColor: theme.colors.active },
           ...(focused ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     />
   );
@@ -163,6 +192,20 @@ export const CollapsibleContent = ({ style, children, ...rest }: Props) => {
       {children}
     </div>
   );
+};
+
+/** Every part of Collapsible, so a misplaced sibling is named. */
+const collapsibleParts: ReadonlyArray<PartComponent> = [
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+];
+
+const collapsibleRoot: PartsContract = {
+  parent: "Collapsible",
+  family: collapsibleParts,
+  accepts: [CollapsibleTrigger, CollapsibleContent],
+  hint: "Put CollapsibleTrigger and CollapsibleContent directly inside Collapsible.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

@@ -107,4 +107,28 @@ describe("Field", () => {
 
     form.unmount();
   });
+
+  it("leaves the tab order and accepts no typing when disabled", () => {
+    const onChange = vi.fn();
+    const form = renderComponent(
+      <Field label="Email">
+        <FieldInput
+          testId="email"
+          disabled
+          onChange={(event) => onChange?.(event.value ?? "")}
+        />
+      </Field>,
+    );
+    const input = form.renderer.findByTestId("email");
+
+    expect(input?.customProps?.readOnly).toBe(true);
+    expect(input?.customProps?.tabIndex).toBe(-1);
+
+    form.renderer.focusElement(input?.id ?? -1);
+    form.renderer.simulateKeystrokes("a");
+
+    expect(onChange).not.toHaveBeenCalled();
+
+    form.unmount();
+  });
 });

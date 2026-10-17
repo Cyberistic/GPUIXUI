@@ -1,0 +1,109 @@
+---
+title: Preview card
+description: A rich, hoverable card shown on hover or keyboard focus.
+---
+
+`PreviewCard` previews what a link or row points at: a title, a sentence, an
+avatar, a small action. It is **hoverable** — the pointer may travel from the
+trigger into the card — which is what separates it from a tooltip.
+
+## Usage
+
+```tsx
+import {
+  PreviewCard,
+  PreviewCardContent,
+  PreviewCardTrigger,
+} from "@gpuixui/components";
+
+<PreviewCard>
+  <PreviewCardTrigger>design-system.md</PreviewCardTrigger>
+  <PreviewCardContent label="design-system.md">
+    <text>Tokens, semantic roles and the theme extension mechanism.</text>
+  </PreviewCardContent>
+</PreviewCard>;
+```
+
+The runnable build is `examples/preview-card.example.tsx`, which the native
+playground mounts.
+
+## The open policy
+
+| Action | Result |
+| ------ | ------ |
+| Pointer enters the trigger | opens after `openDelay` (default 300 ms) |
+| Keyboard focus reaches the trigger | opens immediately, no delay |
+| Pointer leaves the trigger but enters the card | stays open |
+| Pointer leaves **both** | closes after `closeDelay` (default 150 ms) |
+| `Escape` | closes; focus returns to the trigger |
+| Outside press | closes |
+| Press on the trigger while open | closes |
+| Press on the trigger while closed | opens (the touch path) |
+
+The delays are props, so a test or a dense UI can use `0`. They are component
+timers at the UI boundary — not domain time.
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `PreviewCard` | a positioning root; owns open state and the timers | `open?`, `defaultOpen?`, `onOpenChange?`, `openDelay?`, `closeDelay?`, children |
+| `PreviewCardTrigger` | button, `aria-expanded` | button props |
+| `PreviewCardContent` | anchored `FloatingLayer`, `role="group"` named by `label` | `label` (required), `side?`, `align?`, `sideOffset?`, `collisionPadding?`, children |
+
+`PreviewCardContent` renders nothing while closed.
+
+## Theming
+
+The surface uses `popover` / `popoverForeground`, `border`, `radius.lg` and the
+medium elevation; `minWidth` is 240 and `maxWidth` 360 so a preview stays a
+glance. A custom theme changes it with no code change — see
+[Theming](/docs/theming).
+
+## Accessibility
+
+- The trigger is a button: keyboard focus opens the card immediately, so a
+  keyboard user does not have to hover.
+- `Escape` closes and returns focus to the trigger, through the shared dismiss
+  stack — a preview inside a dialog closes only itself.
+- The card is a named `group`; it is not auto-focused on hover (that would steal
+  focus from whatever the user was typing), so `Tab` reaches its links/actions
+  from the trigger.
+- `0.10.0` has no `aria-haspopup` for this pattern and no anchor arrow.
+
+## Limitations
+
+- **Timers are the component's**; a consumer that wants a different policy passes
+  the two delay props, and `0` is supported.
+- **No pointer-type signal**: touch has no hover, so the press-to-toggle path is
+  the honest touch interaction.
+- Not auto-focused on hover; a purely hover-driven user never focuses the card.
+- No anchor arrow, no `aria-haspopup`, no follow-cursor positioning.
+- The card closes on an outside press but does not restore focus (the press gave
+  focus to whatever was pressed) — the same rule as Popover.
+
+## Verification
+
+`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (8 tests):
+closed by default, delayed hover open and immediate focus open, staying open
+while the pointer is inside, closing after leaving both, Escape with focus
+return, outside-press dismissal, surface naming and `aria-expanded`, and a
+controlled card that stays closed. Timers are real but sized to 20 ms by the
+props. One measured fact shaped both the tests and the component: the runtime
+delivers the new element's `mouseEnter` **before** the previous element's
+`mouseLeave`, so the close policy tracks whether either surface still holds the
+pointer.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
+x64, or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Popover** — click-triggered, not hover.
+- **Dialog** — a modal surface.
+- **Card** — the surface a preview usually contains.

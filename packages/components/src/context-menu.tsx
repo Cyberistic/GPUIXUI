@@ -11,8 +11,11 @@
  * a bare `anchored` element plus the shared {@link MenuSurface}.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { pipe } from "effect";
+import * as Option from "effect/Option";
 import {
   createContext,
   useCallback,
@@ -21,11 +24,18 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
-import { useTheme } from "./internal/theme.js";
+import { isMenuKey } from "./internal/key.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
+import { focusRing, useTheme } from "./internal/theme.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -38,6 +48,7 @@ import {
   useMenuState,
   type MenuCloseReason,
 } from "./menu/state.js";
+import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
 import { MenuSurface } from "./menu/surface.js";
 
 /** A point in window coordinates. */
@@ -51,8 +62,12 @@ interface ContextMenuContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly point: Point;
-  /** Open at `point`; called by the trigger's right click. */
+  /** Open at `point` from a pointer; closing leaves focus where it went. */
   readonly openAt: (point: Point) => void;
+  /** Open at `point` from the keyboard; closing returns focus to the trigger. */
+  readonly openFromKeyboard: (point: Point) => void;
+  /** Register the trigger's native id; returns the unregister function. */
+  readonly setTrigger: (id: number) => () => void;
 }
 
 const ContextMenuContext = createContext<ContextMenuContextValue | undefined>(
@@ -73,7 +88,7 @@ export interface ContextMenuProps {
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -87,12 +102,15 @@ export const ContextMenu = ({
   onOpenChange,
   children,
 }: ContextMenuProps) => {
+  const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
   const [point, setPoint] = useState<Point>({ x: 0, y: 0 });
+  const triggerId = useRef<number | undefined>(undefined);
+  const restoreFocus = useRef(false);
 
   // The layer callback must see the latest setter without being re-pushed.
   const setOpenRef = useRef(setOpen);
@@ -100,25 +118,55 @@ export const ContextMenu = ({
     setOpenRef.current = setOpen;
   });
 
-  const close = useCallback((_reason: MenuCloseReason) => {
-    setOpenRef.current(false);
-  }, []);
+  const close = useCallback(
+    (reason: MenuCloseReason) => {
+      setOpenRef.current(false);
+      const target = triggerId.current;
+      if (
+        restoreFocus.current &&
+        target !== undefined &&
+        (reason === "activate" || reason === "dismiss")
+      ) {
+        renderer?.focusElement?.(target);
+      }
+      restoreFocus.current = false;
+    },
+    [renderer],
+  );
   const menu = useMenuState(close);
 
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer(() => setOpenRef.current(false));
-  }, [open]);
+    return pushDismissLayer((event) =>
+      close(event.eventType === "keyDown" ? "dismiss" : "outside"),
+    );
+  }, [close, open]);
 
   const openAt = useCallback((next: Point) => {
+    restoreFocus.current = false;
     setPoint(next);
     setOpenRef.current(true);
   }, []);
 
+  const openFromKeyboard = useCallback((next: Point) => {
+    restoreFocus.current = true;
+    setPoint(next);
+    setOpenRef.current(true);
+  }, []);
+
+  const setTrigger = useCallback((id: number) => {
+    triggerId.current = id;
+    return () => {
+      if (triggerId.current === id) triggerId.current = undefined;
+    };
+  }, []);
+
   const context = useMemo<ContextMenuContextValue>(
-    () => ({ open, setOpen, point, openAt }),
-    [open, openAt, point, setOpen],
+    () => ({ open, openAt, openFromKeyboard, setTrigger, setOpen, point }),
+    [open, openAt, openFromKeyboard, point, setOpen, setTrigger],
   );
+
+  assertParts(contextMenuRoot, children);
 
   return (
     <ContextMenuContext.Provider value={context}>
@@ -136,23 +184,71 @@ export interface ContextMenuTriggerProps extends Props {
   readonly disabled?: boolean;
 }
 
-/** The area whose right click opens the menu. */
+/** The area whose right click — or Shift+F10 — opens the menu. */
 export const ContextMenuTrigger = ({
   disabled = false,
   onAuxClick,
+  onKeyDown,
+  onFocus,
+  onBlur,
   style,
+  ref,
   ...rest
 }: ContextMenuTriggerProps) => {
   const theme = useTheme();
-  const { openAt } = useContextMenuContext();
+  const renderer = useGpuix().renderer;
+  const { openAt, openFromKeyboard, setTrigger } = useContextMenuContext();
+  const [focused, setFocused] = useState(false);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+
+  // Stable identity: a fresh ref callback each render would re-register on every
+  // paint (ListItem has the same constraint).
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setElement = useMergedRef(attach, ref);
+
+  useLayoutEffect(() => {
+    // The native id is what focus returns to after a keyboard-opened menu.
+    if (instance === undefined) return;
+    return setTrigger(instance.id);
+  }, [instance, setTrigger]);
+
+  const openFromKey = (): void => {
+    if (disabled || instance === undefined) return;
+    pipe(
+      Option.fromNullishOr(renderer?.getElementBounds?.(instance.id)),
+      Option.match({
+        onNone: () => undefined,
+        onSome: (bounds) =>
+          openFromKeyboard({ x: bounds.x, y: bounds.y + bounds.height }),
+      }),
+    );
+  };
 
   return (
     <div
       {...rest}
+      ref={setElement}
+      tabIndex={disabled ? -1 : 0}
       onAuxClick={(event: EventPayload) => {
         onAuxClick?.(event);
         if (disabled || event.isRightClick !== true) return;
         openAt({ x: event.x ?? 0, y: event.y ?? 0 });
+      }}
+      onKeyDown={(event: EventPayload) => {
+        if (isMenuKey(event)) openFromKey();
+        onKeyDown?.(event);
+      }}
+      onFocus={(event) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
       }}
       style={mergeStyles(
         {
@@ -166,6 +262,7 @@ export const ContextMenuTrigger = ({
           color: theme.colors.cardForeground,
           cursor: disabled ? "not-allowed" : "default",
           opacity: disabled ? 0.5 : 1,
+          ...(focused && !disabled ? focusRing(theme) : {}),
         },
         style,
       )}
@@ -174,10 +271,10 @@ export const ContextMenuTrigger = ({
 };
 
 /** {@link ContextMenuContent} props. */
-export interface ContextMenuContentProps extends Props {
+export interface ContextMenuContentProps extends Omit<Props, "children"> {
   /** The menu's accessible name. Default `"Context menu"`. */
   readonly label?: string;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -193,6 +290,7 @@ export const ContextMenuContent = ({
   ...rest
 }: ContextMenuContentProps) => {
   const { open, point } = useContextMenuContext();
+  assertParts(contextMenuContent, children);
 
   if (!open) return null;
 
@@ -233,6 +331,54 @@ export type {
   MenuItemProps as ContextMenuItemProps,
 } from "./menu/item.js";
 
+export {
+  MenuSub as ContextMenuSub,
+  MenuSubContent as ContextMenuSubContent,
+  MenuSubTrigger as ContextMenuSubTrigger,
+} from "./menu/sub.js";
+
+export type {
+  MenuSubContentProps as ContextMenuSubContentProps,
+  MenuSubProps as ContextMenuSubProps,
+  MenuSubTriggerProps as ContextMenuSubTriggerProps,
+} from "./menu/sub.js";
+
+/** Every part of the context menu, so a misplaced sibling is named. */
+const contextMenuParts: ReadonlyArray<PartComponent> = [
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  MenuItem,
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuLabel,
+  MenuSeparator,
+  MenuSub,
+  MenuSubTrigger,
+  MenuSubContent,
+];
+
+const contextMenuRoot: PartsContract = {
+  parent: "ContextMenu",
+  family: contextMenuParts,
+  accepts: [ContextMenuTrigger, ContextMenuContent],
+  hint: "Put ContextMenuTrigger and ContextMenuContent directly inside ContextMenu.",
+};
+
+const contextMenuContent: PartsContract = {
+  parent: "ContextMenuContent",
+  family: contextMenuParts,
+  accepts: [
+    MenuItem,
+    MenuCheckboxItem,
+    MenuGroup,
+    MenuLabel,
+    MenuSeparator,
+    MenuSub,
+  ],
+  hint: "Put rows, groups, labels, separators and submenus directly inside ContextMenuContent.",
+};
+
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const contextMenuMeta = {
   name: "Context menus",
@@ -242,7 +388,8 @@ export const contextMenuMeta = {
   limitations: [
     "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",
-    "no submenus and no type-ahead, as with DropdownMenu",
+    "one level of submenus is tested; deeper nesting follows the same rule but is untested",
+    "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
   ],
   docs: "docs/context-menu.mdx",
   example: "examples/context-menu.example.tsx",

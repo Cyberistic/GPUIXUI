@@ -11,10 +11,10 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import type { ReactNode } from "react";
-import { IconButton } from "../internal/button.js";
+import { useRef, type ReactNode } from "react";
+import { Button, IconButton } from "../internal/button.js";
 import {
-  elevation,
+  elevationShadow,
   textStyle,
   tone,
   useTheme,
@@ -46,12 +46,42 @@ const glyph = (value: ToastTone): string =>
 /** One card. Its left bar and glyph carry the tone; the surface is neutral. */
 const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   const theme = useTheme();
-  const { dismiss } = useToast();
+  const { dismiss, pause, resume, actionFor } = useToast();
   const palette = tone(theme, asTone(toast.tone));
+  const held = useRef({ hover: false, focus: 0, paused: false });
+
+  /** Pause while either reason holds; resume only when the last one leaves. */
+  const syncHold = (): void => {
+    const after = held.current.hover || held.current.focus > 0;
+    if (after === held.current.paused) return;
+    held.current.paused = after;
+    if (after) pause(toast.id);
+    else resume(toast.id);
+  };
+
+  const setHover = (value: boolean): void => {
+    held.current.hover = value;
+    syncHold();
+  };
+
+  /** Two controls can hold focus; a count keeps moving between them held. */
+  const setFocus = (value: boolean): void => {
+    held.current.focus = Math.max(0, held.current.focus + (value ? 1 : -1));
+    syncHold();
+  };
+
+  const action = Option.flatMap(toast.action, (candidate) =>
+    Option.map(actionFor(toast.id), (onSelect) => ({
+      candidate,
+      onSelect,
+    })),
+  );
 
   return (
     <div
       testId={`toast-${toast.id}`}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         display: "flex",
         flexDirection: "row",
@@ -62,7 +92,7 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
         borderWidth: theme.borderWidth.thin,
         borderColor: theme.colors.border,
         borderRadius: theme.radius.md,
-        boxShadow: elevation(theme, "md"),
+        boxShadow: elevationShadow(theme, "md"),
         overflow: "hidden",
         pointerEvents: "auto",
       }}
@@ -121,11 +151,31 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
             ),
           })}
         </div>
+        {Option.match(action, {
+          onNone: () => null,
+          onSome: ({ candidate, onSelect }) => (
+            <Button
+              size="sm"
+              variant="secondary"
+              testId="toast-action"
+              onClick={() => {
+                onSelect();
+                dismiss(toast.id);
+              }}
+              onFocus={() => setFocus(true)}
+              onBlur={() => setFocus(false)}
+            >
+              {candidate.label}
+            </Button>
+          ),
+        })}
         <IconButton
           label="Dismiss"
           size="sm"
           testId="toast-dismiss"
           onClick={() => dismiss(toast.id)}
+          onFocus={() => setFocus(true)}
+          onBlur={() => setFocus(false)}
         >
           <text>✕</text>
         </IconButton>

@@ -7,18 +7,34 @@
  * that loses order or duplicates; a disabled option that can still be chosen; an
  * empty state that never appears; a ranking that puts `Vacation` before
  * `Calendar`; and Escape that does not return focus to the trigger.
+ *
+ * Pointer coverage: the suite originally drove every selection from the
+ * keyboard, so a wrapper that ignored a clicked option, kept the popup open, or
+ * let a disabled option through would have passed.
  */
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
   type TestTheme,
 } from "../internal/test-root.js";
-import { Combobox, type ComboboxOption } from "../combobox.js";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+  type ComboboxOption,
+} from "../combobox.js";
 
 const options: ReadonlyArray<ComboboxOption> = [
   { value: "calendar", label: "Calendar", description: "Scheduling" },
@@ -31,12 +47,18 @@ const Picker = ({
   onValueChange,
   multiple,
   disabledCamera,
+  empty,
+  triggerPlaceholder,
+  triggerLabel = "Assign reviewer",
 }: {
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
   ) => void;
   readonly multiple?: boolean;
   readonly disabledCamera?: boolean;
+  readonly empty?: string;
+  readonly triggerPlaceholder?: string;
+  readonly triggerLabel?: string;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <Combobox
@@ -50,9 +72,47 @@ const Picker = ({
           : options
       }
       multiple={multiple}
-      label="Assign reviewer"
       onValueChange={onValueChange}
-    />
+    >
+      <ComboboxTrigger
+        label={triggerLabel}
+        {...(triggerPlaceholder === undefined
+          ? {}
+          : { placeholder: triggerPlaceholder })}
+      />
+      <ComboboxContent>
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+        <ComboboxEmpty>{empty}</ComboboxEmpty>
+      </ComboboxContent>
+    </Combobox>
+  </div>
+);
+
+/** A trigger near the window centre, where a centred popup has room to sit. */
+const CentredPicker = () => (
+  <div style={{ paddingLeft: 540, paddingTop: 100 }}>
+    <Combobox options={options}>
+      <ComboboxTrigger label="Assign reviewer" />
+      <ComboboxContent align="center">
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+      </ComboboxContent>
+    </Combobox>
+  </div>
+);
+
+/** A trigger at the bottom of the window, where a downside popup cannot fit. */
+const LowPicker = () => (
+  <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
+    <div style={{ flexGrow: 1 }} />
+    <Combobox options={options}>
+      <ComboboxTrigger label="Assign reviewer" />
+      <ComboboxContent>
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+      </ComboboxContent>
+    </Combobox>
   </div>
 );
 
@@ -82,6 +142,34 @@ describe("Combobox", () => {
 
     expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+
+    picker.unmount();
+  });
+
+  it("centres a requested popup on its trigger", async () => {
+    const picker = renderComponent(<CentredPicker />);
+
+    await open(picker);
+
+    const trigger = requireBounds(picker, "combobox-trigger");
+    const surface = requireBounds(picker, "combobox-content");
+
+    expect(
+      Math.abs(surface.x + surface.width / 2 - (trigger.x + trigger.width / 2)),
+    ).toBeLessThanOrEqual(1);
+
+    picker.unmount();
+  });
+
+  it("opens above a trigger near the window bottom instead of covering it", async () => {
+    const picker = renderComponent(<LowPicker />);
+
+    await open(picker);
+
+    const trigger = requireBounds(picker, "combobox-trigger");
+    const surface = requireBounds(picker, "combobox-content");
+
+    expect(surface.y + surface.height).toBeLessThanOrEqual(trigger.y);
 
     picker.unmount();
   });
@@ -145,6 +233,16 @@ describe("Combobox", () => {
     await open(picker);
     type(picker, "ca");
     await settle();
+    expect(
+      picker.renderer.findByTestId("combobox-option-calendar")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(
+      picker.renderer.findByTestId("combobox-option-camera")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(false);
     clickCentreOf(picker, "combobox-option-camera");
     await settle();
 
@@ -239,5 +337,105 @@ describe("Combobox", () => {
 
     await assertTheme("dark", darkTheme.colors.popover);
     await assertTheme("light", lightTheme.colors.popover);
+  });
+
+  it("selects an option with the pointer", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Picker onValueChange={onValueChange} />);
+    await open(picker);
+
+    clickCentreOf(picker, "combobox-option-camera");
+    await settle();
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith("camera");
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.customProps?.[
+        "aria-expanded"
+      ],
+    ).toBe(false);
+    expect(picker.renderer.getAllText()).toContain("Camera");
+
+    picker.unmount();
+  });
+
+  it("toggles several options with the pointer and skips a disabled one", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker multiple disabledCamera onValueChange={onValueChange} />,
+    );
+    await open(picker);
+
+    clickCentreOf(picker, "combobox-option-calendar");
+    clickCentreOf(picker, "combobox-option-camera");
+    clickCentreOf(picker, "combobox-option-vacation");
+    clickCentreOf(picker, "combobox-option-calendar");
+    await settle();
+
+    expect(onValueChange.mock.calls).toEqual([
+      [["calendar"]],
+      [["calendar", "vacation"]],
+      [["vacation"]],
+    ]);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("closes on an outside press", async () => {
+    const picker = renderComponent(
+      <div style={{ width: 1280, height: 800, position: "relative" }}>
+        <Picker />
+        <div
+          testId="elsewhere"
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 16,
+            width: 80,
+            height: 40,
+          }}
+        >
+          <text>Elsewhere</text>
+        </div>
+      </div>,
+    );
+    await open(picker);
+
+    clickCentreOf(picker, "elsewhere");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("renders the caller's own empty state", async () => {
+    const picker = renderComponent(<Picker empty="No fruit found" />);
+    await open(picker);
+
+    type(picker, "zzz");
+    await settle();
+
+    expect(picker.renderer.getAllText()).toContain("No fruit found");
+    expect(picker.renderer.getAllText()).not.toContain("No matches");
+
+    picker.unmount();
+  });
+
+  it("takes the trigger's placeholder and name from the part", () => {
+    const picker = renderComponent(
+      <Picker triggerPlaceholder="Pick a reviewer" triggerLabel="Reviewer" />,
+    );
+
+    expect(picker.renderer.getAllText()).toContain("Pick a reviewer");
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("Reviewer");
+
+    picker.unmount();
   });
 });

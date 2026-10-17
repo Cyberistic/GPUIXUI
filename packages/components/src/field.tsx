@@ -11,9 +11,20 @@
  */
 
 import type { InputProps, Props } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import * as Option from "effect/Option";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
+import { useFieldsetDisabled } from "./fieldset.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
 import {
   controlHeight,
   focusRing,
@@ -40,7 +51,7 @@ export interface FieldProps extends Props {
   /** The message to show; also paints the control as invalid. */
   readonly error?: string;
   readonly required?: boolean;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** One labelled field. Compose a {@link FieldInput} or any other control. */
@@ -55,6 +66,7 @@ export const Field = ({
 }: FieldProps) => {
   const theme = useTheme();
   const context: FieldContextValue = { label, description, error, required };
+  assertParts(fieldRoot, children);
 
   return (
     <FieldContext.Provider value={context}>
@@ -159,9 +171,23 @@ export const FieldError = ({ style, ...rest }: Props) => {
 };
 
 /** {@link FieldInput} props: an input that knows whether its field is invalid. */
-export interface FieldInputProps extends InputProps {
+export interface FieldInputProps extends Omit<InputProps, "style"> {
   /** Overrides the field's own error as the validity signal. */
   readonly invalid?: boolean;
+  /**
+   * Leaves the tab order and ignores edits; 0.10.0 has no `aria-disabled`.
+   * Inferred from a disabled `Fieldset` as well as set directly.
+   */
+  readonly disabled?: boolean;
+  /** A style, or a function of the input's state. */
+  readonly style?: StateStyle<FieldInputState>;
+}
+
+/** What the control draws: input state plus the field's validity. */
+export interface FieldInputState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
 }
 
 /**
@@ -170,6 +196,7 @@ export interface FieldInputProps extends InputProps {
  */
 export const FieldInput = ({
   invalid,
+  disabled = false,
   onFocus,
   onBlur,
   style,
@@ -177,8 +204,15 @@ export const FieldInput = ({
 }: FieldInputProps) => {
   const theme = useTheme();
   const field = useContext(FieldContext);
+  const fieldsetDisabled = useFieldsetDisabled();
   const [focused, setFocused] = useState(false);
   const isInvalid = invalid ?? field?.error !== undefined;
+  const isDisabled = disabled || fieldsetDisabled;
+  const state: FieldInputState = {
+    disabled: isDisabled,
+    focused,
+    invalid: isInvalid,
+  };
 
   const message = field?.error ?? field?.description;
   const description = Option.match(Option.fromNullishOr(message), {
@@ -189,6 +223,7 @@ export const FieldInput = ({
   return (
     <input
       {...rest}
+      {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
       {...(field === undefined ? {} : { "aria-label": field.label })}
       {...(description === undefined
         ? {}
@@ -208,19 +243,41 @@ export const FieldInput = ({
           height: controlHeight(theme, "md"),
           paddingLeft: theme.spacing.md,
           paddingRight: theme.spacing.md,
-          backgroundColor: theme.colors.input,
-          color: theme.colors.inputForeground,
+          backgroundColor: isDisabled
+            ? theme.colors.disabled
+            : theme.colors.input,
+          color: isDisabled
+            ? theme.colors.disabledForeground
+            : theme.colors.inputForeground,
           borderWidth: theme.borderWidth.thin,
-          borderColor: isInvalid
-            ? theme.colors.destructive
-            : theme.colors.border,
+          borderColor:
+            isInvalid && !isDisabled
+              ? theme.colors.destructive
+              : theme.colors.border,
           borderRadius: theme.radius.md,
-          ...(focused && !isInvalid ? focusRing(theme) : {}),
+          ...(isDisabled ? { cursor: "not-allowed" } : {}),
+          ...(focused && !isInvalid && !isDisabled ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     />
   );
+};
+
+/** Every part of Field, so a misplaced sibling is named. */
+const fieldParts: ReadonlyArray<PartComponent> = [
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+  FieldInput,
+];
+
+const fieldRoot: PartsContract = {
+  parent: "Field",
+  family: fieldParts,
+  accepts: [FieldInput],
+  hint: "Field renders its label and message itself; put only the control inside it.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

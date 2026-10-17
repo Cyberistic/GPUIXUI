@@ -1,17 +1,22 @@
 /**
- * DatePicker example: a due date with a summary and a clear control.
+ * DatePicker example: a booking window with a summary.
  *
- * The app owns the ISO day; the picker owns the popover, the month grid and its
- * keyboard. Clearing sets `null`, which is the "no due date" state.
+ * The app owns the ISO day; the picker owns the popover, the month grid, its
+ * keyboard and the bounds. `min`/`max` make out-of-window days unchosen, and
+ * `clearable` returns the field to "no date" without a second control.
  */
 
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
-import { DatePicker } from "../src/date-picker.js";
-import { Button } from "../src/internal/button.js";
+import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
+} from "../src/date-picker.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** A due-date field. */
+/** A due-date field with a booking window. */
 export const DatePickerExample = () => {
   const theme = useTheme();
   const [due, setDue] = useState<string | null>("2026-10-30");
@@ -46,28 +51,19 @@ export const DatePickerExample = () => {
           >
             Due date
           </text>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: theme.spacing.md,
-            }}
+          <DatePicker
+            value={due}
+            onValueChange={setDue}
+            today="2026-10-17"
+            min="2026-10-17"
+            max="2026-12-31"
+            clearable
           >
-            <DatePicker
-              label="Due date"
-              value={due}
-              onValueChange={setDue}
-              today="2026-10-17"
-            />
-            <Button
-              variant="ghost"
-              disabled={due === null}
-              onClick={() => setDue(null)}
-            >
-              Clear
-            </Button>
-          </div>
+            <DatePickerTrigger label="Due date" />
+            <DatePickerContent>
+              <DatePickerCalendar />
+            </DatePickerContent>
+          </DatePicker>
         </div>
         <text
           style={{
@@ -75,7 +71,8 @@ export const DatePickerExample = () => {
             color: theme.colors.mutedForeground,
           }}
         >
-          Arrow keys move by day; PageUp/PageDown browse months; Enter selects.
+          Only 17 October–31 December 2026 is selectable; arrows clamp to the
+          window. Enter selects, Clear returns the field to no date.
         </text>
       </div>
     </Card>

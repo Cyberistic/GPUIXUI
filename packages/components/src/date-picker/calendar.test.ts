@@ -3,8 +3,11 @@
  *
  * The bugs these guard: a leap-year February rendered as 28 days; a month that
  * starts mid-week rendered the previous month's days as if they belonged to it;
- * the grid changing height between months; and `addMonths` walking off the end of
- * a year.
+ * the grid changing height between months; `addMonths` walking off the end of
+ * a year; a bound treated as exclusive (dropping the first and last legal day);
+ * a malformed bound crashing instead of being ignored; movement past a bound
+ * landing on an unavailable day; the month controls browsing past the bound's
+ * month; and `min` after `max` still allowing a selection.
  */
 
 import { describe, expect, it } from "vitest";
@@ -13,14 +16,19 @@ import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import {
   addMonths,
+  boundsOf,
+  canBrowseMonth,
+  clampToBounds,
   formatDayLabel,
   formatIsoDay,
   formatMonthLabel,
+  isAvailable,
   isSameDay,
   lastDayOfMonth,
   monthGrid,
   parseIsoDay,
   startOfMonth,
+  unbounded,
   weekdayLabels,
 } from "./calendar.js";
 
@@ -153,5 +161,67 @@ describe("parseIsoDay", () => {
     expect(Option.isNone(parseIsoDay("2026-13-01"))).toBe(true);
     expect(Option.isNone(parseIsoDay("2026-02-30"))).toBe(true);
     expect(Option.isNone(parseIsoDay("2026-2-3"))).toBe(true);
+  });
+});
+
+describe("day bounds", () => {
+  it("parses both bounds and ignores malformed or absent ones", () => {
+    const parsed = boundsOf("2026-10-17", "2026-12-31");
+    expect(Option.map(parsed.min, formatIsoDay)).toEqual(
+      Option.some("2026-10-17"),
+    );
+    expect(Option.map(parsed.max, formatIsoDay)).toEqual(
+      Option.some("2026-12-31"),
+    );
+
+    const malformed = boundsOf("not-a-day", "2026-02-30");
+    expect(Option.isNone(malformed.min)).toBe(true);
+    expect(Option.isNone(malformed.max)).toBe(true);
+
+    expect(boundsOf()).toEqual(unbounded);
+    expect(boundsOf(null, undefined)).toEqual(unbounded);
+  });
+
+  it("treats both bounds as inclusive and everything outside as unavailable", () => {
+    const bounds = boundsOf("2026-10-17", "2026-10-20");
+    expect(isAvailable(day("2026-10-17"), bounds)).toBe(true);
+    expect(isAvailable(day("2026-10-20"), bounds)).toBe(true);
+    expect(isAvailable(day("2026-10-18"), bounds)).toBe(true);
+    expect(isAvailable(day("2026-10-16"), bounds)).toBe(false);
+    expect(isAvailable(day("2026-10-21"), bounds)).toBe(false);
+    expect(isAvailable(day("1900-01-01"), unbounded)).toBe(true);
+  });
+
+  it("clamps a day into the bounds and leaves one inside alone", () => {
+    const bounds = boundsOf("2026-10-17", "2026-10-20");
+    expect(formatIsoDay(clampToBounds(day("2026-10-01"), bounds))).toBe(
+      "2026-10-17",
+    );
+    expect(formatIsoDay(clampToBounds(day("2026-10-18"), bounds))).toBe(
+      "2026-10-18",
+    );
+    expect(formatIsoDay(clampToBounds(day("2026-11-01"), bounds))).toBe(
+      "2026-10-20",
+    );
+    expect(formatIsoDay(clampToBounds(day("2026-10-18"), unbounded))).toBe(
+      "2026-10-18",
+    );
+  });
+
+  it("stops month browsing at the bound's month", () => {
+    const bounds = boundsOf("2026-10-17", "2026-12-05");
+    expect(canBrowseMonth(day("2026-10-17"), -1, bounds)).toBe(false);
+    expect(canBrowseMonth(day("2026-11-01"), -1, bounds)).toBe(true);
+    expect(canBrowseMonth(day("2026-12-01"), 1, bounds)).toBe(false);
+    expect(canBrowseMonth(day("2026-11-01"), 1, bounds)).toBe(true);
+    expect(canBrowseMonth(day("2026-10-17"), -1, unbounded)).toBe(true);
+    expect(canBrowseMonth(day("2026-10-17"), 1, unbounded)).toBe(true);
+  });
+
+  it("makes every day unavailable when min is after max", () => {
+    const inverted = boundsOf("2026-12-31", "2026-01-01");
+    expect(Option.isSome(inverted.min)).toBe(true);
+    expect(Option.isSome(inverted.max)).toBe(true);
+    expect(isAvailable(day("2026-06-15"), inverted)).toBe(false);
   });
 });

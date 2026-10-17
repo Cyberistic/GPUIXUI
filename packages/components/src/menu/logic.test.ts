@@ -19,9 +19,13 @@ import {
 } from "./logic.js";
 
 const rows = (
-  spec: ReadonlyArray<readonly [number, boolean?]>,
+  spec: ReadonlyArray<readonly [number, boolean?, string?]>,
 ): ReadonlyArray<MenuItemSpec> =>
-  spec.map(([id, disabled]) => ({ id, disabled: disabled ?? false }));
+  spec.map(([id, disabled, label]) => ({
+    id,
+    disabled: disabled ?? false,
+    label: label ?? `row ${id}`,
+  }));
 
 const four = rows([[101], [102], [103], [104]]);
 

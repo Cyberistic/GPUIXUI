@@ -6,6 +6,10 @@
  * Ids are monotonic here (so an id is never reused) and `dismiss` cancels its
  * timer, so the queue, the wrap-around of `max`, and the deadline of each
  * toast must all be observable in the assertions below.
+ *
+ * It also guards the timing contract: pausing stores the *remaining* time, so a
+ * toast paused at 2s of 5s resumes with 3s left — not a fresh 5s, and not an
+ * immediate dismissal.
  */
 
 import { describe, expect, it } from "@effect/vitest";
@@ -47,6 +51,53 @@ describe("ToastStore", () => {
         expect(second.id).toBe("2");
         expect(second.tone).toBe("success");
         expect(ids(yield* store.toasts)).toEqual(["1", "2"]);
+      }),
+    ),
+  );
+
+  it.effect("carries a decoded action label on the queued toast", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        const toast = yield* store.push({
+          title: "Message archived",
+          action: { label: "Undo" },
+        });
+
+        expect(Option.map(toast.action, (action) => action.label)).toEqual(
+          Option.some("Undo"),
+        );
+      }),
+    ),
+  );
+
+  it.effect("rejects an empty action label and queues nothing", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+
+        const rejection = yield* store
+          .push({ title: "Archived", action: { label: "" } })
+          .pipe(
+            Effect.match({
+              onFailure: (error) => error,
+              onSuccess: () => undefined,
+            }),
+          );
+
+        expect(Schema.isSchemaError(rejection)).toBe(true);
+        expect(yield* store.toasts).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect("leaves a toast without an action with none", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        const toast = yield* store.push(persistent);
+
+        expect(Option.isNone(toast.action)).toBe(true);
       }),
     ),
   );
@@ -196,6 +247,64 @@ describe("ToastStore", () => {
         );
 
         expect(Arr.map(Arr.fromIterable(seen), ids)).toEqual([[], ["1"]]);
+      }),
+    ),
+  );
+
+  it.effect("pauses the clock and resumes with the remaining time", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Read me" });
+
+        yield* TestClock.adjust(Duration.seconds(2));
+        yield* store.pause("1");
+        yield* TestClock.adjust(Duration.minutes(1));
+
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+
+        yield* store.resume("1");
+        yield* TestClock.adjust(Duration.millis(2900));
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+
+        yield* TestClock.adjust(Duration.millis(200));
+        expect(yield* store.toasts).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect("pause and resume are no-ops for a toast with no timer", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push(persistent);
+
+        yield* store.pause("1");
+        yield* TestClock.adjust(Duration.hours(1));
+        yield* store.resume("1");
+        yield* TestClock.adjust(Duration.hours(1));
+
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+      }),
+    ),
+  );
+
+  it.effect("ignores pause and resume for a toast that is already gone", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Gone soon" });
+        yield* store.dismiss("1");
+
+        yield* store.pause("1");
+        yield* store.resume("1");
+
+        yield* store.push({ title: "Survivor" });
+        yield* TestClock.adjust(Duration.seconds(3));
+        expect(ids(yield* store.toasts)).toEqual(["2"]);
+
+        yield* TestClock.adjust(Duration.seconds(2));
+        expect(yield* store.toasts).toEqual([]);
       }),
     ),
   );

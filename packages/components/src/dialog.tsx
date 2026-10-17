@@ -22,23 +22,29 @@
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Match } from "effect";
 import {
   createContext,
   useCallback,
   useContext,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
-import { useControllableState } from "./internal/controllable.js";
-import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
-import { isDismiss, isTab } from "./internal/key.js";
+import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import {
-  elevation,
+  handleModalKeyDown,
+  useModalFocus,
+  useModalState,
+} from "./internal/modal.js";
+import {
+  assertParts,
+  type PartChildren,
+  type PartComponent,
+  type PartsContract,
+} from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
+import {
+  elevationShadow,
   textStyle,
   useTheme,
   type Theme,
@@ -82,7 +88,7 @@ export interface DialogProps {
    * dialog doing uninterruptible work sets it `false`.
    */
   readonly dismissible?: boolean;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /**
@@ -96,30 +102,19 @@ export const Dialog = ({
   dismissible = true,
   children,
 }: DialogProps) => {
-  const [open, setOpen] = useControllableState({
-    value: openProp,
-    defaultValue: defaultOpen,
-    onChange: onOpenChange,
+  const { open, setOpen } = useModalState({
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    dismissible,
   });
-
-  // The layer handler must see the latest props without being re-pushed: a
-  // re-push would move the dialog above an overlay that opened after it.
-  const dismiss = useRef<() => void>(() => undefined);
-  useLayoutEffect(() => {
-    dismiss.current = () => {
-      if (dismissible) setOpen(false);
-    };
-  });
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    return pushDismissLayer(() => dismiss.current());
-  }, [open]);
 
   const context = useMemo<DialogContextValue>(
     () => ({ open, setOpen }),
     [open, setOpen],
   );
+
+  assertParts(dialogRoot, children);
 
   return (
     <DialogContext.Provider value={context}>{children}</DialogContext.Provider>
@@ -169,7 +164,7 @@ export interface DialogContentProps extends Omit<Props, "children"> {
    * dialog put focus on Cancel instead of on the destructive action.
    */
   readonly initialFocus?: () => number | null;
-  readonly children?: ReactNode;
+  readonly children?: PartChildren;
 }
 
 /** The surface's look: the popover role, a border, the largest elevation. */
@@ -188,7 +183,7 @@ const surfaceStyle = (
   borderRadius: theme.radius.xl,
   borderWidth: theme.borderWidth.thin,
   borderColor: theme.colors.border,
-  boxShadow: elevation(theme, "lg"),
+  boxShadow: elevationShadow(theme, "lg"),
   position: "relative",
   pointerEvents: "auto",
 });
@@ -208,66 +203,31 @@ export const DialogContent = ({
   onMouseDownOutside,
   style,
   testId = "dialog-content",
+  ref,
   ...rest
 }: DialogContentProps) => {
   const theme = useTheme();
   const { open, setOpen } = useDialogContext();
-  const renderer = useGpuix().renderer;
+  const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
+  assertParts(dialogContent, children);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
   const contentRef = useCallback((next: PublicInstance | null) => {
     setContent(next ?? undefined);
   }, []);
-  const previousFocus = useRef<number | null>(null);
-  const initialFocusRef = useRef(initialFocus);
-  useLayoutEffect(() => {
-    initialFocusRef.current = initialFocus;
-  });
-
+  const setContentElement = useMergedRef<PublicInstance | null>(
+    contentRef,
+    ref,
+  );
   const contentId = content?.id;
-
-  useLayoutEffect(() => {
-    if (contentId === undefined) return;
-    previousFocus.current = renderer?.getFocusedElementId?.() ?? null;
-    renderer?.focusElement?.(contentId);
-    const initial = initialFocusRef.current?.() ?? null;
-    if (initial !== null && initial !== contentId) {
-      renderer?.focusElement?.(initial);
-    }
-    return () => {
-      const previous = previousFocus.current;
-      // A destroyed opener must not be focused: `getElementBounds` is the
-      // renderer's own existence check, and it is null once the element is gone.
-      if (
-        previous === null ||
-        previous === contentId ||
-        renderer?.getElementBounds?.(previous) === null
-      ) {
-        return;
-      }
-      renderer?.focusElement?.(previous);
-    };
-  }, [contentId, renderer]);
+  useModalFocus(contentId, initialFocus);
 
   if (!open) return null;
 
   const close = () => setOpen(false);
 
   const handleKeyDown = (event: EventPayload): void => {
-    Match.value(event).pipe(
-      Match.when(isDismiss, (value) => {
-        dismissTopLayer(value);
-      }),
-      Match.when(isTab, (value) => {
-        if (value.modifiers?.shift === true) {
-          renderer?.focusPreviousWithin?.(contentId ?? -1);
-        } else {
-          renderer?.focusNextWithin?.(contentId ?? -1);
-        }
-      }),
-      Match.orElse(() => undefined),
-    );
-    onKeyDown?.(event);
+    handleModalKeyDown({ event, contentId, renderer, onKeyDown });
   };
 
   return (
@@ -294,7 +254,7 @@ export const DialogContent = ({
           aria-label={label}
           tabIndex={-1}
           {...rest}
-          ref={contentRef}
+          ref={setContentElement}
           testId={testId}
           onMouseDownOutside={(event) => {
             onMouseDownOutside?.(event);
@@ -337,8 +297,18 @@ export const DialogContent = ({
 };
 
 /** The surface's heading block: title, description and any meta row. */
-export const DialogHeader = ({ style, ...rest }: Props) => {
+export interface DialogHeaderProps extends Omit<Props, "children"> {
+  readonly children?: PartChildren;
+}
+
+/** The surface's heading block: title, description and any meta row. */
+export const DialogHeader = ({
+  children,
+  style,
+  ...rest
+}: DialogHeaderProps) => {
   const theme = useTheme();
+  assertParts(dialogHeader, children);
   return (
     <div
       {...rest}
@@ -351,7 +321,9 @@ export const DialogHeader = ({ style, ...rest }: Props) => {
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
@@ -403,6 +375,45 @@ export const DialogFooter = ({ style, ...rest }: Props) => {
       )}
     />
   );
+};
+
+/** Every part of Dialog, so a misplaced sibling is named. */
+const dialogParts: ReadonlyArray<PartComponent> = [
+  Dialog,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+];
+
+const dialogRoot: PartsContract = {
+  parent: "Dialog",
+  family: dialogParts,
+  accepts: [DialogTrigger, DialogContent, DialogClose],
+  hint: "Put DialogTrigger and DialogContent directly inside Dialog.",
+};
+
+const dialogContent: PartsContract = {
+  parent: "DialogContent",
+  family: dialogParts,
+  accepts: [
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+  ],
+  hint: "Put the header, title, description, footer and close control inside DialogContent.",
+};
+
+const dialogHeader: PartsContract = {
+  parent: "DialogHeader",
+  family: dialogParts,
+  accepts: [DialogTitle, DialogDescription],
+  hint: "Put DialogTitle and DialogDescription directly inside DialogHeader.",
 };
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */

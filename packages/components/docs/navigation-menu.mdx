@@ -1,0 +1,122 @@
+---
+title: Navigation menu
+description: A horizontal nav whose items open one anchored panel at a time.
+---
+
+`NavigationMenu` is a navigation region: triggers in a row, exactly one anchored
+panel open, and links inside it. It is not a dropdown menu — the panel holds
+navigation, and the trigger row takes arrow keys as a group.
+
+## Usage
+
+```tsx
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@gpuixui/components";
+
+<NavigationMenu label="Product">
+  <NavigationMenuList>
+    <NavigationMenuItem value="platform">
+      <NavigationMenuTrigger>Platform</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <NavigationMenuLink onSelect={() => go("overview")}>
+          Overview
+        </NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  </NavigationMenuList>
+</NavigationMenu>;
+```
+
+The runnable build is `examples/navigation-menu.example.tsx`, which the native
+playground mounts.
+
+## Behaviour
+
+| Action | Result |
+| ------ | ------ |
+| Press or `Enter`/`Space` on a trigger | toggles that item's panel |
+| `ArrowDown` on a trigger | opens its panel and moves focus to the panel surface |
+| `ArrowLeft` / `ArrowRight` on a trigger | moves focus between triggers; does not open |
+| `Home` / `End` on a trigger | first / last trigger |
+| `Escape` | closes the panel and returns focus to its trigger |
+| Outside press | closes the panel |
+| Choosing a link | calls `onSelect` once and closes the panel |
+| A second trigger | closes the first panel; one open at a time |
+
+The open item is `value` (`string | null`, `null` = closed), controllable with
+`onValueChange`. A controlled nav that ignores the change stays closed.
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `NavigationMenu` | `role="navigation"` named by `label`, the dismiss layer | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, children |
+| `NavigationMenuList` | `role="list"` row | children |
+| `NavigationMenuItem` | `role="listitem"`; owns its value | `value` (required), children |
+| `NavigationMenuTrigger` | button with `aria-expanded` | button props |
+| `NavigationMenuContent` | anchored `role="group"` panel, rendered while open | children |
+| `NavigationMenuLink` | a full-width button row | `onSelect?`, button props |
+
+## Theming
+
+The panel uses `popover` / `popoverForeground`, `border`, `radius.lg` and the
+medium elevation; links use the ghost-button roles with an `accent` hover. Items
+sit `spacing["2xs"]` apart. A custom theme changes it with no code change — see
+[Theming](/docs/theming).
+
+## Accessibility
+
+- The nav is a named `navigation` region; the trigger row is a `list`.
+- A trigger reports `aria-expanded`; the open state is one value, so two panels
+  cannot both claim to be open.
+- `Escape` uses the shared dismiss stack: a nav inside a dialog closes first, and
+  focus returns to the trigger that opened it.
+- Links are buttons with `onSelect`; `0.10.0` has no anchor element or `href`.
+- `0.10.0` has no `aria-haspopup`, so the trigger does not announce that it owns
+  a panel.
+
+## Limitations
+
+- **No `href`:** `NavigationMenuLink` is a button; navigation is the consumer's
+  `onSelect`.
+- **Hover does not open.** Press, `Enter`/`Space` or `ArrowDown` open; hover-open
+  is a second policy that would need its own tests, so it is not claimed.
+- **`ArrowDown` focuses the panel surface**, not the first link; one `Tab` then
+  reaches the links.
+- No `aria-haspopup` in `0.10.0`.
+- No nested menus or columns inside a panel beyond whatever children you place.
+
+## Verification
+
+`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer
+(10 tests): declaration order, press-to-open with `aria-expanded`, one panel at a
+time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
+Escape with focus return, outside-press dismissal, a link running once and
+closing, a controlled nav staying closed, and both themes.
+
+One measured implementation fact: the trigger registry updates its ordered key
+list only when the key sequence changes. An always-new array (or a ref callback
+that detaches on every render) caused React's update-depth error.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
+x64, or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Dropdown menus** — actions, not navigation.
+- **Tabs** — switch content in place, not in a panel.
+- **Breadcrumbs** — where you are.

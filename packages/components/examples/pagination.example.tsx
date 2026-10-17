@@ -9,7 +9,12 @@
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
-import { Pagination } from "../src/pagination.js";
+import {
+  Pagination,
+  PaginationList,
+  PaginationNext,
+  PaginationPrevious,
+} from "../src/pagination.js";
 
 const TOTAL = 42;
 const PER_PAGE = 5;
@@ -63,7 +68,11 @@ export const PaginationExample = () => {
           page={page}
           pageCount={PAGE_COUNT}
           onPageChange={setPage}
-        />
+        >
+          <PaginationPrevious />
+          <PaginationList />
+          <PaginationNext />
+        </Pagination>
       </div>
     </Card>
   );

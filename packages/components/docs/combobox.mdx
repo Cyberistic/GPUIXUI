@@ -8,28 +8,49 @@ GPUix's headless combobox — focus, the active row and the keyboard stay the
 runtime's — and adds our option shape, ranking, row look and value semantics.
 
 ```tsx
-import { Combobox } from "@gpuixui/components/combobox";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@gpuixui/components/combobox";
 
 <Combobox
-  label="Assign reviewer"
   options={[
     { value: "ada", label: "Ada Lovelace", description: "Engineering" },
     { value: "grace", label: "Grace Hopper", description: "Compilers" },
   ]}
   onValueChange={(value) => setReviewer(typeof value === "string" ? value : null)}
-/>;
+>
+  <ComboboxTrigger label="Assign reviewer" />
+  <ComboboxContent>
+    <ComboboxInput label="Search reviewers" />
+    <ComboboxList label="Reviewers" />
+    <ComboboxEmpty />
+  </ComboboxContent>
+</Combobox>;
 ```
 
 ## Anatomy
 
 | Part | Responsibility |
 | ---- | -------------- |
-| the trigger | a field-shaped button; the selected label(s) or `placeholder`, `aria-expanded`, `▾` |
-| the popup | a `FloatingLayer`: the search input, the ranked list, the empty state |
-| the option row | label, optional description, `✓` while selected, `aria-selected` |
+| `Combobox` | the headless root: ranking, selection, open state and focus restore |
+| `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `aria-expanded`, `▾` |
+| `ComboboxContent` | the anchored popup surface |
+| `ComboboxInput` | the search field; Escape asks the root to restore focus |
+| `ComboboxList` | the ranked listbox, one `ComboboxItem` per visible option |
+| `ComboboxItem` | one row: label, optional description, `✓` while selected |
+| `ComboboxEmpty` | shown only when no option matches; children replace the default |
 
 Single mode selects one value and closes. Multiple mode keeps the popup open,
 toggles the row, and reports the selected values in the order they were chosen.
+
+The root owns the state because ranking and the selection payload need the whole
+option set; the parts own their own labels and place. `ComboboxItem` is exported
+so a caller can compose the rows of a custom list from the same root.
 
 ## Values, not labels
 
@@ -92,19 +113,41 @@ The trigger paints `colors.background`, a `borderWidth.thin` border in
 scrolling, and rows highlight with `colors.hover`. The selected check is
 `colors.primary`.
 
+## Style by state
+
+Rows take a `StyleDesc` or a function of `ComboboxItemState`
+(`{ selected, highlighted, disabled }`, GPUix's own type). The list renders the
+rows, so pass it as `ComboboxList.itemStyle`; `ComboboxItem.style` accepts the
+same shape for a row composed by hand.
+
+```tsx
+<ComboboxList
+  itemStyle={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+/>
+```
+
 ## Limitations
 
 - No async option loading, no "create new option", no grouping headers in v1.
-- The popup is an anchored layer, not a portal; it flips to stay in the window.
+- The popup is an anchored layer, not a portal. The runtime snaps it inside the
+  window but does not flip it, so the component opens it on the opposite side
+  when snapping would cover the trigger; `align="center"` is measured from the
+  trigger rather than using the runtime's containing-block centre.
+- `align="center"` is clamped by the snap margin near a window edge.
 - The trigger is a `div` with button semantics (the `@gpuixui/primitives`
   stand-in), not a native button element.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (10 tests):
-open + input focus, filtering, ArrowDown + Enter selecting the **value**,
-the empty state, single replacement, multi add/remove with order, the disabled
-row, Escape restoring focus, prefix-before-substring ranking, and both themes.
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (17 tests):
+open + input focus, a centred popup and a near-bottom popup that opens above its
+trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
+single replacement (including the selected row's `aria-selected`), multi
+add/remove with order, the disabled row, Escape restoring focus,
+prefix-before-substring ranking, both themes, the pointer path — selecting an
+option, toggling several while skipping a disabled one, closing on an outside
+press — a caller-supplied empty state, and the trigger's placeholder/name coming
+from the part.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf` and
 `toggledSelection`.

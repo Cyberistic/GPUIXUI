@@ -16,16 +16,17 @@ import {
   isFirst,
   isLast,
   isLeft,
+  isMenuKey,
   isRight,
   isTab,
   isUp,
 } from "./key.js";
 
-const keyEvent = (key: string, ctrl = false): EventPayload => ({
+const keyEvent = (key: string, ctrl = false, shift = false): EventPayload => ({
   elementId: 1,
   eventType: "keyDown",
   key,
-  modifiers: { shift: false, ctrl, alt: false, cmd: false },
+  modifiers: { shift, ctrl, alt: false, cmd: false },
 });
 
 describe("key predicates", () => {
@@ -58,6 +59,14 @@ describe("key predicates", () => {
     expect(isDismiss(keyEvent("escape"))).toBe(true);
     expect(isTab(keyEvent("tab"))).toBe(true);
     expect(isDismiss(keyEvent("tab"))).toBe(false);
+  });
+
+  it("opens a context menu from Shift+F10 or the Menu key", () => {
+    expect(isMenuKey(keyEvent("f10", false, true))).toBe(true);
+    expect(isMenuKey(keyEvent("contextmenu"))).toBe(true);
+    expect(isMenuKey(keyEvent("f10"))).toBe(false);
+    expect(isMenuKey(keyEvent("f10", true))).toBe(false);
+    expect(isMenuKey(keyEvent("enter", false, true))).toBe(false);
   });
 });
 

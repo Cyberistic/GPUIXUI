@@ -25,10 +25,12 @@ import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { FieldExample } from "./field.example.js";
 import { ListExample } from "./list.example.js";
+import { MessageScrollerExample } from "./message-scroller.example.js";
 import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { SearchInputExample } from "./search-input.example.js";
 import { TabsExample } from "./tabs.example.js";
+import { TimePickerExample } from "./time-picker.example.js";
 import { ToastExample } from "./toast.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
@@ -50,9 +52,11 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "empty-state": EmptyStateExample,
   field: FieldExample,
   list: ListExample,
+  "message-scroller": MessageScrollerExample,
   pagination: PaginationExample,
   popover: PopoverExample,
   "search-input": SearchInputExample,
   tabs: TabsExample,
+  "time-picker": TimePickerExample,
   toast: ToastExample,
 };

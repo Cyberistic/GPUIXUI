@@ -33,7 +33,7 @@ toast.push({
 | Part | Responsibility |
 | ---- | -------------- |
 | `ToastProvider` | the `ManagedRuntime`, the store, the React subscription — the package's **only** `runtime.run*` boundary |
-| `useToast()` | `{ toasts, push, dismiss, dismissAll }`; throws outside the provider |
+| `useToast()` | `{ toasts, push, dismiss, dismissAll, pause, resume, actionFor }`; throws outside the provider |
 | `ToastViewport` | the bottom-right stack; `role="status"` |
 
 Render the viewport **last** in the app root: GPUix has no `zIndex`, so overlays
@@ -49,14 +49,51 @@ pointer events back on, so a toast never blocks the page underneath.
 | custom duration | `duration: Duration.seconds(6)` |
 | zero or infinite duration | never auto-dismisses; the card stays until dismissed |
 | ids | monotonic (`"1"`, `"2"`, …), never reused |
+| hovering a card | pauses its clock; leaving resumes with the **remaining** time |
+| focusing a card's controls | pauses its clock; moving focus away resumes with the **remaining** time |
+| an action | one labelled control; pressing it runs the handler once and dismisses the toast |
 
 A dismissed toast's timer is cancelled with it, so a stale timer can never remove
 the next toast. That regression is guarded in `toast/store.test.ts` with
 `TestClock`; the store suite also proves the stack bound and the id order.
 
+Pause/resume is also on `useToast()` for a consumer that wants its own hold
+affordance (a button, a hover target, a focus ring). The viewport holds a card's
+clock while the pointer is on it **or** focus is inside it, and resumes only when
+both have left; the pause keeps the remaining time, so the two reasons compose
+without restarting the countdown.
+
 Tones are `info` (default), `success`, `warning` and `danger`; each paints the
 3px left bar and the glyph. The glyph is text (`i`, `✓`, `!`, `✕`) until an icon
 set lands.
+
+## Actions
+
+A toast may carry one action, such as Undo. The **label** is data in the draft,
+so it decodes and validates like the title; the **handler** is supplied beside
+the draft, because a function cannot cross the schema boundary:
+
+```tsx
+toast.push(
+  {
+    title: "Message archived",
+    action: { label: "Undo" },
+    duration: Duration.seconds(8),
+  },
+  { onAction: () => restore() },
+);
+```
+
+- An action label with **no handler draws nothing** — never a dead control.
+- Pressing the action runs the handler once and dismisses the toast, the same
+  contract as Radix/shadcn; the handler may push another toast.
+- A toast has at most one action. More than one is a composition decision, not a
+  hidden array.
+- Keyboard focus on the action holds the auto-dismiss clock exactly like the
+  dismiss control; the two controls share one hold count, so moving focus between
+  them does not resume the timer.
+- `useToast().actionFor(id)` returns the handler as an `Option`, for a consumer
+  that renders its own content.
 
 ## Controlled by whom
 
@@ -79,8 +116,10 @@ palette Alert and Badge use). Width is 380px.
   region is the supported announcement.
 - **No progress indicator** for the remaining time; the store knows the deadline
   but the card does not animate it.
-- The stack has no pause-on-hover. A card that must not disappear should use
-  `duration: Duration.infinity` (or a zero duration) and a manual dismiss.
+- Hovering a card pauses its clock, and so does keyboard focus on either of its
+  controls; the clock resumes with the remaining time once both the pointer and
+  focus have left. A consumer that needs a custom hold can call
+  `pause`/`resume` from `useToast()`.
 - No portal: the viewport is an absolutely positioned element in its parent, so
   put it at the app root.
 - Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React
@@ -91,11 +130,15 @@ palette Alert and Badge use). Width is 380px.
 ## Verification
 
 - `src/toast/store.test.ts` — queue, ids, `max`, dismiss, `dismissAll`,
-  `TestClock` auto-dismiss, the stale-timer regression, custom durations and
-  rejected input.
-- `src/behaviour/toast.test.tsx` — 7 tests in the real GPUix renderer: push,
+  `TestClock` auto-dismiss, the stale-timer regression, custom durations,
+  rejected input, pause/resume with the remaining time, and action decoding
+  (present, absent, empty label).
+- `src/behaviour/toast.test.tsx` — 14 tests in the real GPUix renderer: push,
   stacking order, dismissing one card, `dismissAll`, the page staying clickable
-  through the viewport, both themes, and the queue still working after a dismiss.
+  through the viewport, both themes, the queue still working after a dismiss,
+  hover pausing a card's auto-dismiss, focus pausing it, focus holding through
+  the pointer leaving, the action running once and dismissing, no control for an
+  unhandled label, no control without an action, and the action holding focus.
 
 ```sh
 nub run --filter @gpuixui/components test

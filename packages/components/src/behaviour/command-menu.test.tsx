@@ -5,7 +5,8 @@
  * that left non-matching labels visible; arrow keys that moved focus out of the
  * input (so typing stopped); Enter running the wrong row, running a disabled row,
  * or leaving the palette open; the empty label missing; a custom filter ignored;
- * and Escape leaving the dialog up.
+ * Escape leaving the dialog up; a non-contiguous query that matched nothing; a
+ * ranking that ran the wrong row; and a global sort that interleaved groups.
  */
 
 import * as Option from "effect/Option";
@@ -13,7 +14,13 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
-import { CommandMenu, type CommandAction } from "../command-menu.js";
+import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+  type CommandAction,
+} from "../command-menu.js";
 
 const actions = (
   perform: (id: string) => void,
@@ -74,7 +81,11 @@ const Palette = ({
       onOpenChange={setOpen}
       actions={actions(perform)}
       filter={filter}
-    />
+    >
+      <CommandMenuInput />
+      <CommandMenuList />
+      <CommandMenuEmpty />
+    </CommandMenu>
   );
 };
 
@@ -82,6 +93,58 @@ const Palette = ({
 const type = (root: ReturnType<typeof renderComponent>, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
+
+/** A palette over a caller-supplied action set. */
+const LocalPalette = ({
+  items,
+}: {
+  readonly items: ReadonlyArray<CommandAction>;
+}) => {
+  const [open, setOpen] = useState(true);
+  return (
+    <CommandMenu open={open} onOpenChange={setOpen} actions={items}>
+      <CommandMenuInput />
+      <CommandMenuList />
+      <CommandMenuEmpty />
+    </CommandMenu>
+  );
+};
+
+/** Two label matches where the better one is declared second. */
+const rankedActions = (
+  perform: (id: string) => void,
+): ReadonlyArray<CommandAction> => [
+  {
+    id: "reopen",
+    label: "Reopen file",
+    group: "Files",
+    perform: () => perform("reopen"),
+  },
+  {
+    id: "open",
+    label: "Open file",
+    group: "Files",
+    perform: () => perform("open"),
+  },
+];
+
+/** The later group's row outranks the earlier one, so only per-group ranking keeps heading order. */
+const groupedActions = (
+  perform: (id: string) => void,
+): ReadonlyArray<CommandAction> => [
+  {
+    id: "goto",
+    label: "Go to line",
+    group: "Navigation",
+    perform: () => perform("goto"),
+  },
+  {
+    id: "open",
+    label: "Open file",
+    group: "File",
+    perform: () => perform("open"),
+  },
+];
 
 describe("CommandMenu", () => {
   it("focuses the search input when it opens", () => {
@@ -101,7 +164,9 @@ describe("CommandMenu", () => {
     expect(texts).toContain("Open file");
     expect(texts).toContain("Open recent");
     expect(texts).not.toContain("Save");
-    expect(texts).not.toContain("Export as PDF");
+    expect(texts).not.toContain("Toggle sidebar");
+    // Fuzzy, not substring: the `o` of "Export" and the `p` of "PDF" match.
+    expect(texts).toContain("Export as PDF");
     // The input keeps focus while the list narrows.
     expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
 
@@ -180,6 +245,129 @@ describe("CommandMenu", () => {
     palette.renderer.simulateKeystrokes("escape");
 
     expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+
+    palette.unmount();
+  });
+
+  it("matches a non-contiguous query by initials", () => {
+    const perform = vi.fn();
+    const palette = renderComponent(<Palette perform={perform} />);
+
+    type(palette, "opfl");
+
+    const texts = palette.renderer.getAllText();
+    expect(texts).toContain("Open file");
+    expect(texts).not.toContain("Open recent");
+    expect(palette.renderer.findByTestId("command-empty")).toBeUndefined();
+
+    palette.renderer.simulateKeystrokes("enter");
+    expect(perform).toHaveBeenCalledWith("open-file");
+
+    palette.unmount();
+  });
+
+  it("runs the best-ranked row, not the first declared", () => {
+    const perform = vi.fn();
+    const palette = renderComponent(
+      <LocalPalette items={rankedActions(perform)} />,
+    );
+
+    type(palette, "open");
+
+    expect(
+      palette.renderer.findByTestId("command-open")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(
+      palette.renderer.findByTestId("command-reopen")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(false);
+
+    palette.renderer.simulateKeystrokes("enter");
+    expect(perform).toHaveBeenCalledWith("open");
+
+    palette.unmount();
+  });
+
+  it("keeps groups in declaration order while ranking inside them", () => {
+    const perform = vi.fn();
+    const palette = renderComponent(
+      <LocalPalette items={groupedActions(perform)} />,
+    );
+
+    type(palette, "o");
+
+    const texts = palette.renderer.getAllText();
+    const navigation = texts.indexOf("Navigation");
+    const file = texts.indexOf("File");
+    expect(navigation).toBeGreaterThanOrEqual(0);
+    expect(file).toBeGreaterThan(navigation);
+    expect(texts.filter((text) => text === "Navigation")).toHaveLength(1);
+    expect(texts.filter((text) => text === "File")).toHaveLength(1);
+
+    palette.unmount();
+  });
+
+  it("keeps declaration order for an empty query", () => {
+    const palette = renderComponent(<Palette perform={vi.fn()} />);
+
+    expect(
+      palette.renderer.findByTestId("command-open-file")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(palette.renderer.getAllText()).toContain("Toggle sidebar");
+
+    palette.unmount();
+  });
+
+  it("renders the caller's own empty state", () => {
+    const CustomEmpty = () => {
+      const [open, setOpen] = useState(true);
+      return (
+        <CommandMenu
+          open={open}
+          onOpenChange={setOpen}
+          actions={actions(vi.fn())}
+        >
+          <CommandMenuInput />
+          <CommandMenuList />
+          <CommandMenuEmpty>Nothing here</CommandMenuEmpty>
+        </CommandMenu>
+      );
+    };
+    const palette = renderComponent(<CustomEmpty />);
+
+    type(palette, "zzz");
+
+    expect(palette.renderer.getAllText()).toContain("Nothing here");
+    expect(palette.renderer.getAllText()).not.toContain("No matching commands");
+
+    palette.unmount();
+  });
+
+  it("takes the input's placeholder and name from the part", () => {
+    const Named = () => {
+      const [open, setOpen] = useState(true);
+      return (
+        <CommandMenu
+          open={open}
+          onOpenChange={setOpen}
+          actions={actions(vi.fn())}
+        >
+          <CommandMenuInput placeholder="Find a command" label="Find" />
+          <CommandMenuList />
+          <CommandMenuEmpty />
+        </CommandMenu>
+      );
+    };
+    const palette = renderComponent(<Named />);
+    const input = palette.renderer.findByTestId("command-input");
+
+    expect(input?.customProps?.placeholder).toBe("Find a command");
+    expect(input?.customProps?.["aria-label"]).toBe("Find");
 
     palette.unmount();
   });

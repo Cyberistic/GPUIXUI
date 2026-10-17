@@ -11,8 +11,10 @@
 
 import type { EventPayload, Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Match } from "effect";
+import { Match, pipe } from "effect";
+import * as Option from "effect/Option";
 import type { ReactNode } from "react";
+import { isEventClaimed } from "../internal/event-claim.js";
 import { dismissTopLayer } from "../internal/dismiss-layer.js";
 import {
   isActivation,
@@ -22,9 +24,10 @@ import {
   isLast,
   isTab,
   isUp,
+  typedChar,
 } from "../internal/key.js";
 import {
-  elevation,
+  elevationShadow,
   textStyle,
   useTheme,
   type Theme,
@@ -43,7 +46,7 @@ export const menuSurfaceStyle = (theme: Theme): StyleDesc => ({
   borderRadius: theme.radius.md,
   borderWidth: theme.borderWidth.thin,
   borderColor: theme.colors.border,
-  boxShadow: elevation(theme, "md"),
+  boxShadow: elevationShadow(theme, "md"),
   pointerEvents: "auto",
 });
 
@@ -56,18 +59,29 @@ export const menuKeyHandler = (
   menu: MenuContextValue,
 ): ((event: EventPayload) => void) => {
   const step = (event: EventPayload): void => {
-    Match.value(event).pipe(
-      Match.when(isDown, () => menu.step({ _tag: "Move", delta: 1 })),
-      Match.when(isUp, () => menu.step({ _tag: "Move", delta: -1 })),
-      Match.when(isFirst, () => menu.step({ _tag: "First" })),
-      Match.when(isLast, () => menu.step({ _tag: "Last" })),
-      Match.when(isActivation, menu.activateActive),
-      Match.when(isDismiss, (value) => {
-        dismissTopLayer(value);
+    // A nested surface (a submenu) has already acted on this event; 0.10.0 has
+    // no stopPropagation, so the claim is how this menu stays out of it.
+    if (isEventClaimed(event)) return;
+    pipe(
+      typedChar(event),
+      Option.match({
+        // A typed letter jumps to a row; it never also runs a named-key rule.
+        onSome: menu.typeahead,
+        onNone: () =>
+          Match.value(event).pipe(
+            Match.when(isDown, () => menu.step({ _tag: "Move", delta: 1 })),
+            Match.when(isUp, () => menu.step({ _tag: "Move", delta: -1 })),
+            Match.when(isFirst, () => menu.step({ _tag: "First" })),
+            Match.when(isLast, () => menu.step({ _tag: "Last" })),
+            Match.when(isActivation, menu.activateActive),
+            Match.when(isDismiss, (value) => {
+              dismissTopLayer(value);
+            }),
+            // A menu is not modal: Tab closes it and lets focus move on.
+            Match.when(isTab, () => menu.close("leave")),
+            Match.orElse(() => undefined),
+          ),
       }),
-      // A menu is not modal: Tab closes it and lets focus move on.
-      Match.when(isTab, () => menu.close("leave")),
-      Match.orElse(() => undefined),
     );
   };
   return step;
@@ -76,7 +90,7 @@ export const menuKeyHandler = (
 /** {@link MenuSurface} props: a labelled menu box. */
 export interface MenuSurfaceProps extends Props {
   /** The menu's accessible name. */
-  readonly label: string;
+  readonly label?: string;
   readonly children?: ReactNode;
 }
 

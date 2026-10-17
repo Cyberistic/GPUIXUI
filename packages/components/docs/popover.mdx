@@ -4,9 +4,13 @@ description: A floating panel anchored to the control that opened it.
 ---
 
 `Popover` floats a surface next to its trigger without making the rest of the
-window modal. Positioning is GPUix's own `anchored` layer, so it flips and snaps
-to stay inside the window; the component owns the open state, the dismissal rules
-and the trigger's re-open guard.
+window modal. Positioning is GPUix's own `anchored` layer. Measured against
+0.10.0, the runtime **snaps** a surface inside the window but does not flip it,
+and its `center` alignment centres on the trigger's containing block rather than
+the trigger. The component therefore owns the placement correction: it flips a
+snapped surface back off its trigger and converts `align="center"` into a
+measured centre. It also owns the open state, the dismissal rules and the
+trigger's re-open guard.
 
 ```tsx
 import {
@@ -34,7 +38,10 @@ import {
 `PopoverContent` takes `side` (`top`/`right`/`bottom`/`left`, default `"bottom"`),
 `align` (`start`/`center`/`end`, default `"start"`), `sideOffset` (default `6`) and
 `collisionPadding` (default `8`, the margin kept from the window edge when the
-layer flips).
+surface snaps). When the snapped surface would cover its trigger, the component
+opens it on the opposite side if that side has room, otherwise on the roomier
+side. `align="center"` is exact: the runtime's `center` is not used.
+`alignOffset` is still added on top if the caller needs its own adjustment.
 
 ## Dismissal
 
@@ -79,18 +86,25 @@ The surface paints `colors.popover` / `colors.popoverForeground`,
   `HostProps` in `@gpuix/native/dist/host.d.ts`), so the link between trigger and
   surface is positional, not semantic.
 - Positioning is the runtime's anchored layer: there is no arrow, no custom anchor
-  element, and no separate backdrop. Keep a popover's content short; for a form
-  that must block the window, use **Dialog**.
+  element, and no separate backdrop. The runtime snaps, so the component flips
+  once when the snapped surface would cover its trigger; it does not do
+  continuous collision-aware placement while the window resizes. Keep a popover's
+  content short; for a form that must block the window, use **Dialog**.
+- `align="center"` cannot centre a surface that would leave the window: the
+  runtime's snap margin wins at the edges.
 - A press outside hands focus to whatever was pressed, so focus is not restored to
   the trigger in that path. Escape is the keyboard path that restores it.
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (8 tests): opens
-below the trigger by measured bounds, honours `side="right"`, Escape closing and
-restoring focus, an outside press closing without the following click re-opening
-it, a press inside keeping it open, Tab closing it, and a controlled popover
-reporting `onOpenChange` while staying as the consumer says.
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (12 tests):
+opens below the trigger by measured bounds, honours `side="right"`, centres a
+requested panel on its trigger, opens above a trigger near the window bottom
+instead of covering it, Escape closing and restoring focus, an outside press
+closing without the following click re-opening it, a press inside keeping it
+open, Tab closing it, a controlled popover reporting `onOpenChange` while staying
+as the consumer says (including an inline consumer that keeps it closed), both
+themes, and a caller trigger `ref`.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

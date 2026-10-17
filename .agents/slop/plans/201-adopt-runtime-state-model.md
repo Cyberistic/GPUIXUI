@@ -5,7 +5,7 @@
 | Phase | B (foundation) — the convention every stateful component follows |
 | Owner | components workstream (owns `packages/components`); primitives owns the Tier 1 helpers |
 | Depends on | `200-adopt-compound-part-api.md` (the public API the state model serves), `020-gpuix-runtime-capability.md` §3.1.3 (pure-logic tests run today) |
-| Status | planned |
+| Status | components half done — 2026-10-17 (`core/runtime.ts`, doc §7, ADR 0005, PLAN D26); the `packages/testing` helper is pending its owner |
 | Source | `references/base-gpui/docs/component-architecture.md`, `src/*/runtime.rs`, `src/*/context.rs`, `src/*/tests/` (1,000+ window-free tests) |
 
 This plan is self-contained. It produces a **convention, one shared hook and its
@@ -154,6 +154,17 @@ state, or a second controlled/uncontrolled implementation.
   must fail the assertion. Run `scripts/verify-two-directions.sh` to prove both
   directions before calling it done.
 - These are pure tests, so they **do** run on this host (plan `020` §3.1.3).
+
+Measured 2026-10-17 (components half):
+
+- `package/components/src/core/runtime.test.ts` — 3 tests: the command fold,
+  part-shaped style-state (keys `active`/`highlighted`, no index), and `initial`
+  unchanged after a run. 222 unit tests green in the package.
+- Both directions: replacing the `select` branch with `() => state` fails 2 of
+  the 3 tests; restored, green.
+- The `packages/testing/src/state.ts` half is not in this package's ownership;
+  it stays a `TODO.md` task for the playground workstream. `runtime.run` is the
+  same fold, so nothing in this package waits on it.
 
 ## 7. STOP conditions
 

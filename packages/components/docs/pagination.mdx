@@ -8,12 +8,38 @@ window the app's page implies. The arithmetic lives in `pagination/logic.ts` so
 the width does not jump as the user pages.
 
 ```tsx
-import { Pagination } from "@gpuixui/components/pagination";
+import {
+  Pagination,
+  PaginationList,
+  PaginationNext,
+  PaginationPrevious,
+} from "@gpuixui/components/pagination";
 
 const [page, setPage] = useState(1);
 
-<Pagination page={page} pageCount={9} onPageChange={setPage} />;
+<Pagination page={page} pageCount={9} onPageChange={setPage}>
+  <PaginationPrevious />
+  <PaginationList />
+  <PaginationNext />
+</Pagination>;
 ```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Pagination` | the `role="navigation"` root, its name, the clamped page and the window |
+| `PaginationPrevious` | the "‹ Prev" control; leaves the tab order on the first page |
+| `PaginationList` | the page window: page buttons and the ellipses for gaps |
+| `PaginationItem` | one page number; the current page is primary and non-pressable |
+| `PaginationNext` | the "Next ›" control; leaves the tab order on the last page |
+| `PaginationEllipsis` | the non-focusable `…` that stands in for omitted pages |
+
+The root derives the window once, so a caller never re-implements the stable-width
+rule. The parts are still composable: add a `PaginationItem` beside the list for a
+"jump to page" shortcut, or put your page-size control between the numbered
+window and `PaginationNext`.
+
 
 ## Window rule
 
@@ -30,10 +56,9 @@ const [page, setPage] = useState(1);
 An out-of-range `page` is clamped; an ellipsis replaces a gap of two or more,
 while a gap of one renders the page itself.
 
-## Anatomy
+## Layout and states
 
-The root is `role="navigation"` with `aria-label="Pagination"`: a Previous
-button, the window, and a Next button. The current page is a button with
+The root lays the parts out in a row. The current page is a button with
 `aria-selected` and the primary fill; pressing it does nothing. Previous and Next
 leave the tab order at the ends instead of merely looking disabled.
 
@@ -49,6 +74,18 @@ page paints `colors.primary` with `colors.primaryForeground`, others are ghost
 buttons with `colors.mutedForeground`. The ellipsis uses `colors.mutedForeground`
 and a caption type role.
 
+## Style by state
+
+`PaginationItem.style` takes a `StyleDesc` or a function of
+`PaginationItemState` (`{ active }`), where `active` is the current page.
+
+```tsx
+<PaginationItem
+  page={3}
+  style={(state) => ({ opacity: state.active ? 1 : 0.8 })}
+/>
+```
+
 ## Accessibility and limitations
 
 - `role="navigation"` and a name on the root; `aria-label="Page N"` on every page
@@ -61,10 +98,11 @@ and a caption type role.
 
 ## Verification
 
-`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (10 tests):
 disabled edges, the page number (not index) reported, the current page no-op,
 Previous/Next stepping, the ellipsis not being a tab stop, Enter activation,
-`pageCount: 0`, and the current fill in both themes.
+`pageCount: 0`, the current fill in both themes, the composed part order, and an
+item outside the list reading the root's page.
 
 `src/pagination/logic.test.ts` covers the window table above, including clamping,
 wide siblings and unique ascending pages.

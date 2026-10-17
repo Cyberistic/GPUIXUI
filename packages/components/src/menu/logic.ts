@@ -16,9 +16,15 @@ import {
   nextEnabled,
   type CollectionItem,
 } from "../internal/collection.js";
+import type { TypeaheadItem } from "../internal/typeahead.js";
 
-/** A menu row: the id of its host element and whether it accepts selection. */
-export type MenuItemSpec = CollectionItem;
+/**
+ * A menu row: the id of its host element, whether it accepts selection, and the
+ * text type-ahead matches. An empty label is not searched.
+ */
+export interface MenuItemSpec extends CollectionItem, TypeaheadItem {
+  readonly label: string;
+}
 
 /** The active row, by element id. */
 export interface MenuState {

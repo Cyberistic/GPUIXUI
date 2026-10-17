@@ -12,7 +12,7 @@
  * and inventing a half-locale here would be a second source of truth.
  */
 
-import { pipe } from "effect";
+import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
@@ -133,3 +133,80 @@ export const addDays = (value: DateTime.Utc, amount: number): DateTime.Utc =>
 /** The month's last day, used to clamp a day-of-month move. */
 export const lastDayOfMonth = (value: DateTime.Utc): DateTime.Utc =>
   DateTime.add({ days: -1 })(addMonths(value, 1));
+
+/** Inclusive day bounds; an absent side is unbounded. */
+export interface DayBounds {
+  readonly min: Option.Option<DateTime.Utc>;
+  readonly max: Option.Option<DateTime.Utc>;
+}
+
+/** No bounds at all. */
+export const unbounded: DayBounds = {
+  min: Option.none(),
+  max: Option.none(),
+};
+
+/** Parse the public ISO props; a malformed or absent bound is unbounded. */
+export const boundsOf = (
+  min?: string | null,
+  max?: string | null,
+): DayBounds => ({
+  min: Option.flatMap(Option.fromNullishOr(min), parseIsoDay),
+  max: Option.flatMap(Option.fromNullishOr(max), parseIsoDay),
+});
+
+/** Whether `day` may be selected: both bounds are inclusive. */
+export const isAvailable = (day: DateTime.Utc, bounds: DayBounds): boolean => {
+  const millis = DateTime.toEpochMillis(day);
+  return (
+    Option.match(bounds.min, {
+      onNone: () => true,
+      onSome: (min) => millis >= DateTime.toEpochMillis(min),
+    }) &&
+    Option.match(bounds.max, {
+      onNone: () => true,
+      onSome: (max) => millis <= DateTime.toEpochMillis(max),
+    })
+  );
+};
+
+/** `day` moved inside the bounds; an unbounded side returns it unchanged. */
+export const clampToBounds = (
+  day: DateTime.Utc,
+  bounds: DayBounds,
+): DateTime.Utc => {
+  const millis = DateTime.toEpochMillis(day);
+  const lower = Option.match(bounds.min, {
+    onNone: () => day,
+    onSome: (min) => (millis < DateTime.toEpochMillis(min) ? min : day),
+  });
+  return Option.match(bounds.max, {
+    onNone: () => lower,
+    onSome: (max) =>
+      DateTime.toEpochMillis(lower) > DateTime.toEpochMillis(max) ? max : lower,
+  });
+};
+
+/** Whether the previous (`-1`) or next (`1`) month is browseable. */
+export const canBrowseMonth = (
+  viewMonth: DateTime.Utc,
+  direction: -1 | 1,
+  bounds: DayBounds,
+): boolean => {
+  const current = DateTime.toEpochMillis(startOfMonth(viewMonth));
+  return Match.value(direction).pipe(
+    Match.when(-1, () =>
+      Option.match(bounds.min, {
+        onNone: () => true,
+        onSome: (min) => current > DateTime.toEpochMillis(startOfMonth(min)),
+      }),
+    ),
+    Match.when(1, () =>
+      Option.match(bounds.max, {
+        onNone: () => true,
+        onSome: (max) => current < DateTime.toEpochMillis(startOfMonth(max)),
+      }),
+    ),
+    Match.exhaustive,
+  );
+};

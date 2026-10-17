@@ -18,7 +18,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../src/dialog.js";
-import { Alert } from "../src/alert.js";
+import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "../src/alert.js";
 import { Button } from "../src/internal/button.js";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
@@ -101,8 +106,13 @@ export const DialogExample = () => {
       </div>
       {deleted ? (
         <div style={{ padding: theme.spacing.xl, paddingTop: 0 }}>
-          <Alert tone="success" title="Workspace deleted">
-            Every member has been notified.
+          <Alert tone="success">
+            <AlertContent>
+              <AlertTitle>Workspace deleted</AlertTitle>
+              <AlertDescription>
+                Every member has been notified.
+              </AlertDescription>
+            </AlertContent>
           </Alert>
         </div>
       ) : null}

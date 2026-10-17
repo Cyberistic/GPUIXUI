@@ -23,6 +23,22 @@ export interface Collection {
   readonly items: () => ReadonlyArray<CollectionItem>;
 }
 
+/** A registered row with a stable value, for registries keyed by value. */
+export interface ValueItem extends CollectionItem {
+  readonly value: string;
+}
+
+/** Add or replace a row by value, preserving declaration order. */
+export const upsertValue = <Item extends ValueItem>(
+  items: ReadonlyArray<Item>,
+  item: Item,
+): ReadonlyArray<Item> =>
+  Arr.some(items, (existing) => existing.value === item.value)
+    ? Arr.map(items, (existing) =>
+        existing.value === item.value ? item : existing,
+      )
+    : Arr.append(items, item);
+
 /** Add `item`, replacing any row with the same id so order never drifts. */
 export const insert = (
   items: ReadonlyArray<CollectionItem>,

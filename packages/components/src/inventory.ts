@@ -11,22 +11,39 @@ import { alertMeta } from "./alert.js";
 import { avatarMeta } from "./avatar.js";
 import { badgeMeta } from "./badge.js";
 import { breadcrumbMeta } from "./breadcrumb.js";
+import { carouselMeta } from "./carousel.js";
 import { cardMeta } from "./card.js";
 import { collapsibleMeta } from "./collapsible.js";
+import { colorPickerMeta } from "./color-picker.js";
 import { comboboxMeta } from "./combobox.js";
 import { commandMenuMeta } from "./command-menu.js";
 import { confirmDialogMeta } from "./confirm-dialog.js";
 import { contextMenuMeta } from "./context-menu.js";
+import { countdownMeta } from "./countdown.js";
 import { datePickerMeta } from "./date-picker.js";
 import { dialogMeta } from "./dialog.js";
+import { drawerMeta } from "./drawer.js";
 import { dropdownMenuMeta } from "./dropdown-menu.js";
 import { emptyStateMeta } from "./empty-state.js";
 import { fieldMeta } from "./field.js";
+import { fieldsetMeta } from "./fieldset.js";
+import { formMeta } from "./form.js";
+import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
+import { inlineEditMeta } from "./inline-edit.js";
+import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
+import { mentionInputMeta } from "./mention-input.js";
+import { messageScrollerMeta } from "./message-scroller.js";
+import { navigationMenuMeta } from "./navigation-menu.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
+import { previewCardMeta } from "./preview-card.js";
 import { searchInputMeta } from "./search-input.js";
+import { stepperMeta } from "./stepper.js";
 import { tabsMeta } from "./tabs.js";
+import { tagInputMeta } from "./tag-input.js";
+import { timelineMeta } from "./timeline.js";
+import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
 
 /** One component's inventory record. */
@@ -53,21 +70,38 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   avatarMeta,
   badgeMeta,
   breadcrumbMeta,
+  carouselMeta,
   cardMeta,
   collapsibleMeta,
+  colorPickerMeta,
   comboboxMeta,
   commandMenuMeta,
   confirmDialogMeta,
   contextMenuMeta,
+  countdownMeta,
   datePickerMeta,
   dialogMeta,
+  drawerMeta,
   dropdownMenuMeta,
   emptyStateMeta,
   fieldMeta,
+  fieldsetMeta,
+  formMeta,
+  hotkeyRecorderMeta,
+  inlineEditMeta,
+  keyboardShortcutsMeta,
   listMeta,
+  mentionInputMeta,
+  messageScrollerMeta,
+  navigationMenuMeta,
   paginationMeta,
   popoverMeta,
+  previewCardMeta,
   searchInputMeta,
+  stepperMeta,
   tabsMeta,
+  tagInputMeta,
+  timelineMeta,
+  timePickerMeta,
   toastMeta,
 ];

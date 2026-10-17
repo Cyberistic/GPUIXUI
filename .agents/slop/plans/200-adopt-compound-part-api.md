@@ -5,7 +5,7 @@
 | Phase | A (feasibility) → the spec every Tier 1–2 component plan consumes |
 | Owner | components workstream (owns `packages/components`), with primitives for Tier 1 |
 | Depends on | `020-gpuix-runtime-capability.md` (what GPUix actually supports), `030-primitives-package.md` (the Tier 1 package), plans `110–117` (the Tier 2 parts) |
-| Status | planned |
+| Status | done — 2026-10-17; contract doc, ADR 0004, licence record and the contract test landed |
 | Source | `references/base-gpui` (MIT, `Copyright (c) 2026 Luke Tandjung`), commit `64b2233`; `docs/components/*.md` (37 guides) and `docs/component-architecture.md` |
 
 This plan is self-contained. It is a **translation** task: read `base-gpui`'s
@@ -105,7 +105,7 @@ the gap as a limitation, exactly as `base-gpui` does for `aria-controls`.
 | `docs/README.md` | add `component-api.md` to the documents table (Phase A) |
 | `PLAN.md` §4 | add a decision row: "public component API follows `base-gpui`'s compound-part contract, translated to React" |
 | `LICENSES/base-gpui.md` | record MIT + `Copyright (c) 2026 Luke Tandjung` and "design reference only; no source copied" |
-| `.agents/adr/0002-compound-part-api.md` | ADR accepting the contract (template in `.agents/adr/README.md`) |
+| `.agents/adr/0004-compound-part-api.md` | ADR accepting the contract (template in `.agents/adr/README.md`). **Renumbered from 0002:** the runtime ADRs `0001–0003` already exist; the next free number is `0004` |
 
 Do **not** create component source in this plan. The per-component plans
 (`110–117`, `030`) consume this contract.
@@ -142,10 +142,14 @@ component that consumes it** (plan `111`), plus document gates:
 - `docs/component-api.md` must contain the six §2 rules; a `grep` per rule is the
   check.
 - The ADR and `PLAN.md` row must exist.
-- **Able-to-fail check:** add a `docs/component-api.test.ts` that reads the file
-  and asserts the translation table contains `onValueChange` and `defaultValue`;
-  delete one row and the test fails. This is a documentation contract, so keep
-  the test to the table's required rows, not prose.
+- **Able-to-fail check:** add the contract assertions to
+  `packages/components/src/inventory.test.ts` (the package's **one**
+  repository-check exception, plan 117 §3) rather than a `docs/*.test.ts` that
+  no project collects. It reads `docs/component-api.md`, asserts the translation
+  table contains `onValueChange` and `defaultValue`, and asserts every inventory
+  record's name has a parts row. Delete one row and the test fails. This is a
+  documentation contract, so keep the test to the table's required rows, not
+  prose.
 
 ## 7. Acceptance criteria
 
@@ -155,3 +159,21 @@ component that consumes it** (plan `111`), plus document gates:
   only".
 - `PLAN.md` §4 and the ADR record the decision.
 - No component source was written and no Rust was copied.
+
+## 8. Result
+
+Landed 2026-10-17:
+
+- `docs/component-api.md` — rules §1–6, Tier 1 and Tier 2 parts tables (every
+  inventory record is listed), planned parts, and the landed deviations in §8.
+- `.agents/adr/0004-compound-part-api.md` (renumbered: 0001–0003 are the runtime
+  ADRs) and `PLAN.md` D25.
+- `LICENSES/base-gpui.md` — MIT, `Copyright (c) 2026 Luke Tandjung`, commit
+  `64b2233`, design reference only.
+- `packages/components/src/inventory.test.ts` gained two contract checks: the
+  six rule headings plus the `defaultValue`/`onValueChange` rows, and every
+  inventory name in a parts table. Proven able to fail by changing
+  `onValueChange` to `onChange` (1 test failed); restored, 219 unit tests green.
+
+The 37-guide count check was run before writing: `docs/components` holds 37
+component guides plus a README.
