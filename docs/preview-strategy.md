@@ -55,6 +55,16 @@ capture script:
 
 The capture script is owned by the playground workstream (`TODO.md`).
 
+## How source is reproduced
+
+Tier **X** shows "source plus a limitation notice", and tier **N/S** pages carry
+the component's source too — always the **real file**, read at build time by
+Fumadocs' `<include>` tag (`remarkInclude`), never a hand-pasted copy. The
+included path is the component's registry `sourcePath`, so the page and the
+registry cannot disagree, and `apps/docs/src/content-references.test.ts` fails
+if a page points at a file that does not exist, names a missing region, or omits
+the source for a component that is no longer `planned`.
+
 ## What is explicitly not claimed
 
 - That a browser approximation runs GPUix. It does not; it is labelled.

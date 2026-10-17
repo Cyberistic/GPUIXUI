@@ -11,6 +11,23 @@ component control what appears, and `@internal` hides a prop.
 Start from the [component index](/docs/components) and open a component to see
 its API table.
 
+## Where the tables come from
+
+The table is generated while the site builds, by
+`fumadocs-typescript`'s remark plugin reading the component's real source. This
+block is that wiring, included from the file itself — never copied by hand, so
+it cannot go stale:
+
+<include lang="ts" meta='title="apps/docs/source.config.ts"'>
+  ../../source.config.ts
+</include>
+
+A component page shows its implementation the same way, through Fumadocs'
+`<include>` tag pointing at the file the component registry records as its
+source, so the page and the record cannot disagree. The docs build fails if an
+include points at a file that does not exist, and `content-references.test.ts`
+fails if a finished component's page omits its source.
+
 <Callout>
 The tables appear as components publish their props types with tsdoc. Until a
 component does, its page says the prop table is unavailable rather than

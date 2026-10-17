@@ -41,7 +41,8 @@ public/screenshots/          real native screenshots (plan 412)
    that sidebar equals `index` plus every non-planned slug, so a forgotten
    entry (or a component with no page) fails the suite.
 3. Move the record out of `planned` only when the component is real. The tests
-   then require a `sourcePath`, the page file, and the sidebar entry.
+   then require a `sourcePath`, the page file, the sidebar entry, and a `## Source`
+   section on the page that includes that path (see below).
 4. When the playground has captured the component, add the PNGs under
    `public/screenshots/<slug>/` **and** the `provenance.json` sidecar the capture
    script writes. A screenshot without a sidecar is never rendered.
@@ -72,6 +73,8 @@ description: Triggers an action; the primary interactive control.
 
 ## API reference
 
+## Source
+
 ## Related
 
 <RelatedComponents slug="button" />
@@ -81,6 +84,31 @@ Prop tables use `fumadocs-typescript`'s remark plugin: write
 `<auto-type-table path="./relative/path.ts" name="ButtonProps" />` in the MDX
 and annotate the real props type with tsdoc (`@internal` hides a prop). The
 table is generated at build time from the component source, so it cannot drift.
+
+## Copyable source
+
+Never paste a component's source into a page. Include the real file with
+Fumadocs' `<include>` tag (plan `414-copyable-component-source.md`); the plugin
+reads it at build time and the page gets the same highlighted, copyable code
+block as any other fence:
+
+```mdx
+<include lang="tsx" meta='title="packages/primitives/src/button/button.tsx"'>
+  ../../../../../packages/primitives/src/button/button.tsx
+</include>
+```
+
+- The path is relative to the MDX file. A page under `content/docs/components/`
+  reaches the repository root with **five** `../` segments.
+- The title is the repo-relative path; `lang` matches the extension.
+- A region (`#name`, marked `// #region name`) includes part of a file instead of
+  all of it.
+- `<include … />` with no body renders **nothing** and says nothing, so always
+  use the paired tag.
+
+`src/content-references.test.ts` fails if an include points at a file that does
+not exist, names a region the file does not contain, is written self-closing, or
+if a component that is no longer `planned` has a page without its real source.
 
 The page's `<title>`, `description`, `og:title`, `og:description` and canonical
 link come from its frontmatter through `src/lib/page-meta.ts`, so a new page
