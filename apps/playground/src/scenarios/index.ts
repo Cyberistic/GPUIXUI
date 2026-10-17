@@ -49,6 +49,10 @@ import {
   primitivesDisplayScenario,
   primitivesFieldsScenario,
 } from "./primitives.js";
+import {
+  primitivesChoiceScenario,
+  primitivesEntryScenario,
+} from "./primitives-advanced.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -121,6 +125,8 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   primitivesActionsScenario,
   primitivesFieldsScenario,
   primitivesDisplayScenario,
+  primitivesChoiceScenario,
+  primitivesEntryScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

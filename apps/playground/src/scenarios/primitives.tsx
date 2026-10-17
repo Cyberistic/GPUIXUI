@@ -13,7 +13,6 @@ import { useState } from "react";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import * as R from "effect/Record";
 import {
   Button,
   Checkbox,
@@ -29,48 +28,9 @@ import {
   Tooltip,
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
-import type { Smoke } from "@gpuixui/testing";
 import { Readout } from "../ui.js";
+import { focusedId, node, read, text, treeOf } from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
-
-/** The accessible node with `role` and `label`, when the dump has one. */
-const nodeFor = (
-  tree: Smoke.A11yTree,
-  role: string,
-  label: string,
-): Option.Option<Smoke.A11yNode> =>
-  Option.flatMap(
-    Arr.findFirst(
-      R.values(tree.nodes),
-      (entry) =>
-        Option.exists(entry.aria, (aria) => Option.contains(aria.role, role)) &&
-        Option.exists(entry.aria, (aria) => Option.contains(aria.label, label)),
-    ),
-    (entry) => entry.aria,
-  );
-
-/** A node's field, or `"none"` so a failure names the absence. */
-const text = (value: Option.Option<string>): string =>
-  Option.getOrElse(value, () => "none");
-
-/** The tree, or a labelled assertion failure. */
-const treeOf = (ctx: Smoke.SmokeContext) =>
-  ctx.expectSome(
-    "the runtime painted an accessibility tree",
-    Option.fromNullishOr(ctx.host.a11y()),
-  );
-
-/** Asserts the node exists and returns it. */
-const node = (
-  ctx: Smoke.SmokeContext,
-  tree: Smoke.A11yTree,
-  role: string,
-  label: string,
-) =>
-  ctx.expectSome(
-    `node ${role} "${label}" is exposed`,
-    nodeFor(tree, role, label),
-  );
 
 const ActionsProbe = () => {
   const theme = useTheme();
@@ -239,12 +199,6 @@ const DisplayProbe = () => {
     </div>
   );
 };
-
-const read = (ctx: Smoke.SmokeContext, testId: string) =>
-  Option.getOrElse(Option.fromNullishOr(ctx.host.text(testId)), () => "none");
-
-const focusedId = (ctx: Smoke.SmokeContext): string =>
-  Option.getOrElse(Option.fromNullishOr(ctx.host.focused()), () => "none");
 
 export const primitivesActionsScenario: PlaygroundScenario = {
   id: "primitives-actions",

@@ -162,4 +162,45 @@ Stop and report with evidence if:
 
 ## 8. Outcome (executed on this host, 2026-10-17)
 
-_To be filled when the plan runs._
+**38/38 green**, exit `0`; `components=verified`. `primitives-choice` records
+18 checks and `primitives-entry` 12.
+
+Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
+
+- **`RadioGroup` moves selection and focus with the arrows, and wraps.** A
+  click on the first row selects `daily`; Down selects `weekly` and the
+  `RadioButton "Weekly"` announces `checked`; Up wraps to `daily`. A click on
+  the second row selects `weekly`, agreeing with the key path.
+- **`Rating` clamps and clears.** A click on the first star rates one; Right
+  raises it; End jumps to five; Right at the end stays at five (no wrap);
+  Delete clears to zero; Left at zero stays zero. The fifth star announces
+  `checked` at five.
+- **`NumberField` steps, clamps on commit and exposes its value.** Up steps
+  5 → 6, two Downs take it to 4; typing `99` and pressing Enter commits the
+  clamped `10`; a further Down steps to `9`; the `TextInput` a11y node reports
+  `9`.
+- **`OTPField` fills, advances, and deletes exactly once.** Six digits fill the
+  code and fire `onComplete` once; focus lands on cell 6; Backspace deletes one
+  character (`12345`, the completion event is not retracted); Left moves native
+  focus to cell 5; typing `7` rewrites that digit (`12347`).
+
+Deviation from this plan:
+
+- **A keystroke delivered after the coordinate click did not reach the
+  group's `onKeyDown` in this harness.** The first implementation sent
+  `key("down")` after the click and the selection stayed on `daily` (the click
+  itself had selected it). The steps now dispatch the pair with
+  `keyDown`/`keyUp` on the group's own `testId` — the same route the package's
+  runtime suites use. Focus routing is proven separately (`roving-focus`,
+  `modal-focus-trap`); this probe asserts the group's keyboard contract. The
+  precise renderer-side cause (where a child-delivered key stops) is a harness
+  fact worth measuring separately, not a reason to weaken this check.
+
+Two-direction proofs:
+
+1. Sending `up` instead of `down` for the first move:
+   `Down moves the selection: expected a string containing "cadence=weekly",
+   got "cadence=never rating=0"` → `components=failed`, exit `1`.
+2. Expecting the pre-Backspace code after a single Backspace:
+   `expected a string containing "code=123456", got "quantity=9 code=12345
+   complete=1"` → `components=failed`, exit `1`.

@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (36/36 green); -> 2 on a host with no binding
+# -> 0 here (38/38 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -143,10 +143,15 @@ theme is read with `useTheme()` and passed to the primitives' own
 | `primitives-actions` | `Button` activates on a click, on Enter **down** and on Space **up**; `disabled` and `loading` refuse all three; the loading button announces `Loading`; the focus ring `controlFocusStyle` merges into the runtime's own style report and disappears when focus moves; `Toggle` flips and announces `pressed` / `not pressed` |
 | `primitives-fields` | a controlled `Input` receives the native edit and `onSubmit`; a disabled `Input` refuses the edit and still exposes its value as a `TextInput`; `Checkbox` toggles by click and Space-up with `aria-valuetext`; `Switch` toggles and announces checked; `Select` paints its options, commits the next one with Down + Enter, and Escape closes without losing the value |
 | `primitives-display` | `Slider` steps by one with the arrow keys and announces its formatted value; `Progress` reports `42%` and `Meter` `68 GB`; `Skeleton` paints a 14 px box with a themed background; `Tooltip` opens on a native mouse enter |
+| `primitives-choice` | `RadioGroup` selects on a click and with the arrows (Down selects and wraps, Up returns), and the item announces `checked`; `Rating` rates on the first star, Right/End raise, Right clamps at five, Delete clears and Left clamps at zero |
+| `primitives-entry` | `NumberField` steps with Up/Down, commits a typed `99` as the clamped `10`, and exposes the committed value; `OTPField` fills six digits with focus advancing, fires `onComplete` once, Backspace deletes exactly one character and Left moves native focus back a cell |
 
 The harness gained `keyDown`/`keyUp` for this: `simulateKeystrokes("space")`
-does not deliver the key **up** a button contract needs. Measured facts are in
-plan `168` §8.
+does not deliver the key **up** a button contract needs, and the choice/entry
+scenarios dispatch arrows to the group's own `testId` because a keystroke
+delivered after the coordinate click did not reach the wrapper. Focus routing
+is proven by `roving-focus` and `modal-focus-trap`; these probes assert the
+controls' contracts. Measured facts are in plan `168` §8 and plan `169` §8.
 
 ## The modal contract (plan `155`)
 
@@ -350,10 +355,10 @@ focus restore.
 
 ## Evidence on this host
 
-The suite is **36/36 green** here (`exit 0`):
+The suite is **38/38 green** here (`exit 0`):
 
 ```
-36/36 scenarios passed · capabilities: layout=verified text=verified
+38/38 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -407,6 +412,7 @@ src/panels/split-pane.tsx the pointer-captured divider
 src/scenarios/*.tsx      one view + one steps effect per capability
 src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
 src/scenarios/primitives.tsx the shipped Tier 1 components (actions, fields, display)
+src/scenarios/primitives-advanced.tsx choice and entry controls (radio, rating, number, OTP)
 src/scenarios/shell.tsx  mounts the real App; guards the sidebar's scrolling
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
@@ -457,7 +463,7 @@ narrower. Each deviation is deliberate and measured:
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe and the app-level shortcut probe pass in real GPUix
-  0.10.0 on this host (36/36), with a written report and screenshots.
+  0.10.0 on this host (38/38), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
