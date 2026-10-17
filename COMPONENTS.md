@@ -39,10 +39,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | virtual-list | `virtual-list-window` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
 | tree | `tree-view` | verified |
+| log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 
-The suite is **17/17 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **18/18 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); synthetic wheel scrolling **does** work
 (`deltaY` negative scrolls down, the opposite of the DOM); a `<virtual-list>`
@@ -273,7 +274,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Inspector panels | todo | ? | Property panels + panels. |
 | Property editors | todo | ? | Fieldset + inputs. |
 | File trees | todo | ? | Tree views (verified) + `<virtual-list>`; hierarchical virtualization is ours. |
-| Log viewers | todo | ? | `<virtual-list>` + `<text>`; text search/highlight hooks exist. |
+| Log viewers | todo | yes (probe) | `log-viewer`: `<virtual-list alignment="bottom" followTail>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up then appending does **not** snap back, so a follow toggle is app state plus a scroll. `<text>`; text search/highlight hooks exist. |
 | Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
 | Multi-pane editing layouts | todo | ? | Composition over split panes + editors. |

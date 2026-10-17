@@ -28,6 +28,7 @@ export const CAPABILITIES = [
   "virtual-list",
   "table",
   "tree",
+  "log",
   "theme",
   "workspace",
 ] as const;

@@ -209,7 +209,9 @@ Verdicts remain `unverified` on this host: the suite exits `2` before running
   use `tree-view` (plan `153`): indentation and expand/collapse are verified,
   but click-to-focus is the only focus path (no programmatic focus).
 - `packages/editor` plan: `<code>` viewer is real; editable highlighted editing
-  is a probe; rich text is unsupported.
+  is a probe; rich text is unsupported. A log viewer uses `log-viewer` (plan
+  `154`): bottom anchoring and append-following are verified, but scrolling up
+  and appending does not snap back — "follow" is app state plus a scroll.
 - Charts: the only honest native path is `<img>` + `setImagePixels`; the
   component must own the off-screen render and cannot be called "native
   drawing".
