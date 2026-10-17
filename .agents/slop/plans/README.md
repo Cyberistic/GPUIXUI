@@ -47,6 +47,7 @@ workstream declares in its own section below.
 | [127](./127-date-picker-bounds-and-clear.md) | Date picker `min`/`max` bounds and a clear action | C/F | 119, 117 | done — 5 calendar tests + 5 native tests, plus the trigger-ref regression fix (3 native tests); behaviour 220 |
 | [128](./128-ref-composition-sweep.md) | Compose the caller's ref on every part that owns one | C/F | 127, 117 | done — 5 native tests (behaviour 225); both-direction proof |
 | [129](./129-menu-typeahead.md) | Menu type-ahead (`DropdownMenu`/`ContextMenu`) | C/F | 114, 126, 117 | done — 13 logic + 7 native tests (behaviour 232); both-direction proof |
+| [130](./130-list-typeahead.md) | List type-ahead over the shared type-ahead core | C/F | 111, 125, 129 | done — 13 logic (moved) + 7 native tests (List 29, behaviour 239); both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

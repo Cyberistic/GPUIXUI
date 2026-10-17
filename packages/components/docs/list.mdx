@@ -6,7 +6,8 @@ description: A vertical collection of rows, optionally single- or multi-selectab
 `List` presents rows. With `selectionMode="single"` it becomes a `listbox`: arrow
 keys move a roving tab stop, a click selects, and the list behaves as a single tab
 stop instead of one per row. `selectionMode="multiple"` keeps that keyboard model
-and adds the desktop selection modifiers.
+and adds the desktop selection modifiers. In both modes, typing the first letters
+of a row jumps to it.
 
 ```tsx
 import {
@@ -17,11 +18,11 @@ import {
 } from "@gpuixui/components/list";
 
 <List selectionMode="single" defaultValue="readme">
-  <ListItem value="readme">
+  <ListItem value="readme" textValue="README.md">
     <ListItemTitle>README.md</ListItemTitle>
     <ListItemDescription>~/GPUIXUI</ListItemDescription>
   </ListItem>
-  <ListItem value="list">
+  <ListItem value="list" textValue="list.tsx">
     <ListItemTitle>list.tsx</ListItemTitle>
   </ListItem>
 </List>;
@@ -45,6 +46,7 @@ import {
 | `Home` | focus the first enabled row |
 | `End` | focus the last enabled row |
 | `Enter` / `Space` | select the focused row |
+| Letter keys | jump to the next enabled row whose `textValue` starts with the typed prefix |
 
 A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it can
 never be selected.
@@ -62,6 +64,34 @@ Movement works exactly as in single mode. Selection differs:
 
 Select-all becomes the new anchor at the first enabled row, so a following
 `Shift`+click extends from the top of the list. Single-mode lists ignore the key.
+Type-ahead works here too: a typed jump moves focus and re-anchors without
+changing the selection, so a following `Shift`+click extends from the row reached.
+
+## Type-ahead
+
+Type the first letters of a row to jump to it. Matching is a case-insensitive
+**prefix** (not fuzzy), reads `ListItem`'s `textValue`, and searches the rows
+after the current one, wrapping to the first match. A repeated letter therefore
+cycles through the rows that start with it, the desktop convention. Disabled rows
+and rows without `textValue` are skipped.
+
+```tsx
+<List selectionMode="single">
+  <ListItem value="readme" textValue="README.md">
+    <ListItemTitle>README.md</ListItemTitle>
+  </ListItem>
+  <ListItem value="design" textValue="Design notes">
+    <ListItemTitle>Design notes</ListItemTitle>
+  </ListItem>
+</List>
+```
+
+Typing `d` focuses “Design notes”; typing `d` again stays there (one match).
+Typing `r` from “Design notes” wraps back to “README.md”.
+
+The typed prefix lives for 500ms. The window is a lazy comparison against
+Effect's monotonic clock, not a timer: nothing runs while the list is idle, and a
+prefix that matches nothing is cleared so the next letter starts a fresh search.
 
 ## Selection
 
@@ -102,8 +132,7 @@ selected, without duplicates. Selecting the same set again reports nothing new.
 Single mode still has no second click that clears the value; a multiple list
 clears by toggling its last selected row.
 
-**Not built**: no type-ahead, no drag reorder, and no `aria-multiselectable`
-(see Accessibility).
+**Not built**: no drag reorder and no `aria-multiselectable` (see Accessibility).
 
 ## API
 
@@ -123,6 +152,7 @@ so the compiler enforces it.
 | `ListItem` prop | Type | Default |
 | --------------- | ---- | ------- |
 | `value` | `string` (required) | — |
+| `textValue` | `string` — the text type-ahead matches; omit and the row is not searched | — |
 | `disabled` | `boolean` | `false` |
 | `leading` | `ReactNode` | — |
 | `trailing` | `ReactNode` | — |
@@ -157,7 +187,10 @@ a disabled row is drawn at 50% opacity.
 
 ## Limitations
 
-- No type-ahead, no drag reorder, no group headers, no nested rows.
+- No drag reorder, no group headers, no nested rows.
+- Type-ahead searches `textValue`, not the rendered `ListItemTitle`: the row is a
+  composition, so the list cannot read its text. An omitted `textValue` makes the
+  row unsearchable rather than guessing.
 - No `aria-multiselectable` in 0.10.0 (see Accessibility).
 - No virtualisation: a `List` renders every row. Long collections belong in
   `virtual-list`, which is a separate component with its own API.
@@ -165,13 +198,15 @@ a disabled row is drawn at 50% opacity.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (22 tests) plus
-`src/internal/collection.test.ts` for the navigation arithmetic and
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (29 tests) plus
+`src/internal/collection.test.ts` for the navigation arithmetic,
+`src/internal/typeahead.test.ts` for the shared prefix matching, and
 `src/list/selection.test.ts` for the multiple-selection rules: the modes and
 their roles, the absence and uniqueness of the tab stop, selection by click and by
 key, a disabled row rejecting both, real focus moving with wrap-around past a
 disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
-height, the controlled list not moving its own selection, and — in multiple mode —
+height, the controlled list not moving its own selection, type-ahead jumping and
+cycling while skipping disabled and unlabelled rows, and — in multiple mode —
 plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
 selecting every enabled row, and a disabled row never entering a selection.
 

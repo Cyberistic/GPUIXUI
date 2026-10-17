@@ -13,6 +13,11 @@
  * mode).
  *
  * A caller `ref` on a row was also discarded in favour of the internal one.
+ *
+ * Type-ahead: typing a prefix moved nothing, a repeated letter did not advance,
+ * a disabled row won the match, an uppercase letter never matched, a missed
+ * prefix poisoned the next search, and a typed jump must not change the
+ * selection in multiple mode.
  */
 
 import * as Arr from "effect/Array";
@@ -90,6 +95,40 @@ const multiCatalog = (
 
 /** All four row ids, for the tab-stop helper. */
 const multiIds = ["row-a", "row-b", "row-c", "row-d"];
+
+/** Rows for type-ahead: two D rows, a disabled B row, and an unsearched row. */
+const searchable = (mode: "single" | "multiple" = "single") => (
+  <List testId="list" selectionMode={mode}>
+    <ListItem testId="row-alpha" value="alpha" textValue="Alpha">
+      <ListItemTitle>Alpha</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-beta" value="beta" disabled textValue="Beta">
+      <ListItemTitle>Beta</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-banana" value="banana" textValue="Banana">
+      <ListItemTitle>Banana</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-delta" value="delta" textValue="Delta">
+      <ListItemTitle>Delta</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-draft" value="draft" textValue="Draft">
+      <ListItemTitle>Draft</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-echo" value="echo">
+      <ListItemTitle>Echo</ListItemTitle>
+    </ListItem>
+  </List>
+);
+
+/** The six ids of the type-ahead fixture, for the tab-stop helper. */
+const searchableIds = [
+  "row-alpha",
+  "row-beta",
+  "row-banana",
+  "row-delta",
+  "row-draft",
+  "row-echo",
+];
 
 /** Whether a row reports itself selected. */
 const isSelected = (root: ComponentTestRoot, testId: string): unknown =>
@@ -536,6 +575,110 @@ describe("List", () => {
     list.renderer.focusElement(ref.current?.id ?? -1);
     list.renderer.simulateKeystrokes("down");
     expect(focusedTestId(list)).toEqual(Option.some("row-b"));
+
+    list.unmount();
+  });
+
+  it("jumps to the first row matching a typed prefix", () => {
+    const list = renderComponent(searchable());
+
+    clickCentreOf(list, "row-alpha");
+    list.renderer.simulateKeystrokes("d");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-delta"));
+    expect(tabStop(list, searchableIds)).toEqual(["row-delta"]);
+
+    list.unmount();
+  });
+
+  it("advances on a repeated letter and wraps", () => {
+    const list = renderComponent(searchable());
+
+    clickCentreOf(list, "row-alpha");
+    list.renderer.simulateKeystrokes("d");
+    expect(focusedTestId(list)).toEqual(Option.some("row-delta"));
+
+    list.renderer.simulateKeystrokes("d");
+    expect(focusedTestId(list)).toEqual(Option.some("row-draft"));
+
+    list.renderer.simulateKeystrokes("d");
+    expect(focusedTestId(list)).toEqual(Option.some("row-delta"));
+
+    list.unmount();
+  });
+
+  it("skips a disabled row with a matching prefix", () => {
+    const list = renderComponent(searchable());
+
+    clickCentreOf(list, "row-alpha");
+    list.renderer.simulateKeystrokes("b");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-banana"));
+
+    list.unmount();
+  });
+
+  it("matches an uppercase letter case-insensitively", () => {
+    const list = renderComponent(searchable());
+
+    clickCentreOf(list, "row-alpha");
+    list.renderer.simulateKeystrokes("shift-b");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-banana"));
+
+    list.unmount();
+  });
+
+  it("starts a new search after a prefix matches nothing", () => {
+    const list = renderComponent(searchable());
+
+    clickCentreOf(list, "row-alpha");
+    list.renderer.simulateKeystrokes("z");
+    expect(focusedTestId(list)).toEqual(Option.some("row-alpha"));
+
+    list.renderer.simulateKeystrokes("b");
+    expect(focusedTestId(list)).toEqual(Option.some("row-banana"));
+
+    list.unmount();
+  });
+
+  it("moves focus without changing a multiple selection", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(
+      <List
+        testId="list"
+        selectionMode="multiple"
+        onValueChange={onValueChange}
+      >
+        <ListItem testId="row-alpha" value="alpha" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-delta" value="delta" textValue="Delta">
+          <ListItemTitle>Delta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    clickCentreOf(list, "row-alpha");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+
+    list.renderer.simulateKeystrokes("d");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-delta"));
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(isSelected(list, "row-alpha")).toBe(true);
+    expect(isSelected(list, "row-delta")).toBe(false);
+
+    list.unmount();
+  });
+
+  it("does not search a row without textValue", () => {
+    const list = renderComponent(searchable());
+
+    clickCentreOf(list, "row-alpha");
+    list.renderer.simulateKeystrokes("e");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-alpha"));
 
     list.unmount();
   });

@@ -8,7 +8,6 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import * as Str from "effect/String";
 import { Match, pipe } from "effect";
 import {
   firstEnabled,
@@ -17,12 +16,13 @@ import {
   nextEnabled,
   type CollectionItem,
 } from "../internal/collection.js";
+import type { TypeaheadItem } from "../internal/typeahead.js";
 
 /**
  * A menu row: the id of its host element, whether it accepts selection, and the
  * text type-ahead matches. An empty label is not searched.
  */
-export interface MenuItemSpec extends CollectionItem {
+export interface MenuItemSpec extends CollectionItem, TypeaheadItem {
   readonly label: string;
 }
 
@@ -106,49 +106,3 @@ export const resolveActiveIndex = activeIndex;
 /** Whether a specific row is the active one. */
 export const isActive = (state: MenuState, id: number): boolean =>
   Option.contains(state.activeId, id);
-
-const normalise = (value: string): string => Str.toLowerCase(Str.trim(value));
-
-/**
- * The row a typed prefix selects: the first **enabled** row after the active one
- * whose label starts with `prefix`, wrapping to the first match; `None` when
- * nothing matches or the prefix is empty.
- *
- * Searching after the active row is what makes a repeated letter advance instead
- * of staying on the first match.
- */
-export const matchPrefix = (
-  items: ReadonlyArray<MenuItemSpec>,
-  activeId: Option.Option<number>,
-  prefix: string,
-): Option.Option<number> => {
-  const needle = Str.trim(Str.toLowerCase(prefix));
-  if (Str.isEmpty(needle)) return Option.none();
-
-  const candidates = pipe(
-    items,
-    Arr.map((item, index) => ({
-      disabled: item.disabled,
-      id: item.id,
-      index,
-      label: normalise(item.label),
-    })),
-    Arr.filter(
-      (candidate) =>
-        !candidate.disabled &&
-        Str.isNonEmpty(candidate.label) &&
-        Str.startsWith(needle)(candidate.label),
-    ),
-  );
-
-  const from = Option.getOrElse(
-    Option.flatMap(activeId, (id) => indexOfId(items, id)),
-    () => -1,
-  );
-
-  return pipe(
-    Arr.findFirst(candidates, (candidate) => candidate.index > from),
-    Option.orElse(() => Arr.head(candidates)),
-    Option.map((candidate) => candidate.id),
-  );
-};

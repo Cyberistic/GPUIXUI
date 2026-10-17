@@ -15,18 +15,16 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useRef,
   useState,
 } from "react";
-import { monotonicNanos } from "../internal/clock.js";
+import { useTypeahead } from "../internal/typeahead.js";
 import {
   initial,
-  matchPrefix,
   move as moveActive,
+  resolveActiveIndex,
   type MenuAction,
   type MenuItemSpec,
 } from "./logic.js";
-import { idle, press, type TypeaheadBuffer } from "./typeahead.js";
 
 /** One registered row: its host id, its searchable text and what activating it does. */
 export interface MenuRow extends MenuItemSpec {
@@ -104,8 +102,6 @@ export const useMenuState = (
   const [activeId, setActiveId] = useState<Option.Option<number>>(
     initial.activeId,
   );
-  /** The typed prefix. A ref: nothing renders it, and it expires by timestamp. */
-  const buffer = useRef<TypeaheadBuffer>(idle);
 
   const register = useCallback((row: MenuRow) => {
     setRows((current) => upsert(current, row));
@@ -138,22 +134,10 @@ export const useMenuState = (
     [activeId, focusRow, rows],
   );
 
-  const typeahead = useCallback(
-    (char: string) => {
-      const next = press(buffer.current, char, monotonicNanos());
-      Option.match(matchPrefix(rows, activeId, next.text), {
-        onNone: () => {
-          // The latest letter matched nothing: start a new search rather than
-          // poisoning every later keystroke with an unmatched prefix.
-          buffer.current = idle;
-        },
-        onSome: (id) => {
-          buffer.current = next;
-          focusRow(id);
-        },
-      });
-    },
-    [activeId, focusRow, rows],
+  const typeahead = useTypeahead(
+    rows,
+    resolveActiveIndex({ activeId }, rows),
+    (row) => focusRow(row.id),
   );
 
   const activate = useCallback(

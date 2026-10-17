@@ -44,18 +44,22 @@ import {
   isLast,
   isSelectAll,
   isUp,
+  typedChar,
 } from "./internal/key.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
+import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 
 /** Whether the list only presents rows, or also tracks a selection. */
 export type ListSelectionMode = "none" | "single" | "multiple";
 
-/** One registered row: its value, whether it accepts input, and its native id. */
+/** One registered row: its value, whether it accepts input, its native id, and
+ *  the text type-ahead searches. */
 interface Row {
   readonly value: string;
   readonly disabled: boolean;
   readonly nativeId: number;
+  readonly label: string;
 }
 
 /** The rules a {@link ListItem} follows; throws when there is no list above it. */
@@ -95,7 +99,9 @@ const upsert = (rows: ReadonlyArray<Row>, row: Row): ReadonlyArray<Row> =>
       // that registration would otherwise trigger.
       onNone: () => Arr.append(rows, row),
       onSome: (current) =>
-        current.disabled === row.disabled && current.nativeId === row.nativeId
+        current.disabled === row.disabled &&
+        current.nativeId === row.nativeId &&
+        current.label === row.label
           ? rows
           : Arr.map(rows, (candidate) =>
               candidate.value === row.value ? row : candidate,
@@ -439,17 +445,32 @@ export const List = (props: ListProps) => {
     commit(next);
   }, [commit, multiple, rows]);
 
+  const typeahead = useTypeahead(rows, indexOf(rows, active), (row) => {
+    focusRow(row);
+    // A typed jump re-anchors, exactly like an arrow move, so a following
+    // Shift+click extends from the row the user reached.
+    setAnchor(Option.some(row.value));
+  });
+
   const handleKeyDown = (event: EventPayload): void => {
     if (!selectable) return;
     const extend = multiple && event.modifiers?.shift === true;
-    Match.value(event).pipe(
-      Match.when(isActivation, selectActive),
-      Match.when(isSelectAll, selectEveryRow),
-      Match.when(isDown, () => moveBy(1, extend)),
-      Match.when(isUp, () => moveBy(-1, extend)),
-      Match.when(isFirst, () => jumpTo("first")),
-      Match.when(isLast, () => jumpTo("last")),
-      Match.orElse(() => undefined),
+    pipe(
+      typedChar(event),
+      Option.match({
+        // A typed letter jumps to a row; it never also runs a named-key rule.
+        onSome: typeahead,
+        onNone: () =>
+          Match.value(event).pipe(
+            Match.when(isActivation, selectActive),
+            Match.when(isSelectAll, selectEveryRow),
+            Match.when(isDown, () => moveBy(1, extend)),
+            Match.when(isUp, () => moveBy(-1, extend)),
+            Match.when(isFirst, () => jumpTo("first")),
+            Match.when(isLast, () => jumpTo("last")),
+            Match.orElse(() => undefined),
+          ),
+      }),
     );
   };
 
@@ -493,6 +514,12 @@ export const List = (props: ListProps) => {
 export interface ListItemProps extends Props {
   /** Stable id, and the value a selection reports. */
   readonly value: string;
+  /**
+   * The text type-ahead matches. Rows are composed from {@link ListItemTitle}
+   * and {@link ListItemDescription}, so the list cannot read the text off
+   * `children`; omit this and the row is skipped by type-ahead.
+   */
+  readonly textValue?: string;
   /** Skipped by the arrow keys and by clicks. */
   readonly disabled?: boolean;
   /** Slot before the text: an avatar, an icon. */
@@ -505,6 +532,7 @@ export interface ListItemProps extends Props {
  *  {@link ListItemDescription}. */
 export const ListItem = ({
   value,
+  textValue,
   disabled = false,
   leading,
   trailing,
@@ -541,8 +569,13 @@ export const ListItem = ({
     // Registration needs the native id, which only exists after the element is
     // committed; `instance` is state, so this effect re-runs once it arrives.
     if (instance === undefined) return;
-    return register({ value, disabled, nativeId: instance.id });
-  }, [disabled, instance, register, value]);
+    return register({
+      value,
+      disabled,
+      nativeId: instance.id,
+      label: textValue ?? "",
+    });
+  }, [disabled, instance, register, textValue, value]);
 
   const isSelected = selectable && Arr.contains(value)(selected);
   const isActive = Option.exists(active, (candidate) => candidate === value);
@@ -675,7 +708,8 @@ export const listMeta = {
   gpuixSupport: "yes",
   limitations: [
     "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
-    "no typeahead, drag reorder or virtualisation",
+    "type-ahead matches an explicit ListItem textValue, not rendered children",
+    "no drag reorder or virtualisation",
   ],
   docs: "docs/list.mdx",
   example: "examples/list.example.tsx",

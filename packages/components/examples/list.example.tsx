@@ -6,6 +6,7 @@
  * shows the selection: the app owns the value, the list renders it. Drop the
  * pair and the list keeps its own state instead. The reviewers list also shows
  * the multiple-selection keys, including `Cmd`/`Ctrl`+A for every enabled row.
+ * Typing a name jumps to that row because every row carries its `textValue`.
  */
 
 import * as Arr from "effect/Array";
@@ -112,6 +113,7 @@ export const ListExample = () => {
             <ListItem
               key={file.id}
               value={file.id}
+              textValue={file.name}
               disabled={file.locked === true}
               leading={
                 <text
@@ -154,6 +156,7 @@ export const ListExample = () => {
             <ListItem
               key={reviewer.id}
               value={reviewer.id}
+              textValue={reviewer.name}
               disabled={reviewer.away === true}
             >
               <ListItemTitle>{reviewer.name}</ListItemTitle>
