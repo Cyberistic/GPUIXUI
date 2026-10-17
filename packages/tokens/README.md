@@ -219,9 +219,13 @@ the loading skeleton on those three, the `muted` panel and the
 `hover`/`active`/`selected` washes a loading row paints — the identity and
 high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved
 them one ramp step — and the decorative `border` at 1.05:1 (3:1 at high
-contrast) on the plain surfaces and on the `secondary`, `hover`, `active` and
-`accent` fills a bordered control paints, so an Alert, Badge or Toast, a loading
-placeholder, every divider and every outlined control's edge stay perceivable.
+contrast) on the plain surfaces, on the `secondary`, `hover`, `active` and
+`accent` fills a bordered control paints and on the four soft status fills a
+status panel divides, so an Alert, Badge or Toast, a loading placeholder, every
+divider and every outlined control's edge stay perceivable. The inherited dark
+`successSoft` measured 1.015:1 on Windows, 1.023:1 on the identity and 1.047:1
+on Linux until plan 095 darkened it and the soft `destructive` fill one step
+while keeping the surface floor.
 Each soft status surface has a designed edge (`xSoftBorder`) held to the divider
 floor on that surface, so the 30% mixture that measured 1.12:1 at high contrast
 cannot return.

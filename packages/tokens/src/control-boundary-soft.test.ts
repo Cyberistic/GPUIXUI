@@ -70,24 +70,30 @@ describe("the control boundary inside a soft status surface", () => {
 
   it("keeps a checkbox edge visible inside a dark Alert", () => {
     const shipped = getTheme("dark").colors;
-    // The pre-092 identity dark boundary.
+    // The pre-092 identity dark boundary and the pre-095 soft fills it painted.
     const previous = "#77808F";
+    const previousFills = {
+      infoSoft: shipped.infoSoft,
+      successSoft: "#0C452D",
+      warningSoft: shipped.warningSoft,
+      destructiveSoft: "#6B1A1D",
+    };
 
     expect(shipped.borderStrong).toBe("#868FA0");
-    expect(contrastRatio(previous, shipped.successSoft)).toBeLessThan(
+    expect(contrastRatio(previous, previousFills.successSoft)).toBeLessThan(
       contrastFloors.default.boundary,
     );
-    expect(contrastRatio(previous, shipped.destructiveSoft)).toBeLessThan(
+    expect(contrastRatio(previous, previousFills.destructiveSoft)).toBeLessThan(
       contrastFloors.default.boundary,
     );
-    expect(contrastRatio(previous, shipped.infoSoft)).toBeLessThan(
+    expect(contrastRatio(previous, previousFills.infoSoft)).toBeLessThan(
       contrastFloors.default.boundary,
     );
     // The one soft fill the old value already cleared: the audit named three,
     // and a value that fixed four anyway would have overstated the defect.
-    expect(contrastRatio(previous, shipped.warningSoft)).toBeGreaterThanOrEqual(
-      contrastFloors.default.boundary,
-    );
+    expect(
+      contrastRatio(previous, previousFills.warningSoft),
+    ).toBeGreaterThanOrEqual(contrastFloors.default.boundary);
     softFills.forEach((fill) => {
       expect(
         contrastRatio(shipped.borderStrong, shipped[fill]),
@@ -121,9 +127,11 @@ describe("the control boundary inside a soft status surface", () => {
 
   it("names the soft fills when a theme regresses", () => {
     const regressed = extendTheme(getTheme("dark"), {
-      colors: { borderStrong: "#77808F" },
+      colors: { borderStrong: "#6B7484" },
     });
-    const failures = themeContrastFailures(regressed);
+    const failures = themeContrastFailures(regressed).filter(({ background }) =>
+      softFills.some((fill) => fill === background),
+    );
 
     expect(
       failures.map(({ background, pairClass, floor }) => ({
@@ -134,6 +142,7 @@ describe("the control boundary inside a soft status surface", () => {
     ).toEqual([
       { background: "infoSoft", pairClass: "boundary", floor: 3 },
       { background: "successSoft", pairClass: "boundary", floor: 3 },
+      { background: "warningSoft", pairClass: "boundary", floor: 3 },
       { background: "destructiveSoft", pairClass: "boundary", floor: 3 },
     ]);
   });

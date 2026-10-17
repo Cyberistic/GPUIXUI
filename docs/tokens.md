@@ -121,13 +121,13 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `infoSoft` | `#DEE9FF` | `#16356F` | soft informational surface |
 | `infoSoftForeground` | `#152F6B` | `#EFF4FF` | text and icons on `infoSoft` |
 | `infoSoftBorder` | `#A6BEF3` | `#3F5E9A` | edge around `infoSoft` |
-| `successSoft` | `#C2F4D6` | `#0C452D` | soft success surface |
+| `successSoft` | `#C2F4D6` | `#0A3E28` | soft success surface |
 | `successSoftForeground` | `#0A3A26` | `#ECFDF3` | text and icons on `successSoft` |
 | `successSoftBorder` | `#8ED3AF` | `#1A6D46` | edge around `successSoft` |
 | `warningSoft` | `#FFE3A3` | `#4B3100` | soft warning surface |
 | `warningSoftForeground` | `#2A1B00` | `#FFF8E8` | text and icons on `warningSoft` |
 | `warningSoftBorder` | `#FCD47B` | `#815F17` | edge around `warningSoft` |
-| `destructiveSoft` | `#FFE0E0` | `#6B1A1D` | soft destructive surface |
+| `destructiveSoft` | `#FFE0E0` | `#66191B` | soft destructive surface |
 | `destructiveSoftForeground` | `#5C1619` | `#FFF1F1` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
 | `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
@@ -906,9 +906,9 @@ soft status fills (`ringSoftPairs`), the
 functional control boundary on the `muted` panel, those washes and the four soft
 status fills (`controlBoundarySoftPairs`), the selection
 wash — body and secondary text through it, and the wash's own perceivability —
-the soft status surfaces and the decorative dividers
-— including on the `secondary`, `hover`, `active` and `accent` fills a bordered
-control paints.
+the soft status surfaces, the plain divider on those fills, and the decorative
+dividers — including on the `secondary`, `hover`, `active` and `accent` fills a
+bordered control paints.
 The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
@@ -1083,11 +1083,17 @@ a field keeps its `borderStrong` edge while the row moves or inside an Alert.
 It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), or if a loading skeleton is indistinguishable
 on any surface or row wash it fills (also 1.05:1), if a decorative `border` is imperceptible on
-those surfaces or on the `secondary`, `hover`, `active` and `accent` fills a
-bordered control paints (1.05:1, and 3:1 at high contrast), or if body text over
+those surfaces, on the `secondary`, `hover`, `active` and `accent` fills a
+bordered control paints, or on the four soft status fills a status panel
+divides (1.05:1, and 3:1 at high contrast), or if body text over
 the composited `selection` wash drops below its body floor on any surface a glyph
 is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
 `popover` and `input`, with the selected row at the secondary floor.
+The audit found four: the inherited `successSoft` (`#0C452D`) measured 1.015:1
+on Windows dark, 1.023:1 on the identity and 1.047:1 on Linux dark, and identity
+dark's `destructiveSoft` (`#6B1A1D`) 1.040:1, under the 1.05:1 divider floor.
+The two soft fills move one step darker and keep the surface floor on every
+canvas.
 Each soft surface also has a role for its edge (`xSoftBorder`), held to the same
 divider floor on that fill; the 30% mixture it replaced measured 1.12:1 on the
 high-contrast light `warning` surface, under the 3:1 that theme requires.

@@ -192,7 +192,10 @@ Two border roles:
   never means invisible. A bordered control paints it on the fill behind it —
   `secondary` at rest, the `hover` and `active` washes, and `accent` for an
   outline toggle that is on — so the floor covers those fills as well, and a
-  pointer state never turns the fill into the divider's own value.
+  pointer state never turns the fill into the divider's own value. A status
+  panel that separates a footer or an action row with a line paints it on a soft
+  status fill, so those four fills carry the same floor; `xSoftBorder` is the
+  edge around the surface, not a divider inside it.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
   against the canvas, the `muted` panel, the `hover`/`active`/`accent`/
   `selected` washes a row paints and the four soft status fills an Alert or Toast
@@ -280,7 +283,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft`) | 1.05:1 | 3:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`selected` washes | 1.05:1 | 1.05:1 |
-| decorative dividers (`border`) on `background`/`card`/`popover` and the `secondary`/`hover`/`active`/`accent` fills a bordered control paints | 1.05:1 | 3:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover`, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite.

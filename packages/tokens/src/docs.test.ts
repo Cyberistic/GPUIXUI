@@ -407,11 +407,11 @@ describe("docs/tokens.md quoted figures", () => {
       "#0E5135",
       compositeOver(light.colors.selection, light.colors.successSoft),
     );
-    const windows = getPlatformTheme("win32", "dark").colors;
     const washedDestructive = contrastRatio(
-      // The pre-091 Windows dark wash.
-      compositeOver("#0067C033", windows.destructiveSoft),
-      windows.destructiveSoft,
+      // The pre-091 Windows dark wash over the fill it inherited then; plan 095
+      // moved that fill, so the historical pair is written out.
+      compositeOver("#0067C033", "#6B1A1D"),
+      "#6B1A1D",
     );
     const sentence =
       "The audit found two gaps: identity light `successSoftForeground` measured " +
@@ -424,16 +424,40 @@ describe("docs/tokens.md quoted figures", () => {
 
   it("quotes the control boundary regression on the soft status fills", () => {
     const dark = themes.dark.colors;
-    // The pre-092 identity dark boundary.
+    // The pre-092 identity dark boundary and the soft fills it painted then
+    // (plan 095 moved the success and destructive tints afterwards).
     const previous = "#77808F";
+    const previousFills = {
+      successSoft: "#0C452D",
+      destructiveSoft: "#6B1A1D",
+    };
     const sentence =
       "The audit found three: identity dark's `borderStrong` " +
       `(\`${previous}\`) measured ` +
-      `${contrastRatio(previous, dark.successSoft).toFixed(2)}:1 on \`successSoft\`, ` +
-      `${contrastRatio(previous, dark.destructiveSoft).toFixed(2)}:1 on \`destructiveSoft\` and ` +
+      `${contrastRatio(previous, previousFills.successSoft).toFixed(2)}:1 on \`successSoft\`, ` +
+      `${contrastRatio(previous, previousFills.destructiveSoft).toFixed(2)}:1 on \`destructiveSoft\` and ` +
       `${contrastRatio(previous, dark.infoSoft).toFixed(2)}:1 on \`infoSoft\`, under the ` +
       `${contrastFloors.default.boundary}:1 boundary floor, while every other shipped set cleared it. The edge is now ` +
       `\`${dark.borderStrong}\`, which clears the floor on all four soft fills.`;
+
+    expect(markdownProse).toContain(sentence);
+  });
+
+  it("quotes the divider regression on the soft status fills", () => {
+    const dark = themes.dark.colors;
+    // The pre-095 success fill the dark styles inherited.
+    const previous = "#0C452D";
+    const windows = getPlatformTheme("win32", "dark").colors;
+    const linux = getPlatformTheme("linux", "dark").colors;
+    const sentence =
+      "The audit found four: the inherited `successSoft` " +
+      `(\`${previous}\`) measured ` +
+      `${contrastRatio(windows.border, previous).toFixed(3)}:1 on Windows dark, ` +
+      `${contrastRatio(dark.border, previous).toFixed(3)}:1 on the identity and ` +
+      `${contrastRatio(linux.border, previous).toFixed(3)}:1 on Linux dark, and identity dark's ` +
+      `\`destructiveSoft\` (\`#6B1A1D\`) ${contrastRatio(dark.border, "#6B1A1D").toFixed(3)}:1, ` +
+      `under the ${contrastFloors.default.divider}:1 divider floor. The two soft fills move one step ` +
+      "darker and keep the surface floor on every canvas.";
 
     expect(markdownProse).toContain(sentence);
   });
@@ -752,7 +776,7 @@ describe("docs/design-system.md", () => {
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\`) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` and the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`, the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);

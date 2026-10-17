@@ -91,7 +91,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [092](./092-control-boundary-soft-fills.md) | The control boundary on the soft status fills | F | 084, 090, 091 | done |
 | [093](./093-ring-on-soft-fills.md) | The focus ring on the soft status fills | F | 086, 090, 092 | done |
 | [094](./094-skeleton-on-row-washes.md) | The loading skeleton on the row washes | F | 078, 079, 087, 093 | done |
-| [095](./095-soft-fill-divider.md) | A divider inside a soft status fill uses the designed edge | F | 076, 080, 090, 094 | planned |
+| [095](./095-soft-fill-divider.md) | The decorative divider on the soft status fills | F | 076, 080, 090, 094 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -441,13 +441,15 @@ placeholder. The four surfaces join the `surface` class (117 → 121 pairs) and 
 skeleton moves one ramp step in seven sets; no wash moves, because washes are
 shared by five other contracts.
 
-095 records a decision rather than a fix: the decorative `border` measured on the
-four soft status fills is under the 1.05:1 divider floor in three dark sets
-(Windows dark 1.015:1 on `successSoft`, the identity 1.023:1, Linux dark
-1.047:1), but the value that clears it drops the tint's own perceivability on the
-card from 1.53:1 to 1.09:1. A divider inside an Alert, Badge or Toast is the
-designed `xSoftBorder` edge (plan 090), so no colour moves and no pair is added;
-the substitution and the rejected squeeze are both guarded by tests.
+095 closes the decorative divider on the soft status fills: a status panel
+separates a footer or an action row with a line, but `border` was measured on the
+plain surfaces and the control fills only. The inherited dark `successSoft`
+measured 1.015:1 on Windows, 1.023:1 on the identity and 1.047:1 on Linux, and
+identity dark's `destructiveSoft` 1.040:1, under the 1.05 divider floor. Moving
+the greys was rejected — they collide with their own pressed washes — so the two
+identity soft fills move one step darker (card 1.53 → 1.39, Linux card 1.20 →
+1.09, both above the surface floor) and the four fills join the `divider` class
+(121 → 125 pairs).
 
 ### Reference adoption (block `200–299`)
 

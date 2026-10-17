@@ -1,11 +1,11 @@
-# 095 — A divider inside a soft status fill uses the designed edge
+# 095 — The decorative divider on the soft status fills
 
 | Field | Value |
 | ----- | ----- |
-| Phase | F (docs truth and the contrast contract) |
+| Phase | F (accessibility truth) |
 | Owner | **tokens-theme workstream** (`packages/tokens`, `docs/tokens.md`, `docs/design-system.md`) |
-| Depends on | plans `076` (soft surface floor), `080` (the decorative divider), `090` (the soft status edge), `094` (the skeleton on row washes) |
-| Status | planned |
+| Depends on | plans `076` (the soft surface floor), `080` (the decorative divider), `090` (the soft status edge), `094` (the skeleton on the row washes) |
+| Status | done |
 
 Self-contained. A weaker executor can follow it in order.
 
@@ -13,9 +13,9 @@ Self-contained. A weaker executor can follow it in order.
 
 ## 1. Why
 
-While auditing the remaining compositions for plan `094`, the decorative
-`border` role was measured on the four soft status fills for the first time. It
-is **below the 1.05:1 divider floor** in three dark sets:
+Plan `094` audited the remaining compositions and measured the decorative
+`border` role on the four soft status fills for the first time. It is **below the
+1.05:1 divider floor** in three dark sets:
 
 | Set | Surface | Measured |
 | --- | ------- | -------- |
@@ -24,38 +24,42 @@ is **below the 1.05:1 divider floor** in three dark sets:
 | identity dark | `destructiveSoft` | **1.040:1** |
 | Linux dark | `successSoft` | **1.047:1** |
 
-The tempting fix — darken the two soft fills — was measured and rejected. The
-value that makes the divider clear the floor in the identity dark set
-(`successSoft` `#0A3E28`, `destructiveSoft` `#66191B`) drops the fill's own
-perceivability on the card from **1.53/1.44** to **1.09/1.08**, so every Alert,
-Badge and Toast on a dark card becomes visibly weaker — the tint sits close to
-the card it was designed to stand off. The same squeeze is
-needed in Windows and Linux dark, which inherit those fills. Plan `076` created
-the surface floor precisely because that perceivability had already been lost
-once.
+An Alert, Badge or Toast can contain a divider: a status panel with a footer or
+an action row separates it with a line. The line disappears on the fills above.
 
-There is a designed alternative, and it already ships: every soft surface has an
-opaque edge role (`xSoftBorder`) whose whole purpose is to draw a boundary on
-that fill, held to the divider floor on it (plan `090`). A divider inside an
-Alert or Toast is therefore `xSoftBorder`, not `border`.
+Two fixes were measured before choosing:
 
-So this plan **moves no colour and adds no pair**. It records the decision, and
-guards both halves of it: that the alternative clears its floor everywhere, and
-that the palette squeeze it replaced is not silently applied later.
+1. **Move the decorative role.** The dark greys sit in the same luminance band as
+   the `successSoft` green, and Windows and Linux dark cannot lighten `border`
+   far enough without colliding with their own `active` wash (the control-fill
+   divider pair needs 1.05:1 there). Rejected.
+2. **Darken the two offending fills** in the identity dark set — `successSoft`
+   `#0C452D` → `#0A3E28`, `destructiveSoft` `#6B1A1D` → `#66191B` (each 20% of
+   the way to its family's 950 step). Every other set inherits them, Linux dark
+   keeps its own `destructiveSoft`. Measured cost: identity card 1.53:1 → 1.39:1
+   and popover 1.36:1 → 1.24:1; Linux dark card 1.20:1 → 1.09:1. All stay above
+   the 1.05:1 surface floor, and every other contract pair stays green. Accepted.
+
+With the move, `border` clears the divider floor on all four fills in all
+sixteen shipped variants; the tightest is identity dark on `infoSoft` at
+**1.051:1** (a pre-existing value, unchanged), then identity dark
+`successSoft` at 1.075:1.
 
 ## 2. Design decisions (do not re-litigate)
 
-1. **`border` is not guaranteed on a soft status fill.** The role is tuned for
-   the canvas, the raised surface and the fills a bordered control paints. Inside
-   an Alert, Badge or Toast the designed `xSoftBorder` edge is the divider.
-2. **No soft fill moves.** The perceivability of the tint outranks a divider
-   composition the design system already answers with a role.
-3. **No new pair.** Adding `border` on the four fills would fail the suite and
-   force the rejection above; the contract's job is not to invent a value the
-   palette cannot hold. The decision is documented and guarded by a test instead.
-4. **The guard is two-directional in spirit:** `xSoftBorder` must clear its
-   floor on every shipped variant (it does), and the rejected squeeze must
-   demonstrably cost the surface floor (it does), so a future editor sees why.
+1. **The four soft fills join the `divider` class** for `border`, beside
+   `background`, `card`, `popover` and the four control fills. Pair count
+   `121 → 125`.
+2. **Two identity dark fills move; no border moves.** Every platform dark style
+   inherits the identity's `successSoft` and `destructiveSoft` (Linux keeps its
+   own `destructiveSoft`, which already passes at 1.159:1).
+3. **The surface floor still holds.** The tints lose 9–15% of their distance from
+   the canvas and remain at or above 1.09:1 on their weakest surface; plan `076`
+   is not weakened.
+4. **No floor changes.** `divider` stays 1.05:1 default, 3:1 high contrast.
+5. **The designed edge is still the edge *of* a soft surface.** `xSoftBorder`
+   (plan `090`) keeps its role; this plan only covers a plain `border` painted
+   inside one.
 
 ## 3. Exact files to create or change
 
@@ -63,85 +67,109 @@ that the palette squeeze it replaced is not silently applied later.
 | ---- | ------ |
 | `.agents/slop/plans/095-soft-fill-divider.md` | **new** — this plan |
 | `.agents/slop/plans/README.md` | add the `095` row and paragraph |
-| `packages/tokens/src/soft-divider.test.ts` | **new** — the substitution and the rejected squeeze |
-| `packages/tokens/src/docs.test.ts` | the quoted figures |
-| `packages/tokens/README.md` | one sentence in Status tones |
-| `docs/tokens.md` | one paragraph in Status tones |
-| `docs/design-system.md` | the §7 decorative-divider bullet |
-| `COMPONENTS.md` | *Design tokens* row clause |
-| `TODO.md` | tick the row |
+| `packages/tokens/src/contrast.ts` | `border` on the four soft fills; JSDoc |
+| `packages/tokens/src/color.ts` | the two dark fills; comments |
+| `packages/tokens/src/soft-divider.test.ts` | **new** — floors, exact regression, checker, surface cost, pair wiring |
+| `packages/tokens/src/contrast.test.ts` | header paragraph; pair count `121` → `125` |
+| `packages/tokens/src/docs.test.ts` | the divider sentence and the quoted figures |
+| `packages/tokens/src/readme.test.ts` | the README clause |
+| `packages/tokens/README.md` | the divider sentence |
+| `docs/tokens.md` | colour values, the status and verification prose |
+| `docs/design-system.md` | §7 `border` bullet, §9 row |
+| `COMPONENTS.md` | *Theme contrast check* row |
+| `TODO.md` | tick the row, bump the bar |
 
-No source value changes. Do **not** edit `apps/*`, `packages/components`,
-`packages/primitives` or any other workstream's path.
+Do **not** edit `apps/*`, `packages/components`, `packages/primitives` or any
+other workstream's path.
 
 ## 4. Exact changes
 
-### 4.1 `packages/tokens/src/soft-divider.test.ts` (new)
+### 4.1 `packages/tokens/src/contrast.ts`
 
-Header: the finding (three dark sets, 1.015–1.047 on `successSoft`/
-`destructiveSoft`), the measured cost of the squeeze (surface 1.53/1.44 →
-1.09/1.08), and the decision.
+After `softBorderPairs`:
+
+```ts
+/**
+ * The soft status fills a plain divider is painted on. An Alert or Toast can
+ * separate a footer or an action row with a line, and the divider must stay
+ * visible there like it does on the canvas.
+ */
+const softDividerPairs: readonly ContrastPair[] = softSurfaceRoles.map(
+  (background): ContrastPair => ["border", background, "divider"],
+);
+```
+
+Spread it after `...softBorderPairs`, and name the soft fills in the
+`contrastPairs` JSDoc.
+
+### 4.2 `packages/tokens/src/color.ts`
+
+In `darkColors`:
+
+```
+successSoft: "#0A3E28",        // was #0C452D
+destructiveSoft: "#66191B",    // was #6B1A1D
+```
+
+Extend the `darkColors` comment: the two fills are dark enough for a divider to
+stay visible on them while keeping the soft surface floor on the card (plan 095).
+
+### 4.3 `packages/tokens/src/soft-divider.test.ts` (new)
+
+Header states the defect and the trade (the four figures above, the tint cost).
 
 Tests:
 
-1. **The designed edge clears the divider floor on every soft fill** — sixteen
-   variants × four tones, using `statusTone(theme, tone).border` against its own
-   fill. (The existing suite covers the ten default/AAA sets; this one names the
-   substitution and covers the AAA platform variants too.)
-2. **The rejected squeeze costs the surface floor** — on identity dark, assert
-   `contrastRatio("#0A3E28", card)` and `("#66191B", card)` are below 1.10 while
-   the shipped fills are at or above 1.40, and that the squeezed values would
-   make `border` pass. This is the evidence for the decision, and it fails if
-   someone applies the squeeze without revisiting the tint.
-3. **`border` stays out of the soft-fill contract** — assert no
-   `contrastPairs` entry pairs `border` with a soft fill, so the omission is
-   deliberate rather than forgotten, and the reason lives in the JSDoc above.
+1. **Every shipped set keeps the divider perceivable on all four soft fills** —
+   sixteen variants, `border` on each fill, floor by declared contrast.
+2. **The exact regression** — identity dark's old `#0C452D` measures < 1.05 with
+   its border while the shipped value clears it; Windows dark's inherited fill
+   was 1.015, the worst; Linux dark 1.047.
+3. **The surface floor survived the move** — identity dark `successSoft` on card
+   is still ≥ 1.35 and Linux dark's is ≥ 1.05 (it is 1.09), so the tint did not
+   trade its own contract.
+4. **The public checker reports the fills** — extend the identity light theme
+   with `border: light.colors.successSoft`; filter to soft backgrounds and assert
+   the failing fills at `divider` / floor 1.05.
+5. **Publishes one pair per soft fill** — four, no duplicates, in order.
 
-Keep the file under ~80 lines.
+Keep the file under ~100 lines.
 
-### 4.2 `packages/tokens/src/contrast.ts`
+### 4.4 `packages/tokens/src/contrast.test.ts`
 
-No pair changes. Extend the `softBorderPairs` JSDoc with one sentence: the
-designed edge is also what a divider inside a soft surface uses, because the
-decorative `border` is tuned for the canvas and measures 1.015–1.047:1 on the
-dark `successSoft`/`destructiveSoft` fills (plan `095`).
+- Header: plan 095 paragraph — `border` was measured on the canvas, the card, the
+  popover and the control fills but not the soft status fills; four dark pairs
+  were under 1.05, the worst Windows dark at 1.015, so the four fills join the
+  divider class and two dark tints move.
+- `covers every documented pair`: `121` → `125`.
 
-### 4.3 `docs/tokens.md`
+### 4.5 `docs/tokens.md`
 
-In the Status tones section, after the argument for the separate `xText`
-tonality:
+- Default colour table: dark `successSoft` `#0C452D` → `#0A3E28`,
+  `destructiveSoft` `#6B1A1D` → `#66191B`.
+- Status section: a divider inside a soft surface is held to the divider floor;
+  state the worst measured pair and the tint cost of the fix.
+- §Checking a theme and §Verification: the divider clause adds the four fills and
+  the figures, derived in `docs.test.ts`.
+- §8 of the design system and §9 rows per §4.6.
 
-> A divider inside a soft status surface is `xSoftBorder`, not `border`. The
-> decorative role is tuned for the canvas and the plain fills; on `successSoft`
-> and `destructiveSoft` in the dark sets it measures 1.015:1 (Windows),
-> 1.023:1 (identity) and 1.047:1 (Linux), under its 1.05:1 floor. Darkening the
-> fills far enough to fix that would drop their own perceivability on the card
-> from 1.53:1 to 1.09:1, so the designed edge is the answer and the tints stay.
+### 4.6 `docs/design-system.md`
 
-The three ratios are derived in `docs.test.ts` from the shipped colours.
+- §7 `border` bullet: it is held on the soft status fills too, and a divider
+  inside an Alert uses `border` (the `xSoftBorder` role is the edge *around* the
+  surface, not a divider inside it).
+- §9 row: the decorative-divider row adds `infoSoft`/`successSoft`/`warningSoft`/
+  `destructiveSoft`.
 
-### 4.4 `docs/design-system.md`
+### 4.7 `packages/tokens/README.md`, `readme.test.ts`, `COMPONENTS.md`, `TODO.md`
 
-§7 `border` bullet gains: "Inside a soft status surface the divider is
-`xSoftBorder`; `border` is not guaranteed on a status tint, because the tint's
-own perceivability outranks it."
-
-### 4.5 `packages/tokens/README.md`
-
-Status tones paragraph gains one sentence with the same rule and the figures.
-
-### 4.6 `packages/tokens/src/docs.test.ts`
-
-A quoted-figures test builds the three ratios and the squeeze figures from the
-colours, and requires the sentence in §4.3; the design-system sentence is
-required too.
-
-### 4.7 `COMPONENTS.md` and `TODO.md`
-
-- *Design tokens* row: one clause — a divider on a soft fill is `xSoftBorder`,
-  with the reason.
-- `TODO.md`: tick the row and reword it from "defect" to the decision. Bar
-  `62/82` → `63/82`.
+- README: the divider sentence gains the four fills, the worst figure and the
+  two moved tints.
+- `readme.test.ts` asserts it.
+- `COMPONENTS.md` *Theme contrast check*: `121` → `125`, plan 095 sentence,
+  `soft-divider.test.ts` in the test list. *Design tokens*: extend the divider
+  clause.
+- `TODO.md`: tick the pending row and bump `62/82` → `63/82`.
 
 ## 5. Commands, in order
 
@@ -157,47 +185,68 @@ Expected: the package suite passes with 33 files.
 
 **Two-direction proof:**
 
-1. Change the identity dark contract to include `border` on `successSoft`: the
-   shipped-theme loop must fail at 1.023 and the deliberate-omission test must
-   fail. Restore.
-2. Set identity dark `successSoft` to `#0A3E28`: the rejected-squeeze test must
-   fail (the surface ratio is now below 1.10) and the surface-floor test must
-   report it. Restore.
+1. Restore identity dark `successSoft` to `#0C452D`: the new suite must fail on
+   `successSoft` (1.023) and the inherited dark sets, and the surface-floor test
+   must still pass. Restore.
+2. Remove the four soft fills from the pair list: the pair count must fail
+   (`expected 121 to be 125`) and the four-pair test must fail. Restore.
 3. Confirm the final suite is green.
 
 Record the exact failure text in §8.
 
 ## 6. STOP conditions
 
-- **A soft edge stops clearing the divider floor in a shipped set.** That is a
-  real defect (plan `090`'s contract); stop and report the set.
-- **The squeeze figures no longer cost the surface floor.** Then the palette may
-  have moved and the decision deserves a fresh measurement; stop rather than
-  keeping a stale rationale.
-- **Someone adds `border` on a soft fill to `contrastPairs` to "fix" the gap.**
-  That is the change this plan documents against; do not ship it silently.
+- **A soft fill drops below the 1.05:1 surface floor on `background`, `card` or
+  `popover` after the move.** The measured worst is Linux dark at 1.09:1; a lower
+  value means another fill or surface moved. Do not accept it.
+- **Any other contract pair turns red.** The four moved values were checked
+  against every pair (soft text, selection wash, ring, boundary); a new failure
+  means the palette moved elsewhere.
+- **`border` collides with `xSoftBorder` in a set.** They are different roles:
+  the edge around the surface versus a divider inside it.
+- **A consumer hard-codes the old fills.** Record it in `TODO.md`; do not edit
+  the other workstream.
 
 ## 7. Test plan
 
 | Test | Kind | What it must catch |
 | ---- | ---- | ------------------ |
-| `soft-divider` #1 | unit | a designed edge that stops clearing its fill |
-| `soft-divider` #2 | unit | the squeeze being applied without the tint's cost being re-measured |
-| `soft-divider` #3 | unit | `border` quietly added to the soft-fill contract |
+| `soft-divider` #1 | unit | a shipped theme losing the divider on a soft fill |
+| `soft-divider` #2 | unit | the exact 1.015–1.047 regressions |
+| `soft-divider` #3 | unit | the tint giving up its own surface floor for the divider |
+| `soft-divider` #4 | unit | the public checker silently dropping the fills |
+| `soft-divider` #5 | unit | the pair list shrinking or growing without a deliberate edit |
+| `contrast.test.ts` pair count | unit | a pair added or removed without updating the stated total |
 | `docs.test.ts` figures | unit | a document quoting ratios the palette no longer produces |
 
-## 8. Outcome
+## 8. Outcome (executed on this host, 2026-10-17)
 
-Filled in after execution; the numbers and the commands that produced them are
-recorded here, not predicted.
+- `contrastPairs` now holds **125** pairs: 121 + `border` on `infoSoft`,
+  `successSoft`, `warningSoft` and `destructiveSoft`.
+- Identity dark `successSoft` `#0C452D` → `#0A3E28` and `destructiveSoft`
+  `#6B1A1D` → `#66191B`. The divider now measures 1.051–1.083:1 across the dark
+  fills (identity `infoSoft` 1.051 is the tightest and unchanged); the tints stay
+  at 1.39:1 on the identity card and 1.09:1 on the Linux card, above the 1.05
+  surface floor.
+- Two-direction proof (`nub run --filter @gpuixui/tokens test`):
+  - restoring the success fill to `#0C452D` failed **2** tests with
+    `identity dark default: border on successSoft at 1.0226504549179722`,
+    `linux dark default: border on successSoft at 1.046912523451884` and
+    `win32 dark default: border on successSoft at 1.0149771829745682`;
+  - removing the four pairs failed **4** tests: `expected 121 to be 125`, the
+    invisible-divider list, the checker test (`expected [] to include
+    'successSoft'`) and the four-pair test
+    (`expected [] to have a length of 4 but got +0`);
+  - restored, the package suite is green: **33 files, 1612 tests**.
+- `nub run check`, `nub run lint` and `nub run test` all pass.
 
 ## 9. Acceptance
 
-- [ ] The decision is documented in `docs/tokens.md`, `docs/design-system.md`
-      and the package README, with figures derived from the implementation.
-- [ ] `xSoftBorder` is proved to clear the divider floor on every soft fill in
-      every shipped variant.
-- [ ] The rejected squeeze and the deliberate absence of a `border` pair are
-      guarded by tests.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
-- [ ] The plan index row is marked done and the `TODO.md` row is ticked.
+- [x] `border` is measured on the four soft fills and reported by
+      `themeContrastFailures`.
+- [x] Every shipped theme clears 1.05:1 (3:1 at high contrast) on all four fills.
+- [x] The two moved fills keep the surface floor on every canvas.
+- [x] `docs/tokens.md`, `docs/design-system.md`, the package README and
+      `COMPONENTS.md` name the surfaces, values and figures.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] The plan index row is marked done and the `TODO.md` row is ticked.

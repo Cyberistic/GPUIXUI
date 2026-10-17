@@ -82,6 +82,15 @@ const softBorderPairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The soft status fills a plain divider is painted on. An Alert or Toast can
+ * separate a footer or an action row with a line, and the divider must stay
+ * visible there like it does on the canvas.
+ */
+const softDividerPairs: readonly ContrastPair[] = softSurfaceRoles.map(
+  (background): ContrastPair => ["border", background, "divider"],
+);
+
+/**
  * The state washes a row paints behind its own text: pointer hover, press, the
  * accent a selectable row uses on hover, and the selected fill. Secondary text
  * sits on all four, so the `secondary` floor applies to each.
@@ -232,7 +241,8 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * status fills a control sits in, the soft
  * status surfaces and the loading skeleton a canvas, a quiet panel or a row wash
  * must distinguish, the
- * designed edge around each soft status surface, and the decorative dividers
+ * designed edge around each soft status surface, the plain divider on those
+ * soft fills, and the decorative dividers
  * that must stay visible, including on the fills a bordered control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
@@ -284,6 +294,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...secondaryTextPairs,
   ...surfacePairs,
   ...softBorderPairs,
+  ...softDividerPairs,
   ["border", "background", "divider"],
   ["border", "card", "divider"],
   ["border", "popover", "divider"],
@@ -490,7 +501,8 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * selection wash measured over the surfaces a selected glyph paints on, the
  * secondary text and the wash's own perceivability on those surfaces, the
  * loading skeleton measured on every surface and row wash it fills, the designed edge around
- * each soft status surface measured on its own fill, the selection wash and the
+ * each soft status surface measured on its own fill, the plain divider measured
+ * on those fills, the selection wash and the
  * tone's own foreground on the four soft status surfaces a selected Alert,
  * Badge or Toast paints, the control edge measured
  * on the fills a bordered control paints, the focus ring on the soft status fills

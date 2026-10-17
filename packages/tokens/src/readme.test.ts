@@ -109,7 +109,10 @@ describe("packages/tokens/README.md", () => {
 
   it("states the fills a bordered control paints its edge on", () => {
     expect(readme).toContain(
-      "the `secondary`, `hover`, `active` and `accent` fills a bordered control paints",
+      "the `secondary`, `hover`, `active` and `accent` fills a bordered control paints and on the four soft status fills a status panel divides",
+    );
+    expect(readme).toContain(
+      "The inherited dark `successSoft` measured 1.015:1 on Windows, 1.023:1 on the identity and 1.047:1 on Linux until plan 095 darkened it and the soft `destructive` fill one step while keeping the surface floor.",
     );
   });
 
