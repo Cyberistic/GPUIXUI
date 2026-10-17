@@ -175,6 +175,7 @@ Cross-cutting records:
 | `430-theming-token-scales.md` | Theming page completeness: render every token group (spacing, radius, border, icon, density, elevation) from the package | F | 410, 416; tokens `Theme` | implemented — `<TokenScales />`, 151 docs tests; both directions proven |
 | `431-search-relevance.md` | Search relevance: a component's exact name reaches its page; a blank query returns `[]`; one page listed once | F | 410, 411, 417, 419, 421 | implemented — title ranking, empty guard, page dedupe; 157 docs tests; every rule proven to fail when removed |
 | [`432-native-coverage-preview.md`](./432-native-coverage-preview.md) | Previews stop calling runtime-verified components unverified: tier V names the native suite and its command | F | 412, 411, 425; primitives 041, components 117 | implemented — every delivered record declares its suite; the registry guard derives the command and the import |
+| [`433-theming-native-captures.md`](./433-theming-native-captures.md) | Curated native theme captures on Theming: real frames, a sidecar from the run, refresh recipe | F | 412, 416, 430; playground 140, 150 | implemented — 20/20 capture run, two frames + sidecar committed, `<ThemeCaptures />` guarded |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

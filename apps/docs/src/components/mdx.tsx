@@ -7,6 +7,7 @@ import { ComponentState } from "./component-state";
 import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { NativePreview } from "./preview/native-preview";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
+import { ThemeCaptures } from "./preview/theme-captures";
 import { RelatedComponents } from "./related-components";
 import { PlatformValues } from "./platform-values";
 import { TokenColors } from "./token-colors";
@@ -29,6 +30,7 @@ export function getMDXComponents(components?: MDXComponents) {
     PlatformTypes,
     TokenScales,
     PlatformValues,
+    ThemeCaptures,
     ...components,
   } satisfies MDXComponents;
 }

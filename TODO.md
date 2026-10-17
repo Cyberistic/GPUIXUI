@@ -81,7 +81,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` Probe the tree view per plan `153`: `tree-view` — exact per-depth indentation, expand/collapse repaint, click-to-focus and arrow-key delivery; the no-programmatic-focus limitation recorded — 17/17 green (fails with exit `1` when the directory toggle is disabled)
 `[x]` Probe the log viewer per plan `154`: `log-viewer` — bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; the overlap of `alignment`/`followTail` and the no-snap-back-on-scroll limitation recorded — 18/18 green (fails with exit `1` when both props are dropped)
 `[ ]` **Gold standard (outside this workstream):** add `.github/workflows/native-smoke.yml` running `nub run --filter playground smoke` on `macos-14` (Apple Silicon) to confirm with the **published** binary (this host's verdict uses a locally-built binding, ADR 0003). The repo is public, so the runners are free. Owner: whoever owns CI/platform
-`[ ]` Cross-team: the docs' honest native previews need **committed** images; the smoke run writes 20 frames to the gitignored `apps/playground/.artifacts/screenshots`. Decide (docs-site) whether to commit a curated set under the docs app and how it is refreshed; never substitute a browser reimplementation. Owner: `docs-site`
+`[x]` Cross-team: the docs' honest native previews need **committed** images — decided in plan 433: the raw `.artifacts` stay gitignored, the docs commit a curated set under `apps/docs/public/screenshots/theming/` with a `provenance.json` from the measured run (20/20, commit `7fd029f`), and `<ThemeCaptures />` refuses a frame with no sidecar. Component screenshots still wait on per-component playground screens. Owner: `docs-site`
 `[ ]` Cross-team: plan numbers collide in the shared `100–199` block —
       `110-package-components.md` and `110-native-smoke-test.md` both exist, and
       the playground set continues `120`–`156`. Renumber one set and update every
@@ -468,9 +468,10 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–431)
 
-`[x]` `[██████████]` 30/31
+`[x]` `[██████████]` 32/33
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
+`[x]` Curated native theme captures on Theming (plan 433) — a real 20/20 capture run, two frames + provenance sidecar, `<ThemeCaptures />` refuses an unproven frame
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified

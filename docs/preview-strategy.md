@@ -67,6 +67,23 @@ capture script:
 
 The capture script is owned by the playground workstream (`TODO.md`).
 
+### What the docs commit
+
+The playground writes every frame to the gitignored
+`apps/playground/.artifacts/screenshots`; those files are **not** published. The
+docs commit a curated set under `apps/docs/public/screenshots/<subject>/`, and
+only the frames a page renders:
+
+- the exact run is `nub run --filter playground build`, then
+  `nub apps/playground/dist/smoke/run.js --screenshots`;
+- each published directory carries a `provenance.json` written from that run —
+  `platform`, `gpuixVersion`, `commit`, `command`, `capturedAt` — with `commit`
+  being the commit the capture ran at;
+- refreshing a capture means re-running the command and re-copying the frame;
+  the caption then shows the new commit, and a stale one stays visible;
+- a frame whose sidecar is absent is not rendered. The page names the missing
+  file instead of showing the image (plan 433).
+
 ## Platform styles in previews
 
 Every preview renders with the site's active platform style (plan 420): the

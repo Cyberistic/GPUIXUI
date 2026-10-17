@@ -1,0 +1,7 @@
+{
+  "platform": "darwin-x64",
+  "gpuixVersion": "0.10.0",
+  "commit": "7fd029f",
+  "command": "nub apps/playground/dist/smoke/run.js --screenshots",
+  "capturedAt": "2026-10-17T15:47:15.213Z"
+}

@@ -109,6 +109,22 @@ const brand = extendTheme(lightTheme, {
 Overrides merge field by field for typography and density, so changing the body
 size keeps its leading and weight. Components never receive a partial theme.
 
+## Native evidence
+
+The token layer is painted by GPUix, not by this browser. These frames come from
+the playground's theme gallery; each scenario asserts every role against the
+runtime's own style report before it captures:
+
+<ThemeCaptures />
+
+Refresh them with `nub run --filter playground build`, then
+`nub apps/playground/dist/smoke/run.js --screenshots`. The run writes every
+scenario to `apps/playground/.artifacts/screenshots`; the docs publish only the
+curated frames, copied into `apps/docs/public/screenshots/theming/` beside their
+`provenance.json` sidecar. A frame without a sidecar is never rendered
+(`docs/preview-strategy.md`), and the caption is built from the sidecar — never
+from the file name.
+
 ## The docs site itself
 
 This site's light and dark themes are the library's own roles, mapped onto
