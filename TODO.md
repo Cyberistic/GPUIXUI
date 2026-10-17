@@ -202,6 +202,8 @@ retired once both branches are one
     - [ ] 201 (shared helper) — `packages/testing/src/state.ts` + its test (`runCommands` over a runtime), so suites outside `packages/components` replay commands (owner: playground; this package's `runtime.run` is the same fold)
     - [x] Split Alert into parts — `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` over a tone context; 11 native tests; docs, example and API table updated (plan 158)
     - [ ] Split the remaining landed deviations named in `docs/component-api.md` §9 into parts — CommandMenu, Pagination, Combobox and the date/time pickers, each with its own behaviour test, docs update and inventory row (owner: components)
+    - [ ] Enforce the contract's typed-by-position children at compile time (a parent `children` narrowed to its part union plus a dev check), currently a render-time throw only (owner: components)
+    - [ ] Expose `style` as `StateStyle<PartState>` or `children(state)` on the parts that draw an interaction state, so a consumer can style state without copying the component (owner: components)
     - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
 `[x]` Verify every component in both themes
 

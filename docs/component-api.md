@@ -10,6 +10,20 @@ compound-part contract (MIT; see [`LICENSES/base-gpui.md`](../LICENSES/base-gpui
 into React over GPUix 0.10.0. No Rust source is copied. Where GPUix lacks a
 capability, the contract says so instead of naming an API that would not work.
 
+## Adoption status
+
+The contract is accepted; adoption is incremental, and §9 tracks the landed
+components that still deviate.
+
+| Rule | Status |
+| ---- | ------ |
+| Compound parts (§1) | **adopted** — Card, Dialog, Tabs, Accordion, menus, Alert and the rest export their parts |
+| Typed-by-position children (§1) | **target** — a misplaced part throws the parts error at render; compile-time narrowing is a `TODO.md` follow-up |
+| Controlled/uncontrolled names (§2) | **adopted** — `value`/`defaultValue`/`onValueChange` across the landed components |
+| State-aware `style`/`children(state)` (§3) | **target** — parts read the theme tokens directly today; no part exposes a state callback yet (`TODO.md` follow-up) |
+| Shared keyboard contract (§4) | **adopted per component** — `packages/primitives`' keyboard module is not yet a dependency of this package (interlock) |
+| Accessibility subset (§5) | **adopted** — every component's docs record the gaps |
+
 ## 1. Compound parts
 
 - A component is a **compound**, not a monolithic widget: one exported
