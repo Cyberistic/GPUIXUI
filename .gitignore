@@ -37,3 +37,7 @@ workspaces/
 
 # The read-only reference clone is a local symlink, not repository content.
 references
+
+# Tooling backups
+*.bak-*
+*.bak
