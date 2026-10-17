@@ -10,6 +10,19 @@ Status: `todo` · `wip` · `done` · `blocked (reason)` · `unsupported (evidenc
 Every row also records **GPUix support** and, when it is not `yes`, the evidence
 and the strongest honest alternative.
 
+## Design system
+
+| Capability | Status | GPUix support | Notes / limitations |
+| ---------- | ------ | ------------- | ------------------- |
+| Design tokens | wip | yes (inline style values) | 47 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark; `colorRoles` indexes the roles for generated doc tables; elevation resolves to the single shadow the runtime paints (`elevationShadow`); WCAG floors in the test suite. Native visual proof pending the playground gallery. |
+| Theme extension | wip | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. Provider test is a server render; native switch pending. |
+| High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; contrast test covers both variants. Docs in `docs/tokens.md`. |
+| Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. Docs in `docs/tokens.md`. |
+| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring; overlay/menu animation is unavailable. Docs in `docs/tokens.md`; plan 017 corrected the earlier claim that the runtime supports outlines. |
+| Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land. |
+| Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests. Native visual check of the sans sentinel pending the playground (B1). |
+| Native theme gallery | todo | yes | `apps/playground`; visual evidence for the rows above. Owner: playground workstream. |
+
 ---
 
 ## Not provided by GPUix
