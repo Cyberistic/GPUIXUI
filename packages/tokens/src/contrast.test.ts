@@ -33,6 +33,15 @@
  * `secondary`, `hover`, `active` or `accent`; four shipped sets had the edge and
  * the fill at the same value (1.00:1), so the edge disappeared exactly while
  * pressed.
+ *
+ * Plan 083 closes the last painted foreground the list measured only on plain
+ * surfaces: status text. A status label or indicator dot inside a list, table or
+ * menu row sits on the `hover`/`active`/`accent`/`selected` wash, and no pair
+ * measured it there. Every light set had a warning label below the floor on the
+ * pressed fill — macOS 4.22:1, Linux 4.24:1, Windows 4.36:1 — and high-contrast
+ * light measured 5.83:1 on `active` and 6.70:1 on `accent`/`selected`, under the
+ * AAA 7:1 floor. All four tones join all four washes, and the two warning steps
+ * move (`#8E5B00` → `#6B4500` light, `#6B4500` → `#4B3100` high contrast).
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -222,7 +231,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(80);
+    expect(contrastPairs.length).toBe(96);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 

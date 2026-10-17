@@ -95,13 +95,30 @@ const primaryTextPairs: readonly ContrastPair[] = primaryTextSurfaces.map(
 );
 
 /**
+ * The state washes a row paints behind a status label, icon or indicator dot:
+ * pointer hover, press, the accent a selectable row uses on hover, and the
+ * selected fill. A status dot in a list, table or menu sits on all four, so the
+ * `secondary` floor applies to each.
+ */
+const statusTextWashes = ["hover", "active", "accent", "selected"] as const;
+
+const statusTextTones = ["info", "success", "warning", "destructive"] as const;
+
+const statusTextWashPairs: readonly ContrastPair[] = statusTextTones.flatMap(
+  (tone) =>
+    statusTextWashes.map(
+      (background): ContrastPair => [`${tone}Text`, background, "secondary"],
+    ),
+);
+
+/**
  * Every documented pair — text, status, surface and divider — including
- * secondary text on the state washes, brand-toned text on the plain surfaces
- * and washes a link paints, the focus ring on the washes a focused row paints,
- * the status text and control boundary on a floating surface, the soft status
- * surfaces and the loading skeleton a canvas must distinguish, and the
- * decorative dividers that must stay visible, including on the fills a
- * bordered control paints.
+ * secondary text and status text on the state washes, brand-toned text on the
+ * plain surfaces and washes a link paints, the focus ring on the washes a
+ * focused row paints, the status text and control boundary on a floating
+ * surface, the soft status surfaces and the loading skeleton a canvas must
+ * distinguish, and the decorative dividers that must stay visible, including on
+ * the fills a bordered control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ["foreground", "background", "body"],
@@ -141,6 +158,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["destructiveText", "background", "secondary"],
   ["destructiveText", "card", "secondary"],
   ["destructiveText", "popover", "secondary"],
+  ...statusTextWashPairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["ring", "selected", "boundary"],
@@ -284,13 +302,13 @@ export const selectionPairs: readonly ContrastPair[] = [
 ];
 
 /**
- * Every documented pair a theme misses — text, status, secondary text on the
- * state washes, selection, surface and divider — including the selection wash
- * measured over the surfaces a selected glyph paints on, the loading skeleton
- * measured on the surfaces it fills, and the control edge measured on the fills
- * a bordered control paints. The level defaults
- * to the one the theme declares, so a high-contrast theme is checked against its
- * own floors. An empty array is the library's guarantee; a consumer test asserts
+ * Every documented pair a theme misses — text, status, secondary text and status
+ * text on the state washes, selection, surface and divider — including the
+ * selection wash measured over the surfaces a selected glyph paints on, the
+ * loading skeleton measured on the surfaces it fills, and the control edge
+ * measured on the fills a bordered control paints. The level defaults to the one
+ * the theme declares, so a high-contrast theme is checked against its own
+ * floors. An empty array is the library's guarantee; a consumer test asserts
  * exactly that:
  *
  * @example

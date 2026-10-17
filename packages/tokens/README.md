@@ -178,7 +178,12 @@ checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught. Secondary text is
 checked on `hover`, `active`, `accent` and `selected` too, so a row description
 stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
-until plan 079. The same list holds
+until plan 079. Status text is checked on the same four washes, so a status dot
+in a list, table or menu row is readable on the fill it sits on: every light set
+had a warning label under 4.5:1 on the pressed wash (macOS 4.22:1, Linux 4.24:1,
+Windows 4.36:1) and high-contrast light was 5.83:1 on `active` and 6.70:1 on
+`accent`/`selected` until plan 083 moved the two warning steps. The same list
+holds
 the soft status surfaces and the loading skeleton at 1.05:1 against `background`,
 `card` and `popover`, and the decorative `border` at 1.05:1 (3:1 at high
 contrast) on the plain surfaces and on the `secondary`, `hover`, `active` and
@@ -195,7 +200,7 @@ lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 The four status families — `info`, `success`, `warning` and `destructive` — each
 have a solid role with a readable foreground, a soft pair for alerts, badges and
 toasts, and an `xText` role for labels, icons and indicator dots on a plain
-surface. `statusTone` resolves the soft surface, its readable foreground, a
+surface or the `hover`/`active`/`accent`/`selected` wash a row paints. `statusTone` resolves the soft surface, its readable foreground, a
 30%-alpha edge and the text role; `alpha` turns any hex role into a translucent
 one. A tone from a payload is unknown until `isStatusTone` narrows it.
 

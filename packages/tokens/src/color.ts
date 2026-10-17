@@ -159,13 +159,13 @@ export interface ThemeColors {
   readonly destructiveSoft: string;
   /** Text and icons on `destructiveSoft`. */
   readonly destructiveSoftForeground: string;
-  /** Informational status text and indicators on plain surfaces. */
+  /** Informational status text and indicators on plain surfaces and row washes. */
   readonly infoText: string;
-  /** Success status text and indicators on plain surfaces. */
+  /** Success status text and indicators on plain surfaces and row washes. */
   readonly successText: string;
-  /** Warning status text and indicators on plain surfaces. */
+  /** Warning status text and indicators on plain surfaces and row washes. */
   readonly warningText: string;
-  /** Destructive status text and indicators on plain surfaces. */
+  /** Destructive status text and indicators on plain surfaces and row washes. */
   readonly destructiveText: string;
   /** Dividers and decorative borders. */
   readonly border: string;
@@ -249,7 +249,7 @@ export const lightColors = {
   destructiveSoftForeground: palette.red[800],
   infoText: palette.blue[700],
   successText: palette.green[700],
-  warningText: palette.amber[700],
+  warningText: palette.amber[800],
   destructiveText: palette.red[700],
   border: "#D6DAE1",
   borderStrong: "#848E9E",
@@ -373,7 +373,7 @@ export const highContrastLightColors = {
   destructiveSoftForeground: palette.red[950],
   infoText: palette.blue[900],
   successText: palette.green[900],
-  warningText: palette.amber[800],
+  warningText: palette.amber[900],
   destructiveText: palette.red[900],
   border: "#6E7683",
   borderStrong: "#4A4F58",

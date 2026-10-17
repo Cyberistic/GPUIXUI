@@ -56,11 +56,11 @@ palette (raw ramps)  →  semantic roles  →  component composition
 The four status families — `info`, `success`, `warning`, `destructive` — each
 carry a solid role with a readable foreground, a soft pair (`xSoft`,
 `xSoftForeground`) for alerts, badges and toasts, and a text role (`xText`) for
-labels, icons and indicator dots on `background` or `card`. `info` has its own
-blue ramp, so an informational message can never be mistaken for a primary
-action. A component names a status family and reads its roles; it never mixes a
-readable text colour out of a solid status colour at runtime, and never
-special-cases a mode to make a tint readable. The solid roles are fills: light
+labels, icons and indicator dots on a plain surface or the wash a row paints.
+`info` has its own blue ramp, so an informational message can never be mistaken
+for a primary action. A component names a status family and reads its roles; it
+never mixes a readable text colour out of a solid status colour at runtime, and
+never special-cases a mode to make a tint readable. The solid roles are fills: light
 `warning` is 1.78:1 against the canvas, so it is never the colour of text or a
 dot.
 
@@ -230,7 +230,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` wash via `selectionColor`; `userSelect: "none"` opts chrome out |
-| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface; a tone from untrusted data narrows with `isStatusTone` |
+| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone` |
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
 so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
@@ -265,7 +265,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | body text on background/card/popover/input | 7:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
-| status text (`xText`) on `background`/`card`/`popover` | 4.5:1 | 7:1 |
+| status text (`xText`) on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted` and the `hover`/`active` washes | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |

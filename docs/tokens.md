@@ -120,10 +120,10 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
 | `destructiveSoft` | `#FFE0E0` | `#6B1A1D` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
-| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` |
-| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` |
-| `warningText` | `#8E5B00` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` |
-| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover` |
+| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
 | `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -182,7 +182,8 @@ Alert, Badge and Toast share four status families. Each has a solid role, a
 readable foreground and a designed soft pair, so a component never mixes a
 readable text colour from the solid colour at runtime. Each also has a text
 role for the case the other two cannot serve: a status label, icon or indicator
-dot drawn directly on `background`, `card` or `popover`.
+dot drawn directly on a surface — `background`, `card`, `popover` or one of the
+state washes a row paints (`hover`, `active`, `accent`, `selected`).
 
 | Tone | Solid fill | Soft surface | Text on the soft surface | Text on a plain surface |
 | ---- | ---------- | ------------ | ----------------------- | ----------------------- |
@@ -194,9 +195,14 @@ dot drawn directly on `background`, `card` or `popover`.
 The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
 1.78:1 against `background` and 1.89:1 against `card`, under the 3:1 non-text
 floor, and light `success` is 4.26:1, under the 4.5:1 text floor. `xText` is the
-readable tonality for the plain surfaces (`background`, `card` and `popover`);
-it is held to 4.5:1 in the default themes and 7:1 in the high-contrast variants.
-A soft surface is a surface in its own right: it is held to 1.05:1 against
+readable tonality for the plain surfaces (`background`, `card` and `popover`)
+and the four state washes a row paints (`hover`, `active`, `accent` and
+`selected`); it is held to 4.5:1 in the default themes and 7:1 in the
+high-contrast variants. That is not theoretical: a warning label in a pressed
+row measured 4.22:1 on macOS light, 4.24:1 on Linux light and 4.36:1 on Windows
+light, and high-contrast light measured 5.83:1 on `active` and 6.70:1 on
+`accent`/`selected` until plan `083` moved the two warning steps. A soft surface
+is a surface in its own right: it is held to 1.05:1 against
 `background`, `card` and `popover`, so an Alert, Badge or Toast stays
 perceivable on every shipped canvas, platform variants included.
 
@@ -210,7 +216,7 @@ const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
 tone.border; // alpha(theme.colors.info, 0.3)
-tone.text; // theme.colors.infoText — labels and dots on background/card/popover
+tone.text; // theme.colors.infoText — labels and dots on plain surfaces and row washes
 ```
 
 A tone can arrive as data — a server payload, a stored notification. It is
@@ -281,10 +287,10 @@ getTheme("light"); // the default light theme, unchanged
 | `warningSoftForeground` | `#2A1B00` | `#FFEFC6` | text and icons on `warningSoft` |
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
-| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover` |
-| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover` |
-| `warningText` | `#6B4500` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` |
-| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover` |
+| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#6E7683` | `#8A8A8A` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
@@ -820,10 +826,11 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 ```
 
 `themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
-against `contrastFloors`. The list holds text pairs, secondary text on the state
-washes (`hover`, `active`, `accent` and `selected`), status pairs, the selection
-wash, the soft status surfaces and the decorative dividers — including on the
-`secondary`, `hover`, `active` and `accent` fills a bordered control paints.
+against `contrastFloors`. The list holds text pairs, secondary text and status
+text on the state washes (`hover`, `active`, `accent` and `selected`), the other
+status pairs, the selection wash, the soft status surfaces and the decorative
+dividers — including on the `secondary`, `hover`, `active` and `accent` fills a
+bordered control paints.
 The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
@@ -982,9 +989,9 @@ text; 4.5:1 for secondary and on-colour text in the default themes, including
 text on a hovered filled action, ghost text on the `hover` and `active` washes,
 muted text on `background`, `card` and `popover`, secondary text on the `hover`,
 `active`, `accent` and `selected` washes a row paints behind a description, and
-status text (`xText`) on `background`, `card` and `popover`; 3:1 for focus and
-essential boundaries in the default themes; 4.5:1 for them in the high-contrast
-variants).
+status text (`xText`) on `background`, `card`, `popover` and those four washes;
+3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
+the high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
 those surfaces or on the `secondary`, `hover`, `active` and `accent` fills a
@@ -1011,15 +1018,21 @@ an outlined control's edge disappeared exactly while pressed; plan `080` moved
 the four dividers. The selection wash is held there too: high-contrast dark
 shipped at 6.48:1 on `hover` and 5.49:1 on `active`, Linux dark at 6.92:1 and
 Windows dark at 6.84:1 on `active`, under the body floor a selected glyph needs;
-plan `081` darkened those three wash bases. Palette edits must keep it green.
+plan `081` darkened those three wash bases. Status text is held to the same
+washes: every light set had a warning label below its floor on the pressed fill
+— macOS 4.22:1, Linux 4.24:1, Windows 4.36:1 — and high-contrast light shipped
+at 5.83:1 on `active` and 6.70:1 on `accent`/`selected`, so plan `083` moved the
+light `warningText` to `#6B4500` and the high-contrast one to `#4B3100`. Palette
+edits must keep it green.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,
 `active` and `selected` washes, because focus and selection co-occur in rows;
 secondary text is measured on `hover`, `active`, `accent` and `selected`, because
 a list row, a combobox option and a menu item paint those washes behind a
-description; status text (`xText`) and the `borderStrong` boundary are also
-measured on `popover`, so a status label or a control inside a dialog, popover or
-toast is covered.
+description; status text (`xText`) is measured on those four washes as well as on
+`popover`, so a status label inside a hovered, pressed or selected row or a
+dialog is covered; the `borderStrong` boundary is also measured on `popover`, so
+a control there is perceivable.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

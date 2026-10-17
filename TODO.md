@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 50/66
+`[x]` `[███████░░░]` 51/67
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -202,8 +202,8 @@ reads the solid `success`/`warning` fills as text (plan 057; owner: `components`
 on the hover wash and 3.29–3.86:1 on the active wash across the shipped light
 sets, under the 4.5:1 secondary floor, while `destructiveText` clears every
 wash (≥5.28:1). The token contract checks `destructiveText` on
-`background`/`card`/`popover`; the two menu washes can join it once the role is
-adopted (plan 079 audit; owner: `components`)
+`background`/`card`/`popover` and, since plan 083, on the `hover`/`active`
+washes the menu item paints (plan 079 audit; owner: `components`)
 `[ ]` Cross-team: `primitives` paints `primary` as text — the Link variant
 (`src/core/variants.ts`, `foreground`) and the `primary` text tone
 (`src/core/style.ts`, `TEXT_TONES`) — and `components` follows through its
@@ -269,6 +269,10 @@ moved and the selected row keeps the secondary floor (plan 081)
 fill and was only measured as one, so macOS light's accent was 4.21:1 on its
 canvas and macOS dark 2.84:1 on `active` while every suite stayed green; the
 54th role is held on the six surfaces a link paints (plan 082)
+`[x]` Hold status text on the state washes a row paints — a warning label in a
+pressed row measured 4.22:1 on macOS light, 4.24:1 on Linux and 4.36:1 on
+Windows, and high-contrast light 5.83:1 on `active`, under the floors; the four
+tones join the four washes and the two warning steps move (plan 083)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
