@@ -517,9 +517,10 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[x]` `[████░░░░░░]` 4/17
+`[~]` `[███░░░░░░░]` 6/22
 
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
+`[ ]` **Repo docs**: `docs/architecture.md` is listed as an A/B deliverable in `docs/README.md`, and the Architecture page says it is not written. This workstream owns `apps/docs`, not that maintainer document — write it there or drop the promise from both surfaces.
 `[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
 `[ ]` Repo tooling: `.gitignore`'s `references/` does not match the worktree's `references` symlink, so it shows as untracked and can be committed by accident; ignore the symlink too
 `[x]` Root `nub.lock` is committed — `master` tracks it, so a clean install resolves the same versions
