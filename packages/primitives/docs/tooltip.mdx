@@ -5,7 +5,9 @@ description: A short label on hover or keyboard focus — a themed wrapper over 
 
 `Tooltip` reuses `@gpuix/react/tooltip` for the anchored layer, the open delay
 and dismissal, and themes the tip to the popover surface and caption type. It is
-a wrapper, not a reimplementation.
+a wrapper, not a reimplementation. It also makes the tip anchor to **its
+trigger**: GPUix's tooltip root otherwise stretches to its parent, which put the
+tip at the edge or centre of the surrounding layout (plan 060).
 
 ## Usage
 
@@ -26,6 +28,23 @@ The child must be a single **focusable host element**. `Tooltip`'s trigger clone
 its child with the hover and focus handlers, so a component that does not forward
 those props (including this package's `Box`) will not open the tip.
 
+## Placement
+
+The root sets `alignSelf: "flex-start"` (`tooltipRootStyle`), so it hugs the
+trigger instead of filling the parent. The anchored layer then measures the
+trigger, in a column **and** a row parent.
+
+`align` decides which edge of the trigger the tip lines up with:
+
+| `align` | Result |
+| ------- | ------ |
+| `start` (default) | the panel's start edge meets the trigger's start edge — exact |
+| `end` | the panel's end edge meets the trigger's end edge — exact |
+| `center` | **off by half the panel**: the runtime places the panel's *end* on the trigger's centre line (plan 060 §0, plan 156 §8), so a 42px tip is 42px left of centre |
+
+`center` is not the default for that reason; pass it only where the offset is
+acceptable.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -33,7 +52,7 @@ those props (including this package's `Box`) will not open the tip.
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
 | `side` | `FloatingSide` | `"top"` | preferred placement |
-| `align` | `FloatingAlign` | GPUix's default | alignment against the trigger |
+| `align` | `FloatingAlign` | `"start"` | alignment against the trigger (`center` is half a panel off — see Placement) |
 | `delay` | `number` | provider default | hover delay in milliseconds |
 | `testId` | `string` | — | locator on the **tip** |
 
@@ -60,6 +79,11 @@ dismisses it. A click dismisses it.
 ## Limitations
 
 - The trigger must be a focusable host element (above).
+- **`align="center"` is off by half the panel** — a runtime defect, measured in
+  plan 060 §0. Use `start`/`end`, or accept the offset.
+- **No collision flip.** Near a window edge the runtime snaps the layer inside
+  the window without flipping it (plan 156 §8), so a `bottom` tip can end up
+  covering its trigger; pass `side="top"` there.
 - No `aria-describedby` association.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
@@ -67,11 +91,13 @@ dismisses it. A click dismisses it.
 
 ## Verification
 
-- `src/components/Select.test.tsx` / `fields.test.tsx` — the wrapper's theme
-  spec at the render seam.
+- `src/components/Select.test.tsx` — the wrapper's theme spec, the root hug and
+  the default `align` at the render seam.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
-  dismisses on click, keeps its content inside the anchoring frame, and paints
-  the popover role.
+  dismisses on click, keeps its content inside the anchoring frame, paints the
+  popover role, and paints the tip against the trigger in a column (`start`,
+  `end`) and in a row (`bottom`). Removing the root hug fails the `end` and row
+  tests; making `center` the default fails the first (plan 060 §6).
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
   hover.
 

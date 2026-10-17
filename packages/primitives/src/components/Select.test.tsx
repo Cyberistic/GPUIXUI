@@ -23,7 +23,7 @@ import {
   selectTriggerStyle,
   type SelectHandlers,
 } from "./Select.js";
-import { tooltipStyle } from "./Tooltip.js";
+import { tooltipRootStyle, renderTooltip, tooltipStyle } from "./Tooltip.js";
 import { elementChildren, elementProp, expectSome } from "./testing/element.js";
 
 const rest = { selected: false, highlighted: false, disabled: false };
@@ -161,5 +161,33 @@ describe("Tooltip", () => {
     expect(style.backgroundColor).toBe(testTheme.colors.popover);
     expect(style.fontSize).toBe(testTheme.typography.caption.fontSize);
     expect(style.whiteSpace).toBe("nowrap");
+  });
+
+  it("hugs its trigger so the layer anchors to the trigger", () => {
+    const tree = renderTooltip(
+      { content: "A hint", children: null },
+      testTheme,
+    );
+    expect(expectSome(elementProp(tree, "style"))).toStrictEqual(
+      tooltipRootStyle,
+    );
+    expect(tooltipRootStyle.alignSelf).toBe("flex-start");
+  });
+
+  it("defaults to the alignment the runtime places exactly", () => {
+    const contentOf = (align?: "start" | "center" | "end") =>
+      expectSome(
+        Arr.get(
+          elementChildren(
+            renderTooltip(
+              { content: "A hint", children: null, align },
+              testTheme,
+            ),
+          ),
+          1,
+        ),
+      );
+    expect(expectSome(elementProp(contentOf(), "align"))).toBe("start");
+    expect(expectSome(elementProp(contentOf("end"), "align"))).toBe("end");
   });
 });

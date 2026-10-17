@@ -237,6 +237,12 @@ retired once both branches are one
       exposed no heading, but `<text role="heading" aria-level>` maps. `h1`-`h3`
       are now headings with levels and `code` is `Code`; `display` stays flat
       (plan 059)
+`[x]` `packages/primitives`: `Tooltip` placement — the tip anchored to the
+      surrounding layout, not its trigger (a column put it at the container's
+      edge/centre; a row put it below the row), and the runtime's `center`
+      align is half a panel off. The root now hugs the trigger and the default
+      align is `start`; three runtime and two offline tests, both directions
+      proven (plan 060)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

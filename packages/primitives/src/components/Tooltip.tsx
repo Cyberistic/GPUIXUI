@@ -11,6 +11,10 @@
  * **Limitation:** the trigger must be a focusable element for the keyboard
  * behaviour to work, and GPUix has no `focusVisible` (plan 020 §1.2), so a
  * tooltip opened by a mouse press looks the same as one opened by Tab.
+ *
+ * The root hugs the trigger (`tooltipRootStyle`) because `<anchored>` measures
+ * its parent: without it the tip opens at the layout's edge, not the trigger's
+ * (plan 060).
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -32,11 +36,24 @@ export interface TooltipProps {
   readonly children: ReactNode;
   /** Defaults to `top`, the runtime's own default. */
   readonly side?: FloatingSide;
+  /**
+   * Defaults to `start`, which is the value the runtime places exactly.
+   * `center` is off by half the panel (plan 060 §0) and `end` is exact.
+   */
   readonly align?: FloatingAlign;
   /** Milliseconds before the tip opens on hover. Defaults to the provider's. */
   readonly delay?: number;
   readonly testId?: string;
 }
+
+/**
+ * The tooltip root hugs its trigger.
+ *
+ * `<anchored>` positions its layer against this root, and a block-level flex
+ * root stretches on its parent's cross axis: without this the tip opens at the
+ * surrounding container's edge or centre (measured: plan 060 §0).
+ */
+export const tooltipRootStyle: StyleDesc = { alignSelf: "flex-start" };
 
 /** The tip: the popover surface, the caption type, no wrapping. */
 export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc => ({
@@ -55,10 +72,10 @@ export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc => ({
 
 /** The element tree `Tooltip` renders. Pure in its arguments. */
 export const renderTooltip = (
-  { content, children, side, align, delay, testId }: TooltipProps,
+  { content, children, side, align = "start", delay, testId }: TooltipProps,
   theme: PrimitiveTheme,
 ): ReactElement => (
-  <GpuixTooltip delayDuration={delay}>
+  <GpuixTooltip delayDuration={delay} style={tooltipRootStyle}>
     <TooltipTrigger asChild>{children}</TooltipTrigger>
     <TooltipContent
       side={side}

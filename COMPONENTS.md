@@ -190,7 +190,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Selects | wip | reuse | [select](packages/primitives/docs/select.mdx) · form | **Runtime (041/057):** opens, paints its options, commits a clicked option. A thin themed wrapper over `@gpuix/react/select`; open state and dismissal are GPUix's. **GPUix sets no ARIA role**, so the wrapper supplies the whole contract: the trigger is a named `combobox` with `expanded` and `value`, the list a named `listbox`, each item a named `option` with `selected` (measured: plan 057 §0). No `aria-haspopup` in the host props. |
 | Switches | wip | partial | [switch](packages/primitives/docs/switch.mdx) · selection | **Runtime (041/049):** a click toggles; AccessKit role is `Switch` and the value flips `unchecked → checked`. **No `aria-checked`**; Space/Enter toggle. The thumb moves by the track's `justifyContent` because the runtime has no `transform`. `invalid` paints the destructive border and focus paints the selection ring (049). |
 | Progress | wip | partial | [progress](packages/primitives/docs/progress.mdx) · form | **Runtime (041):** `aria-valuetext` is `"42%"`, role is `ProgressIndicator`, the fill tracks the value and clamps outside 0–100. **No `aria-valuenow`.** |
-| Tooltips | wip | reuse | [tooltip](packages/primitives/docs/tooltip.mdx) · feedback | **Runtime (041):** opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. A thin wrapper over `@gpuix/react/tooltip`; a mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). Placement facts are the shared floating probe: `align="center"` is off by half the panel and `fit="snap"` does not flip. |
+| Tooltips | wip | reuse | [tooltip](packages/primitives/docs/tooltip.mdx) · feedback | **Runtime (041/060):** opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. A thin wrapper over `@gpuix/react/tooltip`; a mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). **Placement (060):** GPUix's tooltip root stretches on its parent's cross axis, so the tip anchored to the *layout* — edge/centre in a column, below the whole row in a row (measured `x 420` for a trigger at `12..412`, `y 312` in a 300-high row). The wrapper now sets `alignSelf: "flex-start"` and defaults `align` to `start`; `end` is exact, `center` is the runtime's half-panel defect, and `fit="snap"` still clamps without flipping (plan 156). |
 | Skeletons | wip | partial | [skeleton](packages/primitives/docs/skeleton.mdx) · feedback | **Runtime (041):** opacity samples take both `1` and `0.6`. Opacity pulse only: the runtime's `motion` animates width/height/opacity/insets/borderRadius and nothing else, so no shimmer sweep. |
 | Loading indicators | wip | partial | [spinner](packages/primitives/docs/spinner.mdx) · feedback | **Runtime (041):** the lit dot changes index (the accent-coloured dot proves a theme colour reaches the paint) and AccessKit reports role `Status` with its label. `Spinner` **cannot rotate**; a width/left indeterminate sweep is the remaining alternative, and `Progress` with no `value` covers the bar. |
 | Slider | wip | ours | [slider](packages/primitives/docs/slider.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** a real click at 25% of the track reports `25`; the thumb is centred within 1 px of the value at 0/50/100; arrows/page/Home/End move by step, page, end; a disabled slider refuses pointer and keys and leaves the tab order; the ring lands on the thumb. **No pointer capture** — a drag only tracks while the pointer is over the track. **No `aria-valuenow`/`min`/`max`**; the value rides on `aria-valuetext`. |
@@ -202,13 +202,13 @@ carries an evidenced limitation. The capability evidence lives in
 | Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, state rides on `aria-valuetext`. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (134 tests in
-14 files after plan 059's text semantics; 133 at 058, 130 at 057, 128 at 056, 119 at 055,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (137 tests in
+14 files after plan 060's tooltip placement; 134 at 059's text semantics; 133 at 058, 130 at 057, 128 at 056, 119 at 055,
 115 at the 054 OTPField, 54 at the 041 baseline, 68 after 049, 82 after 053, 90
 after NumberField, 97 after Toggle, 106 after Rating, locally built GPUix 0.10.0
 binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan 056
-§12, plan 057 §8, plan 058 §8 and plan 059 §8. The examples suite mounts every
-example in
+§12, plan 057 §8, plan 058 §8, plan 059 §8 and plan 060 §6. The examples suite
+mounts every example in
 `packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the

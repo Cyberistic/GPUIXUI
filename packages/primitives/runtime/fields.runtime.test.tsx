@@ -16,6 +16,7 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { Box } from "../src/components/Box.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { Select } from "../src/components/Select.js";
@@ -383,6 +384,106 @@ it("opens a Tooltip when its trigger takes keyboard focus", async () => {
   runtime.focusNext();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(runtime.allText()).toContain("A hint");
+});
+
+it("opens the Tooltip at the trigger's edge, not the container's", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        testId="frame"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 900,
+          padding: 0,
+        }}
+      >
+        <Tooltip content="A hint" side="bottom" testId="tip">
+          <div
+            testId="target"
+            tabIndex={0}
+            style={{ display: "flex", width: 400 }}
+          >
+            <Text>Trigger</Text>
+          </div>
+        </Tooltip>
+      </Box>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const target = boundsOf(runtime, "target");
+  const tip = boundsOf(runtime, "tip");
+  expect(Math.abs(tip.x - target.x)).toBeLessThanOrEqual(1);
+  expect(tip.y).toBe(target.y + target.height);
+});
+
+it("honours align=end against the trigger rather than the container", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        testId="frame"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 900,
+          padding: 0,
+        }}
+      >
+        <Tooltip content="A hint" side="bottom" align="end" testId="tip">
+          <div
+            testId="target"
+            tabIndex={0}
+            style={{ display: "flex", width: 400 }}
+          >
+            <Text>Trigger</Text>
+          </div>
+        </Tooltip>
+      </Box>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const target = boundsOf(runtime, "target");
+  const tip = boundsOf(runtime, "tip");
+  expect(
+    Math.abs(tip.x + tip.width - (target.x + target.width)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("opens below the trigger inside a row container", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        testId="frame"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          width: 900,
+          height: 300,
+          padding: 0,
+        }}
+      >
+        <Tooltip content="A hint" side="bottom" testId="tip">
+          <div
+            testId="target"
+            tabIndex={0}
+            style={{ display: "flex", width: 400 }}
+          >
+            <Text>Trigger</Text>
+          </div>
+        </Tooltip>
+      </Box>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const target = boundsOf(runtime, "target");
+  const tip = boundsOf(runtime, "tip");
+  expect(tip.y).toBe(target.y + target.height);
 });
 
 it("keeps the Tooltip's content inside the frame it is anchored to", async () => {
