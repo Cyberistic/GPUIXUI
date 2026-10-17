@@ -14,6 +14,7 @@ import { Smoke } from "@gpuixui/testing";
 import type { PlaygroundScenario } from "../types.js";
 import { a11yScenario } from "./a11y.js";
 import { chartScenario } from "./chart.js";
+import { markdownScenario } from "./markdown.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
 import { dragAutoscrollScenario } from "./drag-autoscroll.js";
@@ -151,6 +152,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   searchScenario,
   terminalScenario,
   chartScenario,
+  markdownScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

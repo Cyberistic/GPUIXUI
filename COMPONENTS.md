@@ -50,7 +50,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse` | verified |
-| content | `native-surfaces` | verified |
+| content | `native-surfaces`, `markdown-surface` | verified |
 | drag | `drag-targets`, `drag-autoscroll` | verified |
 | selection | `text-selection` | verified |
 | menu | `context-menu-pointer` | verified |
@@ -59,7 +59,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | terminal | `terminal-grid` | verified |
 | chart | `chart-svg` | verified |
 
-The suite is **48/48 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **49/49 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -131,6 +131,20 @@ the accessibility tree, so labels are `<text>` siblings; React children of
 URL takes GPUI's image path and keeps every fill and gradient — that is the
 **full-colour** route. The limit remains: no pixel readback, so exact colour and
 gradient stops are screenshot evidence, never assertions.
+
+`markdown-surface` is the runtime verdict for the rich-text preview surface a
+message row, changelog or docs pane will render. What holds: `<markdown source>`
+paints GitHub-flavoured markdown — heading, bold/emphasis, inline code, bullets,
+a bordered table and a fenced `ts` block with syntax highlighting — as real
+**text** (`getPaintedText`), and a drag from a sibling `<text>` to another
+crosses the document and copies its runs in order. A coordinate click on a
+link's glyphs fires `onLinkClick` with its URL; the element is `w_full`, so a
+short link is not reachable from the element centre and synthetic input needs
+the link's own coordinates. React children are retained but never painted (the
+same shape as `<svg>`/`<canvas>`), and `role="article"` + `aria-label` is one
+named AccessKit `Article` — the internal headings and table are **not** separate
+nodes. Styling comes from the element's built-in `Theme`; `theme` is the typed
+prop and only its default was measured.
 
 `drag-targets` measures the pointer model behind tab dragging, drag and drop and
 file upload. What holds: a captured gesture keeps **every move and the up** on
@@ -347,6 +361,7 @@ is ahead of the published release — the divergence is called out below.
 | Tooltips | `Tooltip` + parts | **verified** (runtime: `tooltip-open`) |
 | Virtualized lists | `<virtual-list>` | **verified** |
 | Syntax highlighting | `<code>` (bundled languages) | **verified** |
+| Markdown / rich text rendering | `<markdown>` (GFM: headings, lists, tables, fenced code, links) | **verified** (runtime: `markdown-surface`; editing is not provided) |
 | Diff viewer | `<diff>` (unified) | **verified** (runtime: `native-surfaces`) |
 | Image preview | `<img>` (path, data URL, http(s)) | **verified** (runtime: `native-surfaces`) |
 | File / folder selection | `GpuixRenderer.promptForPaths` | **verified** |
@@ -574,7 +589,7 @@ in-package and an end-to-end native verdict.
 | Code editor integration | todo | ? | `<code>` renders highlighted code; there is **no editable code surface** (verified). `<code>` text is selectable and copies without line numbers (`text-selection`), so a read-only viewer can offer copy today. |
 | Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages. API-shape work, not implementation. |
 | Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. Evidence: `native-surfaces` — the file header, hunk header and changed lines all reach the paint log, and the surface is painted at its declared width. `text-selection` — a drag across the diff copies only line text (no header, hunk, gutter or marker). |
-| Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). Its text is selectable and copyable (`text-selection` covers the shared selection path). |
+| Rich-text editing | todo | partial (probe) | **Rendering is provided and measured** — `<markdown>` paints GFM (heading, emphasis, inline code, list, bordered table, fenced code with highlighting) as addressable text; a crossing drag copies it; a coordinate click on a link fires `onLinkClick` with the URL; children are retained but unpainted; `role="article"` is one named AccessKit region (internal headings/table are not nodes). Runtime: `markdown-surface`. **Editing** is not provided: no editable rich-text surface, and the internal block runs are not exposed as elements. A rich-text editor needs a separate model and `<input>`/`<textarea>` only, or is out of scope. |
 | Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. Evidence: `native-surfaces` — a valid PNG data URL lays out at its box with no fallback, a missing `src` paints `img: no src`, an undecodable one paints `img: load failed`, and `setImagePixels` through the ref uploaded a bitmap without throwing. No pixel readback, so a corrupt bitmap with a valid MIME is indistinguishable from a decoded one. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
 | Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `drag-targets`: pointer capture keeps moves and the up on the source, **hover is frozen during the drag**, the drag ends in a click on the source, and a drop on an element without `onFileDrop` still fires a click. `drag-autoscroll`: a held drag at a container edge does **not** auto-scroll; the component owns an edge loop (`renderer.scrollTo` on each held move, which keeps the capture), the derived drop index and the click suppression. |

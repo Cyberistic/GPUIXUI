@@ -20,7 +20,8 @@ placement), the Tier 3/4 probes
 `tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
 command surface probe (`command-palette`), the tabbed-pane probe
 (`workspace-panes`), the app-level shortcut probe
-(`window-key-shortcut`), the chart probe (`chart-svg`) and
+(`window-key-shortcut`), the chart probe (`chart-svg`), the markdown probe
+(`markdown-surface`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
@@ -59,7 +60,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (48/48 green); -> 2 on a host with no binding
+# -> 0 here (49/49 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -498,12 +499,31 @@ area series in an absolute slot, labels as `<text>`, and `<img>` + SVG for any
 full-colour artwork. The limit is unchanged: no pixel readback, so exact colour
 inside the image and the gradient stops are screenshot evidence.
 
+## Markdown surfaces (plan `181`)
+
+`markdown-surface` mounts `<markdown>` — the host element a rich-text preview, a
+changelog pane or an AI message row will render — and measures the contract the
+library had only assumed:
+
+| Fact | Measured |
+| ---- | -------- |
+| render | a heading, bold/emphasis, inline code, a bullet list, a bordered table and a fenced `ts` block (language label + highlighting) all paint, and every run is in `getPaintedText` |
+| selection | a drag from a sibling text before the document to one after it returns a selection containing `Release notes` and `const total`; `userSelect: "none"` on the document excludes it from the same drag |
+| links | a coordinate click on a link's glyphs fires `onLinkClick` with `https://example.test/docs`; a click on prose does not. The element is `w_full`, so a short link is **not** reachable from the element centre |
+| children | React children stay in the retained tree but are never painted, like `<svg>`/`<canvas>` |
+| a11y | `role="article"` + `aria-label` is one AccessKit `Article`; internal headings and the table are **not** separate nodes |
+| styling | the document paints with its built-in `Theme` default; `theme` is the typed styling prop (only the default was measured) |
+
+The recipe: markdown for a rendered document, `<markdown>`'s own text for copy,
+and `<text>`/element coordinates for anything a test must address — the internal
+blocks are not addressable elements.
+
 ## Evidence on this host
 
-The suite is **48/48 green** here (`exit 0`):
+The suite is **49/49 green** here (`exit 0`):
 
 ```
-48/48 scenarios passed · capabilities: layout=verified text=verified
+49/49 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -545,6 +565,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
 | chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
+| markdown | `<markdown>` paints GFM blocks as addressable text; a crossing drag copies the document; a coordinate click on a link fires `onLinkClick`; children are retained but unpainted; one named `Article` node, with no per-heading nodes |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
 (`./legacy-probe/run.sh probe`); they never set a component status.
@@ -587,6 +608,7 @@ src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filt
 src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
 src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
 src/scenarios/chart.tsx     chart: bars, one svg layer per series, SVG text, img gradients
+src/scenarios/markdown.tsx  markdown: blocks, selection, links, children, a11y
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -624,8 +646,9 @@ narrower. Each deviation is deliberate and measured:
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
-  probe, the terminal-grid probe and the chart probe pass in real GPUix 0.10.0
-  on this host (48/48), with a written report and screenshots.
+  probe, the terminal-grid probe, the chart probe and the markdown probe pass
+  in real GPUix 0.10.0 on this host (49/49), with a written report and
+  screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
