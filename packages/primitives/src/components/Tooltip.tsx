@@ -14,17 +14,29 @@
  *
  * The root hugs the trigger (`tooltipRootStyle`) because `<anchored>` measures
  * its parent: without it the tip opens at the layout's edge, not the trigger's
- * (plan 060).
+ * (plan 060). That root is also what the wrapper measures to choose a side: the
+ * runtime's layer is `fit="snap"`, which clamps without flipping, so a tooltip
+ * at the window's top edge opened over its trigger (plan 067).
  */
 
-import type { ReactElement, ReactNode } from "react";
-import type { StyleDesc } from "@gpuix/react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+} from "react";
+import * as Option from "effect/Option";
+import { readWindowSize, useGpuix } from "@gpuix/react";
+import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import {
   Tooltip as GpuixTooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
+import { decideVerticalSide, FLOATING_MARGIN } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -34,7 +46,10 @@ export interface TooltipProps {
   readonly content: ReactNode;
   /** The element the tooltip describes. It must be focusable. */
   readonly children: ReactNode;
-  /** Defaults to `top`, the runtime's own default. */
+  /**
+   * Defaults to `top`, flipped to `bottom` when the tip does not fit above.
+   * An explicit value skips the decision.
+   */
   readonly side?: FloatingSide;
   /**
    * Defaults to `start`, which is the value the runtime places exactly.
@@ -70,16 +85,43 @@ export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc => ({
   whiteSpace: "nowrap",
 });
 
+/**
+ * The height the tip will paint, from the values `tooltipStyle` uses.
+ *
+ * The side must be chosen before the tip exists, so the height is derived: the
+ * vertical padding, one caption line and the border. A test pins the two
+ * together, so a restyle that forgets this estimate fails (plan 067).
+ */
+export const tooltipHeight = (theme: PrimitiveTheme): number =>
+  2 * theme.spacing.xs +
+  theme.typography.caption.lineHeight +
+  2 * theme.borderWidth.thin;
+
+/** The impure glue the wrapper owns; the renderer below stays pure. */
+export interface TooltipHandlers {
+  /** The root div, so the wrapper can measure the trigger's box. */
+  readonly ref?: Ref<PublicInstance>;
+  /** When the tip opens, so the side is decided from a fresh measurement. */
+  readonly onOpenChange?: (open: boolean) => void;
+}
+
 /** The element tree `Tooltip` renders. Pure in its arguments. */
 export const renderTooltip = (
   { content, children, side, align = "start", delay, testId }: TooltipProps,
   theme: PrimitiveTheme,
+  handlers: TooltipHandlers = {},
 ): ReactElement => (
-  <GpuixTooltip delayDuration={delay} style={tooltipRootStyle}>
+  <GpuixTooltip
+    delayDuration={delay}
+    style={tooltipRootStyle}
+    ref={handlers.ref}
+    onOpenChange={handlers.onOpenChange}
+  >
     <TooltipTrigger asChild>{children}</TooltipTrigger>
     <TooltipContent
       side={side}
       align={align}
+      collisionPadding={FLOATING_MARGIN}
       style={tooltipStyle(theme)}
       testId={testId}
     >
@@ -88,6 +130,42 @@ export const renderTooltip = (
   </GpuixTooltip>
 );
 
+/** The trigger's measured vertical extent. */
+interface TooltipBox {
+  readonly top: number;
+  readonly bottom: number;
+}
+
 /** A short label shown when its trigger is hovered or focused. */
-export const Tooltip = (props: TooltipProps): ReactElement =>
-  renderTooltip(props, useTheme());
+export const Tooltip = (props: TooltipProps): ReactElement => {
+  const theme = useTheme();
+  const { renderer } = useGpuix();
+  const root = useRef<PublicInstance | null>(null);
+  const [open, setOpen] = useState(false);
+  const [box, setBox] = useState<TooltipBox | undefined>(undefined);
+  useEffect(() => {
+    const id = root.current?.id;
+    if (id === undefined) return;
+    const bounds = renderer?.getElementBounds?.(id);
+    if (bounds === null || bounds === undefined || bounds.height <= 0) return;
+    setBox({ top: bounds.y, bottom: bounds.y + bounds.height });
+  }, [renderer, open]);
+  const side =
+    props.side ??
+    Option.getOrUndefined(
+      Option.map(Option.fromNullishOr(box), (measured) =>
+        decideVerticalSide({
+          triggerTop: measured.top,
+          triggerBottom: measured.bottom,
+          layerHeight: tooltipHeight(theme),
+          viewportHeight: readWindowSize(renderer).height,
+          margin: FLOATING_MARGIN,
+          preferred: "top",
+        }),
+      ),
+    );
+  return renderTooltip({ ...props, side }, theme, {
+    ref: root,
+    onOpenChange: setOpen,
+  });
+};

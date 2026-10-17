@@ -14,6 +14,15 @@
 /** The vertical sides a layer can open on. */
 export type VerticalSide = "top" | "bottom";
 
+/**
+ * The gap the runtime's floating layer keeps from the window edge.
+ *
+ * `FloatingLayer` calls it `collisionPadding` and defaults it to 8; a component
+ * that decides a side passes this same number down, so the decision and the
+ * runtime's clamp cannot disagree.
+ */
+export const FLOATING_MARGIN = 8;
+
 /** What the decision needs: the trigger, the layer and the window, in pixels. */
 export interface PlacementRequest {
   /** The trigger's top edge, in window coordinates. */
@@ -26,11 +35,14 @@ export interface PlacementRequest {
   readonly viewportHeight: number;
   /** The gap kept between the layer and the window edge. */
   readonly margin: number;
+  /** The side to keep when it has room. Defaults to `bottom`. */
+  readonly preferred?: VerticalSide;
 }
 
 /**
- * The side with room for the layer: below when it fits, else above when it
- * fits, else the side with more room. An exact fit counts as fitting.
+ * The side with room for the layer: the preferred side when the layer fits
+ * there, else the other side when it fits there, else the roomier side. An
+ * exact fit counts as fitting.
  */
 export const decideVerticalSide = ({
   triggerTop,
@@ -38,10 +50,14 @@ export const decideVerticalSide = ({
   layerHeight,
   viewportHeight,
   margin,
+  preferred = "bottom",
 }: PlacementRequest): VerticalSide => {
   const below = viewportHeight - margin - triggerBottom;
   const above = triggerTop - margin;
-  if (layerHeight <= below) return "bottom";
-  if (layerHeight <= above) return "top";
-  return below >= above ? "bottom" : "top";
+  const preferredSpace = preferred === "bottom" ? below : above;
+  const otherSpace = preferred === "bottom" ? above : below;
+  const other = preferred === "bottom" ? "top" : "bottom";
+  if (layerHeight <= preferredSpace) return preferred;
+  if (layerHeight <= otherSpace) return other;
+  return preferredSpace >= otherSpace ? preferred : other;
 };

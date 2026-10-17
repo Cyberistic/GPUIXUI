@@ -45,13 +45,21 @@ trigger, in a column **and** a row parent.
 `center` is not the default for that reason; pass it only where the offset is
 acceptable.
 
+`side` decides which side of the trigger the tip opens on. It prefers **above**,
+and flips **below** when the tip does not fit above — the runtime's layer is
+`fit="snap"`, which clamps a layer inside the window **without flipping it**
+(plan `156` §8), so at the top edge the tip used to open at `y 8..34` over a
+trigger at `y 12..30` (plan `067` §1). The wrapper measures its root and
+estimates the tip's height from `tooltipStyle` (padding, one caption line,
+border); an explicit `side` skips that decision.
+
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
-| `side` | `FloatingSide` | `"top"` | preferred placement |
+| `side` | `FloatingSide` | auto — above, flipped below when it does not fit | preferred placement |
 | `align` | `FloatingAlign` | `"start"` | alignment against the trigger (`center` is half a panel off — see Placement) |
 | `delay` | `number` | provider default | hover delay in milliseconds |
 | `testId` | `string` | — | locator on the **tip** |
@@ -81,9 +89,10 @@ dismisses it. A click dismisses it.
 - The trigger must be a focusable host element (above).
 - **`align="center"` is off by half the panel** — a runtime defect, measured in
   plan 060 §0. Use `start`/`end`, or accept the offset.
-- **No collision flip.** Near a window edge the runtime snaps the layer inside
-  the window without flipping it (plan 156 §8), so a `bottom` tip can end up
-  covering its trigger; pass `side="top"` there.
+- **The flip sees one line.** The side is chosen from an estimated height
+  (padding + one caption line + border), which is exact for the tip this wrapper
+  paints and for `whiteSpace: nowrap`; a multi-line tip is a popover. A `side`
+  you pass yourself is never flipped.
 - No `aria-describedby` association.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
@@ -92,12 +101,18 @@ dismisses it. A click dismisses it.
 ## Verification
 
 - `src/components/Select.test.tsx` — the wrapper's theme spec, the root hug and
-  the default `align` at the render seam.
+  the default `align` at the render seam, and the tip-height estimate checked
+  against `tooltipStyle`.
+- `src/core/floating.test.ts` — the shared side rule, including a preferred
+  `top` and its fallback below.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, and paints the tip against the trigger in a column (`start`,
   `end`) and in a row (`bottom`). Removing the root hug fails the `end` and row
   tests; making `center` the default fails the first (plan 060 §6).
+  **Placement (067):** at the top edge the tip opens below its trigger
+  (`8 >= 30` fails without the decision), a tip with room above stays above, and
+  the painted height equals the estimate.
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
   hover.
 

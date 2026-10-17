@@ -24,7 +24,12 @@ import {
   selectTriggerStyle,
   type SelectHandlers,
 } from "./Select.js";
-import { tooltipRootStyle, renderTooltip, tooltipStyle } from "./Tooltip.js";
+import {
+  tooltipRootStyle,
+  renderTooltip,
+  tooltipHeight,
+  tooltipStyle,
+} from "./Tooltip.js";
 import { elementChildren, elementProp, expectSome } from "./testing/element.js";
 
 const rest = { selected: false, highlighted: false, disabled: false };
@@ -209,5 +214,16 @@ describe("Tooltip", () => {
       );
     expect(expectSome(elementProp(contentOf(), "align"))).toBe("start");
     expect(expectSome(elementProp(contentOf("end"), "align"))).toBe("end");
+  });
+
+  it("estimates the painted tip height from the style it mirrors", () => {
+    // The side is chosen before the tip exists, so the estimate must stay in
+    // step with the paint (plan 067).
+    const style = tooltipStyle(testTheme);
+    expect(tooltipHeight(testTheme)).toBe(
+      2 * Number(style.paddingTop) +
+        Number(style.lineHeight) +
+        2 * Number(style.borderWidth),
+    );
   });
 });

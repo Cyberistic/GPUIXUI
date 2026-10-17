@@ -279,9 +279,13 @@ retired once both branches are one
       does not fit below; an explicit `side` still wins. Pure side rule,
       estimate-vs-styles guard, and two runtime placement tests with both
       directions proven (plan 066)
-`[ ]` `packages/primitives`: `Tooltip` carries the same clamp-without-flip
-      exposure at the top edge; its panel height is only known after content
-      renders, so it needs its own plan (recorded in plan 066 §2)
+`[x]` `packages/primitives`: **`Tooltip`'s tip covered its trigger at the
+      window's top edge** — the same clamp-without-flip rule: measured tip
+      `y 8..34` over a trigger at `y 12..30`. The wrapper measures its root and
+      flips the tip below when it does not fit above, sharing
+      `decideVerticalSide` with `Select` (a `preferred` side keeps tooltips
+      above by default). Estimated height pinned to `tooltipStyle`; two runtime
+      tests, both directions proven (plan 067)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

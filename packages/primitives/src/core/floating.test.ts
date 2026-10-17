@@ -60,4 +60,17 @@ describe("decideVerticalSide", () => {
       ),
     ).toBe("top");
   });
+
+  it("keeps a preferred top when it has room", () => {
+    // A tooltip prefers above even though the layer would also fit below.
+    expect(decideVerticalSide(room({ preferred: "top" }))).toBe("top");
+  });
+
+  it("falls back from a preferred top when only below has room", () => {
+    expect(
+      decideVerticalSide(
+        room({ preferred: "top", triggerTop: 8, triggerBottom: 40 }),
+      ),
+    ).toBe("bottom");
+  });
 });

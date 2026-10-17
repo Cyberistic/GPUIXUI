@@ -25,7 +25,7 @@ import { Select, selectListHeight } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
-import { Tooltip } from "../src/components/Tooltip.js";
+import { Tooltip, tooltipHeight } from "../src/components/Tooltip.js";
 import { a11yNode, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, openWindow, testTheme } from "./fixture.js";
 
@@ -564,6 +564,51 @@ it("opens a Select's list below a trigger with room", async () => {
   );
   const list = selectListBounds(runtime, "Apple");
   expect(list.y).toBeGreaterThanOrEqual(trigger.y + trigger.height);
+});
+
+it("opens a Tooltip below a trigger at the window's top edge", async () => {
+  // The bug guarded: the runtime's floating layer defaults to `side="top"` and
+  // `fit="snap"`, which clamps without flipping (plan 156 §8), so this tooltip
+  // opened its tip at y 8..34 over a trigger at y 12..30 (plan 067).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" testId="tip">
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Hover me</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.y).toBeGreaterThanOrEqual(target.y + target.height);
+  // The height the side decision estimated is the height the tip paints.
+  expect(Math.abs(tip.height - tooltipHeight(testTheme))).toBeLessThanOrEqual(
+    1,
+  );
+});
+
+it("keeps a Tooltip above a trigger with room", async () => {
+  // The other direction: the fix must not hard-code a side.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 400 }}>
+        <Spacer />
+        <Tooltip content="A hint" testId="tip">
+          <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+            <Text>Hover me</Text>
+          </div>
+        </Tooltip>
+      </Stack>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.y + tip.height).toBeLessThanOrEqual(target.y);
 });
 
 it("opens a Tooltip on hover and dismisses it on click", async () => {

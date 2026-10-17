@@ -82,7 +82,7 @@ none paints a literal and none scripts hover or press
 | `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |
 | an anchor that resists its parent | `<anchored>` positions against its parent, and a block-level flex parent stretches on the cross axis | `Tooltip` hugs its trigger with `alignSelf: "flex-start"` so the layer anchors to the trigger, and defaults `align` to the exact `start` (`center` is half a panel off — plan 060) |
 | percentage sizing inside a floating layer | `minWidth: "100%"` resolves against the layer, not the trigger | `Select` measures its trigger's painted width and passes a numeric `minWidth` to the list (plan 062) |
-| a layer that clamps instead of flipping | `fit="snap"` clamps a layer inside the window **without flipping it**, so a bottom-side layer can cover its trigger | `Select` measures its trigger, estimates the list height from its own styles, and opens above when the list does not fit below; an explicit `side` still wins (plan 066) |
+| a layer that clamps instead of flipping | `fit="snap"` clamps a layer inside the window **without flipping it**, so a bottom-side layer can cover its trigger, and a top-side one can cover it at the top edge | `Select` measures its trigger, estimates the list height from its own styles, and opens above when the list does not fit below; `Tooltip` measures its root and flips below when the tip does not fit above. An explicit `side` still wins in both (plans 066, 067) |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
@@ -119,13 +119,13 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **15 files, 158 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **15 files, 160 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
 the paint (plan 055), a tooltip measured against its trigger in a column and a
-row (plan 060), a radio group's failed validation measured on the circles (plan
+row and flipped below at the window's top edge (plans 060, 067), a radio group's failed validation measured on the circles (plan
 061), a select's list measured against its trigger's width and — at the window's
 bottom edge — opened above the trigger instead of over it (plans 062, 066), a
 slider drag measured outside the track with the non-primary buttons refused

@@ -37,17 +37,9 @@ import { controlStyle, surfaceStyle, type ControlSpec } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
-import { decideVerticalSide } from "../core/floating.js";
+import { decideVerticalSide, FLOATING_MARGIN } from "../core/floating.js";
 import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
-
-/**
- * The gap the list keeps from the window edge.
- *
- * It is also `FloatingLayer`'s default `snapMargin`, and this wrapper passes it
- * explicitly so the side decision and the runtime clamp cannot disagree.
- */
-const COLLISION_PADDING = 8;
 
 export interface SelectOption {
   readonly value: string;
@@ -192,7 +184,7 @@ export const renderSelect = (
   state: ValueState<string>,
   open: boolean,
   handlers: SelectHandlers,
-  placement: SelectPlacement = { collisionPadding: COLLISION_PADDING },
+  placement: SelectPlacement = { collisionPadding: FLOATING_MARGIN },
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
   const selected = state.current === "" ? undefined : state.current;
@@ -300,7 +292,7 @@ export const Select = (props: SelectProps): ReactElement => {
           triggerBottom: box.bottom,
           layerHeight: selectListHeight(props.options.length, theme),
           viewportHeight: viewport.height,
-          margin: COLLISION_PADDING,
+          margin: FLOATING_MARGIN,
         }),
       ),
     );
@@ -319,7 +311,7 @@ export const Select = (props: SelectProps): ReactElement => {
     {
       minWidth: triggerBox?.width,
       side,
-      collisionPadding: COLLISION_PADDING,
+      collisionPadding: FLOATING_MARGIN,
     },
   );
 };
