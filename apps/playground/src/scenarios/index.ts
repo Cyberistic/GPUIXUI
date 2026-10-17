@@ -42,6 +42,7 @@ import { modalScenario } from "./modal.js";
 import { floatingScenario } from "./floating.js";
 import {
   themeColorRolesScenario,
+  themePlatformScenario,
   themeTypeAndShadowScenario,
 } from "./theme.js";
 import {
@@ -111,6 +112,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   shortcutScenario,
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
+  themePlatformScenario,
   a11yScenario,
   nativeSurfacesScenario,
   dragTargetsScenario,

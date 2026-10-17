@@ -85,6 +85,9 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "primitives-actions",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "theme-platform",
+    );
   });
 
   it("flags duplicated ids", () => {

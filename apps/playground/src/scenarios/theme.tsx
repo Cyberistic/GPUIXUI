@@ -24,6 +24,8 @@ import {
   colorRoles,
   elevationShadow,
   focusRing,
+  platformTheme,
+  platformTypes,
   textStyle,
   typography,
   type TextRole,
@@ -32,7 +34,13 @@ import {
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { Smoke } from "@gpuixui/testing";
 import { Body, Pressable, Readout } from "../ui.js";
-import { nextPalette, palettes, type PaletteId } from "../palettes.js";
+import {
+  nextPalette,
+  nextPlatform,
+  palettes,
+  type PaletteId,
+  type PlatformId,
+} from "../palettes.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const SWATCH_COLUMNS = 4;
@@ -377,6 +385,152 @@ export const themeTypeAndShadowScenario: PlaygroundScenario = {
         (snapshot) =>
           Option.map(snapshot.boxShadow, (shadow) => shadow.offsetY),
         md.offsetY,
+      );
+    }),
+};
+
+/** The platform cycle, painted with the shipped `platformTheme` per step. */
+const PlatformProbe = () => {
+  const [platform, setPlatform] = useState<PlatformId>("default");
+  const theme = platformTheme(palettes.dark, platform);
+
+  return (
+    <ThemeProvider theme={theme}>
+      <Surface>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Pressable
+            testId="platform-next"
+            onClick={() => setPlatform((current) => nextPlatform[current])}
+          >
+            <Body>switch platform</Body>
+          </Pressable>
+          <Readout testId="platform-readout">
+            {`platform=${platform} label=${platformTypes[platform].label}`}
+          </Readout>
+        </div>
+        <text
+          testId="platform-mono"
+          style={{
+            ...textStyle(theme, "code"),
+            color: theme.colors.foreground,
+          }}
+        >
+          code: the quick brown fox
+        </text>
+        <text
+          testId="platform-sans"
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.foreground,
+          }}
+        >
+          body: the quick brown fox
+        </text>
+        <div
+          testId="platform-surface"
+          style={{
+            width: 120,
+            height: 32,
+            backgroundColor: theme.colors.background,
+          }}
+        />
+      </Surface>
+    </ThemeProvider>
+  );
+};
+
+const family = (
+  ctx: Smoke.SmokeContext,
+  testId: string,
+): Option.Option<string> =>
+  Option.flatMap(styleOf(ctx, testId), (style) => style.fontFamily);
+
+const platformReadout = (ctx: Smoke.SmokeContext): string =>
+  Option.getOrElse(
+    Option.fromNullishOr(ctx.host.text("platform-readout")),
+    () => "",
+  );
+
+export const themePlatformScenario: PlaygroundScenario = {
+  id: "theme-platform",
+  title: "Theme: the platform type styles reach the runtime",
+  capability: "theme",
+  view: () => <PlatformProbe />,
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const mono = (platform: PlatformId) =>
+        expectStyle(
+          ctx,
+          `${platform} mono family`,
+          "platform-mono",
+          (style) => style.fontFamily,
+          platformTypes[platform].mono,
+        );
+      const sans = (platform: PlatformId) =>
+        expectStyle(
+          ctx,
+          `${platform} sans family`,
+          "platform-sans",
+          (style) => style.fontFamily,
+          platformTypes[platform].sans,
+        );
+
+      yield* mono("default");
+      yield* sans("default");
+      yield* ctx.expectContains(
+        "the default style is labelled",
+        platformReadout(ctx),
+        "platform=default label=Default",
+      );
+
+      ctx.host.click("platform-next");
+      yield* ctx.expectContains(
+        "the switch reaches macOS",
+        platformReadout(ctx),
+        "platform=darwin label=macOS",
+      );
+      yield* mono("darwin");
+      yield* sans("darwin");
+
+      ctx.host.click("platform-next");
+      yield* ctx.expectContains(
+        "the switch reaches Linux",
+        platformReadout(ctx),
+        "platform=linux label=Linux",
+      );
+      yield* mono("linux");
+      yield* sans("linux");
+      yield* expectStyle(
+        ctx,
+        "a platform style keeps the palette",
+        "platform-surface",
+        (style) => style.backgroundColor,
+        palettes.dark.colors.background,
+      );
+
+      ctx.host.click("platform-next");
+      yield* ctx.expectContains(
+        "the switch reaches Windows",
+        platformReadout(ctx),
+        "platform=win32 label=Windows",
+      );
+      yield* mono("win32");
+      yield* sans("win32");
+
+      ctx.host.click("platform-next");
+      yield* ctx.expectContains(
+        "the cycle returns to the default",
+        platformReadout(ctx),
+        "platform=default",
+      );
+      const familyNow = yield* ctx.expectSome(
+        "the default family is reported after the cycle",
+        family(ctx, "platform-mono"),
+      );
+      yield* ctx.expectEqual(
+        "the default mono family is restored",
+        familyNow,
+        platformTypes.default.mono,
       );
     }),
 };

@@ -120,4 +120,24 @@ Stop and report with evidence if:
 
 ## 8. Outcome (executed on this host, 2026-10-17)
 
-_To be filled when the plan runs._
+**39/39 green**, exit `0`; `theme-platform` records 16 checks and
+`theme=verified`.
+
+Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
+
+- **`platformTheme`'s typography reaches the paint.** `default` and `darwin`
+  paint `Menlo`; `linux` paints `DejaVu Sans Mono`; `win32` paints `Consolas`.
+  The family is read from `paintedStyle("platform-mono").fontFamily`, i.e. the
+  runtime's own report, not a readout.
+- **`sans` is the system sentinel on every platform** (`.SystemUIFont`), which
+  is the point of the sentinel: GPUI resolves the platform's own UI face.
+- **A platform style moves type, not colour.** `platform-surface` keeps
+  `palettes.dark.colors.background` on Linux, and the readout labels each step
+  (`platform=linux label=Linux`).
+- **The cycle returns to `default`** with `Menlo` again.
+
+Two-direction proof: expecting the macOS family on the Linux step produced
+`darwin mono family: expected "Menlo", got "DejaVu Sans Mono"`,
+`theme=failed`, exit `1`; restoring made the suite green again.
+
+No deviation from the plan.

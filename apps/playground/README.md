@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (38/38 green); -> 2 on a host with no binding
+# -> 0 here (39/39 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -115,6 +115,12 @@ decoded at the adapter boundary), not a screenshot, so a token that never
 reaches the renderer fails by name. The role lists are derived from `colorRoles`
 and `typography`; a new token cannot go untested. The gallery is the native
 preview source for the docs' Theming page.
+
+`theme-platform` adds the platform type styles: a switch cycles Default → macOS
+→ Linux → Windows and the mono role paints `Menlo`, `Menlo`, `DejaVu Sans Mono`
+and `Consolas` while the sans role stays GPUI's `.SystemUIFont`; the surface
+colour does not move, because the shipped variants are type styles, not a second
+palette. The expected families come from `platformTypes`.
 
 Two honest notes:
 
@@ -355,10 +361,10 @@ focus restore.
 
 ## Evidence on this host
 
-The suite is **38/38 green** here (`exit 0`):
+The suite is **39/39 green** here (`exit 0`):
 
 ```
-38/38 scenarios passed · capabilities: layout=verified text=verified
+39/39 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -413,6 +419,7 @@ src/scenarios/*.tsx      one view + one steps effect per capability
 src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
 src/scenarios/primitives.tsx the shipped Tier 1 components (actions, fields, display)
 src/scenarios/primitives-advanced.tsx choice and entry controls (radio, rating, number, OTP)
+src/scenarios/theme.tsx  also the platform type-style cycle (`theme-platform`)
 src/scenarios/shell.tsx  mounts the real App; guards the sidebar's scrolling
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
@@ -463,7 +470,7 @@ narrower. Each deviation is deliberate and measured:
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe and the app-level shortcut probe pass in real GPUix
-  0.10.0 on this host (38/38), with a written report and screenshots.
+  0.10.0 on this host (39/39), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

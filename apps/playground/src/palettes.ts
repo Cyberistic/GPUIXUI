@@ -27,3 +27,17 @@ export const nextPalette: Readonly<Record<PaletteId, PaletteId>> = {
   light: "high",
   high: "dark",
 };
+
+/** The platform type styles the gallery cycles, in switch order. */
+export const platformIds = ["default", "darwin", "linux", "win32"] as const;
+
+/** One platform style id. */
+export type PlatformId = (typeof platformIds)[number];
+
+/** The next platform in the switch's cycle. */
+export const nextPlatform: Readonly<Record<PlatformId, PlatformId>> = {
+  default: "darwin",
+  darwin: "linux",
+  linux: "win32",
+  win32: "default",
+};
