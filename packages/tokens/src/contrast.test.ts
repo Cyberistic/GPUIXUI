@@ -222,7 +222,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(74);
+    expect(contrastPairs.length).toBe(80);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 

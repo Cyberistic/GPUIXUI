@@ -5,7 +5,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * dark), warm grey surfaces, roomier corners and slightly longer transitions.
  * `sans` stays GPUI's system sentinel; `mono` is the family GNOME installs. The
  * dark selection wash uses the light accent as its base so white text keeps the
- * body floor on the fills a row paints (plan 081).
+ * body floor on the fills a row paints (plan 081). The accent's readable text
+ * step is `#12488F` light and `#99C1F1` dark; the fill's `#1C71D8` is 3.51:1 on
+ * the pressed wash (plan 082).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -32,6 +34,7 @@ export const linuxPlatformStyle = {
       primary: "#1C71D8",
       primaryForeground: "#FFFFFF",
       primaryHover: "#1A65C0",
+      primaryText: "#12488F",
       accent: "#E1ECFA",
       accentForeground: "#12488F",
       ring: "#1C71D8",
@@ -59,6 +62,7 @@ export const linuxPlatformStyle = {
       primary: "#78AEED",
       primaryForeground: "#000000",
       primaryHover: "#99C1F1",
+      primaryText: "#99C1F1",
       accent: "#1B3A5C",
       accentForeground: "#A8CBF0",
       ring: "#78AEED",

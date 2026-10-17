@@ -5,7 +5,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * square control corners, comfortable controls and crisp shadows. `sans` stays
  * GPUI's system sentinel; `mono` is the family Windows installs. The dark
  * selection wash uses the light accent as its base so white text keeps the body
- * floor on the fills a row paints (plan 081).
+ * floor on the fills a row paints (plan 081). The accent's readable text step is
+ * `#005BA1` light and `#76D0FF` dark; the fill's `#0067C0` is 4.30:1 on the
+ * pressed wash (plan 082).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -32,6 +34,7 @@ export const windowsPlatformStyle = {
       primary: "#0067C0",
       primaryForeground: "#FFFFFF",
       primaryHover: "#005BA1",
+      primaryText: "#005BA1",
       accent: "#E5F1FB",
       accentForeground: "#004A8F",
       ring: "#0067C0",
@@ -59,6 +62,7 @@ export const windowsPlatformStyle = {
       primary: "#4CC2FF",
       primaryForeground: "#000000",
       primaryHover: "#76D0FF",
+      primaryText: "#76D0FF",
       accent: "#0F3554",
       accentForeground: "#9CD9FF",
       ring: "#4CC2FF",

@@ -9,7 +9,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * both pointer washes (plan 079). `sans` stays GPUI's system sentinel; `mono` is
  * the family macOS installs. The dark divider is Apple's separator grey
  * (`#48484A`), so an outlined control's edge clears the floor on the washes it
- * paints (plan 080).
+ * paints (plan 080). The accent's readable text step is `#0055B3` light and
+ * `#64B5FF` dark: the fill's `#0071E3` measures 4.21:1 on the canvas and
+ * `#0A84FF` 3.82:1 on a dark card (plan 082).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -36,6 +38,7 @@ export const macosPlatformStyle = {
       primary: "#0071E3",
       primaryForeground: "#FFFFFF",
       primaryHover: "#0063CC",
+      primaryText: "#0055B3",
       accent: "#E7F1FF",
       accentForeground: "#0055B3",
       ring: "#0071E3",
@@ -63,6 +66,7 @@ export const macosPlatformStyle = {
       primary: "#0A84FF",
       primaryForeground: "#000000",
       primaryHover: "#409CFF",
+      primaryText: "#64B5FF",
       accent: "#1C3A57",
       accentForeground: "#A8D4FF",
       ring: "#409CFF",

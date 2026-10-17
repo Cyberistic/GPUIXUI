@@ -77,11 +77,30 @@ const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
 );
 
 /**
+ * The surfaces brand-toned text is painted on: the plain surfaces, the quiet
+ * grouping panel a sidebar link sits on, and the two washes the Link variant
+ * paints behind its own label.
+ */
+const primaryTextSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+  "hover",
+  "active",
+] as const;
+
+const primaryTextPairs: readonly ContrastPair[] = primaryTextSurfaces.map(
+  (background): ContrastPair => ["primaryText", background, "secondary"],
+);
+
+/**
  * Every documented pair — text, status, surface and divider — including
- * secondary text on the state washes, the focus ring on the washes a focused
- * row paints, the status text and control boundary on a floating surface, the
- * soft status surfaces and the loading skeleton a canvas must distinguish, and
- * the decorative dividers that must stay visible, including on the fills a
+ * secondary text on the state washes, brand-toned text on the plain surfaces
+ * and washes a link paints, the focus ring on the washes a focused row paints,
+ * the status text and control boundary on a floating surface, the soft status
+ * surfaces and the loading skeleton a canvas must distinguish, and the
+ * decorative dividers that must stay visible, including on the fills a
  * bordered control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
@@ -130,6 +149,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["borderStrong", "card", "boundary"],
   ["borderStrong", "input", "boundary"],
   ["borderStrong", "popover", "boundary"],
+  ...primaryTextPairs,
   ["ring", "background", "boundary"],
   ["ring", "card", "boundary"],
   ["ring", "popover", "boundary"],

@@ -1,5 +1,5 @@
 /**
- * Guards `docs/tokens.md` against drift: its colour tables repeat the 53
+ * Guards `docs/tokens.md` against drift: its colour tables repeat the 54
  * semantic roles for both default and high-contrast themes, so a palette or
  * role edit that is not mirrored in the docs would ship a catalogue that
  * disagrees with the theme. The test parses the documented rows and compares
@@ -51,7 +51,7 @@ import {
   spacing,
 } from "./scale.js";
 import { statusTones } from "./styles.js";
-import { highContrastThemes, themes } from "./theme.js";
+import { getPlatformTheme, highContrastThemes, themes } from "./theme.js";
 import { textRoles, typography } from "./typography.js";
 
 interface DocumentedRole {
@@ -364,6 +364,17 @@ describe("docs/tokens.md quoted figures", () => {
     expect(markdown).toContain(
       `| \`selection\` | \`${highContrastThemes.light.colors.selection}\` | \`${highContrastThemes.dark.colors.selection}\` | ${cell(highContrastThemes.light.colors.selection)} |`,
     );
+  });
+
+  it("quotes the macOS accent's fill and text steps", () => {
+    const macos = getPlatformTheme("darwin", "light").colors;
+    const sentence =
+      `The split is not cosmetic: the macOS accent \`${macos.primary}\` measures ` +
+      `${contrastRatio(macos.primary, macos.background).toFixed(2)}:1 on that canvas and ` +
+      `${contrastRatio(macos.primary, macos.active).toFixed(2)}:1 on the pressed wash, while ` +
+      `its text step \`${macos.primaryText}\` clears both.`;
+
+    expect(markdownProse).toContain(sentence);
   });
 
   it("quotes the warning figure the design system repeats", () => {

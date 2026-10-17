@@ -69,6 +69,11 @@ There is no OS appearance query in GPUix. The application owns the mode switch
 and passes the resolved theme; nested providers scope a brand theme to a
 subtree.
 
+`primary` is a fill: it carries `primaryForeground`, and it is only measured as
+a fill. Brand-toned text — a link, a label, an icon — reads `primaryText`, which
+is held to the text floor on the plain surfaces and the `hover`/`active` washes
+a link paints. A brand that changes `primary` should set `primaryText` beside it.
+
 ## Shadows
 
 The runtime paints one shadow per element and its `BoxShadow` has five fields —
@@ -137,7 +142,7 @@ const density = isDensityName(storedDensity) ? storedDensity : "comfortable";
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 53 roles, so no component changes.
+essential boundaries. It reuses the same 54 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";

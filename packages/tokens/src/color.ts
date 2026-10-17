@@ -111,6 +111,8 @@ export interface ThemeColors {
   readonly primaryForeground: string;
   /** Primary action background while hovered. */
   readonly primaryHover: string;
+  /** Brand-toned text, links and icons on plain surfaces. */
+  readonly primaryText: string;
   /** Secondary action background. */
   readonly secondary: string;
   /** Text and icons on `secondary`. */
@@ -221,6 +223,7 @@ export const lightColors = {
   primary: palette.iris[600],
   primaryForeground: palette.neutral[0],
   primaryHover: palette.iris[700],
+  primaryText: palette.iris[700],
   secondary: palette.neutral[100],
   secondaryForeground: palette.neutral[800],
   muted: palette.neutral[100],
@@ -283,6 +286,7 @@ export const darkColors = {
   primary: palette.iris[300],
   primaryForeground: palette.neutral[950],
   primaryHover: palette.iris[200],
+  primaryText: palette.iris[200],
   secondary: palette.neutral[800],
   secondaryForeground: palette.neutral[200],
   muted: palette.neutral[850],
@@ -330,7 +334,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 53 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 54 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries.
  */
 export const highContrastLightColors = {
@@ -343,6 +347,7 @@ export const highContrastLightColors = {
   primary: "#3B2C8F",
   primaryForeground: "#FFFFFF",
   primaryHover: palette.iris[900],
+  primaryText: palette.iris[800],
   secondary: "#E8E8E8",
   secondaryForeground: "#000000",
   muted: "#F2F2F2",
@@ -390,7 +395,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 53 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 54 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it (plan 080), and
  * the selection wash is a darker tint so white text keeps the body floor on the
@@ -406,6 +411,7 @@ export const highContrastDarkColors = {
   primary: "#C7CBFF",
   primaryForeground: "#000000",
   primaryHover: palette.iris[100],
+  primaryText: palette.iris[100],
   secondary: "#2E2E2E",
   secondaryForeground: "#FFFFFF",
   muted: "#1A1A1A",
@@ -508,6 +514,7 @@ export const colorRoles = [
   "primary",
   "primaryForeground",
   "primaryHover",
+  "primaryText",
   "secondary",
   "secondaryForeground",
   "muted",

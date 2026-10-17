@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 49/65
+`[x]` `[███████░░░]` 50/66
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -204,6 +204,12 @@ sets, under the 4.5:1 secondary floor, while `destructiveText` clears every
 wash (≥5.28:1). The token contract checks `destructiveText` on
 `background`/`card`/`popover`; the two menu washes can join it once the role is
 adopted (plan 079 audit; owner: `components`)
+`[ ]` Cross-team: `primitives` paints `primary` as text — the Link variant
+(`src/core/variants.ts`, `foreground`) and the `primary` text tone
+(`src/core/style.ts`, `TEXT_TONES`) — and `components` follows through its
+`internal/theme.ts` seam. Both should read `primaryText`, which is held to the
+text floor on every surface a link paints; the solid `primary` is a fill. The
+old value fails on macOS and Linux (plan 082; owner: `primitives`, `components`)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
 directly and delete their structural copies of the theme and role list, their
 local focus-ring helpers (`primitives/src/core/style.ts`,
@@ -235,10 +241,11 @@ of its local role array, so an eleventh role cannot be silently omitted (owner:
 mapping from `tsconfig.check.json` / `tsconfig.build.json`, now that the tokens
 React entry carries no JSX (owner: `playground`; plan 061)
 `[ ]` Cross-team: `playground` re-runs the theme gallery against the current
-53-role package — the last green run was the 47-role package, and the four
-`xText` roles plus `primaryHover`/`destructiveHover` are contrast-tested but not
-painted natively; the `Design tokens` row then moves from `wip` to `done`
-(owner: `playground`; plan 150)
+54-role package — the last green run was the 47-role package, and the newest
+roles (the four `xText` roles, `primaryHover`/`destructiveHover` and
+`primaryText`) are contrast-tested but not painted natively; the
+`Design tokens` row then moves from `wip` to `done` (owner: `playground`; plans
+150 and 082)
 `[ ]` Cross-team: `LICENSES/adabraka-ui.md` (MIT, `Copyright (c) 2025 Adabraka
 Team`, "token structure referenced, no assets copied") — plan 202 §7, not this
 workstream's path. Owner: licensing
@@ -258,6 +265,10 @@ value as `border`, so an outlined control lost its edge while pressed (plan 080)
 paints — high-contrast dark measured 6.48:1 on `hover` and 5.49:1 on `active`,
 Linux dark 6.92:1 and Windows dark 6.84:1 on `active`; the three dark wash bases
 moved and the selected row keeps the secondary floor (plan 081)
+`[x]` Ship `primaryText` for brand-toned text, links and icons — `primary` is a
+fill and was only measured as one, so macOS light's accent was 4.21:1 on its
+canvas and macOS dark 2.84:1 on `active` while every suite stayed green; the
+54th role is held on the six surfaces a link paints (plan 082)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is

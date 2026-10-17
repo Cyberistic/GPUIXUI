@@ -68,7 +68,7 @@ to 3:1. A bordered control paints `border` on the fill behind it —
 an outline toggle that is on — so the divider is held to its floor on those
 fills too, not only on the plain surfaces.
 
-There are 53 roles. The four status families — `info`, `success`, `warning` and
+There are 54 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities: a solid fill with a readable
 foreground on it, a soft pair (`xSoft` / `xSoftForeground`) for alerts, badges
 and toasts, and a text role (`xText`) for status labels, icons and indicator
@@ -76,6 +76,14 @@ dots drawn on `background`, `card` or `popover`. A filled action also has a
 designed hover — `primaryHover` and `destructiveHover` — so a component never
 composites an alpha fill over whatever surface sits behind it. `info` is blue,
 not iris, so it can never be confused with `primary`.
+
+The same fill-versus-text split applies to the brand action. `primary` is a
+surface: it carries `primaryForeground`, and it is measured only as a fill.
+Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
+4.5:1 on `background`, `card`, `popover` and `muted`, and on the `hover` and
+`active` washes the Link variant paints behind its own label. The split is not
+cosmetic: the macOS accent `#0071E3` measures 4.21:1 on that canvas and 3.44:1
+on the pressed wash, while its text step `#0055B3` clears both.
 
 | Role | Light | Dark | Use |
 | ---- | ----- | ---- | --- |
@@ -88,6 +96,7 @@ not iris, so it can never be confused with `primary`.
 | `primary` | `#5F4BDB` | `#A7A9FF` | primary action |
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
+| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links and icons on plain surfaces |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `muted` | `#EEF1F5` | `#222730` | quiet surface |
@@ -223,7 +232,7 @@ does the same for a status label and an indicator dot on a plain surface.
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 53 roles and the same type, spacing, radius, density, border
+`Theme` — the same 54 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -248,6 +257,7 @@ getTheme("light"); // the default light theme, unchanged
 | `primary` | `#3B2C8F` | `#C7CBFF` | primary action |
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
 | `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
+| `primaryText` | `#3B2C8F` | `#E0E3FF` | brand-toned text, links and icons on plain surfaces |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
@@ -984,6 +994,11 @@ is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
 `popover` and `input`, with the selected row at the secondary floor.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
 `card` and `popover`, so a placeholder never disappears into the card it fills.
+Brand-toned text is checked on the six surfaces a link paints — `background`,
+`card`, `popover`, `muted` and the `hover`/`active` washes — so a platform accent
+cannot ship as an unreadable link: the audit found macOS light at 4.21:1 on its
+canvas and 3.44:1 on the pressed wash, macOS dark at 2.84:1 on `active`, and
+high-contrast dark at 6.94:1 under its 7:1 floor.
 Every platform variant is checked on its own canvas, not the identity's, so a
 style that moves `background` or `card` is held to the status tints and skeleton
 it inherits. The same loop holds secondary text on each variant's washes: macOS

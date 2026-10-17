@@ -65,7 +65,11 @@ special-cases a mode to make a tint readable. The solid roles are fills: light
 dot.
 
 This keeps a brand theme small: overriding `primary` changes every primary
-action in the library.
+action in the library. A brand that also uses its accent as text overrides
+`primaryText` beside it, because a fill and a foreground carry different
+contrast obligations: `primary` is a surface with `primaryForeground` on it, and
+`primaryText` is the readable step for a link, label or icon on the plain
+surfaces and the washes a link paints.
 
 ## 4. Light and dark
 
@@ -80,7 +84,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite at low alpha | black at high alpha |
 
-Both themes expose exactly the same 53 roles; the type system and the colour
+Both themes expose exactly the same 54 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -222,6 +226,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | pressed | `active` wash |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every shipped canvas; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground` |
+| link | `primaryText` on the plain surfaces and the `hover`/`active` washes a link paints; `primary` is a fill and is never the colour of text |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` wash via `selectionColor`; `userSelect: "none"` opts chrome out |
@@ -261,6 +266,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover` | 4.5:1 | 7:1 |
+| brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted` and the `hover`/`active` washes | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
 | focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover` | 3:1 | 4.5:1 |
