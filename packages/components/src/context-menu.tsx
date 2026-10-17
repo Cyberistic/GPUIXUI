@@ -11,8 +11,11 @@
  * a bare `anchored` element plus the shared {@link MenuSurface}.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { pipe } from "effect";
+import * as Option from "effect/Option";
 import {
   createContext,
   useCallback,
@@ -25,7 +28,8 @@ import {
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
-import { useTheme } from "./internal/theme.js";
+import { isMenuKey } from "./internal/key.js";
+import { focusRing, useTheme } from "./internal/theme.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -51,8 +55,12 @@ interface ContextMenuContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly point: Point;
-  /** Open at `point`; called by the trigger's right click. */
+  /** Open at `point` from a pointer; closing leaves focus where it went. */
   readonly openAt: (point: Point) => void;
+  /** Open at `point` from the keyboard; closing returns focus to the trigger. */
+  readonly openFromKeyboard: (point: Point) => void;
+  /** Register the trigger's native id; returns the unregister function. */
+  readonly setTrigger: (id: number) => () => void;
 }
 
 const ContextMenuContext = createContext<ContextMenuContextValue | undefined>(
@@ -87,12 +95,15 @@ export const ContextMenu = ({
   onOpenChange,
   children,
 }: ContextMenuProps) => {
+  const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
   const [point, setPoint] = useState<Point>({ x: 0, y: 0 });
+  const triggerId = useRef<number | undefined>(undefined);
+  const restoreFocus = useRef(false);
 
   // The layer callback must see the latest setter without being re-pushed.
   const setOpenRef = useRef(setOpen);
@@ -100,24 +111,52 @@ export const ContextMenu = ({
     setOpenRef.current = setOpen;
   });
 
-  const close = useCallback((_reason: MenuCloseReason) => {
-    setOpenRef.current(false);
-  }, []);
+  const close = useCallback(
+    (reason: MenuCloseReason) => {
+      setOpenRef.current(false);
+      const target = triggerId.current;
+      if (
+        restoreFocus.current &&
+        target !== undefined &&
+        (reason === "activate" || reason === "dismiss")
+      ) {
+        renderer?.focusElement?.(target);
+      }
+      restoreFocus.current = false;
+    },
+    [renderer],
+  );
   const menu = useMenuState(close);
 
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer(() => setOpenRef.current(false));
-  }, [open]);
+    return pushDismissLayer((event) =>
+      close(event.eventType === "keyDown" ? "dismiss" : "outside"),
+    );
+  }, [close, open]);
 
   const openAt = useCallback((next: Point) => {
+    restoreFocus.current = false;
     setPoint(next);
     setOpenRef.current(true);
   }, []);
 
+  const openFromKeyboard = useCallback((next: Point) => {
+    restoreFocus.current = true;
+    setPoint(next);
+    setOpenRef.current(true);
+  }, []);
+
+  const setTrigger = useCallback((id: number) => {
+    triggerId.current = id;
+    return () => {
+      if (triggerId.current === id) triggerId.current = undefined;
+    };
+  }, []);
+
   const context = useMemo<ContextMenuContextValue>(
-    () => ({ open, setOpen, point, openAt }),
-    [open, openAt, point, setOpen],
+    () => ({ open, openAt, openFromKeyboard, setTrigger, setOpen, point }),
+    [open, openAt, openFromKeyboard, point, setOpen, setTrigger],
   );
 
   return (
@@ -136,23 +175,69 @@ export interface ContextMenuTriggerProps extends Props {
   readonly disabled?: boolean;
 }
 
-/** The area whose right click opens the menu. */
+/** The area whose right click — or Shift+F10 — opens the menu. */
 export const ContextMenuTrigger = ({
   disabled = false,
   onAuxClick,
+  onKeyDown,
+  onFocus,
+  onBlur,
   style,
   ...rest
 }: ContextMenuTriggerProps) => {
   const theme = useTheme();
-  const { openAt } = useContextMenuContext();
+  const renderer = useGpuix().renderer;
+  const { openAt, openFromKeyboard, setTrigger } = useContextMenuContext();
+  const [focused, setFocused] = useState(false);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+
+  // Stable identity: a fresh ref callback each render would re-register on every
+  // paint (ListItem has the same constraint).
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+
+  useLayoutEffect(() => {
+    // The native id is what focus returns to after a keyboard-opened menu.
+    if (instance === undefined) return;
+    return setTrigger(instance.id);
+  }, [instance, setTrigger]);
+
+  const openFromKey = (): void => {
+    if (disabled || instance === undefined) return;
+    pipe(
+      Option.fromNullishOr(renderer?.getElementBounds?.(instance.id)),
+      Option.match({
+        onNone: () => undefined,
+        onSome: (bounds) =>
+          openFromKeyboard({ x: bounds.x, y: bounds.y + bounds.height }),
+      }),
+    );
+  };
 
   return (
     <div
       {...rest}
+      ref={attach}
+      tabIndex={disabled ? -1 : 0}
       onAuxClick={(event: EventPayload) => {
         onAuxClick?.(event);
         if (disabled || event.isRightClick !== true) return;
         openAt({ x: event.x ?? 0, y: event.y ?? 0 });
+      }}
+      onKeyDown={(event: EventPayload) => {
+        if (isMenuKey(event)) openFromKey();
+        onKeyDown?.(event);
+      }}
+      onFocus={(event) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
       }}
       style={mergeStyles(
         {
@@ -166,6 +251,7 @@ export const ContextMenuTrigger = ({
           color: theme.colors.cardForeground,
           cursor: disabled ? "not-allowed" : "default",
           opacity: disabled ? 0.5 : 1,
+          ...(focused && !disabled ? focusRing(theme) : {}),
         },
         style,
       )}

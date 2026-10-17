@@ -129,6 +129,7 @@ the `@gpuixui/tokens/react` provider
   - Tier 2 hardening after the inventory closed (plans 120+)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
+    - [x] Context menu Shift+F10 opening and focus return — plan 122
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

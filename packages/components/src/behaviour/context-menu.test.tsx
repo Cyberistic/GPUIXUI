@@ -9,7 +9,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { boundsOf, clickCentreOf } from "../internal/interaction.js";
+import {
+  boundsOf,
+  clickCentreOf,
+  focusedTestId,
+} from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -80,6 +84,11 @@ const menuOrigin = (
     throw new Error("behaviour: the menu is not laid out");
   });
   return { x: bounds.x, y: bounds.y };
+};
+
+/** Focus the trigger, as Tab would. */
+const focusRow = (root: ComponentTestRoot): void => {
+  root.renderer.focusElement(root.renderer.findByTestId("row")?.id ?? -1);
 };
 
 describe("ContextMenu", () => {
@@ -163,6 +172,76 @@ describe("ContextMenu", () => {
     rightClickAt(row, origin.x + 40, origin.y + 30);
 
     expect(row.renderer.findByTestId("menu")).toBeUndefined();
+
+    row.unmount();
+  });
+
+  it("opens from Shift+F10 and puts focus in the menu", () => {
+    const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
+    focusRow(row);
+
+    row.renderer.simulateKeystrokes("shift-f10");
+
+    expect(row.renderer.findByTestId("menu")?.customProps?.role).toBe("menu");
+    expect(focusedTestId(row)).toEqual(Option.some("menu"));
+
+    row.unmount();
+  });
+
+  it("opens at the trigger's bottom-left from the keyboard", () => {
+    const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
+    const trigger = Option.getOrElse(boundsOf(row, "row"), () => {
+      throw new Error("behaviour: the row is not laid out");
+    });
+    focusRow(row);
+
+    row.renderer.simulateKeystrokes("shift-f10");
+
+    const menu = menuOrigin(row);
+    expect(Math.abs(menu.x - trigger.x)).toBeLessThanOrEqual(12);
+    expect(Math.abs(menu.y - (trigger.y + trigger.height))).toBeLessThanOrEqual(
+      12,
+    );
+
+    row.unmount();
+  });
+
+  it("activates an item from the keyboard after opening", () => {
+    const onSelect = vi.fn();
+    const row = renderComponent(<ProjectRow onSelect={onSelect} />);
+    focusRow(row);
+
+    row.renderer.simulateKeystrokes("shift-f10");
+    row.renderer.simulateKeystrokes("down");
+    row.renderer.simulateKeystrokes("enter");
+
+    expect(onSelect).toHaveBeenCalledWith("open");
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+
+    row.unmount();
+  });
+
+  it("returns focus to the trigger when Escape closes it", () => {
+    const row = renderComponent(<ProjectRow onSelect={vi.fn()} />);
+    focusRow(row);
+
+    row.renderer.simulateKeystrokes("shift-f10");
+    row.renderer.simulateKeystrokes("escape");
+
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    expect(focusedTestId(row)).toEqual(Option.some("row"));
+
+    row.unmount();
+  });
+
+  it("ignores Shift+F10 on a disabled trigger", () => {
+    const row = renderComponent(<ProjectRow onSelect={vi.fn()} disabled />);
+    focusRow(row);
+
+    row.renderer.simulateKeystrokes("shift-f10");
+
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    expect(row.renderer.findByTestId("row")?.customProps?.tabIndex).toBe(-1);
 
     row.unmount();
   });

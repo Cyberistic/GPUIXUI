@@ -49,6 +49,11 @@ export const isDismiss = (event: EventPayload): boolean =>
 /** Tab. */
 export const isTab = (event: EventPayload): boolean => event.key === "tab";
 
+/** Shift+F10, or the dedicated Menu key: the keyboard route to a context menu. */
+export const isMenuKey = (event: EventPayload): boolean =>
+  (event.key === "f10" && event.modifiers?.shift === true) ||
+  event.key === "contextmenu";
+
 /**
  * The direction an arrow key means for a list on that axis: `1` forward, `-1`
  * back, `None` for every other key. Horizontal lists use Left/Right and ignore
