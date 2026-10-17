@@ -36,6 +36,7 @@ const email = "Contact email";
 | `onSubmit` | `(event) => void` | none | Enter; the raw runtime event |
 | `placeholder` | `string` | none | empty-state text |
 | `readOnly` | `boolean` | `false` | accepts focus and selection, refuses edits |
+| `disabled` | `boolean` | `false` | read-only, out of the tab order, de-emphasised; no edit, submit or ring |
 | `autoFocus` | `boolean` | `false` | takes focus on mount; required for keys to arrive |
 | `invalid` | `boolean` | `false` | border and focus ring take the destructive role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
@@ -63,6 +64,10 @@ handler, not to a field.
 - `invalid` is a border colour, not an announced error. Put the message in a
   `Text role="caption" tone="destructive"` beside the field.
 - `readOnly` remains focusable and selectable, which is the platform contract.
+- A `disabled` field is read-only at the host (GPUix has no `disabled` prop), so
+  assistive technology hears a read-only field, not a disabled one. It is out of
+  the tab order and its handlers are guarded, so keyboard and pointer users
+  cannot edit or submit it.
 
 ## Theming
 
@@ -75,10 +80,11 @@ the native element paints with. Focus uses the shared shadow ring.
 - No `type`, `maxLength`, `inputMode` or `pattern`: the component exposes a
   string field, not every native attribute. Validate with `Schema` at the
   boundary.
+- `disabled` is emulated: the runtime exposes no `disabled` host prop (plan
+  025). The component forwards `readOnly`, drops the field from the tab order
+  and guards its handlers; the accessibility difference is the limitation above.
 - No masks, formatting or prefix/suffix slots.
 - No `aria-describedby`; help text is adjacent content, not associated.
-- A `disabled` field is not exposed: use `readOnly`, which the runtime supports
-  for native fields.
 
 ## Verification
 

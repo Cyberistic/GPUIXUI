@@ -19,9 +19,9 @@ import type { PrimitiveTheme } from "./theme.js";
  *    "compact" and "comfortable" variants of one component would disagree about
  *    what "primary" looks like.
  *
- * The scan reads the source text of this package. `color.ts` (whose subject is
- * a hex parser) and the test fixture (whose subjects are obviously-fake values)
- * are the only files allowed to contain a hex literal.
+ * The scan reads the source text of this package. The test fixture (whose
+ * subjects are obviously-fake values) is the only file allowed to contain a hex
+ * literal; the colour arithmetic itself lives in `@gpuixui/tokens`.
  *
  * Node's `fs` is used directly here on purpose: this is a test boundary doing a
  * one-shot read of the package's own source, not runtime domain code, and the
@@ -30,8 +30,8 @@ import type { PrimitiveTheme } from "./theme.js";
 
 const coreDir = fileURLToPath(new URL(".", import.meta.url));
 
-/** Files whose subject *is* a colour, and therefore may spell one. */
-const COLOUR_FILES = ["color.ts", join("testing", "theme.fixture.ts")];
+/** The fixture is the one file whose subject is a colour. */
+const COLOUR_FILES = [join("testing", "theme.fixture.ts")];
 
 const isSource = (name: string): boolean =>
   name.endsWith(".ts") && !name.endsWith(".test.ts") && !name.endsWith(".d.ts");

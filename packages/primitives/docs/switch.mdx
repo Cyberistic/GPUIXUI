@@ -57,7 +57,9 @@ import { Switch } from "@gpuixui/primitives";
 `switchTrackStyle` and `switchThumbStyle` resolve both parts from the same
 selection spec. The thumb is positioned by the track's `justifyContent`, not a
 pixel offset, because the runtime has no `transform` — so it cannot drift out of
-the pill. Disabled adds half opacity and removes feedback.
+the pill. Disabled adds half opacity and removes feedback. `invalid` gives an
+off-switch the destructive border, the same role a checkbox uses, and focus
+paints the shared selection ring.
 
 ## Limitations
 
@@ -68,7 +70,8 @@ the pill. Disabled adds half opacity and removes feedback.
 
 ## Verification
 
-- `src/core/selection.test.ts` — track and thumb geometry across sizes and states.
+- `src/core/selection.test.ts` — track and thumb geometry across sizes and
+  states; the destructive border when `invalid`; the focus ring.
 - `src/components/selection.test.tsx` — controlled/uncontrolled wiring.
 - `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
   the announced value flips; Space and Enter both toggle.

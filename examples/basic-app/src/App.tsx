@@ -36,7 +36,7 @@ import {
   Tooltip,
   type PrimitiveTheme,
 } from "@gpuixui/primitives";
-import { darkTheme, lightTheme } from "./theme.js";
+import { darkTheme, lightTheme } from "@gpuixui/tokens";
 
 type Mode = "light" | "dark";
 

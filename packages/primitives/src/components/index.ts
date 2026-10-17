@@ -31,8 +31,17 @@ export type { ButtonFocus, ButtonProps } from "./Button.js";
 export { ButtonGroup, BUTTON_GROUP_MODES } from "./ButtonGroup.js";
 export type { ButtonGroupMode, ButtonGroupProps } from "./ButtonGroup.js";
 
+export { pressedValueText, Toggle } from "./Toggle.js";
+export type { ToggleProps } from "./Toggle.js";
+
 export { Input } from "./Input.js";
 export type { FieldProps, InputProps } from "./Input.js";
+
+export { NumberField, numberRange } from "./NumberField.js";
+export type { NumberFieldProps } from "./NumberField.js";
+
+export { OTPField, otpCellLabel } from "./OTPField.js";
+export type { OTPFieldProps } from "./OTPField.js";
 
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
@@ -48,6 +57,15 @@ export type { RadioGroupProps, RadioOption } from "./RadioGroup.js";
 
 export { Progress } from "./Progress.js";
 export type { ProgressProps } from "./Progress.js";
+
+export { Rating, ratingMax } from "./Rating.js";
+export type { RatingProps } from "./Rating.js";
+
+export { RangeSlider, Slider, sliderRange, sliderValueText } from "./Slider.js";
+export type { RangeSliderProps, SliderProps } from "./Slider.js";
+
+export { Meter } from "./Meter.js";
+export type { MeterProps } from "./Meter.js";
 
 export { Skeleton } from "./Skeleton.js";
 export type { SkeletonProps } from "./Skeleton.js";

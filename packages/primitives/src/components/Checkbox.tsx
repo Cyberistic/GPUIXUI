@@ -82,6 +82,7 @@ export const renderCheckbox = (
     shape: "square",
     invalid: props.invalid,
     disabled: props.disabled,
+    focused: focus.focused,
   };
   const toggle = (): void => {
     if (props.disabled === true) return;
@@ -93,20 +94,7 @@ export const renderCheckbox = (
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };
-  const box = mergeStyle(
-    selectionBoxStyle(spec, theme),
-    focus.focused
-      ? {
-          boxShadow: {
-            offsetX: 0,
-            offsetY: 0,
-            blurRadius: 0,
-            spreadRadius: theme.borderWidth.strong,
-            color: theme.colors.ring,
-          },
-        }
-      : {},
-  );
+  const box = selectionBoxStyle(spec, theme);
   return (
     <div
       role="checkbox"

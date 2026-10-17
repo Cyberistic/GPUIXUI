@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { darkTheme, elevationShadow, lightTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -10,6 +11,11 @@ import {
   PROGRESS_TONES,
   ruleStyle,
   scrollStyle,
+  sliderFillStyle,
+  sliderInset,
+  sliderRailStyle,
+  sliderThumbStyle,
+  sliderTrackStyle,
   surfaceStyle,
   textStyle,
   TEXT_TONES,
@@ -30,6 +36,10 @@ import type { PrimitiveTheme } from "./theme.js";
  * The "reads the theme it is given" test is the anti-tautology guard for the
  * rest: it changes the fixture and requires the resolved value to change, so a
  * resolver that quietly hard-codes a colour cannot pass.
+ *
+ * The `@gpuixui/tokens` block guards PLAN.md D17: the ring geometry and the
+ * elevation rule come from the tokens package, not from a local copy. The
+ * widened-border test fails if a local ring constant returns.
  */
 
 const spec = (over: Partial<ControlSpec> = {}): ControlSpec => ({
@@ -174,6 +184,47 @@ describe("controlStyle", () => {
     expect(
       controlFocusStyle(spec({ variant: fieldVariant }), testTheme).boxShadow,
     ).toMatchObject({ color: testTheme.colors.ring });
+  });
+});
+
+describe("the tokens package owns the theme", () => {
+  /** The fixture with one number changed: the ring must follow it. */
+  const widened: PrimitiveTheme = {
+    ...testTheme,
+    borderWidth: { thin: testTheme.borderWidth.thin, strong: 5 },
+  };
+
+  it("takes the ring's spread from borderWidth.strong, not a local constant", () => {
+    const focused = controlFocusStyle(spec(), widened);
+    expect(spreadOf(focused)).toBe(widened.borderWidth.strong);
+    expect(spreadOf(focused)).not.toBe(testTheme.borderWidth.strong);
+  });
+
+  it("recolours an invalid ring without changing its geometry", () => {
+    const invalid = controlFocusStyle(spec({ invalid: true }), widened);
+    expect(invalid.boxShadow).toMatchObject({
+      spreadRadius: widened.borderWidth.strong,
+      color: widened.colors.destructive,
+    });
+  });
+
+  it("resolves an elevation level with the tokens helper, and reserved levels paint nothing", () => {
+    expect(
+      surfaceStyle({ tone: "card", elevation: "md" }, testTheme).boxShadow,
+    ).toEqual(elevationShadow(testTheme, "md"));
+    expect(
+      surfaceStyle({ tone: "card", elevation: "overlay" }, testTheme).boxShadow,
+    ).toBeUndefined();
+  });
+
+  it("renders the shipped light and dark themes without an adapter", () => {
+    expect(controlStyle(spec(), lightTheme).backgroundColor).toBe(
+      lightTheme.colors.primary,
+    );
+    expect(controlStyle(spec(), darkTheme).backgroundColor).toBe(
+      darkTheme.colors.primary,
+    );
+    expect(lightTheme.colors.primary).not.toBe(darkTheme.colors.primary);
   });
 });
 
@@ -351,5 +402,54 @@ describe("progress", () => {
     );
     expect(Number(small.height)).toBeLessThan(Number(medium.height));
     expect(small.backgroundColor).toBe(testTheme.colors.muted);
+  });
+});
+
+describe("value controls", () => {
+  const spec = { size: "md" } as const;
+
+  it("insets the track by half a thumb and pulls the thumb back by the same amount", () => {
+    // The bug guarded: without the negative margins every thumb paints half a
+    // thumb to the right of the value it represents (plan 053 §6).
+    const inset = sliderInset(spec.size, testTheme);
+    const track = sliderTrackStyle(spec, testTheme);
+    const thumb = sliderThumbStyle(spec, testTheme);
+    expect(track.paddingLeft).toBe(inset);
+    expect(track.paddingRight).toBe(inset);
+    expect(thumb.marginLeft).toBe(-inset);
+    expect(thumb.marginRight).toBe(-inset);
+    expect(thumb.width).toBe(testTheme.iconSize[spec.size]);
+  });
+
+  it("paints no fill of its own, so the rail is the only visible chrome", () => {
+    const track = sliderTrackStyle(spec, testTheme);
+    expect(track.backgroundColor).toBeUndefined();
+    expect(track.height).toBe(testTheme.density.controlHeight[spec.size]);
+  });
+
+  it("keeps the rail, the fill and the thumb out of the hit test", () => {
+    // The deepest hit target wins in GPUix and events do not bubble, so a
+    // painted child would swallow the press that maps to a value.
+    const rail = sliderRailStyle(testTheme);
+    const fill = sliderFillStyle(0.5, spec, testTheme);
+    const thumb = sliderThumbStyle(spec, testTheme);
+    expect(rail.pointerEvents).toBe("none");
+    expect(fill.pointerEvents).toBe("none");
+    expect(thumb.pointerEvents).toBe("none");
+  });
+
+  it("paints the fill to its fraction and never outside the rail", () => {
+    expect(sliderFillStyle(0.25, spec, testTheme).width).toBe("25%");
+    expect(sliderFillStyle(2, spec, testTheme).width).toBe("100%");
+    expect(sliderFillStyle(Number.NaN, spec, testTheme).width).toBe("0%");
+    expect(sliderFillStyle(0.25, spec, testTheme).backgroundColor).toBe(
+      testTheme.colors.primary,
+    );
+  });
+
+  it("paints a ring on a focused thumb, at the token ring colour", () => {
+    const focused = sliderThumbStyle({ ...spec, focused: true }, testTheme);
+    expect(focused.boxShadow?.color).toBe(testTheme.colors.ring);
+    expect(sliderThumbStyle(spec, testTheme).boxShadow).toBeUndefined();
   });
 });

@@ -36,7 +36,8 @@ const notes = "Description";
 | `maxRows` | `number` | runtime default | rows after which the field scrolls |
 
 Shared props: `value`, `defaultValue`, `onChange`, `placeholder`, `readOnly`,
-`autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `style`, `testId`.
+`disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `style`,
+`testId`.
 
 Its height is rows, not a control height, so the component re-bases vertical
 padding to the density's horizontal padding step to keep the text inset square.
@@ -68,7 +69,9 @@ changes.
 - **No `onSubmit`** — by design; see plan 046.
 - No rich text, no markdown preview, no character counter.
 - No auto-grow beyond `maxRows`: past it the field scrolls.
-- No `disabled`; use `readOnly`.
+- `disabled` is read-only at the host plus tab-order and handler guards, because
+  GPUix has no `disabled` prop (plan 025); assistive technology hears a
+  read-only field.
 
 ## Verification
 

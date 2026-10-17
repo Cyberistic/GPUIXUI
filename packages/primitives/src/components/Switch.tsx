@@ -56,6 +56,7 @@ export const renderSwitch = (
     accent: props.accent ?? "primary",
     invalid: props.invalid,
     disabled: props.disabled,
+    focused: focus.focused,
   };
   const toggle = (): void => {
     if (props.disabled === true) return;
@@ -67,17 +68,6 @@ export const renderSwitch = (
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };
-  const ring: StyleDesc = focus.focused
-    ? {
-        boxShadow: {
-          offsetX: 0,
-          offsetY: 0,
-          blurRadius: 0,
-          spreadRadius: theme.borderWidth.strong,
-          color: theme.colors.ring,
-        },
-      }
-    : {};
   return (
     <div
       role="switch"
@@ -90,10 +80,7 @@ export const renderSwitch = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(
-        mergeStyle(switchTrackStyle(spec, theme), ring),
-        props.style,
-      )}
+      style={mergeStyle(switchTrackStyle(spec, theme), props.style)}
     >
       <div style={switchThumbStyle(spec, theme)} />
     </div>

@@ -7,8 +7,10 @@
  * design decision, and a resolution test that *should* differ when the theme
  * differs (see `style.test.ts`) cannot pass by accident.
  *
- * Its shape is the contract `@gpuixui/tokens` must satisfy (see `theme.ts`), so
- * this file is also the executable form of the theme port.
+ * It is a `Theme` from `@gpuixui/tokens` (re-exported as `PrimitiveTheme`), so
+ * a fixture that no longer satisfies the real shape fails to compile rather
+ * than drifting into a second contract. The shipped light and dark themes are
+ * exercised in `runtime/theme.runtime.test.tsx`.
  */
 
 import type { FontWeight, PrimitiveTheme, TextStyle } from "../theme.js";
@@ -68,6 +70,18 @@ const palette = (offset: number): PrimitiveTheme["colors"] => ({
   destructiveForeground: shade(offset + 16),
   success: shade(offset + 17),
   successForeground: shade(offset + 18),
+  warning: shade(offset + 36),
+  warningForeground: shade(offset + 37),
+  info: shade(offset + 38),
+  infoForeground: shade(offset + 39),
+  infoSoft: shade(offset + 40),
+  infoSoftForeground: shade(offset + 41),
+  successSoft: shade(offset + 42),
+  successSoftForeground: shade(offset + 43),
+  warningSoft: shade(offset + 44),
+  warningSoftForeground: shade(offset + 45),
+  destructiveSoft: shade(offset + 46),
+  destructiveSoftForeground: shade(offset + 47),
   border: shade(offset + 19),
   borderStrong: shade(offset + 20),
   input: shade(offset + 21),

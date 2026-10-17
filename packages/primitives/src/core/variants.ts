@@ -12,7 +12,7 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import { alpha } from "./color.js";
+import { alpha } from "@gpuixui/tokens";
 import type { PrimitiveTheme } from "./theme.js";
 import type { ControlVariant } from "./style.js";
 
@@ -136,6 +136,59 @@ export const variantTable: ReadonlyArray<{
   },
   { name: "link", variant: link, description: "A text action." },
 ];
+
+export const TOGGLE_VARIANTS = ["default", "outline"] as const;
+
+export type ToggleVariant = (typeof TOGGLE_VARIANTS)[number];
+
+/** No chrome at rest; the accent fill is what says "this mode is on". */
+const toggleRest: ControlVariant = {
+  background: undefined,
+  foreground: (theme) => theme.colors.foreground,
+  border: undefined,
+  ...washed,
+};
+
+/** Border only at rest, so a toggle reads as a control in a toolbar. */
+const toggleOutlineRest: ControlVariant = {
+  background: undefined,
+  foreground: (theme) => theme.colors.foreground,
+  border: (theme) => theme.colors.border,
+  ...washed,
+};
+
+/** The accent role is the theme's "selected surface", so it marks a pressed mode. */
+const togglePressedBase = (
+  border: ControlVariant["border"],
+): ControlVariant => ({
+  background: (theme) => theme.colors.accent,
+  foreground: (theme) => theme.colors.accentForeground,
+  border,
+  hover: (theme) => ({ backgroundColor: alpha(theme.colors.accent, 0.9) }),
+  active: (theme) => ({ backgroundColor: alpha(theme.colors.accent, 0.8) }),
+});
+
+/**
+ * A toggle's two paints: at rest, and while pressed.
+ *
+ * Kept as data so the docs table and the component read one table, exactly like
+ * `buttonVariants`.
+ */
+export const toggleVariants: Readonly<
+  Record<
+    ToggleVariant,
+    { readonly rest: ControlVariant; readonly pressed: ControlVariant }
+  >
+> = {
+  default: {
+    rest: toggleRest,
+    pressed: togglePressedBase(undefined),
+  },
+  outline: {
+    rest: toggleOutlineRest,
+    pressed: togglePressedBase((theme) => theme.colors.border),
+  },
+};
 
 /** A variant's resting paint, as a string a test or a docs table can compare. */
 export const variantKey = (

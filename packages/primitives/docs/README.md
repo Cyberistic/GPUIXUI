@@ -27,12 +27,19 @@ never as a promise.
 | [label](label.mdx) | `Label`, `labelledBy` | [form](../examples/form.example.tsx) |
 | [button](button.mdx) | `Button` | [form](../examples/form.example.tsx) |
 | [button-group](button-group.mdx) | `ButtonGroup` | [form](../examples/form.example.tsx) |
+| [toggle](toggle.mdx) | `Toggle` | [toggle](../examples/toggle.example.tsx) |
 | [input](input.mdx) | `Input` | [form](../examples/form.example.tsx) |
 | [textarea](textarea.mdx) | `TextArea` | [form](../examples/form.example.tsx) |
+| [number-field](number-field.mdx) | `NumberField` | [number-field](../examples/number-field.example.tsx) |
+| [otp-field](otp-field.mdx) | `OTPField` | [otp](../examples/otp.example.tsx) |
 | [checkbox](checkbox.mdx) | `Checkbox` | [selection](../examples/selection.example.tsx) |
 | [radio-group](radio-group.mdx) | `RadioGroup` | [selection](../examples/selection.example.tsx) |
 | [switch](switch.mdx) | `Switch` | [selection](../examples/selection.example.tsx) |
+| [rating](rating.mdx) | `Rating` | [rating](../examples/rating.example.tsx) |
 | [select](select.mdx) | `Select` | [form](../examples/form.example.tsx) |
+| [slider](slider.mdx) | `Slider` | [value](../examples/value.example.tsx) |
+| [range-slider](range-slider.mdx) | `RangeSlider` | [value](../examples/value.example.tsx) |
+| [meter](meter.mdx) | `Meter` | [value](../examples/value.example.tsx) |
 | [progress](progress.mdx) | `Progress` | [form](../examples/form.example.tsx) |
 | [skeleton](skeleton.mdx) | `Skeleton` | [feedback](../examples/feedback.example.tsx) |
 | [spinner](spinner.mdx) | `Spinner` | [feedback](../examples/feedback.example.tsx) |

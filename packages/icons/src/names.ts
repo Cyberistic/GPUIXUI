@@ -46,6 +46,7 @@ export const ICON_NAMES = [
   "settings",
   "sort-asc",
   "star",
+  "star-filled",
   "success",
   "sun",
   "trash",

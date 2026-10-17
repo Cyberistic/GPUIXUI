@@ -8,7 +8,7 @@
  * resolution, keyboard contracts, controlled state).
  */
 
-export { alpha } from "./color.js";
+export { alpha } from "@gpuixui/tokens";
 
 export {
   decideAbsolute,
@@ -23,6 +23,41 @@ export type { KeyName, KeyPhase, Orientation } from "./keyboard.js";
 
 export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";
+
+export {
+  clampNumeric,
+  decideNumberKey,
+  formatNumber,
+  parseNumericText,
+  stepNumber,
+} from "./number.js";
+export type { NumberRange } from "./number.js";
+
+export { clampRating, decideRating, ratingTabStop } from "./rating.js";
+
+export {
+  applyOtpInput,
+  decideOtpKey,
+  normalizeOtp,
+  otpCells,
+  otpLength,
+} from "./otp.js";
+export type { OtpEdit } from "./otp.js";
+
+export {
+  clampValue,
+  decideValueKey,
+  fractionValue,
+  moveSpanEnd,
+  nearestEnd,
+  normalizeRange,
+  normalizeSpan,
+  pointerValue,
+  stepValue,
+  valueFraction,
+  valueStep,
+} from "./value.js";
+export type { TrackBox, ValueRange, ValueSpan } from "./value.js";
 
 export {
   boxStyle,
@@ -80,12 +115,24 @@ export {
   controlStyle,
   fieldTextStyle,
   nativeTextTheme,
+  numberInputStyle,
+  numberStepperColumnStyle,
+  numberStepperStyle,
+  otpCellStyle,
+  otpGroupStyle,
   progressFillStyle,
   progressPercent,
   progressTrackStyle,
+  ratingStarColor,
+  ratingStarStyle,
   PROGRESS_TONES,
   ruleStyle,
   scrollStyle,
+  sliderFillStyle,
+  sliderInset,
+  sliderRailStyle,
+  sliderThumbStyle,
+  sliderTrackStyle,
   surfaceStyle,
   SURFACE_TONES,
   textStyle,
@@ -95,10 +142,13 @@ export {
 export type {
   ControlSpec,
   ControlVariant,
+  OtpCellSpec,
   ProgressSpec,
   ProgressTone,
+  RatingStarSpec,
   RuleSpec,
   ScrollSpec,
+  SliderSpec,
   SurfaceSpec,
   SurfaceTone,
   TextSpec,
@@ -110,10 +160,12 @@ export {
   BUTTON_VARIANTS,
   fieldVariant,
   hasPointerFeedback,
+  TOGGLE_VARIANTS,
+  toggleVariants,
   variantKey,
   variantTable,
 } from "./variants.js";
-export type { ButtonVariant } from "./variants.js";
+export type { ButtonVariant, ToggleVariant } from "./variants.js";
 
 export type {
   BorderWidth,

@@ -74,6 +74,13 @@ describe("selectionBoxStyle", () => {
     ).toBe(testTheme.colors.destructive);
   });
 
+  it("paints the focus ring on a focused box, and only then", () => {
+    const focused = selectionBoxStyle(spec({ focused: true }), testTheme);
+    expect(focused.boxShadow?.color).toBe(testTheme.colors.ring);
+    expect(focused.boxShadow?.spreadRadius).toBe(testTheme.borderWidth.strong);
+    expect(selectionBoxStyle(spec(), testTheme).boxShadow).toBeUndefined();
+  });
+
   it("gives a filled box pointer feedback that is not its resting fill", () => {
     const style = selectionBoxStyle(spec({ state: "checked" }), testTheme);
     expect(style.hover?.backgroundColor).not.toBe(style.backgroundColor);
@@ -139,5 +146,23 @@ describe("switch", () => {
     const thumb = switchThumbStyle(spec({ size: "lg" }), testTheme);
     expect(Number(thumb.width)).toBeLessThan(Number(track.height));
     expect(Arr.every([thumb.width, thumb.height], Number.isInteger)).toBe(true);
+  });
+
+  it("takes the destructive border when invalid, like a checkbox", () => {
+    // The bug guarded: `invalid` reached the spec and was dropped, while
+    // `docs/switch.mdx` promised the destructive role.
+    expect(
+      switchTrackStyle(spec({ invalid: true }), testTheme).borderColor,
+    ).toBe(testTheme.colors.destructive);
+    expect(switchTrackStyle(spec(), testTheme).borderColor).toBe(
+      testTheme.colors.input,
+    );
+  });
+
+  it("paints the focus ring on a focused track, and only then", () => {
+    expect(
+      switchTrackStyle(spec({ focused: true }), testTheme).boxShadow?.color,
+    ).toBe(testTheme.colors.ring);
+    expect(switchTrackStyle(spec(), testTheme).boxShadow).toBeUndefined();
   });
 });

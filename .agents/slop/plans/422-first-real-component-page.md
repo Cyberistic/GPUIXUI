@@ -252,7 +252,7 @@ nub run --filter docs dev
 - **Merge:** `origin/agent/primitives` into `agent/docs-site` (merge commit
   `a184dad`), after `origin/master` (`5f66a24`). Ledger conflicts were resolved
   by keeping both workstreams' rows; `PLAN.md` now records the locally-built
-  binding as D19 and the primitives decisions as D12–D18. The primitives branch
+  binding as D23 and the primitives decisions as D17–D19. The primitives branch
   had dropped the seven unimplemented Tier 1 rows (Slider, Range slider, Meter,
   Number Field, OTP Field, Toggle, Rating) from `COMPONENTS.md`; they were
   restored so `registry.test.ts` and the inventory agree again.

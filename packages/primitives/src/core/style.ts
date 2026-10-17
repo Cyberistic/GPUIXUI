@@ -13,6 +13,7 @@
  */
 
 import type { GpuixTheme, StyleDesc } from "@gpuix/react";
+import { elevationShadow, focusRing } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
@@ -23,8 +24,8 @@ import type {
   RadiusStep,
   SpaceStep,
   TextRole,
-  ThemeShadow,
 } from "./theme.js";
+import { fieldVariant } from "./variants.js";
 
 /**
  * A colour reference into the theme, or nothing at all.
@@ -39,35 +40,6 @@ const paint = (ref: Paint, theme: PrimitiveTheme): string | undefined =>
   Option.getOrUndefined(
     Option.map(Option.fromNullishOr(ref), (colorRef) => colorRef(theme)),
   );
-
-/** The outline GPUix draws as a shadow: a ring with no offset, spread and no blur. */
-const RING_WIDTH = 2;
-
-/**
- * A focus ring.
- *
- * GPUix 0.10.0's `StyleDesc` has **no `focusVisible` state and no `outline*`
- * properties** — those exist only on GPUix's unreleased `main`. So the ring is
- * a zero-offset, zero-blur shadow with a spread, the one shape `boxShadow` can
- * draw that behaves like an outline and takes no layout space. The component
- * applies it while focused, so a mouse press shows the ring too; there is no
- * `:focus-visible` to distinguish a Tab from a click. That limitation is
- * recorded in `COMPONENTS.md`.
- */
-const ring = (color: string): StyleDesc => ({
-  boxShadow: {
-    offsetX: 0,
-    offsetY: 0,
-    blurRadius: 0,
-    spreadRadius: RING_WIDTH,
-    color,
-  },
-});
-
-/** GPUix paints one shadow per element; a level's list resolves to its first. */
-const firstShadow = (
-  shadows: ReadonlyArray<ThemeShadow>,
-): Option.Option<ThemeShadow> => Option.fromNullishOr(shadows[0]);
 
 // ── Controls: Button, Input, Select ──────────────────────────────────
 
@@ -163,15 +135,23 @@ export const controlStyle = (
 /**
  * What a control adds while it holds keyboard focus.
  *
- * Separate from `controlStyle` because GPUix 0.10.0 has no `focusVisible`
- * pseudo-state: a component tracks focus itself (`onFocus`/`onBlur`) and merges
- * this over the resting style.
+ * The geometry is `@gpuixui/tokens`' `focusRing` — a zero-offset, zero-blur
+ * shadow spread by `borderWidth.strong`, the one shape GPUix 0.10.0's
+ * `boxShadow` can draw that behaves like an outline and takes no layout space.
+ * Only the colour changes for an invalid control. There is no `focusVisible`
+ * state, so a component tracks focus itself (`onFocus`/`onBlur`) and merges
+ * this over the resting style; a mouse press shows the ring too, which
+ * `COMPONENTS.md` records.
  */
 export const controlFocusStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
-): StyleDesc =>
-  ring(spec.invalid === true ? theme.colors.destructive : theme.colors.ring);
+): StyleDesc => {
+  const ring = focusRing(theme);
+  return spec.invalid === true
+    ? { boxShadow: { ...ring.boxShadow, color: theme.colors.destructive } }
+    : ring;
+};
 
 /**
  * What a text field adds over the shared control chrome.
@@ -330,9 +310,12 @@ export const surfaceStyle = (
     style.borderColor = theme.colors.border;
   }
   if (spec.elevation !== undefined) {
-    Option.map(firstShadow(theme.elevation[spec.elevation]), (shadow) => {
-      style.boxShadow = shadow;
-    });
+    Option.map(
+      Option.fromNullishOr(elevationShadow(theme, spec.elevation)),
+      (shadow) => {
+        style.boxShadow = shadow;
+      },
+    );
   }
   return style;
 };
@@ -442,3 +425,248 @@ export const progressFillStyle = (
   borderRadius: theme.radius.full,
   backgroundColor: paint(progressTones[spec.tone], theme),
 });
+
+// ── Value controls: Slider, RangeSlider ──────────────────────────────
+
+export interface SliderSpec {
+  readonly size: ControlSize;
+  readonly invalid?: boolean;
+  readonly disabled?: boolean;
+  readonly focused?: boolean;
+}
+
+/**
+ * Half a thumb — the track's inset, and the same number `pointerValue` takes.
+ *
+ * The usable span runs from one thumb radius inside each end to the other, so
+ * a thumb at either end is centred on the end of the span instead of hanging
+ * off it.
+ */
+export const sliderInset = (size: ControlSize, theme: PrimitiveTheme): number =>
+  Math.round(theme.iconSize[size] / 2);
+
+/**
+ * The slider's hit area.
+ *
+ * It paints nothing — the rail is the only visible chrome, so a slider does not
+ * become a bar as tall as the control — and it still takes presses: GPUI makes a
+ * hitbox for an element with mouse handlers (measured in plan 053 §11; an
+ * unpositioned, unfilled box with handlers receives the press).
+ */
+export const sliderTrackStyle = (
+  spec: SliderSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const inset = sliderInset(spec.size, theme);
+  const style: StyleDesc = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    height: theme.density.controlHeight[spec.size],
+    paddingLeft: inset,
+    paddingRight: inset,
+    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+  };
+  if (spec.disabled === true) style.opacity = 0.5;
+  return style;
+};
+
+/** The rail: the whole width, one spacing step tall, and never a hit target. */
+export const sliderRailStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  width: "100%",
+  height: theme.spacing.xs,
+  borderRadius: theme.radius.full,
+  backgroundColor: theme.colors.muted,
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  pointerEvents: "none",
+});
+
+/** The filled part of the rail, up to the value. */
+export const sliderFillStyle = (
+  fraction: number,
+  spec: SliderSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => ({
+  width: `${(Number.isFinite(fraction) ? Math.min(1, Math.max(0, fraction)) : 0) * 100}%`,
+  height: "100%",
+  flexShrink: 0,
+  borderRadius: theme.radius.full,
+  backgroundColor:
+    spec.invalid === true ? theme.colors.destructive : theme.colors.primary,
+  pointerEvents: "none",
+});
+
+/**
+ * The thumb.
+ *
+ * The negative margins are load-bearing: they pull half a thumb out of the
+ * layout on each side, so the thumb's **centre** lands on the fraction the fill
+ * ends at. Without them the thumb would sit half a thumb to the right of the
+ * value it represents. Measured in plan 053 §11.
+ */
+export const sliderThumbStyle = (
+  spec: SliderSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const side = theme.iconSize[spec.size];
+  const half = Math.round(side / 2);
+  const style: StyleDesc = {
+    width: side,
+    height: side,
+    flexShrink: 0,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.input,
+    borderWidth: theme.borderWidth.strong,
+    borderColor:
+      spec.invalid === true ? theme.colors.destructive : theme.colors.primary,
+    marginLeft: -half,
+    marginRight: -half,
+    pointerEvents: "none",
+  };
+  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  return style;
+};
+
+// ── Number fields ────────────────────────────────────────────────────
+
+/**
+ * The text part of a number field.
+ *
+ * It paints no chrome of its own: the wrapper is the field, so the row's border,
+ * fill and focus ring are one surface rather than an input with a box inside a
+ * box.
+ */
+export const numberInputStyle = (): StyleDesc => ({
+  flexGrow: 1,
+  height: "100%",
+  minWidth: 0,
+  paddingLeft: 0,
+  paddingRight: 0,
+  borderWidth: 0,
+});
+
+/** The spin column: two equal halves, one step each, on the field's right. */
+export const numberStepperColumnStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "column",
+  width: theme.iconSize.md + theme.spacing.sm,
+  height: "100%",
+  flexShrink: 0,
+});
+
+/** One step button.
+ *
+ * It is a pointer affordance, not a tab stop: the input's own arrow keys are the
+ * keyboard path, so a number field does not add two stops to the tab order.
+ */
+export const numberStepperStyle = (
+  spec: { readonly disabled?: boolean },
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const style: StyleDesc = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexGrow: 1,
+    borderRadius: theme.radius.sm,
+    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+  };
+  if (spec.disabled !== true) {
+    style.hover = { backgroundColor: theme.colors.hover };
+    style.active = { backgroundColor: theme.colors.active };
+  }
+  return style;
+};
+
+// ── Rating ───────────────────────────────────────────────────────────
+
+export interface RatingStarSpec {
+  readonly size: ControlSize;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly focused?: boolean;
+}
+
+/** One star's hit area: the icon plus a hairline of padding for the ring. */
+export const ratingStarStyle = (
+  spec: RatingStarSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const interactive = spec.disabled !== true && spec.readOnly !== true;
+  const style: StyleDesc = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: theme.spacing["2xs"],
+    borderRadius: theme.radius.full,
+    cursor: interactive ? "pointer" : "not-allowed",
+  };
+  if (spec.disabled === true) style.opacity = 0.5;
+  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  return style;
+};
+
+/** A filled star takes the brand role; an empty one the muted text role. */
+export const ratingStarColor = (
+  filled: boolean,
+  theme: PrimitiveTheme,
+): string => (filled ? theme.colors.primary : theme.colors.mutedForeground);
+
+// ── One-time-code fields ─────────────────────────────────────────────
+
+/** The row the cells sit in. */
+export const otpGroupStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: theme.spacing.sm,
+});
+
+export interface OtpCellSpec {
+  readonly size: ControlSize;
+  readonly invalid?: boolean;
+  readonly disabled?: boolean;
+  readonly focused?: boolean;
+}
+
+/**
+ * One cell.
+ *
+ * It is a real `<input>`, so the cell's own surface is the field: the shared
+ * control chrome resolves to one square per cell (equal width and height from
+ * the density scale), the body type centres the character, and the focus ring
+ * lands on the cell the caret is in rather than on the wrapper.
+ */
+export const otpCellStyle = (
+  spec: OtpCellSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const control = controlStyle(
+    {
+      variant: fieldVariant,
+      size: spec.size,
+      square: true,
+      invalid: spec.invalid,
+      disabled: spec.disabled,
+    },
+    theme,
+  );
+  return {
+    ...control,
+    justifyContent: "center",
+    textAlign: "center",
+    fontSize: theme.typography.body.fontSize,
+    lineHeight: theme.typography.body.lineHeight,
+    fontWeight: theme.typography.body.fontWeight,
+    cursor: spec.disabled === true ? "not-allowed" : "text",
+    ...(spec.focused === true && spec.disabled !== true
+      ? controlFocusStyle(
+          { variant: fieldVariant, size: spec.size, invalid: spec.invalid },
+          theme,
+        )
+      : {}),
+  };
+};

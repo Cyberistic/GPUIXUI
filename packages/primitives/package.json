@@ -20,7 +20,8 @@
     "test:runtime": "vitest run --config vitest.runtime.config.ts"
   },
   "dependencies": {
-    "@gpuixui/icons": "workspace:*"
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/tokens": "workspace:*"
   },
   "peerDependencies": {
     "@gpuix/react": "catalog:",

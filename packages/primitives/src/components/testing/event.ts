@@ -19,6 +19,12 @@ export const keyEvent = (
   ...extra,
 });
 
+/** A key-up event: the channel an `<input>` delivers for editor keys. */
+export const keyUpEvent = (
+  key: string,
+  extra: Partial<EventPayload> = {},
+): EventPayload => ({ ...keyEvent(key, extra), eventType: "keyUp" });
+
 /** An input change event carrying `event.value`. */
 export const changeEvent = (value: string): EventPayload => ({
   elementId: 0,

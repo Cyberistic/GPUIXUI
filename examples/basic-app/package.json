@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@gpuixui/icons": "workspace:*",
-    "@gpuixui/primitives": "workspace:*"
+    "@gpuixui/primitives": "workspace:*",
+    "@gpuixui/tokens": "workspace:*"
   },
   "peerDependencies": {
     "@gpuix/react": "catalog:",

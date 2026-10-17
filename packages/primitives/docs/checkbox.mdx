@@ -76,7 +76,8 @@ clearing.
 `selectionBoxStyle` resolves box side from `iconSize`, radius from `radius.sm`,
 border from `input`/`destructive`, fill from the accent role and the mark from
 `selectionMarkColor`. Hover and press are declared in `style.hover`/`style.active`,
-not scripted. Disabled adds half opacity and removes pointer feedback.
+not scripted. Disabled adds half opacity and removes pointer feedback. Focus
+paints the selection ring (`colors.ring`, spread by `borderWidth.strong`).
 
 ## Limitations
 
@@ -92,7 +93,7 @@ not scripted. Disabled adds half opacity and removes pointer feedback.
   wiring at the render seam.
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
   value flips `unchecked → checked`; indeterminate reads `mixed`; the AccessKit
-  role is `CheckBox`.
+  role is `CheckBox`; focus paints the ring and moves it with focus.
 
 ```sh
 nub run --filter @gpuixui/primitives test

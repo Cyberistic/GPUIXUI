@@ -6,7 +6,8 @@ description: One choice from a small set, with a roving tab stop and arrow navig
 `RadioGroup` is a data-driven radio group. The group owns the roving index and
 the arrow contract, so options arrive as `RadioOption[]` rather than compound
 children — a deviation from shadcn's shape recorded as decision D13 in
-`PLAN.md`.
+`PLAN.md`. It follows the platform contract: the arrows **select and move focus
+together**, and the focused option paints the ring.
 
 ## Usage
 
@@ -48,14 +49,15 @@ caption beside the name, not an accessible description.
 
 | Key | Contract |
 | --- | -------- |
-| ↑ / ↓ (vertical) | move the selection, **wrapping**, skipping disabled options |
+| ↑ / ↓ (vertical) | move the selection and native focus, **wrapping**, skipping disabled options |
 | ← / → (horizontal) | the same on the horizontal axis |
 | Home / End | jump to the first / last **enabled** option and select it |
-| Enter / Space | select the active option |
-| Tab | moves to the group as **one** stop; the active option holds it |
+| Enter / Space | select the focused option |
+| Tab | moves to the group as **one** stop; the selected option holds it |
 
-Arrows and Home/End **select** as they move, matching the platform radio
-contract rather than moving focus alone.
+Arrows and Home/End **select as they move** and take focus with them, matching
+the platform radio contract. The tab stop is the selection: a controlled
+`value` change from the parent moves the tab stop with it.
 
 ## Accessibility
 
@@ -66,6 +68,9 @@ contract rather than moving focus alone.
 - An option's own `label` is its accessible name; the visible text beside the
   circle is a separate `Text`.
 - Disabled options are skipped by the arrows and are not tab stops.
+- The focused option paints a ring (the `ring` role, spread by
+  `borderWidth.strong`), tracked per item because GPUix dispatches focus to the
+  element that owns the handler — a wrapper never sees it.
 
 ## Theming
 
@@ -83,11 +88,14 @@ same size are the same square/circle family. Gaps use `spacing.sm`.
 
 - `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, and
   Home/End landing on the nearest enabled end.
-- `src/core/selection.test.ts` — circle and dot paint.
-- `src/components/selection.test.tsx` — roving index and data options.
+- `src/core/selection.test.ts` — circle and dot paint, including the focus ring.
+- `src/components/selection.test.tsx` — roving index and data options; an arrow
+  asks the group to move focus to the option it landed on.
 - `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
-  options (plan 044); Home/End jump to the enabled ends (plan 048); exactly one
-  item is the tab stop; a click on the circle selects.
+  options (plan 044); Home/End jump to the enabled ends (plan 048); the focused
+  option paints the ring and no other does; arrows move native focus with the
+  selection and a controlled value moves the tab stop (plan 049); a click on the
+  circle selects.
 
 ```sh
 nub run --filter @gpuixui/primitives test

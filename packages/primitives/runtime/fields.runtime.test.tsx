@@ -7,7 +7,7 @@
  * what `simulateKeystrokes` plus `onChange` shows here.
  *
  * `Select` and `Tooltip` are thin wrappers over GPUix's own headless components
- * (PLAN.md D12), so this suite's job is the wrapper's contract: the trigger's
+ * (PLAN.md D15), so this suite's job is the wrapper's contract: the trigger's
  * chrome, the popover's surface, and that the open/dismiss behaviour is really
  * the published one. One measured requirement of the reuse is asserted as a
  * requirement, not as success — see `COMPONENTS.md`.
@@ -124,6 +124,44 @@ it("gives a controlled Input's owner the value after each edit", async () => {
   );
   runtime.type("a b");
   expect(lastValue(field.values)).toBe("ab");
+});
+
+it("refuses to edit or submit a disabled Input", async () => {
+  const runtime = await openWindow();
+  const field = recorder();
+  let submitted = 0;
+  runtime.render(
+    <Surface>
+      <Input
+        testId="field"
+        label="Name"
+        disabled
+        onChange={field.onChange}
+        onSubmit={() => {
+          submitted += 1;
+        }}
+      />
+    </Surface>,
+  );
+  // A click would focus a normal field; a disabled one must stay inert even
+  // when the test aims at it directly.
+  runtime.click("field");
+  runtime.type("h e l l o");
+  expect(field.values).toEqual([]);
+  expect(submitted).toBe(0);
+});
+
+it("accepts no newline in a disabled TextArea", async () => {
+  const runtime = await openWindow();
+  const field = recorder();
+  runtime.render(
+    <Surface>
+      <TextArea testId="area" disabled onChange={field.onChange} />
+    </Surface>,
+  );
+  runtime.click("area");
+  runtime.type("a enter b");
+  expect(field.values).toEqual([]);
 });
 
 it("sizes a TextArea by rows, as the runtime's own height control", async () => {

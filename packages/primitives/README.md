@@ -20,13 +20,14 @@ import { darkTheme } from "@gpuixui/tokens";
 </ThemeProvider>;
 ```
 
-## The theme is a port, not an import
+## The theme comes from `@gpuixui/tokens`
 
-`PrimitiveTheme` (`src/core/theme.ts`) is an interface declared **here**; a theme
-is any value that satisfies it. `@gpuixui/tokens` owns the values, and this
-package never imports it, which keeps the dependency arrow pointing one way
-(`tokens → primitives → components`) and lets the primitives be tested against a
-fixture theme instead of a real palette.
+`PrimitiveTheme` is `@gpuixui/tokens`' `Theme`, re-exported from
+`src/core/theme.ts` under the name the components import. The tokens package
+owns the values **and** the runtime-shaped helpers (`focusRing`,
+`elevationShadow`); primitives owns only the resolution from a semantic spec to a
+`StyleDesc`. There is one declaration of the theme in the library (plan 021) —
+a second copy would drift silently.
 
 There is deliberately **no default theme**: a primitive rendered without a
 `ThemeProvider` above it throws `MissingThemeProviderError` naming the provider.
@@ -44,7 +45,7 @@ test fixture — the theme is the only source of those values.
 
 | Layer | What lives there | Why it is separate |
 | ----- | ---------------- | ------------------ |
-| `core/` | theme types, `style.ts` (spec → `StyleDesc`), `variants.ts`, `keyboard.ts`, `state.ts`, `loading.ts`, `layout.ts`, `selection.ts`, `color.ts` | pure and runtime-free: this is the part that can be proven without a GPUix runtime, and where the design decisions actually live |
+| `core/` | theme re-export, `style.ts` (spec → `StyleDesc`), `variants.ts`, `keyboard.ts`, `state.ts`, `loading.ts`, `layout.ts`, `selection.ts` | pure and runtime-free: this is the part that can be proven without a GPUix runtime, and where the design decisions actually live |
 | `components/` | thin renderers over GPUix host elements | each is a resolver call plus, at most, React-local focus or value state |
 
 `core/` must not import `@gpuix/react` at runtime (type-only imports are erased).
@@ -55,9 +56,10 @@ subpaths; the package root needs a native binding.
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
 **Text** `Text` `Label`
-**Actions** `Button` `ButtonGroup`
-**Fields** `Input` `TextArea` `Select`
-**Selection** `Checkbox` `RadioGroup` `Switch`
+**Actions** `Button` `ButtonGroup` `Toggle`
+**Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
+**Selection** `Checkbox` `RadioGroup` `Switch` `Rating`
+**Value** `Slider` `RangeSlider` `Meter`
 **Feedback** `Progress` `Spinner` `Skeleton` `Tooltip`
 **Theming** `ThemeProvider`
 
@@ -72,7 +74,8 @@ none paints a literal and none scripts hover or press
 | ---------- | ------------ | ---- |
 | `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
-| `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`) |
+| `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
+| pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
 | scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
@@ -86,7 +89,7 @@ Every Tier 1 component has a page and a composed example beside the source:
 
 - `docs/` — one page per component (`docs/README.md` indexes them) with usage,
   API, keyboard, accessibility, theming, limitations and verification;
-- `examples/` — five realistic compositions plus the icon set, registered in
+- `examples/` — ten realistic compositions plus the icon set, registered in
   `examples/index.ts` for `apps/playground`;
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
@@ -108,21 +111,25 @@ function (`renderButton`, `renderCheckbox`, …) instead. The glue in between
 type checker and by the native runtime, not by these suites.
 
 **Verified in the real runtime** (`nub run --filter @gpuixui/primitives test:runtime`):
-six suites in `runtime/` mount the components in the GPUix 0.10.0
+the suites in `runtime/` mount the components in the GPUix 0.10.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
-offset, PNG captures. A seventh suite mounts every example from
-`examples/index.ts`, so the documentation's compositions are runtime-proven too.
-Measured 2026-10-17: **7 files, 63 tests, all passing** — including a theme
-switch on a mounted tree and a check that no painted colour is outside the
-active palette.
+offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
+example from `examples/index.ts`, so the documentation's compositions are
+runtime-proven too. Measured 2026-10-17: **13 files, 119 tests, all passing** —
+including a theme switch on a mounted tree, using the shipped `lightTheme` /
+`darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
+the active palette, the high-contrast palettes in both modes, a density override
+measured against the preset's metrics, and a platform theme's mono family
+reaching the paint (plan 055).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
 
 What it observed, per component, is in `COMPONENTS.md`; the measured details and
 the two-direction proof are in
-`.agents/slop/plans/041-tier1-runtime-verification.md` §9.
+`.agents/slop/plans/041-tier1-runtime-verification.md` §9 and
+`.agents/slop/plans/055-tier1-theme-axes.md` §7.
 
 **Still unproven, on purpose:**
 

@@ -44,7 +44,9 @@ control cannot swallow the press meant for the control.
 ## Sizes
 
 `xs` 12 · `sm` 14 · `md` 16 (default) · `lg` 20 · `xl` 24, or a raw pixel count.
-Named sizes are how an icon lines up with the text beside it.
+The scale is `iconSize` from `@gpuixui/tokens` (plan 024), not a second copy, so
+a theme change moves the icons with it. Named sizes are how an icon lines up
+with the text beside it.
 
 ## Conventions for the markup
 
