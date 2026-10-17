@@ -30,13 +30,21 @@ const requireBounds = (root: ComponentTestRoot, testId: string): Bounds =>
     throw new Error(`behaviour: no element with testId "${testId}"`);
   });
 
-/** Click the centre of `testId` through the runtime's real hit testing. */
+/** Click the centre of `testId` through the runtime's real hit testing.
+ *  `modifiers` is the native keystroke syntax (`"shift"`, `"cmd"`), forwarded so
+ *  a suite can prove the modifier branches rather than calling them directly. */
 export const clickCentreOf = (
   root: ComponentTestRoot,
   testId: string,
+  modifiers?: string,
 ): void => {
   const { x, y, width, height } = requireBounds(root, testId);
-  root.renderer.nativeSimulateClick(x + width / 2, y + height / 2);
+  root.renderer.nativeSimulateClick(
+    x + width / 2,
+    y + height / 2,
+    0,
+    modifiers,
+  );
 };
 
 /** Move the mouse to the centre of `testId`, for hover states. */

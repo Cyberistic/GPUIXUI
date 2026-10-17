@@ -5,8 +5,10 @@
  * click or by key; a hover/selection fill that ignores the theme; the roving tab
  * stop landing on more than one row (which would make the list several stops) or
  * on a disabled one; a click that selects twice; arrow keys that move the active
- * row without moving real focus; wrap-around failing at either end; and a
- * controlled list that updates its own selection when the consumer says no.
+ * row without moving real focus; wrap-around failing at either end; a controlled
+ * list that updates its own selection when the consumer says no; and — in
+ * multiple mode — a Cmd-click that replaces instead of toggling, a Shift range
+ * that includes a disabled row, and Shift+Arrow moving focus without extending.
  */
 
 import * as Arr from "effect/Array";
@@ -41,9 +43,12 @@ const catalog = (
 );
 
 /** Every row that owns the list's tab stop: exactly one should. */
-const tabStop = (root: ComponentTestRoot): ReadonlyArray<string> =>
+const tabStop = (
+  root: ComponentTestRoot,
+  testIds: ReadonlyArray<string> = ["row-a", "row-b", "row-c"],
+): ReadonlyArray<string> =>
   Arr.getSomes(
-    Arr.map(["row-a", "row-b", "row-c"], (testId) =>
+    Arr.map(testIds, (testId) =>
       Option.map(
         Option.filter(
           Option.flatMap(
@@ -56,6 +61,33 @@ const tabStop = (root: ComponentTestRoot): ReadonlyArray<string> =>
       ),
     ),
   );
+
+/** Four rows for the multiple-mode suites; the second is disabled. */
+const multiCatalog = (
+  onValueChange?: (values: ReadonlyArray<string>) => void,
+) => (
+  <List testId="list" selectionMode="multiple" onValueChange={onValueChange}>
+    <ListItem testId="row-a" value="a">
+      <ListItemTitle>Alpha</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-b" value="b" disabled>
+      <ListItemTitle>Beta</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-c" value="c">
+      <ListItemTitle>Gamma</ListItemTitle>
+    </ListItem>
+    <ListItem testId="row-d" value="d">
+      <ListItemTitle>Delta</ListItemTitle>
+    </ListItem>
+  </List>
+);
+
+/** All four row ids, for the tab-stop helper. */
+const multiIds = ["row-a", "row-b", "row-c", "row-d"];
+
+/** Whether a row reports itself selected. */
+const isSelected = (root: ComponentTestRoot, testId: string): unknown =>
+  root.renderer.findByTestId(testId)?.customProps?.["aria-selected"];
 
 describe("List", () => {
   it("presents rows without selection or a tab stop", () => {
@@ -311,6 +343,131 @@ describe("List", () => {
     expect(list.renderer.findByTestId("row-a")?.style.hover).toMatchObject({
       backgroundColor: darkTheme.colors.accent,
     });
+
+    list.unmount();
+  });
+
+  it("reports a multiple selection as a listbox of options with one tab stop", () => {
+    const list = renderComponent(multiCatalog());
+
+    expect(list.renderer.findByTestId("list")?.customProps?.role).toBe(
+      "listbox",
+    );
+    expect(list.renderer.findByTestId("row-a")?.customProps?.role).toBe(
+      "option",
+    );
+    expect(tabStop(list, multiIds)).toEqual(["row-a"]);
+    expect(isSelected(list, "row-a")).toBe(false);
+
+    list.unmount();
+  });
+
+  it("replaces the selection on a plain click in multiple mode", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    clickCentreOf(list, "row-c");
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith(["c"]);
+    expect(isSelected(list, "row-c")).toBe(true);
+    expect(isSelected(list, "row-a")).toBe(false);
+
+    list.unmount();
+  });
+
+  it("toggles a row on a Cmd-click without losing the selection", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    clickCentreOf(list, "row-c");
+    clickCentreOf(list, "row-d", "cmd");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["c", "d"]);
+    expect(isSelected(list, "row-c")).toBe(true);
+    expect(isSelected(list, "row-d")).toBe(true);
+
+    list.unmount();
+  });
+
+  it("selects the enabled range on a Shift-click", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    clickCentreOf(list, "row-a");
+    clickCentreOf(list, "row-d", "shift");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["a", "c", "d"]);
+    expect(isSelected(list, "row-b")).toBe(false);
+
+    list.unmount();
+  });
+
+  it("toggles the focused row with Space in multiple mode", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("space");
+    list.renderer.simulateKeystrokes("down");
+    list.renderer.simulateKeystrokes("space");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["a", "c"]);
+
+    list.unmount();
+  });
+
+  it("extends the selection with Shift+Arrow and moves real focus", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("space");
+    list.renderer.simulateKeystrokes("shift-down");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-c"));
+    expect(onValueChange).toHaveBeenLastCalledWith(["a", "c"]);
+
+    list.unmount();
+  });
+
+  it("never selects a disabled row by Cmd-click", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    clickCentreOf(list, "row-c");
+    clickCentreOf(list, "row-b", "cmd");
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(isSelected(list, "row-b")).toBe(false);
+    expect(isSelected(list, "row-c")).toBe(true);
+
+    list.unmount();
+  });
+
+  it("keeps a controlled multiple selection where the consumer put it", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(
+      <List
+        testId="list"
+        selectionMode="multiple"
+        value={["a"]}
+        onValueChange={onValueChange}
+      >
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    clickCentreOf(list, "row-c");
+
+    expect(onValueChange).toHaveBeenCalledWith(["c"]);
+    expect(isSelected(list, "row-a")).toBe(true);
+    expect(isSelected(list, "row-c")).toBe(false);
 
     list.unmount();
   });

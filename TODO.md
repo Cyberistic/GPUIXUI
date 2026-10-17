@@ -126,6 +126,8 @@ the `@gpuixui/tokens/react` provider
     - [x] `src/inventory.ts` + `src/inventory.test.ts`: files exist, rows agree, no duplicates, `done` implies a behaviour test
     - [x] `src/behaviour/theme-matrix.test.tsx`: the both-theme matrix for the 11 components without one
     - [x] Six records corrected from `gpuixSupport: "yes"` to `partial` where the runtime lacks the ARIA surface or a keyboard path
+  - Tier 2 hardening after the inventory closed (plans 120+)
+    - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

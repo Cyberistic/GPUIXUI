@@ -4,11 +4,12 @@
  * This suite fails when a component is marked `done` without a native behaviour
  * test, when a docs page or example named by a record does not exist, when a
  * `COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
- * finished Tier 2 row has no record, and when two records claim the same name or
- * docs page. It is the automated form of plan 117 §1.
+ * finished Tier 2 row has no record, when two records claim the same name or
+ * docs page, and when one Tier 2 component has two rows (a stray `todo` copy
+ * beneath the real one used to hide there). It is the automated form of plan
+ * 117 §1.
  *
- * The date picker is the one Tier 2 row with no record: it is `todo` with a
- * design, not an implementation, so a record (and its files) would be fiction.
+ * The date picker landed in plan 119, so every Tier 2 row now has a record.
  * `node:fs` is used here only because this is a test-time repository check —
  * plan 117 §3 authorises it, and nothing in the component runtime imports it.
  */
@@ -130,6 +131,12 @@ describe("inventory", () => {
       ...duplicates(inventory.map((meta) => meta.docs)),
       ...duplicates(inventory.map((meta) => meta.example)),
     ]).toEqual([]);
+  });
+
+  it("has no duplicate Tier 2 row names", () => {
+    const names = Arr.map(tier2Rows(), (row) => row.name);
+
+    expect(duplicates(names)).toEqual([]);
   });
 
   it("records limitations as an explicit array", () => {

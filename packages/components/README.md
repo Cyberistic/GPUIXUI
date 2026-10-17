@@ -27,7 +27,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
 | `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |
 | `src/empty-state.tsx` | EmptyState: the centred "nothing here yet" panel |
-| `src/list.tsx` | List / ListItem: rows with a roving tab stop and single selection |
+| `src/list.tsx`, `src/list/selection.ts` | List / ListItem: rows with a roving tab stop and single or multiple selection |
 | `src/dialog.tsx` | Dialog: an anchored window veil, focus-in/return, Tab trap, Escape |
 | `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
