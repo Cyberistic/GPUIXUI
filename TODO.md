@@ -471,7 +471,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–449)
 
-`[~]` `[██████████]` 49/50
+`[~]` `[██████████]` 50/51
 
 `[x]` The registry mirrors the inventory's GPUix-support column (plan 443) — `ours`/`reuse` are real values, the nine flattened records are corrected, a test reads `COMPONENTS.md`, and `done` is backed by its native suite rather than by GPUix writing the primitive
 `[x]` Preview surfaces follow the docs' dark mode (plan 444) — a dark page painted light previews because the surface took `next-themes`' pre-hydration `undefined` and never re-rendered; one tested `previewMode` + `useSyncExternalStore` snapshot fixes it, verified in headless Chrome in both modes
@@ -524,6 +524,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Tier-A preview coverage (plan 449) — eight static Tier 1–2 pages (text input, checkbox, switch, slider, badge, alert, progress, avatar) now carry a labelled rest preview built only from the active theme; 12 previews in total, all under the platform toggle, with a content guard and a hydrated `?platform=win32` badge check
 `[x]` Preview coverage prose stops hand-counting previews (plan 450) — the four stale "four previews" claims are gone, and `prose-truth.test.ts` fails when a page states a total different from the preview registry
 `[x]` Tier-A previews for the nine remaining static Tier 1 controls (plan 451) — text area, radio group, select, range slider, meter, number field, OTP field, toggle and rating; 21 previews in total, and `theme-surface.test.ts` fails when a preview reads a `--preview-*` name the surface does not define (29 shipped kebab-case names fixed)
+`[x]` Tier-A previews for the eight static Tier 2 compositions (plan 452) — list, empty state, inline validation, breadcrumb, pagination, search input, accordion and collapsible; 29 previews in total, all under the literal and variable-name guards
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed

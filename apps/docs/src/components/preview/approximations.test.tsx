@@ -133,6 +133,20 @@ const documentedStates: ReadonlyArray<readonly [string, readonly string[]]> = [
   ["otp-field", ["Verification code", "Six digits from your authenticator."]],
   ["toggle", ["Pin to sidebar", "Show grid", "Bold", "Italic"]],
   ["rating", ["4 of 5", "No rating yet"]],
+  ["list", ["Projects", "Design system", "Documentation site", "Onboarding"]],
+  ["empty-state", ["No projects yet", "Create project", "Browse templates"]],
+  ["inline-validation", ["Workspace name", "Enter a complete email address."]],
+  ["breadcrumb", ["Workspace", "Settings", "Members"]],
+  ["pagination", ["…", "The window keeps a stable width"]],
+  [
+    "search-input",
+    ["Search", "button", "Escape clears only when the field is not empty."],
+  ],
+  [
+    "accordion",
+    ["Notifications", "Billing", "Email me when a deployment finishes."],
+  ],
+  ["collapsible", ["Advanced settings", "unmounts while closed"]],
 ];
 
 describe("preview state coverage", () => {

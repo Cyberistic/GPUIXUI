@@ -15,6 +15,16 @@ import {
   TogglePreview,
 } from "./control-previews";
 import {
+  AccordionPreview,
+  BreadcrumbPreview,
+  CollapsiblePreview,
+  EmptyStatePreview,
+  InlineValidationPreview,
+  ListPreview,
+  PaginationPreview,
+  SearchInputPreview,
+} from "./composition-previews";
+import {
   AlertPreview,
   AvatarPreview,
   BadgePreview,
@@ -329,4 +339,12 @@ export const previewsBySlug: ReadonlyMap<
   ["otp-field", OTPFieldPreview],
   ["toggle", TogglePreview],
   ["rating", RatingPreview],
+  ["list", ListPreview],
+  ["empty-state", EmptyStatePreview],
+  ["inline-validation", InlineValidationPreview],
+  ["breadcrumb", BreadcrumbPreview],
+  ["pagination", PaginationPreview],
+  ["search-input", SearchInputPreview],
+  ["accordion", AccordionPreview],
+  ["collapsible", CollapsiblePreview],
 ]);
