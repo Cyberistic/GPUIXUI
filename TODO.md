@@ -479,7 +479,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Hydrated previews are in the release gate (plan 446) — `smoke:browser` loads the production build in headless Chrome and fails on a wrong palette or platform on every preview surface; exit `1` for a broken site, `2` when Chrome or the server is missing
 `[x]` The measured GPUix capability page (plan 448) — `/docs/capabilities` renders all 15 inventory capabilities from one docs module, guarded against `COMPONENTS.md` and the playground scenario registry; Workspace and Data display now show their measured subset instead of a promise paragraph; 39 files / 228 tests, 68-page crawl
 `[x]` The component index finds what the registry proves (plan 454) — the filter matches documented props types and limitations, and the built-site smoke queries a component's prose so a production index that lost the component pages fails the gate
-`[x]` **Live GPUix surface previews (plan 455)** — the published 0.10.0 wasm renderer runs the real Button scene behind a labelled click-to-load iframe; the native tier stays beneath it, `smoke:preview` proves the scene reaches GPUI's tree in headless Chrome (real time), and an unknown scene reports a reason
+`[x]` **Live GPUix surface previews (plan 455)** — the published 0.10.0 wasm renderer runs the real Button scene behind a labelled click-to-load iframe on the Buttons and Theming pages; the native tier stays beneath it, `smoke:preview` proves the scene reaches GPUI's tree in headless Chrome (real time), the page wiring, and that `?platform=win32` reaches the renderer
 `[ ]` Live scenes for the rest of the delivered components — one per interaction record first (Tabs, Dropdown menu, Dialog), each with its own `LIVE_SCENES` key, a real composition and a smoke assertion; the tier-A list and the components' platform-styled previews stay as they are
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
@@ -541,6 +541,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[~]` `[███░░░░░░░]` 6/23
 
+`[ ]` **Deploy: confirm the production host serves `/gpuix-preview/`** — the live surface adds a 19.1 MB wasm asset to `apps/docs/public/` (under Workers' 25 MiB per-asset limit). Run `smoke:preview --base-url <deploy>` once the deploy path is verified; owner: packages/deploy, with `docs-site` verifying.
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
 `[ ]` **Repo docs**: `docs/architecture.md` is listed as an A/B deliverable in `docs/README.md`, and the Architecture page says it is not written. This workstream owns `apps/docs`, not that maintainer document — write it there or drop the promise from both surfaces.
 `[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
