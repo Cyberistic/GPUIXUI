@@ -108,6 +108,17 @@ const controlBoundaryPairs: readonly ContrastPair[] =
   );
 
 /**
+ * The soft status fills a bounded control can sit on. An Alert or Toast carries
+ * an action — a field, a "don't show again" checkbox — and inline validation
+ * renders inside a soft `destructive` block, so the edge a reader uses to see an
+ * unchecked control is painted on these fills too. The boundary floor applies.
+ */
+export const controlBoundarySoftPairs: readonly ContrastPair[] =
+  softSurfaceRoles.map(
+    (background): ContrastPair => ["borderStrong", background, "boundary"],
+  );
+
+/**
  * The surfaces brand-toned text is painted on: the plain surfaces, the quiet
  * grouping panel a sidebar link sits on, and the two washes the Link variant
  * paints behind its own label.
@@ -190,7 +201,8 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * plain surfaces and washes a link paints, default body text on the quiet panel
  * and the floating surface, the focus ring on every surface a focused control
  * can sit on, status text on a floating surface, the functional control
- * boundary on a floating surface, a quiet panel and the state washes, the soft
+ * boundary on a floating surface, a quiet panel, the state washes and the soft
+ * status fills a control sits in, the soft
  * status surfaces and the loading skeleton a canvas must distinguish, the
  * designed edge around each soft status surface, and the decorative dividers
  * that must stay visible, including on the fills a bordered control paints.
@@ -238,6 +250,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["borderStrong", "input", "boundary"],
   ["borderStrong", "popover", "boundary"],
   ...controlBoundaryPairs,
+  ...controlBoundarySoftPairs,
   ...primaryTextPairs,
   ...secondaryTextPairs,
   ...surfacePairs,
@@ -452,7 +465,8 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * tone's own foreground on the four soft status surfaces a selected Alert,
  * Badge or Toast paints, the control edge measured
  * on the fills a bordered control paints, and the functional boundary measured
- * on the quiet panel and state washes a bounded control sits on. The level
+ * on the quiet panel, the state washes and the soft status fills a bounded
+ * control sits on. The level
  * defaults to the one the theme declares, so a high-contrast theme is checked
  * against its own floors. An empty array is the library's guarantee; a consumer
  * test asserts exactly that:

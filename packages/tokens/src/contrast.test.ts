@@ -60,6 +60,13 @@
  * text (`foreground`) is painted on the quiet panel an avatar's fallback
  * initials sit on and the floating surface a date picker's month header sits
  * on, but only the canvas, card and two washes were measured.
+ *
+ * Plan 092 closes the same gap for the control boundary: `borderStrong` is
+ * painted inside an Alert, Badge or Toast as well, but the contract named the
+ * plain surfaces, the quiet panel and the four row washes only. Identity dark
+ * measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and 2.97:1 on
+ * `infoSoft`, so the four soft fills join the boundary class and the identity
+ * dark edge moves one half-step lighter.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -281,7 +288,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(109);
+    expect(contrastPairs.length).toBe(113);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);

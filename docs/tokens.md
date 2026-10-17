@@ -65,8 +65,9 @@ The core entry has no React dependency. `react` is an optional peer of the
 Components use semantic roles, never ramp shades. The role names describe
 intent, so a brand theme changes values without touching component source.
 `border` is decorative; `borderStrong` is the essential control boundary held
-to 3:1 (4.5:1 at high contrast) on the plain surfaces, the `muted` panel and the
-`hover`/`active`/`accent`/`selected` washes a bounded control sits on. A bordered
+to 3:1 (4.5:1 at high contrast) on the plain surfaces, the `muted` panel, the
+`hover`/`active`/`accent`/`selected` washes a bounded control sits on, and the
+four soft status fills an Alert, Badge or Toast paints. A bordered
 control paints `border` on the fill behind it —
 `secondary` at rest, `hover`/`active` while the pointer moves, and `accent` for
 an outline toggle that is on — so the divider is held to its floor on those
@@ -134,7 +135,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
-| `borderStrong` | `#737C8C` | `#77808F` | essential control boundaries, including on row washes |
+| `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#66707F` | `#7C8595` | placeholder text |
@@ -312,7 +313,7 @@ getTheme("light"); // the default light theme, unchanged
 | `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#6E7683` | `#8A8A8A` | dividers and decorative borders |
-| `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes |
+| `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
@@ -900,7 +901,8 @@ against `contrastFloors`. The list holds text pairs, secondary text and status
 text on the state washes (`hover`, `active`, `accent` and `selected`), the other
 status pairs, the focus ring on the plain surfaces, the `muted` panel, the
 `accent` wash and the three state washes a focused control can sit on, the
-functional control boundary on the `muted` panel and those washes, the selection
+functional control boundary on the `muted` panel, those washes and the four soft
+status fills (`controlBoundarySoftPairs`), the selection
 wash — body and secondary text through it, and the wash's own perceivability —
 the soft status surfaces and the decorative dividers
 — including on the `secondary`, `hover`, `active` and `accent` fills a bordered
@@ -1073,9 +1075,9 @@ muted text on `background`, `card` and `popover`, secondary text on the `hover`,
 `active`, `accent` and `selected` washes a row paints behind a description, and
 status text (`xText`) on `background`, `card`, `popover` and those four washes;
 3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
-the high-contrast variants. The boundary is also measured on the `muted` panel
-and the four washes, because an unchecked checkbox or a field keeps its
-`borderStrong` edge while the row moves.
+the high-contrast variants. The boundary is also measured on the `muted` panel,
+the four washes and the four soft status fills, because an unchecked checkbox or
+a field keeps its `borderStrong` edge while the row moves or inside an Alert.
 It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
 those surfaces or on the `secondary`, `hover`, `active` and `accent` fills a
@@ -1113,7 +1115,12 @@ light `warningText` to `#6B4500` and the high-contrast one to `#4B3100`. The
 functional control boundary is held to them too: a checkbox edge in a pressed
 row measured 2.52:1 on macOS light and 2.62:1 on the identity, 2.80–2.81 in the
 dark identity and 4.15:1 at high-contrast dark, so plan `084` moved five
-boundary values one step. Palette edits must keep it green.
+boundary values one step. It is also held on the four soft status fills a
+control sits in. The audit found three: identity dark's `borderStrong`
+(`#77808F`) measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and
+2.97:1 on `infoSoft`, under the 3:1 boundary floor, while every other shipped
+set cleared it. The edge is now `#868FA0`, which clears the floor on all four
+soft fills. Palette edits must keep it green.
 
 Default body text is measured on `background`, `card`, the `muted` panel,
 `popover` and the `hover`/`active` washes. The panel and the floating surface are
@@ -1143,6 +1150,9 @@ washes as well as on `popover`, so a status label inside a hovered, pressed or
 selected row or a dialog is covered; the `borderStrong` boundary is measured on
 `popover`, the `muted` panel and those four washes, so a checkbox or field in a
 quiet panel, a hovered, pressed, selectable or selected row still shows its edge.
+It is also measured on the four soft status fills, because an Alert or Toast
+carries actions — a field, a don't-show-again checkbox — whose edge must stay
+visible.
 Text selection is measured in both directions: `selectionPairs` holds the body
 role each surface uses and `mutedForeground` on all nine `selectionSurfaces` to
 their floors, and `selectionWashPairs` holds the wash itself to the 1.05:1

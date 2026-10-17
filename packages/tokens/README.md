@@ -204,10 +204,13 @@ in a list, table or menu row is readable on the fill it sits on: every light set
 had a warning label under 4.5:1 on the pressed wash (macOS 4.22:1, Linux 4.24:1,
 Windows 4.36:1) and high-contrast light was 5.83:1 on `active` and 6.70:1 on
 `accent`/`selected` until plan 083 moved the two warning steps. The functional
-control boundary is checked on the `muted` panel and the same four washes, so a
-checkbox or field inside a row keeps its `borderStrong` edge: the identity light
+control boundary is checked on the `muted` panel, the same four washes and the
+four soft status fills, so a checkbox or field inside a row, or an action inside
+an Alert or Toast, keeps its `borderStrong` edge: the identity light
 set measured 2.62:1 on the pressed wash, macOS light 2.52:1, and high-contrast
-dark 4.15:1 until plan 084 moved five boundary values. The same list holds the
+dark 4.15:1 until plan 084 moved five boundary values, and identity dark's edge
+measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and 2.97:1 on
+`infoSoft` until plan 092 moved it to `#868FA0`. The same list holds the
 soft status surfaces and the loading skeleton at 1.05:1 against `background`,
 `card` and `popover`, and the decorative `border` at 1.05:1 (3:1 at high
 contrast) on the plain surfaces and on the `secondary`, `hover`, `active` and

@@ -105,7 +105,10 @@ describe("the control boundary on the state washes", () => {
     const regressed = extendTheme(getTheme("light"), {
       colors: { borderStrong: "#848E9E" },
     });
-    const failures = themeContrastFailures(regressed);
+    // The soft status fills have their own contract and suite (plan 092).
+    const failures = themeContrastFailures(regressed).filter(({ background }) =>
+      boundarySurfaces.some((surface) => surface === background),
+    );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual(
       [...boundarySurfaces].toSorted(),

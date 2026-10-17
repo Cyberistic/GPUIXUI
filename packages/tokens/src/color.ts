@@ -177,7 +177,7 @@ export interface ThemeColors {
   readonly destructiveText: string;
   /** Dividers and decorative borders. */
   readonly border: string;
-  /** Control boundaries on plain surfaces, a quiet panel and row washes. */
+  /** Control boundaries on plain surfaces, a quiet panel, row washes and soft status fills. */
   readonly borderStrong: string;
   /** Input field background. */
   readonly input: string;
@@ -293,7 +293,9 @@ export const lightColors = {
  * keeps the secondary floor when it is selected on a pressed row (plan 087).
  * The soft status foregrounds are the family's lightest step and the selection
  * wash is 20%, so an alert's text keeps the body floor through it while the
- * highlight stays visible (plan 091).
+ * highlight stays visible (plan 091). The boundary is a half-step lighter than
+ * plan 084 left it, so a checkbox or field inside an Alert or Toast keeps its
+ * edge on all four soft status fills (plan 092).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -338,7 +340,7 @@ export const darkColors = {
   warningText: palette.amber[200],
   destructiveText: palette.red[200],
   border: "#343B47",
-  borderStrong: "#77808F",
+  borderStrong: "#868FA0",
   input: palette.neutral[900],
   inputForeground: palette.neutral[100],
   placeholder: "#7C8595",
