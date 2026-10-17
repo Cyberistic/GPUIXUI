@@ -42,6 +42,7 @@ export const CAPABILITIES = [
   "drag",
   "selection",
   "menu",
+  "components",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -237,6 +238,16 @@ export interface SmokeHost {
   /** Moves the pointer onto `testId`, delivering native enter/leave. */
   readonly hover: (testId: string) => void;
   readonly key: (keystroke: string) => void;
+  /**
+   * Delivers a key down to `testId` without a matching up.
+   *
+   * `key` runs the renderer's keystroke parser; a control whose contract is
+   * "Space activates on key **up**" needs the two halves separately, exactly as
+   * a physical keyboard delivers them.
+   */
+  readonly keyDown: (testId: string, key: string) => void;
+  /** Delivers the key up matching {@link SmokeHost.keyDown}. */
+  readonly keyUp: (testId: string, key: string) => void;
   /** Native focus traversal (`window.focus_next`). */
   readonly focusNext: () => void;
   /** Native focus traversal (`window.focus_prev`). */

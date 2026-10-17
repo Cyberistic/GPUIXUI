@@ -65,6 +65,9 @@ importers:
       '@gpuix/react':
         specifier: 0.10.0
         version: 0.10.0(react@19.3.1)
+      '@gpuixui/primitives':
+        specifier: workspace:*
+        version: link:../../packages/primitives
       '@gpuixui/testing':
         specifier: workspace:*
         version: link:../../packages/testing

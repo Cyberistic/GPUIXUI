@@ -44,6 +44,11 @@ import {
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
 } from "./theme.js";
+import {
+  primitivesActionsScenario,
+  primitivesDisplayScenario,
+  primitivesFieldsScenario,
+} from "./primitives.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -64,6 +69,7 @@ export const CORE_CAPABILITIES = [
   "a11y",
   "content",
   "selection",
+  "components",
 ] as const;
 
 /** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`, `164`). */
@@ -112,6 +118,9 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   virtualizedTableScenario,
   treeScenario,
   logViewerScenario,
+  primitivesActionsScenario,
+  primitivesFieldsScenario,
+  primitivesDisplayScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

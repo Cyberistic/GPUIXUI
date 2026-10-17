@@ -144,6 +144,19 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onSome: (point) => renderer.nativeSimulateMouseMove(point.x, point.y),
     }),
   key: (keystroke) => renderer.simulateKeystrokes(keystroke),
+  // The two halves matter for a control whose contract is "activate on Space
+  // up": `simulateKeystrokes` is a parser for typed text and named keys, not a
+  // key-down/key-up pair.
+  keyDown: (testId, key) =>
+    Option.match(elementId(renderer, testId), {
+      onNone: () => {},
+      onSome: (id) => renderer.nativeSimulateKeyDown(id, key),
+    }),
+  keyUp: (testId, key) =>
+    Option.match(elementId(renderer, testId), {
+      onNone: () => {},
+      onSome: (id) => renderer.nativeSimulateKeyUp(id, key),
+    }),
   // `focusNext`/`focusPrevious` are raw native calls: unlike the `simulate*`
   // helpers they do not drain and dispatch the resulting focus events, so the
   // React `onFocus`/`onBlur` handlers would never run (plan `140` §4).

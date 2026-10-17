@@ -79,7 +79,11 @@ describe("scenarioProblems", () => {
         "drag",
         "selection",
         "menu",
+        "components",
       ]),
+    );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "primitives-actions",
     );
   });
 
