@@ -387,6 +387,7 @@ export const TabsTrigger = ({
   disabled = false,
   onClick,
   onFocus,
+  onBlur,
   style,
   ref,
   ...rest
@@ -423,7 +424,10 @@ export const TabsTrigger = ({
         setFocused(true);
         onFocus?.(event);
       }}
-      onBlur={() => setFocused(false)}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
       onClick={
         disabled
           ? undefined

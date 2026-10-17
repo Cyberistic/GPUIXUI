@@ -12,9 +12,10 @@
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   focusRing,
@@ -50,6 +51,7 @@ export const SearchInput = ({
   style,
   onChange,
   onKeyDown,
+  ref,
   ...rest
 }: SearchInputProps) => {
   const theme = useTheme();
@@ -61,6 +63,10 @@ export const SearchInput = ({
   });
   const [focused, setFocused] = useState(false);
   const input = useRef<PublicInstance | null>(null);
+  const attach = useCallback((next: PublicInstance | null) => {
+    input.current = next;
+  }, []);
+  const setInput = useMergedRef<PublicInstance | null>(attach, ref);
 
   const clear = (): void => {
     if (value === "") return;
@@ -102,9 +108,7 @@ export const SearchInput = ({
       </text>
       <input
         {...rest}
-        ref={(instance) => {
-          input.current = instance;
-        }}
+        ref={setInput}
         testId={rest.testId ?? "search-input"}
         value={value}
         placeholder={placeholder}

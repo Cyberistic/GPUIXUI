@@ -4,12 +4,14 @@
  * The bugs these guard: typing that never reached `onValueChange`; a clear
  * control offered on an empty field; clearing that forgot to give focus back to
  * the field; Enter that submitted nothing; Escape that swallowed the key on an
- * empty field; and a controlled field that changed its own display when the
- * consumer said no.
+ * empty field; a controlled field that changed its own display when the consumer
+ * said no; and a caller `ref` that the internal focus ref silently replaced.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { PublicInstance } from "@gpuix/react";
 import * as Option from "effect/Option";
+import { createRef } from "react";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -121,6 +123,24 @@ describe("SearchInput", () => {
     expect(onValueChange).toHaveBeenCalledWith("a");
     // The consumer did not adopt the value, so the field is still empty.
     expect(search.renderer.findByTestId("search-clear")).toBeUndefined();
+
+    search.unmount();
+  });
+
+  it("feeds both the internal and the caller's ref", () => {
+    const ref = createRef<PublicInstance>();
+    const search = renderComponent(
+      <div style={{ width: 360, padding: 40 }}>
+        <SearchInput ref={ref} testId="search" />
+      </div>,
+    );
+
+    expect(ref.current?.id).toBe(search.renderer.findByTestId("search")?.id);
+
+    // The internal ref still points at the same node: clearing focuses it.
+    type(search, "abc");
+    clickCentreOf(search, "search-clear");
+    expect(focusedTestId(search)).toEqual(Option.some("search"));
 
     search.unmount();
   });

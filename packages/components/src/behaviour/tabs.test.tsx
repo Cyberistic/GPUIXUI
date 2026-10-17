@@ -6,7 +6,8 @@
  * real focus (or did not wrap); manual activation that selected on focus anyway,
  * so Enter was meaningless; a disabled tab that could be focused or clicked; and
  * a controlled tab set that changed its own panel when the consumer said no. A
- * caller `ref` on a trigger was discarded in favour of the internal one.
+ * caller `ref` on a trigger was discarded in favour of the internal one, and so
+ * was a caller `onBlur`.
  */
 
 import * as Option from "effect/Option";
@@ -228,6 +229,29 @@ describe("Tabs", () => {
     focusTab(tabs, "tab-profile");
     tabs.renderer.simulateKeystrokes("right");
     expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+
+    tabs.unmount();
+  });
+
+  it("runs a caller onBlur when focus leaves a trigger", () => {
+    const onBlur = vi.fn();
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile" onBlur={onBlur}>
+            Profile
+          </TabsTrigger>
+          <TabsTrigger testId="tab-danger" value="danger">
+            Danger
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+
+    focusTab(tabs, "tab-profile");
+    focusTab(tabs, "tab-danger");
+
+    expect(onBlur).toHaveBeenCalledTimes(1);
 
     tabs.unmount();
   });
