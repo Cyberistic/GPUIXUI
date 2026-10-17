@@ -8,17 +8,18 @@
  * The numeric tables (typography, spacing, radius, density, elevation, motion,
  * border/icon/avatar sizes) are guarded the other way round: the test builds the
  * documented row from the implementation and requires the markdown to contain
- * it, so a value edit cannot ship a document that lies. The design-system
- * assertions include the per-platform mono families and the icon-to-label gap,
- * so the rationale cannot name a family or a spacing value the package does not
- * ship.
+ * it, so a value edit cannot ship a document that lies. The same builder holds
+ * the palette ramps — the last hand-written value table — so a ramp edit and a
+ * document edit cannot land apart. The design-system assertions include the
+ * per-platform mono families and the icon-to-label gap, so the rationale cannot
+ * name a family or a spacing value the package does not ship.
  *
  * `node:fs` is used deliberately: this is a documentation test over the tree's
  * own files, and the tokens package ships zero runtime dependencies by design.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { colorRoles } from "./color.js";
+import { colorRoles, palette } from "./color.js";
 import { contrastFloors } from "./contrast.js";
 import {
   darkElevation,
@@ -212,6 +213,25 @@ describe("docs/tokens.md numeric tables", () => {
         `| \`avatarSize.${size}\` | ${pixels} |`,
       );
     });
+  });
+});
+
+describe("docs/tokens.md palette table", () => {
+  it("lists every ramp and step at its real value", () => {
+    Object.entries(palette).forEach(([ramp, steps]) => {
+      const row = Object.entries(steps)
+        .map(([step, hex]) => `${step} \`${hex}\``)
+        .join(" · ");
+      expect(markdown, `palette.${ramp}`).toContain(`| \`${ramp}\` | ${row} |`);
+    });
+  });
+
+  it("lists the ramps in declaration order", () => {
+    const positions = Object.keys(palette).map((ramp) =>
+      markdown.indexOf(`| \`${ramp}\` |`),
+    );
+    expect(positions).not.toContain(-1);
+    expect(positions).toEqual(positions.toSorted((a, b) => a - b));
   });
 });
 

@@ -943,8 +943,9 @@ It also fails if a soft status surface is indistinguishable from `background` or
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
 the type table to `textRoles` order and content, the status-tone table to
-`statusTones` order and content, and the platform rows to `platformNames` order,
-so this page cannot drift from the implementation. The same file holds
+`statusTones` order and content, the platform rows to `platformNames` order,
+and the palette ramps to `palette` order and values, so this page cannot drift
+from the implementation. The same file holds
 `docs/design-system.md`'s numeric claims
 — the identity metrics, role count, theme surfaces, type summary and the
 spacing, density, radius, icon and avatar scales — so the rationale cannot drift
