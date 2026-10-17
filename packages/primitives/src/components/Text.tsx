@@ -27,6 +27,8 @@ export interface TextProps {
   /** Let the user select this text. Off for chrome, on for content. */
   readonly selectable?: boolean;
   readonly style?: StyleDesc;
+  /** Stable locator for automation. */
+  readonly testId?: string;
   readonly children?: ReactNode;
 }
 
@@ -40,13 +42,16 @@ export const renderText = (
     clamp,
     selectable,
     style,
+    testId,
     children,
   }: TextProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const spec = { role, tone, align, truncate, clamp, selectable };
   return (
-    <text style={mergeStyle(textStyle(spec, theme), style)}>{children}</text>
+    <text testId={testId} style={mergeStyle(textStyle(spec, theme), style)}>
+      {children}
+    </text>
   );
 };
 

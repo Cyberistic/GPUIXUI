@@ -19,18 +19,21 @@ export interface SeparatorProps extends RuleSpec {
   /** A caption centred on the rule. */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** Stable locator for automation. */
+  readonly testId?: string;
 }
 
 export const renderSeparator = (
-  { orientation, inset, label, style }: SeparatorProps,
+  { orientation, inset, label, style, testId }: SeparatorProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const rule = mergeStyle(ruleStyle({ orientation, inset }, theme), style);
   if (label === undefined || orientation === "vertical") {
-    return <div style={rule} />;
+    return <div testId={testId} style={rule} />;
   }
   return (
     <div
+      testId={testId}
       style={{
         display: "flex",
         flexDirection: "row",
@@ -55,10 +58,12 @@ export interface SpacerProps {
   /** A fixed gap on the spacing scale. Omit for a flexible filler. */
   readonly size?: keyof PrimitiveTheme["spacing"];
   readonly style?: StyleDesc;
+  /** Stable locator for automation. */
+  readonly testId?: string;
 }
 
 export const renderSpacer = (
-  { size, style }: SpacerProps,
+  { size, style, testId }: SpacerProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const fixed: StyleDesc =
@@ -70,7 +75,7 @@ export const renderSpacer = (
           width: theme.spacing[size],
           height: theme.spacing[size],
         };
-  return <div style={mergeStyle(fixed, style)} />;
+  return <div testId={testId} style={mergeStyle(fixed, style)} />;
 };
 
 /** Empty space: a fixed gap, or a flexible filler that pushes siblings apart. */

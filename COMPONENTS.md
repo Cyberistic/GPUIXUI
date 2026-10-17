@@ -14,7 +14,7 @@ and the strongest honest alternative.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Text / typography | wip | yes | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Docs page pending (docs-site). |
+| Text / typography | wip | yes | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. Docs page pending (docs-site). |
 | Icons | wip | yes | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. |
 | Separators | wip | yes | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
 | Spacers | wip | yes | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |

@@ -183,6 +183,19 @@ it("paints the type scale, not just the style", async () => {
   expect(h1.height).toBeGreaterThan(body.height);
 });
 
+it("addresses a Text element by the testId the caller gave it", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Text role="caption" testId="caption">
+        Note
+      </Text>
+    </Surface>,
+  );
+  expect(Option.isSome(runtime.element("caption"))).toBe(true);
+  expect(runtime.allText()).toContain("Note");
+});
+
 it("paints a Label's name and its description", async () => {
   const runtime = await openWindow();
   runtime.render(

@@ -109,6 +109,27 @@ describe("layout containers", () => {
     );
   });
 
+  it("forward the automation id the caller gave them", () => {
+    const labelled = renderSeparator(
+      { orientation: "horizontal", label: "or", testId: "labelled" },
+      testTheme,
+    );
+    expect(
+      Arr.map(
+        [
+          renderText({ testId: "text" }, testTheme),
+          renderSeparator(
+            { orientation: "vertical", testId: "rule" },
+            testTheme,
+          ),
+          renderSpacer({ size: "lg", testId: "gap" }, testTheme),
+          labelled,
+        ],
+        (element) => expectSome(hostProp(element, "testId")),
+      ),
+    ).toStrictEqual(["text", "rule", "gap", "labelled"]);
+  });
+
   it("scroll only the axes they were asked for", () => {
     const vertical = renderScrollArea({ axis: "vertical" }, testTheme);
     expect(expectSome(stringIn(vertical, "overflowY"))).toBe("scroll");
