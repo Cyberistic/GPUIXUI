@@ -15,12 +15,13 @@
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
+import * as Option from "effect/Option";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import { controlFocusStyle, controlStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, textOf } from "./internal.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -85,7 +86,7 @@ export const renderButton = (
   return (
     <div
       role="button"
-      aria-label={props.label}
+      aria-label={props.label ?? Option.getOrUndefined(textOf(props.children))}
       aria-description={props.loading === true ? "Loading" : undefined}
       tabIndex={
         props.disabled === true && props.loading !== true ? undefined : 0

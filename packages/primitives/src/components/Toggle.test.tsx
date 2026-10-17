@@ -58,6 +58,33 @@ describe("Toggle", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("pressed");
   });
 
+  it("names itself from text children, and lets an explicit label win", () => {
+    const fromText = renderToggle(
+      { children: "Bold" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(fromText, "aria-label"))).toBe("Bold");
+    const explicit = renderToggle(
+      { label: "Bold", children: "B" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(explicit, "aria-label"))).toBe("Bold");
+    const iconOnly = renderToggle(
+      { children: <div /> },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(iconOnly, "aria-label")).toStrictEqual(Option.none());
+  });
+
   it("paints the accent role while pressed and nothing at rest", () => {
     const pressed = renderToggle(
       { pressed: true },

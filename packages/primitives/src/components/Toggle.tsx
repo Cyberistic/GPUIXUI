@@ -17,6 +17,7 @@
 
 import type { ReactElement, ReactNode } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
+import * as Option from "effect/Option";
 import { decideActivation } from "../core/keyboard.js";
 import { controlFocusStyle, controlStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -24,6 +25,7 @@ import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
 import {
   mergeStyle,
+  textOf,
   useControlState,
   useFocus,
   type FocusState,
@@ -84,7 +86,7 @@ export const renderToggle = (
   return (
     <div
       role="button"
-      aria-label={props.label}
+      aria-label={props.label ?? Option.getOrUndefined(textOf(props.children))}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}

@@ -22,6 +22,7 @@ import { Checkbox } from "../src/components/Checkbox.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
+import { Toggle } from "../src/components/Toggle.js";
 import {
   a11yNode,
   a11yNodes,
@@ -121,6 +122,57 @@ it("refuses to activate a disabled Button by click or by Enter", async () => {
   expect(calls()).toBe(0);
   runtime.keyDown("b", "enter");
   expect(calls()).toBe(0);
+});
+
+it("names a text Button from its content, and lets an explicit label win", async () => {
+  const { runtime } = await renderButton();
+  expect(
+    Option.isSome(a11yNode(runtime.a11y(), { role: "Button", label: "Save" })),
+  ).toBe(true);
+
+  const explicit = await renderButton({ children: "×", label: "Close" });
+  expect(
+    Option.isSome(
+      a11yNode(explicit.runtime.a11y(), { role: "Button", label: "Close" }),
+    ),
+  ).toBe(true);
+  expect(
+    Option.isSome(
+      a11yNode(explicit.runtime.a11y(), { role: "Button", label: "×" }),
+    ),
+  ).toBe(false);
+});
+
+it("leaves an icon-only Button unnamed rather than inventing a name", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="icon">
+          <div style={{ width: 8, height: 8 }} />
+        </Button>
+      </Stack>
+    </Surface>,
+  );
+  const button = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Button" }),
+    () => expect.fail("the runtime exposed no Button node"),
+  );
+  expect(button.aria?.label).toBeUndefined();
+});
+
+it("names a text Toggle from its content", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Toggle testId="t">Bold</Toggle>
+      </Stack>
+    </Surface>,
+  );
+  expect(
+    Option.isSome(a11yNode(runtime.a11y(), { role: "Button", label: "Bold" })),
+  ).toBe(true);
 });
 
 it("refuses to activate a loading Button, and still announces itself busy", async () => {

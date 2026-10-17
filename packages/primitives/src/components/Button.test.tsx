@@ -38,6 +38,26 @@ const resting = (props: Parameters<typeof renderButton>[0]): ReactElement =>
   renderButton(props, testTheme, { focused: false });
 
 describe("Button", () => {
+  it("names itself from text children, and refuses to guess at non-text", () => {
+    expect(
+      expectSome(hostProp(resting({ children: "Save changes" }), "aria-label")),
+    ).toBe("Save changes");
+    expect(
+      expectSome(
+        hostProp(resting({ label: "Close", children: "×" }), "aria-label"),
+      ),
+    ).toBe("Close");
+    expect(hostProp(resting({ children: 3 }), "aria-label")).toStrictEqual(
+      Option.some("3"),
+    );
+    expect(
+      hostProp(resting({ children: <div /> }), "aria-label"),
+    ).toStrictEqual(Option.none());
+    expect(hostProp(resting({ children: "   " }), "aria-label")).toStrictEqual(
+      Option.none(),
+    );
+  });
+
   it("activates on Enter key down, never on key up", () => {
     const onActivate = vi.fn();
     const element = resting({ onActivate });

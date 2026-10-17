@@ -229,6 +229,10 @@ retired once both branches are one
       set no ARIA role, so the wrapper produced **no accessibility node at
       all**. It now supplies combobox/listbox/option, `expanded`, `selected`
       and the value text, measured in the runtime (plan 057)
+`[x]` `packages/primitives`: accessible names for text `Button`/`Toggle` — the
+      runtime does not derive a button name from painted text, so every text
+      button was unnamed. Text-only children now become the name, an explicit
+      `label` wins, and non-text content stays unnamed (plan 058)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

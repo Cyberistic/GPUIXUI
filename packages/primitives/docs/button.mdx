@@ -56,7 +56,7 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
-| `label` | `string` | none | accessible name; required for an icon-only button |
+| `label` | `string` | none | accessible name. Overrides the name derived from text children; required when the content is not text (e.g. an icon) |
 | `onActivate` | `() => void` | none | click or activating key; not called while busy |
 | `onClick` | `(event) => void` | none | the raw click, called before `onActivate` |
 | `style` | `StyleDesc` | — | merged last |
@@ -76,7 +76,11 @@ import { Button, Stack } from "@gpuixui/primitives";
 
 ## Accessibility
 
-- Role: `button`; the name comes from `label` or its text content.
+- Role: `button`; the name is `label` when given, otherwise the **text-only**
+  children joined and trimmed (`"Save changes"`). GPUix does not derive a
+  button's name from painted text, so the component writes `aria-label` itself
+  (measured: plan `058`). Content that is not all text — an icon, an element, a
+  mixed list — yields no name; pass `label` then.
 - `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.
@@ -94,7 +98,8 @@ colours. Size and padding come from `density`.
 
 - No `focusVisible`: the ring cannot distinguish pointer from keyboard focus.
 - No `aria-disabled` and no `aria-pressed`/toggle-button state.
-- An icon-only button must pass `label`; the component cannot infer one.
+- An icon-only button (or one whose children are elements) must pass `label`;
+  the component cannot infer a name and will not invent one.
 - No native button element: the runtime exposes a `div` with role and handlers.
 
 ## Verification

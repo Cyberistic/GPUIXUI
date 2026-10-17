@@ -7,8 +7,12 @@
  * rotate or interpolate a colour (plan 020 §1.2).
  */
 
-import { useEffect, useState } from "react";
+import { Children, useEffect, useState, type ReactNode } from "react";
+import { pipe } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import type { StyleDesc } from "@gpuix/react";
 import {
   initValueState,
@@ -23,6 +27,32 @@ export const mergeStyle = (
   base: StyleDesc,
   override: StyleDesc | undefined,
 ): StyleDesc => (override === undefined ? base : { ...base, ...override });
+
+/**
+ * The accessible name a text-only child list gives a control.
+ *
+ * GPUix does not derive a button's name from painted text (measured: plan `058`
+ * §0), so a `Button`/`Toggle` must carry the name itself. This is the only
+ * honest source: every child is a string or number. An icon, an element or a
+ * mixed list returns `None` — the caller owns the name then, and the library
+ * does not invent one.
+ */
+export const textOf = (children: ReactNode): Option.Option<string> => {
+  const parts = Children.toArray(children);
+  const textOnly = Arr.every(
+    parts,
+    (part) => P.isString(part) || P.isNumber(part),
+  );
+  if (!textOnly || Arr.isReadonlyArrayEmpty(parts)) return Option.none();
+  return pipe(
+    Arr.join(
+      Arr.map(parts, (part) => `${part}`),
+      "",
+    ),
+    Str.trim,
+    (name) => (Str.isEmpty(name) ? Option.none() : Option.some(name)),
+  );
+};
 
 /**
  * The theme a provider hands down.
