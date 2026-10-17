@@ -19,11 +19,11 @@ import { Effect } from "effect";
 import type { ReactNode } from "react";
 import { Box } from "../src/components/Box.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
-import { testTheme } from "../src/core/testing/theme.fixture.js";
+import { testTheme, testThemeDark } from "../src/core/testing/theme.fixture.js";
 import type { Density, PrimitiveTheme } from "../src/core/theme.js";
 import { createRuntime, type Runtime } from "./harness.js";
 
-export { testTheme };
+export { testTheme, testThemeDark };
 
 /** The `testId` of the frame every test mounts into. */
 export const SURFACE = "surface";

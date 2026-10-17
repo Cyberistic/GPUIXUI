@@ -132,7 +132,7 @@ named behaviour the code did not have.
 | `RadioGroup` Home/End | remove `jump(key)` from `onKeyDown` | runtime: `expected 'unchecked' to be 'checked'` for Beta on Home |
 
 After restoring: **156 unit tests pass** (`nub run --filter @gpuixui/primitives
-test`), **63 runtime tests pass** in 7 files
+test`), **64 runtime tests pass** in 7 files
 (`nub run --filter @gpuixui/primitives test:runtime`), and `nub run check` is
 green.
 
@@ -143,3 +143,9 @@ helper, not a new test.
 
 **Measured fact for the page:** AccessKit reports the labelled group as role
 `Group`; the runtime test asserts that role rather than inventing one.
+
+**Adjacent coverage added in the same pass:** `runtime/examples.runtime.test.tsx`
+now repaints every example with `testThemeDark` and asserts each root's fill is
+the dark `card` role (64 runtime tests total). Probe: changing the layout
+example's root to `tone="background"` fails that assertion with the expected
+`background` value; restoring it passes.

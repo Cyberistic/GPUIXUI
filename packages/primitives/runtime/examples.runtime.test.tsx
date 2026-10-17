@@ -20,7 +20,7 @@ import * as Option from "effect/Option";
 import type { ComponentType } from "react";
 import { examples } from "../examples/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, testTheme, testThemeDark } from "./fixture.js";
 
 /** The root and the headline each example must paint. */
 const SCREENS = [
@@ -32,13 +32,17 @@ const SCREENS = [
   { id: "icons", root: "icons-example", headline: "Icon set" },
 ] as const;
 
-const renderExample = (runtime: Runtime, id: string): void => {
+const renderExample = (
+  runtime: Runtime,
+  id: string,
+  theme = testTheme,
+): void => {
   const Example: ComponentType = Option.getOrElse(
     Option.fromNullishOr(examples[id]),
     () => expect.fail(`the example registry has no "${id}" entry`),
   );
   runtime.render(
-    <Surface>
+    <Surface theme={theme}>
       <Example />
     </Surface>,
   );
@@ -107,4 +111,19 @@ it("announces the icons example's labelled status icon", async () => {
       a11yNode(runtime.a11y(), { role: "Image", label: "success" }),
     ),
   ).toBe(true);
+});
+
+it("paints every example from the dark palette", async () => {
+  const runtime = await openWindow();
+  Arr.forEach(SCREENS, (screen) => {
+    renderExample(runtime, screen.id, testThemeDark);
+    const fill = Option.getOrUndefined(
+      Option.flatMap(runtime.element(screen.root), (element) =>
+        Option.fromNullishOr(element.style.backgroundColor),
+      ),
+    );
+    // Every example's root is a `card` surface; a literal colour here would
+    // survive the theme switch and fail this assertion.
+    expect(fill, screen.id).toBe(testThemeDark.colors.card);
+  });
 });

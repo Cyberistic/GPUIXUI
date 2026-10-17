@@ -113,7 +113,7 @@ six suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. A seventh suite mounts every example from
 `examples/index.ts`, so the documentation's compositions are runtime-proven too.
-Measured 2026-10-17: **7 files, 63 tests, all passing** — including a theme
+Measured 2026-10-17: **7 files, 64 tests, all passing** — including a theme
 switch on a mounted tree and a check that no painted colour is outside the
 active palette.
 `runtime/` is deliberately outside `nub run test`, so the default gate still
