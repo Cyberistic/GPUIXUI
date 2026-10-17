@@ -143,8 +143,11 @@ build script) sets the linker flags, so no `@napi-rs/cli` is required.
 
 The artifact is **gitignored** (it is a build product, not source) but its
 provenance is recorded: same version (0.10.0), same source revision, same Rust
-code, only the shader-compilation feature differs. The smoke report's `host`
-string must name this so no row overclaims.
+code, only the shader-compilation feature differs. That provenance lives in ADR
+0003, the `COMPONENTS.md` preamble and the app README — the ledgers a status row
+is read from — rather than in the report's `host` string (which names the
+version, as before); a machine-readable marker would cost more machinery than the
+one label is worth.
 
 ## 4. Measured facts (this host, `@gpuix/native@0.10.0` from source)
 
