@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 38/53
+`[x]` `[███████░░░]` 38/54
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -108,6 +108,11 @@ names are no longer retyped in `scale.test.ts` (plan 068)
 package is private — and guard it against the manifest; hold the design-system's
 per-platform family sentence to `platformTypes`; document icon alignment, the
 last mission-named design-system item (plan 070)
+`[ ]` Cross-team: `playground` extends the type gallery to assert leading and
+weight through layout bounds, not the retained style — `paintedStyle` reads
+`getElement().style`, so it shows what was authored rather than what painted; a
+native probe on the pinned 0.10.0 paints a three-line `lineHeight` 20/60 block at
+76/196px, which bounds can prove (owner: `playground`)
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)
