@@ -71,6 +71,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [072](./072-palette-table-guard.md) | Guard the palette ramps in `docs/tokens.md` | F | 058, 066 | done |
 | [073](./073-declared-contrast.md) | A theme declares its contrast level | F | 013, 063, 071 | done |
 | [074](./074-contrast-state-and-overlay-surfaces.md) | The state washes and floating surfaces the contrast contract never checked | F | 059, 063, 071, 073 | done |
+| [075](./075-quoted-contrast-figures.md) | The contrast figures the catalogue quotes | F | 056–059, 071–074 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -191,6 +192,20 @@ selection co-occur in every row-based component, so the ring is painted on the
 popover or toast is painted on `popover`. The eight missing pairs already pass
 in all four colour sets, so no colour moves — the gate now catches a palette
 edit that would have shipped a focused selected row with no visible focus.
+075 closes the last claims in the catalogue that are sentences rather than
+table rows. The status section argues for a separate `xText` tonality with three
+measured ratios (light `warning` at 1.78:1 on the canvas and 1.89:1 on `card`,
+light `success` at 4.26:1), the design system repeats the first, and the
+selection wash is quoted as 24% / 30% in both colour tables and in the
+selection section — none of it derived from `lightColors`, so a palette edit
+could leave the rationale quoting numbers the theme no longer produces while
+`color.test.ts` stayed green. The same audit found the high-contrast table's
+four `xText` rows still described the pre-074 contract (no `popover`), and
+`compositeOver`'s JSDoc example printed `#808080` for a composite that is
+`#7F7F7F`. The guards build each sentence from `contrastRatio`,
+`contrastFloors` and the alpha byte, and the `xText` surfaces from
+`contrastPairs`, so the next palette, floor or contract edit has to take the
+documents with it.
 
 ### Reference adoption (block `200–299`)
 
