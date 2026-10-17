@@ -70,7 +70,9 @@ export const renderProgress = (
         <div style={fill} />
       ) : (
         <>
-          <div style={indeterminateLeadStyle(indeterminateOffset(step, SEGMENT))} />
+          <div
+            style={indeterminateLeadStyle(indeterminateOffset(step, SEGMENT))}
+          />
           <div style={fill} />
         </>
       )}

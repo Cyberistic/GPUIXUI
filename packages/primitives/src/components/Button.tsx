@@ -76,15 +76,20 @@ export const renderButton = (
     if (busy) return;
     props.onActivate?.();
   };
-  const onKey = (phase: "down" | "up") => (event: EventPayload): void => {
-    if (decideActivation(event.key ?? "", phase, event.isHeld === true)) activate();
-  };
+  const onKey =
+    (phase: "down" | "up") =>
+    (event: EventPayload): void => {
+      if (decideActivation(event.key ?? "", phase, event.isHeld === true))
+        activate();
+    };
   return (
     <div
       role="button"
       aria-label={props.label}
       aria-description={props.loading === true ? "Loading" : undefined}
-      tabIndex={props.disabled === true && props.loading !== true ? undefined : 0}
+      tabIndex={
+        props.disabled === true && props.loading !== true ? undefined : 0
+      }
       testId={props.testId}
       onClick={(event) => {
         if (busy) return;
@@ -96,7 +101,12 @@ export const renderButton = (
       onKeyDown={onKey("down")}
       onKeyUp={onKey("up")}
       style={mergeStyle(
-        focus.focused ? mergeStyle(controlStyle(spec, theme), controlFocusStyle(spec, theme)) : controlStyle(spec, theme),
+        focus.focused
+          ? mergeStyle(
+              controlStyle(spec, theme),
+              controlFocusStyle(spec, theme),
+            )
+          : controlStyle(spec, theme),
         props.style,
       )}
     >

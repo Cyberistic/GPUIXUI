@@ -52,7 +52,10 @@ export const renderSpinner = (
       )}
     >
       {spinnerDots(step, 3).map((point, index) => (
-        <div key={index} style={spinnerDotStyle({ size: dot, accent }, point, theme)} />
+        <div
+          key={index}
+          style={spinnerDotStyle({ size: dot, accent }, point, theme)}
+        />
       ))}
     </div>
   );

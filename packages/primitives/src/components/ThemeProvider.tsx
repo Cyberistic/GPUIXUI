@@ -7,7 +7,12 @@
  * fails with an error that names the provider, at the moment it renders.
  */
 
-import { createContext, useContext, type ReactElement, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import type { Density, PrimitiveTheme } from "../core/index.js";
 
 const ThemeContext = createContext<PrimitiveTheme | null>(null);
@@ -47,7 +52,9 @@ export const ThemeProvider = ({
   density,
   children,
 }: ThemeProviderProps): ReactElement => (
-  <ThemeContext.Provider value={density === undefined ? theme : { ...theme, density }}>
+  <ThemeContext.Provider
+    value={density === undefined ? theme : { ...theme, density }}
+  >
     {children}
   </ThemeContext.Provider>
 );

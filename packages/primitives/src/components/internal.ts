@@ -10,7 +10,12 @@
 import { useEffect, useState } from "react";
 import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
-import { initValueState, setValue, withValue, type ValueState } from "../core/state.js";
+import {
+  initValueState,
+  setValue,
+  withValue,
+  type ValueState,
+} from "../core/state.js";
 
 /** The caller's style wins, property by property. */
 export const mergeStyle = (
@@ -73,7 +78,6 @@ export const useControlState = <Value>(
   };
 };
 
-
 /**
  * A counter that advances every `intervalMs` and wraps at `steps`.
  *
@@ -86,7 +90,10 @@ export const useControlState = <Value>(
 export const useStep = (steps: number, intervalMs: number): number => {
   const [step, setStep] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setStep((current) => (current + 1) % steps), intervalMs);
+    const id = setInterval(
+      () => setStep((current) => (current + 1) % steps),
+      intervalMs,
+    );
     return () => clearInterval(id);
   }, [steps, intervalMs]);
   return step;

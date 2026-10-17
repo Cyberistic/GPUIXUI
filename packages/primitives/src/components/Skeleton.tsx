@@ -9,7 +9,12 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { PULSE_STEPS, pulseOpacity, skeletonStyle, type SkeletonSpec } from "../core/loading.js";
+import {
+  PULSE_STEPS,
+  pulseOpacity,
+  skeletonStyle,
+  type SkeletonSpec,
+} from "../core/loading.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { mergeStyle, useStep } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -26,7 +31,10 @@ export const renderSkeleton = (
 ): ReactElement => (
   <div
     testId={testId}
-    style={mergeStyle({ ...skeletonStyle(spec, theme), opacity: pulseOpacity(step) }, style)}
+    style={mergeStyle(
+      { ...skeletonStyle(spec, theme), opacity: pulseOpacity(step) },
+      style,
+    )}
   />
 );
 

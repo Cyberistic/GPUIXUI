@@ -8,7 +8,12 @@
 
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { gridStyle, stackStyle, type GridSpec, type StackSpec } from "../core/layout.js";
+import {
+  gridStyle,
+  stackStyle,
+  type GridSpec,
+  type StackSpec,
+} from "../core/layout.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -29,7 +34,8 @@ export const renderStack = (
 );
 
 /** Children laid out along one axis. */
-export const Stack = (props: StackProps): ReactElement => renderStack(props, useTheme());
+export const Stack = (props: StackProps): ReactElement =>
+  renderStack(props, useTheme());
 
 export interface GridProps extends GridSpec {
   readonly style?: StyleDesc;
@@ -52,4 +58,5 @@ export const renderGrid = (
  * The runtime's grid is numeric — no track strings, no auto-flow, no named
  * areas (plan 020 §1.2) — so anything raggedy belongs in a wrapping `Stack`.
  */
-export const Grid = (props: GridProps): ReactElement => renderGrid(props, useTheme());
+export const Grid = (props: GridProps): ReactElement =>
+  renderGrid(props, useTheme());

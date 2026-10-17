@@ -27,7 +27,9 @@ export interface LabelProps {
 }
 
 /** The accessible name for a control whose visible name is `Label`'s child. */
-export const labelledBy = (name: string): { readonly "aria-label": string } => ({
+export const labelledBy = (
+  name: string,
+): { readonly "aria-label": string } => ({
   "aria-label": name,
 });
 
@@ -38,31 +40,30 @@ export const renderLabel = ({
   style,
   children,
   testId,
-}: LabelProps): ReactElement =>
-  (
-    <Stack
-      direction="column"
-      gap="2xs"
-      style={mergeStyle({ width: "100%" }, style)}
-      testId={testId}
-    >
-      <Stack direction="row" gap="2xs" align="baseline">
-        <Text role="label" tone={invalid === true ? "destructive" : "default"}>
-          {children}
+}: LabelProps): ReactElement => (
+  <Stack
+    direction="column"
+    gap="2xs"
+    style={mergeStyle({ width: "100%" }, style)}
+    testId={testId}
+  >
+    <Stack direction="row" gap="2xs" align="baseline">
+      <Text role="label" tone={invalid === true ? "destructive" : "default"}>
+        {children}
+      </Text>
+      {required === true ? (
+        <Text role="label" tone="destructive">
+          *
         </Text>
-        {required === true ? (
-          <Text role="label" tone="destructive">
-            *
-          </Text>
-        ) : null}
-      </Stack>
-      {description === undefined ? null : (
-        <Text role="caption" tone="muted">
-          {description}
-        </Text>
-      )}
+      ) : null}
     </Stack>
-  );
+    {description === undefined ? null : (
+      <Text role="caption" tone="muted">
+        {description}
+      </Text>
+    )}
+  </Stack>
+);
 
 /** A control's visible name, with an optional required marker and description. */
 export const Label = (props: LabelProps): ReactElement => renderLabel(props);

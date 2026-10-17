@@ -30,4 +30,5 @@ export const renderBox = (
 );
 
 /** A container. */
-export const Box = (props: BoxProps): ReactElement => renderBox(props, useTheme());
+export const Box = (props: BoxProps): ReactElement =>
+  renderBox(props, useTheme());

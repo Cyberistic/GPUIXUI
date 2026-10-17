@@ -12,7 +12,7 @@ import type { StyleDesc } from "@gpuix/react";
 import type { ValueState } from "../core/state.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { fieldChrome, fieldHostProps, type FieldProps } from "./Input.js";
-import { mergeStyle, useControlState, useFocus, type FocusState } from "./internal.js";
+import { useControlState, useFocus, type FocusState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TextAreaProps extends FieldProps {
@@ -52,6 +52,10 @@ export const renderTextArea = (
 export const TextArea = (props: TextAreaProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
-  const field = useControlState(props.value, props.defaultValue ?? "", props.onChange);
+  const field = useControlState(
+    props.value,
+    props.defaultValue ?? "",
+    props.onChange,
+  );
   return renderTextArea(props, theme, field.value, focus, field.set);
 };

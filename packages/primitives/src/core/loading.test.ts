@@ -121,9 +121,9 @@ describe("indeterminateOffset", () => {
     const offsets = Arr.map(Arr.range(0, 64), (step) =>
       indeterminateOffset(step, segment),
     );
-    expect(Arr.every(offsets, (value) => value >= 0 && value <= 100 - segment)).toBe(
-      true,
-    );
+    expect(
+      Arr.every(offsets, (value) => value >= 0 && value <= 100 - segment),
+    ).toBe(true);
     // The cycle visits one distinct offset per segment step, so the bar is
     // never still and never repeats a position inside a cycle.
     expect(new Set(offsets).size).toBe(SPINNER_SEGMENTS);
@@ -133,7 +133,9 @@ describe("indeterminateOffset", () => {
     expect(indeterminateOffset(1, segment)).toBeGreaterThan(
       indeterminateOffset(0, segment),
     );
-    expect(indeterminateOffset(8, segment)).toBe(indeterminateOffset(0, segment));
+    expect(indeterminateOffset(8, segment)).toBe(
+      indeterminateOffset(0, segment),
+    );
   });
 
   it("never paints the segment past the end of the track", () => {
@@ -150,8 +152,9 @@ describe("indeterminateOffset", () => {
   it("moves the segment with a percentage-width spacer, not a pixel offset", () => {
     const offset = indeterminateOffset(3, segment);
     expect(indeterminateLeadStyle(offset).width).toBe(`${offset}%`);
-    expect(indeterminateFillStyle(segment, testTheme.colors.primary, testTheme).width).toBe(
-      `${segment}%`,
-    );
+    expect(
+      indeterminateFillStyle(segment, testTheme.colors.primary, testTheme)
+        .width,
+    ).toBe(`${segment}%`);
   });
 });

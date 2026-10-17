@@ -1,6 +1,10 @@
 /** The public component surface of `@gpuixui/primitives`. */
 
-export { MissingThemeProviderError, ThemeProvider, useTheme } from "./ThemeProvider.js";
+export {
+  MissingThemeProviderError,
+  ThemeProvider,
+  useTheme,
+} from "./ThemeProvider.js";
 export type { ThemeProviderProps } from "./ThemeProvider.js";
 
 export { Box } from "./Box.js";

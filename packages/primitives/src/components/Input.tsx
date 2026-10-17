@@ -10,10 +10,20 @@
 import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import type { ValueState } from "../core/state.js";
-import { controlFocusStyle, controlStyle, fieldTextStyle, nativeTextTheme } from "../core/style.js";
+import {
+  controlFocusStyle,
+  controlStyle,
+  fieldTextStyle,
+  nativeTextTheme,
+} from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
-import { mergeStyle, useControlState, useFocus, type FocusState } from "./internal.js";
+import {
+  mergeStyle,
+  useControlState,
+  useFocus,
+  type FocusState,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** Props shared by `Input` and `TextArea`. */
@@ -81,7 +91,9 @@ export const renderInput = (
   state: ValueState<string>,
   focus: FocusState,
   onValueChange: (value: string) => void,
-): ReactElement => <input {...fieldHostProps(props, theme, state, focus, onValueChange)} />;
+): ReactElement => (
+  <input {...fieldHostProps(props, theme, state, focus, onValueChange)} />
+);
 
 export type InputProps = FieldProps;
 
@@ -89,6 +101,10 @@ export type InputProps = FieldProps;
 export const Input = (props: InputProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
-  const field = useControlState(props.value, props.defaultValue ?? "", props.onChange);
+  const field = useControlState(
+    props.value,
+    props.defaultValue ?? "",
+    props.onChange,
+  );
   return renderInput(props, theme, field.value, focus, field.set);
 };

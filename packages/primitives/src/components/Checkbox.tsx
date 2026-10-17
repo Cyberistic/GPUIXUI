@@ -20,7 +20,12 @@ import {
 } from "../core/selection.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
-import { mergeStyle, useControlState, useFocus, type FocusState } from "./internal.js";
+import {
+  mergeStyle,
+  useControlState,
+  useFocus,
+  type FocusState,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface CheckboxProps {
@@ -48,7 +53,11 @@ export const selectionValueText = (state: SelectionState): string =>
 
 /** The state a checkbox is in, from its props. */
 export const checkboxState = (props: CheckboxProps): SelectionState =>
-  props.indeterminate === true ? "indeterminate" : props.checked ? "checked" : "unchecked";
+  props.indeterminate === true
+    ? "indeterminate"
+    : props.checked
+      ? "checked"
+      : "unchecked";
 
 const markName = (state: SelectionState): "check" | "minus" =>
   state === "indeterminate" ? "minus" : "check";
@@ -60,7 +69,12 @@ export const renderCheckbox = (
   focus: FocusState,
   onValueChange: (next: boolean) => void,
 ): ReactElement => {
-  const current: SelectionState = props.indeterminate === true ? "indeterminate" : state.current ? "checked" : "unchecked";
+  const current: SelectionState =
+    props.indeterminate === true
+      ? "indeterminate"
+      : state.current
+        ? "checked"
+        : "unchecked";
   const spec: SelectionSpec = {
     state: current,
     size: props.size ?? "md",
@@ -73,12 +87,25 @@ export const renderCheckbox = (
     if (props.disabled === true) return;
     onValueChange(!state.current);
   };
-  const onKey = (phase: "down" | "up") => (event: EventPayload): void => {
-    if (decideActivation(event.key ?? "", phase, event.isHeld === true)) toggle();
-  };
+  const onKey =
+    (phase: "down" | "up") =>
+    (event: EventPayload): void => {
+      if (decideActivation(event.key ?? "", phase, event.isHeld === true))
+        toggle();
+    };
   const box = mergeStyle(
     selectionBoxStyle(spec, theme),
-    focus.focused ? { boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 0, spreadRadius: theme.borderWidth.strong, color: theme.colors.ring } } : {},
+    focus.focused
+      ? {
+          boxShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blurRadius: 0,
+            spreadRadius: theme.borderWidth.strong,
+            color: theme.colors.ring,
+          },
+        }
+      : {},
   );
   return (
     <div
@@ -95,7 +122,11 @@ export const renderCheckbox = (
       style={mergeStyle(box, props.style)}
     >
       {current === "unchecked" ? null : (
-        <Icon name={markName(current)} size={theme.iconSize.sm} color={selectionMarkColor(spec, theme)} />
+        <Icon
+          name={markName(current)}
+          size={theme.iconSize.sm}
+          color={selectionMarkColor(spec, theme)}
+        />
       )}
     </div>
   );
@@ -105,6 +136,10 @@ export const renderCheckbox = (
 export const Checkbox = (props: CheckboxProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
-  const state = useControlState(props.checked, props.defaultChecked ?? false, props.onChange);
+  const state = useControlState(
+    props.checked,
+    props.defaultChecked ?? false,
+    props.onChange,
+  );
   return renderCheckbox(props, theme, state.value, focus, state.set);
 };

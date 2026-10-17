@@ -152,4 +152,3 @@ export const indeterminateLeadStyle = (offset: number): StyleDesc => ({
   width: `${offset}%`,
   flexShrink: 0,
 });
-

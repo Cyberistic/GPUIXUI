@@ -26,7 +26,12 @@ import {
 } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState, useFocus, type FocusState } from "./internal.js";
+import {
+  mergeStyle,
+  useControlState,
+  useFocus,
+  type FocusState,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
@@ -74,16 +79,20 @@ const itemState = (option: RadioOption, value: string): SelectionState =>
 export const renderRadioGroup = (
   props: RadioGroupProps,
   theme: PrimitiveTheme,
-  selected: ValueState<string>,
+  state: ValueState<string>,
   activeIndex: number,
   focus: FocusState,
   handlers: {
     readonly onActivate: (index: number) => void;
-    readonly onFocus: () => void;
-    readonly onBlur: () => void;
+    readonly onSelect: (value: string) => void;
   },
 ): ReactElement => {
-  const { options, orientation = "vertical", size = "md", accent = "primary" } = props;
+  const {
+    options,
+    orientation = "vertical",
+    size = "md",
+    accent = "primary",
+  } = props;
   const count = options.length;
   const move = (key: string): boolean =>
     Option.match(decideMove(activeIndex, count, key, orientation), {
@@ -92,7 +101,7 @@ export const renderRadioGroup = (
         handlers.onActivate(next);
         const option = options[next];
         if (option !== undefined && option.disabled !== true) {
-          selected.set(option.value);
+          handlers.onSelect(option.value);
         }
         return true;
       },
@@ -102,7 +111,8 @@ export const renderRadioGroup = (
     if (move(key)) return;
     if (decideActivation(key, "down", event.isHeld === true)) {
       const option = options[activeIndex];
-      if (option !== undefined && option.disabled !== true) selected.set(option.value);
+      if (option !== undefined && option.disabled !== true)
+        handlers.onSelect(option.value);
     }
   };
   return (
@@ -111,8 +121,8 @@ export const renderRadioGroup = (
       aria-label={props.label}
       testId={props.testId}
       onKeyDown={onKeyDown}
-      onFocus={handlers.onFocus}
-      onBlur={handlers.onBlur}
+      onFocus={focus.onFocus}
+      onBlur={focus.onBlur}
       style={mergeStyle(
         {
           display: "flex",
@@ -123,7 +133,7 @@ export const renderRadioGroup = (
       )}
     >
       {options.map((option, index) => {
-        const current = itemState(option, selected.current);
+        const current = itemState(option, state.current);
         const disabled = props.disabled === true || option.disabled === true;
         const spec: SelectionSpec = {
           state: current,
@@ -142,7 +152,7 @@ export const renderRadioGroup = (
             onClick={() => {
               if (disabled) return;
               handlers.onActivate(index);
-              selected.set(option.value);
+              handlers.onSelect(option.value);
             }}
             style={{
               display: "flex",
@@ -153,7 +163,9 @@ export const renderRadioGroup = (
             }}
           >
             <div style={selectionBoxStyle(spec, theme)}>
-              {current === "checked" ? <div style={radioDotStyle(spec, theme)} /> : null}
+              {current === "checked" ? (
+                <div style={radioDotStyle(spec, theme)} />
+              ) : null}
             </div>
             <Text role="label" tone={disabled ? "muted" : "default"}>
               {option.label}
@@ -184,7 +196,6 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   );
   return renderRadioGroup(props, theme, selected.value, activeIndex, focus, {
     onActivate: setActiveIndex,
-    onFocus: focus.onFocus,
-    onBlur: focus.onBlur,
+    onSelect: selected.set,
   });
 };

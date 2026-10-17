@@ -18,7 +18,12 @@ import {
 } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState, useFocus, type FocusState } from "./internal.js";
+import {
+  mergeStyle,
+  useControlState,
+  useFocus,
+  type FocusState,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SwitchProps {
@@ -56,9 +61,12 @@ export const renderSwitch = (
     if (props.disabled === true) return;
     onValueChange(!state.current);
   };
-  const onKey = (phase: "down" | "up") => (event: EventPayload): void => {
-    if (decideActivation(event.key ?? "", phase, event.isHeld === true)) toggle();
-  };
+  const onKey =
+    (phase: "down" | "up") =>
+    (event: EventPayload): void => {
+      if (decideActivation(event.key ?? "", phase, event.isHeld === true))
+        toggle();
+    };
   const ring: StyleDesc = focus.focused
     ? {
         boxShadow: {
@@ -82,7 +90,10 @@ export const renderSwitch = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(mergeStyle(switchTrackStyle(spec, theme), ring), props.style)}
+      style={mergeStyle(
+        mergeStyle(switchTrackStyle(spec, theme), ring),
+        props.style,
+      )}
     >
       <div style={switchThumbStyle(spec, theme)} />
     </div>
@@ -93,6 +104,10 @@ export const renderSwitch = (
 export const Switch = (props: SwitchProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
-  const state = useControlState(props.checked, props.defaultChecked ?? false, props.onChange);
+  const state = useControlState(
+    props.checked,
+    props.defaultChecked ?? false,
+    props.onChange,
+  );
   return renderSwitch(props, theme, state.value, focus, state.set);
 };

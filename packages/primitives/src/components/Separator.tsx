@@ -30,7 +30,14 @@ export const renderSeparator = (
     return <div style={rule} />;
   }
   return (
-    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: theme.spacing.sm }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: theme.spacing.sm,
+      }}
+    >
       <div style={{ ...rule, flexGrow: 1 }} />
       <Text role="caption" tone="muted">
         {label}
@@ -57,9 +64,15 @@ export const renderSpacer = (
   const fixed: StyleDesc =
     size === undefined
       ? { flexGrow: 1, flexBasis: 0 }
-      : { flexShrink: 0, flexGrow: 0, width: theme.spacing[size], height: theme.spacing[size] };
+      : {
+          flexShrink: 0,
+          flexGrow: 0,
+          width: theme.spacing[size],
+          height: theme.spacing[size],
+        };
   return <div style={mergeStyle(fixed, style)} />;
 };
 
 /** Empty space: a fixed gap, or a flexible filler that pushes siblings apart. */
-export const Spacer = (props: SpacerProps): ReactElement => renderSpacer(props, useTheme());
+export const Spacer = (props: SpacerProps): ReactElement =>
+  renderSpacer(props, useTheme());
