@@ -1,4 +1,5 @@
 export * from "./color.js";
+export * from "./contrast.js";
 export * from "./elevation.js";
 export * from "./motion.js";
 export * from "./platforms.js";

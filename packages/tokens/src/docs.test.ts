@@ -285,6 +285,22 @@ describe("docs/tokens.md public values", () => {
   });
 });
 
+describe("docs/tokens.md contrast contract", () => {
+  it("names the consumer check and the data behind it", () => {
+    const mentions = (name: string): boolean =>
+      new RegExp(`(^|[^A-Za-z0-9_$])${name}(?![A-Za-z0-9_$])`).test(markdown);
+    [
+      "themeContrastFailures",
+      "contrastRatio",
+      "contrastPairs",
+      "contrastFloors",
+      "compositeOver",
+    ].forEach((name) => {
+      expect(mentions(name), name).toBe(true);
+    });
+  });
+});
+
 describe("docs/design-system.md", () => {
   it("states the identity's body, label and control metrics", () => {
     const sentence = `${typography.body.fontSize}px body text, ${typography.label.fontSize}px labels, ${defaultDensity.controlHeight.md}px default controls`;

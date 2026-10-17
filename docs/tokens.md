@@ -770,6 +770,41 @@ Merge rules:
 - nothing is mutated. The returned theme may share untouched token objects. The
   contract is no mutation, not deep cloning.
 
+### Checking a theme
+
+An edited theme — a copied platform style or a brand palette — can be held to
+the same floors as the shipped ones:
+
+```ts
+import { themeContrastFailures } from "@gpuixui/tokens";
+
+themeContrastFailures(brandTheme); // [] when every documented pair clears its floor
+themeContrastFailures(highContrastBrand, "high");
+```
+
+`themeContrastFailures(theme, contrast?)` measures `contrastPairs` against
+`contrastFloors` and returns one entry per missed pair, naming the foreground,
+background, pair class, floor and measured ratio. The selection wash is measured
+as it paints: the foreground over `compositeOver(selection, background)` and
+over `compositeOver(selection, card)`, reported with `wash: "selection"`.
+
+The parts are public too. `contrastRatio(foreground, background)` is the WCAG
+ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
+can never pass — `compositeOver(colour, background)` composites a translucent
+role onto an opaque one, and `contrastPairs` / `contrastFloors` are the data the
+check and the test suite both read:
+
+```ts
+import { contrastFloors } from "@gpuixui/tokens";
+
+contrastFloors.default; // { body: 7, secondary: 4.5, boundary: 3 }
+contrastFloors.high; // { body: 7, secondary: 7, boundary: 4.5 }
+```
+
+The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).
+This is a check for a consumer's own test suite, not a runtime validator: a theme
+authored in TypeScript is still trusted at compile time.
+
 No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary.
@@ -915,6 +950,12 @@ so this page cannot drift from the implementation. The same file holds
 — the identity metrics, role count, theme surfaces, type summary and the
 spacing, density, radius, icon and avatar scales — so the rationale cannot drift
 from the package either.
+
+Both suites import `contrastPairs` and `contrastFloors` from `src/contrast.ts`,
+so the documented contract and the tests that enforce it are one description,
+and `contrast.test.ts` proves the public checker passes every shipped theme and
+names the pairs a brand theme, an opaque selection wash or a malformed role
+misses.
 
 `packages/tokens/src/guards.test.ts` proves each narrowing guard accepts every
 shipped member — `default` included — and rejects casing, aliases, whitespace and

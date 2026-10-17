@@ -148,6 +148,22 @@ const theme = getTheme("dark", "high");
 `getTheme(mode)` is unchanged and returns the default theme. A selection example
 lives in [`src/high-contrast.example.ts`](./src/high-contrast.example.ts).
 
+## Checking a theme
+
+`themeContrastFailures(theme, contrast?)` returns every documented pair the
+theme misses, so a brand theme or an edited platform style is held to the same
+floors as the shipped ones:
+
+```ts
+import { themeContrastFailures } from "@gpuixui/tokens";
+
+themeContrastFailures(brandTheme); // []
+```
+
+`contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
+the parts, and the selection wash is measured as it paints. A runnable example
+lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
+
 ## Status tones
 
 The four status families — `info`, `success`, `warning` and `destructive` — each

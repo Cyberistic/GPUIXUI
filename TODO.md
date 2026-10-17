@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████░░░░]` 38/57
+`[x]` `[███████░░░]` 38/53
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -115,6 +115,11 @@ last mission-named design-system item (plan 070)
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input
 text, ghost text on `hover`/`active`, the composited `selection` wash (plan 059)
+`[x]` Ship the contrast contract a consumer can run — `contrastRatio`,
+`compositeOver`, `contrastPairs`, `contrastFloors` and
+`themeContrastFailures`, so an edited platform style or brand theme is held to
+the same floors the library's own suites enforce, selection wash included
+(plan 071)
 `[x]` Make `@gpuixui/tokens/react` consumable under a GPUix `jsxImportSource`
 with no tsconfig shim — the entry uses `createElement` and carries no JSX; a
 consumer-config type check guards it (plan 061)

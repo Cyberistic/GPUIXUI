@@ -16,47 +16,48 @@ import {
 } from "./color.js";
 
 import {
-  composite,
-  contrast,
-  pairs,
-  type PairClass,
-} from "./testing/contrast.js";
+  compositeOver,
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
+  type ContrastPairClass,
+} from "./contrast.js";
 
 interface ColourSet {
   readonly label: string;
   readonly colors: ThemeColors;
-  readonly floors: Readonly<Record<PairClass, number>>;
+  readonly floors: Readonly<Record<ContrastPairClass, number>>;
 }
 
 const colourSets: readonly ColourSet[] = [
   {
     label: "light",
     colors: lightColors,
-    floors: { body: 7, secondary: 4.5, boundary: 3 },
+    floors: contrastFloors.default,
   },
   {
     label: "dark",
     colors: darkColors,
-    floors: { body: 7, secondary: 4.5, boundary: 3 },
+    floors: contrastFloors.default,
   },
   {
     label: "high-contrast light",
     colors: highContrastLightColors,
-    floors: { body: 7, secondary: 7, boundary: 4.5 },
+    floors: contrastFloors.high,
   },
   {
     label: "high-contrast dark",
     colors: highContrastDarkColors,
-    floors: { body: 7, secondary: 7, boundary: 4.5 },
+    floors: contrastFloors.high,
   },
 ];
 
 describe("semantic colour contrast", () => {
   colourSets.forEach(({ label, colors, floors }) => {
-    pairs.forEach(([foreground, background, pairClass]) => {
+    contrastPairs.forEach(([foreground, background, pairClass]) => {
       it(`${label}: ${foreground} on ${background} meets ${floors[pairClass]}:1`, () => {
         expect(
-          contrast(colors[foreground], colors[background]),
+          contrastRatio(colors[foreground], colors[background]),
           `${label} ${foreground} on ${background}`,
         ).toBeGreaterThanOrEqual(floors[pairClass]);
       });
@@ -72,9 +73,9 @@ describe("high-contrast boundaries", () => {
 
   sets.forEach(([label, colors]) => {
     it(`${label}: decorative border on background meets 3:1`, () => {
-      expect(contrast(colors.border, colors.background)).toBeGreaterThanOrEqual(
-        3,
-      );
+      expect(
+        contrastRatio(colors.border, colors.background),
+      ).toBeGreaterThanOrEqual(3);
     });
   });
 });
@@ -90,9 +91,9 @@ describe("text selection", () => {
     surfaces.forEach((surface) => {
       it(`${label}: body text stays readable on ${surface} under the selection wash`, () => {
         expect(
-          contrast(
+          contrastRatio(
             colors.foreground,
-            composite(colors.selection, colors[surface]),
+            compositeOver(colors.selection, colors[surface]),
           ),
           `${label} ${surface}`,
         ).toBeGreaterThanOrEqual(floors.body);
@@ -113,11 +114,11 @@ describe("soft status surfaces", () => {
     softRoles.forEach((role) => {
       it(`${label}: ${role} is perceivable on both surfaces`, () => {
         expect(
-          contrast(colors[role], colors.background),
+          contrastRatio(colors[role], colors.background),
           `${label} ${role} on background`,
         ).toBeGreaterThanOrEqual(1.05);
         expect(
-          contrast(colors[role], colors.card),
+          contrastRatio(colors[role], colors.card),
           `${label} ${role} on card`,
         ).toBeGreaterThanOrEqual(1.05);
       });

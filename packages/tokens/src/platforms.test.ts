@@ -42,11 +42,13 @@ import {
   themes,
 } from "./theme.js";
 import {
-  composite,
-  contrast,
-  pairs,
-  type PairClass,
-} from "./testing/contrast.js";
+  compositeOver,
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
+  themeContrastFailures,
+  type ContrastPairClass,
+} from "./contrast.js";
 import { typography } from "./typography.js";
 
 const variants = ["darwin", "linux", "win32"] as const;
@@ -385,7 +387,7 @@ describe("platform style examples", () => {
   });
 });
 
-type Floors = Readonly<Record<PairClass, number>>;
+type Floors = Readonly<Record<ContrastPairClass, number>>;
 
 interface PlatformColourSet {
   readonly label: string;
@@ -398,18 +400,29 @@ const platformColourSets: ReadonlyArray<PlatformColourSet> = variants.flatMap(
     modes.map((mode) => ({
       label: `${platform} ${mode}`,
       colors: getPlatformTheme(platform, mode).colors,
-      floors: { body: 7, secondary: 4.5, boundary: 3 },
+      floors: contrastFloors.default,
     })),
 );
 
 describe("platform variant contrast", () => {
   platformColourSets.forEach(({ label, colors, floors }) => {
-    pairs.forEach(([foreground, background, pairClass]) => {
+    contrastPairs.forEach(([foreground, background, pairClass]) => {
       it(`${label}: ${foreground} on ${background} meets ${floors[pairClass]}:1`, () => {
         expect(
-          contrast(colors[foreground], colors[background]),
+          contrastRatio(colors[foreground], colors[background]),
           `${label} ${foreground} on ${background}`,
         ).toBeGreaterThanOrEqual(floors[pairClass]);
+      });
+    });
+  });
+
+  it("clears the documented contract on every variant", () => {
+    variants.forEach((platform) => {
+      modes.forEach((mode) => {
+        expect(
+          themeContrastFailures(getPlatformTheme(platform, mode)),
+          `${platform} ${mode}`,
+        ).toEqual([]);
       });
     });
   });
@@ -424,9 +437,9 @@ describe("platform variant selection", () => {
     (["background", "card"] as const).forEach((surface) => {
       it(`${label}: body text stays readable on ${surface} under the selection wash`, () => {
         expect(
-          contrast(
+          contrastRatio(
             colors.foreground,
-            composite(colors.selection, colors[surface]),
+            compositeOver(colors.selection, colors[surface]),
           ),
           `${label} ${surface}`,
         ).toBeGreaterThanOrEqual(floors.body);

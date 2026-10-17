@@ -252,7 +252,10 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set and is part of the normal test suite.
-It can fail: a palette edit that reduces contrast fails the gate.
+It can fail: a palette edit that reduces contrast fails the gate. The same check
+is public: `themeContrastFailures(theme)` returns every pair an edited theme
+misses, so a brand theme or copied platform style can be held to these floors in
+its own test suite.
 
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
 the identity metrics, the shipped role count, the theme surfaces, the type
@@ -313,6 +316,10 @@ Overrides merge by group; typography merges field by field, motion timing by
 timing and easing by easing; elevation levels are replaced as whole arrays; the
 mode is immutable. Nothing mutates the base, so a theme can be created once at
 startup and shared.
+
+Verify an edited theme with `themeContrastFailures(theme, contrast)`; an empty
+array is the library's guarantee, and a non-empty one names every pair that
+needs fixing.
 
 A brand may change any value but should not remove roles: every component
 expects the full role set. A brand that needs a different structure should add
