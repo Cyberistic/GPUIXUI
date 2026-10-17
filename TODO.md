@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 63/82
+`[x]` `[████████░░]` 64/83
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -318,6 +318,10 @@ dark `successSoft`, 1.040:1 on identity dark `destructiveSoft` and 1.047:1 on
 Linux dark, under the 1.05 divider floor; the four fills join the `divider`
 class and the two dark soft fills move one step darker while keeping the surface
 floor (plan 095)
+`[x]` Close the last numbered union — `controlSizes` / `isControlSize` — so a
+stored control size narrows through the package, and the two test files stop
+retyping `"sm" | "md" | "lg"`; a preset-coverage test fails if a size joins the
+index without a metric in every density preset (plan 096)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)

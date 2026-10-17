@@ -573,6 +573,18 @@ const resolveDensity = (stored: unknown): DensityName =>
   isDensityName(stored) ? stored : "comfortable";
 ```
 
+`controlSizes` lists the three control sizes a component accepts — `sm`, `md`,
+`lg` — in documentation order, and `ControlSize` derives from it, so a size
+cannot exist without a metric in every preset. A stored size is `unknown` like
+any other choice:
+
+```ts
+import { isControlSize, type ControlSize } from "@gpuixui/tokens";
+
+const resolveSize = (stored: unknown): ControlSize =>
+  isControlSize(stored) ? stored : "md";
+```
+
 ## Elevation
 
 A level is geometry, not a colour: `offsetX`, `offsetY`, `blurRadius`,
@@ -862,7 +874,8 @@ consumer does not retype them: `isPlatformName(value)` narrows to a shipped
 platform (including `default`), `isThemeMode(value)` to `light`/`dark`,
 `isThemeContrast(value)` to `default`/`high`, and `isDensityName(value)` to a
 preset. A tone from a payload is the same kind of choice and narrows with
-`isStatusTone(value)`. They narrow a choice; decoding a whole theme object from a
+`isStatusTone(value)`; a stored component size narrows with
+`isControlSize(value)`. They narrow a choice; decoding a whole theme object from a
 file or URL is still the application's boundary and belongs to its `Schema`.
 
 Merge rules:

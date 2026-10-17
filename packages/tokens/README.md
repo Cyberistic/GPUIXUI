@@ -132,15 +132,16 @@ A complete, executed example lives in
 ## Persisted choices
 
 A stored preference or a URL parameter arrives as `unknown`. `isPlatformName`,
-`isThemeMode`, `isThemeContrast` and `isDensityName` narrow it, so a consumer
-never retypes a union; a whole theme object loaded from a file is still the
-application’s `Schema` boundary.
+`isThemeMode`, `isThemeContrast`, `isDensityName` and `isControlSize` narrow it,
+so a consumer never retypes a union; a whole theme object loaded from a file is
+still the application’s `Schema` boundary.
 
 ```ts
-import { isDensityName, isPlatformName } from "@gpuixui/tokens";
+import { isControlSize, isDensityName, isPlatformName } from "@gpuixui/tokens";
 
 const platform = isPlatformName(stored) ? stored : "default";
 const density = isDensityName(storedDensity) ? storedDensity : "comfortable";
+const size = isControlSize(storedSize) ? storedSize : "md";
 ```
 
 ## High contrast

@@ -5,14 +5,19 @@
  * its guard in `src/platform/platform.ts`. Plan 068 closed the same gap for the
  * two remaining unions: a persisted density and a tone from a payload were
  * retyped or cast because `isDensityName` was private and `isStatusTone` did not
- * exist. A persisted choice arrives as `unknown`; the union owner must provide
- * the guard, and adding a member must not require editing another package.
+ * exist. Plan 096 closed the same gap for the last union: a stored component
+ * size had to be retyped as `"sm" | "md" | "lg"` because `ControlSize` shipped
+ * with neither an index nor a guard. A persisted choice arrives as `unknown`;
+ * the union owner must provide the guard, and adding a member must not require
+ * editing another package.
  */
 import { describe, expect, it } from "vitest";
 import {
+  controlSizes,
   densityNames,
   densityPresets,
   highContrastThemes,
+  isControlSize,
   isDensityName,
   isPlatformName,
   isStatusTone,
@@ -25,6 +30,7 @@ import {
   themes,
 } from "./index.js";
 import {
+  resolveControlSize,
   resolveStatusTone,
   themeWithDensity,
 } from "./persisted-choices.example.js";
@@ -103,6 +109,21 @@ describe("isStatusTone", () => {
   });
 });
 
+describe("isControlSize", () => {
+  it("accepts every size the package ships", () => {
+    expect(controlSizes).toEqual(["sm", "md", "lg"]);
+    controlSizes.forEach((size) =>
+      expect(isControlSize(size), size).toBe(true),
+    );
+  });
+
+  it("rejects casing, whitespace, aliases and non-strings", () => {
+    ["", "SM", "Md", "medium", "large", "md ", "xsmall", ...nonStrings].forEach(
+      (value) => expect(isControlSize(value), String(value)).toBe(false),
+    );
+  });
+});
+
 describe("persisted choices", () => {
   it("applies a stored density to a theme", () => {
     expect(themeWithDensity(lightTheme, "compact").density).toEqual(
@@ -122,5 +143,10 @@ describe("persisted choices", () => {
       lightTheme.colors.warningSoft,
     );
     expect(resolveStatusTone("error")).toBe("info");
+  });
+
+  it("resolves a stored size to a shipped one", () => {
+    expect(resolveControlSize("lg")).toBe("lg");
+    expect(resolveControlSize("large")).toBe("md");
   });
 });

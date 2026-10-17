@@ -121,8 +121,22 @@ export type DensityName = (typeof densityNames)[number];
 export const isDensityName = (value: unknown): value is DensityName =>
   densityNames.some((name) => name === value);
 
-/** Control sizes every interactive component supports. */
-export type ControlSize = "sm" | "md" | "lg";
+/**
+ * Control sizes every interactive component supports, in documentation order.
+ * `ControlSize` derives from this list, so a new size must also gain a value in
+ * every density preset.
+ */
+export const controlSizes = ["sm", "md", "lg"] as const;
+
+/** A control size accepted by every interactive component. */
+export type ControlSize = (typeof controlSizes)[number];
+
+/**
+ * Narrow an unknown value — a stored preference or a URL parameter — to a
+ * control size. A consumer never retypes the three names.
+ */
+export const isControlSize = (value: unknown): value is ControlSize =>
+  controlSizes.some((size) => size === value);
 
 /** Density-dependent control metrics. Spacing and type are unaffected. */
 export interface Density {

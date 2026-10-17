@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   avatarSize,
+  controlSizes,
   densityNames,
   densityPresets,
   spacing,
-  type ControlSize,
   type DensityName,
 } from "./scale.js";
-
-const sizes: readonly ControlSize[] = ["sm", "md", "lg"];
 
 const ascendingSpacing = [
   [spacing["2xs"], spacing.xs],
@@ -59,7 +57,7 @@ describe("avatar size scale", () => {
 describe("density presets", () => {
   it("orders control heights from compact to spacious", () => {
     ascendingDensities.forEach(([smaller, larger]) => {
-      sizes.forEach((size) => {
+      controlSizes.forEach((size) => {
         expect(
           densityPresets[smaller].controlHeight[size],
           `${smaller} < ${larger} (${size})`,
@@ -70,7 +68,7 @@ describe("density presets", () => {
 
   it("orders horizontal padding from compact to spacious", () => {
     ascendingDensities.forEach(([smaller, larger]) => {
-      sizes.forEach((size) => {
+      controlSizes.forEach((size) => {
         expect(
           densityPresets[smaller].controlPaddingX[size],
           `${smaller} < ${larger} (${size})`,
@@ -88,6 +86,17 @@ describe("density presets", () => {
         densityPresets[preset].controlHeight.lg,
       );
       expect(densityPresets[preset].rowHeight).toBeGreaterThan(0);
+    });
+  });
+
+  it("gives every size in the index a metric in every preset", () => {
+    densityNames.forEach((preset) => {
+      expect(
+        Object.keys(densityPresets[preset].controlHeight).toSorted(),
+      ).toEqual([...controlSizes].toSorted());
+      expect(
+        Object.keys(densityPresets[preset].controlPaddingX).toSorted(),
+      ).toEqual([...controlSizes].toSorted());
     });
   });
 });
