@@ -16,6 +16,7 @@ import * as Option from "effect/Option";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { inputScenario } from "../scenarios/input.js";
+import { modalScenario } from "../scenarios/modal.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { scrollScenario } from "../scenarios/scroll.js";
 import { scenarios } from "../scenarios/index.js";
@@ -227,10 +228,72 @@ const panel: LiveScenario = {
     }),
 };
 
+const overlay: LiveScenario = {
+  id: "live-overlay",
+  title: "Live overlay: a modal opens, centres and closes on Escape",
+  capability: "overlay",
+  view: modalScenario.view,
+  ready: "modal-trigger",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const closed = yield* textOf(ctx, "modal-readout");
+      yield* ctx.expectContains(
+        "the modal starts closed",
+        closed,
+        "open=false",
+      );
+
+      yield* ctx.host.click("modal-trigger");
+      yield* ctx.host.waitFor("modal-content");
+      yield* settle;
+      const opened = yield* textOf(ctx, "modal-readout");
+      yield* ctx.expectContains(
+        "the trigger opens the modal",
+        opened,
+        "open=true",
+      );
+
+      const content = yield* ctx.host.bounds("modal-content");
+      const box = yield* ctx.expectSome(
+        "the modal surface is painted",
+        Option.fromNullishOr(content),
+      );
+      yield* ctx.expectNear(
+        "the surface is centred horizontally",
+        box.x + box.width / 2,
+        WINDOW.width / 2,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the surface is centred vertically",
+        box.y + box.height / 2,
+        WINDOW.height / 2,
+        2,
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      const dismissed = yield* textOf(ctx, "modal-readout");
+      yield* ctx.expectContains(
+        "Escape closes the focused surface",
+        dismissed,
+        "open=false",
+      );
+      yield* ctx.expectContains(
+        "the close names Escape",
+        dismissed,
+        "last=escape",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${overlay.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
   input,
   scroll,
   panel,
+  overlay,
 ];

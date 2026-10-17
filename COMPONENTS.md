@@ -67,9 +67,10 @@ The suite is **56/56 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`): `layout`, `input`,
-`scroll` and `panel` are confirmed there too — the shell fills the window and
-navigates by click and Enter, typing reaches `onChange`/`onSubmit` in a live
-editor, a wheel moves a live container with its `onScroll` delta, and a paced
+`overlay`, `scroll` and `panel` are confirmed there too — the shell fills the
+window and navigates by click and Enter, typing reaches
+`onChange`/`onSubmit` in a live editor, a modal opens centred and Escape closes
+it, a wheel moves a live container with its `onScroll` delta, and a paced
 divider drag resizes a live split (`320 → 400`). Colour, accessibility,
 virtual-list anchors, highlights and focus traversal stay `TestRenderer`-only:
 the automation protocol does not expose them, and a synthetic `tab` does not

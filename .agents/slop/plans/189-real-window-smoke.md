@@ -48,6 +48,7 @@ the live suite covers the mechanisms those channels are not needed for:
 | `live-input` | `input` | clicking `nav-input-edit` mounts the field; `fill("hi")` makes the readout read `value=hi`; `Enter` sets `submits=1`; a screenshot is written |
 | `live-scroll` | `scroll` | the `scroll-container` scenario's view starts at offset `0`, a `-200` wheel moves it down, and `onScroll` reports the delta |
 | `live-panel` | `panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees |
+| `live-overlay` | `overlay` | the modal trigger opens a painted surface centred in the window, and Escape closes it (`open=false last=escape`) |
 
 Colour, style-report and accessibility assertions stay where their channels
 exist: the `TestRenderer` suite (`theme-*`, `a11y-tree`). The live run is
@@ -188,7 +189,7 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
 ## 8. Acceptance criteria
 
 - `nub run --filter playground smoke:live` exits `0` on this host, writes
-  `.artifacts/live-report.json` and three screenshots.
+  `.artifacts/live-report.json` and five screenshots.
 - The same command exits `2` (not `1`) when no display is available.
 - §9 records: the window size, each scenario's checks, the exit codes, and each
   mutation's failing label.
@@ -197,9 +198,10 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
 
 ## 9. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
 
-`nub run --filter playground smoke:live` — **4/4 scenarios**,
-`layout=input=scroll=panel=verified`, exit `0`, ~2 s, four real-window
-screenshots under `.artifacts/live/` and `.artifacts/live-report.json`.
+`nub run --filter playground smoke:live` — **5/5 scenarios**,
+`layout=input=overlay=scroll=panel=verified`, exit `0`, ~2.5 s, five
+real-window screenshots under `.artifacts/live/` and
+`.artifacts/live-report.json`.
 
 **The window opens on this host.** `renderer.init` created a 1100 × 720 window
 and `render` reported `[gpuix] mount complete` — the earlier "no display
@@ -253,10 +255,17 @@ Two-direction proofs (file restored after each run):
 | L3 | make `input-field` `readOnly` | exit `1`, *typing reaches onChange in the live editor*: got `value= submits=0 area=` |
 | L4 | remove `overflowY: "scroll"` from `scroll-view` | exit `1`, *scroll-view reports an offset*: got `none` |
 | L5 | make the divider's `onMouseDown` forget the press | exit `1`, *the drag grew the pane by 80*: got `split=320` |
+| L6 | make the modal's Escape branch record `last=ignored` instead of closing | exit `1`, *Escape closes the focused surface*: got `open=true … last=ignored` |
 
 L1 and L2 surface as errored scenarios rather than a failed label because the
 scenario waits for the result of the interaction; a mutation that mounted the
 *wrong* view would fail the title check instead.
+
+**A modal opens, centres and closes on Escape in the window.** Clicking
+`modal-trigger` painted `modal-content` (280 × 236) with its centre at
+`(550, 360)` — the window's centre exactly — and Escape closed it
+(`open=false last=escape`). So the overlay lifecycle the `TestRenderer` suite
+proves also holds when the surface is a real window layer.
 
 **Synthetic `tab` does not traverse in a live window either.** Focusing
 `input-field`, typing `a`, sending `tab`, then `x` left the readout at
