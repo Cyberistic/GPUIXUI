@@ -1,10 +1,11 @@
-# 134 — List row activation (`onActivate`)
+# 134 — List row activation (`onActivate`, Enter and click)
 
 - **Phase:** C/F (Tier 2 hardening)
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 111 (List), 117 (inventory gate), 120/125/130 (selection and
   keyboard hardening)
-- **Status:** in progress, 2026-10-17.
+- **Status:** done, 2026-10-17. 6 native tests (List 30 → 36, behaviour 269);
+  docs, example and inventory updated. One scope change from the probe in §9.1.
 
 `List` can select a row but a row cannot **do** anything. A file list is the
 obvious case: selecting a file is not opening it, and today the consumer has no
@@ -15,13 +16,13 @@ controlled reset — the wrong contract.
 
 This plan adds one prop, `onActivate`, with desktop conventions:
 
-- **single selection:** `Enter` selects the active row and activates it;
-  a double click selects and activates; a single click only selects.
+- **single selection:** `Enter` selects the active row and activates it; a click
+  selects and activates; `Space` selects only, so a keyboard user can move the
+  selection without running an action.
 - **no selection:** a click activates immediately (there is nothing to select).
-- **multiple selection:** activation is not offered. Rows are checkboxes; a
-  double click already toggles twice, so running an action there would be a
-  surprise. The prop is not in the multiple variant's type, so the compiler
-  rejects it instead of the runtime ignoring it.
+- **multiple selection:** activation is not offered. Rows are checkboxes, so an
+  action would run while building a range. The prop is not in the multiple
+  variant's type, so the compiler rejects it instead of the runtime ignoring it.
 
 The prop is on the two variants that can honestly support it, so no mode
 silently drops it.
@@ -56,10 +57,14 @@ Read `src/internal/key.ts`, the `ListProps` union, `activate`, `selectActive` an
 2. **`Enter` is the keyboard action, not `Space`.** `Space` keeps its selection
    role in both modes (and is the toggle in multiple mode). A new `isEnter`
    predicate keeps that distinction in `internal/key.ts` rather than inline.
-3. **A double click activates in single mode; a single click does not.** The
-   first click selects (already the contract), the second (`clickCount === 2`)
-   activates. `commit` ignores a repeated same-value selection, so the second
-   click reports nothing new.
+3. **A click activates in both honest modes.** In single mode it selects first
+   and then runs the action; in `none` mode it runs the action directly. The
+   gesture is opt-in through the prop, so a picker that omits it keeps the old
+   select-only click. There is no separate double-click action: the host event
+   payload reports `clickCount`, but the test renderer's `nativeSimulateClick`
+   cannot synthesise a count of 2 (probed 2026-10-17 — two native clicks left
+   `onActivate` uncalled), and an untestable interaction is not shipped. `Space`
+   remains selection-only, so keyboard users have a non-destructive path.
 4. **A click activates in `selectionMode="none"`.** With no selection to make,
    the click is the action. Keyboard activation there is unavailable because
    rows are not focusable; the docs say to use `single` when rows need keys.
@@ -192,11 +197,12 @@ if (!selectable) {
 and after the selection branch has run, at the end of the `onSome` body:
 
 ```ts
-if (!multiple && event.clickCount === 2) onActivate?.(row.value);
+if (!multiple) onActivate?.(row.value);
 ```
 
-The early `!selectable` return replaces the current `if (!selectable) return;`.
-Do not activate before `focusRow`: focus is part of every click.
+The early `!selectable` return replaces the current `if (!selectable) return;` and
+runs the action before returning. Do not activate before `focusRow`: focus is part
+of every click.
 
 ## 5. Tests — `src/behaviour/list.test.tsx` (+6)
 
@@ -223,12 +229,8 @@ const openable = (onActivate?: (value: string) => void) => (
    and `onActivate` gets `["a"]` exactly once.
 2. **Space selects but does not activate.** Press `space` on `row-c`: the
    selection reports `["c"]`, `onActivate` is not called.
-3. **A single click selects only; a double click activates.** Click `row-c`
-   once: `onValueChange` `["c"]`, `onActivate` not called. Then click again
-   through the renderer's double-click route (`nativeSimulateClick` with
-   `clickCount` — use the same helper shape as the existing click tests; if the
-   helper cannot express a double click, STOP and report): `onActivate` gets
-   `["c"]`.
+3. **A click selects and activates in single mode.** Click `row-c` once:
+   `onValueChange` gets `["c"]` and `onActivate` gets `["c"]`.
 4. **A click activates in `selectionMode="none"`.** Render a three-row list with
    no selection mode and `onActivate`; click `row-a`: the action runs with
    `["a"]` and no `onValueChange` exists.
@@ -246,8 +248,8 @@ Expected: the List suite 30 → 36; behaviour 263 → 269.
 1. Green first.
 2. Remove the `isEnter` branch from `handleKeyDown` → test 1 fails with
    `onActivate` never called.
-3. Remove the `event.clickCount === 2` guard (activate on every click) → test 3
-   fails on the first, single click.
+3. Remove the single-mode `onActivate` call after the click selection → test 3
+   fails with no activation.
 4. Remove the `!selectable` early return → test 4 fails.
 5. Remove the `enabledRow` filter from `activateActive` → test 5 fails on the
    disabled row. Restore and record all red lines in §9.
@@ -283,7 +285,8 @@ Expected: the List suite 30 → 36; behaviour 263 → 269.
 ## 7. STOP conditions
 
 1. The renderer has no way to simulate a double click (`clickCount === 2`) →
-   STOP and report; do not call the handler directly.
+   **hit 2026-10-17:** two native clicks produced no activation, so the contract
+   is Enter/click activation and `Space` stays selection-only (§9.1).
 2. `"onActivate" in props` cannot narrow the union without a cast → STOP with
    the compiler output; do not widen the prop onto every mode.
 3. A single click activates in single mode → STOP; the first-click contract is
@@ -308,4 +311,31 @@ nub run test                                          # exit 0
 
 ## 9. Deviations, recorded during implementation
 
-(fill in during implementation.)
+1. **The double-click route does not exist in the test renderer, so it is not
+   shipped.** A probe clicked the same row twice through `nativeSimulateClick`;
+   `onActivate` was never called, so `clickCount` never reached `2`. An
+   untestable interaction would violate the completion bar, so the contract is
+   **Enter/click activation** and `Space` stays selection-only. The one-off probe
+   file was deleted; the plan's §2.3 and §5.3 were corrected above.
+2. **The multiple variant types `onActivate?: never`.** The plan proposed reading
+   the prop with `"onActivate" in props`; giving the multiple member an explicit
+   `never` lets `props` be destructured once, keeps `...rest` free of the
+   callback (it must not reach the host element), and still rejects the prop at
+   compile time. No cast.
+3. **Both-direction proof, recorded from the actual runs.**
+   - Removing the `isEnter` branch made *activates the focused row on Enter
+     without a redundant selection* fail with `expected "vi.fn()" to be called 1
+     times, but got 0 times`.
+   - Removing the single-mode `onActivate` call after selection made *selects and
+     activates the row a click lands on* fail the same way.
+   - Removing the `!selectable` activation branch made *activates a row on click
+     when there is no selection mode* fail the same way.
+   - Removing the `enabledRow` disabled filter made *never activates a disabled
+     row by click or Enter* fail with `expected "vi.fn()" to not be called at
+     all, but actually been called 1 times` and the value `["b"]`.
+   All restored; the List suite then passed 36/36.
+4. **Actual counts.** Behaviour 263 → 269 (List 30 → 36). Logic stays 223 — the
+   feature is a rendering interaction with no new pure module. The docs and
+   COMPONENTS row previously said 29 List tests; the suite already had 30 (the
+   ref-composition test from plan 128 was uncounted), so both now read 36.
+

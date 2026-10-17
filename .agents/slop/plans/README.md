@@ -51,7 +51,7 @@ workstream declares in its own section below.
 | [131](./131-dropdown-submenus.md) | Dropdown menu submenus | C/F | 114, 122, 126, 129, 112 | done — 3 parts, 11 native tests (DropdownMenu 32, behaviour 250); both-direction proof |
 | [132](./132-time-picker.md) | Time picker: the time half of "date/time pickers" | C/F | 110, 117, 119 | done — 12 logic + 8 native tests + 1 theme-matrix row (behaviour 259); both-direction proof |
 | [133](./133-command-menu-fuzzy.md) | Command menu fuzzy matching and in-group ranking | C/F | 114, 129, 117 | done — 12 logic + 4 native tests (CommandMenu 12, behaviour 263); both-direction proof |
-| [134](./134-list-activation.md) | List row activation on Enter and double click | C/F | 111, 120, 125, 130, 117 | in progress — `onActivate` on single/none lists |
+| [134](./134-list-activation.md) | List row activation on Enter and click | C/F | 111, 120, 125, 130, 117 | done — 6 native tests (List 36, behaviour 269); both-direction proof; double-click probe documented |
 
 Interlocks this workstream depends on and does not own:
 
