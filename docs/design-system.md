@@ -273,7 +273,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted` and the `hover`/`active` washes | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
-| focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover`, `muted` and the four state washes | 3:1 | 4.5:1 |
+| focus ring on `background`/`card`/`popover`/`muted`/`accent` and the `hover`/`active`/`selected` washes, and essential boundaries on `popover`, `muted` and the four state washes | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover` and the `secondary`/`hover`/`active`/`accent` fills a bordered control paints | 1.05:1 | 3:1 |
@@ -317,7 +317,7 @@ design system cannot compensate for a missing role.
 | `selectionColor` and `userSelect` inherit | set the selection wash once on the app root; chrome opts out locally |
 | no `scrollbarColor`/`scrollbarWidth` in 0.10.0 | a scroll thumb cannot be tinted, so `scrollbar` is reserved |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
-| shadows are structured objects | elevation tokens are objects, not CSS strings |
+| shadows are structured objects | elevation tokens are geometry plus an alpha over the `shadow` tint, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; tests restrict roles to hex |
 
 ## 11. Extension
