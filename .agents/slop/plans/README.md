@@ -131,7 +131,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–192` is used; `193+` continues
+playground shell and the feasibility probes. `100–193` is used; `194+` continues
 in the same block.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -184,6 +184,7 @@ in the same block.
 | [190](./190-live-focus.md) | Focus in a real window: the live host reads the renderer's focus | B→F | 100, 155, 176, 182, 189 | **landed**: `AsyncSmokeHost.focused` over `renderer.getFocusedElementId`, a pure tree→`testId` lookup, and `live-focus` — focus entry, the modal Tab/Shift-Tab trap and focus return, plus a nested popover's Escape, measured in a real window; 18 checks, live `8 → 9`, exit `0`; the trap and the return each fail `exit 1` when removed (§7) |
 | [191](./191-live-selection.md) | Text selection in a real window | B→F | 100, 163, 189, 190 | **landed**: three async selection verbs, a pure drag-geometry helper and `live-selection` — a real drag copies three text nodes, a `userSelect: none` anchor selects nothing, a crossing drag skips the chrome, and `clearSelection`/a click empty it; 9 checks, live `9 → 10`, exit `0`; ending the drag inside the last line fails `exit 1` with the partial copy (§7) |
 | [192](./192-live-motion.md) | Motion in a real window: the paused clock and a mid-tween frame | B→F | 100, 157, 186, 189, 190 | **landed**: `live-motion` — the paused clock collapses a 240 px sidebar to exactly 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and the `AnimatePresence` exit holds; 25 checks, live `10 → 11`, exit `0`; `fastForwardMotion(0)` fails `exit 1` with 0 px. **`onExitComplete` fires twice live** for one exit (headless: once), so handlers must be idempotent; live `bounds` now returns `null` for a removed element (§7) |
+| [193](./193-live-context-menu.md) | The right click and a context menu in a real window | B→F | 100, 164, 187, 189, 190 | **landed**: `AsyncSmokeHost.rightClick` over `mouse.click(button: 2)` and `live-context-menu` — a right click opens at the pointer (1 px), a disabled row is inert, Copy closes, outside/Escape dismiss, a child click bubbles, and a scrolled-container right click keeps the placement with an item below the viewport still hittable; 31 checks, live `11 → 12`, exit `0`; sending button 0 fails `exit 1` (§7) |
 
 Cross-cutting records:
 

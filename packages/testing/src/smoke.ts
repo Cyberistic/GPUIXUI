@@ -454,6 +454,8 @@ export interface AsyncSmokeHost {
   readonly selectedText: () => Effect.Effect<string | null, SmokeHostError>;
   readonly clearSelection: () => Effect.Effect<void, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /** Right-clicks `testId`'s centre, delivering `onAuxClick` with `isRightClick`. */
+  readonly rightClick: (testId: string) => Effect.Effect<void, SmokeHostError>;
   readonly hover: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /** Waits until `testId` exists — a mount or a re-render can lag the input. */
   readonly waitFor: (testId: string) => Effect.Effect<void, SmokeHostError>;

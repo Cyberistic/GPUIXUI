@@ -67,6 +67,7 @@ export const nullAsyncHost: AsyncSmokeHost = {
   selectedText: () => Effect.succeed(null),
   clearSelection: () => Effect.void,
   click: () => Effect.void,
+  rightClick: () => Effect.void,
   hover: () => Effect.void,
   waitFor: () => Effect.void,
   key: () => Effect.void,

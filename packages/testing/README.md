@@ -96,7 +96,7 @@ returns the **same** `SmokeReport`, which is what lets a live run reuse
 `Report.formatReport` and `Report.exitCode` instead of inventing a second log.
 
 `AsyncSmokeHost` is deliberately **smaller** than `SmokeHost`: bounds, text,
-painted text, input (click/hover/keys/wheel/drag), `waitFor`, scroll offsets,
+painted text, input (click/right-click/hover/keys/wheel/drag), `waitFor`, scroll offsets,
 focus, selection, screenshots and the motion clock. That is the automation
 protocol's surface — plus focus, because the live runner owns the renderer it
 created and `getFocusedElementId` is a renderer method (the protocol itself has

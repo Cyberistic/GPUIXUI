@@ -674,6 +674,7 @@ live pass is citable evidence rather than a second log format.
 | `live-overlay` | the modal trigger opens a painted 280 × 236 surface centred in the window, and Escape closes it (`open=false last=escape`) |
 | `live-focus` | focus enters the modal (`modal-content`), Tab and Shift-Tab walk `a → b → open-popover → close` and wrap back to the content, Escape returns focus to the trigger, and a nested popover's Escape closes only the popover and returns focus to its opener — 18 checks |
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
+| `live-context-menu` | a right click opens a pointer-placed menu (its painted box equals the click point within 1 px); a disabled row is inert, Copy runs and closes, outside/Escape dismiss, a child click bubbles, and a right click inside a **scrolled** container still places the menu at the pointer — 31 checks |
 | `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, and the selection survives |
@@ -710,8 +711,9 @@ does the same for copy with a real pointer drag. `live-motion` proves the live
 clock controls a tween and that a removed surface's `bounds` becomes `null`, but
 `onExitComplete` fires **twice** there for one exit, so the exit check asserts
 removal (and that at least one completion fired), and the docs rule is that the
-handler must be idempotent. Style, a11y, list anchors and highlights remain
-`TestRenderer`-only.
+handler must be idempotent. `live-context-menu` proves the right click, the
+pointer placement and the scrolled-container case; style, a11y, list anchors and
+highlights remain `TestRenderer`-only.
 
 ## Text entry (plan `188`)
 
@@ -880,11 +882,12 @@ narrower. Each deviation is deliberate and measured:
   toast-viewport probe, the shell probe, the pinned-grid probe, the
   collapsible-height probe and the nested-layer probe pass in real
   GPUix 0.10.0 on this host (56/56), with a written report and screenshots.
-  The **real-window** suite (`smoke:live`) is 11/11 — layout, input, scroll,
-  panel, **motion**, overlay, **focus**, **selection**, docking, the shipped
-  primitives and a virtual table — including the modal's Tab/Shift-Tab trap and
-  focus return (plan `190`), a real pointer drag-select with `userSelect: none`
-  exclusion (plan `191`), and a paused-clock mid-tween frame (plan `192`).
+  The **real-window** suite (`smoke:live`) is 12/12 — layout, input, scroll,
+  panel, **motion**, overlay, **focus**, **selection**, **context menus**,
+  docking, the shipped primitives and a virtual table — including the modal's
+  Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
+  with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween frame
+  (plan `192`) and a pointer-placed menu in a scrolled container (plan `193`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

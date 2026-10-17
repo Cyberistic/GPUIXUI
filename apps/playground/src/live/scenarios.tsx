@@ -16,6 +16,7 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
+import { contextMenuScenario } from "../scenarios/context-menu.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { inputScenario } from "../scenarios/input.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
@@ -643,6 +644,154 @@ const motion: LiveScenario = {
     }),
 };
 
+const contextMenu: LiveScenario = {
+  id: "live-context-menu",
+  title: "Live context menu: right click, pointer placement, dismissal",
+  capability: "menu",
+  view: contextMenuScenario.view,
+  ready: "ctx-target",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.rightClick("ctx-target");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a right click opens the menu",
+        yield* textOf(ctx, "ctx-state"),
+        "open=true",
+      );
+      yield* ctx.expectContains(
+        "the pointer route keeps the root scope",
+        yield* textOf(ctx, "ctx-state"),
+        "scope=root",
+      );
+      yield* ctx.expectContains(
+        "the aux click is delivered as a right click",
+        yield* textOf(ctx, "ctx-log"),
+        "A:aux",
+      );
+
+      const target = yield* ctx.expectSome(
+        "the target has bounds",
+        Option.fromNullishOr(yield* ctx.host.bounds("ctx-target")),
+      );
+      const menu = yield* ctx.expectSome(
+        "the menu has bounds",
+        Option.fromNullishOr(yield* ctx.host.bounds("ctx-menu")),
+      );
+      yield* ctx.expectNear(
+        "the menu paints at the pointer's x",
+        menu.x,
+        target.x + target.width / 2,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the menu paints at the pointer's y",
+        menu.y,
+        target.y + target.height / 2,
+        1,
+      );
+
+      yield* ctx.host.click("ctx-item-disabled");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a disabled item leaves the menu open",
+        yield* textOf(ctx, "ctx-state"),
+        "open=true",
+      );
+      yield* ctx.host.click("ctx-item-copy");
+      yield* settle;
+      yield* ctx.expectContains(
+        "an item runs and closes the menu",
+        yield* textOf(ctx, "ctx-state"),
+        "open=false last=copy",
+      );
+
+      yield* ctx.host.rightClick("ctx-target");
+      yield* settle;
+      yield* ctx.host.click("ctx-outside");
+      yield* settle;
+      yield* ctx.expectContains(
+        "an outside press closes the menu",
+        yield* textOf(ctx, "ctx-state"),
+        "open=false last=outside",
+      );
+
+      yield* ctx.host.rightClick("ctx-target");
+      yield* settle;
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Escape closes the menu",
+        yield* textOf(ctx, "ctx-state"),
+        "open=false last=escape",
+      );
+
+      yield* ctx.host.rightClick("ctx-target-label");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a right click on a child opens the menu",
+        yield* textOf(ctx, "ctx-state"),
+        "open=true",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+
+      yield* ctx.host.wheel("ctx-scroll", 0, -400);
+      yield* settle;
+      const offset = yield* ctx.expectSome(
+        "the scroller has an offset",
+        Option.fromNullishOr(yield* ctx.host.scrollOffset("ctx-scroll")),
+      );
+      yield* ctx.expectEqual(
+        "the wheel scrolled the container down",
+        offset.y < 0,
+        true,
+      );
+
+      const row = yield* ctx.expectSome(
+        "the scrolled row has bounds",
+        Option.fromNullishOr(yield* ctx.host.bounds("ctx-scroll-target")),
+      );
+      yield* ctx.host.rightClick("ctx-scroll-target");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a scrolled right click uses the container scope",
+        yield* textOf(ctx, "ctx-state"),
+        "scope=scroll",
+      );
+      const inside = yield* ctx.expectSome(
+        "the in-container menu has bounds",
+        Option.fromNullishOr(yield* ctx.host.bounds("ctx-menu-inside")),
+      );
+      yield* ctx.expectNear(
+        "the scrolled menu paints at the pointer's x",
+        inside.x,
+        row.x + row.width / 2,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the scrolled menu paints at the pointer's y",
+        inside.y,
+        row.y + row.height / 2,
+        1,
+      );
+      yield* ctx.expectContains(
+        "an item below the viewport still paints",
+        (yield* ctx.host.paintedText()).join("\n"),
+        "Row action three",
+      );
+      yield* ctx.host.click("ctx-item-inside-3");
+      yield* settle;
+      yield* ctx.expectContains(
+        "an item below the viewport is still hittable",
+        yield* textOf(ctx, "ctx-state"),
+        "open=false last=inside-item-3",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${contextMenu.id}.png`);
+    }),
+};
+
 const docking: LiveScenario = {
   id: "live-docking",
   title: "Live docking: a tab drag splits a pane in a real window",
@@ -793,6 +942,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   overlay,
   focus,
   selection,
+  contextMenu,
   docking,
   primitives,
   table,
