@@ -53,7 +53,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | motion | `motion-collapse`, `collapsible-height` | verified |
 | content | `native-surfaces`, `markdown-surface` | verified |
 | drag | `drag-targets`, `drag-autoscroll` | verified |
-| selection | `text-selection` | verified |
+| selection | `text-selection`, `live-selection` | verified |
 | menu | `context-menu-pointer` | verified |
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
@@ -78,7 +78,11 @@ row is hit-testable and its list scrolls while keeping the selection, and the
 `190`)** proves focus in the window: it enters the modal, Tab walks
 `a → b → open-popover → close` and wraps back to the content, Shift-Tab is the
 reverse, Escape returns focus to the trigger, and a nested popover's Escape
-closes only the popover and returns focus to its opener. The live host reads
+closes only the popover and returns focus to its opener. **`live-selection`
+(plan `191`)** proves copy with a real pointer: a drag across three text nodes
+selects them, a drag anchored in `userSelect: "none"` selects nothing, a
+crossing drag keeps both sides and excludes the chrome, and `clearSelection`/a
+click empty it. The live host reads
 `getFocusedElementId` from the renderer it created (the automation protocol
 itself has no focus query) and maps the id through the automation tree.
 Colour, accessibility, virtual-list anchors and highlights stay
@@ -243,6 +247,10 @@ gutters, markers and file/hunk headers are `chrome_text` and excluded — and
 measures `userSelect: "none"`: a selection that **crosses** it skips it, but a
 drag **anchored** inside it selects nothing at all, so a gutter must not be the
 start of a selection. `clearSelection` and a plain click both leave it empty.
+**`live-selection` (plan `191`)** repeats the core of that contract with a real
+pointer in a real window: a drag across three text nodes selects them, the
+`userSelect: "none"` anchor and exclusion hold, and `clearSelection`/a click
+empty it.
 
 `context-menu-pointer` is the runtime verdict for the right click behind Context
 menus. A right click arrives as `onAuxClick` with `isRightClick: true`, window

@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { dockingScenario } from "../scenarios/docking.js";
@@ -21,6 +22,7 @@ import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { primitivesActionsScenario } from "../scenarios/primitives.js";
 import { scrollScenario } from "../scenarios/scroll.js";
+import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -96,6 +98,14 @@ const walkFocus = (ctx: LiveContext, key: string, times: number) =>
       }),
     { concurrency: 1 },
   );
+
+/** The selection as a string, treating `null` as empty. */
+const selectionText = (value: string | null): string =>
+  Option.getOrElse(Option.fromNullishOr(value), () => "");
+
+/** Drag-selects `from` through `to` and returns the selection. */
+const select = (ctx: LiveContext, from: string, to: string) =>
+  Effect.map(ctx.host.selectText(from, to), selectionText);
 
 const shell: LiveScenario = {
   id: "live-shell",
@@ -427,6 +437,77 @@ const focus: LiveScenario = {
     }),
 };
 
+const selection: LiveScenario = {
+  id: "live-selection",
+  title: "Live selection: a real drag copies text and skips chrome",
+  capability: "selection",
+  view: textSelectionScenario.view,
+  ready: "select-heading",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const copied = yield* select(ctx, "select-heading", "select-body-2");
+      yield* ctx.expectContains(
+        "a live drag selects the heading",
+        copied,
+        "Selection heading",
+      );
+      yield* ctx.expectContains(
+        "a live drag selects the first body line",
+        copied,
+        "first line",
+      );
+      yield* ctx.expectContains(
+        "a live drag selects the second body line",
+        copied,
+        "second line",
+      );
+
+      const anchoredInChrome = yield* select(
+        ctx,
+        "select-toolbar",
+        "select-after",
+      );
+      yield* ctx.expectEqual(
+        "a drag anchored in userSelect none selects nothing",
+        anchoredInChrome,
+        "",
+      );
+
+      const crossing = yield* select(ctx, "select-body-2", "select-after");
+      yield* ctx.expectContains(
+        "the text before the chrome is selected",
+        crossing,
+        "second line",
+      );
+      yield* ctx.expectContains(
+        "the text after the chrome is selected",
+        crossing,
+        "after toolbar",
+      );
+      yield* ctx.expectEqual(
+        "userSelect none is excluded from the crossing drag",
+        Str.includes("toolbar chrome")(crossing),
+        false,
+      );
+
+      yield* ctx.host.clearSelection();
+      yield* settle;
+      const cleared = yield* Effect.map(ctx.host.selectedText(), selectionText);
+      yield* ctx.expectEqual(
+        "clearSelection empties the live selection",
+        cleared,
+        "",
+      );
+
+      yield* ctx.host.click("select-body-1");
+      yield* settle;
+      const clicked = yield* Effect.map(ctx.host.selectedText(), selectionText);
+      yield* ctx.expectEqual("a click does not select", clicked, "");
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${selection.id}.png`);
+    }),
+};
+
 const docking: LiveScenario = {
   id: "live-docking",
   title: "Live docking: a tab drag splits a pane in a real window",
@@ -575,6 +656,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   panel,
   overlay,
   focus,
+  selection,
   docking,
   primitives,
   table,

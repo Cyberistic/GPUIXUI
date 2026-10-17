@@ -131,7 +131,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–190` is used; `191+` continues
+playground shell and the feasibility probes. `100–191` is used; `192+` continues
 in the same block.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -182,6 +182,7 @@ in the same block.
 | [188](./188-text-entry-contract.md) | The native text-entry contract: caret, selection, masking, placeholder and autosize | B→C | 100, 110, 120, 140, 160 | **landed**: `text-entry` — caret keys, `shift-arrow` selection, `cmd-a`, Backspace and empty-field safety all work natively; `readOnly` is native-enforced (no change event); the placeholder paints and stops painting on text; a fixed-width field **clips** (`158` px before/after 40 characters); `minRows`/`maxRows` autosize exactly (`64 → 116 → 168` px, then clamped). **No masked entry exists**: a typed secret is held, announced and painted in clear, so a `PasswordInput` must not be shipped. The a11y `value` is the **authored prop**, not the live editor (an uncontrolled field reports none). 56 checks, suite `55 → 56`, nine mutation proofs (§9) |
 | [189](./189-real-window-smoke.md) | The real-window smoke run: the playground driven through the automation API | B→F | 100, 110, 120, 140, 188 | **landed**: `smoke:live` opens a real 1100×720 window, mounts the shipped `App` and drives it with `@gpuix/native/automation` — `live-shell` (bounds, click and Enter navigation), `live-input` (typing → `onChange`, Enter → `onSubmit`), `live-scroll` (wheel → offset, `onScroll` delta), `live-panel` (a paced divider drag resizes the split `320 → 400`) `live-overlay` (a modal opens centred, Escape closes it) `live-docking` (dragging a tab onto a pane edge splits it) `live-primitives` (the **shipped** Button activates, a disabled one refuses, the Toggle reports pressed) and `live-table` (a virtual row is hit-testable, the list scrolls, selection survives); 8/8 green, exit `0`, real screenshots. The window needs `createRenderer()` (a bare `GpuixRenderer` gets no input) and a settle/`waitFor` per step — the protocol has no frame boundary, and a drag sent back to back is ignored; no window is exit `2`. Colour/a11y/style stay `TestRenderer`-only (§9) |
 | [190](./190-live-focus.md) | Focus in a real window: the live host reads the renderer's focus | B→F | 100, 155, 176, 182, 189 | **landed**: `AsyncSmokeHost.focused` over `renderer.getFocusedElementId`, a pure tree→`testId` lookup, and `live-focus` — focus entry, the modal Tab/Shift-Tab trap and focus return, plus a nested popover's Escape, measured in a real window; 18 checks, live `8 → 9`, exit `0`; the trap and the return each fail `exit 1` when removed (§7) |
+| [191](./191-live-selection.md) | Text selection in a real window | B→F | 100, 163, 189, 190 | **landed**: three async selection verbs, a pure drag-geometry helper and `live-selection` — a real drag copies three text nodes, a `userSelect: none` anchor selects nothing, a crossing drag skips the chrome, and `clearSelection`/a click empty it; 9 checks, live `9 → 10`, exit `0`; ending the drag inside the last line fails `exit 1` with the partial copy (§7) |
 
 Cross-cutting records:
 

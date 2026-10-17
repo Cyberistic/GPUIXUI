@@ -581,6 +581,8 @@ library had only assumed:
 | a11y | `role="article"` + `aria-label` is one AccessKit `Article`; internal headings and the table are **not** separate nodes |
 | styling | the document paints with its built-in `Theme` default; `theme` is the typed styling prop (only the default was measured) |
 
+The `(x + 2, y + 2) → (x + width, y + height - 2)` mapping is now used by the **live** suite too (`live-selection`, plan `191`), which proves a real pointer drag copies three text nodes, a drag anchored in `userSelect: none` selects nothing, and a crossing drag skips the chrome. The headless verdict remains the place for code/diff copy and `<code>` chrome exclusion.
+
 The recipe: markdown for a rendered document, `<markdown>`'s own text for copy,
 and `<text>`/element coordinates for anything a test must address — the internal
 blocks are not addressable elements.
@@ -670,6 +672,7 @@ live pass is citable evidence rather than a second log format.
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
 | `live-overlay` | the modal trigger opens a painted 280 × 236 surface centred in the window, and Escape closes it (`open=false last=escape`) |
 | `live-focus` | focus enters the modal (`modal-content`), Tab and Shift-Tab walk `a → b → open-popover → close` and wrap back to the content, Escape returns focus to the trigger, and a nested popover's Escape closes only the popover and returns focus to its opener — 18 checks |
+| `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
 | `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, and the selection survives |
@@ -701,8 +704,9 @@ synthetic `tab` does not traverse in a live window either (measured: `a`, `tab`,
 focus story: the component owns traversal (`focusNextWithin`) and the live host
 owns the renderer, so `live-focus` reads `getFocusedElementId` and maps it
 through the automation tree. Focus entry, the modal Tab/Shift-Tab trap, focus
-return and a nested popover's Escape are measured in the window; style, a11y,
-list anchors and highlights remain `TestRenderer`-only.
+return and a nested popover's Escape are measured in the window; `live-selection`
+does the same for copy with a real pointer drag. Style, a11y, list anchors and
+highlights remain `TestRenderer`-only.
 
 ## Text entry (plan `188`)
 
@@ -871,10 +875,11 @@ narrower. Each deviation is deliberate and measured:
   toast-viewport probe, the shell probe, the pinned-grid probe, the
   collapsible-height probe and the nested-layer probe pass in real
   GPUix 0.10.0 on this host (56/56), with a written report and screenshots.
-  The **real-window** suite (`smoke:live`) is 9/9 — layout, input, scroll,
-  panel, overlay, **focus**, docking, the shipped primitives and a virtual
-  table — including the modal's Tab/Shift-Tab trap and focus return (plan
-  `190`).
+  The **real-window** suite (`smoke:live`) is 10/10 — layout, input, scroll,
+  panel, overlay, **focus**, **selection**, docking, the shipped primitives and
+  a virtual table — including the modal's Tab/Shift-Tab trap and focus return
+  (plan `190`) and a real pointer drag-select with `userSelect: none` exclusion
+  (plan `191`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

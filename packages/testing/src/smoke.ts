@@ -442,6 +442,17 @@ export interface AsyncSmokeHost {
   ) => Effect.Effect<Bounds | null, SmokeHostError>;
   /** The `testId` of the natively focused element, or `null` when none has focus. */
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
+  /**
+   * Drag-selects from the start of `fromTestId` to the end of `toTestId` and
+   * returns the runtime's selection, or `null`.
+   */
+  readonly selectText: (
+    fromTestId: string,
+    toTestId: string,
+  ) => Effect.Effect<string | null, SmokeHostError>;
+  /** The runtime's current selection, joined in document order, or `null`. */
+  readonly selectedText: () => Effect.Effect<string | null, SmokeHostError>;
+  readonly clearSelection: () => Effect.Effect<void, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   readonly hover: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /** Waits until `testId` exists — a mount or a re-render can lag the input. */

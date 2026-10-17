@@ -18,6 +18,7 @@ import type { GpuixRenderer } from "@gpuix/native";
 import type { App, Locator } from "@gpuix/native/automation";
 import { Smoke } from "@gpuixui/testing";
 import { testIdOf } from "./focus.js";
+import { selectionDrag } from "./selection.js";
 
 /** How long a live scenario waits for an element a click should have mounted. */
 const WAIT_FOR_MS = 5_000;
@@ -84,6 +85,47 @@ export const createHost = (
           ),
       });
     }),
+  selectText: (fromTestId, toTestId) =>
+    Effect.gen(function* () {
+      const from = yield* verb(`select ${fromTestId} bounds`, () =>
+        at(app, fromTestId).bounds(),
+      );
+      const to = yield* verb(`select ${toTestId} bounds`, () =>
+        at(app, toTestId).bounds(),
+      );
+      const points = yield* Option.match(
+        Option.all({
+          from: Option.fromNullishOr(from),
+          to: Option.fromNullishOr(to),
+        }),
+        {
+          onNone: () =>
+            Effect.fail(
+              new Smoke.SmokeHostError({
+                verb: `select ${fromTestId} -> ${toTestId} bounds`,
+                cause: "bounds missing",
+              }),
+            ),
+          onSome: (bounds) =>
+            Effect.succeed(selectionDrag(bounds.from, bounds.to)),
+        },
+      );
+      yield* verb("select drag", () =>
+        app.mouse.drag(points.start, points.end, { steps: 12 }),
+      );
+      yield* Effect.sleep(Duration.millis(DRAG_FRAME_MS));
+      return yield* verb("select read", () =>
+        app.call("getSelectedText", {}).then((result) => result.text),
+      );
+    }),
+  selectedText: () =>
+    verb("selectedText", () =>
+      app.call("getSelectedText", {}).then((result) => result.text),
+    ),
+  clearSelection: () =>
+    verb("clearSelection", () =>
+      app.call("clearSelection", {}).then(() => undefined),
+    ),
   click: (testId) => verb(`click ${testId}`, () => at(app, testId).click()),
   hover: (testId) => verb(`hover ${testId}`, () => at(app, testId).hover()),
   waitFor: (testId) =>
