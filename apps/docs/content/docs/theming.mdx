@@ -75,12 +75,22 @@ parameter, which keeps canonical URLs clean.
 <PlatformValues />
 
 Every component preview on the site is a **labelled browser approximation** of
-the library's token-driven appearance, unless it is a real GPUix capture. The
-previews below read the whole active `Theme`, so the toggle re-renders all of
-them; today the visible change is the monospace family, because that is the only
-value the shipped platform styles change.
+the library's token-driven appearance, unless it is a real GPUix capture or the
+live GPUix surface. The previews below read the whole active `Theme`, so the
+toggle re-renders all of them; today the visible change is the monospace family,
+because that is the only value the shipped platform styles change.
 
 <PlatformPreviews />
+
+### The toggle reaches real GPUix
+
+The Buttons page carries a **live GPUix surface** (tier L): the library's real
+component code on GPUix's WebAssembly renderer. It reads the same two values as
+every other preview — the mode and the platform from the page — so switching the
+toggle hands the real renderer the platform theme, not just the docs' CSS. It
+loads on request because the renderer is about 20 MB.
+
+<LiveSurface scene="button" title="Buttons" />
 
 Today the platform styles differ in their **type families and theme name** —
 GPUI resolves the `.SystemUIFont` sentinel to each platform's own UI face, and

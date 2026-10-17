@@ -8,6 +8,7 @@ import { ComponentDependencies } from "./component-dependencies";
 import { ComponentState } from "./component-state";
 import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { ComponentPreview } from "./preview/component-preview";
+import { LiveSurface } from "./preview/live-surface";
 import { NativePreview } from "./preview/native-preview";
 import { PlatformPreviews } from "./preview/platform-previews";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
@@ -29,6 +30,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RelatedComponents,
     CapabilityMatrix,
     NativePreview,
+    LiveSurface,
     ComponentPreview,
     IllustrativeApproximation,
     PlatformPreviews,

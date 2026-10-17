@@ -209,9 +209,19 @@ Measured:
   wasm asset; the 20 MB claim in the label is the published artefact.
 - `nub run --filter docs smoke:preview` → exit `0`:
   `live surface ready — 300x150 canvas, 11 text nodes`, then
-  `unknown scene reported — No live scene is named "not-a-scene".` The text
-  includes `Save changes`, `Cancel`, `Duplicate`, `Skip`, `Delete` and the size
-  row — the real `@gpuixui/primitives` `Button`.
+  `unknown scene reported — No live scene is named "not-a-scene".`, then
+  `component page loaded the live iframe — /gpuix-preview/?scene=button&platform=default&mode=dark`,
+  then `the platform toggle reached the live surface —
+  /gpuix-preview/?scene=button&platform=win32&mode=dark`.
+  The text includes `Save changes`, `Cancel`, `Duplicate`, `Skip`, `Delete` and
+  the size row — the real `@gpuixui/primitives` `Button`. The third check clicks
+  the real `/docs/components/button` control after hydration and reads the
+  iframe's document, so the page wiring (HEAD check, click-to-load, query
+  parameters, sandbox) is proven too, not just the standalone surface. The
+  fourth loads `/docs/theming?platform=win32` and proves the toggle reaches the
+  renderer's URL, which is the `MISSION.md` platform acceptance applied to a real
+  GPUix surface. The click must wait ~2.5 s for hydration: the SSR markup ships
+  the control before React attaches its handler.
 - `nub run --filter docs test` → 244 tests pass (up from 235): tier L selection,
   the live/native composition, the URL builder, the label and the "no iframe
   before a click" rule, and the registry's scene-key guard.

@@ -64,8 +64,10 @@ renderer and exports one document per scene:
   mounts the iframe after a click, and says the renderer is ~20 MB.
 
 `smoke:preview` drives Chrome over CDP **in real time** — a virtual-time
-screenshot is black — and asserts the scene's text is in GPUI's tree, plus that
-an unknown scene reports a reason. `--no-build` reuses the current build. Exit
+screenshot is black — and asserts the scene's text is in GPUI's tree, that an
+unknown scene reports a reason, that the real component page loads the iframe on
+a click (after hydration) with its platform and mode in the URL, and that
+`/docs/theming?platform=win32` passes the platform through to the renderer. `--no-build` reuses the current build. Exit
 `1` is a broken surface, `2` means it could not run.
 
 The Wasm renderer is a real GPUix surface, but it is **not** the native desktop

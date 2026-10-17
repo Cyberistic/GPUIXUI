@@ -252,6 +252,64 @@ const paintedText = async (
   return JSON.parse(String(raw)) as ReadonlyArray<string>;
 };
 
+interface PageSurface {
+  readonly state: string;
+  readonly reason?: string;
+  readonly src?: string;
+  readonly canvas?: [number, number];
+}
+
+/**
+ * Open a docs page, click its live-preview control and read the iframe.
+ * The SSR markup ships the control before React attaches its handler, so the
+ * click waits for hydration and retries while the iframe boots.
+ */
+const openPageSurface = async (
+  session: Session,
+  page: string,
+): Promise<PageSurface> => {
+  await session.navigate(page);
+  await sleep(2_500);
+  const clicked = await session.evaluate(`(async () => {
+    for (let attempt = 0; attempt < 80; attempt += 1) {
+      const button = [...document.querySelectorAll("button")].find(
+        (candidate) => candidate.textContent === "Load live preview",
+      );
+      if (button !== undefined) {
+        button.click();
+        return true;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    return false;
+  })()`);
+  if (clicked !== true) return { state: "no-control" };
+
+  const embedded = await session.evaluate(`(async () => {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      const frame = document.querySelector('iframe[title^="Live GPUix surface"]');
+      const state = frame?.contentDocument?.documentElement?.dataset.gpuix;
+      if (state === "ready") {
+        const canvas = frame?.contentDocument?.querySelector("canvas");
+        return JSON.stringify({
+          state,
+          src: frame?.getAttribute("src") ?? "",
+          canvas: [canvas?.width ?? 0, canvas?.height ?? 0],
+        });
+      }
+      if (state === "failed") {
+        return JSON.stringify({
+          state,
+          reason: frame?.contentDocument?.documentElement?.dataset.reason,
+        });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    return JSON.stringify({ state: "timeout" });
+  })()`);
+  return JSON.parse(String(embedded)) as PageSurface;
+};
+
 const main = async (): Promise<number> => {
   let preview: PreviewServer | null = null;
   let session: Session | null = null;
@@ -301,6 +359,50 @@ const main = async (): Promise<number> => {
       return 1;
     }
     console.log(`smoke: unknown scene reported — ${failed.reason}`);
+
+    // The surface working on its own is not the feature: the page must load it
+    // on request, with the docs' platform and mode, and the iframe must reach
+    // GPUI. This drives the real component page, then the Theming page with the
+    // Windows platform in the URL.
+    const componentPage = await openPageSurface(
+      session,
+      `${baseUrl}/docs/components/button`,
+    );
+    if (componentPage.state !== "ready") {
+      console.error(
+        `FAIL live surface: the component page reported ${componentPage.state}${componentPage.reason === undefined ? "" : ` (${componentPage.reason})`}`,
+      );
+      return 1;
+    }
+    if (!(componentPage.src ?? "").includes("scene=button")) {
+      console.error(
+        `FAIL live surface: the component page's iframe lost its scene (${componentPage.src ?? ""})`,
+      );
+      return 1;
+    }
+    console.log(
+      `smoke: component page loaded the live iframe — ${componentPage.src} (${componentPage.canvas?.[0] ?? 0}x${componentPage.canvas?.[1] ?? 0})`,
+    );
+
+    const themed = await openPageSurface(
+      session,
+      `${baseUrl}/docs/theming?platform=win32`,
+    );
+    if (themed.state !== "ready") {
+      console.error(
+        `FAIL live surface: the Theming page reported ${themed.state}${themed.reason === undefined ? "" : ` (${themed.reason})`}`,
+      );
+      return 1;
+    }
+    if (!(themed.src ?? "").includes("platform=win32")) {
+      console.error(
+        `FAIL live surface: the platform toggle did not reach the iframe (${themed.src ?? ""})`,
+      );
+      return 1;
+    }
+    console.log(
+      `smoke: the platform toggle reached the live surface — ${themed.src}`,
+    );
     return 0;
   } catch (error) {
     if (error instanceof SetupError) {
