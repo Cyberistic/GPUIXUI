@@ -66,3 +66,25 @@ Direct evidence of the race in the working tree:
 - **Deliberately wrote nothing else** to the tree — a peer is actively
   implementing plan 014 — and committed only this uniquely-named file with an
   explicit pathspec (`git commit -- <path>`) so no peer's staged work is swept in.
+
+## Recurrence: 2026-10-17 08:31–08:40
+
+Still unresolved. Evidence, same worktree:
+
+| Time | Observation |
+| ---- | ----------- |
+| 07:52 | session `ses_eb7ccad84…` reads the tree at `5ea2c84` |
+| 07:54 | peer commits `29fe8a6 feat(tokens): colour role index …` and claims plan number **015** |
+| 07:58 | the reading session's plan files (`015-tokens-consumable-exports.md`, `016-focus-ring-and-docs-truth.md`) had to be renumbered to 016/017 to avoid a duplicate index row |
+| 08:31:44 | a **second** `swarm:tokens-theme` session (`ses_eb7a7c4d1…`) is created in this worktree; after its last message at 08:39:45 it stops with `session_pending` and `session_inbox` both empty and no client of its own |
+
+Consequence this time: none to committed work — every unit was committed and
+pushed (`a94ec33`, `8da31f0`, `f51d916`) and the tree stayed clean — but one
+uncommitted file was lost to a `git checkout -- <path>` run to undo a deliberate
+mutation, which is exactly the hazard the one-writer rule exists for.
+
+The fix still belongs to the harness (`scripts/swarm/run-*.sh`,
+`scripts/swarm-supervisor.sh`), not to this workstream: the `opencode run` loop
+must not start a session while one for the same worktree is live, and a start
+must reap sessions whose `directory` equals the worktree. `primitives` plan 022
+(`.agents/slop/plans/022-swarm-single-writer.md`) proposes the guard.
