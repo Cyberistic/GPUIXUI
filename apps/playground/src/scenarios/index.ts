@@ -13,6 +13,7 @@ import * as Str from "effect/String";
 import { Smoke } from "@gpuixui/testing";
 import type { PlaygroundScenario } from "../types.js";
 import { a11yScenario } from "./a11y.js";
+import { chartScenario } from "./chart.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
 import { dragAutoscrollScenario } from "./drag-autoscroll.js";
@@ -97,6 +98,7 @@ export const PROBE_CAPABILITIES = [
   "menu",
   "search",
   "terminal",
+  "chart",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -148,6 +150,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   primitivesEntryScenario,
   searchScenario,
   terminalScenario,
+  chartScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

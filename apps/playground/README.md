@@ -20,7 +20,7 @@ placement), the Tier 3/4 probes
 `tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
 command surface probe (`command-palette`), the tabbed-pane probe
 (`workspace-panes`), the app-level shortcut probe
-(`window-key-shortcut`) and
+(`window-key-shortcut`), the chart probe (`chart-svg`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open.
@@ -59,7 +59,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (47/47 green); -> 2 on a host with no binding
+# -> 0 here (48/48 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -474,18 +474,43 @@ lifecycle belong to the app; there is no per-cell background or glyph atlas, so 
 block caret is a themed `div` and wide glyphs rely on the monospace font's
 advance. ANSI parsing is the component's (or the app's), not the renderer's.
 
+## Chart surfaces (plan `180`)
+
+`chart-svg` settles the Tier 3 chart question and the colour picker's gradient
+square. The decisive fact is a runtime mechanism: **`<svg source>` is a tinted
+stencil**. GPUI rasterizes the document to an alpha mask and paints a
+`MonochromeSprite` with the element's `color`, so one SVG document is one
+colour — multi-series means one layer per series.
+
+| Fact | Measured |
+| ---- | -------- |
+| bars from `div`s | a painted mark keeps its exact height (`96`/`64`/`32`), stands on the plot baseline, advances by `width + gap`, and reports `colors.primary`/`success`/`destructive` |
+| chart interaction | a click on a painted bar hit-tests, selects its series and writes the readout |
+| labels | axis/value labels are real `<text>` nodes: assertable and in the a11y tree |
+| chart a11y | `role="img"` + `aria-label` on the container is one AccessKit `Image`; **without `role` the node disappears entirely** |
+| one SVG per series | two absolutely stacked layers paint the same `480 × 160` box; each reports **its own** `color` tint |
+| SVG text | `svg-internal-label` is visible in the screenshot but **absent from `getPaintedText`** and the a11y tree — labels must be siblings |
+| SVG children | React children are retained (`chart-svg-child` reads back) but dropped from the paint, like `<canvas>` |
+| full colour | an `<img>` with a percent-encoded `data:image/svg+xml` URL paints `480 × 120` with no fallback; the screenshot keeps a linear **and** a radial gradient plus two fills |
+
+The recipe: bars from `div`s (fully assertable), one `<svg>` layer per line or
+area series in an absolute slot, labels as `<text>`, and `<img>` + SVG for any
+full-colour artwork. The limit is unchanged: no pixel readback, so exact colour
+inside the image and the gradient stops are screenshot evidence.
+
 ## Evidence on this host
 
-The suite is **47/47 green** here (`exit 0`):
+The suite is **48/48 green** here (`exit 0`):
 
 ```
-47/47 scenarios passed · capabilities: layout=verified text=verified
+48/48 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified command=verified content=verified drag=verified
-selection=verified menu=verified components=verified search=verified terminal=verified
+selection=verified menu=verified components=verified search=verified
+terminal=verified chart=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -519,6 +544,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
+| chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
 (`./legacy-probe/run.sh probe`); they never set a component status.
@@ -560,6 +586,7 @@ src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible si
 src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filtering and focus
 src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
 src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
+src/scenarios/chart.tsx     chart: bars, one svg layer per series, SVG text, img gradients
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -597,8 +624,8 @@ narrower. Each deviation is deliberate and measured:
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
-  probe and the terminal-grid probe pass in real GPUix 0.10.0 on this host
-  (47/47), with a written report and screenshots.
+  probe, the terminal-grid probe and the chart probe pass in real GPUix 0.10.0
+  on this host (48/48), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

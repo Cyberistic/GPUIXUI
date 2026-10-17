@@ -57,8 +57,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
 | terminal | `terminal-grid` | verified |
+| chart | `chart-svg` | verified |
 
-The suite is **47/47 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **48/48 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -110,10 +111,26 @@ and `setImagePixels` through the ref uploads a bitmap without throwing; `<diff>`
 paints its file header, hunk header and changed lines. **`<canvas>` is the
 trap**: the node is retained (the JSX types accept it) but GPUI has no factory,
 so it paints nothing, has no bounds, and drops its children from the paint log.
-Charts must use `<svg>` or `<img>` + `setImagePixels`. The honest limit: there is
+Charts use the `chart-svg` recipe below. The honest limit: there is
 no pixel readback, so a corrupt PNG with a valid MIME type is indistinguishable
 from a decoded one by these checks — the screenshot artifact is the only visual
 evidence, never an assertion.
+
+`chart-svg` is the runtime verdict for Tier 3 charts and the colour picker's
+gradient square. What holds: bars composed from `div`s keep exact widths,
+heights and baseline, report their own token `backgroundColor`, and a painted
+bar is hit-testable; axis and value labels are real `<text>` nodes; a chart
+container with `role="img"` + `aria-label` is one named AccessKit `Image`. What
+is decisive: **`<svg source>` is a monochrome stencil** — GPUI rasterizes the
+document to an **alpha mask** and paints it as a `MonochromeSprite` with the
+element's `color`, so a multi-series line chart is **one `<svg>` layer per
+series**, stacked and tinted independently. Text authored inside the SVG is
+rasterized: it is visible in the screenshot but absent from `getPaintedText` and
+the accessibility tree, so labels are `<text>` siblings; React children of
+`<svg>` are retained but never painted. An `<img>` whose `src` is an SVG data
+URL takes GPUI's image path and keeps every fill and gradient — that is the
+**full-colour** route. The limit remains: no pixel readback, so exact colour and
+gradient stops are screenshot evidence, never assertions.
 
 `drag-targets` measures the pointer model behind tab dragging, drag and drop and
 file upload. What holds: a captured gesture keeps **every move and the up** on
@@ -494,7 +511,7 @@ in-package and an end-to-end native verdict.
 | Drawer | todo | ? | Edge-anchored panel with swipe-to-dismiss and nesting. `Dialog` is main-only in 0.10.0; `div` + `motion` (width/left/opacity) + `createPortal`. |
 | Stepper | todo | ? | Multi-step progress indicator (adabraka `StepItem`/`StepStatus`). `div` + `<text>`. |
 | Timeline | todo | ? | Event timeline with connector styles. `div` + `<text>`. |
-| Color picker | todo | ? | HSL/RGB/HEX + alpha + swatches. **Limitation (measured):** the saturation/value square needs radial or multi-stop gradients, which GPUix does not support (two-stop linear only), and **`<canvas>` renders `gpui::Empty`** (`native-surfaces`). Alternative: a discrete swatch grid or a pre-rendered bitmap uploaded through `<img>` + `setImagePixels`. |
+| Colour picker | todo | partial (probe) | HSL/RGB/HEX + alpha + swatches. **Limitation (measured):** the saturation/value square needs gradients, which the `<svg>` element cannot render in colour (**alpha mask**, `chart-svg`), and **`<canvas>` renders `gpui::Empty`** (`native-surfaces`). Alternative: an SVG document rendered through `<img>` — `chart-svg` proves that path keeps a `linearGradient`, a `radialGradient` and distinct fills, so a two-gradient SV square (or radial wheel) is feasible. No pixel readback, so the picked colour is computed from the click coordinates, never sampled from the surface. |
 | Tag / token input | todo | ? | `<input>` + chip `div`s; the token keyboard contract is ours. |
 | Mention input | todo | ? | `<input>` + an anchored suggestion list (`FloatingLayer`). |
 | Hotkey-recorder input | todo | ? | Captures `KeyEvent` (`key`, `isHeld`, modifiers) on a focused `div`; the accelerator model is ours. |
@@ -521,7 +538,7 @@ in-package and an end-to-end native verdict.
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
 | Statistic / metric cards | todo | ? | Cards + `<text>`. |
-| Charts | todo | ? | No chart host element. **`<canvas>` is unsupported** — retained but renders `gpui::Empty`, so no bounds and no children paint (`native-surfaces`). Static charts can be drawn with `<svg>` (painted at its box); live bitmaps use `<img>` + `setImagePixels`, which uploaded without throwing. |
+| Charts | todo | partial (probe) | No chart host element. **`<canvas>` is unsupported** — retained but renders `gpui::Empty`, so no bounds and no children paint (`native-surfaces`). **`chart-svg` gives the recipe:** bars from `div`s are exactly assertable (geometry, token colour, painted hit-testing); a sourced `<svg>` is an **alpha mask tinted by one `color`**, so a line/area series is **one `<svg>` layer per series** in an absolute slot (both layers paint the same box; each reports its own tint); SVG-internal text is rasterized and invisible to `getPaintedText`/a11y, so axis and value labels are `<text>` siblings; an `<img>` SVG data URL is the **full-colour** path — it paints gradients and multiple fills (screenshot evidence; no pixel readback). |
 
 ## Tier 4 — desktop workspace
 
