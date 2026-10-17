@@ -32,8 +32,9 @@ Blocks are reserved so concurrent workstreams do not collide:
 
 ## The plan set
 
-Numbering is per workstream. The `200` block is the reference-adoption and gap
-sequencing set; the docs-site workstream owns the `4xx` range.
+Numbering is per workstream. This index is the union of the workstreams' plans;
+the `200` block is the reference-adoption and gap-sequencing set, the primitives
+workstream owns `020–049`, and the docs-site workstream owns `4xx`.
 
 ### `tokens-theme` (block `010–019`, plus one overflow plan)
 
@@ -54,12 +55,29 @@ sequencing set; the docs-site workstream owns the `4xx` range.
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
-agent that owns its paths. The block was full at 019 (`010–019` in the table
-above) and 020–049 belongs to primitives, icons and Phase C, so 051 takes the
-first free block — as the tokens workstream's docs-layering plan (050) does.
-052 is rescued from the abandoned `agent/fonts` branch (`6fc7641`), with its
-step 1 answered from the pinned runtime's source; its native proof is blocked by
-B1, so it is planned, not done.
+agent that owns its paths. The block was full at 019 and 020–049 belongs to
+primitives, icons and Phase C, so 051 takes the first free block — as the tokens
+workstream's docs-layering plan (050) does. 052 is rescued from the abandoned
+`agent/fonts` branch (`6fc7641`), with its step 1 answered from the pinned
+runtime's source; its native proof is blocked by B1, so it is planned, not done.
+
+### `primitives` (block `020–049`)
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [020](020-gpuix-runtime-capability.md) | GPUix runtime capability map and verification strategy | A | — | done (recon); runtime proof now comes from plan 041 / 140 |
+| [022](022-swarm-single-writer.md) | One writer per worktree — the swarm is running duplicate agents | infra | — | **BLOCKER B3 — read §3 before writing anything** |
+| [030](030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | **implemented** — all 19 Tier 1 components + `core/` + element-tree suites; docs pages and examples delivered by 047; read §9 (the §2.2/§3 file lists are superseded by the shipped tree) |
+| [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | **done** (45 icons, 18 tests proven in both directions; on-screen paint covered by 047's runtime suite) |
+| [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | **in progress** — code, tests, runtime verification, in-package docs pages and examples done; only the `apps/docs` pages remain (plan 422) |
+| [041](041-tier1-runtime-verification.md) | Tier 1 in the real GPUix runtime (primitives workstream) | C | 030, 031, 040, **140** | **done** — 46 `test:runtime` tests in `packages/primitives/runtime/` (icons included there, §2.2); measured results and the two-direction proof in §9 |
+| [042](042-tier1-theme-verification.md) | Tier 1 in both themes, and a live theme switch | C | 030, 040, 041 | **done** — 5 `test:runtime` tests incl. a repaint-on-switch proof; results in §8 |
+| [043](043-presentational-testid.md) | `testId` parity for the presentational primitives | C | 030, 041 | **done** — `Text`/`Separator`/`Spacer` accept and forward it; both-direction proof in §6 |
+| [044](044-radio-skip-disabled.md) | A radio group must skip disabled options | C | 030, 041 | **done** — `decideMove` takes an optional `isDisabled`; measured regression proof in §6 |
+| [045](045-labelledby-prop.md) | `labelledBy` must return the prop the controls read | C | 030, 040 | **done** — returns `{ label }`; the old return type named nothing; measured proof in §6 |
+| [046](046-textarea-no-submit.md) | `TextArea` must not accept `onSubmit` | C | 030, 040, 041 | **done** — the runtime trades the newline for a submit; measured probe in §6 |
+| [047](047-tier1-docs-and-examples.md) | Tier 1 docs pages and runnable examples | C | 030, 031, 040, 041 | **done** — 21 primitives pages + the icons page, six composed examples, and a 7-file/60-test runtime run that mounts every example (§8) |
+| [048](048-tier1-fixable-limitations.md) | Three fixable Tier 1 limitations | C | 030, 040, 041, 047 | **done** — named `ButtonGroup`, `ScrollArea` deltas, RadioGroup Home/End; measured both directions in §7 (63 runtime tests) |
 
 ### Reference adoption (block `200–299`)
 
@@ -94,9 +112,39 @@ B1, so it is planned, not done.
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
-> (`010–019`, `020–040`, `051`, `100–130`, `410–416`) live on their own branches
-> and are merged into `main` as each workstream completes; this index is the
-> union.
+> live on their own branches and are merged into the integration branch as each
+> workstream completes; this index is the union.
+
+### Runtime verification: what is true now
+
+`020-gpuix-runtime-capability.md` §3 recorded the measured evidence that this box
+is **Intel macOS**, GPUix publishes **no `darwin-x64` native binary**, and this
+SSH session has **no Aqua session**. That changed on 2026-10-17:
+**`140-gpuix-native-darwin-x64-build.md`** (playground workstream) built
+`@gpuix/native@0.10.0` from source with `gpui_macos/runtime_shaders`, and the
+playground's native suite is green against it. The artifact is a local build
+product (gitignored); a fresh checkout has no binding until the script is run.
+
+Consequences:
+
+- `packages/primitives` and `packages/icons` run the **real** `TestRenderer`
+  (`test:runtime`, plans 041/047);
+- `nub run test` still runs on a host without a binding, so runtime suites stay
+  opt-in and fail loudly when the binding is absent;
+- a row may only cite the runtime when that workstream's `test:runtime` produced
+  the observation. The gold-standard confirmation on the **published** binary is
+  a CI task in `TODO.md`.
+
+### Prerequisite for the whole swarm: one writer per worktree
+
+`022-swarm-single-writer.md` records the measured fact that the supervisor ran
+**several live agents per worktree**, so they clobbered each other's files. Its
+§4 mitigation was applied to the `primitives` tree on 2026-10-17 08:40 (the
+duplicate session was deleted after the tree was committed). **The fix itself is
+still unlanded:** `scripts/swarm-supervisor.sh`'s runner loops `opencode run`
+without a stable `--session`, so every loop iteration that returns early leaves a
+live turn and the next iteration forks another. Until §5.1 lands in the shared
+`scripts/`, every workstream can re-acquire a duplicate. Read its §3 first.
 
 ## How to use a plan
 
@@ -107,3 +155,6 @@ B1, so it is planned, not done.
    workaround that the plan did not authorise.
 5. When done, update this table's status column and tick the matching task in
    `TODO.md`.
+6. **Read `020-gpuix-runtime-capability.md` §3 and the runtime note above before
+   promising a component is verified.** A locally-built binding exists on this
+   host; a clean checkout does not.

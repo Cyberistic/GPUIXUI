@@ -1,0 +1,75 @@
+---
+title: Grid
+description: Equal tracks in two dimensions — the only grid GPUix draws.
+---
+
+`Grid` is the runtime's fixed-size grid: a numeric column count and an optional
+numeric row count. It is **not** a CSS grid. There is no auto-flow, no named
+area, no `minmax()` and no track string, so anything raggedy belongs in a
+wrapping `Stack`.
+
+## Usage
+
+```tsx
+import { Grid, Text } from "@gpuixui/primitives";
+
+<Grid columns={2} gap="sm">
+  <Text role="caption" tone="muted">Width</Text>
+  <Text role="code">1280 px</Text>
+  <Text role="caption" tone="muted">Height</Text>
+  <Text role="code">800 px</Text>
+</Grid>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `columns` | `number` | — (required) | equal column tracks; floored, minimum 1 |
+| `rows` | `number` | auto | equal fixed rows; floored, minimum 1 |
+| `gap` | spacing step | none | both axes, from `spacing` |
+| `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
+| `style` | `StyleDesc` | — | merged last |
+| `children` | `ReactNode` | — | cells, in source order |
+| `testId` | `string` | — | stable locator |
+
+## Keyboard
+
+Not focusable. Grid cells do not become a composite widget; a grid of controls
+is a collection with its own roving-tab-stop logic, not a layout.
+
+## Accessibility
+
+No role. Visual columns convey no structure to assistive technology — a
+label/value pair still needs its words in reading order (as in the example),
+not a positional relationship.
+
+## Theming
+
+`gridStyle` reads `theme.spacing[gap]` and clamps the track counts. No column
+width is ever a pixel value at the call site.
+
+## Limitations
+
+- Equal tracks only. A two-column inspector with a narrow label column is not
+  expressible; use a `Stack` row with a fixed-width `Box` label, or `Stack` plus
+  `Spacer`.
+- No auto-flow or spanning cells.
+- No named areas or template strings.
+
+## Verification
+
+- `src/core/layout.test.ts` — column/row clamping and gap resolution.
+- `runtime/layout.runtime.test.tsx` — a two-column grid paints two cells on one
+  row with the theme's gap.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Stack** — one dimension, with per-child growth.
+- **Box** — the grid's cells.
+- **Separator** — divide regions that a grid cannot.

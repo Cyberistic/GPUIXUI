@@ -1,0 +1,139 @@
+/**
+ * The runtime-free core of `@gpuixui/primitives`.
+ *
+ * Nothing here imports `@gpuix/react` at runtime — only its types, which
+ * `verbatimModuleSyntax` erases. That is deliberate: this is the layer that can
+ * be proven on a machine where GPUix's native binding does not exist, and it is
+ * where the design system's decisions actually live (theme role → `StyleDesc`
+ * resolution, keyboard contracts, controlled state).
+ */
+
+export { alpha } from "./color.js";
+
+export {
+  decideAbsolute,
+  decideActivation,
+  decideMove,
+  decidePage,
+  decideToggle,
+  ENTER_KEY,
+  SPACE_KEY,
+} from "./keyboard.js";
+export type { KeyName, KeyPhase, Orientation } from "./keyboard.js";
+
+export { initValueState, setValue, withValue } from "./state.js";
+export type { ControlMode, ValueState } from "./state.js";
+
+export {
+  boxStyle,
+  gridStyle,
+  stackStyle,
+  STACK_ALIGNS,
+  STACK_DIRECTIONS,
+  STACK_JUSTIFIES,
+} from "./layout.js";
+export type {
+  BoxSpec,
+  GridSpec,
+  StackAlign,
+  StackDirection,
+  StackJustify,
+  StackSpec,
+} from "./layout.js";
+
+export {
+  radioDotStyle,
+  SELECTION_ACCENTS,
+  SELECTION_STATES,
+  selectionBoxStyle,
+  selectionMarkColor,
+  switchThumbStyle,
+  switchTrackStyle,
+} from "./selection.js";
+export type {
+  SelectionAccent,
+  SelectionSpec,
+  SelectionState,
+} from "./selection.js";
+
+export {
+  indeterminateFillStyle,
+  indeterminateLeadStyle,
+  indeterminateOffset,
+  PULSE_STEPS,
+  pulseOpacity,
+  skeletonStyle,
+  SPINNER_ACCENTS,
+  SPINNER_SEGMENTS,
+  spinnerDotStyle,
+  spinnerDots,
+} from "./loading.js";
+export type {
+  SkeletonSpec,
+  SpinnerAccent,
+  SpinnerDot,
+  SpinnerSpec,
+} from "./loading.js";
+
+export {
+  controlFocusStyle,
+  controlStyle,
+  fieldTextStyle,
+  nativeTextTheme,
+  progressFillStyle,
+  progressPercent,
+  progressTrackStyle,
+  PROGRESS_TONES,
+  ruleStyle,
+  scrollStyle,
+  surfaceStyle,
+  SURFACE_TONES,
+  textStyle,
+  TEXT_TONES,
+  toneColor,
+} from "./style.js";
+export type {
+  ControlSpec,
+  ControlVariant,
+  ProgressSpec,
+  ProgressTone,
+  RuleSpec,
+  ScrollSpec,
+  SurfaceSpec,
+  SurfaceTone,
+  TextSpec,
+  TextTone,
+} from "./style.js";
+
+export {
+  buttonVariants,
+  BUTTON_VARIANTS,
+  fieldVariant,
+  hasPointerFeedback,
+  variantKey,
+  variantTable,
+} from "./variants.js";
+export type { ButtonVariant } from "./variants.js";
+
+export type {
+  BorderWidth,
+  ColorRef,
+  ControlSize,
+  Density,
+  DensityName,
+  Elevation,
+  ElevationLevel,
+  FontWeight,
+  PrimitiveTheme,
+  Radius,
+  RadiusStep,
+  Spacing,
+  SpaceStep,
+  TextRole,
+  TextStyle,
+  ThemeColors,
+  ThemeIconSize,
+  ThemeMode,
+  ThemeShadow,
+  Typography,
+} from "./theme.js";

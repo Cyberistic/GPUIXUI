@@ -1,0 +1,110 @@
+/**
+ * The examples, mounted in the real GPUix runtime.
+ *
+ * `src/components/*.test.tsx` decode an element tree and `runtime/*.runtime`
+ * proves each component in isolation. Neither proves the thing a consumer
+ * copies: an **example** is a composition of several components with caller-
+ * owned state, and a composition can be wrong even when every part is right.
+ * This suite is the only place where that claim is checked, by mounting each
+ * example and reading what the frame actually painted.
+ *
+ * It is deliberately small. The per-component contracts belong to the other
+ * runtime suites; here the assertions are "this screen renders", "this example
+ * still exercises the control it exists to demonstrate", and the one
+ * interaction each example is built around.
+ */
+
+import { expect, it } from "vitest";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import type { ComponentType } from "react";
+import { examples } from "../examples/index.js";
+import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import { Surface, openWindow } from "./fixture.js";
+
+/** The root and the headline each example must paint. */
+const SCREENS = [
+  { id: "layout", root: "layout-example", headline: "Inspector" },
+  { id: "typography", root: "typography-example", headline: "Version 0.10.0" },
+  { id: "form", root: "form-example", headline: "Project settings" },
+  { id: "selection", root: "selection-example", headline: "Notifications" },
+  { id: "feedback", root: "feedback-example", headline: "Revenue" },
+  { id: "icons", root: "icons-example", headline: "Icon set" },
+] as const;
+
+const renderExample = (runtime: Runtime, id: string): void => {
+  const Example: ComponentType = Option.getOrElse(
+    Option.fromNullishOr(examples[id]),
+    () => expect.fail(`the example registry has no "${id}" entry`),
+  );
+  runtime.render(
+    <Surface>
+      <Example />
+    </Surface>,
+  );
+};
+
+it("mounts every registered example and paints its headline", async () => {
+  const runtime = await openWindow();
+  Arr.forEach(SCREENS, (screen) => {
+    renderExample(runtime, screen.id);
+    expect(runtime.allText(), screen.id).toContain(screen.headline);
+    expect(
+      Option.isSome(runtime.element(screen.root)),
+      `${screen.id} did not retain its root`,
+    ).toBe(true);
+  });
+});
+
+it("composes the layout example around a scrolling property list", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "layout");
+  expect(runtime.allText()).toContain("Corner radius");
+  expect(runtime.allText()).toContain("Read-only");
+  expect(Option.isSome(runtime.element("layout-example-properties"))).toBe(
+    true,
+  );
+});
+
+it("creates through the form example's busy action", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "form");
+  expect(Option.getOrUndefined(runtime.focused())).toBe("form-example-name");
+  runtime.click("form-example-save");
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { label: "Creating project" }),
+    ),
+  ).toBe("62%");
+});
+
+it("pauses through the selection example's switch", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "selection");
+  const announced = (): string =>
+    Option.getOrElse(
+      a11yValueOf(runtime.a11y(), { label: "Pause all notifications" }),
+      () => expect.fail("the pause switch announced no state"),
+    );
+  expect(announced()).toBe("unchecked");
+  runtime.click("selection-example-pause");
+  expect(announced()).toBe("checked");
+});
+
+it("opens the feedback example's tooltip on hover", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "feedback");
+  expect(runtime.allText()).not.toContain("Booked revenue, net of refunds.");
+  runtime.hover("feedback-example-tooltip-trigger");
+  expect(runtime.allText()).toContain("Booked revenue, net of refunds.");
+});
+
+it("announces the icons example's labelled status icon", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "icons");
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "Image", label: "success" }),
+    ),
+  ).toBe(true);
+});

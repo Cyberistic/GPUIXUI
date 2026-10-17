@@ -1,0 +1,134 @@
+/**
+ * The field wiring: `Input` and the narrower `TextArea`.
+ *
+ * `core/state.test.ts` proves the controlled/uncontrolled decision; this suite
+ * proves the elements are *driven by it* — the rendered value comes from the
+ * resolved state, an edit is reported from `event.value`, a runtime event with
+ * no value is not a `null` change, and the field carries the name GPUix can
+ * actually read (`aria-label`; there is no `aria-labelledby`, plan 020 §1.4).
+ */
+
+import type { ReactElement } from "react";
+import { describe, expect, it, vi } from "vitest";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import { initValueState, type ValueState } from "../core/state.js";
+import { testTheme } from "../core/testing/theme.fixture.js";
+import { renderInput } from "./Input.js";
+import { renderTextArea } from "./TextArea.js";
+import type { FocusState } from "./internal.js";
+import { changeEvent } from "./testing/event.js";
+import {
+  expectSome,
+  hostHandler,
+  hostProp,
+  hostTag,
+} from "./testing/element.js";
+
+const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
+/** A control whose parent owns the value. */
+const controlled = (value: string): ValueState<string> =>
+  initValueState(Option.some(value), "");
+/** An uncontrolled control holding its own draft. */
+const draft = (initial: string): ValueState<string> =>
+  initValueState(Option.none(), initial);
+
+/** The resolved `height`, which a textarea leaves to its rows. */
+const heightOf = (element: ReactElement): Option.Option<number> =>
+  expectSome(
+    Schema.decodeUnknownOption(
+      Schema.Struct({ height: Schema.OptionFromNullishOr(Schema.Number) }),
+    )(expectSome(hostProp(element, "style"))),
+  ).height;
+
+describe("Input", () => {
+  it("renders the value the state machine resolved, not its own draft", () => {
+    const element = renderInput(
+      {},
+      testTheme,
+      controlled("from the parent"),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "value"))).toBe("from the parent");
+  });
+
+  it("reports the text the runtime sent in the event", () => {
+    const onValueChange = vi.fn();
+    const element = renderInput(
+      {},
+      testTheme,
+      draft("before"),
+      idle,
+      onValueChange,
+    );
+    expectSome(hostHandler(element, "onChange"))(changeEvent("after"));
+    expect(onValueChange).toHaveBeenCalledWith("after");
+  });
+
+  it("treats an event with no value as an empty string", () => {
+    const onValueChange = vi.fn();
+    const element = renderInput(
+      {},
+      testTheme,
+      draft("before"),
+      idle,
+      onValueChange,
+    );
+    expectSome(hostHandler(element, "onChange"))({
+      elementId: 0,
+      eventType: "change",
+    });
+    expect(onValueChange).toHaveBeenCalledWith("");
+  });
+
+  it("carries its accessible name on the element, since GPUix has no labelledby", () => {
+    const element = renderInput(
+      { label: "Email" },
+      testTheme,
+      controlled(""),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-label"))).toBe("Email");
+    expect(hostProp(element, "aria-labelledby")).toStrictEqual(Option.none());
+  });
+});
+
+describe("TextArea", () => {
+  it("is the runtime's textarea element with the row limits forwarded", () => {
+    const element = renderTextArea(
+      { minRows: 3, maxRows: 8 },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostTag(element))).toBe("textarea");
+    expect(expectSome(hostProp(element, "minRows"))).toBe(3);
+    expect(expectSome(hostProp(element, "maxRows"))).toBe(8);
+  });
+
+  it("has no submit handler, which the runtime would trade the newline for", () => {
+    void renderTextArea(
+      {
+        // @ts-expect-error — `TextAreaProps` omits `onSubmit` on purpose (046).
+        onSubmit: vi.fn(),
+        minRows: 2,
+      },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    const area = renderTextArea({}, testTheme, draft(""), idle, vi.fn());
+    expect(hostProp(area, "onSubmit")).toStrictEqual(Option.none());
+  });
+
+  it("lets the rows decide the height instead of a fixed control height", () => {
+    const area = renderTextArea({}, testTheme, draft(""), idle, vi.fn());
+    const field = renderInput({}, testTheme, draft(""), idle, vi.fn());
+    expect(heightOf(area)).toStrictEqual(Option.none());
+    expect(Option.isSome(heightOf(field))).toBe(true);
+  });
+});

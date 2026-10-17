@@ -1,0 +1,85 @@
+---
+title: Switch
+description: An immediate on/off, distinct from a checkbox in intent.
+---
+
+`Switch` is the "takes effect now" control: a track and a thumb, announced with
+the switch role. It shares `core/selection.ts`'s metrics with `Checkbox`, so the
+two line up on the same row, but they mean different things — a checkbox is a
+choice submitted with a form, a switch is applied immediately.
+
+## Usage
+
+```tsx
+import { Switch } from "@gpuixui/primitives";
+
+<Switch
+  checked={paused}
+  onChange={setPaused}
+  label="Pause all notifications"
+/>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `checked` | `boolean` | — | controlled; omit to let the switch keep its own state |
+| `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
+| `onChange` | `(next: boolean) => void` | none | the next boolean |
+| `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
+| `invalid` | `boolean` | `false` | the track takes the destructive role |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
+| `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
+| `label` | `string` | none | accessible name |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| Space | toggles on key **up** |
+| Enter | toggles on key **down** |
+| held key | repeat events do nothing |
+| Tab | reaches the switch when it is not disabled |
+
+## Accessibility
+
+- Role: `Switch`.
+- State is announced through **`aria-valuetext`** (`checked` / `unchecked`);
+  there is no `aria-checked` in 0.10.0.
+- `disabled` removes the tab stop; no `aria-disabled`.
+- The name comes from `label`; there is no `aria-labelledby`.
+
+## Theming
+
+`switchTrackStyle` and `switchThumbStyle` resolve both parts from the same
+selection spec. The thumb is positioned by the track's `justifyContent`, not a
+pixel offset, because the runtime has no `transform` — so it cannot drift out of
+the pill. Disabled adds half opacity and removes feedback.
+
+## Limitations
+
+- No `aria-checked` and no on/off text inside the control; pair it with a visible
+  `Label` or text row.
+- No slide animation: the thumb jumps between the two `justifyContent` values.
+- No loading or pending state; disable it while a request is in flight.
+
+## Verification
+
+- `src/core/selection.test.ts` — track and thumb geometry across sizes and states.
+- `src/components/selection.test.tsx` — controlled/uncontrolled wiring.
+- `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
+  the announced value flips; Space and Enter both toggle.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Checkbox** — a submitted choice, possibly indeterminate.
+- **RadioGroup** — one of several.
+- **Label** — the visible name.

@@ -1,0 +1,81 @@
+---
+title: Progress
+description: A determinate or indeterminate progress bar.
+---
+
+`Progress` paints a track and a fill. With `value` it is determinate (0–100,
+clamped); without it, it is indeterminate and a segment advances through eight
+positions on a 120 ms interval. It cannot rotate, and does not try to.
+
+## Usage
+
+```tsx
+import { Progress, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="xs">
+  <Text role="caption" tone="muted">Uploading · 42%</Text>
+  <Progress value={42} label="Uploading" />
+</Stack>;
+```
+
+```tsx
+<Progress label="Saving" />
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | — | 0–100 determinate fill; omit for indeterminate |
+| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
+| `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
+| `label` | `string` | none | accessible name |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+Values outside 0–100 are clamped, so a bar can never paint outside its track.
+`NaN` is treated as empty, never as complete.
+
+## Keyboard
+
+Not focusable. Progress is status, not a control; there is no slider behaviour.
+
+## Accessibility
+
+- Role: `progressbar` (`ProgressIndicator` in AccessKit).
+- The value is announced through **`aria-valuetext`** — `"42%"` or
+  `"loading"` — because GPUix 0.10.0 has no `aria-valuenow`.
+- The name comes from `label`. Without one, a progress bar is an unnamed
+  progress bar; give it the task's name ("Uploading", "Saving").
+
+## Theming
+
+`progressTrackStyle` paints `colors.muted`; `progressFillStyle` paints the tone's
+role. Height is a spacing step and both ends are `radius.full`, so a density or
+radius change moves the whole family.
+
+## Limitations
+
+- No `aria-valuenow` (above).
+- The indeterminate segment is a discrete step, not a smooth sweep; the runtime
+  cannot interpolate position beyond the motion API this package does not import.
+- No buffer/secondary value, no stacked segments, no label inside the track.
+
+## Verification
+
+- `src/core/style.test.ts` — clamping, including `NaN` and infinity.
+- `src/components/Progress.test.tsx` — tree-level track/fill and tone.
+- `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
+  and −5 to `"0%"`, the fill tracks the value, and the indeterminate segment
+  moves over real time.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Spinner** — activity with no known proportion.
+- **Skeleton** — content that has not arrived.
+- **Button** — the `loading` action state.

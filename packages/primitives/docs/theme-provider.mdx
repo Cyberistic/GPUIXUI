@@ -1,0 +1,96 @@
+---
+title: ThemeProvider
+description: Supplies the theme every primitive draws with — and refuses to invent one.
+---
+
+`ThemeProvider` puts a `PrimitiveTheme` in React context. Every primitive reads it
+through `useTheme()`. It is **not** a theme builder and it ships **no default
+palette**: without a provider above it, a primitive throws
+`MissingThemeProviderError` at the moment it renders.
+
+## Usage
+
+```tsx
+import { ThemeProvider, Box, Text } from "@gpuixui/primitives";
+import { darkTheme } from "@gpuixui/tokens";
+
+<ThemeProvider theme={darkTheme}>
+  <Box tone="background" padding="lg">
+    <Text role="h2">Settings</Text>
+  </Box>
+</ThemeProvider>;
+```
+
+The theme is a **structural port** declared in `src/core/theme.ts`
+(`PrimitiveTheme`), not an import of `@gpuixui/tokens`. Any value with the
+`colors`, `typography`, `spacing`, `radius`, `density`, `elevation`,
+`borderWidth` and `iconSize` groups satisfies it.
+
+## Density
+
+```tsx
+<ThemeProvider theme={theme} density={compactDensity}>
+  …
+</ThemeProvider>
+```
+
+Density replaces the theme's **numeric** metrics only (`controlHeight`,
+`controlPaddingX`, `rowHeight`). It cannot change colour, so a density switch can
+never produce a second palette. Build presets with tokens' `extendTheme`; this
+package owns no copy of them.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `theme` | `PrimitiveTheme` | — (required) | every colour, size, radius and font a primitive paints |
+| `density` | `Density` | `theme.density` | swaps the numeric metrics group; colours stay |
+| `children` | `ReactNode` | — | the tree that may render primitives |
+
+`useTheme(): PrimitiveTheme` returns the active theme and throws
+`MissingThemeProviderError` when there is none.
+
+## Keyboard
+
+Not interactive. It renders no element of its own.
+
+## Accessibility
+
+No role, no announcement. It only supplies values; the accessibility tree is
+whatever the components below it produce. Because there is no silent default, a
+missing provider is a **visible crash in development**, not a wrong palette
+shipped to a user.
+
+## Theming
+
+This is the seam: light and dark are two `PrimitiveTheme` values. Switching is a
+re-render with a different `theme` prop — verified natively by
+`runtime/theme.runtime.test.tsx`, which mounts both palettes and checks that every
+painted colour comes from the active one.
+
+## Limitations
+
+- The density override is a whole group, not a partial patch; a partial override
+  would make "compact" mean something different at each call site.
+- There is no built-in light/dark toggle and no persistence: theme choice is
+  application state, owned by the app.
+- Providers do not merge: the nearest `ThemeProvider` supplies the whole theme.
+
+## Verification
+
+- `src/components/ThemeProvider.test.tsx` — the missing-provider error and the
+  density swap are proven on the render boundary.
+- `src/core/theme.test.ts` — the port's shape and density metrics.
+- `runtime/theme.runtime.test.tsx` — both palettes paint only their own colours;
+  a live theme switch repaints every asserted role.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Box** — the surface most primitives sit on.
+- **Text** — the typography roles the theme resolves.
+- `@gpuixui/tokens` — the package that builds real light and dark themes.

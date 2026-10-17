@@ -1,0 +1,111 @@
+---
+title: Icons
+description: Forty-seven monochrome icons, their size scale and the two accessibility rules.
+---
+
+`@gpuixui/icons` is the icon set: each icon is a self-contained 24×24 monochrome
+SVG markup string that GPUix's host `<svg>` paints and tints with `style.color`.
+Icons are **data**, not component trees — no paths to render, no icon font, no
+CSS. The package needs no theme, so it is usable before the design system exists.
+
+## Usage
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import { useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+// Decoration: takes itself out of the accessibility tree.
+<Icon name="search" color={theme.colors.mutedForeground} />;
+
+// Meaningful on its own: announced as an image.
+<Icon name="warning" color={theme.colors.destructive} size="md" label="Overdue" />;
+```
+
+A runnable composition is `packages/primitives/examples/icons.example.tsx`.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `name` | `IconName` | — (required) | which icon; TypeScript rejects an unknown name |
+| `color` | `string` | — (required) | the tint; pass a theme role |
+| `size` | `IconSize \| number` | `"md"` | a named step or raw pixels |
+| `label` | `string` | none | accessible name; presence promotes the icon to an image |
+| `testId` | `string` | — | stable locator |
+
+`ICON_NAMES` / `IconName` is the source of truth for which icons exist; `icons`
+exposes the markup by name; `ICON_SIZES` / `iconPixels` resolve the scale.
+
+## Sizes
+
+| Step | Pixels |
+| ---- | ------ |
+| `xs` | 12 |
+| `sm` | 14 |
+| `md` (default) | 16 |
+| `lg` | 20 |
+| `xl` | 24 |
+
+Named sizes line an icon up with text of the same step. A raw number is for the
+rare case that no step fits.
+
+## Accessibility
+
+Two rules the component enforces, because both fail silently otherwise:
+
+- **`color` is required.** A monochrome SVG with no tint paints black, which is
+  invisible in a dark theme. There is no default palette by design.
+- **A decorative icon gets `role="presentation"`** and produces no accessibility
+  node; only a `label` promotes it to `role="img"` with a name. An icon that
+  announces itself inside a button makes the button read twice.
+
+The rendered `<svg>` also sets `pointerEvents: "none"`, so an icon inside a
+control cannot swallow the press meant for the control.
+
+## Theming
+
+The set has no palette: the caller passes the tint, which is why an icon beside
+text can take `theme.colors.mutedForeground` or `toneColor(theme, "muted")`.
+Geometry uses `fill="none"` and `stroke="#000"` in the shared wrapper — the two
+paint values a monochrome tint can use. No individual icon carries a colour.
+
+## Limitations
+
+- Monochrome only: no two-tone, duotone or brand marks.
+- No rotation or spin animation; a spinner is a separate component because the
+  runtime cannot rotate (see `Spinner`).
+- No icon font and no ligatures.
+- The set is curated, not a full Lucide import: add a name to `registry.ts` and
+  `names.ts` together, and the type checker enforces both.
+
+## Verification
+
+- `src/registry.test.ts` — every icon is 24×24 geometry, self-contained and free
+  of scripts, external references and embedded colours.
+- `src/sizes.test.ts` — every named step resolves, and a raw number passes
+  through.
+- `src/Icon.test.ts` — the decoration/image rule, required colour and the
+  pointer-events rule.
+- `packages/primitives/runtime/icons.runtime.test.tsx` — the raw `<svg source>`
+  paints at 20×20 (`lg`) and 24×24 (`xl`); a decorative icon is absent from the
+  accessibility tree while a labelled one is an `Image`; a red versus blue
+  capture differs byte-wise, so the tint reaches the paint.
+
+```sh
+nub run --filter @gpuixui/icons test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Provenance
+
+Geometry follows the [Lucide](https://lucide.dev) 24×24 grid, ISC licence. No
+third-party icon file is copied verbatim and no logo or brand mark is included.
+See `LICENSES/` for the attribution record.
+
+## Related
+
+- **Text** — the type the icon aligns with.
+- **Button** — an icon-only action needs a `label`.
+- **Tooltip** — explains an icon without giving it a name.

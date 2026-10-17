@@ -68,6 +68,14 @@ unmet.
 | D9 | Docs site is **Fumadocs + TanStack Start (SSR)** on Cloudflare Workers via `Cloudflare.Website.Vite` | Fumadocs' documented Vite/Start path; alchemy supports TanStack Start in one call; SSR gives search + SEO; the deploy `rootDir` is already fixed to `apps/docs` (plan 410) | 2026-10-17 |
 | D10 | Honest preview default is **companion playground + real native screenshots**; labelled browser approximations only; live Wasm embed only if proven | GPUix has a browser Wasm build but it needs nightly Rust, ~19 MB Wasm and COOP/COEP, so it is an upgrade path, not a default; `MISSION.md` forbids faking native (plan 412) | 2026-10-17 |
 | D11 | Component metadata is **docs-owned** under `apps/docs` in Phase B, typed by an Effect Schema contract; hoisting it into the packages is a tracked task | The component packages are another workstream; a single schema keeps the index, sidebar and status generated and makes the hoist a file move (plan 411) | 2026-10-17 |
+| D12 | Target **`@gpuix/react` / `@gpuix/native` 0.10.0 (published)**, not the `references/gpuix` checkout | The checkout is `main`, ahead of the release: it has `./button` and `Button`/`buttonProps` that **the published 0.10.0 does not export**. Code must compile against what a consumer can install. | 2026-10-17 |
+| D13 | **Source-first package exports; no build step** for `packages/*` until a publish requirement exists | The consumers are workspace apps with bundlers; a `tsc` emit step would add a second copy of the truth and a stale-`dist` failure mode. `check-types` is the type gate. | 2026-10-17 |
+| D14 | `primitives` consumes the theme through a **structural port** (`PrimitiveTheme`), not an import of `@gpuixui/tokens` | Keeps `primitives` testable independently of the token package and keeps the boundary law (nothing depends on components). `packages/tokens` owns the values; the shipped port groups are `colors`, `typography`, `spacing`, `radius`, `density`, `elevation`, `borderWidth`, `iconSize` | 2026-10-17 |
+| D15 | Behaviour lives in **pure `core/` modules**, components are thin renderers | GPUix's published `./button` is unavailable, so keyboard/state behaviour is ours; and a pure function is the part that can be proven without a runtime | 2026-10-17 |
+| D16 | Component tests assert on the **decoded element tree** (`src/components/testing/element.ts`), not a render | The harness decodes `ReactElement` props with `Schema` at the boundary rather than reading `any`, so the strongest offline check is also a typed one. The real runtime is covered separately by `test:runtime` | 2026-10-17 |
+| D17 | `Select` and `Tooltip` are **themed wrappers** over `@gpuix/react/select`/`/tooltip` | GPUix already publishes headless, shadcn-shaped versions; reimplementing them would duplicate the open state, positioning, delay and dismissal for no gain (plan 020 §1.5) | 2026-10-17 |
+| D18 | `RadioGroup` takes its options **as data**, not compound children | The group owns the roving index and the arrow contract; a compound API moves that logic into a context each child reads — strictly more code for the same behaviour. Recorded as a deviation from shadcn's shape in `COMPONENTS.md` | 2026-10-17 |
+| D19 | Runtime verification runs against a **locally-built `darwin-x64` GPUix 0.10.0 binding** (`runtime_shaders` feature), not the published binary | GPUix publishes no `darwin-x64` artifact for 0.10.0 and this host has no Aqua session. Plan 140's script builds the same version and source revision at `node_modules/@gpuix/native/gpuix-native.darwin-x64.node`; `packages/primitives` and `apps/playground` run against it. The artifact is gitignored, so a clean checkout has no binding until the script runs; published-binary confirmation stays a CI task | 2026-10-17 |
 
 ## 5. Open questions
 
@@ -75,9 +83,17 @@ Tracked here until an ADR answers them. Each plan that resolves one moves the
 answer into §4 or an ADR.
 
 - Which GPUix primitives actually exist for layout, input, focus, overlays and
-  panels? (Phase A — the biggest risk; answered by the native smoke test.)
+  panels? — **answered** by `.agents/slop/plans/020-gpuix-runtime-capability.md`
+  §1; the §1.5 list of what GPUix already ships decides reuse vs. reimplement.
 - Can a GPUix rendering surface be embedded in the Fumadocs site, or is the
-  companion playground the only honest preview? (**Answered as a default** in D7 /
-  plan 412: playground + screenshots; the browser Wasm embed stays a conditional
-  upgrade pending the Phase A probe.)
-- What is the original package name and branding identity? (Phase A.)
+  companion playground the only honest preview? — **answered as a default** in
+  D10 / plan 412: playground + screenshots. `@gpuix/native@0.10.0` ships a wasm
+  renderer, so a *real* GPUix surface in the browser stays a conditional upgrade;
+  it needs nightly Rust, ~19 MB Wasm and COOP/COEP, and the deploy headers would
+  have to allow it.
+- What is the original package name and branding identity? — **still open**, and
+  now blocking nothing but release metadata. `@gpuixui/*` remains the working
+  scope (D4).
+- Which verification path discharges the runtime debt? — **answered locally** by
+  D19 / plan 140: the source-built `darwin-x64` binding runs `test:runtime`.
+  Confirming with the published binary on CI remains open.
