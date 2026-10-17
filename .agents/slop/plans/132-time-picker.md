@@ -3,8 +3,9 @@
 - **Phase:** C (Tier 2 completion / hardening)
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 110, 117 (inventory gate), 119 (the date half)
-- **Status:** planned, 2026-10-17. No implementation may start before this plan is
-  indexed in `.agents/slop/plans/README.md`.
+- **Status:** done, 2026-10-17. 12 logic tests + 8 native behaviour tests + one
+  both-theme matrix row; example, docs and inventory rows. Counts and
+  both-direction proof in §9.
 
 Plan 119 delivered the day picker and recorded "no time picker" as a limitation:
 the mission's inventory item is **"date/time pickers where feasible"**, and only
@@ -578,5 +579,29 @@ missing test.
 
 ## 9. Deviations, recorded during implementation
 
-(fill in during implementation: actual counts, both-direction output, any STOP
-condition hit and its evidence, and any API decision the runtime forced.)
+1. **The external-value sync is a `useLayoutEffect`, not a passive effect.** A
+   passive effect had not run by the time the controlled-contract assertion read
+   the tree after a synchronous keystroke, so the display still read `"23"`.
+   A layout effect also removes the one-frame flash of an edit the consumer did
+   not adopt, which is the same reason `DatePicker` focuses cells in a layout
+   effect. It is not a substitute for React lifecycle; it is display
+   reconciliation before paint.
+2. **The minute-editing test expects the hour to read `"09"`, not `"9"`.**
+   Moving focus to the minute segment blurs the hour segment, and blur pads.
+   That is rule 7, not a regression; the assertion was corrected to state it.
+3. **The blur-padding test starts from an empty field.** Typing `9` into an
+   existing `09` appends, keeps the last two digits (`99`) and clamps to `23`,
+   which tests the clamp path rather than padding. Starting empty is what the
+   test means to prove.
+4. **Both-direction proof, recorded from the actual runs.**
+   - Removing the clamp branch (`text = digits`) made *clamps out-of-range digits
+     in both the text and the value* fail with `expected [ null ] to deeply equal
+     [ '23:00' ]`: the invalid pair no longer composed a value.
+   - Making hours shift by `step` instead of `60` made *carries and wraps through
+     the arrow keys* fail with `expected [ '00:29' ] to deeply equal [ '23:30' ]`.
+   - Short-circuiting the sync layout effect made *keeps a controlled field where
+     the consumer put it* fail with `expected '23' to be '09'`.
+   All restored; the suite then passed 259/259.
+5. **Actual counts.** Logic 199 → 211 (12 new). Behaviour 250 → 259: the 8
+   TimePicker tests plus one both-theme matrix row.
+
