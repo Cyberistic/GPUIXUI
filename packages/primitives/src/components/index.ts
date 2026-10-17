@@ -31,6 +31,9 @@ export type { ButtonFocus, ButtonProps } from "./Button.js";
 export { ButtonGroup, BUTTON_GROUP_MODES } from "./ButtonGroup.js";
 export type { ButtonGroupMode, ButtonGroupProps } from "./ButtonGroup.js";
 
+export { pressedValueText, Toggle } from "./Toggle.js";
+export type { ToggleProps } from "./Toggle.js";
+
 export { Input } from "./Input.js";
 export type { FieldProps, InputProps } from "./Input.js";
 

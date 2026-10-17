@@ -143,10 +143,12 @@ export {
   BUTTON_VARIANTS,
   fieldVariant,
   hasPointerFeedback,
+  TOGGLE_VARIANTS,
+  toggleVariants,
   variantKey,
   variantTable,
 } from "./variants.js";
-export type { ButtonVariant } from "./variants.js";
+export type { ButtonVariant, ToggleVariant } from "./variants.js";
 
 export type {
   BorderWidth,
