@@ -29,3 +29,5 @@ workspaces/
 
 # OS / editor
 .DS_Store
+*.bak-*
+*.bak
