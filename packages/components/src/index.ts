@@ -31,6 +31,7 @@ export * from "./popover.js";
 export * from "./search-input.js";
 export * from "./stepper.js";
 export * from "./tabs.js";
+export * from "./timeline.js";
 export * from "./time-picker.js";
 export * from "./toast.js";
 

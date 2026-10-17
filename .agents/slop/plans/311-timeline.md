@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §4 (C2), `111` |
-| Status | planned |
+| Status | done — 6 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned parts: `Timeline`, `TimelineItem`); `COMPONENTS.md` → Tier 2 → Timeline; plan `205` C2 |
 
 This plan is self-contained. It adds `Timeline` at the Tier 2 bar.
@@ -127,3 +127,19 @@ each.
 - Six native tests, both themes, no literal colours.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/timeline.tsx` — `Timeline` wraps each direct child in a provider whose
+  `last` flag comes from scanning for the final `TimelineItem`, so the rail's
+  connector is a real element that stops exactly once.
+- `src/behaviour/timeline.test.tsx` — 6 tests. The rail is read by child
+  position (`item → rail → dot/connector`), which is the only stable way to ask
+  "does this row draw a connector?" without a testId per internal element.
+- Example, docs page, inventory record, `COMPONENTS.md` row and the contract's
+  §8 table updated.
+- **Both directions:** dropping the `last` branch draws a connector after the
+  final event (test 5 fails); swapping the `primary` and `muted` fills fails the
+  status test. Restored after each: behaviour 344 green.

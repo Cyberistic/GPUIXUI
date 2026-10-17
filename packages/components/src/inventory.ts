@@ -31,6 +31,7 @@ import { popoverMeta } from "./popover.js";
 import { searchInputMeta } from "./search-input.js";
 import { stepperMeta } from "./stepper.js";
 import { tabsMeta } from "./tabs.js";
+import { timelineMeta } from "./timeline.js";
 import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
 
@@ -78,6 +79,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   searchInputMeta,
   stepperMeta,
   tabsMeta,
+  timelineMeta,
   timePickerMeta,
   toastMeta,
 ];

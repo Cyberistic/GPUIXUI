@@ -216,7 +216,7 @@ retired once both branches are one
     - [x] Form — plan 308: owned-value schema validation, one alert summary, decoded `onSubmit`, pending guard (7 native tests; both-direction proof)
     - [ ] Drawer — plan 309
     - [x] Keyboard shortcuts / keycap display — plan 310 (owns the accelerator model): 10 accelerator tests + 6 native tests; both-direction proof
-    - [ ] Timeline — plan 311
+    - [x] Timeline — plan 311: 6 native tests; both-direction proof
     - [ ] Countdown — plan 312
     - [ ] Inline edit — plan 313
     - [ ] Tag / token input — plan 314

@@ -44,6 +44,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
 | `src/form.tsx` | Form: owned-value schema validation, one alert summary, decoded `onSubmit` |
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
+| `src/timeline.tsx` | Timeline: an event rail whose last item ends the connector |
 | `src/keyboard-shortcuts.tsx`, `src/shortcut/accelerator.ts` | KeyboardShortcuts over the shared accelerator model: platform-correct keycaps, named groups |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |

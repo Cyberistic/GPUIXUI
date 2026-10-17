@@ -84,7 +84,7 @@ workstream declares in its own section below.
 | [308](./308-form.md) | Form: validation orchestration and the submit lifecycle | C | 200, 201, 115, 205, 306 | done — 7 native tests; both-direction proof (behaviour 332) |
 | [309](./309-drawer.md) | Drawer: an edge-anchored modal panel over the shared modal hooks | C | 200, 201, 205, 112 | planned |
 | [310](./310-keyboard-shortcuts.md) | Keyboard shortcuts and keycaps, plus the shared accelerator model | C | 200, 201, 205, 111 | done — 10 accelerator tests + 6 native tests, both-direction proof (behaviour 338) |
-| [311](./311-timeline.md) | Timeline: an event rail with derived last-item context | C | 200, 201, 205 | planned |
+| [311](./311-timeline.md) | Timeline: an event rail with derived last-item context | C | 200, 201, 205 | done — 6 native tests; both-direction proof |
 | [312](./312-countdown.md) | Countdown: a remaining-time display whose clock is the app's | C | 200, 201, 205 | planned |
 | [313](./313-inline-edit.md) | Inline edit: rename in place with a commit/cancel contract | C | 200, 201, 115 | planned |
 | [314](./314-tag-input.md) | Tag / token input over a pure add/remove rule set | C | 200, 201, 205 | planned |

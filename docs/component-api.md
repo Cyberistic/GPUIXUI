@@ -231,6 +231,7 @@ parts.
 | Fieldset | `Fieldset`, `FieldsetLegend` | `FieldsetRoot`/`Legend` | plan 306 |
 | Stepper | `Stepper`, `StepperStep` | — | plan 307 |
 | Form | `Form` (render prop; one part) | `Form` | plan 308 |
+| Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
@@ -250,7 +251,6 @@ implementation cannot invent a shape):
 | Navigation menu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink` | plan 205 |
 | Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | plan 205 |
-| Timeline | `Timeline`, `TimelineItem` | plan 205 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
 | Mention input | `MentionInput`, `MentionInputList`, `MentionInputItem` | plan 205 |
 | Hotkey recorder | `HotkeyRecorder` | plan 205 |
