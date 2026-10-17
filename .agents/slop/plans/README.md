@@ -48,7 +48,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | done |
 | [050](./050-docs-layering-and-omissions.md) | The layering model and the deliberate token omissions | B | 011, 017–019 | done |
 | [051](./051-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
-| [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | blocked (B1) |
+| [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | blocked (B1), code + tests + docs landed |
 | [053](./053-reconcile-tokens-branches.md) | Reconcile the two `tokens` branches into one | B | 010–019, 050–052 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,

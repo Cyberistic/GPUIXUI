@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 18/26
+`[x]` `[███████░░░]` 19/26
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -80,11 +80,15 @@ platform toggle (plan 051)
 deliberate token omissions (plan 050; completes plan 202 §2.3–2.4)
 `[x]` Reconcile the two `tokens` branches into one — motion tokens (019) and
 platform type styles (051) now live on one branch (plan 053)
-`[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
-runtime, and record the licence review for any bundled family — plan 052, native
-proof blocked by B1 (rescued from the abandoned `agent/fonts` branch)
+`[x]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
+runtime, and record the licence review for any bundled family — plan 052. Code,
+7 unit tests and docs landed; no font is bundled (consumer-only delivery), so
+there is no font licence entry. Native proof that the face paints is blocked by
+B1, and the plan stays `blocked (B1)` until the playground runs.
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
+`playground`; blocked by B1) — when it runs, it calls `registerFonts` once with a
+licensed face to prove plan 052's registration in the native runtime; Fumadocs
+Theming page from `docs/tokens.md` and the
 docs platform toggle (macOS / Linux / Windows / Default) built on
 `platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
 **symlink** — a `references/` rule does not match a symlink, so every worktree

@@ -309,6 +309,36 @@ family the machine does not have falls back silently, so the platform table only
 names families each platform installs. This table changes no colours, sizes or
 spacing: a platform style is a theme, not a second design system.
 
+### Registering a typeface
+
+`registerFonts(registrar, typefaces)` is the only part of the package that talks
+to the runtime. It hands each `.ttf`/`.otf` file's bytes to the renderer once per
+renderer and per file, and returns the family names ready to spread into a theme:
+
+```ts
+import { extendTheme, registerFonts, themes } from "@gpuixui/tokens";
+
+const fonts = registerFonts(renderer, {
+  sans: { family: "Inter", files: [interRegular, interBold] },
+});
+const theme = extendTheme(themes.dark, { typography: fonts });
+```
+
+A role the application does not bring is absent, so the base theme keeps its
+family — an app can register only its UI face and keep the platform's mono. The
+runtime derives the family from the font's own name table, so `family` is a
+**declaration**: a mismatch falls back silently at render time. WOFF and WOFF2
+are unsupported, bytes the runtime cannot use throw, and the browser renderer has
+no `registerFont` at all, so this runs only where a native renderer exists.
+
+The package ships **no font files**. A consumer picks a face whose licence
+permits redistribution and keeps its licence with the application; this
+consumer-only delivery is why `LICENSES/` has no font entry.
+
+**Not yet verified in the native runtime.** The registry is covered by unit tests
+(`fonts.test.ts`), but that the painted glyphs come from the registered family is
+a bounds/screenshot check that needs the playground, blocked by B1.
+
 ## Spacing
 
 | Token | Pixels |
@@ -664,6 +694,12 @@ has a label and both families, `sans` is the GPUI sentinel, no family is a comma
 stack, `systemMonoFamily` and the default typography follow `currentPlatform`, and
 `platformTheme` changes only the families and the name without mutating its base.
 
+`packages/tokens/src/fonts.test.ts` covers font registration: one registration per
+renderer and file, a second renderer still receives the face, a file the runtime
+rejects is retried rather than cached as registered, the returned families feed
+`extendTheme`, and a consumer's face wins over the platform default without
+changing anything else in the theme.
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
@@ -676,6 +712,9 @@ stack, `systemMonoFamily` and the default typography follow `currentPlatform`, a
 - `.SystemUIFont` is verified by GPUI's own documentation of the name, not yet
   visually in the native runtime: the playground's platform gallery is blocked by
   B1. See `COMPONENTS.md` and `TODO.md`.
+- No bundled typefaces: `registerFonts` lets an application bring its own, but the
+  library ships no font file to licence. That a registered face actually paints is
+  a native check, blocked by B1.
 - No `outline*` and no `focusVisible` in the runtime (GPUix 0.10.0): the focus
   ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
   `borderRadius` only because a shadow does.

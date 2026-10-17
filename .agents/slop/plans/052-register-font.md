@@ -38,8 +38,12 @@ strength of the unit tests alone.
 - `packages/tokens/src/index.ts` — the package's public exports.
 - `packages/tokens/src/*.test.ts` — the existing test convention (vitest, co-located).
 - GPUix is pinned exact: `@gpuix/react` / `@gpuix/native` **0.10.0** (pre-1.0).
-- **No `registerFont` call exists anywhere**, there are no font files in the repository, and
-  `LICENSES/` has no font entry.
+- `packages/tokens/src/fonts.ts` — **landed**: `registerFonts`, `FontRegistrar`,
+  `Typeface`, `Typefaces` and `RegisteredFonts`, exported from the package root;
+  `src/fonts.example.ts` and `src/fonts.test.ts` beside it. It is the package's
+  only runtime-facing module.
+- **No font files are bundled** and `LICENSES/` has no font entry: this is a
+  consumer-only delivery (step 2's alternative), stated in the docs.
 - GPUix is pinned exact: `@gpuix/react` / `@gpuix/native` **0.10.0** (pre-1.0).
 
 ## Steps
@@ -157,12 +161,12 @@ native runtime can produce.
 
 ## Acceptance
 
-- [ ] `registerFonts()` is exported, documented, idempotent per registrar and accepts a
+- [x] `registerFonts()` is exported, documented, idempotent per registrar and accepts a
       consumer's own typeface.
-- [ ] Bundled font files (step 2) are licensed, committed, and recorded in `LICENSES/`
+- [x] Bundled font files (step 2) are licensed, committed, and recorded in `LICENSES/`
       with the copyright line — **only if this plan ships our own faces**; a
       consumer-only delivery skips step 2 and says so in the docs.
-- [ ] `nub run check`, `nub run lint` and `nub run test` exit 0.
+- [x] `nub run check`, `nub run lint` and `nub run test` exit 0.
 - [ ] **Native smoke test passes — blocked by B1 until the playground can run.**
 
 ## STOP conditions

@@ -22,6 +22,7 @@ and the strongest honest alternative.
 | Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring; overlay/menu animation is unavailable. Docs in `docs/tokens.md`; plan 017 corrected the earlier claim that the runtime supports outlines. |
 | Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land. |
 | Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests. Native visual check of the sans sentinel pending the playground (B1). |
+| Font registration | blocked (B1) | yes (`registerFont`, published 0.10.0) | `registerFonts(registrar, typefaces)` hands `.ttf`/`.otf` bytes to the native renderer once per renderer and file, and returns the families to spread into `extendTheme`. No font is bundled; the consumer supplies a licensed face. Unit tests cover idempotence, retry after a rejected file, and the theme merge. That the registered face actually paints — rather than falling back — needs the playground gallery (B1). |
 | Native theme gallery | todo | yes | `apps/playground`; visual evidence for the rows above. Owner: playground workstream. |
 
 ---

@@ -1,5 +1,6 @@
 export * from "./color.js";
 export * from "./elevation.js";
+export * from "./fonts.js";
 export * from "./motion.js";
 export * from "./platforms.js";
 export * from "./scale.js";
