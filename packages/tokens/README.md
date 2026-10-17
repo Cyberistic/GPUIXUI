@@ -159,33 +159,55 @@ Apply it while the control is focused. A mouse press shows the ring too, because
 the runtime has no `:focus-visible` equivalent. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
-## Platform type
+## Platform styles
 
-`platformTypes` decides each platform's families once; `platformTheme` turns one
-into a real theme by deriving it with `extendTheme`, so nothing about the base
-theme changes except the two families.
+Four variants ship: macOS, Linux, Windows and Default. They are full token
+themes, not docs-only CSS: `platformStyles` indexes one editable file per
+platform under [`src/platform-styles/`](./src/platform-styles/) and
+`getPlatformTheme(platform, mode, contrast?)` derives a real `Theme`.
 
-| Platform | `sans` | `mono` |
-| -------- | ------ | ------ |
-| macOS (`darwin`) | `.SystemUIFont` | `Menlo` |
-| Linux (`linux`) | `.SystemUIFont` | `DejaVu Sans Mono` |
-| Windows (`win32`) | `.SystemUIFont` | `Consolas` |
-| `default` | `.SystemUIFont` | `Menlo` |
+| Platform | `mono` | Radius `sm` / `md` / `lg` / `xl` | Density | Primary (light) | Primary (dark) |
+| -------- | ------ | -------------------------------- | ------- | --------------- | -------------- |
+| macOS (`darwin`) | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#0A84FF` |
+| Linux (`linux`) | `DejaVu Sans Mono` | 4 / 6 / 12 / 12 | `comfortable` | `#1C71D8` | `#78AEED` |
+| Windows (`win32`) | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
+| `default` | `Menlo` | identity | `comfortable` | `#5F4BDB` | `#A7A9FF` |
 
-`sans` is GPUI's system UI font sentinel on every platform — GPUI resolves it to
-the operating system's own UI font. `currentPlatform` is the platform this code
-runs on (`default` in a browser or on an OS the library does not know) and
-`systemMonoFamily` is its mono family.
+`sans` is GPUI's `.SystemUIFont` sentinel on every platform — GPUI resolves it to
+the operating system's own UI font. The Default variant has no overrides and
+returns the identity unchanged.
 
 ```tsx
-import { platformTheme, themes } from "@gpuixui/tokens";
+import { getPlatformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 
-<ThemeProvider theme={platformTheme(themes.dark, "win32")} />;
+<ThemeProvider theme={getPlatformTheme("win32", "dark")} />;
 ```
 
-A runnable example lives in
-[`src/platforms.example.ts`](./src/platforms.example.ts).
+High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
+applies only the families and shape, because a platform accent must not drop the
+AAA floors. To ship your own look, copy a style file and apply it, or extend the
+resolved theme:
+
+```ts
+import {
+  applyPlatformStyle,
+  extendTheme,
+  getPlatformTheme,
+  getTheme,
+} from "@gpuixui/tokens";
+
+// A copied `PlatformStyle` with edited values.
+const contoso = applyPlatformStyle(getTheme("dark"), contosoStyle);
+const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
+  colors: { primary: "#005A9E" },
+  radius: { md: 3 },
+});
+```
+
+Runnable examples live in
+[`src/platforms.example.ts`](./src/platforms.example.ts) and
+[`src/platform-styles.example.ts`](./src/platform-styles.example.ts).
 
 ## Custom typefaces
 
@@ -256,9 +278,9 @@ persisted theme at its own boundary, where `Schema` belongs.
 ## Limitations
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
-- A platform style changes font families only. Per-platform control metrics have
-  no evidence in GPUix 0.10.0, so a consumer layers `density` with
-  `extendTheme` instead.
+- Platform variants express platform conventions with our own values; they do not
+  ship a vendor's design system. At high contrast the AAA colour set is kept and
+  only families and shape are applied, because accessibility outranks resemblance.
 - `.SystemUIFont` is verified against GPUI's documentation of the name, and the
   playground's `theme-type-and-shadow` gallery (plan 150) asserts every type role,
   including the family the runtime reports. A visual per-platform comparison is

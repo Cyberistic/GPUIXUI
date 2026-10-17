@@ -13,6 +13,7 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import packageJson from "../package.json";
+import { getPlatformTheme, platformStyles } from "./index.js";
 
 interface ExportTarget {
   readonly subpath: string;
@@ -34,6 +35,16 @@ describe("package exports", () => {
     const subpaths = exportTargets.map((entry) => entry.subpath);
     expect(subpaths).toContain(".");
     expect(subpaths).toContain("./react");
+  });
+
+  it("exposes the platform style table and its resolver", () => {
+    expect(Object.keys(platformStyles).toSorted()).toEqual([
+      "darwin",
+      "default",
+      "linux",
+      "win32",
+    ]);
+    expect(getPlatformTheme("win32", "dark").name).toContain("Windows");
   });
 
   it("points every entry at a file in the repository, not a build artifact", () => {

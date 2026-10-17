@@ -7,7 +7,11 @@ import {
 } from "./color.js";
 import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
 import { motion, type Motion, type MotionEasings } from "./motion.js";
-import { platformTypes, type PlatformName } from "./platforms.js";
+import {
+  platformStyles,
+  type PlatformName,
+  type PlatformStyle,
+} from "./platforms.js";
 import {
   avatarSize,
   borderWidth,
@@ -321,22 +325,74 @@ export function createTheme(config: ThemeConfig): Theme {
   return extendTheme(themes[mode], overrides);
 }
 
+const platformOverrides = (
+  base: Theme,
+  style: PlatformStyle,
+  contrast: ThemeContrast,
+): ThemeOverrides => {
+  const { label, sans, mono } = style.types;
+  const structural: ThemeOverrides = {
+    name: `${base.name} · ${label}`,
+    typography: { sans, mono },
+    radius: style.structure.radius,
+    density: style.structure.density,
+    motion: style.structure.motion,
+  };
+  if (contrast === "high") {
+    return structural;
+  }
+  return {
+    ...structural,
+    colors: style.colors[base.mode],
+    elevation: style.elevation[base.mode],
+  };
+};
+
 /**
- * A theme for one platform: the base theme's colours, scales, mode and density,
- * with that platform's font families. `extendTheme` does the merge, so the base
- * is never mutated and the mode is preserved.
+ * Apply any platform style — shipped or copied and edited — to a base theme.
+ *
+ * Pass the base's contrast level. At `"high"` only the families and shape are
+ * applied and the base's high-contrast colours are kept, because a platform
+ * accent must not drop the AAA floors. The result is a normal {@link Theme}, so
+ * it composes through {@link extendTheme} like any other.
+ *
+ * @example
+ * ```ts
+ * import { applyPlatformStyle, getTheme } from "@gpuixui/tokens";
+ *
+ * const contoso = applyPlatformStyle(getTheme("dark"), contosoStyle);
+ * ```
+ */
+export function applyPlatformStyle(
+  base: Theme,
+  style: PlatformStyle,
+  contrast: ThemeContrast = "default",
+): Theme {
+  return extendTheme(base, platformOverrides(base, style, contrast));
+}
+
+/**
+ * Build a shipped platform variant for a mode and contrast level.
+ *
+ * The Default variant returns the identity unchanged. Every other variant is
+ * the built-in theme for the mode, extended with the platform's type families,
+ * radii, density, motion, surfaces, accent and shadows — a normal {@link Theme},
+ * so it composes through {@link extendTheme} like any other.
  *
  * @example
  * ```tsx
- * import { platformTheme, themes } from "@gpuixui/tokens";
+ * import { getPlatformTheme } from "@gpuixui/tokens";
  *
- * <ThemeProvider theme={platformTheme(themes.dark, "win32")} />
+ * <ThemeProvider theme={getPlatformTheme("win32", "dark")} />
  * ```
  */
-export function platformTheme(base: Theme, platform: PlatformName): Theme {
-  const { label, sans, mono } = platformTypes[platform];
-  return extendTheme(base, {
-    name: `${base.name} · ${label}`,
-    typography: { sans, mono },
-  });
+export function getPlatformTheme(
+  platform: PlatformName,
+  mode: ThemeMode,
+  contrast: ThemeContrast = "default",
+): Theme {
+  const base = getTheme(mode, contrast);
+  return platform === "default"
+    ? base
+    : applyPlatformStyle(base, platformStyles[platform], contrast);
 }

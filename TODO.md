@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 30/42
+`[x]` `[███████░░░]` 31/43
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -69,8 +69,10 @@ prebuilt `dist` (plan 016)
 `elevationShadow(theme, level)` (plan 018)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
-`[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
-platform toggle (plan 051)
+`[x]` Add platform type styles for the docs platform toggle (plan 051)
+`[x]` Ship four platform style variants — macOS, Linux, Windows and Default — as
+editable `platformStyles` themes and `getPlatformTheme(platform, mode, contrast)`,
+with the high-contrast colour set winning over platform resemblance (plan 063)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
@@ -114,9 +116,12 @@ test plan for the release that exposes it. No font is bundled.
 owner: `playground`) — it paints every `colorRoles` entry and every type role
 across dark/light/high-contrast dark and asserts the runtime's own
 `paintedStyle`, which is the native proof these rows cite
-`[ ]` Cross-team: a visual per-platform comparison (macOS / Linux / Windows /
-Default) built on `platformTypes` + `platformTheme` (owner: `docs-site` and
-`playground`); ignore the `references`
+`[ ]` Cross-team: the Fumadocs platform toggle (macOS / Linux / Windows /
+Default) switches every preview through `getPlatformTheme`, keeps the choice in
+shareable page state and remembers it across navigation; document it under
+Theming as an illustrative browser approximation (owner: `docs-site`; plan 063)
+`[ ]` Cross-team: a native visual per-platform comparison built on
+`getPlatformTheme` (owner: `playground`; plan 063); ignore the `references`
 **symlink** — a `references/` rule does not match a symlink, so every worktree
 shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `tokens`)

@@ -122,10 +122,14 @@ table (`platformTypes`): `Menlo` on macOS, `DejaVu Sans Mono` on Linux,
 scale is shared by both themes and is not changed by density.
 
 A platform style is a **real theme**, not a docs-only style sheet:
-`platformTheme(theme, platform)` derives one with `extendTheme`, keeping the
-colours, scales, mode and density of its base and changing only the two
-families, so the docs platform toggle previews exactly what a native build
-renders. A platform is a font decision here, never a second design system.
+`getPlatformTheme(platform, mode, contrast?)` derives one from the identity with
+`extendTheme`. The three real variants — macOS, Linux and Windows — change the
+families, radii, density, motion, surfaces, accent and shadows so a preview reads
+as that platform; the Default variant returns the identity unchanged. The shared
+status, disabled and scale tokens stay put, so the default identity remains the
+system and the platform looks are variants of it, never four design systems. At
+high contrast only families and shape are applied: the AAA colour set wins over
+platform resemblance. The docs toggle and a native build call the same function.
 
 An application can name an **installed** family the same way, with
 `extendTheme(base, { typography: { sans: … } })`, so a brand face that every target
@@ -278,7 +282,10 @@ The extension mechanism is deliberately small:
 
 - `createTheme({ mode, ...overrides })` — start from a built-in theme.
 - `extendTheme(base, overrides)` — derive from any theme, including another
-  brand theme or a high-contrast theme.
+  brand theme, a high-contrast theme or a platform variant.
+- `getPlatformTheme(platform, mode, contrast?)` — resolve a shipped platform
+  variant; the result is a normal theme, so a consumer can edit it with
+  `extendTheme`.
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
 

@@ -24,6 +24,12 @@ import {
 } from "./elevation.js";
 import { motion } from "./motion.js";
 import {
+  platformStyles,
+  platformTypes,
+  systemUiFont,
+  type PlatformName,
+} from "./platforms.js";
+import {
   avatarSize,
   borderWidth,
   defaultDensity,
@@ -198,6 +204,36 @@ describe("docs/tokens.md numeric tables", () => {
     Object.entries(avatarSize).forEach(([size, pixels]) => {
       expect(markdown, `avatarSize.${size}`).toContain(
         `| \`avatarSize.${size}\` | ${pixels} |`,
+      );
+    });
+  });
+});
+
+const platformNames: ReadonlyArray<PlatformName> = [
+  "darwin",
+  "linux",
+  "win32",
+  "default",
+];
+
+describe("docs/tokens.md platform table", () => {
+  it("lists every shipped platform variant", () => {
+    platformNames.forEach((platform) => {
+      expect(markdown, platform).toContain(
+        `| \`${platform}\` (${platformTypes[platform].label}) |`,
+      );
+    });
+  });
+
+  it("states each variant's real type, shape, density and accent", () => {
+    platformNames.forEach((platform) => {
+      const style = platformStyles[platform];
+      const variantRadius = style.structure.radius ?? radius;
+      const density = style.structure.density ?? defaultDensity.name;
+      const light = style.colors.light.primary ?? themes.light.colors.primary;
+      const dark = style.colors.dark.primary ?? themes.dark.colors.primary;
+      expect(markdown, platform).toContain(
+        `| \`${platform}\` (${platformTypes[platform].label}) | \`${systemUiFont}\` | \`${platformTypes[platform].mono}\` | ${variantRadius.sm} / ${variantRadius.md} / ${variantRadius.lg} / ${variantRadius.xl} | \`${density}\` | \`${light}\` | \`${dark}\` |`,
       );
     });
   });

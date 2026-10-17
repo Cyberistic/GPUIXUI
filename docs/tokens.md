@@ -14,6 +14,7 @@ with a different `Theme` object.
 ```ts
 import {
   alpha,
+  applyPlatformStyle,
   colorRoles,
   createTheme,
   currentPlatform,
@@ -21,13 +22,14 @@ import {
   elevationShadow,
   extendTheme,
   focusRing,
+  getPlatformTheme,
   getTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   highContrastThemes,
   lightTheme,
   motionTransition,
-  platformTheme,
+  platformStyles,
   platformTypes,
   statusTone,
   systemUiFont,
@@ -299,46 +301,78 @@ import { textStyle } from "@gpuixui/tokens";
 </text>;
 ```
 
-### Platform type
+### Platform styles
 
-`platformTypes` is the one place a family per platform is decided, and
-`platformTheme(base, platform)` turns it into a real theme — same colours, scales,
-mode and density; the families and the name change. The docs platform toggle and a
-native build use the same table, so a preview cannot show type the runtime cannot
-produce.
+Four platform variants ship: macOS, Linux, Windows and Default. They are full
+token themes in this package, not docs-only CSS: `platformStyles` indexes one
+editable file per platform under `platform-styles/`, and
+`getPlatformTheme(platform, mode, contrast?)` derives a real `Theme` from the
+built-in identity.
 
-| Platform | `sans` | `mono` |
-| -------- | ------ | ------ |
-| `darwin` (macOS) | `.SystemUIFont` | `Menlo` |
-| `linux` | `.SystemUIFont` | `DejaVu Sans Mono` |
-| `win32` (Windows) | `.SystemUIFont` | `Consolas` |
-| `default` | `.SystemUIFont` | `Menlo` |
+| Platform | `sans` | `mono` | Radius `sm` / `md` / `lg` / `xl` | Density | Primary (light) | Primary (dark) |
+| -------- | ------ | ------ | -------------------------------- | ------- | --------------- | -------------- |
+| `darwin` (macOS) | `.SystemUIFont` | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#0A84FF` |
+| `linux` (Linux) | `.SystemUIFont` | `DejaVu Sans Mono` | 4 / 6 / 12 / 12 | `comfortable` | `#1C71D8` | `#78AEED` |
+| `win32` (Windows) | `.SystemUIFont` | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
+| `default` (Default) | `.SystemUIFont` | `Menlo` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |
 
-`currentPlatform` is one of those names — `default` when `process.platform` is
-not one the library knows, such as a browser — and `systemMonoFamily` is
-`platformTypes[currentPlatform].mono`, which is what the default typography uses.
+The Default variant has no overrides — `getPlatformTheme("default", mode)`
+returns the identity unchanged. Each real variant changes its type family,
+radii, density, motion, surfaces, accent and shadows; roles it does not name
+(status, disabled, skeleton, scrollbar) and every non-colour scale inherit the
+identity, so the default stays the design system the library is built on.
+
+`getPlatformTheme` never mutates its base, keeps the requested mode and returns
+a normal `Theme`:
 
 ```tsx
-import { platformTheme, themes } from "@gpuixui/tokens";
+import { getPlatformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 
-<ThemeProvider theme={platformTheme(themes.dark, "win32")}>
+<ThemeProvider theme={getPlatformTheme("win32", "dark")}>
   <Code>npm run build</Code>
 </ThemeProvider>;
 ```
 
-`sans` is the sentinel on every platform because GPUI resolves `.SystemUIFont` to
-the operating system's own UI font — GPUI documents the name as "the system UI
-font, which varies based on platform" and uses it as its default font — so a
-theme never names a face the machine may not have. The table still exists for the
-two things a component cannot infer: the platform's monospace family, and which
-platform a preview is showing.
+**High contrast wins over resemblance.** `getPlatformTheme(platform, mode,
+"high")` applies only the families and shape to the high-contrast colour set,
+because a platform accent must not drop the AAA floors.
 
-**Two runtime facts the table respects.** GPUix 0.10.0's `StyleDesc.fontFamily`
-is a **single** string, not a CSS stack, so an entry never contains a comma; and a
-family the machine does not have falls back silently, so the platform table only
-names families each platform installs. This table changes no colours, sizes or
-spacing: a platform style is a theme, not a second design system.
+To ship your own look, copy a style file and edit it, or extend the resolved
+theme — no component source changes:
+
+```ts
+import {
+  applyPlatformStyle,
+  extendTheme,
+  getPlatformTheme,
+  getTheme,
+} from "@gpuixui/tokens";
+
+// Copy `platform-styles/windows.ts`, change its values, keep the shape.
+import { contosoStyle } from "./contoso";
+
+const contoso = applyPlatformStyle(getTheme("dark"), contosoStyle);
+const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
+  colors: { primary: "#005A9E", primaryHover: "#004578" },
+  radius: { md: 3, lg: 6 },
+});
+```
+
+`applyPlatformStyle(base, style, contrast?)` takes the base theme's contrast
+level, so a copied style never overrides a high-contrast palette.
+
+The docs platform toggle and a native build call the same function, so a preview
+cannot show a theme the runtime cannot produce.
+
+**Type facts.** `sans` is `.SystemUIFont` on every platform because GPUI resolves
+the sentinel to the operating system's own UI font, so a theme never names a
+face the machine may not have. `mono` names a family each platform installs.
+GPUix 0.10.0's `StyleDesc.fontFamily` is a **single** string, not a CSS stack, so
+an entry never contains a comma; a family the machine does not have falls back
+silently. `currentPlatform` is the platform this code runs on (`default` in a
+browser or on an OS the library does not know) and `systemMonoFamily` is its mono
+family, which the default typography uses.
 
 ### Custom typefaces are unavailable in 0.10.0
 
@@ -754,12 +788,19 @@ the implementation. The same file holds `docs/design-system.md`'s numeric claims
 spacing, density, radius, icon and avatar scales — so the rationale cannot drift
 from the package either.
 
-`packages/tokens/src/platforms.test.ts` covers the platform table: every platform
-has a label and both families, `sans` is the GPUI sentinel, no family is a comma
-stack, `systemMonoFamily` and the default typography follow `currentPlatform`, and
-`platformTheme` changes only the families and the name without mutating its base.
-There is no font-registration test because the pinned runtime has no API to test
-against; see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
+`packages/tokens/src/platforms.test.ts` covers the platform table and every
+variant: each platform has a label and both families, `sans` is the GPUI
+sentinel, no family is a comma stack, `systemMonoFamily` and the default
+typography follow `currentPlatform`, the Default variant returns the identity,
+the three real variants change accent and shape without mutating their base, and
+every platform theme is held to the same contrast floors as the identity —
+including the composited `selection` wash. The same suite covers
+`applyPlatformStyle`: a copied style with an edited accent applies, an unnamed
+role inherits the identity, and a high-contrast base keeps its colours.
+`docs.test.ts` builds the table above
+from `platformStyles`, so a value edit cannot ship a document that lies. There is
+no font-registration test because the pinned runtime has no API to test against;
+see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
 
 ## Limitations and future work
 
@@ -767,9 +808,10 @@ against; see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
 - No `letterSpacing` in the runtime.
 - No OS appearance detection; the application selects the mode and contrast, and
   also which platform style to render.
-- No per-platform control metrics: `platformTheme` changes families only, because
-  GPUix 0.10.0 gives no evidence for platform-specific control heights. Layer
-  `density` with `extendTheme` when a platform needs it.
+- Platform styles express platform conventions, not a shipped copy of a vendor
+  design system: radii, density, accent and shadows are our values, and the
+  families are limited to what each OS installs. High contrast keeps its own
+  colours, so a platform accent is a default-contrast feature.
 - `.SystemUIFont` is verified by GPUI's own documentation of the name, and the
   playground's `theme-type-and-shadow` gallery (plan 150) asserts every type role
   through `textStyle`, including the family the runtime reports. A visual
