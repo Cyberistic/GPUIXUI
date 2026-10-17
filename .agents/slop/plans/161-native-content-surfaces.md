@@ -169,7 +169,56 @@ without both the trap is invisible.
 
 ## 8. Measured facts
 
-_To be filled by the implementation run. Record: the suite count and exit code;
-`elementType`/bounds for each surface; the exact painted text for the diff; the
-fallback counts; whether the ref upload painted; what `<canvas>` reports; and
-the two-direction outputs._
+**Suite: 27/27 green on this host, exit `0`**, `content=verified`, with the 26
+prior scenarios unchanged. `native-surfaces` records 40 checks in 303 ms.
+
+- **`<svg>`** — retained as type `svg` and painted at the declared box (48 ×
+  48). Bounds come from `on_painted`, so this is paint evidence. There is no
+  pixel readback: the icon's appearance is visible only in the screenshot
+  artifact. An **empty** `<svg>` (no `source`, no `src`) keeps the same type and
+  box and therefore passes the same checks — the probe cannot tell an icon that
+  failed to parse from one that painted. This is the honest limit; `COMPONENTS.md`
+  records it and the icon component keeps the frame artifact as its visual proof.
+- **`<img>`, no `src`** — retained as type `img`, painted at 96 × 64, and the
+  paint log holds exactly **one `img: no src`** (the component's own chrome
+  fallback).
+- **`<img>`, undecodable data URL** (`data:image/nope;base64,AAAA`) — the
+  invalid-source branch paints **one `img: load failed`**. Counting occurrences,
+  not merely searching for the string, is what makes this meaningful.
+- **`<img>`, valid 1 × 1 PNG data URL** — retained, painted at 64 × 64, and adds
+  **no** fallback string (counts stay 1 and 1). A corrupt PNG with a valid MIME
+  (`data:image/png;base64,AAAA`) produced the same result: it still passed, so
+  this probe **cannot distinguish a decoded bitmap from one that failed inside
+  GPUI** — that failure paints a plain child, which never enters the paint log.
+  Only the screenshot artifact shows it.
+- **`<img>`, pixels through the ref** — `setImagePixels(2, 2, 16 bytes)` in
+  `useLayoutEffect` did not throw, the element painted at 32 × 32, and no
+  fallback appeared. This is the strongest image evidence the host offers: the
+  upload call would fail loudly on a bad buffer, and bounds prove a paint.
+- **`<diff>`** — retained as type `diff`, painted at width 640 with height > 0,
+  and the paint log holds the file path (`example.ts`), the hunk header
+  (`@@ -1,2 +1,2 @@`), the added line (`const added = 1`) and the removed line
+  (`const removed = 1`).
+- **`<canvas>`** — the trap, confirmed. The node is **retained as type
+  `canvas`** (the JSX types accept it), but it **paints nothing**:
+  `getElementBounds` is `null`, so no `on_painted` ever fired. It keeps its
+  child in the retained tree (`host.text` reads `canvas-child`) and **drops it
+  from the paint log** — the registry returns `gpui::Empty`, discarding the
+  built children. Charts and the colour picker's SV square cannot use `<canvas>`
+  on 0.10.0; `<svg>` (static) and `<img>`/`setImagePixels` (dynamic bitmaps) are
+  the alternatives.
+- **Two-direction proof** (all three run, outputs quoted):
+  1. `SEARCH_SVG = ""` (no source): the run stays **green**, confirming the
+     documented weakness that an empty icon is indistinguishable by these
+     checks. Restored.
+  2. the valid data URL replaced by the invalid one: **exit `1`**, `an
+     undecodable data URL paints the load-failure fallback: expected 1, got 2`.
+     The count assertion — the same one that guards the valid image — is what
+     caught it. Restored.
+  3. `<canvas>` replaced by a `<div>`: **exit `1`**, `surface-canvas element
+     type: expected "canvas", got "div"`. Restored.
+- **Consequence for the library**: `<canvas>` must not appear as a chart or
+  colour-picker foundation until GPUix ships a factory. Static charts can be
+  drawn with `<svg>`; live bitmaps use `<img>` + `setImagePixels` (the path a
+  waveform already uses upstream).
+

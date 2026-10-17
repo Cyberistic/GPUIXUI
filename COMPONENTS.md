@@ -49,8 +49,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse` | verified |
+| content | `native-surfaces` | verified |
 
-The suite is **26/26 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **27/27 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -92,6 +93,20 @@ focused row: `focused()` still reports it, the next arrow key still moves it,
 and the focused row stays in `getPaintedText()` outside the window's run. A
 virtualized grid must therefore treat the painted set as "the window **plus**
 the focused row", not as exactly the visible rows.
+
+`native-surfaces` is the runtime verdict for the content elements behind icons,
+image preview and the diff viewer, and it settles the `<canvas>` question. What
+holds: `<svg source>` is retained as type `svg` and painted at its declared box;
+`<img>` with no `src` paints `img: no src`, an undecodable data URL paints
+`img: load failed`, a valid PNG data URL lays out at its box without a fallback,
+and `setImagePixels` through the ref uploads a bitmap without throwing; `<diff>`
+paints its file header, hunk header and changed lines. **`<canvas>` is the
+trap**: the node is retained (the JSX types accept it) but GPUI has no factory,
+so it paints nothing, has no bounds, and drops its children from the paint log.
+Charts must use `<svg>` or `<img>` + `setImagePixels`. The honest limit: there is
+no pixel readback, so a corrupt PNG with a valid MIME type is indistinguishable
+from a decoded one by these checks — the screenshot artifact is the only visual
+evidence, never an assertion.
 
 `select-choose`, `combobox-filter` and `tooltip-open` are the runtime verdicts
 for the three interactive components GPUix ships, which the library composes
@@ -170,7 +185,7 @@ is ahead of the published release — the divergence is called out below.
 | Row | GPUix provides | Verdict |
 | --- | -------------- | ------- |
 | Text / typography | `<text>` host element | **verified** (published 0.10.0) |
-| Icons | `<svg>` (tintable monochrome) + `<img>` | **verified** |
+| Icons | `<svg>` (tintable monochrome) + `<img>` | **verified** (runtime: `native-surfaces`) |
 | Separators, Spacers, Stack / layout primitives, Boxes / containers | `div` + flexbox / grid | **verified** |
 | Scrollable containers | `overflow: "scroll"` | **verified** |
 | Text inputs / Text areas | `<input>`, `<textarea>` | **verified** |
@@ -179,8 +194,8 @@ is ahead of the published release — the divergence is called out below.
 | Tooltips | `Tooltip` + parts | **verified** (runtime: `tooltip-open`) |
 | Virtualized lists | `<virtual-list>` | **verified** |
 | Syntax highlighting | `<code>` (bundled languages) | **verified** |
-| Diff viewer | `<diff>` (unified) | **verified** |
-| Image preview | `<img>` (path, data URL, http(s)) | **verified** |
+| Diff viewer | `<diff>` (unified) | **verified** (runtime: `native-surfaces`) |
+| Image preview | `<img>` (path, data URL, http(s)) | **verified** (runtime: `native-surfaces`) |
 | File / folder selection | `GpuixRenderer.promptForPaths` | **verified** |
 
 **Primitives only — still needs implementation:** Popovers / Dropdown menus /
@@ -188,9 +203,11 @@ Context menus (`floating`'s `FloatingLayer` + `<anchored>` give positioning and
 occlusion, not menu semantics); Toasts / notifications (`AnimatePresence` +
 `createPortal` + `<anchored>`); Buttons and Dialogs (**present on
 `references/gpuix` `main`, absent from published 0.10.0** — no `./button` or
-`./dialog` subpath and no `Button` / `Dialog` in `dist/index.d.ts`); `<canvas>`
-custom drawing (**unverified** — the README's Supported Elements table marks it
-"Custom drawing (planned)").
+`./dialog` subpath and no `Button` / `Dialog` in `dist/index.d.ts`);
+**`<canvas>` custom drawing — unsupported**: the element is in `ElementType`
+and typed in the JSX runtime, but no factory is registered, so it is retained
+and renders `gpui::Empty` — no bounds, no children painted (`native-surfaces`).
+Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps.
 
 **Cross-cutting, verified, partial** (runtime: `a11y-tree`): AccessKit `role`,
 `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`,
@@ -240,7 +257,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
 | Text / typography | todo | yes | `<text>` host element. API-shape work, not implementation. |
-| Icons | todo | yes | `<svg>` (tintable monochrome) + `<img>` provided. The icon *set* and sizing rules are ours. API-shape work, not implementation. |
+| Icons | todo | yes | `<svg>` (tintable monochrome) + `<img>` provided; the icon *set* and sizing rules are ours. API-shape work, not implementation. Evidence: `native-surfaces` — `<svg source>` is retained as type `svg` and paints at its declared box. Limitation: there is no pixel readback, so an empty icon and a painted one are indistinguishable by assertions; the screenshot artifact is the visual proof. |
 | Separators | todo | yes | `div` + border. API-shape work, not implementation. |
 | Spacers | todo | yes | `div`. API-shape work, not implementation. |
 | Stack / layout primitives | todo | yes | flexbox + grid provided. API-shape work, not implementation. |
@@ -301,7 +318,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Drawer | todo | ? | Edge-anchored panel with swipe-to-dismiss and nesting. `Dialog` is main-only in 0.10.0; `div` + `motion` (width/left/opacity) + `createPortal`. |
 | Stepper | todo | ? | Multi-step progress indicator (adabraka `StepItem`/`StepStatus`). `div` + `<text>`. |
 | Timeline | todo | ? | Event timeline with connector styles. `div` + `<text>`. |
-| Color picker | todo | ? | HSL/RGB/HEX + alpha + swatches. **Limitation (unverified for GPUix):** the saturation/value square needs radial or multi-stop gradients, which GPUix does not support (two-stop linear only — verified). Alternative: a discrete swatch grid or a pre-rendered bitmap. |
+| Color picker | todo | ? | HSL/RGB/HEX + alpha + swatches. **Limitation (measured):** the saturation/value square needs radial or multi-stop gradients, which GPUix does not support (two-stop linear only), and **`<canvas>` renders `gpui::Empty`** (`native-surfaces`). Alternative: a discrete swatch grid or a pre-rendered bitmap uploaded through `<img>` + `setImagePixels`. |
 | Tag / token input | todo | ? | `<input>` + chip `div`s; the token keyboard contract is ours. |
 | Mention input | todo | ? | `<input>` + an anchored suggestion list (`FloatingLayer`). |
 | Hotkey-recorder input | todo | ? | Captures `KeyEvent` (`key`, `isHeld`, modifiers) on a focused `div`; the accelerator model is ours. |
@@ -328,7 +345,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
 | Statistic / metric cards | todo | ? | Cards + `<text>`. |
-| Charts | todo | ? | No chart host element. `<svg>` can render static charts; `<canvas>` is "planned" (unverified). |
+| Charts | todo | ? | No chart host element. **`<canvas>` is unsupported** — retained but renders `gpui::Empty`, so no bounds and no children paint (`native-surfaces`). Static charts can be drawn with `<svg>` (painted at its box); live bitmaps use `<img>` + `setImagePixels`, which uploaded without throwing. |
 
 ## Tier 4 — desktop workspace
 
@@ -363,9 +380,9 @@ carries an evidenced limitation. The capability evidence lives in
 | --------- | ------ | ------------- | ------------------- |
 | Code editor integration | todo | ? | `<code>` renders highlighted code; there is **no editable code surface** (verified). |
 | Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages. API-shape work, not implementation. |
-| Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. |
+| Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. Evidence: `native-surfaces` — the file header, hunk header and changed lines all reach the paint log, and the surface is painted at its declared width. |
 | Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). |
-| Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. |
+| Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. Evidence: `native-surfaces` — a valid PNG data URL lays out at its box with no fallback, a missing `src` paints `img: no src`, an undecodable one paints `img: load failed`, and `setImagePixels` through the ref uploaded a bitmap without throwing. No pixel readback, so a corrupt bitmap with a valid MIME is indistinguishable from a decoded one. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
 | Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `onFileDrop` handles file drops only. |
 | Notification centre | todo | ? | Composition over toasts + panels. |

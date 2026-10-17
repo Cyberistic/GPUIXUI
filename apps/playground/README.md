@@ -194,17 +194,40 @@ The honest consequence: every control must pass `aria-label`, and a
 Checkbox/Switch announces its state through `aria-description` until GPUix
 exposes a checked channel.
 
+## Native content surfaces (plan `161`)
+
+`native-surfaces` is the runtime verdict for icons, image preview, the diff
+viewer and the `<canvas>` trap. Bounds are read from GPUI's `on_painted`, so a
+non-null box is paint evidence, not merely layout.
+
+| Surface | Result |
+| ------- | ------ |
+| `<svg source>` | retained as type `svg`, painted at its declared box (48 × 48) |
+| `<img>`, no `src` | retained, painted, and the paint log holds exactly one `img: no src` |
+| `<img>`, undecodable data URL | exactly one `img: load failed` |
+| `<img>`, valid PNG data URL | 64 × 64, no fallback added |
+| `<img>` + `setImagePixels` | 2 × 2 RGBA uploaded through the ref, painted at 32 × 32, no fallback |
+| `<diff>` | 640 wide with a painted height; file header, hunk header, added and removed lines all reach the paint log |
+| `<canvas>` | **retained as type `canvas`, paints nothing**: no bounds, child kept in the tree but dropped from the paint log |
+
+Two limits, stated rather than hidden: there is no pixel readback, so a corrupt
+PNG with a valid MIME is indistinguishable from a decoded one, and an empty
+`<svg>` has the same type and box as a painted icon — the screenshot artifact is
+the only visual evidence, never an assertion. Charts and the colour picker
+cannot use `<canvas>`; `<svg>` and `<img>` + `setImagePixels` are the honest
+alternatives.
+
 ## Evidence on this host
 
-The suite is **26/26 green** here (`exit 0`):
+The suite is **27/27 green** here (`exit 0`):
 
 ```
-26/26 scenarios passed · capabilities: layout=verified text=verified
+27/27 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
-a11y=verified scroll=verified panel=verified virtual-list=verified
-table=verified tree=verified log=verified theme=verified
-workspace=verified
+a11y=verified scroll=verified panel=verified motion=verified
+virtual-list=verified table=verified tree=verified log=verified
+theme=verified workspace=verified content=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -218,6 +241,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | popups | Select and Combobox open, commit and close under synthetic input, including native keys after `autoFocus`; Select returns focus to its trigger on every close. `nativeSimulateMouseMove` delivers enter/leave, so a hover tooltip is measurable; its close is a JS timer, not the GPUI clock |
 | a11y | the AccessKit dump maps every typed ARIA token to a role; names come only from `aria-label`; CheckBox/Switch have no checked state; the tree follows the painted virtual window |
+| content | `<svg>`/`<img>`/`<diff>` are retained **and** painted (bounds fire from `on_painted`); `<canvas>` is retained but renders nothing and drops its children; `setImagePixels` uploads a bitmap through the ref |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -252,6 +276,7 @@ src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/popups.tsx    Select, Combobox and Tooltip in the runtime
 src/scenarios/a11y.tsx      the AccessKit dump: roles, names, states, window
+src/scenarios/surfaces.tsx  svg, img (fallbacks, data URL, ref upload), diff, canvas
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -284,11 +309,11 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The fifteen core capabilities (including the token gallery, the modal
-  contract, floating placement, the three published popups and the
-  accessibility tree), the Tier 3/4 probes and the app-level shortcut probe pass
-  in real GPUix 0.10.0 on this host (26/26), with a written report and
-  screenshots.
+- The sixteen core capabilities (including the token gallery, the modal
+  contract, floating placement, the three published popups, the accessibility
+  tree and the content surfaces), the Tier 3/4 probes and the app-level shortcut
+  probe pass in real GPUix 0.10.0 on this host (27/27), with a written report
+  and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
