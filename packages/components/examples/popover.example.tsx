@@ -67,7 +67,7 @@ export const PopoverExample = () => {
           <PopoverContent
             testId="popover-example-panel"
             side="bottom"
-            align="end"
+            align="center"
           >
             <div
               style={{

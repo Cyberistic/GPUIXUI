@@ -4,9 +4,10 @@ description: A list of actions anchored to the control that opened it.
 ---
 
 `DropdownMenu` shows a short list of actions next to its trigger. The surface is
-an anchored GPUix layer, so it flips and shifts to stay inside the window; the
-component owns the open state, the highlight, the dismissal rules and focus
-return.
+an anchored GPUix layer, which snaps inside the window but does not flip; the
+component opens it on the opposite side when snapping would cover the trigger,
+centres a requested surface from measured bounds, and owns the open state, the
+highlight, the dismissal rules and focus return.
 
 ```tsx
 import {
@@ -49,7 +50,10 @@ import {
 `DropdownMenuContent` takes `side` (`top`/`right`/`bottom`/`left`, default
 `"bottom"`), `align` (`start`/`center`/`end`, default `"start"`), `sideOffset`
 (default `4`) and `collisionPadding` (default `8`, the margin kept from the
-window edge when the layer flips). `label` is the menu's accessible name.
+window edge when the surface snaps). A surface that snaps over its trigger is
+opened on the opposite side when that side has room, otherwise on the roomier
+side. `align="center"` is exact and measured; `alignOffset` is added on top if
+the caller needs its own adjustment. `label` is the menu's accessible name.
 
 ## Highlight is focus
 
@@ -220,14 +224,18 @@ focus is on.
   rule but is not exercised by a suite.
 - Submenus open to the right of their trigger and rely on `fit="snap"` to stay
   in the window; there is no left-side flip.
+- The root surface flips once per open, from measured bounds. A surface taller
+  than both sides can still cover its trigger, and `align="center"` is clamped by
+  the snap margin near a window edge.
 - Type-ahead is a prefix match with no fuzzy scoring, and it ignores a label that
   is not plain text unless `textValue` is set.
 - A hover does not preview a highlight; the pointer activates on click.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (33
-tests): the `menu` role, keyboard opening on the first/last enabled row, arrow
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (35
+tests): the `menu` role, keyboard opening on the first/last enabled row, a
+centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
 dismissal, checkbox toggling and its check mark, the destructive colour, the

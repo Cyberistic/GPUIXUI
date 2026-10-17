@@ -44,6 +44,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import {
   labelOf,
@@ -58,6 +59,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   elevationShadow,
@@ -65,6 +67,7 @@ import {
   useTheme,
   type Theme,
 } from "./internal/theme.js";
+import { usePlacement } from "./internal/use-placement.js";
 
 /** What a selection callback receives: one value, several, or none. */
 export type ComboboxSelection = string | null | ReadonlyArray<string>;
@@ -77,6 +80,7 @@ interface ComboboxContextValue {
   readonly disabled: boolean;
   readonly labelFor: (value: string) => string;
   readonly isDisabled: (value: string) => boolean;
+  readonly trigger: RefObject<PublicInstance | null>;
   readonly registerTrigger: (instance: PublicInstance | null) => void;
   /** An Escape press: close and return focus to the trigger. */
   readonly noteEscape: () => void;
@@ -222,6 +226,7 @@ export const Combobox = ({
             optionOf(options, value),
             (option) => option.disabled === true,
           ),
+        trigger,
         registerTrigger: (instance) => {
           trigger.current = instance;
         },
@@ -358,12 +363,14 @@ export const ComboboxTrigger = ({
 
 /** {@link ComboboxContent} props: the anchored popup surface. */
 export interface ComboboxContentProps extends FloatingContentProps {
-  /** Default `"bottom"`. */
+  /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"start"`. */
+  /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
   readonly align?: "start" | "center" | "end";
   /** The gap between trigger and surface. Default `4`. */
   readonly sideOffset?: number;
+  /** Added on top of the measured centre correction. Default `0`. */
+  readonly alignOffset?: number;
   readonly children?: PartChildren;
 }
 
@@ -372,21 +379,37 @@ export const ComboboxContent = ({
   side = "bottom",
   align = "start",
   sideOffset = 4,
+  alignOffset = 0,
+  collisionPadding = 8,
   children,
   onMouseDownOutside,
   style,
+  ref,
   ...rest
 }: ComboboxContentProps) => {
   const theme = useTheme();
-  const { noteOutsidePress } = useCombobox();
+  const { noteOutsidePress, open, trigger } = useCombobox();
+  const surface = useRef<PublicInstance | null>(null);
+  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const placement = usePlacement({
+    open,
+    side,
+    align,
+    margin: collisionPadding,
+    trigger,
+    surface,
+  });
   assertParts(comboboxContent, children);
 
   return (
     <HeadlessContent
       testId="combobox-content"
-      side={side}
-      align={align}
+      side={placement.side}
+      align={placement.align}
       sideOffset={sideOffset}
+      alignOffset={placement.alignOffset + alignOffset}
+      collisionPadding={collisionPadding}
+      ref={setSurface}
       {...rest}
       onMouseDownOutside={(event) => {
         noteOutsidePress();
@@ -619,12 +642,13 @@ export const comboboxMeta = {
   name: "Comboboxes",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
     "GPUix's filter is order-preserving, so the adapter feeds it pre-ranked items and controls inputValue",
     "selection yields option values, never labels",
     "no aria-activedescendant in 0.10.0: the highlighted row is visual while the input keeps focus",
     "no async options or create-new-option affordance in v1",
+    'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',
   ],
   docs: "docs/combobox.mdx",
   example: "examples/combobox.example.tsx",

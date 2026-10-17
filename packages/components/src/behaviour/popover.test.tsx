@@ -20,6 +20,7 @@ import {
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  requireBounds,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
@@ -29,21 +30,48 @@ const Filters = ({
   open,
   onOpenChange,
   side,
+  align,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly side?: "top" | "right" | "bottom" | "left";
+  readonly align?: "start" | "center" | "end";
 }) => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
   >
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
-      <PopoverContent testId="panel" side={side}>
+      <PopoverContent testId="panel" side={side} align={align}>
         <text testId="panel-text">Visible columns</text>
       </PopoverContent>
     </Popover>
     <Button testId="elsewhere">Elsewhere</Button>
+  </div>
+);
+
+/** A trigger near the window centre, where a centred panel has room to sit. */
+const CentredPopover = () => (
+  <div style={{ paddingLeft: 540, paddingTop: 100 }}>
+    <Popover>
+      <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
+      <PopoverContent testId="panel" align="center">
+        <text>Visible columns</text>
+      </PopoverContent>
+    </Popover>
+  </div>
+);
+
+/** A trigger at the bottom of the window, where a downside panel cannot fit. */
+const LowPopover = () => (
+  <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
+    <div style={{ flexGrow: 1 }} />
+    <Popover>
+      <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
+      <PopoverContent testId="panel">
+        <text>Visible columns</text>
+      </PopoverContent>
+    </Popover>
   </div>
 );
 
@@ -107,6 +135,37 @@ describe("Popover", () => {
     expect(panel.value.x).toBeGreaterThanOrEqual(
       trigger.value.x + trigger.value.width,
     );
+
+    popover.unmount();
+  });
+
+  it("centres a requested panel on its trigger", () => {
+    const popover = renderComponent(<CentredPopover />);
+    clickCentreOf(popover, "trigger");
+
+    const trigger = requireBounds(popover, "trigger");
+    const panel = requireBounds(popover, "panel");
+
+    // GPUix 0.10.0 centres on the trigger's containing block, not the trigger;
+    // the component maps `center` to `start` plus the measured half difference
+    // (plan 323).
+    expect(
+      Math.abs(panel.x + panel.width / 2 - (trigger.x + trigger.width / 2)),
+    ).toBeLessThanOrEqual(1);
+
+    popover.unmount();
+  });
+
+  it("opens above a trigger near the window bottom instead of covering it", () => {
+    const popover = renderComponent(<LowPopover />);
+    clickCentreOf(popover, "trigger");
+
+    const trigger = requireBounds(popover, "trigger");
+    const panel = requireBounds(popover, "panel");
+
+    // `fit="snap"` would clamp the panel up over the trigger; the component
+    // flips to the top side, which has room (plan 156 §8, plan 323).
+    expect(panel.y + panel.height).toBeLessThanOrEqual(trigger.y);
 
     popover.unmount();
   });

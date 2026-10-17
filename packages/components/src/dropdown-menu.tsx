@@ -41,6 +41,7 @@ import {
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { textStyle, useTheme } from "./internal/theme.js";
+import { usePlacement } from "./internal/use-placement.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -230,12 +231,14 @@ export const DropdownMenuTrigger = ({
 export interface DropdownMenuContentProps extends FloatingContentProps {
   /** The menu's accessible name. */
   readonly label?: string;
-  /** Default `"bottom"`. */
+  /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"start"`. */
+  /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
   readonly align?: "start" | "center" | "end";
   /** The gap between trigger and surface. Default `4`. */
   readonly sideOffset?: number;
+  /** Added on top of the measured centre correction. Default `0`. */
+  readonly alignOffset?: number;
   readonly children?: PartChildren;
 }
 
@@ -245,17 +248,29 @@ export const DropdownMenuContent = ({
   side = "bottom",
   align = "start",
   sideOffset = 4,
+  alignOffset = 0,
   collisionPadding = 8,
   children,
   onKeyDown,
   onMouseDownOutside,
   style,
+  ref,
   ...rest
 }: DropdownMenuContentProps) => {
   const theme = useTheme();
-  const { open, pendingFocus } = useDropdownContext();
+  const { open, trigger, pendingFocus } = useDropdownContext();
   const menu = useMenuContext();
   const keys = menuKeyHandler(menu);
+  const surface = useRef<PublicInstance | null>(null);
+  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const placement = usePlacement({
+    open,
+    side,
+    align,
+    margin: collisionPadding,
+    trigger,
+    surface,
+  });
   assertParts(dropdownContent, children);
 
   // Rows register in child layout effects, which run before this one. If the
@@ -272,14 +287,16 @@ export const DropdownMenuContent = ({
 
   return (
     <FloatingLayer
-      side={side}
-      align={align}
+      side={placement.side}
+      align={placement.align}
       sideOffset={sideOffset}
+      alignOffset={placement.alignOffset + alignOffset}
       collisionPadding={collisionPadding}
       role="menu"
       {...(label === undefined ? {} : { "aria-label": label })}
       tabIndex={-1}
       autoFocus
+      ref={setSurface}
       {...rest}
       onMouseDownOutside={(event) => {
         onMouseDownOutside?.(event);
@@ -369,6 +386,7 @@ export const dropdownMenuMeta = {
   gpuixSupport: "partial",
   limitations: [
     "one level of submenus is tested; deeper nesting follows the same rule but is untested",
+    'the root surface flips once when snapping would cover its trigger, and align="center" is measured from the trigger; the snap margin wins near a window edge',
     'submenus open to the right and are clamped by fit="snap"; there is no left-side flip',
     "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
     "type-ahead is a case-insensitive 500 ms prefix search with no fuzzy scoring; a composed label needs textValue",

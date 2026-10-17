@@ -3,7 +3,9 @@
  *
  * Positioning is GPUix's own `FloatingLayer` (`<anchored>` with collision
  * handling), so this component owns only the parts 0.10.0 leaves to the library:
- * the open state, the dismissal rules and the trigger's re-open guard.
+ * the open state, the dismissal rules, the trigger's re-open guard and the
+ * measured placement correction (the runtime snaps but does not flip, and its
+ * `center` centres on the containing block; plan 323).
  *
  * Dismissal rules (all measured — plan 112 §1c):
  *
@@ -49,6 +51,7 @@ import {
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
+import { usePlacement } from "./internal/use-placement.js";
 
 /** The rules a {@link PopoverContent} follows; throws outside a {@link Popover}. */
 interface PopoverContextValue {
@@ -141,14 +144,16 @@ export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
 
 /** {@link PopoverContent} props: a floating surface, side and alignment. */
 export interface PopoverContentProps extends FloatingContentProps {
-  /** Default `"bottom"`. */
+  /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"start"`. */
+  /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
   readonly align?: "start" | "center" | "end";
   /** The gap between the trigger and the surface. Default `6`. */
   readonly sideOffset?: number;
-  /** The margin a flipped surface keeps from the window edge. Default `8`. */
+  /** The margin a snapped surface keeps from the window edge. Default `8`. */
   readonly collisionPadding?: number;
+  /** Added on top of the measured centre correction. Default `0`. */
+  readonly alignOffset?: number;
 }
 
 /**
@@ -159,17 +164,29 @@ export const PopoverContent = ({
   side = "bottom",
   align = "start",
   sideOffset = 6,
+  alignOffset = 0,
   collisionPadding = 8,
   children,
   onKeyDown,
   onMouseDownOutside,
   style,
+  ref,
   ...rest
 }: PopoverContentProps) => {
   const theme = useTheme();
   const { open, setOpen, trigger, dismissedByOutsidePress } =
     usePopoverContext();
   const renderer = useGpuix().renderer;
+  const surface = useRef<PublicInstance | null>(null);
+  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const placement = usePlacement({
+    open,
+    side,
+    align,
+    margin: collisionPadding,
+    trigger,
+    surface,
+  });
 
   // A re-render must not re-push the layer: that would move the popover above an
   // overlay opened after it. The handler reads the latest setter through a ref.
@@ -202,12 +219,14 @@ export const PopoverContent = ({
 
   return (
     <FloatingLayer
-      side={side}
-      align={align}
+      side={placement.side}
+      align={placement.align}
       sideOffset={sideOffset}
+      alignOffset={placement.alignOffset + alignOffset}
       collisionPadding={collisionPadding}
       tabIndex={-1}
       autoFocus
+      ref={setSurface}
       {...rest}
       onMouseDownOutside={(event) => {
         onMouseDownOutside?.(event);
@@ -264,9 +283,10 @@ export const popoverMeta = {
   name: "Popovers",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
-    "positioning is GPUix's anchored layer: it flips to fit the window but has no arrow or custom anchor offset beyond side/align",
+    "positioning is GPUix's anchored layer: it snaps but does not flip, so the component flips once when the snapped surface would cover its trigger; no arrow or custom anchor element",
+    'the runtime\'s `align="center"` centres on the containing block, so the component maps it to a measured `start` offset; the snap margin wins near a window edge',
     "an outside press gives focus to whatever was pressed, so focus is not returned to the trigger (Escape is)",
   ],
   docs: "docs/popover.mdx",

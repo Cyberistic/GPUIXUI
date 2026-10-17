@@ -15,7 +15,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -85,6 +89,33 @@ const Picker = ({
   </div>
 );
 
+/** A trigger near the window centre, where a centred popup has room to sit. */
+const CentredPicker = () => (
+  <div style={{ paddingLeft: 540, paddingTop: 100 }}>
+    <Combobox options={options}>
+      <ComboboxTrigger label="Assign reviewer" />
+      <ComboboxContent align="center">
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+      </ComboboxContent>
+    </Combobox>
+  </div>
+);
+
+/** A trigger at the bottom of the window, where a downside popup cannot fit. */
+const LowPicker = () => (
+  <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
+    <div style={{ flexGrow: 1 }} />
+    <Combobox options={options}>
+      <ComboboxTrigger label="Assign reviewer" />
+      <ComboboxContent>
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+      </ComboboxContent>
+    </Combobox>
+  </div>
+);
+
 /** Let the runtime's microtask (focus) and React's updates settle. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -111,6 +142,34 @@ describe("Combobox", () => {
 
     expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+
+    picker.unmount();
+  });
+
+  it("centres a requested popup on its trigger", async () => {
+    const picker = renderComponent(<CentredPicker />);
+
+    await open(picker);
+
+    const trigger = requireBounds(picker, "combobox-trigger");
+    const surface = requireBounds(picker, "combobox-content");
+
+    expect(
+      Math.abs(surface.x + surface.width / 2 - (trigger.x + trigger.width / 2)),
+    ).toBeLessThanOrEqual(1);
+
+    picker.unmount();
+  });
+
+  it("opens above a trigger near the window bottom instead of covering it", async () => {
+    const picker = renderComponent(<LowPicker />);
+
+    await open(picker);
+
+    const trigger = requireBounds(picker, "combobox-trigger");
+    const surface = requireBounds(picker, "combobox-content");
+
+    expect(surface.y + surface.height).toBeLessThanOrEqual(trigger.y);
 
     picker.unmount();
   });

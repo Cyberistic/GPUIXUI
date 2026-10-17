@@ -102,6 +102,35 @@ const FileActions = ({
   );
 };
 
+/** A trigger near the window centre, where a centred menu has room to sit. */
+const CentredActions = () => (
+  <div style={{ paddingLeft: 540, paddingTop: 100 }}>
+    <DropdownMenu>
+      <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="Centred actions" align="center">
+        <DropdownMenuItem testId="rename" onSelect={() => undefined}>
+          Rename
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+);
+
+/** A trigger at the bottom of the window, where a downside menu cannot fit. */
+const LowActions = () => (
+  <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
+    <div style={{ flexGrow: 1 }} />
+    <DropdownMenu>
+      <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="Low actions">
+        <DropdownMenuItem testId="rename" onSelect={() => undefined}>
+          Rename
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+);
+
 /** A menu whose labels share a first letter, for the type-ahead cycle. */
 const Searchable = ({
   onSelect,
@@ -255,6 +284,32 @@ describe("DropdownMenu", () => {
     expect(menu.renderer.findByTestId("trigger")?.customProps).toMatchObject({
       "aria-expanded": true,
     });
+
+    menu.unmount();
+  });
+
+  it("centres a requested menu on its trigger", () => {
+    const menu = renderComponent(<CentredActions />);
+    clickCentreOf(menu, "trigger");
+
+    const trigger = requireBounds(menu, "trigger");
+    const surface = requireBounds(menu, "menu");
+
+    expect(
+      Math.abs(surface.x + surface.width / 2 - (trigger.x + trigger.width / 2)),
+    ).toBeLessThanOrEqual(1);
+
+    menu.unmount();
+  });
+
+  it("opens above a trigger near the window bottom instead of covering it", () => {
+    const menu = renderComponent(<LowActions />);
+    clickCentreOf(menu, "trigger");
+
+    const trigger = requireBounds(menu, "trigger");
+    const surface = requireBounds(menu, "menu");
+
+    expect(surface.y + surface.height).toBeLessThanOrEqual(trigger.y);
 
     menu.unmount();
   });
