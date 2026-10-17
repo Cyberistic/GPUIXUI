@@ -10,7 +10,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { CheckOutcome } from "./smoke.js";
+import * as Schema from "effect/Schema";
+import { CheckOutcome, StyleSnapshot } from "./smoke.js";
 import { nullHost } from "./test-support.js";
 import { runScenarios } from "./smoke.js";
 import { checkOf, labelsOf, run, scenario, statusOf } from "./test-support.js";
@@ -19,6 +20,67 @@ const holds = (
   check: Option.Option<{ readonly outcome: CheckOutcome }>,
   guard: (outcome: CheckOutcome) => boolean,
 ): boolean => Option.exists(check, (result) => guard(result.outcome));
+
+describe("StyleSnapshot", () => {
+  const decode = Schema.decodeUnknownOption(StyleSnapshot);
+  const field = <A>(
+    snapshot: Option.Option<StyleSnapshot>,
+    get: (style: StyleSnapshot) => Option.Option<A>,
+  ): Option.Option<A> => Option.flatMap(snapshot, get);
+
+  it("keeps the properties a token check asserts on, verbatim", () => {
+    const snapshot = decode({
+      width: 40,
+      height: 20,
+      backgroundColor: "#7567F23D",
+      fontFamily: "Menlo, monospace",
+      fontSize: 13,
+      boxShadow: {
+        offsetX: 0,
+        offsetY: 0,
+        blurRadius: 0,
+        spreadRadius: 3,
+        color: "#3B76F6",
+        inset: false,
+      },
+    });
+    expect(field(snapshot, (style) => style.backgroundColor)).toEqual(
+      Option.some("#7567F23D"),
+    );
+    expect(field(snapshot, (style) => style.fontSize)).toEqual(Option.some(13));
+    expect(field(snapshot, (style) => style.fontFamily)).toEqual(
+      Option.some("Menlo, monospace"),
+    );
+    expect(
+      field(snapshot, (style) =>
+        Option.map(style.boxShadow, (shadow) => shadow.spreadRadius),
+      ),
+    ).toEqual(Option.some(3));
+    expect(
+      field(snapshot, (style) =>
+        Option.map(style.boxShadow, (shadow) => shadow.color),
+      ),
+    ).toEqual(Option.some("#3B76F6"));
+  });
+
+  it("reports a property the runtime left out as absent, never as empty", () => {
+    const snapshot = decode({ width: 40, height: 20 });
+    expect(Option.isSome(snapshot)).toBe(true);
+    expect(field(snapshot, (style) => style.backgroundColor)).toEqual(
+      Option.none(),
+    );
+    expect(field(snapshot, (style) => style.color)).toEqual(Option.none());
+    expect(field(snapshot, (style) => style.boxShadow)).toEqual(Option.none());
+  });
+
+  it("refuses a whole snapshot whose property type changed", () => {
+    // A runtime that renames or retypes a property is a defect a scenario must
+    // see: silently coercing "13px" to 13 would let a token check pass against a
+    // style report that is no longer the one the tokens were written for.
+    expect(Option.isNone(decode({ fontSize: "13px" }))).toBe(true);
+    expect(Option.isNone(decode({ boxShadow: "#3B76F6" }))).toBe(true);
+  });
+});
 
 describe("runScenarios", () => {
   it.effect("a failing scenario does not stop the suite", () =>

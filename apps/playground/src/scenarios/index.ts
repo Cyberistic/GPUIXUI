@@ -23,6 +23,10 @@ import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
 import { shortcutScenario } from "./shortcuts.js";
+import {
+  themeColorRolesScenario,
+  themeTypeAndShadowScenario,
+} from "./theme.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -34,6 +38,7 @@ export const CORE_CAPABILITIES = [
   "scroll",
   "panel",
   "virtual-list",
+  "theme",
 ] as const;
 
 /** The Tier 3/4 capabilities the feasibility probes cover (plan `130`). */
@@ -53,6 +58,8 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tableColumnResizeScenario,
   workspaceScenario,
   shortcutScenario,
+  themeColorRolesScenario,
+  themeTypeAndShadowScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

@@ -9,10 +9,12 @@
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
+import { Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const InputProbe = () => {
+  const theme = useTheme();
   const [value, setValue] = useState("");
   const [submits, setSubmits] = useState(0);
   const [note, setNote] = useState("");
@@ -28,8 +30,8 @@ const InputProbe = () => {
         onChange={(event) => setValue(event.value ?? "")}
         onSubmit={() => setSubmits((count) => count + 1)}
         style={{
-          color: theme.text,
-          backgroundColor: theme.panelAlt,
+          color: theme.colors.inputForeground,
+          backgroundColor: theme.colors.input,
           padding: 8,
         }}
       />
@@ -39,14 +41,14 @@ const InputProbe = () => {
         minRows={2}
         onChange={(event) => setNote(event.value ?? "")}
         style={{
-          color: theme.text,
-          backgroundColor: theme.panelAlt,
+          color: theme.colors.inputForeground,
+          backgroundColor: theme.colors.input,
           padding: 8,
         }}
       />
-      <text testId="input-readout" style={{ color: theme.muted, fontSize: 12 }}>
+      <Readout testId="input-readout">
         {`value=${value} submits=${submits} area=${note.replace(/\n/g, "|")}`}
-      </text>
+      </Readout>
     </div>
   );
 };

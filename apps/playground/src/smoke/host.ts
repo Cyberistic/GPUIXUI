@@ -13,8 +13,9 @@
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import type { TestElement, TestRenderer } from "@gpuix/native/testing";
-import type { Smoke } from "@gpuixui/testing";
+import { Smoke } from "@gpuixui/testing";
 
 /** A point, or `None` when the `testId` is not in the painted tree. */
 interface Point {
@@ -95,6 +96,18 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onNone: () => null,
       onSome: (id) => renderer.getElementBounds(id),
     }),
+  // The renderer reports `style` as an untyped record; decoding it here is the
+  // boundary. A value it reports with an unexpected type makes the decode fail,
+  // which `StyleSnapshot` documents as a defect a scenario must see.
+  paintedStyle: (testId) =>
+    Option.getOrNull(
+      Option.flatMap(elementId(renderer, testId), (id) =>
+        Option.flatMap(
+          Option.fromNullishOr(renderer.getElement(id)?.style),
+          Schema.decodeUnknownOption(Smoke.StyleSnapshot),
+        ),
+      ),
+    ),
   focused: () =>
     Option.match(
       Option.flatMap(

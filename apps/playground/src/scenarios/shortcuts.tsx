@@ -11,13 +11,14 @@
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Option from "effect/Option";
+import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
-import { theme } from "../theme.js";
 import { Readout } from "../ui.js";
 import { useWindowKey } from "../window-key.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const ShortcutProbe = () => {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [last, setLast] = useState("none");
 
@@ -40,12 +41,12 @@ const ShortcutProbe = () => {
         width: 420,
         height: 240,
         padding: 12,
-        backgroundColor: theme.surface,
+        backgroundColor: theme.colors.background,
       }}
     >
-      <text testId="shortcut-hint" style={{ color: theme.muted, fontSize: 12 }}>
+      <Readout testId="shortcut-hint">
         press cmd-k for the palette, escape to close
-      </text>
+      </Readout>
       <div style={{ marginTop: 8 }}>
         <Readout testId="shortcut-readout">{`open=${open} last=${last}`}</Readout>
       </div>
@@ -55,12 +56,14 @@ const ShortcutProbe = () => {
           style={{
             marginTop: 8,
             padding: 8,
-            backgroundColor: theme.panel,
+            backgroundColor: theme.colors.card,
             borderWidth: 1,
-            borderColor: theme.border,
+            borderColor: theme.colors.border,
           }}
         >
-          <text style={{ color: theme.text }}>command palette</text>
+          <text style={{ color: theme.colors.foreground }}>
+            command palette
+          </text>
         </div>
       ) : null}
     </div>

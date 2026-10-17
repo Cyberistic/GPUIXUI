@@ -14,13 +14,14 @@ import { useRef, useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
 import { Body, Pressable, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const ROWS = 24;
 
 const ScrollProbe = () => {
+  const theme = useTheme();
   const [delta, setDelta] = useState(0);
   const bottom = useRef<PublicInstance | null>(null);
 
@@ -48,7 +49,9 @@ const ScrollProbe = () => {
             ref={index === ROWS - 1 ? bottom : undefined}
             style={{ height: 40, padding: 8 }}
           >
-            <text style={{ color: theme.text }}>{`row ${index}`}</text>
+            <text
+              style={{ color: theme.colors.foreground }}
+            >{`row ${index}`}</text>
           </div>
         ))}
       </div>

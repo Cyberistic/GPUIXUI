@@ -32,9 +32,16 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 ## Adapting a host
 
 A consumer adapts its renderer to `Smoke.SmokeHost` — an input surface (click,
-key, wheel, drag) and an inspection surface (text, bounds, scroll offset,
-screenshot). The adapter is the only place a GPUix type appears; scenarios see
-plain values.
+key, wheel, drag) and an inspection surface (text, bounds, scroll offset, the
+runtime's own painted style, screenshot). The adapter is the only place a GPUix
+type appears; scenarios see plain values.
+
+`paintedStyle(testId)` is the **runtime's own style report**, decoded into a
+`StyleSnapshot` at the adapter boundary: `backgroundColor`/`color`/`fontFamily`/
+`fontSize`/`boxShadow` as `Option`s. A property the runtime did not report is
+`None`; a payload whose property type changed fails the whole decode (`null`),
+deliberately — a runtime that changed its style report is a defect a scenario
+must see, never something to coerce.
 
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and

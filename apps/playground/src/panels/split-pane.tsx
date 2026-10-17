@@ -12,7 +12,7 @@
  */
 import { useState, type ReactNode } from "react";
 import * as Option from "effect/Option";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
 import { nextSize } from "./resize.js";
 
 /** A drag in progress: the pointer x and pane width when the button went down. */
@@ -44,6 +44,7 @@ export const SplitPane = ({
   max,
   onResize,
 }: SplitPaneProps) => {
+  const theme = useTheme();
   const [size, setSize] = useState(initial);
   const [press, setPress] = useState<Option.Option<Press>>(Option.none());
 
@@ -68,8 +69,8 @@ export const SplitPane = ({
           width: 6,
           flexShrink: 0,
           cursor: "col-resize",
-          backgroundColor: theme.border,
-          hover: { backgroundColor: theme.accent },
+          backgroundColor: theme.colors.border,
+          hover: { backgroundColor: theme.colors.primary },
         }}
         onMouseDown={(event) =>
           setPress(Option.some({ x: event.x ?? 0, size }))

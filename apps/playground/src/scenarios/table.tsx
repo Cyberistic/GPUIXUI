@@ -16,8 +16,8 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as String from "effect/String";
 import type { EventPayload } from "@gpuix/native";
+import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
-import { theme } from "../theme.js";
 import { Pressable, Readout } from "../ui.js";
 import { nextSize } from "../panels/resize.js";
 import type { PlaygroundScenario } from "../types.js";
@@ -45,14 +45,12 @@ const ordered = (descending: boolean): ReadonlyArray<Row> => {
   return descending ? Arr.reverse(sorted) : sorted;
 };
 
-const cell = {
-  padding: 6,
-  borderBottomWidth: 1,
-  borderColor: theme.border,
-} as const;
+/** Shared cell metrics; the border colour comes from the active theme. */
+const cell = { padding: 6, borderBottomWidth: 1 } as const;
 
 /** A sortable, selectable table with a drag-resized name column. */
 const TableProbe = () => {
+  const theme = useTheme();
   const [descending, setDescending] = useState(false);
   const [selected, setSelected] = useState(Option.none<number>());
   const [nameWidth, setNameWidth] = useState(160);
@@ -82,21 +80,28 @@ const TableProbe = () => {
           onClick={() => setDescending((current) => !current)}
           style={{ padding: 4 }}
         >
-          <text style={{ color: theme.text }}>{`sort: ${direction}`}</text>
+          <text
+            style={{ color: theme.colors.foreground }}
+          >{`sort: ${direction}`}</text>
         </Pressable>
       </div>
       <div
         style={{
           display: "flex",
           width: innerWidth,
-          backgroundColor: theme.panel,
+          backgroundColor: theme.colors.card,
         }}
       >
         <div
           testId="table-header-name"
-          style={{ ...cell, width: nameWidth, flexShrink: 0 }}
+          style={{
+            ...cell,
+            borderColor: theme.colors.border,
+            width: nameWidth,
+            flexShrink: 0,
+          }}
         >
-          <text style={{ color: theme.muted }}>name</text>
+          <text style={{ color: theme.colors.mutedForeground }}>name</text>
         </div>
         <div
           testId="col-name-handle"
@@ -104,8 +109,8 @@ const TableProbe = () => {
             width: 6,
             flexShrink: 0,
             cursor: "col-resize",
-            backgroundColor: theme.border,
-            hover: { backgroundColor: theme.accent },
+            backgroundColor: theme.colors.border,
+            hover: { backgroundColor: theme.colors.primary },
           }}
           onMouseDown={(event) =>
             setPress(Option.some({ x: event.x ?? 0, width: nameWidth }))
@@ -126,11 +131,25 @@ const TableProbe = () => {
           }
           onMouseUp={() => setPress(Option.none())}
         />
-        <div style={{ ...cell, width: STATUS_WIDTH, flexShrink: 0 }}>
-          <text style={{ color: theme.muted }}>status</text>
+        <div
+          style={{
+            ...cell,
+            borderColor: theme.colors.border,
+            width: STATUS_WIDTH,
+            flexShrink: 0,
+          }}
+        >
+          <text style={{ color: theme.colors.mutedForeground }}>status</text>
         </div>
-        <div style={{ ...cell, width: SIZE_WIDTH, flexShrink: 0 }}>
-          <text style={{ color: theme.muted }}>size</text>
+        <div
+          style={{
+            ...cell,
+            borderColor: theme.colors.border,
+            width: SIZE_WIDTH,
+            flexShrink: 0,
+          }}
+        >
+          <text style={{ color: theme.colors.mutedForeground }}>size</text>
         </div>
       </div>
       <div testId="table-scroll" style={{ height: 220, overflowY: "scroll" }}>
@@ -151,21 +170,44 @@ const TableProbe = () => {
               width: innerWidth,
               flexShrink: 0,
               backgroundColor: Option.contains(selected, row.n)
-                ? theme.panelAlt
-                : theme.surface,
-              hover: { backgroundColor: theme.panelAlt },
+                ? theme.colors.muted
+                : theme.colors.background,
+              hover: { backgroundColor: theme.colors.muted },
             }}
           >
-            <div style={{ ...cell, width: nameWidth, flexShrink: 0 }}>
-              <text style={{ color: theme.text }}>{row.name}</text>
+            <div
+              style={{
+                ...cell,
+                borderColor: theme.colors.border,
+                width: nameWidth,
+                flexShrink: 0,
+              }}
+            >
+              <text style={{ color: theme.colors.foreground }}>{row.name}</text>
             </div>
-            <div style={{ ...cell, width: STATUS_WIDTH + 6, flexShrink: 0 }}>
-              <text style={{ color: theme.muted }}>
+            <div
+              style={{
+                ...cell,
+                borderColor: theme.colors.border,
+                width: STATUS_WIDTH + 6,
+                flexShrink: 0,
+              }}
+            >
+              <text style={{ color: theme.colors.mutedForeground }}>
                 {row.n % 3 === 0 ? "ready" : "idle"}
               </text>
             </div>
-            <div style={{ ...cell, width: SIZE_WIDTH, flexShrink: 0 }}>
-              <text style={{ color: theme.muted }}>{`${row.n + 1} B`}</text>
+            <div
+              style={{
+                ...cell,
+                borderColor: theme.colors.border,
+                width: SIZE_WIDTH,
+                flexShrink: 0,
+              }}
+            >
+              <text
+                style={{ color: theme.colors.mutedForeground }}
+              >{`${row.n + 1} B`}</text>
             </div>
           </div>
         ))}

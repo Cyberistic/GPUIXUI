@@ -55,16 +55,19 @@ importers:
         version: 0.10.0
       '@gpuix/react':
         specifier: 0.10.0
-        version: 0.10.0(react@19.2.4)
+        version: 0.10.0(react@19.3.1)
       '@gpuixui/testing':
         specifier: workspace:*
         version: link:../../packages/testing
+      '@gpuixui/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
       effect:
         specifier: 'catalog:'
         version: 4.0.5
       react:
-        specifier: 19.2.4
-        version: 19.2.4
+        specifier: ^19.2.0
+        version: 19.3.1
     devDependencies:
       '@effect/platform-node':
         specifier: 'catalog:'
@@ -146,7 +149,7 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
       react:
         specifier: ^19.2.0
-        version: 19.2.4
+        version: 19.3.1
       react-dom:
         specifier: ^19.2.0
         version: 19.3.1(react@19.3.1)
@@ -1811,10 +1814,6 @@ packages:
     peerDependencies:
       react: ^19.0.0
 
-  react@19.2.4:
-    resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
-    engines: {node: '>=0.10.0'}
-
   react@19.3.1:
     resolution: {integrity: sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw==}
     engines: {node: '>=0.10.0'}
@@ -2342,11 +2341,11 @@ snapshots:
       '@gpuix/native-linux-x64-gnu': 0.10.0
       '@gpuix/native-win32-x64-msvc': 0.10.0
 
-  '@gpuix/react@0.10.0(react@19.2.4)':
+  '@gpuix/react@0.10.0(react@19.3.1)':
     dependencies:
       '@gpuix/native': 0.10.0
-      react: 19.2.4
-      react-reconciler: 0.31.0(react@19.2.4)
+      react: 19.3.1
+      react-reconciler: 0.31.0(react@19.3.1)
 
   '@hono/node-server@1.19.9(hono@4.11.4)':
     dependencies:
@@ -3305,12 +3304,10 @@ snapshots:
       react: 19.3.1
       scheduler: 0.28.0
 
-  react-reconciler@0.31.0(react@19.2.4):
+  react-reconciler@0.31.0(react@19.3.1):
     dependencies:
-      react: 19.2.4
+      react: 19.3.1
       scheduler: 0.25.0
-
-  react@19.2.4: {}
 
   react@19.3.1: {}
 

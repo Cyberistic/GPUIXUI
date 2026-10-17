@@ -28,6 +28,7 @@ export const CAPABILITIES = [
   "virtual-list",
   "table",
   "tree",
+  "theme",
   "workspace",
 ] as const;
 /** Every capability the suite can report a verdict for. */
@@ -116,6 +117,36 @@ export interface Offset {
   readonly y: number;
 }
 
+/** A shadow the runtime reports, shaped like GPUix's `StyleDesc.boxShadow`. */
+export class BoxShadowSnapshot extends Schema.Class<BoxShadowSnapshot>(
+  "BoxShadowSnapshot",
+)({
+  offsetX: Schema.Number,
+  offsetY: Schema.Number,
+  blurRadius: Schema.Number,
+  spreadRadius: Schema.Number,
+  color: Schema.String,
+}) {}
+
+/**
+ * The runtime's own report of the style it applied to an element.
+ *
+ * Every field is optional because the runtime reports what the style set and
+ * nothing else: a missing key decodes to `None`. A property the runtime reports
+ * with an unexpected type fails the whole decode, so the snapshot is `null` —
+ * deliberate, because a runtime that changed the shape of its style report is a
+ * defect a scenario must see rather than a difference to paper over.
+ */
+export class StyleSnapshot extends Schema.Class<StyleSnapshot>("StyleSnapshot")(
+  {
+    backgroundColor: Schema.OptionFromOptional(Schema.String),
+    color: Schema.OptionFromOptional(Schema.String),
+    fontFamily: Schema.OptionFromOptional(Schema.String),
+    fontSize: Schema.OptionFromOptional(Schema.Number),
+    boxShadow: Schema.OptionFromOptional(BoxShadowSnapshot),
+  },
+) {}
+
 /**
  * The only way a scenario touches the runtime.
  *
@@ -131,6 +162,12 @@ export interface SmokeHost {
   readonly text: (testId: string) => string | null;
   readonly paintedText: () => ReadonlyArray<string>;
   readonly bounds: (testId: string) => Bounds | null;
+  /**
+   * The style the runtime applied to `testId`, decoded; `null` when the id is
+   * not painted. The adapter decodes the renderer's payload at this boundary,
+   * so a scenario asserts on tokens, never on an untyped style record.
+   */
+  readonly paintedStyle: (testId: string) => StyleSnapshot | null;
   readonly focused: () => string | null;
   readonly click: (testId: string) => void;
   readonly clickWindow: (x: number, y: number) => void;

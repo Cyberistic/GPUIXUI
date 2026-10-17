@@ -9,13 +9,14 @@
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Option from "effect/Option";
+import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
-import { theme } from "../theme.js";
 import { Readout } from "../ui.js";
 import { SplitPane } from "../panels/split-pane.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const PanelProbe = () => {
+  const theme = useTheme();
   const [size, setSize] = useState(320);
   const [parent, setParent] = useState(500);
 
@@ -34,22 +35,22 @@ const PanelProbe = () => {
             <div
               style={{
                 height: "100%",
-                backgroundColor: theme.panelAlt,
+                backgroundColor: theme.colors.muted,
                 padding: 8,
               }}
             >
-              <text style={{ color: theme.text }}>A</text>
+              <text style={{ color: theme.colors.foreground }}>A</text>
             </div>
           }
           secondary={
             <div
               style={{
                 height: "100%",
-                backgroundColor: theme.panel,
+                backgroundColor: theme.colors.card,
                 padding: 8,
               }}
             >
-              <text style={{ color: theme.text }}>B</text>
+              <text style={{ color: theme.colors.foreground }}>B</text>
             </div>
           }
         />
@@ -65,10 +66,10 @@ const PanelProbe = () => {
             padding: 6,
             borderRadius: 4,
             cursor: "pointer",
-            backgroundColor: theme.panelAlt,
+            backgroundColor: theme.colors.muted,
           }}
         >
-          <text style={{ color: theme.text }}>toggle width</text>
+          <text style={{ color: theme.colors.foreground }}>toggle width</text>
         </div>
       </div>
     </div>

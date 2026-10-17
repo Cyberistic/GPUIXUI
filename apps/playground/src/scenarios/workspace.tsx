@@ -14,7 +14,7 @@
  */
 import { useState } from "react";
 import { Effect, Option } from "effect";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
 import { SplitPane } from "../panels/split-pane.js";
 import type { PlaygroundScenario } from "../types.js";
@@ -37,6 +37,7 @@ const TabStrip = ({
   readonly onSelect: (id: string) => void;
   readonly onMove: (id: string, from: PaneId) => void;
 }) => {
+  const theme = useTheme();
   const [press, setPress] = useState(
     Option.none<{ readonly id: string; readonly x: number }>(),
   );
@@ -47,7 +48,7 @@ const TabStrip = ({
         display: "flex",
         gap: 4,
         padding: 4,
-        backgroundColor: theme.panelAlt,
+        backgroundColor: theme.colors.muted,
       }}
     >
       {tabs.map((id) => (
@@ -78,21 +79,23 @@ const TabStrip = ({
             padding: 6,
             borderRadius: 4,
             cursor: "pointer",
-            backgroundColor: active === id ? theme.panel : theme.surface,
-            hover: { backgroundColor: theme.panel },
+            backgroundColor:
+              active === id ? theme.colors.card : theme.colors.background,
+            hover: { backgroundColor: theme.colors.card },
           }}
         >
-          <text style={{ color: theme.text }}>{id}</text>
+          <text style={{ color: theme.colors.foreground }}>{id}</text>
         </div>
       ))}
       {tabs.length === 0 ? (
-        <text style={{ color: theme.faint }}>empty</text>
+        <text style={{ color: theme.colors.placeholder }}>empty</text>
       ) : null}
     </div>
   );
 };
 
 const WorkspaceProbe = () => {
+  const theme = useTheme();
   const [aTabs, setATabs] = useState<ReadonlyArray<string>>(["one", "two"]);
   const [bTabs, setBTabs] = useState<ReadonlyArray<string>>([]);
   const [active, setActive] = useState("one");
@@ -142,12 +145,17 @@ const WorkspaceProbe = () => {
           max={480}
           onResize={setSplit}
           primary={
-            <div style={{ height: "100%", backgroundColor: theme.panel }}>
+            <div style={{ height: "100%", backgroundColor: theme.colors.card }}>
               {strip("a", aTabs)}
             </div>
           }
           secondary={
-            <div style={{ height: "100%", backgroundColor: theme.surface }}>
+            <div
+              style={{
+                height: "100%",
+                backgroundColor: theme.colors.background,
+              }}
+            >
               {strip("b", bTabs)}
             </div>
           }

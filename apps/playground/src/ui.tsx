@@ -4,10 +4,14 @@
  * `Readout` is the important one: every assertion reads a **number or a string
  * from a readout element**, never a pixel from a screenshot. A readout encodes
  * the state under test as `key=value key=value`.
+ *
+ * Every colour comes from the theme `ThemeProvider` supplies, so the shell's
+ * palette switch re-paints these helpers without a restart.
  */
 import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { theme } from "./theme.js";
+import { textStyle } from "@gpuixui/tokens";
+import { useTheme } from "@gpuixui/tokens/react";
 
 /** A `testId`-addressable string the smoke steps assert against. */
 export const Readout = ({
@@ -16,16 +20,32 @@ export const Readout = ({
 }: {
   readonly testId: string;
   readonly children: ReactNode;
-}) => (
-  <text testId={testId} style={{ color: theme.muted, fontSize: 12 }}>
-    {children}
-  </text>
-);
+}) => {
+  const theme = useTheme();
+  return (
+    <text
+      testId={testId}
+      style={{
+        ...textStyle(theme, "caption"),
+        color: theme.colors.mutedForeground,
+      }}
+    >
+      {children}
+    </text>
+  );
+};
 
-/** Body text in the playground's foreground colour. */
-export const Body = ({ children }: { readonly children: ReactNode }) => (
-  <text style={{ color: theme.text, fontSize: 14 }}>{children}</text>
-);
+/** Body text in the theme's foreground colour. */
+export const Body = ({ children }: { readonly children: ReactNode }) => {
+  const theme = useTheme();
+  return (
+    <text
+      style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}
+    >
+      {children}
+    </text>
+  );
+};
 
 /** A surface with padding and a hairline border. */
 export const Panel = ({
@@ -34,19 +54,22 @@ export const Panel = ({
 }: {
   readonly children: ReactNode;
   readonly style?: StyleDesc;
-}) => (
-  <div
-    style={{
-      backgroundColor: theme.panel,
-      borderWidth: 1,
-      borderColor: theme.border,
-      padding: 12,
-      ...style,
-    }}
-  >
-    {children}
-  </div>
-);
+}) => {
+  const theme = useTheme();
+  return (
+    <div
+      style={{
+        backgroundColor: theme.colors.card,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+        padding: theme.spacing.lg,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 
 /** A horizontal strip that holds controls. */
 export const Toolbar = ({ children }: { readonly children: ReactNode }) => (
@@ -56,9 +79,17 @@ export const Toolbar = ({ children }: { readonly children: ReactNode }) => (
 );
 
 /** A one-pixel separator. */
-export const Divider = () => (
-  <div style={{ height: 1, backgroundColor: theme.border }} />
-);
+export const Divider = () => {
+  const theme = useTheme();
+  return (
+    <div
+      style={{
+        height: theme.borderWidth.thin,
+        backgroundColor: theme.colors.border,
+      }}
+    />
+  );
+};
 
 /** A clickable surface used as a button (GPUix has no `<button>` element). */
 export const Pressable = ({
@@ -71,21 +102,24 @@ export const Pressable = ({
   readonly onClick?: () => void;
   readonly style?: StyleDesc;
   readonly children: ReactNode;
-}) => (
-  <div
-    testId={testId}
-    tabIndex={0}
-    role="button"
-    onClick={onClick}
-    style={{
-      padding: 8,
-      borderRadius: 6,
-      cursor: "pointer",
-      backgroundColor: theme.panelAlt,
-      hover: { backgroundColor: theme.border },
-      ...style,
-    }}
-  >
-    {children}
-  </div>
-);
+}) => {
+  const theme = useTheme();
+  return (
+    <div
+      testId={testId}
+      tabIndex={0}
+      role="button"
+      onClick={onClick}
+      style={{
+        padding: theme.spacing.md,
+        borderRadius: theme.radius.md,
+        cursor: "pointer",
+        backgroundColor: theme.colors.muted,
+        hover: { backgroundColor: theme.colors.border },
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+};

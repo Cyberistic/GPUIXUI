@@ -25,12 +25,14 @@ import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Report, Runtime, Smoke } from "@gpuixui/testing";
+import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import type { PlaygroundScenario } from "../types.js";
 import { createNativeHost } from "./host.js";
 import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
+import { palettes } from "../palettes.js";
 import { scenarios, selectScenarios } from "../scenarios/index.js";
 
 /** The process exit code: 0 passed, 1 failed, 2 unverified. */
@@ -195,7 +197,13 @@ const mount =
       Option.match(viewOf(scenarios, scenario), {
         onNone: () => {},
         onSome: (view) =>
-          root.render(withWindowKeyProvider(registerWindowKey, view())),
+          root.render(
+            createElement(
+              ThemeProvider,
+              { theme: palettes.dark },
+              withWindowKeyProvider(registerWindowKey, view()),
+            ),
+          ),
       }),
     );
     return flags.screenshots

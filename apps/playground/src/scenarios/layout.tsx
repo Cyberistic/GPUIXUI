@@ -8,42 +8,49 @@
  */
 import { Effect } from "effect";
 import * as Option from "effect/Option";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
 import type { PlaygroundScenario } from "../types.js";
 
-const LayoutProbe = () => (
-  <div
-    testId="layout-root"
-    style={{
-      position: "relative",
-      display: "flex",
-      gap: 8,
-      width: 640,
-      height: 200,
-      backgroundColor: theme.surface,
-    }}
-  >
+const LayoutProbe = () => {
+  const theme = useTheme();
+  return (
     <div
-      testId="layout-a"
-      style={{ width: 200, height: 40, backgroundColor: theme.accent }}
-    />
-    <div
-      testId="layout-b"
-      style={{ width: 320, height: 40, backgroundColor: theme.muted }}
-    />
-    <div
-      testId="layout-abs"
+      testId="layout-root"
       style={{
-        position: "absolute",
-        left: 24,
-        top: 16,
-        width: 60,
-        height: 20,
-        backgroundColor: theme.success,
+        position: "relative",
+        display: "flex",
+        gap: 8,
+        width: 640,
+        height: 200,
+        backgroundColor: theme.colors.background,
       }}
-    />
-  </div>
-);
+    >
+      <div
+        testId="layout-a"
+        style={{
+          width: 200,
+          height: 40,
+          backgroundColor: theme.colors.primary,
+        }}
+      />
+      <div
+        testId="layout-b"
+        style={{ width: 320, height: 40, backgroundColor: theme.colors.muted }}
+      />
+      <div
+        testId="layout-abs"
+        style={{
+          position: "absolute",
+          left: 24,
+          top: 16,
+          width: 60,
+          height: 20,
+          backgroundColor: theme.colors.success,
+        }}
+      />
+    </div>
+  );
+};
 
 export const layoutScenario: PlaygroundScenario = {
   id: "layout-flex",

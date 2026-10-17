@@ -21,11 +21,12 @@
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
 import { Body, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const OverlayProbe = () => {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [last, setLast] = useState("none");
   const close = (reason: string) => {
@@ -34,7 +35,13 @@ const OverlayProbe = () => {
   };
 
   return (
-    <div style={{ width: 480, height: 320, backgroundColor: theme.surface }}>
+    <div
+      style={{
+        width: 480,
+        height: 320,
+        backgroundColor: theme.colors.background,
+      }}
+    >
       <div
         testId="overlay-trigger"
         tabIndex={0}
@@ -48,8 +55,8 @@ const OverlayProbe = () => {
           width: 120,
           borderRadius: 6,
           cursor: "pointer",
-          backgroundColor: theme.panelAlt,
-          hover: { backgroundColor: theme.border },
+          backgroundColor: theme.colors.muted,
+          hover: { backgroundColor: theme.colors.border },
         }}
       >
         <Body>open</Body>
@@ -69,13 +76,13 @@ const OverlayProbe = () => {
             }}
             style={{
               padding: 12,
-              backgroundColor: theme.panel,
+              backgroundColor: theme.colors.card,
               borderWidth: 1,
-              borderColor: theme.border,
+              borderColor: theme.colors.border,
               borderRadius: 6,
             }}
           >
-            <text style={{ color: theme.text }}>popup open</text>
+            <text style={{ color: theme.colors.foreground }}>popup open</text>
           </div>
         </anchored>
       ) : null}

@@ -9,27 +9,32 @@
  */
 import { Effect } from "effect";
 import * as Option from "effect/Option";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
 import type { PlaygroundScenario } from "../types.js";
 
-const TextProbe = () => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 480 }}>
-    <text testId="text-plain" style={{ color: theme.text }}>
-      hello gpuix
-    </text>
-    <code
-      testId="text-code"
-      code="const a = 1"
-      language="ts"
-      style={{ color: theme.text }}
-    />
-    <markdown
-      testId="text-markdown"
-      source={"# Heading\n\npara"}
-      style={{ color: theme.text }}
-    />
-  </div>
-);
+const TextProbe = () => {
+  const theme = useTheme();
+  return (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 8, width: 480 }}
+    >
+      <text testId="text-plain" style={{ color: theme.colors.foreground }}>
+        hello gpuix
+      </text>
+      <code
+        testId="text-code"
+        code="const a = 1"
+        language="ts"
+        style={{ color: theme.colors.foreground }}
+      />
+      <markdown
+        testId="text-markdown"
+        source={"# Heading\n\npara"}
+        style={{ color: theme.colors.foreground }}
+      />
+    </div>
+  );
+};
 
 export const textScenario: PlaygroundScenario = {
   id: "text-native",

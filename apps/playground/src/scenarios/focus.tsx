@@ -24,11 +24,13 @@
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Option from "effect/Option";
+import { useTheme } from "@gpuixui/tokens/react";
+import { Readout } from "../ui.js";
 import type { Smoke } from "@gpuixui/testing";
-import { theme } from "../theme.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const FocusProbe = () => {
+  const theme = useTheme();
   const [focused, setFocused] = useState("none");
   const field = (id: string) => ({
     testId: id,
@@ -39,7 +41,7 @@ const FocusProbe = () => {
     style: {
       padding: 12,
       borderWidth: 1,
-      borderColor: focused === id ? theme.accent : theme.border,
+      borderColor: focused === id ? theme.colors.primary : theme.colors.border,
     },
   });
 
@@ -48,14 +50,12 @@ const FocusProbe = () => {
       style={{ display: "flex", flexDirection: "column", gap: 8, width: 320 }}
     >
       <div {...field("focus-a")} autoFocus>
-        <text style={{ color: theme.text }}>A</text>
+        <text style={{ color: theme.colors.foreground }}>A</text>
       </div>
       <div {...field("focus-b")}>
-        <text style={{ color: theme.text }}>B</text>
+        <text style={{ color: theme.colors.foreground }}>B</text>
       </div>
-      <text testId="focus-readout" style={{ color: theme.muted, fontSize: 12 }}>
-        {`focus=${focused}`}
-      </text>
+      <Readout testId="focus-readout">{`focus=${focused}`}</Readout>
     </div>
   );
 };

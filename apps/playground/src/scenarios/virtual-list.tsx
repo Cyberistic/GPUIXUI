@@ -12,13 +12,14 @@ import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { theme } from "../theme.js";
+import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const ROWS = 5000;
 
 const VirtualListProbe = () => {
+  const theme = useTheme();
   const [first, setFirst] = useState(0);
   const [last, setLast] = useState(-1);
 
@@ -47,7 +48,9 @@ const VirtualListProbe = () => {
               testId={`v-${index}`}
               style={{ height: 32, padding: 6 }}
             >
-              <text style={{ color: theme.text }}>{`row ${index}`}</text>
+              <text
+                style={{ color: theme.colors.foreground }}
+              >{`row ${index}`}</text>
             </div>
           ))}
         </virtual-list>

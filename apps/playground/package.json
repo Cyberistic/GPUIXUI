@@ -5,17 +5,18 @@
   "type": "module",
   "scripts": {
     "build": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.build.json",
-    "dev": "nub run build && node --watch dist/main.js",
-    "smoke": "nub run build && node dist/smoke/run.js",
-    "check-types": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.json",
+    "dev": "nub run build && nub watch dist/main.js",
+    "smoke": "nub run build && nub dist/smoke/run.js",
+    "check-types": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.check.json",
     "test": "nub run --filter @gpuixui/testing build && vitest run"
   },
   "dependencies": {
     "@gpuix/native": "0.10.0",
     "@gpuix/react": "0.10.0",
     "@gpuixui/testing": "workspace:*",
+    "@gpuixui/tokens": "workspace:*",
     "effect": "catalog:",
-    "react": "19.2.4"
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",

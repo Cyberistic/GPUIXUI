@@ -22,6 +22,7 @@ export const nullHost: SmokeHost = {
   text: () => null,
   paintedText: () => [],
   bounds: () => null,
+  paintedStyle: () => null,
   focused: () => null,
   click: () => {},
   clickWindow: () => {},
