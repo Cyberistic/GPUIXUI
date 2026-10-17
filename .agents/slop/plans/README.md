@@ -232,7 +232,7 @@ measured **1.004:1** on its own card, macOS 1.051 and Windows 1.068, all at or
 below the library's 1.05 floor, because every variant inherited the identity's
 cool graphite while changing the surface it sits on. The skeleton joins the
 `surface` class on `background`/`card`/`popover` (63 → 66 pairs), and the three
-real variants now carry their own dark neutral (1.228 / 1.234 / 1.284 on their
+real variants now carry their own dark neutral (1.266 / 1.234 / 1.284 on their
 cards), matching the identity's own 1.274. Light variants and high contrast are
 untouched: the identity value already clears every light canvas, and
 `applyPlatformStyle` applies no colours at AAA.
