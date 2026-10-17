@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200-adopt-compound-part-api.md`, `114-tier2-menus.md`, `133-command-menu-fuzzy.md` |
-| Status | planned |
+| Status | done — 2026-10-17; 14 native tests, both-direction proof measured |
 | Source | `docs/component-api.md` §9 row "Command menus"; `TODO.md` → "Split the remaining landed deviations … into parts" |
 
 Self-contained. It migrates only `CommandMenu`. Pagination, Combobox and the
@@ -124,4 +124,14 @@ unconditionally: the ranking test fails. Restore. Test 1 fails if
 
 ## 8. Result
 
-To be filled by the executor: commit, measured counts, both-direction evidence.
+Landed 2026-10-17:
+
+- `command-menu.tsx` — five parts over a root context; the root keeps the query,
+  the ranked matches and the dismiss/key handling; the list renders the grouped
+  rows and the key hint.
+- `command-menu.test.tsx` — 14 tests. Both directions: painting
+  `aria-selected={true}` on every row fails the three ranking/order tests (5 red
+  including the unmount cascade); restored, green.
+- Example and docs compose the parts; `COMPONENTS.md` says 14; the contract's §8
+  row lists the five parts and Command menus left §9.
+- Gates: `nub run check-types` green, 222 unit tests, 14 CommandMenu tests.

@@ -74,7 +74,7 @@ workstream declares in its own section below.
 | [158](./158-alert-parts.md) | Alert becomes a compound part (the first contract migration) | F | 200, 157 | done — 11 native tests; both-direction proof (281 behaviour tests) |
 | [200](./200-adopt-compound-part-api.md) | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | 020, 030, 110–117 | done — `docs/component-api.md` + ADR 0004 + `LICENSES/base-gpui.md`; contract test proven in both directions |
 | [300](./300-pagination-parts.md) | Pagination becomes a compound part | F | 200, 201 | planned — the `docs/component-api.md` §9 deviation |
-| [301](./301-command-menu-parts.md) | CommandMenu becomes a compound part | F | 200, 201, 114, 133 | planned — the `docs/component-api.md` §9 deviation |
+| [301](./301-command-menu-parts.md) | CommandMenu becomes a compound part | F | 200, 201, 114, 133 | done — the `docs/component-api.md` §9 deviation |
 | [302](./302-combobox-parts.md) | Combobox becomes a compound part | F | 200, 201, 116, 138 | planned — the `docs/component-api.md` §9 deviation |
 | [303](./303-date-time-picker-parts.md) | DatePicker and TimePicker become compound parts | F | 200, 201, 119, 127, 132 | planned — the §9 deviation; formalises the TimePicker field shape |
 

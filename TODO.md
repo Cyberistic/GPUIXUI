@@ -203,7 +203,7 @@ retired once both branches are one
     - [x] Split Alert into parts — `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` over a tone context; 11 native tests; docs, example and API table updated (plan 158)
     - [ ] Split the remaining landed deviations named in `docs/component-api.md` §9 into parts — each with its own behaviour test, docs update and inventory row (owner: components). Plans 300–303 are written and indexed.
       - [x] Pagination parts — plan 300
-      - [ ] CommandMenu parts — plan 301
+      - [x] CommandMenu parts — plan 301
       - [ ] Combobox parts — plan 302
       - [ ] DatePicker + TimePicker parts — plan 303
     - [ ] Enforce the contract's typed-by-position children at compile time (a parent `children` narrowed to its part union plus a dev check), currently a render-time throw only (owner: components)

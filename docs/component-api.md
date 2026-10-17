@@ -184,7 +184,7 @@ parts.
 | Popovers | `Popover`, `PopoverTrigger`, `PopoverContent` | `PopoverRoot`/`Trigger`/`Popup`/`Arrow`/`Close`/`Portal`/`Positioner`/`Viewport`/`Backdrop`/`Title`/`Description` | plan 112 |
 | Dropdown menus | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuGroup`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | `MenuRoot` + 18 parts | plan 114 |
 | Context menus | `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent` + the `ContextMenu*` item parts | `ContextMenuRoot`/`Trigger` | plan 114 |
-| Command menus | `CommandMenu` | — | plan 114 |
+| Command menus | `CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty` | — | plan 114, 301 |
 | Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `TabsRoot`/`List`/`Tab`/`Panel`/`Indicator` | plan 113 |
 | Accordions | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `AccordionRoot`/`Header`/`Item`/`Trigger`/`Panel` | plan 113 |
 | Collapsible sections | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` | `CollapsibleRoot`/`Trigger`/`Panel` | plan 113 |
@@ -227,7 +227,6 @@ test, docs row and inventory record.
 
 | Component | Deviation | Planned parts |
 | --------- | --------- | ------------- |
-| Command menus | one component owns the input, list and rows | `CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty` |
 | Comboboxes | the GPUix headless parts stay internal | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty` |
 | Date / time pickers | one component owns the trigger and the popup | `DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar`; the same for `TimePicker` |
 

@@ -7,7 +7,13 @@
 
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
-import { CommandMenu, type CommandAction } from "../src/command-menu.js";
+import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+  type CommandAction,
+} from "../src/command-menu.js";
 import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
@@ -91,7 +97,11 @@ export const CommandMenuExample = () => {
           Try “op”, then ↑ and Enter.
         </text>
       </div>
-      <CommandMenu open={open} onOpenChange={setOpen} actions={actions} />
+      <CommandMenu open={open} onOpenChange={setOpen} actions={actions}>
+        <CommandMenuInput />
+        <CommandMenuList />
+        <CommandMenuEmpty />
+      </CommandMenu>
     </Card>
   );
 };

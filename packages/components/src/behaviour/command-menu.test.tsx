@@ -14,7 +14,13 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
-import { CommandMenu, type CommandAction } from "../command-menu.js";
+import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+  type CommandAction,
+} from "../command-menu.js";
 
 const actions = (
   perform: (id: string) => void,
@@ -75,7 +81,11 @@ const Palette = ({
       onOpenChange={setOpen}
       actions={actions(perform)}
       filter={filter}
-    />
+    >
+      <CommandMenuInput />
+      <CommandMenuList />
+      <CommandMenuEmpty />
+    </CommandMenu>
   );
 };
 
@@ -91,7 +101,13 @@ const LocalPalette = ({
   readonly items: ReadonlyArray<CommandAction>;
 }) => {
   const [open, setOpen] = useState(true);
-  return <CommandMenu open={open} onOpenChange={setOpen} actions={items} />;
+  return (
+    <CommandMenu open={open} onOpenChange={setOpen} actions={items}>
+      <CommandMenuInput />
+      <CommandMenuList />
+      <CommandMenuEmpty />
+    </CommandMenu>
+  );
 };
 
 /** Two label matches where the better one is declared second. */
@@ -303,6 +319,47 @@ describe("CommandMenu", () => {
       ],
     ).toBe(true);
     expect(palette.renderer.getAllText()).toContain("Toggle sidebar");
+
+    palette.unmount();
+  });
+
+  it("renders the caller's own empty state", () => {
+    const CustomEmpty = () => {
+      const [open, setOpen] = useState(true);
+      return (
+        <CommandMenu open={open} onOpenChange={setOpen} actions={actions(vi.fn())}>
+          <CommandMenuInput />
+          <CommandMenuList />
+          <CommandMenuEmpty>Nothing here</CommandMenuEmpty>
+        </CommandMenu>
+      );
+    };
+    const palette = renderComponent(<CustomEmpty />);
+
+    type(palette, "zzz");
+
+    expect(palette.renderer.getAllText()).toContain("Nothing here");
+    expect(palette.renderer.getAllText()).not.toContain("No matching commands");
+
+    palette.unmount();
+  });
+
+  it("takes the input's placeholder and name from the part", () => {
+    const Named = () => {
+      const [open, setOpen] = useState(true);
+      return (
+        <CommandMenu open={open} onOpenChange={setOpen} actions={actions(vi.fn())}>
+          <CommandMenuInput placeholder="Find a command" label="Find" />
+          <CommandMenuList />
+          <CommandMenuEmpty />
+        </CommandMenu>
+      );
+    };
+    const palette = renderComponent(<Named />);
+    const input = palette.renderer.findByTestId("command-input");
+
+    expect(input?.customProps?.placeholder).toBe("Find a command");
+    expect(input?.customProps?.["aria-label"]).toBe("Find");
 
     palette.unmount();
   });
