@@ -82,6 +82,7 @@ in the same block.
 | [156](./156-floating-placement.md) | Floating-layer placement and collision (Tier 2 feasibility) | B→C | 120, 140, 155 | **landed**: `floating-placement` — `side`/`gap`/`align=start` are exact; **`align=center` is off by half the panel** and `fit=snap` clamps but does not flip; 20/20 green (§8) |
 | [157](./157-motion-collapse.md) | Native motion: the collapsible sidebar and the exit tween | B→C/D | 110, 120, 140 | **landed**: `motion-collapse` — the paused motion clock makes a width tween exact (96 px of 240 at 80 ms), the inner pane does not reflow, `AnimatePresence` retains the exit child; `onMotionComplete` needs `dispatchNativeEvents`; **21/21** green (§8) |
 | [158](./158-roving-focus.md) | Roving focus: a list and a virtual list | B→C/D | 110, 140, 152, 155 | **landed**: `roving-focus` — programmatic focus reaches a never-clicked row and the next key lands there; inside `<virtual-list>` focus survives the window scrolling past it; a focused off-window row stays in `getPaintedText()`; **22/22** green (§8) |
+| [159](./159-native-popups.md) | Native popups: `Select`, `Combobox` and `Tooltip` | B→C | 100, 110, 120, 140 | in progress — the three published GPUix components our library composes have no runtime verdict yet; adds the `hover` host call |
 
 Cross-cutting records:
 
