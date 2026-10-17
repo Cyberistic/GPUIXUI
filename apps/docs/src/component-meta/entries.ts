@@ -74,16 +74,33 @@ const delivered = (
 });
 
 const foundational: ReadonlyArray<ComponentMetaInput> = [
-  planned(
+  delivered(
     "text",
     "Text / typography",
     "1",
     "Renders text at a named typography role.",
-    { gpuix: "yes" },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Text.tsx",
+      related: ["label", "icon"],
+      limitations: [
+        "No heading semantics: the role is visual only.",
+        "No rich text: one run, one role.",
+        "No responsive type scale or fluid sizing.",
+        "truncate needs a bounded width to truncate against.",
+      ],
+    },
   ),
-  planned("icon", "Icons", "1", "A sized, aligned glyph from the icon set.", {
+  delivered("icon", "Icons", "1", "A sized, aligned glyph from the icon set.", {
     gpuix: "yes",
     packageName: "@gpuixui/icons",
+    sourcePath: "packages/icons/src/Icon.tsx",
+    related: ["text", "button"],
+    limitations: [
+      "Monochrome only: no two-tone, duotone or brand marks.",
+      "No rotation or spin animation; the runtime cannot rotate.",
+      "The set is curated, not a full Lucide import.",
+    ],
   }),
   delivered(
     "separator",

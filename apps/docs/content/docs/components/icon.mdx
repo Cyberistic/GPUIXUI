@@ -1,0 +1,99 @@
+---
+title: Icons
+description: A sized, aligned glyph from the icon set.
+---
+
+<ComponentState slug="icon" />
+
+<NativePreview slug="icon" />
+
+`@gpuixui/icons` is the icon set: each icon is a self-contained 24×24 monochrome
+SVG markup string that GPUix's host `<svg>` paints and tints with `style.color`.
+Icons are data, not component trees — no paths to render, no icon font, no CSS.
+The package needs no theme, so it is usable before the design system exists.
+
+## Usage
+
+```tsx
+import { Icon } from "@gpuixui/icons";
+import { useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+// Decoration: takes itself out of the accessibility tree.
+<Icon name="search" color={theme.colors.mutedForeground} />;
+
+// Meaningful on its own: announced as an image.
+<Icon name="warning" color={theme.colors.destructive} size="md" label="Overdue" />;
+```
+
+## Variants
+
+`name` is an `IconName`; TypeScript rejects an unknown name. Decorative and
+meaningful are the two modes: without `label` the icon is presentation, with
+`label` it is an image. There is no filled/outline pair, no two-tone mode and no
+brand mark.
+
+## Sizes
+
+| Step | Pixels |
+| ---- | ------ |
+| `xs` | 12 |
+| `sm` | 14 |
+| `md` (default) | 16 |
+| `lg` | 20 |
+| `xl` | 24 |
+
+Named sizes line an icon up with text of the same step. A raw number is for the
+rare case that no step fits.
+
+## States
+
+The icon has no interaction state and sets `pointerEvents: "none"`, so an icon
+inside a control cannot swallow the press meant for the control. Tint changes
+with the palette; there is no hover colour of its own.
+
+## Composition
+
+The icon gallery is a status strip plus the five-step size scale:
+
+<include lang="tsx" meta='title="packages/primitives/examples/icons.example.tsx"'>
+  ../../../../../packages/primitives/examples/icons.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/icons/src/Icon.tsx" name="IconProps" />
+
+## Keyboard and focus
+
+Not focusable. An icon-only action belongs to its parent control; give that
+control a `label`.
+
+## Theming
+
+The set has no palette: the caller passes the tint, which is why an icon beside
+text can take `theme.colors.mutedForeground`. Geometry uses `fill="none"` and
+`stroke="#000"` in the shared wrapper — the two paint values a monochrome tint
+can use. No individual icon carries a colour.
+
+## Accessibility and limitations
+
+- **`color` is required.** A monochrome SVG with no tint paints black, which is
+  invisible in a dark theme; there is no default palette by design.
+- A decorative icon gets `role="presentation"` and produces no accessibility
+  node; only a `label` promotes it to `role="img"` with a name. An icon that
+  announces itself inside a button makes the button read twice.
+- Monochrome only: no two-tone, duotone or brand marks.
+- No rotation or spin animation: the runtime cannot rotate. Use `Spinner`.
+- No icon font and no ligatures; the set is curated, not a full Lucide import.
+
+## Source
+
+<include lang="tsx" meta='title="packages/icons/src/Icon.tsx"'>
+  ../../../../../packages/icons/src/Icon.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="icon" />

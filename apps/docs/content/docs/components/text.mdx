@@ -1,0 +1,102 @@
+---
+title: Text / typography
+description: Renders text at a named typography role.
+---
+
+<ComponentState slug="text" />
+
+<NativePreview slug="text" />
+
+`Text` names a role from the theme's type scale and a tone that decides its
+colour. It adds no behaviour: the runtime has one `text` host element, so every
+typographic role is the same element with a different resolved style. It is not
+a heading element in the accessibility tree — see the limitations.
+
+## Usage
+
+```tsx
+import { Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="2xs">
+  <Text role="h2">Version 0.10.0</Text>
+  <Text role="body" tone="muted">
+    Released 17 October 2026.
+  </Text>
+  <Text role="code">nub add @gpuixui/primitives</Text>
+</Stack>;
+```
+
+## Variants
+
+`role` selects size, leading, weight and family from the theme's type scale:
+
+| `role` | Family | Typical use |
+| ------ | ------ | ----------- |
+| `display` | sans | a landing or empty-state headline |
+| `h1`, `h2`, `h3` | sans | page, section and subsection titles |
+| `body` | sans | running text |
+| `bodyStrong` | sans | the lead sentence of a section |
+| `label` | sans | a control's visible name |
+| `caption` | sans | metadata and helper text |
+| `code` | mono | an inline identifier or command |
+| `codeBlock` | mono | a block of code |
+
+`tone` selects a semantic colour: `default`, `muted`, `primary`, `destructive`
+or `inherit` (take the parent's colour). No component picks a font size.
+
+## Sizes
+
+There is no size prop. The role *is* the size: every step comes from
+`theme.typography`, including line height and weight. There is no fluid or
+responsive type scale.
+
+## States
+
+`Text` has no interaction states. `selectable` turns on text selection for
+content (off for chrome), `truncate` clips one line with an ellipsis and `clamp`
+clips after N lines. `align` is `start`, `center` or `end`.
+
+## Composition
+
+The typography example is a change-log entry: heading, body, caption, code role,
+muted metadata and an inline icon:
+
+<include lang="tsx" meta='title="packages/primitives/examples/typography.example.tsx"'>
+  ../../../../../packages/primitives/examples/typography.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Text.tsx" name="TextProps" />
+
+## Keyboard and focus
+
+Not focusable. Selectable text is pointer-selectable; there is no copy command
+binding in the component.
+
+## Theming
+
+`textStyle` reads `typography[role]`, the sans/mono family and the tone's colour
+role. `userSelect` defaults to `none` so chrome does not accept a selection by
+accident; turn it on for content.
+
+## Accessibility and limitations
+
+- `Text` is a plain text node. GPUix's `<text>` has no heading level, no
+  paragraph role and no semantics beyond its string; `role` is **visual only**.
+  A screen reader hears the words in reading order, not a document outline.
+- No heading semantics: 0.10.0 exposes no heading element, so do not claim a
+  `role="h2"` is announced as a heading.
+- No rich text: one run, one role. Compose several `Text` nodes in a `Stack`.
+- No responsive type scale or fluid sizing.
+- `truncate` needs a bounded width to truncate against.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Text.tsx"'>
+  ../../../../../packages/primitives/src/components/Text.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="text" />
