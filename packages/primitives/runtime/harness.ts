@@ -189,8 +189,25 @@ const subtreeText = (renderer: TestRenderer, element: TestElement): string => {
 /** Every node of a dump, keyed by AccessKit's ephemeral id. */
 export const a11yNodes = (dump: A11yTreeDump): ReadonlyArray<A11yTreeNode> =>
   R.values(dump.nodes ?? {});
-
 /**
+ * Whether `element` is `rootId` or a descendant of it.
+ *
+ * The runtime gives a composite no single focusable id — a roving group focuses
+ * one of its items — so "the focus is inside the control" is an ancestry
+ * question, not an equality one (plans `084`, `089`).
+ */
+export const isWithin = (
+  runtime: Runtime,
+  element: TestElement,
+  rootId: number,
+): boolean =>
+  element.id === rootId ||
+  Option.exists(Option.fromNullishOr(element.parentId), (parentId) =>
+    Option.exists(
+      Option.fromNullishOr(runtime.renderer.getElement(parentId)),
+      (parent) => isWithin(runtime, parent, rootId),
+    ),
+  ); /**
  * The first accessibility node whose present `aria` fields match `match`.
  *
  * The dump has no stable ids across frames, so a test finds a node by who it

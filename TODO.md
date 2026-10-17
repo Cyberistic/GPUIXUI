@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[█████████░]` 61/63
+`[~]` `[██████████]` 62/63
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -450,6 +450,13 @@ retired once both branches are one
       and overlays `onOpenChange`. `src/callback-names.test.ts` fails by file
       and line if a component, page or example reintroduces it, and both guard
       directions plus the runtime suites were run (plan `088`)
+`[x]` `packages/primitives`: **the tab-order matrix** — every one of sixteen
+      controls writes its own "not a tab stop while disabled" guard, the same
+      duplication behind plan `076`'s six OTP stops and plan `083`'s missing
+      ring. `runtime/tab-order.runtime.test.tsx` proves both halves per control
+      (enabled: the next Tab lands inside it; disabled: the next Tab lands on the
+      element after it) in 32 cases; both mutations of a `Checkbox` guard fail the
+      matrix as they should (plan `089`); `isWithin` is now a harness helper.
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
