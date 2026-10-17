@@ -466,9 +466,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–431)
+## Docs site workstream (plans 410–434)
 
-`[x]` `[██████████]` 32/33
+`[x]` `[██████████]` 33/34
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` Curated native theme captures on Theming (plan 433) — a real 20/20 capture run, two frames + provenance sidecar, `<ThemeCaptures />` refuses an unproven frame
@@ -502,6 +502,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Theming renders every token group from the package (plan 430) — `<TokenScales />` generates spacing, radius, border width, icon size, density and elevation; its test fails on a dropped group, a dropped row or a retyped value, and proves both directions
 `[x]` Search relevance (plan 431) — a component title match outranks prose (`button` → its page), a blank query returns `[]`, and a page is listed once; each rule proven to fail when removed
 `[x]` Native coverage is not the absence of a capture (plan 432) — tier V names each delivered component's real GPUix suite and command on all 42 pages instead of calling it "Not verified"; the registry guard derives the command and proves the suite imports the component
+`[x]` Platform-styled previews (plan 434) — the toggle reaches four labelled tier-A previews (Button, Tabs, Dropdown menu, Card) built from the whole active `Theme`; source, page and platform guards pass; browser-verified at `?platform=win32` (Consolas on every preview surface)
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed
@@ -521,6 +522,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[ ]` Repo: AGENTS/PLAN name an integration branch `main`, but only `master` exists and the shared checkout is on it — confirm the name before workstreams merge. `agent/docs-site` has merged `master` (playground + testing) and is green at `552bc43`; it still waits on a coordinator because `master` is another tree's branch and this workstream must not push to it
 `[ ]` **Supervisor: two writers in one worktree.** A docs-site loop session (`run-docs-site.sh` → `opencode run`) and the interactive docs-site session wrote `workspaces/docs-site` at the same time on 2026-10-17 08:38–08:52: the loop committed the other session's in-flight edit together with its own work, and reverted a line of it mid-run. Evidence in `.agents/slop/docs-site-concurrency.md`. Per AGENTS §6 this session stopped the loop (both pids) to become the single writer. Fix: treat a live writer as owning the tree — either track interactive sessions, or refuse to start a workstream whose tree has uncommitted changes from a different pid. Owner: whoever owns `scripts/swarm-supervisor.sh`
 `[x]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables — `@gpuixui/tokens` (root entry) is consumed by the docs site; plan 416 renders the colour and type tables from it
+`[ ]` **Tokens-theme: ship the real per-platform style variants `MISSION.md` now requires.** `platformTheme` changes only the type families and the theme name (plan 051), so the docs platform toggle can only change the mono face. The docs side is ready (plan 434): every labelled preview reads the whole active `Theme`, so per-platform colours, spacing, radius, density and border values reach all four previews with no docs edit. Needs: three editable variant themes in `packages/tokens` pre-styled for macOS/Linux/Windows, their contrast guard, and `docs/tokens.md` updated; the docs then verifies "toggles macOS → Windows and every preview changes" visually. Do not add platform colours in `apps/docs`.
 `[x]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables — `ButtonProps` generates the real 14-row table on the Buttons page (plan 422); the contract is executable in `apps/docs/src/lib/type-table.fixture.tsx` / `type-table.test.ts` (plan 415)
 `[ ]` Playground: add a **per-component** screen (one per delivered component) so component pages can move from tier V to tier S — the capture script exists and produced 20/20 frames (`nub apps/playground/dist/smoke/run.js --screenshots`), but the scenarios are capability probes, not component screens. The sidecar contract (`provenance.json` beside each PNG) is enforced by `preview.test.tsx`, so a capture without it will not render
 `[ ]` **Components/examples**: provide one real composed source for the confirmation flow (`ConfirmDialog` + a form + `Toast`) and one for the command palette (`CommandMenu` + `Dialog`) — plan 427's remaining pattern pages cannot land until a runnable composition exists; do not write a page from separate component examples and call it a pattern

@@ -92,10 +92,29 @@ provider applies `platformTheme(theme, platform)` from `@gpuixui/tokens`. A
 screenshot capture records its platform in the sidecar and keeps that caption;
 the toggle does not relabel a macOS capture as Windows.
 
+**Tier A is token-driven, not a second palette** (plan 434). A labelled
+approximation renders through `PreviewSurface`, which maps the whole active
+`Theme` — every colour role, type role, spacing step, radius, border width,
+density metric, icon size and elevation level — to `--preview-*` custom
+properties. `theme-surface.test.ts` proves the mapping is complete and that a
+theme override reaches every group; `approximations.test.tsx` proves each
+preview changes when the platform theme changes. No preview may contain a colour
+literal; the test reads the source and fails on one.
+
+Today the shipped platform styles differ in **type families and theme name
+only** (`packages/tokens` plan 051). The visible change on a preview is therefore
+its monospace text. Real per-platform colours, spacing and control metrics are a
+`packages/tokens` task recorded in `TODO.md`; when they land, every preview
+inherits them with no docs edit. The site must not invent them.
+
 A browser approximation may show the mono family a platform style resolves to,
 because a browser can render it. It must not claim to show `.SystemUIFont`: that
 sentinel resolves only inside GPUI, so the UI face of a browser approximation is
 still an approximation of the docs site, not of the native window.
+
+Tier A is static only. A preview that needs to prove an interaction belongs in
+the playground or a recording, never in a browser approximation that would imply
+native behaviour it does not have.
 
 ## How source is reproduced
 

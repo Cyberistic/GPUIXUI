@@ -111,6 +111,8 @@ description: Triggers an action; the primary interactive control.
 
 <NativePreview slug="button" />
 
+<ComponentPreview slug="button" />
+
 ## Usage
 
 ## Variants
@@ -137,6 +139,12 @@ description: Triggers an action; the primary interactive control.
 
 <RelatedComponents slug="button" />
 ```
+
+`<ComponentPreview slug>` is optional: it renders a tier-A browser
+approximation only for a component registered in
+`src/components/preview/approximations.tsx`, and its banner is unconditional. Do
+not add an approximation for an interaction or for a component that does not
+exist. A page without a registered preview omits the block.
 
 A compound or workspace record owes extra sections, in the order below. The
 required list is `sectionsFor(pattern)` in `src/component-meta/contract.ts`, and
