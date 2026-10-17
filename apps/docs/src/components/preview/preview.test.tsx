@@ -1,17 +1,55 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import type { ComponentMetaInput } from "@/component-meta/schema";
 import {
   APPROXIMATION_NOTICE,
   IllustrativeApproximation,
 } from "./approximation-banner";
+import type { Capture, CaptureProvenance } from "./captures";
+import { captureCaption } from "./captures";
 import { NativePreview } from "./native-preview";
+import { NativeScreenshot } from "./screenshot";
 import { PlaygroundScreen } from "./playground-screen";
+import { selectPreview } from "./select-preview";
 
 /**
- * Guards the preview honesty rules (plan 412): an approximation is never shown
- * without the "not GPUix" label, and an unverified component is never replaced
- * by one. The load-bearing failure is a banner that can be omitted.
+ * Guards the preview honesty rules (plan 412). The load-bearing failures are a
+ * banner that can be omitted, and a screenshot shown with provenance the
+ * capture script never wrote — e.g. the file name presented as a caption.
  */
+
+const record = (
+  overrides: Partial<ComponentMetaInput>,
+): ComponentMetaInput => ({
+  slug: "demo",
+  title: "Demo",
+  tier: "1",
+  group: "foundational",
+  status: "planned",
+  gpuix: "unverified",
+  summary: "A demo component.",
+  packageName: "@gpuixui/primitives",
+  sourcePath: null,
+  dependencies: [],
+  related: [],
+  playgroundScreen: null,
+  screenshots: [],
+  limitations: [],
+  ...overrides,
+});
+
+const provenance: CaptureProvenance = {
+  platform: "darwin-x64",
+  gpuixVersion: "0.1.0",
+  commit: "abc1234",
+  command: "nub run playground:capture",
+  capturedAt: "2026-10-17T08:00:00.000Z",
+};
+
+const proven = (screenshot: string): Capture => ({
+  screenshot,
+  provenance,
+});
 
 describe("preview labels", () => {
   it("labels every illustrative approximation", () => {
@@ -41,5 +79,73 @@ describe("preview labels", () => {
     );
     expect(html).toContain("nub run dev:playground");
     expect(html).toContain("Button gallery");
+  });
+});
+
+describe("preview tier selection", () => {
+  it("shows a screenshot only when its sidecar proves it", () => {
+    const tier = selectPreview(
+      record({ screenshots: ["screenshots/demo/default.png"] }),
+      proven,
+    );
+    expect(tier.tier).toBe("screenshot");
+  });
+
+  it("refuses to show a screenshot whose sidecar is missing", () => {
+    const tier = selectPreview(
+      record({ screenshots: ["screenshots/demo/default.png"] }),
+      () => undefined,
+    );
+    expect(tier).toEqual({
+      tier: "unavailable",
+      reason: "no capture sidecar for screenshots/demo/default.png",
+    });
+  });
+
+  it("falls to the playground when no capture has been taken", () => {
+    const tier = selectPreview(
+      record({ playgroundScreen: "Button gallery" }),
+      proven,
+    );
+    expect(tier).toEqual({ tier: "playground", screen: "Button gallery" });
+  });
+
+  it("reports unavailable when there is neither a capture nor a screen", () => {
+    const tier = selectPreview(record({}), proven);
+    expect(tier).toEqual({
+      tier: "unavailable",
+      reason: "no native preview has been captured yet",
+    });
+  });
+});
+
+describe("screenshot provenance", () => {
+  it("captions a capture from its sidecar, not its file name", () => {
+    const html = renderToStaticMarkup(
+      <NativeScreenshot
+        src="/screenshots/demo/default.png"
+        provenance={provenance}
+        alt="Demo rendered by GPUix"
+      />,
+    );
+    const caption =
+      html.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/)?.[1] ?? "";
+    expect(caption).toContain(captureCaption(provenance));
+    expect(caption).toContain("darwin-x64");
+    expect(caption).toContain("abc1234");
+    expect(caption).not.toContain("screenshots/demo/default.png");
+  });
+
+  it("never prints a platform, version or commit the sidecar omits", () => {
+    const html = renderToStaticMarkup(
+      <NativeScreenshot
+        src="/screenshots/demo/default.png"
+        provenance={provenance}
+        alt="Demo rendered by GPUix"
+      />,
+    );
+    expect(html).not.toContain("win32");
+    expect(html).not.toContain("9.9.9");
+    expect(html).not.toContain("deadbee");
   });
 });

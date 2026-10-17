@@ -80,7 +80,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[x]` Working search (server route + UI) — `/api/search?query=button` returns real results
 `[x]` Information architecture pages (`content/docs/**`) + landing page — guarded by `src/content.test.ts`
 `[x]` Component metadata contract, registry test, generated index (plan 411)
-`[x]` Preview components + `docs/preview-strategy.md` (plan 412)
+`[x]` Preview components + `docs/preview-strategy.md` (plan 412) — tier selection and screenshot provenance are enforced; a capture without its sidecar is never shown
 `[ ]` Document the first real component page (needs the primitives/components workstream)
 
 ## Cross-team tasks raised by the docs-site workstream
@@ -93,5 +93,5 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[ ]` Owner: decide whether the root `nub.lock` (produced by `nub install`) is committed for reproducible installs or ignored; it is currently untracked
 `[ ]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables
 `[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables
-`[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5)
+`[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5) — the sidecar contract (`provenance.json` beside each PNG) is now enforced by `preview.test.tsx`, so a capture without it will not render
 `[ ]` Docs site: add `<ComponentSource>` (copyable real source) with the first real component page

@@ -13,7 +13,7 @@ names it.
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
-| **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, <version>, <commit>` | Whenever the playground can capture one |
+| **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **A** | A browser approximation of the component's documented layout | `Illustrative approximation — not GPUix. Run it in the playground for real behaviour.` | Only for static layout/typography/spacing; never for an interaction presented as native |
 | **X** | Source plus a limitation notice | `Not verified in the GPUix runtime — <reason>` | When the runtime does not support the behaviour, or it is not yet verified |
 
@@ -47,7 +47,11 @@ capture script:
 - path: `apps/docs/public/screenshots/<slug>/<state>.png`
 - sidecar: `apps/docs/public/screenshots/<slug>/provenance.json` with
   `{ platform, gpuixVersion, commit, command, capturedAt }`
-- the caption renders the sidecar's values; the docs site never invents them.
+- the caption is `Captured from GPUix — <platform>, GPUix <version>, <commit>`,
+  built only from the sidecar; the docs site never invents these values
+- if the registry lists a screenshot whose sidecar is absent, no screenshot is
+  rendered at all: the page reports the missing sidecar rather than taking a
+  caption from the file name
 
 The capture script is owned by the playground workstream (`TODO.md`).
 
