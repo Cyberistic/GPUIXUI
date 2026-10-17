@@ -123,12 +123,14 @@ The playground (and the docs site, where it renders anything native) calls `regi
 once it has a renderer. Rendering before registration is fine: GPUix re-shapes text that
 already named the family. Record the call site in the plan's PR description.
 
-### 6. Tie the platform styles to real families
+### 6. Tie the platform styles to real families — **route taken: theme-level**
 
-A registered family is used through the theme, not through the runtime: derive it with
-`extendTheme(base, { typography: { sans: "Inter" } })`, or add it to `platforms.ts` if it
-should be a platform default. Either way the docs platform toggle then previews type the
-native runtime can produce.
+A registered family is used through the theme, not through the runtime, so the
+route taken is `extendTheme(base, { typography: registerFonts(renderer, …) })`;
+`platformTypes` gains nothing, because a consumer's face is not every app's
+platform default and the runtime cannot rename a family anyway. Documented in
+`packages/tokens/README.md`, `docs/tokens.md` and `docs/design-system.md`. The
+docs platform toggle then previews type the native runtime can produce.
 
 ## Commands
 
