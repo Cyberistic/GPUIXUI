@@ -105,6 +105,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [306](./306-inactive-control-state.md) | The inactive control: a readable label and an edge that holds its shape | F | 014, 056–062, 071, 073, 076, 084, 086–088, 094, 095, 097 | done |
 | [307](./307-inactive-label-soft-fills.md) | The inactive label inside a status panel | F | 090–093, 306 | done |
 | [308](./308-soft-edge-surfaces.md) | The soft status edge on the surfaces a badge sits on | F | 090–095, 300, 306 | done |
+| [309](./309-state-fills-on-panels.md) | The state fills on the panel they paint on | F | 063, 076–095, 300, 306–308 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -616,6 +617,32 @@ The four edges join the `divider` class on the eight surfaces a chip occupies
 (`#FCD47B` → `#EFC055`: 1.246–1.265:1 on the three platform pressed washes,
 1.319:1 on its own fill), and every other shipped set already clears the floor,
 so no other colour moves.
+
+309 closes the gap every earlier perceivability plan left: the contract measured
+what is painted *on* a fill but never the fill itself against the surface behind
+it. `hover`, `active`, `accent`, `selected` and the `secondary` family are the
+shape a row or a filled control paints, and the `muted` panel is the surface a
+sidebar or settings group uses — a composition plans 084 and 086 already treat as
+first class. The audit found **21 shipped pairs** under the library's own 1.05:1
+floor in seven themes: the identity light `muted`, `hover` and `secondary` were
+the same value (`#EEF1F5`), so a sidebar row had no hover feedback, a secondary
+button had no shape and a selected row was invisible; the identity dark `hover`
+was its `muted` and `popover`, so a menu item did not react to the pointer;
+macOS light `selected` measured 1.021:1 on its own canvas, Windows light
+`secondary` was its panel and Linux light `accent` was 1.001:1 on it; the AAA
+dark `accent` sat 1.034:1 from the quiet panel. `stateFillSurfacePairs` is the
+13 interactive fills × the four surfaces they paint on (`background`, `card`,
+`popover`, `muted`) at the `surface` floor, so `contrastPairs` moves 180 → 232.
+The fix moves the **quiet panel one step toward the card in light mode**
+(identity `#EEF1F5` → `#FBFCFD`, macOS → `#F7F7FA`, Linux → `#FBFBFA`, Windows
+→ `#F7F7F7`) rather than darkening five shared washes that sit within 1.05:1 of
+the `border` edge and the `secondaryHover`/`secondaryActive` steps; the two light
+accents the canvas also failed move one step (`#E7F1FF` → `#D9EAFD` on macOS,
+`#E5F1FB` → `#DCEBF8` on Windows), the identity dark `hover` becomes a designed
+step between the 850 panel and the 800 press (`#262C36`, 1.068 on the panel,
+1.059 vs the press), and the AAA dark accent lightens to `#251B5C` (1.152 on
+`muted`, 1.219 on `popover`). No text, edge, ring, selection, soft-tint or scrim
+pair moves; every pair measured on the light panel gains contrast.
 
 ### Reference adoption (block `200–299`)
 
