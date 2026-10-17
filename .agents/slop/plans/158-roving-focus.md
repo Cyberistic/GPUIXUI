@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | ready to execute |
+| Status | landed (measured facts in §8) |
 | Phase | B (feasibility) → feeds C (menus/tabs/radio) and D (data grid, tree) |
 | Owner | playground workstream |
 | Depends on | `110`, `120`, `140`, `152`, `155` |
