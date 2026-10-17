@@ -1,9 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { controlHeight, controlPaddingX, textStyle } from "./styles.js";
-import { extendTheme, lightTheme } from "./theme.js";
+import { alpha } from "./color.js";
+import { statusToneStyles } from "./status-tone.example.js";
+import {
+  controlHeight,
+  controlPaddingX,
+  statusTone,
+  textStyle,
+  type StatusTone,
+} from "./styles.js";
+import {
+  darkTheme,
+  extendTheme,
+  highContrastLightTheme,
+  lightTheme,
+} from "./theme.js";
 import type { ControlSize } from "./scale.js";
 
 const sizes: readonly ControlSize[] = ["sm", "md", "lg"];
+
+const tones: readonly StatusTone[] = [
+  "info",
+  "success",
+  "warning",
+  "destructive",
+];
 
 describe("textStyle", () => {
   it("uses the sans family for prose roles", () => {
@@ -60,5 +80,71 @@ describe("control metrics", () => {
         lightTheme.density.controlPaddingX[size],
       );
     });
+  });
+});
+
+const toneThemes = [
+  ["light", lightTheme],
+  ["dark", darkTheme],
+] as const;
+
+describe("statusTone", () => {
+  it("resolves every tone to its soft roles in every theme", () => {
+    toneThemes.forEach(([label, theme]) => {
+      tones.forEach((tone) => {
+        const style = statusTone(theme, tone);
+        expect(style.background, `${label} ${tone}`).toBe(
+          theme.colors[`${tone}Soft`],
+        );
+        expect(style.foreground, `${label} ${tone}`).toBe(
+          theme.colors[`${tone}SoftForeground`],
+        );
+        expect(style.border, `${label} ${tone}`).toBe(
+          alpha(theme.colors[tone], 0.3),
+        );
+      });
+    });
+  });
+
+  it("gives the four tones four distinct surfaces", () => {
+    const backgrounds = tones.map(
+      (tone) => statusTone(lightTheme, tone).background,
+    );
+    expect(new Set(backgrounds).size).toBe(tones.length);
+  });
+
+  it("does not reuse the light tones in dark mode", () => {
+    tones.forEach((tone) => {
+      expect(statusTone(lightTheme, tone)).not.toEqual(
+        statusTone(darkTheme, tone),
+      );
+    });
+  });
+
+  it("follows a high-contrast theme", () => {
+    tones.forEach((tone) => {
+      const style = statusTone(highContrastLightTheme, tone);
+      expect(style.background).toBe(
+        highContrastLightTheme.colors[`${tone}Soft`],
+      );
+      expect(style.foreground).toBe(
+        highContrastLightTheme.colors[`${tone}SoftForeground`],
+      );
+      expect(style.background).not.toBe(
+        statusTone(lightTheme, tone).background,
+      );
+    });
+  });
+});
+
+describe("status tone example", () => {
+  it("spreads a tone into a container and label style", () => {
+    const style = statusToneStyles(lightTheme, "warning");
+    expect(style.container.backgroundColor).toBe(lightTheme.colors.warningSoft);
+    expect(style.container.borderColor).toBe(
+      alpha(lightTheme.colors.warning, 0.3),
+    );
+    expect(style.text.color).toBe(lightTheme.colors.warningSoftForeground);
+    expect(style.text.fontSize).toBe(lightTheme.typography.label.fontSize);
   });
 });

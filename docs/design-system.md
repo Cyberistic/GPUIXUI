@@ -53,6 +53,14 @@ palette (raw ramps)  →  semantic roles  →  component composition
   needs a value with no semantic home, the role set is incomplete — add a role,
   do not add a `buttonBackgroundHover` token.
 
+The four status families — `info`, `success`, `warning`, `destructive` — each
+carry a solid role with a readable foreground and a soft pair (`xSoft`,
+`xSoftForeground`) for alerts, badges and toasts. `info` has its own blue ramp,
+so an informational message can never be mistaken for a primary action. A
+component names a status family and reads its roles; it never mixes a readable
+text colour out of a solid status colour at runtime, and never special-cases a
+mode to make a tint readable.
+
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library.
 
@@ -69,7 +77,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite at low alpha | black at high alpha |
 
-Both themes expose exactly the same 37 roles; the type system and the colour
+Both themes expose exactly the same 47 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -97,8 +105,18 @@ Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.
 
-Sans is `.SystemUIFont`; mono resolves per platform once at module load. The
-type scale is shared by both themes and is not changed by density.
+Sans is GPUI's `.SystemUIFont` sentinel, which GPUI resolves to the operating
+system's own UI font, so the reading face follows the platform without the
+library naming a face the machine may not have. Mono comes from the platform
+table (`platformTypes`): `Menlo` on macOS, `DejaVu Sans Mono` on Linux,
+`Consolas` on Windows, `Menlo` for a platform the library does not know. The type
+scale is shared by both themes and is not changed by density.
+
+A platform style is a **real theme**, not a docs-only style sheet:
+`platformTheme(theme, platform)` derives one with `extendTheme`, keeping the
+colours, scales, mode and density of its base and changing only the two
+families, so the docs platform toggle previews exactly what a native build
+renders. A platform is a font decision here, never a second design system.
 
 **Limitation.** GPUix has no `letterSpacing`. Tight display tracking and
 all-caps label tracking are therefore impossible without per-glyph layout. The
@@ -133,10 +151,12 @@ Two border roles:
   against the canvas so a control is perceivable without relying on fill alone.
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
-`md` for menus and popovers, `lg` for dialogs and the command palette. Overlay
-layering uses the `overlay` scrim colour; `elevation.overlay` is reserved so the
-shape stays stable. Dark shadows are darker and more opaque because contrast
-between surfaces is lower.
+`md` for menus and popovers, `lg` for dialogs and the command palette. The
+runtime paints one shadow per element — no `inset`, no shadow list — so a level
+is exactly one shadow, read with `elevationShadow(theme, level)`. Overlay
+layering uses the `overlay` scrim colour; `elevation.overlay` is reserved and
+empty so the shape stays stable. Dark shadows are darker and more opaque because
+contrast between surfaces is lower.
 
 ## 8. Interaction states
 
@@ -146,14 +166,21 @@ between surfaces is lower.
 | pressed | `active` wash |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
-| focus | `ring` as an **outline**, offset outside the border box |
+| focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` translucent wash |
+| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
-Focus is an outline, not a border, so gaining focus never changes layout. GPUix
-supports `outlineWidth`, `outlineColor` and `outlineOffset` and a
-`focusVisible` state style; components use them rather than inventing a focus
-border. Selection never relies on colour alone for meaning: selected rows also
-carry `aria-selected` where the runtime exposes it.
+Focus never changes layout: the ring is a shadow, painted outside the border box,
+so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
+no `focusVisible` state** — a nested style offers only `hover` and `active`, and
+`boxShadow` is a single shadow — so `focusRing(theme)` is the one shape the
+runtime can draw. The component applies it while it holds focus, which means a
+mouse press shows the ring too: there is no `:focus-visible` to distinguish a Tab
+from a click. A design that needs that distinction must keep a press from
+focusing the control (that limitation is real and is not worked around).
+
+Selection never relies on colour alone for meaning: selected rows also carry
+`aria-selected` where the runtime exposes it.
 
 Components that cannot express hover or active in the runtime (for example
 `virtual-list`, whose GPUI list has no pressed or hovered style) put the state
@@ -167,7 +194,9 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | ---------- | ------- | ------------- |
 | body text on background/card/popover | 7:1 | 7:1 |
 | secondary text, on-colour text, placeholder | 4.5:1 | 7:1 |
+| soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | focus ring and essential boundaries | 3:1 | 4.5:1 |
+| soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set and is part of the normal test suite.
 It can fail: a palette edit that reduces contrast fails the gate.
@@ -195,6 +224,7 @@ design system cannot compensate for a missing role.
 | no inherited `color` | every `<text>` sets `color` explicitly |
 | no `letterSpacing` | no display tracking or all-caps tracking |
 | no OS appearance query | the app owns the mode |
+| no `outline*`, no `focusVisible`, one `boxShadow` | the focus ring is a spread shadow; overlays and menus cannot animate |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; tests restrict roles to hex |

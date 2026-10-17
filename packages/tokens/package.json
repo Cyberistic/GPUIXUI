@@ -7,15 +7,14 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./react": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js"
+      "types": "./src/react.tsx",
+      "default": "./src/react.tsx"
     }
   },
-  "files": ["dist"],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "check-types": "tsc -p tsconfig.json --noEmit",

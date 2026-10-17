@@ -21,6 +21,19 @@ export const palette = {
     950: "#11141A",
     1000: "#0B0D11",
   },
+  blue: {
+    50: "#EFF4FF",
+    100: "#DEE9FF",
+    200: "#C5D8FF",
+    300: "#9FBEFF",
+    400: "#6E9CFF",
+    500: "#3B76F6",
+    600: "#2559D6",
+    700: "#1B45AC",
+    800: "#173A88",
+    900: "#152F6B",
+    950: "#0C1D42",
+  },
   iris: {
     50: "#EEF0FF",
     100: "#E0E3FF",
@@ -120,6 +133,26 @@ export interface ThemeColors {
   readonly warning: string;
   /** Text and icons on `warning`. */
   readonly warningForeground: string;
+  /** Informational status, distinct from `primary`. */
+  readonly info: string;
+  /** Text and icons on `info`. */
+  readonly infoForeground: string;
+  /** Soft informational surface for alerts, badges and toasts. */
+  readonly infoSoft: string;
+  /** Text and icons on `infoSoft`. */
+  readonly infoSoftForeground: string;
+  /** Soft success surface. */
+  readonly successSoft: string;
+  /** Text and icons on `successSoft`. */
+  readonly successSoftForeground: string;
+  /** Soft warning surface. */
+  readonly warningSoft: string;
+  /** Text and icons on `warningSoft`. */
+  readonly warningSoftForeground: string;
+  /** Soft destructive surface. */
+  readonly destructiveSoft: string;
+  /** Text and icons on `destructiveSoft`. */
+  readonly destructiveSoftForeground: string;
   /** Dividers and decorative borders. */
   readonly border: string;
   /** Essential control boundaries, held to a non-text contrast floor. */
@@ -178,6 +211,16 @@ export const lightColors = {
   successForeground: palette.neutral[0],
   warning: palette.amber[400],
   warningForeground: palette.amber[950],
+  info: palette.blue[600],
+  infoForeground: palette.neutral[0],
+  infoSoft: palette.blue[100],
+  infoSoftForeground: palette.blue[800],
+  successSoft: palette.green[100],
+  successSoftForeground: palette.green[800],
+  warningSoft: palette.amber[100],
+  warningSoftForeground: palette.amber[900],
+  destructiveSoft: palette.red[100],
+  destructiveSoftForeground: palette.red[800],
   border: palette.neutral[200],
   borderStrong: "#848E9E",
   input: palette.neutral[0],
@@ -219,6 +262,16 @@ export const darkColors = {
   successForeground: palette.green[950],
   warning: palette.amber[300],
   warningForeground: palette.amber[950],
+  info: palette.blue[300],
+  infoForeground: palette.neutral[950],
+  infoSoft: palette.blue[900],
+  infoSoftForeground: palette.blue[100],
+  successSoft: palette.green[900],
+  successSoftForeground: palette.green[100],
+  warningSoft: palette.amber[900],
+  warningSoftForeground: palette.amber[100],
+  destructiveSoft: palette.red[900],
+  destructiveSoftForeground: palette.red[100],
   border: palette.neutral[800],
   borderStrong: "#6B7484",
   input: palette.neutral[900],
@@ -239,7 +292,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 37 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 47 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries.
  */
 export const highContrastLightColors = {
@@ -263,6 +316,16 @@ export const highContrastLightColors = {
   successForeground: "#FFFFFF",
   warning: "#F5B01F",
   warningForeground: "#000000",
+  info: palette.blue[700],
+  infoForeground: "#FFFFFF",
+  infoSoft: palette.blue[200],
+  infoSoftForeground: palette.blue[950],
+  successSoft: palette.green[200],
+  successSoftForeground: palette.green[950],
+  warningSoft: palette.amber[200],
+  warningSoftForeground: palette.amber[950],
+  destructiveSoft: palette.red[200],
+  destructiveSoftForeground: palette.red[950],
   border: "#6E7683",
   borderStrong: "#4A4F58",
   input: "#FFFFFF",
@@ -283,7 +346,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 37 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 47 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}.
  */
 export const highContrastDarkColors = {
@@ -307,6 +370,16 @@ export const highContrastDarkColors = {
   successForeground: "#000000",
   warning: "#FFC94D",
   warningForeground: "#000000",
+  info: palette.blue[200],
+  infoForeground: "#000000",
+  infoSoft: palette.blue[900],
+  infoSoftForeground: palette.blue[100],
+  successSoft: palette.green[900],
+  successSoftForeground: palette.green[100],
+  warningSoft: palette.amber[900],
+  warningSoftForeground: palette.amber[100],
+  destructiveSoft: palette.red[900],
+  destructiveSoftForeground: palette.red[100],
   border: "#7A7A7A",
   borderStrong: "#A0A0A0",
   input: "#0D0D0D",
@@ -325,3 +398,94 @@ export const highContrastDarkColors = {
   scrollbar: "#8A8A8A",
   shadow: "#000000B3",
 } satisfies ThemeColors;
+
+const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;
+
+/**
+ * Return `color` with an alpha channel, as an 8-digit hex colour.
+ *
+ * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
+ * `#RRGGBB` gains an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced.
+ * A colour the parser does not recognise is returned unchanged, so a non-hex
+ * value stays solid rather than becoming transparent.
+ *
+ * @example
+ * ```ts
+ * alpha("#2559D6", 0.3); // "#2559D64D"
+ * ```
+ */
+export function alpha(color: string, amount: number): string {
+  const match = hexColor.exec(color);
+  if (match === null) {
+    return color;
+  }
+  const byte = Math.round(Math.min(Math.max(amount, 0), 1) * 255);
+  const hex = byte.toString(16).padStart(2, "0");
+  return `#${match[1]}${hex}`.toUpperCase();
+}
+
+/**
+ * Every semantic colour role, in the order the token documentation lists them.
+ * A documentation site iterates this to build colour tables against any theme
+ * without an unsafe cast.
+ *
+ * @example
+ * ```ts
+ * import { colorRoles, themes } from "@gpuixui/tokens";
+ *
+ * const rows = colorRoles.map((role) => ({
+ *   role,
+ *   light: themes.light.colors[role],
+ *   dark: themes.dark.colors[role],
+ * }));
+ * ```
+ */
+export const colorRoles = [
+  "background",
+  "foreground",
+  "card",
+  "cardForeground",
+  "popover",
+  "popoverForeground",
+  "primary",
+  "primaryForeground",
+  "secondary",
+  "secondaryForeground",
+  "muted",
+  "mutedForeground",
+  "accent",
+  "accentForeground",
+  "destructive",
+  "destructiveForeground",
+  "success",
+  "successForeground",
+  "warning",
+  "warningForeground",
+  "info",
+  "infoForeground",
+  "infoSoft",
+  "infoSoftForeground",
+  "successSoft",
+  "successSoftForeground",
+  "warningSoft",
+  "warningSoftForeground",
+  "destructiveSoft",
+  "destructiveSoftForeground",
+  "border",
+  "borderStrong",
+  "input",
+  "inputForeground",
+  "placeholder",
+  "ring",
+  "selection",
+  "overlay",
+  "hover",
+  "active",
+  "selected",
+  "selectedForeground",
+  "disabled",
+  "disabledForeground",
+  "skeleton",
+  "scrollbar",
+  "shadow",
+] as const satisfies readonly (keyof ThemeColors)[];
