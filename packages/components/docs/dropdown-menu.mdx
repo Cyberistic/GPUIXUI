@@ -191,6 +191,21 @@ with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
 `label` type role, and highlight with `colors.hover` plus a 2px left bar in
 `colors.accent`.
 
+## Style by state
+
+A row takes a `StyleDesc` or a function of its state: `MenuItemState`
+(`{ disabled, highlighted }`) or `MenuCheckboxItemState`
+(`{ checked, disabled, highlighted }`). `highlighted` is the row the menu's real
+focus is on.
+
+```tsx
+<DropdownMenuItem
+  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+>
+  Rename
+</DropdownMenuItem>
+```
+
 ## Accessibility and limitations
 
 - `role="menu"` on the surface, `role="menuitem"` / `role="menuitemcheckbox"` on

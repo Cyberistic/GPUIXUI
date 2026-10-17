@@ -121,6 +121,13 @@ rows use `colors.hover` with a 2px `colors.accent` bar. The trigger is a card-li
 box in `colors.card` with a border and `spacing.md` padding; pass `style` to
 match the row it represents.
 
+## Style by state
+
+The rows are the shared menu parts: `ContextMenuItem.style` takes a
+`MenuItemState` (`{ disabled, highlighted }`) and `ContextMenuCheckboxItem.style`
+a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`). The
+[Dropdown menu](./dropdown-menu) page has the same section.
+
 ## Accessibility and limitations
 
 - `role="menu"` on the surface, `menuitem`/`menuitemcheckbox` on rows. No

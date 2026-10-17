@@ -10,7 +10,11 @@
  */
 
 import type { Props, PublicInstance } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import {
@@ -34,7 +38,7 @@ import { useMenuContext } from "./state.js";
 export type MenuItemTone = "default" | "destructive";
 
 /** {@link MenuItem} props. */
-export interface MenuItemProps extends Props {
+export interface MenuItemProps extends Omit<Props, "style"> {
   /** Runs on click or Enter/Space, then closes the menu. */
   readonly onSelect?: () => void;
   readonly disabled?: boolean;
@@ -55,6 +59,15 @@ export interface MenuItemProps extends Props {
    * sets `false`, because toggling several settings in one visit is the point.
    */
   readonly closeOnSelect?: boolean;
+  /** A style, or a function of the row's state. */
+  readonly style?: StateStyle<MenuItemState>;
+}
+
+/** What a row draws: the menu highlight and its input state. */
+export interface MenuItemState {
+  readonly disabled: boolean;
+  /** The row the menu's highlight is on (the highlight is real focus). */
+  readonly highlighted: boolean;
 }
 
 /** The row's own look, shared by actions, checkbox rows and the Command menu. */
@@ -169,6 +182,7 @@ export const MenuItem = ({
 
   const active =
     instance !== undefined && Option.contains(activeId, instance.id);
+  const state: MenuItemState = { disabled, highlighted: active };
 
   return (
     <div
@@ -192,7 +206,10 @@ export const MenuItem = ({
         closeSubmenu();
         onMouseEnter?.(event);
       }}
-      style={mergeStyles(menuRowStyle(theme, tone, active, disabled), style)}
+      style={mergeStyles(
+        menuRowStyle(theme, tone, active, disabled),
+        resolveStyle(style, state),
+      )}
     >
       <Row leading={leading} trailing={trailing}>
         {children}
@@ -202,9 +219,18 @@ export const MenuItem = ({
 };
 
 /** {@link MenuCheckboxItem} props: a row that toggles a setting. */
-export interface MenuCheckboxItemProps extends MenuItemProps {
+export interface MenuCheckboxItemProps extends Omit<MenuItemProps, "style"> {
   readonly checked: boolean;
   readonly onCheckedChange: (checked: boolean) => void;
+  /** A style, or a function of the checkbox row's state. */
+  readonly style?: StateStyle<MenuCheckboxItemState>;
+}
+
+/** What a checkbox row draws. */
+export interface MenuCheckboxItemState {
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly highlighted: boolean;
 }
 
 /** A menu row that represents an on/off setting. Shows `✓` when checked. */
@@ -212,17 +238,33 @@ export const MenuCheckboxItem = ({
   checked,
   onCheckedChange,
   onSelect,
+  disabled = false,
   leading,
   trailing,
   children,
+  style,
+  ref,
   ...rest
 }: MenuCheckboxItemProps) => {
   const theme = useTheme();
+  const { activeId } = useMenuContext();
+  const instance = useRef<PublicInstance | null>(null);
+  const attach = useCallback((next: PublicInstance | null) => {
+    instance.current = next;
+  }, []);
+  const setRow = useMergedRef<PublicInstance | null>(attach, ref);
+  const highlighted =
+    instance.current !== null && Option.contains(activeId, instance.current.id);
+  const state: MenuCheckboxItemState = { checked, disabled, highlighted };
+
   return (
     <MenuItem
       role="menuitemcheckbox"
       aria-selected={checked}
       {...rest}
+      ref={setRow}
+      disabled={disabled}
+      style={resolveStyle(style, state)}
       closeOnSelect={false}
       onSelect={() => {
         onSelect?.();

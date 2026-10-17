@@ -14,7 +14,11 @@
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -389,10 +393,23 @@ export const TabsList = ({
 };
 
 /** {@link TabsTrigger} props. */
-export interface TabsTriggerProps extends Props {
+export interface TabsTriggerProps extends Omit<Props, "style"> {
   /** The value this trigger selects. Must match a {@link TabsContent}. */
   readonly value: string;
   readonly disabled?: boolean;
+  /** A style, or a function of the trigger's state. */
+  readonly style?: StateStyle<TabsTriggerState>;
+}
+
+/** What a trigger draws: its selection, input state and axis. */
+export interface TabsTriggerState {
+  /** Selected (`aria-selected`). */
+  readonly active: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  /** The tab the last arrow/Home/End gesture landed on. */
+  readonly highlighted: boolean;
+  readonly orientation: TabsOrientation;
 }
 
 /** One tab. Focusable only when selected, or when the selection is disabled. */
@@ -407,7 +424,15 @@ export const TabsTrigger = ({
   ...rest
 }: TabsTriggerProps) => {
   const theme = useTheme();
-  const { selected, tabbable, register, select, noteFocus } = useTabsContext();
+  const {
+    selected,
+    active,
+    orientation,
+    tabbable,
+    register,
+    select,
+    noteFocus,
+  } = useTabsContext();
   const [focused, setFocused] = useState(false);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
@@ -425,6 +450,13 @@ export const TabsTrigger = ({
 
   const isSelected = selected === value;
   const isTabbable = Option.contains(tabbable, value);
+  const state: TabsTriggerState = {
+    active: isSelected,
+    disabled,
+    focused,
+    highlighted: Option.contains(active, value),
+    orientation,
+  };
 
   return (
     <div
@@ -477,7 +509,7 @@ export const TabsTrigger = ({
               },
           ...(focused ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     />
   );

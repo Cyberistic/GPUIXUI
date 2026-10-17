@@ -11,7 +11,11 @@
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -357,6 +361,20 @@ export const AccordionItem = ({
   );
 };
 
+/** {@link AccordionTrigger} props. */
+export interface AccordionTriggerProps extends Omit<Props, "style"> {
+  /** A style, or a function of the header's state. */
+  readonly style?: StateStyle<AccordionTriggerState>;
+}
+
+/** What a header draws: its section's state and its own focus. */
+export interface AccordionTriggerState {
+  /** The section this header controls is open. */
+  readonly open: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+}
+
 /** The full-width heading button of one section. */
 export const AccordionTrigger = ({
   onClick,
@@ -367,7 +385,7 @@ export const AccordionTrigger = ({
   children,
   ref,
   ...rest
-}: Props) => {
+}: AccordionTriggerProps) => {
   const theme = useTheme();
   const { isOpen, toggle, registerTrigger, moveFrom, jumpTo } =
     useAccordionContext();
@@ -377,6 +395,7 @@ export const AccordionTrigger = ({
     undefined,
   );
   const open = isOpen(value);
+  const state: AccordionTriggerState = { open, disabled, focused };
 
   // Stable identity: a fresh ref callback each render would re-register the row
   // on every paint (ListItem has the same constraint).
@@ -453,7 +472,7 @@ export const AccordionTrigger = ({
           hover: disabled ? undefined : { color: theme.colors.primary },
           ...(focused ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     >
       <div

@@ -212,6 +212,21 @@ density) and `density.rowHeight` when `dense` (32px). Selection paints
 `colors.selected` / `colors.selectedForeground`; hover paints `colors.accent`;
 a disabled row is drawn at 50% opacity.
 
+## Style by state
+
+`ListItem.style` takes a `StyleDesc` or a function of `ListItemState`
+(`{ active, disabled, selected }`); `active` is the row the list's roving focus
+is on.
+
+```tsx
+<ListItem
+  value="readme"
+  style={(state) => ({ opacity: state.selected ? 1 : 0.85 })}
+>
+  <ListItemTitle>README.md</ListItemTitle>
+</ListItem>
+```
+
 ## Accessibility
 
 - `role="list"`/`"listitem"` without selection and `listbox`/`option` with it, so

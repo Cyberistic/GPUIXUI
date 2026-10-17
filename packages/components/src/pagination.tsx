@@ -11,7 +11,11 @@
  */
 
 import type { Props } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import { createContext, useContext, useMemo } from "react";
 import { Button } from "./internal/button.js";
@@ -205,9 +209,17 @@ export const PaginationList = ({ style, ...rest }: PaginationListProps) => {
 };
 
 /** {@link PaginationItem} props. */
-export interface PaginationItemProps extends Props {
+export interface PaginationItemProps extends Omit<Props, "style"> {
   /** The page this button goes to. */
   readonly page: number;
+  /** A style, or a function of the page's state. */
+  readonly style?: StateStyle<PaginationItemState>;
+}
+
+/** What a page control draws. */
+export interface PaginationItemState {
+  /** This control is the current page. */
+  readonly active: boolean;
 }
 
 /**
@@ -223,6 +235,7 @@ export const PaginationItem = ({
   const { current, onPageChange } = usePagination();
   const isCurrent = page === current;
   const height = controlHeight(theme, "sm");
+  const state: PaginationItemState = { active: isCurrent };
 
   return (
     <Button
@@ -239,7 +252,7 @@ export const PaginationItem = ({
           paddingLeft: 0,
           paddingRight: 0,
         },
-        style,
+        resolveStyle(style, state),
       )}
     >
       {String(page)}

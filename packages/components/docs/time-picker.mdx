@@ -125,6 +125,19 @@ clear glyph use `colors.mutedForeground`; hover on the clear control uses
 `colors.ring`, because 0.10.0 has no `outline`. Both themes are asserted in the
 theme matrix.
 
+## Style by state
+
+`TimePickerSegment.style` takes a `StyleDesc` or a function of
+`TimePickerSegmentState` (`{ disabled, focused }`); the root's field surface
+still owns the group focus ring.
+
+```tsx
+<TimePickerSegment
+  segment="hours"
+  style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })}
+/>
+```
+
 ## Accessibility and limitations
 
 - The field is a labelled `group`; each input carries `aria-label="<label>

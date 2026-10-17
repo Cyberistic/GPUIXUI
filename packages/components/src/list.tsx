@@ -17,7 +17,11 @@
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -560,7 +564,7 @@ export const List = (props: ListProps) => {
 };
 
 /** {@link ListItem} props. */
-export interface ListItemProps extends Omit<Props, "children"> {
+export interface ListItemProps extends Omit<Props, "children" | "style"> {
   /** Stable id, and the value a selection reports. */
   readonly value: string;
   /**
@@ -576,6 +580,16 @@ export interface ListItemProps extends Omit<Props, "children"> {
   /** Slot after the text: a badge, a shortcut. */
   readonly trailing?: ReactNode;
   readonly children?: PartChildren;
+  /** A style, or a function of the row's state. */
+  readonly style?: StateStyle<ListItemState>;
+}
+
+/** What a row draws: the roving focus, the selection and input state. */
+export interface ListItemState {
+  /** The row the list's roving focus is on. */
+  readonly active: boolean;
+  readonly disabled: boolean;
+  readonly selected: boolean;
 }
 
 /** One row of a {@link List}. Its text parts are {@link ListItemTitle} and
@@ -634,6 +648,11 @@ export const ListItem = ({
     tabbable,
     (candidate) => candidate === value,
   );
+  const state: ListItemState = {
+    active: isActive,
+    disabled,
+    selected: isSelected,
+  };
   assertParts(listItem, children);
 
   return (
@@ -685,7 +704,7 @@ export const ListItem = ({
           // the active one, keyboard or click.
           ...(isActive ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     >
       {leading === undefined ? null : (

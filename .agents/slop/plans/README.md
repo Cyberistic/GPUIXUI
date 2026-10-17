@@ -78,7 +78,7 @@ workstream declares in its own section below.
 | [302](./302-combobox-parts.md) | Combobox becomes a compound part | F | 200, 201, 116, 138 | done — the `docs/component-api.md` §9 deviation |
 | [303](./303-date-time-picker-parts.md) | DatePicker and TimePicker become compound parts | F | 200, 201, 119, 127, 132 | done — the §9 deviation; formalises the TimePicker field shape |
 | [304](./304-typed-by-position-children.md) | Typed-by-position children: the render check and the measured compile-time limit | F | 200, 201, 158, 300–303 | done — 32 family-scoped checks across 19 modules, `PartChildren` narrowing, 6 unit + 7 native tests (behaviour 298); part identity is not expressible in React 19's JSX types |
-| [305](./305-state-aware-style.md) | State-aware `style` on interactive parts | F | 200, 201, 304 | in progress — 11 parts, `StateStyle<<Part>State>` from the published runtime |
+| [305](./305-state-aware-style.md) | State-aware `style` on interactive parts | F | 200, 201, 304 | done — 11 parts use the runtime's `StateStyle`/`resolveStyle`, 11 native tests (behaviour 309); button-shaped triggers recorded out of scope until primitives owns the button |
 
 Interlocks this workstream depends on and does not own:
 

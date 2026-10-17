@@ -20,7 +20,7 @@ history. No landed component currently deviates.
 | Compound parts (§1) | **adopted** — Card, Dialog, Tabs, Accordion, menus, Alert and the rest export their parts |
 | Typed-by-position children (§1) | **adopted with a render check** — `PartChildren` narrows children to elements and conditionals (text is a compile error); part identity is enforced by `internal/parts.ts` at render, because React 19's JSX types are not nominal (plan 304 §2) |
 | Controlled/uncontrolled names (§2) | **adopted** — `value`/`defaultValue`/`onValueChange` across the landed components |
-| State-aware `style`/`children(state)` (§3) | **target** — parts read the theme tokens directly today; no part exposes a state callback yet (`TODO.md` follow-up) |
+| State-aware `style`/`children(state)` (§3) | **adopted for `style`** — eleven parts export a `<Part>State` and accept `StateStyle<<Part>State>` from `@gpuix/react/floating` (plan 305); `children(state)` is not offered, and button-shaped triggers keep a plain `StyleDesc` until `@gpuixui/primitives` owns the button |
 | Shared keyboard contract (§4) | **adopted per component** — `packages/primitives`' keyboard module is not yet a dependency of this package (interlock) |
 | Accessibility subset (§5) | **adopted** — every component's docs record the gaps |
 
@@ -62,16 +62,43 @@ history. No landed component currently deviates.
 GPUix has no CSS, no data attributes and no CSS variables. A part is styled from
 a public state object instead:
 
-- `style` accepts `StyleDesc` or `(state: PartState) => StyleDesc` when the
-  consumer styles through a prop; or
-- `children` accepts `(state: PartState) => ReactNode` when the consumer
-  composes markup.
+```tsx
+<TabsTrigger
+  value="billing"
+  style={(state) => ({
+    color: state.active ? colors.accent : colors.mutedForeground,
+  })}
+/>
+```
 
-The state object is public API: name it `<Part>State` and export the type. State
-names come from `base-gpui`'s per-part structs — `active`, `disabled`, `focused`,
-`highlighted`, `selected`, `orientation` — and are the only vocabulary allowed.
-Every token lookup goes through the theme seam (`internal/theme.ts`); a component
-never repeats a raw role name or writes a colour/shadow/radius literal.
+- `style` accepts `StateStyle<PartState>` — a `StyleDesc` **or**
+  `(state: PartState) => StyleDesc` — from `@gpuix/react/floating`, the same
+  type its own headless `ComboboxItem`/`SelectItem` use. `resolveStyle` resolves
+  it and the result merges after the part's own rules, so a callback wins exactly
+  where an object style would.
+- The state object is public API: name it `<Part>State` and export the type.
+  State names come from `base-gpui`'s per-part structs — `active`, `checked`,
+  `closed`, `disabled`, `focused`, `highlighted`, `invalid`, `open`,
+  `orientation`, `selected` — and are the only vocabulary allowed.
+- Every token lookup goes through the theme seam (`internal/theme.ts`); a
+  component never repeats a raw role name or writes a colour/shadow/radius
+  literal.
+
+Which parts have a state, and which do not, is a measured line:
+
+- **yes** — `TabsTrigger`, `AccordionTrigger`, `CollapsibleTrigger`, `ListItem`,
+  `MenuItem`, `MenuCheckboxItem`, `PaginationItem`, `SearchInput`, `FieldInput`,
+  `TimePickerSegment`, `ComboboxItem` (plus `ComboboxList.itemStyle` for the
+  rows it renders). Their state is not expressible in `StyleDesc`.
+- **no** — button-shaped triggers (`DialogTrigger`, `PopoverTrigger`,
+  `DropdownMenuTrigger`, `ContextMenuTrigger`, `DatePickerTrigger`,
+  `AlertDismiss`, `PaginationPrevious`/`Next`). Their only state beyond
+  `StyleDesc` is `disabled`, and they draw through the local
+  `internal/button.tsx` stand-in that `@gpuixui/primitives` replaces; adding a
+  second state layer there would be deleted with it.
+- **no `children(state)`** — no landed part changes its markup by state, and the
+  runtime's own `StateStyle` path is `style`; a part that genuinely needs
+  different markup composes a different part.
 
 ## 4. Keyboard
 

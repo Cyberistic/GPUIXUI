@@ -11,7 +11,11 @@
 
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import { useCallback, useRef, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
@@ -24,7 +28,10 @@ import {
 } from "./internal/theme.js";
 
 /** {@link SearchInput} props. */
-export interface SearchInputProps extends Omit<InputProps, "onSubmit"> {
+export interface SearchInputProps extends Omit<
+  InputProps,
+  "onSubmit" | "style"
+> {
   /** The controlled text. `undefined` means uncontrolled. */
   readonly value?: string;
   readonly defaultValue?: string;
@@ -37,6 +44,14 @@ export interface SearchInputProps extends Omit<InputProps, "onSubmit"> {
   /** Default `"Search…"`. */
   readonly placeholder?: string;
   readonly disabled?: boolean;
+  /** A style, or a function of the field's state. */
+  readonly style?: StateStyle<SearchInputState>;
+}
+
+/** What the field draws: its input state. */
+export interface SearchInputState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
 }
 
 /** A search field with a leading glyph and a conditional clear control. */
@@ -75,6 +90,7 @@ export const SearchInput = ({
     const instance = input.current;
     if (instance !== null) renderer?.focusElement?.(instance.id);
   };
+  const state: SearchInputState = { disabled, focused };
 
   return (
     <div
@@ -94,7 +110,7 @@ export const SearchInput = ({
           opacity: disabled ? 0.5 : 1,
           ...(focused ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     >
       <text

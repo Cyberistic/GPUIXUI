@@ -74,6 +74,18 @@ page paints `colors.primary` with `colors.primaryForeground`, others are ghost
 buttons with `colors.mutedForeground`. The ellipsis uses `colors.mutedForeground`
 and a caption type role.
 
+## Style by state
+
+`PaginationItem.style` takes a `StyleDesc` or a function of
+`PaginationItemState` (`{ active }`), where `active` is the current page.
+
+```tsx
+<PaginationItem
+  page={3}
+  style={(state) => ({ opacity: state.active ? 1 : 0.8 })}
+/>
+```
+
 ## Accessibility and limitations
 
 - `role="navigation"` and a name on the root; `aria-label="Page N"` on every page

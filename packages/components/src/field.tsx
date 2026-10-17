@@ -11,7 +11,11 @@
  */
 
 import type { InputProps, Props } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import { createContext, useContext, useState } from "react";
 import {
@@ -166,9 +170,20 @@ export const FieldError = ({ style, ...rest }: Props) => {
 };
 
 /** {@link FieldInput} props: an input that knows whether its field is invalid. */
-export interface FieldInputProps extends InputProps {
+export interface FieldInputProps extends Omit<InputProps, "style"> {
   /** Overrides the field's own error as the validity signal. */
   readonly invalid?: boolean;
+  /** Leaves the tab order and ignores edits; 0.10.0 has no `aria-disabled`. */
+  readonly disabled?: boolean;
+  /** A style, or a function of the input's state. */
+  readonly style?: StateStyle<FieldInputState>;
+}
+
+/** What the control draws: input state plus the field's validity. */
+export interface FieldInputState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
 }
 
 /**
@@ -177,6 +192,7 @@ export interface FieldInputProps extends InputProps {
  */
 export const FieldInput = ({
   invalid,
+  disabled = false,
   onFocus,
   onBlur,
   style,
@@ -186,6 +202,7 @@ export const FieldInput = ({
   const field = useContext(FieldContext);
   const [focused, setFocused] = useState(false);
   const isInvalid = invalid ?? field?.error !== undefined;
+  const state: FieldInputState = { disabled, focused, invalid: isInvalid };
 
   const message = field?.error ?? field?.description;
   const description = Option.match(Option.fromNullishOr(message), {
@@ -196,6 +213,7 @@ export const FieldInput = ({
   return (
     <input
       {...rest}
+      {...(disabled ? { readOnly: true } : {})}
       {...(field === undefined ? {} : { "aria-label": field.label })}
       {...(description === undefined
         ? {}
@@ -224,7 +242,7 @@ export const FieldInput = ({
           borderRadius: theme.radius.md,
           ...(focused && !isInvalid ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     />
   );

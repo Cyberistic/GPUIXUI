@@ -85,6 +85,17 @@ Triggers use the `label` type role at `controlHeight(theme, "lg")`, with
 indicator is a text glyph (`⌄` closed, `⌃` open) because 0.10.0's `StyleDesc`
 has no `transform` — a rotation is not available.
 
+## Style by state
+
+`AccordionTrigger` takes a `StyleDesc` or a function of `AccordionTriggerState`
+(`{ open, disabled, focused }`).
+
+```tsx
+<AccordionTrigger
+  style={(state) => ({ opacity: state.open ? 1 : 0.8 })}
+/>
+```
+
 ## Accessibility and limitations
 
 - `aria-expanded` on each trigger; the trigger names the section.

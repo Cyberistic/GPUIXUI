@@ -8,7 +8,11 @@
  */
 
 import type { EventPayload, Props } from "@gpuix/react";
-import { mergeStyles } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import { createContext, useContext, useState } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { isActivation } from "./internal/key.js";
@@ -79,6 +83,19 @@ export const Collapsible = ({
   );
 };
 
+/** {@link CollapsibleTrigger} props. */
+export interface CollapsibleTriggerProps extends Omit<Props, "style"> {
+  /** A style, or a function of the trigger's state. */
+  readonly style?: StateStyle<CollapsibleTriggerState>;
+}
+
+/** What the trigger draws: the section's open state and its own focus. */
+export interface CollapsibleTriggerState {
+  readonly open: boolean;
+  readonly closed: boolean;
+  readonly focused: boolean;
+}
+
 /** A button that opens and closes its section. */
 export const CollapsibleTrigger = ({
   onClick,
@@ -87,10 +104,15 @@ export const CollapsibleTrigger = ({
   onBlur,
   style,
   ...rest
-}: Props) => {
+}: CollapsibleTriggerProps) => {
   const theme = useTheme();
   const { open, setOpen } = useCollapsibleContext();
   const [focused, setFocused] = useState(false);
+  const state: CollapsibleTriggerState = {
+    open,
+    closed: !open,
+    focused,
+  };
 
   const toggle = (): void => setOpen(!open);
 
@@ -135,7 +157,7 @@ export const CollapsibleTrigger = ({
           active: { backgroundColor: theme.colors.active },
           ...(focused ? focusRing(theme) : {}),
         },
-        style,
+        resolveStyle(style, state),
       )}
     />
   );

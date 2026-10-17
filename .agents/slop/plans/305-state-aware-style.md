@@ -196,4 +196,25 @@ Stop and report if:
 
 ## 9. Result
 
-Filled in when the plan lands.
+Landed 2026-10-17:
+
+- The mechanism is the published runtime's own: `StateStyle` + `resolveStyle`
+  from `@gpuix/react/floating`; no local copy.
+- Eleven parts now accept `StateStyle<<Part>State>`: `TabsTrigger`,
+  `AccordionTrigger`, `CollapsibleTrigger`, `ListItem`, `MenuItem`,
+  `MenuCheckboxItem`, `PaginationItem`, `SearchInput`, `FieldInput`,
+  `TimePickerSegment`, `ComboboxItem`; `ComboboxList.itemStyle` forwards the
+  row style to the rows the list renders (a hand-composed item cannot reach the
+  list's item context, so the prop lives there too). `FieldInput` gained the
+  `disabled` prop it needed to report its state.
+- `docs/component-api.md` §3 is adopted, with the widened base-gpui vocabulary
+  (`open`, `closed`, `checked`, `invalid` were missing) and the measured
+  out-of-scope list (button-shaped triggers on the local stand-in,
+  `ComboboxTrigger`, `children(state)`).
+- Ten docs pages gained a "Style by state" section with the exact state shape.
+- Tests: `state-style.test.tsx`, 11 real-renderer cases (state payload + the
+  callback's style winning), behaviour 309 (298 kept + 11). Both directions:
+  resolving with `undefined` instead of the callback fails the `ListItem` case
+  (the remaining failures in that run were the mounted-root cascade, not
+  separate failures). Restored.
+- Gates: `check-types`, `test`, `test:behaviour`, `check`, `lint`, `fmt` green.

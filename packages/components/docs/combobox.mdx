@@ -113,6 +113,19 @@ The trigger paints `colors.background`, a `borderWidth.thin` border in
 scrolling, and rows highlight with `colors.hover`. The selected check is
 `colors.primary`.
 
+## Style by state
+
+Rows take a `StyleDesc` or a function of `ComboboxItemState`
+(`{ selected, highlighted, disabled }`, GPUix's own type). The list renders the
+rows, so pass it as `ComboboxList.itemStyle`; `ComboboxItem.style` accepts the
+same shape for a row composed by hand.
+
+```tsx
+<ComboboxList
+  itemStyle={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+/>
+```
+
 ## Limitations
 
 - No async option loading, no "create new option", no grouping headers in v1.

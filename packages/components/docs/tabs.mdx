@@ -65,6 +65,19 @@ and `radius.md`. The selected trigger takes `colors.card` with
 `colors.foreground`; unselected triggers use `colors.mutedForeground` and hover
 with `colors.hover`. Trigger height is `controlHeight(theme, "md")`.
 
+## Style by state
+
+`style` takes a `StyleDesc` or a function of `TabsTriggerState`
+(`{ active, disabled, focused, highlighted, orientation }`); the result merges
+after the trigger's own rules.
+
+```tsx
+<TabsTrigger
+  value="profile"
+  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+/>
+```
+
 ## Accessibility and limitations
 
 - `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are

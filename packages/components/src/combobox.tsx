@@ -29,7 +29,12 @@ import {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
-import { mergeStyles, type FloatingContentProps } from "@gpuix/react/floating";
+import {
+  mergeStyles,
+  resolveStyle,
+  type FloatingContentProps,
+  type StateStyle,
+} from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -455,11 +460,14 @@ export const ComboboxInput = ({
 export interface ComboboxListProps extends Omit<HeadlessListProps, "children"> {
   /** The listbox's accessible name. Default `"Options"`. */
   readonly label?: string;
+  /** A style for every option row, or a function of its state. */
+  readonly itemStyle?: StateStyle<ComboboxItemState>;
 }
 
 /** The listbox: one {@link ComboboxItem} per visible option, in ranked order. */
 export const ComboboxList = ({
   label = "Options",
+  itemStyle,
   style,
   ...rest
 }: ComboboxListProps) => {
@@ -470,7 +478,7 @@ export const ComboboxList = ({
       {...rest}
       style={mergeStyles({ display: "flex", flexDirection: "column" }, style)}
     >
-      {(item) => <ComboboxItem key={item} value={item} />}
+      {(item) => <ComboboxItem key={item} value={item} style={itemStyle} />}
     </HeadlessList>
   );
 };
@@ -479,8 +487,8 @@ export const ComboboxList = ({
 export interface ComboboxItemProps {
   /** The option's value. The label and description are read from the root. */
   readonly value: string;
-  /** Merged after the row's own state style. */
-  readonly style?: StyleDesc;
+  /** A style, or a function of the row's state (GPUix's `ComboboxItemState`). */
+  readonly style?: StateStyle<ComboboxItemState>;
 }
 
 /** One option row: label, description and the selected mark. */
@@ -498,7 +506,8 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
       disabled={isDisabled(value)}
       testId={`combobox-option-${value}`}
       style={(state) =>
-        mergeStyles(rowStyle(theme, state), style) ?? rowStyle(theme, state)
+        mergeStyles(rowStyle(theme, state), resolveStyle(style, state)) ??
+        rowStyle(theme, state)
       }
     >
       <div
@@ -576,6 +585,9 @@ export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
 };
 
 export type { ComboboxOption } from "./combobox/logic.js";
+
+/** GPUix's own state shape for one option row, re-exported for our consumers. */
+export type { ComboboxItemState } from "@gpuix/react";
 
 /** Every part of Combobox, so a misplaced sibling is named. */
 const comboboxParts: ReadonlyArray<PartComponent> = [

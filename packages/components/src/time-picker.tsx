@@ -22,6 +22,7 @@
 
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import {
@@ -282,11 +283,23 @@ export const TimePicker = ({
 export interface TimePickerSegmentProps {
   /** Which half of the time this input edits. */
   readonly segment: TimeSegment;
+  /** A style, or a function of the segment's state. */
+  readonly style?: StateStyle<TimePickerSegmentState>;
+}
+
+/** What a segment draws: the field's input state and its own focus. */
+export interface TimePickerSegmentState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
 }
 
 /** One labelled segment. Typing clamps, arrows step and blur pads. */
-export const TimePickerSegment = ({ segment }: TimePickerSegmentProps) => {
+export const TimePickerSegment = ({
+  segment,
+  style,
+}: TimePickerSegmentProps) => {
   const theme = useTheme();
+  const [focused, setFocusedSegment] = useState(false);
   const {
     hoursText,
     minutesText,
@@ -300,6 +313,7 @@ export const TimePickerSegment = ({ segment }: TimePickerSegmentProps) => {
     registerHours,
   } = useTimePicker();
   const text = segment === "hours" ? hoursText : minutesText;
+  const state: TimePickerSegmentState = { disabled, focused };
 
   const props: InputProps = {
     testId: `${testId}-${segment}`,
@@ -310,9 +324,13 @@ export const TimePickerSegment = ({ segment }: TimePickerSegmentProps) => {
     tabIndex: disabled ? -1 : 0,
     onChange: (event) => edit(segment, event.value ?? ""),
     onKeyDown: (event) => handleKeyDown(segment, event),
-    onFocus: () => setFocused(true),
+    onFocus: () => {
+      setFocusedSegment(true);
+      setFocused(true);
+    },
     onBlur: () => {
       normalize();
+      setFocusedSegment(false);
       setFocused(false);
     },
     style: {
@@ -323,6 +341,7 @@ export const TimePickerSegment = ({ segment }: TimePickerSegmentProps) => {
       padding: 0,
       textAlign: "center",
       backgroundColor: undefined,
+      ...resolveStyle(style, state),
     },
   };
 
