@@ -36,6 +36,7 @@ const SCREENS = [
     root: "number-field-example",
     headline: "Export settings",
   },
+  { id: "otp", root: "otp-example", headline: "Two-factor verification" },
 ] as const;
 
 const renderExample = (
@@ -180,6 +181,18 @@ it("steps the number-field example's copies and repaints its summary", async () 
     Arr.some(runtime.allText(), (line) =>
       line.startsWith("3 prints at 144 DPI."),
     ),
+  ).toBe(true);
+});
+
+it("verifies the one-time-code example and repaints its status", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "otp");
+  expect(runtime.allText()).toContain("6 digits to go.");
+  Arr.forEach(["1", "2", "3", "4", "5", "6"], (digit) => runtime.type(digit));
+  expect(runtime.allText()).toContain("Code complete — press Verify.");
+  runtime.click("otp-example-verify");
+  expect(
+    Arr.some(runtime.allText(), (line) => line.startsWith("Verified.")),
   ).toBe(true);
 });
 

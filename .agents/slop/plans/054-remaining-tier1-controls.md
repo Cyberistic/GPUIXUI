@@ -2,9 +2,9 @@
 
 - **Phase:** C (Tier 1 completion). **Owner:** primitives workstream.
 - **Depends on:** `030`, `040`, `041`, `047`, `049`, `053` (value maths).
-- **Status:** in progress. `NumberField`, `Toggle` and `Rating` are implemented
-  and measured (§9); `OTPField` is the only component left, and its paste
-  behaviour is the one runtime fact still to verify.
+- **Status:** done (implementation). `NumberField`, `OTPField`, `Toggle` and
+  `Rating` are implemented and measured (§9). The published-binary confirmation
+  and the docs-site page remain the same gates as every Tier 1 row.
 - **Why:** these four rows in `COMPONENTS.md` were marked *owner unassigned*.
   They are all single-purpose input/selection primitives (`div` + `<input>` +
   our keyboard contract) and belong to this package, not to the Tier 2
@@ -17,7 +17,8 @@
 | Fact | Why it matters | Where to check |
 | ---- | -------------- | -------------- |
 | `<input>` has `value`, `placeholder`, `readOnly`, `onChange`, `onSubmit`, `autoFocus`, `theme` — no `type`, no `maxLength`, no `inputMode`, no `onPaste` | NumberField cannot rely on `type="number"`; OTP cannot enforce one character natively and cannot intercept paste | `@gpuix/native` `InputProps` (0.10.0) |
-| `onChange` carries the **accumulated text** after the edit (plan 041 §9) | OTP can distribute a multi-character insert if the platform pastes into one field | `runtime/fields.runtime.test.tsx` |
+| `onChange` carries the **accumulated text** after the edit (plan 041 §9) | OTP must strip the cell's old character before distributing an insert | measured again in §9 |
+| An `<input>`'s **key-down** handler receives Up/Down/letters but **not** Left/Right/Home/End/Backspace/Delete — the editor consumes those; their **key-up** events do arrive, and they do not bubble to a parent `div` | OTP's navigation and backspace contract has to run on key up | measured in §9 |
 | `aria` supports `label`, `description`, `valuetext`, `expanded`, `selected`, `level` — no `pressed`, no `checked` | Toggle and Rating must report state through `aria-valuetext` (same as Checkbox/Switch) | `references/gpuix/packages/native/src/accessibility.rs` |
 | `getElementBounds` + `EventPayload.x/y` | NumberField's drag-to-scrub is only honest if both are available; otherwise drop the feature and say so | runtime probe |
 | Focus can be moved programmatically with `renderer.focusElement(id)`; it is a **method on the renderer** | OTP moves focus between cells, Rating moves focus with selection | plan 049 §7 |
@@ -133,8 +134,9 @@ disabled), its own focus ring and `onChange`/`onKeyDown`. Focus movement uses
 The value is a single string, so a caller never juggles an array.
 
 Keyboard: Left/Right move between cells; Backspace clears and moves left; Delete
-clears; Home/End jump to the ends; typing fills and advances. Arrows are handled
-in the cell so they do not collide with the text caret.
+clears; Home/End jump to the ends; typing fills and advances. The cell's editor
+consumes Left/Right/Home/End/Backspace/Delete on key **down**, so the contract is
+wired on key **up** (measured — §9); a held arrow therefore moves one cell.
 
 **Paste:** verify that pasting into a focused `<input>` delivers the whole
 string through `onChange`. If it does, `applyOtpInput` distributes it. If the
@@ -280,8 +282,8 @@ count before it is measured.
 
 | Command | Result |
 | ------- | ------ |
-| `nub run --filter @gpuixui/primitives test` | 23 files, **260 tests passed** (214 before plan 054; +46) |
-| `nub run --filter @gpuixui/primitives test:runtime` | 11 files, **106 tests passed** (82 before plan 054; +24: seven field, six toggle, seven rating, four example interactions) |
+| `nub run --filter @gpuixui/primitives test` | 25 files, **282 tests passed** (214 before plan 054; +68) |
+| `nub run --filter @gpuixui/primitives test:runtime` | 12 files, **115 tests passed** (82 before plan 054; +33: seven field, six toggle, seven rating, eight OTPField, plus five example interactions) |
 | `nub run check` | tests-can-fail, lint, fmt and `check-types` pass |
 
 Two-direction probes (each change reverted on its own):
@@ -338,11 +340,52 @@ Facts measured for Rating:
 - Tab enters on the selected star (or the first when unrated) and the next Tab
   leaves the group — one tab stop, not five.
 
+### OTPField
+
+| Guard | Revert | Result |
+| ----- | ------ | ------ |
+| accumulated-text strip | use the reported `text` instead of the stripped `edited` | core `strips the character the runtime accumulated…` → **expected `{ value: '2', focus: 1 }` to strictly equal `{ value: '12', focus: 2 }`** |
+| single-delete guard | drop `if (key === "backspace" && alreadyEmptied) return` | runtime `deletes only one character when Backspace empties a filled cell` → **expected '12' to be '1'** |
+| focus advance | drop `focusCell(edit.focus)` | runtime `fills the code one key at a time…` → **expected '123456' to be '6'**; `moves native focus…` → **expected 'otp-cell-2' to be 'otp-cell-1'**; `clears backwards…` → **expected 'otp-cell-2' to be 'otp-cell-3'** |
+
+Facts measured for OTPField (2026-10-17):
+
+- **A filled `<input>` reports the whole text after an edit.** Typing `2` into
+  an input holding `1` delivers `onChange` with `"12"`; the component strips the
+  cell's old character before distributing, or the next cell would receive it.
+  Confirmed with a probe that mounted a controlled `<input value="1">` and typed
+  `2` (reported `"12"`) and then `2 3` (reported `"12"`, then `"123"`).
+- **The editor consumes its own keys on key down.** A probe with handlers on
+  both the input and its wrapper showed: key down delivered `up` and `a` to the
+  input but **not** `left` or `backspace`; key up delivered all four; the
+  wrapper received none. So the OTP key contract runs on `keyUp`, and arrows do
+  not repeat while held. The wrapper cannot be used as a fallback — GPUI does
+  not bubble the event.
+- Backspace on a filled cell is the native edit (`onChange` with an empty text)
+  and then its key-up arrives; without the "this key already emptied the cell"
+  guard the previous cell is deleted too, which the table above measures.
+- Six digits typed one at a time fill six cells and `onComplete` fires once.
+  Typing them in one `simulateKeystrokes` burst is *not* the same interaction:
+  all six keys go to one editor before focus moves, and the accumulated text is
+  then interpreted as an insert from that cell. The runtime suite types one key
+  per call, which is what a keyboard does.
+- The a11y dump reports a named `Group` and six named `TextInput`s
+  (`"Verification code digit N"`); the group's `aria-label` is the `label` prop.
+- `invalid` paints `colors.destructive` as the border on every cell; the focus
+  ring lands on one cell only; a disabled field is `readOnly`, has every cell at
+  `tabIndex -1`, and leaves the tab order (a mounted Button before it keeps
+  focus).
+- **Paste itself is not observable.** `@gpuix/native` 0.10.0 has no `onPaste`
+  and the `TestRenderer` has no clipboard simulation, so the multi-character
+  fill is proven only as a pure rule (`core/otp.test.ts`) and is documented as
+  unverified. It is not simulated with a keyboard sequence.
+
 Not proven:
 
-- paste into the field: there is no `onPaste`, so the runtime's text pipeline
-  delivers it as an edit and `parseNumericText` decides — no separate path to
-  claim;
+- paste into either field: there is no `onPaste`, and for NumberField the
+  runtime's text pipeline delivers it as an edit that `parseNumericText` decides
+  — no separate path to claim. For OTPField the *distribution* is proven as a
+  pure rule, but a real clipboard paste has never been observed;
 - the published `darwin-x64` binding (same provenance as every runtime claim).
 
 ## 10. Acceptance

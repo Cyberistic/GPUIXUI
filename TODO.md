@@ -173,10 +173,11 @@ retired once both branches are one
       `Slider`, `RangeSlider` and `Meter` (plan 053) — value maths, paint,
       element trees, runtime geometry and focus proofs, docs pages and a
       composed example; the rest of the claimed rows are plan 054
-`[~]` `packages/primitives`: `NumberField`, `Toggle` and `Rating` landed (plan
-      054) — core modules, element-tree and runtime suites, docs pages and
-      examples. `OTPField` remains — core module, test, docs page and runtime
-      proof, with the paste behaviour to verify
+`[x]` `packages/primitives`: `NumberField`, `OTPField`, `Toggle` and `Rating`
+      landed (plan 054) — core modules, element-tree and runtime suites, docs
+      pages and examples. `OTPField`'s multi-character fill is proven as a pure
+      rule; a real clipboard paste is unverifiable in 0.10.0 (no `onPaste`, no
+      clipboard simulation) and is documented as such
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
