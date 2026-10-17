@@ -37,6 +37,10 @@ export interface ToastApi {
   readonly push: (draft: ToastDraft) => void;
   readonly dismiss: (id: string) => void;
   readonly dismissAll: () => void;
+  /** Stop the auto-dismiss clock, e.g. while the pointer rests on the card. */
+  readonly pause: (id: string) => void;
+  /** Restart it with the remaining time. */
+  readonly resume: (id: string) => void;
 }
 
 const ToastContext = createContext<ToastApi | undefined>(undefined);
@@ -118,9 +122,23 @@ export const ToastProvider = ({
     runtime.runFork(Effect.flatMap(ToastStore, (store) => store.dismissAll));
   }, [runtime]);
 
+  const pause = useCallback(
+    (id: string) => {
+      runtime.runFork(Effect.flatMap(ToastStore, (store) => store.pause(id)));
+    },
+    [runtime],
+  );
+
+  const resume = useCallback(
+    (id: string) => {
+      runtime.runFork(Effect.flatMap(ToastStore, (store) => store.resume(id)));
+    },
+    [runtime],
+  );
+
   const api = useMemo<ToastApi>(
-    () => ({ toasts, push, dismiss, dismissAll }),
-    [dismiss, dismissAll, push, toasts],
+    () => ({ toasts, push, dismiss, dismissAll, pause, resume }),
+    [dismiss, dismissAll, pause, push, resume, toasts],
   );
 
   return <ToastContext.Provider value={api}>{children}</ToastContext.Provider>;

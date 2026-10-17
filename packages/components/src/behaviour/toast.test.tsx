@@ -9,9 +9,14 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import { Duration } from "effect";
 import * as Option from "effect/Option";
 import { Button } from "../internal/button.js";
-import { boundsOf, clickCentreOf } from "../internal/interaction.js";
+import {
+  boundsOf,
+  clickCentreOf,
+  hoverCentreOf,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -59,11 +64,17 @@ const Controls = ({ onElsewhere }: { readonly onElsewhere: () => void }) => {
   );
 };
 
-const Harness = ({ onElsewhere }: { readonly onElsewhere?: () => void }) => (
+const Harness = ({
+  onElsewhere,
+  duration,
+}: {
+  readonly onElsewhere?: () => void;
+  readonly duration?: Duration.Input;
+}) => (
   // One root element: the native test renderer reports a single tree root, and a
   // provider's children are siblings of each other.
   <div style={{ width: 1200, height: 760 }}>
-    <ToastProvider>
+    <ToastProvider defaultDuration={duration}>
       <Controls onElsewhere={onElsewhere ?? (() => undefined)} />
       <ToastViewport />
     </ToastProvider>
@@ -191,6 +202,27 @@ describe("Toast", () => {
     await settle();
 
     expect(page.renderer.getAllText()).toContain("Disk nearly full");
+
+    page.unmount();
+  });
+
+  it("pauses auto-dismiss while the pointer rests on the toast", async () => {
+    const page = renderComponent(<Harness duration={Duration.millis(600)} />);
+
+    clickCentreOf(page, "push");
+    await settle();
+
+    hoverCentreOf(page, "toast-1");
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+    hoverCentreOf(page, "elsewhere");
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 
     page.unmount();
   });

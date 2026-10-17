@@ -33,7 +33,7 @@ toast.push({
 | Part | Responsibility |
 | ---- | -------------- |
 | `ToastProvider` | the `ManagedRuntime`, the store, the React subscription — the package's **only** `runtime.run*` boundary |
-| `useToast()` | `{ toasts, push, dismiss, dismissAll }`; throws outside the provider |
+| `useToast()` | `{ toasts, push, dismiss, dismissAll, pause, resume }`; throws outside the provider |
 | `ToastViewport` | the bottom-right stack; `role="status"` |
 
 Render the viewport **last** in the app root: GPUix has no `zIndex`, so overlays
@@ -49,10 +49,16 @@ pointer events back on, so a toast never blocks the page underneath.
 | custom duration | `duration: Duration.seconds(6)` |
 | zero or infinite duration | never auto-dismisses; the card stays until dismissed |
 | ids | monotonic (`"1"`, `"2"`, …), never reused |
+| hovering a card | pauses its clock; leaving resumes with the **remaining** time |
 
 A dismissed toast's timer is cancelled with it, so a stale timer can never remove
 the next toast. That regression is guarded in `toast/store.test.ts` with
 `TestClock`; the store suite also proves the stack bound and the id order.
+
+Pause/resume is also on `useToast()` for a consumer that wants its own hold
+affordance (a button, a hover target, a focus ring). The viewport wires hover; it
+does not pause on keyboard focus in v1, because a toast card is not a focus
+target.
 
 Tones are `info` (default), `success`, `warning` and `danger`; each paints the
 3px left bar and the glyph. The glyph is text (`i`, `✓`, `!`, `✕`) until an icon
@@ -79,8 +85,9 @@ palette Alert and Badge use). Width is 380px.
   region is the supported announcement.
 - **No progress indicator** for the remaining time; the store knows the deadline
   but the card does not animate it.
-- The stack has no pause-on-hover. A card that must not disappear should use
-  `duration: Duration.infinity` (or a zero duration) and a manual dismiss.
+- Hovering a card pauses its clock and leaving resumes with the remaining time.
+  Keyboard focus does not pause (the card is not a focus target); a consumer that
+  needs that can call `pause`/`resume` from `useToast()`.
 - No portal: the viewport is an absolutely positioned element in its parent, so
   put it at the app root.
 - Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React
@@ -91,11 +98,12 @@ palette Alert and Badge use). Width is 380px.
 ## Verification
 
 - `src/toast/store.test.ts` — queue, ids, `max`, dismiss, `dismissAll`,
-  `TestClock` auto-dismiss, the stale-timer regression, custom durations and
-  rejected input.
-- `src/behaviour/toast.test.tsx` — 7 tests in the real GPUix renderer: push,
+  `TestClock` auto-dismiss, the stale-timer regression, custom durations,
+  rejected input, and pause/resume with the remaining time.
+- `src/behaviour/toast.test.tsx` — 8 tests in the real GPUix renderer: push,
   stacking order, dismissing one card, `dismissAll`, the page staying clickable
-  through the viewport, both themes, and the queue still working after a dismiss.
+  through the viewport, both themes, the queue still working after a dismiss, and
+  hover pausing a card's auto-dismiss.
 
 ```sh
 nub run --filter @gpuixui/components test

@@ -46,12 +46,14 @@ const glyph = (value: ToastTone): string =>
 /** One card. Its left bar and glyph carry the tone; the surface is neutral. */
 const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   const theme = useTheme();
-  const { dismiss } = useToast();
+  const { dismiss, pause, resume } = useToast();
   const palette = tone(theme, asTone(toast.tone));
 
   return (
     <div
       testId={`toast-${toast.id}`}
+      onMouseEnter={() => pause(toast.id)}
+      onMouseLeave={() => resume(toast.id)}
       style={{
         display: "flex",
         flexDirection: "row",
