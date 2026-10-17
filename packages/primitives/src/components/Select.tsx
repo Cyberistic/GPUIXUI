@@ -12,8 +12,9 @@
  * for anything the data shape cannot express.
  */
 
-import { useState, type ReactElement } from "react";
-import type { StyleDesc } from "@gpuix/react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useGpuix } from "@gpuix/react";
+import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -71,15 +72,25 @@ export const selectTriggerStyle =
       justifyContent: "space-between",
     });
 
-/** The list: the popover surface, one step of padding, full trigger width. */
-export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc => ({
+/**
+ * The list: the popover surface, one step of padding, at least as wide as the
+ * trigger.
+ *
+ * `minWidth` is the trigger's measured width. A percentage cannot express it:
+ * `minWidth: "100%"` resolves against the anchored layer, not the trigger,
+ * which painted a 57 px list under a 900 px field (plan 062 §0).
+ */
+export const selectContentStyle = (
+  theme: PrimitiveTheme,
+  minWidth?: number,
+): StyleDesc => ({
   ...surfaceStyle(
     { tone: "popover", radius: "md", border: true, elevation: "overlay" },
     theme,
   ),
   padding: theme.spacing.xs,
   gap: theme.spacing["2xs"],
-  minWidth: "100%",
+  ...(minWidth === undefined ? {} : { minWidth }),
 });
 
 /** An item's paint, from the three states the runtime reports. */
@@ -114,6 +125,8 @@ export const selectItemStyle =
 export interface SelectHandlers {
   readonly onOpenChange: (open: boolean) => void;
   readonly onValueChange: (value: string) => void;
+  /** The trigger's host instance, so the wrapper can measure its width. */
+  readonly registerTrigger: (instance: PublicInstance | null) => void;
 }
 
 /** The element tree `Select` renders. Pure in its arguments. */
@@ -134,6 +147,7 @@ export const renderSelect = (
   state: ValueState<string>,
   open: boolean,
   handlers: SelectHandlers,
+  triggerWidth?: number,
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
   const selected = state.current === "" ? undefined : state.current;
@@ -164,6 +178,7 @@ export const renderSelect = (
       )}
     >
       <SelectTrigger
+        ref={handlers.registerTrigger}
         role="combobox"
         aria-label={label}
         aria-expanded={open}
@@ -177,7 +192,7 @@ export const renderSelect = (
         role="listbox"
         aria-label={label}
         side={side}
-        style={selectContentStyle(theme)}
+        style={selectContentStyle(theme, triggerWidth)}
       >
         {Arr.map(options, (option) => (
           <SelectItem
@@ -200,14 +215,36 @@ export const renderSelect = (
 /** A list of options in a popover. */
 export const Select = (props: SelectProps): ReactElement => {
   const theme = useTheme();
+  const { renderer } = useGpuix();
   const [open, setOpen] = useState(false);
+  const [triggerWidth, setTriggerWidth] = useState<number | undefined>(
+    undefined,
+  );
+  const trigger = useRef<number | null>(null);
   const state = useControlState(
     props.value,
     props.defaultValue ?? "",
     props.onChange,
   );
-  return renderSelect(props, theme, state.value, open, {
-    onOpenChange: setOpen,
-    onValueChange: state.set,
-  });
+  useEffect(() => {
+    const id = trigger.current;
+    if (id === null) return;
+    const bounds = renderer?.getElementBounds?.(id);
+    if (bounds === null || bounds === undefined || bounds.width <= 0) return;
+    setTriggerWidth(bounds.width);
+  }, [renderer, open, props.size, props.fullWidth]);
+  return renderSelect(
+    props,
+    theme,
+    state.value,
+    open,
+    {
+      onOpenChange: setOpen,
+      onValueChange: state.set,
+      registerTrigger: (instance) => {
+        trigger.current = instance?.id ?? null;
+      },
+    },
+    triggerWidth,
+  );
 };

@@ -34,6 +34,7 @@ const valueState = (value: string): ValueState<string> =>
 const handlers: SelectHandlers = {
   onOpenChange: () => {},
   onValueChange: () => {},
+  registerTrigger: () => {},
 };
 
 const itemsOf = (element: Parameters<typeof elementProp>[0]) =>
@@ -72,10 +73,14 @@ describe("Select", () => {
     expect(trigger.borderColor).toBe(testTheme.colors.destructive);
   });
 
-  it("opens onto the popover surface", () => {
+  it("opens onto the popover surface at the measured trigger width", () => {
     expect(selectContentStyle(testTheme).backgroundColor).toBe(
       testTheme.colors.popover,
     );
+    // No measurement (a tree rendered outside a renderer): the list hugs its
+    // labels. A percentage was the old bug — it resolved against the layer.
+    expect(selectContentStyle(testTheme).minWidth).toBeUndefined();
+    expect(selectContentStyle(testTheme, 240).minWidth).toBe(240);
   });
 
   it("maps the options to the labels the trigger shows", () => {

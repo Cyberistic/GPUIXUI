@@ -81,6 +81,7 @@ none paints a literal and none scripts hover or press
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
 | `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |
 | an anchor that resists its parent | `<anchored>` positions against its parent, and a block-level flex parent stretches on the cross axis | `Tooltip` hugs its trigger with `alignSelf: "flex-start"` so the layer anchors to the trigger, and defaults `align` to the exact `start` (`center` is half a panel off — plan 060) |
+| percentage sizing inside a floating layer | `minWidth: "100%"` resolves against the layer, not the trigger | `Select` measures its trigger's painted width and passes a numeric `minWidth` to the list (plan 062) |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
@@ -117,14 +118,14 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **14 files, 138 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **14 files, 140 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
 the paint (plan 055), a tooltip measured against its trigger in a column and a
-row (plan 060), and a radio group's failed validation measured on the circles
-(plan 061).
+row (plan 060), a radio group's failed validation measured on the circles (plan
+061), and a select's list measured against its trigger's width (plan 062).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

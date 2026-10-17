@@ -344,6 +344,114 @@ it("marks the chosen option selected and reports it as the combobox value", asyn
   ).toBe(false);
 });
 
+/** The Select's trigger: the root's first child, which wears `testId`'s chrome. */
+const selectTriggerOf = (runtime: Runtime, testId: string) => {
+  const root = Option.getOrElse(runtime.element(testId), () =>
+    expect.fail(`the runtime painted no Select ${testId}`),
+  );
+  return Option.getOrElse(
+    Arr.head(root.children).pipe(
+      Option.flatMap((id) =>
+        Option.fromNullishOr(runtime.renderer.getElement(id)),
+      ),
+    ),
+    () => expect.fail(`the Select ${testId} painted no trigger`),
+  );
+};
+
+/** The painted box of the open list: the grandparent of a painted option. */
+const selectListBounds = (runtime: Runtime, option: string): Bounds =>
+  Option.getOrElse(
+    Option.flatMap(
+      Arr.findFirst(runtime.all(), (element) => element.text === option),
+      (item) =>
+        Option.flatMap(Option.fromNullishOr(item.parentId), (row) =>
+          Option.flatMap(
+            Option.fromNullishOr(runtime.renderer.getElement(row)),
+            (element) =>
+              Option.flatMap(Option.fromNullishOr(element.parentId), (list) =>
+                runtime.boundsOfId(list),
+              ),
+          ),
+        ),
+    ),
+    () => expect.fail(`the list painted no ${option} option`),
+  );
+
+it("opens the Select's list at least as wide as its trigger", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        testId="frame"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 900,
+          padding: 0,
+        }}
+      >
+        <Select
+          testId="sel"
+          label="Fruit"
+          placeholder="Choose a fruit"
+          options={[
+            { value: "apple", label: "Apple" },
+            { value: "pear", label: "Pear" },
+          ]}
+        />
+      </Box>
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  const list = selectListBounds(runtime, "Apple");
+  expect(triggerBox.width).toBeLessThan(900);
+  expect(list.width).toBeGreaterThanOrEqual(triggerBox.width - 1);
+});
+
+it("makes a full-width Select's list match the trigger", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        testId="frame"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: 900,
+          padding: 0,
+        }}
+      >
+        <Select
+          testId="sel"
+          label="Fruit"
+          placeholder="Choose a fruit"
+          fullWidth
+          options={[
+            { value: "apple", label: "Apple" },
+            { value: "pear", label: "Pear" },
+          ]}
+        />
+      </Box>
+    </Surface>,
+  );
+  const triggerElement = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(triggerElement);
+  runtime.flush();
+  const trigger = Option.getOrElse(runtime.boundsOfId(triggerElement.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  const list = selectListBounds(runtime, "Apple");
+  expect(Math.abs(list.width - trigger.width)).toBeLessThanOrEqual(1);
+});
+
 it("opens a Tooltip on hover and dismisses it on click", async () => {
   const runtime = await openWindow();
   runtime.render(

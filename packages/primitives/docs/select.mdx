@@ -40,7 +40,7 @@ import { Label, Select } from "@gpuixui/primitives";
 | `disabled` | `boolean` | `false` | refuses opening |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | trigger height and padding |
-| `fullWidth` | `boolean` | `false` | trigger and list fill the parent |
+| `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
 | `side` | `FloatingSide` | GPUix's choice | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
 | `style` | `StyleDesc` | — | merged last on the select root |
@@ -77,12 +77,21 @@ itself the accessible value.
 `selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
 trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
 `radius.md` + `elevation.overlay`) and the item states (`selected`, `hover`,
-`disabledForeground`). The list is one spacing step inset, full trigger width.
+`disabledForeground`). The list is one spacing step inset and **at least the
+trigger's measured width**.
+
+The width is a number, not a percentage: `minWidth: "100%"` resolves against the
+anchored layer, so it painted a 57 px list under a 900 px field (measured, plan
+`062` §0). The wrapper measures the trigger through the renderer after mount and
+again when the list opens or `size`/`fullWidth` change. Rendered as an element
+tree (no renderer), the list hugs its labels.
 
 ## Limitations
 
 - **Options are data.** No option groups, no rich option content, no compound
   escape hatch in the public API; use `RadioGroup` for rich options.
+- **The width is measured, not live.** A resize while the list is closed is
+  picked up the next time it opens; there is no resize observer in 0.10.0.
 - The list's dismissal and positioning are GPUix's; this package cannot change
   the open animation or the outside-click rules.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
@@ -93,13 +102,16 @@ trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
 ## Verification
 
 - `src/components/Select.test.tsx` — trigger chrome, list surface, item states,
-  and the decoded role/name/expanded/selected props the wrapper passes down.
-- `runtime/fields.runtime.test.tsx` — measured 2026-10-17 (plan `057`): a closed
-  Select is a named `ComboBox` with `expanded: false` and the placeholder as its
-  value; opening flips `expanded` to `true` and paints a named `ListBox` of
-  named `ListBoxOption`s; committing "Pear" closes the list, reports the value
-  as `Pear`, and marks only that option `selected` when reopened. The same
-  suite covers opening, painting and committing a clicked option.
+  the measured `minWidth` (present with a width, absent without), and the
+  decoded role/name/expanded/selected props the wrapper passes down.
+- `runtime/fields.runtime.test.tsx` — measured 2026-10-17: a closed Select is a
+  named `ComboBox` with `expanded: false` and the placeholder as its value;
+  opening flips `expanded` to `true` and paints a named `ListBox` of named
+  `ListBoxOption`s; committing "Pear" closes the list, reports the value as
+  `Pear`, and marks only that option `selected` when reopened (plan `057`). The
+  same suite proves the list is at least as wide as a hugging trigger and
+  matches a `fullWidth` one (plan `062`; without the measurement the list was 57
+  px under both a 108 px and a 900 px trigger).
 
 ```sh
 nub run --filter @gpuixui/primitives test
