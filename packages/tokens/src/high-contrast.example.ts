@@ -1,4 +1,5 @@
 import {
+  createTheme,
   highContrastThemes,
   themes,
   type Theme,
@@ -11,3 +12,13 @@ import {
  */
 export const resolveTheme = (mode: ThemeMode, highContrast: boolean): Theme =>
   highContrast ? highContrastThemes[mode] : themes[mode];
+
+/**
+ * Start a theme on the high-contrast variant. `contrast` selects the palette,
+ * the way it does in `getTheme`; it is not a claim about a palette the theme
+ * does not carry.
+ */
+export const accessibleDarkTheme = createTheme({
+  mode: "dark",
+  contrast: "high",
+});

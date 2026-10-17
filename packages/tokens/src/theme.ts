@@ -134,9 +134,18 @@ export interface ThemeOverrides {
   readonly avatarSize?: Partial<AvatarSize>;
 }
 
-/** Input to {@link createTheme}: a mode plus overrides. */
-export interface ThemeConfig extends ThemeOverrides {
+/**
+ * Input to {@link createTheme}: a mode, the built-in contrast variant to start
+ * from, and overrides. `contrast` selects the palette; it is not a claim.
+ */
+export interface ThemeConfig extends Omit<ThemeOverrides, "contrast"> {
   readonly mode: ThemeMode;
+  /**
+   * Which built-in variant to build on. Defaults to `"default"`, so the call
+   * without it is unchanged. Unlike an `extendTheme` override, this selects the
+   * palette rather than declaring a level the theme may not carry.
+   */
+  readonly contrast?: ThemeContrast;
 }
 
 const mergeMotion = (
@@ -341,7 +350,9 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
 }
 
 /**
- * Build a theme for a mode, starting from the built-in light or dark theme.
+ * Build a theme for a mode and contrast variant, starting from the built-in
+ * theme for that pair. Only {@link extendTheme} can declare a floor set: the
+ * builder selects the palette it carries, so it cannot claim another.
  *
  * @example
  * ```ts
@@ -351,11 +362,13 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
  *   colors: { primary: "#7C5CFF" },
  *   density: "compact",
  * });
+ *
+ * const accessible = createTheme({ mode: "dark", contrast: "high" });
  * ```
  */
 export function createTheme(config: ThemeConfig): Theme {
-  const { mode, ...overrides } = config;
-  return extendTheme(themes[mode], overrides);
+  const { mode, contrast = "default", ...overrides } = config;
+  return extendTheme(getTheme(mode, contrast), overrides);
 }
 
 /**

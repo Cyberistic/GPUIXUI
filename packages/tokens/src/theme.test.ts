@@ -2,12 +2,14 @@
  * Guards the extension contract: overrides merge without mutating the base,
  * typography merges field by field, elevation replaces whole levels, a theme can
  * never change its mode through an override, and every shipped theme carries
- * every group the others do.
+ * every group the others do. Also guards plan 304: `createTheme` starts from the
+ * contrast variant it names — it used to relabel the default palette and then
+ * fail the package's own checker.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
-import { resolveTheme } from "./high-contrast.example.js";
+import { accessibleDarkTheme, resolveTheme } from "./high-contrast.example.js";
 import { alpha, densityPresets, type ElevationShape } from "./index.js";
 import {
   createTheme,
@@ -184,11 +186,55 @@ describe("createTheme", () => {
     const created = createTheme({ mode: "dark" });
     expect(created).not.toBe(darkTheme);
     expect(created).toEqual(darkTheme);
+    expect(createTheme({ mode: "dark", contrast: "default" })).toEqual(
+      darkTheme,
+    );
   });
 
   it("applies the name override", () => {
     expect(createTheme({ mode: "dark", name: "Acme" }).name).toBe("Acme");
     expect(createTheme({ mode: "light" }).name).toBe("Light");
+    expect(
+      createTheme({ mode: "light", contrast: "high", name: "Acme AAA" }).name,
+    ).toBe("Acme AAA");
+  });
+
+  it("starts from the contrast variant it names", () => {
+    const light = createTheme({ mode: "light", contrast: "high" });
+    const dark = createTheme({ mode: "dark", contrast: "high" });
+    expect(light.colors).toEqual(highContrastLightTheme.colors);
+    expect(light.name).toBe(highContrastLightTheme.name);
+    expect(dark.colors).toEqual(highContrastDarkTheme.colors);
+    expect(dark.name).toBe(highContrastDarkTheme.name);
+    expect(accessibleDarkTheme.colors).toEqual(highContrastDarkTheme.colors);
+  });
+
+  it("rebuilds every shipped variant and holds it to its declared floors", () => {
+    [themes, highContrastThemes].forEach((set) =>
+      Object.values(set).forEach((base) => {
+        const built = createTheme({
+          mode: base.mode,
+          contrast: base.contrast,
+        });
+        expect(built, base.name).toEqual(base);
+        expect(themeContrastFailures(built), base.name).toEqual([]);
+      }),
+    );
+  });
+
+  it("merges an override onto the selected variant", () => {
+    const custom = createTheme({
+      mode: "dark",
+      contrast: "high",
+      colors: { primary: highContrastDarkTheme.colors.primary },
+      density: "compact",
+    });
+    expect(custom.colors.background).toBe(
+      highContrastDarkTheme.colors.background,
+    );
+    expect(custom.contrast).toBe("high");
+    expect(custom.density.name).toBe("compact");
+    expect(themeContrastFailures(custom)).toEqual([]);
   });
 });
 
