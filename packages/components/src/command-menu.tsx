@@ -147,7 +147,9 @@ export const CommandMenu = ({
     ),
     () => firstEnabled(matches),
   );
-  const activeAction = Option.flatMap(active, (index) => Arr.get(matches, index));
+  const activeAction = Option.flatMap(active, (index) =>
+    Arr.get(matches, index),
+  );
 
   const close = (): void => {
     setQuery("");
@@ -278,10 +280,7 @@ export type CommandMenuListProps = Omit<Props, "children">;
  * The hint belongs to the list because it describes the list's keys; a custom
  * list drops it.
  */
-export const CommandMenuList = ({
-  style,
-  ...rest
-}: CommandMenuListProps) => {
+export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
   const theme = useTheme();
   const { matches } = useCommandMenu();
 

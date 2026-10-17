@@ -45,11 +45,7 @@ const Picker = ({
   readonly options: ReadonlyArray<ComboboxOption>;
   readonly onValueChange: (value: ComboboxSelection) => void;
 }) => (
-  <Combobox
-    multiple={multiple}
-    options={options}
-    onValueChange={onValueChange}
-  >
+  <Combobox multiple={multiple} options={options} onValueChange={onValueChange}>
     <ComboboxTrigger label={label} />
     <ComboboxContent>
       <ComboboxInput label={`Search ${label.toLowerCase()}`} />

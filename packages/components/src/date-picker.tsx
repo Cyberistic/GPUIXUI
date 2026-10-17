@@ -23,10 +23,7 @@
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
-import {
-  mergeStyles,
-  type FloatingContentProps,
-} from "@gpuix/react/floating";
+import { mergeStyles, type FloatingContentProps } from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -406,7 +403,11 @@ export const DatePickerCalendar = ({
     pendingFocus.current = true;
     // `open` is the trigger; the anchor is stable while it is open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, Option.getOrNull(selectedIso), DateTime.formatIsoDateUtc(todayDay)]);
+  }, [
+    open,
+    Option.getOrNull(selectedIso),
+    DateTime.formatIsoDateUtc(todayDay),
+  ]);
 
   useLayoutEffect(() => {
     if (!pendingFocus.current) return;
@@ -598,9 +599,7 @@ export const DatePickerCalendar = ({
                         borderWidth: isToday
                           ? theme.borderWidth.thin
                           : undefined,
-                        borderColor: isToday
-                          ? theme.colors.primary
-                          : undefined,
+                        borderColor: isToday ? theme.colors.primary : undefined,
                         cursor: available ? "pointer" : "not-allowed",
                         hover:
                           isSelected || !available
@@ -623,12 +622,7 @@ export const DatePickerCalendar = ({
       </div>
       {clearable && Option.isSome(selectedDay) ? (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            variant="ghost"
-            size="sm"
-            testId="date-clear"
-            onClick={clear}
-          >
+          <Button variant="ghost" size="sm" testId="date-clear" onClick={clear}>
             Clear
           </Button>
         </div>

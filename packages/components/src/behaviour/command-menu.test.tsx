@@ -327,7 +327,11 @@ describe("CommandMenu", () => {
     const CustomEmpty = () => {
       const [open, setOpen] = useState(true);
       return (
-        <CommandMenu open={open} onOpenChange={setOpen} actions={actions(vi.fn())}>
+        <CommandMenu
+          open={open}
+          onOpenChange={setOpen}
+          actions={actions(vi.fn())}
+        >
           <CommandMenuInput />
           <CommandMenuList />
           <CommandMenuEmpty>Nothing here</CommandMenuEmpty>
@@ -348,7 +352,11 @@ describe("CommandMenu", () => {
     const Named = () => {
       const [open, setOpen] = useState(true);
       return (
-        <CommandMenu open={open} onOpenChange={setOpen} actions={actions(vi.fn())}>
+        <CommandMenu
+          open={open}
+          onOpenChange={setOpen}
+          actions={actions(vi.fn())}
+        >
           <CommandMenuInput placeholder="Find a command" label="Find" />
           <CommandMenuList />
           <CommandMenuEmpty />

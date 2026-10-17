@@ -29,10 +29,7 @@ import {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
-import {
-  mergeStyles,
-  type FloatingContentProps,
-} from "@gpuix/react/floating";
+import { mergeStyles, type FloatingContentProps } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -208,7 +205,10 @@ export const Combobox = ({
         disabled,
         labelFor,
         isDisabled: (value) =>
-          Option.exists(optionOf(options, value), (option) => option.disabled === true),
+          Option.exists(
+            optionOf(options, value),
+            (option) => option.disabled === true,
+          ),
         registerTrigger: (instance) => {
           trigger.current = instance;
         },
@@ -258,7 +258,10 @@ export const Combobox = ({
 };
 
 /** {@link ComboboxTrigger} props. */
-export interface ComboboxTriggerProps extends Omit<HeadlessTriggerProps, "children"> {
+export interface ComboboxTriggerProps extends Omit<
+  HeadlessTriggerProps,
+  "children"
+> {
   /** Shown while nothing is selected. Default `"Select…"`. */
   readonly placeholder?: string;
   /** The trigger's accessible name. */
@@ -455,10 +458,7 @@ export const ComboboxList = ({
       role="listbox"
       aria-label={label}
       {...rest}
-      style={mergeStyles(
-        { display: "flex", flexDirection: "column" },
-        style,
-      )}
+      style={mergeStyles({ display: "flex", flexDirection: "column" }, style)}
     >
       {(item) => <ComboboxItem key={item} value={item} />}
     </HeadlessList>
