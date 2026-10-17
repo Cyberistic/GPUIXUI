@@ -45,7 +45,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
 | tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
-| workspace | `workspace-tab-drag` | verified |
+| workspace | `workspace-tab-drag`, `workspace-restore` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse` | verified |
@@ -54,7 +54,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | selection | `text-selection` | verified |
 | menu | `context-menu-pointer` | verified |
 
-The suite is **32/32 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **33/33 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -140,6 +140,17 @@ component design turns on — it stays exact and **unclipped** inside an
 160 px viewport still paints and activates), so a context menu needs no portal.
 `shift-f10` is delivered as `key: "f10"` with `modifiers.shift`, the surface
 auto-focuses, and Escape returns focus through `renderer.focusElement`.
+
+`workspace-restore` is the runtime verdict for persistent panel state. A keyed
+remount is a real restart: the live workspace returns to its defaults while the
+saved JSON stays. Restoring reproduces the split width, both tab lists, the
+active tab and the `<virtual-list>` anchor **exactly** (`scrollToItem(id, 120,
+16)` → index 120, in-row offset 16), and the restored list takes a click. What
+does **not** survive is native focus: the row focused before the save is not
+focused after the remount, so focus restore is app state. The persistence
+contract: serialise `anchorIndex` + `anchorOffset` from `getListScrollTop` (never
+`getScrollOffset`, which saturates) and apply it once on mount — an inline ref
+callback re-runs every render and would undo the user's next scroll.
 
 `scroll-into-view` is the runtime verdict for keeping a keyboard selection
 visible. **Focusing a row already reveals it** inside `<virtual-list>`, so a
@@ -416,8 +427,8 @@ carries an evidenced limitation. The capability evidence lives in
 | Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. |
 | Docking layouts | todo | ? | Composition over split panes + tabs. |
 | Nested panel arrangements | todo | ? | Composition. |
-| Workspace layouts | todo | ? | Composition + persistence. |
-| Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. |
+| Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. |
+| Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. |
 | Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. |
 | Command palette | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). |
 | Application menus | todo | ? | The macOS menu bar is a renderer API (`README.md` "The macOS menu bar"); cross-platform app menus are ours. |

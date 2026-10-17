@@ -32,6 +32,7 @@ import { motionScenario } from "./motion.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
+import { workspaceRestoreScenario } from "./workspace-restore.js";
 import { shortcutScenario } from "./shortcuts.js";
 import { shellNavigationScenario } from "./shell.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
@@ -96,6 +97,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tableSelectSortScenario,
   tableColumnResizeScenario,
   workspaceScenario,
+  workspaceRestoreScenario,
   shortcutScenario,
   themeColorRolesScenario,
   themeTypeAndShadowScenario,

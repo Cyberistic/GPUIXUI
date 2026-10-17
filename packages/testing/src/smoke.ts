@@ -262,7 +262,11 @@ export interface SmokeHost {
   /** Scrolls the element `testId` into view (the renderer's own method). */
   readonly scrollIntoView: (testId: string) => void;
   /** Scrolls a `<virtual-list>` `testId` to the row at `index`. */
-  readonly scrollToItem: (testId: string, index: number) => void;
+  readonly scrollToItem: (
+    testId: string,
+    index: number,
+    offsetInItem?: number,
+  ) => void;
   /**
    * A `<virtual-list>`'s logical anchor `[itemIndex, offsetInItemPx,
    * viewportHeightPx]`, or `null` for a non-list element.

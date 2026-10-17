@@ -223,10 +223,13 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onNone: () => {},
       onSome: (id) => renderer.scrollIntoView(id),
     }),
-  scrollToItem: (testId, index) =>
+  scrollToItem: (testId, index, offsetInItem) =>
     Option.match(elementId(renderer, testId), {
       onNone: () => {},
-      onSome: (id) => renderer.scrollToItem(id, index),
+      onSome: (id) =>
+        offsetInItem === undefined
+          ? renderer.scrollToItem(id, index)
+          : renderer.scrollToItem(id, index, offsetInItem),
     }),
   listScrollTop: (testId) =>
     Option.match(

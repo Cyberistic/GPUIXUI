@@ -17,82 +17,10 @@ import { Effect, Option } from "effect";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
 import { SplitPane } from "../panels/split-pane.js";
+import { TabStrip } from "../panels/tab-strip.js";
 import type { PlaygroundScenario } from "../types.js";
 
 type PaneId = "a" | "b";
-
-const DROP_THRESHOLD = 80;
-
-/** A tab and the pane it lives in; `press` is the in-flight drag. */
-const TabStrip = ({
-  pane,
-  tabs,
-  active,
-  onSelect,
-  onMove,
-}: {
-  readonly pane: PaneId;
-  readonly tabs: ReadonlyArray<string>;
-  readonly active: string;
-  readonly onSelect: (id: string) => void;
-  readonly onMove: (id: string, from: PaneId) => void;
-}) => {
-  const theme = useTheme();
-  const [press, setPress] = useState(
-    Option.none<{ readonly id: string; readonly x: number }>(),
-  );
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: 4,
-        padding: 4,
-        backgroundColor: theme.colors.muted,
-      }}
-    >
-      {tabs.map((id) => (
-        <div
-          key={id}
-          testId={`tab-${id}`}
-          tabIndex={0}
-          role="tab"
-          aria-selected={active === id}
-          onClick={() => onSelect(id)}
-          onMouseDown={(event) =>
-            setPress(Option.some({ id, x: event.x ?? 0 }))
-          }
-          onMouseMove={(event) =>
-            Option.match(press, {
-              onNone: () => {},
-              onSome: (start) => {
-                const delta = (event.x ?? 0) - start.x;
-                if (delta > DROP_THRESHOLD || delta < -DROP_THRESHOLD) {
-                  onMove(start.id, pane);
-                  setPress(Option.none());
-                }
-              },
-            })
-          }
-          onMouseUp={() => setPress(Option.none())}
-          style={{
-            padding: 6,
-            borderRadius: 4,
-            cursor: "pointer",
-            backgroundColor:
-              active === id ? theme.colors.card : theme.colors.background,
-            hover: { backgroundColor: theme.colors.card },
-          }}
-        >
-          <text style={{ color: theme.colors.foreground }}>{id}</text>
-        </div>
-      ))}
-      {tabs.length === 0 ? (
-        <text style={{ color: theme.colors.placeholder }}>empty</text>
-      ) : null}
-    </div>
-  );
-};
 
 const WorkspaceProbe = () => {
   const theme = useTheme();
@@ -101,7 +29,7 @@ const WorkspaceProbe = () => {
   const [active, setActive] = useState("one");
   const [split, setSplit] = useState(320);
 
-  const move = (id: string, from: PaneId) => {
+  const move = (id: string, from: string) => {
     if (from === "a") {
       setATabs((tabs) => tabs.filter((tab) => tab !== id));
       setBTabs((tabs) => [...tabs, id]);
@@ -114,6 +42,7 @@ const WorkspaceProbe = () => {
 
   const strip = (pane: PaneId, tabs: ReadonlyArray<string>) => (
     <TabStrip
+      testIdPrefix="tab-"
       pane={pane}
       tabs={tabs}
       active={active}

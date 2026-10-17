@@ -13,11 +13,12 @@ app, three jobs:
 
 The **registry is the single source of truth**: `src/scenarios/index.ts` is both
 the sidebar and the smoke list, so a scenario cannot exist in one and not the
-other. Each scenario is one capability, one view, one `steps` effect: the eleven
-core capabilities (including the theme gallery, the modal contract and floating
+other. Each scenario is one capability, one view, one `steps` effect: the core
+capabilities (including the theme gallery, the modal contract and floating
 placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
-`tree-view`, `log-viewer`, `workspace-tab-drag`), the app-level shortcut probe
+`tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
+app-level shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
@@ -57,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (20/20 green); -> 2 on a host with no binding
+# -> 0 here (33/33 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -311,12 +312,29 @@ What holds, and the trap it records:
 A scroll does not move focus, and the focused row stays painted as a straggler
 after the window moves away.
 
+## Workspace restore (plan `167`)
+
+`workspace-restore` saves a two-pane workspace — split width, both tab lists, the
+active tab and a `<virtual-list>` anchor — through app-owned JSON, then kills the
+tree and restores it. What holds:
+
+| Fact | Measured |
+| ---- | -------- |
+| a reset is a real restart | the live workspace returns to `split=320` and anchor row `0`; the saved JSON stays |
+| restore | split `400`, `tabsA=two tabsB=one active=one`, and the anchor **exactly** at index `120`, in-row offset `16` |
+| `scrollToItem(id, index, offsetInItem)` | supported and exact on a freshly mounted list; a mount-only layout effect applies it |
+| native focus | **not restored** — the row focused before the save is not focused after the remount; the restored list still accepts a click |
+
+The docking contract: persist `anchorIndex` + `anchorOffset` from
+`getListScrollTop`, never `getScrollOffset` (it saturates), and do not promise
+focus restore.
+
 ## Evidence on this host
 
-The suite is **32/32 green** here (`exit 0`):
+The suite is **33/33 green** here (`exit 0`):
 
 ```
-32/32 scenarios passed · capabilities: layout=verified text=verified
+33/33 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -418,7 +436,7 @@ narrower. Each deviation is deliberate and measured:
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe and the app-level shortcut probe pass in real GPUix
-  0.10.0 on this host (32/32), with a written report and screenshots.
+  0.10.0 on this host (33/33), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
