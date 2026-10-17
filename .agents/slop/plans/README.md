@@ -27,7 +27,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | `050–099` | free |
 | `100–199` | packages, apps, smoke test |
 | `200–299` | reference adoption and gap sequencing |
-| `300–399` | free |
+| `300–399` | free — `300–303` are the components workstream's §9 part migrations |
 | `400–499` | docs site |
 
 ## The plan set
