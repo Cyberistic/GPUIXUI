@@ -392,6 +392,28 @@ What holds, and the trap it records:
 A scroll does not move focus, and the focused row stays painted as a straggler
 after the window moves away.
 
+## Variable row heights (plan `198`)
+
+`variable-rows` is the one virtual-list probe with **real, differing row
+heights** — the shape an expandable row, a wrapped data cell or a message
+thread needs. 60 rows cycle 20/40/60 px with `estimatedItemHeight={20}`.
+
+| Question | Measured |
+| -------- | -------- |
+| Do declared heights stack? | yes, exactly: rows 0–5 sit at `0, 20, 60, 120, 140, 180` with those heights |
+| Does the paint window follow real heights? | yes — eight rows fill the 300 px viewport (`20+40+60+20+40+60+20+40`) |
+| Does a mismatched `estimatedItemHeight` break it? | no: 20 against a 40 px average still lays out exactly |
+| Expanding row 2 (`60 → 120`) | rows 3/4/5 move `120 → 180`, `140 → 200`, `180 → 240` — exactly `+60`; the anchor stays `[0, 0, 300]`; the window drops to six rows |
+| Collapsing | restores every `y` and repaints the eighth row |
+| `scrollToItem(list, 30)` | anchor `[30, 0, 300]` exactly; row 30 paints at the viewport top and rows 28/29 detach |
+| `scrollIntoView(row 45)` | reveals the row inside the viewport from a jump to the top |
+| A `-120` wheel | anchor index `> 0` with `offsetInItem <` that row's height |
+
+The recipe for Expandable rows: declare each row's height (state, not a
+measurement pass), let the list reflow, and persist the anchor as before — no
+`estimatedItemHeight` tuning is needed for correctness, only for the scrollbar's
+rough scale. A component does **not** need to scroll by hand after an expansion.
+
 ## Search highlights (plan `171`)
 
 `search-highlights` drives the published find contract — `highlight`,
@@ -723,7 +745,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 58-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 59-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -953,7 +975,7 @@ narrower. Each deviation is deliberate and measured:
   command-palette probe, the tabbed-pane probe, the terminal-grid probe, the
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
   the pinned-grid probe, the collapsible-height probe and the nested-layer
-  probe pass in real GPUix 0.10.0 on this host (58/58), with a written report
+  probe pass in real GPUix 0.10.0 on this host (59/59), with a written report
   and screenshots.
   The **real-window** suite (`smoke:live`) is 14/14 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,

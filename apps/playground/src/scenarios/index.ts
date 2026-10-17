@@ -41,6 +41,7 @@ import { panelNestedScenario } from "./panel-nested.js";
 import { motionScenario } from "./motion.js";
 import { collapsibleHeightScenario } from "./collapsible.js";
 import { virtualListScenario } from "./virtual-list.js";
+import { variableRowsScenario } from "./variable-rows.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
 import { workspaceRestoreScenario } from "./workspace-restore.js";
@@ -137,6 +138,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   motionScenario,
   collapsibleHeightScenario,
   virtualListScenario,
+  variableRowsScenario,
   tableSelectSortScenario,
   tableColumnResizeScenario,
   workspaceScenario,

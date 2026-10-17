@@ -41,7 +41,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | tooltip | `tooltip-open` | verified |
 | scroll | `scroll-container`, `scroll-into-view`, `tab-strip-overflow` | verified |
 | panel | `panel-resize`, `panel-nested` | verified |
-| virtual-list | `virtual-list-window`, `live-table` | verified |
+| virtual-list | `virtual-list-window`, `variable-rows`, `live-table` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table`, `live-table` | verified |
 | tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
@@ -65,7 +65,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | grid | `grid-wide-table` | verified |
 | layers | `nested-layer-dismiss` | verified |
 
-The suite is **58/58 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **59/59 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **14/14 green
@@ -627,7 +627,7 @@ in-package and an end-to-end native verdict.
 | Badges | todo | ? | `div` + `<text>`. |
 | Avatars | todo | ? | `<img>` provides the image; the fallback/initials surface is ours. |
 | Lists / list items | todo | ? | `div` rows; `<virtual-list>` for long collections. |
-| Message scroller | todo | ? | Behaviour ported from **shadcn/ui's Message Scroller** (credited in `LICENSES/`): follows new content while pinned, leaves the reader alone when they scroll up, jump-to-latest with an unread count, streaming rows. `<virtual-list>` + scroll handles; the pin/stream state machine is ours. Plan `206`. |
+| Message scroller | todo | ? | Behaviour ported from **shadcn/ui's Message Scroller** (credited in `LICENSES/`): follows new content while pinned, leaves the reader alone when they scroll up, jump-to-latest with an unread count, streaming rows. `<virtual-list>` + scroll handles; the pin/stream state machine is ours. Plan `206`. **Variable message heights are supported** — `variable-rows` (plan `198`) measures exact stacking, an in-place height change reflowing the rows below by the delta, and exact jumps. |
 | Empty states | todo | ? | `div` + `<text>` + Icons. |
 | Alerts | todo | ? | `div` + `<text>` + Icons. |
 | Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |
@@ -673,10 +673,10 @@ in-package and an end-to-end native verdict.
 | Resizable columns | todo | ? | Pointer events + grid tracks. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
-| Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. **A resized pane (`workspace-panes`)** re-windows the list against the **clipped** intersection (a list fixed at `120` still painted fewer rows when its pane shrank), and the anchor survives the resize and a tab switch. The list needs a resolved height: derive it from the split. **Live (`live-table`, plan `197`):** a real window reports the same anchor through the renderer — `[0, 0, 258]` at rest and `[120, 0, 258]` after `scrollToItem(120)` — so persistence is assertable live. |
+| Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. **A resized pane (`workspace-panes`)** re-windows the list against the **clipped** intersection (a list fixed at `120` still painted fewer rows when its pane shrank), and the anchor survives the resize and a tab switch. **Variable heights (`variable-rows`, plan `198`):** declared row heights stack exactly (20/40/60), an in-place expansion reflows the rows below by the exact delta with the anchor intact, and `scrollToItem`/`scrollIntoView` stay exact — so an expandable row or a wrapped cell needs no fixed-height assumption. The list needs a resolved height: derive it from the split. **Live (`live-table`, plan `197`):** a real window reports the same anchor through the renderer — `[0, 0, 258]` at rest and `[120, 0, 258]` after `scrollToItem(120)` — so persistence is assertable live. |
 | Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). **Windowing both axes is component code** (`grid-wide-table`, plan `185`): there is no horizontal virtual list, so a wide grid derives the visible column **and row** ranges from the body offset, keeps only that range plus overdraw in the tree, and reveals a keyboard-selected off-window cell with a component-owned `scrollTo` (`-260` in the probe). |
 | Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `virtualized-tree` adds the virtualized form: 16 px per depth inside `<virtual-list>`, a count change from 8 to 48 rows repaints correctly, and Down/Up move native focus by roving index even for a row outside the window. |
-| Expandable rows | todo | ? | `motion` height. |
+| Expandable rows | todo | yes (probe) | `motion` height for an accordion; **inside a `<virtual-list>` it needs no motion** (`variable-rows`, plan `198`): declared row heights stack exactly, an in-place `60 → 120` expansion moves the rows below by exactly `+60`, the anchor stays `[0, 0, viewport]`, and the painted window shrinks to fit. Declare the height from state; no measurement pass and no manual scroll. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
 | Statistic / metric cards | todo | ? | Cards + `<text>`. |

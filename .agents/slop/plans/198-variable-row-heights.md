@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts and the proof in §7) |
 | Phase | D (Tier 3 feasibility) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `152`, `165`, `166`, `186` |
@@ -148,4 +148,33 @@ STEP 7 — screenshot `apps/playground/.artifacts/screenshots/variable-rows.png`
 
 ## 7. Landed — measured results
 
-_(Filled when implemented.)_
+Run on 2026-10-18, this host, the locally built `darwin-x64` 0.10.0 binding.
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter playground build` | exit `0` |
+| `nub apps/playground/dist/smoke/run.js --only variable-rows` | exit `0`, all checks pass |
+| `nub apps/playground/dist/smoke/run.js` | `59/59`, exit `0` |
+
+Measured in the scenario (the probe's numbers reproduced exactly):
+
+- rows 0–5 at `y = 0, 20, 60, 120, 140, 180` with heights `20/40/60/20/40/60`;
+- eight rows painted in the 300 px viewport; `row 40` absent;
+- expanding row 2 to `120`: rows 3/4/5 at `180/200/240` (`+60` exactly), anchor
+  `[0, 0, 300]`, `row 6` no longer painted;
+- collapsing restores `120/140/180` and repaints `row 7`;
+- `scrollToItem(30)` → `[30, 0, 300]`, row 30 at the viewport top, `row 29`
+  absent;
+- `scrollIntoView("vr-row-45")` reveals the row fully inside the viewport and
+  paints it — this was the open question and it holds;
+- a `-120` wheel leaves an anchor index `> 0` with `offsetInItem` inside that
+  row's height.
+
+Two-direction proof: the expected expansion shift `+60 → +40` failed
+`exit 1` with `row 3 moves down by the expansion: expected 160 ± 1, got 180`;
+reverted, `59/59`, exit `0`.
+
+Landed note for components: an expandable row inside a virtual list needs no
+motion and no measurement pass — only a height declared from state. A motion
+height would animate the reflow, which is a presentation choice, not a
+requirement.
