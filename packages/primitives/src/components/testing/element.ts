@@ -11,6 +11,7 @@
  */
 
 import type { ReactElement } from "react";
+import { isValidElement } from "react";
 import type { EventPayload } from "@gpuix/react";
 import { expect } from "vitest";
 import * as Option from "effect/Option";
@@ -77,8 +78,63 @@ export const hostHandler = (
     Schema.decodeUnknownOption(HostHandler)(value),
   );
 
+const StyleRecord = Schema.Record(Schema.String, Schema.Unknown);
+
+/** One property of a host element's resolved `style` prop, still unknown. */
+export const hostStyle = (
+  element: ReactElement,
+  name: string,
+): Option.Option<unknown> =>
+  Option.flatMap(hostProp(element, "style"), (style) =>
+    Option.flatMap(Schema.decodeUnknownOption(StyleRecord)(style), (record) =>
+      Option.fromNullishOr(record[name]),
+    ),
+  );
+
+/** A `style` property decoded as a string — a width, a colour, a cursor. */
+export const hostStyleString = (
+  element: ReactElement,
+  name: string,
+): Option.Option<string> =>
+  Option.flatMap(
+    hostStyle(element, name),
+    Schema.decodeUnknownOption(Schema.String),
+  );
+
 /** The decoded value, failing the test when the tree did not carry it. */
 export const expectSome = <A>(value: Option.Option<A>): A =>
   Option.getOrElse(value, () =>
     expect.fail("the element tree did not carry what this test asserts on"),
   );
+
+/** React's own element guard, lifted to `unknown` so a tree can be decoded. */
+const ReactElement = Schema.declare(
+  (input: unknown): input is ReactElement =>
+    typeof input === "object" && input !== null && isValidElement(input),
+  { description: "A React element, before the runtime sees it." },
+);
+
+/**
+ * An element's children, as elements.
+ *
+ * The tree is not rendered, so this is the only way to reach the parts a
+ * component composes — a slider's thumb, a group's options. A child that is a
+ * plain string (painted text) is not an element and is omitted.
+ */
+export const elementChildren = (
+  element: ReactElement,
+): ReadonlyArray<ReactElement> => {
+  const children = Option.getOrElse(
+    elementProp(element, "children"),
+    () => undefined,
+  );
+  const many = Schema.decodeUnknownOption(Schema.Array(ReactElement));
+  return Option.match(many(children), {
+    onSome: (elements) => elements,
+    onNone: () =>
+      Option.match(Schema.decodeUnknownOption(ReactElement)(children), {
+        onSome: (element) => [element],
+        onNone: () => [],
+      }),
+  });
+};

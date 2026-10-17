@@ -25,6 +25,21 @@ export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";
 
 export {
+  clampValue,
+  decideValueKey,
+  fractionValue,
+  moveSpanEnd,
+  nearestEnd,
+  normalizeRange,
+  normalizeSpan,
+  pointerValue,
+  stepValue,
+  valueFraction,
+  valueStep,
+} from "./value.js";
+export type { TrackBox, ValueRange, ValueSpan } from "./value.js";
+
+export {
   boxStyle,
   gridStyle,
   stackStyle,
@@ -86,6 +101,11 @@ export {
   PROGRESS_TONES,
   ruleStyle,
   scrollStyle,
+  sliderFillStyle,
+  sliderInset,
+  sliderRailStyle,
+  sliderThumbStyle,
+  sliderTrackStyle,
   surfaceStyle,
   SURFACE_TONES,
   textStyle,
@@ -99,6 +119,7 @@ export type {
   ProgressTone,
   RuleSpec,
   ScrollSpec,
+  SliderSpec,
   SurfaceSpec,
   SurfaceTone,
   TextSpec,

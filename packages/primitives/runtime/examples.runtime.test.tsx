@@ -30,6 +30,7 @@ const SCREENS = [
   { id: "selection", root: "selection-example", headline: "Notifications" },
   { id: "feedback", root: "feedback-example", headline: "Revenue" },
   { id: "icons", root: "icons-example", headline: "Icon set" },
+  { id: "value", root: "value-example", headline: "Render settings" },
 ] as const;
 
 const renderExample = (
@@ -111,6 +112,18 @@ it("announces the icons example's labelled status icon", async () => {
       a11yNode(runtime.a11y(), { role: "Image", label: "success" }),
     ),
   ).toBe(true);
+});
+
+it("moves the value example's quality slider and repaints its readout", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "value");
+  expect(runtime.allText()).toContain("62%");
+  runtime.click("value-example-quality");
+  // A hit-tested click at the track's centre is 50% of 0–100.
+  expect(
+    Option.getOrUndefined(a11yValueOf(runtime.a11y(), { label: "Quality" })),
+  ).toBe("50%");
+  expect(runtime.allText()).toContain("50%");
 });
 
 it("paints every example from the dark palette", async () => {

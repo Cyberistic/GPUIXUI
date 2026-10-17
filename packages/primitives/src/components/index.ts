@@ -49,6 +49,12 @@ export type { RadioGroupProps, RadioOption } from "./RadioGroup.js";
 export { Progress } from "./Progress.js";
 export type { ProgressProps } from "./Progress.js";
 
+export { RangeSlider, Slider, sliderRange, sliderValueText } from "./Slider.js";
+export type { RangeSliderProps, SliderProps } from "./Slider.js";
+
+export { Meter } from "./Meter.js";
+export type { MeterProps } from "./Meter.js";
+
 export { Skeleton } from "./Skeleton.js";
 export type { SkeletonProps } from "./Skeleton.js";
 

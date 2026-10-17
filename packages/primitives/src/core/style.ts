@@ -424,3 +424,107 @@ export const progressFillStyle = (
   borderRadius: theme.radius.full,
   backgroundColor: paint(progressTones[spec.tone], theme),
 });
+
+// ── Value controls: Slider, RangeSlider ──────────────────────────────
+
+export interface SliderSpec {
+  readonly size: ControlSize;
+  readonly invalid?: boolean;
+  readonly disabled?: boolean;
+  readonly focused?: boolean;
+}
+
+/**
+ * Half a thumb — the track's inset, and the same number `pointerValue` takes.
+ *
+ * The usable span runs from one thumb radius inside each end to the other, so
+ * a thumb at either end is centred on the end of the span instead of hanging
+ * off it.
+ */
+export const sliderInset = (size: ControlSize, theme: PrimitiveTheme): number =>
+  Math.round(theme.iconSize[size] / 2);
+
+/**
+ * The slider's hit area.
+ *
+ * It paints nothing — the rail is the only visible chrome, so a slider does not
+ * become a bar as tall as the control — and it still takes presses: GPUI makes a
+ * hitbox for an element with mouse handlers (measured in plan 053 §11; an
+ * unpositioned, unfilled box with handlers receives the press).
+ */
+export const sliderTrackStyle = (
+  spec: SliderSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const inset = sliderInset(spec.size, theme);
+  const style: StyleDesc = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    height: theme.density.controlHeight[spec.size],
+    paddingLeft: inset,
+    paddingRight: inset,
+    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+  };
+  if (spec.disabled === true) style.opacity = 0.5;
+  return style;
+};
+
+/** The rail: the whole width, one spacing step tall, and never a hit target. */
+export const sliderRailStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  width: "100%",
+  height: theme.spacing.xs,
+  borderRadius: theme.radius.full,
+  backgroundColor: theme.colors.muted,
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  pointerEvents: "none",
+});
+
+/** The filled part of the rail, up to the value. */
+export const sliderFillStyle = (
+  fraction: number,
+  spec: SliderSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => ({
+  width: `${(Number.isFinite(fraction) ? Math.min(1, Math.max(0, fraction)) : 0) * 100}%`,
+  height: "100%",
+  flexShrink: 0,
+  borderRadius: theme.radius.full,
+  backgroundColor:
+    spec.invalid === true ? theme.colors.destructive : theme.colors.primary,
+  pointerEvents: "none",
+});
+
+/**
+ * The thumb.
+ *
+ * The negative margins are load-bearing: they pull half a thumb out of the
+ * layout on each side, so the thumb's **centre** lands on the fraction the fill
+ * ends at. Without them the thumb would sit half a thumb to the right of the
+ * value it represents. Measured in plan 053 §11.
+ */
+export const sliderThumbStyle = (
+  spec: SliderSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const side = theme.iconSize[spec.size];
+  const half = Math.round(side / 2);
+  const style: StyleDesc = {
+    width: side,
+    height: side,
+    flexShrink: 0,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.input,
+    borderWidth: theme.borderWidth.strong,
+    borderColor:
+      spec.invalid === true ? theme.colors.destructive : theme.colors.primary,
+    marginLeft: -half,
+    marginRight: -half,
+    pointerEvents: "none",
+  };
+  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  return style;
+};

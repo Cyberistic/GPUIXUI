@@ -98,6 +98,17 @@ export interface Runtime {
   readonly click: (testId: string) => void;
   /** A real click at window coordinates, for a target with no `testId`. */
   readonly clickAt: (x: number, y: number) => void;
+  /** A native mouse press at window coordinates — the start of a drag. */
+  readonly mouseDownAt: (x: number, y: number) => void;
+  /**
+   * A native mouse move at window coordinates.
+   *
+   * GPUI delivers a move to whatever is under the pointer; `pressedButton` is
+   * how a drag reports the button it is holding (0 is the primary button).
+   */
+  readonly mouseMoveAt: (x: number, y: number, pressedButton?: number) => void;
+  /** A native mouse release at window coordinates — the end of a drag. */
+  readonly mouseUpAt: (x: number, y: number) => void;
   /**
    * A key down delivered to `testId` through GPUI's own dispatch.
    *
@@ -277,6 +288,10 @@ export const createRuntime = (
           onSome: (point) => renderer.nativeSimulateClick(point.x, point.y),
         }),
       clickAt: (x, y) => renderer.nativeSimulateClick(x, y),
+      mouseDownAt: (x, y) => renderer.nativeSimulateMouseDown(x, y),
+      mouseMoveAt: (x, y, pressedButton = 0) =>
+        renderer.nativeSimulateMouseMove(x, y, pressedButton),
+      mouseUpAt: (x, y) => renderer.nativeSimulateMouseUp(x, y),
       keyDown: (testId, key, held = false) =>
         Option.match(idOf(renderer, testId), {
           onNone: () => {},

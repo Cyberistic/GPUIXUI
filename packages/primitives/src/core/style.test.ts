@@ -11,6 +11,11 @@ import {
   PROGRESS_TONES,
   ruleStyle,
   scrollStyle,
+  sliderFillStyle,
+  sliderInset,
+  sliderRailStyle,
+  sliderThumbStyle,
+  sliderTrackStyle,
   surfaceStyle,
   textStyle,
   TEXT_TONES,
@@ -397,5 +402,54 @@ describe("progress", () => {
     );
     expect(Number(small.height)).toBeLessThan(Number(medium.height));
     expect(small.backgroundColor).toBe(testTheme.colors.muted);
+  });
+});
+
+describe("value controls", () => {
+  const spec = { size: "md" } as const;
+
+  it("insets the track by half a thumb and pulls the thumb back by the same amount", () => {
+    // The bug guarded: without the negative margins every thumb paints half a
+    // thumb to the right of the value it represents (plan 053 §6).
+    const inset = sliderInset(spec.size, testTheme);
+    const track = sliderTrackStyle(spec, testTheme);
+    const thumb = sliderThumbStyle(spec, testTheme);
+    expect(track.paddingLeft).toBe(inset);
+    expect(track.paddingRight).toBe(inset);
+    expect(thumb.marginLeft).toBe(-inset);
+    expect(thumb.marginRight).toBe(-inset);
+    expect(thumb.width).toBe(testTheme.iconSize[spec.size]);
+  });
+
+  it("paints no fill of its own, so the rail is the only visible chrome", () => {
+    const track = sliderTrackStyle(spec, testTheme);
+    expect(track.backgroundColor).toBeUndefined();
+    expect(track.height).toBe(testTheme.density.controlHeight[spec.size]);
+  });
+
+  it("keeps the rail, the fill and the thumb out of the hit test", () => {
+    // The deepest hit target wins in GPUix and events do not bubble, so a
+    // painted child would swallow the press that maps to a value.
+    const rail = sliderRailStyle(testTheme);
+    const fill = sliderFillStyle(0.5, spec, testTheme);
+    const thumb = sliderThumbStyle(spec, testTheme);
+    expect(rail.pointerEvents).toBe("none");
+    expect(fill.pointerEvents).toBe("none");
+    expect(thumb.pointerEvents).toBe("none");
+  });
+
+  it("paints the fill to its fraction and never outside the rail", () => {
+    expect(sliderFillStyle(0.25, spec, testTheme).width).toBe("25%");
+    expect(sliderFillStyle(2, spec, testTheme).width).toBe("100%");
+    expect(sliderFillStyle(Number.NaN, spec, testTheme).width).toBe("0%");
+    expect(sliderFillStyle(0.25, spec, testTheme).backgroundColor).toBe(
+      testTheme.colors.primary,
+    );
+  });
+
+  it("paints a ring on a focused thumb, at the token ring colour", () => {
+    const focused = sliderThumbStyle({ ...spec, focused: true }, testTheme);
+    expect(focused.boxShadow?.color).toBe(testTheme.colors.ring);
+    expect(sliderThumbStyle(spec, testTheme).boxShadow).toBeUndefined();
   });
 });
