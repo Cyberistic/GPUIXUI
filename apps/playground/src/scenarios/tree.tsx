@@ -6,12 +6,12 @@
  * label by depth, does toggling a directory paint and unpaint its subtree, and
  * do arrow keys reach a clicked row's `onKeyDown`?
  *
- * Honest limit: GPUix cannot move native focus from component code
- * (`PublicInstance` has no `focus()`), so this probe proves key delivery and
- * state, not focus movement. A real tree's roving tabindex needs the runtime to
- * expose programmatic focus; the readout says so.
+ * Honest limit: this probe proves key delivery and state. It does not move
+ * focus itself; `modal-focus-trap` measures the renderer's `focusElement` /
+ * `focusNextWithin` from component code, which is what a roving-tabindex
+ * file tree would build on.
  *
- * Measured facts: plan `140` §4 and plan `153` §8.
+ * Measured facts: plan `140` §4, plan `153` §8 and plan `155` §8.
  */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
@@ -190,8 +190,7 @@ const TreeProbe = () => {
         </div>
       ))}
       <Readout testId="tree-note">
-        selection is React state; GPUix cannot move native focus from a
-        component
+        selection is React state; arrow keys reach the clicked row
       </Readout>
     </div>
   );

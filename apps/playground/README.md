@@ -13,8 +13,9 @@ app, three jobs:
 
 The **registry is the single source of truth**: `src/scenarios/index.ts` is both
 the sidebar and the smoke list, so a scenario cannot exist in one and not the
-other. Each scenario is one capability, one view, one `steps` effect: the nine
-core capabilities (including the theme gallery), the Tier 3/4 probes
+other. Each scenario is one capability, one view, one `steps` effect: the ten
+core capabilities (including the theme gallery and the modal contract), the
+Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`), the app-level shortcut probe
 (`window-key-shortcut`) and
@@ -56,7 +57,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (18/18 green); -> 2 on a host with no binding
+# -> 0 here (19/19 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -127,14 +128,32 @@ Two honest notes:
   reads) stays clean. The durable fix belongs in `packages/tokens` and is
   tracked in `TODO.md`.
 
+## The modal contract (plan `155`)
+
+`modal-focus-trap` is the native evidence for the Tier 2 overlays: it drives the
+same mechanism `DialogContent` uses (a ref callback, `renderer.focusElement`, and
+`focusNextWithin`/`focusPreviousWithin` on the content's own `onKeyDown`) and
+proves:
+
+| Fact | Result |
+| ---- | ------ |
+| focus enters the modal | `renderer.focusElement` moves native focus from component code; `getFocusedElementId` reports the content |
+| Tab cannot leave | forward order `content → a → b → open-popover → close → content`; Shift-Tab is the reverse; every id stays inside |
+| focus returns on close | the layout-effect cleanup focuses the saved trigger id; `getElementBounds` is the existence check |
+| Escape closes one layer | with a popover open inside the modal, Escape closes the popover and returns focus to its opener; a second Escape closes the modal |
+
+The last row is why every overlay pushes onto one dismiss stack: the keystroke
+reaches only the focused layer, so a nested dialog closes outside-in.
+
 ## Evidence on this host
 
-The suite is **18/18 green** here (`exit 0`):
+The suite is **19/19 green** here (`exit 0`):
 
 ```
-18/18 scenarios passed · capabilities: layout=verified text=verified
-input=verified focus=verified overlay=verified scroll=verified panel=verified
-virtual-list=verified table=verified theme=verified workspace=verified
+19/19 scenarios passed · capabilities: layout=verified text=verified
+input=verified focus=verified overlay=verified modal=verified scroll=verified
+panel=verified virtual-list=verified table=verified tree=verified
+log=verified theme=verified workspace=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -144,12 +163,13 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
 | focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
+| modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
 | virtual table | `onVisibleRange` **lags the painted window by one gesture** — after two wheel gestures the painted rows were `32–40` while the range read `16`; an index-driven feature must use the painted rows as the current window |
-| tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. GPUix cannot move native focus from component code, so roving-tabindex focus movement is a runtime gap |
+| tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. Focus movement from component code is measured separately (`modal`), so a roving-tabindex tree can use `renderer.focusElement` |
 | log | bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up and appending does **not** snap back — a follow toggle is app state plus a scroll |
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
@@ -174,6 +194,7 @@ src/scenarios/shell.tsx  mounts the real App; guards the sidebar's scrolling
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
 src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
+src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -192,9 +213,11 @@ narrower. Each deviation is deliberate and measured:
   grep over the installed `dist`). The overlay asserts the popup is *painted*
   and dismissible rather than hit-tested; the panel's `max` is a prop; the
   scroll scenario reads `getScrollOffset`.
-- **No programmatic focus from component code.** `PublicInstance` has no
-  `focus()`, so "focus returns to the trigger" cannot be implemented or checked
-  from a component; the overlay scenario does not claim it.
+- **Programmatic focus is a renderer call, not an instance method.**
+  `PublicInstance` has no `focus()`, but `useGpuix().renderer` exposes
+  `focusElement`, `focusNextWithin`, `focusPreviousWithin` and
+  `getFocusedElementId`; `modal-focus-trap` measures that they work, so a
+  component can move focus into a dialog and return it on close.
 - **`style.gridTemplateColumns` is a column count**, not a CSS track list, so
   the (plan `130`) table probe uses flex rows with fixed widths instead.
 - **`panels/resize.ts` + `panels/split-pane.tsx`**, not `split.ts` +
@@ -204,13 +227,18 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The nine core capabilities (including the token gallery), three Tier 3/4
-  probes and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
-  (18/18), with a written report and screenshots.
+- The ten core capabilities (including the token gallery and the modal
+  contract), the Tier 3/4 probes
+  and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
+  (19/19), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
-  (`swatch background: expected "#11141A", got "#191D25"`, exit `1`).
+  (`swatch background: expected "#11141A", got "#191D25"`, exit `1`). Removing
+  the Tab trap makes `modal-focus-trap` fail with
+  `Tab moved focus [modal-content,modal-content,…]`, and removing the focus
+  return fails with `expected "modal-trigger", got "none"` — both exit `1`
+  (plan `155` §8).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

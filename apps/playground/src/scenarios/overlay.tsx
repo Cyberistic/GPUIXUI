@@ -13,10 +13,11 @@
  * - Escape reaches the focused element's `onKeyDown`, so the popup content
  *   takes focus on open (`autoFocus`) and handles `escape` itself.
  *
- * Limitation: GPUix 0.10.0 exposes no way for component code to move focus
- * programmatically (`PublicInstance` has no `focus()`), so "focus returns to
- * the trigger" cannot be implemented or checked from a component. It is
- * recorded in the app README, not faked here.
+ * Limitation: the `<anchored>` node has no focus method of its own. Native
+ * focus is moved through the renderer (`renderer.focusElement`), which
+ * `modal-focus-trap` measures: focus enters the modal, Tab stays inside, and
+ * closing returns focus to the trigger. This probe deliberately keeps the
+ * trigger focused and does not claim focus return.
  */
 import { useState } from "react";
 import { Effect } from "effect";

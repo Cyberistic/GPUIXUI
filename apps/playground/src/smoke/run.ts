@@ -296,6 +296,10 @@ export const program = (
     );
     yield* Console.log(Report.formatReport(report));
     if (flags.json) yield* Console.log(Report.reportJson(report));
+    // Release the native window before the effect completes: the test root's
+    // window keeps Node's event loop alive, and a `--only` run (no later
+    // scenario replacing the tree) would otherwise never exit.
+    root.unmount();
     return Report.exitCode(report);
   });
 

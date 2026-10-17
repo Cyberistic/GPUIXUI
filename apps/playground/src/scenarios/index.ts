@@ -27,6 +27,7 @@ import { shellNavigationScenario } from "./shell.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
 import { logViewerScenario } from "./log-viewer.js";
+import { modalScenario } from "./modal.js";
 import {
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
@@ -39,6 +40,7 @@ export const CORE_CAPABILITIES = [
   "input",
   "focus",
   "overlay",
+  "modal",
   "scroll",
   "panel",
   "virtual-list",
@@ -60,6 +62,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   inputScenario,
   focusScenario,
   overlayScenario,
+  modalScenario,
   scrollScenario,
   panelScenario,
   virtualListScenario,

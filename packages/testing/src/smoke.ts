@@ -23,6 +23,7 @@ export const CAPABILITIES = [
   "input",
   "focus",
   "overlay",
+  "modal",
   "scroll",
   "panel",
   "virtual-list",
