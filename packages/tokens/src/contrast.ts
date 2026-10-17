@@ -140,6 +140,7 @@ export const inactiveSurfaces = [
   "selected",
 ] as const;
 
+/** The inactive label measured on each surface in {@link inactiveSurfaces}. */
 export const inactivePairs: readonly ContrastPair[] = inactiveSurfaces.map(
   (background): ContrastPair => ["disabledForeground", background, "inactive"],
 );
