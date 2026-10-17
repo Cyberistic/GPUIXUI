@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §10) |
 | Phase | B (feasibility) → feeds C (Accordion, Collapsible) and D (collapsible sidebar, drawer) |
 | Owner | playground workstream |
 | Depends on | `110`, `120`, `140`, `157`, `177` |
@@ -284,3 +284,70 @@ nothing; the scenario's checks are real assertions on measured values).
   the recipe and the limitation, and `TODO.md` is ticked with a cross-team task
   for `@gpuixui/components`.
 - `nub run check` and `nub run test` pass.
+
+## 10. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
+
+Scenario `collapsible-height`, capability `motion`, suite `53 → 54`, exit `0`.
+The body is a `motion.div` at `height: 0`, the content is a plain `div` with
+`overflow: "hidden"` on the body, and the readout's `mounted`/`natural` numbers
+come from `ref` → `renderer.getElementBounds` in component code.
+
+**The three premises of the shipped component's TODO are settled.**
+
+1. **`onLayout` does not exist** in `@gpuix/native@0.10.0` (`MotionProps` and
+   `HostProps` have no such symbol). The measurement route is
+   `ref` → `PublicInstance.id` → `renderer.getElementBounds(id)`, the same one
+   plan `184` proved from component code.
+2. **`motion.div` does interpolate height**, exactly and deterministically under
+   the paused clock: 80 ms into a 200 ms linear tween the next row moved
+   **56 px**, which is `140 × 0.4`; at 200 ms it moved the full **140 px**. The
+   tween is read through the following sibling's `y`, because the published
+   `MotionDivProps` still omits `testId` (plan `157`).
+3. **A first-paint measurement is available.** The content measures **140 px**
+   in a `useLayoutEffect` at mount, *while the body is already collapsed to
+   `height: 0`*, and the same 140 px in the toggle handler. A `defaultOpen` or
+   controlled-open section can therefore animate on its first open with no
+   flash — the premise that blocked the animation is false.
+
+**The clip is load-bearing for input.** Content stays laid out at its natural
+140 px while the body is 0 px high, but a click at the collapsed button's own
+painted centre does **not** activate it (`presses=0`). Removing
+`overflow: "hidden"` makes the same click activate it (`presses=1`). No
+`pointerEvents: "none"` guard is needed; the clip alone refuses the hit.
+
+**State survives.** A draft typed while open (`draft=ab`) is still `ab` after a
+collapse, a re-open and a second collapse; `collapse-content` is in the tree in
+every phase. Unmounting the content while closed (the shipped component's
+behaviour) fails at the first check — `collapse-content is painted: … none`.
+
+**`onMotionComplete`** fires once per height tween (`complete=1`, `2`, `3`), with
+no stale completion from the previous cycle, and the measured target is stable
+across collapse/re-open (140 px every time).
+
+**Keyboard** activation goes through the same `toggle`: `Enter` on key down
+re-opened the section (the trigger is in the tab order and the click focused it).
+
+Two-direction proofs, each with the exact failing check (the file was restored
+after each run):
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | `animate={{ height: open ? natural : 0 }}` → `animate={{ height: 0 }}` | exit `1`, *the height tween is mid-flight at 80 ms*: expected `56 ± 4`, got `0` |
+| M2 | delete `overflow: "hidden"` from the body | exit `1`, *the clip refuses input in the overflowing content*: expected `presses=0`, got `presses=1` |
+| M3 | render the content only while open (`{open ? <div …/> : null}`) | exit `1`, *collapse-content is painted*: none |
+| M4 | `setNatural(height)` → `setNatural(Math.min(height, 100))` | exit `1`, *the measurement is the painted content height*: expected `140 ± 1`, got `100` |
+
+**Recipe for `@gpuixui/components`.** Keep the content mounted; put
+`overflow: "hidden"` on the animated body; measure the content `div` with
+`ref` + `getElementBounds` (available at `useLayoutEffect` and in handlers);
+animate the body's `height` between `0` and the measured value; read the
+animation through a sibling or the content bounds, never a `testId` on the
+motion element. The one remaining limitation is unchanged from plan `157`: the
+motion surface itself is not addressable by `testId`, `role` or `aria-*`.
+
+**Residual limitation.** A body whose content height changes *while collapsed*
+(e.g. a wider window rewrapping text) would keep the old target until the next
+measurement; the probe's content is fixed-height, so that re-measure trigger is
+not measured here. Record it as a component-level rule (re-measure on open and
+on a width change), not as a runtime claim.
+

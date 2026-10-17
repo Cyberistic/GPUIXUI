@@ -50,7 +50,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | command | `command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
-| motion | `motion-collapse` | verified |
+| motion | `motion-collapse`, `collapsible-height` | verified |
 | content | `native-surfaces`, `markdown-surface` | verified |
 | drag | `drag-targets`, `drag-autoscroll` | verified |
 | selection | `text-selection` | verified |
@@ -62,7 +62,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | toast | `toast-lifecycle` | verified |
 | grid | `grid-wide-table` | verified |
 
-The suite is **53/53 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **54/54 green here** (exit `0`, `.artifacts/smoke-report.json`).
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -99,6 +99,25 @@ exit settled. Two caveats: `onMotionComplete` reaches React only after
 published `motion.div` prop type omits `testId`/`role`/`aria-*`, so an animated
 surface is not directly addressable by a smoke test or an accessible role
 without a typed wrapper.
+
+`collapsible-height` answers the height half of the same question, and the
+TODO on the shipped `CollapsibleContent` is answered by it. **`onLayout` does not
+exist** in 0.10.0; the measurement route is `ref` → `renderer.getElementBounds`,
+and it returns the content's natural **140 px at first layout even while the
+body is already clipped to `height: 0`** — so a `defaultOpen` section can
+animate on its first open with no flash. `motion.div` interpolates `height`
+exactly (56 px at 80 ms of a 200 ms/140 px linear tween), and the tween is read
+through the following sibling's `y` because the motion surface itself still has
+no `testId`. The clip is load-bearing for **input**, not just paint: content
+stays laid out, and a click at a collapsed button's own painted centre does not
+activate it (`presses=0`); removing `overflow: "hidden"` lets the same click
+through (`presses=1`), so no `pointerEvents` guard is needed. Content that stays
+mounted keeps its state — a typed draft survives collapse, re-open and a second
+collapse — while unmounting it (the shipped behaviour) loses the tree node
+entirely. `onMotionComplete` fires once per tween. The recipe: keep the body
+mounted under an `overflow: "hidden"` motion container, measure the content
+div, animate the container's height, and re-measure on open and on a width
+change (a fixed-height probe cannot measure text rewrap while collapsed).
 
 `roving-focus` measures the keyboard model a menu, tab strip, radio group or
 data grid needs. `renderer.focusElement` focuses a row that was never clicked,
@@ -544,8 +563,8 @@ in-package and an end-to-end native verdict.
 | Context menus | todo | ? | As Dropdown menus, triggered by a right click. **Measured (`context-menu-pointer`)**: a right click is `onAuxClick` + `isRightClick` — `auxClick` carries **no `button`** and `onClick` never fires for button 2, so guard on `isRightClick`; a child's right click bubbles to the trigger; `<anchored position={pointer}>` is exact, including inside a **scrolled** container (no offset, no clipping — an item below the viewport still paints and activates); outside press and Escape dismiss; `shift-f10` opens and Escape returns focus. One Escape dismisses one layer (`modal-focus-trap`). |
 | Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
 | Tabs | todo | partial (probe) | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. **Overflow (`tab-strip-overflow`, plan `173`):** `overflowX: "scroll"` pans, `deltaX` is the axis a trackpad sends (a vertical wheel leaves a horizontal-only strip at the same `x`), and a child outside the viewport **keeps painted bounds**, so hit-test against the viewport rather than trusting the node's existence. `scrollIntoView` reveals the active tab and saturates at the end, but a near-end reveal stops at `x = -5` rather than `0` — a strip clamps the last pixel. **Keyboard (`tab-strip-focus`, plan `174`):** a clipped tab **is** a native tab stop, and focus does **not** reveal it in a plain scroller (`x` stayed `0`), so the roving tabindex model is required — only the active tab may be a stop, and the strip reveals on every focus it moves. One `focusNext` then leaves the strip; End/Home move selection, native focus and reveal together. |
-| Accordions | todo | ? | `div` + `motion` (height). |
-| Collapsible sections | todo | ? | `div` + `motion` (height). Variant merged here too: Expandable card (adabraka `expandable_card`). |
+| Accordions | todo | partial (probe) | `div` + `motion` (height). **Measured (`collapsible-height`, plan `186`):** `motion.div` interpolates `height` exactly under the paused clock, `ref` + `renderer.getElementBounds` measures the content at **first layout even while the body is clipped to `height: 0`** (`mounted=140`), and a body kept mounted under `overflow: "hidden"` refuses a collapsed child's click with no extra pointer guard while keeping its draft across collapse/re-open. There is **no `onLayout`**; re-measure on open and on a width change. |
+| Collapsible sections | todo | partial (probe) | `div` + `motion` (height). The shipped `CollapsibleContent` unmounts while closed, which loses its state; plan `186` measures the alternative end to end — mounted content, a measured natural height (140 px at first layout, clipped), an exact height tween read through the next sibling (the motion surface has no `testId`), the clip refusing input, and `onMotionComplete` once per tween. Variant merged here too: Expandable card (adabraka `expandable_card`). |
 | Breadcrumbs | todo | ? | `div` + `<text>`. |
 | Pagination | todo | ? | Button groups + `<text>`. |
 | Search inputs | todo | ? | `<input>` exists; the search UI is ours. `useTextSearch`/`findRanges` search rendered text, not an input. **Measured (`search-highlights`, plan `171`):** the hook counts through `onHighlight`, `next` moves the active match, and a nested `highlight` replaces the ancestor's; the input, debounce and empty state remain the component's. |

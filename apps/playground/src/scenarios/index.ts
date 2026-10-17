@@ -37,6 +37,7 @@ import { tabFocusScenario } from "./tab-focus.js";
 import { panelScenario } from "./panel.js";
 import { panelNestedScenario } from "./panel-nested.js";
 import { motionScenario } from "./motion.js";
+import { collapsibleHeightScenario } from "./collapsible.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
@@ -127,6 +128,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   panelScenario,
   panelNestedScenario,
   motionScenario,
+  collapsibleHeightScenario,
   virtualListScenario,
   tableSelectSortScenario,
   tableColumnResizeScenario,
