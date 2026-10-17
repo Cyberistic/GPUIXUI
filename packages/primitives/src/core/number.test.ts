@@ -82,6 +82,23 @@ describe("stepNumber", () => {
   it("treats a zero step as one, so the arrows never freeze", () => {
     expect(stepNumber(10, { step: 0 }, 1)).toBe(11);
   });
+
+  it("keeps a decimal step exact instead of binary noise", () => {
+    // The bug guarded: 0.2 + 0.1 is 0.30000000000000004, and a field that
+    // reports that while painting "0.3" hands its consumer a different number
+    // from the one on screen (plan 077).
+    expect(stepNumber(0.2, { step: 0.1 }, 1)).toBe(0.3);
+    expect(stepNumber(1.1, { step: 0.1 }, 1)).toBe(1.2);
+    expect(stepNumber(-0.2, { step: 0.1 }, -1)).toBe(-0.3);
+  });
+
+  it("keeps the precision the user typed", () => {
+    expect(stepNumber(1.234, { step: 1 }, 1)).toBe(2.234);
+  });
+
+  it("trims after clamping, so a bound is still exact", () => {
+    expect(stepNumber(0.2, { step: 0.1, max: 0.3 }, 1)).toBe(0.3);
+  });
 });
 
 describe("decideNumberKey", () => {

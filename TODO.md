@@ -354,6 +354,12 @@ retired once both branches are one
       focused cell while focused, otherwise the first empty cell (the last when
       the code is full); typing moves it with the caret. 3 core + 3 element + 2
       runtime tests, both directions proven (plan 076)
+`[x]` `packages/primitives`: **decimal `NumberField` steps carried float noise** —
+      a `step={0.1}` field painted `0.3` but reported `0.30000000000000004` to
+      its consumer, so the number on screen and the number in state disagreed.
+      `stepNumber` now trims its clamped result to 12 decimal places; typed
+      precision and bounds are unchanged. 4 core + 1 runtime tests, both
+      directions proven (plan 077)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

@@ -43,13 +43,26 @@ export const clampNumeric = (value: number, range: NumberRange): number => {
 export const formatNumber = (value: number, precision = 0): string =>
   value.toFixed(Math.min(20, Math.max(0, Math.trunc(precision))));
 
+/**
+ * The most decimal places a step may claim.
+ *
+ * Binary floating point cannot represent `0.1`, so `0.2 + 0.1` is
+ * `0.30000000000000004`. A UI step never needs more than 12 places, so a step
+ * result is trimmed there — otherwise the field paints `0.3` and reports a
+ * different number to its consumer (plan `077`).
+ */
+const MAX_STEP_DECIMALS = 12;
+
+const exact = (value: number): number =>
+  Number.isFinite(value) ? Number(value.toFixed(MAX_STEP_DECIMALS)) : value;
+
 /** Move by `steps` steps and clamp. A step of 0 is treated as 1. */
 export const stepNumber = (
   value: number,
   range: NumberRange,
   steps: number,
 ): number =>
-  clampNumeric(value + steps * (range.step > 0 ? range.step : 1), range);
+  exact(clampNumeric(value + steps * (range.step > 0 ? range.step : 1), range));
 
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   up: 1,

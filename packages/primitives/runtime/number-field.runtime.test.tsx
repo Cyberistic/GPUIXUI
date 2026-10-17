@@ -156,6 +156,27 @@ it("steps with the arrow keys, and pages ten at a time", async () => {
   expect(lastValue(field.values)).toBe(41);
 });
 
+it("steps a decimal field to an exact decimal", async () => {
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Opacity"
+      autoFocus
+      defaultValue={0.2}
+      step={0.1}
+      precision={1}
+      onChange={field.onChange}
+    />,
+  );
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "up");
+  // The bug guarded: 0.2 + 0.1 is 0.30000000000000004 in binary floating point,
+  // so the field painted "0.3" while reporting the noise (plan 077).
+  expect(lastValue(field.values)).toBe(0.3);
+  expect(runtime.paintedText()).toContain("0.3");
+});
+
 it("steps from a hit-tested click on the spin column and refocuses the input", async () => {
   const field = recorder();
   const runtime = await mount(

@@ -49,6 +49,10 @@ While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
 through `onChange`; on blur or `Enter` the draft is reformatted to `precision`.
 
+A **decimal step is exact**: `stepNumber` trims its result to 12 decimal places,
+so `0.2` stepped by `0.1` is `0.3` rather than `0.30000000000000004`. `precision`
+remains a display rule — it never rounds the value a caller receives.
+
 ## Keyboard
 
 | Key | Effect |
@@ -95,14 +99,15 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
 ## Verification
 
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
-  stepping, Home/End only with a bound.
+  stepping, Home/End only with a bound, and an exact decimal step (plan `077`).
 - `src/components/NumberField.test.tsx` — the draft value, the key contract, the
   raw edit report, steppers as presentation, one tab stop, disabled/invalid.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
-  `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
-  the chrome ring paints from mount with `autoFocus`; a disabled field refuses
-  text, keys and clicks. Measured 2026-10-17 (plans 054 §9 and 064 §6).
+  `100`; arrow/PageDown step; a decimal step reports `0.3` (not binary noise);
+  a hit-tested stepper press steps and refocuses; the chrome ring paints from
+  mount with `autoFocus`; a disabled field refuses text, keys and clicks.
+  Measured 2026-10-17 (plans 054 §9, 064 §6 and 077 §7).
 
 ```sh
 nub run --filter @gpuixui/primitives test
