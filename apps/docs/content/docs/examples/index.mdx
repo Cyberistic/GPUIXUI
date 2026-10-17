@@ -23,6 +23,11 @@ new components are checked against.
 nub run --filter @gpuixui/basic-app dev
 ```
 
+The `dev` script currently calls `bun src/main.tsx`. Bun is not installed on this
+host and is not the repository's package manager, so the command stops at the
+runner until that script is changed; the type-check below is the check that
+really runs.
+
 **What is verified, and what is not:**
 
 | Check | Status |
