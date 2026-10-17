@@ -6,5 +6,6 @@
  * alternative and is what the docs pages show.
  */
 
+export * from "./avatar.js";
 export * from "./badge.js";
 export * from "./card.js";

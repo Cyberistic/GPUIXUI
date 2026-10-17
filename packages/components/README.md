@@ -22,6 +22,8 @@ Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 | `src/internal/*` | collection index arithmetic, key predicates, theme seam, the a11y-dump reader and the behaviour-suite render helper |
 | `src/runtime.test.tsx` | the native-renderer guard (plan 117 §5b) |
 | `src/card.tsx` | Card and its five parts — verified natively |
+| `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
+| `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
 | `src/pagination/logic.ts` | page-window arithmetic |
 | `src/accordion/logic.ts` | single/multiple open-state transitions |
 | `src/breadcrumb/logic.ts` | trail collapsing |

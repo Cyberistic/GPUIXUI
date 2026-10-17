@@ -80,7 +80,8 @@ the `@gpuixui/tokens/react` provider
     - [x] `internal/collection.ts` (List single-selection core, shared with Tabs/menus)
     - [x] Card: `src/card.tsx`, behaviour suite, example, docs page, inventory record — **verified natively** (5/5, `nub run --filter @gpuixui/components test:behaviour`)
     - [x] Badge: `src/badge.tsx` + `toneSurface` in the theme seam, behaviour suite (7/7), example, docs page, inventory record
-    - [ ] Avatar, Alert, EmptyState, List
+    - [x] Avatar: `src/avatar.tsx` + `src/avatar/logic.ts` (unicode-safe initials), behaviour suite (7/7) + logic suite (8), example, docs page, inventory record
+    - [ ] Alert, EmptyState, List
   - [ ] Overlays: Dialog, Confirmation dialog, Popover
     - [ ] `internal/dismiss-layer.ts` + `internal/button-props.ts` (0.10.0 has neither)
     - [ ] Plans 112/113 reference `keyboardFocusDim` and `focusVisible`, which 0.10.0's `StyleDesc` does not have — correct the plans before writing the styles
@@ -209,6 +210,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) so the local `tone()` helper can be deleted | tokens-theme | pending |
 | `alpha(color, amount)` helper so the local `withAlpha()` can be deleted | tokens-theme | pending |
 | An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | pending |
+| An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
