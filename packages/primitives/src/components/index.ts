@@ -26,13 +26,13 @@ export { Label, labelledBy } from "./Label.js";
 export type { LabelProps } from "./Label.js";
 
 export { Button } from "./Button.js";
-export type { ButtonFocus, ButtonProps } from "./Button.js";
+export type { ButtonFocus, ButtonProps, ButtonState } from "./Button.js";
 
 export { ButtonGroup, BUTTON_GROUP_MODES } from "./ButtonGroup.js";
 export type { ButtonGroupMode, ButtonGroupProps } from "./ButtonGroup.js";
 
 export { pressedValueText, Toggle } from "./Toggle.js";
-export type { ToggleProps } from "./Toggle.js";
+export type { ToggleProps, ToggleState } from "./Toggle.js";
 
 export { ToggleGroup } from "./ToggleGroup.js";
 export type {
@@ -44,7 +44,7 @@ export type {
 } from "./ToggleGroup.js";
 
 export { Input } from "./Input.js";
-export type { FieldProps, InputProps } from "./Input.js";
+export type { FieldProps, FieldState, InputProps } from "./Input.js";
 
 export { NumberField, numberRange } from "./NumberField.js";
 export type { NumberFieldProps } from "./NumberField.js";
@@ -56,7 +56,7 @@ export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
 
 export { Checkbox, checkboxState, selectionValueText } from "./Checkbox.js";
-export type { CheckboxProps } from "./Checkbox.js";
+export type { CheckboxProps, CheckboxState } from "./Checkbox.js";
 
 export { CheckboxGroup } from "./CheckboxGroup.js";
 export type {
@@ -67,7 +67,7 @@ export type {
 } from "./CheckboxGroup.js";
 
 export { Switch } from "./Switch.js";
-export type { SwitchProps } from "./Switch.js";
+export type { SwitchProps, SwitchState } from "./Switch.js";
 
 export { initialActiveIndex, RadioGroup } from "./RadioGroup.js";
 export type { RadioGroupProps, RadioOption } from "./RadioGroup.js";

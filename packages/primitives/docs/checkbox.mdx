@@ -43,7 +43,7 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<CheckboxState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 `indeterminate` is a **paint override**: activation still toggles the underlying
@@ -76,6 +76,29 @@ border from `input`/`destructive`, fill from the accent role and the mark from
 not scripted. Disabled adds half opacity and removes pointer feedback. Focus
 paints the selection ring (`colors.ring`, spread by `borderWidth.strong`).
 
+## Style by state
+
+`style` takes an object or a callback over the checkbox's public state — the
+runtime's own `StateStyle` type:
+
+```tsx
+<Checkbox
+  label="Email notifications"
+  style={(state) => ({ opacity: state.indeterminate ? 0.8 : 1 })}
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `checked` | `boolean` | the resolved value (controlled or its own) |
+| `indeterminate` | `boolean` | the dash state; never true together with `checked` |
+| `disabled` | `boolean` | refuses pointer and keys |
+| `focused` | `boolean` | holds native focus |
+| `invalid` | `boolean` | the empty box paints the destructive border |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. `CheckboxState` is exported.
+
 ## Limitations
 
 - No `aria-checked` (above).
@@ -85,6 +108,11 @@ paints the selection ring (`colors.ring`, spread by `borderWidth.strong`).
 - No partial-state animation and no custom mark.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 079).
+- `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
+  invalid) reaching the painted style.
 
 - `src/core/selection.test.ts` — the three-state paint and mark colour.
 - `src/components/selection.test.tsx` — toggle, indeterminate and disabled

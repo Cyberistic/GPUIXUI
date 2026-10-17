@@ -32,7 +32,7 @@ import { Switch } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<SwitchState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 ## Keyboard
@@ -61,6 +61,28 @@ the pill. Disabled adds half opacity and removes feedback. `invalid` gives an
 off-switch the destructive border, the same role a checkbox uses, and focus
 paints the shared selection ring.
 
+
+## Style by state
+
+`style` takes an object or a callback over the switch's public state:
+
+```tsx
+<Switch
+  label="Dark mode"
+  style={(state) => ({ opacity: state.checked ? 1 : 0.85 })}
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `checked` | `boolean` | the pill's on/off state |
+| `disabled` | `boolean` | refuses pointer and keys |
+| `focused` | `boolean` | holds native focus |
+| `invalid` | `boolean` | paints the destructive border |
+
+The callback's result merges after the component's own rules; `SwitchState` is
+exported.
+
 ## Limitations
 
 - No `aria-checked` and no on/off text inside the control; pair it with a visible
@@ -69,6 +91,11 @@ paints the shared selection ring.
 - No loading or pending state; disable it while a request is in flight.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 079).
+- `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
+  invalid) reaching the painted style.
 
 - `src/core/selection.test.ts` — track and thumb geometry across sizes and
   states; the destructive border when `invalid`; the focus ring.

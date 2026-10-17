@@ -8,7 +8,7 @@
  */
 
 import type { ReactElement } from "react";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import {
   switchThumbStyle,
@@ -19,12 +19,21 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
-  mergeStyle,
+  resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
+  type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `Switch` style callback receives. */
+export interface SwitchState {
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
+}
 
 export interface SwitchProps {
   /** Controlled. Omit to let the switch hold its own state. */
@@ -39,7 +48,8 @@ export interface SwitchProps {
   readonly accent?: SelectionAccent;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over this switch's public state. */
+  readonly style?: StateStyle<SwitchState>;
   readonly testId?: string;
 }
 
@@ -68,6 +78,12 @@ export const renderSwitch = (
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };
+  const partState: SwitchState = {
+    checked: state.current,
+    disabled: props.disabled === true,
+    focused: focus.focused,
+    invalid: props.invalid === true,
+  };
   return (
     <div
       role="switch"
@@ -80,7 +96,11 @@ export const renderSwitch = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(switchTrackStyle(spec, theme), props.style)}
+      style={resolvePartStyle(
+        switchTrackStyle(spec, theme),
+        props.style,
+        partState,
+      )}
     >
       <div style={switchThumbStyle(spec, theme)} />
     </div>

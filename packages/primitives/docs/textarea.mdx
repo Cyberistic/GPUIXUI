@@ -64,6 +64,10 @@ mean.
 The same `fieldChrome` and native text theme as `Input`; only the height model
 changes.
 
+`style` is the same `StateStyle<FieldState>` as `Input` — `disabled`, `focused`,
+`invalid` — resolved after the chrome; the textarea's own vertical padding is
+re-based after it, so a callback's `paddingTop` does not survive.
+
 ## Limitations
 
 - **No `onSubmit`** — by design; see plan 046.
@@ -74,6 +78,11 @@ changes.
   read-only field.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 079).
+- `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
+  invalid) reaching the painted style.
 
 - `src/components/fields.test.tsx` — rows, chrome and the absence of `onSubmit`
   in the public props.

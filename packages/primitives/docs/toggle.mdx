@@ -36,7 +36,7 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name. Overrides the name derived from text children; required when the content is not text |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<ToggleState>` | — | merged last; an object or a state callback |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
 
@@ -75,6 +75,25 @@ docs and the component read one table. Rest paints no fill (or a border for
 `outline`); pressed paints `colors.accent`/`colors.accentForeground`; hover and
 press lift the accent's alpha like a filled button. Nothing names a literal.
 
+
+## Style by state
+
+`style` takes an object or a callback over the toggle's public state — the
+runtime's own `StateStyle` type:
+
+```tsx
+<Toggle style={(state) => ({ opacity: state.checked ? 1 : 0.8 })}>Bold</Toggle>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `checked` | `boolean` | the pressed state (the contract's word for it) |
+| `disabled` | `boolean` | refuses pointer and keys |
+| `focused` | `boolean` | holds native focus |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. `ToggleState` is exported.
+
 ## Limitations
 
 - No `aria-pressed` (above).
@@ -84,6 +103,11 @@ press lift the accent's alpha like a filled button. Nothing names a literal.
   matches the control (`theme.iconSize`).
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 079).
+- `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
+  invalid) reaching the painted style.
 
 - `src/components/Toggle.test.tsx` — role and value text, no `aria-pressed`,
   the pressed paint from the accent role, the outline border, click/Enter/Space

@@ -16,15 +16,28 @@
 
 import { useState, type ReactElement, type ReactNode } from "react";
 import * as Option from "effect/Option";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import { controlFocusStyle, controlStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
 import { useGroupShape } from "./group-shape.js";
-import { mergeStyle, textOf } from "./internal.js";
+import {
+  mergeStyle,
+  resolvePartStyle,
+  textOf,
+  type StateStyle,
+} from "./internal.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `Button` style callback receives. */
+export interface ButtonState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  /** Busy: the spinner is painted and activation is refused. */
+  readonly loading: boolean;
+}
 
 export interface ButtonProps {
   /** Defaults to `primary`. */
@@ -49,7 +62,8 @@ export interface ButtonProps {
   /** Called for a click or an activating key. Not called while busy or disabled. */
   readonly onActivate?: () => void;
   readonly onClick?: (event: EventPayload) => void;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over this button's public state. */
+  readonly style?: StateStyle<ButtonState>;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -84,6 +98,11 @@ export const renderButton = (
     if (busy) return;
     props.onActivate?.();
   };
+  const state: ButtonState = {
+    disabled: props.disabled === true,
+    focused: focus.focused,
+    loading: props.loading === true,
+  };
   const onKey =
     (phase: "down" | "up") =>
     (event: EventPayload): void => {
@@ -108,7 +127,7 @@ export const renderButton = (
       onBlur={focus.onBlur}
       onKeyDown={onKey("down")}
       onKeyUp={onKey("up")}
-      style={mergeStyle(
+      style={resolvePartStyle(
         focus.focused
           ? mergeStyle(
               controlStyle(spec, theme),
@@ -116,6 +135,7 @@ export const renderButton = (
             )
           : controlStyle(spec, theme),
         props.style,
+        state,
       )}
     >
       {props.loading === true ? (

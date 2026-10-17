@@ -20,11 +20,20 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
 import {
   mergeStyle,
+  resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
+  type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a field's style callback receives. */
+export interface FieldState {
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
+}
 
 /** Props shared by `Input` and `TextArea`. */
 export interface FieldProps {
@@ -56,7 +65,8 @@ export interface FieldProps {
   readonly fullWidth?: boolean;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over this field's public state. */
+  readonly style?: StateStyle<FieldState>;
   readonly testId?: string;
 }
 
@@ -73,7 +83,11 @@ export const fieldChrome = (
   );
   const ring =
     focused && disabled !== true ? controlFocusStyle(spec, theme) : {};
-  return mergeStyle(mergeStyle(base, ring), style);
+  return resolvePartStyle(mergeStyle(base, ring), style, {
+    disabled: disabled === true,
+    focused,
+    invalid: invalid === true,
+  });
 };
 
 /** The props an `<input>`/`<textarea>` shares, from the spec and its state. */

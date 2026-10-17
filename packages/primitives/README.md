@@ -52,6 +52,25 @@ test fixture — the theme is the only source of those values.
 `components/` may import the published `/select`, `/tooltip`, `/floating`
 subpaths; the package root needs a native binding.
 
+## Style by state
+
+`style` on an interactive part accepts the runtime's own
+`StateStyle<<Part>State>` — an object, or a callback over that part's public
+state (`docs/component-api.md` §3, adopted from the components workstream):
+
+```tsx
+<Button style={(state) => ({ opacity: state.disabled ? 0.6 : 1 })}>Save</Button>
+```
+
+The callback's result merges after the component's own rules, so it wins per
+property; an object style behaves exactly as before. State types are exported
+(`ButtonState`, `ToggleState`, `CheckboxState`, `SwitchState`, `FieldState`, and
+the group types as they land). Two fields extend the contract's vocabulary
+because this package has real states its parts do not: `ButtonState.loading`
+and `CheckboxState.indeterminate`. `resolvePartStyle` in `components/internal.ts`
+is the single merge point; the type and resolver are the published ones, not a
+local copy.
+
 ## Components
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
@@ -123,7 +142,7 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **16 files, 184 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **17 files, 188 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -143,8 +162,10 @@ PageDown/arrow/Home/End through the runtime while an `Input` inside it kept its
 arrow keys (plan 072), and `InfoTip` opening on hover and on `focusNext` with
 its name, description and painted focus ring (plan 073), an `OTPField` that
 is one roving tab stop instead of six (plan 076), and a decimal `NumberField`
-step that reports `0.3` instead of binary noise (plan 077), and an attached
-button group whose buttons share one square-edged, clipped surface (plan 078).
+step that reports `0.3` instead of binary noise (plan 077), an attached
+button group whose buttons share one square-edged, clipped surface (plan 078),
+and a state-aware `style` callback whose `focused`/`checked`/`invalid` state
+repaints the mounted tree (plan 079).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

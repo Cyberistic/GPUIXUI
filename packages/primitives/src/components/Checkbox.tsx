@@ -8,7 +8,7 @@
  */
 
 import type { ReactElement } from "react";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import { decideActivation } from "../core/keyboard.js";
 import {
@@ -21,12 +21,23 @@ import {
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import {
-  mergeStyle,
+  resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
+  type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `Checkbox` style callback receives. */
+export interface CheckboxState {
+  readonly checked: boolean;
+  /** A third state: the check is a dash. Never true together with `checked`. */
+  readonly indeterminate: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
+}
 
 export interface CheckboxProps {
   /** Controlled. Omit to let the checkbox hold its own state. */
@@ -43,7 +54,8 @@ export interface CheckboxProps {
   readonly accent?: SelectionAccent;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over this checkbox's public state. */
+  readonly style?: StateStyle<CheckboxState>;
   readonly testId?: string;
 }
 
@@ -95,6 +107,13 @@ export const renderCheckbox = (
         toggle();
     };
   const box = selectionBoxStyle(spec, theme);
+  const partState: CheckboxState = {
+    checked: current === "checked",
+    indeterminate: current === "indeterminate",
+    disabled: props.disabled === true,
+    focused: focus.focused,
+    invalid: props.invalid === true,
+  };
   return (
     <div
       role="checkbox"
@@ -107,7 +126,7 @@ export const renderCheckbox = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(box, props.style)}
+      style={resolvePartStyle(box, props.style, partState)}
     >
       {current === "unchecked" ? null : (
         <Icon

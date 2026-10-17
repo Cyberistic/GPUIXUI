@@ -42,7 +42,7 @@ way a native number field does — it does not start with a zero to delete.
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on mount; the ring paints from mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<FieldState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator on the field's chrome |
 
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
@@ -85,6 +85,20 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
 `colors.mutedForeground` icons in the spin column. Height and padding come from
 `density`; nothing names a literal.
 
+
+## Style by state
+
+The same `FieldState` as `Input` — `disabled`, `focused`, `invalid` — resolved
+after the wrapper's chrome:
+
+```tsx
+<NumberField
+  label="Copies"
+  invalid={tooMany}
+  style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })}
+/>
+```
+
 ## Limitations
 
 - **Decimal text only.** `1,5`, `0x10` and `Infinity` are rejected rather than
@@ -97,6 +111,11 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
   is not implemented; the steppers are the honest input for now.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 079).
+- `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
+  invalid) reaching the painted style.
 
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
   stepping, Home/End only with a bound, and an exact decimal step (plan `077`).

@@ -42,7 +42,7 @@ const email = "Contact email";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `label` | `string` | none | accessible name; pair with a visible `Label` |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<FieldState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 ## Keyboard
@@ -75,6 +75,28 @@ handler, not to a field.
 `fieldTextStyle` and `nativeTextTheme` set the font, caret and selection colours
 the native element paints with. Focus uses the shared shadow ring.
 
+
+## Style by state
+
+`style` takes an object or a callback over the field's public state:
+
+```tsx
+<Input
+  label="Email"
+  invalid={hasError}
+  style={(state) => ({ opacity: state.invalid ? 0.9 : 1 })}
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | read-only, out of the tab order, guarded |
+| `focused` | `boolean` | the native input holds focus |
+| `invalid` | `boolean` | paints the destructive border |
+
+The callback's result merges after the field chrome, so it wins per property;
+`FieldState` is exported and shared by `Input`, `TextArea` and `NumberField`.
+
 ## Limitations
 
 - No `type`, `maxLength`, `inputMode` or `pattern`: the component exposes a
@@ -87,6 +109,11 @@ the native element paints with. Focus uses the shared shadow ring.
 - No `aria-describedby`; help text is adjacent content, not associated.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 079).
+- `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
+  invalid) reaching the painted style.
 
 - `src/core/state.test.ts` — controlled/uncontrolled transitions.
 - `src/components/fields.test.tsx` — chrome, invalid state and host props.

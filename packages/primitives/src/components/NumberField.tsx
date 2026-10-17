@@ -13,7 +13,7 @@
  */
 
 import { useRef, useState, type ReactElement } from "react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
@@ -37,11 +37,14 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
+import type { FieldState } from "./Input.js";
 import {
   mergeStyle,
+  resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
+  type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -69,7 +72,8 @@ export interface NumberFieldProps {
   readonly autoFocus?: boolean;
   /** Overrides the display text; the value still parses with `core/number.ts`. */
   readonly formatValue?: (value: number) => string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over this field's public state. */
+  readonly style?: StateStyle<FieldState>;
   readonly testId?: string;
 }
 
@@ -109,7 +113,7 @@ export const renderNumberField = (
     invalid: props.invalid,
     disabled: props.disabled,
   };
-  const chrome = mergeStyle(
+  const chrome = resolvePartStyle(
     mergeStyle(
       mergeStyle(mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)), {
         paddingRight: 0,
@@ -117,6 +121,11 @@ export const renderNumberField = (
       focus.focused && !disabled ? controlFocusStyle(spec, theme) : {},
     ),
     props.style,
+    {
+      disabled,
+      focused: focus.focused,
+      invalid: props.invalid === true,
+    },
   );
   const atMin = props.min !== undefined && state.current <= props.min;
   const atMax = props.max !== undefined && state.current >= props.max;

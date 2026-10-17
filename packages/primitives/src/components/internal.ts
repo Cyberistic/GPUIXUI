@@ -14,6 +14,7 @@ import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import type { StyleDesc } from "@gpuix/react";
+import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import {
   initValueState,
   setValue,
@@ -27,6 +28,27 @@ export const mergeStyle = (
   base: StyleDesc,
   override: StyleDesc | undefined,
 ): StyleDesc => (override === undefined ? base : { ...base, ...override });
+
+/**
+ * A part's `style`: an object, or a callback that reads its public state.
+ *
+ * The type is the runtime's own (`@gpuix/react/floating`), the same one GPUix's
+ * headless `SelectItem` and `ComboboxItem` expose — not a local lookalike.
+ */
+export type { StateStyle } from "@gpuix/react/floating";
+
+/**
+ * Resolve a part's `style` against its state and merge the result last.
+ *
+ * The one merge rule the library uses: a callback wins exactly where an object
+ * style wins today, property by property, and nested `hover`/`active` rules in
+ * the base keep working unless the callback supplies its own.
+ */
+export const resolvePartStyle = <State>(
+  base: StyleDesc,
+  style: StateStyle<State> | undefined,
+  state: State,
+): StyleDesc => mergeStyle(base, resolveStyle(style, state));
 
 /**
  * The accessible name a text-only child list gives a control.

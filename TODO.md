@@ -368,6 +368,22 @@ retired once both branches are one
       through React context, the group supplies the clipped rounded ends, and
       an explicit per-button `radius` wins. 1 element + 2 runtime tests, both
       directions proven (plan 078)
+`[x]` `packages/primitives`: **state-aware `style` (slice 1)** — the
+      components workstream's contract (`docs/component-api.md` §3, plan 305)
+      asks every Tier 1–2 part to style from a public state object through the
+      runtime's `StateStyle`/`resolveStyle`. `Button`, `Toggle`, `Checkbox`,
+      `Switch`, `Input`, `TextArea` and `NumberField` now accept
+      `StateStyle<<X>State>` and export their state type; the callback's result
+      merges last and object styles are unchanged. 7 element-tree + 4 runtime
+      tests, both directions proven (plan 079)
+`[ ]` `packages/primitives`: **state-aware `style` (slice 2)** — the group
+      roots (`CheckboxGroup`, `RadioGroup`, `ToggleGroup`, `Rating`, `OTPField`,
+      `Slider`, `RangeSlider`), `Label`, `ScrollArea` and `Select` (plan 080)
+`[ ]` `packages/primitives`: **per-item styling for the data-driven groups** —
+      `optionStyle`/`rowStyle`/`itemStyle`/`thumbStyle`/`starStyle`/`cellStyle`
+      and a `Select` `triggerStyle` are new props over data, not a `style` on an
+      existing part; decide the shape before adding them (recorded in plan 080
+      §6)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

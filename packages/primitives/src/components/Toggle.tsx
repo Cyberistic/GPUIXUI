@@ -16,7 +16,7 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import type { EventPayload } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { decideActivation } from "../core/keyboard.js";
 import { controlFocusStyle, controlStyle } from "../core/style.js";
@@ -25,12 +25,22 @@ import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
 import {
   mergeStyle,
+  resolvePartStyle,
   textOf,
   useControlState,
   useFocus,
   type FocusState,
+  type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `Toggle` style callback receives. */
+export interface ToggleState {
+  /** The toggle's pressed state — the contract's word for it is `checked`. */
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+}
 
 export interface ToggleProps {
   /** Controlled pressed state. Omit to let the toggle own it. */
@@ -48,7 +58,8 @@ export interface ToggleProps {
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the toggle has only an icon. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over this toggle's public state. */
+  readonly style?: StateStyle<ToggleState>;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -77,6 +88,11 @@ export const renderToggle = (
     if (props.disabled === true) return;
     onPressedChange(!state.current);
   };
+  const partState: ToggleState = {
+    checked: state.current,
+    disabled: props.disabled === true,
+    focused: focus.focused,
+  };
   const onKey =
     (phase: "down" | "up") =>
     (event: EventPayload): void => {
@@ -95,7 +111,7 @@ export const renderToggle = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(
+      style={resolvePartStyle(
         focus.focused
           ? mergeStyle(
               controlStyle(spec, theme),
@@ -103,6 +119,7 @@ export const renderToggle = (
             )
           : controlStyle(spec, theme),
         props.style,
+        partState,
       )}
     >
       {props.leading}
