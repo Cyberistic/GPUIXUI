@@ -196,6 +196,7 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
           id: String(current.seq + 1),
           title: input.title,
           description: input.description,
+          action: input.action,
           tone: input.tone,
         });
         const appended = Arr.append(current.toasts, toast);

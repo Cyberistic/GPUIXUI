@@ -95,6 +95,7 @@ workstream declares in its own section below.
 | [319](./319-mention-input.md) | Mention input: ranked `@` suggestions over an anchored list | C | 200, 201, 116, 112 | done — 12 rule + 9 native tests; both-direction proof |
 | [320](./320-navigation-menu.md) | Navigation menu: one open panel, roving triggers | C | 200, 201, 112, 114, 113 | done — 6 parts, 10 native tests; both-direction proof |
 | [321](./321-tabs-vertical-orientation.md) | Tabs vertical orientation: prove the axis, then show it | C/F | 113, 117 | done — 4 native tests (Tabs 14, behaviour 441), a vertical example, docs/inventory sync; both-direction proof |
+| [322](./322-toast-action.md) | Toast actions: one labelled action per toast, provider-owned handler | C/F | 115, 123, 124 | done — 3 unit + 4 native tests (unit 299, Toast 14, behaviour 445), undo example and docs |
 
 Interlocks this workstream depends on and does not own:
 

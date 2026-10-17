@@ -55,6 +55,53 @@ describe("ToastStore", () => {
     ),
   );
 
+  it.effect("carries a decoded action label on the queued toast", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        const toast = yield* store.push({
+          title: "Message archived",
+          action: { label: "Undo" },
+        });
+
+        expect(Option.map(toast.action, (action) => action.label)).toEqual(
+          Option.some("Undo"),
+        );
+      }),
+    ),
+  );
+
+  it.effect("rejects an empty action label and queues nothing", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+
+        const rejection = yield* store
+          .push({ title: "Archived", action: { label: "" } })
+          .pipe(
+            Effect.match({
+              onFailure: (error) => error,
+              onSuccess: () => undefined,
+            }),
+          );
+
+        expect(Schema.isSchemaError(rejection)).toBe(true);
+        expect(yield* store.toasts).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect("leaves a toast without an action with none", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        const toast = yield* store.push(persistent);
+
+        expect(Option.isNone(toast.action)).toBe(true);
+      }),
+    ),
+  );
+
   it.effect("keeps the newest toasts and drops the oldest beyond max", () =>
     withStore(
       Effect.gen(function* () {
