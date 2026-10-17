@@ -1,0 +1,89 @@
+---
+title: Labels
+description: Names a control for sighted users.
+---
+
+<ComponentState slug="label" />
+
+<NativePreview slug="label" />
+
+`Label` renders the **visible** name of a field. It is not associated with the
+control by reference — GPUix 0.10.0 has no `aria-labelledby` — so the control
+carries its own `aria-label` through its `label` prop. `labelledBy(name)` builds
+that prop from the same string.
+
+## Usage
+
+```tsx
+import { Input, Label, labelledBy } from "@gpuixui/primitives";
+
+const name = "Workspace name";
+
+<Label description="Shown on invitations and in the app switcher.">
+  {name}
+</Label>
+<Input {...labelledBy(name)} fullWidth />;
+```
+
+## Variants
+
+`Label` has no visual variants. Three state props change it: `required` appends
+a destructive `*` (visual only), `invalid` paints the name in the destructive
+role, and `description` adds a caption line under the name.
+
+## Sizes
+
+There is no size prop. The name uses the `label` type role and the description
+uses `caption`; both come from the theme.
+
+## States
+
+`required` and `invalid` are the two states; neither validates or announces
+anything on its own. A label is never hoverable, focusable or disabled.
+
+## Composition
+
+The form example pairs each visible `Label` with a control that carries the same
+name through `labelledBy`:
+
+<include lang="tsx" meta='title="packages/primitives/examples/form.example.tsx"'>
+  ../../../../../packages/primitives/examples/form.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Label.tsx" name="LabelProps" />
+
+## Keyboard and focus
+
+Not focusable. A label that responds to a click is a button. There is no
+click-to-focus: the runtime has no `for`/`htmlFor`, and the label cannot move
+focus to another element.
+
+## Theming
+
+The name uses the `label` role and the `foreground` (or `destructive`) role; the
+description uses `caption` + `mutedForeground`. The required star is
+`destructive`. No literal size or colour.
+
+## Accessibility and limitations
+
+- The visible name is an accessibility `Label` node; the control's own `label`
+  prop is its accessible name. There is **no `aria-labelledby`**, so the two are
+  separate nodes.
+- `required` is a mark, not `aria-required`; validation must also be expressed
+  in words and in the control's `invalid` state.
+- `invalid` is colour plus the field's border; it is not announced by itself.
+- No click-to-focus and no association by reference. `labelledBy` keeps the
+  control side to one object, not the pair.
+- `required` does not validate anything. Validate with `Schema` at the boundary.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Label.tsx"'>
+  ../../../../../packages/primitives/src/components/Label.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="label" />

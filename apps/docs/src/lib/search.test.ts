@@ -35,16 +35,18 @@ describe("search", () => {
     expect(dialogs?.url).toBe("/docs/components?q=Dialogs");
   });
 
-  it("keeps page results ahead of registry results", async () => {
-    const results = await search("select", 20);
-    const firstPage = results.findIndex(
-      (result) => result.url === "/docs/data-display",
+  it("ranks real pages ahead of the registry appendix", async () => {
+    const results = await search("installation", 5);
+    expect(results[0]?.url).toBe("/docs/installation");
+  });
+
+  it("appends planned components after the pages, pointing at the filtered index", async () => {
+    const results = await search("dialog", 20);
+    const planned = results.find(
+      (result) => contentOf(result) === "Dialogs (planned)",
     );
-    const registry = results.findIndex(
-      (result) => contentOf(result) === "Selects (planned)",
-    );
-    expect(firstPage).toBeGreaterThanOrEqual(0);
-    expect(registry).toBeGreaterThan(firstPage);
+    expect(planned?.url).toBe("/docs/components?q=Dialogs");
+    expect(results.at(-1)?.url).toContain("/docs/components?q=");
   });
 
   it("returns nothing for a query no page or component matches", async () => {

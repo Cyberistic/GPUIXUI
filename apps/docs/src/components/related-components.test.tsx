@@ -10,9 +10,14 @@ import { RelatedComponents } from "./related-components";
  */
 describe("related components", () => {
   it("labels a planned record instead of linking to a page that does not exist", () => {
+    const html = renderToStaticMarkup(<RelatedComponents slug="select" />);
+    expect(html).toContain("Radio groups (planned)");
+    expect(html).not.toContain('href="/docs/components/radio-group"');
+  });
+
+  it("links a delivered record to its page", () => {
     const html = renderToStaticMarkup(<RelatedComponents slug="button" />);
-    expect(html).toContain("Button groups (planned)");
-    expect(html).not.toContain('href="/docs/components/button-group"');
+    expect(html).toContain('href="/docs/components/button-group"');
   });
 
   it("renders nothing for an unknown component", () => {

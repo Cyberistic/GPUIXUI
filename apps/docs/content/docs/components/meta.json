@@ -9,6 +9,11 @@
     "stack",
     "box",
     "scroll-area",
-    "button"
+    "button",
+    "button-group",
+    "label",
+    "text-input",
+    "text-area",
+    "select"
   ]
 }

@@ -204,24 +204,65 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       "No native button element: the runtime renders a div with role and handlers.",
     ],
   },
-  planned(
+  delivered(
     "button-group",
     "Button groups",
     "1",
     "Groups related buttons into one control.",
-    { related: ["button"] },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/ButtonGroup.tsx",
+      related: ["button", "separator"],
+      limitations: [
+        "No child reshaping: only the container is rounded and clipped.",
+        "The group name must be passed as label.",
+        "No overflow behaviour: a wide group does not collapse into a menu.",
+      ],
+    },
   ),
-  planned("label", "Labels", "1", "Names a control for sighted users."),
-  planned(
+  delivered("label", "Labels", "1", "Names a control for sighted users.", {
+    gpuix: "partial",
+    sourcePath: "packages/primitives/src/components/Label.tsx",
+    related: ["text-input", "text"],
+    limitations: [
+      "No aria-labelledby: the visible label and the control name are separate nodes.",
+      "No click-to-focus: the runtime has no for/htmlFor.",
+      "required is a visual mark, not aria-required; validation is separate.",
+    ],
+  }),
+  delivered(
     "text-input",
     "Text inputs",
     "1",
     "A single-line editable text field.",
-    { gpuix: "yes" },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Input.tsx",
+      related: ["label", "text-area"],
+      limitations: [
+        "No type, maxLength, inputMode or pattern.",
+        "No masks, formatting or prefix/suffix slots.",
+        "No aria-describedby; help text is adjacent content.",
+        "No disabled field: use readOnly.",
+      ],
+    },
   ),
-  planned("text-area", "Text areas", "1", "A multi-line editable text field.", {
-    gpuix: "yes",
-  }),
+  delivered(
+    "text-area",
+    "Text areas",
+    "1",
+    "A multi-line editable text field.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/TextArea.tsx",
+      related: ["text-input", "label"],
+      limitations: [
+        "No onSubmit by design: with it, Enter would stop inserting newlines.",
+        "No rich text, Markdown preview or character counter.",
+        "No auto-grow beyond maxRows; the field scrolls instead.",
+      ],
+    },
+  ),
   planned(
     "checkbox",
     "Checkboxes",
@@ -229,8 +270,16 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "Toggles a single independent option.",
   ),
   planned("radio-group", "Radio groups", "1", "Selects one option from a set."),
-  planned("select", "Selects", "1", "Selects one value from a list.", {
+  delivered("select", "Selects", "1", "Selects one value from a list.", {
     gpuix: "yes",
+    sourcePath: "packages/primitives/src/components/Select.tsx",
+    dependencies: ["@gpuix/react/select"],
+    related: ["radio-group", "label"],
+    limitations: [
+      "Options are data: no groups, rich content or compound escape hatch.",
+      "Dismissal and positioning are GPUix's.",
+      "No search or type-ahead, and no multi-select.",
+    ],
   }),
   planned("switch", "Switches", "1", "Toggles a setting on or off."),
   planned(

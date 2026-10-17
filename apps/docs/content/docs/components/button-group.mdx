@@ -1,0 +1,90 @@
+---
+title: Button groups
+description: Groups related buttons into one control.
+---
+
+<ComponentState slug="button-group" />
+
+<NativePreview slug="button-group" />
+
+`ButtonGroup` lays buttons out as one row and gives the row `role="group"`. In
+`attached` mode the gap is zero and the **group** is rounded and clipped; it
+does not reshape individual buttons.
+
+## Usage
+
+```tsx
+import { Button, ButtonGroup } from "@gpuixui/primitives";
+
+<ButtonGroup mode="attached" label="Text alignment">
+  <Button variant="ghost">Left</Button>
+  <Button variant="secondary">Center</Button>
+  <Button variant="ghost">Right</Button>
+</ButtonGroup>;
+```
+
+## Variants
+
+| `mode` | Gap | Shape |
+| ------ | --- | ----- |
+| `attached` (default) | 0 | group radius `md`, `overflow: hidden` |
+| `separated` | `gap` step (`sm` default) | buttons keep their own radius |
+
+The runtime has no `:first-child` / `:last-child` selector and a component cannot
+restyle a child without cloning it, so `attached` rounds the **container**. The
+middle buttons' own radii are hidden by the clip.
+
+## Sizes
+
+The group has no size of its own; each child `Button` keeps its `size`. `gap`
+takes a theme spacing step (`2xs` … `5xl`, default `sm`).
+
+## States
+
+The group adds no state. Each child keeps its own variant and its hover, press,
+focus, disabled and loading states. The group itself is never focusable.
+
+## Composition
+
+The form example puts Cancel and a busy primary action in a separated group:
+
+<include lang="tsx" meta='title="packages/primitives/examples/form.example.tsx"'>
+  ../../../../../packages/primitives/examples/form.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/ButtonGroup.tsx" name="ButtonGroupProps" />
+
+## Keyboard and focus
+
+The group adds no key handling. Tab moves through each button in order; Enter
+and Space follow each `Button`'s contract. A segmented control that should be one
+tab stop with arrow navigation is a radio group, not a button group.
+
+## Theming
+
+The gap uses `spacing[gap]`; the group radius is `radius.md`. No literal.
+
+## Accessibility and limitations
+
+- Role: `group`. The runtime has no `aria-labelledby`, so a visible heading
+  cannot name the group by reference; pass its words as `label` and the group
+  carries `aria-label`. Without `label` the group is anonymous.
+- Each button keeps its own name and role.
+- No child reshaping: only the container is rounded and clipped. Pass per-button
+  styles if only the ends should be rounded.
+- The name must be passed as `label`; there is no automatic association with a
+  heading.
+- No overflow behaviour: a group wider than its parent does not collapse into a
+  menu.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/ButtonGroup.tsx"'>
+  ../../../../../packages/primitives/src/components/ButtonGroup.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="button-group" />

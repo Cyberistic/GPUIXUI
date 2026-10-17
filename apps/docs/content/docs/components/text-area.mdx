@@ -1,0 +1,95 @@
+---
+title: Text areas
+description: A multi-line editable text field.
+---
+
+<ComponentState slug="text-area" />
+
+<NativePreview slug="text-area" />
+
+`TextArea` is `Input`'s multi-line sibling: the same field contract on the
+runtime's native `<textarea>`. It deliberately **does not accept `onSubmit`** —
+with that handler set, GPUix turns Enter into a submit and the newline never
+arrives (plan 046).
+
+## Usage
+
+```tsx
+import { Label, TextArea, labelledBy } from "@gpuixui/primitives";
+
+const notes = "Description";
+
+<Label>{notes}</Label>
+<TextArea
+  {...labelledBy(notes)}
+  value={value}
+  onChange={setValue}
+  minRows={3}
+  maxRows={8}
+  fullWidth
+/>;
+```
+
+## Variants
+
+One field appearance, shared with `Input`: `fieldVariant` plus the native text
+theme. `invalid` swaps the border and ring to the destructive role. No rich
+text, Markdown preview or character counter.
+
+## Sizes
+
+Height is rows, not a control height. `minRows` sets the minimum, `maxRows` the
+point after which the field scrolls; vertical padding is re-based to the
+density's horizontal step so the text inset stays square. `fullWidth` and `size`
+match `Input`.
+
+## States
+
+Controlled or uncontrolled, `readOnly`, `invalid` and `autoFocus` behave exactly
+as on `Input`. Enter inserts a newline — never a submit. Submit-on-Enter is a
+single-line interaction: use `Input` when that is what you mean.
+
+## Composition
+
+The form example uses a multi-line description field with a three-row minimum:
+
+<include lang="tsx" meta='title="packages/primitives/examples/form.example.tsx"'>
+  ../../../../../packages/primitives/examples/form.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/TextArea.tsx" name="TextAreaProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| typing | native editing; changes reach `onChange` |
+| Enter | inserts a newline — never submits |
+
+## Theming
+
+The same `fieldChrome` and native text theme as `Input`; only the height model
+changes.
+
+## Accessibility and limitations
+
+- The native element is announced as a multi-line text input.
+- The name comes from `label`; there is no `aria-labelledby`.
+- `invalid` is visual; put the message beside the field in words. There is no
+  `aria-describedby`.
+- **No `onSubmit`** — by design (plan 046).
+- No rich text, Markdown preview or character counter.
+- No auto-grow beyond `maxRows`: past it the field scrolls.
+- No `disabled`; use `readOnly`.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/TextArea.tsx"'>
+  ../../../../../packages/primitives/src/components/TextArea.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="text-area" />

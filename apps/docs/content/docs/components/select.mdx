@@ -1,0 +1,95 @@
+---
+title: Selects
+description: Selects one value from a list.
+---
+
+<ComponentState slug="select" />
+
+<NativePreview slug="select" />
+
+`Select` reuses `@gpuix/react/select` for the open state, dismissal and arrow
+navigation, and themes it to match the field chrome. It is not a
+reimplementation: this package owns the trigger's paint, the list surface and
+the item states.
+
+## Usage
+
+```tsx
+import { Label, Select } from "@gpuixui/primitives";
+
+<Label>Region</Label>
+<Select
+  value={region}
+  onChange={setRegion}
+  label="Region"
+  fullWidth
+  options={[
+    { value: "eu-west", label: "Europe — West" },
+    { value: "us-east", label: "United States — East" },
+    { value: "legacy", label: "Legacy region", disabled: true },
+  ]}
+/>;
+```
+
+## Variants
+
+Options are data (`{ value, label, disabled? }`); there are no option groups,
+rich option content or compound escape hatch. `side` chooses which side the list
+opens on when the runtime has room.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; the trigger height and padding come from
+density. `fullWidth` stretches the trigger and the list to the parent.
+
+## States
+
+The trigger can be `disabled` (refuses to open) or `invalid` (destructive
+border). An individual option can be disabled and cannot be committed. The open
+state, outside-click dismissal and positioning belong to GPUix.
+
+## Composition
+
+The form example uses a controlled `Select` beside the text fields:
+
+<include lang="tsx" meta='title="packages/primitives/examples/form.example.tsx"'>
+  ../../../../../packages/primitives/examples/form.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Select.tsx" name="SelectProps" />
+
+## Keyboard and focus
+
+Owned by GPUix's Select: the trigger opens with Enter or Space, the arrows move
+the highlight, Enter commits and Escape dismisses. This wrapper does not
+intercept any key.
+
+## Theming
+
+`selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
+trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
+`radius.md` + `elevation.overlay`) and the item states (`selected`, `hover`,
+`disabledForeground`). The list is one spacing step inset, full trigger width.
+
+## Accessibility and limitations
+
+- The select and trigger are GPUix's; the wrapper adds the accessible name
+  through `label`. The trigger is announced with its current value.
+- Disabled items are painted from the `disabled` state GPUix reports.
+- Options are data: no groups, no rich content, no compound escape hatch. Use
+  `RadioGroup` for rich options.
+- Dismissal and positioning are GPUix's; this package cannot change the open
+  animation or the outside-click rules.
+- No search or type-ahead, and no multi-select. A long list wants a combobox.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Select.tsx"'>
+  ../../../../../packages/primitives/src/components/Select.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="select" />

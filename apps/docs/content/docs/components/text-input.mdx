@@ -1,0 +1,103 @@
+---
+title: Text inputs
+description: A single-line editable text field.
+---
+
+<ComponentState slug="text-input" />
+
+<NativePreview slug="text-input" />
+
+`Input` is the runtime's native `<input>` with the shared field chrome. The
+native element holds the text; `onChange` reports every edit and `value` pushes
+an external value back in. The controlled/uncontrolled decision is made by
+`core/state.ts`, so an input and a checkbox cannot disagree about which value
+wins.
+
+## Usage
+
+```tsx
+import { Input, Label, labelledBy } from "@gpuixui/primitives";
+
+const email = "Contact email";
+
+<Label description="Where notifications are delivered.">{email}</Label>
+<Input
+  {...labelledBy(email)}
+  value={value}
+  onChange={setValue}
+  placeholder="you@example.com"
+  fullWidth
+/>;
+```
+
+## Variants
+
+One field appearance: `fieldVariant` paints the `input` role and the shared
+border. `invalid` swaps the border and focus ring to the destructive role. There
+is no filled/outline variant and no prefix/suffix slot.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; height and horizontal padding come from
+the theme's density. `fullWidth` stretches the field to its parent.
+
+## States
+
+- controlled (`value`) or uncontrolled (`defaultValue`), with one rule in
+  `core/state.ts`;
+- `readOnly` accepts focus and selection but refuses edits;
+- `invalid` is a visual border state;
+- `autoFocus` takes focus on mount, which is required for keys to arrive.
+
+There is no `disabled` field: use `readOnly`, which the runtime supports.
+
+## Composition
+
+The form example uses controlled inputs for the project name and owner:
+
+<include lang="tsx" meta='title="packages/primitives/examples/form.example.tsx"'>
+  ../../../../../packages/primitives/examples/form.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Input.tsx" name="InputProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| typing | native editing; every change reaches `onChange` |
+| Enter | reaches `onSubmit` with the runtime event |
+| Tab | moves focus with the runtime's own order |
+
+There is no `onKeyDown` prop; a shortcut belongs to the application's window
+key handler, not to a field.
+
+## Theming
+
+`fieldChrome` uses `fieldVariant` (the `input` role) and the density metrics;
+`fieldTextStyle` and `nativeTextTheme` set the font, caret and selection colours
+the native element paints with. Focus uses the shared shadow ring.
+
+## Accessibility and limitations
+
+- The native element is announced as `TextInput`.
+- The name comes from `label`; there is no `aria-labelledby`, so a visible
+  `Label` is not associated by reference.
+- `invalid` is a border colour, not an announced error. Put the message in a
+  `Text role="caption" tone="destructive"` beside the field.
+- No `type`, `maxLength`, `inputMode` or `pattern`; validate with `Schema` at the
+  boundary.
+- No masks, formatting or prefix/suffix slots, and no `aria-describedby`.
+- No `disabled`; use `readOnly`.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Input.tsx"'>
+  ../../../../../packages/primitives/src/components/Input.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="text-input" />
