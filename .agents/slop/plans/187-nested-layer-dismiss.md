@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §9) |
 | Phase | B (feasibility) → feeds C (Dropdown/Context menus, Popover, Dialog) |
 | Owner | playground workstream |
 | Depends on | `110`, `120`, `140`, `155`, `156`, `164` |
@@ -279,13 +279,77 @@ proofs with the exact failing check. `nub run check` and `nub run test` stay
 green; the full suite proves the new mount did not disturb the keyed isolation
 (plan `182`).
 
-## 8. Acceptance criteria
+## 9. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
+
+Scenario `nested-layer-dismiss`, capability `layers`, **29 checks**, suite
+`54 → 55`, exit `0`.
+
+**The runtime delivers a separate payload copy per handler.** One `x` key press
+reached the inner and the enclosing `onKeyDown` (`keyHandlers=2`) as **two
+distinct objects** (`keyObjects=2`). So `internal/event-claim.ts` is right and
+`internal/dismiss-layer.ts`'s `WeakSet<EventPayload>` premise is **false on
+0.10.0**. Measured consequence, with the stack written exactly as
+`dismiss-layer.ts` writes it: one Escape closed **both** layers
+(`last=parent-escape`, stack depth `0`) — every open overlay would close on one
+keystroke.
+
+**The field claim fixes it.** With the claim keyed on the event's fields
+(`eventType`, `key`, `x`, `y`, `button`) and cleared in a microtask, one Escape
+closes only the submenu (`sub=0`, `parent=1`, `last=sub-escape`) and the second
+Escape closes the parent (`last=parent-escape`). Two identical consecutive
+outside presses need a **task boundary** between them for the microtask reset —
+`Effect.yieldNow` models the boundary a real second click has; inside one
+synchronous tick the second press is indistinguishable from the first. That is a
+harness nuance, not a runtime defect, but a caller that synthesises two presses
+in one tick must not expect both to land.
+
+**A press inside the inner layer reaches the outer layer's outside handler.**
+Clicking a submenu row fired the **parent** surface's `onMouseDownOutside`
+(`outsideParent=1`) and did **not** fire the submenu's own (`outsideSub=0`). The
+shipped containment branch is therefore necessary, not dead code.
+
+**The outside payload carries coordinates.** `event.x`/`event.y` were present on
+`mouseDownOutside` (`coords=yes`), so `insideSurface`'s bounds test is
+computable. With it, the submenu stayed open through the press and the row
+activated (`subClicks=1`); removing it closed the submenu on the press and the
+row never activated (`subClicks=0`, `last=sub-outside`).
+
+**A row-derived `<anchored position>` is exact inside the layer that owns the
+row**: the submenu's `x` was the More row's right edge + 4 px and its `y` the
+row's `y`, both within 1 px (expected 179, measured 179; the M3 mutation from
+the row's left edge measured 5).
+
+**`<anchored side align>` positions against its parent, not the trigger.** A raw
+`<anchored side="bottom" align="start">` beside a trigger at `x=8` painted at
+`x=0` (the parent's edge). A component that wants trigger-relative placement
+must either wrap the trigger and layer in an element whose box is the trigger's,
+or compute `<anchored position>` from `getElementBounds` — the submenu's route.
+(`FloatingLayer`'s `side`/`align` are a higher-level helper and were not
+re-measured here.)
+
+Two-direction proofs (file restored after each run):
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | `dismissTop` consumes the claim but ignores the result | exit `1`, *one Escape left the parent open*: got `parent=0 … last=parent-escape` |
+| M2 | `Arr.last` → `Arr.head` in `dismissTop` | exit `1`, *the press inside the submenu activated its row*: got `subClicks=0`, `last=parent-outside` |
+| M3 | position the submenu at the row's left edge | exit `1`, *the submenu starts at the row's right edge plus the gap*: expected `179 ± 1`, got `5` |
+| M4 | `insideSub` returns `false` (no containment) | exit `1`, *the press inside the submenu activated its row*: got `subClicks=0`, `last=sub-outside` |
+
+**Action for `@gpuixui/components`.** Replace `dismiss-layer.ts`'s
+`WeakSet<EventPayload>` with the field claim already implemented in
+`event-claim.ts` (or a single shared claim module used by both). Until then, a
+submenu inside a menu — or a popover inside a dialog — closes its parent on the
+same Escape. The identity assumption is the only broken link; the containment
+branch in `menu/sub.tsx` and the field claim itself are both measured working.
+
+## 10. Acceptance criteria
 
 - `--only nested-layer-dismiss` exits `0`; the full suite is 55/55.
-- §8 (below) records with numbers: the payload-identity verdict, the
+- §9 records with numbers: the payload-identity verdict, the
   one-Escape-one-layer verdict, whether the outer layer sees a press inside the
   inner layer, whether the outside payload carries coordinates, the submenu's
   placement error, and each mutation's failing check.
 - `COMPONENTS.md`, `TODO.md` and the playground README are updated, with a
-  cross-team task only if the verdict contradicts `dismiss-layer.ts` or
-  `event-claim.ts`.
+  cross-team task for `@gpuixui/components` because §9 contradicts
+  `dismiss-layer.ts`.

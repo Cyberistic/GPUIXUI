@@ -50,6 +50,7 @@ export const CAPABILITIES = [
   "chart",
   "toast",
   "grid",
+  "layers",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);

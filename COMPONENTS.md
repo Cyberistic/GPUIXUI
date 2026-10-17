@@ -61,8 +61,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | chart | `chart-svg` | verified |
 | toast | `toast-lifecycle` | verified |
 | grid | `grid-wide-table` | verified |
+| layers | `nested-layer-dismiss` | verified |
 
-The suite is **54/54 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **55/55 green here** (exit `0`, `.artifacts/smoke-report.json`).
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -118,6 +119,24 @@ entirely. `onMotionComplete` fires once per tween. The recipe: keep the body
 mounted under an `overflow: "hidden"` motion container, measure the content
 div, animate the container's height, and re-measure on open and on a width
 change (a fixed-height probe cannot measure text rewrap while collapsed).
+
+`nested-layer-dismiss` is the runtime verdict for the overlay **dismiss stack**,
+and it contradicts the shipped implementation. One key event reaches a nested
+layer and its enclosing layer with **a separate payload copy each**
+(`keyHandlers=2`, `keyObjects=2`), so `internal/dismiss-layer.ts`'s
+`WeakSet<EventPayload>` cannot dedupe: one Escape closed **both** layers
+(measured, `last=parent-escape`). The field claim in `internal/event-claim.ts`
+is the correct model — with it, one Escape closes the submenu
+(`last=sub-escape`, parent still open) and the second closes the parent. A press
+inside the submenu **does** fire the parent surface's `onMouseDownOutside`
+(`outsideParent=1`) and not the submenu's own (`outsideSub=0`), and the payload
+carries `x`/`y`, so `menu/sub.tsx`'s bounds containment is load-bearing: with it
+the row activates (`subClicks=1`), without it the submenu closes on the press and
+the row never activates. A row-derived `<anchored position>` is exact inside the
+parent layer (±1 px); a raw `<anchored side align>` anchors to the **parent's**
+box, not the trigger's. Two identical outside presses in one synchronous tick
+are indistinguishable (the claim's microtask reset needs a task boundary); a real
+second click has one.
 
 `roving-focus` measures the keyboard model a menu, tab strip, radio group or
 data grid needs. `renderer.focusElement` focuses a row that was never clicked,
@@ -559,8 +578,8 @@ in-package and an end-to-end native verdict.
 | Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. Focus entry, the Tab trap and focus return are measured natively by `modal-focus-trap` (playground plan `155`). |
 | Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
 | Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. Focus in/out and “Escape closes only the popover” are measured natively (`modal-focus-trap`). Placement (`floating-placement`): `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is short by half the panel size** and `fit="snap"` clamps without flipping, so a near-bottom popover must choose `side="top"` itself. |
-| Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). **Menus open with `align="center"` must compensate for the half-panel offset, and a near-bottom menu must pick `side="top"`** — `fit="snap"` does not flip (`floating-placement`). |
-| Context menus | todo | ? | As Dropdown menus, triggered by a right click. **Measured (`context-menu-pointer`)**: a right click is `onAuxClick` + `isRightClick` — `auxClick` carries **no `button`** and `onClick` never fires for button 2, so guard on `isRightClick`; a child's right click bubbles to the trigger; `<anchored position={pointer}>` is exact, including inside a **scrolled** container (no offset, no clipping — an item below the viewport still paints and activates); outside press and Escape dismiss; `shift-f10` opens and Escape returns focus. One Escape dismisses one layer (`modal-focus-trap`). |
+| Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). **Menus open with `align="center"` must compensate for the half-panel offset, and a near-bottom menu must pick `side="top"`** — `fit="snap"` does not flip (`floating-placement`). **Nested layers (`nested-layer-dismiss`, plan `187`):** one key event reaches a submenu and its menu as **separate payload objects**, so a dismiss stack keyed on `EventPayload` identity closes **both** on one Escape; key the stack on the event's fields (the `event-claim.ts` model) and one Escape closes one layer. A press inside the submenu fires the parent's `onMouseDownOutside` with `x`/`y`, so containment by `getElementBounds` is required and sufficient. |
+| Context menus | todo | ? | As Dropdown menus, triggered by a right click. **Measured (`context-menu-pointer`)**: a right click is `onAuxClick` + `isRightClick` — `auxClick` carries **no `button`** and `onClick` never fires for button 2, so guard on `isRightClick`; a child's right click bubbles to the trigger; `<anchored position={pointer}>` is exact, including inside a **scrolled** container (no offset, no clipping — an item below the viewport still paints and activates); outside press and Escape dismiss; `shift-f10` opens and Escape returns focus. One Escape dismisses one layer (`modal-focus-trap`). **`nested-layer-dismiss` (plan `187`):** that "one Escape" needs a field-keyed claim — payload identity is not preserved across handlers. A press inside a nested layer still reaches the outer `onMouseDownOutside`. |
 | Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
 | Tabs | todo | partial (probe) | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. **Overflow (`tab-strip-overflow`, plan `173`):** `overflowX: "scroll"` pans, `deltaX` is the axis a trackpad sends (a vertical wheel leaves a horizontal-only strip at the same `x`), and a child outside the viewport **keeps painted bounds**, so hit-test against the viewport rather than trusting the node's existence. `scrollIntoView` reveals the active tab and saturates at the end, but a near-end reveal stops at `x = -5` rather than `0` — a strip clamps the last pixel. **Keyboard (`tab-strip-focus`, plan `174`):** a clipped tab **is** a native tab stop, and focus does **not** reveal it in a plain scroller (`x` stayed `0`), so the roving tabindex model is required — only the active tab may be a stop, and the strip reveals on every focus it moves. One `focusNext` then leaves the strip; End/Home move selection, native focus and reveal together. |
 | Accordions | todo | partial (probe) | `div` + `motion` (height). **Measured (`collapsible-height`, plan `186`):** `motion.div` interpolates `height` exactly under the paused clock, `ref` + `renderer.getElementBounds` measures the content at **first layout even while the body is clipped to `height: 0`** (`mounted=140`), and a body kept mounted under `overflow: "hidden"` refuses a collapsed child's click with no extra pointer guard while keeping its draft across collapse/re-open. The trigger is an AccessKit `Button` whose `aria-expanded` follows the section. There is **no `onLayout`**; re-measure on open and on a width change. |

@@ -23,7 +23,8 @@ command surface probe (`command-palette`), the tabbed-pane probe
 shortcut probe (`window-key-shortcut`), the chart probe (`chart-svg`), the
 markdown probe
 (`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the
-collapsible-height probe (`collapsible-height`), the shell
+collapsible-height probe (`collapsible-height`), the nested-layer probe
+(`nested-layer-dismiss`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -63,7 +64,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (54/54 green); -> 2 on a host with no binding
+# -> 0 here (55/55 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -628,12 +629,31 @@ re-measure on open and on a width change — a fixed-height probe cannot measure
 text rewrap while collapsed. The remaining limitation is the motion wrapper's
 missing `testId`/`role`/`aria-*` (plan `157`).
 
+## Nested layers (plan `187`)
+
+`nested-layer-dismiss` measures the event model behind the shipped dismiss
+stack. It nests two `<anchored>` layers in one React subtree — the shape a
+submenu uses, unlike `modal-focus-trap`'s sibling layers.
+
+| Fact | Measured |
+| ---- | -------- |
+| payload identity | one `x` reaches the inner and the enclosing `onKeyDown` (`keyHandlers=2`) as **two distinct objects** (`keyObjects=2`). The `WeakSet<EventPayload>` model is false; the field claim is right |
+| the identity stack | written exactly as `dismiss-layer.ts` writes it, one Escape closed **both** layers (`last=parent-escape`). With the field claim, one Escape closes the submenu (`sub=0`, `parent=1`, `last=sub-escape`) and the second closes the parent |
+| the descendant press | clicking a submenu row fires the **parent** surface's `onMouseDownOutside` (`outsideParent=1`) and not the submenu's own (`outsideSub=0`) |
+| outside coordinates | `event.x`/`event.y` are present (`coords=yes`), so containment against `getElementBounds` is computable. With it the row activates (`subClicks=1`); without it the submenu closes on the press (`subClicks=0`) |
+| placement | a row-derived `<anchored position>` is exact inside the parent layer (right edge + 4 px, same `y`, ±1 px). A raw `<anchored side align>` anchors to the **parent's** box, not the trigger's |
+| the tick boundary | two identical outside presses in one synchronous tick are indistinguishable (the claim's microtask reset needs a task boundary); a real second click has one, and `Effect.yieldNow` models it |
+
+The action for `@gpuixui/components`: `dismiss-layer.ts` must use the field claim
+`event-claim.ts` already implements. The submenu's containment branch is correct
+as shipped.
+
 ## Evidence on this host
 
-The suite is **54/54 green** here (`exit 0`):
+The suite is **55/55 green** here (`exit 0`):
 
 ```
-54/54 scenarios passed · capabilities: layout=verified text=verified
+55/55 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -642,6 +662,7 @@ theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified
 selection=verified menu=verified components=verified search=verified
 terminal=verified chart=verified toast=verified grid=verified
+layers=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -765,9 +786,9 @@ narrower. Each deviation is deliberate and measured:
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
   probe, the terminal-grid probe, the chart probe, the markdown probe, the
-  toast-viewport probe, the shell probe, the pinned-grid probe and the
-  collapsible-height probe pass in real
-  GPUix 0.10.0 on this host (54/54), with a written report and screenshots.
+  toast-viewport probe, the shell probe, the pinned-grid probe, the
+  collapsible-height probe and the nested-layer probe pass in real
+  GPUix 0.10.0 on this host (55/55), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
