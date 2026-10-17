@@ -152,19 +152,39 @@ const statusTextWashPairs: readonly ContrastPair[] = statusTextTones.flatMap(
 );
 
 /**
+ * The surfaces default body text (`foreground`) is painted on: the canvas and
+ * the card, the quiet panel an avatar's fallback initials sit on, the floating
+ * surface a date picker's month header sits on, and the hover and pressed
+ * washes a ghost row paints. `foreground` is the default `Text` tone on every
+ * `Surface` tone in `primitives`, so the panel and the popover are compositions
+ * the API invites, not accidents.
+ */
+const bodyTextSurfaces = [
+  "background",
+  "card",
+  "muted",
+  "popover",
+  "hover",
+  "active",
+] as const;
+
+const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
+  (background): ContrastPair => ["foreground", background, "body"],
+);
+
+/**
  * Every documented pair — text, status, surface and divider — including
  * secondary text and status text on the state washes, brand-toned text on the
- * plain surfaces and washes a link paints, the focus ring on every surface a
- * focused control can sit on, status text on a floating surface, the functional
- * control
+ * plain surfaces and washes a link paints, default body text on the quiet panel
+ * and the floating surface, the focus ring on every surface a focused control
+ * can sit on, status text on a floating surface, the functional control
  * boundary on a floating surface, a quiet panel and the state washes, the soft
  * status surfaces and the loading skeleton a canvas must distinguish, and the
  * decorative dividers that must stay visible, including on the fills a bordered
  * control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
-  ["foreground", "background", "body"],
-  ["foreground", "card", "body"],
+  ...bodyTextPairs,
   ["cardForeground", "card", "body"],
   ["popoverForeground", "popover", "body"],
   ["mutedForeground", "muted", "secondary"],
@@ -172,8 +192,6 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["mutedForeground", "card", "secondary"],
   ["mutedForeground", "popover", "secondary"],
   ["inputForeground", "input", "body"],
-  ["foreground", "hover", "body"],
-  ["foreground", "active", "body"],
   ...ringPairs,
   ["secondaryForeground", "secondary", "secondary"],
   ["primaryForeground", "primary", "secondary"],

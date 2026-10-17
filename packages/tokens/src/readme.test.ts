@@ -77,6 +77,12 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states where default body text is checked", () => {
+    expect(readme).toContain(
+      "Default body text is checked on the canvas, card, the `muted` panel, `popover` and the `hover`/`active` washes",
+    );
+  });
+
   it("states the skeleton floor the checker enforces", () => {
     expect(readme).toContain(
       `the soft status surfaces and the loading skeleton at ${contrastFloors.default.surface}:1 against \`background\`, \`card\` and \`popover\``,

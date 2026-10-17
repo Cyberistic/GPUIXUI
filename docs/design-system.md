@@ -266,7 +266,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
-| body text on background/card/popover/input | 7:1 | 7:1 |
+| body text on `background`/`card`/`muted`/`popover`/`input` and the `hover`/`active` washes | 7:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |

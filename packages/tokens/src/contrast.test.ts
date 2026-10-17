@@ -55,6 +55,11 @@
  * on the plain surfaces and the three state washes, and a completeness suite
  * fails when a colour role is neither measured by a pair nor on the stated
  * exemption list.
+ *
+ * Plan 088 closes the surface gap the role-level guard cannot see: default body
+ * text (`foreground`) is painted on the quiet panel an avatar's fallback
+ * initials sit on and the floating surface a date picker's month header sits
+ * on, but only the canvas, card and two washes were measured.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -268,7 +273,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(103);
+    expect(contrastPairs.length).toBe(105);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);

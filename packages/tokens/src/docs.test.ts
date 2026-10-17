@@ -513,6 +513,12 @@ describe("docs/tokens.md contrast surfaces", () => {
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
+  it("states where default body text is measured", () => {
+    const sentence =
+      "Default body text is measured on `background`, `card`, the `muted` panel, `popover` and the `hover`/`active` washes. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. Both clear the body floor with margin in every shipped set, so no value moves; the pairs exist so an edited theme cannot break them silently.";
+    expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
+  });
+
   it("names every surface the surface pairs are held against", () => {
     const surfacePairs = contrastPairs.filter(
       ([, , pairClass]) => pairClass === "surface",
@@ -630,7 +636,7 @@ describe("docs/design-system.md", () => {
 
   it("states the floors the contrast checker enforces", () => {
     const rows = [
-      `| body text on background/card/popover/input | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\` and the \`hover\`/\`active\` washes | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
@@ -645,6 +651,27 @@ describe("docs/design-system.md", () => {
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
+    });
+  });
+
+  it("names every surface default body text is measured on", () => {
+    const surfaces = contrastPairs
+      .filter(
+        ([foreground, , pairClass]) =>
+          foreground === "foreground" && pairClass === "body",
+      )
+      .map(([, background]) => background);
+
+    expect(surfaces).toEqual([
+      "background",
+      "card",
+      "muted",
+      "popover",
+      "hover",
+      "active",
+    ]);
+    surfaces.forEach((surface) => {
+      expect(designSystem.includes(`\`${surface}\``), surface).toBe(true);
     });
   });
 

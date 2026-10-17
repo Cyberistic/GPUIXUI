@@ -1068,6 +1068,13 @@ row measured 2.52:1 on macOS light and 2.62:1 on the identity, 2.80–2.81 in th
 dark identity and 4.15:1 at high-contrast dark, so plan `084` moved five
 boundary values one step. Palette edits must keep it green.
 
+Default body text is measured on `background`, `card`, the `muted` panel,
+`popover` and the `hover`/`active` washes. The panel and the floating surface are
+not academic: an avatar's fallback initials sit on `muted`, and a date picker's
+month header sits on its `popover`. Both clear the body floor with margin in
+every shipped set, so no value moves; the pairs exist so an edited theme cannot
+break them silently.
+
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and
 editing `colors.shadow` retints all three levels. Before plan `085` each level

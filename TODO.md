@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 55/73
+`[x]` `[████████░░]` 56/74
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -290,6 +290,10 @@ that is neither measured nor argued (plan 086)
 identity light measured 4.06:1 and identity dark 3.49:1 on a pressed row, and
 seven shipped sets failed — and guard the wash's own perceivability so the fix
 cannot erase the highlight; seven secondary greys move one step (plan 087)
+`[x]` Hold default body text to the body floor on the quiet panel and the
+floating surface — an avatar fallback's initials on `muted` and a date picker's
+month header on `popover` painted with no pair behind them, which the role-level
+completeness guard cannot see (plan 088)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now

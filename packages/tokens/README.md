@@ -184,7 +184,11 @@ invisible to satisfy a text floor. High-contrast dark shipped at 6.48:1 on `hove
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
 `active`, until plan 081 darkened the three wash bases. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
-washes, so a ring that vanishes on a selected row is caught. Secondary text is
+washes, so a ring that vanishes on a selected row is caught. Default body text
+is checked on the canvas, card, the `muted` panel, `popover` and the
+`hover`/`active` washes, so an avatar's initials on the quiet panel and a date
+picker's month header on its floating surface are held to the body floor.
+Secondary text is
 checked on `hover`, `active`, `accent` and `selected` too, so a row description
 stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
 until plan 079. Status text is checked on the same four washes, so a status dot
