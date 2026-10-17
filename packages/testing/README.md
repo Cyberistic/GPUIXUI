@@ -110,7 +110,9 @@ A verb that throws becomes `SmokeHostError` (`verb` names the call) and is
 recorded as an `errored` check — never a silent pass and never a failed
 assertion. `waitFor(testId)` waits until an element exists, which a live runner
 needs because the protocol has no frame boundary: input returns after a tick
-while React commits on a later frame.
+while React commits on a later frame. `bounds` is the exception to the throwing
+rule: a `testId` that matches nothing is `null` (the interface's absent value),
+so a scenario can assert that a removed surface is really gone (plan `192`).
 
 ## Development
 

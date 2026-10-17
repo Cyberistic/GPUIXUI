@@ -19,6 +19,7 @@ import { App } from "../app.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { inputScenario } from "../scenarios/input.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
+import { motionScenario } from "../scenarios/motion.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { primitivesActionsScenario } from "../scenarios/primitives.js";
 import { scrollScenario } from "../scenarios/scroll.js";
@@ -102,6 +103,28 @@ const walkFocus = (ctx: LiveContext, key: string, times: number) =>
 /** The selection as a string, treating `null` as empty. */
 const selectionText = (value: string | null): string =>
   Option.getOrElse(Option.fromNullishOr(value), () => "");
+
+/** The painted left edge of `testId`, or a failure naming the missing id. */
+const leftOf = (ctx: LiveContext, testId: string) =>
+  Effect.gen(function* () {
+    const bounds = yield* ctx.host.bounds(testId);
+    const box = yield* ctx.expectSome(
+      `${testId} is painted`,
+      Option.fromNullishOr(bounds),
+    );
+    return box.x;
+  });
+
+/** The painted width of `testId`, or a failure naming the missing id. */
+const widthOf = (ctx: LiveContext, testId: string) =>
+  Effect.gen(function* () {
+    const bounds = yield* ctx.host.bounds(testId);
+    const box = yield* ctx.expectSome(
+      `${testId} is painted`,
+      Option.fromNullishOr(bounds),
+    );
+    return box.width;
+  });
 
 /** Drag-selects `from` through `to` and returns the selection. */
 const select = (ctx: LiveContext, from: string, to: string) =>
@@ -508,6 +531,118 @@ const selection: LiveScenario = {
     }),
 };
 
+const motion: LiveScenario = {
+  id: "live-motion",
+  title: "Live motion: the paused clock, a mid-tween frame and an exit",
+  capability: "motion",
+  view: motionScenario.view,
+  ready: "motion-toggle",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.pauseMotion();
+      const expanded = yield* leftOf(ctx, "motion-content");
+      yield* ctx.expectNear(
+        "the expanded inner pane is 240 px",
+        yield* widthOf(ctx, "motion-inner"),
+        240,
+        1,
+      );
+
+      yield* ctx.host.click("motion-toggle");
+      yield* settle;
+      yield* ctx.host.fastForwardMotion(80);
+      yield* settle;
+      yield* ctx.expectNear(
+        "the content moved 96 px at 80 ms",
+        expanded - (yield* leftOf(ctx, "motion-content")),
+        96,
+        4,
+      );
+      yield* ctx.expectNear(
+        "the inner pane does not reflow mid-collapse",
+        yield* widthOf(ctx, "motion-inner"),
+        240,
+        1,
+      );
+      yield* ctx.expectContains(
+        "no completion fires mid-tween",
+        yield* textOf(ctx, "motion-readout"),
+        "complete=0",
+      );
+
+      yield* ctx.host.fastForwardMotion(200);
+      yield* settle;
+      yield* ctx.expectNear(
+        "the content reached the collapsed edge",
+        expanded - (yield* leftOf(ctx, "motion-content")),
+        240,
+        1,
+      );
+      yield* ctx.expectContains(
+        "onMotionComplete fires once",
+        yield* textOf(ctx, "motion-readout"),
+        "complete=1",
+      );
+
+      yield* ctx.host.click("motion-toggle");
+      yield* settle;
+      yield* ctx.host.fastForwardMotion(80);
+      yield* settle;
+      yield* ctx.expectNear(
+        "the content moved 96 px into the expand",
+        expanded - (yield* leftOf(ctx, "motion-content")),
+        144,
+        4,
+      );
+      yield* ctx.host.fastForwardMotion(200);
+      yield* settle;
+      yield* ctx.expectNear(
+        "the content returned to the expanded edge",
+        yield* leftOf(ctx, "motion-content"),
+        expanded,
+        1,
+      );
+      yield* ctx.expectContains(
+        "the second tween completes once",
+        yield* textOf(ctx, "motion-readout"),
+        "complete=2",
+      );
+
+      yield* ctx.host.click("motion-show-toast");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the toast mounts",
+        yield* textOf(ctx, "motion-toast-label"),
+        "saved",
+      );
+      yield* ctx.host.click("motion-hide-toast");
+      yield* settle;
+      const retained = yield* ctx.host.bounds("motion-toast-label");
+      yield* ctx.expectEqual(
+        "the toast stays painted while exiting",
+        Option.isSome(Option.fromNullishOr(retained)),
+        true,
+      );
+
+      yield* ctx.host.fastForwardMotion(200);
+      yield* settle;
+      const removed = yield* ctx.host.bounds("motion-toast-label");
+      yield* ctx.expectEqual(
+        "the toast is removed after the exit",
+        Option.isNone(Option.fromNullishOr(removed)),
+        true,
+      );
+      const exited = yield* textOf(ctx, "motion-readout");
+      yield* ctx.expectEqual(
+        "the exit completed at least once",
+        Str.includes("exited=0")(exited),
+        false,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${motion.id}.png`);
+    }),
+};
+
 const docking: LiveScenario = {
   id: "live-docking",
   title: "Live docking: a tab drag splits a pane in a real window",
@@ -654,6 +789,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   input,
   scroll,
   panel,
+  motion,
   overlay,
   focus,
   selection,

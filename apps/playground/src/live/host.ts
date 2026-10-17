@@ -65,7 +65,16 @@ export const createHost = (
     verb("paintedText", () =>
       app.call("getPaintedText", {}).then((result) => result.text),
     ),
-  bounds: (testId) => verb(`bounds ${testId}`, () => at(app, testId).bounds()),
+  bounds: (testId) =>
+    Effect.gen(function* () {
+      const nodes = yield* verb(`bounds ${testId}`, () =>
+        at(app, testId).all(),
+      );
+      return yield* Option.match(Arr.head(nodes), {
+        onNone: () => Effect.succeed(null),
+        onSome: () => verb(`bounds ${testId}`, () => at(app, testId).bounds()),
+      });
+    }),
   focused: () =>
     Effect.gen(function* () {
       const id = yield* Effect.try({

@@ -670,6 +670,7 @@ live pass is citable evidence rather than a second log format.
 | `live-input` | a click focuses the field, `h i` reaches `onChange` (`value=hi`), and `Enter` reaches `onSubmit` (`submits=1`) |
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
+| `live-motion` | the paused clock collapses a 240 px sidebar exactly: 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and a leaving toast stays painted until the exit settles — 25 checks. **`onExitComplete` fires twice live for one exit**; treat it as idempotent |
 | `live-overlay` | the modal trigger opens a painted 280 × 236 surface centred in the window, and Escape closes it (`open=false last=escape`) |
 | `live-focus` | focus enters the modal (`modal-content`), Tab and Shift-Tab walk `a → b → open-popover → close` and wrap back to the content, Escape returns focus to the trigger, and a nested popover's Escape closes only the popover and returns focus to its opener — 18 checks |
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
@@ -705,8 +706,12 @@ focus story: the component owns traversal (`focusNextWithin`) and the live host
 owns the renderer, so `live-focus` reads `getFocusedElementId` and maps it
 through the automation tree. Focus entry, the modal Tab/Shift-Tab trap, focus
 return and a nested popover's Escape are measured in the window; `live-selection`
-does the same for copy with a real pointer drag. Style, a11y, list anchors and
-highlights remain `TestRenderer`-only.
+does the same for copy with a real pointer drag. `live-motion` proves the live
+clock controls a tween and that a removed surface's `bounds` becomes `null`, but
+`onExitComplete` fires **twice** there for one exit, so the exit check asserts
+removal (and that at least one completion fired), and the docs rule is that the
+handler must be idempotent. Style, a11y, list anchors and highlights remain
+`TestRenderer`-only.
 
 ## Text entry (plan `188`)
 
@@ -875,11 +880,11 @@ narrower. Each deviation is deliberate and measured:
   toast-viewport probe, the shell probe, the pinned-grid probe, the
   collapsible-height probe and the nested-layer probe pass in real
   GPUix 0.10.0 on this host (56/56), with a written report and screenshots.
-  The **real-window** suite (`smoke:live`) is 10/10 — layout, input, scroll,
-  panel, overlay, **focus**, **selection**, docking, the shipped primitives and
-  a virtual table — including the modal's Tab/Shift-Tab trap and focus return
-  (plan `190`) and a real pointer drag-select with `userSelect: none` exclusion
-  (plan `191`).
+  The **real-window** suite (`smoke:live`) is 11/11 — layout, input, scroll,
+  panel, **motion**, overlay, **focus**, **selection**, docking, the shipped
+  primitives and a virtual table — including the modal's Tab/Shift-Tab trap and
+  focus return (plan `190`), a real pointer drag-select with `userSelect: none`
+  exclusion (plan `191`), and a paused-clock mid-tween frame (plan `192`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
