@@ -9,6 +9,9 @@ catalogs:
     '@effect/platform-node':
       specifier: 4.0.5
       version: 4.0.5
+    '@effect/vitest':
+      specifier: 4.0.5
+      version: 4.0.5
     '@gpuix/react':
       specifier: 0.10.0
       version: 0.10.0
@@ -53,6 +56,49 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+
+  apps/playground:
+    dependencies:
+      '@gpuix/native':
+        specifier: 0.10.0
+        version: 0.10.0
+      '@gpuix/react':
+        specifier: 0.10.0
+        version: 0.10.0(react@19.3.1)
+      '@gpuixui/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
+      '@gpuixui/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.5
+      react:
+        specifier: ^19.2.0
+        version: 19.3.1
+    devDependencies:
+      '@effect/platform-node':
+        specifier: 'catalog:'
+        version: 4.0.5(effect@4.0.5)(redis@6.3.0)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)))
+      '@gpuixui/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/node':
+        specifier: ^26.1.1
+        version: 26.6.5
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.3.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5))
 
   examples/basic-app:
     dependencies:
@@ -160,6 +206,28 @@ importers:
       react:
         specifier: 'catalog:'
         version: 19.3.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5))
+
+  packages/testing:
+    dependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.5
+    devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)))
+      '@gpuixui/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^26.1.1
+        version: 26.6.5
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -398,6 +466,12 @@ packages:
     resolution: {integrity: sha512-TGlU65ZJJMa81I7EoicQXxhRsJDxDPz6A/PNOPzMYRgmCdLs6EsTTXIkKZ+8apb7pl2o0OKVcrT6i6mGlluyLg==}
     peerDependencies:
       effect: ^4.0.5
+
+  '@effect/vitest@4.0.5':
+    resolution: {integrity: sha512-q64paZ/i4V2NiRhTyqCmT2KiDbFjlxc2EZrZca8GGt+Nf8844946HyJM5bPk/q+YeRkFSxIrlCs+J+LSfky/wA==}
+    peerDependencies:
+      effect: ^4.0.5
+      vitest: '>=5.0.0 <6.0.0'
 
   '@electric-sql/pglite-socket@0.0.20':
     resolution: {integrity: sha512-J5nLGsicnD9wJHnno9r+DGxfcZWh+YJMCe0q/aCgtG6XOm9Z7fKeite8IZSNXgZeGltSigM9U/vAWZQWdgcSFg==}
@@ -2327,6 +2401,11 @@ snapshots:
   '@effect/sql-sqlite-do@4.0.5(effect@4.0.5)':
     dependencies:
       effect: 4.0.5
+
+  '@effect/vitest@4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)))':
+    dependencies:
+      effect: 4.0.5
+      vitest: 5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5))
 
   '@electric-sql/pglite-socket@0.0.20(@electric-sql/pglite@0.3.15)':
     dependencies:

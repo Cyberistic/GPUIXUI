@@ -29,5 +29,15 @@ workspaces/
 
 # OS / editor
 .DS_Store
+
+# Agent scratch under .agents/slop (tooling, downloaded tarballs, extracted
+# reference packages). Agent state, never repository content.
+.agents/slop/scratch/
+.agents/slop/rd/
+
+# The read-only reference clone is a local symlink, not repository content.
+references
+
+# Tooling backups
 *.bak-*
 *.bak

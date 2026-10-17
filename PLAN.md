@@ -75,23 +75,31 @@ unmet.
 | D16 | `RadioGroup` takes its options **as data**, not compound children | The group owns the roving index and the arrow contract; a compound API moves that logic into a context each child reads — strictly more code for the same behaviour. Recorded as a deviation from shadcn's shape in `COMPONENTS.md` | 2026-10-17 |
 | D17 | `primitives` imports **`@gpuixui/tokens` directly**; the `PrimitiveTheme` port, the local focus-ring geometry and the first-shadow helper are deleted | Tokens is the single source of truth for values and for the two runtime-shaped helpers (`focusRing`, `elevationShadow`); keeping a structural copy let the two drift silently. `Theme` is structurally the shape the components already render, so the migration is a type re-export plus two helper calls (plan 021) | 2026-10-17 |
 | D18 | The remaining inventory rows — **Slider, Range slider, Meter, Number Field, OTP Field, Toggle, Rating** — belong to `packages/primitives` | Each is a single-purpose value/input/selection primitive built from `div`/`<input>` plus our own keyboard and pointer contract, which is the definition of this package; `packages/components` composes Tier 2 surfaces. Claimed in plan 053 (value controls, shipped) and plan 054 (fields/toggle/rating) so the inventory has one owner per row | 2026-10-17 |
+| D19 | Plan numbers follow the block table in `.agents/slop/plans/README.md` | The playground branch proposed per-workstream number ranges; the merged index kept explicit blocks (`010–019` tokens, `020–049` primitives/icons/Phase C, `050–099` free, `100–199` packages/apps/smoke, `200–299` reference adoption, `400–499` docs), which is what plans 053–055 use | 2026-10-17 |
+| D20 | The native smoke suite reports **exit 2 "unverified"** when the host has no GPUix binding; no capability is `verified` without a report | The swarm's machine is an Intel Mac, which GPUix does not publish a 0.10 binding for. Faking or skipping the run would poison every `done` row — `.agents/adr/0001-native-smoke-host.md` | 2026-10-17 |
+| D21 | GPUix's wasm browser build is **not** native evidence; it is a docs-embedding candidate for the docs-site workstream to evaluate separately | It is a real GPUix renderer but a browser canvas; MISSION forbids implying a browser preview is native | 2026-10-17 |
+| D22 | The library and playground target `@gpuix/react@0.10.0` + `@gpuix/native@0.10.0`; a separate, labelled `legacy-probe` runs `0.5.1` (the last `darwin-x64` release) to measure the underlying primitives on this host | 0.5.1 runs here but never delivers focus/blur events, so a component library cannot paint focus states on it; 0.10.0 has the API and cannot run here — both facts are recorded with evidence in `.agents/adr/0002-two-gpuix-versions.md` | 2026-10-17 |
+| D23 | **The `darwin-x64` 0.10.0 binding is built from source** with `gpui_macos/runtime_shaders` (the `xcrun metal` build step is optional), so the native smoke suite runs **on this host** — 11/11 green, exit `0`. `verified 0.10.0` is therefore a valid component-status basis | Closes blocker B1: `gpui_apple/build.rs` compiles the shaders at runtime through the OS Metal compiler when the feature is on, so only Rust + Command Line Tools are needed. Provenance (same version/source, different shader path) is recorded; a CI run with the published binary is the gold standard. `.agents/adr/0003-darwin-x64-source-build.md`, plan `140` | 2026-10-17 |
+| D24 | The theme gallery asserts the **runtime's own style report** (`SmokeHost.paintedStyle`, schema-decoded at the adapter) and is the docs' native evidence source for the token layer; screenshots are artifacts, never assertions | A screenshot diff cannot say *which token* painted a pixel, and is brittle across GPU/theme changes. `TestElement.style` reports the authored value verbatim (including 8-digit `#RRGGBBAA` and `boxShadow`), so a token that never reached the renderer fails by name. Plan `150`; `theme-color-roles` (148 checks) and `theme-type-and-shadow` (30) | 2026-10-17 |
 
 ## 5. Open questions
 
 Tracked here until an ADR answers them. Each plan that resolves one moves the
 answer into §4 or an ADR.
 
-- Which GPUix primitives actually exist for layout, input, focus, overlays and
-  panels? — **answered** by `.agents/slop/plans/020-gpuix-runtime-capability.md`
-  §1; the §1.5 list of what GPUix already ships decides reuse vs. reimplement.
+- ~~Which GPUix primitives actually exist for layout, input, focus, overlays and
+  panels?~~ **Answered by measurement** (plan `140` §4, this host, 0.10.0):
+  layout, text, input, focus/blur, overlays, wheel scroll, panel resizing,
+  virtual-list painting, tables and workspace tabs are all supported. The
+  surprises that changed plans: focus/blur **do** work (they never did on
+  0.5.1); `autoFocus` sets native focus without dispatching `onFocus`; a
+  synthetic `"tab"` keystroke does not itself traverse in the `TestRenderer`
+  (`focusNext` does); wheel `deltaY` is negative to scroll down; a
+  `<virtual-list>` retains every row but paints only a window; an `<anchored>`
+  paints no surface of its own, so overlay handlers go on the content div.
 - Can a GPUix rendering surface be embedded in the Fumadocs site, or is the
-  companion playground the only honest preview? — still open. Note for the
-  docs-site workstream: `@gpuix/native@0.10.0` ships a wasm renderer, so a
-  *real* GPUix surface in the browser is plausible; a demo of a native desktop
-  component inside a docs page is where the honest line has to be drawn.
-- What is the original package name and branding identity? — **still open**, and
-  now blocking nothing but release metadata. `@gpuixui/*` remains the working
-  scope (D4).
-- Which verification path discharges D10? — wasm in headless Chrome (playground
-  workstream), or a GUI session / `darwin-x64` source build (human decision).
-  Tracked in `TODO.md` Phase A.
+  companion playground the only honest preview? (Phase A/B.) — GPUix ships a
+  **wasm browser build** (`@gpuix/native/wasm`), so strategy 1 may be real; it
+  is not the native runtime and needs its own evaluation by the docs-site
+  workstream.
+- What is the original package name and branding identity? (Phase A.)
