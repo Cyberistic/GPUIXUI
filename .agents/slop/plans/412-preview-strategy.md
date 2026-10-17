@@ -111,10 +111,17 @@ apps/docs/src/components/preview/
 ├── playground-screen.tsx     # <PlaygroundScreen screen> — run instructions block
 ├── approximation-banner.tsx  # the mandatory "illustrative, not GPUix" banner
 ├── preview-unavailable.tsx   # <PreviewUnavailable reason> — tier X, with evidence link
-├── component-source.tsx      # <ComponentSource path> — copyable real source
 └── preview.test.tsx          # proves the label rules hold
 apps/docs/public/screenshots/<slug>/*.png      # written by the playground capture script
 ```
+
+**Deviation (plan 414):** `component-source.tsx` is **not** implemented. Copyable
+real source uses Fumadocs' built-in `<include>` tag instead: `remarkInclude` is
+applied to every page by `fumadocs-mdx` by default, reads the real file at build
+time and emits the same highlighted, copyable code block the site's prose blocks
+use. A custom component would have reimplemented that and pulled the file text
+into the client bundle. The convention, its evidence and the test that guards it
+are in [`414-copyable-component-source.md`](./414-copyable-component-source.md).
 
 `<NativePreview slug>` reads the component's registry record and the presence of
 screenshots to pick the highest honest tier, then renders it; a record with
