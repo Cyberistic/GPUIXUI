@@ -168,7 +168,7 @@ reproducible with `apps/playground/dist/smoke/run.js` after the build in §5.
 **Suite**
 
 ```
-11/11 scenarios passed · capabilities: layout=verified text=verified
+12/12 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified scroll=verified panel=verified
 virtual-list=verified table=verified workspace=verified
 ```
@@ -191,7 +191,7 @@ this section)
 | panel | pointer-capture divider drag + inclusive clamp verified |
 | virtual-list | children mode **retains every row** (5 000) but GPUI **paints only ~9** — `getPaintedText()`, not the retained count, is the window. The element has no own bounds (`getElementBounds` is `null`). `onVisibleRange` fires **on scroll**; its first event reports the *pre-scroll* range, so the window moving is asserted on the painted rows |
 | table | row click, sort, `onKeyDown` down/up, wheel scroll and column drag all verified. A row scrolled out of a `overflow:"scroll"` parent is laid out beyond the window, so a click at its bounds **misses** — select a visible row |
-| workspace | tab click, tab drag between panes and split resize verified. **Pointer capture needs `onMouseMove`**: a `mouseUp` after the pointer left the pressed element only reaches it when the element also declares `onMouseMove` (the drop is therefore decided during the move) |
+| workspace | tab click, tab drag between panes and split resize verified. **Pointer capture needs `onMouseMove`**: a `mouseUp` after the pointer left the pressed element only reaches it when the element also declares `onMouseMove` (the drop is therefore decided during the move). The **app-level window key handler** is the one input path the element scenarios do not cover: GPUix delivers window keys only through `render({ onKeyDown })` (the `TestRenderer`'s `createTestRoot({ onKeyDown })`), after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette / application-menu mechanism (scenario `window-key-shortcut`) |
 
 ## 5. Steps
 

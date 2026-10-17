@@ -34,13 +34,15 @@ here. It is not the published binary's shader path (ADR 0003), so a row names
 its provenance; the CI task in `TODO.md` is the gold-standard confirmation with
 the published binary.
 
-The suite is **11/11 green here** (exit `0`). What it settled, and what changed
+The suite is **12/12 green here** (exit `0`). What it settled, and what changed
 the plans: focus/blur events **do** work on 0.10.0 (they never did on 0.5.1);
 synthetic wheel scrolling **does** work (`deltaY` negative scrolls down, the
 opposite of the DOM); a `<virtual-list>` **retains** every row but **paints** a
 window (~9 of 5 000); an `<anchored>` paints no surface of its own, so overlay
 handlers belong on the content div; `autoFocus` takes native focus without
-dispatching `onFocus`.
+dispatching `onFocus`; and the app-level window key handler
+(`render({ onKeyDown })`) receives a keystroke after the focused element's
+`onKeyDown` — the command-palette / application-menu path.
 
 ## Tier 1 — foundational
 
@@ -128,8 +130,8 @@ dispatching `onFocus`.
 | Workspace layouts | todo | docs (composition) | |
 | Persistent panel state | todo | docs (no storage primitive; app boundary owns it) | |
 | Keyboard navigation | todo | verified 0.10.0 (focus + `focusNext`/`focusPrevious`) | `onFocus`/`onBlur` fire; a synthetic `"tab"` keystroke reaches `onKeyDown` but does not itself traverse in the `TestRenderer` |
-| Command palette | todo | docs (Dialog + `<input>` + `<virtual-list>`; window key handler) | |
-| Application menus | todo | docs | |
+| Command palette | todo | verified 0.10.0 (window key handler + overlay + input + virtual-list) | app-level `render({ onKeyDown })` verified (scenario `window-key-shortcut`) |
+| Application menus | todo | docs (app-level window key handler verified 0.10.0) | |
 | Status bars | todo | verified 0.10.0 (layout) | |
 | Toolbars | todo | verified 0.10.0 (layout) | |
 | Breadcrumb navigation | todo | docs | |

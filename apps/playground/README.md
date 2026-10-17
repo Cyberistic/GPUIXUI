@@ -13,8 +13,9 @@ three jobs:
 The **registry is the single source of truth**: `src/scenarios/index.ts` is both
 the sidebar and the smoke list, so a scenario cannot exist in one and not the
 other. Each scenario is one capability, one view, one `steps` effect: the eight
-core capabilities plus three Tier 3/4 probes (`table-select-sort`,
-`table-column-resize`, `workspace-tab-drag`).
+core capabilities, three Tier 3/4 probes (`table-select-sort`,
+`table-column-resize`, `workspace-tab-drag`) and the app-level shortcut probe
+(`window-key-shortcut`).
 
 ## Run it
 
@@ -85,10 +86,10 @@ an Apple Silicon CI runner is the gold standard, tracked in `TODO.md`.
 
 ## Evidence on this host
 
-The suite is **11/11 green** here (`exit 0`):
+The suite is **12/12 green** here (`exit 0`):
 
 ```
-11/11 scenarios passed · capabilities: layout=verified text=verified
+12/12 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified scroll=verified panel=verified
 virtual-list=verified table=verified workspace=verified
 ```
@@ -104,6 +105,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
 | table, workspace | row click/sort/keyboard, column drag; tab drag between panes, split resize |
+| window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
 (`./legacy-probe/run.sh probe`); they never set a component status.
@@ -120,6 +122,7 @@ src/panels/resize.ts     pure resize math (nextSize, clamped)
 src/panels/split-pane.tsx the pointer-captured divider
 src/scenarios/*.tsx      one view + one steps effect per capability
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
+src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
 ```
@@ -148,8 +151,9 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The eight core capabilities and three Tier 3/4 probes pass in real GPUix
-  0.10.0 on this host, with a written report and screenshots.
+- The eight core capabilities, three Tier 3/4 probes and the app-level shortcut
+  probe pass in real GPUix 0.10.0 on this host (12/12), with a written report and
+  screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,

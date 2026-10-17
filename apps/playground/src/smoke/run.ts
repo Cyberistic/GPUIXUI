@@ -25,9 +25,12 @@ import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Report, Runtime, Smoke } from "@gpuixui/testing";
+import type { EventPayload } from "@gpuix/native";
 import type { ReactNode } from "react";
 import type { PlaygroundScenario } from "../types.js";
 import { createNativeHost } from "./host.js";
+import { withWindowKeyProvider } from "../window-key.js";
+import type { WindowKeyHandler } from "../window-key.js";
 import { scenarios, selectScenarios } from "../scenarios/index.js";
 
 /** The process exit code: 0 passed, 1 failed, 2 unverified. */
@@ -185,12 +188,14 @@ const mount =
       readonly renderer: { captureScreenshot: (path: string) => void };
     },
     path: Path.Path,
+    registerWindowKey: (handler: Option.Option<WindowKeyHandler>) => void,
   ) =>
   (scenario: Smoke.SmokeScenario): Effect.Effect<void> => {
     const render = Effect.sync(() =>
       Option.match(viewOf(scenarios, scenario), {
         onNone: () => {},
-        onSome: (view) => root.render(view()),
+        onSome: (view) =>
+          root.render(withWindowKeyProvider(registerWindowKey, view())),
       }),
     );
     return flags.screenshots
@@ -245,7 +250,27 @@ export const program = (
       );
     }
 
-    const root = testing.createTestRoot({ width: 1280, height: 800 });
+    // The app-level window key handler: GPUix delivers window keys only through
+    // `render({ onKeyDown })`, so the CLI is the "app" that owns it and forwards
+    // to whatever the mounted scenario registered (`useWindowKey`).
+    const windowKey: { current: Option.Option<WindowKeyHandler> } = {
+      current: Option.none(),
+    };
+    const registerWindowKey = (
+      handler: Option.Option<WindowKeyHandler>,
+    ): void => {
+      windowKey.current = handler;
+    };
+
+    const root = testing.createTestRoot({
+      width: 1280,
+      height: 800,
+      onKeyDown: (event: EventPayload) =>
+        Option.match(windowKey.current, {
+          onNone: () => {},
+          onSome: (handler) => handler(event),
+        }),
+    });
     const host = createNativeHost(root.renderer);
     const selected = selectScenarios(scenarios, flags.only);
     const startedAt = yield* Clock.currentTimeMillis;
@@ -254,7 +279,7 @@ export const program = (
       host,
       selected,
       { host: hostLabel(), startedAt },
-      mount(flags, root, path),
+      mount(flags, root, path, registerWindowKey),
     );
 
     yield* fileSystem.writeFileString(

@@ -22,6 +22,7 @@ import { panelScenario } from "./panel.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
+import { shortcutScenario } from "./shortcuts.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -51,6 +52,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tableSelectSortScenario,
   tableColumnResizeScenario,
   workspaceScenario,
+  shortcutScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);
