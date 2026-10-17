@@ -33,6 +33,11 @@ describe("built-in themes", () => {
     expect(lightTheme.mode).toBe("light");
     expect(darkTheme.mode).toBe("dark");
   });
+
+  it("declares the floor set it is designed against", () => {
+    expect(lightTheme.contrast).toBe("default");
+    expect(darkTheme.contrast).toBe("default");
+  });
 });
 
 describe("high-contrast themes", () => {
@@ -47,6 +52,11 @@ describe("high-contrast themes", () => {
   it("keeps the light/dark mode of its canvas", () => {
     expect(highContrastLightTheme.mode).toBe("light");
     expect(highContrastDarkTheme.mode).toBe("dark");
+  });
+
+  it("declares the high-contrast floors", () => {
+    expect(highContrastLightTheme.contrast).toBe("high");
+    expect(highContrastDarkTheme.contrast).toBe("high");
   });
 
   it("is named so a preview can label it", () => {
@@ -153,6 +163,14 @@ describe("extendTheme", () => {
   it("never changes the mode of the base theme", () => {
     expect(extendTheme(darkTheme, { name: "Still dark" }).mode).toBe("dark");
     expect(extendTheme(lightTheme, { name: "Still light" }).mode).toBe("light");
+  });
+
+  it("keeps the base contrast level unless one is declared", () => {
+    const accessible = extendTheme(highContrastLightTheme, {
+      colors: { primary: "#123456" },
+    });
+    expect(accessible.contrast).toBe("high");
+    expect(extendTheme(lightTheme, { contrast: "high" }).contrast).toBe("high");
   });
 });
 

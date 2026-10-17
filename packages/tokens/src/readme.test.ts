@@ -61,6 +61,15 @@ describe("packages/tokens/README.md", () => {
     expect(readme).toContain(`all ${textRoles.length} typographic roles`);
   });
 
+  it("states that a theme records the floor set it is designed against", () => {
+    expect(readme).toContain(
+      "The `Theme` records the floor set it is designed against",
+    );
+    expect(readme).toContain(
+      "`themeContrastFailures(theme, contrast = theme.contrast)`",
+    );
+  });
+
   it("lists every motion level, including the zero one", () => {
     const levelNames = Object.entries(motion)
       .filter(([, value]) => typeof value === "number")

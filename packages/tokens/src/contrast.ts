@@ -172,20 +172,21 @@ const selectionSurfaces = ["background", "card"] as const;
 
 /**
  * Every documented pair a theme misses, including the selection wash measured
- * over `background` and `card`. An empty array is the library's guarantee; a
- * consumer test asserts exactly that:
+ * over `background` and `card`. The level defaults to the one the theme
+ * declares, so a high-contrast theme is checked against its own floors. An
+ * empty array is the library's guarantee; a consumer test asserts exactly that:
  *
  * @example
  * ```ts
  * import { getTheme, themeContrastFailures } from "@gpuixui/tokens";
  *
  * themeContrastFailures(getTheme("dark")); // []
- * themeContrastFailures(brandTheme, "high"); // the pairs to fix
+ * themeContrastFailures(getTheme("dark"), "high"); // the same theme at AAA
  * ```
  */
 export function themeContrastFailures(
   theme: Theme,
-  contrast: ThemeContrast = "default",
+  contrast: ThemeContrast = theme.contrast,
 ): ReadonlyArray<ContrastFailure> {
   const floors = contrastFloors[contrast];
   const pairFailures: ReadonlyArray<ContrastFailure> = contrastPairs.flatMap(

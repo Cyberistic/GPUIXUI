@@ -179,13 +179,14 @@ describe("applyPlatformStyle", () => {
     expect(themed.radius.md).toBe(platformStyles.win32.structure.radius?.md);
   });
 
-  it("keeps a high-contrast base's colours when told the contrast", () => {
+  it("keeps a high-contrast base's colours from the base's declaration", () => {
     const themed = applyPlatformStyle(
       highContrastLightTheme,
       platformStyles.linux,
-      "high",
     );
     expect(themed.colors).toEqual(highContrastLightTheme.colors);
+    expect(themed.contrast).toBe("high");
+    expect(themeContrastFailures(themed)).toEqual([]);
     expect(themed.radius.lg).toBe(platformStyles.linux.structure.radius?.lg);
     expect(themed.typography.mono).toBe("DejaVu Sans Mono");
   });

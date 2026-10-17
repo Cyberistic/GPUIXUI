@@ -24,7 +24,12 @@ import {
   type Theme,
   type ThemeContrast,
 } from "./index.js";
-import { quietBrandFailures, quietBrandTheme } from "./contrast.example.js";
+import {
+  quietBrandFailures,
+  quietBrandTheme,
+  quietHighContrastFailures,
+  quietHighContrastTheme,
+} from "./contrast.example.js";
 
 describe("contrastRatio", () => {
   it("returns the WCAG extremes", () => {
@@ -77,10 +82,26 @@ const shipped: ReadonlyArray<readonly [string, Theme, ThemeContrast]> = [
 ];
 
 describe("themeContrastFailures", () => {
-  it("passes every shipped theme at its own contrast level", () => {
+  it("passes every shipped theme at the level it declares", () => {
     shipped.forEach(([label, theme, contrast]) => {
-      expect(themeContrastFailures(theme, contrast), label).toEqual([]);
+      expect(theme.contrast, label).toBe(contrast);
+      expect(themeContrastFailures(theme), label).toEqual([]);
     });
+  });
+
+  it("reads the level a theme declares, not a laxer default", () => {
+    // `#6B6B6B` is 5.33:1 on the AAA canvas (under 7:1) but 4.76:1 on the AAA
+    // muted surface, so only the declared high-contrast floors catch it.
+    expect(quietHighContrastFailures).toHaveLength(4);
+    expect(
+      quietHighContrastFailures.every(
+        ({ foreground, floor }) =>
+          foreground === "mutedForeground" && floor === 7,
+      ),
+    ).toBe(true);
+    expect(themeContrastFailures(quietHighContrastTheme, "default")).toEqual(
+      [],
+    );
   });
 
   it("names every pair a brand theme misses, and only those", () => {

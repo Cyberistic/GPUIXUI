@@ -322,6 +322,29 @@ describe("docs/tokens.md contrast contract", () => {
   });
 });
 
+describe("docs/tokens.md theme contract", () => {
+  const themeApiBlock =
+    /## Theme API\n+```ts\n([\s\S]*?)```/.exec(markdown)?.[1] ?? "";
+
+  const documentedFields = themeApiBlock.split("\n").flatMap((line) => {
+    const field = /^ {2}([A-Za-z]+):/.exec(line)?.[1];
+    return field === undefined ? [] : [field];
+  });
+
+  it("documents every Theme field in the interface's order", () => {
+    expect(documentedFields).toEqual(Object.keys(themes.light));
+  });
+
+  it("states the argument the checks default to", () => {
+    [
+      "`themeContrastFailures(theme, contrast = theme.contrast)`",
+      "`applyPlatformStyle(base, style, contrast = base.contrast)`",
+    ].forEach((signature) => {
+      expect(markdown.includes(signature), signature).toBe(true);
+    });
+  });
+});
+
 describe("docs/design-system.md", () => {
   it("states the identity's body, label and control metrics", () => {
     const sentence = `${typography.body.fontSize}px body text, ${typography.label.fontSize}px labels, ${defaultDensity.controlHeight.md}px default controls`;

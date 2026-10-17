@@ -43,6 +43,11 @@ export interface Theme {
   readonly name: string;
   /** The mode this theme was built for. Never changed by an override. */
   readonly mode: ThemeMode;
+  /**
+   * The floor set this theme is designed against. `extendTheme` keeps the base
+   * level unless one is declared; `themeContrastFailures` checks it.
+   */
+  readonly contrast: ThemeContrast;
   /** Semantic colour roles. */
   readonly colors: ThemeColors;
   /** Font families and type roles. */
@@ -91,6 +96,11 @@ export interface TypographyOverrides {
 export interface ThemeOverrides {
   /** Override the theme name. */
   readonly name?: string;
+  /**
+   * Declare the floor set the result is designed against. A claim, not a
+   * measurement: `themeContrastFailures(theme)` checks it.
+   */
+  readonly contrast?: ThemeContrast;
   /** Override individual semantic colour roles. */
   readonly colors?: Partial<ThemeColors>;
   /** Override font families or text roles. */
@@ -186,6 +196,7 @@ const mergeDensity = (
 export const lightTheme: Theme = {
   name: "Light",
   mode: "light",
+  contrast: "default",
   colors: lightColors,
   typography,
   spacing,
@@ -202,6 +213,7 @@ export const lightTheme: Theme = {
 export const darkTheme: Theme = {
   name: "Dark",
   mode: "dark",
+  contrast: "default",
   colors: darkColors,
   typography,
   spacing,
@@ -235,6 +247,7 @@ export const isThemeContrast = (value: unknown): value is ThemeContrast =>
 export const highContrastLightTheme: Theme = {
   name: "High contrast light",
   mode: "light",
+  contrast: "high",
   colors: highContrastLightColors,
   typography,
   spacing,
@@ -251,6 +264,7 @@ export const highContrastLightTheme: Theme = {
 export const highContrastDarkTheme: Theme = {
   name: "High contrast dark",
   mode: "dark",
+  contrast: "high",
   colors: highContrastDarkColors,
   typography,
   spacing,
@@ -300,6 +314,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
   return {
     name: overrides.name ?? base.name,
     mode: base.mode,
+    contrast: overrides.contrast ?? base.contrast,
     colors: { ...base.colors, ...overrides.colors },
     typography: mergeTypography(base.typography, overrides.typography),
     spacing: { ...base.spacing, ...overrides.spacing },
@@ -357,10 +372,11 @@ const platformOverrides = (
 /**
  * Apply any platform style — shipped or copied and edited — to a base theme.
  *
- * Pass the base's contrast level. At `"high"` only the families and shape are
- * applied and the base's high-contrast colours are kept, because a platform
- * accent must not drop the AAA floors. The result is a normal {@link Theme}, so
- * it composes through {@link extendTheme} like any other.
+ * The contrast level defaults to the one the base declares, so applying a
+ * copied style to a high-contrast theme keeps the AAA palette. At `"high"` only
+ * the families and shape are applied, because a platform accent must not drop
+ * those floors. The result is a normal {@link Theme}, so it composes through
+ * {@link extendTheme} like any other.
  *
  * @example
  * ```ts
@@ -372,7 +388,7 @@ const platformOverrides = (
 export function applyPlatformStyle(
   base: Theme,
   style: PlatformStyle,
-  contrast: ThemeContrast = "default",
+  contrast: ThemeContrast = base.contrast,
 ): Theme {
   return extendTheme(base, platformOverrides(base, style, contrast));
 }
@@ -400,5 +416,5 @@ export function getPlatformTheme(
   const base = getTheme(mode, contrast);
   return platform === "default"
     ? base
-    : applyPlatformStyle(base, platformStyles[platform], contrast);
+    : applyPlatformStyle(base, platformStyles[platform]);
 }
