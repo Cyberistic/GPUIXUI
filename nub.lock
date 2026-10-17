@@ -106,6 +106,10 @@ importers:
         version: 7.0.2
 
   packages/icons:
+    dependencies:
+      '@gpuixui/tokens':
+        specifier: workspace:*
+        version: link:../tokens
     devDependencies:
       '@gpuix/react':
         specifier: 'catalog:'
