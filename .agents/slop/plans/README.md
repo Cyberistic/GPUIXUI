@@ -96,6 +96,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [097](./097-filled-control-states.md) | Designed hover and pressed roles for every filled control | F | 011, 014, 055, 063, 071, 080, 084 | done |
 | [098](./098-brand-theme-truth.md) | The documented brand theme must pass the contract it teaches | F | 011, 013, 055, 071, 082, 097 | done |
 | [099](./099-modal-scrim-perceivability.md) | The modal scrim must be perceivable on every surface it covers | F | 013, 071, 073, 076, 086, 087, 094 | done |
+| [300](./300-soft-status-quiet-panel.md) | The soft status surface on the quiet panel | F | 014, 063, 071, 076, 090, 094 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -509,6 +510,20 @@ four base surfaces (`background`, `card`, `muted`, `popover`) at the `surface`
 floor, `overlay` leaves the exemption list, and the AAA dark theme veils with
 light (`#FFFFFF26`) because a dark veil cannot darken black. The other nine
 scrims keep their exact pixels.
+
+300 closes plan 076's defect one surface over. The soft status tints were held to
+1.05:1 on `background`, `card` and `popover`, but not on the quiet `muted` panel
+a sidebar or settings group paints — the fourth base surface, which
+`packages/primitives` exposes as a `Surface` tone. The platform light variants
+change `muted` (macOS `#ECECF0`, Linux `#EBEBEA`, Windows `#EDEDED`) while
+inheriting the pastel tints, so a status badge in a sidebar measured **1.023:1**
+on Linux, 1.036:1 on macOS and 1.043:1 on Windows, under the library's own floor.
+`muted` joins the soft-surface pairs (129 → 133) and the four light tints move one
+small step deeper — `#DEE9FF` → `#D6E3FF`, `#C2F4D6` → `#B8EDCE`, `#FFE3A3` →
+`#FFDF9A`, `#FFE0E0` → `#FFD6D6` — clearing the darkest quiet panel at
+1.081–1.111 while keeping the soft text (≥9.87:1) and edge (≥1.096:1) floors. A
+soft chip inside a hovered or selected row is deliberately not a fill pair: it is
+bounded by its designed `xSoftBorder` edge, unlike a full Alert panel.
 
 ### Reference adoption (block `200–299`)
 
