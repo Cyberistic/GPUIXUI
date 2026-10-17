@@ -556,8 +556,7 @@ export const numberStepperColumnStyle = (theme: PrimitiveTheme): StyleDesc => ({
   flexShrink: 0,
 });
 
-/**
- * One step button.
+/** One step button.
  *
  * It is a pointer affordance, not a tab stop: the input's own arrow keys are the
  * keyboard path, so a number field does not add two stops to the tab order.
@@ -580,3 +579,37 @@ export const numberStepperStyle = (
   }
   return style;
 };
+
+// ── Rating ───────────────────────────────────────────────────────────
+
+export interface RatingStarSpec {
+  readonly size: ControlSize;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly focused?: boolean;
+}
+
+/** One star's hit area: the icon plus a hairline of padding for the ring. */
+export const ratingStarStyle = (
+  spec: RatingStarSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const interactive = spec.disabled !== true && spec.readOnly !== true;
+  const style: StyleDesc = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: theme.spacing["2xs"],
+    borderRadius: theme.radius.full,
+    cursor: interactive ? "pointer" : "not-allowed",
+  };
+  if (spec.disabled === true) style.opacity = 0.5;
+  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  return style;
+};
+
+/** A filled star takes the brand role; an empty one the muted text role. */
+export const ratingStarColor = (
+  filled: boolean,
+  theme: PrimitiveTheme,
+): string => (filled ? theme.colors.primary : theme.colors.mutedForeground);

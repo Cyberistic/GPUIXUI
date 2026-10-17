@@ -33,6 +33,8 @@ export {
 } from "./number.js";
 export type { NumberRange } from "./number.js";
 
+export { clampRating, decideRating, ratingTabStop } from "./rating.js";
+
 export {
   clampValue,
   decideValueKey,
@@ -110,6 +112,8 @@ export {
   progressFillStyle,
   progressPercent,
   progressTrackStyle,
+  ratingStarColor,
+  ratingStarStyle,
   PROGRESS_TONES,
   ruleStyle,
   scrollStyle,
@@ -129,6 +133,7 @@ export type {
   ControlVariant,
   ProgressSpec,
   ProgressTone,
+  RatingStarSpec,
   RuleSpec,
   ScrollSpec,
   SliderSpec,

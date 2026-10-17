@@ -55,6 +55,9 @@ export type { RadioGroupProps, RadioOption } from "./RadioGroup.js";
 export { Progress } from "./Progress.js";
 export type { ProgressProps } from "./Progress.js";
 
+export { Rating, ratingMax } from "./Rating.js";
+export type { RatingProps } from "./Rating.js";
+
 export { RangeSlider, Slider, sliderRange, sliderValueText } from "./Slider.js";
 export type { RangeSliderProps, SliderProps } from "./Slider.js";
 
