@@ -162,7 +162,28 @@ Two-direction proofs:
   import. Report the error; the search route already does the same thing and is
   the reference.
 
-## 8. Acceptance criteria
+## 8. Implementation record (2026-10-17)
+
+Landed on `agent/docs-site`.
+
+- `src/lib/site.ts` exports `SITE_URL` and `absoluteUrl`; `siteUrl` from the
+  plan draft was dropped as a duplicate of `absoluteUrl`.
+- Two-direction proofs: reverting the canonical to `meta.url` fails
+  `page-meta.test.ts`; returning only the fixed entries from `sitemapEntries`
+  fails the completeness test (0 entries for every page).
+- Dev-server verification (port 3000):
+  `/sitemap.xml` → 200, `application/xml; charset=utf-8`, 16 `<url>` entries
+  (`/`, `/docs`, 14 other pages); `/robots.txt` → 200 with
+  `Sitemap: https://docs.gpuixui.dev/sitemap.xml`;
+  `/docs/installation` carries
+  `<link rel="canonical" href="https://docs.gpuixui.dev/docs/installation">`
+  and the matching `og:url`.
+- A crawl of all 16 sitemap URLs plus every internal link returned 200; an
+  unknown `/docs/no-such-page` returned 404 with the custom not-found page.
+- Mobile check at 390×844: no horizontal overflow; the "Open Sidebar" control
+  opens the fixed backdrop + aside with 15 navigation links.
+
+## 9. Acceptance criteria
 
 - [ ] The canonical link and `og:url` on every docs page are absolute.
 - [ ] `/sitemap.xml` lists `/`, `/docs` and every content page exactly once,
