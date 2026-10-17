@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { exportedNames } from "../lib/source-exports";
-import { registryViolations } from "./contract";
+import { registryViolations, statusViolations } from "./contract";
 import { components } from "./registry";
 import { decodeComponentMeta } from "./schema";
 
@@ -45,6 +45,36 @@ const tierRows = (heading: string): readonly string[] => {
   });
 };
 
+/**
+ * The status word a `COMPONENTS.md` cell means in the registry vocabulary. The
+ * inventory's `todo` is the registry's `planned`; the two bracket words carry a
+ * reason in parentheses, so they match by prefix.
+ */
+const statusWord = (value: string): string | undefined => {
+  if (value === "todo") return "planned";
+  if (value.startsWith("blocked")) return "blocked";
+  if (value.startsWith("unsupported")) return "unsupported";
+  return ["planned", "wip", "done"].includes(value) ? value : undefined;
+};
+
+/** Title → status for one inventory tier table, keyed like the title test. */
+const inventoryStatuses = (heading: string): ReadonlyMap<string, string> => {
+  const section = componentsMarkdown
+    .split(`## ${heading}`)[1]
+    ?.split("\n## ")[0];
+  if (section === undefined) return new Map();
+  return new Map(
+    section.split("\n").flatMap((line) => {
+      const cells = line.split("|").map((cell) => cell.trim());
+      const name = cells[1];
+      const status = statusWord(cells[2] ?? "");
+      return name === undefined || status === undefined
+        ? []
+        : [[normalize(name), status] as const];
+    }),
+  );
+};
+
 describe("component registry", () => {
   it("decodes every entry through the schema", () => {
     const decoded = components.map((entry) => decodeComponentMeta(entry));
@@ -69,22 +99,23 @@ describe("component registry", () => {
   });
 
   it("keeps status and GPUix support coherent", () => {
-    const violations = components.flatMap((entry) => {
-      const problems: string[] = [];
-      if (entry.status === "done" && entry.gpuix !== "yes")
-        problems.push(`${entry.slug}: done requires gpuix "yes"`);
-      if (entry.status === "unsupported" && entry.gpuix !== "no")
-        problems.push(`${entry.slug}: unsupported requires gpuix "no"`);
-      if (entry.status === "unsupported" && entry.limitations.length === 0)
-        problems.push(`${entry.slug}: unsupported requires a limitation`);
-      if (
-        (entry.status === "wip" || entry.status === "done") &&
-        entry.sourcePath === null
-      )
-        problems.push(`${entry.slug}: ${entry.status} requires a sourcePath`);
-      return problems;
+    expect(statusViolations(components)).toEqual([]);
+  });
+
+  it("takes every status from its COMPONENTS.md row", () => {
+    const inventory = new Map([
+      ...inventoryStatuses("Tier 1 — foundational"),
+      ...inventoryStatuses("Tier 2 — composition and feedback"),
+    ]);
+    const mismatches = components.flatMap((entry) => {
+      const expected = inventory.get(normalize(entry.title));
+      return expected === undefined
+        ? [`${entry.slug}: no COMPONENTS.md row`]
+        : expected === entry.status
+          ? []
+          : [`${entry.slug}: inventory ${expected}, registry ${entry.status}`];
     });
-    expect(violations).toEqual([]);
+    expect(mismatches).toEqual([]);
   });
 
   it("orders entries by tier then group so grouping stays correct", () => {
@@ -249,5 +280,48 @@ describe("compound record contract", () => {
         isExported,
       ),
     ).toEqual([]);
+  });
+});
+
+/**
+ * The status rules behind the inventory agreement (plan 429). The inventory
+ * owns the status word; these fixtures prove the coherence check rejects a
+ * `done` row the repository cannot back.
+ */
+describe("status contract", () => {
+  const base: (typeof components)[number] = {
+    slug: "demo",
+    title: "Demo",
+    tier: "2",
+    group: "composition",
+    status: "done",
+    gpuix: "yes",
+    summary: "A demo record.",
+    packageName: "@gpuixui/components",
+    sourcePath: "packages/components/src/card.tsx",
+    parts: [],
+    pattern: "static",
+    persistence: null,
+    dependencies: [],
+    related: [],
+    playgroundScreen: null,
+    screenshots: [],
+    limitations: [],
+  };
+
+  it("accepts done with verified support and a source", () => {
+    expect(statusViolations([base])).toEqual([]);
+  });
+
+  it("rejects done without verified GPUix support", () => {
+    expect(statusViolations([{ ...base, gpuix: "unverified" }])).toEqual([
+      "demo: done requires verified GPUix support",
+    ]);
+  });
+
+  it("requires a limitation when done support is partial", () => {
+    expect(statusViolations([{ ...base, gpuix: "partial" }])).toEqual([
+      "demo: done with partial support needs a limitation",
+    ]);
   });
 });

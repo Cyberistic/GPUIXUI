@@ -71,9 +71,13 @@ runtime-mounted example. Copy their shape.
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
    `COMPONENTS.md` row exactly** — `registry.test.ts` proves the two agree.
    Start `status: "planned"`, `gpuix: "unverified"`; a delivered component moves
-   to `wip`/`done` only with a real `sourcePath`. The `planned`/`delivered`
-   helpers default `parts` to `[]`, `pattern` to `"static"` and `persistence` to
-   `null`; a compound or workspace record overrides them (plan 427).
+   to `wip`/`done` only with a real `sourcePath` and **the exact status word its
+   `COMPONENTS.md` row carries** — the same test parses the inventory table and
+   fails on any difference (plan 429). A `done` record with `gpuix: "partial"`
+   must carry at least one documented limitation; `done` never sits on
+   `unverified` support. The `planned`/`delivered` helpers default `parts` to
+   `[]`, `pattern` to `"static"` and `persistence` to `null`; a compound or
+   workspace record overrides them (plan 427).
 2. Add `content/docs/components/<slug>.mdx` using the template below, and add
    the slug to `content/docs/components/meta.json`. `registry.test.ts` asserts
    that sidebar equals `index` plus every non-planned slug, so a forgotten

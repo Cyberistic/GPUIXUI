@@ -77,10 +77,41 @@ export const missingPartSources = (
   );
 
 /**
+ * Status coherence for a record. The inventory (`COMPONENTS.md`) owns the
+ * status itself; this checks that a `done` row is credible (verified support,
+ * and a documented limitation when support is only partial) and that the other
+ * states carry the evidence they claim.
+ */
+export const statusViolations = (
+  records: readonly ComponentMetaInput[],
+): readonly string[] =>
+  records.flatMap((record) => [
+    ...(record.status === "done" &&
+    record.gpuix !== "yes" &&
+    record.gpuix !== "partial"
+      ? [`${record.slug}: done requires verified GPUix support`]
+      : []),
+    ...(record.status === "done" &&
+    record.gpuix === "partial" &&
+    record.limitations.length === 0
+      ? [`${record.slug}: done with partial support needs a limitation`]
+      : []),
+    ...(record.status === "unsupported" && record.gpuix !== "no"
+      ? [`${record.slug}: unsupported requires gpuix "no"`]
+      : []),
+    ...(record.status === "unsupported" && record.limitations.length === 0
+      ? [`${record.slug}: unsupported requires a limitation`]
+      : []),
+    ...((record.status === "wip" || record.status === "done") &&
+    record.sourcePath === null
+      ? [`${record.slug}: ${record.status} requires a sourcePath`]
+      : []),
+  ]);
+
+/**
  * Record-level rules that hold before a page is written. `isExported` is the
  * caller's index of real package exports, so this stays pure and testable.
- */
-export const registryViolations = (
+ */ export const registryViolations = (
   records: readonly ComponentMetaInput[],
   isExported: (packageName: string, name: string) => boolean,
 ): readonly string[] =>

@@ -61,15 +61,20 @@ const planned = (
 interface DeliveredOptions extends PlannedOptions {
   /** Repo-relative path to the shipped component. */
   readonly sourcePath: string;
+  /**
+   * The `COMPONENTS.md` status. `registry.test.ts` fails when the two disagree;
+   * Tier 1 is held at `wip` by the primitives rule, Tier 2 passed its gate.
+   */
+  readonly status?: "wip" | "done";
   /** The runtime gaps a reader must know before adopting it. */
   readonly limitations: readonly string[];
   readonly dependencies?: readonly string[];
 }
 
 /**
- * A component that exists in the repository. `wip`, not `done`: the docs page,
- * the props table and the source are real, while `done` waits on the published
- * GPUix binary (the primitives workstream's rule).
+ * A component that exists in the repository. The status mirrors its
+ * `COMPONENTS.md` row; the defaults keep a new record honest (`wip`) until the
+ * inventory says otherwise.
  */
 const delivered = (
   slug: string,
@@ -79,7 +84,7 @@ const delivered = (
   options: DeliveredOptions,
 ): ComponentMetaInput => ({
   ...planned(slug, title, tier, summary, options),
-  status: "wip",
+  status: options.status ?? "wip",
   sourcePath: options.sourcePath,
   dependencies: options.dependencies ?? [],
   limitations: options.limitations,
@@ -449,6 +454,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/card.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["list", "empty-state"],
       limitations: [
@@ -461,6 +467,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("badge", "Badges", "2", "A compact status or count label.", {
     gpuix: "yes",
     sourcePath: "packages/components/src/badge.tsx",
+    status: "done",
     dependencies: ["@gpuix/react/floating", "effect"],
     related: ["alert", "avatar"],
     limitations: [
@@ -476,6 +483,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/avatar.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["badge", "list"],
       limitations: [
@@ -493,6 +501,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/list.tsx",
+      status: "done",
       dependencies: [
         "@gpuix/react/floating",
         "effect",
@@ -522,6 +531,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/empty-state.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["card", "list"],
       limitations: [
@@ -539,6 +549,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/alert.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["toast", "badge"],
       limitations: [
@@ -556,6 +567,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/field.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Option"],
       related: ["alert", "toast"],
       limitations: [
@@ -573,6 +585,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/toast/provider.tsx",
+      status: "done",
       dependencies: [
         "effect",
         "effect/Fiber",
@@ -595,6 +608,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dialog.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["confirm-dialog", "popover"],
       limitations: [
@@ -612,6 +626,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/confirm-dialog.tsx",
+      status: "done",
       dependencies: ["dialog", "effect"],
       related: ["dialog", "alert"],
       limitations: [
@@ -629,6 +644,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/popover.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["dialog", "dropdown-menu"],
       limitations: [
@@ -646,6 +662,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dropdown-menu.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["context-menu", "command-menu"],
       limitations: [
@@ -663,6 +680,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/context-menu.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["dropdown-menu", "command-menu"],
       limitations: [
@@ -680,6 +698,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/command-menu.tsx",
+      status: "done",
       dependencies: [
         "dialog",
         "effect/Array",
@@ -697,6 +716,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("tabs", "Tabs", "2", "Switches between sibling views in place.", {
     gpuix: "partial",
     sourcePath: "packages/components/src/tabs.tsx",
+    status: "done",
     dependencies: [
       "@gpuix/react/floating",
       "effect",
@@ -718,6 +738,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/accordion.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Array", "effect/Option"],
       related: ["collapsible", "tabs"],
       limitations: [
@@ -735,6 +756,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/collapsible.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["accordion", "card"],
       limitations: [
@@ -752,6 +774,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/breadcrumb.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Array"],
       related: ["tabs", "pagination"],
       limitations: [
@@ -769,6 +792,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/pagination.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Array"],
       related: ["breadcrumb", "list"],
       limitations: [
@@ -786,6 +810,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/search-input.tsx",
+      status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["combobox", "inline-validation"],
       limitations: [
@@ -803,6 +828,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/combobox.tsx",
+      status: "done",
       dependencies: ["effect/Array", "effect/Option"],
       related: ["search-input", "list"],
       limitations: [
@@ -820,6 +846,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/date-picker.tsx",
+      status: "done",
       dependencies: [
         "effect",
         "effect/Array",

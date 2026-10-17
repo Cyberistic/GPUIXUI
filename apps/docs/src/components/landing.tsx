@@ -1,5 +1,5 @@
 import { Link } from "fumadocs-core/link";
-import { components, statusCounts } from "@/component-meta/registry";
+import { components } from "@/component-meta/registry";
 
 /**
  * The commands the landing page's quick start shows. `landing.test.tsx` keeps
@@ -13,7 +13,9 @@ export const QUICK_START = [
 
 /** The landing page body. Extracted from the route so it can be tested. */
 export function Landing() {
-  const counts = statusCounts();
+  const documented = components.filter(
+    (component) => component.status !== "planned",
+  ).length;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-20">
@@ -68,8 +70,8 @@ export function Landing() {
           <dd className="text-2xl font-semibold">{components.length}</dd>
         </div>
         <div>
-          <dt className="text-fd-muted-foreground">Implemented</dt>
-          <dd className="text-2xl font-semibold">{counts.get("done") ?? 0}</dd>
+          <dt className="text-fd-muted-foreground">Documented</dt>
+          <dd className="text-2xl font-semibold">{documented}</dd>
         </div>
       </dl>
     </main>

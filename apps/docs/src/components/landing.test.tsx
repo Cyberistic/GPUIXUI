@@ -56,4 +56,15 @@ describe("landing page", () => {
     expect(components.length).toBeGreaterThan(0);
     expect(html).toContain(`>${components.length}<`);
   });
+
+  it("counts components with a page, not just the ones the inventory calls done", () => {
+    const documented = components.filter(
+      (component) => component.status !== "planned",
+    );
+    expect(documented.length).toBeGreaterThan(0);
+    expect(documented.length).toBeLessThan(components.length);
+    expect(html).toContain("Documented");
+    expect(html).toContain(`>${documented.length}<`);
+    expect(html).not.toContain("Implemented</dt>");
+  });
 });

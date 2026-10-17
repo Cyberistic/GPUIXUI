@@ -136,6 +136,7 @@ pages, examples and prop types (plan `425`).
 | `426-prose-truth-and-examples.md` | Prose truth pass (layouts, examples, getting started, installation) and a drift guard | F | 410, 424; primitives 047; components 110–119 | implemented — `prose-truth.test.ts` failed on the stale pages first, then passed; 111 docs tests, type-check and build green |
 | `427-phase-d-docs-and-patterns.md` | Phase D docs: compound-component metadata/page template, Tier 3–4 pages, interaction previews and pattern pages | D/F | data-grid, docking; 410–412, 426 | partly implemented — Parts A–C contracts (schema, conditional template, part-source and interaction-preview guards) and Part D's first pattern page landed; Tier 3–4 pages await `packages/data-grid` and `packages/docking` |
 | `428-component-page-dependencies.md` | The `Dependencies` section every `MISSION.md` component page owes, derived from each entry file and guarded against drift | F | 410, 411, 422–426 | implemented — 42 records and pages, `dependencies.test.ts` re-derives from source |
+| `429-inventory-status-is-registry-status.md` | `COMPONENTS.md` owns status; the registry mirrors it and the landing page stops reporting "Implemented 0" | F | 411, 425; components 117 | implemented — status agreement test, 22 Tier 2 rows corrected |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

@@ -418,7 +418,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–426)
 
-`[x]` `[██████████]` 25/26
+`[x]` `[██████████]` 26/27
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -445,6 +445,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Prose truth pass over the non-component pages (plan 426) — `layouts`, `examples`, `getting-started` and `installation` now describe the landed packages and the real `basic-app`; `prose-truth.test.ts` fails on the old claims and guards future drift
 `[x]` First real pattern page (plan 427 Part D) — `patterns/settings-form.mdx` documents `examples/basic-app` with its real source, the verification table and `pattern-pages.test.ts`; Plans index and sidebar updated
 `[x]` Every component page states its dependencies (plan 428) — the list is derived from each record's real entry file, rendered by `<ComponentDependencies>`, and re-derived by `dependencies.test.ts`; all 42 pages carry the section
+`[x]` The inventory owns component status (plan 429) — the registry mirrors each `COMPONENTS.md` row (22 Tier 2 rows move to `done`), `registry.test.ts` parses the inventory and fails on drift, and the landing page counts **Documented** instead of reporting "Implemented 0"
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed
