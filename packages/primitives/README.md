@@ -120,6 +120,7 @@ none paints a literal and none scripts hover or press
 | no list height cap | the layer grows past the window and the options past the edge are unreachable | `Select` caps a long list to the free space on its side and scrolls it; rows keep their height, so the list scrolls instead of squashing (plan 068) |
 | a highlighted option outside a capped layer | the layer scrolls only with the wheel, and the item's `highlighted` state is the only signal the runtime gives | `Select` scrolls the newly highlighted option into view through the renderer's `scrollIntoView`, so the arrows keep the active option visible (plan 069) |
 | `aria-invalid` | absent | a failed validation is paint only; `invalid` marks the empty selection or field border and the app pairs it with an error `Text` |
+| a clamp that belongs to one element | the runtime keeps one shaped text layout per string, font and width for the whole window; `lineClamp` is applied to that layout but is **not** in the key, so the first copy of a string decides the clamp for every identical copy at that width (measured: a clamped copy followed by a plain one painted `36 / 36` px; the reverse painted `108 / 108` px) | `Text.clamp` is the element's own `maxHeight` (`clamp ×` the role's line height) plus `overflow: hidden`, which no cache can share. The trade is a hard cut with no ellipsis; `truncate` keeps the one-line ellipsis because the wrap mode *is* in the key (plan `082`) |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
