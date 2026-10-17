@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §2 (A12), `110` |
-| Status | planned |
+| Status | done — 10 rule + 8 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned parts: `TagInput`, `TagInputField`, `TagInputChip`); `COMPONENTS.md` → Tier 2 → Tag / token input; plan `205` A12 |
 
 This plan is self-contained. It adds `TagInput` at the Tier 2 bar.
@@ -148,3 +148,23 @@ fail. Ignore `max`: unit test 6 and native test 7 fail. Restore after each.
 - Nine native + nine unit tests, both themes, no literal colours.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18. Deviations from the plan, both measured:
+
+- **Controlled only.** The planned `defaultValue` was removed: in a compound API
+  where the caller renders the chips, an internal value the caller cannot read
+  would display nothing. `value` and `onValueChange` are required; the
+  uncontrolled test became "a caller that refuses a change keeps its list".
+- **No Backspace-on-empty removal.** The runtime's test renderer emits no
+  `keyDown` for `backspace` or `delete` on a focused `<input>` (probed with
+  `nativeSimulateKeyDown` for `escape`, `enter`, `tab`, `home`, `end`, arrows,
+  `backspace`, `delete` — only `escape`, `tab` and the arrows arrived as
+  keyDown). Rather than ship an untestable promise, removal is the chip control
+  and the limitation is recorded in the docs and the inventory row.
+- A typed comma arrives through `onChange` because there is no `preventDefault`,
+  so the field commits everything before the last comma and keeps the rest as the
+  draft. This also makes pasted lists work.
+- **Both directions:** dropping the duplicate and cap guards fails 3 rule tests
+  and 3 native tests (plus cascades). Restored: 10 rule + 8 native green.

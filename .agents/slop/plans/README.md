@@ -87,7 +87,7 @@ workstream declares in its own section below.
 | [311](./311-timeline.md) | Timeline: an event rail with derived last-item context | C | 200, 201, 205 | done — 6 native tests; both-direction proof |
 | [312](./312-countdown.md) | Countdown: a remaining-time display whose clock is the app's | C | 200, 201, 205 | done — 9 logic + 5 native tests |
 | [313](./313-inline-edit.md) | Inline edit: rename in place with a commit/cancel contract | C | 200, 201, 115 | done — 8 native tests; both-direction proof |
-| [314](./314-tag-input.md) | Tag / token input over a pure add/remove rule set | C | 200, 201, 205 | planned |
+| [314](./314-tag-input.md) | Tag / token input over a pure add/remove rule set | C | 200, 201, 205 | done — 10 rule + 8 native tests; both-direction proof |
 | [315](./315-carousel.md) | Carousel: discrete slide stepping (no transform in 0.10.0) | C | 200, 201, 205 | planned |
 | [316](./316-hotkey-recorder.md) | Hotkey recorder over the shared accelerator model | C | 200, 201, 310 | planned |
 | [317](./317-preview-card.md) | Preview card: hover/focus preview on the anchored layer | C | 200, 201, 112, 114 | planned |
