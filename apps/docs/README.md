@@ -16,7 +16,8 @@ Fumadocs + TanStack Start (SSR), built with Vite, Tailwind 4 and
 nub run --filter docs dev           # http://localhost:3000
 nub run --filter docs build         # SSR bundle + client assets
 nub run --filter docs check-types   # fumadocs-mdx generate + tsc --noEmit
-nub run --filter docs test          # registry + preview tests
+nub run --filter docs test          # registry, IA, search, theme and preview tests
+nub run check                       # repo gate: test quality, lint, format, types
 ```
 
 ## Layout
@@ -35,9 +36,15 @@ public/screenshots/          real native screenshots (plan 412)
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
    `COMPONENTS.md` row exactly** — `registry.test.ts` proves the two agree.
    Start `status: "planned"`, `gpuix: "unverified"`.
-2. Add `content/docs/components/<slug>.mdx` using the template below.
-3. Move the record out of `planned` only when the component is real; the test
-   then requires a `sourcePath` and a page file.
+2. Add `content/docs/components/<slug>.mdx` using the template below, and add
+   the slug to `content/docs/components/meta.json`. `registry.test.ts` asserts
+   that sidebar equals `index` plus every non-planned slug, so a forgotten
+   entry (or a component with no page) fails the suite.
+3. Move the record out of `planned` only when the component is real. The tests
+   then require a `sourcePath`, the page file, and the sidebar entry.
+4. When the playground has captured the component, add the PNGs under
+   `public/screenshots/<slug>/` **and** the `provenance.json` sidecar the capture
+   script writes. A screenshot without a sidecar is never rendered.
 
 ```mdx
 ---
@@ -75,8 +82,21 @@ Prop tables use `fumadocs-typescript`'s remark plugin: write
 and annotate the real props type with tsdoc (`@internal` hides a prop). The
 table is generated at build time from the component source, so it cannot drift.
 
+## Previews
+
+`<NativePreview slug>` picks the strongest honest tier from the record plus the
+capture sidecars (`src/components/preview/select-preview.ts`):
+
+- a listed screenshot **with** its `provenance.json` → the real capture (tier S);
+- otherwise a `playgroundScreen` → the run instructions (tier N);
+- otherwise the "not verified" notice (tier X).
+
+An approximation is never a fallback. The only way to render one is
+`<IllustrativeApproximation>`, which always renders the mandated banner.
+
 ## Honesty rules
 
 Every preview obeys `docs/preview-strategy.md`. This app must never import
 `@gpuixui/*` runtime code or `@gpuix/react` — it reads the real TypeScript
 *source* for prop tables and copyable snippets, and nothing else.
+`src/architecture.test.ts` enforces that boundary over `src/**`.
