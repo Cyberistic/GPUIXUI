@@ -79,6 +79,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [080](./080-control-edge-on-fills.md) | The control edge on the fills it paints | F | 014, 063, 071–079 | done |
 | [081](./081-selection-on-painted-surfaces.md) | The selection wash on the surfaces text is selected on | F | 063, 069, 071–080 | done |
 | [082](./082-primary-text-role.md) | The primary role as text | F | 014, 057, 063, 071–081 | done |
+| [083](./083-status-text-state-washes.md) | The status text on the state washes | F | 014, 057, 063, 071–082 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -297,6 +298,16 @@ fill-versus-text split plan 057 shipped for status families — measured on the 
 surfaces a link actually sits on (`background`, `card`, `popover`, `muted`,
 `hover`, `active`), so the pair list moves 74 → 80 and every platform style
 carries its own readable step in its own accent family.
+083 closes the same blind spot for the status roles: `xText` was measured only on
+`background`/`card`/`popover`, but a status label or indicator dot inside a list,
+table or menu row sits on the `hover`/`active`/`accent`/`selected` wash the row
+paints. Every light set had a warning label below the floor on a pressed row —
+macOS **4.22:1**, Linux 4.24:1, Windows 4.36:1 — and high-contrast light failed
+all four washes (5.83 on `active`, 6.70 on `accent`/`selected`, 6.92 on `hover`)
+under the 7:1 the design system states; Linux and Windows light `selected`
+cleared 4.5:1 by four hundredths. The four tones join the four washes (80 → 96
+pairs) and the two warning steps move one ramp step each (light `#8E5B00` →
+`#6B4500`, high-contrast light `#6B4500` → `#4B3100`), so no other role changes.
 
 ### Reference adoption (block `200–299`)
 
