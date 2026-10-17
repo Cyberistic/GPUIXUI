@@ -3,6 +3,10 @@
 - **Phase:** C (gate) and F (re-run)
 - **Workstream:** components · **Owns:** `packages/components/**`, Tier 2 rows of `COMPONENTS.md`
 - **Depends on:** 110–116
+- **Status:** done, 2026-10-17. `src/inventory.ts` collects 21 records;
+  `src/inventory.test.ts` checks files, rows, support and duplicates (and caught
+  six wrong support values on its first run); `src/behaviour/theme-matrix.test.tsx`
+  closes the both-theme gaps in 11 tests. Deviations in §11.
 
 A component is not done because it renders. This plan defines the gate every
 Tier 2 component passes, and the automated check that keeps the inventory honest.
@@ -282,9 +286,35 @@ statuses into `COMPONENTS.md`. Honesty over completeness:
 
 ## 10. Acceptance criteria
 
-- [ ] Every Tier 2 component passes §1.
-- [ ] `inventory.test.ts` passes and would fail if a `done` row lost its test.
-- [ ] Both-theme assertions exist for every row in §4.
-- [ ] Full gate green, with the command output recorded.
-- [ ] `COMPONENTS.md` Tier 2 section is accurate, including what is not done.
-- [ ] Playground smoke recorded as a TODO for its owner.
+- [x] Every Tier 2 component passes §1.
+- [x] `inventory.test.ts` passes and would fail if a `done` row lost its test.
+- [x] Both-theme assertions exist for every row in §4.
+- [x] Full gate green, with the command output recorded.
+- [x] `COMPONENTS.md` Tier 2 section is accurate, including what is not done.
+- [x] Playground smoke recorded as a TODO for its owner.
+
+## 11. Deviations, recorded during implementation (2026-10-17)
+
+1. **`testFile` is the native behaviour suite**, checked to exist and to live
+   under `src/behaviour/` with a `.test.tsx` suffix. A second co-located
+   `src/<file>.test.tsx` requirement would duplicate the same signal: the pure
+   logic suites (`accordion/logic.test.ts`, …) are per module, not per component.
+2. **A Tier 2 row with status `todo` needs no record.** The date picker is the
+   only such row; creating a record would force fake docs/example/test paths that
+   §3.1 would then fail. Every non-`todo` row must have a record and every record
+   must have a row.
+3. **The both-theme matrix lives in one new suite.** Components whose behaviour
+   suites already asserted both themes keep those assertions; the 11 missing ones
+   are collected in `src/behaviour/theme-matrix.test.tsx` so a gap is visible in
+   one file instead of scattered. Each test renders dark, asserts, unmounts, then
+   does the same in light (the unmount is in a `finally` so a failed assertion
+   cannot leave the one-window renderer mounted).
+4. **The check caught real drift immediately.** Six records claimed
+   `gpuixSupport: "yes"` while their `COMPONENTS.md` row said `partial` (Tabs,
+   Pagination, Breadcrumb, Dropdown, Context, Command): the components lack
+   `aria-orientation`/`aria-current`/`aria-checked`/`aria-activedescendant` or a
+   keyboard path to open. The records now say `partial`, which is the truth.
+5. **Avatar's fallback colour and EmptyState's text colour are asserted through
+   `findByType`, not `findByText`:** a `<text>` host wraps an anonymous child
+   holding the string, and only the wrapper carries the style — measured in the
+   empty-state suite and reused here.

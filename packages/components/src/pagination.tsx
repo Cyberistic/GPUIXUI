@@ -157,7 +157,7 @@ export const paginationMeta = {
   name: "Pagination",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
     "no aria-current in 0.10.0; the current page carries aria-selected",
     "page numbers are the only navigation: there is no page-size control",

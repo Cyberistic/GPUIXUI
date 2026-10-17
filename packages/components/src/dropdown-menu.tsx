@@ -261,7 +261,7 @@ export const dropdownMenuMeta = {
   name: "Dropdown menus",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
     "no type-ahead: a correct one needs a timed buffer, which belongs to the Effect clock rule in plan 114 §2",
     "no submenus in v1",

@@ -238,7 +238,7 @@ export const contextMenuMeta = {
   name: "Context menus",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
     "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",

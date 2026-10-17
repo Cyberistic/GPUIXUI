@@ -268,7 +268,7 @@ export const commandMenuMeta = {
   name: "Command menus",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
     "no fuzzy scoring in v1: the default filter is a case-insensitive substring; pass filter for anything else",
     "the input is the GPUix <input> host element until @gpuixui/primitives lands",

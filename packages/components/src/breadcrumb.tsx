@@ -289,7 +289,7 @@ export const breadcrumbMeta = {
   name: "Breadcrumbs",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
     "no aria-current in 0.10.0; the current page is marked by BreadcrumbPage and colour only",
     "maxItems reads direct children, so a custom wrapper element is counted as one entry",

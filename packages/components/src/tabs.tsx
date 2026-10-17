@@ -497,7 +497,7 @@ export const tabsMeta = {
   name: "Tabs",
   tier: 2,
   status: "done",
-  gpuixSupport: "yes",
+  gpuixSupport: "partial",
   limitations: [
     "no aria-orientation, aria-controls or aria-labelledby in 0.10.0; the panel is named by its value",
     "the trigger/panel relationship is positional, not semantic",

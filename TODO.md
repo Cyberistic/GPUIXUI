@@ -122,8 +122,11 @@ the `@gpuixui/tokens/react` provider
     - [x] `field.tsx` (Field/FieldLabel/FieldDescription/FieldError/FieldInput) + 5 native behaviour tests
     - [x] Examples, docs pages and inventory rows for Toast and Field
   - [ ] Date / time picker (design in plan 116 §5; not started)
-  - [ ] Tier 2 verification matrix and inventory sync check (plan 117)
-`[ ]` Verify every component in both themes
+  - [x] Tier 2 verification matrix and inventory sync check (plan 117)
+    - [x] `src/inventory.ts` + `src/inventory.test.ts`: files exist, rows agree, no duplicates, `done` implies a behaviour test
+    - [x] `src/behaviour/theme-matrix.test.tsx`: the both-theme matrix for the 11 components without one
+    - [x] Six records corrected from `gpuixSupport: "yes"` to `partial` where the runtime lacks the ARIA surface or a keyboard path
+`[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
 

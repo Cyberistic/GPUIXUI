@@ -3,8 +3,8 @@
 Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
-Plans for this package and every component it will hold are in
-`.agents/slop/plans/` (110–117). Read those before adding a component.
+Plans for this package and every component it holds are in
+`.agents/slop/plans/` (110–118). Read those before adding a component.
 
 ## Boundary
 
@@ -13,7 +13,8 @@ Allowed imports, in full: `effect`, `@gpuixui/tokens`, `@gpuixui/primitives`
 `@gpuix/react` and its subpaths, and `react`.
 
 Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
-`node:*` in `src/**`, DOM APIs, CSS or `className`.
+`node:*` in component source (the inventory test is the sole repository-check
+exception, plan 117 §3), DOM APIs, CSS or `className`.
 
 ## What is here
 
@@ -30,18 +31,24 @@ Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 | `src/dialog.tsx` | Dialog: an anchored window veil, focus-in/return, Tab trap, Escape |
 | `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
+| `src/dropdown-menu.tsx`, `src/menu/*` | DropdownMenu over the shared row registry, rows and menu surface |
+| `src/context-menu.tsx` | ContextMenu: the same rows at the pointer (`onAuxClick` + `isRightClick`) |
+| `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts` |
+| `src/tabs.tsx` | Tabs: roving tab stop, automatic/manual activation, arrow wrap |
+| `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a body that unmounts |
+| `src/accordion.tsx` | Accordion: single (collapsible) and multiple modes over a tagged union |
+| `src/breadcrumb.tsx` | Breadcrumb: a declarative trail with `maxItems` collapsing |
+| `src/pagination.tsx` | Pagination: a stable-width page window with disabled edges |
+| `src/field.tsx` | Field: label, control, one message slot; the inline-validation surface |
+| `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
+| `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
+| `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store |
+| `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
 | `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
-| `src/pagination/logic.ts` | page-window arithmetic |
-| `src/accordion/logic.ts` | single/multiple open-state transitions |
-| `src/breadcrumb/logic.ts` | trail collapsing |
-| `src/menu/logic.ts` | active-row transitions over the shared collection |
-| `src/combobox/logic.ts` | option ranking and selection membership |
-| `src/toast/model.ts`, `src/toast/store.ts` | the toast domain: schema inputs, and the queue with its timers |
-| `src/validation/logic.ts` | schema-to-message mapping for form fields |
-| more components (`badge.tsx`, `dialog.tsx`, …) | per plans 111–116; not yet landed |
+| `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
 
 ## Commands
 
