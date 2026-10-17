@@ -48,9 +48,9 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 11/13
+`[x]` `[███████████]` 12/14
 
-`[x]` Write and index the tokens/theme plan set (plans 010–017)
+`[x]` Write and index the tokens/theme plan set (plans 010–018)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -63,6 +63,8 @@ prebuilt `dist` (plan 016)
 `[x]` Ship `focusRing(theme)` and correct the focus claims in `docs/tokens.md` and
 `docs/design-system.md` — GPUix 0.10.0 has no `outline*` and no `focusVisible`
 (plan 017)
+`[x]` Drop `BoxShadow.inset`, document the one-shadow rule and hoist
+`elevationShadow(theme, level)` (plan 018)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`
@@ -72,10 +74,12 @@ prebuilt `dist` (plan 016)
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
 `references` symlink in `.gitignore` (owner: repo tooling)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
-directly and delete their structural copies of the theme and role list, plus
-their local focus-ring helpers (`primitives/src/core/style.ts`,
-`components/src/internal/theme.ts`), now that `focusRing` exists and the package
-resolves from source (owner: those workstreams; plans 016–017)
+directly and delete their structural copies of the theme and role list, their
+local focus-ring helpers (`primitives/src/core/style.ts`,
+`components/src/internal/theme.ts`) and their first-shadow helpers
+(`primitives/src/core/style.ts` `firstShadow`, `components/src/internal/theme.ts`
+`elevation`), now that `focusRing` and `elevationShadow` exist and the package
+resolves from source (owner: those workstreams; plans 016–018)
 
 ## Phase C — Tier 1–2 components
 

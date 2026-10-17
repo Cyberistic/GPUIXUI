@@ -1,4 +1,6 @@
-/** A drop shadow, structurally compatible with GPUix's `StyleDesc.boxShadow`. */
+import type { Theme } from "./theme.js";
+
+/** A drop shadow, structurally identical to GPUix's `StyleDesc.boxShadow`. */
 export interface BoxShadow {
   /** Horizontal offset in pixels. */
   readonly offsetX: number;
@@ -10,11 +12,14 @@ export interface BoxShadow {
   readonly spreadRadius: number;
   /** Shadow colour, usually the theme's `shadow` role with alpha. */
   readonly color: string;
-  /** Draw inside the border box. */
-  readonly inset?: boolean;
 }
 
-/** Elevation levels. Each level is a shadow list painted in order. */
+/**
+ * Elevation levels. A level is a list so a web renderer can composite several
+ * shadows; the native runtime paints **one** shadow per element, so a shipped
+ * level carries at most one entry and a consumer reads it with
+ * {@link elevationShadow}. `overlay` is reserved and empty.
+ */
 export interface Elevation {
   /** Resting cards and raised rows. */
   readonly sm: BoxShadow[];
@@ -24,6 +29,26 @@ export interface Elevation {
   readonly lg: BoxShadow[];
   /** Reserved for surfaces that need an additional inset ring. */
   readonly overlay: BoxShadow[];
+}
+
+/** A level a surface can be raised to. */
+export type ElevationLevel = keyof Elevation;
+
+/**
+ * The shadow an elevation level paints. The runtime paints one shadow per
+ * element, so a level resolves to its first entry; a reserved empty level paints
+ * nothing and returns `undefined`, which `boxShadow` accepts.
+ *
+ * @example
+ * ```tsx
+ * <div style={{ boxShadow: elevationShadow(theme, "md") }} />
+ * ```
+ */
+export function elevationShadow(
+  theme: Theme,
+  level: ElevationLevel,
+): BoxShadow | undefined {
+  return theme.elevation[level][0];
 }
 
 /** Light theme elevation. */

@@ -29,8 +29,9 @@ licensing, docs site).
 | [015](./015-colour-role-index.md) | Colour role index for documentation | B | 011, 013, 014 | done |
 | [016](./016-tokens-consumable-exports.md) | `@gpuixui/tokens` resolvable without a prebuilt `dist` | B | 011 | done |
 | [017](./017-focus-ring-and-docs-truth.md) | Focus ring helper and the focus documentation truth pass | B | 011, 016 | done |
+| [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
 
-Plans 010–017 are the `tokens-theme` workstream. They own `packages/tokens`,
+Plans 010–018 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
 agent that owns its paths.
 

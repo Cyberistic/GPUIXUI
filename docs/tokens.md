@@ -17,6 +17,7 @@ import {
   colorRoles,
   createTheme,
   darkTheme,
+  elevationShadow,
   extendTheme,
   focusRing,
   getTheme,
@@ -308,8 +309,9 @@ controlPaddingX(theme, "md");
 ## Elevation
 
 Shadows are structured objects (`offsetX`, `offsetY`, `blurRadius`,
-`spreadRadius`, `color`, optional `inset`), matching GPUix's
-`StyleDesc.boxShadow`.
+`spreadRadius`, `color`) — the exact five fields of GPUix's
+`StyleDesc.boxShadow`. There is no `inset` and no shadow list: **the runtime
+paints one shadow per element.**
 
 | Level | Light | Dark | Use |
 | ----- | ----- | ---- | --- |
@@ -317,6 +319,21 @@ Shadows are structured objects (`offsetX`, `offsetY`, `blurRadius`,
 | `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | menus and popovers |
 | `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | dialogs and command palettes |
 | `overlay` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
+
+A level is a list so a web renderer can composite several shadows; a shipped
+level carries at most one entry, and a consumer reads the one that paints with
+`elevationShadow`:
+
+```tsx
+import { elevationShadow } from "@gpuixui/tokens";
+
+<div style={{ boxShadow: elevationShadow(theme, "md") }} />;
+```
+
+`elevationShadow(theme, level)` returns the level's shadow, or `undefined` for
+the reserved empty `overlay` level (which `boxShadow` accepts). A shipped level
+with two entries would silently render only the first, so
+`packages/tokens/src/elevation.test.ts` fails if one appears.
 
 ## Borders and icons
 

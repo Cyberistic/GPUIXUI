@@ -141,10 +141,12 @@ Two border roles:
   against the canvas so a control is perceivable without relying on fill alone.
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
-`md` for menus and popovers, `lg` for dialogs and the command palette. Overlay
-layering uses the `overlay` scrim colour; `elevation.overlay` is reserved so the
-shape stays stable. Dark shadows are darker and more opaque because contrast
-between surfaces is lower.
+`md` for menus and popovers, `lg` for dialogs and the command palette. The
+runtime paints one shadow per element — no `inset`, no shadow list — so a level
+is exactly one shadow, read with `elevationShadow(theme, level)`. Overlay
+layering uses the `overlay` scrim colour; `elevation.overlay` is reserved and
+empty so the shape stays stable. Dark shadows are darker and more opaque because
+contrast between surfaces is lower.
 
 ## 8. Interaction states
 

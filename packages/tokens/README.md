@@ -58,6 +58,17 @@ There is no OS appearance query in GPUix. The application owns the mode switch
 and passes the resolved theme; nested providers scope a brand theme to a
 subtree.
 
+## Shadows
+
+The runtime paints one shadow per element and its `BoxShadow` has five fields —
+no `inset`, no list. `elevationShadow(theme, level)` returns the shadow a level
+paints (`undefined` for the reserved empty `overlay` level).
+
+```tsx
+const shadow = elevationShadow(theme, "md");
+<div style={{ boxShadow: shadow }} />;
+```
+
 ## Extending a theme
 
 `createTheme` starts from a built-in theme; `extendTheme` derives from any
