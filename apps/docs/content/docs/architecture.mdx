@@ -28,10 +28,14 @@ Phase A/B deliverable in `docs/README.md` and is not written yet.
 The library renders through GPUix; this site is a browser app. Rather than fake
 a native surface, every preview is one of:
 
-1. a **real native run** in the playground, named per component;
+1. a **real native run** in the playground, named per component when a screen
+   exists;
 2. a **real screenshot** captured from the GPUix runtime;
-3. a **browser approximation**, always labelled "not GPUix";
-4. **source and a limitation notice** when the runtime cannot do something.
+3. **native coverage** by an automated suite, naming the suite and its command;
+4. a **browser approximation**, always labelled "not GPUix";
+5. **source and a limitation notice** when the runtime cannot do something.
 
-The decision, its evidence and the exact label text are recorded in
-`docs/preview-strategy.md` in the repository.
+Today the delivered pages use native coverage, and four carry a labelled
+approximation; no per-component playground screen exists yet. The decision, its
+evidence and the exact label text are recorded in `docs/preview-strategy.md` in
+the repository.

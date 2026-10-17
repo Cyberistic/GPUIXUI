@@ -36,25 +36,32 @@ nub install
 nub run --filter @gpuixui/basic-app dev
 ```
 
-It needs the GPUix native binding and a desktop session; on a host without one
-the app is type-checked but never launched. See [Examples](/docs/examples) for
-what that does and does not prove.
+Its `dev` script currently runs `bun src/main.tsx`, so it needs Bun, the GPUix
+native binding and a desktop session; without that,
+`nub run --filter @gpuixui/basic-app check-types` verifies the composition. See
+[Examples](/docs/examples) for what that does and does not prove.
 
 ## The native playground
 
-A companion playground (`apps/playground`) will host a screen per component and
-the screenshot capture used by these pages. It is a Phase B deliverable: the
-repository holds its design and README, but no app and no `package.json` yet, so
-`nub run dev:playground` does not resolve.
+The companion playground (`apps/playground`) hosts the capability scenarios and
+the theme gallery behind the repository's 20/20 native smoke suite:
 
-Each component page names the playground screen that will demonstrate it. Until
-that screen exists, the page shows the honest "not verified in the GPUix
-runtime" notice instead of a browser imitation.
+```sh
+nub run dev:playground
+```
+
+It needs the GPUix native binding and a desktop session. On Intel macOS the
+pinned 0.10.0 binding is a local source build (ADR `0003`), so a clean checkout
+must build it first.
+
+The playground has no per-component screens yet. Each component page therefore
+names the native suite that drives it, and four pages carry a labelled browser
+approximation; no page substitutes a browser imitation for a runtime check.
 
 ## Native previews
 
 This site does not render GPUix in the browser. A page either shows a real
-capture from the runtime, links to the playground, labels a browser
-approximation explicitly, or states that the component is unverified. The rules
-are summarised in [Architecture](/docs/architecture) and recorded in full in
-`docs/preview-strategy.md`.
+capture from the runtime, names the native suite that drives the component,
+labels a browser approximation explicitly, or states that the component is
+unverified. The rules are summarised in [Architecture](/docs/architecture) and
+recorded in full in `docs/preview-strategy.md`.

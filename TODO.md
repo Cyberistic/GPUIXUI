@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–435)
+## Docs site workstream (plans 410–436)
 
-`[x]` `[██████████]` 34/35
+`[x]` `[██████████]` 35/36
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` Curated native theme captures on Theming (plan 433) — a real 20/20 capture run, two frames + provenance sidecar, `<ThemeCaptures />` refuses an unproven frame
@@ -507,6 +507,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Native coverage is not the absence of a capture (plan 432) — tier V names each delivered component's real GPUix suite and command on all 42 pages instead of calling it "Not verified"; the registry guard derives the command and proves the suite imports the component
 `[x]` Platform-styled previews (plan 434) — the toggle reaches four labelled tier-A previews (Button, Tabs, Dropdown menu, Card) built from the whole active `Theme`; source, page and platform guards pass; browser-verified at `?platform=win32` (Consolas on every preview surface)
 `[x]` Document the seven delivered Tier 1 value/choice components (plan 435) — Slider, Range slider, Meter, Number field, OTP field, Toggle and Rating: `wip` records, pages, generated props tables, real sources and their examples; 49 component pages, 180 docs tests, sitemap and search verified
+`[x]` Prose truth: the site no longer calls the built playground missing (plan 436) — getting-started, examples, architecture and the intro now describe it, the five preview tiers and the quick start's Bun/`check-types` prerequisite; the widened `prose-truth.test.ts` failed on both stale pages first (8 claims) and the command-resolves guard is proven in both directions
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed

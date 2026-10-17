@@ -38,6 +38,14 @@ describe("landing page", () => {
     });
   });
 
+  it("names the example runner and the check that runs without a window", () => {
+    // Plan 436: the quick start is `basic-app dev`, whose script runs Bun and
+    // then needs a desktop session. Presenting it as runnable everywhere was
+    // the same truth failure as the playground prose.
+    expect(html).toContain("Bun");
+    expect(html).toContain("check-types");
+  });
+
   it("links to the docs it describes", () => {
     Arr.forEach(
       [

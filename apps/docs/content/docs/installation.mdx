@@ -18,9 +18,11 @@ nub install
 nub run --filter @gpuixui/basic-app dev
 ```
 
-`basic-app` is the example that composes the Tier 1 components; it needs the
-GPUix native binding and a desktop session. [Examples](/docs/examples) records
-what it verifies.
+`basic-app` is the example that composes the Tier 1 components. Its `dev`
+script currently runs `bun src/main.tsx`, so the command needs Bun, the GPUix
+native binding and a desktop session;
+`nub run --filter @gpuixui/basic-app check-types` is the check that runs
+without a window. [Examples](/docs/examples) records what it verifies.
 
 ## The intended install
 

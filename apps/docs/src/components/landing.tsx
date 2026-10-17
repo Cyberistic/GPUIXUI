@@ -50,8 +50,11 @@ export function Landing() {
         <h2 className="text-xl font-medium">Quick start</h2>
         <p className="text-sm text-fd-muted-foreground">
           The packages are not on a registry yet, so start from a checkout. The
-          example is a real native application; this site never renders GPUix,
-          so it links to the playground instead of imitating it.
+          example's <code>dev</code> script currently needs Bun, the GPUix
+          native binding and a desktop session;{" "}
+          <code>nub run --filter @gpuixui/basic-app check-types</code> verifies
+          the composition without launching a window. This site never renders
+          GPUix, so it links to the playground instead of imitating it.
         </p>
         <pre className="overflow-x-auto rounded-lg border border-fd-border bg-fd-card p-4 text-sm">
           <code>{QUICK_START.map((command) => `${command}\n`).join("")}</code>

@@ -15,6 +15,11 @@ import { describe, expect, it } from "vitest";
  * The playground check is deliberately inverted: it stays green while the
  * playground has no app and turns red the moment `apps/playground/package.json`
  * lands, so the page is updated in the same change that makes it runnable.
+ *
+ * Bug guarded (plan 436): the first version matched only "not built yet" while
+ * the pages said "has not been built yet", so the site kept announcing a
+ * missing playground after the app had been green since plan 140. The rule now
+ * covers the wording class, not one sentence.
  */
 const contentDirectory = fileURLToPath(
   new URL("../content/docs/", import.meta.url),
@@ -57,6 +62,16 @@ const registered = (path: string): boolean => {
 
 const pathPattern = /`((?:packages|apps|examples|docs|LICENSES)\/[^`\s]+)`/g;
 
+/** The wording class plan 436 shipped under: any way of saying the app is absent. */
+const stalePlaygroundClaims = [
+  /\bnot built yet\b/i,
+  /\bnot been built\b/i,
+  /\bno `?package\.json`?/i,
+  /\bdoes not resolve\b/i,
+  /\bPhase B deliverable\b/i,
+  /\bwill host\b/i,
+];
+
 describe("prose truth", () => {
   it("scans the content tree, so a missing directory cannot pass vacuously", () => {
     expect(pages.length).toBeGreaterThan(10);
@@ -87,15 +102,28 @@ describe("prose truth", () => {
   });
 
   it("revisit the playground claim once the playground app exists", () => {
-    const stale = pages
-      .filter(
-        ({ body }) =>
-          playgroundIsRunnable &&
-          /\bnot built yet\b/i.test(body) &&
-          /apps\/playground|dev:playground/.test(body),
-      )
-      .map(({ path }) => path);
+    const stale = playgroundIsRunnable
+      ? pages.flatMap(({ path, body }) =>
+          /apps\/playground|dev:playground/.test(body)
+            ? stalePlaygroundClaims
+                .filter((claim) => claim.test(body))
+                .map((claim) => `${path}: ${String(claim)}`)
+            : [],
+        )
+      : [];
     expect(stale).toEqual([]);
+  });
+
+  it("names only playground commands the root package defines", () => {
+    const rootPackage = readFileSync(join(repoRoot, "package.json"), "utf8");
+    const missing = pages.flatMap(({ path, body }) =>
+      [...body.matchAll(/\bnub run ([a-z][\w:-]*)/g)]
+        .map((match) => match[1] ?? "")
+        .filter((script) => script.includes("playground"))
+        .filter((script) => !rootPackage.includes(`"${script}":`))
+        .map((script) => `${path}: nub run ${script}`),
+    );
+    expect(missing).toEqual([]);
   });
 
   it("names only repository paths that exist or are registered as planned", () => {

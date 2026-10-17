@@ -23,10 +23,9 @@ new components are checked against.
 nub run --filter @gpuixui/basic-app dev
 ```
 
-The `dev` script currently calls `bun src/main.tsx`. Bun is not installed on this
-host and is not the repository's package manager, so the command stops at the
-runner until that script is changed; the type-check below is the check that
-really runs.
+The `dev` script currently calls `bun src/main.tsx`. Bun is not the repository's
+package manager, so unless it is installed the command stops at the runner; the
+type-check below is the check that runs without it.
 
 **What is verified, and what is not:**
 
@@ -34,7 +33,7 @@ really runs.
 | ----- | ------ |
 | `nub run --filter @gpuixui/basic-app check-types` | passes — every component is used with its real props |
 | the components themselves | type-checked and covered by their packages' element-tree suites |
-| the window, layout, hit-testing and focus order | **never run** — this host has no desktop session, so the app has not been launched |
+| the window, layout, hit-testing and focus order | **never run** — the verification host has no desktop session, so the app has not been launched |
 
 That gap is the repository's, not the example's: a component moves to `done` on
 the component index only when it runs in the real runtime. Until then the example
@@ -43,12 +42,20 @@ is a real, type-checked composition whose visual result is unverified.
 ## The native playground
 
 The companion playground (`apps/playground`) is where a compiled screen becomes
-an interactive proof. It is a Phase B deliverable and has not been built yet:
-`apps/playground` currently contains its README and no `package.json`, so
-`nub run dev:playground` does not resolve. Component pages point at the
-playground screen they will use; today they show the honest "not verified"
-notice instead.
+an interactive proof. It runs the capability scenarios and the theme gallery
+that back the 20/20 native smoke suite:
+
+```sh
+nub run dev:playground
+```
+
+It needs the GPUix native binding and a desktop session; on Intel macOS the
+binding is a local source build (ADR `0003`). It is not yet a gallery of
+per-component screens, so component pages name the native suite that drives
+them: four carry a labelled browser approximation and the rest show the
+native-coverage notice until the playground captures their screen.
 
 Future examples — a workspace layout, a data-heavy table, a command palette —
-appear once the components they compose exist and run. This page will list their
-commands at that point; it will not describe an app that does not run.
+appear once `@gpuixui/data-grid` and `@gpuixui/docking` exist and run. This page
+will list their commands at that point; it will not describe an app that does
+not run.
