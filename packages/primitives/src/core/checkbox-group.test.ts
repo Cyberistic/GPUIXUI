@@ -3,7 +3,7 @@
  *
  * The bugs to guard are the ones hand-written parents produce: a select-all
  * that looks checked while an option is off, a clear that silently drops a
- * value the user could not toggle, and an `onChange` fired for a press that
+ * value the user could not toggle, and an `onValueChange` fired for a press that
  * changed nothing.
  */
 
