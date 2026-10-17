@@ -171,7 +171,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `mutedForeground` | `#3D4552` | `#CBD1DB` | secondary text |
 | `accent` | `#EEF0FF` | `#2E2370` | tinted emphasis surface |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
-| `destructive` | `#CC3439` | `#FF6B6B` | destructive action |
+| `destructive` | `#CC3439` | `#FF6B6B` | destructive action, and the invalid field edge |
 | `destructiveForeground` | `#FFFFFF` | `#3A0B0D` | text on `destructive` |
 | `destructiveHover` | `#A5262B` | `#FF9E9E` | destructive action while hovered |
 | `destructiveActive` | `#7E1D21` | `#FFC6C6` | destructive action while pressed |
@@ -374,7 +374,7 @@ carries, so it cannot claim another.
 | `mutedForeground` | `#1F1F1F` | `#E0E0E0` | secondary text |
 | `accent` | `#E0E3FF` | `#251B5C` | tinted emphasis surface |
 | `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
-| `destructive` | `#7E1D21` | `#FF9E9E` | destructive action |
+| `destructive` | `#7E1D21` | `#FF9E9E` | destructive action, and the invalid field edge |
 | `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
 | `destructiveHover` | `#5C1619` | `#FFC6C6` | destructive action while hovered |
 | `destructiveActive` | `#3A0B0D` | `#FFE0E0` | destructive action while pressed |
@@ -1124,7 +1124,8 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 against `contrastFloors`. The list holds text pairs, secondary text and status
 text on the state washes (`hover`, `active`, `accent` and `selected`), the
 default label of a list or menu row on the washes it paints, the field edge on
-its `input` fill, the other
+its `input` fill, the invalid field edge — `destructive` on the `input` fill and
+on the `background` canvas a transparent field paints — the other
 status pairs, the focus ring on the plain surfaces, the `muted` panel, the
 `accent` wash, the three state washes a focused control can sit on and the four
 soft status fills (`ringSoftPairs`), the
@@ -1152,6 +1153,11 @@ the text list. An Alert, Badge or Toast is measured the same way:
 fills. The wash itself is compared with each surface it paints on, so a
 highlight that has become imperceptible is reported as well;
 `selectionWashPairs` is that list.
+
+An invalid field is an error state, not a decoration: `FieldInput` paints a
+`destructive` border over its `input` fill and the ColorPicker hex field over
+the `background` canvas, so both are `boundary` pairs.
+`invalid-field-edge.test.ts` holds them and the erased-error regression.
 
 The modal scrim is measured the same way, because its job is to change the
 surface beneath it: `overlayWashPairs` composites `overlay` over the app's four

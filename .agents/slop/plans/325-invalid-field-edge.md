@@ -241,8 +241,10 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/tokens-theme`.
    nub run fmt
    nub run test
    ```
-   Expected: all green; 53 files / 3220 tests; `contrast.test.ts` proves 264
-   pairs.
+   Expected: all green; 53 files. The pair suites generate one case per pair,
+   so the total rises by 24 (3 new cases in `invalid-field-edge.test.ts`, one new
+   docs case, and 20 generated pair cases across `color.test.ts` and
+   `platforms.test.ts`), and `contrast.test.ts` proves 264 pairs.
 
 5. Re-read the `Checking a theme` paragraph so the added clause is one sentence,
    not a second contract story.

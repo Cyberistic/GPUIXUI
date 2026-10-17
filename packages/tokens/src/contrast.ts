@@ -385,6 +385,18 @@ const fieldEdgePairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The invalid field edge. A field in an error state paints `destructive` as its
+ * border — `FieldInput` on its `input` fill and the ColorPicker hex field on the
+ * `background` canvas — so the error signal is an essential boundary, not a
+ * fill. `destructive` is measured as a fill elsewhere; this is the pair that
+ * keeps the error itself visible.
+ */
+const invalidEdgePairs: readonly ContrastPair[] = [
+  ["destructive", "input", "boundary"],
+  ["destructive", "background", "boundary"],
+];
+
+/**
  * The surfaces a placeholder is painted on beyond the `input` fill: the four
  * `Surface` tones a transparent field (`SearchInput`, `InlineEdit`,
  * `ColorPicker`, `TagInput`, `MentionInput`) can sit on. A hint that disappears
@@ -467,7 +479,9 @@ const softBodyPairs: readonly ContrastPair[] = softSurfaceRoles.map(
  * text on the `input` fill and on the `background`, `card`, `popover` and
  * `muted` surfaces a transparent field paints, the placeholder on those same
  * surfaces, and a text field's
- * edge is measured on the `input` fill it sits on.
+ * edge is measured on the `input` fill it sits on; an invalid field's
+ * `destructive` edge is a boundary pair on that fill and on the `background`
+ * canvas a transparent field paints.
  *
  * The filled families are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
@@ -544,6 +558,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["border", "muted", "divider"],
   ["border", "disabled", "divider"],
   ...fieldEdgePairs,
+  ...invalidEdgePairs,
   ...controlFillPairs,
   ...stateFillSurfacePairs,
 ];

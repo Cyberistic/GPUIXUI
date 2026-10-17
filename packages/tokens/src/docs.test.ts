@@ -647,6 +647,22 @@ describe("docs/tokens.md contrast surfaces", () => {
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
+  it("states the invalid field edge and the surfaces it is painted on", () => {
+    const pairs = contrastPairs
+      .filter(
+        ([foreground, , pairClass]) =>
+          foreground === "destructive" && pairClass === "boundary",
+      )
+      .map(([, background]) => background);
+
+    expect(pairs.toSorted()).toEqual(["background", "input"]);
+    expect(markdown).toContain("the invalid field edge");
+    expect(markdown).toContain("`destructive` on the `input` fill");
+    expect(markdown).toContain(
+      "the `background` canvas a transparent field paints",
+    );
+  });
+
   it("names every wash the secondary text pairs are held against", () => {
     const washes = [
       ...new Set(
@@ -848,7 +864,7 @@ describe("docs/design-system.md", () => {
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, and essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
+      `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
@@ -862,8 +878,9 @@ describe("docs/design-system.md", () => {
 
   it("names every interactive fill and the surfaces it is held against", () => {
     const fillRoles: ReadonlySet<string> = new Set(stateFillRoles);
-    const pairs = contrastPairs.filter(([foreground]) =>
-      fillRoles.has(foreground),
+    const pairs = contrastPairs.filter(
+      ([foreground, , pairClass]) =>
+        fillRoles.has(foreground) && pairClass === "surface",
     );
 
     expect(pairs).toEqual(stateFillSurfacePairs);
