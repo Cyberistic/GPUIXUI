@@ -13,6 +13,7 @@ import {
   Box,
   Button,
   ButtonGroup,
+  IconButton,
   Input,
   Label,
   Progress,
@@ -55,11 +56,27 @@ export const FormExample = (): ReactElement => {
       style={{ width: 440 }}
     >
       <Stack direction="column" gap="md">
-        <Stack direction="column" gap="2xs">
-          <Text role="h3">Project settings</Text>
-          <Text role="caption" tone="muted">
-            You can change these after the project is created.
-          </Text>
+        <Stack direction="row" justify="between" align="start" gap="sm">
+          <Stack direction="column" gap="2xs">
+            <Text role="h3">Project settings</Text>
+            <Text role="caption" tone="muted">
+              You can change these after the project is created.
+            </Text>
+          </Stack>
+          <IconButton
+            icon="refresh"
+            label="Reset form"
+            variant="ghost"
+            size="sm"
+            onActivate={() => {
+              setName("Atlas");
+              setOwner("");
+              setNotes("");
+              setRegion("eu-west");
+              setSaving(false);
+            }}
+            testId="form-example-reset"
+          />
         </Stack>
 
         <Stack direction="column" gap="2xs">

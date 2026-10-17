@@ -424,6 +424,15 @@ retired once both branches are one
       share one path: `onClick(event)` then `onActivate()`, with held/disabled/
       loading refused. 2 offline + 4 runtime tests, both directions proven
       (plan 085)
+`[x]` `packages/primitives`: **`IconButton`** — the icon-only button the
+      components workstream's contract imports (plan `110` §7) had only a local
+      stand-in, and the hand-rolled shape got three things wrong: the icon tint
+      (needs the variant's *foreground* role), `loading` (painted the spinner
+      **and** the icon), and the accessible name (an icon child is not text, so
+      the button shipped unnamed). One part: a square `Button` with a required
+      `label`, the tint and `iconSize` resolved from the button, and the spinner
+      in place of the icon while busy. 6 offline + 5 runtime tests, both
+      directions proven (plan 086)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
@@ -437,6 +446,16 @@ retired once both branches are one
       available. Re-plan `052` around installed family names, or wait for a
       runtime upgrade, before implementing (evidence:
       `docs/gpuix-capabilities.md` §5).
+
+`[x]` **components workstream — the primitives import list (plan `110` §7) is
+      answered.** `IconButton` now exists (plan `086`). `Icon`/`IconProps` stay
+      owned by `@gpuixui/icons` — add that dependency and import it there; a
+      second re-export path from primitives would give one component two owners
+      (the icon page and size scale live in `packages/icons`). The filled
+      destructive variant is named `"destructive"`, not `"danger"`. And
+      `Button.onClick` is now the full activation callback (plan `085`), so the
+      trigger wiring in `internal/button.tsx` keeps working when the stand-in is
+      deleted.
 
 `[ ]` **components workstream**: plan `201` §2.3 tells the thin context to call
       `useControllableState` from `@gpuix/react/floating`, but that function is

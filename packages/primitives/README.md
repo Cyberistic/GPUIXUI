@@ -89,7 +89,7 @@ local copy.
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
 **Text** `Text` `Label`
-**Actions** `Button` `ButtonGroup` `Toggle` `ToggleGroup`
+**Actions** `Button` `IconButton` `ButtonGroup` `Toggle` `ToggleGroup`
 **Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
 **Selection** `Checkbox` `CheckboxGroup` `RadioGroup` `Switch` `Rating`
 **Value** `Slider` `RangeSlider` `Meter`
@@ -157,7 +157,7 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **19 files, 225 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **19 files, 230 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -184,7 +184,8 @@ repaints the mounted tree (plans 079, 080), a select trigger ringed on focus and
 while its list is open (plan 083), and a seventeen-control matrix that fails if
 any focusable control paints zero or two focus rings (plan 084), and a button
 wired with the familiar `onClick` activated by Enter and Space instead of only
-by a mouse (plan 085).
+by a mouse (plan 085), and an `IconButton` that is one named button with a
+tinted icon and a spinner instead of the icon while busy (plan 086).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

@@ -1,0 +1,123 @@
+---
+title: IconButton
+description: A square button whose only content is an icon, with a required accessible name.
+---
+
+`IconButton` is the icon-only shape of `Button`: dialogs close, menus and
+popovers open, toasts dismiss. It is not a second button — it composes `Button`
+with `square`, forwards its state props, and owns the three things a hand-rolled
+copy gets wrong: the icon tint, the busy state, and the accessible name.
+
+## Usage
+
+```tsx
+import { IconButton, Stack } from "@gpuixui/primitives";
+
+<Stack direction="row" gap="sm">
+  <IconButton icon="pencil" label="Edit" variant="ghost" onActivate={edit} />
+  <IconButton
+    icon="trash"
+    label="Delete"
+    variant="destructive"
+    onActivate={remove}
+  />
+</Stack>;
+```
+
+`icon` names an icon from `@gpuixui/icons`; `label` is the button's name and is
+required, because an icon alone cannot name anything.
+
+## Variants and sizes
+
+The paint is [`Button`](button.mdx)'s `buttonVariants`; the icon is tinted with
+the same **foreground** role that variant paints its text in, so it cannot
+disappear on a filled button.
+
+| `variant` | Icon tint |
+| --------- | --------- |
+| `primary` (default) | `primaryForeground` |
+| `secondary` | `secondaryForeground` |
+| `outline` | `foreground` |
+| `ghost` | `foreground` |
+| `destructive` | `destructiveForeground` |
+| `link` | `primary` |
+
+| `size` | Button box | Icon |
+| ------ | ---------- | ---- |
+| `sm` | `controlHeight.sm` square | `iconSize.sm` (14 px) |
+| `md` (default) | `controlHeight.md` square | `iconSize.md` (16 px) |
+| `lg` | `controlHeight.lg` square | `iconSize.lg` (20 px) |
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `icon` | `IconName` | — | the glyph that is painted |
+| `label` | `string` | — | accessible name; required |
+| `variant` | `ButtonVariant` | `"primary"` | fill, border and icon tint |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | square box and icon size |
+| `radius` | `RadiusStep` | `"md"` | corner radius |
+| `disabled` | `boolean` | `false` | leaves the tab order, refuses activation, fades to 50% |
+| `loading` | `boolean` | `false` | paints the spinner **instead of** the icon, announces `Loading`, refuses activation |
+| `onActivate` / `onClick` | — | none | the shared `Button` activation path; `onClick` receives the click or the key event |
+| `style` | `StateStyle<ButtonState>` | — | merged last over the button's own rules |
+| `testId` | `string` | — | stable locator |
+
+`children`, `leading`, `trailing` and `fullWidth` are deliberately absent: an
+icon button has one content slot and a square box.
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| Enter | activates on key **down** |
+| Space | activates on key **up** |
+| held key | repeat events never activate |
+
+`disabled` and `loading` refuse activation. `disabled` removes the tab stop;
+`loading` keeps it, so a keyboard user is not dropped mid-action.
+
+## Accessibility
+
+- One `button` node named `label`. The icon is decorative (`presentation`), so
+  the tree has no second node for it — measured in the runtime: a `Button` named
+  `"Close"` and **no** `Image` node.
+- No `aria-disabled`: a disabled button leaves the tab order instead.
+- `loading` sets `aria-description="Loading"`; GPUix has no `aria-busy`.
+- The icon's visual tint is `style.color`, so contrast follows the button's
+  foreground role in every theme.
+
+## Theming
+
+No new token: the geometry and the fill come from `Button`/`controlStyle`, the
+tint from `buttonVariants`, the icon size from `theme.iconSize`, and the focus
+ring from `focusRing(theme)`. A theme change repaints the button and the icon
+together because both read the same `Theme`.
+
+## Limitations
+
+- The icon must be a name in the set. There is no arbitrary child slot.
+- No `focusVisible` in GPUix 0.10.0: a mouse click paints the same ring as
+  `Tab`.
+- No native `<button>`: the runtime exposes a `div` with `role="button"`.
+- The icon cannot carry its own label; the button owns the name.
+
+## Verification
+
+- `src/components/IconButton.test.tsx` — composes a square `Button` with the
+  required name, paints the named icon, tints it with each variant's foreground,
+  maps the size scale, and omits the icon while loading.
+- `runtime/controls.runtime.test.tsx` — one named `Button` and no `Image` node;
+  click/Enter/Space activation; the painted `svg` tint and square bounds; the
+  loading spinner with no icon; a disabled button skipped by `Tab`.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Button** — the part this composes; use it whenever there is text.
+- **Icons** — the icon set, its sizes and the `label` rule.
+- **Tooltip** / **InfoTip** — name an icon-only action with a description.

@@ -24,6 +24,7 @@ const PAGES: Readonly<Record<string, string>> = {
   Checkbox: "checkbox",
   CheckboxGroup: "checkbox-group",
   Grid: "grid",
+  IconButton: "icon-button",
   InfoTip: "info-tip",
   Input: "input",
   Label: "label",

@@ -21,6 +21,7 @@ import type { EventPayload } from "@gpuix/react";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
+import { IconButton } from "../src/components/IconButton.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
@@ -250,6 +251,85 @@ it("reports a real click through onClick with the click's own event", async () =
   runtime.click("b");
   expect(clicks).toHaveLength(1);
   expect(clicks[0]?.key).toBeUndefined();
+});
+
+/** An IconButton with a counted activation. */
+const mountIconButton = async (
+  props: Partial<Parameters<typeof IconButton>[0]> = {},
+): Promise<{ runtime: Runtime; calls: () => number }> => {
+  const runtime = await openWindow();
+  let calls = 0;
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <IconButton
+          testId="ib"
+          icon="x"
+          label="Close"
+          onActivate={() => {
+            calls += 1;
+          }}
+          {...props}
+        />
+      </Stack>
+    </Surface>,
+  );
+  return { runtime, calls: () => calls };
+};
+
+it("exposes one named Button and no Image node for the decorative icon", async () => {
+  const { runtime } = await mountIconButton();
+  expect(
+    Option.isSome(a11yNode(runtime.a11y(), { role: "Button", label: "Close" })),
+  ).toBe(true);
+  expect(
+    Arr.every(a11yNodes(runtime.a11y()), (node) => node.aria?.role !== "Image"),
+  ).toBe(true);
+});
+
+it("activates an IconButton by click, Enter and Space", async () => {
+  const { runtime, calls } = await mountIconButton();
+  runtime.click("ib");
+  expect(calls()).toBe(1);
+  runtime.keyDown("ib", "enter");
+  expect(calls()).toBe(2);
+  runtime.keyUp("ib", "space");
+  expect(calls()).toBe(3);
+});
+
+it("tints the icon with the variant's foreground and paints a square box", async () => {
+  const { runtime } = await mountIconButton({ variant: "ghost", size: "lg" });
+  const icon = Option.getOrElse(
+    Arr.findFirst(runtime.all(), (element) => element.type === "svg"),
+    () => expect.fail("the runtime painted no svg for the icon"),
+  );
+  expect(icon.style["color"]).toBe(testTheme.colors.foreground);
+  expect(icon.style["width"]).toBe(testTheme.iconSize.lg);
+  const bounds = boundsOf(runtime, "ib");
+  expect(bounds.width).toBe(bounds.height);
+  expect(bounds.height).toBe(testTheme.density.controlHeight.lg);
+});
+
+it("paints one spinner instead of an icon while loading, and refuses activation", async () => {
+  const { runtime, calls } = await mountIconButton({ loading: true });
+  expect(
+    Arr.isReadonlyArrayEmpty(
+      Arr.filter(runtime.all(), (element) => element.type === "svg"),
+    ),
+  ).toBe(true);
+  expect(descriptions(runtime)).toContain("Loading");
+  runtime.click("ib");
+  runtime.keyDown("ib", "enter");
+  expect(calls()).toBe(0);
+});
+
+it("takes a disabled IconButton out of the tab order and refuses activation", async () => {
+  const { runtime, calls } = await mountIconButton({ disabled: true });
+  runtime.focusNext();
+  expect(runtime.focused()).toStrictEqual(Option.none());
+  runtime.click("ib");
+  runtime.keyDown("ib", "enter");
+  expect(calls()).toBe(0);
 });
 
 it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", async () => {
