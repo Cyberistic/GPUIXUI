@@ -36,7 +36,7 @@ and the strongest honest alternative.
 | Loading indicators | wip | partial | [spinner](packages/primitives/docs/spinner.mdx) · feedback | **Runtime (041):** the lit dot changes index (the accent-coloured dot proves a theme colour reaches the paint) and AccessKit reports role `Status` with its label. `Spinner` **cannot rotate**; `Progress` with no `value` is the alternative. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (67 tests in 7
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (68 tests in 7
 files after the 049 follow-ups; 54 at the 041 baseline, locally-built GPUix
 0.10.0 binding). Details: plan 041 §9. The seventh file mounts every example in
 `packages/primitives/examples/` (plan 047).

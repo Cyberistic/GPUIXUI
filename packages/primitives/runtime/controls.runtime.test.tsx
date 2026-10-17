@@ -463,6 +463,30 @@ it("rings the radio that holds focus, and only that one", async () => {
   expect(ringed(runtime, "Alpha")).toBe(false);
 });
 
+it("rings a focused Checkbox and Switch, and clears it when focus leaves", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Checkbox testId="cb" label="Agree" />
+        <Switch testId="sw" label="Dark mode" />
+      </Stack>
+    </Surface>,
+  );
+  const shadow = (label: string): boolean =>
+    Option.isSome(
+      Option.fromNullishOr(byLabel(runtime, label).style.boxShadow),
+    );
+  runtime.click("cb");
+  runtime.flush();
+  expect(shadow("Agree")).toBe(true);
+  runtime.click("sw");
+  runtime.flush();
+  // The ring moved with focus: a stale one would leave both painted.
+  expect(shadow("Agree")).toBe(false);
+  expect(shadow("Dark mode")).toBe(true);
+});
+
 it("moves native focus with the selection when an arrow moves it", async () => {
   const runtime = await openWindow();
   runtime.render(

@@ -137,6 +137,9 @@ M .agents/slop/plans/README.md
 5. **Ring follows focus, runtime** — Tab into the group: Alpha's style has
    `boxShadow`, Beta's does not; after ArrowDown it is the other way round;
    after tabbing out neither has one.
+5b. **Checkbox and Switch rings, runtime** — the ring the refactor shares is
+   wired by each control: clicking a Checkbox paints its ring, clicking the
+   Switch beside it clears the checkbox's and paints the switch's.
 6. **Controlled tab stop, runtime** — mount a controlled group at `a`, re-mount
    at `b`, Tab in from the control above: the focused label is `Beta`. Before
    the change it is `Alpha`.
@@ -150,7 +153,7 @@ nub run --filter @gpuixui/primitives test
 # expect: 161 unit tests (156 before; +5), all pass.
 
 nub run --filter @gpuixui/primitives test:runtime
-# expect: 7 files, 67 runtime tests (64 before; +3), all pass.
+# expect: 7 files, 68 runtime tests (64 before; +4), all pass.
 
 nub run check
 # expect: check-tests, lint, fmt, check-types pass.
@@ -188,9 +191,11 @@ group carries a `boxShadow`. A `Checkbox` focused by a click does.
 | focus follows selection | drop `handlers.onFocusMove(index)` from `navigate` | runtime: `expected 'Alpha' to be 'Beta'` (`controls.runtime.test.tsx:491`) |
 | derived roving index | restore the mount-only `useState` | runtime: `expected 'Alpha' to be 'Beta'` (`controls.runtime.test.tsx:521`) |
 | `Switch` invalid | make `emptyBorder` the input role again | unit: the `invalid` assertion fails at `selection.test.ts:156` (input role received, destructive expected) |
+| Checkbox ring wiring | drop `focused: focus.focused` from its spec | runtime: `rings a focused Checkbox and Switch` → `expected false to be true` |
+| Switch ring wiring | the same revert in `Switch` | runtime: the same assertion fails on `Dark mode` |
 
 After restoring: **161 unit tests pass** (`nub run --filter @gpuixui/primitives
-test`) and **67 runtime tests pass** in 7 files (`nub run --filter
+test`) and **68 runtime tests pass** in 7 files (`nub run --filter
 @gpuixui/primitives test:runtime`), and `nub run check` is green.
 
 ### §7b Final run
@@ -200,7 +205,7 @@ Measured 2026-10-17, after the four changes were restored:
 | Command | Result |
 | ------- | ------ |
 | `nub run --filter @gpuixui/primitives test` | 16 files, **161 tests passed** (156 before; +5) |
-| `nub run --filter @gpuixui/primitives test:runtime` | 7 files, **67 tests passed** (64 before; +3) |
+| `nub run --filter @gpuixui/primitives test:runtime` | 7 files, **68 tests passed** (64 before; +4) |
 | `nub run check` | tests-can-fail, lint, fmt and `check-types` all pass |
 
 **Measured facts for the page:**
