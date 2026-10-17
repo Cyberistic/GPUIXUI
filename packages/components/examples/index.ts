@@ -15,6 +15,7 @@ import { BadgeExample } from "./badge.example.js";
 import { BreadcrumbExample } from "./breadcrumb.example.js";
 import { CardExample } from "./card.example.js";
 import { CollapsibleExample } from "./collapsible.example.js";
+import { ComboboxExample } from "./combobox.example.js";
 import { CommandMenuExample } from "./command-menu.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
 import { ContextMenuExample } from "./context-menu.example.js";
@@ -25,6 +26,7 @@ import { FieldExample } from "./field.example.js";
 import { ListExample } from "./list.example.js";
 import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
+import { SearchInputExample } from "./search-input.example.js";
 import { TabsExample } from "./tabs.example.js";
 import { ToastExample } from "./toast.example.js";
 
@@ -37,6 +39,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   breadcrumb: BreadcrumbExample,
   card: CardExample,
   collapsible: CollapsibleExample,
+  combobox: ComboboxExample,
   "command-menu": CommandMenuExample,
   "confirm-dialog": ConfirmDialogExample,
   "context-menu": ContextMenuExample,
@@ -47,6 +50,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   list: ListExample,
   pagination: PaginationExample,
   popover: PopoverExample,
+  "search-input": SearchInputExample,
   tabs: TabsExample,
   toast: ToastExample,
 };

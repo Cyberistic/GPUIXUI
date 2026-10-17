@@ -69,9 +69,9 @@ and the strongest honest alternative.
 | Collapsible sections | done | partial | trigger with `aria-expanded`, content unmounts while closed; 4 native behaviour tests. Mounts instantly: 0.10.0's motion needs a numeric height and an auto-height reveal needs a measured first paint |
 | Breadcrumbs | done | partial | declarative trail with `maxItems` collapsing the middle (first + … + tail), separators follow their item; 5 native behaviour tests + 7 collapse tests. No `aria-current` in 0.10.0, so the current page is text and colour |
 | Pagination | done | partial | stable-width page window with siblings/edges, disabled edges, ellipsis; 8 native behaviour tests + 9 window tests, both themes. Current page uses `aria-selected` because 0.10.0 has no `aria-current`; no page-size control |
-| Search inputs | todo | ? | |
-| Comboboxes | todo | ? | |
-| Date / time pickers | todo | ? | |
+| Search inputs | done | yes | leading glyph, conditional clear control, Enter submit, Escape clears only when non-empty, controlled/uncontrolled; 6 native behaviour tests. No debounce (the consumer's job); the glyph is text until an icon set lands |
+| Comboboxes | done | yes | wraps GPUix's headless combobox with our ranked option shape; single and multiple selection by value, disabled rows, empty state, Escape focus restore; 10 native behaviour tests + ranking suite, both themes. No async options/create-new, no `aria-activedescendant` |
+| Date / time pickers | todo | ? | Deferred with a design in plan 116 §5: no calendar primitive and no native time input; needs its own plan |
 
 ## Tier 3 — data presentation
 

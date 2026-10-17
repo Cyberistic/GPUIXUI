@@ -5,6 +5,9 @@
 - **Depends on:** plan 110, plan 111 (List row styling), plan 114 (menu keyboard idioms)
 - **GPUix surface used:** `Combobox` and its parts from `@gpuix/react`
   (`ComboboxProps` is string-item based — see §3)
+- **Status:** done, 2026-10-17. SearchInput (6 native tests) and Combobox
+  (10 native tests) over the existing ranking suite; examples, docs, inventory
+  rows. The date picker stays deferred per §5. Deviations in §9.
 
 ---
 
@@ -222,9 +225,32 @@ Expected: exits 0; `combobox/logic.test.ts`, `search-input.test.tsx` and
 
 ## 8. Acceptance criteria
 
-- [ ] SearchInput with clear/submit/Escape proven by real keystrokes.
-- [ ] Combobox wraps GPUix rather than reimplementing it, with our ranking in a
+- [x] SearchInput with clear/submit/Escape proven by real keystrokes.
+- [x] Combobox wraps GPUix rather than reimplementing it, with our ranking in a
       tested pure module.
-- [ ] Selection yields values, never labels; single and multiple both proven.
-- [ ] Examples, docs pages, `COMPONENTS.md` rows; date picker left as `todo`
+- [x] Selection yields values, never labels; single and multiple both proven.
+- [x] Examples, docs pages, `COMPONENTS.md` rows; date picker left as `todo`
       with the design above.
+
+## 9. Deviations, recorded during implementation (2026-10-17)
+
+1. **The pre-filtered `items` fallback replaced the predicate (STOP 1 avoided by
+   measurement).** GPUix's `filter` is `items.filter(...)`, so it can only remove
+   rows and cannot express rank order. The adapter passes `filter={null}` and
+   feeds it `filterOptions(options, query).map(value)`, with `inputValue`
+   controlled by our query state. The ranking test asserts Calendar/Camera before
+   Vacation.
+2. **`autoHighlight="always"` is set** so the first enabled match is active as
+   soon as the query changes, which is also what makes ArrowDown + Enter land on
+   the second match in the tests.
+3. **`onValueChange` reports `string | null | ReadonlyArray<string>`**, not the
+   plan's `string | ReadonlyArray<string>`: GPUix's single-select value is
+   `string | null`, and `null` is the honest "nothing selected" state inside the
+   controlled/uncontrolled convention.
+4. **Focus returns to the trigger only for Escape and selection.** An outside
+   press already gave focus to whatever was pressed, so restoring it there would
+   steal focus. `restoreFocus` is set by the input's Escape handler and by
+   `onValueChange`, not by `onMouseDownOutside`.
+5. **The trigger is a `div` with button semantics** (GPUix's `ComboboxTrigger`
+   uses `renderSlot`), not a native button. It carries `aria-expanded` and the
+   caller's `label`.

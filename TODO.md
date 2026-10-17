@@ -109,8 +109,11 @@ the `@gpuixui/tokens/react` provider
     - [x] `dropdown-menu.tsx`, behaviour suite (9/9), example, docs page, inventory row
     - [x] `context-menu.tsx` on `onAuxClick` + `isRightClick` and an `anchored` surface at the pointer (6/6), example, docs, inventory
     - [x] `command-menu.tsx` composing Dialog + the shared row look; input keeps focus, Enter arrives as `submit` (8/8), example, docs, inventory
-  - [ ] Choice inputs: Search input, Combobox
+  - [x] Choice inputs: Search input, Combobox (plan 116)
     - [x] Logic: `combobox/logic.ts` (ranking + selection)
+    - [x] `search-input.tsx` + 6 native behaviour tests (typing, clear + focus, Enter, Escape once, controlled)
+    - [x] `combobox.tsx` wrapping GPUix's headless combobox with pre-ranked items; 10 native behaviour tests (ranking, value payload, single/multiple, disabled, Escape)
+    - [x] Examples, docs pages and inventory rows for both
   - [x] Feedback: Toast system, inline validation (`Field`)
     - [x] `toast/model.ts` + test (the `ToastInput` boundary type and the queued `Toast`)
     - [x] `toast/store.ts` + test (queue, monotonic ids, `FiberMap` timers, `TestClock`)
