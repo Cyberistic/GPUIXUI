@@ -5,7 +5,7 @@
 | Phase | F (accessibility truth) |
 | Owner | **tokens-theme workstream** (`packages/tokens`, `docs/tokens.md`, `docs/design-system.md`) |
 | Depends on | plans `084` (the control boundary on the state washes), `090` (the soft status edge), `091` (selection inside a soft status surface) |
-| Status | planned |
+| Status | done |
 
 Self-contained. A weaker executor can follow it in order.
 
@@ -265,20 +265,38 @@ Record the exact failure text in §8.
 | `docs.test.ts` figure, §9 row, sentence | unit | a document that stops naming a surface or figure the contract checks |
 | `readme.test.ts` | unit | the consumer-facing front door drifting from the contract |
 
-## 8. Outcome
+## 8. Outcome (executed on this host, 2026-10-17)
 
-Filled in after execution; the numbers and the commands that produced them are
-recorded here, not predicted.
+- `contrastPairs` now holds **113** pairs: 109 + `borderStrong` on `infoSoft`,
+  `successSoft`, `warningSoft` and `destructiveSoft`.
+- Identity dark `borderStrong` `#77808F` → `#868FA0`. Measured after the move:
+  3.39:1 on `successSoft` (the tightest), 3.60:1 on `destructiveSoft`, 3.64:1 on
+  `infoSoft` and 3.71:1 on `warningSoft`; its tightest existing boundary pair
+  moved 3.31:1 → 4.06:1 on `accent`/`selected`.
+- The failing run before the move named exactly three pairs:
+  `identity dark default: borderStrong on infoSoft at 2.9718000814276277`,
+  `… on successSoft at 2.7660454515169555`,
+  `… on destructiveSoft at 2.9423184916516485`; `warningSoft` already passed.
+- Two-direction proof (`nub run --filter @gpuixui/tokens test`):
+  - restoring `#77808F` failed **4** tests: the shipped-theme loop with the three
+    pairs above, the exact-value assertion (`expected '#77808F' to be
+    '#868FA0'`), the colour-table guard and the quoted-figures guard;
+  - removing `...controlBoundarySoftPairs` from `contrastPairs` failed **3**
+    tests: `expected 109 to be 113`, the checker pair test
+    (`expected [] to deeply equal [ …(3) ]`) and the four-pair test
+    (`expected [] to have a length of 4 but got +0`);
+  - restored, the package suite is green: **30 files, 1475 tests**.
+- `nub run check`, `nub run lint` and `nub run test` all pass.
 
 ## 9. Acceptance
 
-- [ ] `controlBoundarySoftPairs` is public (via `contrastPairs`) and reported by
+- [x] `controlBoundarySoftPairs` is public (via `contrastPairs`) and reported by
       `themeContrastFailures`.
-- [ ] Every shipped theme clears the boundary floor on all four soft fills, and
+- [x] Every shipped theme clears the boundary floor on all four soft fills, and
       both high-contrast sets clear 4.5:1.
-- [ ] The identity dark regression is guarded in both directions.
-- [ ] `docs/tokens.md`, `docs/design-system.md`, the package README and
+- [x] The identity dark regression is guarded in both directions.
+- [x] `docs/tokens.md`, `docs/design-system.md`, the package README and
       `COMPONENTS.md` name the surfaces, the counts and the figures, all built
       from the implementation.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
-- [ ] The plan index row is marked done and the `TODO.md` row is ticked.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] The plan index row is marked done and the `TODO.md` row is ticked.
