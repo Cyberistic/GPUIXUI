@@ -48,9 +48,9 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████████]` 12/13
+`[x]` `[████████░░]` 14/17
 
-`[x]` Write and index the tokens/theme plan set (plans 010–019)
+`[x]` Write and index the tokens/theme plan set (plans 010–020)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -70,6 +70,7 @@ prebuilt `dist` (plan 016)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Add motion tokens (durations/easings); three `primitives` call sites held
 `120`/`700` as literals (plan 019)
+`[x]` Guard that all four shipped themes carry every theme group (plan 020)
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the

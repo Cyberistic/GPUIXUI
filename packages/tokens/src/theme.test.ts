@@ -1,7 +1,8 @@
 /**
  * Guards the extension contract: overrides merge without mutating the base,
- * typography merges field by field, elevation replaces whole levels, and a
- * theme can never change its mode through an override.
+ * typography merges field by field, elevation replaces whole levels, a theme can
+ * never change its mode through an override, and every shipped theme carries
+ * every group the others do.
  */
 import { describe, expect, it } from "vitest";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
@@ -157,6 +158,34 @@ describe("createTheme", () => {
   it("applies the name override", () => {
     expect(createTheme({ mode: "dark", name: "Acme" }).name).toBe("Acme");
     expect(createTheme({ mode: "light" }).name).toBe("Light");
+  });
+});
+
+describe("theme completeness", () => {
+  it("gives every shipped theme the same groups", () => {
+    const reference = Object.keys(lightTheme).toSorted();
+    (
+      [
+        ["dark", darkTheme],
+        ["high-contrast light", highContrastLightTheme],
+        ["high-contrast dark", highContrastDarkTheme],
+      ] as const
+    ).forEach(([label, theme]) => {
+      expect(Object.keys(theme).toSorted(), label).toEqual(reference);
+    });
+    expect(reference).toContain("motion");
+  });
+
+  it("keeps every group through a real override", () => {
+    const extended = extendTheme(lightTheme, {
+      colors: { primary: "#123456" },
+      motion: { fast: 100 },
+    });
+    expect(extended.colors.primary).toBe("#123456");
+    expect(extended.motion.fast).toBe(100);
+    expect(Object.keys(extended).toSorted()).toEqual(
+      Object.keys(lightTheme).toSorted(),
+    );
   });
 });
 
