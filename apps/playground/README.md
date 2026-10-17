@@ -20,7 +20,7 @@ placement), the Tier 3/4 probes
 `tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
 command surface probe (`command-palette`), the tabbed-pane probe
 (`workspace-panes`), the docking probe (`docking-layout`), the detachable-tab
-probe (`float-tab`), the app-level
+probe (`float-tab`), the hover-card probe (`preview-card`), the app-level
 shortcut probe (`window-key-shortcut`), the chart probe (`chart-svg`), the
 markdown probe
 (`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the
@@ -229,6 +229,32 @@ Two traps worth knowing: `ComboboxList` filters **only** when its child is a
 function — static children render every item regardless of the query. And a
 Tooltip trigger closes on click (mousedown → close, click → close), so focus
 that arrives from a click does not leave it open; hover is the supported path.
+
+## Interactive hover cards (plan `196`)
+
+`preview-card` asks the question a tooltip does not answer: can the pointer
+move **into** a floating card and use it, or is every hover surface
+non-interactive by construction? The answer is yes, with a specific mechanism
+(18 checks). The card is a `FloatingLayer`, and that layer renders **inside** its
+anchor (plan `156`), so the card is a descendant of the trigger — which is what
+makes the naive model fail.
+
+| Fact | Measured |
+| ---- | -------- |
+| entering the card | `body:enter` arrives **before** the trigger's `trigger:leave`, so cancelling a close on enter does not work — the leave schedules one after |
+| the leave payload | **no coordinates** (`trigger:leave:none`), so intent cannot be computed from the event |
+| the grace close | a 200 ms timer scheduled on any leave, which **re-checks an `inside` ref at fire time**; `hover(card)` then 300 ms later reads `open=true closes=0` |
+| leave delivery | **per element**: moving from the card's control to empty space fires the control's leave, not the body's — every hoverable child in the card needs the handler |
+| ancestors | the card root does receive enter/leave (`in=1 out=1`), but a child-to-child move can leave it, so the root cannot own the grace area |
+| the timer | real JS time: a 300 ms `Effect.sleep` and `advance(0)` are needed before the close is visible, the same rule as `toast-lifecycle` |
+| interactivity | a click on the card's control runs (`actions=1`) and the card stays open; a hover does not move native focus |
+| re-enter | leaving and re-entering the trigger inside the delay keeps the card open and does not count a close |
+
+The component contract: an interactive hover card needs a **delayed** close
+that re-checks pointer presence, a handler on **every** hoverable child, and no
+dependence on ancestor enter/leave or event coordinates. Remove the fire-time
+check and the card closes the moment the pointer reaches it (the recorded
+reverse proof).
 
 ## Accessibility (plan `160`)
 
@@ -915,13 +941,14 @@ narrower. Each deviation is deliberate and measured:
 
 - The eighteen core capabilities (including the modal contract, floating
   placement, the three published popups, the accessibility tree, the content
-  surfaces, text selection and the detachable-tab float), the Tier 3/4 probes,
-  the drag/file-drop probe, the app-level shortcut probe, the search-highlight
-  probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
-  probe, the terminal-grid probe, the chart probe, the markdown probe, the
-  toast-viewport probe, the shell probe, the pinned-grid probe, the
-  collapsible-height probe and the nested-layer probe pass in real
-  GPUix 0.10.0 on this host (57/57), with a written report and screenshots.
+  surfaces, text selection, the detachable-tab float and the interactive hover
+  card), the Tier 3/4 probes, the drag/file-drop probe, the app-level shortcut
+  probe, the search-highlight probe, the drag-autoscroll probe, the
+  command-palette probe, the tabbed-pane probe, the terminal-grid probe, the
+  chart probe, the markdown probe, the toast-viewport probe, the shell probe,
+  the pinned-grid probe, the collapsible-height probe and the nested-layer
+  probe pass in real GPUix 0.10.0 on this host (58/58), with a written report
+  and screenshots.
   The **real-window** suite (`smoke:live`) is 13/13 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives and a virtual

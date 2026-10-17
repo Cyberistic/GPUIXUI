@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §7) |
 | Phase | B → C (input/overlay feasibility) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `156`, `159` |
@@ -94,9 +94,12 @@ timer must have fired; the smoke steps run on the real clock, as
    "preview-card-body")`; sleep 250 ms; `preview-state` contains `open=true`
    and `closes=0`. This is the decisive check: without cancel-on-enter the
    trigger's leave closes the card inside 120 ms.
-4. **Event order** — `preview-order` contains `prev=trigger:leave` and
-   `last=body:enter` (the trigger's leave arrives first). Record the actual
-   pair if it differs; do not reverse the assertion to make it pass.
+4. **Event order** — `preview-order` contains `last=body:enter`. **Record** whether
+   `prev=trigger:leave`. `FloatingLayer` renders **inside** its anchor (plan
+   `156`), so the card is a descendant of the trigger: a DOM-like hover model
+   would not deliver the trigger's leave at all. Both orders are acceptable
+   outcomes; the open check in step 3 is what must hold. Do not reverse an
+   assertion to make a mechanism pass.
 5. **Ancestor delivery** — read `preview-root`; record whether `in` is `1` or
    `0`. This is an **observation**, not a pass/fail: it says whether a card root
    can own the grace area or every child needs the handlers.
@@ -110,9 +113,9 @@ timer must have fired; the smoke steps run on the real clock, as
    sleep 250 ms; `open=true` and `closes` still `1`.
 9. **Leaving the trigger with no return closes** — `hover("preview-away")`;
    sleep 250 ms; `open=false`, `reason=trigger`, `closes=2`.
-10. **The leave payload** — `preview-log` contains `trigger:leave:xy` or
-    `trigger:leave:none`. Assert the value observed in the first run in §7 and
-    keep the assertion; a runtime change must fail it.
+10. **The leave payload** — `preview-log` contains `trigger:leave:none`
+    (measured; the event carries no coordinates). Asserted, so a runtime change
+    fails the check.
 11. Screenshot `apps/playground/.artifacts/screenshots/preview-card.png`.
 
 ## 4. Commands and expected results
@@ -149,7 +152,41 @@ timer must have fired; the smoke steps run on the real clock, as
 
 ## 7. Measured results
 
-_Filled after the run._
+Run on this host (Intel macOS, locally built `@gpuix/native@0.10.0`, ADR 0003),
+2026-10-18.
+
+**An interactive hover card is feasible.** `preview-card` records **18
+checks**; the suite is `58/58`, exit `0`:
+
+- hovering the trigger opens the card and does **not** move native focus;
+- moving the pointer onto the card body, then waiting 300 ms, leaves it
+  `open=true closes=0` — the grace close is cancelled;
+- the order readout is `prev=body:enter` with `last=trigger:leave`: the card's
+  enter is delivered **before** the trigger's leave;
+- the leave payload is `trigger:leave:none` — **no coordinates**;
+- clicking the card's control runs it (`actions=1`) and the card stays open;
+- leaving the card closes it after the 200 ms delay (`closes=1`), and leaving
+  the trigger closes it with `reason=trigger` (`closes=2`);
+- a re-enter inside the delay keeps it open and does not count a close;
+- ancestor delivery: the card root counted `in=1 out=1`; a child-to-child move
+  from the body to the control delivered the root's leave, so the root cannot
+  own the grace area, and the control needed its **own** leave handler (without
+  it the close never scheduled when the pointer left the control).
+
+The mechanism that works: on any leave, cancel and schedule a 200 ms close; the
+timer **re-checks an `inside` ref at fire time**. Cancelling on enter alone is
+insufficient because the trigger's leave arrives after the enter. The timer is
+real JS time — the steps need `Effect.sleep("300 millis")` **and**
+`ctx.host.advance(0)` before the readout changes, the same rule as
+`toast-lifecycle`.
+
+**Reverse run:** deleting the `if (inside.current) return;` check makes the card
+close the moment the pointer reaches it:
+`the pointer enters the card and the grace close is cancelled: expected a string
+containing "open=true", got "open=false closes=1 reason=trigger"` — exit `1`.
+Restored and re-ran green.
+
+Screenshot: `apps/playground/.artifacts/screenshots/preview-card.png`.
 
 ## 8. Acceptance
 

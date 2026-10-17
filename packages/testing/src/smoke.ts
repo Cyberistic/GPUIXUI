@@ -40,6 +40,7 @@ export const CAPABILITIES = [
   "workspace",
   "docking",
   "float",
+  "preview",
   "command",
   "content",
   "drag",

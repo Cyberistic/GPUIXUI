@@ -47,7 +47,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag`, `workspace-restore`, `workspace-panes` | verified |
 | docking | `docking-layout` | verified |
-| float | `float-tab` | verified |
+| float | `float-tab`, `live-float` | verified |
+| preview | `preview-card` | verified |
 | command | `command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
@@ -64,7 +65,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | grid | `grid-wide-table` | verified |
 | layers | `nested-layer-dismiss` | verified |
 
-The suite is **57/57 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **58/58 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **13/13 green
@@ -640,8 +641,8 @@ in-package and an end-to-end native verdict.
 | Date / time pickers | todo | ? | `div` + `<text>` + keyboard grid; no date host element. |
 | Fieldset | todo | ? | Form grouping (`FieldsetRoot`/`Legend` in base-gpui). `div` + `<text>`. |
 | Form | todo | ? | Validation orchestration and submit lifecycle (base-gpui `Form`). No host element; Effect-based validation lives in the package, not the renderer. |
-| Navigation Menu | todo | ? | 13-part nav whose items open content panels; distinct from Dropdown menus. `FloatingLayer` + `<anchored>`. |
-| Preview Card | todo | ? | Hover-triggered rich card with a positioner (base-gpui, 8 parts). `FloatingLayer` + `<anchored>`. |
+| Navigation Menu | todo | ? | 13-part nav whose items open content panels; distinct from Dropdown menus. `FloatingLayer` + `<anchored>`. Hover intent is the `preview-card` contract above (delayed close with a fire-time presence check). |
+| Preview Card | partial (probe) | partial (probe) | Hover-triggered rich card with a positioner (base-gpui, 8 parts). `FloatingLayer` + `<anchored>`. **An interactive card works (`preview-card`, plan `196`), with three rules:** the card enter arrives **before** the trigger leave, so a close scheduled on the leave must re-check an `inside` ref **when the timer fires** (200 ms); the leave payload has **no coordinates**; and enter/leave are delivered **per element**, so every hoverable child inside the card carries the handler (the root gets enter/leave but a child-to-child move can leave it). A card click runs and keeps it open, hover never moves focus, and a re-enter inside the delay cancels. Remove the fire-time check and the card closes the moment the pointer reaches it — measured. |
 | Drawer | todo | ? | Edge-anchored panel with swipe-to-dismiss and nesting. `Dialog` is main-only in 0.10.0; `div` + `motion` (width/left/opacity) + `createPortal`. |
 | Stepper | todo | ? | Multi-step progress indicator (adabraka `StepItem`/`StepStatus`). `div` + `<text>`. |
 | Timeline | todo | ? | Event timeline with connector styles. `div` + `<text>`. |
