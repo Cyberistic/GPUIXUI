@@ -34,19 +34,28 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[█████░░░░░]` 5/9 plans-and-harness
+`[x]` `[██████░░░░]` 6/10 plans-and-harness
 
 `[x]` Plans `100`–`130` written and indexed for the playground workstream
 `[x]` Record the build host's missing 0.10 binding as ADR 0001 (evidence + consequence)
 `[x]` Probe GPUix 0.5.1 on this host: it runs (real window, layout/input/overlay/panel/virtual-list/programmatic scroll) and it never delivers focus or wheel-scroll events — ADR 0002
 `[x]` Establish the GPUix capability map from docs/types and measured probes (layout, input, focus, overlay, scroll, panel, virtual-list, Tier 3/4)
 `[x]` Land `packages/testing` (harness, report, runtime preflight) per plan `100`
+`[x]` Land the `legacy-probe` (0.5.1) so the documented capability matrix is reproducible per plan `110` §3.4
 `[ ]` Land `apps/playground` shell + `SplitPane` + the eight core scenarios per plan `120`
-`[ ]` Land the `legacy-probe` (0.5.1) so the documented capability matrix is reproducible per plan `110` §3.4
 `[ ]` Land the Tier 3/4 probe scenarios per plan `130`
 `[ ]` **Blocked: run the 0.10 native smoke suite on a supported host** (Apple Silicon Mac / x64 Windows / x64 Linux) and paste the report into `COMPONENTS.md` — no supported host on this machine (ADR 0001/0002)
 `[ ]` Wire the playground to `@gpuixui/tokens` once the tokens workstream lands (replace `src/theme.ts`)
 `[ ]` Replace the jj-based `scripts/verify-two-directions.sh` with a git implementation (outside this workstream)
+
+#### Process — one writer per tree
+
+`[ ]` **Supervisor bug: two playground agents ran in `workspaces/playground` at
+once.** The 30-minute tick starts a workstream loop when its pid file is gone,
+but an interactive session for the same workstream is not tracked, so a second
+agent implemented `packages/testing` while the first was mid-edit. Either track
+interactive sessions or refuse to start a workstream whose tree has uncommitted
+changes from another pid. Owners: whoever owns `scripts/swarm-supervisor.sh`.
 
 ## Phase B — working foundation
 

@@ -1,0 +1,15 @@
+{
+  "name": "gpuix-legacy-probe",
+  "private": true,
+  "type": "module",
+  "description": "Reproduces the GPUix 0.5.1 capability measurements on this host. Deliberately outside the workspace: it pins an older GPUix than the library targets.",
+  "scripts": {
+    "probe": "node probe.mjs",
+    "live": "node live-driver.mjs"
+  },
+  "dependencies": {
+    "@gpuix/native": "0.5.1",
+    "@gpuix/react": "0.5.1",
+    "react": "19.2.0"
+  }
+}

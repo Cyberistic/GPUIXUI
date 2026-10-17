@@ -39,24 +39,24 @@ synthetic wheel scrolling do not; `<canvas>` does not paint.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Text / typography | todo | docs | |
-| Icons | todo | docs | |
-| Separators | todo | docs | |
-| Spacers | todo | docs | |
-| Stack / layout primitives | todo | docs | |
-| Boxes / containers | todo | docs | |
-| Scrollable containers | todo | docs | |
-| Buttons | todo | docs | |
+| Text / typography | todo | verified 0.5.1 (text) | |
+| Icons | todo | docs (`<svg>`, `<img>`) | |
+| Separators | todo | verified 0.5.1 (layout) | |
+| Spacers | todo | verified 0.5.1 (layout) | |
+| Stack / layout primitives | todo | verified 0.5.1 (layout) | |
+| Boxes / containers | todo | verified 0.5.1 (layout) | |
+| Scrollable containers | todo | verified 0.5.1 (programmatic scroll); wheel unverified | |
+| Buttons | todo | verified 0.5.1 (click); no native `<button>` | |
 | Button groups | todo | docs | |
 | Labels | todo | docs | |
-| Text inputs | todo | docs | |
-| Text areas | todo | docs | |
-| Checkboxes | todo | docs | |
-| Radio groups | todo | docs | |
+| Text inputs | todo | verified 0.5.1 (input) | |
+| Text areas | todo | verified 0.5.1 (input) | |
+| Checkboxes | todo | docs (composition: click verified 0.5.1) | |
+| Radio groups | todo | docs (composition; focus unverified) | |
 | Selects | todo | docs | |
-| Switches | todo | docs | |
+| Switches | todo | docs (composition: click verified 0.5.1) | |
 | Progress | todo | docs | |
-| Tooltips | todo | docs | |
+| Tooltips | todo | docs (0.5.1 `Tooltip`; anchored overlay verified 0.5.1) | |
 | Skeletons | todo | docs | |
 | Loading indicators | todo | docs | |
 
@@ -64,19 +64,19 @@ synthetic wheel scrolling do not; `<canvas>` does not paint.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Cards | todo | docs | |
+| Cards | todo | verified 0.5.1 (layout) | |
 | Badges | todo | docs | |
 | Avatars | todo | docs | |
-| Lists / list items | todo | docs | |
+| Lists / list items | todo | verified 0.5.1 (layout) | |
 | Empty states | todo | docs | |
 | Alerts | todo | docs | |
 | Inline validation | todo | docs | |
 | Toasts / notifications | todo | docs | |
-| Dialogs | todo | docs | |
-| Confirmation dialogs | todo | docs | |
-| Popovers | todo | docs | |
-| Dropdown menus | todo | docs | |
-| Context menus | todo | docs | |
+| Dialogs | todo | docs (anchored overlay + Escape + click-outside verified 0.5.1) | |
+| Confirmation dialogs | todo | docs (Dialog composed with a form) | |
+| Popovers | todo | docs (anchored overlay verified 0.5.1) | |
+| Dropdown menus | todo | docs (anchored overlay verified 0.5.1) | |
+| Context menus | todo | docs (anchored overlay; no z-index: deferred layer only) | |
 | Command menus | todo | docs | |
 | Tabs | todo | docs | |
 | Accordions | todo | docs | |
@@ -91,61 +91,61 @@ synthetic wheel scrolling do not; `<canvas>` does not paint.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Tables | todo | docs | |
+| Tables | todo | docs (composition; probe: plan 130) | |
 | Sortable tables | todo | docs | |
 | Row selection | todo | docs | |
 | Column configuration | todo | docs | |
 | Resizable columns | todo | docs | |
 | Filtering controls | todo | docs | |
 | Data toolbars | todo | docs | |
-| Virtualized lists | todo | docs | |
-| Virtualized tables | todo | docs | |
-| Tree views | todo | docs | |
-| Expandable rows | todo | docs | |
+| Virtualized lists | todo | verified 0.5.1 (virtual-list: 5 of 500 rows built) | |
+| Virtualized tables | todo | docs (probe: plan 130 `table-select-sort`) | |
+| Tree views | todo | docs (composition over verified layout primitives) | |
+| Expandable rows | todo | docs (composition) | |
 | Key-value displays | todo | docs | |
-| Property panels | todo | docs | |
+| Property panels | todo | docs (composition) | |
 | Statistic / metric cards | todo | docs | |
-| Charts | todo | docs | |
+| Charts | todo | unsupported (no canvas: 0.5.1 `<canvas>` has no painted bounds). Alternative: `<img>` + `setImagePixels` | |
 
 ## Tier 4 — desktop workspace
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Resizable split panes | todo | docs | |
-| Panel groups | todo | docs | |
+| Resizable split panes | todo | verified 0.5.1 (pointer-capture drag + clamp) | |
+| Panel groups | todo | docs (nested split panes; resize verified 0.5.1) | |
 | Collapsible sidebars | todo | docs | |
 | Tabbed panels | todo | docs | |
-| Detachable / movable tabs | todo | docs | |
-| Docking layouts | todo | docs | |
-| Nested panel arrangements | todo | docs | |
-| Workspace layouts | todo | docs | |
-| Persistent panel state | todo | docs | |
-| Keyboard navigation | todo | docs | |
-| Command palette | todo | docs | |
+| Detachable / movable tabs | todo | unsupported (no multiple windows) | |
+| Docking layouts | todo | docs (nested flex + state; no z-index, deferred overlays only) | |
+| Nested panel arrangements | todo | docs (nested flex; nested scrolling is unsupported) | |
+| Workspace layouts | todo | docs (composition) | |
+| Persistent panel state | todo | docs (no storage primitive; app boundary owns it) | |
+| Keyboard navigation | todo | unverified (no focus/blur events on 0.5.1) | |
+| Command palette | todo | docs (Dialog + `<input>` + `<virtual-list>`; window key handler) | |
 | Application menus | todo | docs | |
-| Status bars | todo | docs | |
-| Toolbars | todo | docs | |
+| Status bars | todo | verified 0.5.1 (layout) | |
+| Toolbars | todo | verified 0.5.1 (layout) | |
 | Breadcrumb navigation | todo | docs | |
-| Inspector panels | todo | docs | |
+| Inspector panels | todo | docs (composition) | |
 | Property editors | todo | docs | |
-| File trees | todo | docs | |
-| Log viewers | todo | docs | |
-| Terminal surfaces | todo | docs | |
-| Search and replace | todo | docs | |
-| Multi-pane editing layouts | todo | docs | |
+| File trees | todo | docs (tree view + `onFileDrop`) | |
+| Log viewers | todo | docs (`<virtual-list>` + `followTail`) | |
+| Terminal surfaces | todo | unsupported as a terminal (no PTY element). Alternative: `<code>` output + `<input>` line | |
+| Search and replace | todo | docs (`highlight` + `useTextSearch` in 0.10) | |
+| Multi-pane editing layouts | todo | docs (composition) | |
 
 ## Tier 5 — specialised
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Code editor integration | todo | docs | |
-| Syntax highlighting | todo | docs | |
-| Diff viewer | todo | docs | |
-| Rich-text editing | todo | docs | |
-| Image preview | todo | docs | |
-| File / folder selection | todo | docs | |
-| Drag and drop | todo | docs | |
-| Notification centre | todo | docs | |
-| Multi-step forms | todo | docs | |
-| Virtualized hierarchical data | todo | docs | |
-| Advanced filtering / query builders | todo | docs | |
+| Code editor integration | todo | docs (`<code>` is display-only; `<textarea>` edits plain text) | |
+| Syntax highlighting | todo | docs (`<code>`; paint verified 0.5.1) | |
+| Diff viewer | todo | docs (`<diff>` native element) | |
+| Rich-text editing | todo | unsupported (no document model) | |
+| Image preview | todo | docs (`<img>`: path, data URL, http(s); `setImagePixels`) | |
+| File / folder selection | todo | docs (0.10 `onFileDrop`, `promptForPaths`; absent in 0.5.1) | |
+| Drag and drop | todo | docs (internal drag verified 0.5.1; no native drag-out) | |
+| Notification centre | todo | docs (portal/anchored layer) | |
+| Multi-step forms | todo | docs (composition) | |
+| Virtualized hierarchical data | todo | docs (`<virtual-list>` + flattening) | |
+| Advanced filtering / query builders | todo | docs (composition) | |
