@@ -45,6 +45,20 @@ solid role with a readable foreground and a soft pair (`xSoft` /
 `xSoftForeground`) for alerts, badges and toasts. `info` is blue, never iris, so
 an informational message cannot be mistaken for a primary action.
 
+## Scales and control metrics
+
+Spacing, radii, border widths, icon sizes, density and elevation are values in
+the same `Theme`, so overriding one moves every component that reads it. The
+tables below are generated from `@gpuixui/tokens`: a group the package adds
+appears here without a docs edit, and a changed value cannot drift.
+
+<TokenScales />
+
+Density is a preset, not a second palette. It moves control heights, horizontal
+padding and row heights, and leaves colour and type alone. Elevation resolves to
+one shadow per surface because the native runtime paints one; `overlay` is
+reserved and paints nothing.
+
 ## Platform styles
 
 The library ships a platform style for **macOS**, **Linux** and **Windows**, plus

@@ -41,9 +41,11 @@ token package first, then the stylesheet — a mismatch fails the suite.
 
 The theming and typography pages render `<TokenColors />`, `<TypeScale />` and
 `<PlatformTypes />` from the package's data, so the documented values are the
-shipped values. The token root entry is the **only** `@gpuixui/*` import the site
-may make (`@gpuixui/tokens/react` is forbidden, as is every GPUix runtime
-package); `src/architecture.test.ts` enforces the allow-list.
+shipped values. `<TokenScales />` adds every remaining group — spacing, radius,
+border width, icon size, density and elevation — with tests that fail when a
+group, key or value drifts. The token root entry is the **only** `@gpuixui/*`
+import the site may make (`@gpuixui/tokens/react` is forbidden, as is every GPUix
+runtime package); `src/architecture.test.ts` enforces the allow-list.
 
 ## Public URL
 

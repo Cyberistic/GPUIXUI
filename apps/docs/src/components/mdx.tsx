@@ -10,6 +10,7 @@ import { PreviewUnavailable } from "./preview/preview-unavailable";
 import { RelatedComponents } from "./related-components";
 import { PlatformValues } from "./platform-values";
 import { TokenColors } from "./token-colors";
+import { TokenScales } from "./token-scales";
 import { PlatformTypes, TypeScale } from "./type-scale";
 
 export function getMDXComponents(components?: MDXComponents) {
@@ -26,6 +27,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TokenColors,
     TypeScale,
     PlatformTypes,
+    TokenScales,
     PlatformValues,
     ...components,
   } satisfies MDXComponents;
