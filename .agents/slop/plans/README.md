@@ -36,6 +36,7 @@ workstream declares in its own section below.
 | [116](./116-tier2-choice-inputs.md) | Choice inputs: Search input, Combobox (+ deferred date picker design) | C-6 | 110, 111, 114 | done — 16 native behaviour tests; date picker deferred with a design |
 | [117](./117-tier2-verification.md) | Tier 2 verification, inventory sync check and completion gate | C/F | 110–116 | done — inventory check + 11-test theme matrix; gate green |
 | [118](./118-single-writer-components.md) | B3 in the components worktree: two live writers, one tree | cross-cutting | — | **blocker** |
+| [119](./119-tier2-date-picker.md) | Date picker: the deferred Tier 2 item | C | 110, 112, 117 | done — 13 calendar tests + 9 native behaviour tests |
 
 Interlocks this workstream depends on and does not own:
 

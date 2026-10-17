@@ -71,7 +71,7 @@ and the strongest honest alternative.
 | Pagination | done | partial | stable-width page window with siblings/edges, disabled edges, ellipsis; 8 native behaviour tests + 9 window tests, both themes. Current page uses `aria-selected` because 0.10.0 has no `aria-current`; no page-size control |
 | Search inputs | done | yes | leading glyph, conditional clear control, Enter submit, Escape clears only when non-empty, controlled/uncontrolled; 6 native behaviour tests. No debounce (the consumer's job); the glyph is text until an icon set lands |
 | Comboboxes | done | yes | wraps GPUix's headless combobox with our ranked option shape; single and multiple selection by value, disabled rows, empty state, Escape focus restore; 10 native behaviour tests + ranking suite, both themes. No async options/create-new, no `aria-activedescendant` |
-| Date / time pickers | todo | ? | Deferred with a design in plan 116 §5: no calendar primitive and no native time input; needs its own plan |
+| Date / time pickers | done | partial | month grid over Effect `DateTime` (no `Date`), `Popover` surface, arrow/Home/End/PageUp/PageDown, ISO-day value; 9 native behaviour tests + 13 calendar tests, both themes. Fixed English labels, no adjacent-month days, no time picker, no `aria-current` |
 
 ## Tier 3 — data presentation
 

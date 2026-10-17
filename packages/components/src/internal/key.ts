@@ -34,6 +34,14 @@ export const isFirst = (event: EventPayload): boolean => event.key === "home";
 /** End. */
 export const isLast = (event: EventPayload): boolean => event.key === "end";
 
+/** Page Up, the previous month in a calendar. */
+export const isPageUp = (event: EventPayload): boolean =>
+  event.key === "pageup";
+
+/** Page Down, the next month in a calendar. */
+export const isPageDown = (event: EventPayload): boolean =>
+  event.key === "pagedown";
+
 /** Escape, which every overlay treats as dismiss. */
 export const isDismiss = (event: EventPayload): boolean =>
   event.key === "escape";

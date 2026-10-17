@@ -17,6 +17,7 @@ export * from "./combobox.js";
 export * from "./command-menu.js";
 export * from "./confirm-dialog.js";
 export * from "./context-menu.js";
+export * from "./date-picker.js";
 export * from "./dialog.js";
 export * from "./dropdown-menu.js";
 export * from "./empty-state.js";

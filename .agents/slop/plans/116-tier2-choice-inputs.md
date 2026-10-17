@@ -178,26 +178,12 @@ string items are wrapped rather than reimplemented), ranking rules table, empty
 state, a11y (`aria-expanded`, no `aria-activedescendant` — GPUix focuses the
 input, highlight is visual), limitations.
 
-## 5. Date / time picker — deferred, with a design
+## 5. Date / time picker — delivered in plan 119
 
-Not in this phase's scope. `COMPONENTS.md` keeps it as `todo` with the note
-"needs its own plan; no calendar component exists in Tier 1/2 yet".
-
-When it is picked up, the shape is already decided, so the work is bounded:
-
-1. `src/date-picker/calendar.ts` — pure. `Effect`'s `DateTime` for month math
-   (`DateTime.add`, `DateTime.startOf("month")`, `DateTime.weekday`), no `Date`.
-   Exports `monthGrid(month: DateTime.DateTime, weekStartsOn: 0|1): ReadonlyArray<ReadonlyArray<DateTime.DateTime | null>>`,
-   `isSameDay`, `addMonths`, `formatMonthLabel`.
-2. Tests: February in a leap year, a month starting on Sunday, a month starting
-   on Saturday, year boundaries, week-start variants.
-3. `DatePicker` = a `Popover` (plan 112) containing a 7-column grid of
-   `Button`s + month navigation; `role:"grid"`, arrow keys move by day, PageUp/
-   PageDown by month.
-4. A time picker is a separate, later decision: there is no native time-input
-   element in GPUix, so it composes two `NumberInput`s or a scroll list.
-5. STOP if `DateTime` cannot produce a stable month grid without a locale
-   dependency — report before inventing month names.
+Implemented by plan `119-tier2-date-picker.md` on 2026-10-17: a pure `DateTime`
+month grid (`src/date-picker/calendar.ts`), a `Popover`-hosted `DatePicker`, 13
+calendar tests and 9 native behaviour tests. The time picker remains out of
+scope and is documented as such.
 
 ## 6. Commands
 

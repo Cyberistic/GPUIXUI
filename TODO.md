@@ -63,10 +63,10 @@ the `@gpuixui/tokens/react` provider
 
 ## Phase C — Tier 1–2 components
 
-`[~]` `[██░░░░░░░░]` 1/3
+`[x]` `[██░░░░░░░░]` 2/3
 
 `[ ]` Tier 1 foundational components (code + test + example + docs + inventory)
-`[~]` Tier 2 composition/feedback components (same bar)
+`[x]` Tier 2 composition/feedback components (same bar)
   - [x] Write and index the Tier 2 plan set (plans 110–117)
   - [x] `packages/components` package, token/primitives adapters, native test harness
     - [x] Package scaffold (package.json, tsconfig, vitest config, README)
@@ -121,7 +121,7 @@ the `@gpuixui/tokens/react` provider
     - [x] `toast/provider.tsx` + `viewport.tsx` + `toast.tsx` (ManagedRuntime boundary, `useToast`, viewport) + 7 native behaviour tests
     - [x] `field.tsx` (Field/FieldLabel/FieldDescription/FieldError/FieldInput) + 5 native behaviour tests
     - [x] Examples, docs pages and inventory rows for Toast and Field
-  - [ ] Date / time picker (design in plan 116 §5; not started)
+  - [x] Date / time picker (plan 119) — the day picker is done; a time picker is documented as out of scope
   - [x] Tier 2 verification matrix and inventory sync check (plan 117)
     - [x] `src/inventory.ts` + `src/inventory.test.ts`: files exist, rows agree, no duplicates, `done` implies a behaviour test
     - [x] `src/behaviour/theme-matrix.test.tsx`: the both-theme matrix for the 11 components without one

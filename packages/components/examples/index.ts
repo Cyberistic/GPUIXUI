@@ -19,6 +19,7 @@ import { ComboboxExample } from "./combobox.example.js";
 import { CommandMenuExample } from "./command-menu.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
 import { ContextMenuExample } from "./context-menu.example.js";
+import { DatePickerExample } from "./date-picker.example.js";
 import { DialogExample } from "./dialog.example.js";
 import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
@@ -43,6 +44,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "command-menu": CommandMenuExample,
   "confirm-dialog": ConfirmDialogExample,
   "context-menu": ContextMenuExample,
+  "date-picker": DatePickerExample,
   dialog: DialogExample,
   "dropdown-menu": DropdownMenuExample,
   "empty-state": EmptyStateExample,

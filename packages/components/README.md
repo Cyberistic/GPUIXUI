@@ -42,6 +42,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/field.tsx` | Field: label, control, one message slot; the inline-validation surface |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
+| `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover |
 | `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store |
 | `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
 | `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |

@@ -17,6 +17,7 @@ import { comboboxMeta } from "./combobox.js";
 import { commandMenuMeta } from "./command-menu.js";
 import { confirmDialogMeta } from "./confirm-dialog.js";
 import { contextMenuMeta } from "./context-menu.js";
+import { datePickerMeta } from "./date-picker.js";
 import { dialogMeta } from "./dialog.js";
 import { dropdownMenuMeta } from "./dropdown-menu.js";
 import { emptyStateMeta } from "./empty-state.js";
@@ -58,6 +59,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   commandMenuMeta,
   confirmDialogMeta,
   contextMenuMeta,
+  datePickerMeta,
   dialogMeta,
   dropdownMenuMeta,
   emptyStateMeta,
