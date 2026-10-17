@@ -1,0 +1,110 @@
+---
+title: Slider
+description: Selects one value by click, drag or keyboard.
+---
+
+<ComponentState slug="slider" />
+
+<NativePreview slug="slider" />
+
+`Slider` is one value inside a closed range. GPUix 0.10.0 publishes no slider
+host element, so the track, fill and thumb are the package's own `div` tree over
+`core/value.ts`, and the pointer and key contracts are ours. It is a single tab
+stop; the arrows and the pointer act on the same value.
+
+## Usage
+
+```tsx
+import { Slider, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="sm">
+  <Text role="caption" tone="muted">
+    Quality · {quality}%
+  </Text>
+  <Slider
+    label="Quality"
+    value={quality}
+    onChange={setQuality}
+    formatValue={(value) => `${value}%`}
+  />
+</Stack>;
+```
+
+Omit `value` to let the slider own its state; `defaultValue` sets the start.
+
+## Variants
+
+One track appearance. `invalid` paints the destructive role on the fill and the
+thumb's border, the same signal a field uses, so a failed validation is not
+carried by text alone.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`: the track height comes from
+`density.controlHeight` and the thumb from `iconSize`, so a slider matches the
+field beside it at the same size.
+
+## States
+
+Controlled (`value`) or uncontrolled (`defaultValue`); `disabled` leaves the tab
+order, adds half opacity and refuses both pointer and keys. Values outside
+`min`–`max` are clamped, a value between steps snaps to the step measured from
+`min`, and `NaN` reads as `min` rather than a full track.
+
+## Composition
+
+The value example puts a slider, a range slider and a meter in one settings
+card, controlled by the same state the labels read:
+
+<include lang="tsx" meta='title="packages/primitives/examples/value.example.tsx"'>
+  ../../../../../packages/primitives/examples/value.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Slider.tsx" name="SliderProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| `ArrowRight` / `ArrowUp` | + one step |
+| `ArrowLeft` / `ArrowDown` | − one step |
+| `PageUp` / `PageDown` | ± ten steps |
+| `Home` / `End` | `min` / `max` |
+| Tab | enters the slider as one stop; the ring paints on the thumb |
+
+A press anywhere on the track moves the value to the point under the pointer; a
+drag updates while the pointer is over the track.
+
+## Theming
+
+The track is `colors.muted`, the fill `colors.primary` (or `colors.destructive`
+when invalid), and the thumb `colors.input` with a `colors.primary` border. The
+ring is the shared `focusRing`. No component literal names a colour, size or
+radius.
+
+## Accessibility and limitations
+
+- Role `slider`; the value is announced through **`aria-valuetext`**, with
+  `formatValue` when the number alone is ambiguous (`"62%"`, `"$40"`).
+- **No `aria-valuenow`/`min`/`max`** in 0.10.0: a screen reader hears the value
+  but not the range. Pair it with visible text when the range matters.
+- **No pointer capture**: a drag that leaves the track stops receiving moves.
+  Click-to-position and the whole keyboard contract still work.
+- A disabled slider is skipped rather than announced as an unusable control.
+- The thumb cannot rotate or transform; its position is a flex layout.
+
+## Dependencies
+
+<ComponentDependencies slug="slider" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Slider.tsx"'>
+  ../../../../../packages/primitives/src/components/Slider.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="slider" />

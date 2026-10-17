@@ -67,7 +67,9 @@ describe("preview labels", () => {
   });
 
   it("shows an unverified component as unavailable, never approximated", () => {
-    const html = renderToStaticMarkup(<NativePreview slug="slider" />);
+    const html = renderToStaticMarkup(
+      <NativePreview slug="message-scroller" />,
+    );
     expect(html).toContain("Not verified in the GPUix runtime");
     expect(html).not.toContain(APPROXIMATION_NOTICE);
   });

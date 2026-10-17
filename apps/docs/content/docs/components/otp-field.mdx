@@ -1,0 +1,116 @@
+---
+title: OTP Field
+description: A one-time code in length cells, held as one string.
+---
+
+<ComponentState slug="otp-field" />
+
+<NativePreview slug="otp-field" />
+
+`OTPField` is a one-time-code entry control: `length` single-character `<input>`
+cells over one value. It is not six independent fields — the caller passes and
+receives one string, and the package distributes it across the cells
+(`core/otp.ts`) while moving native focus between them.
+
+## Usage
+
+```tsx
+import { Label, OTPField, Stack } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="xs">
+  <Label description="Six digits from your authenticator">
+    Verification code
+  </Label>
+  <OTPField
+    label="Verification code"
+    value={code}
+    onChange={setCode}
+    onComplete={(complete) => verify(complete)}
+  />
+</Stack>;
+```
+
+`length` defaults to six. The value is contiguous from the first cell, so typing
+into a cell beyond the current code appends rather than leaving a hole, and only
+letters and digits are kept (`123-456` becomes `123456`).
+
+## Variants
+
+One cell appearance. `invalid` paints the destructive border on every cell, so a
+rejected code is a property of the field rather than of the cell that happens to
+have focus.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; cell height and width come from the
+density scale, and the row gap is the `sm` spacing step.
+
+## States
+
+Controlled (`value`) or uncontrolled (`defaultValue`); `disabled` makes every
+cell read-only, removes them from the tab order and guards the handlers;
+`autoFocus` focuses the first cell on mount. `onComplete` fires once, when an
+edit makes the code full.
+
+## Composition
+
+The OTP example is a two-step verification form with a resend action:
+
+<include lang="tsx" meta='title="packages/primitives/examples/otp.example.tsx"'>
+  ../../../../../packages/primitives/examples/otp.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/OTPField.tsx" name="OTPFieldProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| any character | replaces the cell, then focus advances |
+| `ArrowLeft` / `ArrowRight` | previous / next cell |
+| `Home` / `End` | first / last cell |
+| `Backspace` | deletes the current character; in an empty cell, clears the one before and moves there |
+| `Delete` | deletes the current character (native) |
+
+The key contract runs on **key up**: the native text editor consumes
+Left/Right/Home/End/Backspace/Delete on key down, so a held arrow moves one cell
+instead of repeating. Backspace on a filled cell is the native edit and does not
+delete a second character.
+
+## Theming
+
+Cells use the shared field chrome (`colors.input`, `colors.border`,
+`colors.inputForeground`), the destructive role when invalid, and the
+`controlFocusStyle` ring on the focused cell only. Cell size comes from
+`density.controlHeight[size]`. No literal colour, size or radius is named.
+
+## Accessibility and limitations
+
+- The field is a named `Group`; each cell is a named `TextInput`
+  (`"Verification code digit 1"` …), because 0.10.0 has no `aria-labelledby`.
+- A disabled field is read-only and every cell leaves the tab order.
+- **Paste is unverified**: 0.10.0 has no `onPaste` and the `TestRenderer` has no
+  clipboard simulation. A multi-character change fills forward from the receiving
+  cell — proven as a pure rule — but the real clipboard path has not been
+  observed.
+- **Arrows do not repeat** (key up, above).
+- The code is contiguous: clearing a middle character shifts the rest left.
+- **`autoFocus` paints no ring on mount**, because no focus event is dispatched.
+- No letter-casing rule: letters are kept as typed; normalise in `onChange` if
+  the backend expects uppercase.
+
+## Dependencies
+
+<ComponentDependencies slug="otp-field" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/OTPField.tsx"'>
+  ../../../../../packages/primitives/src/components/OTPField.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="otp-field" />

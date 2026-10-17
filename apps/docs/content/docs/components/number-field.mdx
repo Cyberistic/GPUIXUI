@@ -1,0 +1,113 @@
+---
+title: Number Field
+description: A numeric field with steps, bounds and formatting.
+---
+
+<ComponentState slug="number-field" />
+
+<NativePreview slug="number-field" />
+
+`NumberField` is a numeric text field. GPUix's `<input>` has no numeric mode —
+no `type`, no `min`, no spinner — so parsing, clamping, stepping and the draft
+text are the package's (`core/number.ts`). It is not a slider: the user types an
+exact number, and the arrows are a convenience. An untouched field with no value
+renders empty rather than a zero to delete.
+
+## Usage
+
+```tsx
+import { Label, NumberField, Stack } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="xs">
+  <Label description="1–99">Copies</Label>
+  <NumberField
+    label="Copies"
+    value={copies}
+    onChange={setCopies}
+    min={1}
+    max={99}
+  />
+</Stack>;
+```
+
+While the user types, the draft text is kept verbatim (`1.` stays `1.`), so the
+caret never jumps; on blur or `Enter` it is reformatted to `precision`.
+
+## Variants
+
+One field appearance. `invalid` paints the destructive border, like any other
+field, and there is no separate stepper-only or slider-hybrid variant.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; height and padding come from the theme's
+density scale, so the field matches `Input` beside it.
+
+## States
+
+Controlled (`value`) or uncontrolled (`defaultValue`); `disabled` makes the field
+read-only, removes the tab stop and guards the handlers; `invalid` paints the
+destructive border. The spin buttons are pointer affordances and are never tab
+stops — the field is one stop.
+
+## Composition
+
+The number-field example is a print settings form with bounded copies and a
+live summary:
+
+<include lang="tsx" meta='title="packages/primitives/examples/number-field.example.tsx"'>
+  ../../../../../packages/primitives/examples/number-field.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/NumberField.tsx" name="NumberFieldProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| `ArrowUp` / `ArrowRight` | + one step |
+| `ArrowDown` / `ArrowLeft` | − one step |
+| `PageUp` / `PageDown` | ± ten steps |
+| `Home` / `End` | `min` / `max`, only when that bound exists |
+| `Enter` | commit and reformat |
+| Tab | one stop for the whole field; the steppers are not stops |
+
+A click on a stepper returns focus to the input, so the next arrow works without
+reaching for the mouse again.
+
+## Theming
+
+The field uses the shared field chrome: `colors.input`, `colors.border`,
+`colors.inputForeground`, with the `controlFocusStyle` ring on the wrapper.
+Stepper glyphs are `colors.mutedForeground`; height and padding come from
+`density`. Nothing names a literal.
+
+## Accessibility and limitations
+
+- The input is a `TextInput` named by `label`; the steppers are `presentation`,
+  so a screen reader sees one named number field, not three controls.
+- There is **no `aria-valuenow`/`min`/`max`** in 0.10.0; the value is the native
+  input's text.
+- **Decimal text only**: `1,5`, `0x10` and `Infinity` are rejected rather than
+  guessed at. Use `formatValue` for display and parse before assigning.
+- **No `type="number"`, `inputMode` or `maxLength`**: the host input takes text,
+  a placeholder and read-only, nothing more.
+- **No drag-to-scrub**: it would need pointer capture, which the runtime lacks.
+- **`autoFocus` paints no ring on mount**, because the runtime focuses without
+  dispatching a focus event.
+
+## Dependencies
+
+<ComponentDependencies slug="number-field" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/NumberField.tsx"'>
+  ../../../../../packages/primitives/src/components/NumberField.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="number-field" />

@@ -74,9 +74,10 @@ no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
 
 ## Adding a component page
 
-The first real page is `content/docs/components/button.mdx` (plan 422); all 20
-Tier 1 pages followed it (plan 423) and the 22 Tier 2 pages after that (plan
-425). Each shows the whole chain: a `wip` registry record, generated status and
+The first real page is `content/docs/components/button.mdx` (plan 422); the
+remaining Tier 1 pages followed it (plan 423), the 22 Tier 2 pages after that
+(plan 425) and the seven Tier 1 value/choice pages in plan 435 — 49 component
+pages in total. Each shows the whole chain: a `wip` registry record, generated status and
 preview blocks, a real API table, the real component source and a
 runtime-mounted example. Copy their shape.
 
@@ -189,7 +190,7 @@ file** by `src/lib/source-imports.ts` (plan 428):
 
 - the entry file's non-relative module imports are the modules (React and
   `@gpuix/react` are the peer packages every component has, so the block states
-  them once instead of listing them 42 times);
+  them once instead of listing them 49 times);
 - a relative import that resolves to another delivered record's `sourcePath` is
   recorded as that record's slug and rendered as a **Composes** link; a relative
   import into `internal/`, `core/`, `menu/`, `toast/` or `combobox/` is a private

@@ -1,0 +1,104 @@
+---
+title: Toggle
+description: A button whose pressed state persists.
+---
+
+<ComponentState slug="toggle" />
+
+<NativePreview slug="toggle" />
+
+`Toggle` is a button that stays on: bold, grid view, snap-to-grid, mute. It is
+not a `Switch` — a switch changes a setting immediately ("dark mode"), while a
+toggle sets a mode for what happens next and usually sits in a toolbar beside
+other actions.
+
+## Usage
+
+```tsx
+import { Toggle } from "@gpuixui/primitives";
+
+<Toggle
+  pressed={grid}
+  onPressedChange={setGrid}
+  label="Grid"
+  variant="outline"
+>
+  Grid
+</Toggle>;
+```
+
+Omit `pressed` to let the toggle own its state; `defaultPressed` sets the start.
+
+## Variants
+
+`variant` is `default` (no chrome at rest) or `outline` (a border). Pressing
+paints the accent role in both cases, so pressed, hover and focus remain three
+distinct states.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`, from the density scale. `square` makes
+the control equal width and height for an icon-only toggle; it sizes the button,
+not the icon inside it — pass an icon at the matching `iconSize`.
+
+## States
+
+Controlled (`pressed`) or uncontrolled (`defaultPressed`); `disabled` removes the
+tab stop, adds half opacity and refuses activation. There is no loading state: a
+toggle sets a mode instantly, so a toggle that waits for a request disables
+itself and reports the result elsewhere.
+
+## Composition
+
+The toggle example is a canvas toolbar: two controlled modes plus a mode that is
+unavailable until something is selected.
+
+<include lang="tsx" meta='title="packages/primitives/examples/toggle.example.tsx"'>
+  ../../../../../packages/primitives/examples/toggle.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Toggle.tsx" name="ToggleProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| `Enter` | activates on key **down** |
+| `Space` | activates on key **up** |
+| a held key | repeat events are ignored |
+| Tab | one stop; the ring paints while it holds focus |
+
+A click activates as well. The component owns this contract because
+`@gpuix/react` 0.10.0 publishes no button.
+
+## Theming
+
+Rest and pressed are two rows of the shared `toggleVariants` table. Rest paints
+no fill (or a border for `outline`); pressed paints `colors.accent` and
+`colors.accentForeground`; hover and press lift the accent's alpha like a filled
+button. Nothing names a literal.
+
+## Accessibility and limitations
+
+- Role `button`; the pressed state is announced through **`aria-valuetext`**
+  (`"pressed"` / `"not pressed"`).
+- **No `aria-pressed`** in 0.10.0: a screen reader hears a button with a value,
+  not a pressed button. That is the runtime's limitation, not a hidden bug.
+- Give an icon-only toggle a `label`; the icon itself is decorative.
+- No loading state and no `aria-disabled`; `disabled` removes the tab stop.
+
+## Dependencies
+
+<ComponentDependencies slug="toggle" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Toggle.tsx"'>
+  ../../../../../packages/primitives/src/components/Toggle.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="toggle" />

@@ -1,0 +1,101 @@
+---
+title: Meter
+description: Reports a measurement inside a known range.
+---
+
+<ComponentState slug="meter" />
+
+<NativePreview slug="meter" />
+
+`Meter` reports where a measurement sits in a range it has: disk used, signal
+strength, a score out of 16. It is not `Progress` — a progress bar reports how
+far a task has got and is always 0–100, while a meter has a `min` and a `max`
+that mean something. It is status, never a control: no tab stop, no pointer, no
+keys.
+
+## Usage
+
+```tsx
+import { Meter, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="xs">
+  <Text role="caption" tone="muted">
+    Disk usage · 68 of 100 GB
+  </Text>
+  <Meter
+    label="Disk usage"
+    value={68}
+    max={100}
+    formatValue={(value) => `${value} GB`}
+  />
+</Stack>;
+```
+
+Pair the meter with visible text when the range matters: the runtime announces
+the value, not the endpoints.
+
+## Variants
+
+`tone` is `primary` (default), `success`, `destructive` or `muted`, choosing the
+fill's role. The track is always `colors.muted`; there is no striped, segmented
+or threshold variant.
+
+## Sizes
+
+`size` is `sm` or `md` (default); the track height is a spacing step, so a meter
+sits on the same rhythm as the text beside it.
+
+## States
+
+A meter is a value, not a state machine: `value` is required and is clamped into
+`min`–`max`. There is no disabled, loading or interactive state, because there
+is nothing to interact with.
+
+## Composition
+
+The value example places a meter beside the two sliders so a reader can see the
+difference between an input and a measurement:
+
+<include lang="tsx" meta='title="packages/primitives/examples/value.example.tsx"'>
+  ../../../../../packages/primitives/examples/value.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Meter.tsx" name="MeterProps" />
+
+## Keyboard and focus
+
+None. A meter is not focusable, takes no pointer or key handlers and is never a
+tab stop. If the measurement needs to change, use `Slider`; if a task's progress
+is the subject, use `Progress`.
+
+## Theming
+
+The paint is `Progress`'s shared bar: a `colors.muted` track, the tone's role for
+the fill (`colors.primary`, `colors.success`, `colors.destructive`,
+`colors.mutedForeground`), both ends `radius.full`. One bar painter means the two
+components cannot drift apart.
+
+## Accessibility and limitations
+
+- Role `meter`; the measurement is announced through **`aria-valuetext`**.
+- **No `aria-valuenow`/`min`/`max`** in 0.10.0, so the range is not announced.
+  The visible text carries it.
+- The name comes from `label`; without one the meter is unnamed.
+- No threshold segments, tick marks or a label inside the track.
+- The fill repaints between values; it does not animate.
+
+## Dependencies
+
+<ComponentDependencies slug="meter" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Meter.tsx"'>
+  ../../../../../packages/primitives/src/components/Meter.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="meter" />

@@ -1,0 +1,112 @@
+---
+title: Rating
+description: A whole-number star rating, or none.
+---
+
+<ComponentState slug="rating" />
+
+<NativePreview slug="rating" />
+
+`Rating` is a radio-group-shaped input: one tab stop, arrows move the selection
+and native focus together. It differs from `RadioGroup` in two ways a rating
+needs — the arrows **clamp** at the ends instead of wrapping, and `Delete`
+clears back to zero. It is not a slider: the value is a small whole number, not
+a position.
+
+## Usage
+
+```tsx
+import { Rating, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="xs">
+  <Rating label="Quality" value={score} onChange={setScore} />
+  <Text role="caption" tone="muted">
+    {score === 0 ? "Not rated" : `${score} of 5`}
+  </Text>
+</Stack>;
+```
+
+Omit `value` to let the rating own its state; `defaultValue` sets the start
+(`0` is unrated). Clicking the selected star keeps it — clearing is a deliberate
+`Delete`/`Backspace`, or the app calling `onChange(0)`.
+
+## Variants
+
+One star appearance: a filled `star-filled` glyph for a selected star and the
+outline `star` for an empty one, both from `@gpuixui/icons`. There is no half
+star and no custom glyph slot.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`; the star size comes from
+`theme.iconSize[size]`, so a rating matches an icon button beside it.
+
+## States
+
+Controlled (`value`) or uncontrolled (`defaultValue`); `disabled` paints the
+group muted and refuses input; `readOnly` shows the value, takes no input and is
+not a tab stop. Values are truncated to whole stars and clamped to `0..max`; a
+value that is not a number reads as unrated.
+
+## Composition
+
+The rating example is a review card with an interactive rating beside a
+read-only aggregate:
+
+<include lang="tsx" meta='title="packages/primitives/examples/rating.example.tsx"'>
+  ../../../../../packages/primitives/examples/rating.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Rating.tsx" name="RatingProps" />
+
+## Keyboard and focus
+
+| Key | Contract |
+| --- | -------- |
+| `ArrowRight` / `ArrowUp` | + one star, clamped at `max` |
+| `ArrowLeft` / `ArrowDown` | − one star, clamped at `0` |
+| `Home` / `End` | one star / `max` |
+| `Delete` / `Backspace` | clear to `0` |
+| Tab | one stop on the group; the next Tab leaves it |
+
+The group holds one tab stop — on the current rating, or on the first star when
+unrated — and the arrows move the selection and native focus together, so the
+focused star always paints the ring.
+
+## Theming
+
+A selected star paints `colors.primary`, an empty one `colors.mutedForeground`,
+using two icons of the same geometry. The filled icon is still monochrome — its
+fill is what GPUix retints — so a theme or platform change repaints both states.
+The star size is `theme.iconSize[size]` and the ring is the shared `focusRing`.
+
+## Accessibility and limitations
+
+- Roles: `radiogroup` with the group's `label`, and one `radio` per star.
+- Each star's name is `"N of max"`; its state is announced through
+  **`aria-valuetext`** (`"checked"` / `"unchecked"`), because 0.10.0 has no
+  `aria-checked`.
+- `readOnly` keeps the group visible to assistive technology but removes it from
+  the tab order.
+- **Whole stars only**: half stars would need clipping or a transform, neither
+  of which the runtime has.
+- **No hover preview**: the runtime does not report which star is under the
+  pointer for a group, so a hover fill would need per-star state.
+- **Clearing is explicit** (Delete/Backspace or the app), not "click the
+  selected star again" — a rating is not a toggle.
+
+## Dependencies
+
+<ComponentDependencies slug="rating" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Rating.tsx"'>
+  ../../../../../packages/primitives/src/components/Rating.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="rating" />

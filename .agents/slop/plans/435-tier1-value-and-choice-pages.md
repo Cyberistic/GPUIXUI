@@ -6,7 +6,7 @@
 - **Depends on:** plans `411`–`415`, `423` (the proven Tier 1 page shape), `424`
   (the truth guard), `428` (dependencies), `432` (native coverage), and the
   primitives workstream's `053`, `054` (the seven delivered components)
-- **Status:** planned
+- **Status:** implemented — evidence in §8.1
 
 ## 1. Why this plan exists
 
@@ -173,6 +173,44 @@ Record every run in §8. A command that was not run is not a pass.
       current.
 - [ ] All gates in §5 pass; two-direction proofs recorded below.
 
-### §8.1 Evidence
+### §8.1 Evidence (measured 2026-10-17)
 
-To be filled by the executor.
+- **Merge:** `master` merged into `agent/docs-site` (`9611358`). Conflicts were
+  confined to the five ledgers; they were resolved by keeping the docs branch's
+  Tier 2 status/docs rows and the master branch's Tier 1 rows, renumbering the
+  docs decisions to D25–D27 in `PLAN.md`, and taking `master`'s tracked
+  `nub.lock`. Content (`apps/docs/**`, `packages/**`) merged without a conflict.
+- **Records:** the seven `planned` stubs in `src/component-meta/entries.ts`
+  became `delivered` records with the source, the runtime suite, the derived
+  dependency list (`effect/Option`, `effect/Array`, `@gpuixui/icons` where real)
+  and the measured limitations. The registry now has 71 records and 49 delivered
+  pages.
+- **Pages:** `slider`, `range-slider`, `meter`, `number-field`, `otp-field`,
+  `toggle`, `rating`; each has the twelve template sections, its example
+  `<include>`, one generated props table and its source include. `meta.json`
+  follows the registry order.
+- **Gates:** `docs test` 31 files / **180 tests**; `docs check-types` 0;
+  `docs build` 0.
+- **Browser/route check (dev server):** all seven URLs return 200; each emits its
+  own `type-table-<file>-<Type>-*` ids (7, 13–17 rows), its source include and its
+  example include; `/sitemap.xml` lists **49** component URLs; `/api/search`
+  reaches `/docs/components/number-field` for `number field`.
+- **Two directions proven** (each reverted to green afterwards):
+  1. renamed the `rating` slug → `registry.test.ts` (2), `component-pages.test.ts`
+     (2) and `content-references.test.ts` (1) failed.
+  2. `toggle.mdx` `## Theming` → `## Theme` → `component-pages.test.ts`:
+     `toggle: missing section "Theming"`.
+  3. `meter.mdx` include path → `src/Meter.tsx` → `content-references.test.ts`
+     failed on the include, the table target and the generated table.
+  4. `slider.mdx` `SliderProps` → `SliderPropd` → `slider.mdx: SliderPropd
+     generated no props`.
+  5. removed `effect/Option` from the slider record → `slider: expected
+     effect/Option, found (none)`.
+  6. pointed `otp-field` at `fields.runtime.test.tsx` → `does not import it`.
+  7. imported `Toggle` from `@gpuixui/components` in the page snippet →
+     `toggle.mdx: Toggle is not exported by @gpuixui/components`.
+- **Test fixture updated:** `preview.test.tsx` used the `slider` slug as its
+  example of an unverified component; that record is now delivered, so the
+  fixture moved to the still-planned `message-scroller`. The assertion (an
+  unverified component is never approximated) is unchanged.
+

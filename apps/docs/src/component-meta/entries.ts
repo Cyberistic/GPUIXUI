@@ -513,38 +513,143 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  planned(
+  delivered(
     "slider",
     "Slider",
     "1",
-    "Selects a value or range by dragging a thumb.",
+    "Selects one value by click, drag or keyboard.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Slider.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/value.runtime.test.tsx",
+      ),
+      dependencies: ["effect/Option"],
+      related: ["range-slider", "meter", "progress"],
+      limitations: [
+        "No pointer capture: a drag stops tracking when the pointer leaves the track.",
+        "No aria-valuenow/min/max: the value is announced through aria-valuetext.",
+        "The thumb cannot rotate or transform; its position is a flex layout.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "range-slider",
     "Range slider",
     "1",
-    "A two-thumb variant of Slider.",
-    { related: ["slider"] },
+    "Selects the two ends of an interval on one track.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Slider.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/value.runtime.test.tsx",
+      ),
+      dependencies: ["effect/Option"],
+      related: ["slider", "meter", "text-input"],
+      limitations: [
+        "No pointer capture: a drag stops tracking when the pointer leaves the track.",
+        "No aria-valuenow/min/max: each thumb announces its value through aria-valuetext.",
+        "The thumbs cannot be given custom glyphs; both are Slider's pill.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "meter",
     "Meter",
     "1",
-    "A value within a known range, not task completion.",
-    { related: ["progress"] },
+    "Reports a measurement inside a known range.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Meter.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/value.runtime.test.tsx",
+      ),
+      dependencies: [],
+      related: ["progress", "slider"],
+      limitations: [
+        "No aria-valuenow/min/max: the measurement is announced through aria-valuetext.",
+        "No threshold segments, tick marks or label inside the track.",
+        "The fill repaints between values; it does not animate.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "number-field",
     "Number Field",
     "1",
-    "A numeric input with stepper, clamping and formatting.",
+    "A numeric field with steps, bounds and formatting.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/NumberField.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/number-field.runtime.test.tsx",
+      ),
+      dependencies: ["@gpuixui/icons", "effect/Option"],
+      related: ["text-input", "slider", "label"],
+      limitations: [
+        "Decimal text only: 1,5, 0x10 and Infinity are rejected rather than guessed.",
+        "No type=number, inputMode or maxLength: the host input takes text only.",
+        "No drag-to-scrub: it needs pointer capture, which the runtime lacks.",
+        "autoFocus paints no ring on mount, because no focus event is dispatched.",
+      ],
+    },
   ),
-  planned("otp-field", "OTP Field", "1", "A segmented one-time-code input."),
-  planned("toggle", "Toggle", "1", "A momentary pressed control.", {
-    related: ["switch"],
+  delivered(
+    "otp-field",
+    "OTP Field",
+    "1",
+    "A one-time code in length cells, held as one string.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/OTPField.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/otp.runtime.test.tsx",
+      ),
+      dependencies: ["effect/Array", "effect/Option"],
+      related: ["text-input", "label"],
+      limitations: [
+        "Paste is unverified: 0.10.0 has no onPaste and the TestRenderer has no clipboard.",
+        "Arrows do not repeat: they are handled on key up because the editor consumes key down.",
+        "The code is contiguous; clearing a middle character shifts the rest left.",
+        "autoFocus paints no ring on mount, because no focus event is dispatched.",
+      ],
+    },
+  ),
+  delivered("toggle", "Toggle", "1", "A button whose pressed state persists.", {
+    gpuix: "yes",
+    sourcePath: "packages/primitives/src/components/Toggle.tsx",
+    runtime: nativeSuite(
+      "@gpuixui/primitives",
+      "runtime/toggle.runtime.test.tsx",
+    ),
+    dependencies: [],
+    related: ["button", "switch", "checkbox"],
+    limitations: [
+      "No aria-pressed: the state is announced through aria-valuetext.",
+      "No loading state; disable the toggle while a request is in flight.",
+      "square sizes the control, not the icon inside it.",
+    ],
   }),
-  planned("rating", "Rating", "1", "A radio-like score input.", {
-    related: ["radio-group"],
+  delivered("rating", "Rating", "1", "A whole-number star rating, or none.", {
+    gpuix: "yes",
+    sourcePath: "packages/primitives/src/components/Rating.tsx",
+    runtime: nativeSuite(
+      "@gpuixui/primitives",
+      "runtime/rating.runtime.test.tsx",
+    ),
+    dependencies: ["@gpuixui/icons", "effect/Array", "effect/Option"],
+    related: ["radio-group", "slider"],
+    limitations: [
+      "Whole stars only: half stars need clipping or a transform the runtime lacks.",
+      "No hover preview: the runtime does not report which star is under the pointer.",
+      "No aria-checked: each star announces its state through aria-valuetext.",
+      "Clearing is explicit (Delete/Backspace or the app), not a second click.",
+    ],
   }),
 ];
 

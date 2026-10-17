@@ -471,7 +471,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–435)
 
-`[~]` `[██████████]` 33/35
+`[x]` `[██████████]` 34/35
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` Curated native theme captures on Theming (plan 433) — a real 20/20 capture run, two frames + provenance sidecar, `<ThemeCaptures />` refuses an unproven frame
@@ -506,7 +506,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Search relevance (plan 431) — a component title match outranks prose (`button` → its page), a blank query returns `[]`, and a page is listed once; each rule proven to fail when removed
 `[x]` Native coverage is not the absence of a capture (plan 432) — tier V names each delivered component's real GPUix suite and command on all 42 pages instead of calling it "Not verified"; the registry guard derives the command and proves the suite imports the component
 `[x]` Platform-styled previews (plan 434) — the toggle reaches four labelled tier-A previews (Button, Tabs, Dropdown menu, Card) built from the whole active `Theme`; source, page and platform guards pass; browser-verified at `?platform=win32` (Consolas on every preview surface)
-`[~]` Document the seven delivered Tier 1 value/choice components (plan 435) — Slider, Range slider, Meter, Number field, OTP field, Toggle and Rating get `wip` records, pages, generated props, real sources and their examples; the components are on `master`, the pages are this workstream's remaining handoff
+`[x]` Document the seven delivered Tier 1 value/choice components (plan 435) — Slider, Range slider, Meter, Number field, OTP field, Toggle and Rating: `wip` records, pages, generated props tables, real sources and their examples; 49 component pages, 180 docs tests, sitemap and search verified
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed

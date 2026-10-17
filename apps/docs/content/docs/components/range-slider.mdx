@@ -1,0 +1,109 @@
+---
+title: Range slider
+description: Selects the two ends of an interval on one track.
+---
+
+<ComponentState slug="range-slider" />
+
+<NativePreview slug="range-slider" />
+
+`RangeSlider` is a minimum and a maximum on one track: a price band, a time
+window, a size range. It is a separate component rather than a mode of `Slider`
+because its contract is different — the group contains two sliders, each with
+its own value, tab stop and focus ring.
+
+## Usage
+
+```tsx
+import { RangeSlider, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="sm">
+  <Text role="caption" tone="muted">
+    ${price[0]} – ${price[1]}
+  </Text>
+  <RangeSlider
+    label="Budget"
+    value={price}
+    onChange={setPrice}
+    step={5}
+    formatValue={(value) => `$${value}`}
+  />
+</Stack>;
+```
+
+The value is always `[start, end]` in that order. The ends can touch but never
+cross; a press picks the nearer end and moves it.
+
+## Variants
+
+One track appearance. `invalid` paints the destructive role on the fill and both
+thumb borders.
+
+## Sizes
+
+`size` is `sm`, `md` (default) or `lg`, sharing `Slider`'s track and thumb
+metrics, so the two controls line up in the same form.
+
+## States
+
+Controlled (`value`) or uncontrolled (`defaultValue`); `disabled` removes both
+thumbs from the tab order and refuses pointer and keys. A start driven past the
+end stops on it; the pair cannot invert.
+
+## Composition
+
+The value example shows a range slider beside a slider and a meter, all
+controlled by the same settings state:
+
+<include lang="tsx" meta='title="packages/primitives/examples/value.example.tsx"'>
+  ../../../../../packages/primitives/examples/value.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Slider.tsx" name="RangeSliderProps" />
+
+## Keyboard and focus
+
+| Key | Effect on the focused thumb |
+| --- | --------------------------- |
+| `ArrowRight` / `ArrowUp` | + one step |
+| `ArrowLeft` / `ArrowDown` | − one step |
+| `PageUp` / `PageDown` | ± ten steps |
+| `Home` / `End` | `min` / `max`, clamped at the other thumb |
+| Tab | moves between the two thumbs, each a stop |
+
+A press moves native focus to the thumb it grabbed, so the next arrow acts on the
+end the user is holding; that thumb paints the ring.
+
+## Theming
+
+The same resolver as `Slider`: a `colors.muted` rail, a `colors.primary` fill,
+and thumbs of `colors.input` with a `colors.primary` border. The second fill is
+the length between the two ends; the shared `focusRing` paints focus.
+
+## Accessibility and limitations
+
+- The group is `role="group"` with the `label`; each thumb is `role="slider"`
+  with its own tab stop.
+- The names are derived from `label` — `"Budget minimum"`, `"Budget maximum"` —
+  so a named group never contains two unnamed sliders.
+- **No `aria-valuenow`/`min`/`max`**: each thumb announces its value through
+  `aria-valuetext`; the range itself is not announced.
+- **No pointer capture**: a drag stops updating when the pointer leaves the
+  track. Press-to-position and the keyboard are the precise paths.
+- The thumbs cannot be given custom glyphs; both use `Slider`'s pill.
+
+## Dependencies
+
+<ComponentDependencies slug="range-slider" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Slider.tsx"'>
+  ../../../../../packages/primitives/src/components/Slider.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="range-slider" />
