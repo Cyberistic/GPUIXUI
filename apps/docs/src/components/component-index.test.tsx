@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { bySlug, components, groups } from "@/component-meta/registry";
+import type { ComponentMetaInput } from "@/component-meta/schema";
 import { supportLegend } from "@/component-meta/support";
 import {
   ComponentIndex,
@@ -13,17 +14,24 @@ import {
 
 /**
  * Guards the generated component index (plan 411 §1) and its local filter
- * (plan 417): every record must appear once with its status **and** GPUix
- * support, grouped under its tier, and the filter must search titles and
- * summaries case-insensitively. The failures it catches are an index that drops
- * the support column (a reader can no longer tell `unverified` from `yes`), a
- * group whose heading vanished, and a filter that silently matches nothing.
+ * (plans 417 and 454): every record must appear once with its status **and**
+ * GPUix support, grouped under its tier, and the filter must search the title,
+ * summary, documented props types and limitations case-insensitively. The
+ * failures it catches are an index that drops the support column (a reader can
+ * no longer tell `unverified` from `yes`), a group whose heading vanished, a
+ * filter that silently matches nothing, and a filter that stops finding the
+ * props type or limitation a record proves.
  */
 const html = renderToStaticMarkup(<ComponentIndex />);
 
-const button = bySlug.get("button");
-if (button === undefined)
-  throw new Error("registry is missing the button record");
+const record = (slug: string): ComponentMetaInput => {
+  const found = bySlug.get(slug);
+  if (found === undefined)
+    throw new Error(`registry is missing the ${slug} record`);
+  return found;
+};
+
+const button = record("button");
 
 describe("component index", () => {
   it("renders one card per registry record", () => {
@@ -86,6 +94,25 @@ describe("component filter", () => {
     const words = button.summary.split(" ");
     const phrase = words.slice(0, 2).join(" ");
     expect(matchesComponent(button, phrase)).toBe(true);
+  });
+
+  it("matches a documented props type, not only prose", () => {
+    expect(matchesComponent(button, "ButtonProps")).toBe(true);
+    expect(matchesComponent(button, "buttonprops")).toBe(true);
+  });
+
+  it("matches a documented limitation and returns the records that name it", () => {
+    expect(matchesComponent(record("checkbox"), "aria-checked")).toBe(true);
+    const slugs = Arr.flatMap(filterGroups("aria-checked"), (group) =>
+      Arr.map(group.items, (item) => item.slug),
+    );
+    expect(slugs).toContain("checkbox");
+    expect(slugs).toContain("switch");
+    expect(slugs).not.toContain("card");
+  });
+
+  it("still rejects a word no field proves", () => {
+    expect(matchesComponent(button, "portal")).toBe(false);
   });
 
   it("treats blank queries as match-all and unknown queries as match-none", () => {

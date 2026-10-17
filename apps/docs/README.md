@@ -76,6 +76,12 @@ props types a component documents are indexed too, so `ButtonProps` and
 and one page is listed once. `src/lib/search.test.ts` guards all four rules
 (plan 431).
 
+The component index's own filter searches the same record fields it can prove —
+title, summary, documented props types and limitations — so `aria-checked`
+finds Checkbox and Switch without leaving the index (plan 454). The built-site
+smoke check queries both a component name and a limitation, so a production
+index that stopped seeing the component pages fails the release gate.
+
 ## Capabilities
 
 `/docs/capabilities` renders the measured GPUix matrix (plan 448) from

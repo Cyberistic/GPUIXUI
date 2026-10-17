@@ -136,6 +136,21 @@ const internalTargets = (html: string): ReadonlyArray<string> =>
     return path === undefined || path === "" ? [] : [path];
   });
 
+/** The `url` of every entry in an `/api/search` response; a bad body is no answer. */
+const searchUrls = (body: string): ReadonlyArray<string> => {
+  const payload: unknown = JSON.parse(body);
+  return Array.isArray(payload)
+    ? payload.flatMap((entry: unknown) =>
+        typeof entry === "object" &&
+        entry !== null &&
+        "url" in entry &&
+        typeof entry.url === "string"
+          ? [entry.url]
+          : [],
+      )
+    : [];
+};
+
 const auditPage = async (
   baseUrl: string,
   path: string,
@@ -249,34 +264,46 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
   problems.push(...linkProblems);
   console.log(`smoke: links ${targets.length} checked`);
 
-  const search = await request(`${baseUrl}/api/search?query=button`);
-  if (search === null || search.status !== 200) {
-    problems.push({
-      where: "/api/search?query=button",
-      what:
-        search === null
-          ? "request failed"
-          : `expected 200, got ${search.status}`,
-    });
-  } else {
-    const payload: unknown = JSON.parse(search.body);
-    const urls = Array.isArray(payload)
-      ? payload.flatMap((entry: unknown) =>
-          typeof entry === "object" &&
-          entry !== null &&
-          "url" in entry &&
-          typeof entry.url === "string"
-            ? [entry.url]
-            : [],
-        )
-      : [];
-    if (!urls.includes("/docs/components/button")) {
-      problems.push({
-        where: "/api/search?query=button",
-        what: "Buttons page is not the first/only matching result",
-      });
-    }
-  }
+  const searchChecks = [
+    {
+      query: "button",
+      expected: "/docs/components/button",
+      what: "a component name from the registry index",
+    },
+    {
+      query: "aria-checked",
+      expected: "/docs/components/checkbox",
+      what: "a component page's documented prose",
+    },
+  ] as const;
+
+  const searchProblems = await Promise.all(
+    searchChecks.map(async (check) => {
+      const where = `/api/search?query=${check.query}`;
+      const response = await request(baseUrl + where);
+      if (response === null || response.status !== 200) {
+        return [
+          {
+            where,
+            what:
+              response === null
+                ? "request failed"
+                : `expected 200, got ${response.status}`,
+          },
+        ];
+      }
+      const urls = searchUrls(response.body);
+      return urls.some((url) => url.startsWith(check.expected))
+        ? []
+        : [
+            {
+              where,
+              what: `no result under ${check.expected} for ${check.what}`,
+            },
+          ];
+    }),
+  );
+  problems.push(...searchProblems.flat());
 
   for (const path of ["/api/search", "/api/search?query="]) {
     const empty = await request(baseUrl + path);

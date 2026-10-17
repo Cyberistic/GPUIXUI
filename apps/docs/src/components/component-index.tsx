@@ -15,6 +15,9 @@ const card =
 /**
  * Whether a component matches a filter query. Case-insensitive and whitespace
  * trimmed; an empty query matches everything because every string contains "".
+ * The record's documented props types and limitations are searched too: a
+ * reader who knows `ButtonProps`, or the `aria-checked` gap that decides their
+ * adoption, finds the component without leaving the index (plan 454).
  * Exported for the test: server-rendered markup can only prove the initial
  * state.
  */
@@ -23,10 +26,12 @@ export const matchesComponent = (
   query: string,
 ): boolean => {
   const needle = query.trim().toLowerCase();
-  return (
-    component.title.toLowerCase().includes(needle) ||
-    component.summary.toLowerCase().includes(needle)
-  );
+  return [
+    component.title,
+    component.summary,
+    ...component.api,
+    ...component.limitations,
+  ].some((field) => field.toLowerCase().includes(needle));
 };
 
 /** The registry groups that survive a query; empty groups are dropped. */
@@ -84,8 +89,9 @@ function Card({ component }: { component: ComponentMetaInput }) {
  * pairing), so a planned entry renders as plain text — the index must never
  * offer a link to a page that does not exist.
  *
- * The filter searches titles and summaries. It is local because the registry is
- * small and Fumadocs' full-text index never sees these rendered records.
+ * The filter searches everything the record proves: title, summary, documented
+ * props types and limitations. It is local because the registry is small and
+ * Fumadocs' full-text index never sees these rendered records.
  */
 export function ComponentIndex() {
   const [query, setQuery] = useState("");
@@ -122,7 +128,7 @@ export function ComponentIndex() {
           type="search"
           value={query}
           onChange={(event) => updateQuery(event.target.value)}
-          placeholder="Filter by name or summary…"
+          placeholder="Filter by name, summary, props type or limitation…"
           autoComplete="off"
           aria-describedby="component-filter-count"
           className="w-full rounded-lg border border-fd-border bg-fd-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-fd-ring focus-visible:outline-none"
