@@ -51,9 +51,7 @@ describe("tier-A previews", () => {
   });
 
   it("render nothing for a component with no preview", () => {
-    expect(renderToStaticMarkup(<ComponentPreview slug="separator" />)).toBe(
-      "",
-    );
+    expect(renderToStaticMarkup(<ComponentPreview slug="icon" />)).toBe("");
   });
 
   it("never present an interaction as native behaviour", () => {
@@ -147,6 +145,20 @@ const documentedStates: ReadonlyArray<readonly [string, readonly string[]]> = [
     ["Notifications", "Billing", "Email me when a deployment finishes."],
   ],
   ["collapsible", ["Advanced settings", "unmounts while closed"]],
+  ["text", ["GPUIXUI", "Design system", "const theme = createTheme("]],
+  ["separator", ["Appearance", "A horizontal rule separates sections."]],
+  ["spacer", ["Start", "End", "The spacer is the flexible gap"]],
+  ["stack", ["Column · one", "Row · one"]],
+  ["box", ["Nested surface", "Padding, border and radius"]],
+  ["button-group", ["Day", "Week", "Month", "Attached children are 0px apart"]],
+  [
+    "label",
+    [
+      "Workspace name",
+      "Required before the form can be saved.",
+      "Legacy field",
+    ],
+  ],
 ];
 
 describe("preview state coverage", () => {

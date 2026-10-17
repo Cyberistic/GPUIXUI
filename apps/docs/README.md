@@ -380,13 +380,17 @@ capture sidecars (`src/components/preview/select-preview.ts`):
   the suite path plus its command, and that no capture is published);
 - otherwise the "not verified" notice (tier X).
 
-The static component pages carry a tier-A preview (plans 449, 451 and 452):
+The static component pages carry a tier-A preview (plans 449, 451, 452 and 453):
 Button, Tabs, Dropdown menu and Card; Text input, Text area, Checkbox, Radio
 group, Select, Switch and Slider; Range slider, Meter, Number field, OTP field,
 Toggle and Rating; Badge, Alert, Progress and Avatar; List, Empty state, Inline
-validation, Breadcrumb, Pagination, Search input, Accordion and Collapsible.
-Every one is a static rest state built only from the `--preview-*` values of the
-active theme, so the platform toggle re-renders all of them. `theme-surface.test.ts` also proves every
+validation, Breadcrumb, Pagination, Search input, Accordion and Collapsible;
+Text, Separator, Spacer, Stack, Box, Button group and Label. Every one is a
+static rest state built only from the `--preview-*` values of the active theme,
+so the platform toggle re-renders all of them. The 13 pages without one are
+interactions (dialog, confirm dialog, popover, the three menus, toast, tooltip,
+combobox, date picker, scroll area), animations (skeleton, spinner) or the icon
+glyph set; they stay at tier V/X. `theme-surface.test.ts` also proves every
 `--preview-*` name a preview reads is one the surface defines.
 
 An approximation is never a fallback. The only way to render one is

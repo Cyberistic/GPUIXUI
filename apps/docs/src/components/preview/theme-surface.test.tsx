@@ -34,6 +34,7 @@ const previewSources = [
   "./control-previews.tsx",
   "./feedback-previews.tsx",
   "./composition-previews.tsx",
+  "./layout-previews.tsx",
   "./platform-previews.tsx",
 ];
 

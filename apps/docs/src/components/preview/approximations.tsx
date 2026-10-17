@@ -31,6 +31,15 @@ import {
   ProgressPreview,
 } from "./feedback-previews";
 import {
+  BoxPreview,
+  ButtonGroupPreview,
+  LabelPreview,
+  SeparatorPreview,
+  SpacerPreview,
+  StackPreview,
+  TextPreview,
+} from "./layout-previews";
+import {
   captionType,
   column,
   keycap,
@@ -347,4 +356,11 @@ export const previewsBySlug: ReadonlyMap<
   ["search-input", SearchInputPreview],
   ["accordion", AccordionPreview],
   ["collapsible", CollapsiblePreview],
+  ["text", TextPreview],
+  ["separator", SeparatorPreview],
+  ["spacer", SpacerPreview],
+  ["stack", StackPreview],
+  ["box", BoxPreview],
+  ["button-group", ButtonGroupPreview],
+  ["label", LabelPreview],
 ]);
