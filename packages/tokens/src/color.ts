@@ -157,13 +157,13 @@ export interface ThemeColors {
   readonly destructiveSoft: string;
   /** Text and icons on `destructiveSoft`. */
   readonly destructiveSoftForeground: string;
-  /** Informational status text and indicators on `background` and `card`. */
+  /** Informational status text and indicators on plain surfaces. */
   readonly infoText: string;
-  /** Success status text and indicators on `background` and `card`. */
+  /** Success status text and indicators on plain surfaces. */
   readonly successText: string;
-  /** Warning status text and indicators on `background` and `card`. */
+  /** Warning status text and indicators on plain surfaces. */
   readonly warningText: string;
-  /** Destructive status text and indicators on `background` and `card`. */
+  /** Destructive status text and indicators on plain surfaces. */
   readonly destructiveText: string;
   /** Dividers and decorative borders. */
   readonly border: string;

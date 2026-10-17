@@ -36,3 +36,16 @@ export const quietHighContrastTheme = extendTheme(highContrastLightTheme, {
 export const quietHighContrastFailures = themeContrastFailures(
   quietHighContrastTheme,
 );
+
+/**
+ * A theme whose focus ring is a surface tint rather than a contrast ring: it
+ * passes as a fill, not as a ring. Focus and selection co-occur, so the check
+ * measures the ring on the washes a focused row paints, not only on the canvas.
+ */
+export const quietRingTheme = extendTheme(getTheme("light"), {
+  name: "Quiet ring",
+  colors: { ring: "#EFF4FF" },
+});
+
+/** Every pair the quiet ring misses, the selected row included. */
+export const quietRingFailures = themeContrastFailures(quietRingTheme);

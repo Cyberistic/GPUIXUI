@@ -107,10 +107,10 @@ it can never be confused with `primary`.
 | `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
 | `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
-| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card` |
-| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card` |
-| `warningText` | `#8E5B00` | `#FFDE8A` | warning text and indicators on `background`/`card` |
-| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card` |
+| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` |
+| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` |
+| `warningText` | `#8E5B00` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` |
+| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
 | `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -168,7 +168,7 @@ Alert, Badge and Toast share four status families. Each has a solid role, a
 readable foreground and a designed soft pair, so a component never mixes a
 readable text colour from the solid colour at runtime. Each also has a text
 role for the case the other two cannot serve: a status label, icon or indicator
-dot drawn directly on `background` or `card`.
+dot drawn directly on `background`, `card` or `popover`.
 
 | Tone | Solid fill | Soft surface | Text on the soft surface | Text on a plain surface |
 | ---- | ---------- | ------------ | ----------------------- | ----------------------- |
@@ -180,8 +180,8 @@ dot drawn directly on `background` or `card`.
 The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
 1.78:1 against `background` and 1.89:1 against `card`, under the 3:1 non-text
 floor, and light `success` is 4.26:1, under the 4.5:1 text floor. `xText` is the
-readable tonality for plain surfaces: it is held to 4.5:1 in the default themes
-and 7:1 in the high-contrast variants.
+readable tonality for the plain surfaces (`background`, `card` and `popover`);
+it is held to 4.5:1 in the default themes and 7:1 in the high-contrast variants.
 
 `statusTone(theme, tone)` resolves the soft surface, its readable foreground, a
 30%-alpha edge from the solid role, and the plain-surface text role:
@@ -193,7 +193,7 @@ const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
 tone.border; // alpha(theme.colors.info, 0.3)
-tone.text; // theme.colors.infoText — labels and dots on background/card
+tone.text; // theme.colors.infoText — labels and dots on background/card/popover
 ```
 
 A tone can arrive as data — a server payload, a stored notification. It is
@@ -951,11 +951,17 @@ for primary body pairs, typed input text, soft status text and all high-contrast
 text; 4.5:1 for secondary and on-colour text in the default themes, including
 text on a hovered filled action, ghost text on the `hover` and `active` washes,
 muted text on `background`, `card` and `popover`, and status text (`xText`) on
-`background` and `card`; 3:1 for focus and essential boundaries in the default
-themes; 4.5:1 for them in the high-contrast variants).
+`background`, `card` and `popover`; 3:1 for focus and essential boundaries in
+the default themes; 4.5:1 for them in the high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background` or
 `card` (floor 1.05:1), or if body text over the composited `selection` wash on
 `background`/`card` drops below its body floor. Palette edits must keep it green.
+
+The focus ring is measured on the canvas, card and popover and on the `hover`,
+`active` and `selected` washes, because focus and selection co-occur in rows;
+status text (`xText`) and the `borderStrong` boundary are also measured on
+`popover`, so a status label or a control inside a dialog, popover or toast is
+covered.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

@@ -1,7 +1,7 @@
 /**
  * Guards the public contrast contract (plan 071).
  *
- * The bug these catch: the WCAG maths and the 41 documented pairs lived in
+ * The bug these catch: the WCAG maths and the 48 documented pairs lived in
  * test-only code, so a consumer editing a copied platform style could not hold
  * their theme to the floors the library promises. These tests prove the public
  * check is the same one the suites run — known ratios, the shipped themes
@@ -29,6 +29,8 @@ import {
   quietBrandTheme,
   quietHighContrastFailures,
   quietHighContrastTheme,
+  quietRingFailures,
+  quietRingTheme,
 } from "./contrast.example.js";
 
 describe("contrastRatio", () => {
@@ -159,7 +161,23 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(40);
+    expect(contrastPairs.length).toBe(48);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
+  });
+
+  it("checks the focus ring on the washes a focused row paints", () => {
+    expect(quietRingTheme.colors.ring).toBe("#EFF4FF");
+    const ringFailures = quietRingFailures
+      .filter(({ foreground }) => foreground === "ring")
+      .map(({ background, pairClass, floor }) => ({
+        background,
+        pairClass,
+        floor,
+      }));
+    expect(ringFailures).toEqual(
+      ["hover", "active", "selected", "background", "card", "popover"].map(
+        (background) => ({ background, pairClass: "boundary", floor: 3 }),
+      ),
+    );
   });
 });

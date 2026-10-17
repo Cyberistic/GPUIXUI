@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 40/56
+`[x]` `[███████░░░]` 41/57
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -125,6 +125,11 @@ text, ghost text on `hover`/`active`, the composited `selection` wash (plan 059)
 `themeContrastFailures`, so an edited platform style or brand theme is held to
 the same floors the library's own suites enforce, selection wash included
 (plan 071)
+`[x]` Extend the contrast contract to the surfaces the state table and the
+layering model already name — the focus ring on the `hover`/`active`/`selected`
+washes a focused row paints, and status text and the control boundary on
+`popover` — so an edited theme is held to the pairs an app actually paints
+(plan 074)
 `[x]` Guard the palette ramps in `docs/tokens.md` — the last hand-written value
 table without a drift test (plan 072)
 `[x]` Make a theme declare its contrast level so `applyPlatformStyle` and
@@ -264,6 +269,7 @@ and retires the now-redundant `agent/tokens-platform` worktree (its branch is
 - **B1** GPUix native bindings fail to install (blocks the playground + every native smoke test).
 - **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
 
-Both are specified in ; each fix starts with a plan under .
+Both are specified in `~/GPUIXUI/BLOCKERS.md`; each fix starts with a plan under
+`.agents/slop/plans/`.
 
 - **Docs: platform toggle (macOS / Linux / Windows / Default)** — every component preview switches platform style; the styles are real editable token themes in packages/tokens, not docs-only CSS (see MISSION.md).

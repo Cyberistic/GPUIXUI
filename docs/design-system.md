@@ -247,9 +247,9 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | body text on background/card/popover/input | 7:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
-| status text (`xText`) on `background`/`card` | 4.5:1 | 7:1 |
+| status text (`xText`) on `background`/`card`/`popover` | 4.5:1 | 7:1 |
 | text selection (`foreground` over the composited `selection` wash) | 7:1 | 7:1 |
-| focus ring and essential boundaries | 3:1 | 4.5:1 |
+| focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover` | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set and is part of the normal test suite.

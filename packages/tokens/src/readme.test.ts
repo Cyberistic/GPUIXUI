@@ -70,6 +70,12 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states the state washes and floating surface the ring is checked on", () => {
+    expect(readme).toContain(
+      "The focus ring is checked on the canvas, card, popover and the `hover`, `active` and `selected` washes, so a ring that vanishes on a selected row is caught.",
+    );
+  });
+
   it("lists every motion level, including the zero one", () => {
     const levelNames = Object.entries(motion)
       .filter(([, value]) => typeof value === "number")

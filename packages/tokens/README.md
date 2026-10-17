@@ -163,7 +163,9 @@ themeContrastFailures(brandTheme); // []
 ```
 
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
-the parts, and the selection wash is measured as it paints. A runnable example
+the parts, and the selection wash is measured as it paints. The focus ring is
+checked on the canvas, card, popover and the `hover`, `active` and `selected`
+washes, so a ring that vanishes on a selected row is caught. A runnable example
 lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 
 ## Status tones

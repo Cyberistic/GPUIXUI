@@ -84,9 +84,9 @@ export interface StatusToneStyle {
   /** The tone's solid colour at 30% alpha, for the surface edge. */
   readonly border: string;
   /**
-   * Status text and indicators drawn on `background` or `card` (`xText`).
-   * The solid roles are fills, so they cannot carry this: the light `warning`
-   * is 1.78:1 against the canvas.
+   * Status text and indicators drawn on a plain surface — `background`, `card`
+   * or `popover` (`xText`). The solid roles are fills, so they cannot carry
+   * this: the light `warning` is 1.78:1 against the canvas.
    */
   readonly text: string;
 }

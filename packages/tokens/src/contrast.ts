@@ -21,7 +21,11 @@ export type ContrastPair = readonly [
   ContrastPairClass,
 ];
 
-/** Every documented text, status and boundary pair. */
+/**
+ * Every documented text, status and boundary pair — including the focus ring on
+ * the washes a focused row paints, and the status text and control boundary on a
+ * floating surface.
+ */
 export const contrastPairs: readonly ContrastPair[] = [
   ["foreground", "background", "body"],
   ["foreground", "card", "body"],
@@ -34,6 +38,8 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["inputForeground", "input", "body"],
   ["foreground", "hover", "body"],
   ["foreground", "active", "body"],
+  ["ring", "hover", "boundary"],
+  ["ring", "active", "boundary"],
   ["secondaryForeground", "secondary", "secondary"],
   ["primaryForeground", "primary", "secondary"],
   ["primaryForeground", "primaryHover", "secondary"],
@@ -48,18 +54,24 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["destructiveSoftForeground", "destructiveSoft", "body"],
   ["infoText", "background", "secondary"],
   ["infoText", "card", "secondary"],
+  ["infoText", "popover", "secondary"],
   ["successText", "background", "secondary"],
   ["successText", "card", "secondary"],
+  ["successText", "popover", "secondary"],
   ["warningText", "background", "secondary"],
   ["warningText", "card", "secondary"],
+  ["warningText", "popover", "secondary"],
   ["destructiveText", "background", "secondary"],
   ["destructiveText", "card", "secondary"],
+  ["destructiveText", "popover", "secondary"],
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
+  ["ring", "selected", "boundary"],
   ["placeholder", "input", "secondary"],
   ["borderStrong", "background", "boundary"],
   ["borderStrong", "card", "boundary"],
   ["borderStrong", "input", "boundary"],
+  ["borderStrong", "popover", "boundary"],
   ["ring", "background", "boundary"],
   ["ring", "card", "boundary"],
   ["ring", "popover", "boundary"],
