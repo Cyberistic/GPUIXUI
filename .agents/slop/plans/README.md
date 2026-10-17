@@ -53,6 +53,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [054](./054-avatar-size-scale.md) | The avatar diameter scale | B | 011, 016 | done |
 | [055](./055-filled-control-hover-roles.md) | Designed hover roles for filled controls | B | 011, 013–016 | done |
 | [056](./056-docs-truth-guard.md) | Docs truth guard for the token catalogue | F | 010–019, 050–055 | done |
+| [057](./057-status-text-roles.md) | Status text roles: a readable status tonality on plain surfaces | B | 010–019, 050–056 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -70,7 +71,10 @@ scale"*) and the designed filled-control hover roles (the `primaryHover` /
 `alpha` helper and the `info` role — were already shipped by plan 014 and only
 need the consumer to drop its structural copy. 056 is the Phase F docs-truth
 slice for this workstream: it makes `docs/tokens.md`'s colour catalogue fail the
-test suite if it drifts from the shipped themes.
+test suite if it drifts from the shipped themes. 057 closes the status-tone
+contract: the solid fills are tuned as backgrounds, so status text, icons and
+dots drawn on `background`/`card` get their own `xText` tonality (light
+`warning` measured 1.78:1 against the canvas).
 
 ### Reference adoption (block `200–299`)
 

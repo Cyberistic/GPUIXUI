@@ -77,6 +77,10 @@ its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls
 stop faking hover with an alpha fill (plan 055)
 `[x]` Guard the token catalogue against drift from the implementation (plan 056)
+`[ ]` Ship status text roles (`infoText`/`successText`/`warningText`/
+`destructiveText`) so status labels, icons and indicator dots have a readable
+colour on plain surfaces — light `warning` was 1.78:1 on `background` — and
+expose them as `statusTone(...).text` (plan 057)
 `[x]` Add motion tokens (durations/easings); three `primitives` call sites held
 `120`/`700` as literals (plan 019)
 `[x]` Guard that all four shipped themes carry every theme group (part of plan
@@ -98,6 +102,9 @@ docs platform toggle (macOS / Linux / Windows / Default) built on
 **symlink** — a `references/` rule does not match a symlink, so every worktree
 shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `tokens`)
+`[ ]` Cross-team: `components` uses `statusTone(...).text` for inline status
+text, icons and indicator dots and retires its local `tone()` foreground, which
+reads the solid `success`/`warning` fills as text (plan 057; owner: `components`)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
 directly and delete their structural copies of the theme and role list, their
 local focus-ring helpers (`primitives/src/core/style.ts`,
