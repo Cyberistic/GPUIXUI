@@ -113,6 +113,12 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "workspace-panes",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "grid-wide-table",
+    );
+    expect(Arr.map(scenarios, (scenario) => scenario.capability)).toContain(
+      "grid",
+    );
   });
 
   it("flags duplicated ids", () => {

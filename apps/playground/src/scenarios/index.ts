@@ -45,6 +45,7 @@ import { shortcutScenario } from "./shortcuts.js";
 import { commandPaletteScenario } from "./command-palette.js";
 import { workspacePanesScenario } from "./workspace-panes.js";
 import { dockingScenario } from "./docking.js";
+import { gridScenario } from "./grid.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
@@ -104,6 +105,7 @@ export const PROBE_CAPABILITIES = [
   "chart",
   "toast",
   "docking",
+  "grid",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -133,6 +135,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   commandPaletteScenario,
   workspacePanesScenario,
   dockingScenario,
+  gridScenario,
   shortcutScenario,
   themeColorRolesScenario,
   themeTypeAndShadowScenario,

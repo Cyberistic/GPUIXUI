@@ -62,7 +62,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (52/52 green); -> 2 on a host with no binding
+# -> 0 here (53/53 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -490,6 +490,27 @@ from the last-child rule (`toast-lifecycle`) and not asserted; the
 gesture-ending click is a measured `drag-targets` fact and must be suppressed by
 a component; a detached tab stays in-window (0.10.0 has one app window).
 
+## Pinned grid chrome (plan `185`)
+
+`grid-wide-table` is the wide-table contract: a header that stays put, a frozen
+first column, column windowing and keyboard navigation across 24 columns. The
+decisive fact is negative:
+
+| Fact | Measured |
+| ---- | -------- |
+| `position: "sticky"` | **ignored**: a sticky header inside a scroller moved exactly 80 px for a `-80` wheel, so it is in normal flow (`style.rs` maps only absolute/fixed/relative) |
+| one scroll source | the body is the only scroller; the header cells sit at `c*90 + pan.x` and the pinned rows at `r*28 + pan.y`, fed by `renderer.getScrollOffset(bodyId)` |
+| alignment | after `-360` the header cell and body cell agree within 1 px; after `-280` the pinned row and body row agree within 1 px; the pinned header does not move |
+| column windowing | at `x=-360` the tree holds columns 3–10 (`0` and `20` return `null`); at the end `x=-1700` it holds 17–23 (`20` paints, `0` is absent) — the runtime does not drop clipped children, the grid never rendered them |
+| keyboard | six Rights from column 1 reach `0,7`, focus follows, and the component pans to `-260` to reveal it; three Downs reach `3,7` with the pinned row aligned |
+| a11y | `role="gridcell"` is AccessKit `GridCell`; the authored `aria-id` is the dump key, `aria-label` the name, and `aria-selected` is exposed |
+
+Limits: column windowing is component code (no horizontal virtual list), the
+probe derives its windows from the renderer's offset rather than accumulating
+wheel deltas, and rows are plain — combining the window with `<virtual-list>`
+row virtualization is the data-grid component's job (`virtualized-table` and
+`scroll-into-view` measure that half).
+
 ## Terminal surfaces (plan `179`)
 
 `terminal-grid` asks whether a Tier 4 terminal is feasible. The runtime has no
@@ -584,10 +605,10 @@ integration branch.
 
 ## Evidence on this host
 
-The suite is **52/52 green** here (`exit 0`):
+The suite is **53/53 green** here (`exit 0`):
 
 ```
-52/52 scenarios passed · capabilities: layout=verified text=verified
+53/53 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -595,7 +616,7 @@ virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified
 selection=verified menu=verified components=verified search=verified
-terminal=verified chart=verified toast=verified
+terminal=verified chart=verified toast=verified grid=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -676,6 +697,8 @@ src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible si
 src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filtering and focus
 src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
 src/scenarios/docking.tsx   docking: drop zones, split creation, prune, restore
+src/scenarios/grid.tsx      pinned grid chrome: sticky, one scroll source, column windows
+src/scenarios/grid-window.ts the pure window: clamp, visible range, keyboard reveal
 src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
 src/scenarios/chart.tsx     chart: bars, one svg layer per series, SVG text, img gradients
 src/scenarios/markdown.tsx  markdown: blocks, selection, links, children, a11y
@@ -717,8 +740,8 @@ narrower. Each deviation is deliberate and measured:
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
   probe, the terminal-grid probe, the chart probe, the markdown probe, the
-  toast-viewport probe and the shell probe pass in real GPUix 0.10.0 on this
-  host (52/52), with a written report and screenshots.
+  toast-viewport probe, the shell probe and the pinned-grid probe pass in real
+  GPUix 0.10.0 on this host (53/53), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

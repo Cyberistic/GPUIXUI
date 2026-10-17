@@ -60,8 +60,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | terminal | `terminal-grid` | verified |
 | chart | `chart-svg` | verified |
 | toast | `toast-lifecycle` | verified |
+| grid | `grid-wide-table` | verified |
 
-The suite is **52/52 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **53/53 green here** (exit `0`, `.artifacts/smoke-report.json`).
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -570,15 +571,15 @@ in-package and an end-to-end native verdict.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Tables | todo | ? | No `<table>` element; grid + `div` rows. Keyboard row navigation builds on the `roving-focus` contract. |
+| Tables | todo | ? | No `<table>` element; grid + `div` rows. Keyboard row navigation builds on the `roving-focus` contract. **Pinned chrome (`grid-wide-table`, plan `185`):** `position: "sticky"` is **ignored** by 0.10.0 (a sticky header scrolls with its content; `style.rs` maps only absolute/fixed/relative), so a header and a frozen column must be derived from the body's one scroll offset (`renderer.getScrollOffset`) and re-rendered from it — measured alignment within 1 px on both axes under a wheel pan. `role="gridcell"` maps to AccessKit `GridCell`, and `aria-selected` reaches the dump. |
 | Sortable tables | todo | ? | Grid + keyboard headers. |
 | Row selection | todo | ? | `aria-selected` is supported (verified). |
-| Column configuration | todo | ? | Grid tracks + a menu. |
+| Column configuration | todo | ? | Grid tracks + a menu. Columns are **component-windowed** on a wide table: `grid-wide-table` keeps only the visible columns in the tree (at `x=-360` columns 3–10; at the end 17–23), because the runtime keeps clipped children in its paint log. Track widths are `style.width` per cell; `gridTemplateColumns` is a count, not a track list. |
 | Resizable columns | todo | ? | Pointer events + grid tracks. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. **A resized pane (`workspace-panes`)** re-windows the list against the **clipped** intersection (a list fixed at `120` still painted fewer rows when its pane shrank), and the anchor survives the resize and a tab switch. The list needs a resolved height: derive it from the split. |
-| Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). |
+| Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). **Column windowing is component code** (`grid-wide-table`, plan `185`): there is no horizontal virtual list, so a wide grid derives the visible column range from the horizontal offset, keeps only that range plus overdraw in the tree, and reveals a keyboard-selected off-window cell with a component-owned `scrollTo` (`-260` in the probe). |
 | Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `virtualized-tree` adds the virtualized form: 16 px per depth inside `<virtual-list>`, a count change from 8 to 48 rows repaints correctly, and Down/Up move native focus by roving index even for a row outside the window. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
