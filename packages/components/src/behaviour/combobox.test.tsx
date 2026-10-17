@@ -22,7 +22,15 @@ import {
   type ComponentTestRoot,
   type TestTheme,
 } from "../internal/test-root.js";
-import { Combobox, type ComboboxOption } from "../combobox.js";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+  type ComboboxOption,
+} from "../combobox.js";
 
 const options: ReadonlyArray<ComboboxOption> = [
   { value: "calendar", label: "Calendar", description: "Scheduling" },
@@ -35,12 +43,18 @@ const Picker = ({
   onValueChange,
   multiple,
   disabledCamera,
+  empty,
+  triggerPlaceholder,
+  triggerLabel = "Assign reviewer",
 }: {
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
   ) => void;
   readonly multiple?: boolean;
   readonly disabledCamera?: boolean;
+  readonly empty?: string;
+  readonly triggerPlaceholder?: string;
+  readonly triggerLabel?: string;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <Combobox
@@ -54,9 +68,20 @@ const Picker = ({
           : options
       }
       multiple={multiple}
-      label="Assign reviewer"
       onValueChange={onValueChange}
-    />
+    >
+      <ComboboxTrigger
+        label={triggerLabel}
+        {...(triggerPlaceholder === undefined
+          ? {}
+          : { placeholder: triggerPlaceholder })}
+      />
+      <ComboboxContent>
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+        <ComboboxEmpty>{empty}</ComboboxEmpty>
+      </ComboboxContent>
+    </Combobox>
   </div>
 );
 
@@ -149,6 +174,16 @@ describe("Combobox", () => {
     await open(picker);
     type(picker, "ca");
     await settle();
+    expect(
+      picker.renderer.findByTestId("combobox-option-calendar")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(
+      picker.renderer.findByTestId("combobox-option-camera")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(false);
     clickCentreOf(picker, "combobox-option-camera");
     await settle();
 
@@ -292,9 +327,7 @@ describe("Combobox", () => {
   it("closes on an outside press", async () => {
     const picker = renderComponent(
       <div style={{ width: 1280, height: 800, position: "relative" }}>
-        <div style={{ width: 360, padding: 40 }}>
-          <Combobox options={options} label="Assign reviewer" />
-        </div>
+        <Picker />
         <div
           testId="elsewhere"
           style={{
@@ -315,6 +348,34 @@ describe("Combobox", () => {
     await settle();
 
     expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("renders the caller's own empty state", async () => {
+    const picker = renderComponent(<Picker empty="No fruit found" />);
+    await open(picker);
+
+    type(picker, "zzz");
+    await settle();
+
+    expect(picker.renderer.getAllText()).toContain("No fruit found");
+    expect(picker.renderer.getAllText()).not.toContain("No matches");
+
+    picker.unmount();
+  });
+
+  it("takes the trigger's placeholder and name from the part", () => {
+    const picker = renderComponent(
+      <Picker triggerPlaceholder="Pick a reviewer" triggerLabel="Reviewer" />,
+    );
+
+    expect(picker.renderer.getAllText()).toContain("Pick a reviewer");
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("Reviewer");
 
     picker.unmount();
   });

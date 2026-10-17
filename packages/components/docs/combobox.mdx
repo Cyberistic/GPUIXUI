@@ -8,28 +8,49 @@ GPUix's headless combobox — focus, the active row and the keyboard stay the
 runtime's — and adds our option shape, ranking, row look and value semantics.
 
 ```tsx
-import { Combobox } from "@gpuixui/components/combobox";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@gpuixui/components/combobox";
 
 <Combobox
-  label="Assign reviewer"
   options={[
     { value: "ada", label: "Ada Lovelace", description: "Engineering" },
     { value: "grace", label: "Grace Hopper", description: "Compilers" },
   ]}
   onValueChange={(value) => setReviewer(typeof value === "string" ? value : null)}
-/>;
+>
+  <ComboboxTrigger label="Assign reviewer" />
+  <ComboboxContent>
+    <ComboboxInput label="Search reviewers" />
+    <ComboboxList label="Reviewers" />
+    <ComboboxEmpty />
+  </ComboboxContent>
+</Combobox>;
 ```
 
 ## Anatomy
 
 | Part | Responsibility |
 | ---- | -------------- |
-| the trigger | a field-shaped button; the selected label(s) or `placeholder`, `aria-expanded`, `▾` |
-| the popup | a `FloatingLayer`: the search input, the ranked list, the empty state |
-| the option row | label, optional description, `✓` while selected, `aria-selected` |
+| `Combobox` | the headless root: ranking, selection, open state and focus restore |
+| `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `aria-expanded`, `▾` |
+| `ComboboxContent` | the anchored popup surface |
+| `ComboboxInput` | the search field; Escape asks the root to restore focus |
+| `ComboboxList` | the ranked listbox, one `ComboboxItem` per visible option |
+| `ComboboxItem` | one row: label, optional description, `✓` while selected |
+| `ComboboxEmpty` | shown only when no option matches; children replace the default |
 
 Single mode selects one value and closes. Multiple mode keeps the popup open,
 toggles the row, and reports the selected values in the order they were chosen.
+
+The root owns the state because ranking and the selection payload need the whole
+option set; the parts own their own labels and place. `ComboboxItem` is exported
+so a caller can compose the rows of a custom list from the same root.
 
 ## Values, not labels
 
@@ -101,12 +122,14 @@ scrolling, and rows highlight with `colors.hover`. The selected check is
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (15 tests):
 open + input focus, filtering, ArrowDown + Enter selecting the **value**,
-the empty state, single replacement, multi add/remove with order, the disabled
-row, Escape restoring focus, prefix-before-substring ranking, both themes, and
-the pointer path — selecting an option, toggling several while skipping a
-disabled one, and closing on an outside press.
+the empty state, single replacement (including the selected row's
+`aria-selected`), multi add/remove with order, the disabled row, Escape restoring
+focus, prefix-before-substring ranking, both themes, the pointer path — selecting
+an option, toggling several while skipping a disabled one, closing on an outside
+press — a caller-supplied empty state, and the trigger's placeholder/name coming
+from the part.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf` and
 `toggledSelection`.

@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200-adopt-compound-part-api.md`, `116-tier2-choice-inputs.md`, `138-combobox-pointer-coverage.md` |
-| Status | planned |
+| Status | done — 2026-10-17; 15 native tests, both-direction proof measured |
 | Source | `docs/component-api.md` §9 row "Comboboxes"; `TODO.md` → "Split the remaining landed deviations … into parts" |
 
 Self-contained. It migrates only `Combobox`. Pagination, CommandMenu and the
@@ -132,4 +132,16 @@ fails if the trigger reads a root-level placeholder or ignores `label`.
 
 ## 8. Result
 
-To be filled by the executor: commit, measured counts, both-direction evidence.
+Landed 2026-10-17:
+
+- `combobox.tsx` — seven parts over a root context. GPUix's headless parts stay
+  the implementation; the ranking adapter (`filter={null}`, pre-ranked items,
+  controlled `inputValue`) is unchanged and lives only in the root.
+- The trigger registers its instance in the root's ref, so Escape and a select
+  still return focus; the input's Escape handler is the only new signal.
+- `combobox.test.tsx` — 15 tests. Both directions: painting
+  `aria-selected={false}` on every row fails the single-replacement test (the
+  rest cascade from the unmounted root); restored, green.
+- Example and docs compose the parts; `COMPONENTS.md` says 15; the contract's §8
+  row lists the seven parts and Comboboxes left §9.
+- Gates: `nub run check-types` green, 222 unit tests, 15 Combobox tests.

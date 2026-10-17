@@ -10,25 +10,39 @@
  *
  * Focus, the active row and Enter/arrow/Escape handling stay GPUix's: those are
  * proven in its own suite and reimplementing them here would be a second, worse
- * copy. The trigger label, the ranking and the selection payload are ours.
+ * copy. The parts own the trigger label, the ranking adapter and the selection
+ * payload, and a part is never given a duplicated `value` prop.
  */
 
 import {
   Combobox as HeadlessCombobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxTrigger,
+  ComboboxContent as HeadlessContent,
+  ComboboxEmpty as HeadlessEmpty,
+  ComboboxInput as HeadlessInput,
+  ComboboxItem as HeadlessItem,
+  ComboboxList as HeadlessList,
+  ComboboxTrigger as HeadlessTrigger,
   type ComboboxItemState,
+  type ComboboxListProps as HeadlessListProps,
+  type ComboboxTriggerProps as HeadlessTriggerProps,
   type ComboboxValue,
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
+import {
+  mergeStyles,
+  type FloatingContentProps,
+} from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useLayoutEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   labelOf,
   filterOptions,
@@ -47,6 +61,34 @@ import {
 /** What a selection callback receives: one value, several, or none. */
 export type ComboboxSelection = string | null | ReadonlyArray<string>;
 
+/** The rules a combobox part follows; throws outside a {@link Combobox}. */
+interface ComboboxContextValue {
+  readonly options: ReadonlyArray<ComboboxOption>;
+  readonly selectedValues: ReadonlyArray<string>;
+  readonly open: boolean;
+  readonly disabled: boolean;
+  readonly labelFor: (value: string) => string;
+  readonly isDisabled: (value: string) => boolean;
+  readonly registerTrigger: (instance: PublicInstance | null) => void;
+  /** An Escape press: close and return focus to the trigger. */
+  readonly noteEscape: () => void;
+  /** An outside press already moved focus, so do not restore it. */
+  readonly noteOutsidePress: () => void;
+}
+
+const ComboboxContext = createContext<ComboboxContextValue | undefined>(
+  undefined,
+);
+
+/** The combobox a part belongs to. Throws when there is none. */
+const useCombobox = (): ComboboxContextValue => {
+  const value = useContext(ComboboxContext);
+  if (value === undefined) {
+    throw new Error("Combobox parts must be used inside Combobox");
+  }
+  return value;
+};
+
 /** {@link Combobox} props. */
 export interface ComboboxProps {
   readonly options: ReadonlyArray<ComboboxOption>;
@@ -56,17 +98,8 @@ export interface ComboboxProps {
   readonly onValueChange?: (value: ComboboxSelection) => void;
   /** Default `false`: one value and the popup closes on select. */
   readonly multiple?: boolean;
-  /** Shown on the trigger when nothing is selected. Default `"Select…"`. */
-  readonly placeholder?: string;
-  /** The search field's placeholder. Default `"Search…"`. */
-  readonly searchPlaceholder?: string;
-  /** Shown when the query matches nothing. Default `"No matches"`. */
-  readonly emptyLabel?: string;
   readonly disabled?: boolean;
-  /** The trigger's accessible name. */
-  readonly label?: string;
-  /** The trigger's test id. Default `"combobox-trigger"`. */
-  readonly testId?: string;
+  readonly children?: ReactNode;
 }
 
 /** Narrow the public selection to the runtime's value shape. */
@@ -91,16 +124,6 @@ const optionOf = (
 ): Option.Option<ComboboxOption> =>
   Arr.findFirst(options, (option) => option.value === value);
 
-/** The label for a stored value; falls back to the value itself. */
-const labelFor = (
-  options: ReadonlyArray<ComboboxOption>,
-  value: string,
-): string =>
-  Option.match(optionOf(options, value), {
-    onNone: () => value,
-    onSome: labelOf,
-  });
-
 /** The row's look in each interaction state. */
 const rowStyle = (theme: Theme, state: ComboboxItemState): StyleDesc => ({
   ...textStyle(theme, "label"),
@@ -123,25 +146,24 @@ const rowStyle = (theme: Theme, state: ComboboxItemState): StyleDesc => ({
   hover: state.disabled ? undefined : { backgroundColor: theme.colors.hover },
 });
 
-/** A searchable single- or multi-select. */
+/**
+ * A searchable single- or multi-select. Compose {@link ComboboxTrigger} and
+ * {@link ComboboxContent} (with {@link ComboboxInput}, {@link ComboboxList} and
+ * {@link ComboboxEmpty}) inside it.
+ */
 export const Combobox = ({
   options,
   value: valueProp,
   defaultValue,
   onValueChange,
   multiple = false,
-  placeholder = "Select…",
-  searchPlaceholder = "Search…",
-  emptyLabel = "No matches",
   disabled = false,
-  label,
-  testId = "combobox-trigger",
+  children,
 }: ComboboxProps) => {
-  const theme = useTheme();
   const renderer = useGpuix().renderer;
-  const trigger = useRef<PublicInstance | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const trigger = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
 
@@ -158,16 +180,14 @@ export const Combobox = ({
       ? []
       : [selected];
 
-  const display =
-    selectedValues.length === 0
-      ? placeholder
-      : Arr.join(
-          Arr.map(selectedValues, (value) => labelFor(options, value)),
-          ", ",
-        );
-
   const visible = filterOptions(options, query);
   const items = Arr.map(visible, (option) => option.value);
+
+  const labelFor = (value: string): string =>
+    Option.match(optionOf(options, value), {
+      onNone: () => value,
+      onSome: labelOf,
+    });
 
   /** Close, restoring focus only for the paths that should (Escape, select). */
   useLayoutEffect(() => {
@@ -180,96 +200,182 @@ export const Combobox = ({
   }, [open, renderer]);
 
   return (
-    <HeadlessCombobox
-      items={items}
-      value={selected}
-      onValueChange={(next) => {
-        restoreFocus.current = !multiple;
-        setSelected(next);
-      }}
-      inputValue={query}
-      onInputValueChange={(next) => {
-        // GPUix writes the selected label into the input as it closes a
-        // single-select; that is not a query the user typed.
-        if (open) setQuery(next);
-      }}
-      open={open}
-      onOpenChange={(next) => {
-        if (next) {
+    <ComboboxContext.Provider
+      value={{
+        options,
+        selectedValues,
+        open,
+        disabled,
+        labelFor,
+        isDisabled: (value) =>
+          Option.exists(optionOf(options, value), (option) => option.disabled === true),
+        registerTrigger: (instance) => {
+          trigger.current = instance;
+        },
+        noteEscape: () => {
+          restoreFocus.current = true;
+        },
+        noteOutsidePress: () => {
           restoreFocus.current = false;
-          setQuery("");
-          setOpen(true);
-          return;
-        }
-        setOpen(false);
-        setQuery("");
+        },
       }}
-      multiple={multiple}
-      disabled={disabled}
-      autoHighlight="always"
-      filter={null}
-      itemToStringValue={(value) => labelFor(options, value)}
-      style={{ display: "flex", flexDirection: "column", width: "100%" }}
     >
-      <ComboboxTrigger
-        {...(label === undefined ? {} : { "aria-label": label })}
-        aria-expanded={open}
-        ref={trigger}
-        testId={testId}
+      <HeadlessCombobox
+        items={items}
+        value={selected}
+        onValueChange={(next) => {
+          restoreFocus.current = !multiple;
+          setSelected(next);
+        }}
+        inputValue={query}
+        onInputValueChange={(next) => {
+          // GPUix writes the selected label into the input as it closes a
+          // single-select; that is not a query the user typed.
+          if (open) setQuery(next);
+        }}
+        open={open}
+        onOpenChange={(next) => {
+          if (next) {
+            restoreFocus.current = false;
+            setQuery("");
+            setOpen(true);
+            return;
+          }
+          setOpen(false);
+          setQuery("");
+        }}
+        multiple={multiple}
         disabled={disabled}
+        autoHighlight="always"
+        filter={null}
+        itemToStringValue={(value) => labelFor(value)}
+        style={{ display: "flex", flexDirection: "column", width: "100%" }}
+      >
+        {children}
+      </HeadlessCombobox>
+    </ComboboxContext.Provider>
+  );
+};
+
+/** {@link ComboboxTrigger} props. */
+export interface ComboboxTriggerProps extends Omit<HeadlessTriggerProps, "children"> {
+  /** Shown while nothing is selected. Default `"Select…"`. */
+  readonly placeholder?: string;
+  /** The trigger's accessible name. */
+  readonly label?: string;
+  /** Default `"combobox-trigger"`. */
+  readonly testId?: string;
+}
+
+/** The closed control: the selected labels, the caret and `aria-expanded`. */
+export const ComboboxTrigger = ({
+  placeholder = "Select…",
+  label,
+  testId = "combobox-trigger",
+  ...rest
+}: ComboboxTriggerProps) => {
+  const theme = useTheme();
+  const { selectedValues, open, disabled, labelFor, registerTrigger } =
+    useCombobox();
+  const display =
+    selectedValues.length === 0
+      ? placeholder
+      : Arr.join(
+          Arr.map(selectedValues, (value) => labelFor(value)),
+          ", ",
+        );
+
+  return (
+    <HeadlessTrigger
+      {...(label === undefined ? {} : { "aria-label": label })}
+      aria-expanded={open}
+      ref={registerTrigger}
+      testId={testId}
+      disabled={disabled}
+      {...rest}
+      style={{
+        ...textStyle(theme, "label"),
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: theme.spacing.md,
+        width: "100%",
+        height: controlHeight(theme, "md"),
+        paddingLeft: theme.spacing.md,
+        paddingRight: theme.spacing.md,
+        backgroundColor: theme.colors.background,
+        color:
+          selectedValues.length === 0
+            ? theme.colors.mutedForeground
+            : theme.colors.foreground,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.borderStrong,
+        borderRadius: theme.radius.md,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
+      }}
+    >
+      <text
         style={{
           ...textStyle(theme, "label"),
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.spacing.md,
-          width: "100%",
-          height: controlHeight(theme, "md"),
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          backgroundColor: theme.colors.background,
           color:
             selectedValues.length === 0
               ? theme.colors.mutedForeground
               : theme.colors.foreground,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.borderStrong,
-          borderRadius: theme.radius.md,
-          cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? 0.5 : 1,
-          hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
         }}
       >
-        <text
-          style={{
-            ...textStyle(theme, "label"),
-            color:
-              selectedValues.length === 0
-                ? theme.colors.mutedForeground
-                : theme.colors.foreground,
-          }}
-        >
-          {display}
-        </text>
-        <text
-          style={{
-            ...textStyle(theme, "caption"),
-            color: theme.colors.mutedForeground,
-          }}
-        >
-          ▾
-        </text>
-      </ComboboxTrigger>
-      <ComboboxContent
-        testId="combobox-content"
-        side="bottom"
-        align="start"
-        sideOffset={4}
-        onMouseDownOutside={() => {
-          restoreFocus.current = false;
-        }}
+        {display}
+      </text>
+      <text
         style={{
+          ...textStyle(theme, "caption"),
+          color: theme.colors.mutedForeground,
+        }}
+      >
+        ▾
+      </text>
+    </HeadlessTrigger>
+  );
+};
+
+/** {@link ComboboxContent} props: the anchored popup surface. */
+export interface ComboboxContentProps extends FloatingContentProps {
+  /** Default `"bottom"`. */
+  readonly side?: "top" | "right" | "bottom" | "left";
+  /** Default `"start"`. */
+  readonly align?: "start" | "center" | "end";
+  /** The gap between trigger and surface. Default `4`. */
+  readonly sideOffset?: number;
+}
+
+/** The popup. It renders while the combobox is open, anchored by GPUix. */
+export const ComboboxContent = ({
+  side = "bottom",
+  align = "start",
+  sideOffset = 4,
+  children,
+  onMouseDownOutside,
+  style,
+  ...rest
+}: ComboboxContentProps) => {
+  const theme = useTheme();
+  const { noteOutsidePress } = useCombobox();
+
+  return (
+    <HeadlessContent
+      testId="combobox-content"
+      side={side}
+      align={align}
+      sideOffset={sideOffset}
+      {...rest}
+      onMouseDownOutside={(event) => {
+        noteOutsidePress();
+        onMouseDownOutside?.(event);
+      }}
+      style={mergeStyles(
+        {
           display: "flex",
           flexDirection: "column",
           gap: theme.spacing["2xs"],
@@ -284,109 +390,178 @@ export const Combobox = ({
           borderColor: theme.colors.border,
           boxShadow: elevationShadow(theme, "md"),
           pointerEvents: "auto",
+        },
+        style,
+      )}
+    >
+      {children}
+    </HeadlessContent>
+  );
+};
+
+/** {@link ComboboxInput} props. */
+export interface ComboboxInputProps {
+  /** Default `"Search…"`. */
+  readonly placeholder?: string;
+  /** The field's accessible name. Default `"Search options"`. */
+  readonly label?: string;
+}
+
+/** The search field. Escape asks the root to return focus to the trigger. */
+export const ComboboxInput = ({
+  placeholder = "Search…",
+  label = "Search options",
+}: ComboboxInputProps) => {
+  const theme = useTheme();
+  const { noteEscape } = useCombobox();
+
+  return (
+    <HeadlessInput
+      testId="combobox-input"
+      placeholder={placeholder}
+      aria-label={label}
+      onKeyDown={(event) => {
+        if (isDismiss(event)) noteEscape();
+      }}
+      style={{
+        ...textStyle(theme, "body"),
+        height: controlHeight(theme, "sm"),
+        paddingLeft: theme.spacing.md,
+        paddingRight: theme.spacing.md,
+        backgroundColor: theme.colors.input,
+        color: theme.colors.inputForeground,
+        borderRadius: theme.radius.sm,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+      }}
+    />
+  );
+};
+
+/** {@link ComboboxList} props. */
+export interface ComboboxListProps extends Omit<HeadlessListProps, "children"> {
+  /** The listbox's accessible name. Default `"Options"`. */
+  readonly label?: string;
+}
+
+/** The listbox: one {@link ComboboxItem} per visible option, in ranked order. */
+export const ComboboxList = ({
+  label = "Options",
+  style,
+  ...rest
+}: ComboboxListProps) => {
+  return (
+    <HeadlessList
+      role="listbox"
+      aria-label={label}
+      {...rest}
+      style={mergeStyles(
+        { display: "flex", flexDirection: "column" },
+        style,
+      )}
+    >
+      {(item) => <ComboboxItem key={item} value={item} />}
+    </HeadlessList>
+  );
+};
+
+/** {@link ComboboxItem} props. */
+export interface ComboboxItemProps {
+  /** The option's value. The label and description are read from the root. */
+  readonly value: string;
+  /** Merged after the row's own state style. */
+  readonly style?: StyleDesc;
+}
+
+/** One option row: label, description and the selected mark. */
+export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
+  const theme = useTheme();
+  const { options, selectedValues, labelFor, isDisabled } = useCombobox();
+  const option = optionOf(options, value);
+  const selected = Arr.contains(selectedValues, value);
+
+  return (
+    <HeadlessItem
+      value={value}
+      role="option"
+      aria-selected={selected}
+      disabled={isDisabled(value)}
+      testId={`combobox-option-${value}`}
+      style={(state) =>
+        mergeStyles(rowStyle(theme, state), style) ?? rowStyle(theme, state)
+      }
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          minWidth: 0,
+          gap: theme.spacing["2xs"],
         }}
       >
-        <ComboboxInput
-          testId="combobox-input"
-          placeholder={searchPlaceholder}
-          aria-label={label ?? "Search options"}
-          onKeyDown={(event) => {
-            if (isDismiss(event)) restoreFocus.current = true;
+        <text
+          style={{
+            ...textStyle(theme, "label"),
+            color: theme.colors.popoverForeground,
           }}
+        >
+          {labelFor(value)}
+        </text>
+        {Option.match(option, {
+          onNone: () => null,
+          onSome: (candidate) =>
+            candidate.description === undefined ? null : (
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                {candidate.description}
+              </text>
+            ),
+        })}
+      </div>
+      {selected ? (
+        <text
+          aria-label="Selected"
+          style={{
+            ...textStyle(theme, "caption"),
+            color: theme.colors.primary,
+          }}
+        >
+          ✓
+        </text>
+      ) : null}
+    </HeadlessItem>
+  );
+};
+
+/** {@link ComboboxEmpty} props. */
+export interface ComboboxEmptyProps {
+  readonly children?: ReactNode;
+}
+
+/** GPUix's empty slot: shown only while no option matches the query. */
+export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
+  const theme = useTheme();
+
+  return (
+    <HeadlessEmpty testId="combobox-empty">
+      {children ?? (
+        <text
           style={{
             ...textStyle(theme, "body"),
-            height: controlHeight(theme, "sm"),
-            paddingLeft: theme.spacing.md,
-            paddingRight: theme.spacing.md,
-            backgroundColor: theme.colors.input,
-            color: theme.colors.inputForeground,
-            borderRadius: theme.radius.sm,
-            borderWidth: theme.borderWidth.thin,
-            borderColor: theme.colors.border,
+            color: theme.colors.mutedForeground,
+            paddingTop: theme.spacing.lg,
+            paddingBottom: theme.spacing.lg,
           }}
-        />
-        <ComboboxList
-          role="listbox"
-          aria-label={label ?? "Options"}
-          style={{ display: "flex", flexDirection: "column" }}
         >
-          {(item) => {
-            const option = optionOf(options, item);
-            const disabledItem = Option.exists(
-              option,
-              (candidate) => candidate.disabled === true,
-            );
-            return (
-              <ComboboxItem
-                key={item}
-                value={item}
-                role="option"
-                aria-selected={Arr.contains(selectedValues, item)}
-                disabled={disabledItem}
-                testId={`combobox-option-${item}`}
-                style={(state) => rowStyle(theme, state)}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    flexGrow: 1,
-                    minWidth: 0,
-                    gap: theme.spacing["2xs"],
-                  }}
-                >
-                  <text
-                    style={{
-                      ...textStyle(theme, "label"),
-                      color: theme.colors.popoverForeground,
-                    }}
-                  >
-                    {labelFor(options, item)}
-                  </text>
-                  {Option.match(option, {
-                    onNone: () => null,
-                    onSome: (candidate) =>
-                      candidate.description === undefined ? null : (
-                        <text
-                          style={{
-                            ...textStyle(theme, "caption"),
-                            color: theme.colors.mutedForeground,
-                          }}
-                        >
-                          {candidate.description}
-                        </text>
-                      ),
-                  })}
-                </div>
-                {Arr.contains(selectedValues, item) ? (
-                  <text
-                    aria-label="Selected"
-                    style={{
-                      ...textStyle(theme, "caption"),
-                      color: theme.colors.primary,
-                    }}
-                  >
-                    ✓
-                  </text>
-                ) : null}
-              </ComboboxItem>
-            );
-          }}
-        </ComboboxList>
-        <ComboboxEmpty testId="combobox-empty">
-          <text
-            style={{
-              ...textStyle(theme, "body"),
-              color: theme.colors.mutedForeground,
-              paddingTop: theme.spacing.lg,
-              paddingBottom: theme.spacing.lg,
-            }}
-          >
-            {emptyLabel}
-          </text>
-        </ComboboxEmpty>
-      </ComboboxContent>
-    </HeadlessCombobox>
+          No matches
+        </text>
+      )}
+    </HeadlessEmpty>
   );
 };
 

@@ -191,7 +191,7 @@ parts.
 | Breadcrumbs | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator` | — | plan 113 |
 | Pagination | `Pagination`, `PaginationPrevious`, `PaginationList`, `PaginationItem`, `PaginationNext`, `PaginationEllipsis` | — | plan 113, 300 |
 | Search inputs | `SearchInput` | `AutocompleteRoot`/`AutocompleteValue` (shape only) | plan 116 |
-| Comboboxes | `Combobox` | `ComboboxRoot` + 24 parts | plan 116 |
+| Comboboxes | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty` | `ComboboxRoot` + 24 parts | plan 116, 302 |
 | Date pickers | `DatePicker` | — | plan 119 |
 | Time pickers | `TimePicker` | — | plan 132 |
 
@@ -227,7 +227,6 @@ test, docs row and inventory record.
 
 | Component | Deviation | Planned parts |
 | --------- | --------- | ------------- |
-| Comboboxes | the GPUix headless parts stay internal | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty` |
 | Date / time pickers | one component owns the trigger and the popup | `DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar`; the same for `TimePicker` |
 
 `Badge`, `Avatar`, `EmptyState` and `SearchInput` are one styled region and are

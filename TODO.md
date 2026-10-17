@@ -204,7 +204,7 @@ retired once both branches are one
     - [ ] Split the remaining landed deviations named in `docs/component-api.md` §9 into parts — each with its own behaviour test, docs update and inventory row (owner: components). Plans 300–303 are written and indexed.
       - [x] Pagination parts — plan 300
       - [x] CommandMenu parts — plan 301
-      - [ ] Combobox parts — plan 302
+      - [x] Combobox parts — plan 302
       - [ ] DatePicker + TimePicker parts — plan 303
     - [ ] Enforce the contract's typed-by-position children at compile time (a parent `children` narrowed to its part union plus a dev check), currently a render-time throw only (owner: components)
     - [ ] Expose `style` as `StateStyle<PartState>` or `children(state)` on the parts that draw an interaction state, so a consumer can style state without copying the component (owner: components)
