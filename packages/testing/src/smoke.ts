@@ -38,6 +38,7 @@ export const CAPABILITIES = [
   "log",
   "theme",
   "workspace",
+  "content",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -210,6 +211,12 @@ export class A11yTree extends Schema.Class<A11yTree>("A11yTree")({
 export interface SmokeHost {
   readonly text: (testId: string) => string | null;
   readonly paintedText: () => ReadonlyArray<string>;
+  /**
+   * The host element type the runtime retained for `testId`, or `null` when it
+   * holds no such node. Retention is not paint: `<canvas>` is retained and
+   * paints nothing, which `bounds` reports as `null`.
+   */
+  readonly elementType: (testId: string) => string | null;
   readonly bounds: (testId: string) => Bounds | null;
   /**
    * The style the runtime applied to `testId`, decoded; `null` when the id is

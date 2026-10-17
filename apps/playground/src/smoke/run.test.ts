@@ -61,7 +61,13 @@ describe("scenarioProblems", () => {
       "roving-focus",
     );
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
-      expect.arrayContaining(["select", "combobox", "tooltip", "a11y"]),
+      expect.arrayContaining([
+        "select",
+        "combobox",
+        "tooltip",
+        "a11y",
+        "content",
+      ]),
     );
   });
 

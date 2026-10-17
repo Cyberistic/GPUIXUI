@@ -13,6 +13,7 @@ import * as Str from "effect/String";
 import { Smoke } from "@gpuixui/testing";
 import type { PlaygroundScenario } from "../types.js";
 import { a11yScenario } from "./a11y.js";
+import { nativeSurfacesScenario } from "./surfaces.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { inputScenario } from "./input.js";
@@ -55,6 +56,7 @@ export const CORE_CAPABILITIES = [
   "virtual-list",
   "theme",
   "a11y",
+  "content",
 ] as const;
 
 /** The Tier 3/4 capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`). */
@@ -90,6 +92,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
   a11yScenario,
+  nativeSurfacesScenario,
   shellNavigationScenario,
   virtualizedTableScenario,
   treeScenario,

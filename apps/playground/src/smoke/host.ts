@@ -91,6 +91,11 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onSome: (id) => subtreeText(renderer, id),
     }),
   paintedText: () => renderer.getPaintedText(),
+  elementType: (testId) =>
+    Option.match(Option.fromNullishOr(renderer.findByTestId(testId)), {
+      onNone: () => null,
+      onSome: (element: TestElement) => element.type,
+    }),
   bounds: (testId) =>
     Option.match(elementId(renderer, testId), {
       onNone: () => null,
