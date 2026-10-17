@@ -5,15 +5,13 @@
  * part that renders nothing; the title losing its heading role or level; and a
  * consumer's `style` losing to the variant instead of overriding it.
  *
- * **Unrun on this host.** `@gpuix/native` publishes no `darwin-x64` binding, so
- * `src/behaviour/**` is not collected by the default suite and this file has not
- * executed anywhere yet (`TODO.md` → Blockers, plan 117 §5a). Run it with
- * `nub run --filter @gpuixui/components test:behaviour` on a supported host, and
- * only then may Card's inventory row read `done`.
+ * Runs wherever GPUix publishes a native binding, which on 2026-10-17 includes
+ * this Intel Mac because plan 140's locally built `darwin-x64` binding is in the
+ * store; `nub run --filter @gpuixui/components test:behaviour` is how it is run.
  */
 
 import { describe, expect, it } from "vitest";
-import * as R from "effect/Record";
+import * as Option from "effect/Option";
 import {
   Card,
   CardContent,
@@ -22,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../card.js";
+import { nodesWithRole } from "../internal/a11y.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -83,11 +82,11 @@ describe("Card", () => {
 
   it("announces the title as a level-3 heading", () => {
     const card = renderComponent(settingsCard);
-    const nodes = R.values(card.renderer.getA11yTree().nodes ?? {});
-    const headings = nodes.filter((node) => node.aria?.role === "heading");
+    const headings = nodesWithRole(card.renderer, "heading");
 
-    expect(headings.map((node) => node.aria?.level)).toEqual([3]);
-    expect(headings.map((node) => node.aria?.label)).toEqual(["Pro plan"]);
+    expect(headings).toHaveLength(1);
+    expect(headings.map((node) => node.level)).toEqual([Option.some(3)]);
+    expect(headings.map((node) => node.name)).toEqual(["Pro plan"]);
 
     card.unmount();
   });

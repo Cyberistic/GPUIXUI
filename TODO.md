@@ -73,11 +73,12 @@ the `@gpuixui/tokens/react` provider
     - [x] `internal/collection.ts` (index arithmetic), `internal/key.ts` (key predicates)
     - [x] `internal/theme.ts` adapter over the landed token API (plan 110 §6) — the tokens workstream is merged into this branch
     - [x] `runtime.test.tsx` — the renderer guard (plan 117 §5b): a lifted dynamic import decides `available` / `unsupported-host` / `missing`, and fails on a supported host. Proven to fail by adding this host to `supportedHosts`.
-    - [ ] `internal/test-root.tsx` (`renderComponent`) — needs a supported host, see Blockers
-    - [ ] Behaviour suites under a second config (`src/behaviour/`, `test:behaviour`): a static GPUix import fails to *load* on an unsupported host, so `describe.skipIf` cannot gate them (plan 117 §5a/§5c)
+    - [x] `internal/test-root.tsx` (`renderComponent`) — renders under a theme; runs here now that the native binding loads
+    - [x] `internal/a11y.ts` — the accessibility dump normalised for assertions (role case, `value` vs `label`)
+    - [x] Behaviour suites under a second config (`src/behaviour/`, `test:behaviour`): a static GPUix import fails to *load* on an unsupported host, so `describe.skipIf` cannot gate them (plan 117 §5a/§5c). **The split stays**: the suites now run here, on hosts with a binding
   - [ ] Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List
     - [x] `internal/collection.ts` (List single-selection core, shared with Tabs/menus)
-    - [x] Card: `src/card.tsx`, behaviour suite, example, docs page, inventory record — code lands; the behaviour suite is unrun here (no native binding)
+    - [x] Card: `src/card.tsx`, behaviour suite, example, docs page, inventory record — **verified natively** (5/5, `nub run --filter @gpuixui/components test:behaviour`)
     - [ ] Badge, Avatar, Alert, EmptyState, List
   - [ ] Overlays: Dialog, Confirmation dialog, Popover
     - [ ] `internal/dismiss-layer.ts` + `internal/button-props.ts` (0.10.0 has neither)
@@ -102,33 +103,47 @@ the `@gpuixui/tokens/react` provider
 
 ## Blockers (project-level, with evidence)
 
-`[!]` **The GPUix native runtime cannot run on this machine, so native renderer
-tests and the playground are impossible here.** Evidence, 2026-10-17:
+`[x]` **The GPUix native runtime now loads on this machine, so the Tier 2 behaviour
+suites run here.** Resolved 2026-10-17 08:57 by plan `140` (playground workstream):
+`@gpuix/native@0.10.0` publishes no `darwin-x64` binary, so the pinned source was
+built locally with `gpui_macos/runtime_shaders` (which removes the build-time
+`xcrun metal` dependency) and the resulting `gpuix-native.darwin-x64.node` is in
+the store, hard-linked across worktrees. Verified from `packages/components`:
+`nub run --filter @gpuixui/components test:behaviour` runs the real
+`TestRenderer` and Card's suite passes 5/5.
 
-- `uname -m` → `x86_64`; `sysctl -n machdep.cpu.brand_string` →
-  `Intel(R) Core(TM) i7-8750H`; `node -p process.arch` → `x64`.
-- `@gpuix/native@0.10.0` publishes only `@gpuix/native-darwin-arm64`,
-  `-linux-x64-gnu`, `-win32-x64-msvc`. There is **no darwin-x64 binary**.
-- Loading it fails with
-  `mach-o file, but is an incompatible architecture (have 'arm64', need 'x86_64')`
-  and then `Cannot find native binding`.
-- The WASM build (`@gpuix/native/wasm`) exports only `GpuixRenderer`, not
-  `TestGpuixRenderer`, and is a browser (wasm-bindgen) build. `cargo` is not
-  installed, so the napi package cannot be rebuilt from source here.
+Evidence, 2026-10-17 (the failure this replaced): `uname -m` → `x86_64`;
+`@gpuix/native@0.10.0` published only `-darwin-arm64`, `-linux-x64-gnu`,
+`-win32-x64-msvc`; loading it failed with `mach-o file, but is an incompatible
+architecture (have 'arm64', need 'x86_64')`.
 
-Consequences: `createTestRoot()`, `hasNativeTestRenderer`, screenshots and
-`apps/playground` are all unavailable on this host. Logic tests run normally.
-Affected: every Tier 2 component's behaviour test, and the native smoke test.
+Still true and worth remembering:
 
-Alternatives, in order: (1) run the suite on an Apple-silicon Mac, Linux x64 or
-Windows x64 runner; (2) upstream an x64 Darwin build to GPUix; (3) until then,
-the behaviour suites stay written and explicitly skipped with this reason, and
-no component may claim `done` on native interaction evidence.
+- The `wasm` build exports only `GpuixRenderer`, not `TestGpuixRenderer`.
+- The binding is a **locally built artifact**, not a published one: a clean
+  `nub install` on a bare host still has none, so the behaviour suites stay out
+  of the default `test` run (plan 117 §5a–§5c) and a host without a binding
+  reports `unsupported-host` from `src/runtime.test.tsx`.
+- On an Apple-silicon Mac, Linux x64 or Windows x64 the published binding works
+  with no local build.
 
-`[!]` **nub's isolated linker does not install optional platform binaries of
+`[x]` **nub's isolated linker does not install optional platform binaries of
 transitive dependencies.** `@gpuix/native-darwin-arm64` (an optional dependency
 of `@gpuix/native`) was absent from the store entry; `nub install --node-linker
-hoisted` links it, but the architecture mismatch above still blocks it here.
+hoisted` links it. Superseded on this host: the store now carries a locally built
+`darwin-x64` binding (first entry above), hard-linked across worktrees.
+
+`[x]` **Two sessions wrote this worktree at once — B3, resolved 2026-10-17
+08:56.** Root cause and permanent fix: plan `022-swarm-single-writer.md`
+(primitives worktree). Measurement for this worktree: plan
+`118-single-writer-components.md`, which also records the resolution: the stale
+turn `ses_eb7f09666ffeRRbJxPz0d344Cw` (07:12) committed and pushed everything it
+produced and stood down, because the rotating `run-components.sh` turn is the one
+the supervisor can see and replace. Re-verified at 08:56 and again at 09:00: the
+`session_v2` count is `1`, and the tree is clean apart from the untracked
+`nub.lock` and `references` symlink. The permanent fix — pinning `--session` and
+teaching `agent_alive` to count live server-side sessions (plan 022 §5) — is
+still the coordinator's, in `scripts/`.
 
 `[!]` **`@gpuix/react@0.10.0` (the latest published release) is far behind the
 reference clone in `~/GPUIXUI/references/gpuix`.** Verified against the installed

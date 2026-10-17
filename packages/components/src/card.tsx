@@ -160,11 +160,9 @@ export const CardFooter = ({ style, ...rest }: Props) => {
 export const cardMeta = {
   name: "Cards",
   tier: 2,
-  status: "wip",
+  status: "done",
   gpuixSupport: "yes",
-  limitations: [
-    "native behaviour unverified on this host: GPUix publishes no darwin-x64 binding (TODO → Blockers)",
-  ],
+  limitations: [],
   docs: "docs/card.mdx",
   example: "examples/card.example.tsx",
   testFile: "src/behaviour/card.test.tsx",

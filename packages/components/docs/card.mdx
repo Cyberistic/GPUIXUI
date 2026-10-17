@@ -93,16 +93,25 @@ in the component, so a custom theme changes the card with no code change. See
 
 ## Limitations
 
-- **Native behaviour is unverified on this development host.** GPUix publishes no
-  `darwin-x64` native binding, so the behaviour suite
-  (`src/behaviour/card.test.tsx`) is written but has not been executed anywhere.
-  Run `nub run --filter @gpuixui/components test:behaviour` on a supported host
-  (macOS arm64, Linux x64, Windows x64) before treating this component as done.
-  `TODO.md` → Blockers has the evidence.
 - The card does not clip a scrollable body: `overflow` is `hidden` on the
   surface, so a scroller belongs in `CardContent` with its own height.
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
+
+## Verification
+
+`src/behaviour/card.test.tsx` runs in the real GPUix renderer (5 tests): the parts'
+text in tree order, each variant's surface treatment, the level-3 heading role in
+the accessibility dump, a consumer `style` winning over the variant, and the card
+fill from both themes. Run it with:
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64 or Windows
+x64, plus this Intel Mac, where a locally built `darwin-x64` binding from plan
+140 is installed.
 
 ## Related
 

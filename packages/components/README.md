@@ -19,8 +19,9 @@ Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 
 | Area | State |
 | ---- | ----- |
-| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the behaviour-suite render helper |
+| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the a11y-dump reader and the behaviour-suite render helper |
 | `src/runtime.test.tsx` | the native-renderer guard (plan 117 §5b) |
+| `src/card.tsx` | Card and its five parts — verified natively |
 | `src/pagination/logic.ts` | page-window arithmetic |
 | `src/accordion/logic.ts` | single/multiple open-state transitions |
 | `src/breadcrumb/logic.ts` | trail collapsing |
@@ -28,7 +29,7 @@ Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 | `src/combobox/logic.ts` | option ranking and selection membership |
 | `src/toast/model.ts`, `src/toast/store.ts` | the toast domain: schema inputs, and the queue with its timers |
 | `src/validation/logic.ts` | schema-to-message mapping for form fields |
-| components (`card.tsx`, `dialog.tsx`, …) | per plans 111–116; not yet landed |
+| more components (`badge.tsx`, `dialog.tsx`, …) | per plans 111–116; not yet landed |
 
 ## Commands
 
@@ -41,11 +42,12 @@ nub run check            # the repo gate, from the worktree root
 ```
 
 Two suites, deliberately split. `test` runs everywhere: pure logic and the guard
-in `src/runtime.test.tsx`. `test:behaviour` runs only where GPUix publishes a
-native binding (macOS arm64, Linux x64, Windows x64), because `@gpuix/native`
-resolves its binding eagerly — on an unsupported host a behaviour file *fails to
-load* instead of skipping, so it must not be collected by default (plan 117
-§5a–§5c).
+in `src/runtime.test.tsx`. `test:behaviour` renders a real GPUix tree, so it needs
+a host with a GPUix native binding — macOS arm64, Linux x64, Windows x64, or this
+Intel Mac, where plan 140's locally built `darwin-x64` binding is installed.
+`@gpuix/native` resolves its binding eagerly, so on a host without one a behaviour
+file *fails to load* instead of skipping; that is why the default `test` run does
+not collect it (plan 117 §5a–§5c).
 
 ## Adding a component
 
