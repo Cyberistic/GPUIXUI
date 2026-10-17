@@ -87,6 +87,12 @@
  * identity dark `destructiveSoft` 1.040:1 and Linux dark 1.047:1 — so the four
  * fills join the divider class and the identity's two soft fills move one step
  * darker while keeping the surface floor.
+ *
+ * Plan 099 closes the last role the contract exempted by choice: `overlay` is
+ * the wash a Dialog paints across the window, and high-contrast dark's 80% black
+ * scrim composited to the canvas itself — a 1.000:1 modal backdrop on pure
+ * black. The scrim is measured over the four base surfaces as
+ * `overlayWashPairs`, and the AAA dark theme veils with light instead.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -102,6 +108,7 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
+  overlayWashPairs,
   selectionPairs,
   selectionSoftPairs,
   selectionSoftWashPairs,
@@ -315,6 +322,8 @@ describe("themeContrastFailures", () => {
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(4);
     expect(selectionSoftWashPairs.length).toBe(4);
+    expect(overlayWashPairs.length).toBe(4);
+    expect(new Set(overlayWashPairs).size).toBe(overlayWashPairs.length);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {
@@ -452,10 +461,6 @@ describe("contract completeness", () => {
     ],
     ["disabledForeground", "the text of that inactive state; same exemption"],
     [
-      "overlay",
-      "a modal scrim; its job is to obscure, and the content beneath it is the measured surface",
-    ],
-    [
       "scrollbar",
       "reserved; the pinned runtime paints the platform scrollbar and exposes no tint",
     ],
@@ -472,6 +477,7 @@ describe("contract completeness", () => {
       ...selectionWashPairs,
       ...selectionSoftPairs,
       ...selectionSoftWashPairs,
+      ...overlayWashPairs,
     ].flatMap(([foreground, background]) => [foreground, background]),
   );
 

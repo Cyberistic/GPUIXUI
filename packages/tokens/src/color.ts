@@ -197,7 +197,11 @@ export interface ThemeColors {
   readonly ring: string;
   /** Text selection wash for `selectionColor`. Translucent, so text stays legible. */
   readonly selection: string;
-  /** Modal scrim. */
+  /**
+   * Modal scrim. Translucent, because the surfaces beneath it must stay
+   * recognisable. A pure black canvas cannot be darkened, so the high-contrast
+   * dark theme veils with light instead of black.
+   */
   readonly overlay: string;
   /** Hover wash for ghost and subtle surfaces; a filled control uses `xHover`. */
   readonly hover: string;
@@ -511,7 +515,7 @@ export const highContrastDarkColors = {
   placeholder: "#B0B0B0",
   ring: "#C7CBFF",
   selection: "#4C39B54D",
-  overlay: "#000000CC",
+  overlay: "#FFFFFF26",
   hover: "#2E2E2E",
   active: "#3D3D3D",
   selected: "#1C1547",

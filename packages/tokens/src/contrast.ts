@@ -504,6 +504,61 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The surfaces a modal scrim covers. A dialog's scrim is painted across the
+ * window, so the app's base layout is behind it: the canvas, a card, the quiet
+ * panel and the floating surface a menu opens on. A scrim that composites to its
+ * own surface is an invisible modal backdrop, so each is held to the `surface`
+ * floor.
+ */
+export const overlaySurfaces = [
+  "background",
+  "card",
+  "muted",
+  "popover",
+] as const;
+
+/**
+ * The scrim composited over the surfaces it covers. Row washes are deliberately
+ * absent: the pointer leaves the row to reach the dialog, so a scrim over a
+ * transient hover is not a composition the design system supports.
+ */
+export const overlayWashPairs: readonly ContrastPair[] = overlaySurfaces.map(
+  (surface): ContrastPair => ["overlay", surface, "surface"],
+);
+
+const textOverWashFailures = (
+  pairs: readonly ContrastPair[],
+  wash: keyof ThemeColors,
+  theme: Theme,
+  floors: Readonly<Record<ContrastPairClass, number>>,
+): ReadonlyArray<ContrastFailure> =>
+  pairs.flatMap(([foreground, background, pairClass]) => {
+    const ratio = contrastRatio(
+      theme.colors[foreground],
+      compositeOver(theme.colors[wash], theme.colors[background]),
+    );
+    const floor = floors[pairClass];
+    return ratio >= floor
+      ? []
+      : [{ foreground, background, wash, pairClass, floor, ratio }];
+  });
+
+const washVisibilityFailures = (
+  pairs: readonly ContrastPair[],
+  wash: keyof ThemeColors,
+  theme: Theme,
+  floors: Readonly<Record<ContrastPairClass, number>>,
+): ReadonlyArray<ContrastFailure> =>
+  pairs.flatMap(([foreground, background, pairClass]) => {
+    const painted = compositeOver(theme.colors[wash], theme.colors[background]);
+    const ratio = contrastRatio(painted, theme.colors[background]);
+    const floor = floors[pairClass];
+    return ratio >= floor
+      ? []
+      : [{ foreground, background, wash, pairClass, floor, ratio }];
+  });
+
+/**
  * Every documented pair a theme misses — text, status, secondary text and status
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
@@ -516,7 +571,9 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * on the fills a bordered control paints, the focus ring on the soft status fills
  * a toast's action button sits on, and the functional boundary measured
  * on the quiet panel, the state washes and the soft status fills a bounded
- * control sits on. The level
+ * control sits on, and the modal scrim composited over the base surfaces it
+ * covers (reported with `wash: "overlay"`; the AAA dark scrim was 1.000:1 on its
+ * own canvas). The level
  * defaults to the one the theme declares, so a high-contrast theme is checked
  * against its own floors. An empty array is the library's guarantee; a consumer
  * test asserts exactly that:
@@ -553,94 +610,17 @@ export function themeContrastFailures(
           ];
     },
   );
-  const washFailures: ReadonlyArray<ContrastFailure> = selectionPairs.flatMap(
-    ([foreground, background, pairClass]) => {
-      const ratio = contrastRatio(
-        theme.colors[foreground],
-        compositeOver(theme.colors.selection, theme.colors[background]),
-      );
-      const floor = floors[pairClass];
-      return ratio >= floor
-        ? []
-        : [
-            {
-              foreground,
-              background,
-              wash: "selection" as const,
-              pairClass,
-              floor,
-              ratio,
-            },
-          ];
-    },
-  );
-  const washVisibilityFailures: ReadonlyArray<ContrastFailure> =
-    selectionWashPairs.flatMap(([foreground, background, pairClass]) => {
-      const painted = compositeOver(
-        theme.colors.selection,
-        theme.colors[background],
-      );
-      const ratio = contrastRatio(painted, theme.colors[background]);
-      const floor = floors[pairClass];
-      return ratio >= floor
-        ? []
-        : [
-            {
-              foreground,
-              background,
-              wash: "selection" as const,
-              pairClass,
-              floor,
-              ratio,
-            },
-          ];
-    });
-  const softFailures: ReadonlyArray<ContrastFailure> =
-    selectionSoftPairs.flatMap(([foreground, background, pairClass]) => {
-      const ratio = contrastRatio(
-        theme.colors[foreground],
-        compositeOver(theme.colors.selection, theme.colors[background]),
-      );
-      const floor = floors[pairClass];
-      return ratio >= floor
-        ? []
-        : [
-            {
-              foreground,
-              background,
-              wash: "selection" as const,
-              pairClass,
-              floor,
-              ratio,
-            },
-          ];
-    });
-  const softWashFailures: ReadonlyArray<ContrastFailure> =
-    selectionSoftWashPairs.flatMap(([foreground, background, pairClass]) => {
-      const painted = compositeOver(
-        theme.colors.selection,
-        theme.colors[background],
-      );
-      const ratio = contrastRatio(painted, theme.colors[background]);
-      const floor = floors[pairClass];
-      return ratio >= floor
-        ? []
-        : [
-            {
-              foreground,
-              background,
-              wash: "selection" as const,
-              pairClass,
-              floor,
-              ratio,
-            },
-          ];
-    });
   return [
     ...pairFailures,
-    ...washFailures,
-    ...washVisibilityFailures,
-    ...softFailures,
-    ...softWashFailures,
+    ...textOverWashFailures(selectionPairs, "selection", theme, floors),
+    ...washVisibilityFailures(selectionWashPairs, "selection", theme, floors),
+    ...textOverWashFailures(selectionSoftPairs, "selection", theme, floors),
+    ...washVisibilityFailures(
+      selectionSoftWashPairs,
+      "selection",
+      theme,
+      floors,
+    ),
+    ...washVisibilityFailures(overlayWashPairs, "overlay", theme, floors),
   ];
 }
