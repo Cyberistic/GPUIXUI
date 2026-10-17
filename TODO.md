@@ -150,7 +150,7 @@ retired once both branches are one
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–413)
+## Docs site workstream (plans 410–422)
 
 `[x]` `[████████████████]` 16/18
 

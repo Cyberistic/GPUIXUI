@@ -45,6 +45,7 @@ PROBE_TIMEOUT="${GPUIXUI_PROBE_TIMEOUT:-180}"
 RUNG1="${GPUIXUI_MODEL_RUNG1:-opencode-go-braven/deepseek-v4.1-flash}"
 RUNG2="${GPUIXUI_MODEL_RUNG2:-opencode/deepseek-v4.1-flash-free}"
 RUNG3="${GPUIXUI_MODEL_RUNG3:-deepseek-braven/deepseek-flash}"
+RUNG4="${GPUIXUI_MODEL_RUNG4:-deepseek/deepseek-flash}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
@@ -62,7 +63,7 @@ now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 epoch() { date -u +%s; }
 log() { printf '%s %s\n' "$(now)" "$*" >>"$LOG"; }
 
-model_of() { case "$1" in 1) echo "$RUNG1" ;; 2) echo "$RUNG2" ;; 3) echo "$RUNG3" ;; esac; }
+model_of() { case "$1" in 1) echo "$RUNG1" ;; 2) echo "$RUNG2" ;; 3) echo "$RUNG3" ;; 4) echo "$RUNG4" ;; esac; }
 
 state_field() { sed -n "s/^$1=//p" "$STATE" 2>/dev/null | head -1; }
 
@@ -136,7 +137,7 @@ cmd_rungs() {
   ensure_state
   local active rung status
   active="$(state_field model)"
-  for rung in 1 2 3; do
+  for rung in 1 2 3 4; do
     if available "$rung"; then status=available; else status=unavailable; fi
     [ "$(model_of "$rung")" = "$active" ] && status="$status active"
     printf '%s\t%s\t%s\n' "$rung" "$(model_of "$rung")" "$status"
@@ -158,7 +159,7 @@ cmd_advance() { # model reason
     log "skipping rung $next ($(model_of "$next")): no credential configured"
     next=$((next + 1))
   done
-  if [ "$next" -gt 3 ]; then
+  if [ "$next" -gt 4 ]; then
     log "limit on $active and no rung left: staying on it ($reason)"
     return 3
   fi
