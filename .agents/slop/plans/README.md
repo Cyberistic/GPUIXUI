@@ -27,7 +27,7 @@ range.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| `100` | `packages/testing` — the platform-free smoke harness | B | — | ready to execute |
+| `100` | `packages/testing` — the platform-free smoke harness | B | — | **landed** (`packages/testing` green on this host) |
 | `110` | The native smoke test (cross-cutting) | B | 100, 120 | ready; 0.10 suite exits 2 here, 0.5.1 legacy probe runs (ADR 0002) |
 | `120` | `apps/playground` — native playground + smoke runner | B | 100 | ready to execute |
 | `130` | Tier 3/4 feasibility probes | B→D | 100, 110, 120 | ready; verdicts need a supported host |
