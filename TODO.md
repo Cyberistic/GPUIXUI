@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 66/85
+`[x]` `[████████░░]` 67/86
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -332,6 +332,11 @@ inherited the dark `primaryForeground`, which measured 4.243:1 on the brand fill
 under the 4.5:1 floor, while `docs/tokens.md` claimed
 `themeContrastFailures(brandTheme)` was empty; a brand now moves its whole
 primary family and a test holds the example to the checker (plan 098)
+`[x]` Hold the modal scrim to the perceivability floor — `overlay` was exempt,
+so high-contrast dark's `#000000CC` scrim composited to 1.000:1 on its pure black
+canvas and the AAA dialog shipped an invisible backdrop; the scrim is now
+measured over the four base surfaces and the AAA dark theme veils with 15% white
+(plan 099)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)

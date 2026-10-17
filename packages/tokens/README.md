@@ -209,7 +209,10 @@ checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught, and on the four soft
 status fills, because a toast's action button is focused while it sits on its own
 tint; every shipped variant already clears that floor, so the pairs are a
-guarantee rather than a fix (plan 093). Default body text
+guarantee rather than a fix (plan 093). The modal scrim is measured the same way:
+`overlay` composited over the four base surfaces and held to 1.05:1, which caught
+the AAA dark theme's black veil painting **1.000:1** on its pure black canvas and
+turned it into a light one (plan 099). Default body text
 is checked on the canvas, card, the `muted` panel, `popover` and the
 `hover`/`active` washes, so an avatar's initials on the quiet panel and a date
 picker's month header on its floating surface are held to the body floor.

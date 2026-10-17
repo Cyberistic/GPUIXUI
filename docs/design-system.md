@@ -215,7 +215,15 @@ runtime paints one shadow per element — no `inset`, no shadow list — so a le
 is exactly one shadow, read with `elevationShadow(theme, level)`. A level is
 geometry plus an alpha; the tint is the single `shadow` role, so a brand retints
 every level by editing one value. Overlay layering uses the `overlay` scrim
-colour; `elevation.overlay` is reserved and empty so the shape stays stable.
+colour, a translucent wash a Dialog paints across the window. The scrim is held
+to the same 1.05:1 perceivability floor as every other painted value, on the four
+base surfaces it covers (`background`, `card`, the `muted` panel and `popover`),
+because a scrim that composites to the surface beneath it is an invisible modal
+backdrop. On the high-contrast dark theme's pure black canvas a dark veil cannot
+darken anything, so that theme veils with light: the modal is separated by a
+light wash, its own edge and elevation instead of a darker backdrop.
+`elevation.overlay` is a different concern — a reserved shadow level, empty so
+the shape stays stable.
 Dark shadows are darker and more opaque because contrast between surfaces is
 lower.
 
@@ -283,7 +291,7 @@ on a wrapping element instead of faking it.
 
 ## 9. Accessibility
 
-Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
+Colour is checked, not assumed. The token suite enforces:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
@@ -303,9 +311,13 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | soft status edge (`xSoftBorder` on `xSoft`) | 1.05:1 | 3:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`selected` washes | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
+| modal scrim (`overlay` composited over `background`/`card`/`muted`/`popover`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
-its own canvas — and is part of the normal test suite.
+its own canvas — and is part of the normal test suite. The modal scrim is
+measured composited rather than as a value: `overlay` over the four base
+surfaces, which caught the AAA dark backdrop painting **1.000:1** on its own
+canvas until plan `099` gave it a light veil.
 It can fail: a palette edit that reduces contrast fails the gate. The same check
 is public: `themeContrastFailures(theme)` returns every pair an edited theme
 misses, so a brand theme or copied platform style can be held to these floors in

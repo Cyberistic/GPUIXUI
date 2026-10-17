@@ -330,7 +330,7 @@ getTheme("light"); // the default light theme, unchanged
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
-| `overlay` | `#000000A6` | `#000000CC` | modal scrim |
+| `overlay` | `#000000A6` | `#FFFFFF26` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
 | `selected` | `#E0E3FF` | `#1C1547` | selected row or item |
@@ -965,6 +965,17 @@ fills. The wash itself is compared with each surface it paints on, so a
 highlight that has become imperceptible is reported as well;
 `selectionWashPairs` is that list.
 
+The modal scrim is measured the same way, because its job is to change the
+surface beneath it: `overlayWashPairs` composites `overlay` over the app's four
+base surfaces — `overlaySurfaces` is `background`, `card`, `muted` and `popover`
+— and holds the painted value to the `surface` floor. A scrim that composites to
+its own surface is an invisible modal backdrop; the audit found high-contrast
+dark's `#000000CC` measured **1.000:1** on its pure black canvas, so the AAA dark
+theme now veils with a 15% white wash (`#FFFFFF26`, 1.388:1) — a dark veil cannot
+darken black. The failures are reported with `wash: "overlay"`. Row washes are
+deliberately not scrim surfaces: the pointer leaves the row to reach the dialog,
+so a scrim over a transient hover is not a composition the system supports.
+
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
 can never pass — `compositeOver(colour, background)` composites a translucent
@@ -1101,7 +1112,7 @@ than an invalid theme.
 
 ## Verification
 
-Contrast is enforced by `packages/tokens/src/color.test.ts`:
+Contrast is enforced by the `@gpuixui/tokens` suite:
 
 ```sh
 nub run --filter @gpuixui/tokens test
@@ -1232,16 +1243,27 @@ wash and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 `successSoftForeground` measured 5.83:1 and Windows dark's wash over
 `destructiveSoft` 1.005:1 (plan `091`).
 
+The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
+over `background`, `card`, `muted` and `popover` and holds the result to 1.05:1,
+because a scrim that paints its own surface is an invisible modal backdrop. The
+audit found high-contrast dark's `#000000CC` measured **1.000:1** on the pure
+black canvas — an 80% black veil over black — while every other shipped set
+cleared the floor. The AAA dark theme now veils with light (`#FFFFFF26`): a
+dialog's separation cannot come from darkening a canvas that is already black.
+`overlay` stops being an exempt role; it is measured like the selection wash and
+reported with `wash: "overlay"` (plan `099`).
+
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
-`selectionWashPairs`, `selectionSoftPairs` and `selectionSoftWashPairs` measure
-the painted roles, and `contrast.test.ts` keeps a declared exemption list for the
-five that are not pairs — `disabled` and `disabledForeground` (WCAG exempts
+`selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs` and
+`overlayWashPairs` measure the painted roles, and `contrast.test.ts` keeps a
+declared exemption list for the four that are not pairs — `disabled` and
+`disabledForeground` (WCAG exempts
 inactive controls, and the design system requires a visible dim rather than a
-floor), `overlay` (a scrim, whose job is to obscure), `scrollbar` (reserved; the
+floor), `scrollbar` (reserved; the
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`087` closed.
+plans `076`–`099` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
