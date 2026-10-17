@@ -45,7 +45,7 @@ test fixture — the theme is the only source of those values.
 
 | Layer | What lives there | Why it is separate |
 | ----- | ---------------- | ------------------ |
-| `core/` | theme types, `style.ts` (spec → `StyleDesc`), `variants.ts`, `keyboard.ts`, `state.ts`, `loading.ts`, `layout.ts`, `selection.ts`, `color.ts` | pure and runtime-free: this is the part that can be proven without a GPUix runtime, and where the design decisions actually live |
+| `core/` | theme re-export, `style.ts` (spec → `StyleDesc`), `variants.ts`, `keyboard.ts`, `state.ts`, `loading.ts`, `layout.ts`, `selection.ts` | pure and runtime-free: this is the part that can be proven without a GPUix runtime, and where the design decisions actually live |
 | `components/` | thin renderers over GPUix host elements | each is a resolver call plus, at most, React-local focus or value state |
 
 `core/` must not import `@gpuix/react` at runtime (type-only imports are erased).

@@ -8,7 +8,7 @@
  * resolution, keyboard contracts, controlled state).
  */
 
-export { alpha } from "./color.js";
+export { alpha } from "@gpuixui/tokens";
 
 export {
   decideAbsolute,

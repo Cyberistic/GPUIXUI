@@ -159,6 +159,8 @@ retired once both branches are one
       structural theme port and the local ring/shadow helpers, use `focusRing`
       and `elevationShadow`, and verify both shipped themes in the runtime
       (plan 021)
+`[x]` `packages/primitives`: `alpha` comes from `@gpuixui/tokens`; delete the
+      local copy and its test (plan 023)
 `[x]` `examples/basic-app`: compose the Tier 1 set into one settings-form workflow
       (typed + `check-types` green; the app itself is **never run** — it needs a
       desktop session, while the primitives it composes are runtime-verified)

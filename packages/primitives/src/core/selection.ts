@@ -10,7 +10,7 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import { alpha } from "./color.js";
+import { alpha } from "@gpuixui/tokens";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 
 export const SELECTION_STATES = [
