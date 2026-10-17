@@ -84,8 +84,8 @@ platform type styles (051) now live on one branch (plan 053)
 exists only as an unreleased minor changeset on `references/gpuix` main — so no
 registration code lands. Evidence: `@gpuix/native@0.10.0`'s `GpuixRenderer`
 declares no such method and `@gpuix/react@0.10.0` re-exports that class. Plan 052
-is `blocked (upstream)` and keeps the ready design (idempotent `registerFonts`,
-7 tests) for the release that exposes it. No font is bundled.
+is `blocked (upstream)` and keeps the ready design (idempotent `registerFonts`) and
+test plan for the release that exposes it. No font is bundled.
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
 docs platform toggle (macOS / Linux / Windows / Default) built on
