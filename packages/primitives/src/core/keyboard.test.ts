@@ -110,6 +110,17 @@ describe("decideAbsolute", () => {
     expect(decideAbsolute(5, "down")).toEqual(Option.none());
     expect(decideAbsolute(0, "home")).toEqual(Option.none());
   });
+
+  it("lands on the nearest enabled end", () => {
+    const disabledEnds = (index: number): boolean => index === 0 || index === 4;
+    expect(decideAbsolute(5, "home", disabledEnds)).toEqual(Option.some(1));
+    expect(decideAbsolute(5, "end", disabledEnds)).toEqual(Option.some(3));
+  });
+
+  it("finds nowhere to land when every option is disabled", () => {
+    expect(decideAbsolute(3, "home", () => true)).toEqual(Option.none());
+    expect(decideAbsolute(3, "end", () => true)).toEqual(Option.none());
+  });
 });
 
 describe("decidePage", () => {

@@ -88,14 +88,25 @@ export const decideMove = (
   return Arr.findFirst(candidates, (candidate) => !isDisabled(candidate));
 };
 
-/** Home and End land on the ends rather than moving by one. */
+/**
+ * Home and End land on the ends rather than moving by one.
+ *
+ * Like `decideMove`, the optional `isDisabled` predicate keeps the landing spot
+ * selectable: a first or last option that cannot be chosen is skipped inwards.
+ * `None` means the key is not Home/End, the group is empty, or every option is
+ * disabled.
+ */
 export const decideAbsolute = (
   count: number,
   key: KeyName,
+  isDisabled: (index: number) => boolean = () => false,
 ): Option.Option<number> => {
   if (count <= 0) return Option.none();
-  if (key === "home") return Option.some(0);
-  if (key === "end") return Option.some(count - 1);
+  const indexes = Arr.range(0, count - 1);
+  if (key === "home")
+    return Arr.findFirst(indexes, (index) => !isDisabled(index));
+  if (key === "end")
+    return Arr.findFirst(Arr.reverse(indexes), (index) => !isDisabled(index));
   return Option.none();
 };
 

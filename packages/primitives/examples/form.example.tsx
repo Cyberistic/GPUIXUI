@@ -113,6 +113,7 @@ export const FormExample = (): ReactElement => {
         <ButtonGroup
           mode="separated"
           gap="sm"
+          label="Form actions"
           style={{ justifyContent: "flex-end" }}
         >
           <Button

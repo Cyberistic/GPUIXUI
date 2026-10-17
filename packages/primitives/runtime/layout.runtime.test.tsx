@@ -163,6 +163,27 @@ it("scrolls a ScrollArea by the wheel's delta", async () => {
   expect(after.x).toBe(0);
 });
 
+it("forwards a ScrollArea's scroll deltas to the caller", async () => {
+  const runtime = await openWindow();
+  const deltas: number[] = [];
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        testId="s"
+        onScroll={(event) => deltas.push(event.deltaY ?? 0)}
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.wheel("s", 0, -100);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(deltas).toContain(-100);
+});
+
 it("paints the type scale, not just the style", async () => {
   const runtime = await openWindow();
   runtime.render(

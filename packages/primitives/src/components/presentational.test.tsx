@@ -150,6 +150,20 @@ describe("layout containers", () => {
       numberIn(renderButtonGroup({ mode: "separated" }, testTheme), "gap"),
     ).toStrictEqual(Option.some(testTheme.spacing.sm));
   });
+
+  it("give the group a name when it is labelled", () => {
+    const named = renderButtonGroup(
+      { mode: "attached", label: "Text alignment" },
+      testTheme,
+    );
+    expect(expectSome(hostProp(named, "aria-label"))).toBe("Text alignment");
+    expect(
+      hostProp(
+        renderButtonGroup({ mode: "attached" }, testTheme),
+        "aria-label",
+      ),
+    ).toStrictEqual(Option.none());
+  });
 });
 
 describe("type", () => {

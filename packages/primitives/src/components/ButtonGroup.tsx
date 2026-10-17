@@ -22,13 +22,25 @@ export interface ButtonGroupProps {
   readonly mode?: ButtonGroupMode;
   /** A gap on the theme's spacing scale, for `separated`. Defaults to `sm`. */
   readonly gap?: keyof PrimitiveTheme["spacing"];
+  /**
+   * The group's accessible name. The runtime has no `aria-labelledby`, so a
+   * visible heading cannot name it by reference; pass the same words here.
+   */
+  readonly label?: string;
   readonly style?: StyleDesc;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
 export const renderButtonGroup = (
-  { mode = "attached", gap = "sm", style, children, testId }: ButtonGroupProps,
+  {
+    mode = "attached",
+    gap = "sm",
+    label,
+    style,
+    children,
+    testId,
+  }: ButtonGroupProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
   const base: StyleDesc = {
@@ -42,7 +54,12 @@ export const renderButtonGroup = (
     base.overflow = "hidden";
   }
   return (
-    <div role="group" testId={testId} style={mergeStyle(base, style)}>
+    <div
+      role="group"
+      aria-label={label}
+      testId={testId}
+      style={mergeStyle(base, style)}
+    >
       {children}
     </div>
   );

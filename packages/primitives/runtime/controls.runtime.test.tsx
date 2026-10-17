@@ -155,6 +155,47 @@ it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", 
   expect(await gapOf("separated")).toBe(testTheme.spacing.sm);
 });
 
+it("names a ButtonGroup for assistive technology", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ButtonGroup label="Text alignment" testId="g">
+        <Button>Left</Button>
+        <Button>Right</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "Group", label: "Text alignment" }),
+    ),
+  ).toBe(true);
+});
+
+it("jumps a RadioGroup to its enabled ends with Home and End", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        defaultValue="c"
+        options={[
+          { value: "a", label: "Alpha", disabled: true },
+          { value: "b", label: "Beta" },
+          { value: "c", label: "Gamma" },
+          { value: "d", label: "Delta" },
+          { value: "e", label: "Epsilon", disabled: true },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.keyDown("rg", "home");
+  expect(announced(runtime, "Beta")).toBe("checked");
+  runtime.keyDown("rg", "end");
+  expect(announced(runtime, "Delta")).toBe("checked");
+});
+
 it("toggles a Checkbox on a click, and announces the state", async () => {
   const runtime = await openWindow();
   runtime.render(

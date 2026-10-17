@@ -17,7 +17,11 @@ import { useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
-import { decideActivation, decideMove } from "../core/keyboard.js";
+import {
+  decideAbsolute,
+  decideActivation,
+  decideMove,
+} from "../core/keyboard.js";
 import {
   radioDotStyle,
   selectionBoxStyle,
@@ -99,33 +103,35 @@ export const renderRadioGroup = (
     accent = "primary",
   } = props;
   const count = Arr.length(options);
+  const isDisabled = (index: number): boolean =>
+    options[index]?.disabled === true;
+  const select = (index: number): boolean => {
+    const option = options[index];
+    if (
+      props.disabled === true ||
+      option === undefined ||
+      option.disabled === true
+    )
+      return false;
+    handlers.onActivate(index);
+    handlers.onSelect(option.value);
+    return true;
+  };
   const move = (key: string): boolean =>
-    Option.match(
-      decideMove(
-        activeIndex,
-        count,
-        key,
-        orientation,
-        (candidate) => options[candidate]?.disabled === true,
-      ),
-      {
-        onNone: () => false,
-        onSome: (next) => {
-          handlers.onActivate(next);
-          const option = options[next];
-          if (option !== undefined) handlers.onSelect(option.value);
-          return true;
-        },
-      },
-    );
+    Option.match(decideMove(activeIndex, count, key, orientation, isDisabled), {
+      onNone: () => false,
+      onSome: select,
+    });
+  const jump = (key: string): boolean =>
+    Option.match(decideAbsolute(count, key, isDisabled), {
+      onNone: () => false,
+      onSome: select,
+    });
   const onKeyDown = (event: EventPayload): void => {
     const key = event.key ?? "";
-    if (move(key)) return;
-    if (decideActivation(key, "down", event.isHeld === true)) {
-      const option = options[activeIndex];
-      if (option !== undefined && option.disabled !== true)
-        handlers.onSelect(option.value);
-    }
+    if (move(key) || jump(key)) return;
+    if (decideActivation(key, "down", event.isHeld === true))
+      select(activeIndex);
   };
   return (
     <div
