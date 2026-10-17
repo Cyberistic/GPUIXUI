@@ -8,13 +8,12 @@
  * (`src/components/Button.test.tsx`). Here the keys go through GPUI's own
  * dispatcher and the observation is the platform's.
  *
- * Each test names the bug it guards. A test that flips with a wrong rule (Enter
- * on key up, Space on key down, a held key activating, a disabled control
- * activating) is the bar plan 040 §2 sets.
+ * Each test names the bug it guards: Enter firing on key up, Space on key down,
+ * a held key activating, a disabled control activating, the roving tab stop
+ * staying behind the selection.
  */
 
 import { expect, it } from "vitest";
-import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
@@ -26,25 +25,23 @@ import { Switch } from "../src/components/Switch.js";
 import {
   a11yNodes,
   a11yValueOf,
-  createRuntime,
   type Bounds,
+  type Runtime,
 } from "./harness.js";
-import { Surface, WINDOW, testTheme } from "./fixture.js";
+import { Surface, openWindow, testTheme } from "./fixture.js";
 
-const runtime = await Effect.runPromise(createRuntime(WINDOW));
-
-const boundsOf = (testId: string): Bounds =>
+const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
 
 /** A control's announced state — `aria-valuetext` is the only state this runtime carries. */
-const announced = (label: string): string =>
+const announced = (runtime: Runtime, label: string): string =>
   Option.getOrElse(a11yValueOf(runtime.a11y(), { label }), () =>
     expect.fail(`no accessibility node announced ${label}`),
   );
 
-const byLabel = (label: string) =>
+const byLabel = (runtime: Runtime, label: string) =>
   Option.getOrElse(
     Arr.findFirst(
       runtime.all(),
@@ -53,95 +50,91 @@ const byLabel = (label: string) =>
     () => expect.fail(`the runtime retained no element labelled ${label}`),
   );
 
-/** A counter, so an activation claim is about the number of calls. */
-const counter = (): {
-  readonly calls: number;
-  readonly onActivate: () => void;
-} => {
-  const state = { calls: 0 };
-  return {
-    get calls() {
-      return state.calls;
-    },
-    onActivate: () => {
-      state.calls += 1;
-    },
-  };
-};
-
-const renderButton = (
-  props: Partial<Parameters<typeof Button>[0]> = {},
-): ReturnType<typeof counter> => {
-  const count = counter();
-  runtime.render(
-    <Surface>
-      <Stack direction="row">
-        <Button testId="b" onActivate={count.onActivate} {...props}>
-          Save
-        </Button>
-      </Stack>
-    </Surface>,
-  );
-  return count;
-};
-
-it("activates a Button on a real click", () => {
-  const count = renderButton();
-  runtime.click("b");
-  expect(count.calls).toBe(1);
-});
-
-it("activates a Button on Enter down, and not again on the key up", () => {
-  const count = renderButton();
-  runtime.keyDown("b", "enter");
-  runtime.keyUp("b", "enter");
-  expect(count.calls).toBe(1);
-});
-
-it("activates a Button on Space up, and not on the key down before it", () => {
-  const count = renderButton();
-  runtime.keyDown("b", "space");
-  expect(count.calls).toBe(0);
-  runtime.keyUp("b", "space");
-  expect(count.calls).toBe(1);
-});
-
-it("ignores a held key", () => {
-  const count = renderButton();
-  runtime.keyDown("b", "enter", true);
-  expect(count.calls).toBe(0);
-});
-
-it("refuses to activate a disabled Button by click or by Enter", () => {
-  const count = renderButton({ disabled: true });
-  runtime.click("b");
-  runtime.keyDown("b", "enter");
-  expect(count.calls).toBe(0);
-});
-
 /**
  * Every non-empty accessibility description in the last painted frame.
  *
  * `Arr.filterMap` is not the Option-filtering helper in Effect v4 (it takes a
  * `Result`), so this is the map-then-`getSomes` pair.
  */
-const descriptions = (): ReadonlyArray<string> =>
+const descriptions = (runtime: Runtime): ReadonlyArray<string> =>
   Arr.getSomes(
     Arr.map(a11yNodes(runtime.a11y()), (node) =>
       Option.fromNullishOr(node.aria?.description),
     ),
   );
 
-it("refuses to activate a loading Button, and still announces itself busy", () => {
-  const count = renderButton({ loading: true, label: "Save" });
+/** A counter, so an activation claim is about the number of calls. */
+const renderButton = async (
+  props: Partial<Parameters<typeof Button>[0]> = {},
+): Promise<{ readonly runtime: Runtime; readonly calls: () => number }> => {
+  const runtime = await openWindow();
+  let calls = 0;
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button
+          testId="b"
+          onActivate={() => {
+            calls += 1;
+          }}
+          {...props}
+        >
+          Save
+        </Button>
+      </Stack>
+    </Surface>,
+  );
+  return { runtime, calls: () => calls };
+};
+
+it("activates a Button on a real click", async () => {
+  const { runtime, calls } = await renderButton();
   runtime.click("b");
-  runtime.keyDown("b", "enter");
-  expect(count.calls).toBe(0);
-  expect(descriptions()).toContain("Loading");
+  expect(calls()).toBe(1);
 });
 
-it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", () => {
-  const group = (mode: "attached" | "separated") => {
+it("activates a Button on Enter down, and not again on the key up", async () => {
+  const { runtime, calls } = await renderButton();
+  runtime.keyDown("b", "enter");
+  runtime.keyUp("b", "enter");
+  expect(calls()).toBe(1);
+});
+
+it("activates a Button on Space up, and not on the key down before it", async () => {
+  const { runtime, calls } = await renderButton();
+  runtime.keyDown("b", "space");
+  expect(calls()).toBe(0);
+  runtime.keyUp("b", "space");
+  expect(calls()).toBe(1);
+});
+
+it("ignores a held key", async () => {
+  const { runtime, calls } = await renderButton();
+  runtime.keyDown("b", "enter", true);
+  expect(calls()).toBe(0);
+});
+
+it("refuses to activate a disabled Button by click or by Enter", async () => {
+  const { runtime, calls } = await renderButton({ disabled: true });
+  runtime.click("b");
+  runtime.keyDown("b", "enter");
+  expect(calls()).toBe(0);
+});
+
+it("refuses to activate a loading Button, and still announces itself busy", async () => {
+  const { runtime, calls } = await renderButton({
+    loading: true,
+    label: "Save",
+  });
+  runtime.click("b");
+  runtime.keyDown("b", "enter");
+  expect(calls()).toBe(0);
+  expect(descriptions(runtime)).toContain("Loading");
+});
+
+it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", async () => {
+  const gapOf = async (mode: "attached" | "separated"): Promise<number> => {
+    const runtime = await openWindow();
     runtime.render(
       <Surface>
         <ButtonGroup mode={mode} gap="sm" testId="g">
@@ -150,15 +143,16 @@ it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", 
         </ButtonGroup>
       </Surface>,
     );
-    const one = boundsOf("one");
-    const two = boundsOf("two");
+    const one = boundsOf(runtime, "one");
+    const two = boundsOf(runtime, "two");
     return two.x - (one.x + one.width);
   };
-  expect(group("attached")).toBe(0);
-  expect(group("separated")).toBe(testTheme.spacing.sm);
+  expect(await gapOf("attached")).toBe(0);
+  expect(await gapOf("separated")).toBe(testTheme.spacing.sm);
 });
 
-it("toggles a Checkbox on a click, and announces the state", () => {
+it("toggles a Checkbox on a click, and announces the state", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="row">
@@ -166,14 +160,15 @@ it("toggles a Checkbox on a click, and announces the state", () => {
       </Stack>
     </Surface>,
   );
-  expect(announced("Enable")).toBe("unchecked");
+  expect(announced(runtime, "Enable")).toBe("unchecked");
   runtime.click("cb");
-  expect(announced("Enable")).toBe("checked");
+  expect(announced(runtime, "Enable")).toBe("checked");
   runtime.click("cb");
-  expect(announced("Enable")).toBe("unchecked");
+  expect(announced(runtime, "Enable")).toBe("unchecked");
 });
 
-it("toggles a Checkbox on Space, and not on the key down alone", () => {
+it("toggles a Checkbox on Space, and not on the key down alone", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="row">
@@ -182,12 +177,13 @@ it("toggles a Checkbox on Space, and not on the key down alone", () => {
     </Surface>,
   );
   runtime.keyDown("cb", "space");
-  expect(announced("Enable")).toBe("unchecked");
+  expect(announced(runtime, "Enable")).toBe("unchecked");
   runtime.keyUp("cb", "space");
-  expect(announced("Enable")).toBe("checked");
+  expect(announced(runtime, "Enable")).toBe("checked");
 });
 
-it("announces an indeterminate Checkbox as mixed", () => {
+it("announces an indeterminate Checkbox as mixed", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="row">
@@ -195,10 +191,11 @@ it("announces an indeterminate Checkbox as mixed", () => {
       </Stack>
     </Surface>,
   );
-  expect(announced("Enable")).toBe("mixed");
+  expect(announced(runtime, "Enable")).toBe("mixed");
 });
 
-it("toggles a Switch on a click and reports the role the runtime maps it to", () => {
+it("toggles a Switch on a click and reports the role the runtime maps it to", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="row">
@@ -206,16 +203,16 @@ it("toggles a Switch on a click and reports the role the runtime maps it to", ()
       </Stack>
     </Surface>,
   );
-  expect(announced("Dark mode")).toBe("unchecked");
+  expect(announced(runtime, "Dark mode")).toBe("unchecked");
   runtime.click("sw");
-  expect(announced("Dark mode")).toBe("checked");
-  expect(
-    Option.isSome(a11yValueOf(runtime.a11y(), { role: "Switch" })),
-    "the switch is not exposed with the Switch role",
-  ).toBe(true);
+  expect(announced(runtime, "Dark mode")).toBe("checked");
+  expect(Option.isSome(a11yValueOf(runtime.a11y(), { role: "Switch" }))).toBe(
+    true,
+  );
 });
 
-it("moves a RadioGroup's selection with the arrow keys", () => {
+it("moves a RadioGroup's selection with the arrow keys", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <RadioGroup
@@ -229,14 +226,15 @@ it("moves a RadioGroup's selection with the arrow keys", () => {
       />
     </Surface>,
   );
-  expect(announced("Alpha")).toBe("checked");
-  expect(announced("Beta")).toBe("unchecked");
+  expect(announced(runtime, "Alpha")).toBe("checked");
+  expect(announced(runtime, "Beta")).toBe("unchecked");
   runtime.keyDown("rg", "down");
-  expect(announced("Alpha")).toBe("unchecked");
-  expect(announced("Beta")).toBe("checked");
+  expect(announced(runtime, "Alpha")).toBe("unchecked");
+  expect(announced(runtime, "Beta")).toBe("checked");
 });
 
-it("wraps a RadioGroup's arrow navigation at the end", () => {
+it("wraps a RadioGroup's arrow navigation at the end", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <RadioGroup
@@ -250,12 +248,13 @@ it("wraps a RadioGroup's arrow navigation at the end", () => {
       />
     </Surface>,
   );
-  expect(announced("Beta")).toBe("checked");
+  expect(announced(runtime, "Beta")).toBe("checked");
   runtime.keyDown("rg", "down");
-  expect(announced("Alpha")).toBe("checked");
+  expect(announced(runtime, "Alpha")).toBe("checked");
 });
 
-it("moves a RadioGroup's single tab stop with its selection", () => {
+it("moves a RadioGroup's single tab stop with its selection", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="row">
@@ -286,11 +285,12 @@ it("moves a RadioGroup's single tab stop with its selection", () => {
   };
   expect(tabFromBefore()).toBe("Alpha");
   runtime.keyDown("rg", "down");
-  expect(announced("Beta")).toBe("checked");
+  expect(announced(runtime, "Beta")).toBe("checked");
   expect(tabFromBefore()).toBe("Beta");
 });
 
-it("selects a RadioGroup option when its own circle is clicked", () => {
+it("selects a RadioGroup option when its own circle is clicked", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <RadioGroup
@@ -304,7 +304,7 @@ it("selects a RadioGroup option when its own circle is clicked", () => {
       />
     </Surface>,
   );
-  const beta = byLabel("Beta");
+  const beta = byLabel(runtime, "Beta");
   const circle = Option.getOrElse(
     Option.flatMap(Option.fromNullishOr(beta.children[0]), (id) =>
       Option.fromNullishOr(runtime.renderer.getElement(id)),
@@ -312,6 +312,6 @@ it("selects a RadioGroup option when its own circle is clicked", () => {
     () => expect.fail("the Beta radio has no circle"),
   );
   runtime.clickElement(circle);
-  expect(announced("Beta")).toBe("checked");
-  expect(announced("Alpha")).toBe("unchecked");
+  expect(announced(runtime, "Beta")).toBe("checked");
+  expect(announced(runtime, "Alpha")).toBe("unchecked");
 });

@@ -12,7 +12,6 @@
  */
 
 import { expect, it } from "vitest";
-import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
@@ -22,38 +21,38 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { Density } from "../src/core/theme.js";
-import { createRuntime, type Bounds } from "./harness.js";
-import { SURFACE, Surface, WINDOW, testTheme } from "./fixture.js";
+import type { Bounds, Runtime } from "./harness.js";
+import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
-const runtime = await Effect.runPromise(createRuntime(WINDOW));
+const next = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;
 
-const boundsOf = (testId: string): Bounds =>
+const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
-
-const inner = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;
 
 /** A card of an exact size, so a measurement has one unknown: the layout. */
 const card = (testId: string, width: number, height: number) => (
   <Box tone="card" style={{ width, height }} testId={testId} />
 );
 
-it("pads the surface by the theme's spacing step", () => {
+it("pads the surface by the theme's spacing step", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Box tone="card" style={{ height: 20 }} testId="first" />
     </Surface>,
   );
-  const frame = boundsOf(SURFACE);
-  const first = boundsOf("first");
+  const frame = boundsOf(runtime, SURFACE);
+  const first = boundsOf(runtime, "first");
   expect(first.x - frame.x).toBe(testTheme.spacing.lg);
   expect(first.y - frame.y).toBe(testTheme.spacing.lg);
   expect(frame.width).toBe(WINDOW.width);
-  expect(first.width).toBe(inner.width);
+  expect(first.width).toBe(next.width);
 });
 
-it("separates a row Stack's children by the theme's gap", () => {
+it("separates a row Stack's children by the theme's gap", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="row" gap="md" testId="row">
@@ -62,15 +61,16 @@ it("separates a row Stack's children by the theme's gap", () => {
       </Stack>
     </Surface>,
   );
-  const row = boundsOf("row");
-  const a = boundsOf("a");
-  const b = boundsOf("b");
+  const row = boundsOf(runtime, "row");
+  const a = boundsOf(runtime, "a");
+  const b = boundsOf(runtime, "b");
   expect(a.y).toBe(b.y);
   expect(a.x - row.x).toBe(0);
   expect(b.x - a.x).toBe(40 + testTheme.spacing.md);
 });
 
-it("stacks a column Stack's children by the theme's gap", () => {
+it("stacks a column Stack's children by the theme's gap", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="column" gap="sm" style={{ alignItems: "flex-start" }}>
@@ -79,13 +79,14 @@ it("stacks a column Stack's children by the theme's gap", () => {
       </Stack>
     </Surface>,
   );
-  const a = boundsOf("a");
-  const b = boundsOf("b");
+  const a = boundsOf(runtime, "a");
+  const b = boundsOf(runtime, "b");
   expect(a.x).toBe(b.x);
   expect(b.y - a.y).toBe(20 + testTheme.spacing.sm);
 });
 
-it("lays a Grid's children into equal columns and wraps to a new row", () => {
+it("lays a Grid's children into equal columns and wraps to a new row", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Grid columns={2}>
@@ -95,15 +96,16 @@ it("lays a Grid's children into equal columns and wraps to a new row", () => {
       </Grid>
     </Surface>,
   );
-  const a = boundsOf("a");
-  const b = boundsOf("b");
-  const c = boundsOf("c");
+  const a = boundsOf(runtime, "a");
+  const b = boundsOf(runtime, "b");
+  const c = boundsOf(runtime, "c");
   expect(a.y).toBe(b.y);
   expect(b.x).toBeGreaterThan(a.x);
   expect(c.y).toBeGreaterThan(a.y);
 });
 
-it("draws a horizontal Separator as one border step across the surface", () => {
+it("draws a horizontal Separator as one border step across the surface", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Separator orientation="horizontal" />
@@ -111,20 +113,18 @@ it("draws a horizontal Separator as one border step across the surface", () => {
   );
   const rule = Option.getOrElse(
     Option.flatMap(runtime.element(SURFACE), (surface) =>
-      Option.map(Option.fromNullishOr(surface.children[0]), (id) =>
+      Option.flatMap(Option.fromNullishOr(surface.children[0]), (id) =>
         runtime.boundsOfId(id),
       ),
     ),
     () => expect.fail("the surface painted no separator"),
   );
-  const box = Option.getOrElse(rule, () =>
-    expect.fail("the separator painted no box"),
-  );
-  expect(box.height).toBe(testTheme.borderWidth.thin);
-  expect(box.width).toBe(inner.width);
+  expect(rule.height).toBe(testTheme.borderWidth.thin);
+  expect(rule.width).toBe(next.width);
 });
 
-it("lets a Spacer push its sibling to the far edge", () => {
+it("lets a Spacer push its sibling to the far edge", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Stack direction="row">
@@ -134,14 +134,15 @@ it("lets a Spacer push its sibling to the far edge", () => {
       </Stack>
     </Surface>,
   );
-  const a = boundsOf("a");
-  const b = boundsOf("b");
-  const frame = boundsOf(SURFACE);
+  const a = boundsOf(runtime, "a");
+  const b = boundsOf(runtime, "b");
+  const frame = boundsOf(runtime, SURFACE);
   expect(b.x + b.width).toBe(frame.x + frame.width - testTheme.spacing.lg);
   expect(a.x - frame.x).toBe(testTheme.spacing.lg);
 });
 
-it("scrolls a ScrollArea by the wheel's delta", () => {
+it("scrolls a ScrollArea by the wheel's delta", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <ScrollArea axis="vertical" style={{ height: 60, width: 200 }} testId="s">
@@ -162,7 +163,8 @@ it("scrolls a ScrollArea by the wheel's delta", () => {
   expect(after.x).toBe(0);
 });
 
-it("paints the type scale, not just the style", () => {
+it("paints the type scale, not just the style", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Box tone="none" testId="h1">
@@ -174,14 +176,15 @@ it("paints the type scale, not just the style", () => {
     </Surface>,
   );
   expect(runtime.allText()).toContain("Heading");
-  const h1 = boundsOf("h1");
-  const body = boundsOf("body");
+  const h1 = boundsOf(runtime, "h1");
+  const body = boundsOf(runtime, "body");
   expect(h1.height).toBe(testTheme.typography.h1.lineHeight);
   expect(body.height).toBe(testTheme.typography.body.lineHeight);
   expect(h1.height).toBeGreaterThan(body.height);
 });
 
-it("paints a Label's name and its description", () => {
+it("paints a Label's name and its description", async () => {
+  const runtime = await openWindow();
   runtime.render(
     <Surface>
       <Label description="Required before saving">Project name</Label>
@@ -191,20 +194,17 @@ it("paints a Label's name and its description", () => {
   expect(runtime.allText()).toContain("Required before saving");
 });
 
-it("moves a control's height with density and keeps its colour", () => {
-  const comfortable = {
-    ...testTheme.density,
-    name: "comfortable",
-  } as const;
+it("moves a control's height with density and keeps its colour", async () => {
   const compact: Density = {
     name: "compact",
     controlHeight: { sm: 22, md: 26, lg: 30 },
     controlPaddingX: { sm: 6, md: 8, lg: 10 },
     rowHeight: 26,
   };
-  const heights = (
+  const measure = async (
     density: Density,
-  ): { readonly height: number; readonly background: unknown } => {
+  ): Promise<{ readonly height: number; readonly background: unknown }> => {
+    const runtime = await openWindow();
     runtime.render(
       <Surface density={density}>
         <Stack direction="row">
@@ -212,19 +212,20 @@ it("moves a control's height with density and keeps its colour", () => {
         </Stack>
       </Surface>,
     );
-    const box = boundsOf("b");
-    const background = Option.flatMap(runtime.element("b"), (element) =>
-      Option.fromNullishOr(element.style.backgroundColor),
-    );
     return {
-      height: box.height,
-      background: Option.getOrUndefined(background),
+      height: boundsOf(runtime, "b").height,
+      background: Option.getOrUndefined(
+        Option.flatMap(runtime.element("b"), (element) =>
+          Option.fromNullishOr(element.style.backgroundColor),
+        ),
+      ),
     };
   };
-  const before = heights(comfortable);
-  const after = heights(compact);
-  expect(before.height).toBe(comfortable.controlHeight.md);
-  expect(after.height).toBe(compact.controlHeight.md);
-  expect(after.height).toBeLessThan(before.height);
-  expect(after.background).toBe(before.background);
+  const comfortable = await measure(testTheme.density);
+  const tight = await measure(compact);
+  expect(comfortable.height).toBe(testTheme.density.controlHeight.md);
+  expect(tight.height).toBe(compact.controlHeight.md);
+  expect(tight.height).toBeLessThan(comfortable.height);
+  // Density moves numbers, never colour.
+  expect(tight.background).toBe(comfortable.background);
 });

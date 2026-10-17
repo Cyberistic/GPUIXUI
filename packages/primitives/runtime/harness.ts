@@ -92,6 +92,8 @@ export interface Runtime {
   readonly focused: () => Option.Option<string>;
   /** Whatever holds native focus — the only way to observe an element with no `testId`. */
   readonly focusedElement: () => Option.Option<TestElement>;
+  /** Move the pointer over an element's centre — how a tooltip opens. */
+  readonly hover: (testId: string) => void;
   /** A real hit-tested click at the element's centre. */
   readonly click: (testId: string) => void;
   /** A real click at window coordinates, for a target with no `testId`. */
@@ -264,6 +266,11 @@ export const createRuntime = (
           Option.fromNullishOr(renderer.getFocusedElementId()),
           (id) => Option.fromNullishOr(renderer.getElement(id)),
         ),
+      hover: (testId) =>
+        Option.match(pointAt(testId), {
+          onNone: () => {},
+          onSome: (point) => renderer.nativeSimulateMouseMove(point.x, point.y),
+        }),
       click: (testId) =>
         Option.match(pointAt(testId), {
           onNone: () => {},
