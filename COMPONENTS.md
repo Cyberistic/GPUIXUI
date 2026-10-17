@@ -36,9 +36,16 @@ and the strongest honest alternative.
 | Loading indicators | wip | partial | **Runtime (041):** the lit dot changes index (the accent-coloured dot proves a theme colour reaches the paint). `Spinner` **cannot rotate**; `Progress` with no `value` is the alternative. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (46 tests,
-locally-built GPUix 0.10.0 binding). Details: plan 041 §9. **No row is `done`**
-until its docs page exists and the published-binary run lands.
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (51 tests,
+locally-built GPUix 0.10.0 binding). Details: plan 041 §9.
+
+**Both themes (042):** every painted colour in the Tier 1 scene comes from the
+active palette, and re-rendering with the dark palette repaints every asserted
+role (plan 042 §8). The palettes are test doubles — the real `lightTheme` /
+`darkTheme` belong to `@gpuixui/tokens`, which is not in this tree yet.
+
+**No row is `done`** until its docs page exists and the published-binary run
+lands.
 
 ## Tier 2 — composition and feedback
 

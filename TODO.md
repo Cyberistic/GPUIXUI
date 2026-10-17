@@ -123,7 +123,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       all 19 components have code, tests, a runtime-verified interaction and an
       inventory row; **docs pages are still pending** (docs-site workstream)
 `[ ]` Tier 2 composition/feedback components (same bar)
-`[ ]` Verify every component in both themes
+`[x]` Verify every component in both themes (`runtime/theme.runtime.test.tsx`: both palettes, a live switch, and no colour outside the active palette)
 
 ## Phase D — data and workspace components
 

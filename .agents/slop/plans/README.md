@@ -30,6 +30,7 @@ is the authority on order, not the file name.
 | [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | **done** (45 icons, 18 tests proven in both directions; on-screen paint unverified — 020 §3) |
 | [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | **in progress** — code + tests + inventory done; example, docs pages and runtime verification outstanding |
 | [041](041-tier1-runtime-verification.md) | Tier 1 in the real GPUix runtime (primitives workstream) | C | 030, 031, 040, **140** | **done** — 46 `test:runtime` tests in `packages/primitives/runtime/` (icons included there, §2.2); measured results and the two-direction proof in §9 |
+| [042](042-tier1-theme-verification.md) | Tier 1 in both themes, and a live theme switch | C | 030, 040, 041 | **done** — 5 `test:runtime` tests incl. a repaint-on-switch proof; results in §8 |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |

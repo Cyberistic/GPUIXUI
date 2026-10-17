@@ -42,46 +42,55 @@ const typography: PrimitiveTheme["typography"] = {
   codeBlock: text(12, 400),
 };
 
+/**
+ * One palette per offset.
+ *
+ * The light and dark doubles must not share a value: a switch test with two
+ * identical palettes cannot tell a repaint from a frozen first theme. `1000`
+ * keeps the dark shades distinct and still meaningless.
+ */
+const palette = (offset: number): PrimitiveTheme["colors"] => ({
+  background: shade(offset + 1),
+  foreground: shade(offset + 2),
+  card: shade(offset + 3),
+  cardForeground: shade(offset + 4),
+  popover: shade(offset + 5),
+  popoverForeground: shade(offset + 6),
+  primary: shade(offset + 7),
+  primaryForeground: shade(offset + 8),
+  secondary: shade(offset + 9),
+  secondaryForeground: shade(offset + 10),
+  muted: shade(offset + 11),
+  mutedForeground: shade(offset + 12),
+  accent: shade(offset + 13),
+  accentForeground: shade(offset + 14),
+  destructive: shade(offset + 15),
+  destructiveForeground: shade(offset + 16),
+  success: shade(offset + 17),
+  successForeground: shade(offset + 18),
+  border: shade(offset + 19),
+  borderStrong: shade(offset + 20),
+  input: shade(offset + 21),
+  inputForeground: shade(offset + 22),
+  placeholder: shade(offset + 23),
+  ring: shade(offset + 24),
+  selection: wash(offset + 25),
+  overlay: wash(offset + 26),
+  hover: wash(offset + 27),
+  active: wash(offset + 28),
+  selected: shade(offset + 29),
+  selectedForeground: shade(offset + 30),
+  disabled: shade(offset + 31),
+  disabledForeground: shade(offset + 32),
+  skeleton: shade(offset + 33),
+  scrollbar: shade(offset + 34),
+  shadow: wash(offset + 35),
+});
+
 export const testTheme: PrimitiveTheme = {
   name: "Test",
   mode: "light",
-  colors: {
-    background: shade(1),
-    foreground: shade(2),
-    card: shade(3),
-    cardForeground: shade(4),
-    popover: shade(5),
-    popoverForeground: shade(6),
-    primary: shade(7),
-    primaryForeground: shade(8),
-    secondary: shade(9),
-    secondaryForeground: shade(10),
-    muted: shade(11),
-    mutedForeground: shade(12),
-    accent: shade(13),
-    accentForeground: shade(14),
-    destructive: shade(15),
-    destructiveForeground: shade(16),
-    success: shade(17),
-    successForeground: shade(18),
-    border: shade(19),
-    borderStrong: shade(20),
-    input: shade(21),
-    inputForeground: shade(22),
-    placeholder: shade(23),
-    ring: shade(24),
-    selection: wash(25),
-    overlay: wash(26),
-    hover: wash(27),
-    active: wash(28),
-    selected: shade(29),
-    selectedForeground: shade(30),
-    disabled: shade(31),
-    disabledForeground: shade(32),
-    skeleton: shade(33),
-    scrollbar: shade(34),
-    shadow: wash(35),
-  },
+  colors: palette(0),
   typography,
   spacing: {
     "2xs": 2,
@@ -136,4 +145,9 @@ export const testTheme: PrimitiveTheme = {
   iconSize: { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 },
 };
 
-export const testThemeDark: PrimitiveTheme = { ...testTheme, mode: "dark" };
+export const testThemeDark: PrimitiveTheme = {
+  ...testTheme,
+  name: "Test Dark",
+  mode: "dark",
+  colors: palette(1000),
+};

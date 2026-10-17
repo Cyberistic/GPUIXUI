@@ -93,10 +93,12 @@ function (`renderButton`, `renderCheckbox`, …) instead. The glue in between
 type checker and by the native runtime, not by these suites.
 
 **Verified in the real runtime** (`nub run --filter @gpuixui/primitives test:runtime`):
-five suites in `runtime/` mount the components in the GPUix 0.10.0
+six suites in `runtime/` mount the components in the GPUix 0.10.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
-offset, PNG captures. Measured 2026-10-17: **5 files, 46 tests, all passing**.
+offset, PNG captures. Measured 2026-10-17: **6 files, 51 tests, all passing** — including a theme
+switch on a mounted tree and a check that no painted colour is outside the
+active palette.
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
