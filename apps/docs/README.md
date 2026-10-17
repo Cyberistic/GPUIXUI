@@ -1,8 +1,9 @@
 # apps/docs — the Fumadocs site
 
-A **browser** application. It documents and showcases the GPUix-native library;
-it does not render it. See `MISSION.md`, plan `410-docs-site.md`, and
-`docs/preview-strategy.md`.
+A **browser** application. It documents and showcases the GPUix-native library.
+The docs shell never imports the native renderer; the one real GPUix surface is
+an isolated, opt-in WebAssembly document under `/gpuix-preview/` (tier L, plan
+455). See `MISSION.md`, plan `410-docs-site.md`, and `docs/preview-strategy.md`.
 
 ## Stack
 
@@ -19,6 +20,8 @@ nub run --filter docs check-types   # fumadocs-mdx generate + tsc --noEmit
 nub run --filter docs test          # registry, IA, search, theme and preview tests
 nub run --filter docs smoke:build   # build, serve and crawl the production output
 nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
+nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
+nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run check                       # repo gate: test quality, lint, format, types
 ```
 
@@ -42,6 +45,33 @@ nub apps/docs/scripts/smoke-build.ts --base-url http://127.0.0.1:4173
 It is deliberately **not** part of `nub run test`: the build takes ~13 s and
 starts a worker, which would slow every checkout. Run it before a release and
 after a layout or content change.
+
+## Live GPUix surface (tier L)
+
+`preview/` is a **second Vite project**, not part of the SSR app. It mounts the
+real library components on `@gpuix/native@0.10.0`'s published WebAssembly
+renderer and exports one document per scene:
+
+- `preview/scenes.ts` lists the scene keys; `preview/scene-views.tsx` holds the
+  components. A registry record opts in with `liveScene: "<key>"` and
+  `registry.test.ts` fails on a key no scene ships.
+- `vite.preview.config.ts` builds it to `public/gpuix-preview/` (gitignored,
+  ~20 MB). `build` and `dev` run `build:preview` first. The published browser
+  entry uses Bun's `with { type: "file" }`, so the config names the two
+  wasm-bindgen artefacts explicitly.
+- The page carries `data-gpuix="ready"` once GPUI has created its canvas, and
+  `data-gpuix="failed"` with `data-reason` otherwise. `<LiveSurface>` only
+  mounts the iframe after a click, and says the renderer is ~20 MB.
+
+`smoke:preview` drives Chrome over CDP **in real time** — a virtual-time
+screenshot is black — and asserts the scene's text is in GPUI's tree, plus that
+an unknown scene reports a reason. `--no-build` reuses the current build. Exit
+`1` is a broken surface, `2` means it could not run.
+
+The Wasm renderer is a real GPUix surface, but it is **not** the native desktop
+binary. Pages keep the native evidence (tier N/S/V) beneath it, and the canvas
+is not exposed to browser accessibility APIs — the page's accessibility section
+and source remain the readable description; see `docs/preview-strategy.md`.
 
 ## Hydrated-preview smoke check
 

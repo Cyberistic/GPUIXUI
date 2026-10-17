@@ -82,9 +82,10 @@ unmet.
 | D23 | **The `darwin-x64` 0.10.0 binding is built from source** with `gpui_macos/runtime_shaders` (the `xcrun metal` build step is optional), so the native smoke suite runs **on this host** — 11/11 green, exit `0`. `verified 0.10.0` is therefore a valid component-status basis | Closes blocker B1: `gpui_apple/build.rs` compiles the shaders at runtime through the OS Metal compiler when the feature is on, so only Rust + Command Line Tools are needed. Provenance (same version/source, different shader path) is recorded; a CI run with the published binary is the gold standard. `.agents/adr/0003-darwin-x64-source-build.md`, plan `140` | 2026-10-17 |
 | D24 | The theme gallery asserts the **runtime's own style report** (`SmokeHost.paintedStyle`, schema-decoded at the adapter) and is the docs' native evidence source for the token layer; screenshots are artifacts, never assertions | A screenshot diff cannot say *which token* painted a pixel, and is brittle across GPU/theme changes. `TestElement.style` reports the authored value verbatim (including 8-digit `#RRGGBBAA` and `boxShadow`), so a token that never reached the renderer fails by name. Plan `150`; `theme-color-roles` (148 checks) and `theme-type-and-shadow` (30) | 2026-10-17 |
 | D25 | Docs site is **Fumadocs + TanStack Start (SSR)** on Cloudflare Workers via `Cloudflare.Website.Vite` | Fumadocs' documented Vite/Start path; alchemy supports TanStack Start in one call; SSR gives search + SEO; the deploy `rootDir` is already fixed to `apps/docs` (plan 410) | 2026-10-17 |
-| D26 | Honest preview default is **companion playground + real native screenshots**; labelled browser approximations only; live Wasm embed only if proven | GPUix has a browser Wasm build but it needs nightly Rust, ~19 MB Wasm and COOP/COEP, so it is an upgrade path, not a default; `MISSION.md` forbids faking native (plan 412) | 2026-10-17 |
+| D26 | Honest preview default is **companion playground + real native screenshots**; labelled browser approximations only; live Wasm embed only if proven | GPUix has a browser Wasm build but it needs nightly Rust, ~19 MB Wasm and COOP/COEP, so it is an upgrade path, not a default; `MISSION.md` forbids faking native (plan 412). **Updated by D29:** the published package ships the built Wasm, so the live surface now exists as an opt-in tier L beside these tiers, never instead of them | 2026-10-17 |
 | D27 | Component metadata is **docs-owned** under `apps/docs` in Phase B, typed by an Effect Schema contract; hoisting it into the packages is a tracked task | The component packages are another workstream; a single schema keeps the index, sidebar and status generated and makes the hoist a file move (plan 411) | 2026-10-17 |
 | D28 | Previews read the state the providers **publish on `<html>`** (`data-platform`, `dark`) through one `useSyncExternalStore` snapshot, not the React contexts | The MDX body renders behind `use(page.load())` and loses the providers' mount-time context updates: a dark page painted light previews and `?platform=win32` kept Menlo. The published state is what the chrome paints, so a preview cannot disagree with it; the server snapshot stays `default`/light so hydration matches. `smoke:browser` guards it in the release gate | 2026-10-17 |
+| D29 | **Live GPUix surface previews (tier L)**: the docs embed the **published** `@gpuix/native@0.10.0` WebAssembly renderer in an isolated, click-to-load `/gpuix-preview/` document, with the native evidence kept beneath it | `MISSION.md` prefers a real GPUix surface over an approximation, and the published package ships the built wasm, so the nightly-Rust cost in D26 applies only to *building* it. Measured: it initialises and paints in headless Chrome; a browser renderer is still not the desktop binary, so the label says so and never replaces tier N/S/V. `smoke:preview` drives it in real time (virtual-time screenshots are black) | 2026-10-18 |
 
 ## 5. Open questions
 
@@ -102,11 +103,10 @@ answer into §4 or an ADR.
   a `<virtual-list>` retains every row but paints only a window; an `<anchored>`
   paints no surface of its own, so overlay handlers go on the content div.
 - Can a GPUix rendering surface be embedded in the Fumadocs site, or is the
-  companion playground the only honest preview? — **answered as a default** in
-  D26 / plan 412: playground + screenshots. GPUix ships a wasm browser build
-  (`@gpuix/native/wasm`), so a *real* GPUix surface in the browser stays a
-  conditional upgrade; it needs nightly Rust, ~19 MB Wasm and COOP/COEP, and the
-  deploy headers would have to allow it.
+  companion playground the only honest preview? — **answered** by D29 / plan 455:
+  the published 0.10.0 ships a working wasm renderer, so the docs embed it as
+  tier L in an isolated, opt-in document; it is not the desktop binary, and the
+  native evidence stays on the page.
 - What is the original package name and branding identity? — **still open**, and
   now blocking nothing but release metadata. `@gpuixui/*` remains the working
   scope (D4).

@@ -1,4 +1,3 @@
-"use client";
 import { useState } from "react";
 import type { PlatformName, ThemeMode } from "@gpuixui/tokens";
 import { usePreviewState } from "./theme-surface";

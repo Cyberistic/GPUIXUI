@@ -184,3 +184,41 @@ build); it is part of the docs release gate beside `smoke:browser`.
 - No 20 MB artefact is committed; a checkout without `build:preview` shows the
   labelled "not built" notice, never a broken frame.
 - `nub run check`, `nub run lint`, `nub run test` stay green.
+
+## 10. Result (implemented 2026-10-18)
+
+Landed as designed, with two corrections found while building:
+
+1. **`sideEffects: false` elides a module-level `await init(...)`.** The first
+   shim awaited initialisation at module scope; the bundler kept the class
+   re-export and dropped the call, so `wasm.gpuixrenderer_new` was undefined at
+   construction. Initialisation is now an explicit `initGpuixWeb()` the entry
+   awaits before `render()`.
+2. **The published browser entry is Bun-only.** It imports the wasm with
+   `with { type: "file" }`; Vite does not implement that attribute for this use.
+   `vite.preview.config.ts` names the two wasm-bindgen artefacts with a small
+   resolver plugin, and `preview/gpuix-web.ts` loads them through `?url`. The
+   package's own subpath exports (`/host`, `/runtime`, `/automation`) still
+   resolve normally.
+3. The preview build needs `base: "/gpuix-preview/"`; without it the emitted
+   HTML asked for `/assets/*.js`, which the site serves as a 404 (measured).
+
+Measured:
+
+- `nub run --filter docs build:preview` → `public/gpuix-preview/` with a 19.1 MB
+  wasm asset; the 20 MB claim in the label is the published artefact.
+- `nub run --filter docs smoke:preview` → exit `0`:
+  `live surface ready — 300x150 canvas, 11 text nodes`, then
+  `unknown scene reported — No live scene is named "not-a-scene".` The text
+  includes `Save changes`, `Cancel`, `Duplicate`, `Skip`, `Delete` and the size
+  row — the real `@gpuixui/primitives` `Button`.
+- `nub run --filter docs test` → 244 tests pass (up from 235): tier L selection,
+  the live/native composition, the URL builder, the label and the "no iframe
+  before a click" rule, and the registry's scene-key guard.
+- `nub run --filter docs smoke:build` → the 68-page crawl still passes.
+- A real-time CDP screenshot (not `--virtual-time-budget`) shows the painted
+  surface in dark mode with the Windows platform style.
+
+Still open, deliberately: one scene only (Button). The TODO row lists the
+interaction records as the next scenes; each needs a real composition, not a
+sampler.
