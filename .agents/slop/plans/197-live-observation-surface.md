@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts and both proofs in §11) |
 | Phase | F (live runtime evidence) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `140`, `171`, `185`, `189`, `190` |
@@ -241,3 +241,41 @@ message and in the plan's Status line when landed.
   `TestRenderer`-only, and states precisely why colour and a11y still are
   (no renderer method / no protocol verb).
 - All commands in §7 pass; both two-direction proofs were run and recorded.
+
+## 11. Landed — measured results
+
+Run on 2026-10-18, this host, the locally built `darwin-x64` 0.10.0 binding.
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter @gpuixui/testing test` | 45 tests pass (was 42; +3: two `decodeHighlights`, one async-anchor contract) |
+| `nub run --filter playground test` | 10 files / 73 tests pass |
+| `nub run --filter @gpuixui/testing check-types` | exit `0` |
+| `nub run --filter playground check-types` | exit `0` |
+| `nub run --filter playground build` | exit `0` |
+| `nub apps/playground/dist/smoke/run.js` | `58/58`, exit `0` |
+| `nub apps/playground/dist/live/run.js` | `14/14`, exit `0`, capabilities incl. `search` |
+
+Measured in the live window:
+
+- `live-highlights`: four document washes, rects inside `search-line-1`, clear →
+  `0`, restore → `4`, `next` → active index `1`, and after
+  `scrollToItem("search-list", 90)` exactly one active row wash whose text is
+  `row 90`. The `onHighlight` readout was **not** asserted in the live scenario;
+  the washes are the renderer's own report and the scenario's evidence.
+- `live-table`: `getListScrollTop("vtable")` = `[0, 0, 258]` before any scroll,
+  `[120, 0, 258]` after `scrollToItem("vtable", 120)` — the viewport height is
+  unchanged by the jump.
+- The live automation tree returns `{id, type, testId, bounds}` for a styled
+  probe div — **no `style`**; `GpuixRenderer` has no `getA11yTree`.
+
+Two-direction proofs (each run, then reverted):
+
+1. expected anchor index `120 → 121` → `live-table` FAIL, exit `1`:
+   `scrollToItem anchors the row: expected 121, got 120`; capability `table=failed`.
+2. expected document washes `4 → 3` → `live-highlights` FAIL, exit `1`:
+   `the document paints one wash per match in a live window: expected 3, got 4`;
+   capability `search=failed`.
+
+`TODO.md`, `COMPONENTS.md`, `PLAN.md` (D41), both READMEs and the plan index are
+updated to match.

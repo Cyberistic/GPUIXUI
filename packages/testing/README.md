@@ -97,14 +97,25 @@ returns the **same** `SmokeReport`, which is what lets a live run reuse
 
 `AsyncSmokeHost` is deliberately **smaller** than `SmokeHost`: bounds, text,
 painted text, input (click/right-click/hover/keys/wheel/drag), `waitFor`, scroll offsets,
-focus, selection, screenshots and the motion clock. That is the automation
-protocol's surface — plus focus, because the live runner owns the renderer it
-created and `getFocusedElementId` is a renderer method (the protocol itself has
-no focus query; the host maps the id back through the automation tree — plan
-`190`). Selection uses the protocol's `getSelectedText`/`clearSelection` plus a
-real paced drag (plan `191`). It has no style report, accessibility dump or list
-anchor, so those assertions stay with the synchronous `TestRenderer` suite
-rather than being approximated.
+focus, selection, highlights, list anchors, screenshots and the motion clock.
+
+Two layers provide those verbs. The automation protocol supplies input, bounds,
+text, scroll offsets and screenshots; the live runner **owns the renderer it
+created**, so it also answers what the renderer exposes directly:
+`getFocusedElementId` (mapped back to a `testId` through the automation tree —
+plan `190`), `getPaintedHighlights`, `scrollToItem` and `getListScrollTop`
+(plan `197`). Selection uses the protocol's `getSelectedText`/`clearSelection`
+plus a real paced drag (plan `191`).
+
+Two observations stay with the synchronous `TestRenderer` suite because the live
+renderer has no method for them: the authored **style report** (the live
+automation tree carries `id`/`type`/`testId`/`bounds`, never `style`) and the
+**accessibility dump** (`getA11yTree` exists only on `TestRenderer`). That is a
+measured limitation, not an approximation.
+
+`Smoke.decodeHighlights` is the shared boundary rule for the renderer's
+highlight payload: it keeps every well-formed wash and drops a malformed one,
+so a single bad quad cannot hide the rest of the frame. Both adapters use it.
 
 A verb that throws becomes `SmokeHostError` (`verb` names the call) and is
 recorded as an `errored` check — never a silent pass and never a failed

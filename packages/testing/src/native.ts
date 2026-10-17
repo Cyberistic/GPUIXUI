@@ -19,7 +19,7 @@ import * as Schema from "effect/Schema";
 import {
   A11yTree,
   type Bounds,
-  HighlightMatch,
+  decodeHighlights,
   type Offset,
   type SmokeHost,
   StyleSnapshot,
@@ -238,14 +238,7 @@ export const createHost = (renderer: NativeRenderer): SmokeHost => ({
     Option.getOrNull(
       Schema.decodeUnknownOption(A11yTree)(renderer.getA11yTree()),
     ),
-  // Highlights are quads, not styles: a bad entry is dropped rather than
-  // failing the whole frame, because one malformed wash must not hide the rest.
-  highlights: () =>
-    Arr.getSomes(
-      Arr.map(renderer.getPaintedHighlights(), (highlight) =>
-        Schema.decodeUnknownOption(HighlightMatch)(highlight),
-      ),
-    ),
+  highlights: () => decodeHighlights(renderer.getPaintedHighlights()),
   focused: () =>
     Option.getOrNull(
       Option.flatMap(focusedElement(renderer), (element) =>

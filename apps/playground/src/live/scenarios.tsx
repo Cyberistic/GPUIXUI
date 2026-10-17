@@ -2,9 +2,12 @@
  * The live scenarios: the shipped playground driven in a real window.
  *
  * They are deliberately few. A live window proves that the core mechanisms
- * transfer out of the offscreen `TestRenderer`; it does not repeat the 56-check
- * suite, and it cannot assert colour, the accessibility dump or virtual-list
- * anchors — the automation protocol does not expose them (plan `189` §2).
+ * transfer out of the offscreen `TestRenderer`; it does not repeat the headless
+ * suite. It cannot assert colour or the accessibility dump — the live renderer
+ * exposes no style or a11y method (plan `197`). Focus, selection, painted
+ * highlights and virtual-list anchors *are* asserted: the runner owns the
+ * renderer, so it reads them there even where the automation protocol has no
+ * verb (plans `190`, `191`, `197`).
  *
  * Each scenario provides its own view, which the runner mounts in the real
  * window under a keyed `Fragment` — the live twin of plan `182`'s isolation.
@@ -25,6 +28,7 @@ import { motionScenario } from "../scenarios/motion.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { primitivesActionsScenario } from "../scenarios/primitives.js";
 import { scrollScenario } from "../scenarios/scroll.js";
+import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { scenarios } from "../scenarios/index.js";
@@ -1053,6 +1057,15 @@ const table: LiveScenario = {
         "r3",
       );
 
+      const anchor = yield* ctx.expectSome(
+        "the virtual list reports a logical anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("vtable")),
+      );
+      yield* ctx.expectEqual("the anchor starts on row 0", anchor[0], 0);
+      yield* ctx.expectEqual("the anchor starts at row offset 0", anchor[1], 0);
+      yield* ctx.expectEqual("the list has a viewport", anchor[2] > 0, true);
+      const viewport = anchor[2];
+
       const before = yield* ctx.expectSome(
         "the virtual list reports an offset",
         Option.fromNullishOr(yield* ctx.host.scrollOffset("vtable")),
@@ -1077,7 +1090,144 @@ const table: LiveScenario = {
         "r3",
       );
 
+      yield* ctx.host.scrollToItem("vtable", 120);
+      yield* settle;
+      const jumped = yield* ctx.expectSome(
+        "the live list reports an anchor after a jump",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("vtable")),
+      );
+      yield* ctx.expectEqual("scrollToItem anchors the row", jumped[0], 120);
+      yield* ctx.expectEqual("the jump lands at offset 0", jumped[1], 0);
+      yield* ctx.expectEqual(
+        "the viewport height is unchanged by a jump",
+        jumped[2],
+        viewport,
+      );
+
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${table.id}.png`);
+    }),
+};
+
+/** The two document lines whose washes the find query must paint. */
+const SEARCH_LINES = [
+  "The error handler logs an error.",
+  "An Error is not the same as errors.",
+];
+
+/** The substring a wash actually covers. */
+const matched = (match: Smoke.HighlightMatch): string =>
+  match.text.slice(match.start, match.end);
+
+const inDocument = (
+  washes: ReadonlyArray<Smoke.HighlightMatch>,
+): ReadonlyArray<Smoke.HighlightMatch> =>
+  Arr.filter(washes, (match) => Arr.contains(SEARCH_LINES, match.text));
+
+const highlights: LiveScenario = {
+  id: "live-highlights",
+  title: "Live search: painted washes and list match numbering",
+  capability: "search",
+  view: searchScenario.view,
+  ready: "search-doc",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const doc = inDocument(yield* ctx.host.highlights());
+      yield* ctx.expectEqual(
+        "the document paints one wash per match in a live window",
+        Arr.length(doc),
+        4,
+      );
+      yield* ctx.expectEqual(
+        "every document wash is the queried word",
+        Arr.every(doc, (match) => Str.toLowerCase(matched(match)) === "error"),
+        true,
+      );
+
+      const line = yield* boxOf(ctx, "search-line-1");
+      const firstLine = Arr.filter(
+        doc,
+        (match) => match.text === SEARCH_LINES[0],
+      );
+      yield* ctx.expectEqual(
+        "the first line paints both of its matches",
+        Arr.length(firstLine),
+        2,
+      );
+      yield* Effect.forEach(
+        firstLine,
+        (match) =>
+          Effect.forEach(
+            match.rects,
+            (rect) =>
+              ctx.expectEqual(
+                "a wash is a visible box inside its line",
+                rect.height > 0 &&
+                  rect.x >= line.x - 1 &&
+                  rect.y >= line.y - 1 &&
+                  rect.x + rect.width <= line.x + line.width + 1 &&
+                  rect.y + rect.height <= line.y + line.height + 1,
+                true,
+              ),
+            { concurrency: 1, discard: true },
+          ),
+        { concurrency: 1, discard: true },
+      );
+
+      yield* ctx.host.click("search-clear");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "clearing the query removes the paint",
+        Arr.length(inDocument(yield* ctx.host.highlights())),
+        0,
+      );
+      yield* ctx.host.click("search-restore");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "restoring the query repaints the document",
+        Arr.length(inDocument(yield* ctx.host.highlights())),
+        4,
+      );
+
+      yield* ctx.host.click("search-next");
+      yield* settle;
+      const stepped = inDocument(yield* ctx.host.highlights());
+      yield* ctx.expectEqual(
+        "the find cursor moves to the second match",
+        Option.getOrElse(
+          Arr.findFirstIndex(stepped, (match) => match.active),
+          () => -1,
+        ),
+        1,
+      );
+
+      yield* ctx.host.scrollToItem("search-list", 90);
+      yield* settle;
+      const rows = Arr.filter(yield* ctx.host.highlights(), (match) =>
+        Str.startsWith("error at row")(match.text),
+      );
+      yield* ctx.expectEqual(
+        "the visible window paints row washes",
+        Arr.length(rows) > 0,
+        true,
+      );
+      const activeRow = Arr.filter(rows, (match) => match.active);
+      yield* ctx.expectEqual(
+        "exactly one row is the active match",
+        Arr.length(activeRow),
+        1,
+      );
+      yield* ctx.expectEqual(
+        "matchIndexOffset numbers matches document-wide",
+        Option.getOrElse(
+          Option.map(Arr.head(activeRow), (match) =>
+            Str.includes("row 90")(match.text),
+          ),
+          () => false,
+        ),
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${highlights.id}.png`);
     }),
 };
 
@@ -1096,4 +1246,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   float,
   primitives,
   table,
+  highlights,
 ];

@@ -140,6 +140,18 @@ export interface Offset {
   readonly y: number;
 }
 
+/**
+ * A `<virtual-list>`'s logical anchor: the row it starts on, the pixel offset
+ * inside that row, and the viewport height.
+ */
+export const ListAnchor = Schema.Tuple([
+  Schema.Number,
+  Schema.Number,
+  Schema.Number,
+]);
+/** A `<virtual-list>`'s logical anchor. */
+export type ListAnchor = typeof ListAnchor.Type;
+
 /** A shadow the runtime reports, shaped like GPUix's `StyleDesc.boxShadow`. */
 export class BoxShadowSnapshot extends Schema.Class<BoxShadowSnapshot>(
   "BoxShadowSnapshot",
@@ -245,6 +257,21 @@ export class HighlightMatch extends Schema.Class<HighlightMatch>(
   active: Schema.Boolean,
   rects: Schema.Array(HighlightRect),
 }) {}
+
+/**
+ * The renderer's highlight payload, decoded.
+ *
+ * A malformed wash is dropped rather than failing the frame: one bad quad must
+ * not hide every other match the runtime painted.
+ */
+export const decodeHighlights = (
+  payloads: ReadonlyArray<unknown>,
+): ReadonlyArray<HighlightMatch> =>
+  Arr.getSomes(
+    Arr.map(payloads, (payload) =>
+      Schema.decodeUnknownOption(HighlightMatch)(payload),
+    ),
+  );
 
 /**
  * The only way a scenario touches the runtime.
@@ -426,10 +453,12 @@ export class SmokeHostError extends Schema.TaggedError<SmokeHostError>()(
  *
  * Deliberately smaller than {@link SmokeHost}: the automation protocol exposes
  * bounds, the tree, painted text, scroll offsets, input, the clock and
- * screenshots — and no style report, no accessibility dump, no list anchor and
- * no focus **query**. `focused` is still answerable because the live runner owns
- * the renderer it created: `getFocusedElementId` is a renderer method, and the
- * host maps the id back to a `testId` through the automation tree (plan `190`).
+ * screenshots — and no focus query, no highlight report, no list anchor and no
+ * style report. The live runner owns the renderer it created, so it answers
+ * what the **renderer** exposes even when the protocol does not:
+ * `getFocusedElementId` (plan `190`), `getPaintedHighlights`, `scrollToItem` and
+ * `getListScrollTop` (plan `197`). Colour and the accessibility dump stay with
+ * the `TestRenderer` suite: `GpuixRenderer` has no style or a11y method.
  */
 export interface AsyncSmokeHost {
   readonly text: (
@@ -484,6 +513,24 @@ export interface AsyncSmokeHost {
   readonly scrollOffset: (
     testId: string,
   ) => Effect.Effect<Offset | null, SmokeHostError>;
+  /** Every highlight wash the last frame painted, decoded at the adapter. */
+  readonly highlights: () => Effect.Effect<
+    ReadonlyArray<HighlightMatch>,
+    SmokeHostError
+  >;
+  /** Scrolls a `<virtual-list>` `testId` to the row at `index`. */
+  readonly scrollToItem: (
+    testId: string,
+    index: number,
+    offsetInItem?: number,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * A `<virtual-list>`'s logical anchor `[itemIndex, offsetInItemPx,
+   * viewportHeightPx]`, or `null` for a non-list element.
+   */
+  readonly listScrollTop: (
+    testId: string,
+  ) => Effect.Effect<ListAnchor | null, SmokeHostError>;
   readonly screenshot: (path: string) => Effect.Effect<void, SmokeHostError>;
   readonly pauseMotion: () => Effect.Effect<number, SmokeHostError>;
   readonly fastForwardMotion: (

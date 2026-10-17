@@ -6,14 +6,16 @@
  * names the call that broke instead of surfacing as a missing element or a
  * silent pass (`Smoke.SmokeHostError`).
  *
- * Only the verbs the protocol exposes are implemented — see
- * `Smoke.AsyncSmokeHost`. Style reports, the accessibility dump and list
- * anchors are deliberately absent: those assertions belong to the
- * `TestRenderer` suite, which can observe them.
+ * The protocol has no focus, highlight or virtual-list verb, so those three
+ * read the **renderer** this runner created (`getFocusedElementId`,
+ * `getPaintedHighlights`, `getListScrollTop`/`scrollToItem`) — plans `190` and
+ * `197`. Style and accessibility stay absent because `GpuixRenderer` exposes no
+ * such method; those assertions belong to the `TestRenderer` suite.
  */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import type { GpuixRenderer } from "@gpuix/native";
 import type { App, Locator } from "@gpuix/native/automation";
 import { Smoke } from "@gpuixui/testing";
@@ -58,7 +60,13 @@ const at = (app: App, testId: string): Locator => app.getByTestId(testId);
 /** A `Smoke.AsyncSmokeHost` over a connected automation `App`. */
 export const createHost = (
   app: App,
-  renderer: Pick<GpuixRenderer, "getFocusedElementId">,
+  renderer: Pick<
+    GpuixRenderer,
+    | "getFocusedElementId"
+    | "getPaintedHighlights"
+    | "getListScrollTop"
+    | "scrollToItem"
+  >,
 ): Smoke.AsyncSmokeHost => ({
   text: (testId) => verb(`text ${testId}`, () => at(app, testId).textContent()),
   paintedText: () =>
@@ -206,6 +214,42 @@ export const createHost = (
           ),
       ),
     ),
+  highlights: () =>
+    Effect.try({
+      try: () => Smoke.decodeHighlights(renderer.getPaintedHighlights()),
+      catch: (cause) => new Smoke.SmokeHostError({ verb: "highlights", cause }),
+    }),
+  scrollToItem: (testId, index, offsetInItem) =>
+    verb(`scrollToItem ${testId}`, () =>
+      idOf(app, testId).then((elementId) => {
+        renderer.scrollToItem(elementId, index, offsetInItem);
+      }),
+    ),
+  listScrollTop: (testId) =>
+    Effect.gen(function* () {
+      const elementId = yield* verb(`listScrollTop ${testId} id`, () =>
+        idOf(app, testId),
+      );
+      const raw = yield* Effect.try({
+        try: () => renderer.getListScrollTop(elementId),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: `listScrollTop ${testId}`, cause }),
+      });
+      return yield* Option.match(Option.fromNullishOr(raw), {
+        onNone: () => Effect.succeed(null),
+        onSome: (value) =>
+          Option.match(Schema.decodeUnknownOption(Smoke.ListAnchor)(value), {
+            onNone: () =>
+              Effect.fail(
+                new Smoke.SmokeHostError({
+                  verb: `listScrollTop ${testId} shape`,
+                  cause: value,
+                }),
+              ),
+            onSome: Effect.succeed,
+          }),
+      });
+    }),
   screenshot: (path) =>
     verb(`screenshot ${path}`, () =>
       app.screenshot({ path }).then(() => undefined),

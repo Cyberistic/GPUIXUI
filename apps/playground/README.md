@@ -559,7 +559,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `13/13`.
+exact, and focus/Escape and the close button hold. The live suite is `14/14`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -723,7 +723,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 57-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 58-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -743,7 +743,8 @@ live pass is citable evidence rather than a second log format.
 | `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) |
 | `live-float` | a paced drag from the Alpha tab, released outside the dock, opens the floating panel at the release point within 1 px; its title bar drags it to exactly `(200, 60)`; its tab takes focus, Escape closes it and returns focus to `float-tab-beta`; the close button drops the reopened tab — 28 checks |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
-| `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, and the selection survives |
+| `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, the selection survives, and `getListScrollTop` reports the logical anchor exactly — `[0, 0, h]` at rest, `[120, 0, h]` after `scrollToItem(120)` |
+| `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).
@@ -764,22 +765,27 @@ window (CI, a locked session, a missing binding) — and no report is written on
 `2`. The window appears for a few seconds and takes focus while it runs; it is
 opt-in for that reason.
 
-What it cannot assert: colour, the accessibility dump, virtual-list anchors and
-highlights. The automation tree carries `id`/`type`/`testId`/`text`/`bounds` and
-no style, and the protocol has no a11y, list-anchor or highlight call. A
-synthetic `tab` does not traverse in a live window either (measured: `a`, `tab`,
-`x` left the field reading `value=ax` in plan `189`). That is not the end of the
-focus story: the component owns traversal (`focusNextWithin`) and the live host
-owns the renderer, so `live-focus` reads `getFocusedElementId` and maps it
-through the automation tree. Focus entry, the modal Tab/Shift-Tab trap, focus
-return and a nested popover's Escape are measured in the window; `live-selection`
-does the same for copy with a real pointer drag. `live-motion` proves the live
-clock controls a tween and that a removed surface's `bounds` becomes `null`, but
-`onExitComplete` fires **twice** there for one exit, so the exit check asserts
-removal (and that at least one completion fired), and the docs rule is that the
-handler must be idempotent. `live-context-menu` proves the right click, the
-pointer placement and the scrolled-container case; style, a11y, list anchors and
-highlights remain `TestRenderer`-only.
+What it cannot assert: **colour and the accessibility dump**. The live
+automation tree carries `id`/`type`/`testId`/`bounds` and **no `style`**
+(measured: a styled probe div reports only its box), and `GpuixRenderer` has no
+a11y method — `getA11yTree` exists on `TestRenderer` alone. Those two stay
+headless.
+
+Everything else the protocol lacks, the **renderer** answers, because the runner
+owns the renderer it created: `live-focus` reads `getFocusedElementId` and maps
+the id through the automation tree (plan `190`); `live-selection` uses the
+protocol's selection verbs with a real paced drag (plan `191`); and
+`live-highlights`/`live-table` read `getPaintedHighlights`, `scrollToItem` and
+`getListScrollTop` straight from the renderer (plan `197`). Focus entry, the
+modal Tab/Shift-Tab trap, focus return, a nested popover's Escape, a real drag
+copy, a painted find wash and an exact virtual-list anchor are therefore
+measured **in the window**, not only headless. A synthetic `tab` still does not
+traverse in a live window (measured: `a`, `tab`, `x` left the field reading
+`value=ax` in plan `189`) — traversal is component code (`focusNextWithin`).
+`live-motion` proves the live clock controls a tween and that a removed
+surface's `bounds` becomes `null`, but `onExitComplete` fires **twice** there
+for one exit, so the exit check asserts removal (and that at least one
+completion fired), and the docs rule is that the handler must be idempotent.
 
 ## Text entry (plan `188`)
 
@@ -949,14 +955,15 @@ narrower. Each deviation is deliberate and measured:
   the pinned-grid probe, the collapsible-height probe and the nested-layer
   probe pass in real GPUix 0.10.0 on this host (58/58), with a written report
   and screenshots.
-  The **real-window** suite (`smoke:live`) is 13/13 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 14/14 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
-  docking, the detachable-tab float, the shipped primitives and a virtual
-  table — including the modal's Tab/Shift-Tab trap and focus return (plan
-  `190`), a real pointer drag-select with `userSelect: none` exclusion (plan
-  `191`), a paused-clock mid-tween frame (plan `192`), a pointer-placed menu in
-  a scrolled container (plan `193`) and a tab torn out into a floating panel
-  (plan `195`).
+  docking, the detachable-tab float, the shipped primitives, a virtual table
+  with its exact anchor and a painted **find** probe — including the modal's
+  Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
+  with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
+  frame (plan `192`), a pointer-placed menu in a scrolled container (plan
+  `193`), a tab torn out into a floating panel (plan `195`), and highlights plus
+  `getListScrollTop` read from the renderer (plan `197`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

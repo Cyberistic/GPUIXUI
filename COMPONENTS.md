@@ -41,8 +41,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | tooltip | `tooltip-open` | verified |
 | scroll | `scroll-container`, `scroll-into-view`, `tab-strip-overflow` | verified |
 | panel | `panel-resize`, `panel-nested` | verified |
-| virtual-list | `virtual-list-window` | verified |
-| table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
+| virtual-list | `virtual-list-window`, `live-table` | verified |
+| table | `table-select-sort`, `table-column-resize`, `virtualized-table`, `live-table` | verified |
 | tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag`, `workspace-restore`, `workspace-panes` | verified |
@@ -58,7 +58,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | selection | `text-selection`, `live-selection` | verified |
 | menu | `context-menu-pointer`, `live-context-menu` | verified |
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
-| search | `search-highlights` | verified |
+| search | `search-highlights`, `live-highlights` | verified |
 | terminal | `terminal-grid` | verified |
 | chart | `chart-svg` | verified |
 | toast | `toast-lifecycle` | verified |
@@ -68,10 +68,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 The suite is **58/58 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **13/13 green
+(`nub run --filter playground smoke:live`, plan `189`) and is **14/14 green
 here**: `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
-`selection`, `menu`, `docking`, `float`, `components` and `table` are confirmed
-there too
+`selection`, `menu`, `docking`, `float`, `components`, `table` and `search`
+are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -102,11 +102,18 @@ dock, and closes a reopened float from its button. It also caught a **live-only*
 race: the drag-ending click re-applied the pre-drag dock from a stale closure and
 resurrected the torn-off tab, which the headless `press`/`releasePointer` gesture
 cannot reproduce; the tab click now uses a functional `setDock((current) => ...)`.
-The live host reads
-`getFocusedElementId` from the renderer it created (the automation protocol
-itself has no focus query) and maps the id through the automation tree.
-Colour, accessibility, virtual-list anchors and highlights stay
-`TestRenderer`-only: the automation protocol does not expose them.
+The live host reads the renderer it created when the automation protocol has no
+verb: `getFocusedElementId` (mapped back to a `testId` through the automation
+tree), and — plan `197` — `getPaintedHighlights`, `scrollToItem` and
+`getListScrollTop`. **`live-highlights`** mounts the find probe in the window
+and asserts four document washes with window-space rects inside their line,
+clear/restore repainting, the find cursor moving, and document-wide
+`matchIndexOffset` numbering after a jump to row 90; **`live-table`** asserts
+the exact logical anchor `[0, 0, h]` and `[120, 0, h]` after
+`scrollToItem(120)`. Colour and the accessibility dump stay `TestRenderer`-only
+for a measured reason, not an assumption: the live automation tree carries
+`id`/`type`/`testId`/`bounds` and **no `style`**, and `GpuixRenderer` exposes no
+a11y method (`getA11yTree` is on `TestRenderer` alone).
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -666,7 +673,7 @@ in-package and an end-to-end native verdict.
 | Resizable columns | todo | ? | Pointer events + grid tracks. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
-| Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. **A resized pane (`workspace-panes`)** re-windows the list against the **clipped** intersection (a list fixed at `120` still painted fewer rows when its pane shrank), and the anchor survives the resize and a tab switch. The list needs a resolved height: derive it from the split. |
+| Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. **A resized pane (`workspace-panes`)** re-windows the list against the **clipped** intersection (a list fixed at `120` still painted fewer rows when its pane shrank), and the anchor survives the resize and a tab switch. The list needs a resolved height: derive it from the split. **Live (`live-table`, plan `197`):** a real window reports the same anchor through the renderer — `[0, 0, 258]` at rest and `[120, 0, 258]` after `scrollToItem(120)` — so persistence is assertable live. |
 | Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). **Windowing both axes is component code** (`grid-wide-table`, plan `185`): there is no horizontal virtual list, so a wide grid derives the visible column **and row** ranges from the body offset, keeps only that range plus overdraw in the tree, and reveals a keyboard-selected off-window cell with a component-owned `scrollTo` (`-260` in the probe). |
 | Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `virtualized-tree` adds the virtualized form: 16 px per depth inside `<virtual-list>`, a count change from 8 to 48 rows repaints correctly, and Down/Up move native focus by roving index even for a row outside the window. |
 | Expandable rows | todo | ? | `motion` height. |
@@ -687,7 +694,7 @@ in-package and an end-to-end native verdict.
 | Docking layouts | todo | partial (probe) | Composition over split panes + tabs. **`docking-layout` measures the mechanism:** a pane layout is a recursive React tree whose surface rectangle comes from component code (`ref` → `PublicInstance.id` → `renderer.getElementBounds`), and the pure model's boxes for every group match the runtime; the drop indicator is an **absolute child of a `position: "relative"` pane**, pixel-exact (a 4 px bar on the edge, the whole pane for a centre), `pointerEvents: "none"`, tinted by the theme's `primary`; the zone is a 48 px edge band with the nearest edge winning a corner; a right/bottom drop puts the new group **secondary**, left/top **primary**; an emptied group is pruned and its split collapses to the survivor (measured at the top level too); and a recursive layout — outer `280`, nested `324`/`197` — restores exactly through a keyed remount of the model. |
 | Nested panel arrangements | todo | partial (probe) | Composition. A vertical outer split holding a horizontal inner split is measured end to end: both axes resize, the nested drag leaves `outer = 228`, and the top pane's painted height/width track the readouts (`panel-nested`). |
 | Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. **Composition (`workspace-panes`)**: a hidden pane keeps its own state and anchor; a resized pane re-windows its list (`5 → 2` painted rows at `240 → 180`) and keeps the anchor; a nested scroller needs the `pointerEvents: "auto"` wheel guard. |
-| Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. **Recursive layouts (`docking-layout`)**: the tree owns every split size; `encodeDock`/`decodeDock` are the JSON boundary (`Schema.fromJsonString`), and a restore is a **keyed remount** so each `SplitPane` re-reads `initial` — the live instance's state is not mutated. A corrupt snapshot decodes to `None` and is reported, never thrown. |
+| Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. **Recursive layouts (`docking-layout`)**: the tree owns every split size; `encodeDock`/`decodeDock` are the JSON boundary (`Schema.fromJsonString`), and a restore is a **keyed remount** so each `SplitPane` re-reads `initial` — the live instance's state is not mutated. A corrupt snapshot decodes to `None` and is reported, never thrown. **The anchor is live-readable** (`live-table`, plan `197`: `getListScrollTop` on the renderer the live runner owns), so a restore check need not be headless-only. |
 | Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. **`live-focus` (plan `190`)** proves the modal's Tab/Shift-Tab containment and focus return in a real window, not only in `TestRenderer`. |
 | Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. |
 | Application menus | todo | unsupported (in-window only) | **The published 0.10.0 has no menu/tray API**: `@gpuix/native`'s `NativeRenderer` exposes only window controls (`setWindowTitle`, `activateWindow`, `minimizeWindow`, `zoomWindow`, `toggleFullscreen`), and no `menu`/`Menu`/`tray` symbol exists in the native or React types. An application menu must therefore be an **in-window** surface opened by a window key — the path `command-palette` measures end to end (`cmd-k`, Escape delivery, focus return). A true macOS menu bar would need a renderer API that is not in this version. |

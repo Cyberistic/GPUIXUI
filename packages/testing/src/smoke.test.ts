@@ -16,6 +16,7 @@ import {
   HighlightMatch,
   SmokeHostError,
   StyleSnapshot,
+  decodeHighlights,
   runAsyncScenarios,
 } from "./smoke.js";
 import { asyncScenario, nullAsyncHost, nullHost } from "./test-support.js";
@@ -224,6 +225,35 @@ describe("expectSome", () => {
   );
 });
 
+describe("decodeHighlights", () => {
+  const wash = {
+    elementId: 4,
+    sub: 1,
+    text: "The error handler logs an error.",
+    start: 4,
+    end: 9,
+    active: true,
+    rects: [{ x: 68, y: 30, width: 31, height: 20 }],
+  };
+
+  it("keeps a well-formed wash, offsets and geometry intact", () => {
+    const [match] = decodeHighlights([wash]);
+    expect(match?.text.slice(match.start, match.end)).toBe("error");
+    expect(match?.active).toBe(true);
+    expect(Arr.map(match?.rects ?? [], (rect) => rect.width)).toEqual([31]);
+  });
+
+  it("drops a malformed wash without hiding the valid one beside it", () => {
+    const corrupted = {
+      ...wash,
+      rects: [{ x: 68, y: 30, width: "31", height: 20 }],
+    };
+    const matches = decodeHighlights([corrupted, wash]);
+    expect(Arr.length(matches)).toBe(1);
+    expect(matches[0]?.elementId).toBe(4);
+  });
+});
+
 describe("runAsyncScenarios", () => {
   it.effect("aggregates the same report from effectful host verbs", () =>
     Effect.gen(function* () {
@@ -261,6 +291,32 @@ describe("runAsyncScenarios", () => {
         "the host reports text",
         "the text",
       ]);
+    }),
+  );
+
+  it.effect("a missing list anchor fails the scenario that needs it", () =>
+    Effect.gen(function* () {
+      // A host that cannot read an anchor must not let a persistence check pass
+      // on an absent value: `expectSome` turns the null into a failed check.
+      const report = yield* runAsyncScenarios(
+        nullAsyncHost,
+        [
+          asyncScenario("anchor", "virtual-list", (ctx) =>
+            Effect.gen(function* () {
+              const anchor = yield* ctx.expectSome(
+                "the list reports an anchor",
+                Option.fromNullishOr(yield* ctx.host.listScrollTop("list")),
+              );
+              yield* ctx.expectEqual("the first row", anchor[0], 0);
+            }),
+          ),
+        ],
+        { host: "async fixture", startedAt: 0 },
+      );
+      expect(Option.getOrUndefined(statusOf(report, "virtual-list"))).toBe(
+        "failed",
+      );
+      expect(holds(checkOf(report, 0), CheckOutcome.guards.failed)).toBe(true);
     }),
   );
 
