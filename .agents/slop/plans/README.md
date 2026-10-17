@@ -116,6 +116,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [317](./317-placeholder-surfaces.md) | The placeholder on every surface a field sits on | F | 059, 071–095, 300, 306–316 | done |
 | [318](./318-neutral-press-edge.md) | The neutral control's edge on its designed hover and press | F | 055, 071–095, 097, 306–317 | done |
 | [319](./319-input-text-surfaces.md) | Typed text on every surface a field sits on | F | 059, 071–095, 300, 306–318 | done |
+| [320](./320-soft-body-text.md) | Default body text on the soft status fills | F | 071, 074, 088, 300, 306–319 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -783,6 +784,20 @@ erase a query while `themeContrastFailures` returned `[]`. `card`, `popover` and
 clears 7:1 on all three (the quiet panel is the tightest), so no colour moves,
 and `canvas-input-text.test.ts` now states the four-surface contract and the
 erased-text regression the public checker catches.
+
+320 closes the last default body-text surface the 088–319 audits left: an Alert's
+description (`components/alert.tsx:181`) and its ghost dismiss control
+(`internal/button.tsx:84`) paint `foreground` inside the tone-tinted root
+(`toneSurface`, i.e. `xSoft`), but the contract measured `foreground` only on the
+plain surfaces and the row washes. A copied platform style or brand theme could
+darken one soft fill until an Alert's body disappeared while
+`themeContrastFailures` returned `[]`. The four soft status fills join the body
+contract (257 → 261); every shipped identity, platform and recipe set clears 7:1
+(the tightest dark pair is above 10:1), so no colour moves, and
+`soft-body-text.test.ts` states the four pairs and the erased-description
+regression. The Alert composition is the third time the series has found a
+composition the role-level completeness guard cannot see: `foreground` is
+measured somewhere, just not on the surface the component paints it on.
 
 ### Reference adoption (block `200–299`)
 

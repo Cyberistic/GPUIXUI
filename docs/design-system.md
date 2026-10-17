@@ -336,7 +336,7 @@ Colour is checked, not assumed. The token suite enforces:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
-| body text on `background`/`card`/`muted`/`popover`/`input` and the `hover`/`active`/`accent`/`selected` washes; typed text on `input` and on the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on | 7:1 | 7:1 |
+| body text on `background`/`card`/`muted`/`popover`/`input`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills an Alert's description paints; typed text on `input` and on the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on | 7:1 | 7:1 |
 | a menu row's label (`popoverForeground` on `hover`/`active`, and on `selected` for a selected `Select` option) | 7:1 | 7:1 |
 | selected row label (`selectedForeground` on `selected`, the `accent` wash a hovered selectable row paints and the `hover`/`active` pointer washes) | 4.5:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |

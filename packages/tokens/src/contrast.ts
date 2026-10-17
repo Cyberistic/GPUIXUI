@@ -425,11 +425,22 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
 );
 
 /**
+ * The four soft status fills a default body text role is painted on. An Alert's
+ * description and its ghost dismiss control paint `foreground` inside the
+ * tone-tinted root (`components/alert.tsx`), so the body floor applies to each
+ * fill the same way it does on the quiet panel.
+ */
+const softBodyPairs: readonly ContrastPair[] = softSurfaceRoles.map(
+  (background): ContrastPair => ["foreground", background, "body"],
+);
+
+/**
  * Every documented pair — text, status, surface and divider — including
  * secondary text and status text on the state washes, a status label or dot on
  * the quiet `muted` panel, brand-toned text on the plain surfaces, the washes a
- * link paints and the row fills it sits on, default body text on the quiet panel
- * and the floating surface, the focus ring on every surface a focused control
+ * link paints and the row fills it sits on, default body text on the quiet panel,
+ * the floating surface and the four soft status fills an Alert's description and
+ * ghost dismiss control paint, the focus ring on every surface a focused control
  * can sit on, the ring on the soft status fills a toast's action button sits on,
  * status text on a floating surface, the functional control
  * boundary on a floating surface, a quiet panel, the state washes and the soft
@@ -505,6 +516,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["destructiveText", "popover", "secondary"],
   ...statusTextSurfacePairs,
   ...rowTextPairs,
+  ...softBodyPairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],

@@ -218,10 +218,11 @@ guarantee rather than a fix (plan 093). The modal scrim is measured the same way
 `overlay` composited over the four base surfaces and held to 1.05:1, which caught
 the AAA dark theme's black veil painting **1.000:1** on its pure black canvas and
 turned it into a light one (plan 099). Default body text
-is checked on the canvas, card, the `muted` panel, `popover` and the
-`hover`/`active`/`accent`/`selected` washes, so an avatar's initials on the
-quiet panel, a date picker's month header on its floating surface and a selected
-row's title are held to the body floor. Typed text (`inputForeground`) is
+is checked on the canvas, card, the `muted` panel, `popover`, the
+`hover`/`active`/`accent`/`selected` washes and the four soft status fills an
+Alert's description and ghost dismiss control paint, so an avatar's initials on
+the quiet panel, a date picker's month header on its floating surface, a selected
+row's title and an Alert's body are held to the body floor. Typed text (`inputForeground`) is
 checked on the `input` fill and on the four `Surface` tones a transparent field
 can sit on — `background`, `card`, `popover` and `muted` — so a search box or
 inline edit cannot lose its text whichever panel it sits on (plan 319). The

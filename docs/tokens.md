@@ -1360,7 +1360,9 @@ set cleared it. The edge is now `#868FA0`, which clears the floor on all four
 soft fills. Palette edits must keep it green.
 
 Default body text is measured on `background`, `card`, the `muted` panel,
-`popover` and the `hover`/`active`/`accent`/`selected` washes; typed text is
+`popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft
+status fills an Alert's description and ghost dismiss control paint
+(`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is
 `inputForeground` on the `input` fill and on the four `Surface` tones a
 transparent field can sit on (`background`, `card`, `popover`, `muted`), the same
 set the placeholder is measured on. The placeholder is held to the same secondary floor
@@ -1399,7 +1401,8 @@ row inherits its label on, and plan `317` adds the placeholder on the four
 `Surface` tones, taking the contract from 248 to 252. Plan `318` adds the neutral
 family's designed hover and press to the control edge, taking it from 252 to
 **254**, and plan `319` adds typed text on the same four `Surface` tones as the
-placeholder, taking it from 254 to **257**.
+placeholder, taking it from 254 to **257**. Plan `320` adds default body text on
+the four soft status fills an Alert paints, taking it from 257 to **261**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
