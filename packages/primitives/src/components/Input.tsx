@@ -34,7 +34,10 @@ export interface FieldProps {
   readonly defaultValue?: string;
   /** Called with the text after every edit, only when it actually changed. */
   readonly onChange?: (value: string) => void;
-  /** Enter in an `<input>`, or Enter in a `<textarea>` when this is set. */
+  /**
+   * Enter in an `<input>`. A `TextArea` does not take this: the runtime would
+   * turn Enter into a submit and take the newline away (plan 046).
+   */
   readonly onSubmit?: (event: EventPayload) => void;
   readonly placeholder?: string;
   readonly readOnly?: boolean;

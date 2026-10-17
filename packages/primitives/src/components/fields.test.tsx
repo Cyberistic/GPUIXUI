@@ -109,6 +109,22 @@ describe("TextArea", () => {
     expect(expectSome(hostProp(element, "maxRows"))).toBe(8);
   });
 
+  it("has no submit handler, which the runtime would trade the newline for", () => {
+    void renderTextArea(
+      {
+        // @ts-expect-error — `TextAreaProps` omits `onSubmit` on purpose (046).
+        onSubmit: vi.fn(),
+        minRows: 2,
+      },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    const area = renderTextArea({}, testTheme, draft(""), idle, vi.fn());
+    expect(hostProp(area, "onSubmit")).toStrictEqual(Option.none());
+  });
+
   it("lets the rows decide the height instead of a fixed control height", () => {
     const area = renderTextArea({}, testTheme, draft(""), idle, vi.fn());
     const field = renderInput({}, testTheme, draft(""), idle, vi.fn());
