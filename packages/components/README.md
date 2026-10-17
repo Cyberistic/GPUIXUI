@@ -4,7 +4,7 @@ Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
 Plans for this package and every component it holds are in
-`.agents/slop/plans/` (110–132). Read those before adding a component.
+`.agents/slop/plans/` (110–134). Read those before adding a component.
 
 ## Boundary
 
