@@ -84,7 +84,7 @@ local copy.
 **Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
 **Selection** `Checkbox` `CheckboxGroup` `RadioGroup` `Switch` `Rating`
 **Value** `Slider` `RangeSlider` `Meter`
-**Feedback** `Progress` `Spinner` `Skeleton` `Tooltip` `InfoTip` `InfoTip`
+**Feedback** `Progress` `Spinner` `Skeleton` `Tooltip` `InfoTip`
 **Theming** `ThemeProvider`
 
 Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
