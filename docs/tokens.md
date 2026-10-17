@@ -1313,11 +1313,14 @@ light one until plan `308` moved it, and the 30% mixture it replaced measured
 1.12:1 on the high-contrast light `warning` surface, under the 3:1 that theme
 requires.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
-`card`, `popover`, `muted`, `hover`, `active` and `selected`, so a placeholder
-never disappears into the card it fills or the row it sits in. The audit found
-the placeholder was the `active` fill in the identity and high-contrast themes,
-so a pressed loading row erased the placeholder (1.000:1); the light and dark skeleton moved
-one ramp step away, and each dark platform style carries its own.
+`card`, `popover`, `muted`, `hover`, `active`, `accent` and `selected`, so a
+placeholder never disappears into the card it fills or the row it sits in. The
+`accent` wash is the fill a selectable list row paints on hover, and a
+placeholder row has no designed edge to keep its shape if the fill matches. The
+audit found the placeholder was the `active` fill in the identity and
+high-contrast themes, so a pressed loading row erased the placeholder (1.000:1);
+the light and dark skeleton moved one ramp step away, and each dark platform
+style carries its own.
 Brand-toned text is checked on the eight surfaces a link paints —
 `background`, `card`, `popover`, `muted`, the `hover`/`active` washes and the
 `accent`/`selected` fills a selectable row paints — so a platform accent cannot
@@ -1404,7 +1407,9 @@ row inherits its label on, and plan `317` adds the placeholder on the four
 family's designed hover and press to the control edge, taking it from 252 to
 **254**, and plan `319` adds typed text on the same four `Surface` tones as the
 placeholder, taking it from 254 to **257**. Plan `320` adds default body text on
-the four soft status fills an Alert paints, taking it from 257 to **261**.
+the four soft status fills an Alert paints, taking it from 257 to **261**. Plan
+`322` adds the `accent` wash a selectable row hovers to the skeleton surfaces,
+taking it from 261 to **262**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the

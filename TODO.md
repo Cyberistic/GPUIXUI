@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 89/118
+`[x]` `[████████░░]` 90/119
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -171,6 +171,11 @@ contract grows 257 → 261 (plan 320)
 override erased a colour role, a type field, a motion timing, a density metric or
 an elevation level, and the last one crashed `elevationShadow`; every group now
 treats it as omitted (plan 321)
+`[x]` Hold the loading skeleton on the `accent` wash a selectable list row
+hovers — `skeletonSurfaces` covered `hover`/`active`/`selected` but not `accent`,
+so an edited theme could erase a placeholder row while the checker returned `[]`;
+every shipped set passes, so no colour moves and the contract grows 261 → 262
+(plan 322)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

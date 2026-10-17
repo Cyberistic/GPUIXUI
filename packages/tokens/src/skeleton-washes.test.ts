@@ -6,6 +6,11 @@
  * pairs were under the 1.05:1 floor, ten of them exactly 1.000:1, because the
  * identity and high-contrast skeletons *were* the `active` fill: a pressed
  * loading row erased the placeholder.
+ *
+ * Plan 322 closes the last row wash: a selectable `List` row paints `accent` on
+ * hover (`list.tsx`), so a placeholder row in a selectable list can sit on it.
+ * The skeleton has no designed edge to fall back on, so an edited theme could
+ * erase it while the checker returned `[]`.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -31,6 +36,7 @@ const surfaces = [
   "muted",
   "hover",
   "active",
+  "accent",
   "selected",
 ] as const;
 
@@ -130,6 +136,28 @@ describe("the loading skeleton on a row surface", () => {
         floor: contrastFloors.default.surface,
       },
     ]);
+  });
+
+  it("names the accent wash when a selectable row regresses", () => {
+    const light = getTheme("light");
+    const regressed = extendTheme(light, {
+      colors: { skeleton: light.colors.accent },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ foreground }) => foreground === "skeleton",
+    );
+
+    expect(
+      failures.map(({ background, pairClass, floor }) => ({
+        background,
+        pairClass,
+        floor,
+      })),
+    ).toContainEqual({
+      background: "accent",
+      pairClass: "surface",
+      floor: contrastFloors.default.surface,
+    });
   });
 
   it("publishes one pair per surface a placeholder fills", () => {

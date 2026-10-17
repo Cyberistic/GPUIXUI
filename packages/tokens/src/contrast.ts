@@ -53,9 +53,12 @@ const softSurfacePairs: readonly ContrastPair[] = softSurfaceRoles.flatMap(
 
 /**
  * The surfaces a loading placeholder sits on beyond the plain ones: the quiet
- * panel of a sidebar list and the washes a loading row paints. A skeleton row is
- * hovered, pressed and selected like any other, and a placeholder that vanishes
- * into the wash is a failed loading state, so each is held to the surface floor.
+ * panel of a sidebar list and the four washes a loading row paints — pointer
+ * hover, press, the `accent` fill a selectable list row uses on hover, and the
+ * selected fill. A skeleton row is hovered, pressed and selected like any other,
+ * and a placeholder that vanishes into the wash is a failed loading state, so
+ * each is held to the surface floor. Unlike a soft status chip it has no
+ * designed edge to keep its shape if the fill matches.
  */
 const skeletonSurfaces = [
   "background",
@@ -64,6 +67,7 @@ const skeletonSurfaces = [
   "muted",
   "hover",
   "active",
+  "accent",
   "selected",
 ] as const;
 
