@@ -57,7 +57,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[████████░░]` 41/48 plans-and-harness
+`[x]` `[█████████░]` 42/48 plans-and-harness
 
 `[x]` Plans `100`–`158` written and indexed for the playground workstream
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
@@ -253,9 +253,18 @@ retired once both branches are one
       measured against the preset metrics, and `platformTheme`'s mono family
       reaching the paint; 13 files / 119 runtime tests
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
-`[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
-      into the shared smoke framework once the package lands — plan 041 §2.2
-      records why it is duplicated for now
+`[x]` **packages/testing**: the native adapter is hoisted (plan `178`) —
+      `Native.createHost(renderer)` plus the structural `NativeRenderer` port and
+      the `boundsOf`/`hitBoundsOf`/`subtreeText`/`focusedElement` lookups live in
+      `@gpuixui/testing`; `apps/playground` no longer owns an adapter and the
+      package still imports no `@gpuix/*`
+`[ ]` **packages/primitives** (owner: primitives): delegate
+      `runtime/harness.ts` to `@gpuixui/testing`'s `Native` helpers — import the
+      `NativeRenderer`/`NativeElement` types, `find`/`findById`,
+      `boundsOf`/`hitBoundsOf`, `subtreeText`, `focusedElement` and the
+      `focusNext`/`focusPrevious` dispatch rule, and delete the local copies.
+      `test:runtime` must build `@gpuixui/testing` first (as the playground does).
+      Evidence and the exact exports: plan `178` §3.
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
@@ -293,8 +302,9 @@ retired once both branches are one
       order, Enter/Space activation, checkbox/switch toggle, radio arrows, scroll
       offset and the a11y dump are measured by `packages/primitives/runtime/`
       (plan `041`, 119 tests) and by the playground's five `primitives-*`
-      scenarios (plans `168`–`169`). `packages/testing` stays the platform-free
-      half; the native adapter lives in `apps/playground/src/smoke/host.ts`
+      scenarios (plans `168`–`169`). `packages/testing` stays platform-free; the
+      native adapter is `Native.createHost` in `packages/testing/src/native.ts`
+      (plan `178`)
 `[ ]` **docs-site workstream**: Tier 1 component pages + the `docs/preview-strategy.md`
       decision (code examples plus a companion native playground, never a silent
       HTML/CSS reimplementation)

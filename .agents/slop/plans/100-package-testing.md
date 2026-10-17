@@ -24,6 +24,13 @@ the scenarios themselves) lives in `apps/playground` and is planned in
 
 ## 2. Verified facts
 
+> **Amendment (plan `178`):** the package now also owns the native adapter,
+> `Native.createHost(renderer)`, over a **structural** `NativeRenderer` port. It
+> still imports no `@gpuix/*` — the renderer is passed in and typed by shape — so
+> the "platform-free half" design above is unchanged; the port exists so the
+> playground and the primitives runtime suites share one implementation of the
+> ancestor-bounds, subtree-text and focus-dispatch rules instead of two.
+
 Commands run in this worktree; results quoted verbatim.
 
 | Fact | Evidence |

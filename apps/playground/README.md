@@ -536,7 +536,6 @@ src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filt
 src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
-src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
 ```
 
@@ -545,9 +544,10 @@ src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
 The plan was written against upstream `main`; the installed `0.10.0` API is
 narrower. Each deviation is deliberate and measured:
 
-- **The host adapter is synchronous, over `TestRenderer`** (`smoke/host.ts`),
-  not the async `automation` `Locator`/`App`. Every renderer input and
-  inspection method is synchronous and the `SmokeHost` contract is synchronous.
+- **The host adapter is synchronous, over `TestRenderer`** (`Native.createHost`
+  in `@gpuixui/testing`), not the async `automation` `Locator`/`App`. Every
+  renderer input and inspection method is synchronous and the `SmokeHost`
+  contract is synchronous.
 - **0.10.0 has no `getElementsAt`, `onLayout` or `onScrollChange`** (verified by
   grep over the installed `dist`). The overlay asserts the popup is *painted*
   and dismissible rather than hit-tested; the panel's `max` is a prop; the

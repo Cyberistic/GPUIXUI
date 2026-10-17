@@ -2,8 +2,10 @@
  * `@gpuixui/testing` — the platform-free half of the native smoke suite.
  *
  * Namespace projections, one per module, so a consumer reads
- * `Smoke.runScenarios`, `Report.formatReport` and `Runtime.detectRuntime`.
+ * `Smoke.runScenarios`, `Report.formatReport`, `Runtime.detectRuntime` and
+ * `Native.createHost`.
  */
+export * as Native from "./native.js";
 export * as Report from "./report.js";
 export * as Runtime from "./runtime.js";
 export * as Smoke from "./smoke.js";

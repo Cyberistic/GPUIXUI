@@ -28,6 +28,7 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 | `Runtime` | `detectRuntime` (never fails), `bindingHint`, `RuntimeStatus` |
 | `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
+| `Native`  | `createHost(renderer)`, the structural `NativeRenderer` port, and the lookups (`find`, `allElements`, `boundsOf`, `hitBoundsOf`, `centerOf`, `subtreeText`, `focusedElement`) |
 
 ## Adapting a host
 
@@ -35,6 +36,20 @@ A consumer adapts its renderer to `Smoke.SmokeHost` — an input surface (click,
 hover, key, wheel, drag) and an inspection surface (text, bounds, scroll offset,
 the runtime's own painted style, accessibility tree, screenshot). The adapter is the only place a GPUix
 type appears; scenarios see plain values.
+
+`Native.createHost(renderer)` is that adapter, already implemented: pass a real
+`TestRenderer` and the suite can run. The renderer is typed **structurally**
+(`Native.NativeRenderer`), so this package still imports no `@gpuix/*` and loads
+on a host with no binding; the real `TestRenderer` satisfies the port
+structurally, which the playground's type check proves. A fake renderer can
+implement it too, which is how the adapter's own rules are tested.
+
+Two bounds rules are kept apart on purpose. `Native.boundsOf` reports what the
+element itself painted — `None` for `<canvas>`, `<anchored>` and
+`<virtual-list>`, which scenarios assert. `Native.hitBoundsOf` walks to the
+nearest ancestor with bounds and is the only rule input targeting may use, or a
+click aimed inside such a layer lands at the origin. `SmokeHost.bounds` uses the
+first; `centerOf`/`click`/`wheel` use the second.
 
 `key` runs the renderer's keystroke parser (typed text, `enter`, `escape`, …).
 A control whose contract is "activate on Space **up**" needs the two halves
