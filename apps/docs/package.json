@@ -5,13 +5,15 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
+    "dev": "nub run build:preview && vite dev",
+    "build": "nub run build:preview && vite build",
     "preview": "vite preview",
-    "check-types": "fumadocs-mdx && tsc --noEmit",
+    "check-types": "fumadocs-mdx && tsc --noEmit && tsc -p preview/tsconfig.json --noEmit",
     "test": "vitest run",
     "smoke:build": "nub scripts/smoke-build.ts",
-    "smoke:browser": "nub scripts/smoke-browser.ts"
+    "smoke:browser": "nub scripts/smoke-browser.ts",
+    "build:preview": "nub scripts/build-preview.ts",
+    "smoke:preview": "nub scripts/smoke-live-preview.ts"
   },
   "dependencies": {
     "@gpuixui/tokens": "workspace:*",
@@ -26,7 +28,10 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.64.0",
+    "@gpuix/native": "0.10.0",
+    "@gpuix/react": "catalog:",
     "@gpuixui/config": "workspace:*",
+    "@gpuixui/primitives": "workspace:*",
     "@tailwindcss/vite": "4.3.3",
     "@types/mdx": "2.0.14",
     "@types/node": "^26.1.1",

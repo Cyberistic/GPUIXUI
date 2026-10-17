@@ -10,7 +10,7 @@ import { captureCaption } from "./captures";
 import { NativePreview } from "./native-preview";
 import { NativeScreenshot } from "./screenshot";
 import { PlaygroundScreen } from "./playground-screen";
-import { selectPreview } from "./select-preview";
+import { selectNativeEvidence, selectPreview } from "./select-preview";
 
 /**
  * Guards the preview honesty rules (plan 412). The load-bearing failures are a
@@ -37,6 +37,7 @@ const record = (
   dependencies: [],
   related: [],
   playgroundScreen: null,
+  liveScene: null,
   screenshots: [],
   runtime: null,
   limitations: [],
@@ -76,13 +77,24 @@ describe("preview labels", () => {
   });
 
   it("names the native suite for a component with no capture yet", () => {
+    const html = renderToStaticMarkup(<NativePreview slug="text" />);
+    expect(html).toContain('data-preview-tier="runtime"');
+    expect(html).toContain(
+      "packages/primitives/runtime/layout.runtime.test.tsx",
+    );
+    expect(html).toContain("nub run --filter @gpuixui/primitives test:runtime");
+    expect(html).not.toContain("Not verified in the GPUix runtime");
+  });
+
+  it("shows a live surface first and keeps the native evidence beneath it", () => {
     const html = renderToStaticMarkup(<NativePreview slug="button" />);
+    expect(html).toContain('data-preview-tier="live"');
+    expect(html).toContain("Live GPUix surface");
     expect(html).toContain('data-preview-tier="runtime"');
     expect(html).toContain(
       "packages/primitives/runtime/controls.runtime.test.tsx",
     );
-    expect(html).toContain("nub run --filter @gpuixui/primitives test:runtime");
-    expect(html).not.toContain("Not verified in the GPUix runtime");
+    expect(html).not.toContain("<iframe");
   });
 
   it("reports an unknown component instead of rendering nothing", () => {
@@ -100,6 +112,32 @@ describe("preview labels", () => {
 });
 
 describe("preview tier selection", () => {
+  it("prefers a live surface over every native tier", () => {
+    const tier = selectPreview(
+      record({
+        liveScene: "button",
+        screenshots: ["screenshots/demo/default.png"],
+        playgroundScreen: "Demo gallery",
+      }),
+      proven,
+    );
+    expect(tier).toEqual({ tier: "live", scene: "button" });
+  });
+
+  it("keeps the native evidence for a record with a live surface", () => {
+    const evidence = selectNativeEvidence(
+      record({
+        liveScene: "button",
+        runtime: {
+          command: "nub run --filter @gpuixui/primitives test:runtime",
+          testFile: "runtime/controls.runtime.test.tsx",
+        },
+      }),
+      proven,
+    );
+    expect(evidence.tier).toBe("runtime");
+  });
+
   it("shows a screenshot only when its sidecar proves it", () => {
     const tier = selectPreview(
       record({ screenshots: ["screenshots/demo/default.png"] }),

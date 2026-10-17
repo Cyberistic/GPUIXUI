@@ -43,6 +43,8 @@ interface PlannedOptions {
   readonly pattern?: ComponentMetaInput["pattern"];
   /** Defaults to `null`: the component owns no storage contract. */
   readonly persistence?: string | null;
+  /** A live GPUix wasm scene (plan 455); `null` when none ships. */
+  readonly liveScene?: string | null;
 }
 
 const groupOf = (tier: Tier): string =>
@@ -74,6 +76,7 @@ const planned = (
   dependencies: [],
   related: options.related ?? [],
   playgroundScreen: null,
+  liveScene: options.liveScene ?? null,
   screenshots: [],
   runtime: null,
   limitations: [],
@@ -278,6 +281,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "ours",
       sourcePath: "packages/primitives/src/components/Button.tsx",
       api: ["ButtonProps"],
+      liveScene: "button",
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/controls.runtime.test.tsx",

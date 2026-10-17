@@ -1,4 +1,7 @@
 # App-local artifacts. The root .gitignore covers node_modules, dist and .source.
+# The live preview surface (plan 455) is built by `build:preview`; its 20 MB
+# renderer is never repository content.
+public/gpuix-preview/
 .cache/
 .tanstack/
 .wrangler/

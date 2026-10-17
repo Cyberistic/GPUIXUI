@@ -106,6 +106,12 @@ export class ComponentMeta extends Schema.Class<ComponentMeta>("ComponentMeta")(
     related: Schema.Array(Schema.String),
     /** Named screen in `apps/playground`, if one exists. */
     playgroundScreen: Schema.OptionFromNullOr(Schema.String),
+    /**
+     * The live GPUix WebAssembly scene this component runs under
+     * `/gpuix-preview/` (plan 455). `null` when no scene ships; the preview then
+     * keeps its native tiers. A scene is never a substitute for native evidence.
+     */
+    liveScene: Schema.OptionFromNullOr(Schema.String),
     /** Real native screenshot paths under `public/`, relative to it. */
     screenshots: Schema.Array(Schema.NonEmptyString),
     /**

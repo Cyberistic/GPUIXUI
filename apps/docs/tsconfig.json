@@ -19,5 +19,5 @@
     "scripts/**/*.ts",
     "*.ts"
   ],
-  "exclude": ["node_modules", "dist", ".output", "public"]
+  "exclude": ["node_modules", "dist", ".output", "public", "preview"]
 }

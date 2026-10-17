@@ -2,11 +2,13 @@ import type { ComponentMetaInput } from "@/component-meta/schema";
 import type { Capture } from "./captures";
 
 /**
- * The tier a component's page must show (plan 412). Pure and lookup-driven so
- * it is testable without a browser, a GPUix runtime or a screenshot: the
- * caller supplies the capture lookup, production supplies the real sidecars.
+ * The tier a component's page must show (plan 412, extended by plan 455). Pure
+ * and lookup-driven so it is testable without a browser, a GPUix runtime or a
+ * screenshot: the caller supplies the capture lookup, production supplies the
+ * real sidecars.
  */
 export type PreviewTier =
+  | { readonly tier: "live"; readonly scene: string }
   | { readonly tier: "screenshot"; readonly captures: readonly Capture[] }
   | { readonly tier: "playground"; readonly screen: string }
   | {
@@ -17,13 +19,11 @@ export type PreviewTier =
   | { readonly tier: "unavailable"; readonly reason: string };
 
 /**
- * Picks the highest honest tier. A screenshot the registry lists but no sidecar
- * proves is **not** shown: it reports the missing sidecar, because a caption
- * taken from a file name would be invented provenance. A component with no
- * capture and no playground screen but a real native suite is **covered**, not
- * unverified: it reports tier V rather than the tier-X notice (plan 432).
+ * The native evidence for a record, independent of any live surface. A live
+ * surface is a real GPUix renderer, but it is not the desktop binary, so it
+ * never replaces this tier on a page that has one (plan 455).
  */
-export const selectPreview = (
+export const selectNativeEvidence = (
   record: ComponentMetaInput,
   lookup: (screenshot: string) => Capture | undefined,
 ): PreviewTier => {
@@ -63,3 +63,19 @@ export const selectPreview = (
     reason: "no native preview has been captured yet",
   };
 };
+
+/**
+ * Picks the highest honest preview. A live surface outranks a screenshot for
+ * the interactive showcase, but only when the build ships its scene; the
+ * native evidence is rendered beneath it. A screenshot the registry lists but
+ * no sidecar proves is **not** shown, because a caption taken from a file name
+ * would be invented provenance. A component with no capture and no playground
+ * screen but a real native suite is **covered**, not unverified (plan 432).
+ */
+export const selectPreview = (
+  record: ComponentMetaInput,
+  lookup: (screenshot: string) => Capture | undefined,
+): PreviewTier =>
+  record.liveScene !== null
+    ? { tier: "live", scene: record.liveScene }
+    : selectNativeEvidence(record, lookup);

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
+import { LIVE_SCENES } from "../../preview/scenes";
 import { exportedNames } from "../lib/source-exports";
 import { registryViolations, statusViolations } from "./contract";
 import { components, tierGroupTitle } from "./registry";
@@ -124,6 +125,16 @@ describe("component registry", () => {
     const titles = new Set(components.map((entry) => entry.title));
     expect(slugs.size).toBe(components.length);
     expect(titles.size).toBe(components.length);
+  });
+
+  it("names a live scene the preview build ships", () => {
+    const unknown = components.flatMap((entry) =>
+      entry.liveScene === null ||
+      LIVE_SCENES.some((scene) => scene === entry.liveScene)
+        ? []
+        : [`${entry.slug}: ${entry.liveScene}`],
+    );
+    expect(unknown).toEqual([]);
   });
 
   it("keeps every related link resolvable", () => {
@@ -290,6 +301,7 @@ describe("compound record contract", () => {
     dependencies: [],
     related: [],
     playgroundScreen: null,
+    liveScene: null,
     screenshots: [],
     runtime: null,
     limitations: [],
@@ -397,6 +409,7 @@ describe("status contract", () => {
     dependencies: [],
     related: [],
     playgroundScreen: null,
+    liveScene: null,
     screenshots: [],
     runtime: {
       command: "nub run --filter @gpuixui/components test:behaviour",

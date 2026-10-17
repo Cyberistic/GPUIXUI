@@ -1,0 +1,16 @@
+{
+  "extends": "@gpuixui/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "@gpuix/react",
+    "types": ["node", "vite/client"],
+    "noEmit": true,
+    "paths": {
+      "@gpuix/native/wasm/gpuix-web.js": [
+        "../node_modules/@gpuix/native/wasm/gpuix-web.d.ts"
+      ]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}
