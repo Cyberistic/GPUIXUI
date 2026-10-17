@@ -4,7 +4,8 @@
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 116 (SearchInput), 113 (Tabs), 128 (ref-composition sweep),
   134 (inventory gate)
-- **Status:** planned.
+- **Status:** done, 2026-10-17. 2 native tests (SearchInput 7, Tabs 10,
+  behaviour 276); both-direction proof recorded in §8.
 
 Two public props are silently dropped:
 
@@ -104,7 +105,7 @@ onBlur={(event) => {
    fails with zero calls.
 4. Restore and run the whole behaviour suite.
 
-Expected counts: SearchInput 6 → 7; Tabs 8 → 9; behaviour 274 → 276; logic stays
+Expected counts: SearchInput 6 → 7; Tabs 9 → 10; behaviour 274 → 276; logic stays
 223.
 
 ## 5. Docs, inventory, ledgers
@@ -112,7 +113,7 @@ Expected counts: SearchInput 6 → 7; Tabs 8 → 9; behaviour 274 → 276; logic
 - `docs/search-input.mdx`: one line that the field merges the caller's `ref` with
   its own; verification 6 → 7.
 - `docs/tabs.mdx`: one line that a trigger's caller `onBlur` still runs;
-  verification 8 → 9.
+  verification 9 → 10.
 - `COMPONENTS.md`: Tabs 9 native tests; Search inputs 7 native tests.
 - `TODO.md`: tick the sweep under Tier 2 hardening.
 - `.agents/slop/plans/README.md`: index row with final counts.
@@ -140,3 +141,14 @@ nub run test                                          # exit 0
 ```
 
 ## 8. Deviations, recorded during implementation
+
+1. **Tabs already had 9 tests, not 8.** The docs and `COMPONENTS.md` were one
+   behind (the ref test from plan 128 was uncounted). The suite is now 10 and both
+   ledgers say 10.
+2. **Both-direction proof, recorded from the actual runs.**
+   - Reverting `ref={setInput}` to the internal callback made *feeds both the
+     internal and the caller's ref* fail with `expected undefined to be 3`.
+   - Reverting the composed `onBlur` made *runs a caller onBlur when focus leaves
+     a trigger* fail with `expected "vi.fn()" to be called 1 times, but got 0
+     times`.
+   - Restored; SearchInput 7/7, Tabs 10/10, behaviour 276/276.

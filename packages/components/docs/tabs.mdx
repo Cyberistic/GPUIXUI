@@ -81,10 +81,14 @@ with `colors.hover`. Trigger height is `controlHeight(theme, "md")`.
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (8 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (10 tests): click
 switching, the active theme role in both themes, arrow wrap with a disabled tab,
-manual activation waiting for Enter, Home/End, the controlled contract, and a
-panel whose value matches nothing.
+manual activation waiting for Enter, Home/End, the controlled contract, a panel
+whose value matches nothing, a caller `ref`, and a caller `onBlur` composed with
+the focus ring.
+
+A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler
+runs exactly once.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

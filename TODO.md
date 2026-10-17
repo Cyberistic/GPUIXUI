@@ -144,7 +144,7 @@ the `@gpuixui/tokens/react` provider
     - [x] Command menu fuzzy matching and in-group ranking — plan 133
     - [x] List row activation on Enter and click — plan 134
     - [x] Submenu pointer activation and ContextMenu submenus — plan 135
-    - [~] SearchInput ref and TabsTrigger onBlur forwarding — plan 136
+    - [x] SearchInput ref and TabsTrigger onBlur forwarding — plan 136
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
