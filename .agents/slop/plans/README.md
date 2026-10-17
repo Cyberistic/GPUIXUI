@@ -131,8 +131,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–198` is used; `199+` continues
-in the same block.
+playground shell and the feasibility probes. `100–199` is now **full**; the
+next playground plan takes a free block (`300–399`).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -190,6 +190,7 @@ in the same block.
 | [196](./196-preview-card.md) | An interactive hover card: hover intent and a grace close | B→C | 100, 110, 120, 140, 156, 159 | **landed**: `preview-card` — the card enter arrives **before** the trigger leave, the leave has **no coordinates**, and enter/leave are **per element**, so an interactive card needs a delayed close that re-checks an `inside` ref at fire time and a handler on every hoverable child. A click runs and keeps it open, hover does not focus, a re-enter cancels. 18 checks, suite `57 → 58`, exit `0`; removing the fire-time check closes the card on arrival, exit `1` (§7) |
 | [197](./197-live-observation-surface.md) | The renderer is the live observation surface (part 2): highlights and list anchors | F | 100, 110, 140, 171, 185, 189, 190 | **landed**: `AsyncSmokeHost` gains `highlights`/`scrollToItem`/`listScrollTop`; `live-highlights` proves four document washes, rects inside their line, clear/restore and document-wide match numbering after a row-90 jump; `live-table` proves `[0,0,258] → [120,0,258]`. Live `13 → 14`, exit `0`; both directions exit `1` (§11). Records the measured limits: the live tree has **no `style`** and `GpuixRenderer` **no a11y method** |
 | [198](./198-variable-row-heights.md) | Variable row heights and expandable rows in a virtual list | D | 100, 110, 120, 140, 152, 165, 166, 186 | **landed**: `variable-rows` — 20/40/60 px rows stack exactly (y `0/20/60/120/140/180`), eight fill the 300 px viewport, a `60 → 120` expansion moves the rows below by exactly `+60` with the anchor still `[0,0,300]`, collapsing restores, `scrollToItem(30)` and `scrollIntoView(45)` stay exact, and a wheel's in-row offset stays inside its row. Suite `58 → 59`, exit `0`; expected `+40` fails `exit 1` (§7) |
+| [199](./199-live-hover.md) | Hover in a real window: enter/leave and the grace close | F | 100, 110, 120, 140, 156, 159, 189, 196 | planned — `live-preview` is the first live scenario to use `hover`; it repeats the preview-card contract in a window (open, reach the card, click its action, grace close, re-enter cancel) and records whether a real `mouse.move` delivers enter/leave |
 
 Cross-cutting records:
 
