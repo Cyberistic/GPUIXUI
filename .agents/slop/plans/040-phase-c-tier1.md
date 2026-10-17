@@ -4,7 +4,8 @@
 **Depends on:** `030-primitives-package.md`, `031-icons-package.md`, and — for the
 *docs page* and *example* halves of each row only — `apps/docs` (docs-site) and
 `examples/` (this workstream).
-**Status:** `planned`
+**Status:** `implemented` — code, tests, examples and runtime verification are
+done; only the docs pages (docs-site workstream) remain.
 
 The Bar (AGENTS.md §4 / MISSION "Implementation standards"): a component is
 **not** complete until it has **code + a test that can fail + a working example +

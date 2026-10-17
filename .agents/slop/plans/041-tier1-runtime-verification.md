@@ -61,6 +61,14 @@ paths, so this harness is a second implementation of the same adapter idea.
 **Hoist it when `packages/testing` lands** — recorded in `TODO.md` as a
 cross-workstream item, not fixed here.
 
+The same reasoning decides where the **icons** suite lives. One harness, one
+location: `packages/primitives/runtime/`. A second harness in
+`packages/icons` would be copy-paste, and the reverse import (icons →
+primitives) would break the boundary, since `primitives` already depends on
+`icons`. So `packages/primitives/runtime/icons.runtime.test.tsx` renders
+`@gpuixui/icons` and the icons row cites that run. (Measured 2026-10-17: the
+suite passes there, including the painted-tint capture.)
+
 ### 2.3 What counts as evidence
 
 - Every assertion is on something the runtime produced: painted text, element
@@ -79,19 +87,17 @@ packages/primitives/
   vitest.runtime.config.ts          NEW  include: runtime/**/*.runtime.test.tsx
   runtime/
     harness.ts                      NEW  the TestRenderer adapter + preflight
+    fixture.tsx                     NEW  Surface + openWindow, one window per test
     layout.runtime.test.tsx         NEW  Box, Stack, Grid, Separator, Spacer, ScrollArea, Text, Label
     controls.runtime.test.tsx       NEW  Button, ButtonGroup, Checkbox, Switch, RadioGroup
-    fields.runtime.test.tsx         NEW  Input, TextArea, Select, Tooltip
+    fields.runtime.test.tsx         NEW  Input, TextArea, Select, Tooltip, a field's accessible name
     loading.runtime.test.tsx        NEW  Progress, Skeleton, Spinner
-  package.json                      EDIT script test:runtime
+    icons.runtime.test.tsx          NEW  paint, sizing, a11y role, painted tint
+  package.json                      EDIT script test:runtime; devDependency @effect/platform-node
   tsconfig.json                     EDIT include runtime/**/*
   README.md                         EDIT the runtime section (how to run it)
 packages/icons/
-  vitest.runtime.config.ts          NEW
-  runtime/icon.runtime.test.tsx     NEW  paint, sizing, a11y role
-  package.json                      EDIT script test:runtime
-  tsconfig.json                     EDIT include runtime/**/*
-  README.md                         EDIT the runtime section
+  README.md                         EDIT where the on-screen proof lives (§9)
 COMPONENTS.md                       EDIT measured verdicts on the Tier 1 rows
 TODO.md                             EDIT tick the runtime task; add the hoist item
 .agents/slop/plans/README.md        EDIT index this plan
@@ -124,9 +130,8 @@ TODO.md                             EDIT tick the runtime task; add the hoist it
 ```sh
 # from the worktree root
 nub run --filter @gpuixui/primitives test:runtime
-# expect: every runtime suite passes; the file names and counts are pasted into §9
-nub run --filter @gpuixui/icons test:runtime
-# expect: the icon runtime suite passes
+# expect: all five suites pass (layout, controls, fields, loading, icons);
+# the counts are recorded in §9
 nub run --filter @gpuixui/primitives test        # the src suites: unchanged, still green
 nub run check                                    # expect: green (runtime/ is not in the default include)
 ```
@@ -171,9 +176,8 @@ The suite *is* the test. Its rules:
 
 ## 8. Acceptance criteria
 
-- `nub run --filter @gpuixui/primitives test:runtime` and
-  `nub run --filter @gpuixui/icons test:runtime` pass on this host, and the
-  counts are recorded in §9.
+- `nub run --filter @gpuixui/primitives test:runtime` passes on this host, and
+  the counts are recorded in §9. (The icons suite runs there too — §2.2.)
 - `nub run check`, `nub run lint`, `nub run test` stay green (the runtime dirs
   are opt-in).
 - Every Tier 1 `COMPONENTS.md` row names what the runtime run observed, and no
@@ -184,3 +188,66 @@ The suite *is* the test. Its rules:
 
 Filled in by the implementation. `test:runtime` on `darwin-x64` with the
 locally-built `@gpuix/native@0.10.0` binding (plan 140 §4 provenance).
+
+**Run of 2026-10-17** (this worktree, one writer):
+
+```sh
+nub run --filter @gpuixui/primitives test:runtime
+# Test Files  5 passed (5)
+#      Tests  46 passed (46)
+#   Duration  9.38s
+```
+
+| Suite | Tests | What the frame showed |
+| ----- | ----- | --------------------- |
+| `layout.runtime.test.tsx` | 10 | `Box` padding equals the theme's `lg` step; row/column `Stack` gaps equal the theme's step; `Grid` lays equal columns and wraps; `Separator` is one border step across the surface; `Spacer` pushes its sibling to the far edge; a wheel (`deltaY: -100`) leaves `ScrollArea` at `y: -100`; `Text` paints its string at the role's line height (`h1` > `body`); `Label` paints name and description; a compact density changes a `Button`'s height and leaves its background identical. |
+| `controls.runtime.test.tsx` | 15 | A real hit-tested click activates `Button` (exactly once); Enter activates on key **down** and not again on the up; Space activates only on the up; a held key does nothing; `disabled` ignores click and Enter; `loading` ignores both and announces `"Loading"` through `aria-description`; `ButtonGroup` is 0px apart attached and `spacing.sm` apart separated; `Checkbox` toggles on click and on **Space up**, and `aria-valuetext` flips `unchecked → checked → unchecked`; an indeterminate checkbox reads `mixed`; `Switch` toggles on click; `RadioGroup` arrows move the selection, wrap at the end, keep exactly one `tabIndex 0`, and select from a click on the circle. |
+| `fields.runtime.test.tsx` | 11 | `simulateKeystrokes` reaches `onChange` with the accumulated text; Enter reaches `onSubmit`; a controlled field reports each edit; a `TextArea` is sized by rows and accepts a newline; the visible `Label` and the `TextInput`'s own name are two a11y nodes (roles `Label` and `TextInput`); `Select` opens, paints its options, and commits a clicked one; `Tooltip` opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. |
+| `loading.runtime.test.tsx` | 6 | `Progress` announces `"42%"` via `aria-valuetext`, paints role `ProgressIndicator`, fills 100% at 100 and 0 at 0, clamps 140 → `"100%"` / −5 → `"0%"`; the indeterminate segment changes width over time; `Skeleton` opacity samples take both `1` and `0.6`; the `Spinner`'s lit dot (the one painted in `colors.primary`) changes index — the accent colour is also the proof that a theme colour reaches a painted style. |
+| `icons.runtime.test.tsx` | 4 | GPUix paints the raw `<svg source>`: at `lg` the box is exactly 20×20 and at `xl` exactly 24×24; a decorative icon is absent from the a11y tree, a labelled one is an `Image` node named `Done`; two captures of the same red icon are **byte-identical**, while the blue capture differs — so `style.color` really tints the painted mark. |
+
+### What the run changed in the implementation
+
+- **One window per test, never per file.** Measured: a re-render replaces the
+  React tree but GPUI keeps the native `<input>`'s text, so two editing tests
+  passed against the previous test's buffer. `fixture.tsx` owns `openWindow()`
+  and every test opens its own window.
+- **`boundsOf` walks to the nearest ancestor with bounds.** A `<svg>` (and an
+  overlay layer) occupies space but reports `null` from `getElementBounds`, so a
+  click aimed at the icon's own id hit nothing.
+- **A `Label` does not make a field's name.** The visible name is an a11y
+  `Label` node; the control needs its own `label` prop to become
+  `TextInput` + name. This is the end-to-end form of `labelledBy`.
+
+### Two-direction proof (§5)
+
+Removed `props.onActivate?.()` from `Button`'s `onClick` handler:
+
+```sh
+nubx vitest run --config vitest.runtime.config.ts runtime/controls.runtime.test.tsx
+# FAIL  runtime/controls.runtime.test.tsx > activates a Button on a real click
+#       Tests  1 failed | 14 passed (15)
+```
+
+Restored it:
+
+```sh
+nubx vitest run --config vitest.runtime.config.ts runtime/controls.runtime.test.tsx
+#       Tests  15 passed (15)
+```
+
+So the click assertion fails with the runtime's own observation (the handler
+never ran) and passes only when the component is correct.
+
+### What this run does **not** prove
+
+- The binding is the **locally-built** 0.10.0 artifact from plan 140, not the
+  published binary (no `darwin-x64` release exists). The published-binary
+  confirmation is the playground workstream's CI task.
+- `test:runtime` is deliberately **outside** `nub run test`/`nub run check`, so
+  those gates still pass on a host with no binding — and a green gate says
+  nothing about native behaviour here.
+- The focus-ring distinction (`focusVisible`) is still unobservable: the runtime
+  has no such state, so a mouse-opened and a keyboard-opened ring look the same.
+- Scrollbar tint, rotation and colour interpolation remain impossible in 0.10.0;
+  the alternatives measured above are the honest ones.

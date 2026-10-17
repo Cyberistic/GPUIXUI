@@ -92,9 +92,28 @@ function (`renderButton`, `renderCheckbox`, …) instead. The glue in between
 (which resolved state the wrapper hands the renderer) is therefore held by the
 type checker and by the native runtime, not by these suites.
 
-**Not yet verified:** anything that needs the runtime to paint or dispatch —
-layout, hit-testing, focus order, the scroll offset, the actual ARIA tree.
-GPUix publishes no `darwin-x64` binary and this environment has no GUI session
-(`.agents/slop/plans/020-gpuix-runtime-capability.md` §3), so no component here
-claims a verified interaction. That debt and the command that would discharge it
-are tracked in `TODO.md`; `apps/playground` (playground workstream) owns it.
+**Verified in the real runtime** (`nub run --filter @gpuixui/primitives test:runtime`):
+five suites in `runtime/` mount the components in the GPUix 0.10.0
+`TestRenderer` and assert only on what the frame produced — painted text,
+bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
+offset, PNG captures. Measured 2026-10-17: **5 files, 46 tests, all passing**.
+`runtime/` is deliberately outside `nub run test`, so the default gate still
+runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
+the binding is absent rather than skipping.
+
+What it observed, per component, is in `COMPONENTS.md`; the measured details and
+the two-direction proof are in
+`.agents/slop/plans/041-tier1-runtime-verification.md` §9.
+
+**Still unproven, on purpose:**
+
+- the binding is the **locally-built** `darwin-x64` artifact (plan 140), not a
+  published binary — no `darwin-x64` release exists;
+- `focusVisible` cannot be observed: the runtime has no such state, so a
+  mouse-opened and a keyboard-opened focus ring look the same;
+- scrollbar tint, rotation and colour interpolation are absent from 0.10.0, so
+  the alternatives listed above are the honest ones, not a placeholder.
+
+**What the element-tree suites cannot reach and the runtime now covers:** the
+glue between a component's hook holder and its renderer (which resolved state is
+handed over) is proven by the runtime suites, not by the `src/**` ones.

@@ -69,8 +69,17 @@ See `LICENSES/` for the attribution record.
 The registry, sizing and `Icon`'s accessibility/props contract are covered by
 executable tests (`nub run --filter @gpuixui/icons test`).
 
-**Not yet verified:** that GPUix paints a given markup, that the tint reaches
-`stroke="#000"`, and that `style.width`/`height` scale the 24x24 grid. Those
-need the native runtime, which cannot run in this environment — see
-`.agents/slop/plans/020-gpuix-runtime-capability.md` §3. They are tasks for
-`packages/testing` / `apps/playground`.
+**Verified in the real GPUix runtime** by
+`packages/primitives/runtime/icons.runtime.test.tsx`, which runs with
+`nub run --filter @gpuixui/primitives test:runtime` (the harness lives with the
+package that consumes icons — see plan 041 §2.2). Measured 2026-10-17:
+
+- the raw `<svg source>` markup is painted: at `lg` the box is 20×20, at `xl`
+  24×24;
+- a decorative icon is absent from the accessibility tree, and a labelled one is
+  an `Image` node carrying its name;
+- `style.color` tints the painted mark: two captures of the same red icon are
+  byte-identical while the blue capture differs.
+
+The binding behind that run is the locally-built `darwin-x64` artifact from plan
+140, not a published binary (none exists for Intel macOS).

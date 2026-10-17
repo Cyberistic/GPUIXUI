@@ -29,7 +29,7 @@ is the authority on order, not the file name.
 | [030](030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | **implemented** — all 19 Tier 1 components + `core/` + element-tree suites; docs pages and `examples/basic-app` pending; read §9 (the §2.2/§3 file lists are superseded by the shipped tree) |
 | [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | **done** (45 icons, 18 tests proven in both directions; on-screen paint unverified — 020 §3) |
 | [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | **in progress** — code + tests + inventory done; example, docs pages and runtime verification outstanding |
-| [041](041-tier1-runtime-verification.md) | Tier 1 in the real GPUix runtime (primitives workstream) | C | 030, 031, 040, **140** | **implemented** — `test:runtime` suites in `packages/primitives` + `packages/icons`; read §9 for what was observed |
+| [041](041-tier1-runtime-verification.md) | Tier 1 in the real GPUix runtime (primitives workstream) | C | 030, 031, 040, **140** | **done** — 46 `test:runtime` tests in `packages/primitives/runtime/` (icons included there, §2.2); measured results and the two-direction proof in §9 |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |

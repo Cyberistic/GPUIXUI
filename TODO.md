@@ -66,11 +66,17 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       (`src/components/testing/element.ts`; render is impossible here, so a test
       asserts on the tree the runtime would receive)
 `[x]` `packages/primitives`: package README (theme port, density, component
-      list, and the honest runtime-verification gap)
+      list, and the runtime-verification status)
+`[x]` `packages/primitives`: Tier 1 runtime suites in `runtime/` — 46 tests
+      against the real GPUix 0.10.0 `TestRenderer` (layout, controls, fields,
+      loading, icons), with the two-direction proof; results in plan 041 §9
 `[x]` `examples/basic-app`: compose the Tier 1 set into one settings-form workflow
-      (typed + `check-types` green; **never run** — needs the GPUix binding and a
-      desktop session, recorded below)
+      (typed + `check-types` green; the app itself is **never run** — it needs a
+      desktop session, while the primitives it composes are runtime-verified)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
+`[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
+      into the shared smoke framework once the package lands — plan 041 §2.2
+      records why it is duplicated for now
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
@@ -88,6 +94,9 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       sessions in `agent_alive`, and land `scripts/check-single-writer.sh` as the
       regression guard. Full evidence and the fix:
       `.agents/slop/plans/022-swarm-single-writer.md`.
+`[ ]` **root**: `PLAN.md` D7 still says "GPUix cannot run in this
+      environment"; plan 140's locally-built binding disproved it and plan 041
+      used it. D7 needs a correction row so the next reader is not misled.
 `[ ]` **tokens workstream**: `packages/tokens` must export light and dark theme
       values satisfying the `PrimitiveTheme` port in
       `.agents/slop/plans/030-primitives-package.md` §2.2 (colours, space,
@@ -111,8 +120,8 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[~]` `[███░░░░░░░]` 1/3
 
 `[~]` Tier 1 foundational components (code + test + example + docs + inventory):
-      all 19 components have code, a `core/` behaviour module or element-tree
-      suite, and an inventory row; **examples and docs pages are still pending**
+      all 19 components have code, tests, a runtime-verified interaction and an
+      inventory row; **docs pages are still pending** (docs-site workstream)
 `[ ]` Tier 2 composition/feedback components (same bar)
 `[ ]` Verify every component in both themes
 

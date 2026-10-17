@@ -17,11 +17,13 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Input } from "../src/components/Input.js";
+import { Label } from "../src/components/Label.js";
 import { Select } from "../src/components/Select.js";
+import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Tooltip } from "../src/components/Tooltip.js";
-import type { Bounds, Runtime } from "./harness.js";
+import { a11yNode, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
@@ -50,6 +52,26 @@ const lastValue = (values: ReadonlyArray<string>): string =>
   Option.getOrElse(Arr.last(values), () =>
     expect.fail("the field reported no edit at all"),
   );
+
+it("announces a field's own name beside its visible Label", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Label>Project name</Label>
+        <Input testId="field" label="Project name" />
+      </Stack>
+    </Surface>,
+  );
+  // The visible name and the control's name are two nodes with different
+  // roles; `aria-labelledby` does not exist, so the control carries its own
+  // name (plan 020 §1.4). This is the end-to-end form of `labelledBy`.
+  const dump = runtime.a11y();
+  expect(Option.isSome(a11yNode(dump, { role: "Label" }))).toBe(true);
+  expect(
+    Option.isSome(a11yNode(dump, { role: "TextInput", label: "Project name" })),
+  ).toBe(true);
+});
 
 it("edits an Input through the runtime's own text handling", async () => {
   const runtime = await openWindow();

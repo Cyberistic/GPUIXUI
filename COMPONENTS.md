@@ -14,26 +14,31 @@ and the strongest honest alternative.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Text / typography | wip | yes | `Text` resolves a semantic role (`display`…`caption`, `code`, `codeBlock`) to size/weight/family/tone; `textStyle` in `core/style.ts`, covered by `style.test.ts`. Docs page + example pending (docs-site / `examples/basic-app`). |
-| Icons | wip | partial | `packages/icons`: 45 icons as 24x24 markup for `<svg source>`, size scale, a11y rule (decorative ⇒ `role="presentation"`), 18 tests proven in both directions. **Unverified on screen:** that GPUix paints the markup, tints `stroke="#000"` from `style.color`, and scales it from `style.width`. Needs the native runtime — plan 020 §3. |
-| Separators | wip | yes | `Separator` is one border on `theme.colors.border`, with an optional inset step and a label slot; `ruleStyle` test. |
-| Spacers | wip | yes | `Spacer` either fills (`flexGrow`) or takes a fixed spacing step; `layout.test.ts`. |
-| Stack / layout primitives | wip | yes | `Stack` (direction/gap/align/justify/wrap/grow) and `Grid` — the runtime's grid is **numeric only** (`columns`, `rowHeight`); there is no auto-flow and no named areas. `stackStyle`/`gridStyle` tests. |
-| Boxes / containers | wip | yes | `Box` carries surface/tone/padding/radius/border/elevation variants and is the only place a caller's raw `style` merges; `surfaceStyle` test. |
-| Scrollable containers | wip | partial | `ScrollArea` sets `overflowX`/`overflowY` only. **No `scrollbarColor`, no `scrollbarWidth`, no fade mask** in 0.10.0, so the thumb is platform-themed and cannot be tinted; `onScroll` exists but there is no `onScrollChange` to observe a change in one place. |
-| Buttons | wip | ours | `@gpuix/react` publishes **no `./button`**, so the keyboard contract is this package's: Enter on key **down**, Space on key **up**, a held key ignored, `defaultPrevented` unobservable. `loading` stays focusable but refuses to activate. `Button.test.tsx` + `keyboard.test.ts`. |
-| Button groups | wip | yes | `attached` (shared radius, single border) or `separated`; `role="group"`, variant and size forwarded to each child. |
-| Labels | wip | partial | There is **no `aria-labelledby`** in the runtime, so `Label` is visible text only and `labelledBy(name)` builds the control's own `aria-label`; the name is written once and passed to both. |
-| Text inputs | wip | yes | The native `<input>` holds its own text and reports edits through `onChange`'s `event.value`; controlled/uncontrolled is `core/state.ts`'s decision. Enter arrives through `onSubmit`. `fields.test.tsx` + `state.test.ts`. |
-| Text areas | wip | yes | Native `<textarea>`; `minRows`/`maxRows` are the runtime's own height controls, so a textarea's height is rows rather than the control height. |
-| Checkboxes | wip | partial | **No `aria-checked`** — the state is reported through `aria-valuetext` (`checked`/`unchecked`/`mixed`), which is the supported way to make it legible. |
-| Radio groups | wip | partial | Options are **data**, not compound children, because the group owns the roving index and the arrow contract over them (a deviation from shadcn's shape, recorded here). Arrows move the selection and wrap; `initialActiveIndex` tested. |
-| Selects | wip | reuse | A thin themed wrapper over the published `@gpuix/react/select`; the open state, dismissal and arrow navigation are GPUix's, only the paint is ours. |
-| Switches | wip | partial | `role="switch"`; Space/Enter toggle. The thumb is positioned by the track's `justifyContent` because the runtime has no `transform`. |
-| Progress | wip | partial | **No `aria-valuenow`** — the value rides on `aria-valuetext` (`"42%"`, or `"loading"`) and is clamped to 0–100 in `core/style.ts`. |
-| Tooltips | wip | reuse | A thin themed wrapper over the published `@gpuix/react/tooltip`; positioning, delay and dismissal are GPUix's. A mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). |
-| Skeletons | wip | partial | Opacity pulse only: the runtime's `motion` animates width/height/opacity/insets/borderRadius and nothing else, so no shimmer sweep. |
-| Loading indicators | wip | partial | `Spinner` **cannot rotate**, so it advances a discrete lit dot per step on a timer (`core/loading.ts`); `Progress` with no `value` is the alternative. |
+| Text / typography | wip | yes | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Docs page pending (docs-site). |
+| Icons | wip | yes | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. |
+| Separators | wip | yes | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
+| Spacers | wip | yes | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |
+| Stack / layout primitives | wip | yes | **Runtime (041):** row and column gaps equal the theme step. The runtime's grid is **numeric only** (`columns`, `rowHeight`); there is no auto-flow and no named areas. |
+| Boxes / containers | wip | yes | **Runtime (041):** padding equals the theme's step; density moves height and leaves colour alone. The only place a caller's raw `style` merges. |
+| Scrollable containers | wip | partial | **Runtime (041):** a wheel with `deltaY -100` leaves the offset at `y -100`. **No `scrollbarColor`, no `scrollbarWidth`, no fade mask** in 0.10.0, so the thumb is platform-themed and cannot be tinted; `onScroll` exists but there is no `onScrollChange`. |
+| Buttons | wip | ours | **Runtime (041):** a hit-tested click activates once; Enter on key **down**, Space on key **up**, a held key ignored; `disabled` refuses both; `loading` refuses both and announces `Loading`. `@gpuix/react` publishes **no `./button`**, so the keyboard contract is this package's. |
+| Button groups | wip | yes | **Runtime (041):** attached children are 0px apart, separated ones the theme's `sm` gap. `role="group"`; variant and size forwarded. |
+| Labels | wip | partial | **Runtime (041):** the visible name is an a11y `Label`; the control's own `label` is the `TextInput`'s name. There is **no `aria-labelledby`**, so `labelledBy(name)` writes the name once for both. |
+| Text inputs | wip | yes | **Runtime (041):** runtime keystrokes reach `onChange` with the accumulated text; Enter reaches `onSubmit`; a controlled field reports each edit. The native `<input>` holds its text; `core/state.ts` decides controlled/uncontrolled. |
+| Text areas | wip | yes | **Runtime (041):** height follows `rows` and a newline is accepted. `minRows`/`maxRows` are the runtime's own height controls. |
+| Checkboxes | wip | partial | **Runtime (041):** click and Space-up toggle, and `aria-valuetext` flips `unchecked → checked`; indeterminate reads `mixed`. **No `aria-checked`.** |
+| Radio groups | wip | partial | **Runtime (041):** arrows move the selection and wrap; exactly one item is the tab stop; a click on the circle selects. Options are **data**, not compound children (D13). |
+| Selects | wip | reuse | **Runtime (041):** opens, paints its options, commits a clicked option. A thin themed wrapper over `@gpuix/react/select`; open state and dismissal are GPUix's. |
+| Switches | wip | partial | **Runtime (041):** a click toggles and the role is reported. **No `aria-checked`**; Space/Enter toggle. The thumb moves by the track's `justifyContent` because the runtime has no `transform`. |
+| Progress | wip | partial | **Runtime (041):** `aria-valuetext` is `"42%"`, role is `ProgressIndicator`, the fill tracks the value and clamps outside 0–100. **No `aria-valuenow`.** |
+| Tooltips | wip | reuse | **Runtime (041):** opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. A thin wrapper over `@gpuix/react/tooltip`; a mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). |
+| Skeletons | wip | partial | **Runtime (041):** opacity samples take both `1` and `0.6`. Opacity pulse only: the runtime's `motion` animates width/height/opacity/insets/borderRadius and nothing else, so no shimmer sweep. |
+| Loading indicators | wip | partial | **Runtime (041):** the lit dot changes index (the accent-coloured dot proves a theme colour reaches the paint). `Spinner` **cannot rotate**; `Progress` with no `value` is the alternative. |
+
+`Runtime (041)` = observed by
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (46 tests,
+locally-built GPUix 0.10.0 binding). Details: plan 041 §9. **No row is `done`**
+until its docs page exists and the published-binary run lands.
 
 ## Tier 2 — composition and feedback
 

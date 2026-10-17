@@ -27,6 +27,7 @@
     "react": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-node": "catalog:",
     "@gpuix/react": "catalog:",
     "@gpuixui/config": "workspace:*",
     "@types/react": "catalog:",
