@@ -122,6 +122,11 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onSome: (point) => renderer.nativeSimulateClick(point.x, point.y),
     }),
   clickWindow: (x, y) => renderer.nativeSimulateClick(x, y),
+  hover: (testId) =>
+    Option.match(center(renderer, testId), {
+      onNone: () => {},
+      onSome: (point) => renderer.nativeSimulateMouseMove(point.x, point.y),
+    }),
   key: (keystroke) => renderer.simulateKeystrokes(keystroke),
   // `focusNext`/`focusPrevious` are raw native calls: unlike the `simulate*`
   // helpers they do not drain and dispatch the resulting focus events, so the

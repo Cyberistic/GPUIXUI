@@ -25,6 +25,9 @@ export const CAPABILITIES = [
   "overlay",
   "modal",
   "floating",
+  "select",
+  "combobox",
+  "tooltip",
   "scroll",
   "panel",
   "motion",
@@ -175,6 +178,8 @@ export interface SmokeHost {
   readonly focused: () => string | null;
   readonly click: (testId: string) => void;
   readonly clickWindow: (x: number, y: number) => void;
+  /** Moves the pointer onto `testId`, delivering native enter/leave. */
+  readonly hover: (testId: string) => void;
   readonly key: (keystroke: string) => void;
   /** Native focus traversal (`window.focus_next`). */
   readonly focusNext: () => void;

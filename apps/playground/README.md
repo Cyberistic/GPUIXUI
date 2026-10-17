@@ -157,15 +157,34 @@ renders. Three facts, two of them defects to design around:
 | `align="center"` | **not centred**: it ends the panel at the anchor's centre line, short by half the panel's own size on both axes (`anchored.rs` wraps the layer in a full-size zero box and also positions it from the anchor point). `start`/`end` are exact; a component must compensate with a known-size `alignOffset` or avoid `center` |
 | window edge | `fit="snap"` clamps the panel to `window − snapMargin`; it **does not flip**. A bottom-side menu near the bottom ends up over its trigger, so the component must choose `side="top"` itself |
 
+## Native popups (plan `159`)
+
+`select-choose`, `combobox-filter` and `tooltip-open` are the runtime verdicts
+for the three interactive components GPUix publishes and the library composes.
+They add the `hover` host call (`nativeSimulateMouseMove`), which no earlier
+scenario exercised.
+
+| Scenario | What it asserts |
+| -------- | --------------- |
+| `select-choose` | a trigger click opens and paints the items; an item click commits, closes and **returns native focus to the trigger**; Down opens, Down on the auto-focused content moves, Enter commits the next item; Escape closes; an outside press dismisses and returns focus |
+| `combobox-filter` | focus/click opens; typing filters (the non-matching row unmounts); Enter commits the auto-highlighted row; the empty state mounts; Escape closes |
+| `tooltip-open` | a real native mouse enter opens the tooltip and paints its content; leaving closes it after the component's 80 ms timer; a click closes it |
+
+Two traps worth knowing: `ComboboxList` filters **only** when its child is a
+function — static children render every item regardless of the query. And a
+Tooltip trigger closes on click (mousedown → close, click → close), so focus
+that arrives from a click does not leave it open; hover is the supported path.
+
 ## Evidence on this host
 
-The suite is **20/20 green** here (`exit 0`):
+The suite is **25/25 green** here (`exit 0`):
 
 ```
-20/20 scenarios passed · capabilities: layout=verified text=verified
+25/25 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
-floating=verified scroll=verified panel=verified virtual-list=verified
-table=verified tree=verified log=verified theme=verified workspace=verified
+floating=verified select=verified combobox=verified tooltip=verified
+scroll=verified panel=verified virtual-list=verified table=verified
+tree=verified log=verified theme=verified workspace=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -177,6 +196,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
+| popups | Select and Combobox open, commit and close under synthetic input, including native keys after `autoFocus`; Select returns focus to its trigger on every close. `nativeSimulateMouseMove` delivers enter/leave, so a hover tooltip is measurable; its close is a JS timer, not the GPUI clock |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -209,6 +229,7 @@ src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
 src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
 src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
+src/scenarios/popups.tsx    Select, Combobox and Tooltip in the runtime
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -241,10 +262,10 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The eleven core capabilities (including the token gallery, the modal contract
-  and floating placement), the Tier 3/4 probes
-  and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
-  (20/20), with a written report and screenshots.
+- The fourteen core capabilities (including the token gallery, the modal
+  contract, floating placement and the three published popups), the Tier 3/4
+  probes and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
+  (25/25), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
@@ -254,7 +275,10 @@ narrower. Each deviation is deliberate and measured:
   return fails with `expected "modal-trigger", got "none"` — both exit `1`
   (plan `155` §8). Hard-coding `side="bottom"` in the floating layer fails
   `side=right sits one gap right of the anchor: expected 326 ± 1, got 200`
-  (plan `156` §8).
+  (plan `156` §8). A no-op `Select.onValueChange` fails with
+  `expected … "open=false value=Beta", got "open=false value=none"`,
+  `autoHighlight={false}` fails the Combobox commit, and replacing the tooltip
+  hover with a click fails the open check — all exit `1` (plan `159` §8).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

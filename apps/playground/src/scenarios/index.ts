@@ -18,6 +18,7 @@ import { inputScenario } from "./input.js";
 import { focusScenario } from "./focus.js";
 import { rovingFocusScenario } from "./roving-focus.js";
 import { overlayScenario } from "./overlay.js";
+import { comboboxScenario, selectScenario, tooltipScenario } from "./popups.js";
 import { scrollScenario } from "./scroll.js";
 import { panelScenario } from "./panel.js";
 import { motionScenario } from "./motion.js";
@@ -45,6 +46,9 @@ export const CORE_CAPABILITIES = [
   "overlay",
   "modal",
   "floating",
+  "select",
+  "combobox",
+  "tooltip",
   "scroll",
   "panel",
   "virtual-list",
@@ -70,6 +74,9 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   overlayScenario,
   modalScenario,
   floatingScenario,
+  selectScenario,
+  comboboxScenario,
+  tooltipScenario,
   scrollScenario,
   panelScenario,
   motionScenario,

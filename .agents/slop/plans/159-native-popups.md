@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §8) |
 | Phase | B (feasibility) → feeds C (Tier 1–2 selects/comboboxes/tooltips) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140` |
@@ -127,8 +127,6 @@ readouts so a scenario can assert on it:
    `host.advance(0)` → readout `open=false`. The component's close is an 80 ms
    **JS** timer, which the GPUI dispatcher clock does not move; the sleep is the
    honest way to let it fire.
-4. `hover("tooltip-trigger")` again → `open=true`, then `advance(100)` on the
-   **motion** path is not used here: closing is asserted by the leave in step 3.
 
 If step 2 never opens, STOP: a hover-only tooltip cannot be verified through
 `nativeSimulateMouseMove`; record it (focus-open is still measured by the
@@ -239,9 +237,39 @@ expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
 );
 ```
 
-## 8. Measured facts (fill on landing)
+## 8. Measured facts
 
-- `select`: _to be measured._
-- `combobox`: _to be measured._
-- `tooltip`: _to be measured._
-- `hover`: _to be measured_ (`nativeSimulateMouseMove` enter/leave delivery).
+**Suite: 25/25 green on this host, exit `0`**, capabilities
+`select=verified combobox=verified tooltip=verified` (the 22 prior scenarios
+unchanged). Two-direction proof: each scenario below was broken and re-run.
+
+- **select** — every step in §3.2 holds: a trigger click mounts the content and
+  paints `Alpha`/`Beta`/`Gamma`; an item click commits `value=Beta`, unmounts
+  the content and **returns native focus to `select-trigger`**; Down on the
+  focused trigger opens; Down on the auto-focused content moves the active item;
+  Enter commits `Gamma`; Escape closes; a click at `(1200, 700)` dismisses and
+  returns focus. Negative direction: making `onValueChange` a no-op produced
+  `open=false value=none` and **exit `1`**.
+- **combobox** — focus/click opens, typing `be` filters (the `Alpha` row
+  unmounts), Enter commits the auto-highlighted `Beta`, `autoHighlight="always"`
+  is what makes Enter commit under a fresh query, two `z` keystrokes paint the
+  empty state, Escape closes. Negative direction: `autoHighlight={false}`
+  produced `open=true value=none` and **exit `1`**.
+- **combobox API trap** — `ComboboxList` filters **only** when its child is a
+  function. Static children (`{items.map(...)}`) render every item regardless of
+  the query; the first run failed exactly this way (`the non-matching item
+  unmounted: expected true, got false`). The scenario now uses
+  `{(item) => <ComboboxItem …/>}`.
+- **tooltip** — `nativeSimulateMouseMove` delivers `onMouseEnter`/
+  `onMouseLeave`: hovering the trigger (after an establishing move to a
+  sibling) opens the tooltip and paints `tip text`; moving away closes it after
+  the component's 80 ms JS timer, which needs `Effect.sleep("150 millis")` —
+  `host.advance` moves the GPUI dispatcher clock, not a JS timer. A click on the
+  trigger closes it (mousedown → close, click → close), so focus reached **via a
+  click** does not leave it open; hover is the supported path. Negative
+  direction: replacing the hover with a click produced `open=false` and **exit
+  `1`**.
+- **hover** — added to `SmokeHost` as
+  `renderer.nativeSimulateMouseMove(centre)`; it is the missing sibling of
+  `click`/`wheel`/`drag` and is end-to-end (hit test, enter/leave dispatch,
+  flush). `nullHost` carries the inert implementation.

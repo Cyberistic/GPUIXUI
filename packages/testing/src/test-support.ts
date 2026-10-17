@@ -26,6 +26,7 @@ export const nullHost: SmokeHost = {
   focused: () => null,
   click: () => {},
   clickWindow: () => {},
+  hover: () => {},
   key: () => {},
   focusNext: () => {},
   focusPrevious: () => {},

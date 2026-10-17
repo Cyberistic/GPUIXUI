@@ -32,8 +32,8 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 ## Adapting a host
 
 A consumer adapts its renderer to `Smoke.SmokeHost` — an input surface (click,
-key, wheel, drag) and an inspection surface (text, bounds, scroll offset, the
-runtime's own painted style, screenshot). The adapter is the only place a GPUix
+hover, key, wheel, drag) and an inspection surface (text, bounds, scroll offset,
+the runtime's own painted style, screenshot). The adapter is the only place a GPUix
 type appears; scenarios see plain values.
 
 `paintedStyle(testId)` is the **runtime's own style report**, decoded into a

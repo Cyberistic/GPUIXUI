@@ -36,6 +36,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | overlay | `overlay-dialog` | verified |
 | modal | `modal-focus-trap` | verified |
 | floating | `floating-placement` | verified |
+| select | `select-choose` | verified |
+| combobox | `combobox-filter` | verified |
+| tooltip | `tooltip-open` | verified |
 | scroll | `scroll-container` | verified |
 | panel | `panel-resize` | verified |
 | virtual-list | `virtual-list-window` | verified |
@@ -46,7 +49,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 | motion | `motion-collapse` | verified |
 
-The suite is **22/22 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **25/25 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -88,6 +91,27 @@ focused row: `focused()` still reports it, the next arrow key still moves it,
 and the focused row stays in `getPaintedText()` outside the window's run. A
 virtualized grid must therefore treat the painted set as "the window **plus**
 the focused row", not as exactly the visible rows.
+
+`select-choose`, `combobox-filter` and `tooltip-open` are the runtime verdicts
+for the three interactive components GPUix ships, which the library composes
+instead of reimplementing. **Select** opens on a trigger click, paints its items,
+commits on an item click, closes and returns native focus to the trigger; the
+trigger's own keys work through native delivery (Down opens, Down on the
+auto-focused content moves, Enter commits the next item), Escape closes, and an
+outside press dismisses and returns focus. **Combobox** opens on input
+focus/click, filters as the input is edited (the non-matching row unmounts),
+commits the auto-highlighted row on Enter, paints its empty state when nothing
+matches, and closes on Escape. **Tooltip** opens on a real native mouse enter and
+closes on leave through the component's 80 ms timer — the GPUI dispatcher clock
+does not move that timer, so a test must wait on a real clock. The probe also
+adds the `hover` host call (`nativeSimulateMouseMove`), which delivers
+`onMouseEnter`/`onMouseLeave`; no scenario used mouse movement before.
+
+Two API traps this measured, worth knowing in the library: `ComboboxList`
+filters **only** when its child is a function (`(item) => ...`); static children
+render every item regardless of the query. And a click closes a Tooltip trigger
+(mousedown → onMouseDown closes, then the click), so focus that arrives *from a
+click* does not leave the tooltip open — hover is the supported open path.
 
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
@@ -131,9 +155,9 @@ is ahead of the published release — the divergence is called out below.
 | Separators, Spacers, Stack / layout primitives, Boxes / containers | `div` + flexbox / grid | **verified** |
 | Scrollable containers | `overflow: "scroll"` | **verified** |
 | Text inputs / Text areas | `<input>`, `<textarea>` | **verified** |
-| Selects | `Select` + parts | **verified** |
-| Comboboxes | `Combobox` + parts | **verified** |
-| Tooltips | `Tooltip` + parts | **verified** |
+| Selects | `Select` + parts | **verified** (runtime: `select-choose`) |
+| Comboboxes | `Combobox` + parts | **verified** (runtime: `combobox-filter`) |
+| Tooltips | `Tooltip` + parts | **verified** (runtime: `tooltip-open`) |
 | Virtualized lists | `<virtual-list>` | **verified** |
 | Syntax highlighting | `<code>` (bundled languages) | **verified** |
 | Diff viewer | `<diff>` (unified) | **verified** |
@@ -209,10 +233,10 @@ carries an evidenced limitation. The capability evidence lives in
 | Text areas | todo | yes | `<textarea>` host element. API-shape work, not implementation. |
 | Checkboxes | todo | ? | No checkbox host element; `aria-checked` is unsupported. Variant merged here: Checkbox Group (base-gpui `CheckboxGroup`). |
 | Radio groups | todo | ? | No radio host element; roving-focus keyboard contract is ours. |
-| Selects | todo | yes | `Select` + parts published. API-shape work, not implementation. |
+| Selects | todo | yes | `Select` + parts published and measured natively (`select-choose`): open, choose, keyboard, Escape and outside dismissal all work; focus returns to the trigger. API-shape work, not implementation. |
 | Switches | todo | ? | Distinct from Toggle (on/off state vs momentary pressed mode). |
 | Progress | todo | ? | `div` + width/opacity `motion`. |
-| Tooltips | todo | yes | `Tooltip` + parts published. API-shape work, not implementation. Placement facts are the shared `floating` probe: `align="center"` is off by half the panel, `fit=snap` does not flip. |
+| Tooltips | todo | yes | `Tooltip` + parts published and measured natively (`tooltip-open`): opens on mouse enter, closes on leave, content paints; a click closes the trigger. API-shape work, not implementation. Placement facts are the shared `floating` probe: `align="center"` is off by half the panel, `fit=snap` does not flip. |
 | Skeletons | todo | ? | `div` + opacity `motion` (GPUix animates opacity only — verified). |
 | Loading indicators | todo | ? | **No rotation** in `motion` (verified); use an indeterminate sweep (width/left) or a discrete step cycle. |
 | Slider | todo | ? | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
@@ -248,7 +272,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Breadcrumbs | todo | ? | `div` + `<text>`. |
 | Pagination | todo | ? | Button groups + `<text>`. |
 | Search inputs | todo | ? | `<input>` exists; the search UI is ours. `useTextSearch`/`findRanges` search rendered text, not an input. |
-| Comboboxes | todo | yes | `Combobox` + parts published. API-shape work, not implementation. Variant merged here: Autocomplete (base-gpui `AutocompleteRoot`/`AutocompleteValue`) — the free-text variant; see also Search inputs. |
+| Comboboxes | todo | yes | `Combobox` + parts published and measured natively (`combobox-filter`): typing filters, Enter commits the auto-highlighted row, the empty state mounts, Escape closes. `ComboboxList` filters only when its child is a function. API-shape work, not implementation. Variant merged here: Autocomplete (base-gpui `AutocompleteRoot`/`AutocompleteValue`) — the free-text variant; see also Search inputs. |
 | Date / time pickers | todo | ? | `div` + `<text>` + keyboard grid; no date host element. |
 | Fieldset | todo | ? | Form grouping (`FieldsetRoot`/`Legend` in base-gpui). `div` + `<text>`. |
 | Form | todo | ? | Validation orchestration and submit lifecycle (base-gpui `Form`). No host element; Effect-based validation lives in the package, not the renderer. |
