@@ -89,6 +89,32 @@ done
   clobbered agent. That is the regression test this fix must land with
   (AGENTS.md §3).
 
+### The §5 check is necessary but not sufficient (measured 08:54 the same day)
+
+The *pair* rotates, so the count cannot fall to `1` by agent discipline:
+
+| Time | Live sessions holding `workspaces/components` |
+| ---- | -------------------------------------------- |
+| 08:47 | `ses_eb7f0966…` (07:12, stale turn) + `ses_eb7a7c3e…` (08:31, that turn) |
+| 08:52 | unchanged — the check printed `2` |
+| 08:54 | `ses_eb7f0966…` (**still** live) + `ses_eb795d97…` (a **new** turn) |
+
+`ses_eb7a7c3e…` went idle and the runner immediately started `ses_eb795d97…`. The
+stale turn is the constant and the second session is the rotating one, so the
+count stays `2` for as long as the stale turn lives however disciplined the
+rotating turn is. **The resume condition therefore cannot be satisfied by agent
+behaviour**: it needs the coordinator's fix (plan 022 §5 — pin `--session` so a
+second run joins the first, and teach `agent_alive` to count live server-side
+sessions), or the explicit ending of the stale turn.
+
+Consequences for this workstream:
+
+1. Component code stays paused. The last clean state is committed and pushed
+   (`ab000ab`, `22f706c`), the gates are green, and nothing is left uncommitted,
+   so whichever session resumes later starts from `HEAD`.
+2. A doc-only edit is not `packages/components` code and does not reintroduce the
+   collision, which is why this measurement lands in the plan and in `TODO.md`.
+
 ## 6. STOP conditions
 
 Plan 022 §7 applies. Additional:

@@ -175,7 +175,11 @@ one-writer invariant; the one clean non-overlapping commit (`22f706c`, the
 status-tone palette) is preserved. No session was deleted — that is the
 coordinator's call and would discard the stale session's in-flight work (plan
 022 §4/§7). Resume `packages/components` only when the plan 118 §5 check prints
-`1` twice.
+`1` twice. **Re-measured 08:54:** the pair rotates — `ses_eb7a7c3e…` went idle and
+`ses_eb795d97…` took its place while the stale turn stayed live — so the count
+stays `2` and the condition **cannot** be met by agent discipline; it needs plan
+022 §5's pinned-session fix (coordinator, `scripts/`). Component code stays
+paused on a green, pushed `HEAD`; plan 118 carries the measurement.
 
 ## Interlocks (cross-workstream dependencies)
 
