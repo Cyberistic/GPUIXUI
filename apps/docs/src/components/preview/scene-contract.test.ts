@@ -63,14 +63,17 @@ const pagesDirectory = new URL(
   import.meta.url,
 );
 
-/** Whether a component page renders a tier-A illustration. */
-const hasIllustration = (slug: string): boolean => {
+/** The page source for a slug, or an empty string when no page exists yet. */
+const pageBody = (slug: string): string => {
   const file = new URL(`${slug}.mdx`, pagesDirectory);
-  return (
-    existsSync(fileURLToPath(file)) &&
-    readFileSync(fileURLToPath(file), "utf8").includes("<ComponentPreview")
-  );
+  return existsSync(fileURLToPath(file))
+    ? readFileSync(fileURLToPath(file), "utf8")
+    : "";
 };
+
+/** Whether a component page renders a tier-A illustration. */
+const hasIllustration = (slug: string): boolean =>
+  pageBody(slug).includes("<ComponentPreview");
 
 describe("live scene table", () => {
   it("has a unique key for every scene", () => {
@@ -122,6 +125,16 @@ describe("interaction records", () => {
         : [],
     );
     expect(gaps.toSorted()).toEqual([...noLiveScene.keys()].toSorted());
+  });
+
+  it("never tell a reader a page with a scene cannot render it live", () => {
+    const denied = components.flatMap((entry) =>
+      entry.liveScene !== null &&
+      /cannot render (?:it|this component) live/i.test(pageBody(entry.slug))
+        ? [entry.slug]
+        : [],
+    );
+    expect(denied).toEqual([]);
   });
 });
 

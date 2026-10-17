@@ -10,11 +10,14 @@ Electron.
 
 ## What this site is
 
-This site is a **browser application**. It documents and showcases the library;
-it does not render it. Where a component cannot be shown running in a browser,
-the page says so and names the native suite that drives it rather than
-imitating native behaviour. See [Architecture](/docs/architecture) for how every
-preview is labelled, and `docs/preview-strategy.md` in the repository for the full decision.
+This site is a **browser application**. It documents and showcases the library.
+Where a page has a live scene, it runs the real component code on GPUix's
+published WebAssembly renderer — a real GPUix surface, labelled as the browser
+renderer and not the desktop binary. Every page also carries its native
+evidence (a run, a capture or the suite that drives it), and a static rest state
+may carry a labelled browser approximation. No page presents an imitation as
+native. See [Architecture](/docs/architecture) for how every preview is
+labelled, and `docs/preview-strategy.md` in the repository for the full decision.
 
 ## Where to start
 

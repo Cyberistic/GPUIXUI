@@ -37,6 +37,11 @@ export const PREVIEW_TIERS: ReadonlyArray<{
   readonly detail: string;
 }> = [
   {
+    label: "Live GPUix surface",
+    detail:
+      "the real component code on the GPUix WebAssembly renderer, labelled as the browser renderer",
+  },
+  {
     label: "Native run",
     detail: "a screen in the companion playground, where one exists",
   },
@@ -149,7 +154,8 @@ export function Landing() {
           are the library's own palette, read from{" "}
           <code className="text-fd-foreground">@gpuixui/tokens</code> — the same
           values a component paints in the native runtime. This site is a
-          browser, so it can show the values; it does not render GPUix.
+          browser: it shows the values here, and a page with a live scene runs
+          them on GPUix's WebAssembly renderer.
         </p>
         <div className="flex flex-wrap gap-8">
           {MODES.map((mode) => (
@@ -237,9 +243,9 @@ export function Landing() {
 
       <Section id="previews" title="Every preview is labelled">
         <p className="max-w-2xl text-sm text-fd-muted-foreground">
-          A browser cannot render GPUix, so each component page says exactly
-          what its preview is — and never presents an imitation as the real
-          thing.
+          A component page says exactly what its preview is — a live GPUix
+          WebAssembly surface, native evidence, or a labelled approximation —
+          and never presents an imitation as the real thing.
         </p>
         <ol className="flex flex-col gap-2 text-sm">
           {PREVIEW_TIERS.map((tier, index) => (

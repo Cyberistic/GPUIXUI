@@ -61,8 +61,10 @@ for a runtime check.
 
 ## Native previews
 
-This site does not render GPUix in the browser. A page either shows a real
-capture from the runtime, names the native suite that drives the component,
-labels a browser approximation explicitly, or states that the component is
-unverified. The rules are summarised in [Architecture](/docs/architecture) and
-recorded in full in `docs/preview-strategy.md`.
+The site runs GPUix in the browser only through an isolated, opt-in WebAssembly
+document: a page with a scene shows the real component code there, labelled as
+the browser renderer rather than the desktop window. Every page also carries its
+native evidence — a capture, a playground screen, or the suite and command that
+drives the component — and a static rest state may carry a labelled browser
+approximation. The rules are summarised in [Architecture](/docs/architecture)
+and recorded in full in `docs/preview-strategy.md`.

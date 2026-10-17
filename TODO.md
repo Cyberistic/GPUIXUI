@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–459)
+## Docs site workstream (plans 410–460)
 
-`[~]` `[██████████]` 57/59
+`[~]` `[██████████]` 58/60
 
 `[x]` The registry mirrors the inventory's GPUix-support column (plan 443) — `ours`/`reuse` are real values, the nine flattened records are corrected, a test reads `COMPONENTS.md`, and `done` is backed by its native suite rather than by GPUix writing the primitive
 `[x]` Preview surfaces follow the docs' dark mode (plan 444) — a dark page painted light previews because the surface took `next-themes`' pre-hydration `undefined` and never re-rendered; one tested `previewMode` + `useSyncExternalStore` snapshot fixes it, verified in headless Chrome in both modes
@@ -486,6 +486,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Live scenes for the five pages a real surface can show without a new component API (plan 458) — Icons, Scrollable containers, Skeletons, Loading indicators and Confirmation dialogs; eleven scenes, and `scene-contract.test.ts` fails on a delivered page with neither a live scene nor an illustration unless its reason is listed
 `[x]` Every `liveScene` gap is measured: Tooltip, Combobox and Select hide their open state behind a wrapper with no `open`/`defaultOpen`; Toast races its own dismissal and pulls the Effect runtime into the shared scene bundle (`TODO.md` cross-team row, `docs/preview-strategy.md`)
 `[x]` Architecture page truth (plan 459) — it names all seven packages with real edges, includes the live surface in the preview list, and no longer promises `docs/architecture.md`; `prose-truth.test.ts` reads `packages/*/package.json` and fails on an absent `docs/*.md`
+`[x]` The site stops denying the live surface (plan 460) — the introduction, getting-started, examples, landing page and 19 component pages; a live-scene page may never carry the old denial, and the landing page lists the live tier as its first preview
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` A props type name (`ButtonProps`) reaches its component page from search (plan 442)

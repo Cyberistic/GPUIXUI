@@ -712,7 +712,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       limitations: [
         "The surface clips overflow, so a scroller belongs in CardContent.",
         "No interactive or overlay behaviour: compose controls inside it.",
-        "The docs site cannot render it live; the example and source are real.",
+        "No live scene ships for this component yet; the example and source are real.",
       ],
     },
   ),

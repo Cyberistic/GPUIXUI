@@ -148,7 +148,7 @@ public/screenshots/          real native screenshots (plan 412)
 `/` is `src/components/landing.tsx`, extracted from the route so
 `landing.test.tsx` can render it with `renderToStaticMarkup`. It reads the light
 and dark palettes and the platform families from `@gpuixui/tokens`, the
-documented/tracked counts from the component registry and the five preview tiers
+documented/tracked counts from the component registry and the six preview tiers
 from its own `PREVIEW_TIERS`; no colour or number is typed twice (plan 440). It
 shows **no component image**: the only committed captures are theme-gallery
 developer frames, and a browser-drawn component would be a placeholder presented

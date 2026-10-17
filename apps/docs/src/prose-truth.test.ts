@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { previewsBySlug } from "./components/preview/approximations";
+import { LIVE_SCENES } from "../preview/scenes";
 
 /**
  * Guards the prose pages against the Phase A -> Phase C drift (plan 426).
@@ -219,5 +220,27 @@ describe("prose truth", () => {
       .map((match) => match[0])
       .filter((named) => !existsSync(join(repoRoot, named)));
     expect(missing).toEqual([]);
+  });
+
+  /**
+   * The site ships real GPUix components on the browser renderer (plans
+   * 455–458). Before plan 460 the introduction, getting-started and the landing
+   * page all denied it, while four component pages said the site could not
+   * render a component they showed live. The guard turns red only while a scene
+   * exists, so removing the live surface cannot leave a stale denial rule.
+   */
+  it("does not deny the live surface it ships", () => {
+    const liveSceneCount: number = LIVE_SCENES.length;
+    const denials =
+      liveSceneCount === 0
+        ? []
+        : pages
+            .filter(
+              ({ body }) =>
+                /\bdoes not render (?:it|GPUix)\b/i.test(body) ||
+                /\bcannot be shown running in a browser\b/i.test(body),
+            )
+            .map(({ path }) => path);
+    expect(denials).toEqual([]);
   });
 });

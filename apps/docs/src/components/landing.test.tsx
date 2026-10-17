@@ -124,12 +124,14 @@ describe("landing page", () => {
     });
   });
 
-  it("lists all five preview tiers and points at the rule", () => {
-    expect(PREVIEW_TIERS).toHaveLength(5);
+  it("lists the six preview tiers, live surface first, and points at the rule", () => {
+    expect(PREVIEW_TIERS).toHaveLength(6);
+    expect(PREVIEW_TIERS[0]?.detail).toContain("WebAssembly");
     Arr.forEach(PREVIEW_TIERS, (tier) => {
       expect(html).toContain(tier.label);
       expect(html).toContain(tier.detail);
     });
+    expect(html).not.toContain("cannot render GPUix");
     expect(textOf('href="/docs/architecture"')).toContain("Architecture");
   });
 });
