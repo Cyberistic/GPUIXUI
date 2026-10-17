@@ -18,6 +18,11 @@ const viewSource = readFileSync(
   "utf8",
 );
 
+const mainSource = readFileSync(
+  fileURLToPath(new URL("../../../preview/main.tsx", import.meta.url)),
+  "utf8",
+);
+
 const interactionScenes = new Map([
   ["tabs", "tabs"],
   ["dropdown-menu", "dropdown-menu"],
@@ -65,5 +70,28 @@ describe("interaction records", () => {
         : [`${entry.slug}: ${entry.liveScene}`],
     );
     expect(wrong).toEqual([]);
+  });
+});
+
+describe("scene theme", () => {
+  /**
+   * The bug this guards (measured 2026-10-18): a scene using
+   * `@gpuixui/components` painted its light fallback inside a dark docs page,
+   * because primitives and components read two different theme contexts. The
+   * surface therefore needs **both** providers, and both must receive the
+   * resolved theme, or a dark page shows light Tabs and Popovers again.
+   */
+  it("puts the surface inside both theme providers with the same theme", () => {
+    const tokens = mainSource.indexOf("<TokensThemeProvider theme={theme}>");
+    const primitives = mainSource.indexOf("<ThemeProvider theme={theme}>");
+    const surface = mainSource.indexOf("<LiveSurface");
+    expect(tokens).toBeGreaterThanOrEqual(0);
+    expect(primitives).toBeGreaterThanOrEqual(0);
+    expect(tokens).toBeLessThan(surface);
+    expect(primitives).toBeLessThan(surface);
+    expect(mainSource.indexOf("</TokensThemeProvider>")).toBeGreaterThan(
+      surface,
+    );
+    expect(mainSource.indexOf("</ThemeProvider>")).toBeGreaterThan(surface);
   });
 });

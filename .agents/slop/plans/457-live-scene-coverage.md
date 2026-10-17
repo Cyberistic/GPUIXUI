@@ -49,8 +49,9 @@ Change:
 | ---- | ------ |
 | `apps/docs/preview/scenes.ts` | add `popover` and `command-menu` to `LIVE_SCENES`; add their `SCENE_TEXT` entries |
 | `apps/docs/preview/scene-views.tsx` | add `PopoverScene` (column chooser, surface open) and `CommandMenuScene` (grouped palette, open on mount); extend `LIVE_SCENE_VIEWS` |
+| `apps/docs/preview/main.tsx` | nest the tokens `ThemeProvider` inside the scene root as well as the primitives one, so `@gpuixui/components` reads the resolved theme instead of its light fallback |
 | `apps/docs/src/component-meta/entries.ts` | `liveScene: "popover"` / `"command-menu"` on the two delivered records |
-| `apps/docs/src/components/preview/scene-contract.test.ts` | the interaction-record map gains both; one new test pins the page-slug rule the smoke relies on |
+| `apps/docs/src/components/preview/scene-contract.test.ts` | the interaction-record map gains both; one new test pins the page-slug rule the smoke relies on; one guards the two-provider nesting that keeps a scene on the docs' theme |
 | `apps/docs/scripts/smoke-live-preview.ts` | derive the page loop from `LIVE_SCENES` instead of a hand-written `pageScenes` list, and assert the scene key reaches the iframe |
 | `docs/preview-strategy.md` | the tier-L row and the closing paragraph name six scenes and the two recorded gaps |
 | `PLAN.md` | D29's scene set becomes six and names the API asks that block the other two |
@@ -163,8 +164,8 @@ Measured:
 - `nub run --filter docs build:preview` → exit `0`; 438 modules, 19.1 MB wasm,
   the JS bundle grew 454.70 kB → 462.55 kB for the two component scenes.
 - `nub run --filter docs check-types` → exit `0` (app and preview project).
-- `nub run --filter docs test` → 249 tests (up from 248), including the new
-  slug guard.
+- `nub run --filter docs test` → 250 tests (up from 248): the slug guard and the
+  two-provider guard.
 - `nub run --filter docs smoke:preview` → exit `0`: six scenes ready, six
   component pages load their own scene, the unknown scene reports its reason and
   `?platform=win32` still reaches the surface.
@@ -172,7 +173,7 @@ Measured:
   the view does not render fails `scene-contract.test.ts`; restored, it passes.
 - `nub run --filter docs build` and the repository gates are green.
 
-**Two measured corrections** while making the smoke cover six pages:
+**Three measured corrections** while making the smoke cover six pages:
 
 1. The expectation table is matched against **exact** `getAllText()` nodes, so
    `popover` had to be `Show columns` (the panel's own label), not a word that
@@ -183,4 +184,16 @@ Measured:
    first run timed out on Theming, the next on Buttons. The loop now keeps
    offering the click until the iframe exists, and the script's overall budget
    is 240s (six scenes plus six page loads measured ~55s).
+3. **Every `@gpuixui/components` scene painted its light fallback on a dark
+   page.** Primitives own a theme context of their own
+   (`packages/primitives/src/components/ThemeProvider.tsx`) while components read
+   `@gpuixui/tokens/react`; the preview mounted only the primitives provider, so
+   Tabs, Dropdown menu and Dialog — shipped in plan 456 — rendered light-on-dark,
+   and the new scenes inherited it. `preview/main.tsx` now nests the tokens
+   provider with the same resolved theme, and `scene-contract.test.ts` fails if
+   either provider stops wrapping `<LiveSurface>`. Proven in headless Chrome by
+   screenshot before (white tab list, white popover) and after (the dark theme,
+   anchored popover, complete dialog). Two providers is the components/primitives
+   integration contract, so the ask to unify or document it is a cross-team row
+   in `TODO.md`.
 

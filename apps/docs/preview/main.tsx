@@ -19,6 +19,7 @@ import {
   type Theme,
   type ThemeMode,
 } from "@gpuixui/tokens";
+import { ThemeProvider as TokensThemeProvider } from "@gpuixui/tokens/react";
 import { useEffect, useState } from "react";
 import { initGpuixWeb } from "./gpuix-web";
 import { isWindowReady } from "./renderer-ready";
@@ -71,18 +72,24 @@ const Surface = ({
 }) => {
   const size = useWindowSize();
   const View = LIVE_SCENE_VIEWS[activeScene];
+  // Two providers, because the two packages read two contexts: primitives owns
+  // its context, components read `@gpuixui/tokens/react` and otherwise fall back
+  // to the light theme (measured: light Tabs and Popovers on a dark page). Both
+  // receive the same resolved theme, so a scene cannot disagree with itself.
   return (
-    <ThemeProvider theme={theme}>
-      <LiveSurface size={{ width: size.width, height: size.height }}>
-        {ready ? (
-          <View />
-        ) : (
-          <Text role="caption" tone="muted">
-            Preparing the scene…
-          </Text>
-        )}
-      </LiveSurface>
-    </ThemeProvider>
+    <TokensThemeProvider theme={theme}>
+      <ThemeProvider theme={theme}>
+        <LiveSurface size={{ width: size.width, height: size.height }}>
+          {ready ? (
+            <View />
+          ) : (
+            <Text role="caption" tone="muted">
+              Preparing the scene…
+            </Text>
+          )}
+        </LiveSurface>
+      </ThemeProvider>
+    </TokensThemeProvider>
   );
 };
 
