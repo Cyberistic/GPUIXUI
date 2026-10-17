@@ -367,7 +367,8 @@ level, so a copied style never overrides a high-contrast palette.
 ### Authoring a platform style
 
 A style file is plain data. Copy one from `platform-styles/` and keep the shape;
-only `types` is required, and every omitted role inherits the identity:
+every field inside `structure` is optional, and every omitted role or level
+inherits the identity:
 
 ```ts
 interface PlatformStyle {
