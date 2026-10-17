@@ -8,6 +8,8 @@
  *
  * The public value is an ISO day (`YYYY-MM-DD`), never a `DateTime` and never a
  * locale-formatted string: a stored value must not depend on the display.
+ * `min`/`max` bound selection inclusively, keyboard movement clamps to them, and
+ * `clearable` adds the reset to `null`; none of that rewrites a controlled value.
  *
  * Known scope, recorded in the docs: fixed English month/day labels (no i18n
  * layer in the repo yet), no adjacent-month days in the grid, and no time picker.
@@ -23,9 +25,13 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   addDays,
   addMonths,
+  boundsOf,
+  canBrowseMonth,
+  clampToBounds,
   formatDayLabel,
   formatIsoDay,
   formatMonthLabel,
+  isAvailable,
   isSameDay,
   lastDayOfMonth,
   monthGrid,
@@ -34,7 +40,7 @@ import {
   weekdayLabels,
   type WeekStart,
 } from "./date-picker/calendar.js";
-import { IconButton } from "./internal/button.js";
+import { Button, IconButton } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import {
   isActivation,
@@ -67,6 +73,15 @@ export interface DatePickerProps {
   readonly placeholder?: string;
   /** Default `1` (Monday). */
   readonly weekStartsOn?: WeekStart;
+  /**
+   * The first selectable ISO day, inclusive. Absent or malformed means no lower
+   * bound. Bounds constrain choosing; they never rewrite a controlled `value`.
+   */
+  readonly min?: string;
+  /** The last selectable ISO day, inclusive. Absent or malformed is unbounded. */
+  readonly max?: string;
+  /** Show a `Clear` action in the surface while a day is selected. Default `false`. */
+  readonly clearable?: boolean;
   readonly disabled?: boolean;
   /**
    * The ISO day the picker treats as today. Defaults to the runtime clock; pass
@@ -94,6 +109,9 @@ export const DatePicker = ({
   label,
   placeholder = "Pick a date",
   weekStartsOn = 1,
+  min,
+  max,
+  clearable = false,
   disabled = false,
   today,
   testId = "date-picker-trigger",
@@ -112,6 +130,7 @@ export const DatePicker = ({
     parseIsoDay,
   );
   const selectedIso = Option.map(selectedDay, formatIsoDay);
+  const bounds = boundsOf(min, max);
 
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState<DateTime.Utc>(() =>
@@ -162,23 +181,40 @@ export const DatePicker = ({
     cellIds.current[iso] = instance.id;
   };
 
-  const choose = (day: DateTime.Utc): void => {
-    setSelected(formatIsoDay(day));
+  /** Close the surface and hand focus back to the trigger. */
+  const closeToTrigger = (): void => {
     setOpen(false);
     const instance = trigger.current;
     if (instance !== null) renderer?.focusElement?.(instance.id);
   };
 
+  const choose = (day: DateTime.Utc): void => {
+    if (!isAvailable(day, bounds)) return;
+    setSelected(formatIsoDay(day));
+    closeToTrigger();
+  };
+
+  /** Drop the selection and close; the next open anchors on today. */
+  const clear = (): void => {
+    setSelected(null);
+    closeToTrigger();
+  };
+
   const moveDays = (delta: number): void => {
     const from = Option.getOrElse(active, () => startOfMonth(viewMonth));
-    focusActive(addDays(from, delta));
+    focusActive(clampToBounds(addDays(from, delta), bounds));
   };
 
   const moveToWeekEdge = (edge: "first" | "last"): void => {
     const from = Option.getOrElse(active, () => startOfMonth(viewMonth));
     const parts = DateTime.toPartsUtc(from);
     const offset = (parts.weekDay - weekStartsOn + 7) % 7;
-    focusActive(addDays(from, edge === "first" ? -offset : 6 - offset));
+    focusActive(
+      clampToBounds(
+        addDays(from, edge === "first" ? -offset : 6 - offset),
+        bounds,
+      ),
+    );
   };
 
   const moveMonths = (delta: number): void => {
@@ -187,7 +223,7 @@ export const DatePicker = ({
     const target = addMonths(from, delta);
     const lastDay = DateTime.toPartsUtc(lastDayOfMonth(target)).day;
     const day = Math.min(parts.day, lastDay);
-    focusActive(addDays(startOfMonth(target), day - 1));
+    focusActive(clampToBounds(addDays(startOfMonth(target), day - 1), bounds));
   };
 
   const handleKeyDown = (event: EventPayload): void => {
@@ -214,9 +250,12 @@ export const DatePicker = ({
   };
 
   const grid = monthGrid(viewMonth, weekStartsOn);
-  const tabbable = Option.getOrElse(
-    Option.filter(active, (day) => isSameDay(startOfMonth(day), viewMonth)),
-    () => startOfMonth(viewMonth),
+  const tabbable = clampToBounds(
+    Option.getOrElse(
+      Option.filter(active, (day) => isSameDay(startOfMonth(day), viewMonth)),
+      () => startOfMonth(viewMonth),
+    ),
+    bounds,
   );
   const labelText = Option.match(selectedDay, {
     onNone: () => placeholder,
@@ -301,6 +340,7 @@ export const DatePicker = ({
             label="Previous month"
             size="sm"
             testId="date-prev"
+            disabled={!canBrowseMonth(viewMonth, -1, bounds)}
             onClick={() => setViewMonth(addMonths(viewMonth, -1))}
           >
             <text>‹</text>
@@ -318,6 +358,7 @@ export const DatePicker = ({
             label="Next month"
             size="sm"
             testId="date-next"
+            disabled={!canBrowseMonth(viewMonth, 1, bounds)}
             onClick={() => setViewMonth(addMonths(viewMonth, 1))}
           >
             <text>›</text>
@@ -362,18 +403,23 @@ export const DatePicker = ({
                   ),
                   onSome: (day) => {
                     const iso = formatIsoDay(day);
+                    const available = isAvailable(day, bounds);
                     const isSelected = Option.contains(selectedIso, iso);
                     const isToday = isSameDay(day, todayDay);
                     return (
                       <div
                         key={iso}
                         role="gridcell"
-                        aria-label={formatDayLabel(day)}
+                        aria-label={
+                          available
+                            ? formatDayLabel(day)
+                            : `${formatDayLabel(day)}, unavailable`
+                        }
                         aria-selected={isSelected}
                         tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
                         ref={attachCell(iso)}
                         testId={`date-day-${iso}`}
-                        onClick={() => choose(day)}
+                        onClick={available ? () => choose(day) : undefined}
                         onFocus={() => setActive(Option.some(day))}
                         style={{
                           ...textStyle(theme, "caption"),
@@ -388,17 +434,20 @@ export const DatePicker = ({
                             : undefined,
                           color: isSelected
                             ? theme.colors.primaryForeground
-                            : theme.colors.foreground,
+                            : available
+                              ? theme.colors.foreground
+                              : theme.colors.mutedForeground,
                           borderWidth: isToday
                             ? theme.borderWidth.thin
                             : undefined,
                           borderColor: isToday
                             ? theme.colors.primary
                             : undefined,
-                          cursor: "pointer",
-                          hover: isSelected
-                            ? undefined
-                            : { backgroundColor: theme.colors.hover },
+                          cursor: available ? "pointer" : "not-allowed",
+                          hover:
+                            isSelected || !available
+                              ? undefined
+                              : { backgroundColor: theme.colors.hover },
                           ...(iso ===
                           formatIsoDay(Option.getOrElse(active, () => tabbable))
                             ? focusRing(theme)
@@ -414,6 +463,18 @@ export const DatePicker = ({
             </div>
           ))}
         </div>
+        {clearable && Option.isSome(selectedDay) ? (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              testId="date-clear"
+              onClick={clear}
+            >
+              Clear
+            </Button>
+          </div>
+        ) : null}
       </PopoverContent>
     </Popover>
   );
@@ -430,6 +491,8 @@ export const datePickerMeta = {
     "the grid shows only the current month; adjacent-month days are blank",
     "no time picker: GPUix has no native time input, and a second control would need its own plan",
     "0.10.0 has no aria-current, so today is marked by a border only",
+    "0.10.0 has no aria-disabled: an unavailable day leaves the tab order and its accessible name ends in ', unavailable'",
+    "a min after max makes no day selectable; the grid is visible and inert rather than throwing from render",
   ],
   docs: "docs/date-picker.mdx",
   example: "examples/date-picker.example.tsx",

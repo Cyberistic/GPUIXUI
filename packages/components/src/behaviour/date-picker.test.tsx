@@ -5,8 +5,11 @@
  * that reports a `DateTime` or a locale string instead of the ISO day; a
  * controlled value that changes without the consumer; arrow keys that move the
  * highlight without moving real focus; PageDown that changes the selected day;
- * Escape that does not return focus to the trigger; and a selected day painted
- * from a constant instead of the theme.
+ * Escape that does not return focus to the trigger; a selected day painted
+ * from a constant instead of the theme; a click on an out-of-range day producing
+ * a value; arrow keys walking past `min`/`max`; the month controls browsing past
+ * the bound; a picked day that cannot be cleared from the surface; and Clear
+ * appearing without a value or without `clearable`.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -21,11 +24,17 @@ const Picker = ({
   defaultValue,
   onValueChange,
   disabled,
+  min,
+  max,
+  clearable,
 }: {
   readonly value?: string | null;
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string | null) => void;
   readonly disabled?: boolean;
+  readonly min?: string;
+  readonly max?: string;
+  readonly clearable?: boolean;
 }) => (
   <div style={{ width: 420, padding: 40 }}>
     <DatePicker
@@ -35,6 +44,9 @@ const Picker = ({
       defaultValue={defaultValue}
       onValueChange={onValueChange}
       disabled={disabled}
+      min={min}
+      max={max}
+      clearable={clearable}
     />
   </div>
 );
@@ -69,6 +81,7 @@ describe("DatePicker", () => {
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
     expect(picker.renderer.getAllText()).toContain("20 October 2026");
     expect(picker.renderer.getAllText()).not.toContain("Pick a date");
+    expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
 
     picker.unmount();
   });
@@ -180,5 +193,94 @@ describe("DatePicker", () => {
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
 
     picker.unmount();
+  });
+
+  it("refuses an unavailable day and announces it as such", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker min="2026-10-17" onValueChange={onValueChange} />,
+    );
+    open(picker);
+
+    expect(
+      picker.renderer.findByTestId("date-day-2026-10-16")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("16 October 2026, unavailable");
+
+    clickCentreOf(picker, "date-day-2026-10-16");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+    expect(picker.renderer.getAllText()).toContain("Pick a date");
+
+    picker.unmount();
+  });
+
+  it("clamps arrow movement at the lower bound", () => {
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-18" min="2026-10-17" />,
+    );
+    open(picker);
+
+    picker.renderer.simulateKeystrokes("left");
+    picker.renderer.simulateKeystrokes("left");
+
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+    expect(picker.renderer.getAllText()).toContain("18 October 2026");
+    expect(picker.renderer.getAllText()).not.toContain("17 October 2026");
+
+    picker.unmount();
+  });
+
+  it("stops month browsing at the bound's month", () => {
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-17" min="2026-10-17" />,
+    );
+    open(picker);
+
+    expect(
+      picker.renderer.findByTestId("date-prev")?.customProps?.tabIndex,
+    ).toBe(-1);
+
+    clickCentreOf(picker, "date-prev");
+
+    expect(picker.renderer.findByText("October 2026")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("clears the selection, closes and returns focus to the trigger", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker
+        defaultValue="2026-10-17"
+        clearable
+        onValueChange={onValueChange}
+      />,
+    );
+    open(picker);
+
+    clickCentreOf(picker, "date-clear");
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith(null);
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+    expect(picker.renderer.getAllText()).toContain("Pick a date");
+    expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
+
+    picker.unmount();
+  });
+
+  it("offers Clear only when asked for and only with a selection", () => {
+    const empty = renderComponent(<Picker clearable />);
+    open(empty);
+    expect(empty.renderer.findByTestId("date-clear")).toBeUndefined();
+    empty.unmount();
+
+    const notClearable = renderComponent(<Picker defaultValue="2026-10-17" />);
+    open(notClearable);
+    expect(notClearable.renderer.findByTestId("date-clear")).toBeUndefined();
+    notClearable.unmount();
   });
 });

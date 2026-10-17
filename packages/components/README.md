@@ -4,7 +4,7 @@ Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
 Plans for this package and every component it holds are in
-`.agents/slop/plans/` (110–125). Read those before adding a component.
+`.agents/slop/plans/` (110–127). Read those before adding a component.
 
 ## Boundary
 
@@ -20,7 +20,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 
 | Area | State |
 | ---- | ----- |
-| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the a11y-dump reader and the behaviour-suite render helper |
+| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the merged host ref, the a11y-dump reader and the behaviour-suite render helper |
 | `src/runtime.test.tsx` | the native-renderer guard (plan 117 §5b) |
 | `src/card.tsx` | Card and its five parts — verified natively |
 | `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
@@ -42,7 +42,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/field.tsx` | Field: label, control, one message slot; the inline-validation surface |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
-| `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover |
+| `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover, with bounded selection and a clear action |
 | `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store, with pointer/focus pause/resume |
 | `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
 | `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |
