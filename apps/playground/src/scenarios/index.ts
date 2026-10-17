@@ -48,6 +48,7 @@ import { shortcutScenario } from "./shortcuts.js";
 import { commandPaletteScenario } from "./command-palette.js";
 import { workspacePanesScenario } from "./workspace-panes.js";
 import { dockingScenario } from "./docking.js";
+import { floatScenario } from "./float.js";
 import { gridScenario } from "./grid.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
@@ -108,6 +109,7 @@ export const PROBE_CAPABILITIES = [
   "chart",
   "toast",
   "docking",
+  "float",
   "grid",
 ] as const;
 
@@ -140,6 +142,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   commandPaletteScenario,
   workspacePanesScenario,
   dockingScenario,
+  floatScenario,
   gridScenario,
   shortcutScenario,
   themeColorRolesScenario,

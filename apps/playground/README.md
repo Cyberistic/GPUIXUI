@@ -19,7 +19,8 @@ placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
 command surface probe (`command-palette`), the tabbed-pane probe
-(`workspace-panes`), the docking probe (`docking-layout`), the app-level
+(`workspace-panes`), the docking probe (`docking-layout`), the detachable-tab
+probe (`float-tab`), the app-level
 shortcut probe (`window-key-shortcut`), the chart probe (`chart-svg`), the
 markdown probe
 (`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the
@@ -68,7 +69,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (56/56 green); -> 2 on a host with no binding
+# -> 0 here (57/57 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -496,6 +497,33 @@ from the last-child rule (`toast-lifecycle`) and not asserted; the
 gesture-ending click is a measured `drag-targets` fact and must be suppressed by
 a component; a detached tab stays in-window (0.10.0 has one app window).
 
+## Detachable tabs as floating panels (plan `194`)
+
+`float-tab` answers the half of **Detachable / movable tabs** that `172` left
+open. The negative half is settled: 0.10.0 has one application window and no
+`openWindow`, so a detached tab cannot become an OS window. This probe measures
+the honest alternative — an absolutely positioned panel inside the app surface —
+end to end (46 checks, model in `src/panels/float.ts`).
+
+| Fact | Measured |
+| ---- | -------- |
+| tear-off | a press on a tab, two held moves and a release **outside** the dock open a float at the release point exactly (`x=560 y=320` on a 900 × 480 app surface); the strip loses the tab (`main=beta,gamma@beta`) |
+| the release point | the **last held move** is the release; the `up` handler needs no coordinates |
+| paint order | the float is the app root's **last child** inside `position: "relative"`; a click where it overlaps the dock reaches the float body (`body=1`, `dockBody=0`). Rendering it before the dock reverses that — the dock takes the click |
+| title drag | the title bar moves the window by the pointer delta exactly; no offset double-count, no scroll correction |
+| clamp | moving far past the corner pins the box at `(640, 320)` — `900 − 260` and `480 − 160`. The clamp is component code: without it the frame follows the pointer to `2200` |
+| focus | a click focuses the float's tab; Escape closes the float and `renderer.focusElement` returns focus to the dock's active tab |
+| re-dock | dragging the float's tab onto the strip appends and activates it (`main=gamma,beta@beta`) and prunes the emptied window |
+| restore | the JSON snapshot is `{ dock, float }` with a nullable float; save → move → restore reproduces `(420, 300)` exactly |
+| close | the close button drops the tab (the app's choice); an emptied window is not painted |
+| a11y | the panel is an AccessKit `Region` labelled `Floating panel`, its tab a `Tab`, its close control a labelled `Button` |
+
+Two honest limits. There is **no drag preview**: the panel appears on release,
+and pointer-following paint was not measured here. And a close control nested
+**inside** the press-captured title bar did not fire its click; the same control
+as a sibling of the title bar does. A floating panel should keep its drag
+surface and its controls separate.
+
 ## Pinned grid chrome (plan `185`)
 
 `grid-wide-table` is the wide-table contract: a header that stays put, a frozen
@@ -658,7 +686,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 56-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 57-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a

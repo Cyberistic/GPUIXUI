@@ -39,6 +39,7 @@ export const CAPABILITIES = [
   "theme",
   "workspace",
   "docking",
+  "float",
   "command",
   "content",
   "drag",

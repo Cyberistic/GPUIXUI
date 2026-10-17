@@ -67,7 +67,7 @@ export type DockNode = DockGroup | DockSplit;
 /** Which pane region a drop lands in. */
 export type DockEdge = "center" | "left" | "right" | "top" | "bottom";
 
-const DockTabSchema: Schema.Codec<DockTab> = Schema.Struct({
+export const DockTabSchema: Schema.Codec<DockTab> = Schema.Struct({
   id: Schema.String,
   title: Schema.String,
 });

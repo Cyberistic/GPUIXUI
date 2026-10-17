@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §8) |
 | Phase | B → D (Tier 4 feasibility) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `162`, `164`, `172`, `177`, `184` |
@@ -271,7 +271,61 @@ Restore each mutation and re-run green. Record the exact failure text in §8.
 
 ## 8. Measured results
 
-_Filled after the run._
+Run on this host (Intel macOS, locally built `@gpuix/native@0.10.0`, ADR 0003),
+2026-10-18.
+
+**A detachable tab can be an in-window floating panel.** `float-tab` records
+**46 checks**; the suite is `57/57`, exit `0`:
+
+- a press, two held moves and a release outside the dock open a float at the
+  **release point** exactly (`x=560 y=320` on a 900 × 480 surface) and the strip
+  loses the tab (`main=beta,gamma@beta`);
+- the panel is the app root's **last child** and paints above the dock: a click
+  at the overlap reaches the float body (`body=1`) and the dock body stays
+  `dockBody=0`;
+- the title bar moves the window by the **pointer delta** exactly (560/320 →
+  200/60);
+- the clamp pins the corner at `(640, 320)` (`900 − 260`, `480 − 160`) and the
+  box never leaves the surface;
+- the float tab takes native focus, Escape closes the float (`closed=escape`)
+  and focus returns to the dock's active tab (`float-tab-beta`) through
+  `renderer.focusElement`;
+- dragging the float's tab back appends and activates it
+  (`main=gamma,beta@beta`), the emptied window is pruned (`float=none`) and its
+  bounds are gone;
+- the a11y dump has a `Region` labelled `Floating panel`, a `Tab` and a
+  `Button` labelled `Close floating panel`;
+- `{ dock, float }` JSON save → move → restore reproduces `(420, 300)` exactly;
+- the close button closes (`closed=button`) and drops the tab rather than
+  returning it to the dock.
+
+Two honest observations not turned into checks:
+
+- **No drag preview was measured.** The panel appears on release; a
+  pointer-following surface was not built here.
+- A **close control nested inside the title bar** (which owns the press
+  handlers) did not fire its click; the same control as a **sibling** of the
+  title bar closes the panel. The probe uses the sibling layout.
+
+**A real bug the pure tests caught before the native run:** the first
+`dockFloat` filtered the active tab out of the float even when the target group
+did not exist, so docking against a missing pane silently lost the tab. The
+test "loses nothing when the target group does not exist" failed
+(`expected [] to deeply equal [ 'alpha' ]`); `dockFloat` now checks the target
+first. The native checks then passed unchanged.
+
+**Two-direction proofs**, each restored and re-run green afterwards:
+
+- **M1 — clamp removed** (`clampAxis` returns the value): `the clamp pins the
+  right edge: expected 640 ± 1, got 2200` — exit `1`.
+- **M2 — float rendered before the dock**: `a click on the overlap reaches the
+  float: expected a string containing "body=1", got "opened=1 body=0
+  dockBody=1 docked=0 closed=none"` — exit `1`. Paint order is child order.
+- **M3 — the float opened at the press point instead of the release point**:
+  `the float holds the torn tab: expected a string containing "float=alpha
+  x=560 y=320", got "float=alpha x=30 y=22"` — exit `1`.
+
+Screenshot: `apps/playground/.artifacts/screenshots/float-tab.png`.
 
 ## 9. Acceptance
 
