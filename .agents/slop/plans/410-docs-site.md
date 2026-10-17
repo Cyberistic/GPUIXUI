@@ -371,3 +371,25 @@ Stop and report (do not improvise) if:
 - [ ] `nub run check`, `nub run lint`, `nub run test` pass.
 - [ ] `TODO.md` docs rows and the plans index are current; work committed on
   `agent/docs-site`.
+
+## 13. Content truth audit (2026-10-17)
+
+Every repository path named in backticks on a page was checked against the file
+system (a throwaway script over `content/docs/**/*.mdx`). Findings and fixes:
+
+| Page | Path named | State | Action |
+| ---- | ---------- | ----- | ------ |
+| `architecture.mdx` | `docs/architecture.md` | claimed to exist ("lives at"), does not exist; registered in `docs/README.md` | reworded to "will live at …; not written yet" |
+| `theming.mdx` | `docs/design-system.md`, `docs/tokens.md` | claimed "are written beside the code" | reworded to "are not written yet; they are produced by the tokens/theming workstream" |
+| `typography.mdx` | same two | "is defined in …" next to "once those land" | reworded to the future tense only |
+| `license.mdx` | `LICENSES/{inventory,provenance}.md`, `NOTICE` | absent | already honest ("must exist before release; none is written yet") — no change |
+| `api-reference.mdx` | `apps/docs/src/components/preview/captures.ts` | exists | none |
+
+This is **not** a test, deliberately: whether a page means "planned" or
+"landed" is page prose, and the mechanical rule that is checkable — "a named
+repository file exists, or is registered in that directory's README" — accepts
+`docs/architecture.md`, so it would not have caught the defect. The register
+(`docs/README.md`, `LICENSES/README.md`) stays the source of what will land
+where, and this table records that the audit was run.
+
+The same pass over component pages happens with them (Phase F).
