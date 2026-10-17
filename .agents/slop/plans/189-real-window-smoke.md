@@ -258,8 +258,18 @@ L1 and L2 surface as errored scenarios rather than a failed label because the
 scenario waits for the result of the interaction; a mutation that mounted the
 *wrong* view would fail the title check instead.
 
+**Synthetic `tab` does not traverse in a live window either.** Focusing
+`input-field`, typing `a`, sending `tab`, then `x` left the readout at
+`value=ax` — the field kept the keystroke, so the tab did not move native focus.
+The platform's own Tab handling is not part of the synthetic key path, which is
+the same result the `TestRenderer` recorded (`focusNext` does traverse, a
+synthetic `"tab"` does not). Consequence: focus movement is component code
+(`renderer.focusElement` / `focusNextWithin`), and a live run cannot observe
+Tab traversal because the automation protocol has neither a focus query nor a
+`focusNext` call. The `focus` verdict stays with the headless suite.
+
 **What stays `TestRenderer`-only:** `paintedStyle`, the AccessKit dump,
-`getListScrollTop`, `scrollIntoView`/`scrollToItem` and
-`getPaintedHighlights`. The automation tree carries `id`, `type`, `testId`,
+`getListScrollTop`, `scrollIntoView`/`scrollToItem`, `getPaintedHighlights`
+and focus traversal. The automation tree carries `id`, `type`, `testId`,
 `text`, `bounds` and `children` — no style — and the protocol has no call for
 the rest. Every such verdict in `COMPONENTS.md` still cites the headless suite.

@@ -688,10 +688,13 @@ window (CI, a locked session, a missing binding) — and no report is written on
 `2`. The window appears for a few seconds and takes focus while it runs; it is
 opt-in for that reason.
 
-What it cannot assert: colour, the accessibility dump, virtual-list anchors and
-highlights. The automation tree carries `id`/`type`/`testId`/`text`/`bounds` and
-no style, and the protocol has no a11y or list-anchor call — those verdicts stay
-with the `TestRenderer` suite.
+What it cannot assert: colour, the accessibility dump, virtual-list anchors,
+highlights and focus traversal. The automation tree carries
+`id`/`type`/`testId`/`text`/`bounds` and no style, and the protocol has no a11y,
+list-anchor or focus query. A synthetic `tab` does not traverse in a live window
+either (measured: `a`, `tab`, `x` left the field reading `value=ax`), so Tab
+traversal — like in the `TestRenderer` — is component code, not a runtime
+service.
 
 ## Text entry (plan `188`)
 

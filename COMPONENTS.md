@@ -71,8 +71,9 @@ A second, smaller suite runs the shipped playground in a **real window**
 navigates by click and Enter, typing reaches `onChange`/`onSubmit` in a live
 editor, a wheel moves a live container with its `onScroll` delta, and a paced
 divider drag resizes a live split (`320 → 400`). Colour, accessibility,
-virtual-list anchors and highlights stay `TestRenderer`-only: the automation
-protocol does not expose them.
+virtual-list anchors, highlights and focus traversal stay `TestRenderer`-only:
+the automation protocol does not expose them, and a synthetic `tab` does not
+traverse in a live window either.
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
