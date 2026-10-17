@@ -8,15 +8,16 @@ They map onto GPUix's flexbox and fixed-track grid, not a browser's CSS layout:
 there are no media queries, no auto-flow and no percentage tracks beyond the
 runtime's own.
 
-They ship in `@gpuixui/primitives` and each has its own page with the real
-source, a generated props table and its runtime observations:
+They ship in `@gpuixui/primitives`. The layout pages carry the real source, a
+generated props table and their runtime observations — `Stack` documents both
+flex stacks and the runtime's grid:
 
 - [`Box`](/docs/components/box) — the surface and padding container; the place an
   application overrides a background or a border.
 - [`Stack`](/docs/components/stack) — one axis, a theme-owned `gap`, and explicit
   alignment. `direction` is required so a row cannot silently become a column.
-- [`Grid`](/docs/components/grid) — equal numeric tracks. GPUix's grid is
-  `columns` + `rows`; there is no auto-placement and no named areas.
+  The same page documents `Grid`: equal numeric tracks, `columns` + `rows`, with
+  no auto-placement and no named areas.
 - [`Separator`](/docs/components/separator) — one border step across the surface.
 - [`Spacer`](/docs/components/spacer) — a flexible filler that pushes siblings to
   the far edge.
