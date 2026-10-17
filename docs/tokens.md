@@ -35,6 +35,7 @@ import {
   platformNames,
   platformStyles,
   platformTypes,
+  selectionPairs,
   selectionStyle,
   statusTone,
   statusTones,
@@ -280,7 +281,7 @@ getTheme("light"); // the default light theme, unchanged
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
-| `selection` | `#7567F24D` | `#C7CBFF4D` | text selection wash (30% alpha; `selectionColor`) |
+| `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
 | `overlay` | `#000000A6` | `#000000CC` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
@@ -692,8 +693,10 @@ Both selection properties inherit down the tree, so an application sets the wash
 once on its root; chrome that must not be selectable — a toolbar, a tab strip,
 window controls — sets `userSelect: "none"` on its own subtree. The wash is
 translucent (24% in the default themes, 30% at high contrast), so selected text
-keeps the foreground's contrast on the `background` and `card` surfaces the check
-measures.
+keeps the body contrast on every surface a glyph can be selected on:
+`background`, `card`, `muted`, `hover`, `active` and `accent` with `foreground`;
+`popover` with `popoverForeground`; `input` with `inputForeground`; and `selected`
+with `selectedForeground` at the secondary floor. `selectionPairs` lists them.
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";
@@ -816,8 +819,11 @@ level the theme declares, so a high-contrast theme is checked against 7:1 withou
 a second argument; naming a level asks a stricter question of a theme that does
 not claim it. It returns one entry per missed pair, naming the two roles, the
 pair class, the floor and the measured ratio. The selection wash is measured as
-it paints: the foreground over `compositeOver(selection, background)` and over
-`compositeOver(selection, card)`, reported with `wash: "selection"`.
+it paints, with the role each surface uses for its own text: the foreground over
+`compositeOver(selection, background)`, `card`, `muted`, `hover`, `active` and
+`accent`; `popoverForeground` over `popover`; `inputForeground` over `input`; and
+`selectedForeground` over `selected` at the secondary floor — reported with
+`wash: "selection"`. `selectionPairs` is the list.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
@@ -973,7 +979,9 @@ It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
 those surfaces or on the `secondary`, `hover`, `active` and `accent` fills a
 bordered control paints (1.05:1, and 3:1 at high contrast), or if body text over
-the composited `selection` wash on `background`/`card` drops below its body floor.
+the composited `selection` wash drops below its body floor on any surface a glyph
+is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
+`popover` and `input`, with the selected row at the secondary floor.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
 `card` and `popover`, so a placeholder never disappears into the card it fills.
 Every platform variant is checked on its own canvas, not the identity's, so a
@@ -985,7 +993,10 @@ shipped sets had `border` equal to the fill it sits on (identity light `active`,
 identity dark `secondary`/`active`/`accent`, macOS dark `hover`/`secondary`/
 `accent`, and high-contrast dark's `active` at 2.53:1 under the AAA floor), so
 an outlined control's edge disappeared exactly while pressed; plan `080` moved
-the four dividers. Palette edits must keep it green.
+the four dividers. The selection wash is held there too: high-contrast dark
+shipped at 6.48:1 on `hover` and 5.49:1 on `active`, Linux dark at 6.92:1 and
+Windows dark at 6.84:1 on `active`, under the body floor a selected glyph needs;
+plan `081` darkened those three wash bases. Palette edits must keep it green.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,
 `active` and `selected` washes, because focus and selection co-occur in rows;

@@ -250,14 +250,25 @@ export interface ContrastFailure {
   readonly ratio: number;
 }
 
-const selectionSurfaces = ["background", "card"] as const;
+/** The surfaces a selected glyph is painted on, with the role each one uses. */
+export const selectionPairs: readonly ContrastPair[] = [
+  ["foreground", "background", "body"],
+  ["foreground", "card", "body"],
+  ["foreground", "muted", "body"],
+  ["foreground", "hover", "body"],
+  ["foreground", "active", "body"],
+  ["foreground", "accent", "body"],
+  ["popoverForeground", "popover", "body"],
+  ["inputForeground", "input", "body"],
+  ["selectedForeground", "selected", "secondary"],
+];
 
 /**
  * Every documented pair a theme misses — text, status, secondary text on the
  * state washes, selection, surface and divider — including the selection wash
- * measured over `background` and `card`, the loading skeleton measured on the
- * surfaces it fills, and the control edge measured on the fills a bordered
- * control paints. The level defaults
+ * measured over the surfaces a selected glyph paints on, the loading skeleton
+ * measured on the surfaces it fills, and the control edge measured on the fills
+ * a bordered control paints. The level defaults
  * to the one the theme declares, so a high-contrast theme is checked against its
  * own floors. An empty array is the library's guarantee; a consumer test asserts
  * exactly that:
@@ -294,24 +305,26 @@ export function themeContrastFailures(
           ];
     },
   );
-  const washFailures: ReadonlyArray<ContrastFailure> =
-    selectionSurfaces.flatMap((background) => {
+  const washFailures: ReadonlyArray<ContrastFailure> = selectionPairs.flatMap(
+    ([foreground, background, pairClass]) => {
       const ratio = contrastRatio(
-        theme.colors.foreground,
+        theme.colors[foreground],
         compositeOver(theme.colors.selection, theme.colors[background]),
       );
-      return ratio >= floors.body
+      const floor = floors[pairClass];
+      return ratio >= floor
         ? []
         : [
             {
-              foreground: "foreground" as const,
+              foreground,
               background,
               wash: "selection" as const,
-              pairClass: "body" as const,
-              floor: floors.body,
+              pairClass,
+              floor,
               ratio,
             },
           ];
-    });
+    },
+  );
   return [...pairFailures, ...washFailures];
 }

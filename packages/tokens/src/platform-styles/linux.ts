@@ -3,7 +3,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
 /**
  * Linux (GNOME / Adwaita): Adwaita's blue accent (`#1C71D8` light, `#78AEED`
  * dark), warm grey surfaces, roomier corners and slightly longer transitions.
- * `sans` stays GPUI's system sentinel; `mono` is the family GNOME installs.
+ * `sans` stays GPUI's system sentinel; `mono` is the family GNOME installs. The
+ * dark selection wash uses the light accent as its base so white text keeps the
+ * body floor on the fills a row paints (plan 081).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -60,7 +62,7 @@ export const linuxPlatformStyle = {
       accent: "#1B3A5C",
       accentForeground: "#A8CBF0",
       ring: "#78AEED",
-      selection: "#78AEED33",
+      selection: "#1C71D833",
       selected: "#2B4F76",
       selectedForeground: "#D6E7FA",
       placeholder: "#A8A7A3",

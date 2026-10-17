@@ -163,7 +163,12 @@ themeContrastFailures(brandTheme); // []
 ```
 
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
-the parts, and the selection wash is measured as it paints. The focus ring is
+the parts, and the selection wash is measured as it paints on every surface a
+glyph is selected on: the neutral surfaces with `foreground`, `popover` and
+`input` with their own text roles, and `selected` with `selectedForeground` at
+the secondary floor. High-contrast dark shipped at 6.48:1 on `hover` and 5.49:1
+on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on `active`, until
+plan 081 darkened the three wash bases. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught. Secondary text is
 checked on `hover`, `active`, `accent` and `selected` too, so a row description

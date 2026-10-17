@@ -392,7 +392,9 @@ export const highContrastLightColors = {
 /**
  * High-contrast dark roles. The same 53 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
- * pressed fill so the edge clears the AAA divider floor on it (plan 080).
+ * pressed fill so the edge clears the AAA divider floor on it (plan 080), and
+ * the selection wash is a darker tint so white text keeps the body floor on the
+ * fills a row paints (plan 081).
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -437,7 +439,7 @@ export const highContrastDarkColors = {
   inputForeground: "#FFFFFF",
   placeholder: "#B0B0B0",
   ring: "#C7CBFF",
-  selection: "#C7CBFF4D",
+  selection: "#4C39B54D",
   overlay: "#000000CC",
   hover: "#2E2E2E",
   active: "#3D3D3D",

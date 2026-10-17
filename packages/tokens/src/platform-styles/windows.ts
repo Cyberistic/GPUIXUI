@@ -3,7 +3,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
 /**
  * Windows 11: Fluent's blue accent (`#0067C0` light, `#4CC2FF` dark), almost
  * square control corners, comfortable controls and crisp shadows. `sans` stays
- * GPUI's system sentinel; `mono` is the family Windows installs.
+ * GPUI's system sentinel; `mono` is the family Windows installs. The dark
+ * selection wash uses the light accent as its base so white text keeps the body
+ * floor on the fills a row paints (plan 081).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -60,7 +62,7 @@ export const windowsPlatformStyle = {
       accent: "#0F3554",
       accentForeground: "#9CD9FF",
       ring: "#4CC2FF",
-      selection: "#4CC2FF33",
+      selection: "#0067C033",
       selected: "#094771",
       selectedForeground: "#CFE9FF",
       placeholder: "#A6A6A6",

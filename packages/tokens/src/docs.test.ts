@@ -346,7 +346,11 @@ describe("docs/tokens.md quoted figures", () => {
       "The wash is translucent (" +
       `${washPercent(light.colors.selection)}% in the default themes, ` +
       `${washPercent(high.light.colors.selection)}% at high contrast), ` +
-      "so selected text keeps the foreground's contrast on the `background` and `card` surfaces the check measures.";
+      "so selected text keeps the body contrast on every surface a glyph can be " +
+      "selected on: `background`, `card`, `muted`, `hover`, `active` and `accent` " +
+      "with `foreground`; `popover` with `popoverForeground`; `input` with " +
+      "`inputForeground`; and `selected` with `selectedForeground` at the " +
+      "secondary floor. `selectionPairs` lists them.";
     expect(markdownProse).toContain(sentence);
   });
 
@@ -603,7 +607,8 @@ describe("docs/design-system.md", () => {
       `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| text selection (\`foreground\` over the composited \`selection\` wash) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| focus ring and essential boundaries, including the ring on the \`hover\`/\`active\`/\`selected\` washes and a control boundary on \`popover\` | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

@@ -182,20 +182,26 @@ describe("themeContrastFailures", () => {
     expect(quietBrandFailures).toEqual(themeContrastFailures(quietBrandTheme));
   });
 
-  it("reports an opaque selection wash over both surfaces", () => {
+  it("reports an opaque selection wash over every painted surface", () => {
     const opaque = extendTheme(getTheme("light"), {
       colors: { selection: "#000000" },
     });
     const failures = themeContrastFailures(opaque).filter(
       ({ wash }) => wash === "selection",
     );
-    expect(failures.map(({ background }) => background)).toEqual([
-      "background",
-      "card",
-    ]);
     expect(
-      failures.every(({ foreground }) => foreground === "foreground"),
-    ).toBe(true);
+      failures.map(({ foreground, background }) => [foreground, background]),
+    ).toEqual([
+      ["foreground", "background"],
+      ["foreground", "card"],
+      ["foreground", "muted"],
+      ["foreground", "hover"],
+      ["foreground", "active"],
+      ["foreground", "accent"],
+      ["popoverForeground", "popover"],
+      ["inputForeground", "input"],
+      ["selectedForeground", "selected"],
+    ]);
   });
 
   it("accepts a transparent wash, because it paints the base", () => {
