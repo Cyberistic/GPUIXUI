@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (39/39 green); -> 2 on a host with no binding
+# -> 0 here (40/40 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -342,6 +342,29 @@ What holds, and the trap it records:
 A scroll does not move focus, and the focused row stays painted as a straggler
 after the window moves away.
 
+## Search highlights (plan `171`)
+
+`search-highlights` drives the published find contract — `highlight`,
+`onHighlight`, `useTextSearch` and `getPaintedHighlights()` — over one
+document. What holds, and the traps it records:
+
+| Fact | Measured |
+| ---- | -------- |
+| a wash reaches the paint | `getPaintedHighlights()` reports one entry per match, with the run text, UTF-16 `[start, end)` and boxes |
+| coordinates | the rects are **window coordinates**, the same space as `getElementBounds` (a doc offset by 40/30 painted at `x=68.4, y=30`) |
+| `useTextSearch` totals | `total=4` for two matches on each of two lines; `active` starts at 0 and `next` moves it |
+| `onHighlight` | delivered after `dispatchNativeEvents` (the same requirement as `onMotionComplete`); it carried `matchCount=3` |
+| scoping | a nested `highlight` **replaces** the ancestor's for its subtree — the outer query does not wash the nested run |
+| matching | case-insensitive by default, `caseSensitive` respected, `wholeWord` skips `errors`, explicit `ranges` paint exactly |
+| surrogate pairs | a range that splits one is **refused** (no wash), while a valid range after the surrogate still paints |
+| soft wrap | a match that wraps paints **more than one box** — one per visual row |
+| `<code>` | `query` searches native code text; a `ranges` spec paints **nothing** inside `<code>` |
+| virtual list | `matchIndexOffset: row` + `activeIndex: 90` makes row 90 the only active wash after `scrollToItem(list, 90)` — numbering is document-wide, not window-local |
+
+The honest gap: `getPaintedHighlights()` reports no colour, so the wash colour
+and `activeColor` are not asserted; a screenshot is visual evidence, never an
+assertion.
+
 ## Workspace restore (plan `167`)
 
 `workspace-restore` saves a two-pane workspace — split width, both tab lists, the
@@ -361,16 +384,16 @@ focus restore.
 
 ## Evidence on this host
 
-The suite is **39/39 green** here (`exit 0`):
+The suite is **40/40 green** here (`exit 0`):
 
 ```
-39/39 scenarios passed · capabilities: layout=verified text=verified
+40/40 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified content=verified drag=verified
-selection=verified menu=verified components=verified
+selection=verified menu=verified components=verified search=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -400,6 +423,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | components | the shipped `@gpuixui/primitives` mount and behave in the runtime through the token theme: click/Enter-down/Space-up activation, a focus ring that the component merges and drops, controlled `Input` edits plus `onSubmit`, `Checkbox`/`Switch` state on `aria-valuetext`, the themed `Select` commit/dismiss, `Slider` arrow steps, `Progress`/`Meter` value text, a painted `Skeleton`, and a hover `Tooltip`. `simulateKeystrokes("space")` delivers no key up, so the harness now exposes `keyDown`/`keyUp` (plan `168`) |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
+| search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
@@ -434,6 +458,7 @@ src/scenarios/text-selection.tsx selection across text, code, diff and chrome
 src/scenarios/context-menu.tsx right click, pointer placement, dismissal
 src/scenarios/virtual-tree.tsx a 328-node flattened tree inside <virtual-list>
 src/scenarios/scroll-into-view.tsx keyboard follow and the two scroll routes
+src/scenarios/search.tsx  painted highlights, find controls and the virtual match index
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -469,8 +494,9 @@ narrower. Each deviation is deliberate and measured:
 - The seventeen core capabilities (including the token gallery, the modal
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
-  drag/file-drop probe and the app-level shortcut probe pass in real GPUix
-  0.10.0 on this host (39/39), with a written report and screenshots.
+  drag/file-drop probe, the app-level shortcut probe and the search-highlight
+  probe pass in real GPUix 0.10.0 on this host (40/40), with a written report
+  and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

@@ -119,6 +119,14 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
     Option.getOrNull(
       Schema.decodeUnknownOption(Smoke.A11yTree)(renderer.getA11yTree()),
     ),
+  // Highlights are quads, not styles: a bad entry is dropped rather than
+  // failing the whole frame, because one malformed wash must not hide the rest.
+  highlights: () =>
+    Arr.getSomes(
+      Arr.map(renderer.getPaintedHighlights(), (highlight) =>
+        Schema.decodeUnknownOption(Smoke.HighlightMatch)(highlight),
+      ),
+    ),
   focused: () =>
     Option.match(
       Option.flatMap(

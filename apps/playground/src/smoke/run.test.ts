@@ -80,6 +80,7 @@ describe("scenarioProblems", () => {
         "selection",
         "menu",
         "components",
+        "search",
       ]),
     );
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
@@ -87,6 +88,9 @@ describe("scenarioProblems", () => {
     );
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "theme-platform",
+    );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "search-highlights",
     );
   });
 

@@ -19,6 +19,7 @@ import { contextMenuScenario } from "./context-menu.js";
 import { virtualizedTreeScenario } from "./virtual-tree.js";
 import { scrollIntoViewScenario } from "./scroll-into-view.js";
 import { textSelectionScenario } from "./text-selection.js";
+import { searchScenario } from "./search.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { inputScenario } from "./input.js";
@@ -86,6 +87,7 @@ export const PROBE_CAPABILITIES = [
   "motion",
   "drag",
   "menu",
+  "search",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -129,6 +131,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   primitivesDisplayScenario,
   primitivesChoiceScenario,
   primitivesEntryScenario,
+  searchScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

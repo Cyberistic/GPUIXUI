@@ -11,7 +11,7 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { CheckOutcome, StyleSnapshot } from "./smoke.js";
+import { CheckOutcome, HighlightMatch, StyleSnapshot } from "./smoke.js";
 import { nullHost } from "./test-support.js";
 import { runScenarios } from "./smoke.js";
 import { checkOf, labelsOf, run, scenario, statusOf } from "./test-support.js";
@@ -79,6 +79,52 @@ describe("StyleSnapshot", () => {
     // style report that is no longer the one the tokens were written for.
     expect(Option.isNone(decode({ fontSize: "13px" }))).toBe(true);
     expect(Option.isNone(decode({ boxShadow: "#3B76F6" }))).toBe(true);
+  });
+});
+
+describe("HighlightMatch", () => {
+  const decode = Schema.decodeUnknownOption(HighlightMatch);
+
+  it("keeps the run text, offsets and every rect", () => {
+    const match = decode({
+      elementId: 42,
+      sub: 1,
+      text: "The error handler",
+      start: 4,
+      end: 9,
+      active: true,
+      rects: [
+        { x: 10, y: 20, width: 30, height: 14 },
+        { x: 10, y: 34, width: 12, height: 14 },
+      ],
+    });
+    expect(
+      Option.map(match, (value) => value.text.slice(value.start, value.end)),
+    ).toEqual(Option.some("error"));
+    expect(Option.map(match, (value) => value.active)).toEqual(
+      Option.some(true),
+    );
+    expect(Option.map(match, (value) => Arr.length(value.rects))).toEqual(
+      Option.some(2),
+    );
+  });
+
+  it("refuses a wash whose geometry is not a rect", () => {
+    // The adapter drops a malformed entry; a rect that became a string must not
+    // be coerced, or a scenario would assert on a box the runtime never painted.
+    expect(
+      Option.isNone(
+        decode({
+          elementId: 42,
+          sub: 0,
+          text: "error",
+          start: 0,
+          end: 5,
+          active: false,
+          rects: [{ x: 10, y: 20, width: "30", height: 14 }],
+        }),
+      ),
+    ).toBe(true);
   });
 });
 

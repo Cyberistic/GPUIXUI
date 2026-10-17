@@ -43,6 +43,7 @@ export const CAPABILITIES = [
   "selection",
   "menu",
   "components",
+  "search",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -202,6 +203,41 @@ export class A11yTree extends Schema.Class<A11yTree>("A11yTree")({
 }) {}
 
 /**
+ * One box a highlight wash painted.
+ *
+ * A soft-wrapped match paints one box per visual row, so a match owns rects,
+ * not a rect.
+ */
+export class HighlightRect extends Schema.Class<HighlightRect>("HighlightRect")(
+  {
+    x: Schema.Number,
+    y: Schema.Number,
+    width: Schema.Number,
+    height: Schema.Number,
+  },
+) {}
+
+/**
+ * One highlight wash the runtime painted, decoded from `getPaintedHighlights`.
+ *
+ * `text` is the full run the match lives in, so `text.slice(start, end)` is the
+ * matched string. Offsets are UTF-16 code units — the units `indexOf` returns —
+ * and `active` marks the find-bar cursor. The wash colour is not reported; this
+ * snapshot deliberately stops at what the runtime can prove.
+ */
+export class HighlightMatch extends Schema.Class<HighlightMatch>(
+  "HighlightMatch",
+)({
+  elementId: Schema.Number,
+  sub: Schema.Number,
+  text: Schema.String,
+  start: Schema.Number,
+  end: Schema.Number,
+  active: Schema.Boolean,
+  rects: Schema.Array(HighlightRect),
+}) {}
+
+/**
  * The only way a scenario touches the runtime.
  *
  * `apps/playground` adapts a real renderer to this interface; a scenario never
@@ -230,6 +266,14 @@ export interface SmokeHost {
   readonly paintedStyle: (testId: string) => StyleSnapshot | null;
   /** The last painted frame's accessibility tree, decoded at the adapter. */
   readonly a11y: () => A11yTree | null;
+  /**
+   * Every highlight wash the last frame painted, decoded at the adapter.
+   *
+   * A highlight is a quad, not a style property and not painted text, so the
+   * renderer's own report is the only honest evidence that a match reached the
+   * screen.
+   */
+  readonly highlights: () => ReadonlyArray<HighlightMatch>;
   readonly focused: () => string | null;
   readonly click: (testId: string) => void;
   readonly clickWindow: (x: number, y: number) => void;

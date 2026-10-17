@@ -57,7 +57,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[███████░░░]` 34/44 plans-and-harness
+`[x]` `[███████░░░]` 35/45 plans-and-harness
 
 `[x]` Plans `100`–`158` written and indexed for the playground workstream
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
@@ -76,6 +76,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` Probe a virtualized tree per plan `165`: `virtualized-tree` — 328 flattened rows inside `<virtual-list>`; `paddingLeft` still indents 16 px per depth; expanding 8 ↔ 48 rows repaints the window with no stale child; click and arrows move selection **and native focus** by roving index, and an off-window focused row stays painted and still receives the next key — 31/31 green (fails with exit `1` when the indent, the focus move or the flattening is removed)
 `[x]` Probe the right-click context-menu contract per plan `164`: `context-menu-pointer` — a right click is `onAuxClick` + `isRightClick` with **no `button`** and no `onClick`; a child's right click bubbles; `<anchored position={pointer}>` is exact **inside a scrolled container** (no offset, no clipping, an item below the viewport still activates); outside press and Escape dismiss; `shift-f10` opens and Escape returns focus — 30/30 green (fails with exit `1` when the open call, the position or the focus return is removed)
 `[x]` Prove the platform type styles in the native runtime per plan `170`: cycle Default/macOS/Linux/Windows and assert the mono family and unchanged colours — `theme-platform`, 39/39 green
+`[x]` Probe native search highlights per plan `171`: `highlight` / `onHighlight` / `useTextSearch` / `getPaintedHighlights`, case/whole-word/active/ranges, nested scoping, `<code>` text and the virtual `matchIndexOffset` contract — `search-highlights` 40 checks, suite `39 → 40`, two-direction proof recorded
 `[x]` Probe the remaining Tier 1 controls natively per plan `169`: `RadioGroup` arrow selection/wrap, `Rating` clamp/clear, `NumberField` step/clamp, `OTPField` focus advance and Backspace — 38/38 green, two-direction proofs recorded
 `[x]` Probe the shipped Tier 1 primitives natively per plan `168`: mount `@gpuixui/primitives` (`Button`, `Toggle`, `Input`, `Checkbox`, `Switch`, `Select`, `Slider`, `Progress`, `Meter`, `Skeleton`, `Tooltip`) through the tokens theme and add the `components` capability — 36/36 green, two-direction proofs recorded
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)

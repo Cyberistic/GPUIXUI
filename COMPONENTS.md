@@ -54,8 +54,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | selection | `text-selection` | verified |
 | menu | `context-menu-pointer` | verified |
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
+| search | `search-highlights` | verified |
 
-The suite is **39/39 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **40/40 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -162,6 +163,24 @@ saturates** on a virtual list (`-1320` at the end of a 200-row list) — read
 `getListScrollTop` for the exact `[itemIndex, offsetInItemPx, viewportHeightPx]`
 anchor. A scroll never moves focus and the focused row stays painted after the
 window leaves it.
+
+`search-highlights` is the runtime verdict for the find contract a Search input,
+log search and Search and replace are built on. What holds: `highlight` paints a
+wash per match and `getPaintedHighlights()` reports it with the run text, UTF-16
+`[start, end)` offsets and **window-space** rects (a document offset by 40/30
+painted at `x=68.4, y=30`; the same space as `getElementBounds`). `useTextSearch`
+counts through the native `onHighlight` event (`matchCount=3` after
+`dispatchNativeEvents`), `next` moves the active match, a nested `highlight`
+**replaces** its ancestor's for that subtree, case-insensitive is the default,
+`caseSensitive`/`wholeWord` behave as documented, and explicit `ranges` paint
+exactly. A soft-wrapped match paints **one box per visual row**; a range that
+splits a surrogate pair is **refused without snapping** while a valid range
+after it still paints. `<code>` is searched by `query`; a `ranges` spec paints
+nothing inside native code text. In a `<virtual-list>`,
+`matchIndexOffset` + `activeIndex` number matches **document-wide**: each row
+declaring `matchIndexOffset: row` made row 90 the only active wash after
+`scrollToItem(list, 90)`. The honest gap: the report carries no wash colour, so
+`color`/`activeColor` are unasserted — screenshot evidence only.
 
 `virtualized-tree` is the runtime verdict for a file tree: it flattens 8
 directories × 40 files into one `<virtual-list>` and drives the tree contract
@@ -416,7 +435,7 @@ in-package and an end-to-end native verdict.
 | Collapsible sections | todo | ? | `div` + `motion` (height). Variant merged here too: Expandable card (adabraka `expandable_card`). |
 | Breadcrumbs | todo | ? | `div` + `<text>`. |
 | Pagination | todo | ? | Button groups + `<text>`. |
-| Search inputs | todo | ? | `<input>` exists; the search UI is ours. `useTextSearch`/`findRanges` search rendered text, not an input. |
+| Search inputs | todo | ? | `<input>` exists; the search UI is ours. `useTextSearch`/`findRanges` search rendered text, not an input. **Measured (`search-highlights`, plan `171`):** the hook counts through `onHighlight`, `next` moves the active match, and a nested `highlight` replaces the ancestor's; the input, debounce and empty state remain the component's. |
 | Comboboxes | todo | yes | `Combobox` + parts published and measured natively (`combobox-filter`): typing filters, Enter commits the auto-highlighted row, the empty state mounts, Escape closes. `ComboboxList` filters only when its child is a function. API-shape work, not implementation. Variant merged here: Autocomplete (base-gpui `AutocompleteRoot`/`AutocompleteValue`) — the free-text variant; see also Search inputs. |
 | Date / time pickers | todo | ? | `div` + `<text>` + keyboard grid; no date host element. |
 | Fieldset | todo | ? | Form grouping (`FieldsetRoot`/`Legend` in base-gpui). `div` + `<text>`. |
@@ -479,7 +498,7 @@ in-package and an end-to-end native verdict.
 | File trees | todo | yes (probe) | Tree views + `<virtual-list>` — `virtualized-tree` proves the combination: 328 flattened rows, 16 px per depth inside a virtual row, expand/collapse from 8 to 48 rows, click/arrows with native focus, and focus surviving the window moving away. Hierarchical virtualization itself is ours; an off-window row is invisible to the accessibility tree (`a11y-tree`). |
 | Log viewers | todo | yes (probe) | `log-viewer`: `<virtual-list alignment="bottom" followTail>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up then appending does **not** snap back, so a follow toggle is app state plus a scroll. `<text>`; text search/highlight hooks exist. Copy is native: `text-selection` selects across text rows and `<code>`/`<diff>` copy excludes chrome, but a drag anchored in a `userSelect: "none"` gutter selects nothing — a text row, not the gutter, must anchor the selection. |
 | Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
-| Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
+| Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. **Measured (`search-highlights`, plan `171`):** washes paint in window coordinates, a soft wrap paints one box per row, a surrogate-split range is refused, `<code>` is searched by `query` (not `ranges`), and a virtual row's `matchIndexOffset` numbers matches document-wide. The wash colour is not reported, so `color`/`activeColor` are unasserted. |
 | Multi-pane editing layouts | todo | ? | Composition over split panes + editors. |
 
 ## Tier 5 — specialised
