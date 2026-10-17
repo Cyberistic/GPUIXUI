@@ -1,0 +1,85 @@
+---
+title: Collapsible sections
+description: A single show/hide region.
+---
+
+<ComponentState slug="collapsible" />
+
+<NativePreview slug="collapsible" />
+
+`Collapsible` is the smallest disclosure: a trigger with `aria-expanded` and a
+body that is mounted only while open. Compose it when an accordion would be
+overkill — one advanced-options block, one "show details" row.
+
+## Usage
+
+```tsx
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@gpuixui/components/collapsible";
+
+<Collapsible defaultOpen={false}>
+  <CollapsibleTrigger>Advanced options</CollapsibleTrigger>
+  <CollapsibleContent>
+    <Option label="Retry budget" value="3 attempts" />
+  </CollapsibleContent>
+</Collapsible>;
+```
+
+## Variants
+
+No visual variant. The three parts are the root, the trigger and the content; the
+content unmounts while closed, so it holds no focus, subscriptions or stale
+values.
+
+## Sizes
+
+No size prop. The trigger uses the `label` type role and theme spacing; the body
+has no surface of its own and inherits the card or panel around it.
+
+## States
+
+Controlled (`open`/`onOpenChange`) or uncontrolled (`defaultOpen`). In controlled
+mode the trigger reports the change and leaves the body where the consumer put it.
+
+## Composition
+
+The collapsible example is an advanced-options block inside a settings card:
+
+<include lang="tsx" meta='title="packages/components/examples/collapsible.example.tsx"'>
+  ../../../../../packages/components/examples/collapsible.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/collapsible.tsx" name="CollapsibleProps" />
+
+## Keyboard and focus
+
+The trigger is a button: Tab reaches it, Enter and Space toggle it, and
+`aria-expanded` follows the body. Nothing traps focus.
+
+## Theming
+
+The trigger uses `colors.foreground`, `colors.hover` on hover, `colors.active`
+while pressed and the shared focus ring; the body uses `colors.mutedForeground`
+and theme spacing.
+
+## Accessibility and limitations
+
+- `aria-expanded` and real button semantics on the trigger.
+- **No `aria-controls`** in 0.10.0; the relationship is positional.
+- **No height animation in v1**: the runtime animates to a numeric height, and an
+  auto-height reveal needs a measured first paint. The body mounts instantly.
+- Closing loses local state inside the body by design (it unmounts).
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/collapsible.tsx"'>
+  ../../../../../packages/components/src/collapsible.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="collapsible" />

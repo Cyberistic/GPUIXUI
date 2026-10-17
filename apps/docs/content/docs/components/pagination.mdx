@@ -1,0 +1,80 @@
+---
+title: Pagination
+description: Moves through a long result set.
+---
+
+<ComponentState slug="pagination" />
+
+<NativePreview slug="pagination" />
+
+`Pagination` is controlled: the app owns the page, the control renders the window
+the page implies. The arithmetic lives in `pagination/logic.ts` so the width does
+not jump as the user pages.
+
+## Usage
+
+```tsx
+import { Pagination } from "@gpuixui/components/pagination";
+
+const [page, setPage] = useState(1);
+
+<Pagination page={page} pageCount={9} onPageChange={setPage} />;
+```
+
+## Variants
+
+`showEdges={false}` drops the first and last page; `siblingCount` (default 1)
+widens the window around the current page. There is no visual variant.
+
+## Sizes
+
+Page buttons are `controlHeight(theme, "sm")` squares with `radius.sm`; the
+current page is a primary-filled button, the others are ghost buttons.
+
+## States
+
+Controlled only, by design: the result set and the page usually live together. An
+out-of-range page is clamped. Previous/Next leave the tab order at the ends
+instead of merely looking disabled; the current page is a no-op.
+
+## Composition
+
+The pagination example pages a real result set with a live count:
+
+<include lang="tsx" meta='title="packages/components/examples/pagination.example.tsx"'>
+  ../../../../../packages/components/examples/pagination.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/pagination.tsx" name="PaginationProps" />
+
+## Keyboard and focus
+
+Tab moves through the enabled buttons only. Enter and Space activate the focused
+button through the shared button primitive.
+
+## Theming
+
+The current page paints `colors.primary`/`primaryForeground`; others are ghost
+with `colors.mutedForeground`; the ellipsis uses the muted foreground and caption
+type.
+
+## Accessibility and limitations
+
+- `role="navigation"` with a name; every page button has `aria-label="Page N"`,
+  ellipses have `aria-label="More pages"`.
+- **No `aria-current="page"`** in 0.10.0: the current page carries the supported
+  `aria-selected` plus the primary fill.
+- No page-size selector; put one beside the control.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/pagination.tsx"'>
+  ../../../../../packages/components/src/pagination.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="pagination" />

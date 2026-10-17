@@ -1,0 +1,92 @@
+---
+title: Tabs
+description: Switches between sibling views in place.
+---
+
+<ComponentState slug="tabs" />
+
+<NativePreview slug="tabs" />
+
+`Tabs` switches between panels that share one region. Selection lives in the tab
+set, focus lives on a trigger, and the two move together unless `activation` says
+otherwise.
+
+## Usage
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
+
+<Tabs defaultValue="profile">
+  <TabsList label="Account">
+    <TabsTrigger value="profile">Profile</TabsTrigger>
+    <TabsTrigger value="notifications">Notifications</TabsTrigger>
+  </TabsList>
+  <TabsContent value="profile">…</TabsContent>
+  <TabsContent value="notifications">…</TabsContent>
+</Tabs>;
+```
+
+## Variants
+
+`TabsList` renders horizontal or vertical rails; `activation` is `automatic`
+(default: arrows select) or `manual` (arrows move focus, Enter/Space selects).
+There is no separate visual variant.
+
+## Sizes
+
+The rail uses the shared control metrics (`controlHeight(theme, "md")`), a thin
+border and `radius.md`; a vertical list stacks the triggers.
+
+## States
+
+Controlled (`value`/`onValueChange`) or uncontrolled (`defaultValue`). Only the
+selected trigger is in the tab order; the others are `-1`. Disabled triggers are
+skipped by every key and cannot be clicked. A controlled set reports the change
+but does not switch its panel until the consumer re-renders.
+
+## Composition
+
+The tabs example is a settings panel with real panels per tab:
+
+<include lang="tsx" meta='title="packages/components/examples/tabs.example.tsx"'>
+  ../../../../../packages/components/examples/tabs.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/tabs.tsx" name="TabsProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| ---- | ------ |
+| ArrowRight / ArrowLeft (horizontal) | next / previous enabled tab, wrapping |
+| ArrowDown / ArrowUp (vertical) | the same on the vertical axis |
+| Home / End | first / last enabled tab |
+| Enter / Space | select the focused tab (the only way in manual) |
+
+## Theming
+
+The rail paints `colors.background` with a thin `colors.border` and `radius.md`.
+The selected trigger takes `colors.card`/`foreground`; the others use
+`mutedForeground` and hover with `colors.hover`.
+
+## Accessibility and limitations
+
+- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
+  exposed; give the list a `label` so the set has a name.
+- **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in 0.10.0. The
+  panel is named by its value and the trigger→panel link is positional.
+- The list owns the keys because a focused trigger's key event bubbles to it.
+- Vertical tab sets stack the triggers; the rail is not a separate column.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/tabs.tsx"'>
+  ../../../../../packages/components/src/tabs.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="tabs" />

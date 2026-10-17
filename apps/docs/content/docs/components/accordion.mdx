@@ -1,0 +1,88 @@
+---
+title: Accordions
+description: Expands and collapses stacked sections.
+---
+
+<ComponentState slug="accordion" />
+
+<NativePreview slug="accordion" />
+
+`Accordion` is a list of collapsible sections that agree on which ones are open.
+The two modes have genuinely different state: a single optional value, or an
+ordered set. That is a tagged union in `accordion/logic.ts`, not a list plus a
+boolean.
+
+## Usage
+
+```tsx
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@gpuixui/components/accordion";
+
+<Accordion type="single" collapsible={false} defaultValue="what">
+  <AccordionItem value="what">
+    <AccordionTrigger>What is GPUix?</AccordionTrigger>
+    <AccordionContent>A native rendering runtime…</AccordionContent>
+  </AccordionItem>
+</Accordion>;
+```
+
+## Variants
+
+| Mode | Rules |
+| ---- | ----- |
+| `type="single"` | opening another section closes the first; toggling the open one is a no-op unless `collapsible` |
+| `type="single" collapsible` | toggling the open section closes it, leaving nothing open |
+| `type="multiple"` | toggling adds or removes; open order is preserved and duplicates are impossible |
+
+## Sizes
+
+Triggers use the `label` type role at `controlHeight(theme, "lg")`; spacing and
+dividers come from the theme.
+
+## States
+
+Controlled or uncontrolled. Single mode reports `string | null` (`null` is the
+controlled closed state); multiple mode reports an array. Disabled items are
+skipped by clicks and keys and leave the tab order.
+
+## Composition
+
+The accordion example is a real FAQ/advanced-settings stack:
+
+<include lang="tsx" meta='title="packages/components/examples/accordion.example.tsx"'>
+  ../../../../../packages/components/examples/accordion.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/accordion.tsx" name="AccordionProps" />
+
+## Keyboard and focus
+
+The trigger is a button: Tab reaches it, Enter and Space toggle it. There is no
+arrow-key navigation between headers in v1.
+
+## Theming
+
+Triggers use `colors.foreground` and `colors.primary` on hover; a thin
+`colors.border` divides sections, with none after the last. The indicator is a
+text glyph (`⌄` / `⌃`) because 0.10.0's style has no `transform` for rotation.
+
+## Accessibility and limitations
+
+- `aria-expanded` on each trigger; the trigger names its section.
+- **No `aria-controls`** in 0.10.0; the relationship is positional.
+- The indicator carries `aria-label="Expand"` / `"Collapse"`.
+- No arrow-key movement between headers and no height animation.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/accordion.tsx"'>
+  ../../../../../packages/components/src/accordion.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="accordion" />

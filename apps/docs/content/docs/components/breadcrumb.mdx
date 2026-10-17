@@ -1,0 +1,98 @@
+---
+title: Breadcrumbs
+description: Shows and navigates the current hierarchy.
+---
+
+<ComponentState slug="breadcrumb" />
+
+<NativePreview slug="breadcrumb" />
+
+`Breadcrumb` shows where the current page sits in a hierarchy. The trail is
+declarative — `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage` — and
+`maxItems` collapses the middle while always keeping the first entry and the
+current page.
+
+## Usage
+
+```tsx
+import {
+  Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
+  BreadcrumbPage, BreadcrumbSeparator,
+} from "@gpuixui/components/breadcrumb";
+
+<Breadcrumb maxItems={3}>
+  <BreadcrumbList>
+    <BreadcrumbItem>
+      <BreadcrumbLink onSelect={() => go("Projects")}>Projects</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbLink onSelect={() => go("GPUIXUI")}>GPUIXUI</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbPage>components</BreadcrumbPage>
+    </BreadcrumbItem>
+  </BreadcrumbList>
+</Breadcrumb>;
+```
+
+## Variants
+
+No visual variant. The optional `separator` changes the glyph; the default is a
+slash-like text separator.
+
+## Sizes
+
+`maxItems` is a budget, not a size: values below 3 clamp to 3. The trail keeps
+the first entry, an ellipsis and the last `maxItems - 2` entries; a hidden entry
+takes its separator with it.
+
+## States
+
+Breadcrumbs have no selected state. The current page is `BreadcrumbPage`, plain
+text with no tab stop; the earlier entries are links.
+
+## Composition
+
+The breadcrumb example is a real project → file hierarchy with a collapsed middle:
+
+<include lang="tsx" meta='title="packages/components/examples/breadcrumb.example.tsx"'>
+  ../../../../../packages/components/examples/breadcrumb.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/breadcrumb.tsx" name="BreadcrumbProps" />
+
+## Keyboard and focus
+
+Tab reaches each link in order. Enter and Space fire `onSelect`. The current page
+and the ellipsis are not focusable.
+
+## Theming
+
+Links and separators use the `caption` role; links are `colors.mutedForeground`
+and hover to `colors.foreground`; the current page is `colors.foreground`. The
+root has no surface.
+
+## Accessibility and limitations
+
+- `role="navigation"` named "Breadcrumb", `role="list"`, and `role="listitem"` on
+  entries; separators are presentation.
+- **No `aria-current`** in 0.10.0: the current page is text plus colour, not an
+  attribute.
+- The ellipsis is a text node with `aria-label="More"`, not a button.
+- `BreadcrumbList` reads its direct children, so a wrapper around an item counts
+  as one entry.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/breadcrumb.tsx"'>
+  ../../../../../packages/components/src/breadcrumb.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="breadcrumb" />

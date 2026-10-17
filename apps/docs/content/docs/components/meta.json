@@ -35,6 +35,11 @@
     "popover",
     "dropdown-menu",
     "context-menu",
-    "command-menu"
+    "command-menu",
+    "tabs",
+    "accordion",
+    "collapsible",
+    "breadcrumb",
+    "pagination"
   ]
 }

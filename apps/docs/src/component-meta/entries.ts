@@ -635,30 +635,74 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  planned("tabs", "Tabs", "2", "Switches between sibling views in place.", {
-    related: ["button-group"],
+  delivered("tabs", "Tabs", "2", "Switches between sibling views in place.", {
+    gpuix: "partial",
+    sourcePath: "packages/components/src/tabs.tsx",
+    related: ["accordion", "list"],
+    limitations: [
+      "No aria-orientation, aria-controls or aria-labelledby in 0.10.0.",
+      "The panel is named by its value; the trigger-panel link is positional.",
+      "Vertical tab sets stack the triggers rather than using a separate rail.",
+    ],
   }),
-  planned(
+  delivered(
     "accordion",
     "Accordions",
     "2",
     "Expands and collapses stacked sections.",
-    { related: ["collapsible"] },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/accordion.tsx",
+      related: ["collapsible", "tabs"],
+      limitations: [
+        "No aria-controls in 0.10.0; the relationship is positional.",
+        "No arrow-key movement between headers.",
+        "No height animation; the indicator is a text glyph.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "collapsible",
     "Collapsible sections",
     "2",
     "A single show/hide region.",
-    { related: ["accordion"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/collapsible.tsx",
+      related: ["accordion", "card"],
+      limitations: [
+        "No aria-controls in 0.10.0.",
+        "No height animation: the body mounts instantly.",
+        "Closing unmounts the body and loses its local state.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "breadcrumb",
     "Breadcrumbs",
     "2",
     "Shows and navigates the current hierarchy.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/breadcrumb.tsx",
+      related: ["tabs", "pagination"],
+      limitations: [
+        "No aria-current in 0.10.0; the current page is text plus colour.",
+        "The ellipsis is a text node, not a button.",
+        "A wrapper around an item counts as one entry.",
+      ],
+    },
   ),
-  planned("pagination", "Pagination", "2", "Moves through a long result set."),
+  delivered("pagination", "Pagination", "2", "Moves through a long result set.", {
+    gpuix: "partial",
+    sourcePath: "packages/components/src/pagination.tsx",
+    related: ["breadcrumb", "list"],
+    limitations: [
+      "No aria-current=page in 0.10.0; the current page uses aria-selected.",
+      "Controlled only; there is no uncontrolled copy.",
+      "No page-size selector.",
+    ],
+  }),
   planned(
     "search-input",
     "Search inputs",
