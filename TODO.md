@@ -85,9 +85,12 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[ ]` `[░░░░░░░░░░]` 0/4
+`[ ]` `[░░░░░░░░░░]` 0/7
 
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
+`[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
+`[ ]` Repo tooling: `.gitignore`'s `references/` does not match the worktree's `references` symlink, so it shows as untracked and can be committed by accident; ignore the symlink too
 `[ ]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables
 `[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables
 `[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5)
+`[ ]` Docs site: add `<ComponentSource>` (copyable real source) with the first real component page

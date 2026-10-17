@@ -161,7 +161,7 @@ import { Button } from "@gpuixui/primitives";
 
 ## API reference
 
-<PropsTable sourcePath="@gpuixui/primitives/button" exportName="ButtonProps" />
+<auto-type-table path="../../../../../packages/primitives/src/button/button.tsx" name="ButtonProps" />
 
 ## Related
 
@@ -172,19 +172,8 @@ See <RelatedComponents slug="button" />.
 dependencies, related components and the recorded limitations — all from one
 record, so the page cannot contradict `COMPONENTS.md`.
 
-`<PropsTable>` wraps `fumadocs-typescript`'s `AutoTypeTable`:
-
-```tsx
-import { AutoTypeTable } from "fumadocs-typescript/ui";
-
-export function PropsTable({ sourcePath, exportName }: PropsTableProps) {
-  return <AutoTypeTable path={sourcePath} name={exportName} />;
-}
-```
-
-The prop types are read from the component package's **source** at build time via
-`remarkAutoTypeTable` (configured in `source.config.ts`), using tsdoc annotations the
-component workstream already must write:
+Prop tables are generated from the component's **source** at build time by
+`remarkAutoTypeTable`, using tsdoc annotations the component workstream writes:
 
 - `@internal` hides a prop;
 - `@remarks \`Type\`` simplifies a displayed type;
@@ -211,24 +200,36 @@ than thinning the schema.
 
 ## 6. Files to create
 
+Files (as implemented — see §4a for the two deviations from the first draft):
+
 ```
 apps/docs/src/component-meta/
 ├── schema.ts                 # Effect Schema contract (test-only usage)
+├── entries.ts                # the records, typed by the schema
 ├── registry.ts               # aggregates entries; grouped views
-├── registry.test.ts          # the load-bearing test
-└── entries/
-    ├── button.ts             # first record(s); "planned" until the package lands
-    └── ...                   # one per COMPONENTS.md row as components land
+└── registry.test.ts          # the load-bearing test
 apps/docs/src/components/
 ├── component-index.tsx       # index page body, generated from the registry
 ├── component-state.tsx       # status/support/deps/related/limitations block
-├── related-components.tsx    # inline related links from the registry
-└── preview/
-    └── props-table.tsx       # fumadocs-typescript AutoTypeTable wrapper
+└── related-components.tsx    # inline related links from the registry
 apps/docs/content/docs/components/
-├── meta.json                 # order; may be generated from the registry
+├── meta.json                 # order
 └── index.mdx                 # <ComponentIndex />
 ```
+
+### 4a. Two deviations, with reasons
+
+1. **One `entries.ts`, not `entries/<slug>.ts`.** The records are small and
+   uniform; one typed module with a `planned(...)` helper is less code than
+   dozens of near-identical files, and the registry test still enforces
+   uniqueness, ordering, and agreement with `COMPONENTS.md`.
+2. **Prop tables use the remark path, not the async UI component.**
+   `fumadocs-typescript/ui`'s `AutoTypeTable` is an **async** component (RSC);
+   TanStack Start is SSR, not RSC, so it cannot render it. The supported Vite
+   path is `remarkAutoTypeTable` in `source.config.ts`: a page writes
+   `<auto-type-table path="./relative.ts" name="ButtonProps" />`, the plugin
+   generates the table at build time, and `TypeTable` is registered in the MDX
+   component map (`src/components/mdx.tsx`). `path` is relative to the MDX file.
 
 `source.config.ts` gains the `remarkAutoTypeTable` plugin:
 
@@ -237,7 +238,7 @@ import { createGenerator, createFileSystemGeneratorCache, remarkAutoTypeTable } 
 import { defineConfig } from "fumadocs-mdx/config";
 
 const generator = createGenerator({
-  cache: createFileSystemGeneratorCache("node_modules/.cache/fumadocs-typescript"),
+  cache: createFileSystemGeneratorCache(".cache/fumadocs-typescript"),
 });
 
 export default defineConfig({
