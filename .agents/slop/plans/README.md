@@ -121,6 +121,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [322](./322-skeleton-accent-wash.md) | The loading skeleton on the accent a selectable row hovers | F | 071, 078, 094, 300, 309, 312, 314, 316 | done |
 | [323](./323-undefined-platform-colour.md) | An `undefined` platform colour is not a colour override | F | 301, 310, 311, 321 | done |
 | [324](./324-public-type-index.md) | Name every public type in the reference | F | 066, 071, 086, 311 | done |
+| [325](./325-invalid-field-edge.md) | The invalid field edge the contract never measures | F | 057, 071, 074, 084, 092, 306, 312 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -851,6 +852,19 @@ now has a `## Types` index naming all 44 once, alphabetically, and
 `public-types.test.ts` compares the table with the module walk in both
 directions, so a new export cannot ship unnamed and a stale row cannot linger.
 No value, token, pair or floor changes.
+
+325 closes the last functional boundary the contract measured only as a fill.
+An invalid field signals its error with a `destructive` border — `FieldInput`
+paints it on the `input` fill and the ColorPicker hex field on the `background`
+canvas — but `destructive` was measured as a fill (its on-colour foreground, its
+hover and pressed steps, and its perceivability on a surface), never as an edge.
+An edited theme whose `destructive` approaches `input` could therefore erase the
+only error signal while `themeContrastFailures` returned `[]`. The two pairs join
+the `boundary` class (262 → 264) and every shipped set already clears the floor
+(Aero light is the tightest at 4.18:1 default; the AAA sets are above 10:1), so
+no colour moves. `invalid-field-edge.test.ts` states the shipped guarantee and
+the erased-error regression, and the design system gains the `invalid` state and
+its floor row.
 
 ### Reference adoption (block `200–299`)
 

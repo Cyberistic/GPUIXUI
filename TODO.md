@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 92/121
+`[x]` `[████████░░]` 93/122
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -184,6 +184,11 @@ but declared `default`; the predicate reads defined values now (plan 323)
 including `ThemeOverrides`, `PlatformRecipeName` and the contrast contract's
 `ContrastPair`, were absent while the value-coverage test stayed green; a
 module-walk guard now holds the type index to the entry modules (plan 324)
+`[x]` Hold the invalid field edge — `FieldInput` paints a `destructive` border
+on `input` and the ColorPicker hex field on `background`, but the contract
+measured `destructive` only as a fill, so an edited theme could erase the error
+signal while the checker returned `[]`; both pairs join the `boundary` class,
+every shipped set passes, so no colour moves (plan 325)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
