@@ -63,6 +63,17 @@ src/component-meta/          the component registry (plan 411)
 public/screenshots/          real native screenshots (plan 412)
 ```
 
+## Landing page
+
+`/` is `src/components/landing.tsx`, extracted from the route so
+`landing.test.tsx` can render it with `renderToStaticMarkup`. It reads the light
+and dark palettes and the platform families from `@gpuixui/tokens`, the
+documented/tracked counts from the component registry and the five preview tiers
+from its own `PREVIEW_TIERS`; no colour or number is typed twice (plan 440). It
+shows **no component image**: the only committed captures are theme-gallery
+developer frames, and a browser-drawn component would be a placeholder presented
+as native.
+
 ## Theme
 
 The site's light and dark palette **is** the library's palette. The Fumadocs

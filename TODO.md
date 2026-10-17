@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–439)
+## Docs site workstream (plans 410–440)
 
-`[x]` `[██████████]` 38/39
+`[x]` `[██████████]` 39/40
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` Curated native theme captures on Theming (plan 433) — a real 20/20 capture run, two frames + provenance sidecar, `<ThemeCaptures />` refuses an unproven frame
@@ -511,6 +511,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` The component sidebar names its tiers (plan 437) — `meta.json` separators at the Tier 1/Tier 2 boundary, one shared `tierGroupTitle` rule with the index, the registry guard proves a missing or misplaced separator fails, and the IA guard no longer treats a separator as a page
 `[x]` Internal link integrity (plan 438) — every literal `/docs` link in the content tree and the app resolves to a real page; the guard failed on the shipped `layouts.mdx` → `/docs/components/grid` link first, the page now points at the Stack page that documents `Grid`, and 184 docs tests pass
 `[x]` Built-site smoke check (plan 439) — `nub run --filter docs smoke:build` builds, serves and crawls the production output (66 pages, 85 links, search, 404, robots); it found and fixed two nested `<main>` landmarks on `/` and the 404, exits `1` on a broken canonical and `2` when it cannot verify, and the default suite guards the landmark regression without a server
+`[x]` Landing page showcase (plan 440) — `/` now renders the real light/dark palettes, the macOS/Linux/Windows families, documented-of-tracked counts per tier and the five honest preview tiers, all derived from `@gpuixui/tokens` and the registry; no colour literal, no hand-counted number, no component image, and four two-direction proofs
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed

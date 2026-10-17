@@ -1,5 +1,8 @@
+import type { ReactNode } from "react";
 import { Link } from "fumadocs-core/link";
-import { components } from "@/component-meta/registry";
+import { platformTypes } from "@gpuixui/tokens";
+import { components, groupTitles, groups } from "@/component-meta/registry";
+import { themeColors } from "@/lib/docs-theme";
 
 /**
  * The commands the landing page's quick start shows. `landing.test.tsx` keeps
@@ -11,6 +14,98 @@ export const QUICK_START = [
   "nub run --filter @gpuixui/basic-app dev",
 ] as const;
 
+/**
+ * The design system in one glance. Eight roles, not the whole catalogue: the
+ * Theming page generates all 47. Every value here is read from
+ * `@gpuixui/tokens`; a literal would be a second palette, which `landing.test`
+ * rejects (plan 440).
+ */
+export const PALETTE_ROLES = [
+  "background",
+  "foreground",
+  "primary",
+  "accent",
+  "destructive",
+  "success",
+  "warning",
+  "border",
+] as const;
+
+/** The five honest preview tiers, worded after `docs/preview-strategy.md`. */
+export const PREVIEW_TIERS: ReadonlyArray<{
+  readonly label: string;
+  readonly detail: string;
+}> = [
+  {
+    label: "Native run",
+    detail: "a screen in the companion playground, where one exists",
+  },
+  {
+    label: "Native capture",
+    detail: "a frame from the GPUix runtime, with its provenance sidecar",
+  },
+  {
+    label: "Native coverage",
+    detail: "the suite and command that drive the component in the renderer",
+  },
+  {
+    label: "Illustrative approximation",
+    detail: "browser layout for static pages, always labelled not GPUix",
+  },
+  {
+    label: "Source and limitation",
+    detail: "when the runtime cannot do it, the source and the reason",
+  },
+];
+
+const MODES = ["light", "dark"] as const;
+const PLATFORMS = ["darwin", "linux", "win32"] as const;
+
+function Palette({ mode }: { readonly mode: (typeof MODES)[number] }) {
+  return (
+    <div data-palette={mode} className="flex flex-col gap-2">
+      <p className="text-sm font-medium capitalize">{mode}</p>
+      <ul aria-label={`${mode} theme colour roles`} className="flex gap-2">
+        {PALETTE_ROLES.map((role) => {
+          const value = themeColors[mode][role];
+          return (
+            <li
+              key={role}
+              role="img"
+              aria-label={`${role} ${value}`}
+              title={`${role} · ${value}`}
+              data-role={role}
+              data-mode={mode}
+              className="size-8 rounded-md border border-fd-border"
+              style={{ backgroundColor: value }}
+            />
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/** One landing-page section; the heading id is the section's accessible name. */
+function Section({
+  id,
+  title,
+  children,
+}: {
+  readonly id: string;
+  readonly title: string;
+  readonly children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-4">
+      <h2 id={id} className="text-xl font-medium">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 /** The landing page body. Extracted from the route so it can be tested. */
 export function Landing() {
   const documented = components.filter(
@@ -18,36 +113,109 @@ export function Landing() {
   ).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-20">
-      <p className="text-sm font-medium text-fd-muted-foreground">
-        A native UI component library
-      </p>
-      <h1 className="text-4xl font-semibold">
-        Build native desktop UI with GPUix and React.
-      </h1>
-      <p className="max-w-2xl text-fd-muted-foreground">
-        GPUIXUI is a reusable component library rendered by GPUix — the GPU
-        runtime behind Zed's UI toolkit. The components run in the real native
-        runtime; this site documents them honestly and points at the native
-        playground once a screen exists.
-      </p>
-      <div className="flex flex-wrap gap-3">
-        <Link
-          href="/docs"
-          className="rounded-lg bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground"
-        >
-          Read the docs
-        </Link>
-        <Link
-          href="/docs/components"
-          className="rounded-lg border border-fd-border px-4 py-2 text-sm font-medium"
-        >
-          Browse components
-        </Link>
-      </div>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-14 px-4 py-20">
+      <header className="flex flex-col gap-5">
+        <p className="text-sm font-medium text-fd-muted-foreground">
+          A native UI component library
+        </p>
+        <h1 className="text-4xl font-semibold">
+          Build native desktop UI with GPUix and React.
+        </h1>
+        <p className="max-w-2xl text-fd-muted-foreground">
+          GPUIXUI is a reusable component library rendered by GPUix — the GPU
+          runtime behind Zed's UI toolkit. The components run in the real native
+          runtime; this site documents them honestly and points at the native
+          playground once a screen exists.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/docs"
+            className="rounded-lg bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground"
+          >
+            Read the docs
+          </Link>
+          <Link
+            href="/docs/components"
+            className="rounded-lg border border-fd-border px-4 py-2 text-sm font-medium"
+          >
+            Browse components
+          </Link>
+        </div>
+      </header>
 
-      <section className="flex flex-col gap-3 pt-6">
-        <h2 className="text-xl font-medium">Quick start</h2>
+      <Section id="system" title="The design system is the source of truth">
+        <p className="max-w-2xl text-sm text-fd-muted-foreground">
+          Semantic roles, not literal colours, in both themes. These swatches
+          are the library's own palette, read from{" "}
+          <code className="text-fd-foreground">@gpuixui/tokens</code> — the same
+          values a component paints in the native runtime. This site is a
+          browser, so it can show the values; it does not render GPUix.
+        </p>
+        <div className="flex flex-wrap gap-8">
+          {MODES.map((mode) => (
+            <Palette key={mode} mode={mode} />
+          ))}
+        </div>
+        <dl className="grid gap-3 pt-2 sm:grid-cols-3">
+          {PLATFORMS.map((platform) => (
+            <div key={platform} className="flex flex-col gap-1">
+              <dt className="text-sm font-medium">
+                {platformTypes[platform].label}
+              </dt>
+              <dd
+                className="font-mono text-xs text-fd-muted-foreground"
+                data-mono={platform}
+              >
+                {platformTypes[platform].mono}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="text-sm text-fd-muted-foreground">
+          Each platform style is an editable theme, not a stylesheet.{" "}
+          <Link href="/docs/theming">
+            See the token reference and the toggle
+          </Link>
+          .
+        </p>
+      </Section>
+
+      <Section id="inventory" title="What is documented">
+        <ul className="flex flex-col gap-2">
+          {groups.map((group) => {
+            const done = group.items.filter(
+              (component) => component.status !== "planned",
+            ).length;
+            return (
+              <li
+                key={`${group.tier}-${group.group}`}
+                data-group={group.group}
+                data-documented={done}
+                data-tracked={group.items.length}
+                className="flex flex-wrap items-baseline gap-2 text-sm"
+              >
+                <span className="font-medium">
+                  Tier {group.tier} — {groupTitles[group.group] ?? group.group}
+                </span>
+                <span className="text-fd-muted-foreground">
+                  {done} documented of {group.items.length} tracked
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="text-sm text-fd-muted-foreground">
+          Every documented component has a page with its real source, generated
+          props and the native suite that drives it. Planned rows have no
+          implementation yet.{" "}
+          <Link href="/docs/components">
+            Browse all {documented} documented components
+          </Link>
+          .
+        </p>
+      </Section>
+
+      <Section id="quick-start" title="Quick start">
         <p className="text-sm text-fd-muted-foreground">
           The packages are not on a registry yet, so start from a checkout. The
           example's <code>dev</code> script currently needs Bun, the GPUix
@@ -65,18 +233,29 @@ export function Landing() {
           <Link href="/docs/getting-started">Getting started</Link> to render
           the first window.
         </p>
-      </section>
+      </Section>
 
-      <dl className="flex gap-8 pt-4 text-sm">
-        <div>
-          <dt className="text-fd-muted-foreground">Components tracked</dt>
-          <dd className="text-2xl font-semibold">{components.length}</dd>
-        </div>
-        <div>
-          <dt className="text-fd-muted-foreground">Documented</dt>
-          <dd className="text-2xl font-semibold">{documented}</dd>
-        </div>
-      </dl>
+      <Section id="previews" title="Every preview is labelled">
+        <p className="max-w-2xl text-sm text-fd-muted-foreground">
+          A browser cannot render GPUix, so each component page says exactly
+          what its preview is — and never presents an imitation as the real
+          thing.
+        </p>
+        <ol className="flex flex-col gap-2 text-sm">
+          {PREVIEW_TIERS.map((tier, index) => (
+            <li key={tier.label} className="flex flex-wrap gap-2">
+              <span className="font-medium">
+                {index + 1}. {tier.label}
+              </span>
+              <span className="text-fd-muted-foreground">— {tier.detail}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="text-sm text-fd-muted-foreground">
+          The rule and its evidence are in{" "}
+          <Link href="/docs/architecture">Architecture</Link>.
+        </p>
+      </Section>
     </div>
   );
 }

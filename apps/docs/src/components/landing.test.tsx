@@ -1,17 +1,18 @@
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
+import { colorRoles, platformTypes } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
-import { components } from "@/component-meta/registry";
-import { Landing, QUICK_START } from "./landing";
+import { components, groups } from "@/component-meta/registry";
+import { themeColors } from "@/lib/docs-theme";
+import { Landing, PALETTE_ROLES, PREVIEW_TIERS, QUICK_START } from "./landing";
 
 /**
  * Guards the landing page (plan 410 §"Showcase quality": a useful landing page
- * and quick-start). The failure it catches is drift: the quick start is the
- * second place a newcomer reads the install commands, so it must be exactly the
- * first shell block of `installation.mdx` — a page edited on its own would
- * otherwise send readers down a command sequence the install page no longer
- * documents.
+ * and quick-start). The failure it catches is drift: every number and colour on
+ * `/` is read from the component registry or `@gpuixui/tokens`, so a page that
+ * hard-codes one would keep building after the library changed underneath it
+ * (plan 440).
  *
  * `node:fs` rather than the Effect `FileSystem` service, as in `content.test.ts`
  * and `registry.test.ts`: this package is a browser app whose tests read the
@@ -29,6 +30,20 @@ const installationCommands = (
   .split("\n");
 
 const html = renderToStaticMarkup(<Landing />);
+
+const tagWith = (attributes: string): string => {
+  const match = html.match(new RegExp(`<[a-z]+[^>]*${attributes}[^>]*>`));
+  expect(match, `no element carries ${attributes}`).not.toBeNull();
+  return match?.[0] ?? "";
+};
+
+const textOf = (attributes: string): string => {
+  const match = html.match(
+    new RegExp(`<([a-z]+)[^>]*${attributes}[^>]*>([\\s\\S]*?)</\\1>`),
+  );
+  expect(match, `no element carries ${attributes}`).not.toBeNull();
+  return match?.[2] ?? "";
+};
 
 describe("landing page", () => {
   it("shows the same quick start as the installation page", () => {
@@ -60,6 +75,8 @@ describe("landing page", () => {
         "/docs/components",
         "/docs/installation",
         "/docs/getting-started",
+        "/docs/theming",
+        "/docs/architecture",
       ],
       (href) => {
         expect(html).toContain(`href="${href}"`);
@@ -67,19 +84,52 @@ describe("landing page", () => {
     );
   });
 
-  it("reports the real component count rather than a hard-coded one", () => {
-    expect(components.length).toBeGreaterThan(0);
-    expect(html).toContain(`>${components.length}<`);
-  });
-
-  it("counts components with a page, not just the ones the inventory calls done", () => {
+  it("reports the real inventory rather than a hard-coded count", () => {
     const documented = components.filter(
       (component) => component.status !== "planned",
     );
     expect(documented.length).toBeGreaterThan(0);
     expect(documented.length).toBeLessThan(components.length);
-    expect(html).toContain("Documented");
-    expect(html).toContain(`>${documented.length}<`);
+    expect(html).toContain(`${documented.length} documented components`);
     expect(html).not.toContain("Implemented</dt>");
+  });
+
+  it("derives every tier's documented and tracked count from the registry", () => {
+    Arr.forEach(groups, (group) => {
+      const done = group.items.filter(
+        (component) => component.status !== "planned",
+      ).length;
+      expect(html).toContain(
+        `data-group="${group.group}" data-documented="${done}" data-tracked="${group.items.length}"`,
+      );
+    });
+  });
+
+  it("paints every palette swatch with the package's value", () => {
+    Arr.forEach(PALETTE_ROLES, (role) => {
+      expect(colorRoles).toContain(role);
+      Arr.forEach(["light", "dark"] as const, (mode) => {
+        const swatch = tagWith(`data-role="${role}" data-mode="${mode}"`);
+        expect(swatch).toContain(`background-color:${themeColors[mode][role]}`);
+      });
+    });
+  });
+
+  it("names the platform families from the token package", () => {
+    Arr.forEach(["darwin", "linux", "win32"] as const, (platform) => {
+      expect(textOf(`data-mono="${platform}"`)).toContain(
+        platformTypes[platform].mono,
+      );
+      expect(html).toContain(platformTypes[platform].label);
+    });
+  });
+
+  it("lists all five preview tiers and points at the rule", () => {
+    expect(PREVIEW_TIERS).toHaveLength(5);
+    Arr.forEach(PREVIEW_TIERS, (tier) => {
+      expect(html).toContain(tier.label);
+      expect(html).toContain(tier.detail);
+    });
+    expect(textOf('href="/docs/architecture"')).toContain("Architecture");
   });
 });
