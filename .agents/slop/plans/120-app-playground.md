@@ -42,6 +42,42 @@ scenario list, and the smoke runner *is* the same list driven automatically.
 dynamically, after a successful preflight.** A static import anywhere in the CLI
 module graph would crash before the report can explain why.
 
+### 2.1 Plan amendments (measured against the installed `@gpuix/*@0.10.0`)
+
+The design below was written against upstream `main`; the installed `0.10.0`
+package is narrower. Each amendment was verified against the installed `dist`
+before implementing, and the app README repeats them for a consumer.
+
+1. **The host adapter is synchronous, over `TestRenderer`** (`src/smoke/host.ts`),
+   not the async `automation` `Locator`/`App`. Every `TestRenderer` input and
+   inspection method (`nativeSimulate*`, `getElementBounds`, `getAllText`,
+   `getPaintedText`, `getScrollOffset`, `getFocusedElementId`, `captureScreenshot`,
+   `advanceTime`) is synchronous, and `SmokeHost` is synchronous; the async
+   locator would force every scenario to await for no extra capability.
+2. **`getElementsAt`, `onLayout` and `onScrollChange` do not exist in 0.10.0**
+   (`grep -r` over `react/dist` and `native/dist` finds none). §3.2's hit-test,
+   §3.5's `onLayout`-derived `max`, and §3.3's `onScrollChange` readout are
+   replaced: the overlay asserts the popup is *painted* and dismissible, the
+   panel takes `max` as a prop, and the scroll scenario reads
+   `renderer.getScrollOffset` directly.
+3. **No programmatic focus from component code.** `PublicInstance` has no
+   `focus()`; the app boundary owns `renderer.focusElement`. §3.3's "focus
+   returns to the trigger" cannot be a component contract, so the overlay
+   scenario does not claim it and the README records the limitation.
+4. **`style.gridTemplateColumns` is a column count** (`number`), not a CSS track
+   list — §3.5 of plan `130` uses flex rows with fixed widths instead.
+5. **The pure math is `src/panels/resize.ts` and the component is
+   `src/panels/split-pane.tsx`**, not `split.ts` + `split.tsx`: two files with
+   the same basename emit the same `split.js` and `tsc` rejects the collision.
+6. **`beforeEach` is a new optional argument on `Smoke.runScenarios`** so the app
+   can mount each scenario's own `view()` before its `steps` run. It is optional,
+   so the platform-free tests still need no renderer, and it is unit-tested
+   (`packages/testing`).
+7. **Artifacts use `@effect/platform-node`'s `NodeFileSystem`/`NodePath`**
+   (EF-21). `nub install --force` was needed once to materialise the package
+   into `apps/playground/node_modules`; a plain `nub install` reported "up to
+   date" against stale `.modules.yaml` metadata.
+
 ## 3. Design
 
 ### 3.1 Files (budget: ≤ 900 LOC of `src`, tests and scenarios included)

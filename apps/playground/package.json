@@ -1,0 +1,29 @@
+{
+  "name": "playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.build.json",
+    "dev": "nub run build && node --watch dist/main.js",
+    "smoke": "nub run build && node dist/smoke/run.js",
+    "check-types": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.json",
+    "test": "nub run --filter @gpuixui/testing build && vitest run"
+  },
+  "dependencies": {
+    "@gpuix/native": "0.10.0",
+    "@gpuix/react": "0.10.0",
+    "@gpuixui/testing": "workspace:*",
+    "effect": "catalog:",
+    "react": "19.2.4"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

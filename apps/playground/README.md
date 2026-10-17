@@ -1,25 +1,44 @@
 # apps/playground — the native GPUix playground
 
-**Status: Phase B.** Plan `120`
-(`.agents/slop/plans/120-app-playground.md`) builds the app: the scenario shell,
-`SplitPane` and the eight core scenarios, plus the smoke CLI. Two pieces already
-exist beside it:
+**Status: Phase B, implemented** (plan `120`,
+`.agents/slop/plans/120-app-playground.md`). One app, three jobs:
 
-- `../../packages/testing` (`@gpuixui/testing`) — the platform-free half: check
-  model, scenario runner, report and runtime preflight;
-- `legacy-probe/` — the GPUix 0.5.1 evidence probe (below).
+1. **The playground** — a real GPUix window showing every scenario, so a human
+   can drive each primitive by hand.
+2. **The native smoke runner** — the same scenarios exercised by synthetic GPUI
+   input in a `TestRenderer`, producing `smoke-report.json`.
+3. **The evidence source for the docs** — scenario ids, readouts and screenshots
+   are what `apps/docs` links to instead of faking a native preview.
 
-The app itself is not created yet; this README is updated by plan `120`.
+The **registry is the single source of truth**: `src/scenarios/index.ts` is both
+the sidebar and the smoke list, so a scenario cannot exist in one and not the
+other. Each scenario is one capability, one view, one `steps` effect.
 
-This is where the library is proven. It runs on GPUix, in the real runtime, and
-it is the only honest source of native previews for the docs site.
+## Run it
 
-## Why it exists
+```sh
+nub run dev:playground              # from the repo root: opens the playground window
+nub run --filter playground smoke   # the native smoke suite, headless
+```
 
-The single biggest risk in this project is whether GPUix supports the layout,
-input, focus, overlay and panel primitives the component API needs. That is
-resolved by a **real native smoke test early** — before investing heavily in the
-component API — and this app is where that smoke test lives.
+`dev` and `smoke` both **preflight first**: they import the native binding only
+after asking whether it loads, so a host without one gets a one-line remedy and
+exit `2`, never a stack trace.
+
+## Exit codes (`smoke`)
+
+| Exit | Meaning |
+| ---- | ------- |
+| `0`  | every scenario ran and passed |
+| `1`  | at least one scenario failed — a real regression |
+| `2`  | the runtime is unsupported here, or nothing ran — **no evidence** |
+
+Artifacts (gitignored, under `.artifacts/`):
+
+- `.artifacts/smoke-report.json` — the schema-encoded report (`Report.reportJson`);
+- `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
+
+Flags: `--json`, `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`.
 
 ## Evidence on this host (read this before believing a status row)
 
@@ -42,16 +61,61 @@ Those verdicts are evidence about the runtime and the hardware. They are
 suite run on a supported host (Apple Silicon macOS, x64 Windows, or x64 Linux
 for the live-app path).
 
-## What Phase B must create (plan `120`)
+On this host the suite exits `2`. The phase's "runs in GPUix" exit condition is
+therefore met by `legacy-probe` only, and the eight scenarios stay `unverified`
+until a supported host runs them.
 
-- A GPUix + React application that imports the library's packages directly and
-  renders a gallery of the components that exist.
-- A **native smoke test** that exercises, in the real runtime: layout, text
-  rendering, input editing, focus movement, selection, overlay open/close,
-  outside-click where supported, scroll, and panel resizing. Its output must be
-  readable from the command line so the supervisor and agents can cite it.
-- A documented run command (`nub run dev:playground` from the root) and a
-  documented way to capture evidence (screenshot or runtime output) that a docs
-  page can link to.
-- Honest failure: a primitive GPUix does not support is reported as unsupported
-  with the reproduction, not worked around silently.
+## Structure
+
+```
+src/main.tsx             the dev entry: preflight, then one render()
+src/app.tsx              the shell (sidebar = registry, stage, note)
+src/ui.tsx               Readout / Panel / Pressable / … presentational helpers
+src/theme.ts             app-local semantic colours (TODO: @gpuixui/tokens)
+src/types.ts             PlaygroundScenario = SmokeScenario + view
+src/panels/resize.ts     pure resize math (nextSize, clamped)
+src/panels/split-pane.tsx the pointer-captured divider
+src/scenarios/*.tsx      one view + one steps effect per capability
+src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
+src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
+src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
+```
+
+## Deviations from plan `120`, and why
+
+The plan was written against upstream `main`; the installed `0.10.0` API is
+narrower. Each deviation is deliberate and measured:
+
+- **The host adapter is synchronous, over `TestRenderer`** (`smoke/host.ts`),
+  not the async `automation` `Locator`/`App`. Every renderer input and
+  inspection method is synchronous and the `SmokeHost` contract is synchronous;
+  the async locator would force every scenario to await for no extra capability.
+- **0.10.0 has no `getElementsAt`, `onLayout` or `onScrollChange`** (verified by
+  grep over the installed `dist`). The overlay scenario asserts the popup is
+  *painted* and dismissible rather than hit-tested; the panel's `max` is a prop
+  rather than an observed layout; the scroll scenario reads the `getScrollOffset`
+  the renderer exposes instead of a layout event.
+- **No programmatic focus from component code.** `PublicInstance` has no
+  `focus()`, so "focus returns to the trigger" cannot be implemented or checked
+  from a component; the overlay scenario does not claim it. The app boundary
+  could call `renderer.focusElement`, but injecting renderer calls the component
+  itself cannot make would be dishonest.
+- **`style.gridTemplateColumns` is a column count**, not a CSS track list, so
+  the (plan `130`) table probe uses flex rows with fixed widths instead.
+- **`panels/resize.ts` + `panels/split-pane.tsx`**, not `split.ts` +
+  `split.tsx`: two files with the same basename collide on emit (`split.js`).
+- **`@effect/platform-node`'s `NodeFileSystem`/`NodePath`** write the artifacts
+  (EF-21), not `node:fs`.
+
+## What is proven here, honestly
+
+- `nub run --filter playground smoke` exits `2` on this host with the loader
+  message and the `darwin-arm64` remedy, and writes no report.
+- The registry reveals a missing or duplicated capability (`scenarioProblems`,
+  unit-tested).
+- The resize arithmetic clamps inclusively (`resize.test.ts`; proven to fail
+  without the clamp).
+- The CLI's unsupported path returns `2` without evaluating the suite
+  (`run.test.ts`).
+- The eight scenarios themselves are **authored, not verified** here: running
+  them needs a supported host, per ADR 0001/0002.

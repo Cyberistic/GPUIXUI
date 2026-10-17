@@ -302,11 +302,16 @@ const errored =
 const runScenario = (
   host: SmokeHost,
   scenario: SmokeScenario,
+  mount: Option.Option<(scenario: SmokeScenario) => Effect.Effect<void>>,
 ): Effect.Effect<ScenarioResult> =>
   Effect.gen(function* () {
     const checks = yield* Ref.make<ReadonlyArray<CheckResult>>([]);
     const startedAt = yield* Clock.currentTimeMillis;
-    yield* scenario.steps(context(host, checks)).pipe(
+    yield* Option.match(mount, {
+      onNone: () => Effect.void,
+      onSome: (before) => before(scenario),
+    }).pipe(
+      Effect.flatMap(() => scenario.steps(context(host, checks))),
       Effect.catch((error) => failed(checks, error)),
       Effect.catchCause(errored(checks, scenario.id)),
     );
@@ -358,16 +363,22 @@ const capabilityResults = (
  *
  * A scenario can never fail the suite: a typed assertion becomes `failed`, a
  * defect becomes `errored`, and the next scenario still runs.
+ *
+ * `beforeEach` is the mount seam: a native runner renders the scenario's own
+ * view before its `steps` run. It is optional so the platform-free tests need
+ * no renderer.
  */
 export const runScenarios = (
   host: SmokeHost,
   scenarios: ReadonlyArray<SmokeScenario>,
   meta: { readonly host: string; readonly startedAt: number },
+  beforeEach?: (scenario: SmokeScenario) => Effect.Effect<void>,
 ): Effect.Effect<SmokeReport> =>
   Effect.gen(function* () {
+    const mount = Option.fromNullishOr(beforeEach);
     const results = yield* Effect.forEach(
       scenarios,
-      (scenario) => runScenario(host, scenario),
+      (scenario) => runScenario(host, scenario, mount),
       { concurrency: 1 },
     );
     const endedAt = yield* Clock.currentTimeMillis;

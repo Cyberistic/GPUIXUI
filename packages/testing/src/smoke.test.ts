@@ -11,6 +11,8 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { CheckOutcome } from "./smoke.js";
+import { nullHost } from "./test-support.js";
+import { runScenarios } from "./smoke.js";
 import { checkOf, labelsOf, run, scenario, statusOf } from "./test-support.js";
 
 const holds = (
@@ -104,6 +106,31 @@ describe("expectSome", () => {
       ]);
       expect(holds(checkOf(report, 0), CheckOutcome.guards.passed)).toBe(true);
       expect(holds(checkOf(report, 1), CheckOutcome.guards.failed)).toBe(true);
+    }),
+  );
+});
+
+describe("runScenarios mount seam", () => {
+  it.effect("mounts each scenario once, in order, before its steps run", () =>
+    Effect.gen(function* () {
+      const mounted: string[] = [];
+      const report = yield* runScenarios(
+        nullHost,
+        [
+          scenario("a", "layout", (ctx) => ctx.expectEqual("x", 1, 1)),
+          scenario("b", "scroll", (ctx) => ctx.expectEqual("y", 1, 1)),
+        ],
+        { host: "fixture host", startedAt: 0 },
+        (mount) => Effect.sync(() => mounted.push(mount.id)),
+      );
+      expect(mounted).toEqual(["a", "b"]);
+      expect(Arr.map(report.scenarios, (result) => result.id)).toEqual([
+        "a",
+        "b",
+      ]);
+      expect(Option.getOrUndefined(statusOf(report, "layout"))).toBe(
+        "verified",
+      );
     }),
   );
 });
