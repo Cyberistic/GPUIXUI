@@ -14,7 +14,7 @@ describe("component dependencies block", () => {
     );
 
     expect(html).toContain("@gpuixui/components");
-    expect(html).toContain("effect/String");
+    expect(html).toContain("@gpuix/react/floating");
     expect(html).toContain('href="/docs/components/dialog"');
     expect(html).toContain("Dialogs");
   });

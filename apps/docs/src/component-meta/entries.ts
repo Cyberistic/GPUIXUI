@@ -780,12 +780,28 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  planned(
+  delivered(
     "message-scroller",
     "Message scroller",
     "2",
     "Keeps a transcript on new content while the reader stays in control.",
-    { related: ["list"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/message-scroller.tsx",
+      api: ["MessageScrollerProps", "MessageScrollerViewportProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/message-scroller.test.tsx",
+      ),
+      status: "done",
+      related: ["list"],
+      limitations: [
+        "Not virtualized: every row renders.",
+        "The jump-to-latest affordance sits beneath the viewport, not in a corner.",
+        "No resize observer: a stream that does not re-render is not followed.",
+        "No aria-live in 0.10.0, so new rows are not announced.",
+      ],
+    },
   ),
   delivered(
     "empty-state",
@@ -872,8 +888,12 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       status: "done",
       dependencies: [
         "effect",
+        "effect/Array",
         "effect/Fiber",
+        "effect/HashMap",
+        "effect/HashSet",
         "effect/ManagedRuntime",
+        "effect/Option",
         "effect/Stream",
       ],
       related: ["alert", "dialog"],
@@ -899,7 +919,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         "src/behaviour/dialog.test.tsx",
       ),
       status: "done",
-      dependencies: ["@gpuix/react/floating", "effect"],
+      dependencies: ["@gpuix/react/floating"],
       related: ["confirm-dialog", "popover"],
       limitations: [
         "No aria-modal or aria-labelledby; the name is the required label.",
@@ -994,7 +1014,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         "src/behaviour/context-menu.test.tsx",
       ),
       status: "done",
-      dependencies: ["@gpuix/react/floating"],
+      dependencies: ["@gpuix/react/floating", "effect", "effect/Option"],
       related: ["dropdown-menu", "command-menu"],
       limitations: [
         "No onContextMenu: opens from onAuxClick + isRightClick.",
@@ -1019,10 +1039,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ),
       status: "done",
       dependencies: [
+        "@gpuix/react/floating",
         "dialog",
         "effect/Array",
         "effect/Option",
-        "effect/String",
       ],
       related: ["dialog", "combobox"],
       limitations: [
@@ -1066,7 +1086,12 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         "src/behaviour/accordion.test.tsx",
       ),
       status: "done",
-      dependencies: ["@gpuix/react/floating", "effect/Array", "effect/Option"],
+      dependencies: [
+        "@gpuix/react/floating",
+        "effect",
+        "effect/Array",
+        "effect/Option",
+      ],
       related: ["collapsible", "tabs"],
       limitations: [
         "No aria-controls in 0.10.0; the relationship is positional.",
@@ -1181,7 +1206,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         "src/behaviour/combobox.test.tsx",
       ),
       status: "done",
-      dependencies: ["effect/Array", "effect/Option"],
+      dependencies: ["@gpuix/react/floating", "effect/Array", "effect/Option"],
       related: ["search-input", "list"],
       limitations: [
         "No aria-activedescendant in 0.10.0.",
@@ -1192,9 +1217,9 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   ),
   delivered(
     "date-picker",
-    "Date / time pickers",
+    "Date pickers",
     "2",
-    "Selects a date or time.",
+    "Selects a calendar day through a popover.",
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/date-picker.tsx",
@@ -1205,17 +1230,19 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ),
       status: "done",
       dependencies: [
+        "@gpuix/react/floating",
         "effect",
         "effect/Array",
         "effect/DateTime",
         "effect/Option",
         "popover",
       ],
-      related: ["popover", "inline-validation"],
+      related: ["popover", "inline-validation", "time-picker"],
       limitations: [
         "No aria-current; today is marked by a border.",
         "Fixed English labels; there is no i18n layer.",
-        "No time picker, range selection or adjacent-month days.",
+        "No range selection or adjacent-month days.",
+        "A date is picker-only; the time of day is the separate TimePicker field.",
       ],
     },
   ),
