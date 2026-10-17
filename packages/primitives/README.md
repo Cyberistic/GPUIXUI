@@ -80,6 +80,20 @@ none paints a literal and none scripts hover or press
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
+## Documentation and examples
+
+Every Tier 1 component has a page and a composed example beside the source:
+
+- `docs/` — one page per component (`docs/README.md` indexes them) with usage,
+  API, keyboard, accessibility, theming, limitations and verification;
+- `examples/` — five realistic compositions plus the icon set, registered in
+  `examples/index.ts` for `apps/playground`;
+- `runtime/examples.runtime.test.tsx` — mounts every example in the real
+  renderer, so an example cannot rot into source that has never run.
+
+The browser docs site (`apps/docs`) is a separate workstream and must not render
+these examples as live previews: they are GPUix host trees, not DOM.
+
 ## Verification status
 
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
@@ -97,7 +111,9 @@ type checker and by the native runtime, not by these suites.
 six suites in `runtime/` mount the components in the GPUix 0.10.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
-offset, PNG captures. Measured 2026-10-17: **6 files, 54 tests, all passing** — including a theme
+offset, PNG captures. A seventh suite mounts every example from
+`examples/index.ts`, so the documentation's compositions are runtime-proven too.
+Measured 2026-10-17: **7 files, 60 tests, all passing** — including a theme
 switch on a mounted tree and a check that no painted colour is outside the
 active palette.
 `runtime/` is deliberately outside `nub run test`, so the default gate still

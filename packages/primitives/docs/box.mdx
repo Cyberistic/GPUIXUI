@@ -1,0 +1,95 @@
+---
+title: Box
+description: The one container — a GPUix box with a semantic surface and flex facts.
+---
+
+`Box` is a `<div>` with a resolved surface: tone, padding, radius, border,
+elevation and the two flex facts a layout needs. It is the **only** primitive
+that merges a caller's `style` over a resolved one and the escape hatch for
+anything the named props do not cover. It is not a card, a panel or a dialog;
+those are compositions.
+
+## Usage
+
+```tsx
+import { Box, Text } from "@gpuixui/primitives";
+
+<Box tone="card" padding="md" radius="md" border>
+  <Text role="body">A surface with the card role.</Text>
+</Box>;
+```
+
+## Tones
+
+| `tone` | Background role | Use for |
+| ------ | --------------- | ------- |
+| `none` | none | a layout wrapper that must not paint |
+| `background` | `background` | the application frame |
+| `card` | `card` | a raised content surface |
+| `popover` | `popover` | menus, overlays, tooltips |
+| `muted` | `muted` | a quiet inset region |
+| `accent` | `accent` | a highlighted region |
+| `selected` | `selected` | a selected row or tile |
+| `skeleton` | `skeleton` | a placeholder block |
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `tone` | `SurfaceTone` | — (required) | which semantic background is painted |
+| `padding` | spacing step | none | padding on all sides from the theme scale |
+| `radius` | `none \| sm \| md \| lg \| xl \| full` | none | corner radius |
+| `border` | `boolean` | `false` | one thin border on the `border` role |
+| `elevation` | `sm \| md \| lg \| overlay` | none | the theme's first shadow at that level |
+| `grow` | `boolean` | `false` | takes leftover space on the parent's main axis |
+| `shrink` | `boolean` | `false` | may shrink below its content |
+| `fullWidth` / `fullHeight` | `boolean` | `false` | `100%` on that axis |
+| `style` | `StyleDesc` | — | merged **last**, so it wins property by property |
+| `children` | `ReactNode` | — | content |
+| `testId` | `string` | — | stable locator for automation |
+
+`shrink` is deliberately `false` by default: chrome must not squash, which is the
+opposite of the browser's flex default and the right one for application layout.
+
+## Keyboard
+
+Not focusable and not interactive. A clickable surface is a `Button` or an
+application-level host element with its own contract.
+
+## Accessibility
+
+`Box` contributes **no role** and no `aria-*`. A decorative container must stay
+out of the accessibility tree; semantic regions belong to the content or to a
+composed component such as `ButtonGroup`.
+
+## Theming
+
+Surface tones resolve through `surfaceStyle` in `src/core/style.ts`. Padding,
+radius and border width come from `spacing`, `radius` and `borderWidth`;
+elevation from the theme's shadow list, of which GPUix paints the first entry.
+
+## Limitations
+
+- No `role`, `tabIndex` or event props: the public API is a container, not a
+  host-element re-export. Compose a host element when you need semantics.
+- No gradient, background image or border-style control: the runtime's
+  `StyleDesc` supports solid roles only.
+- One shadow per element — the runtime paints a single `boxShadow`.
+
+## Verification
+
+- `src/components/presentational.test.tsx` — tone resolution, padding, radius,
+  border and "the caller's style wins".
+- `runtime/layout.runtime.test.tsx` — padding and tone survive layout in real
+  GPUix; density moves height and leaves colour alone.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Stack** — one axis over the same box.
+- **Grid** — equal tracks.
+- **ScrollArea** — a bounded box that scrolls.

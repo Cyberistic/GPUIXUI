@@ -1,0 +1,95 @@
+---
+title: Select
+description: One choice from a list, in a popover — a themed wrapper over GPUix's own Select.
+---
+
+`Select` reuses `@gpuix/react/select` for the open state, dismissal and arrow
+navigation, and themes it to match the field chrome. It is **not** a
+reimplementation: what this package owns is the trigger's paint, the list surface
+and the item states.
+
+## Usage
+
+```tsx
+import { Label, Select } from "@gpuixui/primitives";
+
+<Label>Region</Label>
+<Select
+  value={region}
+  onChange={setRegion}
+  label="Region"
+  fullWidth
+  options={[
+    { value: "eu-west", label: "Europe — West" },
+    { value: "us-east", label: "United States — East" },
+    { value: "legacy", label: "Legacy region", disabled: true },
+  ]}
+/>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `options` | `ReadonlyArray<SelectOption>` | — (required) | `{ value, label, disabled? }` items |
+| `value` | `string` | — | controlled selection |
+| `defaultValue` | `string` | — | initial selection when uncontrolled |
+| `onChange` | `(value: string) => void` | none | committed value |
+| `placeholder` | `string` | none | shown before a choice |
+| `disabled` | `boolean` | `false` | refuses opening |
+| `invalid` | `boolean` | `false` | destructive border on the trigger |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | trigger height and padding |
+| `fullWidth` | `boolean` | `false` | trigger and list fill the parent |
+| `side` | `FloatingSide` | GPUix's choice | which side the list opens on |
+| `label` | `string` | none | accessible name for the select |
+| `style` | `StyleDesc` | — | merged last on the select root |
+| `testId` | `string` | — | stable locator |
+
+## Keyboard
+
+Owned by GPUix's Select: the trigger opens with Enter/Space, the arrows move the
+highlight, Enter commits, Escape dismisses. This wrapper does not intercept any
+key.
+
+## Accessibility
+
+- The select and its trigger are GPUix's; the wrapper adds the accessible name
+  through the `label` prop.
+- The trigger wears the field chrome, so it is announced as a control with the
+  current value.
+- Disabled items are painted from the `disabled` state GPUix reports and cannot
+  be committed.
+
+## Theming
+
+`selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
+trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
+`radius.md` + `elevation.overlay`) and the item states (`selected`, `hover`,
+`disabledForeground`). The list is one spacing step inset, full trigger width.
+
+## Limitations
+
+- **Options are data.** No option groups, no rich option content, no compound
+  escape hatch in the public API; use `RadioGroup` for rich options.
+- The list's dismissal and positioning are GPUix's; this package cannot change
+  the open animation or the outside-click rules.
+- No search or type-ahead. A long list wants a combobox, which is Tier 2.
+- No multi-select.
+
+## Verification
+
+- `src/components/Select.test.tsx` — trigger chrome, list surface and item
+  states.
+- `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
+  clicked option in the real renderer; open state and dismissal are GPUix's.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **RadioGroup** — a small set with no popover.
+- **Label** — the visible name.
+- **Tooltip** — the other headless GPUix wrapper this package themes.

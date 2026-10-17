@@ -1,0 +1,82 @@
+---
+title: Separator
+description: One theme-coloured rule between regions, with an optional caption.
+---
+
+`Separator` paints a single border step: horizontal or vertical, optionally
+inset, optionally carrying a centred caption. It is a visual divider, not a
+sectioning element and not a resizable splitter.
+
+## Usage
+
+```tsx
+import { Separator, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="md">
+  <Text role="h3">Account</Text>
+  <Separator orientation="horizontal" />
+  <Text role="body">Profile and sign-in details.</Text>
+</Stack>;
+```
+
+A labelled rule is still one call:
+
+```tsx
+<Separator orientation="horizontal" label="Advanced" />
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `orientation` | `"horizontal" \| "vertical"` | — (required) | which way the rule runs |
+| `inset` | spacing step | none | margin at both ends, from `spacing` |
+| `label` | `string` | none | a centred caption; ignored for vertical rules |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+The rule's thickness is `theme.borderWidth.thin` and its colour is
+`theme.colors.border`. A labelled separator is composed from two rules and a
+`caption`-role text, not a new visual primitive.
+
+## Keyboard
+
+Not focusable. A focusable divider is a resize handle, which is a docking
+component, not this one.
+
+## Accessibility
+
+No role. The rule is decorative: it conveys grouping visually, so a region whose
+only structure is a rule must still be understandable from headings and order.
+The optional label is painted as text and is therefore readable, but it is not
+associated with a region.
+
+## Theming
+
+`ruleStyle` reads `spacing[inset]`, `borderWidth.thin` and `colors.border`. No
+literal colour or thickness appears in the component.
+
+## Limitations
+
+- No dashed or dotted style: the runtime paints solid borders.
+- No draggable splitter and no resize event.
+- A vertical separator does not stretch to its parent automatically; give it a
+  bounded parent or a `fullHeight` box around it.
+
+## Verification
+
+- `src/components/presentational.test.tsx` — horizontal/vertical thickness,
+  inset and the labelled composition.
+- `runtime/layout.runtime.test.tsx` — one border step across the surface.
+- `runtime/theme.runtime.test.tsx` — the rule repaints with the active palette.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Spacer** — empty space rather than a rule.
+- **Stack** — the regions a separator divides.
+- **Box** — a bordered surface.

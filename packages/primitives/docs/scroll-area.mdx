@@ -1,0 +1,80 @@
+---
+title: ScrollArea
+description: A bounded container that scrolls on the chosen axes.
+---
+
+`ScrollArea` sets the overflow axes and nothing else. GPUix paints the
+scrollbar with the platform theme, so the thumb cannot be tinted and there is no
+fade mask. It is a `<div>`: the runtime has no separate scroller element.
+
+## Usage
+
+```tsx
+import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
+
+<ScrollArea axis="vertical" style={{ height: 240 }}>
+  <Stack direction="column" gap="sm">
+    {rows.map((row) => (
+      <Text role="body" key={row}>{row}</Text>
+    ))}
+  </Stack>
+</ScrollArea>;
+```
+
+**Give it a bounded size.** A scroll container with no height constraint grows
+with its content and never scrolls.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` (the others are `hidden`) |
+| `style` | `StyleDesc` | — | merged last; put the bounded size here |
+| `children` | `ReactNode` | — | content |
+| `testId` | `string` | — | stable locator |
+
+## Keyboard
+
+Not focusable by itself. The runtime scrolls with the wheel; keyboard scrolling
+belongs to the focused content inside the area, and this wrapper exposes no
+`onScroll` or `onScrollChange` handler to intercept it.
+
+## Accessibility
+
+No role. The content inside is what assistive technology traverses; a scroll
+region with no label is not announced as a region. Keep lists short enough to
+navigate, or pair the area with a heading.
+
+## Theming
+
+Only the axes are resolved (`scrollStyle`). The scrollbar's colour and width
+belong to the platform theme; `theme.colors.scrollbar` exists but cannot reach
+the 0.10.0 scrollbar.
+
+## Limitations
+
+- **No scrollbar tint and no scrollbar width control** in GPUix 0.10.0
+  (`scrollbarColor`/`scrollbarWidth` exist only on the unreleased `main`).
+- **No fade mask** at the edges.
+- **No scroll events exposed by this component.** The runtime has `onScroll` but
+  not `onScrollChange`; a consumer that needs the offset must own a host element.
+- No virtualisation: a long list mounts every row. `packages/data-grid` owns the
+  virtual-list work when it lands.
+
+## Verification
+
+- `src/core/style.test.ts` — the four axis combinations.
+- `runtime/layout.runtime.test.tsx` — a wheel with `deltaY -100` leaves the
+  offset at `y -100` in the real renderer.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Box** — the bounded surface around it.
+- **Stack** — the content it scrolls.
+- **Progress** — the honest alternative for "still loading", not a fake scroll
+  position.

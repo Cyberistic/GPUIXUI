@@ -58,6 +58,15 @@ Named sizes are how an icon lines up with the text beside it.
 `src/registry.test.ts` enforces all of the above over every entry, so a
 malformed icon fails the suite rather than shipping.
 
+## Documentation and example
+
+- `docs/icon.mdx` — the icon page: API, size scale, the two accessibility rules,
+  limitations, provenance and verification.
+- `packages/primitives/examples/icons.example.tsx` — a runnable status strip and
+  the size scale, mounted in the real renderer by
+  `packages/primitives/runtime/examples.runtime.test.tsx` (the example needs the
+  theme and the runtime harness, which live in the primitives package).
+
 ## Provenance
 
 Geometry follows the [Lucide](https://lucide.dev) 24x24 grid, ISC licence. No

@@ -1,0 +1,76 @@
+---
+title: Spinner
+description: An activity indicator built from three dots, because the runtime cannot rotate.
+---
+
+`Spinner` is the activity indicator for work with no known proportion. GPUix
+0.10.0's `motion` cannot rotate, so there is no spinning arc: three dots advance
+a lit position every 120 ms and the trail fades. A `Progress` with no `value` is
+the other honest option.
+
+## Usage
+
+```tsx
+import { Spinner, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="row" align="center" gap="sm">
+  <Spinner label="Refreshing revenue" />
+  <Text role="caption" tone="muted">Refreshing…</Text>
+</Stack>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `size` | `number` | `theme.iconSize.md` | the dot side in pixels |
+| `accent` | `primary \| destructive \| muted` | `"primary"` | the lit dot's colour role |
+| `label` | `string` | `"Loading"` | accessible name announced as a status |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+`size` accepts a number because a spinner inside a `Button` often needs to match
+the button's own icon size rather than a named icon step.
+
+## Keyboard
+
+Not focusable. Activity is status, not an action.
+
+## Accessibility
+
+- Role: `Status`, with the `label` as its name.
+- Announce **what** is happening: the default "Loading" is a poor name when three
+  spinners share a screen.
+- The dots themselves are decorative and carry no text.
+
+## Theming
+
+`spinnerDots` decides the lit index and each dot's opacity; `spinnerDotStyle`
+resolves size and colour from the accent role. The gap is `spacing["2xs"]`.
+
+## Limitations
+
+- **Cannot rotate** (above).
+- No smooth animation: the lit dot jumps by design, and the runtime paints no
+  intermediate position for this component.
+- No size scale: pass pixels or an icon size's number.
+- No inline placement inside a text run; put it in a `Stack`.
+
+## Verification
+
+- `src/core/loading.test.ts` — the lit index and fade across steps.
+- `runtime/loading.runtime.test.tsx` — the lit dot's index changes over real
+  time, the accent role reaches the paint, and AccessKit reports `Status` with
+  the label.
+- `runtime/examples.runtime.test.tsx` — the feedback example mounts it.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Progress** — when a proportion is known.
+- **Skeleton** — when the shape of the content is known.
+- **Button** — uses a spinner for its `loading` state.

@@ -1,0 +1,79 @@
+---
+title: Skeleton
+description: A pulsing placeholder for content that has not arrived.
+---
+
+`Skeleton` paints a block in the skeleton role and pulses its opacity between two
+states. It is not a spinner and not a progress bar: it stands in for the shape of
+content while that content loads.
+
+## Usage
+
+```tsx
+import { Skeleton, Stack } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="sm">
+  <Skeleton height={36} width="45%" />
+  <Skeleton height={14} width="70%" />
+  <Skeleton height={12} />
+</Stack>;
+```
+
+An avatar placeholder:
+
+```tsx
+<Skeleton width={32} height={32} circle />
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `width` | `number \| string` | `"100%"` | the block's width |
+| `height` | `number \| string` | body line height | the block's height |
+| `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
+| `circle` | `boolean` | `false` | full radius; an avatar or icon placeholder |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+## Keyboard
+
+Not focusable. A skeleton is decoration; loading state must be announced by
+something else.
+
+## Accessibility
+
+The block has **no role** and no text, which is the honest arrangement — a
+placeholder must not be read out as content. Announce the wait with a `Spinner`
+label ("Loading projects") or a `Progress` label, or with visible text beside the
+skeleton.
+
+## Theming
+
+`skeletonStyle` paints `colors.skeleton`; height defaults to
+`typography.body.lineHeight`. The pulse alternates opacity `1` / `0.6` every
+700 ms.
+
+## Limitations
+
+- **No shimmer sweep**: the runtime's `motion` animates opacity, width, height,
+  insets and radius — not a moving gradient — so a shimmer would be a fake.
+- No automatic count or list-shape generation; compose the blocks you need.
+- No reduced-motion switch: the pulse is a plain interval.
+
+## Verification
+
+- `src/core/loading.test.ts` — the two pulse states and the block geometry.
+- `runtime/loading.runtime.test.tsx` — opacity samples take both `1` and `0.6`
+  in the real renderer.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Spinner** — activity without a shape.
+- **Progress** — a known proportion.
+- **Box** — the surface the real content will occupy.

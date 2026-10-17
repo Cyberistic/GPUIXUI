@@ -1,0 +1,71 @@
+---
+title: Spacer
+description: Empty space — a fixed step, or a flexible filler that pushes siblings apart.
+---
+
+`Spacer` is layout, not decoration. With no `size` it is a flexible filler
+(`flexGrow: 1`, `flexBasis: 0`) that pushes the next sibling to the far edge.
+With a `size` it is a fixed gap from the theme's spacing scale.
+
+## Usage
+
+```tsx
+import { Spacer, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="row" align="center" gap="sm">
+  <Text role="caption" tone="muted">Read-only</Text>
+  <Spacer />
+  <Text role="caption" tone="primary">Reset all</Text>
+</Stack>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `size` | spacing step | none (flexible) | a fixed square gap on both axes |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+A fixed spacer sets **both** width and height to the step, so it works in a row
+or a column without a direction prop. A flexible spacer grows on the parent's
+main axis.
+
+## Keyboard
+
+Not focusable and not interactive.
+
+## Accessibility
+
+No role and no content. Spacing carries no meaning to an assistive technology,
+which is correct: it must not be the only thing separating two concepts.
+
+## Theming
+
+The fixed size is `theme.spacing[size]`. There is no pixel `size`, so a one-off
+gap cannot enter the layout.
+
+## Limitations
+
+- A flexible spacer needs a parent with a definite main-axis size; inside an
+  unbounded column it simply has nothing to grow into.
+- It is not a margin: it occupies a flex item slot, so a parent using
+  `justify` may distribute around it differently than expected.
+- No negative space or overlapping.
+
+## Verification
+
+- `src/core/layout.test.ts` — the flexible and fixed forms.
+- `runtime/layout.runtime.test.tsx` — a filler pushes its sibling to the far
+  edge in a real frame.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Stack** — the axis a spacer grows along.
+- **Separator** — a visible division instead of empty space.
+- **Box** — a container with its own padding.

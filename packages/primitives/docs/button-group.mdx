@@ -1,0 +1,84 @@
+---
+title: ButtonGroup
+description: A row of related actions, attached or separated.
+---
+
+`ButtonGroup` lays buttons out as one row and gives the row `role="group"`. In
+`attached` mode the gap is zero and the **group** is rounded and clipped; it does
+not reshape individual buttons.
+
+## Usage
+
+```tsx
+import { Button, ButtonGroup } from "@gpuixui/primitives";
+
+<ButtonGroup mode="attached">
+  <Button variant="ghost">Day</Button>
+  <Button variant="secondary">Week</Button>
+  <Button variant="ghost">Month</Button>
+</ButtonGroup>;
+```
+
+## Modes
+
+| `mode` | Gap | Shape |
+| ------ | --- | ----- |
+| `attached` (default) | 0 | group radius `md`, `overflow: hidden` |
+| `separated` | `gap` step (`sm` default) | buttons keep their own radius |
+
+The runtime has no `:first-child`/`:last-child` selector and a component cannot
+restyle a child without cloning it, so `attached` rounds the **container**. The
+middle buttons' own radii are hidden by the clip; if you need only the ends
+rounded, pass per-button styles yourself.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced row |
+| `gap` | spacing step | `"sm"` | the gap in separated mode |
+| `style` | `StyleDesc` | — | merged last, e.g. `justifyContent: "flex-end"` |
+| `testId` | `string` | — | stable locator |
+| `children` | `ReactNode` | — | the buttons |
+
+## Keyboard
+
+The group adds no key handling. Tab moves through each button in order; Enter and
+Space follow each `Button`'s contract. A segmented control that should be one tab
+stop with arrow navigation is a radio group, not a button group.
+
+## Accessibility
+
+- Role: `group`. The component exposes **no `label` prop** and the runtime has no
+  `aria-labelledby`, so the group has no accessible name of its own. Name it with
+  a visible heading or a surrounding labelled region.
+- Each button keeps its own name and role.
+
+## Theming
+
+The gap uses `spacing[gap]`; the group radius is `radius.md`. No literal.
+
+## Limitations
+
+- No accessible name for the group (above).
+- No attached child reshaping: only the container is rounded and clipped.
+- No overflow behaviour: a group wider than its parent does not collapse into a
+  menu.
+
+## Verification
+
+- `src/components/presentational.test.tsx` — attached and separated geometry
+  plus `role="group"`.
+- `runtime/controls.runtime.test.tsx` — attached children are 0px apart,
+  separated children are the theme's `sm` gap.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Button** — the child.
+- **RadioGroup** — one choice from a set, with a roving tab stop.
+- **Separator** — divide unrelated action rows.
