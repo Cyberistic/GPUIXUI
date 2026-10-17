@@ -118,6 +118,7 @@ it("ignores a held key", async () => {
 it("refuses to activate a disabled Button by click or by Enter", async () => {
   const { runtime, calls } = await renderButton({ disabled: true });
   runtime.click("b");
+  expect(calls()).toBe(0);
   runtime.keyDown("b", "enter");
   expect(calls()).toBe(0);
 });
@@ -128,6 +129,7 @@ it("refuses to activate a loading Button, and still announces itself busy", asyn
     label: "Save",
   });
   runtime.click("b");
+  expect(calls()).toBe(0);
   runtime.keyDown("b", "enter");
   expect(calls()).toBe(0);
   expect(descriptions(runtime)).toContain("Loading");
