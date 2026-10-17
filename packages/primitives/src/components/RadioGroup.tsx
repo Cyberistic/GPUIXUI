@@ -2,9 +2,13 @@
  * `RadioGroup` — one choice from a small set.
  *
  * A radio group navigates with the arrow keys and holds **one** tab stop: the
- * arrow moves the selection, the way the platform does. Each item is the same
- * three-state paint as a checkbox with the circle shape, so the two controls
- * cannot drift.
+ * arrow selects and moves native focus with it, the way the platform behaves.
+ * Each item is the same three-state paint as a checkbox with the circle shape,
+ * so the two controls cannot drift.
+ *
+ * Focus is tracked **per item**, not on the wrapper: GPUix dispatches an event
+ * to the element that owns the handler, so a wrapper never sees a child's
+ * focus. The focused item paints the ring, exactly like a Checkbox.
  *
  * The options are data rather than children because the group owns the roving
  * index and the arrow contract over them; a compound API would move that logic
@@ -13,10 +17,11 @@
  * `COMPONENTS.md`.
  */
 
-import { useState, type ReactElement } from "react";
+import { useRef, useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
+import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import {
   decideAbsolute,
   decideActivation,
@@ -31,12 +36,7 @@ import {
 } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import {
-  mergeStyle,
-  useControlState,
-  useFocus,
-  type FocusState,
-} from "./internal.js";
+import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
@@ -67,6 +67,26 @@ export interface RadioGroupProps {
   readonly testId?: string;
 }
 
+/** Which item holds native focus, and how the group learns that it moved. */
+export interface RadioGroupFocus {
+  /** The focused option, or `None` while focus is outside the group. */
+  readonly focusedIndex: Option.Option<number>;
+  readonly onFocus: (index: number) => void;
+  /** Reports the index that lost focus, so a stale blur cannot clear the ring. */
+  readonly onBlur: (index: number) => void;
+}
+
+/** What the renderer does with the group's own state. */
+export interface RadioGroupHandlers {
+  readonly onSelect: (value: string) => void;
+  /** Move native focus to the option a keyboard move landed on. */
+  readonly onFocusMove: (index: number) => void;
+  /** Register an option's host instance, so the group can call `focusElement`. */
+  readonly registerItem: (
+    index: number,
+  ) => (instance: PublicInstance | null) => void;
+}
+
 /** The index the item at `value` sits at, or the first enabled one. */
 export const initialActiveIndex = (
   options: ReadonlyArray<RadioOption>,
@@ -90,11 +110,8 @@ export const renderRadioGroup = (
   theme: PrimitiveTheme,
   state: ValueState<string>,
   activeIndex: number,
-  focus: FocusState,
-  handlers: {
-    readonly onActivate: (index: number) => void;
-    readonly onSelect: (value: string) => void;
-  },
+  focus: RadioGroupFocus,
+  handlers: RadioGroupHandlers,
 ): ReactElement => {
   const {
     options,
@@ -113,19 +130,24 @@ export const renderRadioGroup = (
       option.disabled === true
     )
       return false;
-    handlers.onActivate(index);
     handlers.onSelect(option.value);
+    return true;
+  };
+  /** A keyboard move selects **and** moves focus, so the ring stays on the choice. */
+  const navigate = (index: number): boolean => {
+    if (!select(index)) return false;
+    handlers.onFocusMove(index);
     return true;
   };
   const move = (key: string): boolean =>
     Option.match(decideMove(activeIndex, count, key, orientation, isDisabled), {
       onNone: () => false,
-      onSome: select,
+      onSome: navigate,
     });
   const jump = (key: string): boolean =>
     Option.match(decideAbsolute(count, key, isDisabled), {
       onNone: () => false,
-      onSome: select,
+      onSome: navigate,
     });
   const onKeyDown = (event: EventPayload): void => {
     const key = event.key ?? "";
@@ -139,8 +161,6 @@ export const renderRadioGroup = (
       aria-label={props.label}
       testId={props.testId}
       onKeyDown={onKeyDown}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
       style={mergeStyle(
         {
           display: "flex",
@@ -159,19 +179,24 @@ export const renderRadioGroup = (
           accent,
           shape: "circle",
           disabled,
+          focused: Option.exists(
+            focus.focusedIndex,
+            (focused) => focused === index,
+          ),
         };
         return (
           <div
             key={option.value}
+            ref={handlers.registerItem(index)}
             role="radio"
             aria-label={option.label}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
             onClick={() => {
-              if (disabled) return;
-              handlers.onActivate(index);
-              handlers.onSelect(option.value);
+              if (!disabled) select(index);
             }}
+            onFocus={() => focus.onFocus(index)}
+            onBlur={() => focus.onBlur(index)}
             style={{
               display: "flex",
               flexDirection: "row",
@@ -203,17 +228,53 @@ export const renderRadioGroup = (
 /** A group of radio buttons. */
 export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const theme = useTheme();
-  const focus = useFocus();
+  const { renderer } = useGpuix();
+  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
+    Option.none(),
+  );
+  const itemIds = useRef<Map<number, number>>(new Map());
   const selected = useControlState(
     props.value,
     props.defaultValue ?? "",
     props.onChange,
   );
-  const [activeIndex, setActiveIndex] = useState(() =>
-    initialActiveIndex(props.options, props.value ?? props.defaultValue ?? ""),
+  return renderRadioGroup(
+    props,
+    theme,
+    selected.value,
+    initialActiveIndex(props.options, selected.value.current),
+    {
+      focusedIndex,
+      onFocus: (index) => setFocusedIndex(Option.some(index)),
+      onBlur: (index) =>
+        setFocusedIndex((current) =>
+          Option.filter(current, (focused) => focused !== index),
+        ),
+    },
+    {
+      onSelect: selected.set,
+      onFocusMove: (index) =>
+        Option.match(
+          Option.all({
+            id: Option.fromNullishOr(itemIds.current.get(index)),
+            target: Option.fromNullishOr(renderer),
+          }),
+          {
+            onNone: () => {},
+            // Paint where focus is going in the same commit: the focus event
+            // follows the native call, and waiting for it would paint the ring
+            // a frame late. The call keeps its receiver — `focusElement` is a
+            // method on the renderer, not a free function.
+            onSome: ({ id, target }) => {
+              target.focusElement?.(id);
+              setFocusedIndex(Option.some(index));
+            },
+          },
+        ),
+      registerItem: (index) => (instance) => {
+        if (instance === null) itemIds.current.delete(index);
+        else itemIds.current.set(index, instance.id);
+      },
+    },
   );
-  return renderRadioGroup(props, theme, selected.value, activeIndex, focus, {
-    onActivate: setActiveIndex,
-    onSelect: selected.set,
-  });
 };

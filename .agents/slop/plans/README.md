@@ -37,6 +37,7 @@ is the authority on order, not the file name.
 | [046](046-textarea-no-submit.md) | `TextArea` must not accept `onSubmit` | C | 030, 040, 041 | **done** — the runtime trades the newline for a submit; measured probe in §6 |
 | [047](047-tier1-docs-and-examples.md) | Tier 1 docs pages and runnable examples | C | 030, 031, 040, 041 | **done** — 21 primitives pages + the icons page, six composed examples, and a 7-file/60-test runtime run that mounts every example (§8) |
 | [048](048-tier1-fixable-limitations.md) | Three fixable Tier 1 limitations | C | 030, 040, 041, 047 | **done** — named `ButtonGroup`, `ScrollArea` deltas, RadioGroup Home/End; measured both directions in §7 (64 runtime tests) |
+| [049](049-radio-group-focus-contract.md) | The radio group's focus contract, and a Switch prop that did nothing | C | 030, 040, 041, 044, 048 | **done** — per-item ring, focus follows the selection, a derived roving index and `Switch.invalid`; four measured both-direction probes in §7 (67 runtime tests) |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |

@@ -73,6 +73,9 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[x]` `packages/icons`: docs page and the icon-gallery example (plan 047)
 `[x]` `packages/primitives`: close three fixable limitations — a named
       `ButtonGroup`, `ScrollArea` scroll deltas, RadioGroup Home/End (plan 048)
+`[x]` `packages/primitives`: the RadioGroup focus contract — a per-item focus
+      ring, focus following the selection, a derived roving index, and
+      `Switch`'s ignored `invalid` prop (plan 049)
 `[x]` `packages/primitives`: Tier 1 runtime suites in `runtime/` — 46 tests
       against the real GPUix 0.10.0 `TestRenderer` (layout, controls, fields,
       loading, icons), with the two-direction proof; results in plan 041 §9

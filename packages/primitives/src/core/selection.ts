@@ -32,7 +32,26 @@ export interface SelectionSpec {
   readonly shape?: "square" | "circle";
   readonly invalid?: boolean;
   readonly disabled?: boolean;
+  /**
+   * Holds keyboard focus, so it paints the ring.
+   *
+   * Tracked by each control, not by the paint: GPUix has no `focusVisible`, so a
+   * control learns it is focused from its own `onFocus`/`onBlur` and asks for
+   * this. A focused control gets the one outline shape a `boxShadow` can draw.
+   */
+  readonly focused?: boolean;
 }
+
+/** The ring a focused selection control paints: no offset, no blur, a spread. */
+const focusRing = (
+  theme: PrimitiveTheme,
+): NonNullable<StyleDesc["boxShadow"]> => ({
+  offsetX: 0,
+  offsetY: 0,
+  blurRadius: 0,
+  spreadRadius: theme.borderWidth.strong,
+  color: theme.colors.ring,
+});
 
 const filled = (spec: SelectionSpec): boolean => spec.state !== "unchecked";
 
@@ -107,6 +126,7 @@ export const selectionBoxStyle = (
     };
     style.active = {};
   }
+  if (spec.focused === true) style.boxShadow = focusRing(theme);
   return style;
 };
 
@@ -123,6 +143,8 @@ export const switchTrackStyle = (
 ): StyleDesc => {
   const height = theme.iconSize[spec.size];
   const role = accentRole(spec, theme);
+  const emptyBorder =
+    spec.invalid === true ? theme.colors.destructive : theme.colors.input;
   const style: StyleDesc = {
     display: "flex",
     flexDirection: "row",
@@ -133,7 +155,7 @@ export const switchTrackStyle = (
     borderRadius: theme.radius.full,
     padding: theme.spacing["2xs"],
     borderWidth: theme.borderWidth.thin,
-    borderColor: filled(spec) ? role.background : theme.colors.input,
+    borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : theme.colors.muted,
     justifyContent: filled(spec) ? "flex-end" : "flex-start",
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
@@ -149,10 +171,11 @@ export const switchTrackStyle = (
     style.opacity = 0.5;
     style.hover = {
       backgroundColor: filled(spec) ? role.background : theme.colors.muted,
-      borderColor: filled(spec) ? role.background : theme.colors.input,
+      borderColor: filled(spec) ? role.background : emptyBorder,
     };
     style.active = {};
   }
+  if (spec.focused === true) style.boxShadow = focusRing(theme);
   return style;
 };
 

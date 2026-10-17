@@ -391,6 +391,137 @@ it("moves a RadioGroup's single tab stop with its selection", async () => {
   expect(tabFromBefore()).toBe("Beta");
 });
 
+/**
+ * A key down delivered to whatever already holds focus.
+ *
+ * The existing helpers focus the element named by `testId`; a radio option has
+ * no `testId` of its own, and a user never focuses the wrapper. This is the
+ * honest path: the key goes to the focused item, as GPUI delivers it.
+ */
+const keyDownFocused = (runtime: Runtime, key: string): void =>
+  Option.match(runtime.focusedElement(), {
+    onNone: () => {
+      expect.fail("nothing holds focus, so no key can be delivered");
+    },
+    onSome: (element) => {
+      runtime.renderer.nativeSimulateKeyDown(element.id, key);
+    },
+  });
+
+/** The accessible name of whatever holds native focus. */
+const focusedLabel = (runtime: Runtime): string =>
+  Option.getOrElse(
+    Option.map(runtime.focusedElement(), (element) =>
+      String(element.customProps?.["aria-label"] ?? element.type),
+    ),
+    () => "nothing",
+  );
+
+/** The circle a radio option paints — the ring lands on it, not on the row. */
+const circleOf = (runtime: Runtime, label: string) =>
+  Option.getOrElse(
+    Option.flatMap(
+      Option.fromNullishOr(byLabel(runtime, label).children[0]),
+      (id) => Option.fromNullishOr(runtime.renderer.getElement(id)),
+    ),
+    () => expect.fail(`the ${label} radio has no circle`),
+  );
+
+/** Whether a radio option paints the focus ring. */
+const ringed = (runtime: Runtime, label: string): boolean =>
+  Option.isSome(Option.fromNullishOr(circleOf(runtime, label).style.boxShadow));
+
+it("rings the radio that holds focus, and only that one", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Switch testId="before" label="Before" />
+      </Stack>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        defaultValue="a"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+      <Stack direction="row">
+        <Switch testId="after" label="After" />
+      </Stack>
+    </Surface>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  runtime.flush();
+  expect(focusedLabel(runtime)).toBe("Alpha");
+  expect(ringed(runtime, "Alpha")).toBe(true);
+  expect(ringed(runtime, "Beta")).toBe(false);
+  runtime.focusNext();
+  runtime.flush();
+  expect(ringed(runtime, "Alpha")).toBe(false);
+});
+
+it("moves native focus with the selection when an arrow moves it", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Switch testId="before" label="Before" />
+      </Stack>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        defaultValue="a"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focusedLabel(runtime)).toBe("Alpha");
+  keyDownFocused(runtime, "down");
+  runtime.flush();
+  // The bug guarded: selection and tab stop moved to Beta while native focus
+  // stayed on Alpha, so the ring would have sat on the wrong option.
+  expect(announced(runtime, "Beta")).toBe("checked");
+  expect(focusedLabel(runtime)).toBe("Beta");
+  expect(ringed(runtime, "Alpha")).toBe(false);
+  expect(ringed(runtime, "Beta")).toBe(true);
+});
+
+it("follows a controlled value change with the tab stop", async () => {
+  const runtime = await openWindow();
+  const view = (value: string) => (
+    <Surface>
+      <Stack direction="row">
+        <Switch testId="before" label="Before" />
+      </Stack>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        value={value}
+        onChange={() => {}}
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>
+  );
+  runtime.render(view("a"));
+  runtime.render(view("b"));
+  runtime.click("before");
+  runtime.focusNext();
+  // The bug guarded: the roving index was state initialised at mount, so a
+  // parent that set the value left the tab stop on the old option.
+  expect(focusedLabel(runtime)).toBe("Beta");
+});
+
 it("selects a RadioGroup option when its own circle is clicked", async () => {
   const runtime = await openWindow();
   runtime.render(

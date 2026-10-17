@@ -20,6 +20,8 @@ import {
 import {
   initialActiveIndex,
   renderRadioGroup,
+  type RadioGroupHandlers,
+  type RadioGroupFocus,
   type RadioOption,
 } from "./RadioGroup.js";
 import { renderSwitch } from "./Switch.js";
@@ -33,6 +35,19 @@ import {
 } from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
+const unfocused: RadioGroupFocus = {
+  focusedIndex: Option.none(),
+  onFocus: vi.fn(),
+  onBlur: vi.fn(),
+};
+/** The group's handlers, with the focus move recorded by default. */
+const radioHandlers = (
+  onSelect: (value: string) => void,
+): RadioGroupHandlers => ({
+  onSelect,
+  onFocusMove: vi.fn(),
+  registerItem: () => () => {},
+});
 const checked = (value: boolean): ValueState<boolean> =>
   initValueState(Option.some(value), false);
 const text = (value: string): ValueState<string> =>
@@ -122,12 +137,44 @@ describe("RadioGroup", () => {
       testTheme,
       text("alpha"),
       0,
-      idle,
-      { onActivate: vi.fn(), onSelect },
+      unfocused,
+      radioHandlers(onSelect),
     );
     expect(expectSome(hostProp(element, "role"))).toBe("radiogroup");
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
     expect(onSelect).toHaveBeenCalledWith("beta");
+  });
+
+  it("moves focus to the option an arrow lands on", () => {
+    // The bug guarded: arrows moved the selection and the tab stop while native
+    // focus stayed on the old radio, so the platform's "selection follows
+    // focus" contract was broken and a ring would have sat on the wrong item.
+    const handlers = radioHandlers(vi.fn());
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      handlers,
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+    expect(handlers.onFocusMove).toHaveBeenCalledWith(1);
+  });
+
+  it("jumps focus to the option Home lands on", () => {
+    const handlers = radioHandlers(vi.fn());
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("gamma"),
+      2,
+      unfocused,
+      handlers,
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("home"));
+    expect(handlers.onFocusMove).toHaveBeenCalledWith(0);
+    expect(handlers.onFocusMove).toHaveBeenCalledTimes(1);
   });
 
   it("wraps from the last option back to the first", () => {
@@ -137,8 +184,8 @@ describe("RadioGroup", () => {
       testTheme,
       text("gamma"),
       2,
-      idle,
-      { onActivate: vi.fn(), onSelect },
+      unfocused,
+      radioHandlers(onSelect),
     );
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
     expect(onSelect).toHaveBeenCalledWith("alpha");
@@ -151,8 +198,8 @@ describe("RadioGroup", () => {
       testTheme,
       text(""),
       0,
-      idle,
-      { onActivate: vi.fn(), onSelect },
+      unfocused,
+      radioHandlers(onSelect),
     );
     expect(expectSome(hostTag(element))).toBe("div");
     expect(onSelect).toHaveBeenCalledTimes(0);
