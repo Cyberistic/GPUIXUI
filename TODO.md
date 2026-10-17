@@ -149,6 +149,8 @@ retired once both branches are one
 `[x]` `packages/icons`: docs page and the icon-gallery example (plan 047)
 `[x]` `packages/icons`: the size scale is `@gpuixui/tokens`' `iconSize`, not a
       second copy (plan 024)
+`[x]` `packages/primitives`: `Input`/`TextArea` gain an honest `disabled` state
+      (read-only, out of the tab order, guarded handlers) — plan 025
 `[x]` `packages/primitives`: close three fixable limitations — a named
       `ButtonGroup`, `ScrollArea` scroll deltas, RadioGroup Home/End (plan 048)
 `[x]` `packages/primitives`: the RadioGroup focus contract — a per-item focus

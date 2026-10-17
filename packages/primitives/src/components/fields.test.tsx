@@ -41,6 +41,17 @@ const heightOf = (element: ReactElement): Option.Option<number> =>
     )(expectSome(hostProp(element, "style"))),
   ).height;
 
+/** The two chrome values that make a field look and behave disabled. */
+const chromeOf = (element: ReactElement) =>
+  expectSome(
+    Schema.decodeUnknownOption(
+      Schema.Struct({
+        opacity: Schema.OptionFromNullishOr(Schema.Number),
+        cursor: Schema.OptionFromNullishOr(Schema.String),
+      }),
+    )(expectSome(hostProp(element, "style"))),
+  );
+
 describe("Input", () => {
   it("renders the value the state machine resolved, not its own draft", () => {
     const element = renderInput(
@@ -93,6 +104,40 @@ describe("Input", () => {
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Email");
     expect(hostProp(element, "aria-labelledby")).toStrictEqual(Option.none());
   });
+
+  it("makes a disabled field read-only, untabbable and de-emphasised", () => {
+    const element = renderInput(
+      { disabled: true, autoFocus: true },
+      testTheme,
+      draft("locked"),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "readOnly"))).toBe(true);
+    expect(expectSome(hostProp(element, "tabIndex"))).toBe(-1);
+    expect(hostProp(element, "autoFocus")).toStrictEqual(Option.none());
+    const chrome = chromeOf(element);
+    expect(expectSome(chrome.opacity)).toBeLessThan(1);
+    expect(expectSome(chrome.cursor)).toBe("not-allowed");
+  });
+
+  it("guards a disabled field's edit and submit handlers", () => {
+    const onValueChange = vi.fn();
+    const onSubmit = vi.fn();
+    const element = renderInput(
+      { disabled: true, onSubmit },
+      testTheme,
+      draft("locked"),
+      idle,
+      onValueChange,
+    );
+    Option.map(hostHandler(element, "onChange"), (handler) =>
+      handler(changeEvent("unwanted")),
+    );
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(hostHandler(element, "onSubmit")).toStrictEqual(Option.none());
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });
 
 describe("TextArea", () => {
@@ -123,6 +168,20 @@ describe("TextArea", () => {
     );
     const area = renderTextArea({}, testTheme, draft(""), idle, vi.fn());
     expect(hostProp(area, "onSubmit")).toStrictEqual(Option.none());
+  });
+
+  it("keeps a disabled TextArea read-only and untabbable", () => {
+    const area = renderTextArea(
+      { disabled: true, autoFocus: true },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(area, "readOnly"))).toBe(true);
+    expect(expectSome(hostProp(area, "tabIndex"))).toBe(-1);
+    expect(hostProp(area, "autoFocus")).toStrictEqual(Option.none());
+    expect(chromeOf(area).cursor).toStrictEqual(Option.some("not-allowed"));
   });
 
   it("lets the rows decide the height instead of a fixed control height", () => {

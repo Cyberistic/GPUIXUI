@@ -41,6 +41,12 @@ export interface FieldProps {
   readonly onSubmit?: (event: EventPayload) => void;
   readonly placeholder?: string;
   readonly readOnly?: boolean;
+  /**
+   * Not editable, out of the tab order, and painted with the disabled chrome.
+   * The host has no `disabled` prop, so this is read-only plus the guards below
+   * — assistive technology sees a read-only field (plan 025).
+   */
+  readonly disabled?: boolean;
   /** Take keyboard focus on mount. Required for a field to receive key events. */
   readonly autoFocus?: boolean;
   /** Validation failed: the border takes the destructive role. */
@@ -56,13 +62,17 @@ export interface FieldProps {
 
 /** The chrome a field element draws, shared by the input and the textarea. */
 export const fieldChrome = (
-  { size = "md", invalid, fullWidth, style }: FieldProps,
+  { size = "md", invalid, disabled, fullWidth, style }: FieldProps,
   theme: PrimitiveTheme,
   focused: boolean,
 ): StyleDesc => {
-  const spec = { variant: fieldVariant, size, invalid, fullWidth };
-  const base = mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme));
-  const ring = focused ? controlFocusStyle(spec, theme) : {};
+  const spec = { variant: fieldVariant, size, invalid, disabled, fullWidth };
+  const base = mergeStyle(
+    mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)),
+    disabled === true ? { cursor: "not-allowed" } : undefined,
+  );
+  const ring =
+    focused && disabled !== true ? controlFocusStyle(spec, theme) : {};
   return mergeStyle(mergeStyle(base, ring), style);
 };
 
@@ -76,14 +86,17 @@ export const fieldHostProps = (
 ) => ({
   value: state.current,
   placeholder: props.placeholder,
-  readOnly: props.readOnly,
-  autoFocus: props.autoFocus,
+  readOnly: props.readOnly === true || props.disabled === true,
+  autoFocus: props.disabled === true ? undefined : props.autoFocus,
+  tabIndex: props.disabled === true ? -1 : undefined,
   theme: nativeTextTheme(theme),
   testId: props.testId,
   "aria-label": props.label,
   style: fieldChrome(props, theme, focus.focused),
-  onChange: (event: EventPayload) => onValueChange(event.value ?? ""),
-  onSubmit: props.onSubmit,
+  onChange: (event: EventPayload) => {
+    if (props.disabled !== true) onValueChange(event.value ?? "");
+  },
+  onSubmit: props.disabled === true ? undefined : props.onSubmit,
   onFocus: focus.onFocus,
   onBlur: focus.onBlur,
 });
