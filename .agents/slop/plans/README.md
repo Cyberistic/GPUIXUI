@@ -81,6 +81,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [082](./082-primary-text-role.md) | The primary role as text | F | 014, 057, 063, 071–081 | done |
 | [083](./083-status-text-state-washes.md) | The status text on the state washes | F | 014, 057, 063, 071–082 | done |
 | [084](./084-control-boundary-on-state-washes.md) | The control boundary on the washes a row paints | F | 014, 063, 071–083 | done |
+| [085](./085-elevation-tint-role.md) | The elevation tint role the theme never painted | F | 011, 018, 056–066 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -321,6 +322,16 @@ high-contrast dark at 4.15 under 4.5. The five surfaces join the `boundary`
 class (96 → 101 pairs) and five values move one step (identity light `#848E9E` →
 `#737C8C`, identity dark `#6B7484` → `#77808F`, high-contrast dark `#A0A0A0` →
 `#AAAAAA`, macOS light `#8A8A8E` → `#6E6E73`, Linux dark `#9A9996` → `#A09F9C`).
+085 closes the last documented role the package never painted: `shadow` is
+described as the elevation tint and every platform style sets it, but no
+elevation level read it — `lightElevation` and its dark and platform peers
+carried a complete colour per level, so editing `colors.shadow` in a copied
+style changed nothing while the same tint was duplicated three times per set.
+A level is now geometry plus the alpha to apply to the tint, and
+`elevationShadow` composes the runtime's five-field shadow; `elevationShadows`
+resolves the whole list for a compositing renderer. The alphas are chosen so
+every shipped pixel is unchanged, and a new suite proves that editing the role
+retints all three levels.
 
 ### Reference adoption (block `200–299`)
 
