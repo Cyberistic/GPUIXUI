@@ -246,7 +246,7 @@ background changes with state — a selectable list row uses `accent` on hover,
 3.55:1 on `active`**, under the 4.5:1 the design system states, while every
 other shipped set passed. The four washes join the `secondary` class (66 → 70
 pairs), macOS dark lightens `mutedForeground` to `#AEAEB2` and darkens its
-pressed wash to `#404042` (5.13 / 4.68 / 5.28 / 5.29 on the four washes), and
+pressed wash to `#404042` (5.13 / 4.68 / 5.30 / 5.32 on the four washes), and
 `state-text.test.ts` guards both the shipped sets and the exact regression. The
 quiet AAA example moves to `#5D5D5D` so it still fails at 7:1 and still passes
 the default floors, which is what makes its declared-level assertion meaningful.
