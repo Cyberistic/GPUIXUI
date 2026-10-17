@@ -56,7 +56,7 @@ export const renderTextArea = (
 /** A multi-line text field. */
 export const TextArea = (props: TextAreaProps): ReactElement => {
   const theme = useTheme();
-  const focus = useFocus();
+  const focus = useFocus(props.autoFocus === true && props.disabled !== true);
   const field = useControlState(
     props.value,
     props.defaultValue ?? "",

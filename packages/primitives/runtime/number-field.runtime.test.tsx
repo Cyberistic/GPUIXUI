@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { Button } from "../src/components/Button.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yNode, type Bounds, type Runtime } from "./harness.js";
@@ -77,6 +78,30 @@ it("edits through the runtime's text pipeline and reports the number", async () 
       a11yNode(runtime.a11y(), { role: "TextInput", label: "Quantity" }),
     ),
   ).toBe(true);
+});
+
+/** The ring the field's chrome carries while it holds focus. */
+const ringed = (runtime: Runtime): boolean =>
+  Option.exists(
+    runtime.element("nf"),
+    (element) => element.style.boxShadow !== undefined,
+  );
+
+it("paints the chrome ring from mount when autoFocus is set", async () => {
+  // The runtime focuses on mount without dispatching `onFocus` (plan 041 §9);
+  // the field starts its focus state from the prop so it is not painted as
+  // unfocused while it holds the caret.
+  const runtime = await mount(
+    <Stack direction="row">
+      <NumberField testId="nf" label="Quantity" autoFocus />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  expect(Option.isSome(runtime.focusedElement())).toBe(true);
+  expect(ringed(runtime)).toBe(true);
+  runtime.click("after");
+  runtime.flush();
+  expect(ringed(runtime)).toBe(false);
 });
 
 it("keeps a trailing dot as a draft instead of rewriting it mid-edit", async () => {

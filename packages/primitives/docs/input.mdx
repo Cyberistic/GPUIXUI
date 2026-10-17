@@ -37,7 +37,7 @@ const email = "Contact email";
 | `placeholder` | `string` | none | empty-state text |
 | `readOnly` | `boolean` | `false` | accepts focus and selection, refuses edits |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, de-emphasised; no edit, submit or ring |
-| `autoFocus` | `boolean` | `false` | takes focus on mount; required for keys to arrive |
+| `autoFocus` | `boolean` | `false` | takes focus on mount, and the ring paints from mount (the runtime focuses without dispatching a focus event) |
 | `invalid` | `boolean` | `false` | border and focus ring take the destructive role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |

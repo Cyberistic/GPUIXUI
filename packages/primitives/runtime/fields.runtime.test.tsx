@@ -17,6 +17,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
+import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { Select } from "../src/components/Select.js";
@@ -85,6 +86,55 @@ it("edits an Input through the runtime's own text handling", async () => {
   expect(Option.getOrUndefined(runtime.focused())).toBe("field");
   runtime.type("h e l l o");
   expect(lastValue(field.values)).toBe("hello");
+});
+
+/** Whether a painted element carries the focus ring. */
+const ringed = (runtime: Runtime, testId: string): boolean =>
+  Option.exists(
+    runtime.element(testId),
+    (element) => element.style.boxShadow !== undefined,
+  );
+
+it("paints an autoFocus Input's ring on mount, and clears it when focus leaves", async () => {
+  // The bug guarded: `autoFocus` takes native focus without dispatching
+  // `onFocus` (plan 041 §9), so the tracked state stayed false and the field
+  // that held focus looked unfocused until the next focus change.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Input testId="field" label="Name" autoFocus />
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+  expect(Option.getOrUndefined(runtime.focused())).toBe("field");
+  expect(ringed(runtime, "field")).toBe(true);
+  runtime.click("after");
+  runtime.flush();
+  expect(ringed(runtime, "field")).toBe(false);
+});
+
+it("paints an autoFocus TextArea's ring on mount", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <TextArea testId="area" label="Notes" autoFocus />
+    </Surface>,
+  );
+  expect(Option.getOrUndefined(runtime.focused())).toBe("area");
+  expect(ringed(runtime, "area")).toBe(true);
+});
+
+it("paints no ring on a disabled autoFocus field", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Input testId="field" label="Name" disabled autoFocus />
+    </Surface>,
+  );
+  expect(runtime.focused()).toStrictEqual(Option.none());
+  expect(ringed(runtime, "field")).toBe(false);
 });
 
 it("reports an Input's Enter through onSubmit", async () => {

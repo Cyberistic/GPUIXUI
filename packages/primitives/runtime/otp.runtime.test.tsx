@@ -85,6 +85,27 @@ it("fills the code one key at a time and completes once", async () => {
   expect(field.complete).toStrictEqual(["123456"]);
 });
 
+it("paints the first cell's ring from mount when autoFocus is set", async () => {
+  // The runtime focuses the first cell without dispatching `onFocus`, so the
+  // per-cell focus state starts on cell 0 and clears on blur.
+  const runtime = await mount(
+    <Stack direction="row">
+      <OTPField testId="otp" label="Verification code" autoFocus />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  const ringed = (id: string): boolean =>
+    Option.exists(
+      runtime.element(id),
+      (element) => element.style.boxShadow !== undefined,
+    );
+  expect(focusedId(runtime)).toBe("otp-cell-1");
+  expect(ringed("otp-cell-1")).toBe(true);
+  runtime.click("after");
+  runtime.flush();
+  expect(ringed("otp-cell-1")).toBe(false);
+});
+
 it("moves native focus into the next cell as a character lands", async () => {
   const runtime = await mount(
     <OTPField testId="otp" label="Verification code" autoFocus />,

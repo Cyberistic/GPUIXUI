@@ -190,7 +190,7 @@ export const renderNumberField = (
 export const NumberField = (props: NumberFieldProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const focus = useFocus();
+  const focus = useFocus(props.autoFocus === true && props.disabled !== true);
   const range = numberRange(props);
   const inputId = useRef<number | null>(null);
   const [draft, setDraft] = useState<Option.Option<string>>(Option.none());

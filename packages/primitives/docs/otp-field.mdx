@@ -47,7 +47,7 @@ leaving a hole.
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
 | `label` | `string` | none | group name; each cell is named `<label> digit N` |
-| `autoFocus` | `boolean` | `false` | focuses the first cell on mount |
+| `autoFocus` | `boolean` | `false` | focuses the first cell on mount; its ring paints from mount |
 | `style` | `StyleDesc` | — | merged last on the group |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
@@ -103,9 +103,6 @@ No literal colour, size or radius is named.
 - **The code is contiguous.** Clearing a middle character shifts the following
   characters left; there is no sparse representation, which is why the public
   value is a single string.
-- **`autoFocus` paints no ring on mount.** The runtime focuses the cell without
-  dispatching a focus event (the same limitation as `Input`); the ring appears
-  at the next focus change.
 - **No letter casing rule.** Letters are kept as typed; a caller that needs
   uppercase normalises in `onChange`.
 
@@ -121,8 +118,8 @@ No literal colour, size or radius is named.
   cells and complete once; focus advances and moves back with the arrow keys;
   Backspace clears backwards on an empty cell and only one character on a
   filled one; the a11y tree has a `Group` and six `TextInput`s; invalid paints
-  every cell; one ring; disabled refuses input and leaves the tab order.
-  Measured 2026-10-17 (plan 054 §9).
+  every cell; one ring, painted from mount with `autoFocus`; disabled refuses
+  input and leaves the tab order. Measured 2026-10-17 (plans 054 §9 and 064 §6).
 
 ```sh
 nub run --filter @gpuixui/primitives test

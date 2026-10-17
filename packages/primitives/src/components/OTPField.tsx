@@ -164,7 +164,9 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   /** Whether the current key's native edit just emptied this cell. */
   const emptiedByEdit = useRef(false);
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
-    Option.none(),
+    props.autoFocus === true && props.disabled !== true
+      ? Option.some(0)
+      : Option.none(),
   );
   const state = useControlState(
     props.value,

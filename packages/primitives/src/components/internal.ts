@@ -66,22 +66,26 @@ export const withDensity = (
   density: Density | undefined,
 ): PrimitiveTheme => (density === undefined ? theme : { ...theme, density });
 
-/** Whether a control holds focus, and the handlers that track it. */
+/**
+ * Whether a control holds focus, and the handlers that track it.
+ *
+ * The runtime has no `focusVisible` state (plan 020 §1.2), so a focus ring has
+ * to be drawn by the component; this is where it learns it should be. React-local
+ * render state with no other reader, so a hook — not a shared Atom — is right.
+ *
+ * `initiallyFocused` exists for one runtime fact: `autoFocus` takes native focus
+ * **without dispatching `onFocus`** (plan 041 §9), so a field that mounts
+ * focused would otherwise paint no ring until the next focus change. A field
+ * passes its `autoFocus` prop; `onBlur` still clears the state normally.
+ */
 export interface FocusState {
   readonly focused: boolean;
   readonly onFocus: () => void;
   readonly onBlur: () => void;
 }
 
-/**
- * Track focus for a control.
- *
- * The runtime has no `focusVisible` state (plan 020 §1.2), so a focus ring has
- * to be drawn by the component; this is where it learns it should be. React-local
- * render state with no other reader, so a hook — not a shared Atom — is right.
- */
-export const useFocus = (): FocusState => {
-  const [focused, setFocused] = useState(false);
+export const useFocus = (initiallyFocused = false): FocusState => {
+  const [focused, setFocused] = useState(initiallyFocused);
   return {
     focused,
     onFocus: () => setFocused(true),

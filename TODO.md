@@ -261,6 +261,11 @@ retired once both branches are one
       focused a range thumb. The gesture is now `button === 0`, five runtime
       tests cover the captured drag and the refusal, and every false claim is
       corrected (plan 063)
+`[x]` `packages/primitives`: **`autoFocus` fields paint no ring.** The runtime
+      focuses on mount without dispatching `onFocus`, so the tracked focus state
+      stayed false and the field looked unfocused. It now starts from the prop;
+      five runtime tests prove the ring on mount and that it clears on blur, and
+      the limitation is deleted from the docs (plan 064)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

@@ -118,16 +118,17 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **14 files, 145 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **14 files, 150 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
 the paint (plan 055), a tooltip measured against its trigger in a column and a
 row (plan 060), a radio group's failed validation measured on the circles (plan
-061), a select's list measured against its trigger's width (plan 062), and a
-slider drag measured outside the track with the non-primary buttons refused
-(plan 063).
+061), a select's list measured against its trigger's width (plan 062), a slider
+drag measured outside the track with the non-primary buttons refused (plan 063),
+and an `autoFocus` field's ring painted from mount and cleared on blur (plan
+064).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

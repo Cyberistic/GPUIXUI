@@ -40,7 +40,7 @@ way a native number field does — it does not start with a zero to delete.
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
 | `placeholder` | `string` | none | empty-field hint |
-| `autoFocus` | `boolean` | `false` | focus on mount |
+| `autoFocus` | `boolean` | `false` | focus on mount; the ring paints from mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator on the field's chrome |
@@ -91,9 +91,6 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
 - **No drag-to-scrub.** A scrub could keep tracking outside the field — the
   runtime captures the pressed element (measured in plan 063) — but the gesture
   is not implemented; the steppers are the honest input for now.
-- **`autoFocus` paints no ring on mount.** The runtime focuses the input without
-  dispatching a focus event, so the wrapper's ring appears at the next focus
-  change (a click or Tab). The same is true of `Input`.
 
 ## Verification
 
@@ -104,8 +101,8 @@ The field uses the shared field chrome (`colors.input`, `colors.border`,
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
-  the ring paints on the chrome; a disabled field refuses text, keys and clicks.
-  Measured 2026-10-17 (plan 054 §9).
+  the chrome ring paints from mount with `autoFocus`; a disabled field refuses
+  text, keys and clicks. Measured 2026-10-17 (plans 054 §9 and 064 §6).
 
 ```sh
 nub run --filter @gpuixui/primitives test
