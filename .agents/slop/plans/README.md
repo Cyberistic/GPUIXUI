@@ -80,6 +80,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [081](./081-selection-on-painted-surfaces.md) | The selection wash on the surfaces text is selected on | F | 063, 069, 071–080 | done |
 | [082](./082-primary-text-role.md) | The primary role as text | F | 014, 057, 063, 071–081 | done |
 | [083](./083-status-text-state-washes.md) | The status text on the state washes | F | 014, 057, 063, 071–082 | done |
+| [084](./084-control-boundary-on-state-washes.md) | The control boundary on the washes a row paints | F | 014, 063, 071–083 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -308,6 +309,18 @@ under the 7:1 the design system states; Linux and Windows light `selected`
 cleared 4.5:1 by four hundredths. The four tones join the four washes (80 → 96
 pairs) and the two warning steps move one ramp step each (light `#8E5B00` →
 `#6B4500`, high-contrast light `#6B4500` → `#4B3100`), so no other role changes.
+084 closes the last functional boundary the contract measured only on plain
+surfaces. `borderStrong` is the edge of a field and of an unchecked checkbox or
+radio, and those controls sit in rows and quiet panels whose fill changes:
+`packages/primitives/src/core/selection.ts` paints the edge on `hover` and
+`active`, a selectable row adds `accent` and `selected`, and a settings group
+sits on `muted`. Six shipped sets were below the non-text floor there — the
+identity light at **2.62:1** on `active` (2.92 on the other four), macOS light at
+**2.52:1**, the identity dark at 2.80–2.81, Linux dark at 2.97 on `selected`, and
+high-contrast dark at 4.15 under 4.5. The five surfaces join the `boundary`
+class (96 → 101 pairs) and five values move one step (identity light `#848E9E` →
+`#737C8C`, identity dark `#6B7484` → `#77808F`, high-contrast dark `#A0A0A0` →
+`#AAAAAA`, macOS light `#8A8A8E` → `#6E6E73`, Linux dark `#9A9996` → `#A09F9C`).
 
 ### Reference adoption (block `200–299`)
 
