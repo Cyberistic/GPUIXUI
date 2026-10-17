@@ -18,7 +18,7 @@ capabilities (including the theme gallery, the modal contract and floating
 placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
-app-level shortcut probe
+command surface probe (`command-palette`), the app-level shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (44/44 green); -> 2 on a host with no binding
+# -> 0 here (45/45 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -400,17 +400,43 @@ The docking contract: persist `anchorIndex` + `anchorOffset` from
 `getListScrollTop`, never `getScrollOffset` (it saturates), and do not promise
 focus restore.
 
+## The command surface (plan `176`)
+
+`command-palette` is the Tier 4 command surface: a global shortcut, a **non-modal**
+overlay, one focus owner and a filtered list — 58 checks. It also settles the
+application-menu path, because `@gpuix/native` 0.10.0 exposes only window
+controls (`setWindowTitle`, `activateWindow`, `minimizeWindow`, `zoomWindow`,
+`toggleFullscreen`) and **no native menu or tray API**: a menu is an in-window
+surface opened by a window key, exactly like this palette.
+
+| Fact | Measured |
+| ---- | -------- |
+| window keys under a focused `<input>` | letters, arrows and Escape reach **both** the field and the app-level handler (`window=t keys=3`; `window=escape`) |
+| Enter and Backspace | **not** delivered to the app-level handler — Enter becomes the field's `onSubmit`, Backspace is consumed by the native editor. A shortcut layer must not rely on them |
+| a chord while typing | `cmd-k` reaches the app handler and does **not** type into the field (`query=o` unchanged, `window=k`); a chord also does not reset the query while the palette is open |
+| arrows | delivered to the field as **key down** (`input=d:down`), and they move the active row while native focus stays in the input — the selection is visual only |
+| a11y | the surface is AccessKit `Dialog`; each row is an option whose `aria-selected` follows the active index. There is no `aria-activedescendant`, so this is the only AT-visible selection |
+| commit | `onSubmit` commits the active row, closes the palette and returns focus to the trigger |
+| dismissal | Escape closes from the field and returns focus; the app handler sees the same Escape; an outside press on the scrim covers a full-window layer and dismisses |
+| layering | the scrim and surface are **siblings** inside the `<anchored>` layer: a row click lands above the veil (a successful commit proves it) and a click on the veil's centre dismisses |
+| focus | `autoFocus` focuses the field on a conditional mount; the previously focused element is captured **in the open handler** (before the input mounts) and restored through `renderer.focusElement` |
+
+The component contract: a palette keeps one focus owner and moves a visual
+selection, handles arrows on key down and Enter through `onSubmit`, never routes
+commit/dismiss through window keys alone, and treats the window handler as a
+chord shortcut layer that may also see plain typing.
+
 ## Evidence on this host
 
-The suite is **44/44 green** here (`exit 0`):
+The suite is **45/45 green** here (`exit 0`):
 
 ```
-44/44 scenarios passed · capabilities: layout=verified text=verified
+45/45 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
-theme=verified workspace=verified content=verified drag=verified
+theme=verified workspace=verified command=verified content=verified drag=verified
 selection=verified menu=verified components=verified search=verified
 ```
 
@@ -483,6 +509,7 @@ src/scenarios/drag-autoscroll.tsx held edge scroll, capture and the drop index
 src/scenarios/tab-overflow.tsx horizontal pan, tab-strip overflow and reveal
 src/scenarios/tab-focus.tsx     clipped tab stops and the roving strip
 src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible sidebar
+src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filtering and focus
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter

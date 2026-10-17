@@ -46,6 +46,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag`, `workspace-restore` | verified |
+| command | `command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse` | verified |
@@ -248,6 +249,23 @@ AccessKit nodes follow the **painted window** (8 of 50 rows), so an off-window
 grid row or tree node is invisible to assistive technology — the same trade the
 paint window already makes. Explicit `tabIndex={0}` rows and an `<input>` each
 count as a tab stop in the frame.
+
+`command-palette` is the runtime verdict for the Tier 4 command surface and
+therefore for application menus too. What holds: the window shortcut opens the
+palette; `autoFocus` focuses the field on a conditional mount; letters, arrows
+and Escape reach **both** the field and the app-level handler while it is
+focused (`window=t keys=3`, `window=escape`), but **Enter and Backspace do
+not** — Enter becomes `onSubmit` and Backspace is consumed by the native
+editor, so a shortcut layer must not rely on either; `cmd-k` arrives while
+typing without typing a `k`; arrows arrive at the field as key **down** and move
+the active row while native focus stays in the input; the surface is an
+AccessKit `Dialog` and the rows are options whose `aria-selected` follows the
+active index; `onSubmit` commits, closes and returns focus to the trigger;
+Escape closes from the field and returns focus; the veil is a full-window layer
+whose **sibling** surface takes row clicks above it, and a veil click dismisses;
+an unmatched query paints `No commands` and Enter commits nothing. The
+limitation: there is no `aria-activedescendant`, so the visual selection is
+not announced as focus — `aria-selected` is the only AT-visible form.
 
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
@@ -503,8 +521,8 @@ in-package and an end-to-end native verdict.
 | Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. |
 | Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. |
 | Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. |
-| Command palette | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). |
-| Application menus | todo | ? | The macOS menu bar is a renderer API (`README.md` "The macOS menu bar"); cross-platform app menus are ours. |
+| Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. |
+| Application menus | todo | unsupported (in-window only) | **The published 0.10.0 has no menu/tray API**: `@gpuix/native`'s `NativeRenderer` exposes only window controls (`setWindowTitle`, `activateWindow`, `minimizeWindow`, `zoomWindow`, `toggleFullscreen`), and no `menu`/`Menu`/`tray` symbol exists in the native or React types. An application menu must therefore be an **in-window** surface opened by a window key — the path `command-palette` measures end to end (`cmd-k`, Escape delivery, focus return). A true macOS menu bar would need a renderer API that is not in this version. |
 | Status bars | todo | ? | `div` + `<text>`. |
 | Toolbars | todo | ? | `div` + Button groups. |
 | Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |

@@ -57,7 +57,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[████████░░]` 39/46 plans-and-harness
+`[x]` `[████████░░]` 40/47 plans-and-harness
 
 `[x]` Plans `100`–`158` written and indexed for the playground workstream
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
@@ -81,6 +81,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` Probe horizontal scrolling per plan `173`: `overflowX: "scroll"` pans on `deltaX`, a vertical wheel does not pan a horizontal-only strip, a clipped tab **keeps painted bounds**, `scrollIntoView` reveals it (saturating at `-461`, with the near-end reveal at `-5`), and `scrollTo` is exact — `tab-strip-overflow` 29 checks, suite `41 → 42`, two-direction proof recorded
 `[x]` Probe the tab strip focus contract per plan `174`: a clipped tab **is** a tab stop and focus does **not** reveal it in a plain scroller; a roving strip is one stop and End/Home move selection, native focus and reveal together — `tab-strip-focus` 19 checks, suite `42 → 43`, two-direction proofs recorded
 `[x]` Probe nested panels per plan `175`: a vertical split (`dy` → painted height), isolation of a nested split, a zero-width sidebar, keyboard resize on a focused divider, and the AccessKit `Splitter` role — `panel-nested` 32 checks, suite `43 → 44`, two-direction proofs recorded
+`[x]` Probe the command surface per plan `176`: `command-palette` — a window shortcut opens a non-modal overlay, the field keeps focus while arrows move a visual row, letters/arrows/Escape reach both the field and the app-level handler while Enter and Backspace do not, `cmd-k` does not type, `onSubmit` commits and returns focus, the scrim is a hit-testable sibling under the surface; adds the `command` capability — 58 checks, suite `44 → 45`, three two-direction proofs recorded. `Application menus` is recorded as in-window only: 0.10.0 has no menu API
 `[x]` Probe the remaining Tier 1 controls natively per plan `169`: `RadioGroup` arrow selection/wrap, `Rating` clamp/clear, `NumberField` step/clamp, `OTPField` focus advance and Backspace — 38/38 green, two-direction proofs recorded
 `[x]` Probe the shipped Tier 1 primitives natively per plan `168`: mount `@gpuixui/primitives` (`Button`, `Toggle`, `Input`, `Checkbox`, `Switch`, `Select`, `Slider`, `Progress`, `Meter`, `Skeleton`, `Tooltip`) through the tokens theme and add the `components` capability — 36/36 green, two-direction proofs recorded
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)

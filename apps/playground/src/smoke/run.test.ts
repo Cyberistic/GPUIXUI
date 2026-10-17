@@ -104,6 +104,12 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "panel-nested",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "command-palette",
+    );
+    expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
+      expect.arrayContaining(["command"]),
+    );
   });
 
   it("flags duplicated ids", () => {
