@@ -12,7 +12,7 @@
  */
 
 import { useGpuix } from "@gpuix/react";
-import type { Props, PublicInstance } from "@gpuix/react";
+import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import {
   FloatingLayer,
   floatingRootStyle,
@@ -444,6 +444,7 @@ export const DropdownMenuSubContent = ({
   const parentClose = parent.close;
   const parentClaim = parent.claimSubmenu;
   const restoreFocus = useRef(false);
+  const surface = useRef<PublicInstance | null>(null);
 
   const close = useCallback(
     (reason: MenuCloseReason) => {
@@ -484,17 +485,45 @@ export const DropdownMenuSubContent = ({
     closeRef.current = close;
   });
 
+  /** Whether a pointer event landed on this submenu's own surface. */
+  const insideSurface = useCallback(
+    (event: EventPayload): boolean => {
+      const instance = surface.current;
+      if (instance === null) return false;
+      const bounds = renderer?.getElementBounds?.(instance.id);
+      if (bounds === null || bounds === undefined) return false;
+      const { x, y } = event;
+      return (
+        x !== undefined &&
+        y !== undefined &&
+        x >= bounds.x &&
+        x <= bounds.x + bounds.width &&
+        y >= bounds.y &&
+        y <= bounds.y + bounds.height
+      );
+    },
+    [renderer],
+  );
+
+  const setSurface = useCallback((next: PublicInstance | null) => {
+    surface.current = next;
+  }, []);
+
   useLayoutEffect(() => {
     if (!open) return;
     const release = parentClaim(() => setOpen(false));
     const pop = pushDismissLayer((event) => {
+      // A press inside this surface is outside the parent surface, so the
+      // parent's outside handler offers it here first. Closing would unmount
+      // the row before its click lands; the press belongs to the submenu.
+      if (event.eventType === "mouseDownOutside" && insideSurface(event)) return;
       closeRef.current(event.eventType === "keyDown" ? "dismiss" : "outside");
     });
     return () => {
       pop();
       release();
     };
-  }, [open, parentClaim, setOpen]);
+  }, [insideSurface, open, parentClaim, setOpen]);
 
   useLayoutEffect(() => {
     if (open || !restoreFocus.current) return;
@@ -551,6 +580,7 @@ export const DropdownMenuSubContent = ({
         occlude
       >
         <MenuSurface
+          ref={setSurface}
           testId={testId}
           label={label}
           {...rest}
