@@ -1,64 +1,37 @@
-import type { CSSProperties, ReactElement, ReactNode } from "react";
-import type { Theme } from "@gpuixui/tokens";
+import type { ReactElement, ReactNode } from "react";
+import {
+  CheckboxPreview,
+  SliderPreview,
+  SwitchPreview,
+  TextInputPreview,
+} from "./control-previews";
+import {
+  AlertPreview,
+  AvatarPreview,
+  BadgePreview,
+  ProgressPreview,
+} from "./feedback-previews";
+import {
+  captionType,
+  column,
+  keycap,
+  labelType,
+  monoType,
+  row,
+  type PreviewProps,
+} from "./preview-styles";
 import { PreviewSurface } from "./theme-surface";
 
 /**
  * Tier-A previews: labelled browser approximations of a delivered component's
- * rest layout (plan 412, plan 434). They read the whole active `Theme` through
- * `PreviewSurface`, so the platform toggle re-renders them and a future
+ * rest layout (plan 412, plans 434 and 449). They read the whole active `Theme`
+ * through `PreviewSurface`, so the platform toggle re-renders them and a future
  * per-platform palette reaches them with no edit here.
  *
  * They are deliberately not interactive: tier A may show static
  * layout/typography/spacing, never an interaction presented as native
  * behaviour.
  */
-
-export interface PreviewProps {
-  /** A resolved theme, for tests and the Theming showcase. */
-  readonly theme?: Theme;
-}
-
-const labelType: CSSProperties = {
-  fontSize: "var(--preview-text-label-size)",
-  lineHeight: "var(--preview-text-label-leading)",
-  fontWeight: "var(--preview-text-label-weight)",
-  fontFamily: "var(--preview-font-sans)",
-};
-
-const captionType: CSSProperties = {
-  fontSize: "var(--preview-text-caption-size)",
-  lineHeight: "var(--preview-text-caption-leading)",
-  fontWeight: "var(--preview-text-caption-weight)",
-  fontFamily: "var(--preview-font-sans)",
-  color: "var(--preview-color-muted-foreground)",
-};
-
-const monoType: CSSProperties = {
-  fontFamily: "var(--preview-font-mono)",
-  fontSize: "var(--preview-text-code-size)",
-  lineHeight: "var(--preview-text-code-leading)",
-};
-
-const row: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: "var(--preview-space-sm)",
-};
-
-const column: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "var(--preview-space-md)",
-};
-
-const keycap: CSSProperties = {
-  ...monoType,
-  padding: "0 var(--preview-space-xs)",
-  border: "var(--preview-border-thin) solid var(--preview-color-border)",
-  borderRadius: "var(--preview-radius-sm)",
-  color: "var(--preview-color-muted-foreground)",
-};
 
 const control = (variant: ButtonVariant, size: ButtonSize = "md") => {
   const heights = {
@@ -330,4 +303,12 @@ export const previewsBySlug: ReadonlyMap<
   ["tabs", TabsPreview],
   ["dropdown-menu", MenuPreview],
   ["card", CardPreview],
+  ["text-input", TextInputPreview],
+  ["checkbox", CheckboxPreview],
+  ["switch", SwitchPreview],
+  ["slider", SliderPreview],
+  ["badge", BadgePreview],
+  ["alert", AlertPreview],
+  ["progress", ProgressPreview],
+  ["avatar", AvatarPreview],
 ]);

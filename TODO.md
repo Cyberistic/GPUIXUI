@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–448)
+## Docs site workstream (plans 410–449)
 
-`[~]` `[██████████]` 46/47
+`[~]` `[██████████]` 47/48
 
 `[x]` The registry mirrors the inventory's GPUix-support column (plan 443) — `ours`/`reuse` are real values, the nine flattened records are corrected, a test reads `COMPONENTS.md`, and `done` is backed by its native suite rather than by GPUix writing the primitive
 `[x]` Preview surfaces follow the docs' dark mode (plan 444) — a dark page painted light previews because the surface took `next-themes`' pre-hydration `undefined` and never re-rendered; one tested `previewMode` + `useSyncExternalStore` snapshot fixes it, verified in headless Chrome in both modes
@@ -521,6 +521,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Built-site smoke check (plan 439) — `nub run --filter docs smoke:build` builds, serves and crawls the production output (66 pages, 85 links, search, 404, robots); it found and fixed two nested `<main>` landmarks on `/` and the 404, exits `1` on a broken canonical and `2` when it cannot verify, and the default suite guards the landmark regression without a server
 `[x]` Landing page showcase (plan 440) — `/` now renders the real light/dark palettes, the macOS/Linux/Windows families, documented-of-tracked counts per tier and the five honest preview tiers, all derived from `@gpuixui/tokens` and the registry; no colour literal, no hand-counted number, no component image, and four two-direction proofs
 `[x]` The tokens and theming API reference (plan 447) — `/docs/tokens-api` generates the `ThemeConfig`/`Theme` shapes, lists all 13 exported helpers and the React provider, and fails when a helper or a table name is missing; 215 docs tests, 67-page built-site crawl
+`[x]` Tier-A preview coverage (plan 449) — eight static Tier 1–2 pages (text input, checkbox, switch, slider, badge, alert, progress, avatar) now carry a labelled rest preview built only from the active theme; 12 previews in total, all under the platform toggle, with a content guard and a hydrated `?platform=win32` badge check
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed

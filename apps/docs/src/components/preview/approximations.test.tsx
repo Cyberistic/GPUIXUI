@@ -51,7 +51,9 @@ describe("tier-A previews", () => {
   });
 
   it("render nothing for a component with no preview", () => {
-    expect(renderToStaticMarkup(<ComponentPreview slug="slider" />)).toBe("");
+    expect(renderToStaticMarkup(<ComponentPreview slug="separator" />)).toBe(
+      "",
+    );
   });
 
   it("never present an interaction as native behaviour", () => {
@@ -73,6 +75,50 @@ describe("tier-A previews", () => {
       )?.[1];
       expect(darwin, slug).toBe("Menlo");
       expect(win32, slug).toBe("Consolas");
+    });
+  });
+});
+
+/**
+ * The states each preview exists to show (plan 449). A preview that quietly
+ * drops the invalid field, the indeterminate checkbox or a badge variant still
+ * renders and still passes every other guard, so the documented state is pinned
+ * to the markup here.
+ */
+const documentedStates: ReadonlyArray<readonly [string, readonly string[]]> = [
+  [
+    "text-input",
+    [
+      "Workspace name",
+      "Use lowercase letters, numbers and dashes.",
+      "Managed by your organisation",
+    ],
+  ],
+  [
+    "checkbox",
+    ["Email notifications", "Weekly digest", "Select all", "Locked by policy"],
+  ],
+  ["switch", ["Sync automatically", "Ask before deleting"]],
+  ["slider", ["Minimum", "Halfway", "Maximum"]],
+  [
+    "badge",
+    ["Neutral", "Primary", "Success", "Warning", "Danger", "Info", "Outline"],
+  ],
+  ["alert", ["Workspace archived", "Members keep read access"]],
+  ["progress", ["Uploading", "Indexing", "25%", "60%"]],
+  [
+    "avatar",
+    ["Ada Lovelace", "Jean Sammet", "Margaret Hamilton", "Radia Perlman"],
+  ],
+];
+
+describe("preview state coverage", () => {
+  it("shows every state its component page documents", () => {
+    documentedStates.forEach(([slug, phrases]) => {
+      const html = rendered(slug, "darwin");
+      phrases.forEach((phrase) =>
+        expect(html, `${slug}: ${phrase}`).toContain(phrase),
+      );
     });
   });
 });

@@ -154,7 +154,12 @@ describe("previewVars", () => {
 
   it("keeps a colour literal out of the preview source", () => {
     const forbidden = /#[0-9a-fA-F]{3,8}\b|\brgb|\bhsl|\boklch/;
-    expect(source("./theme-surface.tsx")).not.toMatch(forbidden);
-    expect(source("./approximations.tsx")).not.toMatch(forbidden);
+    [
+      "./theme-surface.tsx",
+      "./approximations.tsx",
+      "./preview-styles.ts",
+      "./control-previews.tsx",
+      "./feedback-previews.tsx",
+    ].forEach((file) => expect(source(file), file).not.toMatch(forbidden));
   });
 });

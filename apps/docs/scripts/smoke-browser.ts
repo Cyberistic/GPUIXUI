@@ -169,6 +169,20 @@ const checks: ReadonlyArray<Check> = [
     ],
   },
   {
+    path: "/docs/components/badge?platform=win32",
+    dark: true,
+    problems: (dom) => [
+      ...(documentPlatform(dom) === "win32"
+        ? []
+        : [`data-platform is "${documentPlatform(dom)}", expected win32`]),
+      ...everySurface(
+        dom,
+        "font-mono",
+        platformTheme(themes.dark, "win32").typography.mono,
+      ),
+    ],
+  },
+  {
     path: "/docs/theming?platform=linux",
     dark: true,
     problems: (dom) => [
