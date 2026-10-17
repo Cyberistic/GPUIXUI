@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §2 (A14), `310` (accelerator model) |
-| Status | planned |
+| Status | done — 8 capture + 8 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned part: `HotkeyRecorder`); `COMPONENTS.md` → Tier 2 → Hotkey-recorder input; plan `205` A14 |
 
 This plan is self-contained. It adds `HotkeyRecorder` at the Tier 2 bar.
@@ -134,3 +134,23 @@ modifier-only press as a chord: unit test 3 and native test 6 fail. Restore.
 - Eight native + eight unit tests, both themes, no literal colours.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18. Two deviations:
+
+- **Clearing is a named control**, not Backspace/Delete: the installed test
+  renderer emits no key event for those keys (measured for the tag input, plan
+  314), so promising that gesture would be unprovable. The control is
+  `${testId}-clear` and is a real button.
+- **A secondary modifier keeps its own token.** `mod` is the platform's primary
+  modifier only; a Control press on macOS captures `ctrl`, and a Command press on
+  Windows/Linux captures `cmd`, instead of being folded into `mod`. The order is
+  `mod`, secondary, `shift`, `alt`, then the key.
+
+`HotkeyRecorderProps` omits the host `onChange` (its `onChange` is the chord
+callback) and the capture rules live in `hotkey/logic.ts`.
+
+**Both directions:** removing the Escape branch fails 6 native tests (cascades);
+removing the clear guard makes the clear press start a recording. Restored: 8
+capture + 8 native green.

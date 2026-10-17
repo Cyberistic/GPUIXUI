@@ -27,6 +27,7 @@ export * from "./empty-state.js";
 export * from "./field.js";
 export * from "./fieldset.js";
 export * from "./form.js";
+export * from "./hotkey-recorder.js";
 export * from "./inline-edit.js";
 export * from "./keyboard-shortcuts.js";
 export * from "./list.js";

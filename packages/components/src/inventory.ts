@@ -27,6 +27,7 @@ import { emptyStateMeta } from "./empty-state.js";
 import { fieldMeta } from "./field.js";
 import { fieldsetMeta } from "./fieldset.js";
 import { formMeta } from "./form.js";
+import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
 import { inlineEditMeta } from "./inline-edit.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
@@ -80,6 +81,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   fieldMeta,
   fieldsetMeta,
   formMeta,
+  hotkeyRecorderMeta,
   inlineEditMeta,
   keyboardShortcutsMeta,
   listMeta,

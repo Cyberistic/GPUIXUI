@@ -234,6 +234,7 @@ parts.
 | Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
 | Countdown | `Countdown` | — | plan 312 |
 | Inline edit | `InlineEdit` (render display/input swap; one part) | — | plan 313 |
+| Hotkey-recorder input | `HotkeyRecorder` | — | plan 316 |
 | Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | — | plan 315 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
@@ -257,7 +258,6 @@ implementation cannot invent a shape):
 | Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
 | Mention input | `MentionInput`, `MentionInputList`, `MentionInputItem` | plan 205 |
-| Hotkey recorder | `HotkeyRecorder` | plan 205 |
 | Countdown | `Countdown` | plan 205 |
 | Inline edit | `InlineEdit` | plan 205 |
 
