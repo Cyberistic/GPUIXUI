@@ -10,6 +10,103 @@ Status: `todo` · `wip` · `done` · `blocked (reason)` · `unsupported (evidenc
 Every row also records **GPUix support** and, when it is not `yes`, the evidence
 and the strongest honest alternative.
 
+## Design system
+
+| Capability | Status | GPUix support | Notes / limitations |
+| ---------- | ------ | ------------- | ------------------- |
+| Design tokens | wip | yes (inline style values) | 47 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark; `colorRoles` indexes the roles for generated doc tables; elevation resolves to the single shadow the runtime paints (`elevationShadow`); WCAG floors in the test suite. Native visual proof pending the playground gallery. |
+| Theme extension | wip | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. Provider test is a server render; native switch pending. |
+| High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; contrast test covers both variants. Docs in `docs/tokens.md`. |
+| Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. Docs in `docs/tokens.md`. |
+| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring; overlay/menu animation is unavailable. Docs in `docs/tokens.md`; plan 017 corrected the earlier claim that the runtime supports outlines. |
+| Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land. |
+| Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests. Native visual check of the sans sentinel pending the playground (B1). |
+| Native theme gallery | todo | yes | `apps/playground`; visual evidence for the rows above. Owner: playground workstream. |
+
+---
+
+## Not provided by GPUix
+
+The owner's explicit ask: **whatever is missing and GPUix does not already
+provide** — the rows that need real implementation, not API-shape work over an
+existing host element.
+
+Verdicts are against the **published `@gpuix/react` / `@gpuix/native` 0.10.0**
+(the version this repo pins), read on 2026-10-17 from
+`workspaces/components/node_modules/@gpuix/react/dist/index.d.ts`,
+`dist/components/`, `dist/floating.d.ts`, `@gpuix/native/dist/host.d.ts` and
+`@gpuix/native/index.d.ts`. They are **not** read from `references/gpuix`, which
+is ahead of the published release — the divergence is called out below.
+
+### Provided by GPUix — API-shape work only
+
+| Row | GPUix provides | Verdict |
+| --- | -------------- | ------- |
+| Text / typography | `<text>` host element | **verified** (published 0.10.0) |
+| Icons | `<svg>` (tintable monochrome) + `<img>` | **verified** |
+| Separators, Spacers, Stack / layout primitives, Boxes / containers | `div` + flexbox / grid | **verified** |
+| Scrollable containers | `overflow: "scroll"` | **verified** |
+| Text inputs / Text areas | `<input>`, `<textarea>` | **verified** |
+| Selects | `Select` + parts | **verified** |
+| Comboboxes | `Combobox` + parts | **verified** |
+| Tooltips | `Tooltip` + parts | **verified** |
+| Virtualized lists | `<virtual-list>` | **verified** |
+| Syntax highlighting | `<code>` (bundled languages) | **verified** |
+| Diff viewer | `<diff>` (unified) | **verified** |
+| Image preview | `<img>` (path, data URL, http(s)) | **verified** |
+| File / folder selection | `GpuixRenderer.promptForPaths` | **verified** |
+
+**Primitives only — still needs implementation:** Popovers / Dropdown menus /
+Context menus (`floating`'s `FloatingLayer` + `<anchored>` give positioning and
+occlusion, not menu semantics); Toasts / notifications (`AnimatePresence` +
+`createPortal` + `<anchored>`); Buttons and Dialogs (**present on
+`references/gpuix` `main`, absent from published 0.10.0** — no `./button` or
+`./dialog` subpath and no `Button` / `Dialog` in `dist/index.d.ts`); `<canvas>`
+custom drawing (**unverified** — the README's Supported Elements table marks it
+"Custom drawing (planned)").
+
+**Cross-cutting, verified, partial:** AccessKit `role`, `aria-label`,
+`aria-description`, `aria-id`, `aria-expanded`, `aria-selected`,
+`aria-valuetext`, `aria-level`; native `tabIndex` / `autoFocus` and renderer
+`focusElement` / `focusNext` / `focusPrevious` / `focusNextWithin`. There is **no**
+`aria-checked`, `aria-valuenow`, `aria-labelledby` or `aria-describedby`.
+
+### Not provided — needs real implementation
+
+Grouped by tier. The GPUix primitive each will be built on is in the row's Notes.
+
+- **Tier 1:** Labels (association needs `aria-labelledby` — unsupported), Button
+  groups, Checkboxes, Radio groups, Switches, Progress, Skeletons, Loading
+  indicators, Slider, Range slider, Meter, Number Field, OTP Field, Toggle,
+  Rating.
+- **Tier 2:** Cards, Badges, Avatars, Lists / list items, Empty states, Alerts,
+  Inline validation, Toasts / notifications, Dialogs, Confirmation dialogs,
+  Popovers, Dropdown menus, Context menus, Command menus, Tabs, Accordions,
+  Collapsible sections, Breadcrumbs, Pagination, Search inputs, Date / time
+  pickers, Fieldset, Form, Navigation Menu, Preview Card, Drawer, Stepper,
+  Timeline, Color picker, Tag / token input, Mention input, Hotkey-recorder
+  input, Countdown, Carousel, Inline edit, Keyboard shortcuts / keycap display.
+- **Tier 3:** Tables, Sortable tables, Row selection, Column configuration,
+  Resizable columns, Filtering controls, Data toolbars, Virtualized tables, Tree
+  views, Expandable rows, Key-value displays, Property panels, Statistic /
+  metric cards, Charts.
+- **Tier 4:** every row — Resizable split panes, Panel groups, Collapsible
+  sidebars, Tabbed panels, Detachable / movable tabs, Docking layouts, Nested
+  panel arrangements, Workspace layouts, Persistent panel state, Keyboard
+  navigation, Command palette, Application menus, Status bars, Toolbars,
+  Breadcrumb navigation, Inspector panels, Property editors, File trees, Log
+  viewers, Terminal surfaces, Search and replace, Multi-pane editing layouts.
+- **Tier 5:** Code editor integration, Rich-text editing, Drag and drop,
+  Notification centre, Multi-step forms, Virtualized hierarchical data, Advanced
+  filtering / query builders, QR code, File upload, Video / audio player +
+  waveform, Crop area.
+
+Nothing in this list may be claimed `done` until it runs in the real runtime or
+carries an evidenced limitation. The capability evidence lives in
+`docs/gpuix-capabilities.md` (plan `203`); the sequencing is in plan `205`.
+
+---
+
 ## Tier 1 — foundational
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
@@ -27,13 +124,20 @@ and the strongest honest alternative.
 | Text inputs | wip | yes | [input](packages/primitives/docs/input.mdx) · form | **Runtime (041):** runtime keystrokes reach `onChange` with the accumulated text; Enter reaches `onSubmit`; a controlled field reports each edit. The native `<input>` holds its text; `core/state.ts` decides controlled/uncontrolled. |
 | Text areas | wip | yes | [textarea](packages/primitives/docs/textarea.mdx) · form | **Runtime (041):** height follows `rows` and a newline is accepted; **no `onSubmit`** — with one the runtime turns Enter into a submit and costs the newline (046). `minRows`/`maxRows` are the runtime's own height controls. |
 | Checkboxes | wip | partial | [checkbox](packages/primitives/docs/checkbox.mdx) · selection | **Runtime (041):** click and Space-up toggle, and `aria-valuetext` flips `unchecked → checked`; indeterminate reads `mixed`; AccessKit role is `CheckBox`. **No `aria-checked`.** |
-| Radio groups | wip | partial | [radio-group](packages/primitives/docs/radio-group.mdx) · selection | **Runtime (041/044/048/049):** AccessKit roles are `RadioGroup` and `RadioButton`; arrows move the selection, wrap, and **skip disabled options** (044); Home/End jump to the nearest **enabled** end (048); arrows **move native focus with the selection** and the focused option paints the ring (049); the roving index is derived from the value, so a controlled change moves the tab stop (049); a click on the circle selects. Options are **data**, not compound children (D13). |
+| Radio groups | wip | partial | [radio-group](packages/primitives/docs/radio-group.mdx) · selection | **Runtime (041/044/048/049):** AccessKit roles are `RadioGroup` and `RadioButton`; arrows move the selection, wrap, and **skip disabled options** (044); Home/End jump to the nearest **enabled** end (048); arrows **move native focus with the selection** and the focused option paints the ring (049); the roving index is derived from the value, so a controlled change moves the tab stop (049); a click on the circle selects. Options are **data**, not compound children (D16). |
 | Selects | wip | reuse | [select](packages/primitives/docs/select.mdx) · form | **Runtime (041):** opens, paints its options, commits a clicked option. A thin themed wrapper over `@gpuix/react/select`; open state and dismissal are GPUix's. |
 | Switches | wip | partial | [switch](packages/primitives/docs/switch.mdx) · selection | **Runtime (041/049):** a click toggles; AccessKit role is `Switch` and the value flips `unchecked → checked`. **No `aria-checked`**; Space/Enter toggle. The thumb moves by the track's `justifyContent` because the runtime has no `transform`. `invalid` paints the destructive border and focus paints the selection ring (049). |
 | Progress | wip | partial | [progress](packages/primitives/docs/progress.mdx) · form | **Runtime (041):** `aria-valuetext` is `"42%"`, role is `ProgressIndicator`, the fill tracks the value and clamps outside 0–100. **No `aria-valuenow`.** |
 | Tooltips | wip | reuse | [tooltip](packages/primitives/docs/tooltip.mdx) · feedback | **Runtime (041):** opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. A thin wrapper over `@gpuix/react/tooltip`; a mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). |
 | Skeletons | wip | partial | [skeleton](packages/primitives/docs/skeleton.mdx) · feedback | **Runtime (041):** opacity samples take both `1` and `0.6`. Opacity pulse only: the runtime's `motion` animates width/height/opacity/insets/borderRadius and nothing else, so no shimmer sweep. |
 | Loading indicators | wip | partial | [spinner](packages/primitives/docs/spinner.mdx) · feedback | **Runtime (041):** the lit dot changes index (the accent-coloured dot proves a theme colour reaches the paint) and AccessKit reports role `Status` with its label. `Spinner` **cannot rotate**; `Progress` with no `value` is the alternative. |
+| Slider | todo | ? | — | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
+| Range slider | todo | ? | — | Two-thumb variant of Slider; its own runtime for min/max ordering and thumb crossing. No host element. |
+| Meter | todo | ? | — | Distinct from Progress: a value in a range, not task completion. No host element. |
+| Number Field | todo | ? | — | `<input>` exists (API-shape for the text part); stepper buttons, drag-to-scrub, clamping and locale formatting are ours. |
+| OTP Field | todo | ? | — | `<input>` exists; segmented rendering, paste distribution and keyboard movement are ours. |
+| Toggle | todo | ? | — | Momentary pressed mode, distinct from Switches. No `Button` in published 0.10.0; built on `div` + the shared keyboard contract. |
+| Rating | todo | ? | — | Radio-group-like input; no host element. Reuses the radio roving-focus contract. |
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (68 tests in 7
@@ -41,10 +145,10 @@ files after the 049 follow-ups; 54 at the 041 baseline, locally-built GPUix
 0.10.0 binding). Details: plan 041 §9. The seventh file mounts every example in
 `packages/primitives/examples/` (plan 047).
 
-**Both themes (042):** every painted colour in the Tier 1 scene comes from the
+**Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
 active palette, and re-rendering with the dark palette repaints every asserted
-role (plan 042 §8). The palettes are test doubles — the real `lightTheme` /
-`darkTheme` belong to `@gpuixui/tokens`, which is not in this tree yet.
+role (plan 042 §8). Since plan 021 the palettes are the shipped `lightTheme` /
+`darkTheme` from `@gpuixui/tokens`, not test doubles.
 
 **No row is `done`** until the published-binary run lands and the docs site
 (docs-site workstream) has its page. The in-package docs page and the mounted
@@ -55,88 +159,110 @@ locally-built-binding result.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Cards | todo | ? | |
-| Badges | todo | ? | |
-| Avatars | todo | ? | |
-| Lists / list items | todo | ? | |
-| Empty states | todo | ? | |
-| Alerts | todo | ? | |
-| Inline validation | todo | ? | |
-| Toasts / notifications | todo | ? | |
-| Dialogs | todo | ? | |
-| Confirmation dialogs | todo | ? | |
-| Popovers | todo | ? | |
-| Dropdown menus | todo | ? | |
-| Context menus | todo | ? | |
-| Command menus | todo | ? | |
-| Tabs | todo | ? | |
-| Accordions | todo | ? | |
-| Collapsible sections | todo | ? | |
-| Breadcrumbs | todo | ? | |
-| Pagination | todo | ? | |
-| Search inputs | todo | ? | |
-| Comboboxes | todo | ? | |
-| Date / time pickers | todo | ? | |
+| Cards | todo | ? | `div` + `<text>`. Variant merged here: Expandable card (adabraka `expandable_card`) — see also Collapsible sections. |
+| Badges | todo | ? | `div` + `<text>`. |
+| Avatars | todo | ? | `<img>` provides the image; the fallback/initials surface is ours. |
+| Lists / list items | todo | ? | `div` rows; `<virtual-list>` for long collections. |
+| Message scroller | todo | ? | Behaviour ported from **shadcn/ui's Message Scroller** (credited in `LICENSES/`): follows new content while pinned, leaves the reader alone when they scroll up, jump-to-latest with an unread count, streaming rows. `<virtual-list>` + scroll handles; the pin/stream state machine is ours. Plan `206`. |
+| Empty states | todo | ? | `div` + `<text>` + Icons. |
+| Alerts | todo | ? | `div` + `<text>` + Icons. |
+| Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |
+| Toasts / notifications | todo | ? | `AnimatePresence` + `createPortal` + `<anchored>` are published primitives; the toast system is ours. |
+| Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. |
+| Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
+| Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. |
+| Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. |
+| Context menus | todo | ? | As Dropdown menus, triggered by `onAuxClick` / right-click position. |
+| Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
+| Tabs | todo | ? | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. |
+| Accordions | todo | ? | `div` + `motion` (height). |
+| Collapsible sections | todo | ? | `div` + `motion` (height). Variant merged here too: Expandable card (adabraka `expandable_card`). |
+| Breadcrumbs | todo | ? | `div` + `<text>`. |
+| Pagination | todo | ? | Button groups + `<text>`. |
+| Search inputs | todo | ? | `<input>` exists; the search UI is ours. `useTextSearch`/`findRanges` search rendered text, not an input. |
+| Comboboxes | todo | yes | `Combobox` + parts published. API-shape work, not implementation. Variant merged here: Autocomplete (base-gpui `AutocompleteRoot`/`AutocompleteValue`) — the free-text variant; see also Search inputs. |
+| Date / time pickers | todo | ? | `div` + `<text>` + keyboard grid; no date host element. |
+| Fieldset | todo | ? | Form grouping (`FieldsetRoot`/`Legend` in base-gpui). `div` + `<text>`. |
+| Form | todo | ? | Validation orchestration and submit lifecycle (base-gpui `Form`). No host element; Effect-based validation lives in the package, not the renderer. |
+| Navigation Menu | todo | ? | 13-part nav whose items open content panels; distinct from Dropdown menus. `FloatingLayer` + `<anchored>`. |
+| Preview Card | todo | ? | Hover-triggered rich card with a positioner (base-gpui, 8 parts). `FloatingLayer` + `<anchored>`. |
+| Drawer | todo | ? | Edge-anchored panel with swipe-to-dismiss and nesting. `Dialog` is main-only in 0.10.0; `div` + `motion` (width/left/opacity) + `createPortal`. |
+| Stepper | todo | ? | Multi-step progress indicator (adabraka `StepItem`/`StepStatus`). `div` + `<text>`. |
+| Timeline | todo | ? | Event timeline with connector styles. `div` + `<text>`. |
+| Color picker | todo | ? | HSL/RGB/HEX + alpha + swatches. **Limitation (unverified for GPUix):** the saturation/value square needs radial or multi-stop gradients, which GPUix does not support (two-stop linear only — verified). Alternative: a discrete swatch grid or a pre-rendered bitmap. |
+| Tag / token input | todo | ? | `<input>` + chip `div`s; the token keyboard contract is ours. |
+| Mention input | todo | ? | `<input>` + an anchored suggestion list (`FloatingLayer`). |
+| Hotkey-recorder input | todo | ? | Captures `KeyEvent` (`key`, `isHeld`, modifiers) on a focused `div`; the accelerator model is ours. |
+| Countdown | todo | ? | `div` + `<text>`; the time source is the app's (Effect `Clock`), never a renderer timer. |
+| Carousel | todo | ? | `motion` animates width/left/opacity only — **no transform/scale** (verified). Scroll snap is unavailable; discrete stepping is the honest alternative. |
+| Inline edit | todo | ? | Swaps `<text>` for `<input>` in place; focus/commit/cancel contract ours. |
+| Keyboard shortcuts / keycap display | todo | ? | Keycap `div`s + a categorised shortcut table. No host element. |
 
 ## Tier 3 — data presentation
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Tables | todo | ? | |
-| Sortable tables | todo | ? | |
-| Row selection | todo | ? | |
-| Column configuration | todo | ? | |
-| Resizable columns | todo | ? | |
-| Filtering controls | todo | ? | |
-| Data toolbars | todo | ? | |
-| Virtualized lists | todo | ? | |
-| Virtualized tables | todo | ? | |
-| Tree views | todo | ? | |
-| Expandable rows | todo | ? | |
-| Key-value displays | todo | ? | |
-| Property panels | todo | ? | |
-| Statistic / metric cards | todo | ? | |
-| Charts | todo | ? | |
+| Tables | todo | ? | No `<table>` element; grid + `div` rows. |
+| Sortable tables | todo | ? | Grid + keyboard headers. |
+| Row selection | todo | ? | `aria-selected` is supported (verified). |
+| Column configuration | todo | ? | Grid tracks + a menu. |
+| Resizable columns | todo | ? | Pointer events + grid tracks. |
+| Filtering controls | todo | ? | `div` + `<input>`. |
+| Data toolbars | todo | ? | Toolbars + Button groups. |
+| Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
+| Virtualized tables | todo | ? | `<virtual-list>` rows can host a grid; there is no table element. |
+| Tree views | todo | ? | `<virtual-list>` + indentation; hierarchical virtualization is ours. |
+| Expandable rows | todo | ? | `motion` height. |
+| Key-value displays | todo | ? | `div` + `<text>`. |
+| Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
+| Statistic / metric cards | todo | ? | Cards + `<text>`. |
+| Charts | todo | ? | No chart host element. `<svg>` can render static charts; `<canvas>` is "planned" (unverified). |
 
 ## Tier 4 — desktop workspace
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Resizable split panes | todo | ? | |
-| Panel groups | todo | ? | |
-| Collapsible sidebars | todo | ? | |
-| Tabbed panels | todo | ? | |
-| Detachable / movable tabs | todo | ? | |
-| Docking layouts | todo | ? | |
-| Nested panel arrangements | todo | ? | |
-| Workspace layouts | todo | ? | |
-| Persistent panel state | todo | ? | |
-| Keyboard navigation | todo | ? | |
-| Command palette | todo | ? | |
-| Application menus | todo | ? | |
-| Status bars | todo | ? | |
-| Toolbars | todo | ? | |
-| Breadcrumb navigation | todo | ? | |
-| Inspector panels | todo | ? | |
-| Property editors | todo | ? | |
-| File trees | todo | ? | |
-| Log viewers | todo | ? | |
-| Terminal surfaces | todo | ? | |
-| Search and replace | todo | ? | |
-| Multi-pane editing layouts | todo | ? | |
+| Resizable split panes | todo | ? | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). |
+| Panel groups | todo | ? | Composition over split panes. |
+| Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow). |
+| Tabbed panels | todo | ? | Tabs + panels. |
+| Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. |
+| Docking layouts | todo | ? | Composition over split panes + tabs. |
+| Nested panel arrangements | todo | ? | Composition. |
+| Workspace layouts | todo | ? | Composition + persistence. |
+| Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. |
+| Keyboard navigation | todo | ? | Real native focus handles (verified); the roving-focus model is ours. |
+| Command palette | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). |
+| Application menus | todo | ? | The macOS menu bar is a renderer API (`README.md` "The macOS menu bar"); cross-platform app menus are ours. |
+| Status bars | todo | ? | `div` + `<text>`. |
+| Toolbars | todo | ? | `div` + Button groups. |
+| Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |
+| Inspector panels | todo | ? | Property panels + panels. |
+| Property editors | todo | ? | Fieldset + inputs. |
+| File trees | todo | ? | Tree views + `<virtual-list>`. |
+| Log viewers | todo | ? | `<virtual-list>` + `<text>`; text search/highlight hooks exist. |
+| Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
+| Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
+| Multi-pane editing layouts | todo | ? | Composition over split panes + editors. |
 
 ## Tier 5 — specialised
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Code editor integration | todo | ? | |
-| Syntax highlighting | todo | ? | |
-| Diff viewer | todo | ? | |
-| Rich-text editing | todo | ? | |
-| Image preview | todo | ? | |
-| File / folder selection | todo | ? | |
-| Drag and drop | todo | ? | |
-| Notification centre | todo | ? | |
-| Multi-step forms | todo | ? | |
-| Virtualized hierarchical data | todo | ? | |
-| Advanced filtering / query builders | todo | ? | |
+| Code editor integration | todo | ? | `<code>` renders highlighted code; there is **no editable code surface** (verified). |
+| Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages. API-shape work, not implementation. |
+| Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. |
+| Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). |
+| Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. |
+| File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
+| Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `onFileDrop` handles file drops only. |
+| Notification centre | todo | ? | Composition over toasts + panels. |
+| Multi-step forms | todo | ? | Variant merged here: Form (adabraka `form`) — partial coverage; validation orchestration is the Tier 2 Form row. |
+| Virtualized hierarchical data | todo | ? | Tree views + `<virtual-list>`; hierarchical virtualization is ours. |
+| Advanced filtering / query builders | todo | ? | Composition over inputs + menus. |
+| QR code | todo | ? | Render the matrix as a grid of `div`s or one `<svg>`; both are provided. The encoder is ours (dependency not yet chosen). |
+| File upload | todo | ? | Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists. |
+| Video / audio player + waveform | todo | ? | **No media host element** (verified: not in `ElementType`). Playback needs a platform surface — **unverified**; a waveform can only be drawn via `<svg>` or the planned `<canvas>`. |
+| Crop area | todo | ? | Draggable handles over `<img>`; crop geometry and constraints are ours. No custom-paint requirement unless the mask is drawn — **unverified**. |
+| Chat (AI conversation) | todo | ? | Behaviour ported from **shadcn/ui's AI Elements `chat`** (credited in `LICENSES/`): a message list in a Message scroller, a composer with attachments, submit/stop, `idle/submitting/streaming/error` states, empty state. Plan `207`. |
+| Message (AI message row) | todo | ? | Behaviour ported from **shadcn/ui's AI Elements `message`** (credited): `user`/`assistant`/`system` variants; avatar, content (`<markdown>`), actions (copy/retry/feedback), attachments, reasoning, tool calls, sources, streaming indicator. Plan `207`. |

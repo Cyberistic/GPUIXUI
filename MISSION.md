@@ -255,3 +255,30 @@ investing heavily in the component API. And: **Fumadocs runs in the browser
 while the library runs through GPUix** — unless GPUix exposes a supported way to
 embed its rendering surface in the docs site, the docs use code examples plus a
 companion native playground, never a silent HTML/CSS reimplementation.
+
+---
+
+## Platform styles (macOS · Linux · Windows) — a first-class requirement
+
+The library ships **three built-in platform style variants**, pre-styled to look native on
+**macOS**, **Linux** and **Windows** (plus the default variant). They are real, **editable
+token themes** in `packages/tokens` — not docs-only CSS. A consumer picks a platform, or
+starts from one, and can **change any of its values** to match their own design, exactly as
+shadcn/ui lets a user own and edit the source: copyable, readable, documented, never an
+opaque preset. The default theme must remain the identity the rest of the system is built
+on; the platform styles are variants of it, not replacements.
+
+The **Fumadocs site** gets a **platform toggle** (macOS · Linux · Windows · Default) that
+switches every component preview between the platform styles, so a reader sees how a
+Button, a Tab, a Panel, a menu and a table look on each platform. The toggle state belongs
+in the page URL (shareable) and is remembered across navigation; it is documented under
+Theming.
+
+**Honesty rule (unchanged).** The docs run in a browser while the library runs on GPUix, so
+a browser preview is an **illustrative approximation** unless it is a real GPUix surface —
+label it as such. The platform variants must exist in the library itself, so the docs
+preview reflects real theming and not a mock.
+
+**Acceptance.** A reader toggles macOS -> Windows and every preview changes; a consumer can
+take one platform theme file, edit it, and ship their own look; both are covered by tests
+and documented under Theming.

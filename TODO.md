@@ -9,6 +9,23 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
+## Harness — the supervisor that keeps the swarm alive
+
+`[x]` `[█████████░]` 6/7
+
+`[x]` Repo on `proserver` with the required shape, mission, rules and plan index
+`[x]` opencode 2.0.31 installed with the provider credentials and a trimmed config
+`[x]` Verified a real run on `opencode-go-braven/deepseek-v4.1-flash`
+`[x]` Supervisor: 30-minute tick, ≥5 agents, one worktree each, idempotent and crash-safe
+`[x]` Scheduler installed (launchd agent + daemon driver; see `.agents/slop/README.md`)
+`[x]` Model fallback chain with limit detection, one active model for the whole swarm, and an hourly recovery probe (see `scripts/README.md`)
+`[ ]` Enforce one live session per worktree: the `opencode run` loop currently
+starts a new session before the previous one closes (evidence:
+`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`; the guard is
+planned in `primitives` plan 022, `022-swarm-single-writer.md`)
+
+---
+
 ## Phase A — audit and feasibility
 
 `[~]` `[███░░░░░░░]` 3/7
@@ -40,21 +57,80 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Phase B — working foundation
 
-`[~]` `[██░░░░░░░░]` 1/6
+`[~]` `[██░░░░░░░░]` 2/6
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
-`[ ]` Land tokens and the theming architecture (light + dark, semantic roles)
+`[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[x]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
 `[ ]` Land the docs shell and document that component in Fumadocs
 
+### Design tokens and theming (`tokens-theme`)
+
+`[x]` `[███████░░░]` 14/20
+
+`[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
+`[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
+radii, density, elevation, light + dark themes
+`[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
+the `@gpuixui/tokens/react` provider
+`[x]` Add high-contrast (AAA) light and dark themes (`getTheme(mode, "high")`)
+`[x]` Add status tone roles plus `alpha` and `statusTone` helpers
+`[x]` Expose `colorRoles` for the docs site's generated token tables
+`[x]` Make `@gpuixui/tokens` resolvable from source so a clean checkout needs no
+prebuilt `dist` (plan 016)
+`[x]` Ship `focusRing(theme)` and correct the focus claims in `docs/tokens.md` and
+`docs/design-system.md` — GPUix 0.10.0 has no `outline*` and no `focusVisible`
+(plan 017)
+`[x]` Drop `BoxShadow.inset`, document the one-shadow rule and hoist
+`elevationShadow(theme, level)` (plan 018)
+`[x]` Write `docs/tokens.md` (every token + extension API)
+`[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
+`[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
+platform toggle (plan 051)
+`[x]` Add the design-system rows to `COMPONENTS.md`
+`[ ]` Add motion tokens (durations/easings) once a component consumes them
+`[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
+runtime, and record the licence review for any bundled family — plan 052, native
+proof blocked by B1 (rescued from the abandoned `agent/fonts` branch)
+`[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
+`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
+docs platform toggle (macOS / Linux / Windows / Default) built on
+`platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
+**symlink** — a `references/` rule does not match a symlink, so every worktree
+shows it as untracked (owner: repo tooling; `packages/README.md` already lists
+`tokens`)
+`[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
+directly and delete their structural copies of the theme and role list, their
+local focus-ring helpers (`primitives/src/core/style.ts`,
+`components/src/internal/theme.ts`) and their first-shadow helpers
+(`primitives/src/core/style.ts` `firstShadow`, `components/src/internal/theme.ts`
+`elevation`), now that `focusRing` and `elevationShadow` exist and the package
+resolves from source (owner: those workstreams; plans 016–018).
+**Primitives half done** in plan 021 (`Theme` re-export, `focusRing`,
+`elevationShadow`); `components` is still outstanding.
+`[ ]` Cross-team: `components` still carries a whole structural copy of the
+package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
+it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
+`components`)
+`[x]` Promote the workstream to `main`: plans 010–019 and 051, `packages/tokens`
+and the union plan index are on `main` (commit `458fe10`); `main` now compiles
+`@gpuixui/tokens` from source, so `primitives`, `components` and `docs-site` can
+merge it and drop their structural copies
+`[ ]` Merge `main` into `agent/tokens-theme` once plan 019 (motion tokens) lands
+there, then promote that commit — `agent/tokens-platform` is a second branch for
+this workstream, created because two live sessions shared one worktree (see
+`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`), and should be
+retired once both branches are one
+
 ### Primitives workstream (owner: primitives)
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
-`[x]` `packages/primitives`: the `core/` layer (theme port, style resolution,
-      variants, keyboard, state, layout, selection, loading) with tests
+`[x]` `packages/primitives`: the `core/` layer (theme re-export, style
+      resolution, variants, keyboard, state, layout, selection, loading) with
+      tests
 `[x]` `packages/primitives`: `ThemeProvider` + density override
 `[x]` `packages/primitives`: layout primitives (Box, Stack, Grid, Separator, Spacer, ScrollArea)
 `[x]` `packages/primitives`: Text + typography scale
@@ -79,6 +155,10 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[x]` `packages/primitives`: Tier 1 runtime suites in `runtime/` — 46 tests
       against the real GPUix 0.10.0 `TestRenderer` (layout, controls, fields,
       loading, icons), with the two-direction proof; results in plan 041 §9
+`[x]` `packages/primitives`: consume `@gpuixui/tokens` directly — delete the
+      structural theme port and the local ring/shadow helpers, use `focusRing`
+      and `elevationShadow`, and verify both shipped themes in the runtime
+      (plan 021)
 `[x]` `examples/basic-app`: compose the Tier 1 set into one settings-form workflow
       (typed + `check-types` green; the app itself is **never run** — it needs a
       desktop session, while the primitives it composes are runtime-verified)
@@ -89,9 +169,8 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
-`[ ]` **root**: `nub.lock` is generated by `nub install` but is untracked (also
-      absent from `master`). Decide whether the lockfile belongs in git — a
-      reproducible clean install (Phase G) needs an answer.
+`[x]` **root**: `nub.lock` is generated by `nub install`; `master` now tracks it,
+      so a clean install resolves the same versions (Phase G).
 `[ ]` **root**: `.gitignore` ignores `references/`, which does not match the
       `references` **symlink** the supervisor creates in each worktree. It
       therefore shows as untracked, and a `git add -A` at the root would commit a
@@ -103,13 +182,12 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       sessions in `agent_alive`, and land `scripts/check-single-writer.sh` as the
       regression guard. Full evidence and the fix:
       `.agents/slop/plans/022-swarm-single-writer.md`.
-`[ ]` **root**: `PLAN.md` D7 still says "GPUix cannot run in this
-      environment"; plan 140's locally-built binding disproved it and plan 041
-      used it. D7 needs a correction row so the next reader is not misled.
-`[ ]` **tokens workstream**: `packages/tokens` must export light and dark theme
-      values satisfying the `PrimitiveTheme` port in
-      `.agents/slop/plans/030-primitives-package.md` §2.2 (colours, space,
-      radius, font; density as a number multiplier, never a second palette)
+`[x]` **root**: `PLAN.md`'s "GPUix cannot run" decision (now D10 after merging
+      `master`'s infrastructure decisions) is marked superseded: plan 140 built
+      the binding and plan 041 used it.
+`[x]` **tokens workstream**: `packages/tokens` exports light and dark themes that
+      are the primitives' `PrimitiveTheme` (plan 021 proves it in the offline and
+      runtime suites)
 `[ ]` **playground workstream**: resolve the runtime blocker — either run the
       published wasm renderer in headless Chrome
       (`@gpuix/native@0.10.0/wasm`, COOP/COEP headers, `--enable-unsafe-swiftshader`),
@@ -165,3 +243,12 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`)
+
+## Swarm-owned blockers (fix these)
+
+- **B1** GPUix native bindings fail to install (blocks the playground + every native smoke test).
+- **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
+
+Both are specified in ; each fix starts with a plan under .
+
+- **Docs: platform toggle (macOS / Linux / Windows / Default)** — every component preview switches platform style; the styles are real editable token themes in packages/tokens, not docs-only CSS (see MISSION.md).
