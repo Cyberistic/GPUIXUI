@@ -12,7 +12,9 @@
 
 The **registry is the single source of truth**: `src/scenarios/index.ts` is both
 the sidebar and the smoke list, so a scenario cannot exist in one and not the
-other. Each scenario is one capability, one view, one `steps` effect.
+other. Each scenario is one capability, one view, one `steps` effect: the eight
+core capabilities plus three Tier 3/4 probes (`table-select-sort`,
+`table-column-resize`, `workspace-tab-drag`).
 
 ## Run it
 
@@ -48,6 +50,14 @@ Artifacts (gitignored, under `.artifacts/`):
 - `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
 
 Flags: `--json`, `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`.
+
+**Observe the code from the built CLI, not through `nub run`.** nub 0.9.6
+collapses a non-zero child exit to `1`, so `nub run --filter playground smoke`
+still *prints* the CLI's `exit 2` line but its own process code is `1`:
+
+```sh
+nub run --filter playground build && node apps/playground/dist/smoke/run.js; echo $?   # -> 2 here
+```
 
 Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
 is no evidence, and a stale report must never be mistaken for a fresh one.
@@ -130,5 +140,5 @@ narrower. Each deviation is deliberate and measured:
   without the clamp).
 - The CLI's unsupported path returns `2` without evaluating the suite
   (`run.test.ts`).
-- The eight scenarios themselves are **authored, not verified** here: running
-  them needs a supported host, per ADR 0001/0002.
+- The eight core scenarios and the three Tier 3/4 probes are **authored, not
+  verified** here: running them needs a supported host, per ADR 0001/0002.

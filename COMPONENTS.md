@@ -91,11 +91,11 @@ synthetic wheel scrolling do not; `<canvas>` does not paint.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Tables | todo | docs (composition; probe: plan 130) | |
+| Tables | todo | probe-able (scenario `table-select-sort`) | |
 | Sortable tables | todo | docs | |
-| Row selection | todo | docs | |
+| Row selection | todo | probe-able (scenario `table-select-sort`) | |
 | Column configuration | todo | docs | |
-| Resizable columns | todo | docs | |
+| Resizable columns | todo | probe-able (scenario `table-column-resize`) | |
 | Filtering controls | todo | docs | |
 | Data toolbars | todo | docs | |
 | Virtualized lists | todo | verified 0.5.1 (virtual-list: 5 of 500 rows built) | |
@@ -111,10 +111,10 @@ synthetic wheel scrolling do not; `<canvas>` does not paint.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Resizable split panes | todo | verified 0.5.1 (pointer-capture drag + clamp) | |
+| Resizable split panes | todo | probe-able (scenario `workspace-tab-drag`); verified 0.5.1 (pointer-capture drag + clamp) | |
 | Panel groups | todo | docs (nested split panes; resize verified 0.5.1) | |
 | Collapsible sidebars | todo | docs | |
-| Tabbed panels | todo | docs | |
+| Tabbed panels | todo | probe-able (scenario `workspace-tab-drag`) | |
 | Detachable / movable tabs | todo | unsupported (no multiple windows) | |
 | Docking layouts | todo | docs (nested flex + state; no z-index, deferred overlays only) | |
 | Nested panel arrangements | todo | docs (nested flex; nested scrolling is unsupported) | |

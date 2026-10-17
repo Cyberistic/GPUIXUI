@@ -118,6 +118,29 @@ Steps:
    persist**. That is the honest note for `packages/docking`: persistence is the
    app's, via Effect `FileSystem`/`Config`.
 
+### 3.4 As implemented (deviations from the sketches above)
+
+Verified against the installed `@gpuix/*@0.10.0` before implementing:
+
+- **`style.gridTemplateColumns` is a column count** (`number`), not a CSS track
+  list, so §3.1's `"120px 1fr 80px"` does not exist. The table cells use explicit
+  flex widths, which also makes the column-resize arithmetic measurable.
+- **0.10.0 has no `onLayout`**, so the table's inner width is state
+  (`nameWidth + status + size`), not read back from the runtime.
+- **A tab drag cannot float a preview** (no `position: fixed`) *and* pointer
+  capture keeps every move on the pressed tab, so `workspace-tab-drag` decides
+  the drop from the pointer delta crossing a threshold. It is a documented
+  heuristic, and the probe asserts the tab really moved panes.
+- **Keyboard row navigation** is a component contract (`onKeyDown` down/up on a
+  `tabIndex` row), not a GPUix table feature; the probe asserts the readout
+  changed, so a dead handler fails.
+- `table-select-sort` and `table-column-resize` share one `TableProbe` view; the
+  registry mounts each scenario's own `view()` (via `Smoke.runScenarios`'
+  `beforeEach`), so they cannot interfere.
+
+Verdicts remain `unverified` on this host: the suite exits `2` before running
+(ADR 0001/0002).
+
 ## 4. Steps
 
 1. Write the three probes as scenarios in `apps/playground/src/scenarios/`

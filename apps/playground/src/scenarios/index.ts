@@ -3,8 +3,8 @@
  * smoke runner.
  *
  * `scenarioProblems` is pure so the integrity check runs on any host: unique,
- * non-empty ids, every declared capability in the union, and all eight core
- * capabilities represented.
+ * non-empty ids, every declared capability in the union, and every core and
+ * Tier 3/4 capability represented.
  */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -20,6 +20,8 @@ import { overlayScenario } from "./overlay.js";
 import { scrollScenario } from "./scroll.js";
 import { panelScenario } from "./panel.js";
 import { virtualListScenario } from "./virtual-list.js";
+import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
+import { workspaceScenario } from "./workspace.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -33,7 +35,10 @@ export const CORE_CAPABILITIES = [
   "virtual-list",
 ] as const;
 
-/** One view per core capability, in the order the suite runs them. */
+/** The Tier 3/4 capabilities the feasibility probes cover (plan `130`). */
+export const PROBE_CAPABILITIES = ["table", "workspace"] as const;
+
+/** One view per capability, in the order the suite runs them. */
 export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   layoutScenario,
   textScenario,
@@ -43,6 +48,9 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   scrollScenario,
   panelScenario,
   virtualListScenario,
+  tableSelectSortScenario,
+  tableColumnResizeScenario,
+  workspaceScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);
@@ -51,14 +59,18 @@ const isCapability = Schema.is(Smoke.Capability);
  * Every integrity problem in `list`. An empty array means valid.
  *
  * The bug it guards: a scenario added with a duplicate or empty id, an unknown
- * capability, or one of the eight core capabilities left uncovered would make
- * the smoke report claim coverage it does not have.
+ * capability, or a required capability left uncovered would make the smoke
+ * report claim coverage it does not have.
  */
 export const scenarioProblems = (
   list: ReadonlyArray<PlaygroundScenario>,
 ): ReadonlyArray<string> => {
   const ids = Arr.map(list, (scenario) => scenario.id);
   const capabilities = Arr.map(list, (scenario) => scenario.capability);
+  const required = Arr.appendAll(
+    [...CORE_CAPABILITIES],
+    [...PROBE_CAPABILITIES],
+  );
 
   return Arr.flatten([
     Arr.filter(ids, Str.isEmpty).map(() => "a scenario has an empty id"),
@@ -69,7 +81,7 @@ export const scenarioProblems = (
       (scenario) => `unknown capability "${scenario.capability}"`,
     ),
     Arr.filter(
-      CORE_CAPABILITIES,
+      required,
       (capability) => !Arr.contains(capabilities, capability),
     ).map((capability) => `no scenario covers "${capability}"`),
   ]);
