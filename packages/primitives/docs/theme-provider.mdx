@@ -21,10 +21,12 @@ import { darkTheme } from "@gpuixui/tokens";
 </ThemeProvider>;
 ```
 
-The theme is a **structural port** declared in `src/core/theme.ts`
-(`PrimitiveTheme`), not an import of `@gpuixui/tokens`. Any value with the
-`colors`, `typography`, `spacing`, `radius`, `density`, `elevation`,
-`borderWidth` and `iconSize` groups satisfies it.
+The theme is `Theme` from **`@gpuixui/tokens`**, re-exported here as
+`PrimitiveTheme` (`src/core/theme.ts`). The tokens package owns every value and
+the runtime-shaped helpers (`focusRing`, `elevationShadow`); this package resolves
+a semantic spec into a GPUix `StyleDesc` from that theme. There is one theme
+declaration in the library (plan 021), so a token change reaches every component
+without an adapter.
 
 ## Density
 
@@ -63,10 +65,10 @@ shipped to a user.
 
 ## Theming
 
-This is the seam: light and dark are two `PrimitiveTheme` values. Switching is a
+This is the seam: light and dark are two `Theme` values from `@gpuixui/tokens`. Switching is a
 re-render with a different `theme` prop — verified natively by
-`runtime/theme.runtime.test.tsx`, which mounts both palettes and checks that every
-painted colour comes from the active one.
+`runtime/theme.runtime.test.tsx`, which mounts the shipped `lightTheme` and
+`darkTheme` and checks that every painted colour comes from the active one.
 
 ## Limitations
 
@@ -80,7 +82,7 @@ painted colour comes from the active one.
 
 - `src/components/ThemeProvider.test.tsx` — the missing-provider error and the
   density swap are proven on the render boundary.
-- `src/core/theme.test.ts` — the port's shape and density metrics.
+- `src/core/theme.test.ts` — the colour-literal scan and density metrics.
 - `runtime/theme.runtime.test.tsx` — both palettes paint only their own colours;
   a live theme switch repaints every asserted role.
 

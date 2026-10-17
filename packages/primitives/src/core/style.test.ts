@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { darkTheme, elevationShadow, lightTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -30,6 +31,10 @@ import type { PrimitiveTheme } from "./theme.js";
  * The "reads the theme it is given" test is the anti-tautology guard for the
  * rest: it changes the fixture and requires the resolved value to change, so a
  * resolver that quietly hard-codes a colour cannot pass.
+ *
+ * The `@gpuixui/tokens` block guards PLAN.md D17: the ring geometry and the
+ * elevation rule come from the tokens package, not from a local copy. The
+ * widened-border test fails if a local ring constant returns.
  */
 
 const spec = (over: Partial<ControlSpec> = {}): ControlSpec => ({
@@ -174,6 +179,47 @@ describe("controlStyle", () => {
     expect(
       controlFocusStyle(spec({ variant: fieldVariant }), testTheme).boxShadow,
     ).toMatchObject({ color: testTheme.colors.ring });
+  });
+});
+
+describe("the tokens package owns the theme", () => {
+  /** The fixture with one number changed: the ring must follow it. */
+  const widened: PrimitiveTheme = {
+    ...testTheme,
+    borderWidth: { thin: testTheme.borderWidth.thin, strong: 5 },
+  };
+
+  it("takes the ring's spread from borderWidth.strong, not a local constant", () => {
+    const focused = controlFocusStyle(spec(), widened);
+    expect(spreadOf(focused)).toBe(widened.borderWidth.strong);
+    expect(spreadOf(focused)).not.toBe(testTheme.borderWidth.strong);
+  });
+
+  it("recolours an invalid ring without changing its geometry", () => {
+    const invalid = controlFocusStyle(spec({ invalid: true }), widened);
+    expect(invalid.boxShadow).toMatchObject({
+      spreadRadius: widened.borderWidth.strong,
+      color: widened.colors.destructive,
+    });
+  });
+
+  it("resolves an elevation level with the tokens helper, and reserved levels paint nothing", () => {
+    expect(
+      surfaceStyle({ tone: "card", elevation: "md" }, testTheme).boxShadow,
+    ).toEqual(elevationShadow(testTheme, "md"));
+    expect(
+      surfaceStyle({ tone: "card", elevation: "overlay" }, testTheme).boxShadow,
+    ).toBeUndefined();
+  });
+
+  it("renders the shipped light and dark themes without an adapter", () => {
+    expect(controlStyle(spec(), lightTheme).backgroundColor).toBe(
+      lightTheme.colors.primary,
+    );
+    expect(controlStyle(spec(), darkTheme).backgroundColor).toBe(
+      darkTheme.colors.primary,
+    );
+    expect(lightTheme.colors.primary).not.toBe(darkTheme.colors.primary);
   });
 });
 

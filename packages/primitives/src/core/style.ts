@@ -13,6 +13,7 @@
  */
 
 import type { GpuixTheme, StyleDesc } from "@gpuix/react";
+import { elevationShadow, focusRing } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
@@ -23,7 +24,6 @@ import type {
   RadiusStep,
   SpaceStep,
   TextRole,
-  ThemeShadow,
 } from "./theme.js";
 
 /**
@@ -39,35 +39,6 @@ const paint = (ref: Paint, theme: PrimitiveTheme): string | undefined =>
   Option.getOrUndefined(
     Option.map(Option.fromNullishOr(ref), (colorRef) => colorRef(theme)),
   );
-
-/** The outline GPUix draws as a shadow: a ring with no offset, spread and no blur. */
-const RING_WIDTH = 2;
-
-/**
- * A focus ring.
- *
- * GPUix 0.10.0's `StyleDesc` has **no `focusVisible` state and no `outline*`
- * properties** — those exist only on GPUix's unreleased `main`. So the ring is
- * a zero-offset, zero-blur shadow with a spread, the one shape `boxShadow` can
- * draw that behaves like an outline and takes no layout space. The component
- * applies it while focused, so a mouse press shows the ring too; there is no
- * `:focus-visible` to distinguish a Tab from a click. That limitation is
- * recorded in `COMPONENTS.md`.
- */
-const ring = (color: string): StyleDesc => ({
-  boxShadow: {
-    offsetX: 0,
-    offsetY: 0,
-    blurRadius: 0,
-    spreadRadius: RING_WIDTH,
-    color,
-  },
-});
-
-/** GPUix paints one shadow per element; a level's list resolves to its first. */
-const firstShadow = (
-  shadows: ReadonlyArray<ThemeShadow>,
-): Option.Option<ThemeShadow> => Option.fromNullishOr(shadows[0]);
 
 // ── Controls: Button, Input, Select ──────────────────────────────────
 
@@ -163,15 +134,23 @@ export const controlStyle = (
 /**
  * What a control adds while it holds keyboard focus.
  *
- * Separate from `controlStyle` because GPUix 0.10.0 has no `focusVisible`
- * pseudo-state: a component tracks focus itself (`onFocus`/`onBlur`) and merges
- * this over the resting style.
+ * The geometry is `@gpuixui/tokens`' `focusRing` — a zero-offset, zero-blur
+ * shadow spread by `borderWidth.strong`, the one shape GPUix 0.10.0's
+ * `boxShadow` can draw that behaves like an outline and takes no layout space.
+ * Only the colour changes for an invalid control. There is no `focusVisible`
+ * state, so a component tracks focus itself (`onFocus`/`onBlur`) and merges
+ * this over the resting style; a mouse press shows the ring too, which
+ * `COMPONENTS.md` records.
  */
 export const controlFocusStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
-): StyleDesc =>
-  ring(spec.invalid === true ? theme.colors.destructive : theme.colors.ring);
+): StyleDesc => {
+  const ring = focusRing(theme);
+  return spec.invalid === true
+    ? { boxShadow: { ...ring.boxShadow, color: theme.colors.destructive } }
+    : ring;
+};
 
 /**
  * What a text field adds over the shared control chrome.
@@ -330,9 +309,12 @@ export const surfaceStyle = (
     style.borderColor = theme.colors.border;
   }
   if (spec.elevation !== undefined) {
-    Option.map(firstShadow(theme.elevation[spec.elevation]), (shadow) => {
-      style.boxShadow = shadow;
-    });
+    Option.map(
+      Option.fromNullishOr(elevationShadow(theme, spec.elevation)),
+      (shadow) => {
+        style.boxShadow = shadow;
+      },
+    );
   }
   return style;
 };

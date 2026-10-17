@@ -20,13 +20,14 @@ import { darkTheme } from "@gpuixui/tokens";
 </ThemeProvider>;
 ```
 
-## The theme is a port, not an import
+## The theme comes from `@gpuixui/tokens`
 
-`PrimitiveTheme` (`src/core/theme.ts`) is an interface declared **here**; a theme
-is any value that satisfies it. `@gpuixui/tokens` owns the values, and this
-package never imports it, which keeps the dependency arrow pointing one way
-(`tokens → primitives → components`) and lets the primitives be tested against a
-fixture theme instead of a real palette.
+`PrimitiveTheme` is `@gpuixui/tokens`' `Theme`, re-exported from
+`src/core/theme.ts` under the name the components import. The tokens package
+owns the values **and** the runtime-shaped helpers (`focusRing`,
+`elevationShadow`); primitives owns only the resolution from a semantic spec to a
+`StyleDesc`. There is one declaration of the theme in the library (plan 021) —
+a second copy would drift silently.
 
 There is deliberately **no default theme**: a primitive rendered without a
 `ThemeProvider` above it throws `MissingThemeProviderError` naming the provider.
@@ -113,9 +114,10 @@ six suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. A seventh suite mounts every example from
 `examples/index.ts`, so the documentation's compositions are runtime-proven too.
-Measured 2026-10-17: **7 files, 64 tests, all passing** — including a theme
-switch on a mounted tree and a check that no painted colour is outside the
-active palette.
+Measured 2026-10-17: **7 files, 68 tests, all passing** — including a theme
+switch on a mounted tree, using the shipped `lightTheme` / `darkTheme` from
+`@gpuixui/tokens`, and a check that no painted colour is outside the active
+palette.
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
