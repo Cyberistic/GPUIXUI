@@ -686,6 +686,55 @@ it("scrolls a capped Select list to follow the keyboard highlight", async () => 
   expect(bounds.y + bounds.height).toBeLessThanOrEqual(list.y + list.height);
 });
 
+it("opens a capped Select list scrolled to its selected option", async () => {
+  const runtime = await openWindow();
+  const options = Array.from({ length: 60 }, (_, index) => ({
+    value: `option-${index}`,
+    label: `Option ${index}`,
+  }));
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Many"
+        placeholder="Pick"
+        options={options}
+        defaultValue="option-49"
+      />
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const listId = selectListId(runtime, "Option 0");
+  const list = selectListBounds(runtime, "Option 0");
+  expect(runtime.renderer.getScrollOffset(listId)).not.toBeNull();
+  // The selected row is the only one wearing the selected role; the trigger's
+  // painted value is a text node, not a row.
+  const rowId = Option.getOrElse(
+    Option.flatMap(
+      Arr.findFirst(
+        runtime.all(),
+        (element) =>
+          element.style["backgroundColor"] === testTheme.colors.selected,
+      ),
+      (element) => Option.fromNullishOr(element.id),
+    ),
+    () => expect.fail("no selected option row"),
+  );
+  const row = Option.getOrElse(runtime.boundsOfId(rowId), () =>
+    expect.fail("the selected option painted no box"),
+  );
+  expect(
+    Option.getOrElse(
+      Option.fromNullishOr(runtime.renderer.getScrollOffset(listId)?.[1]),
+      () => 0,
+    ),
+  ).toBeLessThan(0);
+  expect(row.y).toBeGreaterThanOrEqual(list.y);
+  expect(row.y + row.height).toBeLessThanOrEqual(list.y + list.height);
+});
+
 it("leaves a Select list that fits the window alone", async () => {
   const runtime = await openWindow();
   runtime.render(

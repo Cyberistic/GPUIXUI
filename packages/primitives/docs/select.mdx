@@ -53,7 +53,7 @@ highlight, Enter commits, Escape dismisses. This wrapper does not intercept any
 key. It **does** follow the highlight: the option the arrows (or the pointer)
 newly highlight is scrolled into view through the renderer, so a capped list
 moves with the keyboard instead of leaving the active option beyond the fold
-(plan `069`).
+(plan `069`). Opening on a selected option scrolls that row into view too.
 
 ## Accessibility
 
@@ -153,8 +153,9 @@ scrolls instead of squashing the options.
   unscrollable, and dropping `flexShrink` squashes the rows instead. **Keyboard
   (069):** 40 Down presses in a 60-option list scroll it to offset `-455` and
   leave the highlighted "Option 39" inside the list (without the wrapper's
-  `scrollIntoView` the offset stays `0`); a three-option list is not a scroller
-  and does not move.
+  `scrollIntoView` the offset stays `0`); opening on "Option 49" scrolls to
+  offset `-755` with the selected row inside the list; a three-option list is
+  not a scroller and does not move.
 
 
 ```sh

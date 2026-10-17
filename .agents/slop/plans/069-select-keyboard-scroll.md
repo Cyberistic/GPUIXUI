@@ -104,6 +104,10 @@ Runtime (`fields.runtime.test.tsx`, the long-list test already there):
    inside the list's bounds.
 4. Short list: 3 options, 2 Downs — still no scroller; the last row stays inside
    the list (proves the effect does not move a list that fits).
+5. Open-at-selection: 60 options with `defaultValue="option-49"`; opening scrolls
+   to the selected row (the only one wearing `colors.selected`) and leaves it
+   inside the list. This is the same effect reached by the initial highlight,
+   not by an arrow.
 
 Commands:
 
@@ -112,10 +116,11 @@ nub run --filter @gpuixui/primitives test
 nub run --filter @gpuixui/primitives test:runtime
 ```
 
-Expected: offline unchanged (337); runtime **163** (161 + 2).
+Expected: offline unchanged (**337** at this plan; plan 070 adds one); runtime
+**164** (161 + 3).
 
 **Two-direction proof:** comment out the `onHighlight` call (keep everything
-else), run the new runtime test, record the exact failure in §6, restore.
+else), run the new runtime tests, record the exact failures in §6, restore.
 
 ## 5. STOP conditions
 
@@ -133,12 +138,14 @@ Executed on this host, 2026-10-17.
 
 | Check | Result |
 | ----- | ------ |
-| `nub run --filter @gpuixui/primitives test` | 29 files, **337 tests green** |
-| `nub run --filter @gpuixui/primitives test:runtime` | 15 files, **163 tests green** |
+| `nub run --filter @gpuixui/primitives test` | 29 files, **337 tests green** (338 after plan 070) |
+| `nub run --filter @gpuixui/primitives test:runtime` | 15 files, **164 tests green** (165 after plan 070) |
 | 60 options, before | 40 Downs → highlight "Option 39" at `y 1249`; offset `[0, 0]` |
-| 60 options, after | 40 Downs → offset `[0, -485]`; highlighted row `y 764` inside the list |
+| 60 options, after | 40 Downs → offset `[0, -455]`; highlighted row `y 764` inside the list |
+| opening on "Option 49" | offset `[0, -755]`; the selected row at `y 764` inside the list |
 | short list | 3 options, 2 Downs: not a scroller, no movement |
 
-**Two-direction proof:** removed the `onHighlight` call → the new test fails
-with the measured `expected 0 to be less than 0` (offset unchanged) and the
-highlighted row outside the list; restored, green.
+**Two-direction proof:** removed the `onHighlight` call → the arrow test fails
+with `expected 0 to be less than 0` (offset unchanged) and the highlighted row
+outside the list; the open-at-selection test fails with the same
+`expected 0 to be less than 0`. Restored, both green.

@@ -300,7 +300,7 @@ retired once both branches are one
       wrapper now scrolls the newly highlighted option into view through the
       renderer. Measured: 40 Down presses move the 60-option list from offset
       `0` to `-455` and keep "Option 39" inside it; a list that fits does not
-      move. Two runtime tests, both directions proven (plan 069)
+      move. Three runtime tests, both directions proven (plan 069)
 `[x]` `packages/primitives`: **`Rating` could not show a failed validation** —
       every other value-bearing control painted `invalid`; the rating's colour
       resolver had no branch. Empty stars now take `destructive` and a chosen
