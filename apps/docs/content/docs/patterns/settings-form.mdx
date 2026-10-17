@@ -1,0 +1,80 @@
+---
+title: Settings form
+description: The Tier 1 set composed into one workspace settings workflow.
+---
+
+A pattern is a composition with a job: here, the settings screen an application
+would actually ship. It is built from the public primitives only — no private
+component, no docs-only wrapper — so the page doubles as the example's
+explanation.
+
+<Callout>
+The source is real and type-checked, but the application has **never been
+launched** on this machine: a native window needs the GPUix binding and a
+desktop session. Read [What is verified](#what-is-verified) before treating the
+visual result as evidence.
+</Callout>
+
+## The task
+
+Edit a workspace's preferences: its name and description, the contact address
+that receives notifications, the plan, density, notification switches, and the
+terms acceptance required before saving. Save is disabled until the required
+fields are valid, and the screen reports progress while it saves.
+
+## Composition
+
+The whole screen is one `ThemeProvider` over a full-height `Box` and a column
+`Stack`:
+
+- a header row with the title and a `ButtonGroup` that switches light/dark;
+- a `ScrollArea` holding the form, so the save row stays reachable at any
+  window height;
+- field groups that pair a `Label` with its control and an error line — the
+  same shape `Field` documents on the [inline validation](/docs/components/inline-validation)
+  page, composed locally because the app owns its validation messages;
+- a data-driven `Select` and `RadioGroup` (options are data, not compound
+  children);
+- a `Tooltip` over an `Icon` for the one piece of contextual help;
+- a footer with `Spacer`, a secondary reset and the primary save action.
+
+Nothing reads a literal colour, spacing value or font size: every value comes
+from the theme passed to `ThemeProvider`.
+
+## State
+
+One `App` component owns all of it. Every control is **controlled**: `useState`
+holds the value and the control receives `value` + `onChange`, so the save
+action can read the same state the fields show.
+
+Two values are derived, not stored: `badEmail` (non-empty and failing the
+address shape) and `canSave` (a non-empty name, a valid address and accepted
+terms). The loading and saving timers are the application's own simulation —
+the library ships no timer, and a real app would await its request instead.
+The theme is derived from `mode`, not stored twice.
+
+## What is verified
+
+| Check | Status |
+| ----- | ------ |
+| `nub run --filter @gpuixui/basic-app check-types` | passes — every primitive is used with its real props |
+| the primitives themselves | covered by `packages/primitives`' element-tree suites and, with the local binding, its runtime suites |
+| layout, hit-testing, focus order and the painted result | **not verified** — the app has never been launched |
+
+This page does not show a screenshot, because no capture exists. A browser
+re-creation would be an approximation and is not offered as the example.
+
+## Source
+
+<include lang="tsx" meta='title="examples/basic-app/src/App.tsx"'>
+  ../../../../../examples/basic-app/src/App.tsx
+</include>
+
+## Related
+
+- [Box](/docs/components/box) · [Stack](/docs/components/stack) · [ScrollArea](/docs/components/scroll-area) · [Separator](/docs/components/separator) · [Spacer](/docs/components/spacer)
+- [Button](/docs/components/button) · [Button group](/docs/components/button-group)
+- [Label](/docs/components/label) · [Text input](/docs/components/text-input) · [Text area](/docs/components/text-area)
+- [Select](/docs/components/select) · [Radio group](/docs/components/radio-group) · [Checkbox](/docs/components/checkbox) · [Switch](/docs/components/switch)
+- [Progress](/docs/components/progress) · [Spinner](/docs/components/spinner) · [Skeleton](/docs/components/skeleton)
+- [Tooltip](/docs/components/tooltip) · [Icon](/docs/components/icon) · [Inline validation](/docs/components/inline-validation)

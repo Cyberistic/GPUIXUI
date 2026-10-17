@@ -418,7 +418,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–426)
 
-`[x]` `[██████████]` 23/23
+`[x]` `[██████████]` 24/25
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -443,6 +443,8 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Docs truth pass against the implementation (plan 424) — 20 pages audited against source, inventory and the shared keyboard module; `component-truth.test.ts` guards repo paths, placeholder prose and real package exports; one tooltip import defect fixed
 `[x]` Document every delivered Tier 2 component (plan 425) — 22 pages with generated props, real source and their own examples; 42 component pages total
 `[x]` Prose truth pass over the non-component pages (plan 426) — `layouts`, `examples`, `getting-started` and `installation` now describe the landed packages and the real `basic-app`; `prose-truth.test.ts` fails on the old claims and guards future drift
+`[x]` First real pattern page (plan 427 Part D) — `patterns/settings-form.mdx` documents `examples/basic-app` with its real source, the verification table and `pattern-pages.test.ts`; Plans index and sidebar updated
+`[ ]` Plan 427 Parts A–C — extend the metadata schema and page template for compound/workspace components, then add Tier 3–4 pages and interaction previews when `packages/data-grid` and `packages/docking` land
 
 ## Cross-team tasks raised by the docs-site workstream
 

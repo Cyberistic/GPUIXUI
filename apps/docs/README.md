@@ -215,6 +215,17 @@ describe. When the playground becomes runnable, update `getting-started.mdx`
 and `examples/index.mdx` in the same change — the guard is inverted so it fails
 until you do.
 
+## Pattern pages
+
+A pattern page documents a **real composition**, not a component. The first is
+`content/docs/patterns/settings-form.mdx`, built from
+`examples/basic-app/src/App.tsx`. Its contract (`src/pattern-pages.test.ts`) is:
+six sections (`The task`, `Composition`, `State`, `What is verified`, `Source`,
+`Related`), at least one real `<include>` that resolves inside the repository,
+no placeholder prose, and any `nub run --filter <package> <script>` claim must
+name a script the example package really defines. A pattern with no runnable
+source does not get a page.
+
 ## Previews
 
 `<NativePreview slug>` picks the strongest honest tier from the record plus the
