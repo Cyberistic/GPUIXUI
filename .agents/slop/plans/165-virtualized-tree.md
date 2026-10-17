@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ------- |
-| Status | planned (measured facts land in §8) |
+| Status | landed (measured facts in §8) |
 | Phase | B (feasibility) → feeds Tier 4 File tree, Tier 5 Virtualized hierarchical data |
 | Owner | playground workstream (`apps/playground`, `packages/testing`) |
 | Depends on | `152` (virtual rows/lag), `153` (tree indentation/keys), `158` (roving focus in a virtual list) |
@@ -66,10 +66,11 @@ Steps:
 7. Click `dir-3/file-25` → `selected=dir-3/file-25`, native focus on that row.
 8. Down → `selected=dir-3/file-26` and focus `vtree-node-dir-3/file-26`.
    Up → back to `file-25` (both selection and focus).
-9. Scroll the focused row out of the window (`wheel +320`, then assert
-   `file-25` is not painted), then Down → `selected=dir-3/file-26` and the
-   focused row is `vtree-node-dir-3/file-26` — the roving index, not the paint
-   window, drives movement.
+9. Scroll the window back up (`wheel +320`): the window is
+   `file-12 … file-20` (assert `file-12` paints, `file-24` no longer paints),
+   and the **focused** `file-22` stays painted outside the window (the
+   straggler `roving-focus` measured). Then Down moves the selection and focus
+   to `file-23` — the roving index, not the paint window, drives movement.
 10. Scroll back (`wheel +800`), click `dir-3`, `key("left")` → collapsed:
     `visible=8`, `open=0`, and `dir-3/file-0` is not painted.
 11. Click `dir-3`, `key("right")` → expanded again: `visible=48 open=1`; then
@@ -139,5 +140,38 @@ capability string and no `SmokeHost` member.
 
 ## 8. Measured facts
 
-_(Filled in by the run; every number below must come from the report's checks
-and the artifact, never from expectation.)_
+**Suite: 31/31 green on this host, exit `0`**, `tree=verified` (now two
+scenarios), with the 30 prior scenarios unchanged. `virtualized-tree` records
+**27 checks**.
+
+| Question | Measured |
+| -------- | -------- |
+| Does `paddingLeft` indent inside a virtual row? | **yes** — the child label is exactly **16 px** right of the directory label, ±1 |
+| Does expanding change the flattened count? | **yes** — `visible` 8 → 48 on `dir-0`, back to 8 on collapse, and 48 again on `dir-3` |
+| Does the window follow the count change? | **yes** — the collapsed child is not painted; after expanding 40 rows and scrolling, `dir-3/file-24` paints and `dir-0` does not |
+| Does a click focus a child? | **yes** — `vtree-node-dir-3/file-22` |
+| Do arrows move selection **and native focus**? | **yes** — Down → `file-23`, Up → `file-22`, in a row whose index shifted by an expansion |
+| Does focus survive outside the window? | **yes** — at scroll `-512` the window painted `file-12 … file-20` **plus the focused `file-22`** (the straggler), and Down still moved focus to `file-23` |
+| Does Right from an open directory move to its first child? | **yes** — `dir-3` → `dir-3/file-0` |
+| Does Left on a file move to its parent? | **yes** — `dir-3/file-0` → `dir-3` |
+
+The one limit, unchanged from `a11y-tree` and `roving-focus`: an off-window row
+is not in the accessibility tree, and the focused straggler is painted but not
+part of the visible window — a virtualized file tree must treat "painted" as
+"window **plus** the focused row", exactly as `COMPONENTS.md` records.
+
+**Two-direction proofs** (all run, outputs quoted):
+
+1. hard-coding `paddingLeft` to `4`: **exit `1`**, `a virtual row still indents
+   its child by one step: expected 16 ± 1, got 0`. Restored.
+2. removing `focusNode` from `select`: **exit `1`**, `Down moves native focus to
+   the next child: expected "vtree-node-dir-3/file-23", got
+   "vtree-node-dir-3/file-22"` — the state moved, the native focus did not.
+   Restored.
+3. freezing the flattened list (`visibleTreeNodes(NODES, [])`): **exit `1`**,
+   `expanding a directory adds its children: expected a string containing
+   "visible=48 open=1", got "selected=dir-0 visible=8 open=1"`. Restored.
+
+**Not measured:** drag-and-drop reordering inside the tree, multi-select, and
+lazy child loading — each is the component's own contract.
+

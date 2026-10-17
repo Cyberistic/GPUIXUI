@@ -277,12 +277,30 @@ The honest consequence: a context menu does **not** need a portal or a root
 mount in 0.10.0 — the anchored surface is window-positioned even inside
 `overflowY: "scroll"`.
 
+## Virtualized tree (plan `165`)
+
+`virtualized-tree` flattens 8 directories × 40 files into one list inside a
+`<virtual-list>` and drives the tree contract through the component's own
+handlers. What holds:
+
+| Question | Measured |
+| -------- | -------- |
+| indentation inside a virtual row | `paddingLeft: 4 + depth * 16` shifts the child label exactly **16 px** |
+| expand/collapse under virtualization | 8 rows ↔ 48 rows; the painted window follows, no stale child remains |
+| click / arrows | the clicked row takes native focus; Down/Up move selection **and** focus, including after an expansion shifted the indices |
+| focus outside the window | at scroll `-512` the window painted `file-12 … file-20` plus the focused `file-22`; Down still moved focus to `file-23` |
+| Right on an open directory | moves to its first child; Left on a file moves to its parent |
+
+The limit is the one `a11y-tree` records: the accessibility tree follows the
+painted window, so a virtualized file tree must treat "painted" as the window
+**plus** the focused row.
+
 ## Evidence on this host
 
-The suite is **30/30 green** here (`exit 0`):
+The suite is **31/31 green** here (`exit 0`):
 
 ```
-30/30 scenarios passed · capabilities: layout=verified text=verified
+31/31 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -306,6 +324,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | drag | capture owns every move and the up; hover is frozen during the drag; the gesture ends in a click on the source; a drop on a handler-less element still clicks; `onFileDrop` carries paths and coordinates |
 | selection | cross-element selection joins with newlines; `<code>`/`<diff>` copy is chrome-free; an anchor inside `userSelect: "none"` selects nothing; a click selects nothing |
 | menu | a right click is `onAuxClick` + `isRightClick` (no `button`, no `onClick`); `<anchored position>` is exact at the pointer, even inside a **scrolled** container (no offset, no clipping); `shift-f10` opens and Escape returns focus |
+| hierarchy | a flattened tree inside `<virtual-list>`: 16 px per depth, 8 ↔ 48 rows on expand/collapse, roving focus moves native focus, the focused row stays painted outside the window |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -344,6 +363,7 @@ src/scenarios/surfaces.tsx  svg, img (fallbacks, data URL, ref upload), diff, ca
 src/scenarios/drag-targets.tsx capture, hover during drag, file drops
 src/scenarios/text-selection.tsx selection across text, code, diff and chrome
 src/scenarios/context-menu.tsx right click, pointer placement, dismissal
+src/scenarios/virtual-tree.tsx a 328-node flattened tree inside <virtual-list>
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -380,7 +400,7 @@ narrower. Each deviation is deliberate and measured:
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe and the app-level shortcut probe pass in real GPUix
-  0.10.0 on this host (30/30), with a written report and screenshots.
+  0.10.0 on this host (31/31), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

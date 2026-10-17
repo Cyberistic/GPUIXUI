@@ -43,7 +43,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | panel | `panel-resize` | verified |
 | virtual-list | `virtual-list-window` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
-| tree | `tree-view` | verified |
+| tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
@@ -54,7 +54,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | selection | `text-selection` | verified |
 | menu | `context-menu-pointer` | verified |
 
-The suite is **30/30 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **31/31 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -140,6 +140,19 @@ component design turns on — it stays exact and **unclipped** inside an
 160 px viewport still paints and activates), so a context menu needs no portal.
 `shift-f10` is delivered as `key: "f10"` with `modifiers.shift`, the surface
 auto-focuses, and Escape returns focus through `renderer.focusElement`.
+
+`virtualized-tree` is the runtime verdict for a file tree: it flattens 8
+directories × 40 files into one `<virtual-list>` and drives the tree contract
+with the component's own handlers. What holds: `paddingLeft: 4 + depth * 16`
+still indents by exactly 16 px inside a virtual row; expanding changes the
+flattened count 8 ↔ 48 and the painted window follows with no stale child; a
+clicked row takes native focus and Down/Up move selection **and** focus by
+roving index, even after an expansion shifted the indices; Right on an open
+directory moves to its first child and Left on a file to its parent. The
+measured straggler: at scroll `-512` the window painted `file-12 … file-20`
+**plus** the focused `file-22`, and the next key still reached it — "painted" is
+the window plus the focused row. The `a11y-tree` limit applies: an off-window
+row is not in the accessibility tree.
 
 `select-choose`, `combobox-filter` and `tooltip-open` are the runtime verdicts
 for the three interactive components GPUix ships, which the library composes
@@ -375,7 +388,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
 | Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). |
-| Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `roving-focus` proved component code can move focus between rows with `renderer.focusElement`, so a roving-tabindex tree is buildable. |
+| Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `virtualized-tree` adds the virtualized form: 16 px per depth inside `<virtual-list>`, a count change from 8 to 48 rows repaints correctly, and Down/Up move native focus by roving index even for a row outside the window. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
@@ -403,7 +416,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |
 | Inspector panels | todo | ? | Property panels + panels. |
 | Property editors | todo | ? | Fieldset + inputs. |
-| File trees | todo | ? | Tree views (verified) + `<virtual-list>`; hierarchical virtualization is ours. |
+| File trees | todo | yes (probe) | Tree views + `<virtual-list>` — `virtualized-tree` proves the combination: 328 flattened rows, 16 px per depth inside a virtual row, expand/collapse from 8 to 48 rows, click/arrows with native focus, and focus surviving the window moving away. Hierarchical virtualization itself is ours; an off-window row is invisible to the accessibility tree (`a11y-tree`). |
 | Log viewers | todo | yes (probe) | `log-viewer`: `<virtual-list alignment="bottom" followTail>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up then appending does **not** snap back, so a follow toggle is app state plus a scroll. `<text>`; text search/highlight hooks exist. Copy is native: `text-selection` selects across text rows and `<code>`/`<diff>` copy excludes chrome, but a drag anchored in a `userSelect: "none"` gutter selects nothing — a text row, not the gutter, must anchor the selection. |
 | Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
@@ -422,7 +435,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `drag-targets`: pointer capture keeps moves and the up on the source, **hover is frozen during the drag**, the drag ends in a click on the source, and a drop on an element without `onFileDrop` still fires a click. The component owns hit-testing, the drop indicator and the click suppression. |
 | Notification centre | todo | ? | Composition over toasts + panels. |
 | Multi-step forms | todo | ? | Variant merged here: Form (adabraka `form`) — partial coverage; validation orchestration is the Tier 2 Form row. |
-| Virtualized hierarchical data | todo | ? | Tree views + `<virtual-list>`; hierarchical virtualization is ours. Only the painted window reaches the accessibility tree, so a keyboard-focusable row outside it is invisible to assistive technology (`a11y-tree`). |
+| Virtualized hierarchical data | todo | yes (probe) | Tree views + `<virtual-list>` — `virtualized-tree` measures the model: flatten, indent by depth, a changing row count, roving focus by index, and the focused row staying painted outside the window. Only the painted window reaches the accessibility tree, so a keyboard-focusable row outside it is invisible to assistive technology (`a11y-tree`). |
 | Advanced filtering / query builders | todo | ? | Composition over inputs + menus. |
 | QR code | todo | ? | Render the matrix as a grid of `div`s or one `<svg>`; both are provided. The encoder is ours (dependency not yet chosen). |
 | File upload | todo | ? | Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists and `drag-targets` measured it: absolute paths plus the window drop point, but the simulation also emits moves, and a drop on an element without a handler fires a click. |
