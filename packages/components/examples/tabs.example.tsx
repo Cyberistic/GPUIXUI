@@ -89,3 +89,38 @@ export const TabsExample = () => {
     </Card>
   );
 };
+
+/**
+ * The same section rail on the vertical axis: a workspace-style settings
+ * sidebar. Arrows move with Up/Down, and the rail is a column beside the panel.
+ */
+export const VerticalTabsExample = () => (
+  <Card style={{ maxWidth: 560 }}>
+    <CardHeader>
+      <CardTitle>Workspace settings</CardTitle>
+      <CardDescription>
+        A vertical tab set: Down/Up moves, Left/Right does nothing.
+      </CardDescription>
+    </CardHeader>
+    <Tabs defaultValue="general" orientation="vertical">
+      <TabsList label="Workspace sections" testId="workspace-tabs">
+        <TabsTrigger value="general">General</TabsTrigger>
+        <TabsTrigger value="members" disabled>
+          Members
+        </TabsTrigger>
+        <TabsTrigger value="billing">Billing</TabsTrigger>
+      </TabsList>
+      <TabsContent value="general">
+        <Row label="Name" value="Analytical Engine" />
+        <Row label="Visibility" value="Private" />
+      </TabsContent>
+      <TabsContent value="members">
+        <Row label="Members" value="Owner only" />
+      </TabsContent>
+      <TabsContent value="billing">
+        <Row label="Plan" value="Team" />
+        <Row label="Seats" value="12" />
+      </TabsContent>
+    </Tabs>
+  </Card>
+);

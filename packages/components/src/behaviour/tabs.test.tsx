@@ -7,7 +7,8 @@
  * so Enter was meaningless; a disabled tab that could be focused or clicked; and
  * a controlled tab set that changed its own panel when the consumer said no. A
  * caller `ref` on a trigger was discarded in favour of the internal one, and so
- * was a caller `onBlur`.
+ * was a caller `onBlur`. A vertical tab set could move along the wrong axis,
+ * stay laid out horizontally, react to Left/Right, or bypass manual activation.
  */
 
 import * as Option from "effect/Option";
@@ -38,6 +39,7 @@ const Settings = ({
     activation={activation}
     value={value}
     onValueChange={onValueChange}
+    testId="tabs-root"
   >
     <TabsList testId="list">
       <TabsTrigger testId="tab-profile" value="profile">
@@ -65,6 +67,38 @@ const Settings = ({
 const focusTab = (root: ComponentTestRoot, testId: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId(testId)?.id ?? -1);
 };
+
+/** The same three tabs on the vertical axis, with the middle one disabled. */
+const VerticalSettings = ({
+  activation,
+}: {
+  readonly activation?: "automatic" | "manual";
+}) => (
+  <Tabs
+    defaultValue="profile"
+    orientation="vertical"
+    activation={activation}
+    testId="tabs-root"
+  >
+    <TabsList testId="vertical-list">
+      <TabsTrigger testId="tab-profile" value="profile">
+        Profile
+      </TabsTrigger>
+      <TabsTrigger testId="tab-billing" value="billing" disabled>
+        Billing
+      </TabsTrigger>
+      <TabsTrigger testId="tab-danger" value="danger">
+        Danger
+      </TabsTrigger>
+    </TabsList>
+    <TabsContent testId="panel-profile" value="profile">
+      <text>Profile panel</text>
+    </TabsContent>
+    <TabsContent testId="panel-danger" value="danger">
+      <text>Danger panel</text>
+    </TabsContent>
+  </Tabs>
+);
 
 describe("Tabs", () => {
   it("shows only the panel of the clicked tab", () => {
@@ -252,6 +286,87 @@ describe("Tabs", () => {
     focusTab(tabs, "tab-danger");
 
     expect(onBlur).toHaveBeenCalledTimes(1);
+
+    tabs.unmount();
+  });
+
+  it("moves along the vertical axis and selects with Down and Up", () => {
+    const tabs = renderComponent(<VerticalSettings />);
+    focusTab(tabs, "tab-profile");
+
+    tabs.renderer.simulateKeystrokes("down");
+
+    // Billing is disabled, so the move lands on Danger.
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+    expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeUndefined();
+
+    tabs.renderer.simulateKeystrokes("down");
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-profile"));
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeDefined();
+
+    tabs.renderer.simulateKeystrokes("up");
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+
+    tabs.unmount();
+  });
+
+  it("ignores Left and Right in a vertical tab set", () => {
+    const tabs = renderComponent(<VerticalSettings />);
+    focusTab(tabs, "tab-profile");
+
+    tabs.renderer.simulateKeystrokes("right");
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-profile"));
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeDefined();
+
+    tabs.renderer.simulateKeystrokes("left");
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-profile"));
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeDefined();
+
+    tabs.unmount();
+  });
+
+  it("lays a vertical tab set in a row with a column rail", () => {
+    const vertical = renderComponent(<VerticalSettings />);
+
+    expect(
+      vertical.renderer.findByTestId("tabs-root")?.style.flexDirection,
+    ).toBe("row");
+    expect(
+      vertical.renderer.findByTestId("vertical-list")?.style.flexDirection,
+    ).toBe("column");
+
+    vertical.unmount();
+
+    const horizontal = renderComponent(<Settings />);
+
+    expect(
+      horizontal.renderer.findByTestId("tabs-root")?.style.flexDirection,
+    ).toBe("column");
+    expect(horizontal.renderer.findByTestId("list")?.style.flexDirection).toBe(
+      "row",
+    );
+
+    horizontal.unmount();
+  });
+
+  it("waits for Enter before switching in a vertical manual set", () => {
+    const tabs = renderComponent(<VerticalSettings activation="manual" />);
+    focusTab(tabs, "tab-profile");
+
+    tabs.renderer.simulateKeystrokes("down");
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeDefined();
+    expect(tabs.renderer.findByTestId("panel-danger")).toBeUndefined();
+
+    tabs.renderer.simulateKeystrokes("enter");
+
+    expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
 
     tabs.unmount();
   });

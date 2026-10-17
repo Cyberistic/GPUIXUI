@@ -39,6 +39,30 @@ Arrow keys move focus *and* the selection in `automatic` mode; in `manual` mode
 they only move focus, and Enter/Space selects. Disabled triggers are skipped by
 every key and cannot be clicked.
 
+## Orientation
+
+`orientation` defaults to `"horizontal"`. A vertical set puts the rail in a
+column beside the panel and maps the arrow keys to the axis — `Down`/`Up`
+instead of `Right`/`Left`. Home/End, wrapping, disabled skipping, manual
+activation and the controlled rule are identical on both axes.
+
+```tsx
+<Tabs defaultValue="general" orientation="vertical">
+  <TabsList label="Workspace sections">
+    <TabsTrigger value="general">General</TabsTrigger>
+    <TabsTrigger value="members" disabled>
+      Members
+    </TabsTrigger>
+    <TabsTrigger value="billing">Billing</TabsTrigger>
+  </TabsList>
+  <TabsContent value="general">…</TabsContent>
+  <TabsContent value="billing">…</TabsContent>
+</Tabs>
+```
+
+`examples/tabs.example.tsx` exports both shapes: the horizontal account settings
+and the vertical workspace settings.
+
 ## Keyboard
 
 | Key | Result |
@@ -90,15 +114,20 @@ after the trigger's own rules.
   trigger→panel relationship is positional.
 - The list owns the keys because a key event on a focused trigger bubbles to the
   list — measured in the real renderer, the same behaviour `List` relies on.
-- Vertical tab sets stack the triggers; the rail is not a separate column.
+- Vertical tab sets put the rail in a column beside the panel; the axis is a
+  layout and keyboard choice, not an ARIA attribute (unavailable, below).
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (10 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (14 tests): click
 switching, the active theme role in both themes, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Home/End, the controlled contract, a panel
-whose value matches nothing, a caller `ref`, and a caller `onBlur` composed with
-the focus ring.
+whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
+focus ring, and four vertical-axis cases — Down/Up movement with wrap, Left/Right
+ignored, the row/column layout, and manual activation. The vertical guard is
+proven in both directions: inverting the axis mapping fails the movement and
+axis-isolation tests, inverting the layout fails the layout test, and forcing
+`selectsOnFocus` to `true` fails the manual test.
 
 A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler
 runs exactly once.
