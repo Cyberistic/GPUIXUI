@@ -614,7 +614,7 @@ Use `renderToStaticMarkup` from `react-dom/server` (no DOM, no jsdom):
 ```tsx
 function Probe() {
   const theme = useTheme();
-  return <span>{theme.colors.background}</span>;
+  return <>{theme.colors.background}</>;
 }
 
 const html = renderToStaticMarkup(
@@ -622,6 +622,9 @@ const html = renderToStaticMarkup(
 );
 expect(html).toContain(darkTheme.colors.background);
 ```
+
+Use a fragment rather than an intrinsic element: the package's tsconfig has no
+DOM lib, so `<span>` would drag browser types into a native token package.
 
 Also assert a provider-less render returns `lightTheme.colors.background`.
 This test fails if the provider stops supplying context or the hook reads the

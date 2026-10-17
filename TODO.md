@@ -34,10 +34,10 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Phase B — working foundation
 
-`[ ]` `[░░░░░░░░░░]` 0/6
+`[x]` `[██░░░░░░░░]` 1/6
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
-`[ ]` Land tokens and the theming architecture (light + dark, semantic roles)
+`[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[ ]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
