@@ -113,6 +113,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [314](./314-row-surface-text.md) | The selected menu row, the sidebar status label and the link on a row fill | F | 057, 071–095, 300, 306–313 | done |
 | [315](./315-canvas-input-text.md) | Typed text on the canvas field | F | 059, 071–095, 088, 306–314 | done |
 | [316](./316-selected-label-accent-wash.md) | The selected row's inherited label on the accent wash | F | 059, 071–095, 300, 306–315 | done |
+| [317](./317-placeholder-surfaces.md) | The placeholder on every surface a field sits on | F | 059, 071–095, 300, 306–316 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -733,6 +734,21 @@ on macOS light), so no colour moves and the contract grows 247 → 248. The
 regression case sets `accent` to the light `selectedForeground` and asserts the
 public checker reports the pair, and the §9 design-system row now names the
 three pointer fills instead of two.
+
+317 closes the same class of gap for the placeholder, which was measured on the
+`input` fill alone because the transparent fields plan 315 audited leave the
+colour to the runtime default. A field is not tied to one surface: `primitives`
+exposes four `Surface` tones, so a sidebar search sits on `muted`, a command
+palette's field on `popover`, a settings form on `card` and the canvas is plan
+315's case. The audit found the shipped defect the missing surfaces hid: the
+identity dark `placeholder` (`#7C8595`) measures **4.03:1** on both `muted` and
+`popover` (`#222730`), under the 4.5:1 secondary floor, and the `default`
+platform variant plus the XP and Aero dark recipes inherit it. The four
+`Surface` tones join the contract (248 → 252), the dark value moves one designed
+step to `#858F9F` (4.59:1 on the quiet panel, 5.17 on the input fill, 5.95 on
+the canvas) while staying dimmer than `mutedForeground`, and the field on a row
+wash and the disabled field are documented as out of scope — the latter reads
+`disabledForeground`, which plan 306 measures.
 
 ### Reference adoption (block `200–299`)
 

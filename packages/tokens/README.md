@@ -223,7 +223,11 @@ is checked on the canvas, card, the `muted` panel, `popover` and the
 quiet panel, a date picker's month header on its floating surface and a selected
 row's title are held to the body floor. Typed text (`inputForeground`) is
 checked on the `input` fill and on the `background` canvas a transparent field
-paints (plan 315), so a search box or inline edit cannot lose its text. A menu
+paints (plan 315), so a search box or inline edit cannot lose its text. The
+placeholder (`placeholder`) is checked on the `input` fill and on all four
+`Surface` tones a transparent field can sit on, because a search box in a
+sidebar or a dialog is not tied to one fill; identity dark measured 4.03:1 on
+the quiet panel and the floating surface until plan 317 moved it one step. A menu
 row's `popoverForeground` on
 `hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a
 selected row's inherited `selectedForeground` on the `accent` wash a selectable

@@ -334,14 +334,18 @@ describe("themeContrastFailures", () => {
     const typo = extendTheme(getTheme("dark"), {
       colors: { placeholder: "not-a-colour" },
     });
-    const failures = themeContrastFailures(typo);
-    expect(failures).toHaveLength(1);
-    expect(failures[0]?.background).toBe("input");
-    expect(Number.isNaN(failures[0]?.ratio)).toBe(true);
+    const failures = themeContrastFailures(typo).filter(
+      ({ foreground }) => foreground === "placeholder",
+    );
+    expect(failures).toHaveLength(5);
+    expect(new Set(failures.map(({ background }) => background))).toEqual(
+      new Set(["input", "background", "card", "popover", "muted"]),
+    );
+    failures.forEach(({ ratio }) => expect(Number.isNaN(ratio)).toBe(true));
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(248);
+    expect(contrastPairs.length).toBe(252);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(

@@ -146,7 +146,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background` canvas a transparent field paints |
-| `placeholder` | `#66707F` | `#7C8595` | placeholder text |
+| `placeholder` | `#66707F` | `#858F9F` | placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
@@ -1353,7 +1353,13 @@ soft fills. Palette edits must keep it green.
 Default body text is measured on `background`, `card`, the `muted` panel,
 `popover` and the `hover`/`active`/`accent`/`selected` washes; typed text is
 `inputForeground` on the `input` fill and on the `background` canvas a
-transparent field paints. The panel and the floating surface are not
+transparent field paints. The placeholder is held to the same secondary floor
+on the `input` fill and on all four `Surface` tones a transparent field can sit
+on (`background`, `card`, `muted`, `popover`); a field on a row wash and a
+disabled field are deliberately out of scope — the latter reads
+`disabledForeground`, which plan `306` measures — and identity dark `#7C8595`
+measured 4.03:1 on the quiet panel and the floating surface until plan `317`
+moved it to `#858F9F`. The panel and the floating surface are not
 academic: an avatar's fallback initials sit on `muted`, and a date picker's month
 header sits on its `popover`. The row washes are not either: a selectable list
 row paints `accent` on hover and `selected` when selected, and its title is
@@ -1378,8 +1384,9 @@ A text field's edge is `border` on its own `input` fill, measured at the divider
 floor; the weakest shipped set is Linux dark at **1.25:1**, above the 1.05:1
 floor. These seven pairs take `contrastPairs` from 232 to 239; plan `314` adds
 the selected option, the sidebar status label and the row link, plan `315` adds
-typed text on the canvas field, and plan `316` adds the `accent` fill a selected
-row inherits its label on, taking the contract from 247 to 248.
+typed text on the canvas field, plan `316` adds the `accent` fill a selected
+row inherits its label on, and plan `317` adds the placeholder on the four
+`Surface` tones, taking the contract from 248 to 252.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the

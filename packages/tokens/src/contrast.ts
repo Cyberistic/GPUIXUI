@@ -374,6 +374,16 @@ const fieldEdgePairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The surfaces a placeholder is painted on beyond the `input` fill: the four
+ * `Surface` tones a transparent field (`SearchInput`, `InlineEdit`,
+ * `ColorPicker`, `TagInput`, `MentionInput`) can sit on. A hint that disappears
+ * into a sidebar or a dialog is a failed field.
+ */
+const placeholderSurfacePairs: readonly ContrastPair[] = (
+  ["background", "card", "popover", "muted"] as const
+).map((background): ContrastPair => ["placeholder", background, "secondary"]);
+
+/**
  * The surfaces default body text (`foreground`) is painted on: the canvas and
  * the card, the quiet panel an avatar's fallback initials sit on, the floating
  * surface a date picker's month header sits on, and the hover and pressed
@@ -418,7 +428,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * pointer washes — a selected `Select` option's label on
  * its `selected` fill, a status label or dot on the quiet `muted` panel, typed
  * text on the `input` fill and on the `background` canvas a transparent field
- * paints, and a text field's edge is measured on the `input` fill it sits on.
+ * paints, the placeholder on that canvas and on the `card`, `popover` and
+ * `muted` surfaces a transparent field can sit on instead, and a text field's
+ * edge is measured on the `input` fill it sits on.
  *
  * The filled families are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
@@ -474,6 +486,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],
+  ...placeholderSurfacePairs,
   ...inactivePairs,
   ["borderStrong", "background", "boundary"],
   ["borderStrong", "card", "boundary"],

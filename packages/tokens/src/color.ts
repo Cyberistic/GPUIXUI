@@ -382,7 +382,7 @@ export const darkColors = {
   borderStrong: "#868FA0",
   input: palette.neutral[900],
   inputForeground: palette.neutral[100],
-  placeholder: "#7C8595",
+  placeholder: "#858F9F",
   ring: palette.iris[300],
   selection: "#A7A9FF33",
   overlay: "#000000A6",

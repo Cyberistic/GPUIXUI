@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 84/110
+`[x]` `[████████░░]` 85/111
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -142,12 +142,19 @@ row hovers — `list.tsx` paints `accent` on hover while the label keeps
 theme could erase it while the checker returned `[]`; every shipped set passes
 (5.81:1 at the tightest), so no colour moves and the contract grows 247 → 248
 pairs (plan 316)
+`[x]` Hold the placeholder on every surface a field sits on — it was measured
+on the `input` fill only, so a transparent SearchInput in a sidebar or a dialog
+had no pair, and the identity dark `#7C8595` measured 4.03:1 on `muted` and
+`popover` while the XP and Aero dark recipes inherited it; the four `Surface`
+tones join the contract (248 → 252), identity dark moves to `#858F9F` and every
+shipped set clears 4.5:1 (plan 317)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
-they currently leave placeholder colour to the runtime default, so the
-`placeholder` token and its pair apply to the `input` fill alone (owner:
-`components`; plan 315)
+they currently leave placeholder colour to the runtime default; the token is now
+measured on the `input` fill and the four `Surface` tones a transparent field
+sits on, so painting it on any of them is held by the checker (owner:
+`components`; plans 315 and 317)
 `[ ]` Cross-team: `primitives` paints an unchecked checkbox/switch border with
 `theme.colors.input`, a **background** role — `input` is `#FFFFFF` in every
 light set, so an unchecked box on a white card measures 1.000:1 and has no
