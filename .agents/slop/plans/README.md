@@ -71,6 +71,7 @@ workstream declares in its own section below.
 | [138](./138-combobox-pointer-coverage.md) | Combobox pointer selection coverage | C/F | 116, 117, 134 | done — 3 native tests (Combobox 13, behaviour 280); liveness proof |
 | [139](./139-inventory-test-counts.md) | Inventory test counts, and the rows that drifted | C/F | 117, 128, 134 | done — +1 inventory check (unit 224); 3 counts + Cards row corrected; both-direction proof |
 | [157](./157-components-consume-token-helpers.md) | `@gpuixui/components` consumes the token helpers instead of copying them | F | 014, 016, 017, 018 | done — theme test fails against the old `accent` tone; behaviour 280 green |
+| [158](./158-alert-parts.md) | Alert becomes a compound part (the first contract migration) | F | 200, 157 | done — 11 native tests; both-direction proof (281 behaviour tests) |
 | [200](./200-adopt-compound-part-api.md) | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | 020, 030, 110–117 | done — `docs/component-api.md` + ADR 0004 + `LICENSES/base-gpui.md`; contract test proven in both directions |
 
 Interlocks this workstream depends on and does not own:

@@ -1,16 +1,25 @@
 /**
  * Alert behaviour, in the real GPUix renderer.
  *
- * The bugs these guard: a tone that does not tint the surface; a body that
- * inherits the tone's text colour and becomes unreadable; a dismiss control that
- * renders without `onDismiss`, disappears with it, or cannot be reached and fired
- * by keyboard; a click that fires twice; a lost alert role; and a body slot that
- * swallows the click of the action inside it.
+ * The bugs these guard: a tone that does not tint the surface; a title that does
+ * not take the tone's readable colour; a description that inherits that colour
+ * and becomes unreadable; a dismiss control that renders without `onDismiss`,
+ * cannot be reached and fired by keyboard, or fires twice; a lost alert role; a
+ * description that swallows the click of the action inside it; and a part that
+ * silently renders outside its root with the default tone.
  */
 
 import * as Arr from "effect/Array";
 import { describe, expect, it, vi } from "vitest";
-import { Alert, type AlertTone } from "../alert.js";
+import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertDismiss,
+  AlertIcon,
+  AlertTitle,
+  type AlertTone,
+} from "../alert.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
 import { clickCentreOf } from "../internal/interaction.js";
@@ -26,10 +35,13 @@ const tones: ReadonlyArray<AlertTone> = [
 ];
 
 describe("Alert", () => {
-  it("is a live region that renders its title and body in order", () => {
+  it("is a live region that renders its parts in order", () => {
     const alert = renderComponent(
-      <Alert testId="alert" title="Sync paused">
-        Two files could not be uploaded.
+      <Alert testId="alert">
+        <AlertContent>
+          <AlertTitle>Sync paused</AlertTitle>
+          <AlertDescription>Two files could not be uploaded.</AlertDescription>
+        </AlertContent>
       </Alert>,
     );
 
@@ -42,10 +54,12 @@ describe("Alert", () => {
     alert.unmount();
   });
 
-  it("paints every tone's surface and heading from the shared palette", () => {
+  it("paints every tone's surface from the shared palette", () => {
     Arr.forEach(tones, (value) => {
       const alert = renderComponent(
-        <Alert testId="alert" tone={value} title="Heads up" />,
+        <Alert testId="alert" tone={value}>
+          <AlertTitle testId="alert-title">Heads up</AlertTitle>
+        </Alert>,
       );
 
       expect(alert.renderer.findByTestId("alert")?.style).toMatchObject({
@@ -53,33 +67,47 @@ describe("Alert", () => {
         borderColor: tone(darkTheme, value).border,
         color: tone(darkTheme, value).fg,
       });
+      expect(alert.renderer.findByTestId("alert-title")?.style.color).toBe(
+        tone(darkTheme, value).fg,
+      );
 
       alert.unmount();
     });
   });
 
-  it("keeps body prose in the foreground colour, not the tone's", () => {
+  it("keeps description prose in the foreground colour, not the tone's", () => {
     const alert = renderComponent(
-      <Alert testId="alert" tone="warning" title="Heads up">
-        Details
+      <Alert testId="alert" tone="warning">
+        <AlertDescription testId="alert-description">Details</AlertDescription>
       </Alert>,
     );
 
-    // A warning tone's text colour on its own tint is the tone's dark shade;
-    // if the body inherited it, no container would carry the page foreground.
-    expect(
-      Arr.some(
-        alert.renderer.findByType("div"),
-        (element) => element.style.color === darkTheme.colors.foreground,
-      ),
-    ).toBe(true);
+    expect(alert.renderer.findByTestId("alert-description")?.style.color).toBe(
+      darkTheme.colors.foreground,
+    );
 
     alert.unmount();
   });
 
+  it("paints the icon in the tone's colour and treats it as optional", () => {
+    const withIcon = renderComponent(
+      <Alert testId="alert" tone="danger">
+        <AlertIcon testId="alert-icon">!</AlertIcon>
+      </Alert>,
+    );
+    expect(withIcon.renderer.findByTestId("alert-icon")?.style.color).toBe(
+      tone(darkTheme, "danger").fg,
+    );
+    withIcon.unmount();
+
+    const withoutIcon = renderComponent(<Alert testId="alert" />);
+    expect(withoutIcon.renderer.findByTestId("alert-icon")).toBeUndefined();
+    withoutIcon.unmount();
+  });
+
   it("reads the theme for a tone fill", () => {
     const dark = renderComponent(
-      <Alert testId="alert" tone="danger" title="Failed" />,
+      <Alert testId="alert" tone="danger" />,
       "dark",
     );
     expect(dark.renderer.findByTestId("alert")?.style.backgroundColor).toBe(
@@ -88,7 +116,7 @@ describe("Alert", () => {
     dark.unmount();
 
     const light = renderComponent(
-      <Alert testId="alert" tone="danger" title="Failed" />,
+      <Alert testId="alert" tone="danger" />,
       "light",
     );
     expect(light.renderer.findByTestId("alert")?.style.backgroundColor).toBe(
@@ -97,8 +125,12 @@ describe("Alert", () => {
     light.unmount();
   });
 
-  it("renders no dismiss control without onDismiss", () => {
-    const alert = renderComponent(<Alert testId="alert" title="Heads up" />);
+  it("renders no dismiss control unless AlertDismiss is composed", () => {
+    const alert = renderComponent(
+      <Alert testId="alert">
+        <AlertTitle>Heads up</AlertTitle>
+      </Alert>,
+    );
 
     expect(alert.renderer.findByTestId("alert-dismiss")).toBeUndefined();
     expect(alert.renderer.getAllText()).toEqual(["Heads up"]);
@@ -109,7 +141,10 @@ describe("Alert", () => {
   it("dismisses when its control is clicked", () => {
     const onDismiss = vi.fn();
     const alert = renderComponent(
-      <Alert testId="alert" title="Heads up" onDismiss={onDismiss} />,
+      <Alert testId="alert">
+        <AlertTitle>Heads up</AlertTitle>
+        <AlertDismiss onDismiss={onDismiss} />
+      </Alert>,
     );
 
     clickCentreOf(alert, "alert-dismiss");
@@ -122,7 +157,9 @@ describe("Alert", () => {
   it("dismisses from the keyboard through a focusable control", () => {
     const onDismiss = vi.fn();
     const alert = renderComponent(
-      <Alert testId="alert" title="Heads up" onDismiss={onDismiss} />,
+      <Alert testId="alert">
+        <AlertDismiss onDismiss={onDismiss} />
+      </Alert>,
     );
 
     const dismiss = alert.renderer.findByTestId("alert-dismiss");
@@ -138,28 +175,39 @@ describe("Alert", () => {
   });
 
   it("names its dismiss control for assistive technology", () => {
-    const alert = renderComponent(
-      <Alert
-        testId="alert"
-        title="Heads up"
-        onDismiss={() => undefined}
-        dismissLabel="Close the notice"
-      />,
+    const standard = renderComponent(
+      <Alert testId="alert">
+        <AlertDismiss onDismiss={() => undefined} />
+      </Alert>,
     );
+    expect(
+      nodesWithRole(standard.renderer, "button").map((node) => node.name),
+    ).toEqual(["Dismiss"]);
+    standard.unmount();
 
-    const buttons = nodesWithRole(alert.renderer, "button");
-    expect(buttons.map((node) => node.name)).toEqual(["Close the notice"]);
-
-    alert.unmount();
+    const named = renderComponent(
+      <Alert testId="alert">
+        <AlertDismiss onDismiss={() => undefined} label="Close the notice" />
+      </Alert>,
+    );
+    expect(
+      nodesWithRole(named.renderer, "button").map((node) => node.name),
+    ).toEqual(["Close the notice"]);
+    named.unmount();
   });
 
-  it("renders an interactive body without swallowing its click", () => {
+  it("renders an interactive description without swallowing its click", () => {
     const onRetry = vi.fn();
     const alert = renderComponent(
-      <Alert testId="alert" tone="danger" title="Upload failed">
-        <Button testId="retry" onClick={onRetry}>
-          Try again
-        </Button>
+      <Alert testId="alert" tone="danger">
+        <AlertContent>
+          <AlertTitle>Upload failed</AlertTitle>
+          <AlertDescription>
+            <Button testId="retry" onClick={onRetry}>
+              Try again
+            </Button>
+          </AlertDescription>
+        </AlertContent>
       </Alert>,
     );
 
@@ -170,9 +218,9 @@ describe("Alert", () => {
     alert.unmount();
   });
 
-  it("lets a consumer's style win", () => {
+  it("lets a consumer's style win on the root", () => {
     const alert = renderComponent(
-      <Alert testId="alert" title="Heads up" style={{ borderRadius: 0 }} />,
+      <Alert testId="alert" style={{ borderRadius: 0 }} />,
     );
 
     expect(alert.renderer.findByTestId("alert")?.style.borderRadius).toBe(0);

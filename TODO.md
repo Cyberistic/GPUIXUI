@@ -200,7 +200,8 @@ retired once both branches are one
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D9 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D10 (plan 201; both-direction proof: deleting the select branch fails the fold test)
     - [ ] 201 (shared helper) — `packages/testing/src/state.ts` + its test (`runCommands` over a runtime), so suites outside `packages/components` replay commands (owner: playground; this package's `runtime.run` is the same fold)
-    - [ ] Split the landed deviations named in `docs/component-api.md` §9 into parts — Alert, CommandMenu, Pagination, Combobox and the date/time pickers, each with its own behaviour test, docs update and inventory row (owner: components)
+    - [x] Split Alert into parts — `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` over a tone context; 11 native tests; docs, example and API table updated (plan 158)
+    - [ ] Split the remaining landed deviations named in `docs/component-api.md` §9 into parts — CommandMenu, Pagination, Combobox and the date/time pickers, each with its own behaviour test, docs update and inventory row (owner: components)
     - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
 `[x]` Verify every component in both themes
 

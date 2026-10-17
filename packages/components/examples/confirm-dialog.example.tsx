@@ -7,7 +7,12 @@
  */
 
 import { useEffect, useState } from "react";
-import { Alert } from "../src/alert.js";
+import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "../src/alert.js";
 import { Button } from "../src/internal/button.js";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { ConfirmDialog } from "../src/confirm-dialog.js";
@@ -57,8 +62,13 @@ export const ConfirmDialogExample = () => {
       </div>
       {archived ? (
         <div style={{ padding: theme.spacing.xl, paddingTop: 0 }}>
-          <Alert tone="info" title="Project archived">
-            Restore it from the archive within 30 days.
+          <Alert tone="info">
+            <AlertContent>
+              <AlertTitle>Project archived</AlertTitle>
+              <AlertDescription>
+                Restore it from the archive within 30 days.
+              </AlertDescription>
+            </AlertContent>
           </Alert>
         </div>
       ) : null}

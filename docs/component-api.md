@@ -160,7 +160,7 @@ parts.
 | Cards | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | — | plan 111 |
 | Badges | `Badge` | — | plan 111 |
 | Avatars | `Avatar` | `AvatarRoot`/`Image`/`Fallback` | plan 111 |
-| Alerts | `Alert` | — | plan 111 |
+| Alerts | `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` | — | plan 158 |
 | Lists / list items | `List`, `ListItem`, `ListItemTitle`, `ListItemDescription` | — | plan 111 |
 | Empty states | `EmptyState` | — | plan 111 |
 | Inline validation | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldInput` | `FieldRoot`/`Label`/`Description`/`Error`/`Validity`/`Item`/`Control` | plan 115 |
@@ -213,7 +213,6 @@ test, docs row and inventory record.
 
 | Component | Deviation | Planned parts |
 | --------- | --------- | ------------- |
-| Alerts | `title`/`icon`/`onDismiss` are props on one node | `Alert`, `AlertTitle`, `AlertDescription`, `AlertIcon`, `AlertDismiss` |
 | Command menus | one component owns the input, list and rows | `CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty` |
 | Pagination | one component builds the page buttons internally | `Pagination`, `PaginationList`, `PaginationItem`, `PaginationPrevious`, `PaginationNext`, `PaginationEllipsis` |
 | Comboboxes | the GPUix headless parts stay internal | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty` |

@@ -17,65 +17,105 @@ Choose by lifetime, not by looks:
 
 ## Usage
 
+`Alert` is a compound: the root paints the tone and owns `role="alert"`, and the
+parts fill it.
+
 ```tsx
-import { Alert } from "@gpuixui/components/alert";
+import {
+  Alert,
+  AlertContent,
+  AlertDescription,
+  AlertTitle,
+} from "@gpuixui/components/alert";
 
-<Alert tone="warning" title="3 tokens are missing">
-  The platform themes fall back to the default palette.
-</Alert>;
-
-// With a dismiss control:
-<Alert tone="info" title="Update available" onDismiss={() => setDismissed(true)}>
-  0.11.0 is ready. Installing restarts the app.
+<Alert tone="warning">
+  <AlertContent>
+    <AlertTitle>3 tokens are missing</AlertTitle>
+    <AlertDescription>
+      The platform themes fall back to the default palette.
+    </AlertDescription>
+  </AlertContent>
 </Alert>;
 ```
 
-The body is a container, so a message can carry its own action:
+Add the icon and the dismiss control only when the message needs them:
 
 ```tsx
-<Alert tone="danger" title="Upload failed">
-  <Button onClick={retry}>Try again</Button>
-</Alert>;
+<Alert tone="info">
+  <AlertIcon>i</AlertIcon>
+  <AlertContent>
+    <AlertTitle>Update available</AlertTitle>
+    <AlertDescription>0.11.0 is ready. Installing restarts the app.</AlertDescription>
+  </AlertContent>
+  <AlertDismiss onDismiss={() => setDismissed(true)} />
+</Alert>
 ```
+
+`AlertDescription` is a container, so an action belongs inside it:
+
+```tsx
+<Alert tone="danger">
+  <AlertContent>
+    <AlertTitle>Upload failed</AlertTitle>
+    <AlertDescription>
+      <Button onClick={retry}>Try again</Button>
+    </AlertDescription>
+  </AlertContent>
+</Alert>
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Alert` | the root: `role="alert"`, the tone surface, the row layout and the tone context |
+| `AlertIcon` | the leading glyph, in the tone's readable colour |
+| `AlertContent` | the growing column between the glyph and the dismiss control |
+| `AlertTitle` | the heading, `bodyStrong` in the tone's colour |
+| `AlertDescription` | body prose in the page foreground; may hold an action |
+| `AlertDismiss` | the focusable dismiss button |
 
 ## Tones
 
 | `tone` | Surface | Heading |
 | ------ | ------- | ------- |
-| `info` (default) | soft `accent` tint | `accentForeground` |
-| `success` | soft `success` tint | tone text |
-| `warning` | soft `warning` tint | tone text |
-| `danger` | soft `destructive` tint | tone text |
+| `info` (default) | `infoSoft` | `infoSoftForeground` |
+| `success` | `successSoft` | `successSoftForeground` |
+| `warning` | `warningSoft` | `warningSoftForeground` |
+| `danger` | `destructiveSoft` | `destructiveSoftForeground` |
 
-The tone paints the surface, the border and the heading; the **body stays in the
-page's foreground colour**, because body prose has to stay readable rather than
-match the tone. Badge, Alert and the toast viewport share one palette
-(`src/internal/theme.ts`), so a status cannot look different in two places.
+The tone paints the surface, the border and the heading; the **description stays
+in the page's foreground colour**, because body prose has to stay readable rather
+than match the tone. Badge, Alert and the toast viewport read the same
+`statusTone` roles from `@gpuixui/tokens` (plan 157), so a status cannot look
+different in two places.
 
 ## API
 
-`Alert` takes the GPUix host props (`style`, `testId`, `role`, `aria-*`, pointer
-and key handlers) and **merges `style` last**.
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and **merges `style` last**.
 
-| Prop | Type | Default |
-| ---- | ---- | ------- |
-| `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` |
-| `title` | `string` (required) | — |
-| `icon` | `ReactNode` | — |
-| `onDismiss` | `() => void` | — (no dismiss control) |
-| `dismissLabel` | `string` | `"Dismiss"` |
-| `children` | `ReactNode` | — |
+| Part | Prop | Type | Default |
+| ---- | ---- | ---- | ------- |
+| `Alert` | `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` |
+| `AlertDismiss` | `onDismiss` | `() => void` (required) | — |
+| `AlertDismiss` | `label` | `string` | `"Dismiss"` |
+
+A part rendered outside `Alert` throws `Alert parts must be used inside Alert` —
+the tone context is the contract. (The test renderer catches render errors, so
+this is a code guarantee rather than a behaviour-suite assertion.)
 
 ## Accessibility
 
 - The root is `role="alert"` — a live region, announced when it appears. An alert
   that appears out of nowhere mid-sentence should be used sparingly.
-- The dismiss control is a focusable `role="button"` with `dismissLabel` as its
+- The dismiss control is a focusable `role="button"` with `label` as its
   accessible name, activated by Enter or Space as well as a click. Its `testId` is
   `alert-dismiss`.
-- The `icon` slot is decorative: it is not announced, so the heading must say what
-  the state is.
-- Colour is never the only signal — every alert has a `title`.
+- `AlertIcon` is decorative: it is not announced, so the title must say what the
+  state is.
+- Colour is never the only signal — every alert has an `AlertTitle`.
+- A part outside its root fails loudly instead of rendering with the wrong tone.
 
 ## Limitations
 
@@ -93,13 +133,13 @@ and key handlers) and **merges `style` last**.
 
 ## Verification
 
-`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (10 tests): the
-title and body render in order, the root is an alert region, every tone paints
-its own surface and heading, the body keeps the foreground colour, the theme is
-read rather than a constant, there is no dismiss control without `onDismiss`, a
-real click on the control fires `onDismiss` exactly once, the control is reachable
-and fires from the keyboard, its accessible name is `dismissLabel`, an action in
-the body still receives its click, and a consumer `style` wins.
+`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (11 tests): the
+parts render in order inside one alert region, every tone paints its root surface
+and title colour, the description keeps the page foreground, the icon takes the
+tone colour and is optional, the theme is read rather than a constant, there is no
+dismiss control unless `AlertDismiss` is composed, a click and an Enter fire it
+once, its accessible name is the default or `label`, an action in the description
+receives its click, and a consumer `style` wins.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
