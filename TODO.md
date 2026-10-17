@@ -191,3 +191,4 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[ ]` Docs site: the first real component page — it must show its source via `<include>` and include it in `content/docs/components/meta.json`. The copyable-source mechanism itself landed with plan 414; the page waits on the primitives/components workstream
 `[x]` Canonical and OpenGraph URLs are absolute — resolved in the docs workstream by plan 418: `SITE_URL` defaults to the deploy domain (`docs.gpuixui.dev`) and is overridable with `VITE_SITE_URL`; no change to `packages/deploy` was needed
 `[ ]` Owner: the Alchemy deploy path (`nub run deploy:docs`) is unverified — it needs Cloudflare credentials and lives in `packages/deploy`. The stand-down path is verified locally (plan 410 §3)
+`[ ]` Repo: `README.md` still says "Phase A (audit and feasibility)" although Phase B tokens and the docs site are implemented; update the ledger to match `TODO.md`
