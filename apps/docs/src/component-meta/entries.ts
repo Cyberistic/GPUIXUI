@@ -693,31 +693,70 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  delivered("pagination", "Pagination", "2", "Moves through a long result set.", {
-    gpuix: "partial",
-    sourcePath: "packages/components/src/pagination.tsx",
-    related: ["breadcrumb", "list"],
-    limitations: [
-      "No aria-current=page in 0.10.0; the current page uses aria-selected.",
-      "Controlled only; there is no uncontrolled copy.",
-      "No page-size selector.",
-    ],
-  }),
-  planned(
+  delivered(
+    "pagination",
+    "Pagination",
+    "2",
+    "Moves through a long result set.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/pagination.tsx",
+      related: ["breadcrumb", "list"],
+      limitations: [
+        "No aria-current=page in 0.10.0; the current page uses aria-selected.",
+        "Controlled only; there is no uncontrolled copy.",
+        "No page-size selector.",
+      ],
+    },
+  ),
+  delivered(
     "search-input",
     "Search inputs",
     "2",
     "A text field with search affordances.",
-    { related: ["combobox"] },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/search-input.tsx",
+      related: ["combobox", "inline-validation"],
+      limitations: [
+        "No debounce: debouncing is the consumer's policy.",
+        "No suggestions, search history or shortcut binding.",
+        "The glyph is text until an icon set lands.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "combobox",
     "Comboboxes",
     "2",
     "A text field that filters a list of options.",
-    { gpuix: "yes", related: ["search-input"] },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/combobox.tsx",
+      related: ["search-input", "list"],
+      limitations: [
+        "No aria-activedescendant in 0.10.0.",
+        "No async loading, create-new or grouping headers.",
+        "The trigger is a div with button semantics, not a native button.",
+      ],
+    },
   ),
-  planned("date-picker", "Date / time pickers", "2", "Selects a date or time."),
+  delivered(
+    "date-picker",
+    "Date / time pickers",
+    "2",
+    "Selects a date or time.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/date-picker.tsx",
+      related: ["popover", "inline-validation"],
+      limitations: [
+        "No aria-current; today is marked by a border.",
+        "Fixed English labels; there is no i18n layer.",
+        "No time picker, range selection or adjacent-month days.",
+      ],
+    },
+  ),
   planned(
     "fieldset",
     "Fieldset",

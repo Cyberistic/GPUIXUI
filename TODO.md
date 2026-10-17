@@ -373,7 +373,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
-| Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | in progress — plan 425 adds the 22 pages; contract and truth guards are already in place |
+| Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | **resolved** — the 22 pages landed with plan 425, each with its generated props and the package's own example |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | pending |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source | licensing | pending |
@@ -416,9 +416,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–422)
+## Docs site workstream (plans 410–425)
 
-`[~]` `[██████████]` 21/22
+`[x]` `[██████████]` 22/22
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -441,7 +441,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Docs platform toggle (macOS · Linux · Windows · Default) built on `platformTypes` + `platformTheme`; URL + storage state, live values on Theming (plan 420)
 `[x]` A planned component's search result opens the index filtered to it (plan 421)
 `[x]` Docs truth pass against the implementation (plan 424) — 20 pages audited against source, inventory and the shared keyboard module; `component-truth.test.ts` guards repo paths, placeholder prose and real package exports; one tooltip import defect fixed
-`[~]` Document every delivered Tier 2 component (plan 425) — 22 components handed over by the components workstream; pages in batches with generated props and their examples
+`[x]` Document every delivered Tier 2 component (plan 425) — 22 pages with generated props, real source and their own examples; 42 component pages total
 
 ## Cross-team tasks raised by the docs-site workstream
 

@@ -1,0 +1,94 @@
+---
+title: Search inputs
+description: A text field with search affordances.
+---
+
+<ComponentState slug="search-input" />
+
+<NativePreview slug="search-input" />
+
+`SearchInput` is the field a filter bar uses: a leading glyph, the text, and a
+clear control that appears only when there is something to clear. It reports
+every keystroke and never debounces.
+
+## Usage
+
+```tsx
+import { SearchInput } from "@gpuixui/components/search-input";
+
+<SearchInput
+  placeholder="Filter files…"
+  onValueChange={setQuery}
+  onSubmit={runSearch}
+  onClear={() => setQuery("")}
+/>;
+```
+
+Put a `Field` around it when the search needs a visible label, or pass
+`aria-label` for a filter bar. There is no label part inside the component.
+
+## Variants
+
+One appearance. The glyph is a static `⌕` marker; the clear control is a labelled
+button that appears only with text.
+
+## Sizes
+
+The container is `controlHeight(theme, "md")` tall with `spacing.md` horizontal
+padding, `radius.md` and a thin border; the clear control is 18×18 with
+`radius.sm`.
+
+## States
+
+Controlled (`value`/`onValueChange`) or uncontrolled (`defaultValue`). A
+controlled field whose consumer ignores the change keeps showing the prop value
+while `onValueChange` still fires. Escape clears only when non-empty, so it does
+not swallow the key from an enclosing dialog.
+
+## Composition
+
+The search-input example is a real filter bar over a file list:
+
+<include lang="tsx" meta='title="packages/components/examples/search-input.example.tsx"'>
+  ../../../../../packages/components/examples/search-input.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/search-input.tsx" name="SearchInputProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| ---- | ------ |
+| any character | updates the text and calls `onValueChange` |
+| `Enter` | calls `onSubmit(currentText)`; it arrives as the input's submit event |
+| `Escape` | clears when non-empty and calls `onClear`; no-op when empty |
+
+Clicking clear empties the field and returns focus to the input.
+
+## Theming
+
+The container paints `colors.background` with a thin `colors.border`,
+`radius.md` and `spacing.md`; the clear control hovers with `colors.accent`.
+Focus draws the zero-blur `colors.ring` ring, because 0.10.0 has no outline.
+
+## Accessibility and limitations
+
+- The input carries the caller's `aria-label` (or the field's label); the clear
+  control is a labelled button.
+- **No debounce**: debouncing is the consumer's policy and belongs on the Effect
+  clock, not a component timer.
+- No search history, suggestions or shortcut binding (`⌘F` belongs to the app).
+- The glyph is text until an icon set lands.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/search-input.tsx"'>
+  ../../../../../packages/components/src/search-input.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="search-input" />

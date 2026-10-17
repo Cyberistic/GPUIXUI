@@ -1,0 +1,98 @@
+---
+title: Comboboxes
+description: A text field that filters a list of options.
+---
+
+<ComponentState slug="combobox" />
+
+<NativePreview slug="combobox" />
+
+`Combobox` combines a field-like trigger with a searchable popup. It wraps
+GPUix's headless combobox — focus, the active row and the keyboard stay the
+runtime's — and adds the option shape, ranking, row look and value semantics.
+
+## Usage
+
+```tsx
+import { Combobox } from "@gpuixui/components/combobox";
+
+<Combobox
+  label="Assign reviewer"
+  options={[
+    { value: "ada", label: "Ada Lovelace", description: "Engineering" },
+    { value: "grace", label: "Grace Hopper", description: "Compilers" },
+  ]}
+  onValueChange={(value) => setReviewer(typeof value === "string" ? value : null)}
+/>;
+```
+
+## Variants
+
+Single mode selects one value and closes. Multiple mode keeps the popup open,
+toggles rows, and reports values in the order chosen. `onValueChange` receives
+the option **value**, never its display label.
+
+## Sizes
+
+The trigger is `controlHeight(theme, "md")` with `radius.md`; the popup caps at
+280px and scrolls. There is no size prop.
+
+## States
+
+Controlled (`value`) or uncontrolled. `null` means "nothing selected" in single
+mode; `undefined` means uncontrolled. A controlled field reports the change and
+keeps showing its prop value. Disabled options stay visible but cannot be chosen.
+
+## Composition
+
+The combobox example is a real assignee picker with ranked matches:
+
+<include lang="tsx" meta='title="packages/components/examples/combobox.example.tsx"'>
+  ../../../../../packages/components/examples/combobox.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/combobox.tsx" name="ComboboxProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| ---- | ------ |
+| click / Enter / Down on trigger | open the popup |
+| typing | filter; the first enabled match is highlighted |
+| ArrowDown / ArrowUp | move the highlight, wrapping and skipping disabled rows |
+| Enter | select the highlighted row |
+| Escape | close and return focus to the trigger |
+| outside press | close without stealing focus back |
+
+Ranking is prefix-before-word-before-substring-before-description; ties keep
+declaration order and an empty query shows everything.
+
+## Theming
+
+The trigger paints `colors.background`, a thin `colors.borderStrong` border,
+`radius.md` and muted placeholder text. The popup paints `colors.popover`,
+`radius.md`, the `md` elevation; rows highlight with `colors.hover` and the
+selected check is `colors.primary`.
+
+## Accessibility and limitations
+
+- The trigger carries `aria-expanded`; rows use `aria-selected`.
+- **No `aria-activedescendant`** in 0.10.0: the input→row relationship is visual
+  only for assistive technology.
+- No async option loading, create-new or grouping headers in v1.
+- The popup is an anchored layer, not a portal; it flips to stay in the window.
+- The trigger is a `div` with button semantics (the primitives stand-in), not a
+  native button.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/combobox.tsx"'>
+  ../../../../../packages/components/src/combobox.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="combobox" />

@@ -40,6 +40,9 @@
     "accordion",
     "collapsible",
     "breadcrumb",
-    "pagination"
+    "pagination",
+    "search-input",
+    "combobox",
+    "date-picker"
   ]
 }

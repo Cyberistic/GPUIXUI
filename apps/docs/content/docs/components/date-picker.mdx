@@ -1,0 +1,97 @@
+---
+title: Date / time pickers
+description: Selects a date or time.
+---
+
+<ComponentState slug="date-picker" />
+
+<NativePreview slug="date-picker" />
+
+`DatePicker` is a field-shaped trigger plus a month grid in a Popover. GPUix has
+no calendar primitive and no native date input, so the grid is ours: pure
+`DateTime` arithmetic in `date-picker/calendar.ts`, no `Date`, no `Intl`.
+
+## Usage
+
+```tsx
+import { DatePicker } from "@gpuixui/components/date-picker";
+
+const [due, setDue] = useState<string | null>("2026-10-30");
+
+<DatePicker label="Due date" value={due} onValueChange={setDue} />;
+```
+
+## Variants
+
+One day-picker. There is no time picker and no range picker in v1: the public
+value is an ISO day (`YYYY-MM-DD`) or `null`.
+
+## Sizes
+
+The grid is always six rows of seven cells, so the popover does not change height
+between a 28-day February and a 31-day month. Adjacent-month days are blank
+cells, not second-month buttons.
+
+## States
+
+Controlled (`value`/`onValueChange`) or uncontrolled (`defaultValue`); `null`
+means no date, `undefined` means uncontrolled. Browsing months changes the view,
+not the value; only Enter, Space or a click selects. A disabled trigger cannot
+open the grid.
+
+## Composition
+
+The date-picker example is a real due-date field with a deterministic today:
+
+<include lang="tsx" meta='title="packages/components/examples/date-picker.example.tsx"'>
+  ../../../../../packages/components/examples/date-picker.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/date-picker.tsx" name="DatePickerProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| ---- | ------ |
+| ArrowLeft / ArrowRight | one day back / forward, crossing months |
+| ArrowUp / ArrowDown | one week back / forward |
+| Home / End | the week's first / last day, using `weekStartsOn` |
+| PageUp / PageDown | previous / next month, clamped to the month's last day |
+| Enter / Space | select the focused day and close |
+| Escape | close and return focus to the trigger |
+| Tab | leave the popover; it is not a trap |
+
+One cell is the tab stop; arrow keys move real focus, so highlight and focus are
+the same cell.
+
+## Theming
+
+The trigger uses `colors.background`, a thin `colors.borderStrong` border and
+`radius.md`. The popover uses `colors.popover`; the selected day is
+`colors.primary` on `primaryForeground`; today keeps a primary outline; hover is
+`colors.hover`; focus is `colors.ring`.
+
+## Accessibility and limitations
+
+- The grid is `role="grid"`/`row`/`gridcell`; a cell's `aria-label` is the full
+  day ("17 October 2026") and the chosen cell carries `aria-selected`.
+- **No `aria-current`** in 0.10.0: today is marked by a border, not an attribute.
+- **Fixed English labels**; the repo has no i18n layer, and a locale prop that
+  silently did nothing would be worse than none.
+- **No adjacent-month days** and no range selection.
+- **No time picker**: a time control needs its own decision.
+- The only clock read is `DateTime.nowUnsafe` for "today"; pass `today` to make a
+  test or server boundary deterministic.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/date-picker.tsx"'>
+  ../../../../../packages/components/src/date-picker.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="date-picker" />

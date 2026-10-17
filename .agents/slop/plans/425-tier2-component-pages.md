@@ -6,7 +6,7 @@
 - **Depends on:** plans `411`–`415`, `422` (the proven page shape), `424` (the truth
   guard), and the components workstream's `110–118` (the 22 delivered components,
   their in-package pages and examples)
-- **Status:** planned
+- **Status:** implemented — all 22 pages and the evidence in §8.1
 
 The components workstream records this handoff explicitly: "Docs site renders
 `packages/components/docs/*.mdx` and the example registry — docs-site — pending"
@@ -138,9 +138,30 @@ Record the runs in §8.
 - [ ] All gates pass; two-direction proof recorded.
 - [ ] `COMPONENTS.md`, `TODO.md` and the plan index current.
 
-### §8.1 Evidence (filled by the executor)
+### §8.1 Evidence (measured 2026-10-17)
 
-- Merge and batches:
-- Gates:
-- Two-direction proof:
-- Browser check:
+- **Merge:** `origin/agent/components` into `agent/docs-site` (merge `dc336d4`),
+  with the ledgers resolved by keeping both workstreams' rows and the 16 planned
+  Tier 2 inventory rows restored. The merge exposed a real integration defect:
+  `packages/components` compiles `@gpuixui/tokens/react` with
+  `jsxImportSource: "@gpuix/react"`, and the tokens entry still contained JSX, so
+  `check-types` failed with TS2875. The tokens workstream's fix (plan 061,
+  `db72f69`) was cherry-picked: `ThemeProvider` uses `createElement`, the entry
+  is `.ts`, and its consumer-shaped regression test now runs here.
+- **Batches (one commit each):** surface (6), feedback (5), menus (3),
+  navigation (5), choice (3) — 22 pages.
+- **Gates:** `docs test` **20 files / 106 tests**; `docs check-types` and
+  `docs build` pass; `nub run check`, `nub run lint`, `nub run test` pass —
+  tokens 11/197, icons 3/18, primitives 16/156, components 18/157, docs 20/106.
+- **Two-direction proof:** renamed `## Theming` to `## Theme` on `card.mdx` →
+  `component-pages.test.ts` failed (`card: missing section "Theming"`, 1 failed /
+  105 passed); restored. Changed the badge snippet to import `Badge` from
+  `@gpuixui/primitives` → `component-truth.test.ts` failed
+  (`badge.mdx: Badge is not exported by @gpuixui/primitives`, 1 failed / 105
+  passed); restored → 106 passed.
+- **Browser check:** all **42** component slugs returned 200, each with at least
+  one generated props table and its real source path; `/sitemap.xml` lists 42
+  component URLs.
+- **Registry:** all 22 Tier 2 records are `wip` with a real `sourcePath`.
+  `message-scroller` and the 15 other planned Tier 2 rows stay `planned` because
+  they have no implementation in this tree.
