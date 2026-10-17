@@ -35,7 +35,8 @@ edited:
 - GPUI Kit — https://github.com/longbridge/gpui-kit
 - shadcn/ui — https://github.com/shadcn-ui/ui
 - Fumadocs — https://github.com/fuma-nama/fumadocs
-- PanelUI — https://panelui.dev/docs/components
+- PanelUI — https://panelui.dev/docs/components (documentation only: no public
+  source repository, so it is read as documentation and not cloned)
 
 ## Tooling ledger
 
