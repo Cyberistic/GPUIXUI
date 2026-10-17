@@ -578,7 +578,10 @@ and pressed — and is compiled, applied and held to
 library tests, not a sketch. A style that names only the fill inherits a
 foreground designed for another fill; that is the 2.96:1 failure plan `310`
 fixed. A style that moves `accent` but not its states inherits the base hue's
-hover and press; that is the lavender Contoso toggle plan `330` fixed.
+hover and press; that is the lavender Contoso toggle plan `330` fixed. The
+drag-selection wash follows the accent too: `selection` is the accent at the
+identity's alpha for the mode, because a copied style that keeps the identity
+wash selects text in another hue (plan `331`).
 
 `applyPlatformStyle(getTheme(mode), contosoPlatformStyle)` is the same call the
 shipped variants use, so a copied file cannot take a path the library does not

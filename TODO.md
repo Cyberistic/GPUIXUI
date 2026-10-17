@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 98/127
+`[x]` `[████████░░]` 99/128
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -216,6 +216,12 @@ a presence case now cover both recipes in both modes (plan 329)
 while hovered and pressed while every contrast pair stayed green; both states now
 belong to the Contoso blue family, and a regression case holds the moved roles to
 the base (plan 330)
+`[x]` Make the authored example's selection wash follow its accent — every
+shipped style ties `selection` to its accent, but `contosoPlatformStyle` kept the
+identity iris wash while moving the rest of the family to Contoso blue, so a
+copied theme selected text in the wrong hue while `themeContrastFailures`
+returned `[]`; the wash is now the Contoso primary at the identity's alpha and a
+regression case holds it away from the base (plan 331)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

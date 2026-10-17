@@ -405,6 +405,14 @@ describe("docs/tokens.md authored platform style", () => {
       "A style that moves `accent` but not its states inherits the base hue's",
     );
   });
+
+  // Plan 331: the wash stayed the identity iris while the accent and selected
+  // surfaces moved to Contoso blue, and the page did not say the wash follows.
+  it("states that the selection wash follows the accent", () => {
+    expect(markdown).toContain(
+      "drag-selection wash follows the accent too: `selection` is the accent at the",
+    );
+  });
 });
 
 describe("docs/tokens.md status table", () => {

@@ -471,6 +471,19 @@ describe("platform style examples", () => {
     });
   });
 
+  // Plan 331: every shipped style ties its drag-selection wash to its own
+  // accent, but the authored example kept the identity iris wash while moving
+  // the accent and selected surfaces to Contoso blue — so copied text selected
+  // in another hue and every contrast pair still passed.
+  it("moves the selection wash when the authored style moves the accent", () => {
+    modes.forEach((mode) => {
+      const authored = resolveAuthoredPlatformStyle(mode).colors;
+      const base = getTheme(mode).colors;
+      expect(authored.accent, mode).not.toBe(base.accent);
+      expect(authored.selection, mode).not.toBe(base.selection);
+    });
+  });
+
   it("applies a style authored from scratch and inherits what it omits", () => {
     const light = resolveAuthoredPlatformStyle("light");
     expect(light.name).toBe("Light · Contoso");

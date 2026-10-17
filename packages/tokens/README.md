@@ -140,8 +140,9 @@ export const brandTheme = createTheme({
 A theme that moves a filled family moves the whole family: the brand's
 `primaryForeground`, `primaryHover`, `primaryActive` and `primaryText` are set
 beside `primary`, and `accentForeground`, `accentHover` and `accentActive` belong
-beside `accent`. An inherited state keeps the base hue running the interaction,
-and an inherited foreground can miss the on-colour floor.
+beside `accent`, and `selection` is the accent's translucent wash. An inherited
+state keeps the base hue running the interaction, and an inherited foreground can
+miss the on-colour floor.
 
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts) and is held to
