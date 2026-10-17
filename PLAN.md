@@ -62,6 +62,11 @@ unmet.
 | D3 | **One `git worktree` per agent workstream** under `workspaces/` | The reference repo's rule: never two writers in one tree | 2026-10-17 |
 | D4 | Package scope `@gpuixui/*` | Placeholder: the original branding and package name are a Phase A deliverable. **Finalise the scope in Phase A, before packages proliferate** | 2026-10-17 |
 | D5 | Planning before implementation | The mission's first deliverable is the plan set; a weaker executor must be able to run each plan unaided | 2026-10-17 |
+| D6 | Target **`@gpuix/react` / `@gpuix/native` 0.10.0 (published)**, not the `references/gpuix` checkout | The checkout is `main`, ahead of the release: it has `./button` and `Button`/`buttonProps` that **the published 0.10.0 does not export**. Code must compile against what a consumer can install. | 2026-10-17 |
+| D7 | **GPUix cannot run in this environment.** No `darwin-x64` native binary is published (Intel macOS) and this session has no Aqua session; the `darwin-x64` binary that does exist (0.5.1) throws `NSException` in `MacDisplay::primary`. Evidence: plan 020 §3. | Verification strategy must be honest: pure logic is tested under vitest now; runtime interaction is a recorded debt until the wasm-in-headless-Chrome path or a GUI session works. **No component row may say `done` before then.** | 2026-10-17 |
+| D8 | **Source-first package exports; no build step** for `packages/*` until a publish requirement exists | The consumers are workspace apps with bundlers; a `tsc` emit step would add a second copy of the truth and a stale-`dist` failure mode. `check-types` is the type gate. | 2026-10-17 |
+| D9 | `primitives` consumes the theme through a **structural port** (`PrimitiveTheme`), not an import of `@gpuixui/tokens` | Keeps `primitives` testable and unblocked before tokens lands, and keeps the boundary law (nothing depends on components). `packages/tokens` owns the values; plan 030 §2.2 fixes the exact shape. | 2026-10-17 |
+| D10 | Behaviour lives in **pure `core/` modules**, components are thin renderers | GPUix's published `./button` is unavailable, so keyboard/state behaviour is ours; and a pure function is the only part of a component library that can be proven on a machine with no runtime (D7). | 2026-10-17 |
 
 ## 5. Open questions
 
@@ -69,7 +74,16 @@ Tracked here until an ADR answers them. Each plan that resolves one moves the
 answer into §4 or an ADR.
 
 - Which GPUix primitives actually exist for layout, input, focus, overlays and
-  panels? (Phase A — the biggest risk; answered by the native smoke test.)
+  panels? — **answered** by `.agents/slop/plans/020-gpuix-runtime-capability.md`
+  §1; the §1.5 list of what GPUix already ships decides reuse vs. reimplement.
 - Can a GPUix rendering surface be embedded in the Fumadocs site, or is the
-  companion playground the only honest preview? (Phase A/B.)
-- What is the original package name and branding identity? (Phase A.)
+  companion playground the only honest preview? — still open. Note for the
+  docs-site workstream: `@gpuix/native@0.10.0` ships a wasm renderer, so a
+  *real* GPUix surface in the browser is plausible; a demo of a native desktop
+  component inside a docs page is where the honest line has to be drawn.
+- What is the original package name and branding identity? — **still open**, and
+  now blocking nothing but release metadata. `@gpuixui/*` remains the working
+  scope (D4).
+- Which verification path discharges D7? — wasm in headless Chrome (playground
+  workstream), or a GUI session / `darwin-x64` source build (human decision).
+  Tracked in `TODO.md` Phase A.

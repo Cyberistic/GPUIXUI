@@ -19,9 +19,29 @@ licensing, docs site).
 
 ## The plan set
 
+Numbering is by dependency order; gaps are left for other workstreams. The table
+is the authority on order, not the file name.
+
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| — | *(nothing yet — the first agents write these)* | A | — | — |
+| [020](020-gpuix-runtime-capability.md) | GPUix runtime capability map and verification strategy | A | — | **done (recon); runtime verification BLOCKED — read §3** |
+| [030](030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | planned |
+| [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | planned |
+| [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | planned |
+| — | `packages/tokens` (tokens-theme) | B | — | not written here |
+| — | `packages/components` (components) | C/D | 030 | not written here |
+| — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |
+| — | `apps/docs` Fumadocs site (docs-site) | B–F | — | not written here |
+
+### Prerequisite for the whole swarm: the runtime is not runnable here
+
+`020-gpuix-runtime-capability.md` §3 records the measured evidence: this box is
+**Intel macOS**, GPUix publishes **no `darwin-x64` native binary**, and this SSH
+session has **no Aqua session** (`NSScreen.screens` is empty), so even the older
+`darwin-x64` build cannot open a window. **No component interaction can be
+verified on this machine today.** Its §3.1 lists the three honest verification
+paths in strength order. Every component row stays `wip` until path 1 (wasm in
+headless Chrome) or path 2 (a GUI session / a source build) succeeds.
 
 ## How to use a plan
 
@@ -32,3 +52,6 @@ licensing, docs site).
    workaround that the plan did not authorise.
 5. When done, update this table's status column and tick the matching task in
    `TODO.md`.
+6. **Read `020-gpuix-runtime-capability.md` §3 before promising any component is
+   verified.** The native runtime cannot run in this environment; the honest
+   paths to verification are listed there.
