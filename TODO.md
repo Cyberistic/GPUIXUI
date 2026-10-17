@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 59/77
+`[x]` `[████████░░]` 59/78
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -297,6 +297,13 @@ completeness guard cannot see (plan 088)
 `[x]` Make a density metric override expressible and true to its documentation —
 `controlHeight` required all three sizes and the merge replaced the record, so a
 theme that changed one control height lost the other two (plan 089)
+`[ ]` Hold the essential control boundary on the four soft status fills — the
+identity dark `borderStrong` measures 2.77:1 on `successSoft`, 2.94:1 on
+`destructiveSoft` and 2.97:1 on `infoSoft`, under the 3:1 floor, because a
+checkbox or field edge can sit inside an Alert or Toast and plan 084 measured
+the boundary only on the `muted` panel and the state washes; the focus ring
+already clears its floor on all four, so this is the boundary pair alone
+(next plan 092)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)
