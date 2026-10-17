@@ -12,10 +12,11 @@
  * for anything the data shape cannot express.
  */
 
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import {
   Select as GpuixSelect,
   SelectContent,
@@ -26,9 +27,10 @@ import {
   type SelectTriggerState,
 } from "@gpuix/react/select";
 import { controlStyle, surfaceStyle, type ControlSpec } from "../core/style.js";
+import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SelectOption {
@@ -108,13 +110,16 @@ export const selectItemStyle =
     cursor: state.disabled === true ? "not-allowed" : "pointer",
   });
 
+/** What the renderer does with the wrapper's own state. */
+export interface SelectHandlers {
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onValueChange: (value: string) => void;
+}
+
 /** The element tree `Select` renders. Pure in its arguments. */
 export const renderSelect = (
   {
     options,
-    value,
-    defaultValue,
-    onChange,
     placeholder,
     disabled,
     invalid,
@@ -126,8 +131,19 @@ export const renderSelect = (
     testId,
   }: SelectProps,
   theme: PrimitiveTheme,
+  state: ValueState<string>,
+  open: boolean,
+  handlers: SelectHandlers,
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
+  const selected = state.current === "" ? undefined : state.current;
+  const selectedLabel = Option.getOrElse(
+    Option.map(
+      Arr.findFirst(options, (option) => option.value === selected),
+      (option) => option.label,
+    ),
+    () => undefined,
+  );
   const items = Arr.map(options, (option) => ({
     value: option.value,
     label: option.label,
@@ -137,11 +153,10 @@ export const renderSelect = (
   return (
     <GpuixSelect
       items={items}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={onChange}
+      value={selected}
+      onValueChange={handlers.onValueChange}
+      onOpenChange={handlers.onOpenChange}
       disabled={disabled}
-      aria-label={label}
       testId={testId}
       style={mergeStyle(
         { width: fullWidth === true ? "100%" : undefined },
@@ -149,16 +164,28 @@ export const renderSelect = (
       )}
     >
       <SelectTrigger
+        role="combobox"
+        aria-label={label}
+        aria-expanded={open}
+        aria-valuetext={selectedLabel ?? placeholder}
         disabled={disabled}
         style={selectTriggerStyle(spec, theme)}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent side={side} style={selectContentStyle(theme)}>
+      <SelectContent
+        role="listbox"
+        aria-label={label}
+        side={side}
+        style={selectContentStyle(theme)}
+      >
         {Arr.map(options, (option) => (
           <SelectItem
             key={option.value}
             value={option.value}
+            role="option"
+            aria-label={option.label}
+            aria-selected={option.value === selected}
             disabled={option.disabled}
             style={selectItemStyle(theme)}
           >
@@ -171,5 +198,16 @@ export const renderSelect = (
 };
 
 /** A list of options in a popover. */
-export const Select = (props: SelectProps): ReactElement =>
-  renderSelect(props, useTheme());
+export const Select = (props: SelectProps): ReactElement => {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const state = useControlState(
+    props.value,
+    props.defaultValue ?? "",
+    props.onChange,
+  );
+  return renderSelect(props, theme, state.value, open, {
+    onOpenChange: setOpen,
+    onValueChange: state.set,
+  });
+};

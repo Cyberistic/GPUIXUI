@@ -225,6 +225,10 @@ retired once both branches are one
       select in `single` and only move focus in `multiple`, disabled skipping
       (plan 056). Also fixed the selected-but-disabled radio leaving its group
       with no tab stop (regression test in `selection.test.tsx`)
+`[x]` `packages/primitives`: `Select` accessibility — GPUix's headless Select
+      set no ARIA role, so the wrapper produced **no accessibility node at
+      all**. It now supplies combobox/listbox/option, `expanded`, `selected`
+      and the value text, measured in the runtime (plan 057)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

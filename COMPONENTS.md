@@ -187,7 +187,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Text areas | wip | yes | [textarea](packages/primitives/docs/textarea.mdx) · form | **Runtime (041):** height follows `rows` and a newline is accepted; **no `onSubmit`** — with one the runtime turns Enter into a submit and costs the newline (046). `minRows`/`maxRows` are the runtime's own height controls. **`disabled`** is the same read-only + tab-order + handler guard as `Input` (plan 025). |
 | Checkboxes | wip | partial | [checkbox](packages/primitives/docs/checkbox.mdx) · selection | **Runtime (041):** click and Space-up toggle, and `aria-valuetext` flips `unchecked → checked`; indeterminate reads `mixed`; AccessKit role is `CheckBox`. **No `aria-checked`.** Variant merged here: Checkbox Group (base-gpui `CheckboxGroup`). |
 | Radio groups | wip | partial | [radio-group](packages/primitives/docs/radio-group.mdx) · selection | **Runtime (041/044/048/049):** AccessKit roles are `RadioGroup` and `RadioButton`; arrows move the selection, wrap, and **skip disabled options** (044); Home/End jump to the nearest **enabled** end (048); arrows **move native focus with the selection** and the focused option paints the ring (049); the roving index is derived from the value, so a controlled change moves the tab stop (049); a click on the circle selects. Options are **data**, not compound children (D16). |
-| Selects | wip | reuse | [select](packages/primitives/docs/select.mdx) · form | **Runtime (041):** opens, paints its options, commits a clicked option. A thin themed wrapper over `@gpuix/react/select`; open state and dismissal are GPUix's. |
+| Selects | wip | reuse | [select](packages/primitives/docs/select.mdx) · form | **Runtime (041/057):** opens, paints its options, commits a clicked option. A thin themed wrapper over `@gpuix/react/select`; open state and dismissal are GPUix's. **GPUix sets no ARIA role**, so the wrapper supplies the whole contract: the trigger is a named `combobox` with `expanded` and `value`, the list a named `listbox`, each item a named `option` with `selected` (measured: plan 057 §0). No `aria-haspopup` in the host props. |
 | Switches | wip | partial | [switch](packages/primitives/docs/switch.mdx) · selection | **Runtime (041/049):** a click toggles; AccessKit role is `Switch` and the value flips `unchecked → checked`. **No `aria-checked`**; Space/Enter toggle. The thumb moves by the track's `justifyContent` because the runtime has no `transform`. `invalid` paints the destructive border and focus paints the selection ring (049). |
 | Progress | wip | partial | [progress](packages/primitives/docs/progress.mdx) · form | **Runtime (041):** `aria-valuetext` is `"42%"`, role is `ProgressIndicator`, the fill tracks the value and clamps outside 0–100. **No `aria-valuenow`.** |
 | Tooltips | wip | reuse | [tooltip](packages/primitives/docs/tooltip.mdx) · feedback | **Runtime (041):** opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. A thin wrapper over `@gpuix/react/tooltip`; a mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). Placement facts are the shared floating probe: `align="center"` is off by half the panel and `fit="snap"` does not flip. |
@@ -202,12 +202,13 @@ carries an evidenced limitation. The capability evidence lives in
 | Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, state rides on `aria-valuetext`. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (127 tests in
-14 files after plan 056's Toggle Group; 119 at 055, 115 at the 054 OTPField, 54
-at the 041 baseline, 68 after 049, 82 after 053, 90 after NumberField, 97 after
-Toggle, 106 after Rating, locally built GPUix 0.10.0 binding). Details: plan 041
-§9, plan 053 §11, plan 054 §9, plan 055 §7 and plan 056 §9. The examples suite
-mounts every example in `packages/primitives/examples/` (plan 047).
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (130 tests in
+14 files after plan 057's Select accessibility; 128 at 056, 119 at 055, 115 at
+the 054 OTPField, 54 at the 041 baseline, 68 after 049, 82 after 053, 90 after
+NumberField, 97 after Toggle, 106 after Rating, locally built GPUix 0.10.0
+binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan 056
+§12 and plan 057 §4. The examples suite mounts every example in
+`packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
 active palette, and re-rendering with the dark palette repaints every asserted

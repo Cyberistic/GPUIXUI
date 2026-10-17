@@ -5,8 +5,9 @@ description: One choice from a list, in a popover — a themed wrapper over GPUi
 
 `Select` reuses `@gpuix/react/select` for the open state, dismissal and arrow
 navigation, and themes it to match the field chrome. It is **not** a
-reimplementation: what this package owns is the trigger's paint, the list surface
-and the item states.
+reimplementation: what this package owns is the trigger's paint, the list
+surface, the item states, and the **accessibility contract** GPUix's headless
+Select does not set (plan `057`).
 
 ## Usage
 
@@ -53,12 +54,23 @@ key.
 
 ## Accessibility
 
-- The select and its trigger are GPUix's; the wrapper adds the accessible name
-  through the `label` prop.
-- The trigger wears the field chrome, so it is announced as a control with the
-  current value.
-- Disabled items are painted from the `disabled` state GPUix reports and cannot
-  be committed.
+GPUix's published `Select` sets **no ARIA role at all** — measured on 0.10.0, the
+trigger, list and items produced no accessibility node (plan `057` §0). The
+wrapper supplies the whole contract, and the roles are the runtime's own
+mappings (`role_from_aria`):
+
+- The trigger is a **`combobox`** named by `label`, with `aria-expanded`
+  following the real open state and `aria-valuetext` carrying the chosen label
+  (or the placeholder). AccessKit reports it as `ComboBox`, `expanded`,
+  `value`.
+- The list is a **`listbox`** named by the same `label`.
+- Each item is an **`option`** with its own label and `aria-selected` on the
+  chosen one. AccessKit reports `ListBox`, `ListBoxOption`, `selected`.
+
+There is no `aria-haspopup` in `HostProps`, so the combobox role is the strongest
+honest claim. The value is announced through `aria-valuetext` — the runtime
+exposes no other value channel — and the visible text inside the trigger is not
+itself the accessible value.
 
 ## Theming
 
@@ -75,13 +87,19 @@ trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
   the open animation or the outside-click rules.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
 - No multi-select.
+- No `aria-haspopup` (absent from the runtime's host props); the `combobox`
+  role, `expanded` and `selected` carry the semantics instead.
 
 ## Verification
 
-- `src/components/Select.test.tsx` — trigger chrome, list surface and item
-  states.
-- `runtime/fields.runtime.test.tsx` — opens, paints its options and commits a
-  clicked option in the real renderer; open state and dismissal are GPUix's.
+- `src/components/Select.test.tsx` — trigger chrome, list surface, item states,
+  and the decoded role/name/expanded/selected props the wrapper passes down.
+- `runtime/fields.runtime.test.tsx` — measured 2026-10-17 (plan `057`): a closed
+  Select is a named `ComboBox` with `expanded: false` and the placeholder as its
+  value; opening flips `expanded` to `true` and paints a named `ListBox` of
+  named `ListBoxOption`s; committing "Pear" closes the list, reports the value
+  as `Pear`, and marks only that option `selected` when reopened. The same
+  suite covers opening, painting and committing a clicked option.
 
 ```sh
 nub run --filter @gpuixui/primitives test

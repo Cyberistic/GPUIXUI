@@ -265,6 +265,84 @@ it("selects a Select option by clicking it", async () => {
   expect(lastValue(field.values)).toBe("pear");
 });
 
+/** The accessibility node's own record, or a failed test. */
+const ariaOf = (
+  runtime: Runtime,
+  match: { readonly role?: string; readonly label?: string },
+) =>
+  Option.getOrElse(a11yNode(runtime.a11y(), match), () =>
+    expect.fail(
+      `no accessibility node for ${match.role ?? "any role"} ` +
+        `"${match.label ?? "any label"}"`,
+    ),
+  ).aria;
+
+const selectProps = {
+  testId: "sel",
+  label: "Fruit",
+  placeholder: "Pick one",
+  options: [
+    { value: "apple", label: "Apple" },
+    { value: "pear", label: "Pear" },
+  ],
+} as const;
+
+it("exposes a named combobox whose expanded state follows the list", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select {...selectProps} />
+    </Surface>,
+  );
+  const closed = ariaOf(runtime, { role: "ComboBox", label: "Fruit" });
+  expect(closed?.expanded).toBe(false);
+  expect(closed?.value).toBe("Pick one");
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  expect(ariaOf(runtime, { role: "ComboBox", label: "Fruit" })?.expanded).toBe(
+    true,
+  );
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "ListBox", label: "Fruit" }),
+    ),
+  ).toBe(true);
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "ListBoxOption", label: "Pear" }),
+    ),
+  ).toBe(true);
+});
+
+it("marks the chosen option selected and reports it as the combobox value", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select {...selectProps} />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  const row = Option.getOrElse(
+    Option.fromNullishOr(textElement(runtime, "Pear").parentId),
+    () => expect.fail("the Pear option has no row"),
+  );
+  runtime.clickElement(
+    Option.getOrElse(
+      Option.fromNullishOr(runtime.renderer.getElement(row)),
+      () => expect.fail("the Pear row vanished"),
+    ),
+  );
+  const selected = ariaOf(runtime, { role: "ComboBox", label: "Fruit" });
+  expect(selected?.value).toBe("Pear");
+  expect(selected?.expanded).toBe(false);
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  expect(
+    ariaOf(runtime, { role: "ListBoxOption", label: "Pear" })?.selected,
+  ).toBe(true);
+  expect(
+    ariaOf(runtime, { role: "ListBoxOption", label: "Apple" })?.selected,
+  ).toBe(false);
+});
+
 it("opens a Tooltip on hover and dismisses it on click", async () => {
   const runtime = await openWindow();
   runtime.render(

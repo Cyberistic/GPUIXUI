@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { fieldVariant } from "../core/variants.js";
 import {
@@ -20,11 +21,20 @@ import {
   selectContentStyle,
   selectItemStyle,
   selectTriggerStyle,
+  type SelectHandlers,
 } from "./Select.js";
 import { tooltipStyle } from "./Tooltip.js";
-import { elementProp, expectSome } from "./testing/element.js";
+import { elementChildren, elementProp, expectSome } from "./testing/element.js";
 
 const rest = { selected: false, highlighted: false, disabled: false };
+
+const valueState = (value: string): ValueState<string> =>
+  initValueState(Option.some(value), "");
+
+const handlers: SelectHandlers = {
+  onOpenChange: () => {},
+  onValueChange: () => {},
+};
 
 const itemsOf = (element: Parameters<typeof elementProp>[0]) =>
   expectSome(
@@ -32,6 +42,11 @@ const itemsOf = (element: Parameters<typeof elementProp>[0]) =>
       Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
     )(expectSome(elementProp(element, "items"))),
   );
+
+const childAt = (
+  element: Parameters<typeof elementChildren>[0],
+  index: number,
+) => expectSome(Option.fromNullishOr(elementChildren(element)[index]));
 
 describe("Select", () => {
   it("paints a selected item differently from a hovered or resting one", () => {
@@ -67,11 +82,76 @@ describe("Select", () => {
     const element = renderSelect(
       { options: [{ value: "alpha", label: "Alpha" }], disabled: true },
       testTheme,
+      valueState(""),
+      false,
+      handlers,
     );
     expect(
       Option.map(Arr.head(itemsOf(element)), (item) => item["label"]),
     ).toStrictEqual(Option.some("Alpha"));
     expect(expectSome(elementProp(element, "disabled"))).toBe(true);
+  });
+
+  it("names the trigger as a combobox and reports its expanded state", () => {
+    const closed = renderSelect(
+      {
+        options: [{ value: "alpha", label: "Alpha" }],
+        label: "Fruit",
+        placeholder: "Pick one",
+      },
+      testTheme,
+      valueState(""),
+      false,
+      handlers,
+    );
+    const trigger = childAt(closed, 0);
+    expect(expectSome(elementProp(trigger, "role"))).toBe("combobox");
+    expect(expectSome(elementProp(trigger, "aria-label"))).toBe("Fruit");
+    expect(expectSome(elementProp(trigger, "aria-expanded"))).toBe(false);
+    expect(expectSome(elementProp(trigger, "aria-valuetext"))).toBe("Pick one");
+
+    const open = renderSelect(
+      { options: [{ value: "alpha", label: "Alpha" }], label: "Fruit" },
+      testTheme,
+      valueState("alpha"),
+      true,
+      handlers,
+    );
+    expect(expectSome(elementProp(childAt(open, 0), "aria-expanded"))).toBe(
+      true,
+    );
+    expect(expectSome(elementProp(childAt(open, 0), "aria-valuetext"))).toBe(
+      "Alpha",
+    );
+  });
+
+  it("names the list and every option, with the selected one marked", () => {
+    const element = renderSelect(
+      {
+        options: [
+          { value: "alpha", label: "Alpha" },
+          { value: "beta", label: "Beta" },
+        ],
+        label: "Fruit",
+      },
+      testTheme,
+      valueState("beta"),
+      true,
+      handlers,
+    );
+    const list = childAt(element, 1);
+    expect(expectSome(elementProp(list, "role"))).toBe("listbox");
+    expect(expectSome(elementProp(list, "aria-label"))).toBe("Fruit");
+    const entries = elementChildren(list);
+    expect(
+      entries.map((item) => expectSome(elementProp(item, "role"))),
+    ).toStrictEqual(["option", "option"]);
+    expect(
+      entries.map((item) => expectSome(elementProp(item, "aria-label"))),
+    ).toStrictEqual(["Alpha", "Beta"]);
+    expect(
+      entries.map((item) => expectSome(elementProp(item, "aria-selected"))),
+    ).toStrictEqual([false, true]);
   });
 });
 
