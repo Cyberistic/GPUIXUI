@@ -69,6 +69,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [070](./070-install-path-and-claim-guards.md) | Install-path truth and the last unguarded design-system claims | F | 062, 065, 066 | done |
 | [071](./071-contrast-contract.md) | A contrast contract the consumer can run | F | 013, 014, 057, 059, 063 | done |
 | [072](./072-palette-table-guard.md) | Guard the palette ramps in `docs/tokens.md` | F | 058, 066 | done |
+| [073](./073-declared-contrast.md) | A theme declares its contrast level | F | 013, 063, 071 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -172,7 +173,15 @@ already proved the palette holds paintable hex, but the values printed in
 `docs/tokens.md` could disagree with the export while every suite stayed green.
 The guard builds each documented row from `palette` and requires it, so a ramp
 edit and a document edit cannot land apart; every value table in the page is now
-built from the implementation one way.
+built from the implementation one way. 073 closes two laxer defaults of the same
+family. `applyPlatformStyle(base, style, contrast?)` and
+`themeContrastFailures(theme, contrast?)` both defaulted to `"default"`, so a
+copied platform style applied to a high-contrast base replaced the AAA palette,
+and the one check that exists to catch a broken high-contrast theme measured it
+against the default floors. A resolved `Theme` now records the floor set it is
+designed against, beside `mode`; both functions default to that declaration, and
+`docs/tokens.md`'s `Theme` block is held to the interface so a new field cannot
+land undocumented.
 
 ### Reference adoption (block `200–299`)
 
