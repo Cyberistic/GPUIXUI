@@ -101,6 +101,14 @@ export const hostStyleString = (
     Schema.decodeUnknownOption(Schema.String),
   );
 
+/** A host element's whole resolved `style` prop, as a record. */
+export const hostStyleRecord = (
+  element: ReactElement,
+): Option.Option<Record<string, unknown>> =>
+  Option.flatMap(hostProp(element, "style"), (style) =>
+    Schema.decodeUnknownOption(StyleRecord)(style),
+  );
+
 /** The decoded value, failing the test when the tree did not carry it. */
 export const expectSome = <A>(value: Option.Option<A>): A =>
   Option.getOrElse(value, () =>

@@ -25,6 +25,15 @@ export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";
 
 export {
+  clampNumeric,
+  decideNumberKey,
+  formatNumber,
+  parseNumericText,
+  stepNumber,
+} from "./number.js";
+export type { NumberRange } from "./number.js";
+
+export {
   clampValue,
   decideValueKey,
   fractionValue,
@@ -95,6 +104,9 @@ export {
   controlStyle,
   fieldTextStyle,
   nativeTextTheme,
+  numberInputStyle,
+  numberStepperColumnStyle,
+  numberStepperStyle,
   progressFillStyle,
   progressPercent,
   progressTrackStyle,

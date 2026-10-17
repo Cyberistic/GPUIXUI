@@ -528,3 +528,55 @@ export const sliderThumbStyle = (
   if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
+
+// ── Number fields ────────────────────────────────────────────────────
+
+/**
+ * The text part of a number field.
+ *
+ * It paints no chrome of its own: the wrapper is the field, so the row's border,
+ * fill and focus ring are one surface rather than an input with a box inside a
+ * box.
+ */
+export const numberInputStyle = (): StyleDesc => ({
+  flexGrow: 1,
+  height: "100%",
+  minWidth: 0,
+  paddingLeft: 0,
+  paddingRight: 0,
+  borderWidth: 0,
+});
+
+/** The spin column: two equal halves, one step each, on the field's right. */
+export const numberStepperColumnStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "column",
+  width: theme.iconSize.md + theme.spacing.sm,
+  height: "100%",
+  flexShrink: 0,
+});
+
+/**
+ * One step button.
+ *
+ * It is a pointer affordance, not a tab stop: the input's own arrow keys are the
+ * keyboard path, so a number field does not add two stops to the tab order.
+ */
+export const numberStepperStyle = (
+  spec: { readonly disabled?: boolean },
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const style: StyleDesc = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexGrow: 1,
+    borderRadius: theme.radius.sm,
+    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+  };
+  if (spec.disabled !== true) {
+    style.hover = { backgroundColor: theme.colors.hover };
+    style.active = { backgroundColor: theme.colors.active };
+  }
+  return style;
+};

@@ -34,6 +34,9 @@ export type { ButtonGroupMode, ButtonGroupProps } from "./ButtonGroup.js";
 export { Input } from "./Input.js";
 export type { FieldProps, InputProps } from "./Input.js";
 
+export { NumberField, numberRange } from "./NumberField.js";
+export type { NumberFieldProps } from "./NumberField.js";
+
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
 
