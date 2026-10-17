@@ -48,9 +48,11 @@ after a layout or content change.
 (`src/lib/search.ts`). A component name is scored by its **title** — equal,
 prefix, word prefix, then substring — so `button` reaches
 `/docs/components/button` even when prose matches first; every other query keeps
-the page index's order and appends registry hits in the tail (plan 419). A blank
-query returns `[]`, and one page is listed once. `src/lib/search.test.ts` guards
-all four rules (plan 431).
+the page index's order and appends registry hits in the tail (plan 419). The
+props types a component documents are indexed too, so `ButtonProps` and
+`ToastViewportProps` reach their pages (plan 442). A blank query returns `[]`,
+and one page is listed once. `src/lib/search.test.ts` guards all four rules
+(plan 431).
 
 ## Layout
 

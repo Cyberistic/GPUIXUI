@@ -68,6 +68,16 @@ describe("search", () => {
     expect(results[0]?.url).toBe("/docs/components/button");
   });
 
+  it("finds a component by one of its props types", async () => {
+    const results = await search("ButtonProps");
+    expect(results[0]?.url).toBe("/docs/components/button");
+  });
+
+  it("finds a component when its second table is the match", async () => {
+    const results = await search("ToastViewportProps");
+    expect(results[0]?.url).toBe("/docs/components/toast");
+  });
+
   it("caps the merged response at the limit", async () => {
     const results = await search("select", 3);
     expect(results).toHaveLength(3);

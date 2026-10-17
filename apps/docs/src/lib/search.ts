@@ -34,10 +34,10 @@ export const componentSearchIndex = (component: ComponentMetaInput): Index => ({
       ? `${component.title} (planned)`
       : component.title,
   description: component.summary,
-  content: `${component.title}\n${component.summary}`,
+  content: [component.title, component.summary, ...component.api].join("\n"),
   url: componentSearchUrl(component),
   breadcrumbs: ["Components"],
-  keywords: component.packageName,
+  keywords: [component.packageName, ...component.api].join(" "),
 });
 
 const pageSearch = createFromSource(source);
