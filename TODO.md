@@ -141,6 +141,7 @@ the `@gpuixui/tokens/react` provider
     - [x] List type-ahead over the shared type-ahead core — plan 130
     - [x] Dropdown menu submenus — plan 131
     - [x] Time picker, the time half of the date/time item — plan 132
+    - [~] Command menu fuzzy matching and in-group ranking — plan 133
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
