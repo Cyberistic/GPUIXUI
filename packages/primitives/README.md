@@ -116,17 +116,20 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **12 files, 115 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **13 files, 119 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
-`darkTheme` from `@gpuixui/tokens`, and a check that no painted colour is
-outside the active palette.
+`darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
+the active palette, the high-contrast palettes in both modes, a density override
+measured against the preset's metrics, and a platform theme's mono family
+reaching the paint (plan 055).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
 
 What it observed, per component, is in `COMPONENTS.md`; the measured details and
 the two-direction proof are in
-`.agents/slop/plans/041-tier1-runtime-verification.md` §9.
+`.agents/slop/plans/041-tier1-runtime-verification.md` §9 and
+`.agents/slop/plans/055-tier1-theme-axes.md` §7.
 
 **Still unproven, on purpose:**
 

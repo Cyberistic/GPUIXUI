@@ -39,7 +39,32 @@ without an adapter.
 Density replaces the theme's **numeric** metrics only (`controlHeight`,
 `controlPaddingX`, `rowHeight`). It cannot change colour, so a density switch can
 never produce a second palette. Build presets with tokens' `extendTheme`; this
-package owns no copy of them.
+package owns no copy of them. Selection boxes stay icon-sized by design, so
+density never stretches a checkbox or a switch.
+
+## Contrast and platform
+
+Contrast is another theme, not a component prop:
+
+```tsx
+import { getTheme } from "@gpuixui/tokens";
+
+<ThemeProvider theme={getTheme("dark", "high")}>…</ThemeProvider>;
+```
+
+`getTheme(mode, contrast)` returns the shipped high-contrast palette. Every
+Tier 1 component paints from that palette and nothing else; the runtime suite
+below keeps that invariant in both modes.
+
+The platform styles are themes too. `platformTheme` re-types the base theme
+without touching its colours or metrics, which is exactly what the docs site's
+platform toggle feeds the provider:
+
+```tsx
+import { platformTheme, lightTheme } from "@gpuixui/tokens";
+
+<ThemeProvider theme={platformTheme(lightTheme, "win32")}>…</ThemeProvider>;
+```
 
 ## API
 
@@ -85,6 +110,10 @@ re-render with a different `theme` prop — verified natively by
 - `src/core/theme.test.ts` — the colour-literal scan and density metrics.
 - `runtime/theme.runtime.test.tsx` — both palettes paint only their own colours;
   a live theme switch repaints every asserted role.
+- `runtime/theme-axes.runtime.test.tsx` — the high-contrast palettes paint only
+  their own colours in both modes; a density override moves control heights to
+  the preset and leaves colour alone; `platformTheme`'s mono family reaches the
+  paint and a platform switch repaints the same tree (plan 055).
 
 ```sh
 nub run --filter @gpuixui/primitives test

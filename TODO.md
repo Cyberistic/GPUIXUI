@@ -178,6 +178,10 @@ retired once both branches are one
       pages and examples. `OTPField`'s multi-character fill is proven as a pure
       rule; a real clipboard paste is unverifiable in 0.10.0 (no `onPaste`, no
       clipboard simulation) and is documented as such
+`[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
+      055) — the high-contrast palettes in both modes, a density override
+      measured against the preset metrics, and `platformTheme`'s mono family
+      reaching the paint; 13 files / 119 runtime tests
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

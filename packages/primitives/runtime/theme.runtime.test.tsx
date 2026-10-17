@@ -37,6 +37,7 @@ import { ThemeProvider } from "../src/components/ThemeProvider.js";
 import type { PrimitiveTheme } from "../src/core/theme.js";
 import type { Runtime } from "./harness.js";
 import { openWindow } from "./fixture.js";
+import { painted, paintedColours, rgbOf } from "./theme.js";
 
 /** The scene: one element per themed role, all on the background surface. */
 const scene = (theme: PrimitiveTheme) => (
@@ -52,46 +53,6 @@ const scene = (theme: PrimitiveTheme) => (
     </Box>
   </ThemeProvider>
 );
-
-/** The applied style of the element with `testId`, as the runtime holds it. */
-const styleOf = (
-  runtime: Runtime,
-  testId: string,
-): Readonly<Record<string, unknown>> =>
-  Option.getOrElse(
-    Option.map(runtime.element(testId), (element) => element.style),
-    () => expect.fail(`the runtime retained no ${testId}`),
-  );
-
-/** The painted value of one style property, failing when it is absent. */
-const painted = (runtime: Runtime, testId: string, property: string): string =>
-  Option.getOrElse(
-    Option.flatMap(
-      Option.fromNullishOr(styleOf(runtime, testId)[property]),
-      (v) => Option.fromNullishOr(typeof v === "string" ? v : null),
-    ),
-    () => expect.fail(`${testId} painted no ${property}`),
-  );
-
-/** A 6- or 8-digit hex colour, the only shape the palette produces. */
-const isColour = (value: string): boolean =>
-  /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/.test(value);
-
-/** The RGB part of a palette entry, so a lifted-alpha colour still matches. */
-const rgbOf = (colour: string): string => colour.slice(0, 7).toUpperCase();
-
-/** Every colour-shaped value the tree applied, in element order. */
-const paintedColours = (runtime: Runtime): ReadonlyArray<string> =>
-  Arr.flatMap(runtime.all(), (element) =>
-    Arr.map(
-      Arr.filter(
-        R.values(element.style),
-        (value): value is string =>
-          typeof value === "string" && isColour(value),
-      ),
-      rgbOf,
-    ),
-  );
 
 const rendered = (node: React.ReactElement): Promise<Runtime> =>
   openWindow().then((runtime) => {
