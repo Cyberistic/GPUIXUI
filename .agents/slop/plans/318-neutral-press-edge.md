@@ -148,7 +148,8 @@ Cases:
 
 1. **Pair shape** — the `border` pairs in `contrastPairs` are exactly
    `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`,
-   `accent`, once each, all `divider`; `contrastPairs.length` is 254.
+   `accent`, once each, all `divider`. The published count lives in
+   `contrast.test.ts` (254 when this plan landed; plan 319 grows it to 257).
 2. **Shipped floors** — every shipped theme (identity light/dark at both
    contrasts, the three real platform styles in both modes and both contrasts,
    and both recipes in both modes) clears the declared divider floor on
@@ -318,7 +319,7 @@ Stop and report if:
 ## 7. Acceptance
 
 - [x] `border` is measured on `secondaryHover` and `secondaryActive`; the public
-  count is 254.
+  count was 254 when this plan landed (257 after plan 319).
 - [x] macOS, Linux and Windows light `secondaryActive` are `#C7C7CC`,
   `#CAC8C6` and `#CCCCCC`; both AAA `border` roles are `#575E6B` and `#A0A0A0`;
   every shipped set clears its declared floor, and the regression tests prove

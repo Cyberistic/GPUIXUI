@@ -1,17 +1,21 @@
 /**
- * Guards the gap plan 315 closed. `inputForeground` is the role for typed text,
- * and plan 059 measured it on the `input` fill only. Five shipped components
- * paint a transparent input on the canvas instead:
+ * Guards the gap plan 315 closed, completed by plan 319. `inputForeground` is
+ * the role for typed text, and plan 059 measured it on the `input` fill only.
+ * Five shipped components paint a transparent input on a `Surface` tone
+ * instead:
  *
  * - `SearchInput` (root `background`, inner `<input>` `inputForeground`);
  * - `InlineEdit` (input `background`);
  * - `ColorPicker` (input `background`);
  * - `TagInput` and `MentionInput` (root `background`, transparent input).
  *
- * A copied platform style that retints `background` while keeping the
- * identity's `inputForeground` could erase typed text in any of them while
- * `themeContrastFailures` returned `[]`. Every shipped set passes, so no colour
- * moves.
+ * Plan 315 added the `background` canvas; plan 319 adds the other three
+ * `Surface` tones, because a sidebar search sits on `muted`, a command palette's
+ * field on `popover` and a settings form on `card` — the surfaces plan 317 made
+ * first class for the placeholder. A copied platform style that retints one of
+ * them while keeping the identity's `inputForeground` could erase typed text
+ * while `themeContrastFailures` returned `[]`. Every shipped set passes, so no
+ * colour moves.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -63,11 +67,14 @@ const surfacesOf = (background: string) =>
   typedTextPairs.filter(([, surface]) => surface === background);
 
 describe("typed text on the canvas field", () => {
-  it("documents the canvas and the input fill, once each, as body text", () => {
-    expect(surfacesOf("background")).toEqual([
-      ["inputForeground", "background", "body"],
-    ]);
+  it("documents the four Surface tones and the input fill, once each", () => {
+    ["background", "card", "popover", "muted"].forEach((surface) => {
+      expect(surfacesOf(surface), surface).toEqual([
+        ["inputForeground", surface, "body"],
+      ]);
+    });
     expect(surfacesOf("input")).toEqual([["inputForeground", "input", "body"]]);
+    expect(typedTextPairs).toHaveLength(5);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 
@@ -103,6 +110,21 @@ describe("typed text on the canvas field", () => {
           floor === contrastFloors.default.body,
       ),
     ).toBe(true);
+  });
+
+  it("reports a quiet panel that erases a transparent field's text", () => {
+    const regressed = extendTheme(getTheme("light"), {
+      colors: { muted: lightColors.inputForeground },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ foreground, background }) =>
+        foreground === "inputForeground" && background === "muted",
+    );
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.pairClass).toBe("body");
+    expect(failures[0]?.floor).toBe(contrastFloors.default.body);
+    expect(failures[0]?.ratio).toBeCloseTo(1, 5);
   });
 
   it("keeps the input fill measured beside the canvas", () => {

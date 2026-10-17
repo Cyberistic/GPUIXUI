@@ -391,6 +391,19 @@ const placeholderSurfacePairs: readonly ContrastPair[] = (
 ).map((background): ContrastPair => ["placeholder", background, "secondary"]);
 
 /**
+ * The surfaces typed text is painted on: the four `Surface` tones a transparent
+ * field (`SearchInput`, `InlineEdit`, `ColorPicker`, `TagInput`,
+ * `MentionInput`) can sit on. They are the same four surfaces the placeholder is
+ * measured on, because a field that loses its text is worse than one that loses
+ * its hint.
+ */
+const inputTextSurfaces = ["background", "card", "popover", "muted"] as const;
+
+const inputTextSurfacePairs: readonly ContrastPair[] = inputTextSurfaces.map(
+  (background): ContrastPair => ["inputForeground", background, "body"],
+);
+
+/**
  * The surfaces default body text (`foreground`) is painted on: the canvas and
  * the card, the quiet panel an avatar's fallback initials sit on, the floating
  * surface a date picker's month header sits on, and the hover and pressed
@@ -436,9 +449,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * label on the `accent` fill a selectable row hovers and on the `hover`/`active`
  * pointer washes — a selected `Select` option's label on
  * its `selected` fill, a status label or dot on the quiet `muted` panel, typed
- * text on the `input` fill and on the `background` canvas a transparent field
- * paints, the placeholder on that canvas and on the `card`, `popover` and
- * `muted` surfaces a transparent field can sit on instead, and a text field's
+ * text on the `input` fill and on the `background`, `card`, `popover` and
+ * `muted` surfaces a transparent field paints, the placeholder on those same
+ * surfaces, and a text field's
  * edge is measured on the `input` fill it sits on.
  *
  * The filled families are measured at rest, hover and pressed. The neutral
@@ -459,7 +472,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["mutedForeground", "card", "secondary"],
   ["mutedForeground", "popover", "secondary"],
   ["inputForeground", "input", "body"],
-  ["inputForeground", "background", "body"],
+  ...inputTextSurfacePairs,
   ...ringPairs,
   ...ringSoftPairs,
   ["secondaryForeground", "secondary", "secondary"],

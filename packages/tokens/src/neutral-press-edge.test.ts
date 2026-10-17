@@ -80,7 +80,6 @@ describe("the neutral control's edge on its designed states", () => {
         .filter(([, background]) => controlFillSet.has(background))
         .map(([, background, pairClass]) => [background, pairClass]),
     ).toEqual(controlFills.map((fill) => [fill, "divider"]));
-    expect(contrastPairs).toHaveLength(254);
   });
 
   it("keeps every shipped theme above its declared divider floor", () => {

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 86/112
+`[x]` `[████████░░]` 87/113
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -155,6 +155,12 @@ fills, so macOS light and Windows light measured 1.000:1 and Linux light 1.009:1
 on the pressed fill, and both AAA sets sat under their 3:1 floor; the two fills
 join the divider contract (252 → 254), the three light pressed steps and the two
 AAA dividers move one designed step (plan 318)
+`[x]` Hold typed text on every surface a field sits on — `inputForeground` had
+pairs on the `input` fill and the `background` canvas only, while the placeholder
+gained all four `Surface` tones in plan 317, so a copied style could erase a
+search query in a sidebar or a dialog while the checker returned `[]`; the
+`card`, `popover` and `muted` surfaces join the body contract (254 → 257) and
+every shipped set clears 7:1, so no colour moves (plan 319)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

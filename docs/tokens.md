@@ -146,7 +146,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
-| `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background` canvas a transparent field paints |
+| `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
 | `placeholder` | `#66707F` | `#858F9F` | placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
@@ -349,7 +349,7 @@ carries, so it cannot claim another.
 | `border` | `#575E6B` | `#A0A0A0` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
-| `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input, on the `input` fill or the `background` canvas a transparent field paints |
+| `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
@@ -1361,8 +1361,9 @@ soft fills. Palette edits must keep it green.
 
 Default body text is measured on `background`, `card`, the `muted` panel,
 `popover` and the `hover`/`active`/`accent`/`selected` washes; typed text is
-`inputForeground` on the `input` fill and on the `background` canvas a
-transparent field paints. The placeholder is held to the same secondary floor
+`inputForeground` on the `input` fill and on the four `Surface` tones a
+transparent field can sit on (`background`, `card`, `popover`, `muted`), the same
+set the placeholder is measured on. The placeholder is held to the same secondary floor
 on the `input` fill and on all four `Surface` tones a transparent field can sit
 on (`background`, `card`, `muted`, `popover`); a field on a row wash and a
 disabled field are deliberately out of scope — the latter reads
@@ -1397,7 +1398,8 @@ typed text on the canvas field, plan `316` adds the `accent` fill a selected
 row inherits its label on, and plan `317` adds the placeholder on the four
 `Surface` tones, taking the contract from 248 to 252. Plan `318` adds the neutral
 family's designed hover and press to the control edge, taking it from 252 to
-**254**.
+**254**, and plan `319` adds typed text on the same four `Surface` tones as the
+placeholder, taking it from 254 to **257**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the

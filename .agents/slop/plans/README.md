@@ -115,6 +115,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [316](./316-selected-label-accent-wash.md) | The selected row's inherited label on the accent wash | F | 059, 071–095, 300, 306–315 | done |
 | [317](./317-placeholder-surfaces.md) | The placeholder on every surface a field sits on | F | 059, 071–095, 300, 306–316 | done |
 | [318](./318-neutral-press-edge.md) | The neutral control's edge on its designed hover and press | F | 055, 071–095, 097, 306–317 | done |
+| [319](./319-input-text-surfaces.md) | Typed text on every surface a field sits on | F | 059, 071–095, 300, 306–318 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -770,6 +771,18 @@ their neutral ladder (`#575E6B` light, `#A0A0A0` dark, 3.289 / 3.389 on the pres
 because a fill cannot recede past its mode direction. `neutral-press-edge.test.ts`
 states the shipped ratios and holds the public checker to them, and both
 documents now name the designed steps beside the washes they replaced.
+
+319 closes the other half of plan 317: the placeholder was given a pair on the
+four `Surface` tones a transparent field can sit on, but the typed text it
+replaces was still measured on the `background` canvas alone. A sidebar search
+on `muted`, a command palette's field on `popover` and a settings form on `card`
+are the same compositions plan 317 made first class, so a copied platform style
+could retint one of those surfaces, keep the identity's `inputForeground` and
+erase a query while `themeContrastFailures` returned `[]`. `card`, `popover` and
+`muted` join the `body` contract (254 → 257 pairs); every shipped set already
+clears 7:1 on all three (the quiet panel is the tightest), so no colour moves,
+and `canvas-input-text.test.ts` now states the four-surface contract and the
+erased-text regression the public checker catches.
 
 ### Reference adoption (block `200–299`)
 
