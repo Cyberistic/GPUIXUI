@@ -230,9 +230,10 @@ export const quietBrandFailures = themeContrastFailures(quietBrandTheme);
 
 `docs.test.ts`: one new assertion that `docs/tokens.md` names
 `themeContrastFailures`, `contrastRatio`, `contrastPairs`, `contrastFloors` and
-`compositeOver`. (The existing namespace-wide public-values guard covers the
-same names; this assertion states the reason so a future deletion of the section
-fails with a sentence.)
+`compositeOver`, and one that builds the six floor rows of
+`docs/design-system.md` §9 from `contrastFloors`. (The existing namespace-wide
+public-values guard covers the same names; the sentence assertion states the
+reason, and the floor-row guard closes the one table plan `062` left as prose.)
 
 ## 6. Documentation edits
 
@@ -363,5 +364,6 @@ Stop and report if:
   offending pairs for a brand theme, an opaque selection wash and an
   unparseable role.
 - `docs/tokens.md`, `docs/design-system.md`, `README.md` and `COMPONENTS.md`
-  describe the check; `TODO.md` carries the ticked task and an honest bar.
+  describe the check; the design-system's §9 floor table is held to
+  `contrastFloors`; `TODO.md` carries the ticked task and an honest bar.
 - The gate commands exit 0, and every failing direction in §9 was observed.

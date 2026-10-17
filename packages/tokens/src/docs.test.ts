@@ -19,6 +19,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { colorRoles } from "./color.js";
+import { contrastFloors } from "./contrast.js";
 import {
   darkElevation,
   lightElevation,
@@ -373,6 +374,20 @@ describe("docs/design-system.md", () => {
   it("states the icon-to-label gap the spacing scale defines", () => {
     const sentence = `The gap between icon and label is \`spacing.sm\` (${spacing.sm}px).`;
     expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
+  it("states the floors the contrast checker enforces", () => {
+    const rows = [
+      `| body text on background/card/popover/input | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| secondary text (\`mutedForeground\` on plain surfaces), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| status text (\`xText\`) on \`background\`/\`card\` | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection (\`foreground\` over the composited \`selection\` wash) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| focus ring and essential boundaries | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
+    ];
+    rows.forEach((row) => {
+      expect(designSystem.includes(row), row).toBe(true);
+    });
   });
 
   it("states the radius scale", () => {
