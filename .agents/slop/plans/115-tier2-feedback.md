@@ -11,7 +11,8 @@ timers, cancellation and a bounded size is a state machine, not a `setTimeout`.
 APIs below were verified against `effect@4.0.5` type definitions:
 `ManagedRuntime.make`, `SubscriptionRef.make/.changes/.get/.modify`,
 `FiberMap.make/.run`, `Effect.sleep`, `Duration.Input`, `SchemaError.message`,
-`SchemaIssue.makeFormatterDefault`.
+`SchemaIssue.makeFormatterDefault`. **`Layer.scoped` does not exist in 4.0.5** —
+use `Layer.effect`, which runs its effect in the layer's scope.
 
 ---
 
@@ -93,6 +94,11 @@ export const makeToastStore: (
   options?: ToastStoreOptions,
 ) => Effect.Effect<ToastStoreService, never, Scope.Scope>;
 
+/**
+ * `Layer.effect`, not `Layer.scoped`: Effect 4.0.5 has no `Layer.scoped`. A
+ * layer built with `effect` runs its effect in the layer's own scope, which is
+ * what keeps the `FiberMap` alive for the runtime's lifetime.
+ */
 export const layer: (options?: ToastStoreOptions) => Layer.Layer<ToastStoreService>;
 ```
 

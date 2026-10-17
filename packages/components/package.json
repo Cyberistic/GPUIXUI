@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@gpuix/react": "0.10.0",
+    "@gpuixui/tokens": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

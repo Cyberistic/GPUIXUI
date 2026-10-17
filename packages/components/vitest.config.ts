@@ -4,9 +4,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}"],
-    // The native renderer paints through one retained tree; parallel workers
+    // The native renderer paints through one retained tree; a second worker
     // would race on the window and on the native module.
     pool: "forks",
-    poolOptions: { forks: { singleFork: true } },
+    maxWorkers: 1,
   },
 });

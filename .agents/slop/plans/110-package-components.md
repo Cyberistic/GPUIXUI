@@ -229,7 +229,7 @@ export interface ToneStyle { readonly fg: string; readonly bg: string; readonly 
 /** The soft-fill status palette used by Alert, Badge and Toast. */
 export const tone: (theme: Theme, tone: Tone) => ToneStyle;
 
-/** `outlineWidth/Color/Offset` for a keyboard-focus look, from `colors.ring`. */
+/** A zero-blur shadow spread by `colors.ring`: 0.10.0 has no `outline`. */
 export const focusRing: (theme: Theme) => StyleDesc;
 ```
 
@@ -263,7 +263,7 @@ The component plans write styles compactly. Expand exactly like this:
 | `radius.sm/md/lg/xl/full` | `theme.radius.sm/md/lg/xl/full` (4, 6, 8, 12, 9999) |
 | `colors.<role>` | `theme.colors.<role>` |
 | `tone(x).fg/.bg/.border` | `tone(theme, x)` from §6 |
-| `elevation.sm/md/lg` | `theme.elevation.sm/md/lg` (a `BoxShadow[]`) |
+| `elevation.sm/md/lg` | `elevation(theme, "sm" \| "md" \| "lg")` — one `BoxShadow`, never a list |
 | `controlHeight(theme, "md")` | the tokens helper of the same name |
 | `type.caption` `type.label` `type.body` `type.h3` | `textStyle(theme, "caption" \| "label" \| "body" \| "h3")` |
 | `font.size.xs/sm/md/lg/xl` | the `fontSize` of `type.caption/label/body/h3/display` |
@@ -273,6 +273,25 @@ The component plans write styles compactly. Expand exactly like this:
 Prefer `textStyle(theme, role)` wholesale over picking `fontSize` and
 `fontWeight` separately: it also sets the family and line height, which is what
 makes prose and code roles render correctly.
+
+### What the installed `StyleDesc` actually has (verified 2026-10-17)
+
+Read from `@gpuix/native@0.10.0`'s `dist/host.d.ts`, not from the reference
+clone. Three of these differ from the clone and each one invalidates an earlier
+draft of a component style:
+
+| Property | 0.10.0 | Consequence |
+| -------- | ------ | ----------- |
+| `boxShadow` | **`BoxShadow`, not a list** | a theme level with several shadows paints one; `elevation()` in `internal/theme.ts` picks `Arr.head` |
+| `outlineWidth` / `outlineColor` / `outlineOffset` | **absent** | focus is a zero-blur `boxShadow` spread by `colors.ring`; `internal/theme.ts`'s `focusRing` draws it that way |
+| `focusVisible` | **absent** | a keyboard-only focus look cannot be declared; focus shows whenever the element is focused |
+| `keyboardFocusDim` | **absent** | the per-element opt-out used in plans 112 and 113 is not available; dimming is a root/`WindowKeyEventHandlers` option only |
+| `hover` / `active` | present, typed `Omit<StyleDesc, "hover" \| "active">` | row and control states work as planned |
+
+**Rules that follow.** Never write `outline*`, `focusVisible`, or
+`keyboardFocusDim` in a component style. Never pass an array to `boxShadow`.
+When a plan mentions one of them, the plan is stale: fix the plan first, then
+the code.
 
 **Interlock rule.** If `packages/tokens` does not yet export a role: read its
 `src/index.ts`, map the nearest equivalent in `theme.ts`, and add a line to the
