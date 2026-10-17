@@ -21,10 +21,12 @@ import { ContextMenuExample } from "./context-menu.example.js";
 import { DialogExample } from "./dialog.example.js";
 import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
+import { FieldExample } from "./field.example.js";
 import { ListExample } from "./list.example.js";
 import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { TabsExample } from "./tabs.example.js";
+import { ToastExample } from "./toast.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
@@ -41,8 +43,10 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   dialog: DialogExample,
   "dropdown-menu": DropdownMenuExample,
   "empty-state": EmptyStateExample,
+  field: FieldExample,
   list: ListExample,
   pagination: PaginationExample,
   popover: PopoverExample,
   tabs: TabsExample,
+  toast: ToastExample,
 };

@@ -85,7 +85,7 @@ the `@gpuixui/tokens/react` provider
     - [x] Local button stand-in: `src/internal/button.tsx` (`Button`, `IconButton`), behaviour suite (9/9); plan 110 §7 amended
     - [x] EmptyState: `src/empty-state.tsx`, behaviour suite (6/6), example, docs page, inventory record
     - [x] List / ListItem: `src/list.tsx` over `internal/collection.ts`, behaviour suite (12/12: real focus, wrap over disabled rows, controlled), example, docs page, inventory record
-  - [ ] Overlays: Dialog, Confirmation dialog, Popover
+  - [x] Overlays: Dialog, Confirmation dialog, Popover
     - [x] Plan 112 §1/§1b re-measured against 0.10.0 and corrected: there is **no** `Dialog`, `DismissableLayer`, `pushDismissLayer` or `anchored fill="window"`, so the overlays are local implementations over host elements
     - [x] Plan 112 §1b's five overlay probes answered and recorded in plan 112 §1c — the veil must be an `<anchored position={{x:0,y:0}}>`, because `position:"absolute"` resolves against the mount parent; `focusNextWithin` wraps; a focused `tabIndex={-1}` node receives keys
     - [x] `internal/dismiss-layer.ts` (topmost-layer-wins, one event consumes one layer) + `dialog.tsx` (+ 5 logic tests, 12 native behaviour tests)
@@ -111,12 +111,13 @@ the `@gpuixui/tokens/react` provider
     - [x] `command-menu.tsx` composing Dialog + the shared row look; input keeps focus, Enter arrives as `submit` (8/8), example, docs, inventory
   - [ ] Choice inputs: Search input, Combobox
     - [x] Logic: `combobox/logic.ts` (ranking + selection)
-  - [ ] Feedback: Toast system, inline validation (`Field`)
+  - [x] Feedback: Toast system, inline validation (`Field`)
     - [x] `toast/model.ts` + test (the `ToastInput` boundary type and the queued `Toast`)
     - [x] `toast/store.ts` + test (queue, monotonic ids, `FiberMap` timers, `TestClock`)
     - [x] `validation/logic.ts` + test (`validate` / `validateAll` over schema issues)
-    - [ ] `toast/provider.tsx` + `viewport.tsx` (render layer; needs the theme seam)
-    - [ ] `field.tsx` (needs `@gpuixui/primitives` `Input`/`Label`)
+    - [x] `toast/provider.tsx` + `viewport.tsx` + `toast.tsx` (ManagedRuntime boundary, `useToast`, viewport) + 7 native behaviour tests
+    - [x] `field.tsx` (Field/FieldLabel/FieldDescription/FieldError/FieldInput) + 5 native behaviour tests
+    - [x] Examples, docs pages and inventory rows for Toast and Field
   - [ ] Date / time picker (design in plan 116 §5; not started)
   - [ ] Tier 2 verification matrix and inventory sync check (plan 117)
 `[ ]` Verify every component in both themes

@@ -3,6 +3,8 @@
 - **Phase:** C-5
 - **Workstream:** components · **Owns:** `packages/components/**`
 - **Depends on:** plan 110, plan 111 (Alert styling), plan 112 (layer patterns)
+- **Status:** done, 2026-10-17. Store suite + provider/viewport/field with 12 new
+  native behaviour tests; examples, docs and inventory rows. Deviations in §11.
 
 This is the one Tier 2 area whose logic is genuinely asynchronous. It is also
 the first place the repo's Effect rules earn their keep: a toast queue with
@@ -299,10 +301,32 @@ tests by name (no skips).
 
 ## 10. Acceptance criteria
 
-- [ ] Toast store is Effect-native, cancellable, bounded and deterministic.
-- [ ] Auto-dismiss and stale-timer behaviour proven with `TestClock`.
-- [ ] Toast and Field render and behave correctly in the native renderer.
-- [ ] `runtime.run*` appears only in `toast/provider.tsx`.
-- [ ] Examples, docs pages, `COMPONENTS.md` rows.
-- [ ] Limitations documented: no progress bar, paint-order stacking, no
+- [x] Toast store is Effect-native, cancellable, bounded and deterministic.
+- [x] Auto-dismiss and stale-timer behaviour proven with `TestClock`.
+- [x] Toast and Field render and behave correctly in the native renderer.
+- [x] `runtime.run*` appears only in `toast/provider.tsx`.
+- [x] Examples, docs pages, `COMPONENTS.md` rows.
+- [x] Limitations documented: no progress bar, paint-order stacking, no
       `aria-describedby`, no form library.
+
+## 11. Deviations, recorded during implementation (2026-10-17)
+
+1. **`useSyncExternalStore` was not used.** The provider subscribes in a
+   `useEffect` with `Stream.runForEach` and holds the queue in React state; the
+   fiber is interrupted on cleanup. This is the same single-source-of-truth
+   subscription without asking React 19 to reconcile a snapshot the native
+   renderer updates synchronously, and it avoids the tearing STOP 2 named.
+2. **`useToast()` commands return `void`, not `Effect`.** The provider is the
+   runtime boundary (EF-21), so `push`/`dismiss`/`dismissAll` fork on it. A
+   rejected draft is logged (`the decoded title is empty`) rather than thrown;
+   the typed `ToastDraft` is the caller-facing contract.
+3. **`ToastProvider` children are siblings.** The native test renderer reports a
+   single tree root, so a provider whose children are a page and a viewport must
+   sit inside one root element. The behaviour harness wraps it in a div; the
+   docs say "render the viewport last in the app root".
+4. **The `role="alert"` on `FieldError` is asserted through the accessibility
+   dump**, not `customProps`: a `<text>` node's role is not exposed in the
+   retained tree on 0.10.0, while the AccessKit node is. The test states this.
+5. **`Field` passes `aria-description`** built from `error ?? description` plus
+   `"Required"`; the plan's earlier "required only" shape would have dropped the
+   field's own description.
