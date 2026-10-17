@@ -12,12 +12,12 @@
  */
 
 import { useEffect, useState, type ReactElement } from "react";
-import { Icon } from "@gpuixui/icons";
 import {
   Box,
   Button,
   ButtonGroup,
   Checkbox,
+  InfoTip,
   Input,
   Label,
   Progress,
@@ -33,7 +33,6 @@ import {
   Text,
   TextArea,
   ThemeProvider,
-  Tooltip,
   type PrimitiveTheme,
 } from "@gpuixui/primitives";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
@@ -259,15 +258,10 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                   <Stack direction="column" gap="lg">
                     <Stack direction="row" align="center" gap="xs">
                       <Text role="h3">Notifications</Text>
-                      <Tooltip content="Delivered by email; never your content.">
-                        <Box tone="none" padding="xs">
-                          <Icon
-                            name="info"
-                            color={theme.colors.mutedForeground}
-                            size={theme.iconSize.sm}
-                          />
-                        </Box>
-                      </Tooltip>
+                      <InfoTip
+                        content="Delivered by email; never your content."
+                        label="Delivery method"
+                      />
                     </Stack>
                     <Toggle
                       name="Weekly digest"

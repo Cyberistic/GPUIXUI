@@ -46,6 +46,7 @@ never as a promise.
 | [skeleton](skeleton.mdx) | `Skeleton` | [feedback](../examples/feedback.example.tsx) |
 | [spinner](spinner.mdx) | `Spinner` | [feedback](../examples/feedback.example.tsx) |
 | [tooltip](tooltip.mdx) | `Tooltip` | [feedback](../examples/feedback.example.tsx) |
+| [info-tip](info-tip.mdx) | `InfoTip` | [feedback](../examples/feedback.example.tsx) |
 
 The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx).
 

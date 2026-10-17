@@ -95,3 +95,6 @@ export type { SelectOption, SelectProps } from "./Select.js";
 
 export { Tooltip } from "./Tooltip.js";
 export type { TooltipProps } from "./Tooltip.js";
+
+export { InfoTip, infoTipTriggerStyle } from "./InfoTip.js";
+export type { InfoTipProps } from "./InfoTip.js";

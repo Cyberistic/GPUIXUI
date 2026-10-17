@@ -1,0 +1,88 @@
+---
+title: InfoTip
+description: An information icon whose tooltip explains a nearby term.
+---
+
+`InfoTip` is the one accessible shape for an info icon with a tooltip. A
+`Tooltip` needs a trigger that is a **focusable host element with a role and a
+name**; hand-rolling that per consumer produced a real bug — `examples/basic-app`
+wrapped the icon in a `Box`, which forwards no `tabIndex` and no role, so the tip
+was hover-only and absent from the accessibility tree (plan 073).
+
+## Usage
+
+```tsx
+import { InfoTip, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="row" align="center" gap="xs">
+  <Text role="h3">Revenue</Text>
+  <InfoTip
+    content="Booked revenue, net of refunds."
+    label="Revenue definition"
+  />
+</Stack>;
+```
+
+`content` is the explanation; `label` is what a screen reader calls the icon.
+The icon itself is decorative, so the trigger is a single accessibility node.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `content` | `string` | — | the tip; also the trigger's `aria-description` |
+| `label` | `string` | — | the trigger's accessible name |
+| `icon` | `IconName` | `"info"` | which icon is painted |
+| `side` | `FloatingSide` | `top` | preferred side; flips when it does not fit (plan 067) |
+| `testId` | `string` | — | the **trigger's** locator |
+| `tipTestId` | `string` | — | the **tip's** locator |
+
+`content` is a string on purpose: a non-string tip is painted but has no text to
+announce (plan 071), and an info tip is prose. Pass an explicit `tipTestId` when
+a test needs the open tip; a derived id would be a second convention.
+
+## Keyboard
+
+`Tab` focuses the trigger, which opens the tip. `Escape` dismisses it (the
+published tooltip's own behaviour). There is no activation: the icon describes,
+it does not act.
+
+## Accessibility
+
+The trigger is `role="img"` with `aria-label={label}` and `tabIndex={0}`; the
+free-text `content` becomes its `aria-description`, so the explanation is
+announced on focus even while the tip is closed. The open tip is a named
+`role="tooltip"` node (plan 071). The icon is `presentation`, so one trigger
+produces one node, not two.
+
+## Theming
+
+The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
+`colors.mutedForeground`; the focus ring is `focusRing(theme)`. The tip is
+`Tooltip`'s popover surface.
+
+## Limitations
+
+- **Focus is painted but not "focus-visible"**: GPUix 0.10.0 has no such state,
+  so a mouse press shows the same ring as `Tab`.
+- **No click-to-open.** The published tooltip opens on hover and focus; a
+  persistent popover is `Popover`/`Dialog` work in `@gpuixui/components`.
+- The tip does not wrap (`whiteSpace: "nowrap"`), so keep `content` short.
+
+## Verification
+
+- `src/components/InfoTip.test.tsx` — the trigger is a named `img` tab stop, the
+  icon is `presentation`, and the ring paints only while focused.
+- `runtime/info-tip.runtime.test.tsx` — hover opens the tip; `focusNext` lands on
+  the trigger, the `Image` node carries the description and the tip is a named
+  `Tooltip`; the painted `boxShadow` equals `focusRing(theme)`.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Tooltip** — the underlying layer, for triggers that already have a role.
+- **Icons** — the icon set and its own label rule.

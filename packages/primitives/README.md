@@ -60,7 +60,7 @@ subpaths; the package root needs a native binding.
 **Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
 **Selection** `Checkbox` `CheckboxGroup` `RadioGroup` `Switch` `Rating`
 **Value** `Slider` `RangeSlider` `Meter`
-**Feedback** `Progress` `Spinner` `Skeleton` `Tooltip`
+**Feedback** `Progress` `Spinner` `Skeleton` `Tooltip` `InfoTip` `InfoTip`
 **Theming** `ThemeProvider`
 
 Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
@@ -123,7 +123,7 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **15 files, 172 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **16 files, 175 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -138,9 +138,10 @@ slider drag measured outside the track with the non-primary buttons refused
 an `autoFocus` field's ring painted from mount and cleared on blur (plan
 064), a checkbox group's row hit area, derived select-all state and skipped
 disabled tab stop (plan 065), a rating's failed validation painted on the
-empty stars only (plan 070), and a labelled scroll region scrolled by
+empty stars only (plan 070), a labelled scroll region scrolled by
 PageDown/arrow/Home/End through the runtime while an `Input` inside it kept its
-arrow keys (plan 072).
+arrow keys (plan 072), and `InfoTip` opening on hover and on `focusNext` with
+its name, description and painted focus ring (plan 073).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

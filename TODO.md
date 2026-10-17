@@ -316,6 +316,18 @@ retired once both branches are one
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family
       reaching the paint; 13 files / 119 runtime tests
+`[x]` **examples/basic-app** (owner: primitives workstream, outside
+      `packages/primitives`): the info-icon tooltip trigger was a bare `Box`,
+      which forwarded neither `tabIndex` nor a role, so the tip was hover-only
+      and absent from the accessibility tree. It now uses **`InfoTip`**, the
+      hoisted shape (a named focusable `img` trigger with a focus ring); the
+      app's stale README (stand-in theme, never-run claims) is refreshed — plan
+      073
+`[x]` `packages/primitives`: **`InfoTip`** — the info-icon tooltip trigger as a
+      component. It was hand-rolled in the feedback example and shipped broken in
+      `basic-app`; one named, focusable `role="img"` trigger with a decorative
+      icon, a string description and a focus ring. 3 element + 3 runtime tests,
+      both directions proven (plan 073)
 `[x]` `packages/primitives`: **`ScrollArea` could not be scrolled by keyboard**
       — the runtime never scrolled a focused container, focus does not bubble
       from a child, and Tab could land on a control painted outside the region.
@@ -348,12 +360,11 @@ retired once both branches are one
       in-package page at `packages/primitives/docs/checkbox-group.mdx`; the
       existing `checkbox.mdx` on `agent/docs-site` predates it.
 
-`[ ]` **examples/basic-app** (owner: primitives workstream, outside
-      `packages/primitives`): the info-icon tooltip trigger is a bare `Box`,
-      which forwards neither `tabIndex` nor a role — the tip is hover-only and
-      absent from the accessibility tree. Replace it with the focusable, named
-      `div role="img" aria-label=...` shape that plan 071 used in the feedback
-      example.
+`[x]` **examples/basic-app** (owner: primitives workstream, outside
+      `packages/primitives`): the info-icon tooltip trigger is now `InfoTip`,
+      the hoisted shape (plan 073) — the old bare `Box` forwarded neither
+      `tabIndex` nor a role, so the tip was hover-only and absent from the
+      accessibility tree.
 
 `[x]` **resolved (D18)**: `COMPONENTS.md`'s extra Tier 1 rows — Slider, Range
       slider, Meter, Number Field, OTP Field, Toggle, Rating — are claimed by

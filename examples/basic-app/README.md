@@ -1,9 +1,9 @@
 # `examples/basic-app` — the Tier 1 set in one workflow
 
-A settings form that uses the whole Tier 1 component set the way an application
-would: a labelled field set with live validation, a select, a checkbox, switches
-and a radio group, a save with progress and a spinner, a loading skeleton, a
-scroll area, a tooltip and a light/dark switch.
+A settings form that uses the Tier 1 component set the way an application would:
+a labelled field set with live validation, a select, a checkbox, switches and a
+radio group, a save with progress and a spinner, a loading skeleton, a keyboard
+scrollable region, an info tip and a light/dark switch.
 
 It is deliberately **not** a gallery of swatches. MISSION asks for realistic
 compositions — "a dialog page shows a real form/confirmation workflow, not a
@@ -15,28 +15,38 @@ floating rectangle" — and this is the runnable end of that idea.
 nub run --filter @gpuixui/basic-app dev      # bun src/main.tsx
 ```
 
-**Requirements:** the GPUix native binding and a desktop session. GPUix
-publishes no `darwin-x64` binary and this environment has no GUI session, so the
-app **has not been run here** — see
-`.agents/slop/plans/020-gpuix-runtime-capability.md` §3. `apps/playground` owns
-the run path that will discharge this (playground workstream).
+**Requirements:** the GPUix native binding and a desktop session. This host has
+no GUI session, so the app itself **has not been executed here**. The binding
+can be built from source (`apps/playground`, ADR 0003, plan 140); opening this
+window remains the missing step.
 
 ## What is verified, and what is not
 
 | | |
 | --- | --- |
 | verified | `nub run --filter @gpuixui/basic-app check-types` — every component is used with its real props |
-| verified | the components themselves: `packages/primitives` `core/` behaviour and element-tree suites |
-| **not verified** | the window opening, layout, hit-testing, focus order and everything a screenshot would show |
+| verified | the components themselves in the real GPUix 0.10.0 `TestRenderer` (`packages/primitives/runtime/`) — layout, controls, fields, loading, both themes, the labelled scroll region and the info tip |
+| **not verified** | *this composition* — the window opening, its layout, hit-testing and the app's own focus order |
 
-That gap is the repository's, not this example's: no component in the tree claims
-a verified interaction until the native runtime runs.
+The components are verified individually; the app that composes them is not.
+That distinction matters: a passing primitives suite is not a screenshot of this
+screen.
 
-## The theme is a stand-in
+## Theme
 
-`src/theme.ts` carries one example palette because `@gpuixui/tokens` has not
-landed yet (its `exports` still points at an uncommitted `dist`). It is not a
-design system, and the only thing the app reads from it is the `PrimitiveTheme`
-port. When tokens merges, delete that file and import `lightTheme`/`darkTheme`
-from `@gpuixui/tokens` — the app takes its theme at the mount boundary, so
-nothing else changes.
+The app takes its palette from `@gpuixui/tokens` (`lightTheme` / `darkTheme`) at
+the `ThemeProvider` boundary and switches it with the Light/Dark buttons in the
+header. There is no app-local theme.
+
+## What it demonstrates
+
+- **Fields** — `Input` with live e-mail validation, `TextArea`, `Select`,
+  `RadioGroup` (density), `Checkbox` (terms) and `Switch` rows.
+- **Loading** — a skeleton while the form "arrives", `Progress` while saving and
+  a `Spinner` in the save button.
+- **Scroll and tips** — a labelled `ScrollArea` (a keyboard scroll stop with
+  arrows, page keys and Home/End, plan 072) and `InfoTip` for the notification
+  delivery explanation (a named, focusable trigger rather than a hover-only
+  icon, plan 073).
+- **States** — a disabled save until the form is valid, a loading save, and an
+  invalid field with an inline message.

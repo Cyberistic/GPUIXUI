@@ -12,20 +12,10 @@ tip at the edge or centre of the surrounding layout (plan 060).
 ## Usage
 
 ```tsx
-import { Icon } from "@gpuixui/icons";
-import { Tooltip, useTheme } from "@gpuixui/primitives";
+import { Button, Tooltip } from "@gpuixui/primitives";
 
-const theme = useTheme();
-
-<Tooltip content="Booked revenue, net of refunds." side="bottom">
-  <div
-    role="img"
-    aria-label="Revenue definition"
-    tabIndex={0}
-    style={{ display: "flex", padding: 2 }}
-  >
-    <Icon name="info" color={theme.colors.mutedForeground} size="sm" />
-  </div>
+<Tooltip content="Delete this file" side="bottom">
+  <Button label="Delete">Delete</Button>
 </Tooltip>;
 ```
 
@@ -34,6 +24,10 @@ The child must be a single **focusable host element with a role and a name**.
 component that does not forward those props (including this package's `Box`)
 will not open the tip — and a bare focus stop with no role produces no
 accessibility node at all.
+
+For the common "info icon that explains a term" case, use **InfoTip** instead of
+writing that trigger by hand: it owns the role, the name, the tab stop and the
+focus ring.
 
 ## Placement
 
@@ -144,6 +138,8 @@ nub run --filter @gpuixui/primitives test:runtime
 
 ## Related
 
+- **InfoTip** — the ready-made info-icon trigger, with the role, name, tab stop
+  and focus ring already right.
 - **Button** — the usual icon-only trigger; give it a `label`.
 - **Select** — the other headless GPUix wrapper this package themes.
 - **Text** — use visible help text when the information is essential.

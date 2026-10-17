@@ -3,22 +3,21 @@
  *
  * The three loading surfaces in their real roles — a skeleton for content that
  * has not arrived, a spinner for work in progress, and a tooltip that explains
- * a metric without occupying the card. The tooltip's trigger is a plain host
- * element because the runtime's trigger must be focusable; a themed `Box` does
- * not forward `tabIndex`. It is a named `img`, not a bare focus stop, so the
- * description reaches assistive technology and the info icon reads as a thing
- * (plan `071`).
+ * a metric without occupying the card. The tip's trigger is `InfoTip`, the one
+ * shape that is focusable, named and visible to assistive technology (plan
+ * `073`); a themed `Box` forwards no `tabIndex` and would make the tip
+ * hover-only.
  */
 
 import { Icon } from "@gpuixui/icons";
 import type { ReactElement } from "react";
 import {
   Box,
+  InfoTip,
   Skeleton,
   Spinner,
   Stack,
   Text,
-  Tooltip,
   useTheme,
 } from "../src/index.js";
 
@@ -38,30 +37,13 @@ export const FeedbackExample = (): ReactElement => {
         <Stack direction="row" align="center" justify="between" gap="sm">
           <Stack direction="row" align="center" gap="xs">
             <Text role="h3">Revenue</Text>
-            <Tooltip
+            <InfoTip
               content="Booked revenue, net of refunds."
+              label="Revenue definition"
               side="bottom"
-              testId="feedback-example-tooltip"
-            >
-              <div
-                testId="feedback-example-tooltip-trigger"
-                role="img"
-                aria-label="Revenue definition"
-                tabIndex={0}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: theme.spacing["2xs"],
-                  borderRadius: theme.radius.sm,
-                }}
-              >
-                <Icon
-                  name="info"
-                  color={theme.colors.mutedForeground}
-                  size={theme.iconSize.sm}
-                />
-              </div>
-            </Tooltip>
+              testId="feedback-example-tooltip-trigger"
+              tipTestId="feedback-example-tooltip"
+            />
           </Stack>
           <Spinner size={theme.iconSize.sm} label="Refreshing revenue" />
         </Stack>
