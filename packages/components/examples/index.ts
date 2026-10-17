@@ -14,6 +14,7 @@ import { BadgeExample } from "./badge.example.js";
 import { CardExample } from "./card.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
 import { DialogExample } from "./dialog.example.js";
+import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { ListExample } from "./list.example.js";
 import { PopoverExample } from "./popover.example.js";
@@ -26,6 +27,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   card: CardExample,
   "confirm-dialog": ConfirmDialogExample,
   dialog: DialogExample,
+  "dropdown-menu": DropdownMenuExample,
   "empty-state": EmptyStateExample,
   list: ListExample,
   popover: PopoverExample,

@@ -120,7 +120,7 @@ describe("Popover", () => {
     popover.unmount();
   });
 
-  it("closes on an outside press without re-opening on the following click", () => {
+  it("closes on an outside press without re-opening on the following click", async () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
 
@@ -128,7 +128,10 @@ describe("Popover", () => {
 
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
 
-    // The next click on the trigger opens it again: the dismiss flag is spent.
+    // The real runtime delivers the press and the next click in separate tasks,
+    // so the one-gesture dismiss mark has been cleared by now.
+    await Promise.resolve();
+
     clickCentreOf(popover, "trigger");
 
     expect(popover.renderer.findByTestId("panel")).toBeDefined();

@@ -14,11 +14,26 @@ copy-pasted second menu is the failure mode this plan exists to prevent.
 
 | Concern | Owner |
 | ------- | ----- |
-| Escape / layer stacking / focus restore | GPUix `DismissableLayer` |
+| Escape / layer stacking / focus restore | **our `internal/dismiss-layer.ts`** — 0.10.0 ships no `DismissableLayer` |
 | Anchoring, flipping, collision padding | GPUix `FloatingLayer` (`@gpuix/react/floating`) |
 | Which item is active, wrap-around, skip disabled, activation | **our `menu/logic.ts`** |
 | Item styling, destructive tone, checkbox state | **our `menu/item.tsx`** |
 | Trigger semantics (`aria-expanded`, `aria-haspopup`) | **our roots** |
+
+### Amendment, 2026-10-17: what 0.10.0 does not have
+
+Three things this plan's first draft assumed, corrected before implementing:
+
+1. **No `DismissableLayer`.** Menus reuse `internal/dismiss-layer.ts` exactly as
+   Dialog and Popover do, so a menu inside a dialog dismisses first.
+2. **No `colors.surfaceHover` / `colors.surface` roles.** The theme's hover wash
+   is `colors.hover` (accent is `colors.accent`), and the menu surface is
+   `colors.popover`. Every other role named below exists.
+3. **No `Input` primitive.** `packages/primitives` has not landed, so
+   `command-menu.tsx` uses the GPUix `<input>` host element directly — the same
+   documented stand-in as `internal/button.tsx` (plan 110 §7). The interlock row
+   in `TODO.md` already records the replacement.
+
 
 ## 2. `src/menu/logic.ts`
 
@@ -114,7 +129,7 @@ export { MenuItem as DropdownMenuItem, MenuCheckboxItem as DropdownMenuCheckboxI
          MenuGroup as DropdownMenuGroup };
 ```
 
-Content: `DismissableLayer` → `FloatingLayer` with `autoFocus`, `tabIndex={-1}`,
+Content: the dismiss stack → `FloatingLayer` with `autoFocus`, `tabIndex={-1}`,
 `role:"menu"`, `minWidth:180` (`keyboardFocusDim` does not exist in 0.10.0 —
 corrected 2026-10-17), `onMouseDownOutside` closes without stealing focus,
 surface = `colors.popover`,
@@ -150,10 +165,12 @@ The trigger stores `{ x: event.x, y: event.y }` and opens.
 Positioning: `ContextMenuContent` renders
 `<anchored position={point} deferred priority={1} occlude>` + an inner surface
 `div` (`FloatingLayer` is anchor-relative and cannot take a pointer point).
-**Verify the coordinate space with a test, do not assume:** open at a known
-point, then assert the content's `getElementBounds()` top-left is within 12px of
-that point. If the runtime treats `position` as parent-relative, subtract the
-trigger's bounds origin. Record which it was in the component's JSDoc.
+**Answered 2026-10-17 by plan 112 §1c's probe:** `anchored position` is
+**window coordinates**, independent of the mount parent (a nested 200px container
+still produced `x:300, y:400` for `position={{x:300,y:400}}`). So the pointer point
+is passed through unchanged; the test still asserts the content's top-left is
+within 12px of the point, because that is the contract, not an implementation
+detail.
 
 Also close on `Escape`, on outside press, and on a second right-click elsewhere.
 

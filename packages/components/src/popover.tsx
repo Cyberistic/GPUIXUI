@@ -49,8 +49,8 @@ interface PopoverContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
-  /** Whether the trigger was already open when it was pressed. */
-  readonly pressedWhileOpen: RefObject<boolean>;
+  /** Set by a dismissing outside press, consumed by the click that follows it. */
+  readonly dismissedByOutsidePress: RefObject<boolean>;
 }
 
 const PopoverContext = createContext<PopoverContextValue | undefined>(
@@ -92,10 +92,10 @@ export const Popover = ({
     onChange: onOpenChange,
   });
   const trigger = useRef<PublicInstance | null>(null);
-  const pressedWhileOpen = useRef(false);
+  const dismissedByOutsidePress = useRef(false);
 
   const context = useMemo<PopoverContextValue>(
-    () => ({ open, setOpen, trigger, pressedWhileOpen }),
+    () => ({ open, setOpen, trigger, dismissedByOutsidePress }),
     [open, setOpen],
   );
 
@@ -107,31 +107,21 @@ export const Popover = ({
 };
 
 /** Opens the popover it sits in. An ordinary button in every other respect. */
-export const PopoverTrigger = ({
-  onClick,
-  onMouseDown,
-  ...rest
-}: ButtonProps) => {
-  const { open, setOpen, trigger, pressedWhileOpen } = usePopoverContext();
+export const PopoverTrigger = ({ onClick, ...rest }: ButtonProps) => {
+  const { open, setOpen, trigger, dismissedByOutsidePress } =
+    usePopoverContext();
 
   return (
     <Button
       {...rest}
       ref={trigger}
       aria-expanded={open}
-      aria-haspopup="dialog"
-      onMouseDown={(event) => {
-        onMouseDown?.(event);
-        pressedWhileOpen.current = open;
-      }}
       onClick={(event) => {
         onClick?.(event);
-        // The press that opened this click may already have closed the popover
-        // (pressing the trigger while open is an outside press). The flag was
-        // recorded on mousedown, before the dismiss handler ran, so this click
-        // must not toggle it back open.
-        if (pressedWhileOpen.current) {
-          pressedWhileOpen.current = false;
+        // The press that dismissed the popover owns this click: toggling here
+        // would re-open what the same gesture just closed.
+        if (dismissedByOutsidePress.current) {
+          dismissedByOutsidePress.current = false;
           return;
         }
         setOpen(!open);
@@ -168,7 +158,8 @@ export const PopoverContent = ({
   ...rest
 }: PopoverContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger } = usePopoverContext();
+  const { open, setOpen, trigger, dismissedByOutsidePress } =
+    usePopoverContext();
   const renderer = useGpuix().renderer;
 
   // A re-render must not re-push the layer: that would move the popover above an
@@ -188,9 +179,15 @@ export const PopoverContent = ({
       if (event.eventType === "keyDown") {
         const target = trigger.current;
         if (target !== null) renderer?.focusElement?.(target.id);
+        return;
       }
+      // Mark the press so the click it belongs to cannot re-open the popover.
+      dismissedByOutsidePress.current = true;
+      queueMicrotask(() => {
+        dismissedByOutsidePress.current = false;
+      });
     });
-  }, [open, renderer, trigger]);
+  }, [dismissedByOutsidePress, open, renderer, trigger]);
 
   if (!open) return null;
 

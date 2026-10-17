@@ -99,6 +99,8 @@ the `@gpuixui/tokens/react` provider
     - [x] Logic: `accordion/logic.ts`, `breadcrumb/logic.ts`, `pagination/logic.ts`
   - [ ] Menus: Dropdown, Context, Command
     - [x] Logic: `menu/logic.ts` over the shared collection
+    - [x] `menu/state.ts` + `menu/item.tsx` + `menu/surface.tsx` (the shared row registry, highlight-follows-focus, menu keyboard rules)
+    - [x] `dropdown-menu.tsx`, behaviour suite (9/9), example, docs page, inventory row
   - [ ] Choice inputs: Search input, Combobox
     - [x] Logic: `combobox/logic.ts` (ranking + selection)
   - [ ] Feedback: Toast system, inline validation (`Field`)
