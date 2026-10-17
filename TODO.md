@@ -105,12 +105,13 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[ ]` `[░░░░░░░░░░]` 0/8
+`[ ]` `[░░░░░░░░░░]` 0/9
 
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
 `[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
 `[ ]` Repo tooling: `.gitignore`'s `references/` does not match the worktree's `references` symlink, so it shows as untracked and can be committed by accident; ignore the symlink too
 `[ ]` Owner: decide whether the root `nub.lock` (produced by `nub install`) is committed for reproducible installs or ignored; it is currently untracked
+`[ ]` Repo: AGENTS/PLAN name an integration branch `main`, but only `master` exists and the shared checkout is on it — confirm the name before workstreams merge. `agent/docs-site` is green and ready to integrate; it was not merged because the shared checkout had uncommitted edits from another agent
 `[ ]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables
 `[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables
 `[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5) — the sidecar contract (`provenance.json` beside each PNG) is now enforced by `preview.test.tsx`, so a capture without it will not render

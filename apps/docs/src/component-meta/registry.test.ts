@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { components } from "./registry";
 import { decodeComponentMeta } from "./schema";
@@ -13,9 +14,14 @@ import { decodeComponentMeta } from "./schema";
  */
 
 const root = new URL("../../../../", import.meta.url);
+const pagesDirectory = new URL("apps/docs/content/docs/components/", root);
 const componentsMarkdown = readFileSync(
   fileURLToPath(new URL("COMPONENTS.md", root)),
   "utf8",
+);
+
+const decodeSidebar = Schema.decodeUnknownSync(
+  Schema.fromJsonString(Schema.Struct({ pages: Schema.Array(Schema.String) })),
 );
 
 const normalize = (value: string): string =>
@@ -111,16 +117,28 @@ describe("component registry", () => {
   });
 
   it("has a page and source for every finished component", () => {
-    const pages = new URL("apps/docs/content/docs/components/", root);
     const incomplete = components
       .filter((entry) => entry.status !== "planned")
       .filter(
         (entry) =>
-          !existsSync(new URL(`${entry.slug}.mdx`, pages)) ||
+          !existsSync(new URL(`${entry.slug}.mdx`, pagesDirectory)) ||
           entry.sourcePath === null ||
           !existsSync(new URL(entry.sourcePath, root)),
       )
       .map((entry) => entry.slug);
     expect(incomplete).toEqual([]);
+  });
+
+  it("keeps the components sidebar in step with the pages that exist", () => {
+    const sidebar = decodeSidebar(
+      readFileSync(new URL("meta.json", pagesDirectory), "utf8"),
+    );
+    const expected = [
+      "index",
+      ...components
+        .filter((entry) => entry.status !== "planned")
+        .map((entry) => entry.slug),
+    ];
+    expect(sidebar.pages).toEqual(expected);
   });
 });
