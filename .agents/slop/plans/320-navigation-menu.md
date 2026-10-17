@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §5 (D9), `112` (anchored layer), `114` (menu row look), `113` (Tabs roving) |
-| Status | planned |
+| Status | done — 6 parts, 10 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned parts: `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink`); `COMPONENTS.md` → Tier 2 → Navigation Menu; plan `205` D9 |
 
 This plan is self-contained. It adds `NavigationMenu` at the Tier 2 bar.
@@ -132,3 +132,21 @@ dismiss layer: tests 6/7 fail. Restore after each.
 - Nine native tests, both themes, no literal colours.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/navigation-menu.tsx` — six parts. The root keeps an ordered trigger
+  registry; **the ordered key list is updated only when the sequence changes**.
+  The first version set a new array on every ref callback, and because a new
+  ref callback is created on each render the component hit React's
+  "Maximum update depth exceeded" (every ref detach/re-attach wrote state). The
+  trigger's internal ref is now a `useCallback`, and the key list is compared
+  before it is stored.
+- `ArrowDown` opens and moves focus to the **panel surface** (`tabIndex={-1}`),
+  not the first link — the honest, testable version of the plan; recorded in the
+  docs and the inventory.
+- Links are buttons with `onSelect`: 0.10.0 has no anchor element or `href`.
+- **Both directions:** removing the ArrowDown branch and the Escape handler fails
+  7 of the 10 tests. Restored: 10 native green.

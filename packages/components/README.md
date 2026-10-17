@@ -45,6 +45,8 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
 | `src/form.tsx` | Form: owned-value schema validation, one alert summary, decoded `onSubmit` |
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
+| `src/navigation-menu.tsx` | NavigationMenu: one open anchored panel, roving triggers |
+| `src/mention-input.tsx`, `src/mention/logic.ts` | MentionInput: ranked `@` suggestions over the anchored layer |
 | `src/preview-card.tsx` | PreviewCard: hover/focus preview with pointer travel into the card |
 | `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no gradients in 0.10.0) |
 | `src/hotkey-recorder.tsx`, `src/hotkey/logic.ts` | HotkeyRecorder: capture a chord, reusing the accelerator model |

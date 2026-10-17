@@ -32,6 +32,8 @@ export * from "./hotkey-recorder.js";
 export * from "./inline-edit.js";
 export * from "./keyboard-shortcuts.js";
 export * from "./list.js";
+export * from "./mention-input.js";
+export * from "./navigation-menu.js";
 export * from "./pagination.js";
 export * from "./popover.js";
 export * from "./preview-card.js";

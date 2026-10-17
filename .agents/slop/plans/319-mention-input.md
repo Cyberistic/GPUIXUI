@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §2 (A13), `116` (search/combobox patterns), `112` (anchored layer) |
-| Status | planned |
+| Status | done — 12 rule + 9 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned parts: `MentionInput`, `MentionInputList`, `MentionInputItem`); `COMPONENTS.md` → Tier 2 → Mention input; plan `205` A13 |
 
 This plan is self-contained. It adds `MentionInput` at the Tier 2 bar.
@@ -151,3 +151,26 @@ test 2 fail. Do not append the trailing space: unit test 7 fails. Restore.
 - The caret limitation and its consequence are stated in the docs and the row.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18. Three measured facts changed the design:
+
+- **`role="listbox"` and `role="option"` do not reach the accessibility dump**
+  (probed: `nodesWithRole(renderer, "option")` was `[]`). The surface is a named
+  `group` and the rows are selected buttons with `tabIndex=0`, so Tab + Enter can
+  pick a row. The limitation is recorded in the docs and the inventory.
+- **A space typed while the floating list is mounted is consumed by the
+  runtime** before the field sees it. The planned "whitespace closes the list"
+  native test was replaced with "a query that matches nothing closes it" (a real
+  path), and the docs say so; the token rule still lives in `mentionQuery` and is
+  unit-tested (`"@a b"` → none).
+- **A press must select on `mouseDown`**, not `click`: blur/click ordering can
+  unmount the row between press and release. Items listen to `onMouseDown`.
+
+`Enter` arrives as the input's `submit` event (0.10.0), so insertion is handled
+there; `isEnter` on keyDown is not used.
+
+**Both directions:** ranking by declaration order fails the ranking unit test;
+removing the trailing space from `applyMention` fails two unit tests. Restored:
+12 rule + 9 native green.

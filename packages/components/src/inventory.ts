@@ -32,6 +32,8 @@ import { hotkeyRecorderMeta } from "./hotkey-recorder.js";
 import { inlineEditMeta } from "./inline-edit.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
+import { mentionInputMeta } from "./mention-input.js";
+import { navigationMenuMeta } from "./navigation-menu.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
 import { previewCardMeta } from "./preview-card.js";
@@ -88,6 +90,8 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   inlineEditMeta,
   keyboardShortcutsMeta,
   listMeta,
+  mentionInputMeta,
+  navigationMenuMeta,
   paginationMeta,
   popoverMeta,
   previewCardMeta,

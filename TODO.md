@@ -224,8 +224,9 @@ retired once both branches are one
     - [x] Hotkey-recorder input — plan 316 (consumes plan 310): 8 capture + 8 native tests; both-direction proof
     - [x] Preview Card — plan 317: 8 native tests; delay, pointer travel and Escape proven
     - [x] Color picker — plan 318 (discrete swatches: 0.10.0 has no gradients): 8 hex + 8 native tests; both-direction proof
-    - [ ] Mention input — plan 319
-    - [ ] Navigation Menu — plan 320
+    - [x] Mention input — plan 319: 12 rule + 9 native tests; both-direction proof
+    - [x] Navigation Menu — plan 320: 6 parts, 10 native tests; both-direction proof
+    - [x] Tier 2 gap cluster complete: all twelve landed with code, a native test, an example, a docs page and an inventory row; behaviour 426, unit 285
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
