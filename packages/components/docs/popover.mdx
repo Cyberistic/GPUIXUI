@@ -86,11 +86,12 @@ The surface paints `colors.popover` / `colors.popoverForeground`,
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (8 tests): opens
-below the trigger by measured bounds, honours `side="right"`, Escape closing and
-restoring focus, an outside press closing without the following click re-opening
-it, a press inside keeping it open, Tab closing it, and a controlled popover
-reporting `onOpenChange` while staying as the consumer says.
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (10 tests):
+opens below the trigger by measured bounds, honours `side="right"`, Escape closing
+and restoring focus, an outside press closing without the following click
+re-opening it, a press inside keeping it open, Tab closing it, a controlled
+popover reporting `onOpenChange` while staying as the consumer says (including an
+inline consumer that keeps it closed), both themes, and a caller trigger `ref`.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

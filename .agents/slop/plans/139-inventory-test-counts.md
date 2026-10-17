@@ -3,7 +3,8 @@
 - **Phase:** C/F (Tier 2 hardening)
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 117 (inventory check), 128 (ref sweep), 134–138
-- **Status:** planned.
+- **Status:** done, 2026-10-17. +1 inventory test (unit 224); three counts
+  corrected, Cards row normalised; both-direction proof in §6.
 
 `COMPONENTS.md` states a native test count for every Tier 2 row, but nothing
 checks it. Three rows are already wrong — each by the ref-composition test plan
@@ -76,3 +77,12 @@ nub run test                                          # exit 0
    ledger only after confirming the suite count by hand.
 
 ## 6. Deviations, recorded during implementation
+
+1. **The Cards row used a different phrase** — “behaviour suite passes in the
+   real renderer (5 tests, `test:behaviour`)” — so the new check reported
+   `row does not state a native test count`. The row was normalised to
+   “5 native behaviour tests”; the check requires the ledger phrase, and that is
+   the point.
+2. **Both-direction proof, recorded from the actual run.** Setting Accordions
+   back to 12 made the check fail with
+   `Accordions: row says 12, suite has 13`. Restored; 8/8 inventory tests pass.

@@ -56,7 +56,7 @@ workstream declares in its own section below.
 | [136](./136-prop-forwarding-sweep.md) | SearchInput ref and TabsTrigger onBlur forwarding | C/F | 113, 116, 128, 134 | done — 2 native tests (SearchInput 7, Tabs 10, behaviour 276); both-direction proof |
 | [137](./137-list-item-click-forwarding.md) | ListItem's caller onClick | C/F | 111, 134, 136 | done — 1 native test (List 37, behaviour 277); both-direction proof |
 | [138](./138-combobox-pointer-coverage.md) | Combobox pointer selection coverage | C/F | 116, 117, 134 | done — 3 native tests (Combobox 13, behaviour 280); liveness proof |
-| [139](./139-inventory-test-counts.md) | Inventory test counts, and the rows that drifted | C/F | 117, 128, 134 | planned — +1 inventory check; 3 rows corrected |
+| [139](./139-inventory-test-counts.md) | Inventory test counts, and the rows that drifted | C/F | 117, 128, 134 | done — +1 inventory check (unit 224); 3 counts + Cards row corrected; both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

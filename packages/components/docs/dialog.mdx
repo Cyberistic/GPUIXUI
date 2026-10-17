@@ -133,13 +133,14 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (12 tests): the
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (13 tests): the
 veil measured at the window bounds, a click on a control behind it blocked, focus
 entering and returning, Escape and backdrop dismissal, Tab wrapping at both ends,
 `role`/`aria-label` in the accessibility dump, both themes reading
 `colors.popover`/`colors.overlay`, a non-dismissible dialog ignoring both
-dismissals, and a controlled dialog staying closed. Plus
-`src/internal/dismiss-layer.test.ts` for the stack's own rules.
+dismissals, a controlled dialog staying closed, the caller's own close control,
+and a caller content `ref`. Plus `src/internal/dismiss-layer.test.ts` for the
+stack's own rules.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
