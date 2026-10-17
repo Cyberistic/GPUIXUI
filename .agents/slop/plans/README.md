@@ -117,6 +117,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [318](./318-neutral-press-edge.md) | The neutral control's edge on its designed hover and press | F | 055, 071–095, 097, 306–317 | done |
 | [319](./319-input-text-surfaces.md) | Typed text on every surface a field sits on | F | 059, 071–095, 300, 306–318 | done |
 | [320](./320-soft-body-text.md) | Default body text on the soft status fills | F | 071, 074, 088, 300, 306–319 | done |
+| [321](./321-total-theme-merges.md) | Total theme merges: an explicit `undefined` must inherit | F | 011, 085, 089, 097, 304, 310, 311 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -798,6 +799,20 @@ contract (257 → 261); every shipped identity, platform and recipe set clears 7
 regression. The Alert composition is the third time the series has found a
 composition the role-level completeness guard cannot see: `foreground` is
 measured somewhere, just not on the surface the component paints it on.
+
+321 fixes the one place the extension mechanism contradicted its own documented
+merge rule. `extendTheme` spread each override group over the base, so an
+**explicitly `undefined`** value — which TypeScript accepts, because the repo does
+not enable `exactOptionalPropertyTypes`, and which a partial config spread
+produces naturally — overwrote the base value instead of being omitted. A colour
+role, a type field, a motion timing, a density metric or an elevation level could
+therefore become `undefined` with no error, and an undefined elevation level
+crashed `elevationShadow` with `TypeError: undefined is not iterable`. A probe on
+the shipped light theme reproduced all three. Every flat group and the nested
+typography, motion and density merges now route through one `mergeDefined`
+helper that copies only defined entries; a defined value still wins, a preset
+density name still selects the preset, and elevation keeps its replace-a-level
+semantics for a defined array. No token value moves.
 
 ### Reference adoption (block `200–299`)
 
