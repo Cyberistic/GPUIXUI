@@ -1,0 +1,26 @@
+{
+  "name": "@gpuixui/basic-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Runnable GPUixUI example: the Tier 1 set composed into one settings workflow.",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "dev": "bun src/main.tsx"
+  },
+  "dependencies": {
+    "@gpuixui/icons": "workspace:*",
+    "@gpuixui/primitives": "workspace:*"
+  },
+  "peerDependencies": {
+    "@gpuix/react": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@gpuix/react": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  }
+}
