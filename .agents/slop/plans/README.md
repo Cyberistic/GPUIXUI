@@ -119,6 +119,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [320](./320-soft-body-text.md) | Default body text on the soft status fills | F | 071, 074, 088, 300, 306–319 | done |
 | [321](./321-total-theme-merges.md) | Total theme merges: an explicit `undefined` must inherit | F | 011, 085, 089, 097, 304, 310, 311 | done |
 | [322](./322-skeleton-accent-wash.md) | The loading skeleton on the accent a selectable row hovers | F | 071, 078, 094, 300, 309, 312, 314, 316 | done |
+| [323](./323-undefined-platform-colour.md) | An `undefined` platform colour is not a colour override | F | 301, 310, 311, 321 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -825,6 +826,16 @@ designed edge to keep its shape, so a copied style could erase it while
 `active` and `selected` (261 → 262 pairs); a probe over the identity themes, every
 shipped platform variant and both recipes in both modes found every set already
 clears 1.05:1, so no colour moves.
+
+323 closes the declaration the merge fix one plan earlier made falsifiable.
+Plan 321 lets a copied `PlatformStyle` carry `{ primary: undefined }` and still
+inherit the role, but `applyPlatformStyle` decided whether a style carried
+platform colours with `Object.keys(colors).length`: one undefined key, no applied
+colour, and an AAA theme declared `default` while it still carried the AAA
+palette. The predicate now reads defined values, so an undefined colour is not an
+override and the base's level stays; one defined colour still declares `default`.
+`platform-claim.test.ts` states both directions, and no theme, style or pair
+changes.
 
 ### Reference adoption (block `200–299`)
 
