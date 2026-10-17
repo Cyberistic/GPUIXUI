@@ -7,6 +7,10 @@
  * that loses order or duplicates; a disabled option that can still be chosen; an
  * empty state that never appears; a ranking that puts `Vacation` before
  * `Calendar`; and Escape that does not return focus to the trigger.
+ *
+ * Pointer coverage: the suite originally drove every selection from the
+ * keyboard, so a wrapper that ignored a clicked option, kept the popup open, or
+ * let a disabled option through would have passed.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -239,5 +243,79 @@ describe("Combobox", () => {
 
     await assertTheme("dark", darkTheme.colors.popover);
     await assertTheme("light", lightTheme.colors.popover);
+  });
+
+  it("selects an option with the pointer", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Picker onValueChange={onValueChange} />);
+    await open(picker);
+
+    clickCentreOf(picker, "combobox-option-camera");
+    await settle();
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith("camera");
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.customProps?.[
+        "aria-expanded"
+      ],
+    ).toBe(false);
+    expect(picker.renderer.getAllText()).toContain("Camera");
+
+    picker.unmount();
+  });
+
+  it("toggles several options with the pointer and skips a disabled one", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker multiple disabledCamera onValueChange={onValueChange} />,
+    );
+    await open(picker);
+
+    clickCentreOf(picker, "combobox-option-calendar");
+    clickCentreOf(picker, "combobox-option-camera");
+    clickCentreOf(picker, "combobox-option-vacation");
+    clickCentreOf(picker, "combobox-option-calendar");
+    await settle();
+
+    expect(onValueChange.mock.calls).toEqual([
+      [["calendar"]],
+      [["calendar", "vacation"]],
+      [["vacation"]],
+    ]);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("closes on an outside press", async () => {
+    const picker = renderComponent(
+      <div style={{ width: 1280, height: 800, position: "relative" }}>
+        <div style={{ width: 360, padding: 40 }}>
+          <Combobox options={options} label="Assign reviewer" />
+        </div>
+        <div
+          testId="elsewhere"
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 16,
+            width: 80,
+            height: 40,
+          }}
+        >
+          <text>Elsewhere</text>
+        </div>
+      </div>,
+    );
+    await open(picker);
+
+    clickCentreOf(picker, "elsewhere");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    picker.unmount();
   });
 });
