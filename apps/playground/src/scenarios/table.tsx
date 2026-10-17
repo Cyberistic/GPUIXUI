@@ -193,18 +193,9 @@ export const tableSelectSortScenario: PlaygroundScenario = {
         "rows=200 sorted=name-asc selected=none",
       );
 
-      ctx.host.click("table-sort");
-      yield* ctx.expectContains(
-        "header click changed the sort",
-        readout(ctx, "table-readout"),
-        "name-desc",
-      );
-      yield* ctx.expectContains(
-        "sort is real: the first row is the last name",
-        readout(ctx, "table-first"),
-        "Item 199",
-      );
-
+      // Select and navigate *before* sorting: row 3 is visible in ascending
+      // order, but after a descending sort it sits ~4 700px down, outside the
+      // 220px scroller, so a click on it would hit nothing (plan `140` §4).
       ctx.host.click("table-row-3");
       yield* ctx.expectContains(
         "row click selected it",
@@ -219,7 +210,19 @@ export const tableSelectSortScenario: PlaygroundScenario = {
         "selected=r4",
       );
 
-      ctx.host.wheel("table-scroll", 0, 200);
+      ctx.host.click("table-sort");
+      yield* ctx.expectContains(
+        "header click changed the sort",
+        readout(ctx, "table-readout"),
+        "name-desc",
+      );
+      yield* ctx.expectContains(
+        "sort is real: the first row is the last name",
+        readout(ctx, "table-first"),
+        "Item 199",
+      );
+
+      ctx.host.wheel("table-scroll", 0, -200);
       const offset = yield* ctx.expectSome(
         "table scroller reports an offset",
         Option.fromNullishOr(ctx.host.scrollOffset("table-scroll")),

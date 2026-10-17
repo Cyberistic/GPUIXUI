@@ -135,6 +135,10 @@ export interface SmokeHost {
   readonly click: (testId: string) => void;
   readonly clickWindow: (x: number, y: number) => void;
   readonly key: (keystroke: string) => void;
+  /** Native focus traversal (`window.focus_next`). */
+  readonly focusNext: () => void;
+  /** Native focus traversal (`window.focus_prev`). */
+  readonly focusPrevious: () => void;
   readonly wheel: (testId: string, deltaX: number, deltaY: number) => void;
   readonly drag: (
     testId: string,

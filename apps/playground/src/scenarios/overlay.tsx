@@ -3,10 +3,15 @@
  * click.
  *
  * GPUix has no `z-index`; a deferred `<anchored>` layer paints above the tree,
- * which is what makes an overlay possible at all. The scenario asserts the
- * popup's text is painted while open, that Escape closes it, and that a click
- * outside closes it — three separate mechanisms, so a popup that only looks
- * right but cannot be dismissed fails here.
+ * which is what makes an overlay possible at all. Measured on this host (plan
+ * `140` §4):
+ *
+ * - the `<anchored>` node paints **no surface of its own**, so
+ *   `getElementBounds` is `null` for it and `onMouseDownOutside` on the
+ *   `<anchored>` never fires. The handlers belong on the **content div inside**
+ *   it, which is exactly what GPUix's own `FloatingLayer` does.
+ * - Escape reaches the focused element's `onKeyDown`, so the popup content
+ *   takes focus on open (`autoFocus`) and handles `escape` itself.
  *
  * Limitation: GPUix 0.10.0 exposes no way for component code to move focus
  * programmatically (`PublicInstance` has no `focus()`), so "focus returns to
@@ -53,16 +58,15 @@ const OverlayProbe = () => {
         <Readout testId="overlay-readout">{`open=${open} last=${last}`}</Readout>
       </div>
       {open ? (
-        <anchored
-          deferred
-          position={{ x: 60, y: 120 }}
-          priority={1}
-          onMouseDownOutside={() => close("outside")}
-          onKeyDown={(event) => {
-            if (event.key === "escape") close("escape");
-          }}
-        >
+        <anchored deferred position={{ x: 60, y: 120 }} priority={1} occlude>
           <div
+            testId="overlay-popup"
+            tabIndex={0}
+            autoFocus
+            onMouseDownOutside={() => close("outside")}
+            onKeyDown={(event) => {
+              if (event.key === "escape") close("escape");
+            }}
             style={{
               padding: 12,
               backgroundColor: theme.panel,
@@ -71,9 +75,7 @@ const OverlayProbe = () => {
               borderRadius: 6,
             }}
           >
-            <text testId="overlay-popup" style={{ color: theme.text }}>
-              popup open
-            </text>
+            <text style={{ color: theme.text }}>popup open</text>
           </div>
         </anchored>
       ) : null}

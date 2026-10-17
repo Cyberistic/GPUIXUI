@@ -61,17 +61,19 @@ const TabStrip = ({
           onMouseDown={(event) =>
             setPress(Option.some({ id, x: event.x ?? 0 }))
           }
-          onMouseUp={(event) =>
+          onMouseMove={(event) =>
             Option.match(press, {
               onNone: () => {},
               onSome: (start) => {
                 const delta = (event.x ?? 0) - start.x;
-                if (delta > DROP_THRESHOLD || delta < -DROP_THRESHOLD)
+                if (delta > DROP_THRESHOLD || delta < -DROP_THRESHOLD) {
                   onMove(start.id, pane);
-                setPress(Option.none());
+                  setPress(Option.none());
+                }
               },
             })
           }
+          onMouseUp={() => setPress(Option.none())}
           style={{
             padding: 6,
             borderRadius: 4,

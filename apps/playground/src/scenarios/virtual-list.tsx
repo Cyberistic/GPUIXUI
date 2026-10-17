@@ -1,13 +1,16 @@
 /**
- * `virtual-list-window` — `<virtual-list>` builds only a window of rows.
+ * `virtual-list-window` — `<virtual-list>` paints only a window of rows.
  *
- * 5 000 rows are declared; only the rows near the viewport may be built. The
- * scenario reads the index range from `onVisibleRange`, then wheels and checks
- * the window actually moved. A list that builds every row fails the first
- * check; a list that never scrolls fails the second.
+ * 5 000 rows are declared. React and the retained tree hold every row, but GPUI
+ * builds, lays out and paints only those near the viewport — so the honest
+ * check is `getPaintedText()`, not the retained child count (which is 5 000).
+ * Measured on this host: 9 rows painted at rest; see plan `140` §4.
+ *
+ * The wheel's `deltaY` is negative to scroll down (see `scroll.tsx`).
  */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { theme } from "../theme.js";
 import { Readout } from "../ui.js";
@@ -71,22 +74,36 @@ export const virtualListScenario: PlaygroundScenario = {
   view: () => <VirtualListProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
-      yield* ctx.expectSome(
-        "virtual list painted",
-        Option.fromNullishOr(ctx.host.bounds("vlist")),
+      const painted = ctx.host.paintedText();
+      yield* ctx.expectContains(
+        "virtual list painted the first row",
+        Arr.join(painted, "\n"),
+        "row 0",
       );
-      const last = readIndex(Option.fromNullishOr(ctx.host.text("vlist-last")));
       yield* ctx.expectEqual(
-        "initial window ends well before row 100",
-        last >= 0 && last < 100,
-        true,
+        "only a window of rows is painted, not all 5000",
+        Arr.some(painted, (line) => line === `row ${ROWS - 1}`),
+        false,
       );
 
-      ctx.host.wheel("vlist", 0, 400);
+      ctx.host.wheel("vlist", 0, -400);
       ctx.host.advance(50);
-      const first = readIndex(
-        Option.fromNullishOr(ctx.host.text("vlist-first")),
+      // `onVisibleRange` fires on scroll; the readouts start at `first=0
+      // last=-1`, so a non-negative `last` proves the event reached React.
+      const lastAfter = readIndex(
+        Option.fromNullishOr(ctx.host.text("vlist-last")),
       );
-      yield* ctx.expectEqual("wheel moved the visible window", first > 0, true);
+      yield* ctx.expectEqual(
+        "onVisibleRange fired for the wheel",
+        lastAfter >= 0,
+        true,
+      );
+      // The first `onVisibleRange` reports the pre-scroll range, so the window
+      // moving is asserted on the painted rows instead: row 0 scrolls away.
+      yield* ctx.expectEqual(
+        "the painted window moved past the first row",
+        Arr.some(ctx.host.paintedText(), (line) => line === "row 0"),
+        false,
+      );
     }),
 };

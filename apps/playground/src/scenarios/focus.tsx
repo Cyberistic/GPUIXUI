@@ -1,21 +1,30 @@
 /**
- * `focus-traversal` — focus, Tab and click-to-focus.
+ * `focus-traversal` — focus, blur and native focus traversal.
  *
  * This is the capability the whole library depends on: without focus/blur
  * delivery there are no focus rings, no keyboard focus state and no dialog
  * focus management. ADR 0002 measured that GPUix 0.5.1 never delivers
- * `onFocus`; the 0.10 suite is what confirms it here. The scenario asserts both
- * channels — the `onFocus` readout in React and `getFocusedElementId` in the
- * runtime — because they can disagree.
+ * `onFocus`; **0.10.0 does** — this scenario is the measurement.
+ *
+ * Measured on this host (plan `140` §4):
+ *
+ * - `autoFocus` takes **native** focus but does not dispatch `onFocus`, so the
+ *   runtime channel (`getFocusedElementId`) is the proof for it;
+ * - a click and a native traversal (`window.focus_next`) both dispatch
+ *   `onFocus`/`onBlur`, which is what a focus ring is painted from;
+ * - a synthetic `"tab"` keystroke reaches the focused element's `onKeyDown` but
+ *   does **not** itself traverse in the `TestRenderer`, so traversal is
+ *   asserted through the runtime's `focusNext`/`focusPrevious`.
  *
  * The ring is painted from React state, not a `focusVisible` style: GPUix
- * 0.10.0 has no `:focus-visible` equivalent in `StyleDesc` (verified against
- * the installed `@gpuix/native@0.10.0` types), so a component library must own
- * this itself. Writing `focusVisible` in `style` would be silently ignored.
+ * 0.10.0 has no `:focus-visible` equivalent in `StyleDesc`, so a component
+ * library must own this itself. Writing `focusVisible` in `style` would be
+ * silently ignored.
  */
 import { useState } from "react";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import * as Option from "effect/Option";
+import type { Smoke } from "@gpuixui/testing";
 import { theme } from "../theme.js";
 import type { PlaygroundScenario } from "../types.js";
 
@@ -51,59 +60,70 @@ const FocusProbe = () => {
   );
 };
 
+/** The `focus=` readout, or `""` when the readout element is missing. */
+const readout = (ctx: Smoke.SmokeContext): string =>
+  pipe(
+    Option.fromNullishOr(ctx.host.text("focus-readout")),
+    Option.getOrElse(() => ""),
+  );
+
 export const focusScenario: PlaygroundScenario = {
   id: "focus-traversal",
-  title: "Focus: autoFocus, Tab, Shift+Tab and click",
+  title: "Focus: autoFocus, click-to-focus and native traversal",
   capability: "focus",
   view: () => <FocusProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
-      const initial = yield* ctx.expectSome(
-        "focus readout present",
-        Option.fromNullishOr(ctx.host.text("focus-readout")),
+      // `autoFocus` takes native focus without dispatching `onFocus`, so the
+      // runtime channel is the proof for it.
+      const mounted = yield* ctx.expectSome(
+        "native focus after autoFocus",
+        Option.fromNullishOr(ctx.host.focused()),
       );
-      yield* ctx.expectContains(
-        "autoFocus landed on A",
-        initial,
-        "focus=focus-a",
-      );
+      yield* ctx.expectEqual("autoFocus landed on A", mounted, "focus-a");
 
-      ctx.host.key("tab");
-      const afterTab = yield* ctx.expectSome(
-        "focus readout after Tab",
-        Option.fromNullishOr(ctx.host.text("focus-readout")),
-      );
+      // A click focuses and dispatches `onFocus` — the event a focus ring needs.
+      ctx.host.click("focus-b");
       yield* ctx.expectContains(
-        "Tab moved focus to B",
-        afterTab,
+        "click dispatched onFocus for B",
+        readout(ctx),
         "focus=focus-b",
       );
-
-      ctx.host.key("shift-tab");
-      const afterShiftTab = yield* ctx.expectSome(
-        "focus readout after Shift+Tab",
-        Option.fromNullishOr(ctx.host.text("focus-readout")),
-      );
-      yield* ctx.expectContains(
-        "Shift+Tab returned to A",
-        afterShiftTab,
-        "focus=focus-a",
-      );
-
-      ctx.host.click("focus-b");
       const afterClick = yield* ctx.expectSome(
-        "focus readout after click",
-        Option.fromNullishOr(ctx.host.text("focus-readout")),
-      );
-      yield* ctx.expectContains("click focused B", afterClick, "focus=focus-b");
-
-      const runtimeFocus = yield* ctx.expectSome(
-        "runtime reports a focused element",
+        "runtime reports the clicked focus",
         Option.fromNullishOr(ctx.host.focused()),
       );
       yield* ctx.expectEqual(
-        "runtime reports the focused testId",
-        runtimeFocus,
+        "runtime agrees with the React readout",
+        afterClick,
+        "focus-b",
+      );
+
+      // Native traversal: `window.focus_next`, which is what Tab maps to.
+      ctx.host.focusNext();
+      const afterNext = yield* ctx.expectSome(
+        "native focus after focusNext",
+        Option.fromNullishOr(ctx.host.focused()),
+      );
+      yield* ctx.expectEqual(
+        "focusNext moved focus off B",
+        afterNext !== "focus-b",
+        true,
+      );
+      yield* ctx.expectContains(
+        "traversal dispatched onFocus",
+        readout(ctx),
+        `focus=${afterNext}`,
+      );
+
+      ctx.host.focusPrevious();
+      const afterPrevious = yield* ctx.expectSome(
+        "native focus after focusPrevious",
+        Option.fromNullishOr(ctx.host.focused()),
+      );
+      yield* ctx.expectEqual(
+        "focusPrevious returned to B",
+        afterPrevious,
         "focus-b",
       );
     }),

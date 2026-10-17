@@ -3,9 +3,12 @@
  *
  * `overflow: "scroll"` makes a container natively scrollable. The scenario
  * checks three things a component library depends on: the wheel actually moves
- * the offset (ADR 0002 measured that 0.5.1 does **not** apply a synthetic
- * wheel), `onScroll` fires so an app can react, and a ref's `scrollIntoView()`
- * moves content without a gesture.
+ * the offset, `onScroll` fires so an app can react, and a ref's
+ * `scrollIntoView()` moves content without a gesture.
+ *
+ * The wheel's `deltaY` is **negative to scroll down** (GPUI's convention, the
+ * opposite of the DOM `WheelEvent`): a positive delta asks to scroll past the
+ * top and clamps at `0`. Measured on this host — see plan `140` §4.
  */
 import { useRef, useState } from "react";
 import { Effect } from "effect";
@@ -61,7 +64,7 @@ export const scrollScenario: PlaygroundScenario = {
   view: () => <ScrollProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
-      ctx.host.wheel("scroll-view", 0, 200);
+      ctx.host.wheel("scroll-view", 0, -200);
       const offset = yield* ctx.expectSome(
         "scroll offset readable",
         Option.fromNullishOr(ctx.host.scrollOffset("scroll-view")),

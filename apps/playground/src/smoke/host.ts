@@ -35,15 +35,33 @@ const center = (renderer: TestRenderer, testId: string): Option.Option<Point> =>
   pipe(
     elementId(renderer, testId),
     Option.flatMap((id) =>
-      Option.map(
-        Option.fromNullishOr(renderer.getElementBounds(id)),
-        (bounds) => ({
-          x: bounds.x + bounds.width / 2,
-          y: bounds.y + bounds.height / 2,
-        }),
-      ),
+      Option.map(boundsOf(renderer, id), (bounds) => ({
+        x: bounds.x + bounds.width / 2,
+        y: bounds.y + bounds.height / 2,
+      })),
     ),
   );
+
+/**
+ * An element's painted bounds, or the nearest ancestor's.
+ *
+ * A `<virtual-list>` and an `<anchored>` layer paint no surface of their own, so
+ * `getElementBounds` is `null` for them even though they occupy space. Input
+ * targeting (`center`) walks up to the first ancestor that does have bounds, so
+ * a wheel or click aimed at such an element lands inside it instead of nowhere.
+ */
+const boundsOf = (
+  renderer: TestRenderer,
+  id: number,
+): Option.Option<Smoke.Bounds> =>
+  Option.match(Option.fromNullishOr(renderer.getElementBounds(id)), {
+    onSome: Option.some,
+    onNone: () =>
+      Option.flatMap(
+        Option.fromNullishOr(renderer.getElement(id)?.parentId ?? null),
+        (parentId) => boundsOf(renderer, parentId),
+      ),
+  });
 
 /** Own text plus every descendant's, concatenated like DOM `textContent`. */
 const subtreeText = (renderer: TestRenderer, id: number): string =>
@@ -92,6 +110,19 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
     }),
   clickWindow: (x, y) => renderer.nativeSimulateClick(x, y),
   key: (keystroke) => renderer.simulateKeystrokes(keystroke),
+  // `focusNext`/`focusPrevious` are raw native calls: unlike the `simulate*`
+  // helpers they do not drain and dispatch the resulting focus events, so the
+  // React `onFocus`/`onBlur` handlers would never run (plan `140` §4).
+  focusNext: () => {
+    renderer.focusNext();
+    renderer.dispatchNativeEvents();
+    renderer.flush();
+  },
+  focusPrevious: () => {
+    renderer.focusPrevious();
+    renderer.dispatchNativeEvents();
+    renderer.flush();
+  },
   wheel: (testId, deltaX, deltaY) =>
     Option.match(center(renderer, testId), {
       onNone: () => {},
