@@ -202,7 +202,7 @@ retired once both branches are one
     - [ ] 201 (shared helper) — `packages/testing/src/state.ts` + its test (`runCommands` over a runtime), so suites outside `packages/components` replay commands (owner: playground; this package's `runtime.run` is the same fold)
     - [x] Split Alert into parts — `Alert`, `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`, `AlertDismiss` over a tone context; 11 native tests; docs, example and API table updated (plan 158)
     - [ ] Split the remaining landed deviations named in `docs/component-api.md` §9 into parts — each with its own behaviour test, docs update and inventory row (owner: components). Plans 300–303 are written and indexed.
-      - [ ] Pagination parts — plan 300
+      - [x] Pagination parts — plan 300
       - [ ] CommandMenu parts — plan 301
       - [ ] Combobox parts — plan 302
       - [ ] DatePicker + TimePicker parts — plan 303

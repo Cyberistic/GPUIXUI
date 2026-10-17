@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200-adopt-compound-part-api.md`, `201-adopt-runtime-state-model.md` (the convention; a rewrite is not a prerequisite) |
-| Status | planned |
+| Status | done — 2026-10-17; 10 native tests, both-direction proof measured |
 | Source | `docs/component-api.md` §9 row "Pagination"; `TODO.md` → "Split the remaining landed deviations … into parts" |
 
 This plan is self-contained. It migrates only Pagination. The other three
@@ -130,5 +130,15 @@ fails. Restore. Test 1 fails if `Pagination` renders the parts itself instead of
 
 ## 8. Result
 
-To be filled by the executor with the landed commit, the measured test counts and
-the both-direction evidence.
+Landed 2026-10-17:
+
+- `pagination.tsx` — six parts over a root context; the window is computed once in
+  the root; the parts keep the old labels, test-id passthrough and no-op rules.
+- `pagination.test.tsx` — 10 tests (283 behaviour tests in the suite). Both
+  directions: making `PaginationItem` paint `variant="primary"` always fails the
+  both-theme fill test and the "item outside the list" test (3 red including the
+  unmount cascade); restored, green.
+- Example and docs compose the parts; `COMPONENTS.md` says 10; the contract's §8
+  row lists the six parts and Pagination left §9.
+- Gates: `nub run check-types` green, 222 unit tests, 10 Pagination behaviour
+  tests.
