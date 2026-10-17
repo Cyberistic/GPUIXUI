@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (41/41 green); -> 2 on a host with no binding
+# -> 0 here (42/42 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -402,10 +402,10 @@ focus restore.
 
 ## Evidence on this host
 
-The suite is **41/41 green** here (`exit 0`):
+The suite is **42/42 green** here (`exit 0`):
 
 ```
-41/41 scenarios passed · capabilities: layout=verified text=verified
+42/42 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -433,6 +433,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | hierarchy | a flattened tree inside `<virtual-list>`: 16 px per depth, 8 ↔ 48 rows on expand/collapse, roving focus moves native focus, the focused row stays painted outside the window |
 | scroll into view | `focusElement` reveals a virtual row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; `getScrollOffset` **saturates** on a virtual list, `getListScrollTop` is exact |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
+| horizontal scroll | `overflowX: "scroll"` pans; `deltaX: -240` → `x = -240`; a vertical wheel leaves a horizontal-only strip at the same `x`; a clipped tab **keeps painted bounds**; `scrollIntoView` reveals it and saturates at `-461`, but the near-end reveal stops at `x = -5` (clamp it); `renderer.scrollTo(id, -400, 0)` is exact |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
 | table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
@@ -479,6 +480,7 @@ src/scenarios/virtual-tree.tsx a 328-node flattened tree inside <virtual-list>
 src/scenarios/scroll-into-view.tsx keyboard follow and the two scroll routes
 src/scenarios/search.tsx  painted highlights, find controls and the virtual match index
 src/scenarios/drag-autoscroll.tsx held edge scroll, capture and the drop index
+src/scenarios/tab-overflow.tsx horizontal pan, tab-strip overflow and reveal
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -516,7 +518,7 @@ narrower. Each deviation is deliberate and measured:
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe and the drag-autoscroll probe pass in real GPUix 0.10.0 on this host
-  (41/41), with a written report and screenshots.
+  (42/42), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

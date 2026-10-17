@@ -39,7 +39,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | select | `select-choose` | verified |
 | combobox | `combobox-filter` | verified |
 | tooltip | `tooltip-open` | verified |
-| scroll | `scroll-container`, `scroll-into-view` | verified |
+| scroll | `scroll-container`, `scroll-into-view`, `tab-strip-overflow` | verified |
 | panel | `panel-resize` | verified |
 | virtual-list | `virtual-list-window` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
@@ -56,7 +56,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
 
-The suite is **41/41 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **42/42 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -366,7 +366,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Spacers | wip | yes | [spacer](packages/primitives/docs/spacer.mdx) · layout | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |
 | Stack / layout primitives | wip | yes | [stack](packages/primitives/docs/stack.mdx) · [grid](packages/primitives/docs/grid.mdx) · layout | **Runtime (041):** row and column gaps equal the theme step. The runtime's grid is **numeric only** (`columns`, `rowHeight`); there is no auto-flow and no named areas. |
 | Boxes / containers | wip | yes | [box](packages/primitives/docs/box.mdx) · layout | **Runtime (041):** padding equals the theme's step; density moves height and leaves colour alone. Every primitive merges a caller's `style` last; `Box` is where an app overrides a surface. |
-| Scrollable containers | wip | partial | [scroll-area](packages/primitives/docs/scroll-area.mdx) · layout | **Runtime (041/048):** a wheel with `deltaY -100` leaves the offset at `y -100`, and a caller's `onScroll` receives that delta. **No `scrollbarColor`, no `scrollbarWidth`, no fade mask** in 0.10.0, so the thumb is platform-themed and cannot be tinted; there is no absolute offset (`onScrollChange`). |
+| Scrollable containers | wip | partial | [scroll-area](packages/primitives/docs/scroll-area.mdx) · layout | **Runtime (041/048):** a wheel with `deltaY -100` leaves the offset at `y -100`, and a caller's `onScroll` receives that delta. **Horizontal (playground `tab-strip-overflow`, plan `173`):** `overflowX: "scroll"` pans, `getScrollOffset` reports `x`, `deltaX -240` moves it to `-240`, and `renderer.scrollTo(id, x, 0)` is exact. **No `scrollbarColor`, no `scrollbarWidth`, no fade mask** in 0.10.0, so the thumb is platform-themed and cannot be tinted; there is no absolute offset (`onScrollChange`). |
 | Buttons | wip | ours | [button](packages/primitives/docs/button.mdx) · form | **Runtime (041):** a hit-tested click activates once; Enter on key **down**, Space on key **up**, a held key ignored; `disabled` refuses both; `loading` refuses both and announces `Loading`. `@gpuix/react` publishes **no `./button`**, so the keyboard contract is this package's. Variants merged here: Floating action button and Copy button (adabraka `floating_action_button`, `copy_button`). |
 | Button groups | wip | yes | [button-group](packages/primitives/docs/button-group.mdx) · form | **Runtime (041/048):** attached children are 0px apart, separated ones the theme's `sm` gap. `role="group"` with `aria-label` from `label`; `attached` rounds and clips the group — it does not reshape each child (no `:first-child`, no child cloning). Variants merged here: Toggle Group (base-gpui `ToggleGroup`) and Segmented control (adabraka `segmented_nav`) — pressed-state variants, not separate rows. |
 | Labels | wip | partial | [label](packages/primitives/docs/label.mdx) · form | **Runtime (041):** the visible name is an a11y `Label`; the control's own `label` is the `TextInput`'s name. There is **no `aria-labelledby`**, so `labelledBy(name)` returns the control's `label` prop (045). |
@@ -445,7 +445,7 @@ in-package and an end-to-end native verdict.
 | Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). **Menus open with `align="center"` must compensate for the half-panel offset, and a near-bottom menu must pick `side="top"`** — `fit="snap"` does not flip (`floating-placement`). |
 | Context menus | todo | ? | As Dropdown menus, triggered by a right click. **Measured (`context-menu-pointer`)**: a right click is `onAuxClick` + `isRightClick` — `auxClick` carries **no `button`** and `onClick` never fires for button 2, so guard on `isRightClick`; a child's right click bubbles to the trigger; `<anchored position={pointer}>` is exact, including inside a **scrolled** container (no offset, no clipping — an item below the viewport still paints and activates); outside press and Escape dismiss; `shift-f10` opens and Escape returns focus. One Escape dismisses one layer (`modal-focus-trap`). |
 | Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
-| Tabs | todo | ? | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. |
+| Tabs | todo | partial (probe) | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. **Overflow (`tab-strip-overflow`, plan `173`):** `overflowX: "scroll"` pans, `deltaX` is the axis a trackpad sends (a vertical wheel leaves a horizontal-only strip at the same `x`), and a child outside the viewport **keeps painted bounds**, so hit-test against the viewport rather than trusting the node's existence. `scrollIntoView` reveals the active tab and saturates at the end, but a near-end reveal stops at `x = -5` rather than `0` — a strip clamps the last pixel. Selection + native focus + reveal on arrows/Home/End are measured natively. |
 | Accordions | todo | ? | `div` + `motion` (height). |
 | Collapsible sections | todo | ? | `div` + `motion` (height). Variant merged here too: Expandable card (adabraka `expandable_card`). |
 | Breadcrumbs | todo | ? | `div` + `<text>`. |
@@ -496,9 +496,9 @@ in-package and an end-to-end native verdict.
 | Resizable split panes | todo | ? | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). |
 | Panel groups | todo | ? | Composition over split panes. |
 | Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. |
-| Tabbed panels | todo | ? | Tabs + panels. |
+| Tabbed panels | todo | partial (probe) | Tabs + panels. The strip's overflow contract is measured by `tab-strip-overflow`: horizontal pan, clipped children keeping bounds, and a component-owned reveal (clamp the near end — the renderer stops at `x = -5`, not `0`). |
 | Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. **`drag-autoscroll`:** the runtime does **not** scroll a held drag at an edge — the strip must own an edge loop (`renderer.scrollTo` per held move), which keeps the capture and the up, and derive the drop index from the pointer and the live offset. A new OS window is not available either: 0.10.0 exposes one app window (`render` + `WindowOptions`), no `openWindow`. |
-| Docking layouts | todo | ? | Composition over split panes + tabs. |
+| Docking layouts | todo | partial (probe) | Composition over split panes + tabs. The overflowed strip contract is measured (`tab-strip-overflow`, plan `173`): x-axis wheel, exact `scrollTo`, `scrollIntoView` reveal, and clipped nodes that keep bounds. |
 | Nested panel arrangements | todo | ? | Composition. |
 | Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. |
 | Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. |
