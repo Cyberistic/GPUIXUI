@@ -83,6 +83,12 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states the fills a bordered control paints its edge on", () => {
+    expect(readme).toContain(
+      "the `secondary`, `hover`, `active` and `accent` fills a bordered control paints",
+    );
+  });
+
   it("lists every motion level, including the zero one", () => {
     const levelNames = Object.entries(motion)
       .filter(([, value]) => typeof value === "number")

@@ -7,7 +7,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * 2.50:1 on the pressed-row wash, under the 3:1 boundary floor. The dark
  * secondary grey and pressed wash are set so row descriptions clear 4.5:1 on
  * both pointer washes (plan 079). `sans` stays GPUI's system sentinel; `mono` is
- * the family macOS installs.
+ * the family macOS installs. The dark divider is Apple's separator grey
+ * (`#48484A`), so an outlined control's edge clears the floor on the washes it
+ * paints (plan 080).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -49,7 +51,7 @@ export const macosPlatformStyle = {
       popover: "#2C2C2E",
       muted: "#2C2C2E",
       mutedForeground: "#AEAEB2",
-      border: "#3A3A3C",
+      border: "#48484A",
       borderStrong: "#8E8E93",
       input: "#1C1C1E",
       inputForeground: "#F5F5F7",

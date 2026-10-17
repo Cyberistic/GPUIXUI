@@ -204,7 +204,13 @@ export interface ThemeColors {
   readonly shadow: string;
 }
 
-/** Light theme semantic roles. */
+/**
+ * Light theme semantic roles.
+ *
+ * The divider sits a half-step off the fill ladder (`#D6DAE1`, between neutral
+ * 200 and 300) so a bordered control's edge stays visible on the fill it paints
+ * (plan 080).
+ */
 export const lightColors = {
   background: palette.neutral[50],
   foreground: palette.neutral[900],
@@ -242,7 +248,7 @@ export const lightColors = {
   successText: palette.green[700],
   warningText: palette.amber[700],
   destructiveText: palette.red[700],
-  border: palette.neutral[200],
+  border: "#D6DAE1",
   borderStrong: "#848E9E",
   input: palette.neutral[0],
   inputForeground: palette.neutral[900],
@@ -261,7 +267,12 @@ export const lightColors = {
   shadow: "#191D2526",
 } satisfies ThemeColors;
 
-/** Dark theme semantic roles. Designed, not an inversion of the light theme. */
+/**
+ * Dark theme semantic roles. Designed, not an inversion of the light theme.
+ * The divider sits a half-step off the fill ladder (`#343B47`, between neutral
+ * 800 and 700) so a bordered control's edge stays visible on the fill it paints
+ * (plan 080).
+ */
 export const darkColors = {
   background: palette.neutral[950],
   foreground: palette.neutral[100],
@@ -299,7 +310,7 @@ export const darkColors = {
   successText: palette.green[200],
   warningText: palette.amber[200],
   destructiveText: palette.red[200],
-  border: palette.neutral[800],
+  border: "#343B47",
   borderStrong: "#6B7484",
   input: palette.neutral[900],
   inputForeground: palette.neutral[100],
@@ -380,7 +391,8 @@ export const highContrastLightColors = {
 
 /**
  * High-contrast dark roles. The same 53 roles as {@link darkColors}, with the
- * floors of {@link highContrastLightColors}.
+ * floors of {@link highContrastLightColors}. The divider is lighter than the
+ * pressed fill so the edge clears the AAA divider floor on it (plan 080).
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -419,7 +431,7 @@ export const highContrastDarkColors = {
   successText: palette.green[100],
   warningText: palette.amber[100],
   destructiveText: palette.red[100],
-  border: "#7A7A7A",
+  border: "#8A8A8A",
   borderStrong: "#A0A0A0",
   input: "#0D0D0D",
   inputForeground: "#FFFFFF",

@@ -27,6 +27,12 @@
  * selectable row uses and selection, but the list measured it only on the plain
  * surfaces; macOS dark's secondary text was 4.41:1 on `hover` and 3.55:1 on
  * `active`, under the 4.5:1 the design system states.
+ *
+ * Plan 080 closes the decorative divider on the fills a bordered control paints.
+ * An outlined control keeps its `border` edge while the fill becomes
+ * `secondary`, `hover`, `active` or `accent`; four shipped sets had the edge and
+ * the fill at the same value (1.00:1), so the edge disappeared exactly while
+ * pressed.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -210,7 +216,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(70);
+    expect(contrastPairs.length).toBe(74);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 
@@ -280,10 +286,19 @@ describe("themeContrastFailures", () => {
       "background",
       "card",
       "popover",
+      "secondary",
+      "hover",
+      "active",
+      "accent",
     ]);
+    expect(failures.every(({ floor }) => floor === 3)).toBe(true);
+    // Only the three white surfaces are the border's own value; the control
+    // fills are merely under the floor a white divider misses.
     expect(
-      failures.every(({ floor, ratio }) => floor === 3 && ratio === 1),
-    ).toBe(true);
+      failures
+        .filter(({ ratio }) => ratio === 1)
+        .map(({ background }) => background),
+    ).toEqual(["background", "card", "popover"]);
   });
 
   it("checks the focus ring on the washes a focused row paints", () => {

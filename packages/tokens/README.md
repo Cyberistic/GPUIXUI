@@ -171,8 +171,12 @@ stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
 until plan 079. The same list holds
 the soft status surfaces and the loading skeleton at 1.05:1 against `background`,
 `card` and `popover`, and the decorative `border` at 1.05:1 (3:1 at high
-contrast), so an Alert, Badge or Toast, a loading placeholder and every divider
-stay perceivable. Every shipped theme passes it —
+contrast) on the plain surfaces and on the `secondary`, `hover`, `active` and
+`accent` fills a bordered control paints, so an Alert, Badge or Toast, a loading
+placeholder, every divider and every outlined control's edge stay perceivable.
+Four shipped sets had the divider equal to the fill it sits on (1.00:1) until
+plan 080, so an edge vanished exactly while a control was pressed. Every shipped
+theme passes it —
 platform variants on their own canvas, not the identity's. A runnable example
 lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 

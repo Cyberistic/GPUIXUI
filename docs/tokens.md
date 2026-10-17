@@ -62,7 +62,10 @@ The core entry has no React dependency. `react` is an optional peer of the
 Components use semantic roles, never ramp shades. The role names describe
 intent, so a brand theme changes values without touching component source.
 `border` is decorative; `borderStrong` is the essential control boundary held
-to 3:1.
+to 3:1. A bordered control paints `border` on the fill behind it —
+`secondary` at rest, `hover`/`active` while the pointer moves, and `accent` for
+an outline toggle that is on — so the divider is held to its floor on those
+fills too, not only on the plain surfaces.
 
 There are 53 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities: a solid fill with a readable
@@ -111,7 +114,7 @@ not iris, so it can never be confused with `primary`.
 | `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` |
 | `warningText` | `#8E5B00` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` |
 | `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover` |
-| `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
+| `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
 | `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
@@ -271,7 +274,7 @@ getTheme("light"); // the default light theme, unchanged
 | `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover` |
 | `warningText` | `#6B4500` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` |
 | `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover` |
-| `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
+| `border` | `#6E7683` | `#8A8A8A` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input |
@@ -805,7 +808,9 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 `themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
 against `contrastFloors`. The list holds text pairs, secondary text on the state
 washes (`hover`, `active`, `accent` and `selected`), status pairs, the selection
-wash, the soft status surfaces and the decorative dividers. The default is the
+wash, the soft status surfaces and the decorative dividers — including on the
+`secondary`, `hover`, `active` and `accent` fills a bordered control paints.
+The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
 not claim it. It returns one entry per missed pair, naming the two roles, the
@@ -965,15 +970,21 @@ essential boundaries in the default themes; 4.5:1 for them in the high-contrast
 variants).
 It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
-those surfaces (1.05:1, and 3:1 at high contrast), or if body text over the
-composited `selection` wash on `background`/`card` drops below its body floor.
+those surfaces or on the `secondary`, `hover`, `active` and `accent` fills a
+bordered control paints (1.05:1, and 3:1 at high contrast), or if body text over
+the composited `selection` wash on `background`/`card` drops below its body floor.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
 `card` and `popover`, so a placeholder never disappears into the card it fills.
 Every platform variant is checked on its own canvas, not the identity's, so a
 style that moves `background` or `card` is held to the status tints and skeleton
 it inherits. The same loop holds secondary text on each variant's washes: macOS
 dark shipped at 4.41:1 on `hover` and 3.55:1 on `active` until plan `079` moved
-its secondary grey and pressed wash. Palette edits must keep it green.
+its secondary grey and pressed wash. The control edge is held there too: four
+shipped sets had `border` equal to the fill it sits on (identity light `active`,
+identity dark `secondary`/`active`/`accent`, macOS dark `hover`/`secondary`/
+`accent`, and high-contrast dark's `active` at 2.53:1 under the AAA floor), so
+an outlined control's edge disappeared exactly while pressed; plan `080` moved
+the four dividers. Palette edits must keep it green.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,
 `active` and `selected` washes, because focus and selection co-occur in rows;

@@ -465,6 +465,23 @@ describe("docs/tokens.md contrast surfaces", () => {
     });
   });
 
+  it("names every fill the control edge is held against", () => {
+    const fills = [
+      ...new Set(
+        contrastPairs
+          .filter(([foreground]) => foreground === "border")
+          .map(([, background]) => background),
+      ),
+    ].filter((background) =>
+      ["secondary", "hover", "active", "accent"].includes(background),
+    );
+
+    expect(fills).toEqual(["secondary", "hover", "active", "accent"]);
+    const sentence =
+      "the `secondary`, `hover`, `active` and `accent` fills a bordered control paints";
+    expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
+  });
+
   it("names every surface the surface pairs are held against", () => {
     const surfacePairs = contrastPairs.filter(
       ([, , pairClass]) => pairClass === "surface",
@@ -590,7 +607,7 @@ describe("docs/design-system.md", () => {
       `| focus ring and essential boundaries, including the ring on the \`hover\`/\`active\`/\`selected\` washes and a control boundary on \`popover\` | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` and the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);

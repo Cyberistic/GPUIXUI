@@ -185,7 +185,10 @@ Two border roles:
 
 - `border` is decorative — dividers and card edges. It is intentionally subtle,
   but held to a 1.05:1 perceivability floor (3:1 at high contrast), so subtle
-  never means invisible.
+  never means invisible. A bordered control paints it on the fill behind it —
+  `secondary` at rest, the `hover` and `active` washes, and `accent` for an
+  outline toggle that is on — so the floor covers those fills as well, and a
+  pointer state never turns the fill into the divider's own value.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
   against the canvas so a control is perceivable without relying on fill alone.
 
@@ -237,6 +240,9 @@ A row's metadata keeps its `mutedForeground` role on every wash the row paints �
 `hover` and `active` for pointer state, `accent` where a selectable row hovers,
 and `selected` when it is selected. That is why the secondary floor covers the
 washes, not only the plain surfaces: a description is read while the row moves.
+A bordered control keeps its `border` edge on the fill it paints, so the divider
+floor covers `secondary`, `hover`, `active` and `accent`; a state fill never
+takes the divider's own value, or the edge would disappear as the pointer lands.
 
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.
@@ -259,7 +265,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover` | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
-| decorative dividers (`border`) on `background`/`card`/`popover` | 1.05:1 | 3:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover` and the `secondary`/`hover`/`active`/`accent` fills a bordered control paints | 1.05:1 | 3:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite.

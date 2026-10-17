@@ -65,11 +65,24 @@ const secondaryTextPairs: readonly ContrastPair[] = stateWashes.map(
 );
 
 /**
+ * The fills a bordered control paints behind its own edge: a secondary control's
+ * resting fill, the hover and pressed washes an outline control uses, and the
+ * accent fill a pressed outline toggle takes. `border` is painted on all four,
+ * so the divider floor applies to each.
+ */
+const controlFillRoles = ["secondary", "hover", "active", "accent"] as const;
+
+const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
+  (background): ContrastPair => ["border", background, "divider"],
+);
+
+/**
  * Every documented pair — text, status, surface and divider — including
  * secondary text on the state washes, the focus ring on the washes a focused
  * row paints, the status text and control boundary on a floating surface, the
  * soft status surfaces and the loading skeleton a canvas must distinguish, and
- * the decorative dividers that must stay visible.
+ * the decorative dividers that must stay visible, including on the fills a
+ * bordered control paints.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ["foreground", "background", "body"],
@@ -125,6 +138,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["border", "background", "divider"],
   ["border", "card", "divider"],
   ["border", "popover", "divider"],
+  ...controlFillPairs,
 ];
 
 /** WCAG floors by contrast level and pair class. */
@@ -241,8 +255,9 @@ const selectionSurfaces = ["background", "card"] as const;
 /**
  * Every documented pair a theme misses — text, status, secondary text on the
  * state washes, selection, surface and divider — including the selection wash
- * measured over `background` and `card` and the loading skeleton measured on the
- * surfaces it fills. The level defaults
+ * measured over `background` and `card`, the loading skeleton measured on the
+ * surfaces it fills, and the control edge measured on the fills a bordered
+ * control paints. The level defaults
  * to the one the theme declares, so a high-contrast theme is checked against its
  * own floors. An empty array is the library's guarantee; a consumer test asserts
  * exactly that:
