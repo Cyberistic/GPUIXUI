@@ -51,7 +51,7 @@ starts a new session before the previous one closes (evidence:
 
 `[x]` `[████████░░]` 14/17
 
-`[x]` Write and index the tokens/theme plan set (plans 010–019)
+`[x]` Write and index the tokens/theme plan set (plans 010–019, 050)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -73,6 +73,8 @@ prebuilt `dist` (plan 016)
 `120`/`700` as literals (plan 019)
 `[x]` Guard that all four shipped themes carry every theme group (part of plan
 019)
+`[x]` Document the layering model (tree order, no portal in 0.10.0) and the
+deliberate token omissions (plan 050; completes plan 202 §2.3–2.4)
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
@@ -88,6 +90,19 @@ resolves from source (owner: those workstreams; plans 016–018)
 literals with `theme.motion.step` / `theme.motion.pulse`, and the Tier 2 overlay
 components take enter/exit transitions from `motionTransition` (owner:
 `primitives` and `components`; plan 019)
+`[!]` Cross-team: `components` plan 112 builds Dialog/Popover on
+`Dialog`/`DialogPortal`/`createPortal`. Published `@gpuix/react` 0.10.0 exports
+none of them — only `FloatingLayer`/`floatingRootStyle`, the `<anchored>` host
+element and `AnimatePresence`; `createPortal` is an unreleased changeset. The
+layering rule and the no-portal limitation are documented in `docs/tokens.md`
+(plan 050). Owner: `components`
+`[ ]` Cross-team: `LICENSES/adabraka-ui.md` (MIT, `Copyright (c) 2025 Adabraka
+Team`, "token structure referenced, no assets copied") — plan 202 §7, not this
+workstream's path. Owner: licensing
+`[ ]` Cross-team: this branch is current with `origin/master` and green
+(21 commits, plans 010–019 + 050 complete). The integration owner merges
+`agent/tokens-theme` into `main` so the shared `TODO.md`, `COMPONENTS.md` and
+plan index carry the tokens rows; this agent was instructed not to push `main`
 
 ## Phase C — Tier 1–2 components
 

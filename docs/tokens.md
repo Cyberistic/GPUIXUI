@@ -388,6 +388,32 @@ const still = extendTheme(base, {
 A runnable example lives in
 [`src/motion.example.ts`](../packages/tokens/src/motion.example.ts).
 
+## Layering
+
+There is **no `z-index` and no stacking context** in GPUix 0.10.0 — the word does
+not appear in either published package — so **tree order is paint order**. The
+order a desktop app expects is a *mounting rule*, not data:
+
+```
+dropdown → popover → tooltip → modal → toast
+```
+
+Mount a later layer later in the tree (or reorder the children that hold it).
+There is no layering token, and there will not be one: a number no runtime reads
+is a lie in the API.
+
+An overlay positions with `FloatingLayer` / `floatingRootStyle` from
+`@gpuix/react/floating` and the `<anchored>` host element, which occludes what
+the layer covers. Enter and exit are `AnimatePresence` + `motion`, timed by the
+[motion tokens](#motion).
+
+**Limitation — no portal.** `createPortal` is an unreleased GPUix changeset, so
+in 0.10.0 an overlay paints where it sits in the tree rather than at the document
+root. A scrim that must cover the window therefore has to be mounted where it
+paints over its siblings; the strongest honest alternative is to keep the overlay
+as the last child of the surface it covers. This is a component-level
+consequence, not something tokens can fix.
+
 ## Borders and icons
 
 | Token | Pixels |
@@ -598,5 +624,13 @@ It also fails if a soft status surface is indistinguishable from `background` or
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
   only animate the seven `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.
+- No breakpoints. Responsiveness is application-level, through GPUix's
+  `useWindowSize` and `useWindowInsets`; a breakpoint token would describe a
+  layout engine this runtime does not have.
+- No `shadowXs` or `shadowXl`. Four elevation levels cover the shipped surfaces,
+  and an unused level is dead data.
+- No second spacing or radius scale, and no second name for a role that already
+  has one.
+- No stacking scale; see [Layering](#layering).
 - Native visual proof is the playground's theme gallery, not this document. See
   `TODO.md`.

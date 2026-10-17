@@ -158,6 +158,10 @@ tokens hold milliseconds because that is what a timer takes;
 `top`/`right`/`bottom`/`left` and `borderRadius` — there is no transform, no
 rotation and no colour interpolation — so the design never promises them.
 
+Overlays are ordered by tree order, because the runtime has no stacking context:
+the mounting rule and its no-portal limitation are documented once, under
+[Layering](./tokens.md#layering).
+
 ## 8. Interaction states
 
 | State | Role / mechanism |

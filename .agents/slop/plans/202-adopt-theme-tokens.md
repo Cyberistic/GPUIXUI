@@ -166,3 +166,18 @@ Stop and report if:
 - No duplicate group, no `z` scale, no asset copied.
 - `LICENSES/adabraka-ui.md` records the MIT line and "structure referenced, no
   assets copied".
+
+## Execution note — 2026-10-17, tokens-theme workstream
+
+§5's STOP condition ("adding `motion` or `focusRing` would duplicate an existing
+field under a different name") applies, so this plan is executed as follows
+rather than verbatim:
+
+| Section | Outcome |
+| ------- | ------- |
+| §2.1 `focusRing` geometry | **Refused on evidence.** Published `@gpuix/native` 0.10.0 has no `outlineWidth`/`outlineColor`/`outlineOffset` and no `focusVisible`; those are unreleased `main`. The ring is a zero-offset, zero-blur `boxShadow` with `spreadRadius = borderWidth.strong`, shipped as `focusRing(theme)` by plan 017. A `ring_offset` gap is not expressible with one shadow, so it is not shipped. |
+| §2.2 `motion` | **Delivered, differently.** Plan 019 stores milliseconds in `theme.motion` (`none`, `step`, `fast`, `normal`, `slow`, `pulse`) and converts through `motionTransition(theme, level, phase)`. Milliseconds are what `setInterval` takes (the three `primitives` call sites holding `120`/`700` as literals) and the helper produces the runtime's seconds; a seconds-only token would have been wrong for the indicators. Easings are `standard`/`enter`/`exit`/`linear`. |
+| §2.3 `layering` | **Delivered by plan 050**, with one correction: 0.10.0 has no `createPortal` (unreleased changeset), so the section documents tree order plus the no-portal limitation rather than a portal. |
+| §2.4 omissions | **Delivered by plan 050** — breakpoints, `shadowXs`/`shadowXl`, a second spacing/radius scale and a `z` scale are recorded as deliberate omissions. |
+| §3 `focus.ts` | Not created; `focusRing` lives in `styles.ts` beside `textStyle`/`statusTone`, where it reads `theme.borderWidth` and `theme.colors`. |
+| §3 `LICENSES/adabraka-ui.md` | Not this workstream's path; recorded as a TODO item for the licensing owner. |

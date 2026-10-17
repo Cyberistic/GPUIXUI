@@ -5,6 +5,7 @@
  * every group the others do.
  */
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { resolveTheme } from "./high-contrast.example.js";
 import { densityPresets, type BoxShadow } from "./index.js";
@@ -186,6 +187,13 @@ describe("theme completeness", () => {
     expect(Object.keys(extended).toSorted()).toEqual(
       Object.keys(lightTheme).toSorted(),
     );
+  });
+
+  it("ships no stacking scale, because GPUix paints in tree order", () => {
+    // `node:fs` is deliberate: this is a policy test over the package's own
+    // source, and the package ships zero dependencies (see exports.test.ts).
+    const source = readFileSync(new URL("./theme.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/z-?index/i);
   });
 });
 

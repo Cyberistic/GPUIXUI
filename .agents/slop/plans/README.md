@@ -44,6 +44,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [017](./017-focus-ring-and-docs-truth.md) | Focus ring helper and the focus documentation truth pass | B | 011, 016 | done |
 | [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | done |
+| [050](./050-docs-layering-and-omissions.md) | The layering model and the deliberate token omissions | B | 011, 017–019 | done |
 | `200` | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | `020`, `030`, `110–117` | planned |
 | `201` | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | planned |
 | `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | planned |
@@ -51,10 +52,10 @@ Blocks are reserved so concurrent workstreams do not collide:
 | `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |
 | `205` | Implement the "not provided by GPUix" cluster | C/E | `200`, `201`, `203`, `030`, `110–117` | planned |
 
-Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
-`docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
-agent that owns its paths. The `020–049` block belongs to primitives, icons and
-Phase C; a tokens follow-up uses `050–099`, which is free.
+Plans 010–019 and 050 are the `tokens-theme` workstream. They own
+`packages/tokens`, `docs/tokens.md` and `docs/design-system.md`; every other plan
+belongs to the agent that owns its paths. The `020–049` block belongs to
+primitives, icons and Phase C; a tokens follow-up uses `050–099`, which is free.
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
