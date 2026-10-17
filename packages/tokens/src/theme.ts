@@ -25,6 +25,7 @@ import {
   type BorderWidth,
   type Density,
   type DensityName,
+  type DensityOverrides,
   type IconSize,
   type Radius,
   type Spacing,
@@ -110,10 +111,11 @@ export interface ThemeOverrides {
   /** Override individual radii. */
   readonly radius?: Partial<Radius>;
   /**
-   * Use a density preset, or override density metrics. A partial override
-   * keeps the base preset's name.
+   * Use a density preset, or override individual metrics. A size-keyed record
+   * merges size by size, so changing the medium control height keeps the small
+   * and large ones. A partial override keeps the base preset's name.
    */
-  readonly density?: DensityName | Partial<Omit<Density, "name">>;
+  readonly density?: DensityName | DensityOverrides;
   /** Replace individual elevation levels. */
   readonly elevation?: Partial<Elevation>;
   /**
@@ -181,7 +183,7 @@ const mergeTypography = (
 
 const mergeDensity = (
   base: Density,
-  override: DensityName | Partial<Omit<Density, "name">> | undefined,
+  override: DensityName | DensityOverrides | undefined,
 ): Density => {
   if (override === undefined) {
     return base;
@@ -189,7 +191,16 @@ const mergeDensity = (
   if (isDensityName(override)) {
     return densityPresets[override];
   }
-  return { ...base, ...override, name: base.name };
+  return {
+    ...base,
+    ...override,
+    controlHeight: { ...base.controlHeight, ...override.controlHeight },
+    controlPaddingX: {
+      ...base.controlPaddingX,
+      ...override.controlPaddingX,
+    },
+    name: base.name,
+  };
 };
 
 /** The default light theme. */

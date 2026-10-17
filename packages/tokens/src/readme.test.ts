@@ -83,6 +83,12 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states how the theme groups merge", () => {
+    expect(readme).toContain(
+      "Typography merges field by field, density metrics size by size, elevation levels replace whole arrays, and the mode is not overridable.",
+    );
+  });
+
   it("states the skeleton floor the checker enforces", () => {
     expect(readme).toContain(
       `the soft status surfaces and the loading skeleton at ${contrastFloors.default.surface}:1 against \`background\`, \`card\` and \`popover\``,

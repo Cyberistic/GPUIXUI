@@ -110,8 +110,9 @@ A runnable example lives in
 ## Extending a theme
 
 `createTheme` starts from a built-in theme; `extendTheme` derives from any
-theme. Neither mutates its base. Typography merges field by field, elevation
-levels replace whole arrays, and the mode is not overridable.
+theme. Neither mutates its base. Typography merges field by field, density
+metrics size by size, elevation levels replace whole arrays, and the mode is not
+overridable.
 
 ```ts
 import { createTheme } from "@gpuixui/tokens";

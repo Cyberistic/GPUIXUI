@@ -136,6 +136,18 @@ export interface Density {
   readonly rowHeight: number;
 }
 
+/**
+ * Partial density metrics. A size-keyed record merges size by size, so an
+ * omitted size keeps the base preset's value; `rowHeight` is a single metric.
+ * The preset's name is never overridable — a metric override is still the base
+ * preset with edits.
+ */
+export interface DensityOverrides {
+  readonly controlHeight?: Partial<Readonly<Record<ControlSize, number>>>;
+  readonly controlPaddingX?: Partial<Readonly<Record<ControlSize, number>>>;
+  readonly rowHeight?: number;
+}
+
 /** Density presets. Compact is for dense desktop workspaces. */
 export const densityPresets: Readonly<Record<DensityName, Density>> = {
   compact: {

@@ -351,10 +351,10 @@ keeps the base's declaration and `applyPlatformStyle` and
 `themeContrastFailures` default to it, so the short call is the safe one. A
 declaration is a claim; `themeContrastFailures` is what proves it.
 
-Overrides merge by group; typography merges field by field, motion timing by
-timing and easing by easing; elevation levels are replaced as whole arrays; the
-mode is immutable. Nothing mutates the base, so a theme can be created once at
-startup and shared.
+Overrides merge by group; typography merges field by field, density metrics size
+by size, motion timing by timing and easing by easing; elevation levels are
+replaced as whole arrays; the mode is immutable. Nothing mutates the base, so a
+theme can be created once at startup and shared.
 
 Verify an edited theme with `themeContrastFailures(theme)` — it checks at the
 level the theme declares, so a high-contrast theme needs no second argument. An

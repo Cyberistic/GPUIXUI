@@ -525,6 +525,20 @@ controlHeight(theme, "md");
 controlPaddingX(theme, "md");
 ```
 
+A metric override merges size by size:
+
+```ts
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const taller = extendTheme(lightTheme, {
+  density: { controlHeight: { md: 34 } },
+});
+```
+
+`{ density: { controlHeight: { md: 34 } } }` raises the default control by 2px
+and keeps the small and large heights, the padding and the row height, and the
+theme still names `comfortable`.
+
 `defaultDensity` is the `comfortable` preset, and every built-in theme uses it.
 A theme's `density` always names the preset it is based on, including after a
 partial metric override.
@@ -834,8 +848,9 @@ Merge rules:
   alpha applied to the `shadow` tint;
 - motion merges timing by timing and easing by easing, so overriding `normal`
   keeps `fast` and `enter`;
-- `density` accepts a preset name or partial metrics; a partial override keeps
-  the base preset name;
+- `density` accepts a preset name or partial metrics; metrics merge by size, so
+  changing the medium control height keeps the small and large ones, and a
+  partial override keeps the base preset name;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
 - `contrast` defaults to the base's declaration; an override is a claim the
   extension mechanism does not check;

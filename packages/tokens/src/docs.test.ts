@@ -470,6 +470,13 @@ describe("docs/tokens.md theme contract", () => {
       expect(markdown.includes(signature), signature).toBe(true);
     });
   });
+
+  it("states the density merge rule and shows a size-by-size override", () => {
+    expect(markdown.replace(/\s+/g, " ")).toContain(
+      "`density` accepts a preset name or partial metrics; metrics merge by size, so changing the medium control height keeps the small and large ones, and a partial override keeps the base preset name;",
+    );
+    expect(markdown).toContain("density: { controlHeight: { md: 34 } }");
+  });
 });
 
 describe("docs/tokens.md contrast surfaces", () => {

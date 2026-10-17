@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 56/74
+`[x]` `[████████░░]` 57/75
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -294,6 +294,9 @@ cannot erase the highlight; seven secondary greys move one step (plan 087)
 floating surface — an avatar fallback's initials on `muted` and a date picker's
 month header on `popover` painted with no pair behind them, which the role-level
 completeness guard cannot see (plan 088)
+`[x]` Make a density metric override expressible and true to its documentation —
+`controlHeight` required all three sizes and the merge replaced the record, so a
+theme that changed one control height lost the other two (plan 089)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now
