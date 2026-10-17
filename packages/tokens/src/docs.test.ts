@@ -339,6 +339,15 @@ describe("docs/tokens.md quoted figures", () => {
     expect(markdownProse).toContain(sentence);
   });
 
+  it("states the soft edge floor in the catalogue", () => {
+    const sentence =
+      "measured on the fill it borders at the divider floor — " +
+      `${contrastFloors.default.divider}:1 in the default themes and ` +
+      `${contrastFloors.high.divider}:1 at high contrast.`;
+
+    expect(markdownProse).toContain(sentence);
+  });
+
   it("quotes the high-contrast soft edge and the mixture it replaced", () => {
     const high = highContrastThemes.light.colors;
     const mixed = compositeOver(alpha(high.warning, 0.3), high.warningSoft);
@@ -673,6 +682,7 @@ describe("docs/design-system.md", () => {
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\` and the \`hover\`/\`active\`/\`selected\` washes, and essential boundaries on \`popover\`, \`muted\` and the four state washes | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| soft status edge (\`xSoftBorder\` on \`xSoft\`) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` and the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
