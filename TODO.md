@@ -24,6 +24,14 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       the three honest ways out are in
       `.agents/slop/plans/020-gpuix-runtime-capability.md` §3. Owned by
       playground workstream (wasm path) with a human decision for the GUI path.
+`[!]` **BLOCKER B3: several live agents are writing the same worktree.** Measured
+      2026-10-17 07:40: 5 live `swarm:primitives` sessions (and 2–6 for every
+      other workstream) editing `workspaces/primitives` concurrently, clobbering
+      each other's files. `scripts/swarm-supervisor.sh`'s runner loops
+      `opencode run` without a session id, so each CLI return leaves a live turn
+      and starts another. Evidence, mitigation and the fix:
+      `.agents/slop/plans/022-swarm-single-writer.md`. Fix lives in `scripts/`
+      (shared checkout) — needs a coordinator or the human.
 
 ## Phase B — working foundation
 
@@ -39,10 +47,12 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 ### Primitives workstream (owner: primitives)
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
-`[ ]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
-`[ ]` `packages/primitives`: theme port, `ThemeProvider`, density
-`[ ]` `packages/primitives`: `core/style.ts` + `core/metrics.ts` (the single resolution point)
-`[ ]` `packages/primitives`: `core/keyboard.ts` + `core/state.ts` behaviour modules
+`[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
+`[!]` `packages/primitives`: **do not write while 022 is unresolved** — several
+      live sessions edit this tree (measured; see 022). The `core/` refactor to
+      the tokens-aligned theme port is theirs and was mid-flight; finish it
+      after 022 §4, starting from the real `nub run check` result
+`[ ]` `packages/primitives`: `ThemeProvider` + density switch
 `[ ]` `packages/primitives`: layout primitives (Box, Stack, Grid, Separator, Spacer, ScrollArea)
 `[ ]` `packages/primitives`: Text + typography scale
 `[ ]` `packages/primitives`: Button + ButtonGroup
@@ -53,6 +63,11 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
+`[!]` **swarm runner**: one writer per worktree. Add
+      `opencode run --session swarm-<ws>` to the generated runner, count live
+      sessions in `agent_alive`, and land `scripts/check-single-writer.sh` as the
+      regression guard. Full evidence and the fix:
+      `.agents/slop/plans/022-swarm-single-writer.md`.
 `[ ]` **tokens workstream**: `packages/tokens` must export light and dark theme
       values satisfying the `PrimitiveTheme` port in
       `.agents/slop/plans/030-primitives-package.md` §2.2 (colours, space,

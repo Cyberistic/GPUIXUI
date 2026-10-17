@@ -40,34 +40,45 @@ There is **no** `span`, `a`, `button`, `input[type=checkbox]`, `select`,
   there is no `grid-auto-flow` and no named areas.
 - box model: `width`/`height`/`min*`/`max*` as `number | string`, padding,
   margin, `position` + `top/right/bottom/left`.
-- surface: `background` (colour or 2-stop linear gradient), `borderWidth` +
-  `borderColor` + `borderRadius` (and per-side/corner variants), `boxShadow`
-  (one or a list), `borderStyle: "solid" | "dashed"`.
-- **focus without layout shift**: `outlineWidth`, `outlineColor`,
-  `outlineOffset` — this is how focus rings are drawn.
-- typography: `fontSize`, `fontFamily`, `fontWeight`, `textAlign`, `lineHeight`,
-  `whiteSpace: "normal" | "nowrap"`, `textOverflow: "ellipsis" | "ellipsis-start"`,
-  `lineClamp`, `textDecoration`.
-- scroll: `overflow`/`overflowX`/`overflowY`, plus `scrollbarColor` and
-  `scrollbarWidth` (the thumb is painted natively, takes no pointer input).
-- `cursor`, `pointerEvents: "auto" | "none"`, `userSelect`, `selectionColor`.
-- **native pseudo-states, no JS round-trip**: `hover`, `active`, `focusVisible`
-  (CSS `:focus-visible` semantics: keyboard only, a mouse press never shows it),
-  and `keyboardFocusDim`. Nesting is exactly one level deep.
-- `opacity`, `aspectRatio`, `visibility`, `display`.
+- surface: `background` (a colour string or a 2-stop `LinearGradientBackground`)
+  and `backgroundColor`; `borderWidth` (+ per-side variants) + `borderColor` +
+  `borderRadius` (+ per-corner variants); `boxShadow` is a **single**
+  `BoxShadow` (`offsetX`, `offsetY`, `blurRadius`, `spreadRadius`, `color`) —
+  there is no shadow list. **There is no `borderStyle`** (so no dashed border).
+- typography: `fontSize`, `fontFamily`, `fontWeight` (`string | number`),
+  `textAlign`, `lineHeight`, `whiteSpace: "normal" | "nowrap"`,
+  `textOverflow: "ellipsis" | "ellipsis-start"`, `lineClamp`, `textDecoration`.
+- scroll: `overflow`/`overflowX`/`overflowY` only. **No `scrollbarColor`, no
+  `scrollbarWidth`, no fade mask** — the thumb is painted from the platform
+  theme and takes no pointer input.
+- `cursor` (a typed `CursorValue`), `pointerEvents: "auto" | "none"`,
+  `userSelect: "text" | "none" | "auto"`, `selectionColor`.
+- **native pseudo-states, no JS round-trip**: `hover` and `active` only, each
+  `Omit<StyleDesc, "hover" | "active">`, nested exactly one level deep. **There
+  is no `focusVisible`, no `keyboardFocusDim` and no `outline*`** — a focus ring
+  is drawn by the component as a zero-blur, zero-offset `boxShadow` applied
+  while it holds focus, so a mouse press shows the ring too.
+- `opacity`, `visibility`, `display`. **No `aspectRatio`, no `transition`.**
 
 ### 1.3 Events
 
 Mouse: `onClick` (primary only), `onAuxClick`, `onMouseDown`/`Up`/`Move`/`Enter`/
-`Leave`, `onMouseDownOutside`. Keyboard: `onKeyDown`, `onKeyUp` (fire on the
-focused element and on ancestors that declare them). Focus: `onFocus`, `onBlur`.
-Scroll: `onScroll`, `onScrollChange` (offset, wheel/drag/programmatic, not for
-`virtual-list`). Layout: `onLayout` (`div` and `text` only, fires on mount and
-on resize, not on move). Text: `onChange`, `onSubmit`. Plus `onFileDrop`,
-`onVisibleRange`, `onMotionComplete`, `onHighlight`.
+`Leave`, `onMouseDownOutside` (fires when the user clicks outside this element).
+Keyboard: `onKeyDown`, `onKeyUp` (fire on the focused element and on ancestors
+that declare them). Focus: `onFocus`, `onBlur`. Scroll: `onScroll` only —
+**there is no `onScrollChange`**. Text: `onChange`, `onSubmit` (Enter on
+`<input>`, or Enter on `<textarea>` when this listener is set). Plus
+`onFileDrop`, `onVisibleRange`, `onHighlight`, `onMotionComplete`, and the
+code/diff-specific `onToggleFile`, `onShowMore`, `onLineClick`, `onLinkClick`.
+**There is no `onLayout`.** The host also takes `testId` as a stable automation
+locator.
 
-`KeyEvent` carries `key`, `isHeld`, `defaultPrevented`, and modifiers — so
-keyboard handling is real, not synthesised.
+**Keyboard events are typed `EventPayload`, not `KeyEvent`.** `EventPayload`
+carries `key?: string`, `keyChar?: string` and `isHeld?: boolean` — all
+optional — and **no `defaultPrevented`**, no `elementId`-independent modifiers
+beyond `modifiers`, and no separate `KeyEvent` type (that exists only on `main`).
+So key facts must be **decoded at the boundary** before a decision function sees
+them, and there is no way to observe `preventDefault` from another listener.
 
 ### 1.4 Focus, a11y and animation
 
@@ -81,18 +92,56 @@ keyboard handling is real, not synthesised.
   `opacity`, `top`, `right`, `bottom`, `left`, `borderRadius`. **No rotation, no
   colour interpolation, no spring.** `motion.div` from `@gpuix/react` wraps it.
 
-### 1.5 What `@gpuix/react` already ships (reuse, do not reimplement)
+### 1.5 What `@gpuix/react` 0.10.0 already ships (reuse, do not reimplement)
 
-Headless components: `Button` (+ `buttonProps`/`ButtonState`), `Select`,
-`Combobox`, `Dialog`, `Tooltip`, `DismissableLayer`, `AnimatePresence`/`motion`,
-`createPortal`. Hooks: `useGpuix`, `useWindowSize`, `useWindowInsets`,
-`useTextSearch`. Theme/metrics: `GpuixTheme`, `GpuixMetrics`, `SyntaxTheme`
-(passed per element, e.g. `theme` on `<code>`/`<input>`).
+The published `exports` map is exactly: `.`, `./jsx-runtime`, `./jsx-dev-runtime`,
+`./testing`, `./select`, `./combobox`, `./tooltip`, `./floating`, `./automation`.
+The root re-exports the `Select`, `Combobox` and `Tooltip` component families,
+`AnimatePresence`/`motion`, the hooks `useGpuix`/`useWindowSize`/`useWindowInsets`/
+`useTextSearch`, and the theme/metric types (`GpuixTheme`, `GpuixMetrics`,
+`SyntaxTheme`) which are passed per element.
+
+**Absent from the published root** (present only on GPUix's `main`): `Button`
+(+ `buttonProps`), `Dialog`, `createPortal`. There is no `./button` export and no
+`dist/components/button.js`. Overlays therefore build on the published
+`./floating` module (`DismissableLayer`, `FloatingLayer`, `renderSlot`,
+`resolveStyle`, `mergeStyles`) rather than on the root's `Dialog`.
+
+**Import behaviour on this box** (measured, see §3): importing the package root
+or `./testing` **throws `Cannot find native binding` at import time**, because
+`@gpuix/react` → `@gpuix/native` has no `darwin-x64` binary. Importing `./select`,
+`./combobox`, `./tooltip`, `./floating`, `./jsx-runtime` succeeds. So a component
+module may depend on the subpath modules and must use the JSX runtime
+(`jsxImportSource: "@gpuix/react"`), but a test in this repository must assert on
+the **React element tree** rather than render it.
 
 `@gpuix/react/testing` re-exports `@gpuix/native/testing`: `TestRenderer` drives
 the **real** GPUI pipeline (build → layout → hit test → dispatch) and exposes
 tree queries, `getElementBounds`, `getA11yTree`/`getAutomationTree`, key and
 pointer simulation, scroll and selection APIs, and `captureScreenshot`.
+
+### 1.6 `main` vs published 0.10.0 — measured differences
+
+Every one of these was found by compiling against the installed tarball after
+writing code against the checkout. They are the difference between code that
+type-checks and code that does not.
+
+| Feature | `main` (checkout) | published 0.10.0 | Consequence |
+| ------- | ----------------- | ---------------- | ----------- |
+| `focusVisible` state style | yes | **no** | focus rings are scripted; no `:focus-visible` distinction |
+| `outlineWidth`/`Color`/`Offset` | yes | **no** | a ring must be a spread-only `boxShadow` or a colour change |
+| `keyboardFocusDim` | yes | **no** | cannot opt out of focus dimming |
+| `borderStyle: solid \| dashed` | yes | **no** | no dashed borders |
+| `scrollbarColor`/`scrollbarWidth` | yes | **no** | the scrollbar cannot be tinted |
+| `boxShadow` | one or a list | **one** | no layered shadows |
+| `aspectRatio` | yes | **no** | size both axes explicitly |
+| `KeyEvent` on `onKeyDown` | yes | **no** (`EventPayload`) | decode key facts at the boundary |
+| `onScrollChange`, `onLayout` | yes | **no** | no scroll-offset or layout reporting |
+| `./button` export | yes | **no** | button keyboard behaviour is ours |
+| `Dialog`, `DismissableLayer`, `createPortal` | yes | **partial** (`./floating` ships `DismissableLayer`/`FloatingLayer`; the root's `Dialog` is not published) | overlays are built here on `./floating` |
+
+Anything written below as a "GPUix limitation" therefore cites 0.10.0, and a
+future upgrade may remove it. Re-run the probe table in §3 before assuming.
 
 ---
 
@@ -104,13 +153,16 @@ pointer simulation, scroll and selection APIs, and `captureScreenshot`.
    *pure function*, which is the most testable part of the library.
 2. **Composition is `div` + `text` + flexbox.** Stack/Box/Separator/Spacer are
    thin. That is correct here, not lazy: the runtime has one box primitive.
-3. **Interaction state is declared, not scripted.** Hover/active/focus-visible
-   belong in `style.hover`/`style.active`/`style.focusVisible`. Do not implement
-   them with `onMouseEnter` + `useState`.
-4. **Keyboard behaviour is real and must be real.** `buttonProps` in
-   `@gpuix/react/button` is the reference implementation (Enter on key down,
-   Space on key up, `defaultPrevented` respected, `focusableWhenDisabled`).
-   Every focusable control reuses that shape.
+3. **Interaction state is declared, not scripted — with one exception.** Hover
+   and active belong in `style.hover`/`style.active`; never implement them with
+   `onMouseEnter` + `useState`. Focus is the exception the runtime forces: there
+   is no `focusVisible`, so a focus ring is the one piece of interaction state a
+   component must track, and it should do so in a single shared place rather than
+   in every control.
+4. **Keyboard behaviour is ours.** `@gpuix/react/button` is not published, so the
+   contract (Enter on key down, Space on key up, a held key ignored) lives in
+   `packages/primitives/src/core/keyboard.ts` and every focusable control reuses
+   it. Decode the key facts from `EventPayload` at the boundary.
 5. **Animation is opacity/size/position only.** Skeletons pulse (opacity).
    A spinner cannot rotate: use an indeterminate sweep (width/left) or a
    discrete step cycle, and document the limitation.
@@ -139,10 +191,12 @@ not assumed.
 | Browser/Wasm path | published tarball contents | `wasm/gpuix-web.js` + `wasm/gpuix-web_bg.wasm` + `browser.mjs` **are** published |
 
 **Therefore:** on this box, in this session, **no GPUix component can be
-rendered, clicked, focused or asserted on**, and any module that imports
-`@gpuix/react` **throws at import time** because `@gpuix/react` → `@gpuix/native`
-has no `darwin-x64` binding. `nub run test` on such a module fails while loading
-the module, not while running a test.
+rendered, clicked, focused or asserted on**. Importing `@gpuix/react` (the root)
+or `@gpuix/react/testing` **throws `Cannot find native binding` at import time**,
+because `@gpuix/react` → `@gpuix/native` has no `darwin-x64` binding; a test that
+imports either fails while loading, not while running. The subpath modules
+(`./floating`, `./select`, `./tooltip`, `./combobox`, `./jsx-runtime`) do load,
+which is what makes element-level tests possible.
 
 ### 3.1 The only honest verification paths, strongest first
 
@@ -181,6 +235,9 @@ Stop and report (do not improvise) if, while working on any plan:
 
 - you need a GPUix capability that §1 does not list (no transform, no
   `aria-checked`, no colour animation, no `position: fixed`);
+- **you are about to copy a `style` property or host prop from the
+  `references/gpuix` checkout** — check §1.6 first; a dozen of them do not exist
+  in the published release and the mistake only shows up at type-check time;
 - you are about to assert a runtime behaviour that was never executed;
 - the wasm path (3.1.1) is attempted and WebGPU is unavailable in headless
   Chrome — record the exact Chrome flags and error, then fall back to path 3;

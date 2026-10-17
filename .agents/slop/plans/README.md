@@ -25,6 +25,7 @@ is the authority on order, not the file name.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [020](020-gpuix-runtime-capability.md) | GPUix runtime capability map and verification strategy | A | — | **done (recon); runtime verification BLOCKED — read §3** |
+| [022](022-swarm-single-writer.md) | One writer per worktree — the swarm is running duplicate agents | infra | — | **BLOCKER B3 — read §3 before writing anything** |
 | [030](030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | planned |
 | [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | planned |
 | [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | planned |
@@ -42,6 +43,14 @@ session has **no Aqua session** (`NSScreen.screens` is empty), so even the older
 verified on this machine today.** Its §3.1 lists the three honest verification
 paths in strength order. Every component row stays `wip` until path 1 (wasm in
 headless Chrome) or path 2 (a GUI session / a source build) succeeds.
+
+### Prerequisite for the whole swarm: one writer per worktree
+
+`022-swarm-single-writer.md` records the measured fact that the supervisor is
+running **several live agents per worktree** (5 for `primitives` alone), so they
+clobber each other's files. Until §4 of that plan leaves exactly one live
+session per tree, no workstream should write: a green `nub run check` under
+concurrent writers proves nothing. Read its §3 first.
 
 ## How to use a plan
 

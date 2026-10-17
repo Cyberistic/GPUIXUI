@@ -15,7 +15,7 @@ and the strongest honest alternative.
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
 | Text / typography | todo | ? | |
-| Icons | todo | ? | |
+| Icons | wip | partial | `packages/icons`: 45 icons as 24x24 markup for `<svg source>`, size scale, a11y rule (decorative ⇒ `role="presentation"`), 18 tests proven in both directions. **Unverified on screen:** that GPUix paints the markup, tints `stroke="#000"` from `style.color`, and scales it from `style.width`. Needs the native runtime — plan 020 §3. |
 | Separators | todo | ? | |
 | Spacers | todo | ? | |
 | Stack / layout primitives | todo | ? | |

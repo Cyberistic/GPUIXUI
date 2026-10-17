@@ -81,6 +81,12 @@ export interface ColorRoles {
   readonly ring: string
   readonly selection: string
   readonly overlay: string
+  /** Paint for a raised surface's shadow. */
+  readonly shadow: string
+  /** Success state: a completed step, a healthy metric. */
+  readonly success: string
+  /** Scrollbar thumb colour, where the runtime exposes one (0.10.0 does not). */
+  readonly scrollbar: string
   readonly primary: VariantColors
   readonly secondary: VariantColors
   readonly destructive: VariantColors
@@ -207,6 +213,16 @@ invalid, disabled, orientation, … }`). `resolveStyleSpec` is a total function 
 no `any`, no `undefined` branches — and it is where the theme is applied.
 It must be pure so `nub run test` can prove it.
 
+**One deliberate asymmetry:** the published runtime has no `focusVisible` state
+style (plan 020 §1.6), so a focused control's style is a *separate* resolution
+(`controlFocusStyle`) that the component merges over the resting style while it
+holds focus. Hover and active stay declarative in `style.hover`/`style.active`.
+
+**Second asymmetry:** `hover`/`active` on a variant are functions
+(`(theme) => StyleDesc`), not colours, so a variant can change its border or add
+a text decoration instead of only repainting a fill — and an invariant test can
+require every variant to declare *some* feedback.
+
 ### 3.3 `core/variant.registry.ts`
 
 One table per component mapping `(variant, size, state)` → the semantic class
@@ -239,7 +255,7 @@ repeat, `defaultPrevented` wins. Tests state each rule and fail if it flips.
 | `Grid` | `div` grid | numeric-only GPUix grid: `columns`, `rowHeight` — document the missing areas/auto-flow |
 | `Separator` | `div` | 1px border, `orientation`, `inset`, `label` slot |
 | `Spacer` | `div` | `flexGrow` filler or fixed `size` |
-| `ScrollArea` | `div` `overflow: scroll` | `axis`, `scrollbarColor`/`Width` from the theme; **no fade mask** (GPUix has none — GPIO Kit's `scrollable_mask` has no equivalent; document) |
+| `ScrollArea` | `div` `overflow: scroll` | `axis` only — the published runtime has **no `scrollbarColor`/`scrollbarWidth`**, so the thumb is platform-themed and cannot be tinted; **no fade mask** (GPUI Kit's `scrollable_mask` has no equivalent). Document both. |
 | `Text` | `text` | sizes `xs…2xl`, weights, `tone` (`default\|muted\|subtle\|primary\|destructive`), `truncate`, `lineClamp`, `align`, `mono`, `selectable` |
 | `Label` | `text` (+ wrapping `div`) | `required`, `description`, `invalid`; **`aria-labelledby` does not exist in GPUix** — the label sets `aria-label` on the control via a render callback instead. Document the workaround. |
 | `Button` | focusable `div` + `role="button"` | variants `primary\|secondary\|outline\|ghost\|destructive\|link`, sizes `xs\|sm\|md\|lg\|icon`, `loading`, `disabled`, `focusableWhenDisabled`, leading/trailing icon, `asChild` via `renderSlot` |
@@ -331,7 +347,39 @@ anything: revert the source change, watch the test fail, restore, watch it pass.
 ## 8. Open items to record, not solve
 
 - `PLAN.md` §4: source-first exports (no `build` step) until a publish
-  requirement exists.
-- `PLAN.md` §4: the `PrimitiveTheme` port and the tokens contract.
+  requirement exists; the `PrimitiveTheme` port and the tokens contract.
 - `TODO.md`: runtime tests for Tier 1 (playground workstream);
   `aria-checked`/`aria-valuenow` gaps (upstream GPUix); density in tokens.
+
+---
+
+## 9. Current state of `packages/primitives` — handover (read before editing)
+
+**Several agents from the same workstream were editing this worktree at once.**
+`022-swarm-single-writer.md` is the measured diagnosis (5 live
+`swarm:primitives` sessions; 2–6 for every other workstream) and the reason no
+workstream should write until its §4 leaves exactly one live session. This plan
+recorded the collision from the other side: files under `src/core/` changed
+signature *between* a compiler pass and an assertion, so a green `nub run check`
+here proves nothing yet.
+
+**Consequence for this plan:** §3's file list, §2.2's minimal theme port and the
+`core/metrics.ts` split are all **superseded**. A later writer folded sizes into
+the theme and aligned `core/theme.ts` group for group with `@gpuixui/tokens`
+(`colors`, `typography`, `spacing`, `radius`, `density`, `elevation`,
+`borderWidth`, `iconSize`), and added `core/{color,layout,selection,loading}.ts`.
+**Keep that design** — it is what the tokens package satisfies directly, and it
+replaces the port §2.2 proposed. What survives unchanged from this plan is the
+architecture it argues for: one resolution point in `core/style.ts`, behaviour
+in pure modules, hover/active declared rather than scripted, and no component
+claiming a capability plan 020 §1.6 says the runtime lacks.
+
+**Rule for resuming:** after `022` §4 has left one live session per tree, run
+`nub run check` in `packages/primitives` and finish whatever is still red, then
+continue with §3 of this plan. At the time of writing that was down to a single
+failing test (`loading.test.ts` comparing two interned `Option.some`
+singletons, which `Option` caches, so `not.toBe` cannot fail as written) and one
+unused import — eroding by the minute, and not worth a second writer racing for.
+
+**Complete and not to be redone:** `packages/icons` (18 tests, each proven in
+both directions) and the plan set in this directory.
