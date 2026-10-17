@@ -43,7 +43,11 @@ const pairs: readonly Pair[] = [
   ["selectedForeground", "selected", 4.5],
   ["placeholder", "input", 4.5],
   ["borderStrong", "background", 3],
+  ["borderStrong", "card", 3],
+  ["borderStrong", "input", 3],
   ["ring", "background", 3],
+  ["ring", "card", 3],
+  ["ring", "popover", 3],
 ];
 
 const themes = [
