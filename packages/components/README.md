@@ -4,7 +4,7 @@ Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
 Plans for this package and every component it holds are in
-`.agents/slop/plans/` (110–118). Read those before adding a component.
+`.agents/slop/plans/` (110–125). Read those before adding a component.
 
 ## Boundary
 
@@ -27,7 +27,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
 | `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |
 | `src/empty-state.tsx` | EmptyState: the centred "nothing here yet" panel |
-| `src/list.tsx`, `src/list/selection.ts` | List / ListItem: rows with a roving tab stop and single or multiple selection |
+| `src/list.tsx`, `src/list/selection.ts` | List / ListItem: rows with a roving tab stop, single or multiple selection, and select-all |
 | `src/dialog.tsx` | Dialog: an anchored window veil, focus-in/return, Tab trap, Escape |
 | `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |

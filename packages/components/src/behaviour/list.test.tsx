@@ -8,7 +8,9 @@
  * row without moving real focus; wrap-around failing at either end; a controlled
  * list that updates its own selection when the consumer says no; and — in
  * multiple mode — a Cmd-click that replaces instead of toggling, a Shift range
- * that includes a disabled row, and Shift+Arrow moving focus without extending.
+ * that includes a disabled row, Shift+Arrow moving focus without extending, and
+ * Cmd/Ctrl+A doing nothing in multiple mode (or reporting a change in single
+ * mode).
  */
 
 import * as Arr from "effect/Array";
@@ -427,6 +429,45 @@ describe("List", () => {
 
     expect(focusedTestId(list)).toEqual(Option.some("row-c"));
     expect(onValueChange).toHaveBeenLastCalledWith(["a", "c"]);
+
+    list.unmount();
+  });
+
+  it("selects every enabled row on Cmd+A and keeps focus put", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-c")?.id ?? -1);
+    list.renderer.simulateKeystrokes("cmd-a");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["a", "c", "d"]);
+    expect(isSelected(list, "row-a")).toBe(true);
+    expect(isSelected(list, "row-b")).toBe(false);
+    expect(isSelected(list, "row-c")).toBe(true);
+    expect(isSelected(list, "row-d")).toBe(true);
+    expect(focusedTestId(list)).toEqual(Option.some("row-c"));
+
+    list.unmount();
+  });
+
+  it("ignores select-all in single mode", () => {
+    const onValueChange = vi.fn();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" onValueChange={onValueChange}>
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b">
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("ctrl-a");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(focusedTestId(list)).toEqual(Option.some("row-a"));
 
     list.unmount();
   });

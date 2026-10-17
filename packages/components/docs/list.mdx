@@ -58,6 +58,10 @@ Movement works exactly as in single mode. Selection differs:
 | `Space` / `Enter` | toggle the focused row, keeping the rest |
 | `Shift+↓` / `Shift+↑` | move focus and select the range from the anchor |
 | `↓` / `↑` (no shift) | move focus and re-anchor; the selection stays |
+| `Cmd+A` / `Ctrl+A` | select every enabled row; focus stays put |
+
+Select-all becomes the new anchor at the first enabled row, so a following
+`Shift`+click extends from the top of the list. Single-mode lists ignore the key.
 
 ## Selection
 
@@ -98,8 +102,8 @@ selected, without duplicates. Selecting the same set again reports nothing new.
 Single mode still has no second click that clears the value; a multiple list
 clears by toggling its last selected row.
 
-**Not built**: no select-all, no type-ahead, no drag reorder, and no
-`aria-multiselectable` (see Accessibility).
+**Not built**: no type-ahead, no drag reorder, and no `aria-multiselectable`
+(see Accessibility).
 
 ## API
 
@@ -153,7 +157,7 @@ a disabled row is drawn at 50% opacity.
 
 ## Limitations
 
-- No select-all, no type-ahead, no drag reorder, no group headers, no nested rows.
+- No type-ahead, no drag reorder, no group headers, no nested rows.
 - No `aria-multiselectable` in 0.10.0 (see Accessibility).
 - No virtualisation: a `List` renders every row. Long collections belong in
   `virtual-list`, which is a separate component with its own API.
@@ -161,15 +165,15 @@ a disabled row is drawn at 50% opacity.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (20 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (22 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic and
 `src/list/selection.test.ts` for the multiple-selection rules: the modes and
 their roles, the absence and uniqueness of the tab stop, selection by click and by
 key, a disabled row rejecting both, real focus moving with wrap-around past a
 disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
 height, the controlled list not moving its own selection, and — in multiple mode —
-plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, and a disabled
-row never entering a selection.
+plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
+selecting every enabled row, and a disabled row never entering a selection.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

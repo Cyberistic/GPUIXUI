@@ -4,7 +4,8 @@
  *
  * Both lists are **controlled** (`value` + `onValueChange`) because the header
  * shows the selection: the app owns the value, the list renders it. Drop the
- * pair and the list keeps its own state instead.
+ * pair and the list keeps its own state instead. The reviewers list also shows
+ * the multiple-selection keys, including `Cmd`/`Ctrl`+A for every enabled row.
  */
 
 import * as Arr from "effect/Array";
@@ -139,7 +140,7 @@ export const ListExample = () => {
         <CardHeader>
           <CardTitle>Reviewers</CardTitle>
           <CardDescription>
-            {assigned.length} of {reviewers.length} assigned
+            {assigned.length} of {reviewers.length} assigned — Cmd+A selects all
           </CardDescription>
         </CardHeader>
         <List

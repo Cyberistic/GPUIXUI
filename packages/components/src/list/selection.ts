@@ -27,6 +27,16 @@ export const toggle = (
     ? Arr.filter(values, (candidate) => candidate !== value)
     : Arr.append(values, value);
 
+/** Every enabled row's value, in declaration order. Disabled rows never enter. */
+export const selectAll = (
+  rows: ReadonlyArray<SelectableRow>,
+): ReadonlyArray<string> =>
+  pipe(
+    rows,
+    Arr.filter((row) => !row.disabled),
+    Arr.map((row) => row.value),
+  );
+
 /** The same members, ignoring order. */
 export const sameValues = (
   left: ReadonlyArray<string>,

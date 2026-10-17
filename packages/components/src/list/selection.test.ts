@@ -4,11 +4,18 @@
  * The bugs these guard: a toggle that appends a value twice (so the consumer
  * receives `["a", "a"]` from two clicks), a toggle that drops the first-added
  * order, a range that includes a disabled row or reverses when the click lands
- * above the anchor, and a "changed" report for a selection that did not change.
+ * above the anchor, a "changed" report for a selection that did not change, and
+ * a select-all that puts a disabled row into the selection.
  */
 
 import { describe, expect, it } from "vitest";
-import { range, sameValues, toggle, type SelectableRow } from "./selection.js";
+import {
+  range,
+  sameValues,
+  selectAll,
+  toggle,
+  type SelectableRow,
+} from "./selection.js";
 
 /** Four rows in declaration order; the second is disabled. */
 const rows: ReadonlyArray<SelectableRow> = [
@@ -68,6 +75,21 @@ describe("range", () => {
   it("selects nothing when the target is unknown or disabled", () => {
     expect(range(rows, "a", "missing")).toEqual([]);
     expect(range(rows, "a", "b")).toEqual([]);
+  });
+});
+
+describe("selectAll", () => {
+  it("takes every enabled row in declaration order", () => {
+    expect(selectAll(rows)).toEqual(["a", "c", "d"]);
+  });
+
+  it("omits a disabled row in the middle", () => {
+    expect(selectAll(rows)).not.toContain("b");
+  });
+
+  it("selects nothing when no row accepts input", () => {
+    expect(selectAll([{ value: "a", disabled: true }])).toEqual([]);
+    expect(selectAll([])).toEqual([]);
   });
 });
 

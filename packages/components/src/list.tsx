@@ -36,9 +36,16 @@ import {
   nextEnabled,
   type CollectionItem,
 } from "./internal/collection.js";
-import { isActivation, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import {
+  isActivation,
+  isDown,
+  isFirst,
+  isLast,
+  isSelectAll,
+  isUp,
+} from "./internal/key.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
-import { range, sameValues, toggle } from "./list/selection.js";
+import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 
 /** Whether the list only presents rows, or also tracks a selection. */
 export type ListSelectionMode = "none" | "single" | "multiple";
@@ -417,11 +424,26 @@ export const List = (props: ListProps) => {
     );
   }, [active, select]);
 
+  /** Cmd/Ctrl+A: select every enabled row and anchor at the first of them. */
+  const selectEveryRow = useCallback(() => {
+    if (!multiple) return;
+    const next = selectAll(rows);
+    pipe(
+      Arr.head(next),
+      Option.match({
+        onNone: () => undefined,
+        onSome: (value) => setAnchor(Option.some(value)),
+      }),
+    );
+    commit(next);
+  }, [commit, multiple, rows]);
+
   const handleKeyDown = (event: EventPayload): void => {
     if (!selectable) return;
     const extend = multiple && event.modifiers?.shift === true;
     Match.value(event).pipe(
       Match.when(isActivation, selectActive),
+      Match.when(isSelectAll, selectEveryRow),
       Match.when(isDown, () => moveBy(1, extend)),
       Match.when(isUp, () => moveBy(-1, extend)),
       Match.when(isFirst, () => jumpTo("first")),
@@ -650,7 +672,7 @@ export const listMeta = {
   gpuixSupport: "yes",
   limitations: [
     "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
-    "no select-all, typeahead, drag reorder or virtualisation",
+    "no typeahead, drag reorder or virtualisation",
   ],
   docs: "docs/list.mdx",
   example: "examples/list.example.tsx",

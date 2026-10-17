@@ -132,6 +132,7 @@ the `@gpuixui/tokens/react` provider
     - [x] Context menu Shift+F10 opening and focus return — plan 122
     - [x] Toast pause-on-hover with remaining-time resume — plan 123
     - [x] Toast hold on keyboard focus, composed with hover — plan 124
+    - [x] List select-all (`Cmd`/`Ctrl`+A) over enabled rows — plan 125
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

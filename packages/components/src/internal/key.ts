@@ -49,6 +49,11 @@ export const isDismiss = (event: EventPayload): boolean =>
 /** Tab. */
 export const isTab = (event: EventPayload): boolean => event.key === "tab";
 
+/** Cmd+A (macOS) or Ctrl+A (elsewhere): select every row in a list. */
+export const isSelectAll = (event: EventPayload): boolean =>
+  event.key === "a" &&
+  (event.modifiers?.cmd === true || event.modifiers?.ctrl === true);
+
 /** Shift+F10, or the dedicated Menu key: the keyboard route to a context menu. */
 export const isMenuKey = (event: EventPayload): boolean =>
   (event.key === "f10" && event.modifiers?.shift === true) ||
