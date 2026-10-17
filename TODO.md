@@ -67,6 +67,10 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       asserts on the tree the runtime would receive)
 `[x]` `packages/primitives`: package README (theme port, density, component
       list, and the runtime-verification status)
+`[x]` `packages/primitives`: docs page + composed example for every Tier 1
+      component, co-located in the package (`docs/`, `examples/`); one runtime
+      suite mounts every example (plan 047)
+`[x]` `packages/icons`: docs page and the icon-gallery example (plan 047)
 `[x]` `packages/primitives`: Tier 1 runtime suites in `runtime/` — 46 tests
       against the real GPUix 0.10.0 `TestRenderer` (layout, controls, fields,
       loading, icons), with the two-direction proof; results in plan 041 §9
@@ -120,8 +124,9 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[~]` `[███░░░░░░░]` 1/3
 
 `[~]` Tier 1 foundational components (code + test + example + docs + inventory):
-      all 19 components have code, tests, a runtime-verified interaction and an
-      inventory row; **docs pages are still pending** (docs-site workstream)
+      all 19 components have code, tests, a runtime-verified interaction, an
+      in-package docs page, a mounted example and an inventory row; **docs-site
+      pages are still pending** (docs-site workstream)
 `[ ]` Tier 2 composition/feedback components (same bar)
 `[x]` Verify every component in both themes (`runtime/theme.runtime.test.tsx`: both palettes, a live switch, and no colour outside the active palette)
 
