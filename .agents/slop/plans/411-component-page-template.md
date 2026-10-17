@@ -314,6 +314,22 @@ Two-direction proof (required, AGENTS §3): set `button.status = "done"` while
 `gpuix = "unverified"` and show the test fails; restore and show it passes. Record
 both runs.
 
+### 9a. Package names (fixed 2026-10-17)
+
+`ComponentState` shows the record's `packageName`, so a wrong one is
+user-visible misinformation. The `Icons` row claimed `@gpuixui/primitives`; the
+repository has a separate package (`PLAN.md` §2 `packages/icons`, and
+`packages/icons/package.json` → `"@gpuixui/icons"` on the primitives branch). The
+record now says `@gpuixui/icons` and the `planned(...)` helper takes a
+`packageName` override.
+
+There is deliberately **no test** for this: the component→package mapping lives
+with the workstreams that own the packages, and nothing in this tree knows it
+yet. A mechanical check of "the name is a package `PLAN.md` declares" does not
+catch this defect (the wrong name was declared too) and was written, shown not to
+catch it, and dropped rather than kept as dead weight. From the first merged
+component the `sourcePath` check (7) subsumes it: the path contains the package.
+
 ## 10. STOP conditions
 
 - **Answered (plan 415):** `fumadocs-typescript` in `5.5.2` **does** support this

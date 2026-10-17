@@ -13,6 +13,8 @@ type Support = ComponentMetaInput["gpuix"];
 interface PlannedOptions {
   readonly gpuix?: Support;
   readonly related?: readonly string[];
+  /** Overrides the tier's default package; `registry.test.ts` checks it against `PLAN.md`. */
+  readonly packageName?: string;
 }
 
 const groupOf = (tier: Tier): string =>
@@ -35,7 +37,7 @@ const planned = (
   status: "planned",
   gpuix: options.gpuix ?? "unverified",
   summary,
-  packageName: packageOf(tier),
+  packageName: options.packageName ?? packageOf(tier),
   sourcePath: null,
   dependencies: [],
   related: options.related ?? [],
@@ -54,6 +56,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   ),
   planned("icon", "Icons", "1", "A sized, aligned glyph from the icon set.", {
     gpuix: "yes",
+    packageName: "@gpuixui/icons",
   }),
   planned(
     "separator",
