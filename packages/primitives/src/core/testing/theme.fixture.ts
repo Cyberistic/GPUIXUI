@@ -7,8 +7,10 @@
  * design decision, and a resolution test that *should* differ when the theme
  * differs (see `style.test.ts`) cannot pass by accident.
  *
- * Its shape is the contract `@gpuixui/tokens` must satisfy (see `theme.ts`), so
- * this file is also the executable form of the theme port.
+ * It is a `Theme` from `@gpuixui/tokens` (re-exported as `PrimitiveTheme`), so
+ * a fixture that no longer satisfies the real shape fails to compile rather
+ * than drifting into a second contract. The shipped light and dark themes are
+ * exercised in `runtime/theme.runtime.test.tsx`.
  */
 
 import type { FontWeight, PrimitiveTheme, TextStyle } from "../theme.js";
