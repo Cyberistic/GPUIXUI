@@ -77,6 +77,7 @@ All paths relative to the **tokens-theme worktree**:
 | `.agents/slop/plans/062-design-system-truth-guard.md` | **create** (this file) |
 | `packages/tokens/src/docs.test.ts` | read `docs/design-system.md`, add a `describe("docs/design-system.md")` block |
 | `docs/design-system.md` | one sentence in §9 recording that this page is guarded too |
+| `docs/tokens.md` | one sentence in Verification pointing at the design-system guard |
 | `COMPONENTS.md` | extend the **Design tokens** row's notes: both documents are guarded |
 | `TODO.md` | one task under the tokens block, ticked; progress count updated |
 | `.agents/slop/plans/README.md` | index row for `062`, and the paragraph that explains it |

@@ -749,7 +749,10 @@ It also fails if a soft status surface is indistinguishable from `background` or
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
 the type table to `textRoles` order and content, so this page cannot drift from
-the implementation.
+the implementation. The same file holds `docs/design-system.md`'s numeric claims
+— the identity metrics, role count, theme surfaces, type summary and the
+spacing, density, radius, icon and avatar scales — so the rationale cannot drift
+from the package either.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label and both families, `sans` is the GPUI sentinel, no family is a comma
