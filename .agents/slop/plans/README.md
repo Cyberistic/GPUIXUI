@@ -26,9 +26,9 @@ is the authority on order, not the file name.
 | ---- | ----- | ----- | ---------- | ------ |
 | [020](020-gpuix-runtime-capability.md) | GPUix runtime capability map and verification strategy | A | — | **done (recon); runtime verification BLOCKED — read §3** |
 | [022](022-swarm-single-writer.md) | One writer per worktree — the swarm is running duplicate agents | infra | — | **BLOCKER B3 — read §3 before writing anything** |
-| [030](030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | planned |
-| [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | planned |
-| [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | planned |
+| [030](030-primitives-package.md) | `packages/primitives` — render primitives + Tier 1 components | B/C | 020 | **implemented** — all 19 Tier 1 components + `core/` + element-tree suites; docs pages and `examples/basic-app` pending; read §9 (the §2.2/§3 file lists are superseded by the shipped tree) |
+| [031](031-icons-package.md) | `packages/icons` — icon set, sizing, accessibility | B | 020 | **done** (45 icons, 18 tests proven in both directions; on-screen paint unverified — 020 §3) |
+| [040](040-phase-c-tier1.md) | Phase C: Tier 1 foundational components (primitives workstream) | C | 030, 031 | **in progress** — code + tests + inventory done; example, docs pages and runtime verification outstanding |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |
@@ -48,9 +48,13 @@ headless Chrome) or path 2 (a GUI session / a source build) succeeds.
 
 `022-swarm-single-writer.md` records the measured fact that the supervisor is
 running **several live agents per worktree** (5 for `primitives` alone), so they
-clobber each other's files. Until §4 of that plan leaves exactly one live
-session per tree, no workstream should write: a green `nub run check` under
-concurrent writers proves nothing. Read its §3 first.
+clobber each other's files. Its §4 mitigation was applied to the `primitives`
+tree on 2026-10-17 08:40 (the duplicate session was deleted after the tree was
+committed) and the tree went green afterwards. **The fix itself is still
+unlanded:** `scripts/swarm-supervisor.sh`'s runner loops `opencode run` without a
+stable `--session`, so every loop iteration that returns early leaves a live turn
+and the next iteration forks another. Until §5.1 lands in the shared `scripts/`,
+every workstream will re-acquire a duplicate. Read its §3 first.
 
 ## How to use a plan
 

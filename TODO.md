@@ -32,14 +32,19 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       and starts another. Evidence, mitigation and the fix:
       `.agents/slop/plans/022-swarm-single-writer.md`. Fix lives in `scripts/`
       (shared checkout) — needs a coordinator or the human.
+      **Update 2026-10-17 08:40:** the primitives tree is back to one writer —
+      the duplicate session was removed (§4) after the tree was committed, and
+      the tree then went green (`nub run check`, 133 + 18 tests). The runner
+      **still forks a new session per loop iteration**, so every workstream will
+      re-acquire a duplicate until §5.1 lands in the shared `scripts/`.
 
 ## Phase B — working foundation
 
-`[ ]` `[░░░░░░░░░░]` 0/6
+`[~]` `[██░░░░░░░░]` 1/6
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[ ]` Land tokens and the theming architecture (light + dark, semantic roles)
-`[ ]` Land the primitives package
+`[x]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
 `[ ]` Land the docs shell and document that component in Fumadocs
@@ -48,18 +53,22 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
-`[!]` `packages/primitives`: **do not write while 022 is unresolved** — several
-      live sessions edit this tree (measured; see 022). The `core/` refactor to
-      the tokens-aligned theme port is theirs and was mid-flight; finish it
-      after 022 §4, starting from the real `nub run check` result
-`[ ]` `packages/primitives`: `ThemeProvider` + density switch
-`[ ]` `packages/primitives`: layout primitives (Box, Stack, Grid, Separator, Spacer, ScrollArea)
-`[ ]` `packages/primitives`: Text + typography scale
-`[ ]` `packages/primitives`: Button + ButtonGroup
-`[ ]` `packages/primitives`: Label, Input, TextArea
-`[ ]` `packages/primitives`: Checkbox, RadioGroup, Switch, Select
-`[ ]` `packages/primitives`: Progress, Skeleton, Spinner, Tooltip
+`[x]` `packages/primitives`: the `core/` layer (theme port, style resolution,
+      variants, keyboard, state, layout, selection, loading) with tests
+`[x]` `packages/primitives`: `ThemeProvider` + density override
+`[x]` `packages/primitives`: layout primitives (Box, Stack, Grid, Separator, Spacer, ScrollArea)
+`[x]` `packages/primitives`: Text + typography scale
+`[x]` `packages/primitives`: Button + ButtonGroup
+`[x]` `packages/primitives`: Label, Input, TextArea
+`[x]` `packages/primitives`: Checkbox, RadioGroup, Switch, Select
+`[x]` `packages/primitives`: Progress, Skeleton, Spinner, Tooltip
+`[x]` `packages/primitives`: element-tree test harness + component suites
+      (`src/components/testing/element.ts`; render is impossible here, so a test
+      asserts on the tree the runtime would receive)
+`[x]` `packages/primitives`: package README (theme port, density, component
+      list, and the honest runtime-verification gap)
 `[ ]` `examples/basic-app`: compose the Tier 1 set into one settings-form workflow
+`[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
@@ -88,9 +97,11 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Phase C — Tier 1–2 components
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[~]` `[███░░░░░░░]` 1/3
 
-`[ ]` Tier 1 foundational components (code + test + example + docs + inventory)
+`[~]` Tier 1 foundational components (code + test + example + docs + inventory):
+      all 19 components have code, a `core/` behaviour module or element-tree
+      suite, and an inventory row; **examples and docs pages are still pending**
 `[ ]` Tier 2 composition/feedback components (same bar)
 `[ ]` Verify every component in both themes
 
