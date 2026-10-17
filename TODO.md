@@ -376,9 +376,11 @@ retired once both branches are one
       `StateStyle<<X>State>` and export their state type; the callback's result
       merges last and object styles are unchanged. 7 element-tree + 4 runtime
       tests, both directions proven (plan 079)
-`[ ]` `packages/primitives`: **state-aware `style` (slice 2)** — the group
+`[x]` `packages/primitives`: **state-aware `style` (slice 2)** — the group
       roots (`CheckboxGroup`, `RadioGroup`, `ToggleGroup`, `Rating`, `OTPField`,
-      `Slider`, `RangeSlider`), `Label`, `ScrollArea` and `Select` (plan 080)
+      `Slider`, `RangeSlider`), `Label`, `ScrollArea` and `Select` accept and
+      export their state type; 9 element-tree + 2 runtime tests, both directions
+      proven (plan 080)
 `[ ]` `packages/primitives`: **per-item styling for the data-driven groups** —
       `optionStyle`/`rowStyle`/`itemStyle`/`thumbStyle`/`starStyle`/`cellStyle`
       and a `Select` `triggerStyle` are new props over data, not a `style` on an

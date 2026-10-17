@@ -21,7 +21,7 @@ import { useRef, useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import {
   decideAbsolute,
   decideActivation,
@@ -37,7 +37,11 @@ import {
 } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import {
+  resolvePartStyle,
+  useControlState,
+  type StateStyle,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
@@ -46,6 +50,12 @@ export interface RadioOption {
   readonly label: string;
   readonly description?: string;
   readonly disabled?: boolean;
+}
+
+/** The public state a `RadioGroup` style callback receives. */
+export interface RadioGroupState {
+  readonly disabled: boolean;
+  readonly invalid: boolean;
 }
 
 export interface RadioGroupProps {
@@ -69,7 +79,8 @@ export interface RadioGroupProps {
   readonly invalid?: boolean;
   /** Accessible name for the group. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the group's public state. */
+  readonly style?: StateStyle<RadioGroupState>;
   readonly testId?: string;
 }
 
@@ -155,13 +166,17 @@ export const renderRadioGroup = (
       aria-label={props.label}
       testId={props.testId}
       onKeyDown={onKeyDown}
-      style={mergeStyle(
+      style={resolvePartStyle(
         {
           display: "flex",
           flexDirection: orientation === "horizontal" ? "row" : "column",
           gap: theme.spacing.sm,
         },
         props.style,
+        {
+          disabled: props.disabled === true,
+          invalid: props.invalid === true,
+        },
       )}
     >
       {Arr.map(options, (option, index) => {

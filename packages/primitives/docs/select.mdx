@@ -66,7 +66,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 | `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
 | `side` | `FloatingSide` | auto — below, flipped above when it does not fit | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
-| `style` | `StyleDesc` | — | merged last on the select root |
+| `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 ```ts
@@ -170,7 +170,26 @@ its last option at `y 888` in an 800 px window and no way to reach it (plan
 `068` §1). Rows keep their height inside the cap (`flexShrink: 0`), so the list
 scrolls instead of squashing the options.
 
+## Style by state
+
+`style` takes an object or a callback over `SelectState` — the runtime's own
+`StateStyle` type — merged last on the select root:
+
+```tsx
+<Select style={(state) => ({ opacity: state.open ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `open` | `boolean` | the list is open |
+| `disabled` | `boolean` | the trigger is disabled |
+| `invalid` | `boolean` | the trigger paints the destructive border |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - **Options are data.** No rich option content and no compound escape hatch in
   the public API; use `RadioGroup` for those. A group is a heading and a run of
@@ -188,6 +207,11 @@ scrolls instead of squashing the options.
   role, `expanded` and `selected` carry the semantics instead.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/components/Select.test.tsx` — trigger chrome, list surface, item states,
   the measured `minWidth` (present with a width, absent without), the decoded

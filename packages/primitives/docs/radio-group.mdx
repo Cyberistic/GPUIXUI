@@ -40,7 +40,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `disabled` | `boolean` | `false` | disables every option |
 | `invalid` | `boolean` | `false` | a failed validation: the empty circles take the destructive border |
 | `label` | `string` | none | accessible name for the group |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<RadioGroupState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 `RadioOption` is `{ value, label, description?, disabled? }`. `description` is a
@@ -83,13 +83,36 @@ The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
 `radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
 same size are the same square/circle family. Gaps use `spacing.sm`.
 
+## Style by state
+
+`style` takes an object or a callback over `RadioGroupState` — the runtime's own
+`StateStyle` type — merged last on the group box:
+
+```tsx
+<RadioGroup style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | every option is disabled |
+| `invalid` | `boolean` | paints the empty circles destructive |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - Options are data: no compound `RadioGroupItem`, no rich child content.
 - No type-ahead selection.
 - A `description` is not associated with the option for assistive technology.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, and
   Home/End landing on the nearest enabled end.

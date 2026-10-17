@@ -37,7 +37,7 @@ layout silently would be the worse default.
 | `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` (the others are `hidden`) |
 | `label` | `string` | none | names the region **and** makes it a focusable keyboard scroll stop |
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad **deltas** (`deltaX`, `deltaY`, `precise`, `touchPhase`) |
-| `style` | `StyleDesc` | — | merged last; put the bounded size here |
+| `style` | `StateStyle<ScrollAreaState>` | — | merged last; put the bounded size here; an object or a state callback |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
 
@@ -73,7 +73,24 @@ The axes and the focus ring are resolved (`scrollStyle`, `focusRing`); the
 scrollbar's colour and width belong to the platform theme. `theme.colors.scrollbar`
 exists but cannot reach the 0.10.0 scrollbar.
 
+## Style by state
+
+`style` takes an object or a callback over `ScrollAreaState` — the runtime's own
+`StateStyle` type — merged last on the viewport:
+
+```tsx
+<ScrollArea style={(state) => ({ opacity: state.focused ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `focused` | `boolean` | the labelled region holds native focus; always false for an unlabelled area |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - **No scrollbar tint and no scrollbar width control** in GPUix 0.10.0
   (`scrollbarColor`/`scrollbarWidth` exist only on the unreleased `main`).
@@ -89,6 +106,11 @@ exists but cannot reach the 0.10.0 scrollbar.
   virtual-list work when it lands.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/layout.test.ts` — `decideScroll` and `resolveScroll`: the key map,
   the per-axis rules, one line, one page, Home/End, and the minimum page step.

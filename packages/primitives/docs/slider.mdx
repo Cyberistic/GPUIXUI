@@ -44,7 +44,7 @@ Omit `value` to let the slider own its state (`defaultValue` sets the start).
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name |
 | `formatValue` | `(value: number) => string` | `String` | the announced text |
-| `style` | `StyleDesc` | — | merged last, on the track |
+| `style` | `StateStyle<SliderState>` | — | merged last, on the track; an object or a state callback |
 | `testId` | `string` | — | stable locator for the track |
 
 Out-of-range values are clamped, and a value between steps snaps to the step
@@ -92,13 +92,36 @@ A drag keeps updating **after the pointer leaves the track** — the runtime
 captures the pressed element (measured, plan 063) — and clamps at `min`/`max`.
 Releasing ends the gesture; a plain hover never moves the value.
 
+## Style by state
+
+`style` takes an object or a callback over `SliderState` — the runtime's own
+`StateStyle` type — merged last on the track:
+
+```tsx
+<Slider style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | refuses pointer and keys |
+| `invalid` | `boolean` | paints the destructive role |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - **No `aria-valuenow`/`min`/`max`** (above).
 - The thumb cannot rotate or transform; GPUix has no `transform`, and the
   position is a flex layout, not a `translate`.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/value.test.ts` — clamping, snapping (no binary-float tails),
   fractions, the key contract, the pointer mapping, the crossing rule.

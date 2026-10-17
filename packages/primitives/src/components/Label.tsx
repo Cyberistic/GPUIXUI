@@ -9,10 +9,14 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
-import type { StyleDesc } from "@gpuix/react";
-import { mergeStyle } from "./internal.js";
+import { resolvePartStyle, type StateStyle } from "./internal.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
+
+/** The public state a `Label` style callback receives. */
+export interface LabelState {
+  readonly invalid: boolean;
+}
 
 export interface LabelProps {
   /** Marks the field required. Purely visual; validate with Schema. */
@@ -21,7 +25,8 @@ export interface LabelProps {
   readonly invalid?: boolean;
   /** A second line of help under the name. */
   readonly description?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the label's public state. */
+  readonly style?: StateStyle<LabelState>;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -51,7 +56,9 @@ export const renderLabel = ({
   <Stack
     direction="column"
     gap="2xs"
-    style={mergeStyle({ width: "100%" }, style)}
+    style={resolvePartStyle({ width: "100%" }, style, {
+      invalid: invalid === true,
+    })}
     testId={testId}
   >
     <Stack direction="row" gap="2xs" align="baseline">

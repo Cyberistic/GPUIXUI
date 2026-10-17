@@ -48,7 +48,7 @@ leaving a hole.
 | `invalid` | `boolean` | `false` | destructive border on every cell |
 | `label` | `string` | none | group name; each cell is named `<label> digit N` |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount; its ring paints from mount |
-| `style` | `StyleDesc` | — | merged last on the group |
+| `style` | `StateStyle<OTPFieldState>` | — | merged last on the group; an object or a state callback |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
 Only letters and digits are kept. A pasted `123-456` becomes `123456`, and a
@@ -100,7 +100,25 @@ Cells use the shared field chrome (`colors.input`, `colors.border`,
 comes from `density.controlHeight[size]`; the row gap is the `sm` spacing step.
 No literal colour, size or radius is named.
 
+## Style by state
+
+`style` takes an object or a callback over `OTPFieldState` — the runtime's own
+`StateStyle` type — merged last on the group box (the cells are internal):
+
+```tsx
+<OTPField style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | the field refuses input and leaves the tab order |
+| `invalid` | `boolean` | every cell paints the destructive border |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - **Paste is unverified.** `@gpuix/native` 0.10.0 has no `onPaste` and the
   `TestRenderer` has no clipboard simulation. A multi-character `onChange`
@@ -116,6 +134,11 @@ No literal colour, size or radius is named.
   uppercase normalises in `onChange`.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/otp.test.ts` — normalisation and truncation, cell padding, one-char
   replacement and advance, accumulated-text stripping, multi-character fill,

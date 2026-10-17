@@ -1,5 +1,5 @@
 /**
- * State-aware `style` (plan 079).
+ * State-aware `style` (plans 079, 080).
  *
  * The defect this suite guards: a Tier 1 part accepted only a plain `StyleDesc`,
  * so a consumer could not change the look of a *checked*, *focused*, *loading*
@@ -15,16 +15,57 @@
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton, type ButtonState } from "./Button.js";
+import {
+  renderCheckboxGroup,
+  type CheckboxGroupHandlers,
+  type CheckboxGroupState,
+} from "./CheckboxGroup.js";
 import { renderCheckbox, type CheckboxState } from "./Checkbox.js";
 import { fieldChrome, type FieldState } from "./Input.js";
+import { renderLabel, type LabelState } from "./Label.js";
 import { renderNumberField, type NumberFieldHandlers } from "./NumberField.js";
+import {
+  renderOtpField,
+  type OTPFieldHandlers,
+  type OTPFieldState,
+} from "./OTPField.js";
+import {
+  renderRadioGroup,
+  type RadioGroupHandlers,
+  type RadioGroupState,
+} from "./RadioGroup.js";
+import {
+  renderRating,
+  type RatingHandlers,
+  type RatingState,
+} from "./Rating.js";
+import { renderScrollArea, type ScrollAreaState } from "./ScrollArea.js";
+import {
+  renderSelect,
+  type SelectHandlers,
+  type SelectState,
+} from "./Select.js";
+import {
+  renderRangeSlider,
+  renderSlider,
+  type RangeSliderHandlers,
+  type RangeSliderState,
+  type SliderHandlers,
+  type SliderState,
+} from "./Slider.js";
 import { renderSwitch, type SwitchState } from "./Switch.js";
 import { renderToggle, type ToggleState } from "./Toggle.js";
+import {
+  renderToggleGroup,
+  type ToggleGroupHandlers,
+  type ToggleGroupState,
+} from "./ToggleGroup.js";
 import type { FocusState, StateStyle } from "./internal.js";
-import { expectSome, hostStyleString } from "./testing/element.js";
+import { elementProp, expectSome, hostStyleString } from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
 const focused: FocusState = {
@@ -203,5 +244,251 @@ describe("fields", () => {
       invalid: true,
     });
     expect(background(element)).toBe(PAINT);
+  });
+});
+
+/** A component root's resolved style (Stack, the GPUix Select root). */
+const componentStyle = (element: ReactElement): Record<string, unknown> =>
+  expectSome(
+    Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(
+      expectSome(elementProp(element, "style")),
+    ),
+  );
+
+const componentBackground = (element: ReactElement): unknown =>
+  componentStyle(element)["backgroundColor"];
+
+const groupFocus = {
+  focusedIndex: Option.none<number>(),
+  onFocus: vi.fn(),
+  onBlur: vi.fn(),
+};
+
+const rangeFocus = {
+  focusedIndex: Option.none<0 | 1>(),
+  onFocus: vi.fn(),
+  onBlur: vi.fn(),
+};
+
+const option = (value: string) => ({ value, label: value.toUpperCase() });
+
+const arrayState = (value: ReadonlyArray<string>) =>
+  initValueState(Option.some(value), []);
+
+const textState = (value: string) => initValueState(Option.some(value), "");
+
+const spanState = (value: readonly [number, number]) =>
+  initValueState(Option.some(value), [0, 100] as const);
+
+describe("group roots and overlays", () => {
+  it("CheckboxGroup reports disabled and invalid on its box", () => {
+    const record = recorder<CheckboxGroupState>();
+    const handlers: CheckboxGroupHandlers = {
+      onToggle: vi.fn(),
+      onToggleAll: vi.fn(),
+    };
+    const element = renderCheckboxGroup(
+      {
+        options: [option("alpha")],
+        style: record.style,
+        disabled: true,
+        invalid: true,
+      },
+      testTheme,
+      arrayState([]),
+      groupFocus,
+      handlers,
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      invalid: true,
+    });
+    expect(background(element)).toBe(PAINT);
+  });
+
+  it("RadioGroup reports disabled and invalid on its box", () => {
+    const record = recorder<RadioGroupState>();
+    const handlers: RadioGroupHandlers = {
+      onSelect: vi.fn(),
+      onFocusMove: vi.fn(),
+      registerItem: () => () => {},
+    };
+    const element = renderRadioGroup(
+      {
+        options: [option("alpha")],
+        style: record.style,
+        disabled: true,
+        invalid: true,
+      },
+      testTheme,
+      textState("alpha"),
+      0,
+      groupFocus,
+      handlers,
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      invalid: true,
+    });
+    expect(background(element)).toBe(PAINT);
+  });
+
+  it("ToggleGroup reports its disabled state on the group", () => {
+    const record = recorder<ToggleGroupState>();
+    const handlers: ToggleGroupHandlers = {
+      onPress: vi.fn(),
+      onFocusMove: vi.fn(),
+      registerItem: () => () => {},
+    };
+    const element = renderToggleGroup(
+      {
+        type: "multiple",
+        options: [option("bold")],
+        style: record.style,
+        disabled: true,
+      },
+      testTheme,
+      arrayState([]),
+      0,
+      groupFocus,
+      handlers,
+    );
+    expect(lastState(record.seen)).toStrictEqual({ disabled: true });
+    expect(background(element)).toBe(PAINT);
+  });
+
+  it("Rating reports disabled and invalid on its box", () => {
+    const record = recorder<RatingState>();
+    const handlers: RatingHandlers = {
+      onSelect: vi.fn(),
+      onMove: vi.fn(),
+      registerItem: () => () => {},
+    };
+    const element = renderRating(
+      { style: record.style, disabled: true, invalid: true },
+      testTheme,
+      initValueState(Option.some(3), 0),
+      groupFocus,
+      handlers,
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      invalid: true,
+    });
+    expect(background(element)).toBe(PAINT);
+  });
+
+  it("OTPField reports disabled and invalid on the group", () => {
+    const record = recorder<OTPFieldState>();
+    const handlers: OTPFieldHandlers = {
+      onEdit: vi.fn(),
+      onKey: vi.fn(),
+      onPick: vi.fn(),
+      registerCell: () => () => {},
+    };
+    const element = renderOtpField(
+      { style: record.style, disabled: true, invalid: true },
+      testTheme,
+      textState(""),
+      groupFocus,
+      handlers,
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      invalid: true,
+    });
+    expect(background(element)).toBe(PAINT);
+  });
+
+  it("Slider and RangeSlider report disabled and invalid on the track", () => {
+    const slider = recorder<SliderState>();
+    const range = recorder<RangeSliderState>();
+    const sliderHandlers: SliderHandlers = {
+      onValueChange: vi.fn(),
+      registerTrack: () => {},
+      onPointerDown: vi.fn(),
+      onPointerMove: vi.fn(),
+      onPointerUp: vi.fn(),
+    };
+    const rangeHandlers: RangeSliderHandlers = {
+      onSpanChange: vi.fn(),
+      registerTrack: () => {},
+      registerThumb: () => () => {},
+      onPointerDown: vi.fn(),
+      onPointerMove: vi.fn(),
+      onPointerUp: vi.fn(),
+    };
+    const sliderElement = renderSlider(
+      { style: slider.style, disabled: true, invalid: true },
+      testTheme,
+      initValueState(Option.some(50), 0),
+      idle,
+      sliderHandlers,
+    );
+    const rangeElement = renderRangeSlider(
+      { style: range.style, disabled: true, invalid: true },
+      testTheme,
+      spanState([20, 80]),
+      rangeFocus,
+      rangeHandlers,
+    );
+    expect(lastState(slider.seen)).toStrictEqual({
+      disabled: true,
+      invalid: true,
+    });
+    expect(lastState(range.seen)).toStrictEqual({
+      disabled: true,
+      invalid: true,
+    });
+    expect(background(sliderElement)).toBe(PAINT);
+    expect(background(rangeElement)).toBe(PAINT);
+  });
+
+  it("Label reports its invalid state on the stack", () => {
+    const record = recorder<LabelState>();
+    const element = renderLabel({ style: record.style, invalid: true });
+    expect(lastState(record.seen)).toStrictEqual({ invalid: true });
+    expect(componentBackground(element)).toBe(PAINT);
+  });
+
+  it("ScrollArea reports focus only for a labelled, focused area", () => {
+    const record = recorder<ScrollAreaState>();
+    const element = renderScrollArea(
+      { style: record.style, axis: "vertical", label: "Files" },
+      testTheme,
+      { focused: true },
+    );
+    expect(lastState(record.seen)).toStrictEqual({ focused: true });
+    expect(background(element)).toBe(PAINT);
+
+    const inert = recorder<ScrollAreaState>();
+    renderScrollArea({ style: inert.style, axis: "vertical" }, testTheme, {
+      focused: true,
+    });
+    expect(lastState(inert.seen)).toStrictEqual({ focused: false });
+  });
+
+  it("Select reports open, disabled and invalid on its root", () => {
+    const record = recorder<SelectState>();
+    const handlers: SelectHandlers = {
+      onOpenChange: vi.fn(),
+      onValueChange: vi.fn(),
+      registerTrigger: () => {},
+      registerItem: () => () => {},
+      onHighlight: vi.fn(),
+    };
+    const element = renderSelect(
+      { options: [], style: record.style, disabled: true, invalid: true },
+      testTheme,
+      textState(""),
+      true,
+      handlers,
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      open: true,
+      disabled: true,
+      invalid: true,
+    });
+    expect(componentBackground(element)).toBe(PAINT);
   });
 });

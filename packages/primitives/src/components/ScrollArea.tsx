@@ -17,15 +17,21 @@
  */
 
 import { useRef, type ReactElement, type ReactNode, type Ref } from "react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { focusRing } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
 import { decideScroll, resolveScroll, scrollLine } from "../core/layout.js";
 import { scrollStyle, type ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useFocus } from "./internal.js";
+import { resolvePartStyle, useFocus, type StateStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `ScrollArea` style callback receives. */
+export interface ScrollAreaState {
+  /** Only a labelled area is focusable, so this is false for an inert one. */
+  readonly focused: boolean;
+}
 
 export interface ScrollAreaProps extends ScrollSpec {
   /**
@@ -39,7 +45,8 @@ export interface ScrollAreaProps extends ScrollSpec {
    * accumulates deltas itself.
    */
   readonly onScroll?: (event: EventPayload) => void;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the area's public state. */
+  readonly style?: StateStyle<ScrollAreaState>;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -79,7 +86,9 @@ export const renderScrollArea = (
       onBlur={handlers.onBlur}
       onKeyDown={handlers.onKeyDown}
       onScroll={onScroll}
-      style={mergeStyle({ ...scrollStyle({ axis }), ...ring }, style)}
+      style={resolvePartStyle({ ...scrollStyle({ axis }), ...ring }, style, {
+        focused: named && handlers.focused === true,
+      })}
     >
       {children}
     </div>

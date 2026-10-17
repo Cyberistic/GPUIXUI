@@ -42,7 +42,7 @@ key (`Delete`/`Backspace`) or the app calling `onChange(0)`.
 | `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
 | `invalid` | `boolean` | `false` | a failed validation paints the empty stars destructive |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<RatingState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator on the group |
 
 Values are truncated to whole stars and clamped to `0..max`; a value that is not
@@ -82,7 +82,25 @@ its `#000` fill is what GPUix retints — so a theme change repaints both states
 The star size is `theme.iconSize[size]` and the focus ring is the shared
 `focusRing`.
 
+## Style by state
+
+`style` takes an object or a callback over `RatingState` — the runtime's own
+`StateStyle` type — merged last on the star row:
+
+```tsx
+<Rating style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | refuses pointer and keys |
+| `invalid` | `boolean` | paints the empty stars destructive |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - **Validation is paint only.** GPUix 0.10.0 has no `aria-invalid`, so `invalid`
   marks the empty stars and is not announced; pair the rating with an error
@@ -97,6 +115,11 @@ The star size is `theme.iconSize[size]` and the focus ring is the shared
   star again" — a rating is not a toggle.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
   the tab-stop choice, a zero or fractional `max`.

@@ -61,7 +61,7 @@ Uncontrolled, with no parent row:
 | `disabled` | `boolean` | `false` | disables every row, the parent included |
 | `invalid` | `boolean` | `false` | every **empty** box takes the destructive border |
 | `label` | `string` | none | the group's accessible name |
-| `style` | `StyleDesc` | — | merged last on the group |
+| `style` | `StateStyle<CheckboxGroupState>` | — | merged last on the group; an object or a state callback |
 | `testId` | `string` | — | names the group; rows become `${testId}-${value}` and the parent `${testId}-all` |
 
 ### The select-all parent
@@ -119,7 +119,25 @@ role, mark from `selectionMarkColor`. Hover and press are declared in
 feedback. Focus paints `colors.ring` on the box, not on the row, so the ring sits
 on the control the way it does in `Checkbox`.
 
+## Style by state
+
+`style` takes an object or a callback over `CheckboxGroupState` — the runtime's own
+`StateStyle` type — merged last on the group box:
+
+```tsx
+<CheckboxGroup style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | every row is disabled |
+| `invalid` | `boolean` | paints the empty rows' borders destructive |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - No `aria-checked`; state rides on `aria-valuetext` (above).
 - No arrow-key movement between rows (deliberate; the platform contract is Tab).
@@ -130,6 +148,11 @@ on the control the way it does in `Checkbox`.
   carries its own option label.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/checkbox-group.test.ts` — toggling, the parent tri-state over enabled
   options only, select-all that leaves a disabled value alone, and the identity

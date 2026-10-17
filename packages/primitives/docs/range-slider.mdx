@@ -47,7 +47,7 @@ ends can touch but never cross.
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
 | `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
-| `style` | `StyleDesc` | — | merged last, on the track |
+| `style` | `StateStyle<RangeSliderState>` | — | merged last, on the track; an object or a state callback |
 | `testId` | `string` | — | stable locator for the track |
 
 ## Keyboard
@@ -82,13 +82,36 @@ Same resolver as `Slider`: `colors.muted` rail, `colors.primary` fill, thumb
 `colors.input` with a `colors.primary` border, `focusRing` for focus. The end
 values are painted as two fills; the second fill is the length between the ends.
 
+## Style by state
+
+`style` takes an object or a callback over `RangeSliderState` — the runtime's own
+`StateStyle` type — merged last on the track:
+
+```tsx
+<RangeSlider style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | refuses pointer and keys |
+| `invalid` | `boolean` | paints the destructive role |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - **No `aria-valuenow`/`min`/`max`** (above).
 - The thumbs cannot be given custom glyphs in this version; they are the same
   pill as `Slider`'s.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/value.test.ts` — span ordering, the crossing guard, the nearest-end
   rule (including both thumbs at one value).

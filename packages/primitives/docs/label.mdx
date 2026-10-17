@@ -28,7 +28,7 @@ const name = "Workspace name";
 | `required` | `boolean` | `false` | appends a destructive `*`; **visual only** |
 | `invalid` | `boolean` | `false` | paints the name in the destructive role |
 | `description` | `string` | none | a caption line under the name |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StateStyle<LabelState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the name |
 
@@ -56,7 +56,24 @@ The name uses the `label` role and the `foreground` (or `destructive`) role; the
 description uses `caption` + `mutedForeground`. The required star is
 `destructive`. No literal size or colour.
 
+## Style by state
+
+`style` takes an object or a callback over `LabelState` — the runtime's own
+`StateStyle` type — merged last on the label stack:
+
+```tsx
+<Label style={(state) => ({ opacity: state.invalid ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `invalid` | `boolean` | the name takes the destructive role |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - No click-to-focus: the runtime has no `for`/`htmlFor`, and the label cannot
   move focus to another element.
@@ -66,6 +83,11 @@ description uses `caption` + `mutedForeground`. The required star is
 - `required` does not validate anything. Validate with `Schema` at the boundary.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/components/fields.test.tsx` — name, description, required and invalid
   resolve as specified.

@@ -59,10 +59,22 @@ import {
   FLOATING_MARGIN,
   type PlacementRequest,
 } from "../core/floating.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import {
+  mergeStyle,
+  resolvePartStyle,
+  useControlState,
+  type StateStyle,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export type { SelectEntry, SelectOption, SelectOptionGroup };
+
+/** The public state a `Select` style callback receives. */
+export interface SelectState {
+  readonly open: boolean;
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
 
 export interface SelectProps {
   /**
@@ -85,7 +97,8 @@ export interface SelectProps {
   readonly side?: FloatingSide;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the select's public state. */
+  readonly style?: StateStyle<SelectState>;
   readonly testId?: string;
 }
 
@@ -334,9 +347,14 @@ export const renderSelect = (
       onOpenChange={handlers.onOpenChange}
       disabled={disabled}
       testId={testId}
-      style={mergeStyle(
+      style={resolvePartStyle(
         { width: fullWidth === true ? "100%" : undefined },
         style,
+        {
+          open,
+          disabled: disabled === true,
+          invalid: invalid === true,
+        },
       )}
     >
       <SelectTrigger

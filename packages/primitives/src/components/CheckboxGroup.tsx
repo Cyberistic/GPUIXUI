@@ -41,11 +41,21 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { selectionValueText } from "./Checkbox.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import {
+  resolvePartStyle,
+  useControlState,
+  type StateStyle,
+} from "./internal.js";
 import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export type { CheckboxGroupOption };
+
+/** The public state a `CheckboxGroup` style callback receives. */
+export interface CheckboxGroupState {
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
 
 export interface CheckboxGroupProps {
   readonly options: ReadonlyArray<CheckboxGroupOption>;
@@ -70,7 +80,8 @@ export interface CheckboxGroupProps {
   readonly invalid?: boolean;
   /** Accessible name for the group. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the group's public state. */
+  readonly style?: StateStyle<CheckboxGroupState>;
   readonly testId?: string;
 }
 
@@ -270,13 +281,17 @@ export const renderCheckboxGroup = (
       role="group"
       aria-label={props.label}
       testId={props.testId}
-      style={mergeStyle(
+      style={resolvePartStyle(
         {
           display: "flex",
           flexDirection: orientation === "horizontal" ? "row" : "column",
           gap: theme.spacing.sm,
         },
         props.style,
+        {
+          disabled: props.disabled === true,
+          invalid: props.invalid === true,
+        },
       )}
     >
       {children}

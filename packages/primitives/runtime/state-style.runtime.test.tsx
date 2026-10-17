@@ -1,5 +1,5 @@
 /**
- * State-aware `style` in the real GPUix runtime (plan 079).
+ * State-aware `style` in the real GPUix runtime (plans 079, 080).
  *
  * The offline suite (`src/components/state-style.test.tsx`) proves the state
  * object and the merge order against the element tree. This suite proves the
@@ -15,7 +15,10 @@ import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { Input } from "../src/components/Input.js";
+import { ScrollArea } from "../src/components/ScrollArea.js";
+import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
+import { Text } from "../src/components/Text.js";
 import { Toggle } from "../src/components/Toggle.js";
 import type { Runtime } from "./harness.js";
 import { Surface, openWindow } from "./fixture.js";
@@ -113,4 +116,53 @@ it("Toggle's callback follows the pressed state it reports", async () => {
   expect(background(runtime, "t")).toBe(IDLE);
   runtime.click("t");
   expect(background(runtime, "t")).toBe(FOCUSED);
+});
+
+it("a labelled ScrollArea's callback follows its own focus", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        testId="area"
+        label="Files"
+        axis="vertical"
+        style={(state) => ({
+          backgroundColor: state.focused ? FOCUSED : IDLE,
+        })}
+      >
+        <Text>One</Text>
+      </ScrollArea>
+    </Surface>,
+  );
+  expect(background(runtime, "area")).toBe(IDLE);
+  runtime.focusNext();
+  expect(background(runtime, "area")).toBe(FOCUSED);
+});
+
+it("a Select's callback follows the open state", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        placeholder="Pick one"
+        options={[{ value: "apple", label: "Apple" }]}
+        style={(state) => ({
+          backgroundColor: state.open ? FOCUSED : IDLE,
+        })}
+      />
+    </Surface>,
+  );
+  expect(background(runtime, "sel")).toBe(IDLE);
+  const trigger = Option.getOrElse(
+    Option.flatMap(runtime.element("sel"), (element) =>
+      Option.flatMap(Option.fromNullishOr(element.children[0]), (id) =>
+        Option.fromNullishOr(runtime.renderer.getElement(id)),
+      ),
+    ),
+    () => expect.fail("the Select painted no trigger"),
+  );
+  runtime.clickElement(trigger);
+  expect(background(runtime, "sel")).toBe(FOCUSED);
 });

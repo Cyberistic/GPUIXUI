@@ -21,7 +21,7 @@
 
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -43,9 +43,20 @@ import {
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { toggleVariants, type ToggleVariant } from "../core/variants.js";
-import { mergeStyle, useControlState, type FocusState } from "./internal.js";
+import {
+  mergeStyle,
+  resolvePartStyle,
+  useControlState,
+  type FocusState,
+  type StateStyle,
+} from "./internal.js";
 import { pressedValueText } from "./Toggle.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `ToggleGroup` style callback receives. */
+export interface ToggleGroupState {
+  readonly disabled: boolean;
+}
 
 interface ToggleGroupBase {
   readonly options: ReadonlyArray<ToggleGroupOption>;
@@ -59,7 +70,8 @@ interface ToggleGroupBase {
   readonly disabled?: boolean;
   /** The group's accessible name. There is no `aria-labelledby` on GPUix. */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the group's public state. */
+  readonly style?: StateStyle<ToggleGroupState>;
   readonly testId?: string;
 }
 
@@ -136,7 +148,7 @@ export const renderToggleGroup = (
           { onNone: () => {}, onSome: move },
         );
       }}
-      style={mergeStyle(
+      style={resolvePartStyle(
         {
           display: "flex",
           flexDirection: orientation === "horizontal" ? "row" : "column",
@@ -144,6 +156,7 @@ export const renderToggleGroup = (
           gap: theme.spacing["2xs"],
         },
         props.style,
+        { disabled: props.disabled === true },
       )}
     >
       {Arr.map(options, (option, index) => {

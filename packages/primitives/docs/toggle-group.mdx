@@ -66,7 +66,7 @@ the selection actually changed.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | control height and padding from the density scale |
 | `disabled` | `boolean` | `false` | every item inert and out of the tab order |
 | `label` | `string` | none | the group's accessible name |
-| `style` | `StyleDesc` | — | merged over the group container, not its items |
+| `style` | `StateStyle<ToggleGroupState>` | — | merged over the group container, not its items; an object or a state callback |
 | `testId` | `string` | — | the group's locator; items become `${testId}-${value}` |
 
 Each item paints exactly like a standalone `Toggle`: rest from
@@ -114,7 +114,24 @@ Sizes and the group gap come from `density` and `spacing["2xs"]`. Both themes
 and the high-contrast palettes switch the whole group because it paints only
 theme roles.
 
+## Style by state
+
+`style` takes an object or a callback over `ToggleGroupState` — the runtime's own
+`StateStyle` type — merged last on the group container (items are data):
+
+```tsx
+<ToggleGroup style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `disabled` | `boolean` | every item is disabled |
+
+The callback's result merges after the component's own rules, so it wins per
+property; returning `{}` keeps the default look. The state type is exported.
+
 ## Limitations
+
 
 - No `aria-pressed` (above); the value text is the honest channel.
 - The group has no container chrome: it is a flex row of buttons. Wrap it in a
@@ -130,6 +147,11 @@ theme roles.
   also scroll on Space.
 
 ## Verification
+
+- `src/components/state-style.test.tsx` — the state payload and the callback
+  winning over the component's own rules (plan 080).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
+  a select's open state reaching the paint (plan 080).
 
 - `src/core/toggle-group.test.ts` — single replaces and returns the same array
   on a re-press (no spurious `onChange`); multiple appends, removes and

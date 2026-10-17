@@ -64,9 +64,22 @@ mean.
 The same `fieldChrome` and native text theme as `Input`; only the height model
 changes.
 
+## Style by state
+
 `style` is the same `StateStyle<FieldState>` as `Input` — `disabled`, `focused`,
-`invalid` — resolved after the chrome; the textarea's own vertical padding is
-re-based after it, so a callback's `paddingTop` does not survive.
+`invalid` — resolved after the chrome:
+
+```tsx
+<TextArea
+  label="Notes"
+  invalid={tooLong}
+  style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })}
+/>
+```
+
+The textarea re-bases its own vertical padding after the resolved style, so a
+callback's `paddingTop`/`paddingBottom` does not survive (every other property
+does). `FieldState` is exported from `Input`.
 
 ## Limitations
 

@@ -13,7 +13,7 @@
 
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
-import type { PublicInstance, StyleDesc } from "@gpuix/react";
+import type { PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
@@ -21,8 +21,18 @@ import { clampRating, decideRating, ratingTabStop } from "../core/rating.js";
 import { ratingStarColor, ratingStarStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import {
+  resolvePartStyle,
+  useControlState,
+  type StateStyle,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `Rating` style callback receives. */
+export interface RatingState {
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
 
 export interface RatingProps {
   /** Controlled rating, `0..max` (0 is unrated). */
@@ -40,7 +50,8 @@ export interface RatingProps {
   readonly invalid?: boolean;
   /** The group's name; each star is announced as "N of max". */
   readonly label?: string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the rating's public state. */
+  readonly style?: StateStyle<RatingState>;
   readonly testId?: string;
 }
 
@@ -120,7 +131,7 @@ export const renderRating = (
           onSome: handlers.onMove,
         });
       }}
-      style={mergeStyle(
+      style={resolvePartStyle(
         {
           display: "flex",
           flexDirection: "row",
@@ -128,6 +139,10 @@ export const renderRating = (
           gap: theme.spacing["2xs"],
         },
         props.style,
+        {
+          disabled: props.disabled === true,
+          invalid: props.invalid === true,
+        },
       )}
     >
       {Arr.map(Arr.range(1, max), star)}

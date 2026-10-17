@@ -110,4 +110,34 @@ without adding an observer (it is always the component's own props).
 
 ## 8. Result
 
-_(fill in when landed.)_
+Landed 2026-10-18.
+
+- Ten more parts accept `StateStyle<<Part>State>` and export the type:
+  `CheckboxGroup`, `RadioGroup`, `ToggleGroup`, `Rating`, `OTPField`, `Slider`,
+  `RangeSlider`, `Label`, `ScrollArea`, `Select`. All merge through the same
+  `resolvePartStyle` seam as slice 1.
+- Group and root states are the ones the **container** owns: `disabled`/
+  `invalid` for the four selection groups, `Rating` and both value controls;
+  `disabled` for `ToggleGroup`; `invalid` for `Label`; `focused` for a labelled
+  `ScrollArea`; `open`/`disabled`/`invalid` for `Select`. Per-item focus and
+  per-item values stay out because those items are data — recorded below.
+- **Measured**:
+  - `src/components/state-style.test.tsx` grew from 7 to **16 cases** — each new
+    state payload plus the callback winning; the scroll case proves an
+    unlabelled area always reports `focused: false`;
+  - `runtime/state-style.runtime.test.tsx` grew from 4 to **6 cases**: a labelled
+    ScrollArea repaints when `focusNext` lands on it, and a Select repaints when
+    the list opens;
+  - `nub run --filter @gpuixui/primitives test` → 34 files / **391 tests** (was
+    382); `test:runtime` → 17 files / **190 tests** (was 188).
+- **Both directions**: with `resolvePartStyle` ignoring the caller's style,
+  **16/16** state-style cases failed offline and **10** runtime cases failed
+  (the 6 state-style cases plus four existing suites that use object styles);
+  restoring it made both runs green.
+- Docs: ten pages gained "Style by state" + the verification bullet;
+  `COMPONENTS.md` rows and counts updated; `README.md` lists every exported
+  state type.
+- Still open (recorded in `TODO.md` and §6): per-item styling for the
+  data-driven groups (`optionStyle`/`rowStyle`/`itemStyle`/`thumbStyle`/
+  `starStyle`/`cellStyle`) and `Select`'s `triggerStyle`. Those are new props
+  over data, not a `style` on an existing part.

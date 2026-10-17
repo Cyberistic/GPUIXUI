@@ -17,13 +17,13 @@ export { Separator, Spacer } from "./Separator.js";
 export type { SeparatorProps, SpacerProps } from "./Separator.js";
 
 export { ScrollArea } from "./ScrollArea.js";
-export type { ScrollAreaProps } from "./ScrollArea.js";
+export type { ScrollAreaProps, ScrollAreaState } from "./ScrollArea.js";
 
 export { Text } from "./Text.js";
 export type { TextProps } from "./Text.js";
 
 export { Label, labelledBy } from "./Label.js";
-export type { LabelProps } from "./Label.js";
+export type { LabelProps, LabelState } from "./Label.js";
 
 export { Button } from "./Button.js";
 export type { ButtonFocus, ButtonProps, ButtonState } from "./Button.js";
@@ -41,6 +41,7 @@ export type {
   ToggleGroupMultipleProps,
   ToggleGroupProps,
   ToggleGroupSingleProps,
+  ToggleGroupState,
 } from "./ToggleGroup.js";
 
 export { Input } from "./Input.js";
@@ -50,7 +51,7 @@ export { NumberField, numberRange } from "./NumberField.js";
 export type { NumberFieldProps } from "./NumberField.js";
 
 export { OTPField, otpCellLabel } from "./OTPField.js";
-export type { OTPFieldProps } from "./OTPField.js";
+export type { OTPFieldProps, OTPFieldState } from "./OTPField.js";
 
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
@@ -64,22 +65,32 @@ export type {
   CheckboxGroupHandlers,
   CheckboxGroupOption,
   CheckboxGroupProps,
+  CheckboxGroupState,
 } from "./CheckboxGroup.js";
 
 export { Switch } from "./Switch.js";
 export type { SwitchProps, SwitchState } from "./Switch.js";
 
 export { initialActiveIndex, RadioGroup } from "./RadioGroup.js";
-export type { RadioGroupProps, RadioOption } from "./RadioGroup.js";
+export type {
+  RadioGroupProps,
+  RadioGroupState,
+  RadioOption,
+} from "./RadioGroup.js";
 
 export { Progress } from "./Progress.js";
 export type { ProgressProps } from "./Progress.js";
 
 export { Rating, ratingMax } from "./Rating.js";
-export type { RatingProps } from "./Rating.js";
+export type { RatingProps, RatingState } from "./Rating.js";
 
 export { RangeSlider, Slider, sliderRange, sliderValueText } from "./Slider.js";
-export type { RangeSliderProps, SliderProps } from "./Slider.js";
+export type {
+  RangeSliderProps,
+  RangeSliderState,
+  SliderProps,
+  SliderState,
+} from "./Slider.js";
 
 export { Meter } from "./Meter.js";
 export type { MeterProps } from "./Meter.js";
@@ -96,6 +107,7 @@ export type {
   SelectOption,
   SelectOptionGroup,
   SelectProps,
+  SelectState,
 } from "./Select.js";
 
 export { Tooltip } from "./Tooltip.js";

@@ -28,7 +28,7 @@
 
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -43,8 +43,18 @@ import {
 import { nativeTextTheme, otpCellStyle, otpGroupStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import {
+  resolvePartStyle,
+  useControlState,
+  type StateStyle,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state an `OTPField` style callback receives. */
+export interface OTPFieldState {
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
 
 export interface OTPFieldProps {
   /** Number of cells. Defaults to 6. */
@@ -66,7 +76,8 @@ export interface OTPFieldProps {
   readonly label?: string;
   /** Focus the first cell on mount. */
   readonly autoFocus?: boolean;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the field's public state. */
+  readonly style?: StateStyle<OTPFieldState>;
   readonly testId?: string;
 }
 
@@ -122,7 +133,10 @@ export const renderOtpField = (
       role="group"
       aria-label={props.label}
       testId={props.testId}
-      style={mergeStyle(otpGroupStyle(theme), props.style)}
+      style={resolvePartStyle(otpGroupStyle(theme), props.style, {
+        disabled,
+        invalid: props.invalid === true,
+      })}
     >
       {Arr.map(cells, (cell, index) => (
         <input

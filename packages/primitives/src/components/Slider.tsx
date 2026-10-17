@@ -26,7 +26,6 @@ import type {
   EventPayload,
   NativeRenderer,
   PublicInstance,
-  StyleDesc,
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
@@ -53,12 +52,25 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
-  mergeStyle,
+  resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
+  type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/** The public state a `Slider` style callback receives. */
+export interface SliderState {
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
+
+/** The public state a `RangeSlider` style callback receives. */
+export interface RangeSliderState {
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
 
 /** A single value on a track. */
 export interface SliderProps {
@@ -81,7 +93,8 @@ export interface SliderProps {
   readonly label?: string;
   /** How the value is announced. Defaults to `String(value)`. */
   readonly formatValue?: (value: number) => string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the slider's public state. */
+  readonly style?: StateStyle<SliderState>;
   readonly testId?: string;
 }
 
@@ -99,7 +112,8 @@ export interface RangeSliderProps {
   /** The group's name; each thumb becomes "<label> minimum"/"<label> maximum". */
   readonly label?: string;
   readonly formatValue?: (value: number) => string;
-  readonly style?: StyleDesc;
+  /** An object, or a callback over the range slider's public state. */
+  readonly style?: StateStyle<RangeSliderState>;
   readonly testId?: string;
 }
 
@@ -165,7 +179,10 @@ export const renderSlider = (
       }}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(sliderTrackStyle(spec, theme), props.style)}
+      style={resolvePartStyle(sliderTrackStyle(spec, theme), props.style, {
+        disabled: props.disabled === true,
+        invalid: props.invalid === true,
+      })}
     >
       <div style={sliderRailStyle(theme)}>
         <div
@@ -268,7 +285,10 @@ export const renderRangeSlider = (
       onMouseDown={handlers.onPointerDown}
       onMouseMove={handlers.onPointerMove}
       onMouseUp={handlers.onPointerUp}
-      style={mergeStyle(sliderTrackStyle(base, theme), props.style)}
+      style={resolvePartStyle(sliderTrackStyle(base, theme), props.style, {
+        disabled: props.disabled === true,
+        invalid: props.invalid === true,
+      })}
     >
       <div style={sliderRailStyle(theme)}>
         <div
