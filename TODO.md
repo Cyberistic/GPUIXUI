@@ -341,12 +341,13 @@ retired once both branches are one
       hand-maintained and unenforced. `src/exports.test.ts` now fails by name for
       an undocumented PascalCase export, a missing page, or an unindexed page;
       three failure directions proven (plan 074)
-`[~]` `packages/primitives`: **`Select` option groups** — the docs claimed
+`[x]` `packages/primitives`: **`Select` option groups** — the docs claimed
       "no option groups" as a limitation, but GPUix publishes
       `SelectGroup`/`SelectLabel` and maps a named `group`. `options` accepts a
       `SelectOptionGroup` beside a flat option, headings are skipped by the
       keyboard and counted in the placement estimate, and the group is a named
-      a11y node (plan 075)
+      a11y node (plan 075; 5 core + 2 element + 4 runtime tests, both failing
+      directions measured)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

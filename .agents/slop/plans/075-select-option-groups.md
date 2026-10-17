@@ -5,7 +5,7 @@
 | Phase | C (Tier 1 feature completion) |
 | Owner | primitives workstream |
 | Depends on | `030`, `040`, `041`, `047`, `057`, `062`, `066`, `068`, `069` |
-| Status | **planned** |
+| Status | **done** |
 
 Self-contained: §1 the gap, §2 the API, §3 exact files, §4 tests, §5
 commands, §6 STOP conditions, §7 acceptance and outcome.
@@ -125,17 +125,27 @@ Implementation notes:
 **Native runtime (`runtime/fields.runtime.test.tsx`)**
 
 9. Opening a grouped select paints the headings and every grouped option; the
-   a11y dump contains a `Group` node with the heading as its label.
-10. Keyboard: focus the trigger, Enter opens, Down highlights the **first**
+   a11y dump contains a `Group` node with the heading as its label; the heading
+   row measures the estimate's caption height; the whole list measures the
+   heading-aware estimate within 1 px.
+10. Side decision: a 640 px column puts the trigger where a heading-blind
+    estimate (≈128 px) would fit in the ≈140 px below, while the real grouped
+    list (≈216 px) does not. The list must open above the trigger. This is the
+    test that fails when the component omits `headingCount`.
+11. Keyboard: focus the trigger, Enter opens, Down highlights the **first**
     option (not the heading), Enter commits it and `onChange` reports its value.
-11. The estimate still matches the paint: a two-group list's measured height is
-    within 1 px of `selectListHeight(options, theme, headings)`.
+12. Clicking an option inside a group commits it and the trigger reports that
+    option's label.
 
-Two-direction proof: tests 9–11 fail when `Select.tsx` renders `selectOptions`
-flat (headings missing), when the renderer passes the row index instead of the
-value to `registerItem` (scroll/highlight pairing), and when the estimate omits
-`headingCount` (measured height differs). Record the exact failing assertion in
-§7 after the implementation.
+Two-direction proof (measured, 2026-10-17):
+
+- dropping `counts.headings` from the estimate call fails test 10 with
+  `expected 792 to be less than or equal to 620` — the heading-blind list opened
+  below and ran off the window;
+- turning the group's `role="group"` + `aria-label` into `role="presentation"`
+  fails test 9 with `the first group produced no accessibility node`;
+- flattening the render to `selectOptions` (no headings) fails test 9's painted
+  heading assertion and the group-node lookup.
 
 Regression statement for the test headers: *before this plan the list had no
 group headings and the public API could not express one; the runtime now paints
@@ -179,4 +189,25 @@ Acceptance:
 - docs and `COMPONENTS.md` no longer claim groups are unsupported;
 - `nub run check`, `nub run test`, `nub run lint` pass.
 
-Measured outcome: _to be filled after implementation._
+Measured outcome (2026-10-17, this host):
+
+- **API** — `SelectProps.options` is `ReadonlyArray<SelectEntry>` where
+  `SelectEntry = SelectOption | SelectOptionGroup`. Flat call sites are
+  unchanged; `examples/form.example.tsx` now uses two groups and mounts in the
+  runtime example suite.
+- **Data model** — `src/core/select.ts` owns `selectOptions`,
+  `selectRowCounts` and `isSelectGroup`; 5 pure tests cover flat order, grouped
+  order, empty groups, disabled flags and the group/option distinction.
+- **Paint** — a group is a column with the list's own gap, a caption heading,
+  and a named `group` node. The renderer keys its item registry and highlight
+  callback by **value**, so a heading cannot desynchronise a scroll target.
+- **Placement** — `selectListHeight(optionCount, theme, headingCount)` counts
+  headings; the component passes `selectRowCounts`' numbers.
+- **Tests** — offline suite **365 passed** (33 files); runtime suite **179
+  passed** (16 files, 4 new for groups). Both failing directions in §4 were
+  reproduced verbatim and restored.
+- **Docs** — `docs/select.mdx` documents grouped entries, the flat keyboard
+  order, the named group node, empty-group behaviour and the heading-aware
+  estimate, and its "no option groups" limitation is gone. `COMPONENTS.md`
+  records the feature; `TODO.md` and the plan index are ticked.
+- **Gates** — `nub run check`, `nub run test`, `nub run lint` green.
