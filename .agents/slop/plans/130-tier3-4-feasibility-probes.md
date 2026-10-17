@@ -201,6 +201,9 @@ Verdicts remain `unverified` on this host: the suite exits `2` before running
 
 - `packages/data-grid` plan: the table layout, resize, virtualization and the
   X-only scroll answer come from `table-select-sort` + `table-column-resize`.
+  The **combination** is `virtualized-table` (plan `152`): fixed cells lay out
+  in virtual rows, a painted row is hittable and selects, selection survives
+  scroll, and `onVisibleRange` lags the painted window by one gesture.
 - `packages/docking` plan: split/tab/drag from `workspace-tab-drag`; persistence
   is an app-boundary concern, and there is no multi-window detach.
 - `packages/editor` plan: `<code>` viewer is real; editable highlighted editing

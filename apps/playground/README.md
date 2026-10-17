@@ -14,12 +14,12 @@ app, three jobs:
 The **registry is the single source of truth**: `src/scenarios/index.ts` is both
 the sidebar and the smoke list, so a scenario cannot exist in one and not the
 other. Each scenario is one capability, one view, one `steps` effect: the nine
-core capabilities (including the theme gallery), three Tier 3/4 probes
-(`table-select-sort`, `table-column-resize`, `workspace-tab-drag`), the
-app-level shortcut probe (`window-key-shortcut`) and the shell-navigation guard
-(`shell-navigation`), which mounts the real `App` and proves its sidebar
-scrolls — the registry is longer than the window, so an unreachable entry would
-be a scenario the app cannot open.
+core capabilities (including the theme gallery), the Tier 3/4 probes
+(`table-select-sort`, `table-column-resize`, `virtualized-table`,
+`workspace-tab-drag`), the app-level shortcut probe (`window-key-shortcut`) and
+the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
+proves its sidebar scrolls — the registry is longer than the window, so an
+unreachable entry would be a scenario the app cannot open.
 
 ## Run it
 
@@ -55,7 +55,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (15/15 green); -> 2 on a host with no binding
+# -> 0 here (16/16 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -128,10 +128,10 @@ Two honest notes:
 
 ## Evidence on this host
 
-The suite is **15/15 green** here (`exit 0`):
+The suite is **16/16 green** here (`exit 0`):
 
 ```
-15/15 scenarios passed · capabilities: layout=verified text=verified
+16/16 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified scroll=verified panel=verified
 virtual-list=verified table=verified theme=verified workspace=verified
 ```
@@ -146,7 +146,8 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
-| table, workspace | row click/sort/keyboard, column drag; tab drag between panes, split resize |
+| table, workspace | row click/sort/keyboard, column drag; a virtualized table of 500 rows paints ~9, a painted row is hittable and its selection survives scrolling out and back; tab drag between panes, split resize |
+| virtual table | `onVisibleRange` **lags the painted window by one gesture** — after two wheel gestures the painted rows were `32–40` while the range read `16`; an index-driven feature must use the painted rows as the current window |
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
@@ -167,6 +168,7 @@ src/panels/split-pane.tsx the pointer-captured divider
 src/scenarios/*.tsx      one view + one steps effect per capability
 src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
 src/scenarios/shell.tsx  mounts the real App; guards the sidebar's scrolling
+src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -199,7 +201,7 @@ narrower. Each deviation is deliberate and measured:
 
 - The nine core capabilities (including the token gallery), three Tier 3/4
   probes and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
-  (15/15), with a written report and screenshots.
+  (16/16), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

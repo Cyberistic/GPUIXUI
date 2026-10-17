@@ -37,11 +37,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | scroll | `scroll-container` | verified |
 | panel | `panel-resize` | verified |
 | virtual-list | `virtual-list-window` | verified |
-| table | `table-select-sort`, `table-column-resize` | verified |
+| table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 
-The suite is **15/15 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **16/16 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); synthetic wheel scrolling **does** work
 (`deltaY` negative scrolls down, the opposite of the DOM); a `<virtual-list>`
@@ -242,7 +242,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
-| Virtualized tables | todo | ? | `<virtual-list>` rows can host a grid; there is no table element. |
+| Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. |
 | Tree views | todo | ? | `<virtual-list>` + indentation; hierarchical virtualization is ours. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
