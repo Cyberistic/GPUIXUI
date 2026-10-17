@@ -449,10 +449,23 @@ import { contosoStyle } from "./contoso";
 
 const contoso = applyPlatformStyle(getTheme("dark"), contosoStyle);
 const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
-  colors: { primary: "#005A9E", primaryHover: "#004578" },
+  colors: {
+    primary: "#5CB8FF",
+    primaryForeground: "#001A33",
+    primaryHover: "#8CCFFF",
+    primaryActive: "#A6DBFF",
+    primaryText: "#8CCFFF",
+  },
   radius: { md: 3, lg: 6 },
 });
 ```
+
+The edited family moves together, for the reason the brand example gives: a
+partial edit inherits the state roles and the foreground designed for the base
+fill. This example used to name only `primary` and `primaryHover`, so it kept
+the Windows dark black foreground and measured **2.96:1** on its fill and
+**2.12:1** on the hover, under the 4.5:1 on-colour floor (plan `310`). Both
+example themes are held to `themeContrastFailures`.
 
 `applyPlatformStyle(base, style, contrast = base.contrast)` reads the level the
 base declares, so a copied style never overrides a high-contrast palette unless
@@ -493,8 +506,12 @@ interface PlatformStyle {
 
 A complete file authored from scratch lives in
 [`src/platform-styles.example.ts`](../packages/tokens/src/platform-styles.example.ts)
-(`contosoPlatformStyle`). It is compiled and applied in `platforms.test.ts`, so
-the shape above is the one the library tests, not a sketch.
+(`contosoPlatformStyle`). It names the whole primary family — fill, foreground,
+hover, pressed and text — and is compiled, applied and held to
+`themeContrastFailures` in `platforms.test.ts`, so the shape above is the one the
+library tests, not a sketch. A style that names only the fill inherits a
+foreground designed for another fill; that is the 2.96:1 failure plan `310`
+fixed.
 
 `applyPlatformStyle(getTheme(mode), contosoPlatformStyle)` is the same call the
 shipped variants use, so a copied file cannot take a path the library does not
