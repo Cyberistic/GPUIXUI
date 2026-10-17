@@ -34,6 +34,7 @@ never as a promise.
 | [checkbox](checkbox.mdx) | `Checkbox` | [selection](../examples/selection.example.tsx) |
 | [radio-group](radio-group.mdx) | `RadioGroup` | [selection](../examples/selection.example.tsx) |
 | [switch](switch.mdx) | `Switch` | [selection](../examples/selection.example.tsx) |
+| [rating](rating.mdx) | `Rating` | [rating](../examples/rating.example.tsx) |
 | [select](select.mdx) | `Select` | [form](../examples/form.example.tsx) |
 | [slider](slider.mdx) | `Slider` | [value](../examples/value.example.tsx) |
 | [range-slider](range-slider.mdx) | `RangeSlider` | [value](../examples/value.example.tsx) |

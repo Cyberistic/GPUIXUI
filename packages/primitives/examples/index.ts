@@ -13,6 +13,7 @@ import { FormExample } from "./form.example.js";
 import { IconsExample } from "./icons.example.js";
 import { LayoutExample } from "./layout.example.js";
 import { NumberFieldExample } from "./number-field.example.js";
+import { RatingExample } from "./rating.example.js";
 import { SelectionExample } from "./selection.example.js";
 import { ToggleExample } from "./toggle.example.js";
 import { TypographyExample } from "./typography.example.js";
@@ -25,6 +26,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   icons: IconsExample,
   layout: LayoutExample,
   numberField: NumberFieldExample,
+  rating: RatingExample,
   selection: SelectionExample,
   toggle: ToggleExample,
   typography: TypographyExample,

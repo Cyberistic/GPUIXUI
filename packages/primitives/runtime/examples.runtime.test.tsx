@@ -131,6 +131,23 @@ it("moves the value example's quality slider and repaints its readout", async ()
   expect(runtime.allText()).toContain("50%");
 });
 
+it("rates the rating example and repaints its summary", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "rating");
+  expect(runtime.allText()).toContain("Click a star, or use the arrow keys.");
+  const four = Option.getOrElse(
+    Arr.findFirst(
+      runtime.all(),
+      (element) => element.customProps?.["aria-label"] === "4 of 5",
+    ),
+    () => expect.fail("the rating painted no 4-of-5 star"),
+  );
+  runtime.clickElement(four);
+  expect(
+    Arr.some(runtime.allText(), (line) => line.startsWith("You rated 4 of 5.")),
+  ).toBe(true);
+});
+
 it("flips the toggle example's snap mode and repaints its summary", async () => {
   const runtime = await openWindow();
   renderExample(runtime, "toggle");

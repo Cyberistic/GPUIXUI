@@ -173,10 +173,10 @@ retired once both branches are one
       `Slider`, `RangeSlider` and `Meter` (plan 053) — value maths, paint,
       element trees, runtime geometry and focus proofs, docs pages and a
       composed example; the rest of the claimed rows are plan 054
-`[~]` `packages/primitives`: `NumberField` and `Toggle` landed (plan 054) —
-      core modules, element-tree and runtime suites, docs pages and examples.
-      `OTPField` and `Rating` remain — one core module, test, docs page and
-      runtime proof each
+`[~]` `packages/primitives`: `NumberField`, `Toggle` and `Rating` landed (plan
+      054) — core modules, element-tree and runtime suites, docs pages and
+      examples. `OTPField` remains — core module, test, docs page and runtime
+      proof, with the paste behaviour to verify
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

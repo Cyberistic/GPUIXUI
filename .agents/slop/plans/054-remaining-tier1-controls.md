@@ -2,9 +2,9 @@
 
 - **Phase:** C (Tier 1 completion). **Owner:** primitives workstream.
 - **Depends on:** `030`, `040`, `041`, `047`, `049`, `053` (value maths).
-- **Status:** in progress. `NumberField` and `Toggle` are implemented and
-  measured (§9); `OTPField` and `Rating` are pending, and `053`'s stepping/focus
-  maths is in place for them.
+- **Status:** in progress. `NumberField`, `Toggle` and `Rating` are implemented
+  and measured (§9); `OTPField` is the only component left, and its paste
+  behaviour is the one runtime fact still to verify.
 - **Why:** these four rows in `COMPONENTS.md` were marked *owner unassigned*.
   They are all single-purpose input/selection primitives (`div` + `<input>` +
   our keyboard contract) and belong to this package, not to the Tier 2
@@ -280,8 +280,8 @@ count before it is measured.
 
 | Command | Result |
 | ------- | ------ |
-| `nub run --filter @gpuixui/primitives test` | 21 files, **243 tests passed** (214 before plan 054; +29) |
-| `nub run --filter @gpuixui/primitives test:runtime` | 10 files, **97 tests passed** (82 before plan 054; +15: seven field, six toggle, two example interactions) |
+| `nub run --filter @gpuixui/primitives test` | 23 files, **260 tests passed** (214 before plan 054; +46) |
+| `nub run --filter @gpuixui/primitives test:runtime` | 11 files, **106 tests passed** (82 before plan 054; +24: seven field, six toggle, seven rating, four example interactions) |
 | `nub run check` | tests-can-fail, lint, fmt and `check-types` pass |
 
 Two-direction probes (each change reverted on its own):
@@ -320,6 +320,23 @@ Facts measured for Toggle:
 - A `default`-variant toggle paints no fill at rest; the runtime still creates
   its hitbox from the click handler (the same fact measured for the slider
   track), so the press reaches it.
+
+### Rating
+
+| Guard | Revert | Result |
+| ----- | ------ | ------ |
+| clamping arrows | wrap instead of clamp in `decideRating` | unit `clamps at the ends…` and runtime `moves with the arrows…` → **expected 'unchecked' to be 'checked'** |
+| roving tab stop | give every star `tabIndex: 0` | runtime `is one tab stop…` → **expected '1 of 5' to be '3 of 5'** (Tab entered at the first star, not the rating) |
+
+Facts measured for Rating:
+
+- `star-filled` (a filled path in the retintable `#000`) and `star` share one
+  geometry; a filled star paints `colors.primary` and an empty one
+  `colors.mutedForeground` — checked on the painted `<svg>` styles.
+- An arrow selects and moves native focus together, so the ring lands on the
+  star the value came from; Right at five stays at five.
+- Tab enters on the selected star (or the first when unrated) and the next Tab
+  leaves the group — one tab stop, not five.
 
 Not proven:
 
