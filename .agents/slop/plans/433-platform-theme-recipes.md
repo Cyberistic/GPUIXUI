@@ -16,7 +16,8 @@ Both ship as **documented recipes with working examples**, not prose.
 
 ## Recipe A — Windows XP (Luna) and Windows 7 (Aero)
 
-Start from the Windows variant and override tokens; keep the component code untouched.
+Start from the **default Windows 11** variant and override tokens; keep the component code
+untouched.
 
 | Token group | XP (Luna) | Windows 7 (Aero) |
 |---|---|---|
