@@ -84,6 +84,7 @@ unmet.
 | D25 | Docs site is **Fumadocs + TanStack Start (SSR)** on Cloudflare Workers via `Cloudflare.Website.Vite` | Fumadocs' documented Vite/Start path; alchemy supports TanStack Start in one call; SSR gives search + SEO; the deploy `rootDir` is already fixed to `apps/docs` (plan 410) | 2026-10-17 |
 | D26 | Honest preview default is **companion playground + real native screenshots**; labelled browser approximations only; live Wasm embed only if proven | GPUix has a browser Wasm build but it needs nightly Rust, ~19 MB Wasm and COOP/COEP, so it is an upgrade path, not a default; `MISSION.md` forbids faking native (plan 412) | 2026-10-17 |
 | D27 | Component metadata is **docs-owned** under `apps/docs` in Phase B, typed by an Effect Schema contract; hoisting it into the packages is a tracked task | The component packages are another workstream; a single schema keeps the index, sidebar and status generated and makes the hoist a file move (plan 411) | 2026-10-17 |
+| D28 | Previews read the state the providers **publish on `<html>`** (`data-platform`, `dark`) through one `useSyncExternalStore` snapshot, not the React contexts | The MDX body renders behind `use(page.load())` and loses the providers' mount-time context updates: a dark page painted light previews and `?platform=win32` kept Menlo. The published state is what the chrome paints, so a preview cannot disagree with it; the server snapshot stays `default`/light so hydration matches. `smoke:browser` guards it in the release gate | 2026-10-17 |
 
 ## 5. Open questions
 
