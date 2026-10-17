@@ -89,7 +89,7 @@ describe("packages/tokens/README.md", () => {
 
   it("states where default body text is checked", () => {
     expect(readme).toContain(
-      "Default body text is checked on the canvas, card, the `muted` panel, `popover` and the `hover`/`active` washes",
+      "Default body text is checked on the canvas, card, the `muted` panel, `popover` and the `hover`/`active`/`accent`/`selected` washes",
     );
   });
 

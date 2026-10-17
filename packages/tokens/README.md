@@ -218,8 +218,12 @@ guarantee rather than a fix (plan 093). The modal scrim is measured the same way
 the AAA dark theme's black veil painting **1.000:1** on its pure black canvas and
 turned it into a light one (plan 099). Default body text
 is checked on the canvas, card, the `muted` panel, `popover` and the
-`hover`/`active` washes, so an avatar's initials on the quiet panel and a date
-picker's month header on its floating surface are held to the body floor.
+`hover`/`active`/`accent`/`selected` washes, so an avatar's initials on the
+quiet panel, a date picker's month header on its floating surface and a selected
+row's title are held to the body floor. A menu row's `popoverForeground` on
+`hover`/`active` and a selected row's inherited `selectedForeground` on the
+pointer washes are checked too, and a field's `border` edge is checked on its
+own `input` fill (plan 312).
 Secondary text is
 checked on `hover`, `active`, `accent` and `selected` too, so a row description
 stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
