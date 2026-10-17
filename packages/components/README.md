@@ -24,6 +24,9 @@ Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 | `src/card.tsx` | Card and its five parts — verified natively |
 | `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
 | `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
+| `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |
+| `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
+| `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/pagination/logic.ts` | page-window arithmetic |
 | `src/accordion/logic.ts` | single/multiple open-state transitions |
 | `src/breadcrumb/logic.ts` | trail collapsing |

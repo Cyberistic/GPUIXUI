@@ -12,6 +12,7 @@ import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { Avatar, type AvatarSize, type AvatarStatus } from "../avatar.js";
 import { nodesWithRole } from "../internal/a11y.js";
+import { sizeOf } from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -39,19 +40,6 @@ const backgrounds = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
   Arr.map(
     root.renderer.findByType("div"),
     (element) => element.style.backgroundColor,
-  );
-
-/** The measured size of the `avatar` element, `None` when it is missing. */
-const boundsOf = (
-  root: ComponentTestRoot,
-): Option.Option<{ readonly width: number; readonly height: number }> =>
-  Option.map(
-    Option.flatMap(
-      Option.fromNullishOr(root.renderer.findByTestId("avatar")),
-      (avatar) =>
-        Option.fromNullishOr(root.renderer.getElementBounds(avatar.id)),
-    ),
-    ({ width, height }) => ({ width, height }),
   );
 
 describe("Avatar", () => {
@@ -123,7 +111,7 @@ describe("Avatar", () => {
         <Avatar testId="avatar" name="Ada" size={size} />,
       );
 
-      expect(boundsOf(avatar)).toEqual(
+      expect(sizeOf(avatar, "avatar")).toEqual(
         Option.some({ width: diameter, height: diameter }),
       );
 
@@ -136,7 +124,9 @@ describe("Avatar", () => {
       <Avatar testId="avatar" name="Ada" style={{ width: 64 }} />,
     );
 
-    expect(boundsOf(avatar)).toEqual(Option.some({ width: 64, height: 32 }));
+    expect(sizeOf(avatar, "avatar")).toEqual(
+      Option.some({ width: 64, height: 32 }),
+    );
 
     avatar.unmount();
   });

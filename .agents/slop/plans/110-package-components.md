@@ -336,6 +336,26 @@ the discrepancy in `TODO.md` under `Interlocks`, and report. Do not copy the
 primitive into this package — a second copy is exactly the drift the boundary
 law forbids.
 
+### Amendment, 2026-10-17: `Button`/`IconButton` until primitives lands
+
+§7 and §12.2 say "record the interlock and continue with work that does not need
+it". Every remaining component in this plan set needs a button — Alert's dismiss,
+Dialog's actions, menu triggers, the toast viewport — so applying that literally
+stops the workstream rather than deferring one component. The persistent
+`TODO.md` → Blockers entry already decides the other way:
+
+> `Button`/`buttonProps` and `Dialog` parts must be equivalent local
+> implementations over `<div>` + host props until `packages/primitives` and a
+> newer `@gpuix/react` land.
+
+So this package implements `internal/button.tsx` — a minimal `Button` and
+`IconButton` over host elements, with `role="button"`, a tab stop, Enter/Space
+activation and theme styling — which is not a copy of a primitive (none exists)
+and is what `@gpuix/react`'s newer `buttonProps` does upstream. Interlocks are
+recorded in `TODO.md`; both exports are replaced by `@gpuixui/primitives`' own the
+moment it lands, and until then no component may claim a button it does not have
+(test ids and docs say where the stand-in is).
+
 ---
 
 ## 8. Public API rules (apply to every component)

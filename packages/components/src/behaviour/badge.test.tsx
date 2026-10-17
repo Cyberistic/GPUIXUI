@@ -12,21 +12,16 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { Badge, type BadgeSize, type BadgeVariant } from "../badge.js";
+import { sizeOf } from "../internal/interaction.js";
 import { darkTheme, lightTheme, tone, type Theme } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** The measured height of the `badge` element, `None` when the tree has none. */
+/** The height the renderer measured for the badge, `None` when it is missing. */
 const heightOf = (root: ComponentTestRoot): Option.Option<number> =>
-  Option.map(
-    Option.flatMap(
-      Option.fromNullishOr(root.renderer.findByTestId("badge")),
-      (badge) => Option.fromNullishOr(root.renderer.getElementBounds(badge.id)),
-    ),
-    (bounds) => bounds.height,
-  );
+  Option.map(sizeOf(root, "badge"), ({ height }) => height);
 
 /** The style the tree painted for `testId`; `{}` when the element is missing, so
  *  a vanished part fails the assertion rather than throwing. */

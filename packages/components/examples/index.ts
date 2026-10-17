@@ -8,12 +8,14 @@
  */
 
 import type { ComponentType } from "react";
+import { AlertExample } from "./alert.example.js";
 import { AvatarExample } from "./avatar.example.js";
 import { BadgeExample } from "./badge.example.js";
 import { CardExample } from "./card.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
+  alert: AlertExample,
   avatar: AvatarExample,
   badge: BadgeExample,
   card: CardExample,

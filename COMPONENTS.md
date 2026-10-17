@@ -52,9 +52,9 @@ and the strongest honest alternative.
 | Cards | done | yes | `variant` outline/elevated/plain; behaviour suite passes in the real renderer (5 tests, `test:behaviour`) |
 | Badges | done | yes | seven variants (neutral/primary/4 status tones/outline), two sizes sized by type role; 7 native behaviour tests. Not interactive by design; no icon or dismiss slot yet |
 | Avatars | done | yes | four diameters, deterministic unicode-safe initials fallback (8 logic tests), presence dot; 7 native behaviour tests. No image loading/error state in v1 — a missing file paints nothing and does not restore the initials |
+| Alerts | done | yes | four tones from the shared status palette, required `title`, optional icon slot and dismiss control; 10 native behaviour tests (real click, keyboard activation, alert role). Dismiss uses the local button stand-in; live-region announcement not verifiable here |
 | Lists / list items | todo | ? | |
 | Empty states | todo | ? | |
-| Alerts | todo | ? | |
 | Inline validation | todo | ? | |
 | Toasts / notifications | todo | ? | |
 | Dialogs | todo | ? | |
