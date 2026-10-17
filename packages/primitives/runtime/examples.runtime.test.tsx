@@ -131,6 +131,25 @@ it("moves the value example's quality slider and repaints its readout", async ()
   expect(runtime.allText()).toContain("50%");
 });
 
+it("flips the toggle example's snap mode and repaints its summary", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "toggle");
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { label: "Snap to grid" }),
+    ),
+  ).toBe("not pressed");
+  runtime.click("toggle-example-snap");
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { label: "Snap to grid" }),
+    ),
+  ).toBe("pressed");
+  expect(
+    Arr.some(runtime.allText(), (line) => line.startsWith("Grid on · Snap on")),
+  ).toBe(true);
+});
+
 it("steps the number-field example's copies and repaints its summary", async () => {
   const runtime = await openWindow();
   renderExample(runtime, "numberField");

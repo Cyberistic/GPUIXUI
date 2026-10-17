@@ -136,13 +136,13 @@ carries an evidenced limitation. The capability evidence lives in
 | Meter | wip | yes (a bar, no host element) | [meter](packages/primitives/docs/meter.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** AccessKit role `Meter`; the value text is the formatted measurement; the fill's painted width is the measurement's fraction of its own range; Tab never lands on it. Reuses `Progress`'s track/fill. No `aria-valuenow`. |
 | Number Field | wip | ours | [number-field](packages/primitives/docs/number-field.mdx) · [number-field](packages/primitives/examples/number-field.example.tsx) | **Runtime (054):** real typing reports `12`; `999` against `max=100` reports `100`; arrows step, PageDown pages, a hit-tested spin press steps and refocuses the input; the ring paints on the field's chrome; a disabled field refuses text, keys and presses. The input has **no numeric mode** (no `type`, `min`, `maxLength`), so parsing/clamping/drafts are ours. The spin buttons are `presentation`, not tab stops. `autoFocus` paints no ring on mount (no focus event is dispatched). |
 | OTP Field | todo | ? | — | **Owner: primitives** (plan 054). `<input>` exists; segmented rendering and keyboard movement are ours. Paste distribution depends on a runtime probe. |
-| Toggle | todo | ? | — | **Owner: primitives** (plan 054). Momentary pressed button; no `aria-pressed` in 0.10.0, so state must ride on `aria-valuetext`. |
+| Toggle | wip | ours | [toggle](packages/primitives/docs/toggle.mdx) · [toggle](packages/primitives/examples/toggle.example.tsx) | **Runtime (054):** a click flips the announced state and repaints the accent fill; Enter down and Space up each activate once; a disabled toggle leaves the tab order; the ring follows focus. **No `aria-pressed`** in 0.10.0 — the state rides on `aria-valuetext`, so a screen reader hears a button with a value. Activation and the ring are this package's (`@gpuix/react` publishes no button). |
 | Rating | todo | ? | — | **Owner: primitives** (plan 054). Radio-group-shaped input over `max` stars; reuses the radio roving-focus contract. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (90 tests in 9
-files after the 054 NumberField; 54 at the 041 baseline, 68 after 049, 82 after
-053, locally built GPUix 0.10.0 binding). Details: plan 041 §9 and plan 053 §11. The eighth
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (97 tests in 10
+files after the 054 Toggle; 54 at the 041 baseline, 68 after 049, 82 after 053,
+90 after NumberField, locally built GPUix 0.10.0 binding). Details: plan 041 §9 and plan 053 §11. The eighth
 file mounts every example in `packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the

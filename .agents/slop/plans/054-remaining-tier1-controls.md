@@ -2,8 +2,8 @@
 
 - **Phase:** C (Tier 1 completion). **Owner:** primitives workstream.
 - **Depends on:** `030`, `040`, `041`, `047`, `049`, `053` (value maths).
-- **Status:** in progress. `NumberField` is implemented and measured (§9);
-  `OTPField`, `Toggle` and `Rating` are pending, and `053`'s stepping/focus
+- **Status:** in progress. `NumberField` and `Toggle` are implemented and
+  measured (§9); `OTPField` and `Rating` are pending, and `053`'s stepping/focus
   maths is in place for them.
 - **Why:** these four rows in `COMPONENTS.md` were marked *owner unassigned*.
   They are all single-purpose input/selection primitives (`div` + `<input>` +
@@ -276,12 +276,12 @@ count before it is measured.
 - Rating needs a filled icon the icon package cannot paint: use the outline
   star with the two role colours and record the visual limitation.
 
-## 9. Evidence — `NumberField` (measured 2026-10-17)
+## 9. Evidence — `NumberField` and `Toggle` (measured 2026-10-17)
 
 | Command | Result |
 | ------- | ------ |
-| `nub run --filter @gpuixui/primitives test` | 20 files, **235 tests passed** (214 before; +21) |
-| `nub run --filter @gpuixui/primitives test:runtime` | 9 files, **90 tests passed** (82 before; +8: seven for the field, one for its example) |
+| `nub run --filter @gpuixui/primitives test` | 21 files, **243 tests passed** (214 before plan 054; +29) |
+| `nub run --filter @gpuixui/primitives test:runtime` | 10 files, **97 tests passed** (82 before plan 054; +15: seven field, six toggle, two example interactions) |
 | `nub run check` | tests-can-fail, lint, fmt and `check-types` pass |
 
 Two-direction probes (each change reverted on its own):
@@ -303,6 +303,23 @@ Facts measured beyond the plan:
 - A stepper press moves native focus back to the input (`focusedElement().type`
   is `input`), so the next arrow works.
 - The spin buttons are `presentation` and never enter the tab order.
+
+### Toggle
+
+| Guard | Revert | Result |
+| ----- | ------ | ------ |
+| pressed paint | use `paint.rest` for both states | runtime `paints the accent role…` → **expected undefined to be '#00000D'** |
+| disabled handler | drop `if (props.disabled === true) return` | element tree `refuses activation…` → **expected 2 calls, got 0 expected**; runtime `refuses activation…` → **expected 'pressed' to be 'not pressed'** (with the click and the key asserted separately — one assertion after both activations cancelled the two toggles, which is how the first version of the test passed) |
+
+Facts measured for Toggle:
+
+- AccessKit reports `Button` and the state only through `aria-valuetext`; there
+  is no `aria-pressed` (verified in the dump).
+- A hit-tested click repaints `colors.accent`, and the outline variant keeps
+  `colors.border` while pressed.
+- A `default`-variant toggle paints no fill at rest; the runtime still creates
+  its hitbox from the click handler (the same fact measured for the slider
+  track), so the press reaches it.
 
 Not proven:
 

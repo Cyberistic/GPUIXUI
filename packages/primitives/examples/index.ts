@@ -14,6 +14,7 @@ import { IconsExample } from "./icons.example.js";
 import { LayoutExample } from "./layout.example.js";
 import { NumberFieldExample } from "./number-field.example.js";
 import { SelectionExample } from "./selection.example.js";
+import { ToggleExample } from "./toggle.example.js";
 import { TypographyExample } from "./typography.example.js";
 import { ValueExample } from "./value.example.js";
 
@@ -25,6 +26,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   layout: LayoutExample,
   numberField: NumberFieldExample,
   selection: SelectionExample,
+  toggle: ToggleExample,
   typography: TypographyExample,
   value: ValueExample,
 };
