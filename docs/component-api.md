@@ -1,0 +1,205 @@
+# Component API contract
+
+**Status:** accepted — ADR [`0004`](../.agents/adr/0004-compound-part-api.md),
+plan [`200`](../.agents/slop/plans/200-adopt-compound-part-api.md).
+Applies to every Tier 1–2 component in `packages/components` and
+`packages/primitives`.
+
+This is the **public API spec**. It is a translation of `base-gpui`'s
+compound-part contract (MIT; see [`LICENSES/base-gpui.md`](../LICENSES/base-gpui.md))
+into React over GPUix 0.10.0. No Rust source is copied. Where GPUix lacks a
+capability, the contract says so instead of naming an API that would not work.
+
+## 1. Compound parts
+
+- A component is a **compound**, not a monolithic widget: one exported
+  component and one props type per part, root first —
+  `<Tabs><TabsList><TabsTrigger/><TabsList/><TabsContent/></Tabs>`.
+- A component with one styled region exports **one part** (`Badge`, `Avatar`);
+  it does not grow a `Root` that exists only to satisfy this rule.
+- Children are typed **by position**: a `TabsContent` inside a `TabsList` is a
+  compile error. The parent narrows `children` with a part union and a dev-time
+  check; it never matches `React.Children` by string.
+- The root part owns the controlled-state props; a part never duplicates them.
+
+## 2. Controlled and uncontrolled — one rule, one place
+
+- `value` makes the part controlled: the selection changes **only** when the
+  caller supplies a new value.
+- `defaultValue` is the uncontrolled initial value. `value` and `defaultValue`
+  are mutually exclusive; a component that receives both logs one warning and
+  ignores `defaultValue`.
+- `onValueChange(value)` fires on request and is the only change callback name.
+- The resolution lives in exactly one hook — `useControllableState` from
+  `@gpuix/react/floating` (published in 0.10.0) or this package's
+  `internal/controllable.ts` wrapper. Do not write a second implementation.
+
+## 3. State-aware styling
+
+GPUix has no CSS, no data attributes and no CSS variables. A part is styled from
+a public state object instead:
+
+- `style` accepts `StyleDesc` or `(state: PartState) => StyleDesc` when the
+  consumer styles through a prop; or
+- `children` accepts `(state: PartState) => ReactNode` when the consumer
+  composes markup.
+
+The state object is public API: name it `<Part>State` and export the type. State
+names come from `base-gpui`'s per-part structs — `active`, `disabled`, `focused`,
+`highlighted`, `selected`, `orientation` — and are the only vocabulary allowed.
+Every token lookup goes through the theme seam (`internal/theme.ts`); a component
+never repeats a raw role name or writes a colour/shadow/radius literal.
+
+## 4. Keyboard
+
+Keyboard behaviour is the shared contract in
+`packages/primitives/src/core/keyboard.ts` (plan `030`):
+
+- Enter activates on key down, Space on key up, and `defaultPrevented` is
+  respected;
+- one roving tab stop per composite, arrows wrap and skip disabled parts;
+- Home/End and Escape follow the component's guide;
+- every component's docs page records its own key table, drawn from
+  `base-gpui`'s `## Keyboard interaction` section.
+
+## 5. Accessibility — the supported subset only
+
+Map `base-gpui`'s AccessKit roles onto the GPUix **verified** subset (plan
+`020`): `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`,
+`aria-selected`, `aria-valuetext`, `aria-level`; `tabIndex`/`autoFocus`; and the
+renderer's `focusElement`/`focusNext`/`focusPrevious`/`focusNextWithin`.
+
+Do not invent `aria-checked`, `aria-valuenow`, `aria-labelledby`,
+`aria-describedby`, `aria-controls`, `aria-current` or `aria-modal` — 0.10.0
+does not accept them. Record the gap as a limitation and use the strongest
+supported alternative (`aria-selected`, `aria-valuetext`, a required `label`).
+
+## 6. Translation table
+
+| `base-gpui` (Rust) | Our React |
+| ------------------ | --------- |
+| `TabsRoot > TabsList > TabsTab` | `Tabs > TabsList > TabsTrigger` |
+| `.value(v)` / `.default_value(v)` | `value` / `defaultValue` |
+| `.on_value_change(f)` | `onValueChange` |
+| `.style_with_state(\|state, part\| …)` | `style` as `StateStyle<PartState>` **or** `children(state)` |
+| `TabsTabStyleState { active, disabled, … }` | exported `TabsTriggerState` type |
+| `actions.rs` + `.key_context(..)` + `.on_action(..)` | `tabIndex` + `onKeyDown` + the primitives keyboard contract |
+| `base_gpui::init(cx)` | nothing — React/GPUix has no per-component init |
+
+## 7. Parts by component
+
+The **Source** column is the authority for a component that is already built;
+the base-gpui guide is the shape reference, not a transcription target. `—`
+means base-gpui has no guide for that component and the listed plan defines the
+parts.
+
+### Tier 1 — foundational
+
+| Component | Parts | base-gpui guide | Source |
+| --------- | ----- | --------------- | ------ |
+| Text / typography | `Text` | — | plan 030 |
+| Icons | `Icon` (icon set) | — | plan 031 |
+| Separators | `Separator` | `Separator` | plan 030 |
+| Spacers | `Spacer` | — | plan 030 |
+| Stack / layout primitives | `Stack`, `Grid` | — | plan 030 |
+| Boxes / containers | `Box` | — | plan 030 |
+| Scrollable containers | `ScrollArea` | `ScrollAreaRoot`/`Viewport`/`Scrollbar`/`Thumb`/`Corner`/`Content` | plan 030 |
+| Buttons | `Button` | `ButtonRoot` | plan 030 |
+| Button groups | `ButtonGroup` | `ToggleGroup` (shape only) | plan 048 |
+| Labels | `Label` | `FieldLabel` | plan 030 |
+| Text inputs | `Input` | `Input` | plan 030 |
+| Text areas | `TextArea` | — | plan 030 |
+| Checkboxes | `Checkbox` | `CheckboxRoot`/`Indicator` | plan 030 |
+| Radio groups | `RadioGroup` | `RadioGroupRoot`/`Radio`/`Indicator` | plan 030 |
+| Selects | `Select` | `SelectRoot` + 19 parts | GPUix 0.10.0 `Select` |
+| Switches | `Switch` | `SwitchRoot`/`Thumb` | plan 030 |
+| Progress | `Progress` | `ProgressRoot`/`Track`/`Indicator`/`Label`/`Value` | plan 030 |
+| Tooltips | `Tooltip` | `TooltipRoot`/`Trigger`/`Popup`/… | GPUix 0.10.0 `Tooltip` |
+| Skeletons | `Skeleton` | — | plan 030 |
+| Loading indicators | `Spinner` | — | plan 030 |
+| Slider | `Slider` | `SliderRoot`/`Track`/`Thumb`/`Control`/`Indicator`/`Label`/`Value` | plan 053 |
+| Range slider | `RangeSlider` | `Slider` (two thumbs) | plan 053 |
+| Meter | `Meter` | `MeterRoot`/`Track`/`Indicator`/`Label`/`Value` | plan 053 |
+| Number field | `NumberField` | `NumberFieldRoot`/`Input`/`Increment`/`Decrement`/`Group`/`ScrubArea`/`ScrubAreaCursor` | plan 054 |
+| OTP field | `OTPField` | `OTPFieldRoot`/`Input` | plan 054 |
+| Toggle | `Toggle` | `Toggle` | plan 054 |
+| Rating | `Rating` | — | plan 054 |
+
+### Tier 2 — composition and feedback
+
+| Component | Parts | base-gpui guide | Source |
+| --------- | ----- | --------------- | ------ |
+| Cards | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter` | — | plan 111 |
+| Badges | `Badge` | — | plan 111 |
+| Avatars | `Avatar` | `AvatarRoot`/`Image`/`Fallback` | plan 111 |
+| Alerts | `Alert` | — | plan 111 |
+| Lists / list items | `List`, `ListItem`, `ListItemTitle`, `ListItemDescription` | — | plan 111 |
+| Empty states | `EmptyState` | — | plan 111 |
+| Inline validation | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldInput` | `FieldRoot`/`Label`/`Description`/`Error`/`Validity`/`Item`/`Control` | plan 115 |
+| Toasts / notifications | `ToastProvider`, `ToastViewport` (+ `useToast`) | `ToastProvider`/`Root`/`Title`/`Description`/`Action`/`Close`/`Viewport`/`Portal`/`Content` | plan 115 |
+| Dialogs | `Dialog`, `DialogTrigger`, `DialogClose`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` | plan 112 |
+| Confirmation dialogs | `ConfirmDialog` (composes the Dialog parts) | `AlertDialogRoot`/`Trigger`/`Popup` | plan 112 |
+| Popovers | `Popover`, `PopoverTrigger`, `PopoverContent` | `PopoverRoot`/`Trigger`/`Popup`/`Arrow`/`Close`/`Portal`/`Positioner`/`Viewport`/`Backdrop`/`Title`/`Description` | plan 112 |
+| Dropdown menus | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuGroup`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | `MenuRoot` + 18 parts | plan 114 |
+| Context menus | `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent` + the `ContextMenu*` item parts | `ContextMenuRoot`/`Trigger` | plan 114 |
+| Command menus | `CommandMenu` | — | plan 114 |
+| Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `TabsRoot`/`List`/`Tab`/`Panel`/`Indicator` | plan 113 |
+| Accordions | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `AccordionRoot`/`Header`/`Item`/`Trigger`/`Panel` | plan 113 |
+| Collapsible sections | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` | `CollapsibleRoot`/`Trigger`/`Panel` | plan 113 |
+| Breadcrumbs | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator` | — | plan 113 |
+| Pagination | `Pagination` | — | plan 113 |
+| Search inputs | `SearchInput` | `AutocompleteRoot`/`AutocompleteValue` (shape only) | plan 116 |
+| Comboboxes | `Combobox` | `ComboboxRoot` + 24 parts | plan 116 |
+| Date pickers | `DatePicker` | — | plan 119 |
+| Time pickers | `TimePicker` | — | plan 132 |
+
+**Planned Tier 2 additions** (not implemented; the parts are fixed here so the
+implementation cannot invent a shape):
+
+| Component | Parts | Source |
+| --------- | ----- | ------ |
+| Message scroller | `MessageScrollerRoot`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | plan 206 |
+| Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
+| Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
+| Fieldset | `Fieldset`, `FieldsetLegend` | plan 205 |
+| Form | `Form` | plan 205 |
+| Navigation menu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink` | plan 205 |
+| Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |
+| Drawer | `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | plan 205 |
+| Stepper | `Stepper`, `StepperStep` | plan 205 |
+| Timeline | `Timeline`, `TimelineItem` | plan 205 |
+| Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
+| Mention input | `MentionInput`, `MentionInputList`, `MentionInputItem` | plan 205 |
+| Hotkey recorder | `HotkeyRecorder` | plan 205 |
+| Countdown | `Countdown` | plan 205 |
+| Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | plan 205 |
+| Inline edit | `InlineEdit` | plan 205 |
+| Keyboard shortcuts | `KeyboardShortcuts`, `Keycap` | plan 205 |
+
+## 8. Landed deviations and migration
+
+These components are `done` but still expose a single component where the parts
+table names a compound. They are **follow-ups**, not rewrites in this plan
+(plan `201` §3's rule): a part may only be split out with its own behaviour
+test, docs row and inventory record.
+
+| Component | Deviation | Planned parts |
+| --------- | --------- | ------------- |
+| Alerts | `title`/`icon`/`onDismiss` are props on one node | `Alert`, `AlertTitle`, `AlertDescription`, `AlertIcon`, `AlertDismiss` |
+| Command menus | one component owns the input, list and rows | `CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty` |
+| Pagination | one component builds the page buttons internally | `Pagination`, `PaginationList`, `PaginationItem`, `PaginationPrevious`, `PaginationNext`, `PaginationEllipsis` |
+| Comboboxes | the GPUix headless parts stay internal | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty` |
+| Date / time pickers | one component owns the trigger and the popup | `DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar`; the same for `TimePicker` |
+
+`Badge`, `Avatar`, `EmptyState` and `SearchInput` are one styled region and are
+compliant as single parts.
+
+## 9. Provenance
+
+- `base-gpui` — MIT, `Copyright (c) 2026 Luke Tandjung`, commit `64b2233`;
+  design reference only, no source copied
+  ([`LICENSES/base-gpui.md`](../LICENSES/base-gpui.md)).
+- GPUix capability facts — plan `020` §1 and `docs/gpuix-capabilities.md`
+  (plan `203`).
+- The per-component parts and keyboard rules — plans `110–119`, `030`, `053`,
+  `054`, `205–207`.

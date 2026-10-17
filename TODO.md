@@ -196,6 +196,11 @@ retired once both branches are one
     - [x] ListItem caller `onClick` forwarding — plan 137
     - [x] Combobox pointer selection coverage — plan 138
     - [x] Inventory test counts and the drifted rows — plan 139
+  - Reference adoption
+    - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D9 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
+    - [ ] 201 — the runtime / context / parts state model: `packages/components/src/core/runtime.ts`, its test, the `docs/component-api.md` “State model” section and ADR 0005 (plan 201; needs the `packages/testing` half from the playground owner)
+    - [ ] Split the landed deviations named in `docs/component-api.md` §8 into parts — Alert, CommandMenu, Pagination, Combobox and the date/time pickers, each with its own behaviour test, docs update and inventory row (owner: components)
+    - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

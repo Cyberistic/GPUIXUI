@@ -65,6 +65,7 @@ unmet.
 | D6 | The shared checkout's `main` is the integration branch | Agents work on `agent/<workstream>` branches in `workspaces/`; a workstream merges into `main` once its plan set is complete and the gates pass, so the plan index and `TODO.md` in the shared checkout stay current | 2026-10-17 |
 | D7 | Plans are counted across every worktree | A workstream's plans live on its branch, so the supervisor aggregates distinct plan files from the shared checkout and all worktrees rather than reading only `main` | 2026-10-17 |
 | D8 | The tick is driven by a `nohup` daemon, with a launchd agent and a crontab entry installed alongside | A per-user launchd agent cannot be bootstrapped from this account's SSH session (no `gui/$UID` domain; `launchctl load` aborts) and macOS `cron` silently refuses to run jobs without Full Disk Access. All three paths take the same lock, so none can overlap. Evidence in `.agents/slop/README.md` | 2026-10-17 |
+| D9 | The public component API follows `base-gpui`'s compound-part contract, translated to React (`docs/component-api.md`, ADR 0004) | Base UI's React idiom gives one predictable shape for parts, controlled state, state-aware styling and keyboard; `base-gpui` documents it for 37 components. The contract uses only the GPUix 0.10.0 ARIA subset | 2026-10-17 |
 
 ## 5. Open questions
 

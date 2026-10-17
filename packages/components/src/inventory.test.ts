@@ -201,3 +201,40 @@ describe("inventory", () => {
     expect(problems).toEqual([]);
   });
 });
+
+describe("component API contract", () => {
+  const contract = (): string =>
+    readFileSync(
+      fileURLToPath(new URL("docs/component-api.md", repoRoot)),
+      "utf8",
+    );
+
+  it("documents the six rules and the controlled/uncontrolled names", () => {
+    const markdown = contract();
+    Arr.forEach(
+      [
+        "## 1. Compound parts",
+        "## 2. Controlled and uncontrolled",
+        "## 3. State-aware styling",
+        "## 4. Keyboard",
+        "## 5. Accessibility",
+        "## 6. Translation table",
+      ],
+      (heading) => expect(markdown).toContain(heading),
+    );
+    expect(markdown).toContain(
+      "| `.value(v)` / `.default_value(v)` | `value` / `defaultValue` |",
+    );
+    expect(markdown).toContain("| `.on_value_change(f)` | `onValueChange` |");
+  });
+
+  it("lists every implemented component in the parts tables", () => {
+    const markdown = contract();
+    const missing = Arr.filter(
+      inventory,
+      (meta) => !markdown.includes(`| ${meta.name} |`),
+    ).map((meta) => meta.name);
+
+    expect(missing).toEqual([]);
+  });
+});

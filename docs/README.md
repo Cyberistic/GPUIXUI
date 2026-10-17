@@ -18,6 +18,7 @@ Documents land here as the phases produce them:
 | -------- | ----- |
 | `design-system.md` — identity, semantic roles, both themes | B |
 | `tokens.md` — every public token and the extension mechanism | B |
+| `component-api.md` — the compound-part contract, controlled/uncontrolled, keyboard, accessibility subset and the parts index | A/B |
 | `architecture.md` — boundaries, packages, data flow | A/B |
 | `gpuix-capabilities.md` — what the runtime supports, with evidence | A |
 | `preview-strategy.md` — how the docs site shows native components honestly | B |
