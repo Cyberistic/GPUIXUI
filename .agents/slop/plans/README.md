@@ -110,6 +110,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [311](./311-platform-recipe-styles.md) | Platform recipe styles: Windows XP (Luna) and Aero | F | 063, 071, 097, 301, 309, 310 | done |
 | [312](./312-row-text-on-washes.md) | The row's own text on the washes it paints | F | 059, 071–095, 300, 306–309 | done |
 | [313](./313-ledger-role-count.md) | The ledger's second role count | F | 015, 056–066, 303, 311 | done |
+| [314](./314-row-surface-text.md) | The selected menu row, the sidebar status label and the link on a row fill | F | 057, 071–095, 300, 306–313 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -696,6 +697,19 @@ phrase but not a second count written as prose, so the ledger was false while
 every gate stayed green. The sentence now names no count, and a guard holds every
 numeric role phrase in the row to `colorRoles.length`; the TODO row that still
 called the gallery's target a `54`-role package is corrected at the same time.
+
+314 closes the last three compositions the 079–095 and 300–312 surface audits
+did not name. A selected `Select` option paints `popoverForeground` on
+`selected` (`selectItemStyle`), but `rowTextPairs` measured that role only on
+`hover`/`active` — an edited `selected` could erase the option's label while the
+checker returned `[]`. A status label or dot in a sidebar paints `xText` on the
+quiet `muted` panel that plans 300 and 309 made first class, while plan 083
+measured only the four row washes. A `primaryText` link nested in a selectable
+row paints on `accent`/`selected`, the two fills plan 312 had just added for a
+row's own title. The seven pairs join `contrastPairs` (239 → 246); every shipped
+set already clears its declared floor (4.53:1 at the tightest), so no colour
+moves, and `row-surface-text.test.ts` states the four regressions that the
+public checker now reports.
 
 ### Reference adoption (block `200–299`)
 

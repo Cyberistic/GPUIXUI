@@ -71,8 +71,9 @@ subtree.
 
 `primary` is a fill: it carries `primaryForeground`, and it is only measured as
 a fill. Brand-toned text — a link, a label, an icon — reads `primaryText`, which
-is held to the text floor on the plain surfaces and the `hover`/`active` washes
-a link paints. A brand that changes `primary` should set `primaryText` beside it.
+is held to the text floor on the plain surfaces, the `hover`/`active` washes a
+link paints and the `accent`/`selected` fills a link sits on inside a row
+(plan 314). A brand that changes `primary` should set `primaryText` beside it.
 
 ## Shadows
 
@@ -221,14 +222,15 @@ is checked on the canvas, card, the `muted` panel, `popover` and the
 `hover`/`active`/`accent`/`selected` washes, so an avatar's initials on the
 quiet panel, a date picker's month header on its floating surface and a selected
 row's title are held to the body floor. A menu row's `popoverForeground` on
-`hover`/`active` and a selected row's inherited `selectedForeground` on the
-pointer washes are checked too, and a field's `border` edge is checked on its
-own `input` fill (plan 312).
+`hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a
+selected row's inherited `selectedForeground` on the pointer washes are checked
+too, and a field's `border` edge is checked on its own `input` fill (plan 312).
 Secondary text is
 checked on `hover`, `active`, `accent` and `selected` too, so a row description
 stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
-until plan 079. Status text is checked on the same four washes, so a status dot
-in a list, table or menu row is readable on the fill it sits on: every light set
+until plan 079. Status text is checked on the same four washes and on the
+`muted` quiet panel a sidebar paints (plan 314), so a status dot in a list,
+table, menu row or settings sidebar is readable on the fill it sits on: every light set
 had a warning label under 4.5:1 on the pressed wash (macOS 4.22:1, Linux 4.24:1,
 Windows 4.36:1) and high-contrast light was 5.83:1 on `active` and 6.70:1 on
 `accent`/`selected` until plan 083 moved the two warning steps. The functional

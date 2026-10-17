@@ -266,11 +266,11 @@ the mounting rule and its no-portal limitation are documented once, under
 | pressed | `active` wash on ghost and subtle surfaces, held to the same floor on the same four surfaces; filled actions step to `xActive`, one step past their hover |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every surface and row wash a placeholder fills — the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground`, the fill held to the perceivability floor on the surface it marks |
-| link | `primaryText` on the plain surfaces and the `hover`/`active` washes a link paints; `primary` is a fill and is never the colour of text |
+| link | `primaryText` on the plain surfaces, the `muted` panel, the `hover`/`active` washes a link paints and the `accent`/`selected` fills a selectable row paints under it; `primary` is a fill and is never the colour of text |
 | disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` wash via `selectionColor`; body and secondary text keep their floors through the composited wash on every surface a glyph is selected on, including the four soft status fills (`xSoftForeground`), and the wash itself stays perceivable; `userSelect: "none"` opts chrome out |
-| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair and designed edge through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone` |
+| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair and designed edge through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface, the `muted` panel or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone` |
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
 so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
@@ -329,14 +329,14 @@ Colour is checked, not assumed. The token suite enforces:
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
 | body text on `background`/`card`/`muted`/`popover`/`input` and the `hover`/`active`/`accent`/`selected` washes | 7:1 | 7:1 |
-| a menu row's label (`popoverForeground` on `hover`/`active`) | 7:1 | 7:1 |
+| a menu row's label (`popoverForeground` on `hover`/`active`, and on `selected` for a selected `Select` option) | 7:1 | 7:1 |
 | selected row label (`selectedForeground` on `selected` and, while hovered or pressed, on `hover`/`active`) | 4.5:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
-| status text (`xText`) on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
-| brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted` and the `hover`/`active` washes | 4.5:1 | 7:1 |
+| status text (`xText`) on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
+| brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes and the `accent`/`selected` row fills | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
 | text selection on a soft status fill (`xSoftForeground` over the wash on `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 7:1 | 7:1 |
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |

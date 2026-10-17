@@ -6,7 +6,8 @@
  * 3.51:1, Linux dark 4.08:1, Windows light 4.30:1 and high-contrast dark
  * 6.94:1 under the AAA floor — every suite stayed green because no pair named
  * brand-toned text. `primaryText` is the readable tonality; the contract holds
- * it on the plain surfaces, the quiet panel and the two washes a link paints.
+ * it on the plain surfaces, the quiet panel, the two washes a link paints and,
+ * since plan 314, the `accent`/`selected` fills a link sits on inside a row.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -29,6 +30,8 @@ const surfaces = [
   "muted",
   "hover",
   "active",
+  "accent",
+  "selected",
 ] as const;
 
 const themes: ReadonlyArray<readonly [string, Theme]> = [
@@ -114,11 +117,13 @@ describe("brand-toned text", () => {
     );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
+      "accent",
       "active",
       "card",
       "hover",
       "muted",
       "popover",
+      "selected",
     ]);
     expect(
       failures.every(

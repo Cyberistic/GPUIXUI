@@ -356,7 +356,7 @@ describe("docs/tokens.md status table", () => {
         .split("\n")
         .filter((line) => line.startsWith(`| \`${tone}Text\` |`));
 
-      expect(surfaces.length, tone).toBe(7);
+      expect(surfaces.length, tone).toBe(8);
       expect(rows.length, tone).toBe(2);
       rows.forEach((tableRow) =>
         surfaces.forEach((surface) =>
@@ -643,7 +643,7 @@ describe("docs/tokens.md theme contract", () => {
 describe("docs/tokens.md contrast surfaces", () => {
   it("names the washes and the floating surface the contract covers", () => {
     const sentence =
-      "The focus ring is measured on the eight surfaces a focused control can sit on — the canvas, card and popover, the `muted` panel a sidebar control sits on, the `accent` wash a selectable row paints, and the `hover`, `active` and `selected` washes — because focus and selection co-occur in rows. It is also measured on the four soft status fills, because a Toast's action button is focused while it sits on its own tint; every shipped variant already clears the floor there, so no colour moves, and the pairs exist so an edited theme cannot remove the ring. A field's own `input` fill and a control's `secondary` fill are what the ring surrounds, not what it sits on, so they are deliberately not ring surfaces. `ringSurfaces` in `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public check to it. Secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on those four washes as well as on `popover`, so a status label inside a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is measured on `popover`, the `muted` panel and those four washes, so a checkbox or field in a quiet panel, a hovered, pressed, selectable or selected row still shows its edge. It is also measured on the four soft status fills, because an Alert or Toast carries actions — a field, a don't-show-again checkbox — whose edge must stay visible.";
+      "The focus ring is measured on the eight surfaces a focused control can sit on — the canvas, card and popover, the `muted` panel a sidebar control sits on, the `accent` wash a selectable row paints, and the `hover`, `active` and `selected` washes — because focus and selection co-occur in rows. It is also measured on the four soft status fills, because a Toast's action button is focused while it sits on its own tint; every shipped variant already clears the floor there, so no colour moves, and the pairs exist so an edited theme cannot remove the ring. A field's own `input` fill and a control's `secondary` fill are what the ring surrounds, not what it sits on, so they are deliberately not ring surfaces. `ringSurfaces` in `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public check to it. Secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on `background`, `card`, `popover`, the `muted` panel and those four washes, so a status label or indicator dot in a sidebar, a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is measured on `popover`, the `muted` panel and those four washes, so a checkbox or field in a quiet panel, a hovered, pressed, selectable or selected row still shows its edge. It is also measured on the four soft status fills, because an Alert or Toast carries actions — a field, a don't-show-again checkbox — whose edge must stay visible.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -821,13 +821,13 @@ describe("docs/design-system.md", () => {
   it("states the floors the contrast checker enforces", () => {
     const rows = [
       `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
-      `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, and on \`selected\` for a selected \`Select\` option) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| selected row label (\`selectedForeground\` on \`selected\` and, while hovered or pressed, on \`hover\`/\`active\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
-      `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection on a soft status fill (\`xSoftForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,

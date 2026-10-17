@@ -272,8 +272,9 @@ export const controlBoundarySoftPairs: readonly ContrastPair[] =
 
 /**
  * The surfaces brand-toned text is painted on: the plain surfaces, the quiet
- * grouping panel a sidebar link sits on, and the two washes the Link variant
- * paints behind its own label.
+ * grouping panel a sidebar link sits on, the two washes the Link variant paints
+ * behind its own label, and the fills a selectable row paints under a nested
+ * link (`accent` on hover, `selected` when selected).
  */
 const primaryTextSurfaces = [
   "background",
@@ -282,6 +283,8 @@ const primaryTextSurfaces = [
   "muted",
   "hover",
   "active",
+  "accent",
+  "selected",
 ] as const;
 
 const primaryTextPairs: readonly ContrastPair[] = primaryTextSurfaces.map(
@@ -320,18 +323,24 @@ export const ringSoftPairs: readonly ContrastPair[] = softSurfaceRoles.map(
 );
 
 /**
- * The state washes a row paints behind a status label, icon or indicator dot:
- * pointer hover, press, the accent a selectable row uses on hover, and the
- * selected fill. A status dot in a list, table or menu sits on all four, so the
- * `secondary` floor applies to each.
+ * The surfaces a status label, icon or indicator dot paints on: the quiet
+ * panel of a sidebar or settings group, and the four washes a row paints. A
+ * status dot in a sidebar sits on `muted` the way a soft status chip does
+ * (plan 300), so the `secondary` floor applies there too.
  */
-const statusTextWashes = ["hover", "active", "accent", "selected"] as const;
+const statusTextSurfaces = [
+  "muted",
+  "hover",
+  "active",
+  "accent",
+  "selected",
+] as const;
 
 const statusTextTones = ["info", "success", "warning", "destructive"] as const;
 
-const statusTextWashPairs: readonly ContrastPair[] = statusTextTones.flatMap(
+const statusTextSurfacePairs: readonly ContrastPair[] = statusTextTones.flatMap(
   (tone) =>
-    statusTextWashes.map(
+    statusTextSurfaces.map(
       (background): ContrastPair => [`${tone}Text`, background, "secondary"],
     ),
 );
@@ -340,13 +349,15 @@ const statusTextWashPairs: readonly ContrastPair[] = statusTextTones.flatMap(
  * The default text roles a row paints on the washes it paints behind them. A
  * selectable list row uses `accent` on hover and `selected` when selected, a
  * selected row keeps its inherited `selectedForeground` while hovered or
- * pressed, and a menu row paints `popoverForeground` on `hover`/`active`.
+ * pressed, a menu row paints `popoverForeground` on `hover`/`active`, and a
+ * selected `Select` option paints `popoverForeground` on `selected`.
  */
 const rowTextPairs: readonly ContrastPair[] = [
   ["foreground", "accent", "body"],
   ["foreground", "selected", "body"],
   ["popoverForeground", "hover", "body"],
   ["popoverForeground", "active", "body"],
+  ["popoverForeground", "selected", "body"],
   ["selectedForeground", "hover", "secondary"],
   ["selectedForeground", "active", "secondary"],
 ];
@@ -382,8 +393,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
 
 /**
  * Every documented pair — text, status, surface and divider — including
- * secondary text and status text on the state washes, brand-toned text on the
- * plain surfaces and washes a link paints, default body text on the quiet panel
+ * secondary text and status text on the state washes, a status label or dot on
+ * the quiet `muted` panel, brand-toned text on the plain surfaces, the washes a
+ * link paints and the row fills it sits on, default body text on the quiet panel
  * and the floating surface, the focus ring on every surface a focused control
  * can sit on, the ring on the soft status fills a toast's action button sits on,
  * status text on a floating surface, the functional control
@@ -398,8 +410,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * on the inactive fill a disabled control keeps its shape with, and the inactive
  * label an unavailable control, menu item or row paints on its fill, the plain
  * surfaces and the state washes. The default text role of a list or menu row is
- * measured on the washes the row paints, and a text field's edge is measured on
- * the `input` fill it sits on.
+ * measured on the washes the row paints, a selected `Select` option's label on
+ * its `selected` fill, a status label or dot on the quiet `muted` panel, and a
+ * text field's edge is measured on the `input` fill it sits on.
  *
  * The filled families are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
@@ -449,7 +462,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["destructiveText", "background", "secondary"],
   ["destructiveText", "card", "secondary"],
   ["destructiveText", "popover", "secondary"],
-  ...statusTextWashPairs,
+  ...statusTextSurfacePairs,
   ...rowTextPairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],

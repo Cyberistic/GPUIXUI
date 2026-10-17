@@ -89,8 +89,9 @@ never be confused with `primary`.
 The same fill-versus-text split applies to the brand action. `primary` is a
 surface: it carries `primaryForeground`, and it is measured only as a fill.
 Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
-4.5:1 on `background`, `card`, `popover` and `muted`, and on the `hover` and
-`active` washes the Link variant paints behind its own label. The split is not
+4.5:1 on `background`, `card`, `popover` and `muted`, on the `hover` and
+`active` washes the Link variant paints behind its own label, and on the
+`accent`/`selected` fills a selectable row paints under it. The split is not
 cosmetic: the macOS accent `#0071E3` measures 4.21:1 on that canvas and 3.44:1
 on the pressed wash, while its text step `#0055B3` clears both.
 
@@ -106,7 +107,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |
-| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links and icons on plain surfaces |
+| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links and icons on plain surfaces and the `accent`/`selected` row fills |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
@@ -137,10 +138,10 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `destructiveSoft` | `#FFD6D6` | `#66191B` | soft destructive surface |
 | `destructiveSoftForeground` | `#5C1619` | `#FFF1F1` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
-| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
-| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
-| `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
-| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -199,8 +200,9 @@ Alert, Badge and Toast share four status families. Each has a solid role, a
 readable foreground and a designed soft pair, so a component never mixes a
 readable text colour from the solid colour at runtime. Each also has a text
 role for the case the other two cannot serve: a status label, icon or indicator
-dot drawn directly on a surface — `background`, `card`, `popover` or one of the
-state washes a row paints (`hover`, `active`, `accent`, `selected`).
+dot drawn directly on a surface — `background`, `card`, `popover`, the `muted`
+quiet panel a sidebar paints, or one of the state washes a row paints (`hover`,
+`active`, `accent`, `selected`).
 
 | Tone | Solid fill | Soft surface | Text on the soft surface | Edge on the soft surface | Text on a plain surface |
 | ---- | ---------- | ------------ | ----------------------- | ------------------------ | ----------------------- |
@@ -212,13 +214,15 @@ state washes a row paints (`hover`, `active`, `accent`, `selected`).
 The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
 1.78:1 against `background` and 1.89:1 against `card`, under the 3:1 non-text
 floor, and light `success` is 4.26:1, under the 4.5:1 text floor. `xText` is the
-readable tonality for the plain surfaces (`background`, `card` and `popover`)
-and the four state washes a row paints (`hover`, `active`, `accent` and
-`selected`); it is held to 4.5:1 in the default themes and 7:1 in the
-high-contrast variants. That is not theoretical: a warning label in a pressed
-row measured 4.22:1 on macOS light, 4.24:1 on Linux light and 4.36:1 on Windows
-light, and high-contrast light measured 5.83:1 on `active` and 6.70:1 on
-`accent`/`selected` until plan `083` moved the two warning steps. A soft surface
+readable tonality for the plain surfaces (`background`, `card` and `popover`),
+the `muted` quiet panel a sidebar or settings group paints, and the four state
+washes a row paints (`hover`, `active`, `accent` and `selected`); it is held to
+4.5:1 in the default themes and 7:1 in the high-contrast variants. That is not
+theoretical: a warning label in a pressed row measured 4.22:1 on macOS light,
+4.24:1 on Linux light and 4.36:1 on Windows light, and high-contrast light
+measured 5.83:1 on `active` and 6.70:1 on `accent`/`selected` until plan `083`
+moved the two warning steps. A status dot in a sidebar is the same role on the
+quiet panel, which plan `314` put under the contract. A soft surface
 is a surface in its own right: it is held to 1.05:1 against
 `background`, `card`, `popover` and `muted`, so an Alert, Badge or Toast stays
 perceivable on every shipped canvas, platform variants included. The `muted`
@@ -306,7 +310,7 @@ carries, so it cannot claim another.
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
 | `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
 | `primaryActive` | `#1C1547` | `#EEF0FF` | primary action while pressed |
-| `primaryText` | `#3B2C8F` | `#E0E3FF` | brand-toned text, links and icons on plain surfaces |
+| `primaryText` | `#3B2C8F` | `#E0E3FF` | brand-toned text, links and icons on plain surfaces and the `accent`/`selected` row fills |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `secondaryHover` | `#D6D6D6` | `#3D3D3D` | secondary action while hovered |
@@ -337,10 +341,10 @@ carries, so it cannot claim another.
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#A5262B` | `#FF6B6B` | edge around `destructiveSoft` |
-| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
-| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
-| `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
-| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
+| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#6E7683` | `#8A8A8A` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
@@ -1267,7 +1271,7 @@ text; 4.5:1 for secondary and on-colour text in the default themes, including
 text on a hovered or pressed filled action, ghost text on the `hover` and `active` washes,
 muted text on `background`, `card` and `popover`, secondary text on the `hover`,
 `active`, `accent` and `selected` washes a row paints behind a description, and
-status text (`xText`) on `background`, `card`, `popover` and those four washes;
+status text (`xText`) on `background`, `card`, `popover`, the `muted` panel and those four washes;
 3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
 the high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
 high contrast). The inactive floor is new in plan `306`: `inactivePairs`
@@ -1311,11 +1315,14 @@ never disappears into the card it fills or the row it sits in. The audit found
 the placeholder was the `active` fill in the identity and high-contrast themes,
 so a pressed loading row erased the placeholder (1.000:1); the light and dark skeleton moved
 one ramp step away, and each dark platform style carries its own.
-Brand-toned text is checked on the six surfaces a link paints — `background`,
-`card`, `popover`, `muted` and the `hover`/`active` washes — so a platform accent
-cannot ship as an unreadable link: the audit found macOS light at 4.21:1 on its
+Brand-toned text is checked on the eight surfaces a link paints —
+`background`, `card`, `popover`, `muted`, the `hover`/`active` washes and the
+`accent`/`selected` fills a selectable row paints — so a platform accent cannot
+ship as an unreadable link: the audit found macOS light at 4.21:1 on its
 canvas and 3.44:1 on the pressed wash, macOS dark at 2.84:1 on `active`, and
-high-contrast dark at 6.94:1 under its 7:1 floor.
+high-contrast dark at 6.94:1 under its 7:1 floor. The two row fills were added
+by plan `314`; the tightest shipped pair is `primaryText` on `selected` at
+**4.53:1** (Linux dark), so no value moves.
 Every platform variant is checked on its own canvas, not the identity's, so a
 style that moves `background` or `card` is held to the status tints and skeleton
 it inherits. The same loop holds secondary text on each variant's washes: macOS
@@ -1354,15 +1361,25 @@ the `selectedForeground` the row inherits. Every pair clears the body floor with
 margin in every shipped set, so no value moves; the pairs exist so an edited
 theme cannot break them silently.
 
-The other two row text roles have their own pairs. A menu row paints
-`popoverForeground` on `hover`/`active`, and a selected row under the pointer
-keeps its inherited `selectedForeground` on `accent`/`active`; the latter takes
-the secondary floor, matching `selectedForeground` on `selected`. The tightest
-shipped values are `foreground` on `selected` at **7.47:1** (Linux dark) and
+The other row text roles have their own pairs. A menu row paints
+`popoverForeground` on `hover`/`active`, a selected `Select` option paints it on
+`selected` — the shipped `selectItemStyle` keeps the menu foreground when the row
+fills — and a selected row under the pointer keeps its inherited
+`selectedForeground` on `accent`/`active`; the latter takes the secondary floor,
+matching `selectedForeground` on `selected`. The tightest shipped values are
+`foreground` on `selected` at **7.47:1** (Linux dark),
+`popoverForeground` on `selected` at **7.95:1** (Linux dark) and
 `selectedForeground` on `active` at **5.21:1** (macOS light), so no colour moves.
 A text field's edge is `border` on its own `input` fill, measured at the divider
 floor; the weakest shipped set is Linux dark at **1.25:1**, above the 1.05:1
-floor. These seven pairs take `contrastPairs` from 232 to 239.
+floor. These seven pairs take `contrastPairs` from 232 to 239; plan `314` adds
+the selected option, the sidebar status label and the row link.
+
+A status label or indicator dot in a sidebar is measured on the `muted` quiet
+panel — the surface plans `300` and `309` made first class — as well as on the
+four row washes plan `083` covered, so a warning dot in a settings sidebar has a
+pair. The tightest shipped value is `successText` on `muted` at **5.92:1**
+(Aero light), above the 4.5:1 secondary floor.
 
 The filled-control states are designed roles, not alpha composites. Before plan
 `097` a consumer painted `alpha(primary, 0.9)` for hover and `alpha(primary, 0.8)`
@@ -1420,9 +1437,10 @@ on, so they are deliberately not ring surfaces. `ringSurfaces` in
 `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public
 check to it. Secondary text is measured on `hover`, `active`, `accent` and
 `selected`, because a list row, a combobox option and a menu item paint those
-washes behind a description; status text (`xText`) is measured on those four
-washes as well as on `popover`, so a status label inside a hovered, pressed or
-selected row or a dialog is covered; the `borderStrong` boundary is measured on
+washes behind a description; status text (`xText`) is measured on `background`,
+`card`, `popover`, the `muted` panel and those four washes, so a status label or
+indicator dot in a sidebar, a hovered, pressed or selected row or a dialog is
+covered; the `borderStrong` boundary is measured on
 `popover`, the `muted` panel and those four washes, so a checkbox or field in a
 quiet panel, a hovered, pressed, selectable or selected row still shows its edge.
 It is also measured on the four soft status fills, because an Alert or Toast

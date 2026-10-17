@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 81/107
+`[x]` `[████████░░]` 82/108
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -124,6 +124,12 @@ field edge on `input` joins them, and the checker grows 232 → 239 pairs
 semantic roles` and “the current 58” in one sentence after plan 311 added four
 roles; every numeric role phrase in the row is now held to `colorRoles.length`
 (plan 313)
+`[x]` Hold the last three compositions the contract never painted — a selected
+`Select` option (`popoverForeground` on `selected`), a status dot on the
+`muted` sidebar panel, and a `primaryText` link on the `accent`/`selected` row
+fills — so an edited theme cannot erase them while the checker returns `[]`;
+every shipped set passes (4.53:1 at the tightest) and the contract grows
+239 → 246 pairs (plan 314)
 `[ ]` Cross-team: `primitives` paints an unchecked checkbox/switch border with
 `theme.colors.input`, a **background** role — `input` is `#FFFFFF` in every
 light set, so an unchecked box on a white card measures 1.000:1 and has no
