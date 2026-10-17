@@ -262,10 +262,11 @@ describe("docs/tokens.md status table", () => {
 
 describe("docs/tokens.md public values", () => {
   it("names every value the package exports", () => {
-    const undocumented = Object.keys(Tokens).filter(
-      (name) => !markdown.includes(name),
-    );
-    expect(undocumented).toEqual([]);
+    // A name counts only as a whole identifier: `motion` inside
+    // `motionTransition` does not document the `motion` token.
+    const mentions = (name: string): boolean =>
+      new RegExp(`(^|[^A-Za-z0-9_$])${name}(?![A-Za-z0-9_$])`).test(markdown);
+    expect(Object.keys(Tokens).filter((name) => !mentions(name))).toEqual([]);
   });
 });
 
