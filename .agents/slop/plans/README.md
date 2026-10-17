@@ -97,6 +97,7 @@ workstream declares in its own section below.
 | [321](./321-tabs-vertical-orientation.md) | Tabs vertical orientation: prove the axis, then show it | C/F | 113, 117 | done — 4 native tests (Tabs 14, behaviour 441), a vertical example, docs/inventory sync; both-direction proof |
 | [322](./322-toast-action.md) | Toast actions: one labelled action per toast, provider-owned handler | C/F | 115, 123, 124 | done — 3 unit + 4 native tests (unit 299, Toast 14, behaviour 445), undo example and docs |
 | [323](./323-floating-placement.md) | Floating placement truth: centre alignment and a real near-edge flip | C/F | 112, 114, 116, 117, 156 | done — measured `align="center"` corrects from `start` + the trigger/surface difference, and a snapped surface flips off its trigger for Popover, Dropdown menu and Combobox; +6 native tests (Popover 12, Dropdown 35, Combobox 17), both-direction proof |
+| [324](./324-tier2-icon-adoption.md) | Tier 2 icon adoption: replace component-owned text glyphs with `@gpuixui/icons` | C/F | 110, 111, 112, 113, 114, 116, 119, 120, 132, 157, 158, 300–303, 310, 321–323, 031 | in progress — plan written; implementation, native icon assertions, docs and inventory sync pending |
 
 Interlocks this workstream depends on and does not own:
 
