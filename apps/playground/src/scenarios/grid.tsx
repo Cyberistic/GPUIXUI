@@ -501,6 +501,11 @@ export const gridScenario: PlaygroundScenario = {
         bodyRow.y,
         1,
       );
+      yield* ctx.expectEqual(
+        "the scrolled-away row is not rendered",
+        Option.isSome(Option.fromNullishOr(ctx.host.bounds("grid-row-0"))),
+        false,
+      );
       const pinnedHeaderAfter = yield* boundsOrFail(
         ctx,
         "grid-pinned-header",
@@ -571,6 +576,36 @@ export const gridScenario: PlaygroundScenario = {
       yield* ctx.expectEqual(
         "the first column is gone at the end",
         Option.isSome(Option.fromNullishOr(ctx.host.bounds("grid-cell-11-0"))),
+        false,
+      );
+
+      // The same window applies vertically: rows are component-owned too.
+      ctx.host.wheel("grid-body", 0, -1000);
+      yield* ctx.expectNear(
+        `the body reaches the last viewport (y=${offsetOf(ctx, "y")})`,
+        offsetOf(ctx, "y"),
+        BODY_HEIGHT - CONTENT_HEIGHT,
+        2,
+      );
+      const lastRow = yield* boundsOrFail(
+        ctx,
+        "grid-cell-39-20",
+        "the last row paints",
+      );
+      const lastPinnedRow = yield* boundsOrFail(
+        ctx,
+        "grid-pinned-row-39",
+        "the last pinned row paints",
+      );
+      yield* ctx.expectNear(
+        "the last pinned row follows the bottom",
+        lastPinnedRow.y,
+        lastRow.y,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the first row is gone at the bottom",
+        Option.isSome(Option.fromNullishOr(ctx.host.bounds("grid-row-0"))),
         false,
       );
 

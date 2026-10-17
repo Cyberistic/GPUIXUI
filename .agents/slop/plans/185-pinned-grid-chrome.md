@@ -119,10 +119,10 @@ Steps, in order, each one check:
 | 1 | read root/pinned/main bounds | all paint; `pinned.x ≈ root.x`; `main.x ≈ root.x + 150` |
 | 2 | read `sticky-header` bounds, wheel `sticky-scroller` by `(0, -80)`, read again | the header **moved up by ~80 px** — `position: "sticky"` is ignored (source + measurement) |
 | 3 | body starts at `(0,0)` | `scrollOffset(grid-body)` is `~0`; `grid-cell-0-0` paints at the body origin |
-| 4 | wheel body `(0, -280)` (10 rows) | body `y ≈ -280`; `grid-pinned-row-11.y ≈ grid-row-11.y ± 1`; `grid-pinned-header` did not move; pinned column `x` unchanged |
-| 5 | wheel body `(-360, 0)` (4 columns) | body `x ≈ -360`; `grid-head-5.x ≈ grid-cell-0-5.x ± 1`; `grid-row-11.y` unchanged |
-| 6 | windowing after the pan | `grid-cell-0-0` paints `null` (not rendered); `grid-cell-0-5` and `grid-cell-0-20` — assert `5` present, `20` absent |
-| 7 | click `grid-end` | body `x ≈ -1700`; `grid-cell-11-20` paints; `grid-cell-11-0` is `null`; `grid-head-20` aligns with `grid-cell-11-20` |
+| 4 | wheel body `(0, -280)` (10 rows) | body `y ≈ -280`; `grid-pinned-row-11.y ≈ grid-row-11.y ± 1`; `grid-pinned-header` did not move; `grid-row-0` is `null` (the row window) |
+| 5 | wheel body `(-360, 0)` (4 columns) | body `x ≈ -360`; `grid-head-5.x ≈ grid-cell-11-5.x ± 1` (row 11 is the visible one) |
+| 6 | windowing after the pan | `grid-cell-11-0` and `grid-cell-11-20` both `null` (never rendered); `grid-cell-11-5` paints |
+| 7 | click `grid-end`, then wheel to the bottom `(0, -1000)` | `x ≈ -1700`, then `y ≈ -820`; `grid-cell-39-20` and `grid-pinned-row-39` paint and align; `grid-row-0` is `null`; `grid-head-20` aligns with `grid-cell-11-20` |
 | 8 | click `grid-home` | body back to `~0`; `grid-cell-0-0` paints again; `grid-cell-0-20` is `null` |
 | 9 | click `grid-cell-0-1`, read focus/selection | selection `0,1`; native focus is `grid-cell-0-1`; the cell reports `GridCell` with the authored name |
 | 10 | press Right six times | selection `0,7`; focus `grid-cell-0-7`; body `x < 0` (the reveal panned); the cell's box is inside the body viewport; `grid-head-7` still aligns |
@@ -199,7 +199,7 @@ Record each measured failure line in §8 after the run.
 
 ## 8. Measured facts (2026-10-17, locally built `darwin-x64` 0.10.0, plan `140`)
 
-The scenario is **51 checks, green** (`--only grid-wide-table`, exit `0`); the full suite
+The scenario is **57 checks, green** (`--only grid-wide-table`, exit `0`); the full suite
 is **53/53** and reports `grid=verified`.
 
 - **`position: "sticky"` is ignored.** A `sticky` header inside a 120 px scroller moved
@@ -211,10 +211,11 @@ is **53/53** and reports `grid=verified`.
   from `renderer.getScrollOffset(bodyId)`. The header cell and body cell align within
   1 px after a `-360` pan, and the pinned row and body row within 1 px after a `-280`
   scroll. The pinned header stays fixed (its `y` did not move).
-- **Column windowing is component-owned.** At `x=-360` the tree held columns 3–10
+- **Both axes are component-windowed.** At `x=-360` the tree held columns 3–10
   (`grid-cell-11-0` and `grid-cell-11-20` returned `null`); at the end (`x=-1700`) it
-  held 17–23 (`20` painted, `0` absent). The runtime does not drop clipped children —
-  the grid never rendered them.
+  held 17–23 (`20` painted, `0` absent). Row 0 was absent at `y=-280` and row 39
+  painted at `y=-820`. The runtime does not drop clipped children — the grid never
+  rendered them.
 - **Keyboard reveal.** Six Rights from column 1 reached `0,7`, focus followed, and the
   component panned the body to **-260** (the minimum reveal); the cell and its header
   stayed aligned. Three Downs reached `3,7` with the pinned row aligned. Without the

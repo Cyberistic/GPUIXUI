@@ -501,7 +501,7 @@ decisive fact is negative:
 | `position: "sticky"` | **ignored**: a sticky header inside a scroller moved exactly 80 px for a `-80` wheel, so it is in normal flow (`style.rs` maps only absolute/fixed/relative) |
 | one scroll source | the body is the only scroller; the header cells sit at `c*90 + pan.x` and the pinned rows at `r*28 + pan.y`, fed by `renderer.getScrollOffset(bodyId)` |
 | alignment | after `-360` the header cell and body cell agree within 1 px; after `-280` the pinned row and body row agree within 1 px; the pinned header does not move |
-| column windowing | at `x=-360` the tree holds columns 3–10 (`0` and `20` return `null`); at the end `x=-1700` it holds 17–23 (`20` paints, `0` is absent) — the runtime does not drop clipped children, the grid never rendered them |
+| windowing | at `x=-360` the tree holds columns 3–10 (`0` and `20` return `null`); at the end `x=-1700` it holds 17–23 (`20` paints, `0` is absent); rows window the same way (`row 0` absent at `y=-280`, `row 39` painted at the bottom) — the runtime does not drop clipped children, the grid never rendered them |
 | keyboard | six Rights from column 1 reach `0,7`, focus follows, and the component pans to `-260` to reveal it; three Downs reach `3,7` with the pinned row aligned |
 | a11y | `role="gridcell"` is AccessKit `GridCell`; the authored `aria-id` is the dump key, `aria-label` the name, and `aria-selected` is exposed |
 
