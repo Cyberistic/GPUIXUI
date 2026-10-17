@@ -67,6 +67,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [068](./068-density-and-tone-guards.md) | The last two unions a consumer narrows: density and status tone | F | 064, 066, 067 | done |
 | [069](./069-selection-and-scrollbar-reach.md) | Selection and scrollbar: what the pinned runtime reaches | F | 017, 018, 060 | done |
 | [070](./070-install-path-and-claim-guards.md) | Install-path truth and the last unguarded design-system claims | F | 062, 065, 066 | done |
+| [071](./071-contrast-contract.md) | A contrast contract the consumer can run | F | 013, 014, 057, 059, 063 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -156,7 +157,15 @@ is private and has never been published; the design-system rationale named the
 per-platform mono families with no test behind them; and the mission's
 "icon sizing/alignment" item had sizes but no alignment rule. The install guard
 reads the manifest's `private` flag, so the README cannot present the wrong half
-before or after publication.
+before or after publication. 071 closes the last promise of the extension story:
+the package states WCAG floors and enforces them in its own suites, but a
+consumer who edits a copied platform style had no way to apply the same check.
+The maths, the 40 documented pairs and the floor table move out of test-only code
+into `src/contrast.ts`, and `themeContrastFailures(theme, contrast?)` returns
+every pair — including the composited selection wash — that misses its floor, so
+an edited theme is held to the library's guarantee in one assertion. Both suites
+now consume the same public list and table, so the contract the docs state and
+the tests that enforce it cannot drift.
 
 ### Reference adoption (block `200–299`)
 
