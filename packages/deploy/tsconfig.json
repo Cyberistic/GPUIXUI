@@ -1,0 +1,4 @@
+{
+  "extends": "@gpuixui/config/tsconfig.base.json",
+  "include": ["**/*.ts"]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@gpuixui/deploy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:docs": "alchemy dev alchemy.run.docs.ts",
+    "deploy:docs": "alchemy deploy alchemy.run.docs.ts --stage prod --yes --adopt",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@gpuixui/config": "workspace:*",
+    "@types/node": "^26.1.1",
+    "alchemy": "catalog:",
+    "effect": "catalog:",
+    "typescript": "catalog:"
+  }
+}

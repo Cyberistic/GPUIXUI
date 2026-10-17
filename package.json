@@ -1,0 +1,52 @@
+{
+  "name": "gpuixui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nub run -r build",
+    "check-types": "nub run -r check-types",
+    "test": "nub run -r test",
+    "lint": "oxlint --config .oxlintrc.json --ignore-path .oxfmtrc-ignore",
+    "lint:fix": "oxlint --config .oxlintrc.json --fix --ignore-path .oxfmtrc-ignore",
+    "fmt": "oxfmt --check --ignore-path .oxfmtrc-ignore",
+    "fmt:fix": "oxfmt --write --ignore-path .oxfmtrc-ignore",
+    "check:tests": "nub scripts/check-tests.ts",
+    "check": "nub run check:tests && nub run lint && nub run fmt && nub run check-types",
+    "dev:docs": "nub run --filter docs dev",
+    "dev:playground": "nub run --filter playground dev",
+    "deploy:docs": "nub run --filter @gpuixui/deploy deploy:docs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "24.18.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "nub",
+      "version": "^0.9.6",
+      "onFail": "ignore"
+    }
+  },
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*",
+      "examples/*"
+    ],
+    "catalog": {
+      "@effect/platform-node": "4.0.5",
+      "@effect/vitest": "4.0.5",
+      "alchemy": "2.0.0-beta.83",
+      "effect": "4.0.5",
+      "oxfmt": "^0.57.0",
+      "oxlint": "^1.78.0",
+      "typescript": "^7",
+      "vitest": "^5.0.3"
+    }
+  }
+}

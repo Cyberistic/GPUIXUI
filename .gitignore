@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build / cache artifacts (all workspaces)
+dist/
+build/
+.source/
+*.tsbuildinfo
+
+# Alchemy deploy state
+.alchemy/
+
+# Reference clones (AGENTS.md) — read-only, never repository content
+references/
+
+# Per-agent working copies of the whole repo. Never repository content: one
+# writer per tree, and a second copy inside the repo breaks lint/knip.
+workspaces/
+
+# Agent scratch and transient session logs — never repository content
+.agents/slop/*.log
+.agents/slop/swarm/
+.scratch/
+
+# Environment variables
+.env
+.env.keys
+
+# OS / editor
+.DS_Store

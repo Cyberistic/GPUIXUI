@@ -1,0 +1,13 @@
+# Shared ignore list for oxlint + oxfmt (`.oxfmtrc-ignore`).
+# Gitignore semantics: a leading slash anchors the pattern to the repo root.
+
+# Agent worktrees: full copies of this repo, each with its own copy of these
+# configs, so scanning them loads a second .oxlintrc.json and fails the run.
+/workspaces/
+
+# Reference clones — read-only, not our code.
+/references/
+
+# Agent state and scratch.
+/.agents/
+/.scratch/
