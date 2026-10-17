@@ -106,6 +106,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [307](./307-inactive-label-soft-fills.md) | The inactive label inside a status panel | F | 090–093, 306 | done |
 | [308](./308-soft-edge-surfaces.md) | The soft status edge on the surfaces a badge sits on | F | 090–095, 300, 306 | done |
 | [309](./309-state-fills-on-panels.md) | The state fills on the panel they paint on | F | 063, 076–095, 300, 306–308 | done |
+| [310](./310-platform-edit-example-contract.md) | The copy-and-own platform example the contract rejects | F | 063, 098, 301, 309 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -643,6 +644,19 @@ step between the 850 panel and the 800 press (`#262C36`, 1.068 on the panel,
 1.059 vs the press), and the AAA dark accent lightens to `#251B5C` (1.152 on
 `muted`, 1.219 on `popover`). No text, edge, ring, selection, soft-tint or scrim
 pair moves; every pair measured on the light panel gains contrast.
+
+310 closes the same truth gap plan 098 fixed for the brand theme, one example
+over: `docs/tokens.md` teaches the platform copy-and-own story with a snippet
+that names only `primary` and `primaryHover`, and the executed
+`resolveEditedPlatformTheme` was that snippet. It inherited the Windows dark
+`primaryForeground` (`#000000`, designed for `#4CC2FF`) onto a `#005A9E` fill, so
+the documented path produced **2.96:1** on the fill and **2.12:1** on the hover,
+under the 4.5:1 on-colour floor the package states — and nothing ran the example
+through `themeContrastFailures`, while the brand example already was. Both
+examples now share one Contoso primary family (fill, foreground, hover, pressed
+and text), the authored `contosoPlatformStyle` names the whole family instead of
+two roles, and a test holds both helpers in both modes to the public checker and
+to the family rule. No shipped theme, pair, floor or platform file changes.
 
 ### Reference adoption (block `200–299`)
 
