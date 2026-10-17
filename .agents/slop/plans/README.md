@@ -122,6 +122,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [323](./323-undefined-platform-colour.md) | An `undefined` platform colour is not a colour override | F | 301, 310, 311, 321 | done |
 | [324](./324-public-type-index.md) | Name every public type in the reference | F | 066, 071, 086, 311 | done |
 | [325](./325-invalid-field-edge.md) | The invalid field edge the contract never measures | F | 057, 071, 074, 084, 092, 306, 312 | done |
+| [326](./326-contract-count-truth.md) | The contract's surface counts and pair history | F | 086, 306, 307, 325 | ready |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
