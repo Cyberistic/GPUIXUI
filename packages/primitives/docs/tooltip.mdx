@@ -12,7 +12,10 @@ tip at the edge or centre of the surrounding layout (plan 060).
 ## Usage
 
 ```tsx
-import { Icon, Tooltip } from "@gpuixui/primitives";
+import { Icon } from "@gpuixui/icons";
+import { Tooltip, useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
 
 <Tooltip content="Booked revenue, net of refunds." side="bottom">
   <div
@@ -21,7 +24,7 @@ import { Icon, Tooltip } from "@gpuixui/primitives";
     tabIndex={0}
     style={{ display: "flex", padding: 2 }}
   >
-    <Icon name="info" color={colour} size="sm" />
+    <Icon name="info" color={theme.colors.mutedForeground} size="sm" />
   </div>
 </Tooltip>;
 ```
