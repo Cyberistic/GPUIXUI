@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 61/80
+`[x]` `[████████░░]` 62/82
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -307,6 +307,16 @@ the `boundary` class and the identity dark edge moves to `#868FA0` (plan 092)
 button is focused while it sits on `warningSoft` or `destructiveSoft`, but
 `ringSoftPairs` now adds the four fills to the `boundary` class; every shipped
 variant already cleared the floor, so no colour moves (plan 093)
+`[x]` Hold the loading skeleton on the surfaces a loading row paints — seventeen
+shipped pairs were under 1.05:1, ten exactly 1.000:1, because the identity and
+high-contrast skeletons were the `active` fill; `muted`/`hover`/`active`/
+`selected` join the `surface` class and seven skeletons move one ramp step
+(plan 094)
+`[ ]` Hold the decorative `border` on the soft status fills — a divider inside
+an Alert or Toast measures 1.023:1 on the identity dark `successSoft`, 1.047:1
+on Linux dark and 1.015:1 on Windows dark, under the 1.05 divider floor, because
+plan 076 measured the soft surfaces but never the divider painted on them (next
+plan 095)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)

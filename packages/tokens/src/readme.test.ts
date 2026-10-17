@@ -91,7 +91,10 @@ describe("packages/tokens/README.md", () => {
 
   it("states the skeleton floor the checker enforces", () => {
     expect(readme).toContain(
-      `the soft status surfaces and the loading skeleton at ${contrastFloors.default.surface}:1 against \`background\`, \`card\` and \`popover\``,
+      `the loading skeleton on those three, the \`muted\` panel and the \`hover\`/\`active\`/\`selected\` washes a loading row paints`,
+    );
+    expect(readme).toContain(
+      "the identity and high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved them one ramp step",
     );
   });
 

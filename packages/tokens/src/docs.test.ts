@@ -438,6 +438,16 @@ describe("docs/tokens.md quoted figures", () => {
     expect(markdownProse).toContain(sentence);
   });
 
+  it("quotes the skeleton regression the audit found", () => {
+    // The pre-094 identity light skeleton, which was the pressed wash.
+    const previous = palette.neutral[200];
+    const sentence =
+      "The audit found the placeholder was the `active` fill in the identity and high-contrast themes, so a pressed loading row erased the placeholder (1.000:1); the light and dark skeleton moved one ramp step away, and each dark platform style carries its own.";
+
+    expect(contrastRatio(previous, themes.light.colors.active)).toBe(1);
+    expect(markdownProse).toContain(sentence);
+  });
+
   it("states the wash strength in both colour tables", () => {
     const cell = (light: string, dark: string): string =>
       washPercent(light) === washPercent(dark)
@@ -597,10 +607,12 @@ describe("docs/tokens.md contrast surfaces", () => {
   });
 
   it("names every surface the surface pairs are held against", () => {
-    const surfacePairs = contrastPairs.filter(
-      ([, , pairClass]) => pairClass === "surface",
+    const softPairs = contrastPairs.filter(
+      ([foreground, , pairClass]) =>
+        pairClass === "surface" &&
+        statusTones.some((tone) => foreground === `${tone}Soft`),
     );
-    const surfaces = [...new Set(surfacePairs.map(([, surface]) => surface))];
+    const surfaces = [...new Set(softPairs.map(([, surface]) => surface))];
     const names = surfaces.map((surface) => `\`${surface}\``);
     const list = `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
     const sentence =
@@ -609,18 +621,32 @@ describe("docs/tokens.md contrast surfaces", () => {
       "perceivable on every shipped canvas, platform variants included.";
 
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
-    expect(new Set(surfacePairs.map(([role]) => role))).toEqual(
-      new Set([...statusTones.map((tone) => `${tone}Soft`), "skeleton"]),
+    expect(new Set(softPairs.map(([role]) => role))).toEqual(
+      new Set(statusTones.map((tone) => `${tone}Soft`)),
     );
   });
 
   it("states the skeleton floor the contract enforces", () => {
+    const surfaces = contrastPairs
+      .filter(([foreground]) => foreground === "skeleton")
+      .map(([, surface]) => surface);
+    const names = surfaces.map((surface) => `\`${surface}\``);
+    const list = `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
     const sentence =
       "A loading skeleton is a surface too: it is held to " +
-      `${contrastFloors.default.surface}:1 against \`background\`, \`card\` and ` +
-      "`popover`, so a placeholder never disappears into the card it fills.";
+      `${contrastFloors.default.surface}:1 against ${list}, so a placeholder never ` +
+      "disappears into the card it fills or the row it sits in.";
 
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
+    expect(surfaces).toEqual([
+      "background",
+      "card",
+      "popover",
+      "muted",
+      "hover",
+      "active",
+      "selected",
+    ]);
   });
 
   it("names the skeleton a real platform style carries", () => {
@@ -725,7 +751,7 @@ describe("docs/design-system.md", () => {
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, and essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\`) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
-      `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` and the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {

@@ -203,7 +203,7 @@ export interface ThemeColors {
   readonly disabled: string;
   /** Disabled text and icons. */
   readonly disabledForeground: string;
-  /** Loading placeholder, held to the perceivability floor on every surface. */
+  /** Loading placeholder, held to the perceivability floor on every surface and row wash it fills. */
   readonly skeleton: string;
   /**
    * Scrollbar thumb tint. Reserved in GPUix 0.10.0: the platform paints the
@@ -222,7 +222,9 @@ export interface ThemeColors {
  * (plan 080). `mutedForeground` is neutral 700 rather than 600 so secondary text
  * keeps the secondary floor when it is selected on a pressed row (plan 087).
  * The soft status foregrounds are the family's darkest step so an alert's text
- * keeps the body floor through the selection wash (plan 091).
+ * keeps the body floor through the selection wash (plan 091). The skeleton is
+ * one ramp step darker than the pressed wash so a loading row never erases it
+ * (plan 094).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -280,7 +282,7 @@ export const lightColors = {
   selectedForeground: palette.iris[800],
   disabled: palette.neutral[100],
   disabledForeground: palette.neutral[400],
-  skeleton: palette.neutral[200],
+  skeleton: palette.neutral[300],
   scrollbar: palette.neutral[300],
   shadow: "#191D25",
 } satisfies ThemeColors;
@@ -295,7 +297,8 @@ export const lightColors = {
  * wash is 20%, so an alert's text keeps the body floor through it while the
  * highlight stays visible (plan 091). The boundary is a half-step lighter than
  * plan 084 left it, so a checkbox or field inside an Alert or Toast keeps its
- * edge on all four soft status fills (plan 092).
+ * edge on all four soft status fills (plan 092). The skeleton is one ramp step
+ * lighter than the pressed wash so a loading row never erases it (plan 094).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -353,14 +356,15 @@ export const darkColors = {
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],
   disabledForeground: palette.neutral[600],
-  skeleton: palette.neutral[800],
+  skeleton: palette.neutral[700],
   scrollbar: palette.neutral[700],
   shadow: "#000000",
 } satisfies ThemeColors;
 
 /**
  * High-contrast light roles. The same 58 roles as {@link lightColors}, with
- * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries.
+ * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
+ * skeleton is a perceivable step off the pressed wash (plan 094).
  */
 export const highContrastLightColors = {
   background: "#FFFFFF",
@@ -418,7 +422,7 @@ export const highContrastLightColors = {
   selectedForeground: "#2E2370",
   disabled: "#E8E8E8",
   disabledForeground: "#5A5A5A",
-  skeleton: "#D6D6D6",
+  skeleton: "#B0B0B0",
   scrollbar: "#9A9A9A",
   shadow: "#000000",
 } satisfies ThemeColors;
@@ -428,7 +432,8 @@ export const highContrastLightColors = {
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it (plan 080), and
  * the selection wash is a darker tint so white text keeps the body floor on the
- * fills a row paints (plan 081).
+ * fills a row paints (plan 081). The skeleton is a perceivable step off the
+ * pressed wash (plan 094).
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -486,7 +491,7 @@ export const highContrastDarkColors = {
   selectedForeground: "#E0E3FF",
   disabled: "#2E2E2E",
   disabledForeground: "#8A8A8A",
-  skeleton: "#3D3D3D",
+  skeleton: "#565656",
   scrollbar: "#8A8A8A",
   shadow: "#000000",
 } satisfies ThemeColors;

@@ -16,6 +16,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * secondary label grey (`#6E6E73`), so a checkbox in a row keeps its edge on
  * every wash (plan 084). Elevation levels apply their own alpha to the `shadow`
  * tint, so a copied style retints all three by editing one role (plan 085).
+ * The dark skeleton is one step off the pressed wash, so a loading row keeps its
+ * placeholder visible (plan 094).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -64,7 +66,7 @@ export const macosPlatformStyle = {
       inputForeground: "#F5F5F7",
       hover: "#3A3A3C",
       active: "#404042",
-      skeleton: "#3C3C3E",
+      skeleton: "#525254",
       secondary: "#3A3A3C",
       secondaryForeground: "#F5F5F7",
       primary: "#0A84FF",

@@ -14,6 +14,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * highlight must stay perceivable on a status surface too (plan 091). Elevation
  * levels apply their own alpha to the `shadow` tint, so a copied style retints
  * all three by editing one role (plan 085).
+ * The dark skeleton is one step off the pressed wash, so a loading row keeps its
+ * placeholder visible (plan 094).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -62,7 +64,7 @@ export const windowsPlatformStyle = {
       inputForeground: "#FFFFFF",
       hover: "#383838",
       active: "#454545",
-      skeleton: "#3C3C3C",
+      skeleton: "#525252",
       secondary: "#383838",
       secondaryForeground: "#FFFFFF",
       primary: "#4CC2FF",

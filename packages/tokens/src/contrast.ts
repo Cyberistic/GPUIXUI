@@ -43,12 +43,28 @@ const softSurfacePairs: readonly ContrastPair[] = softSurfaceRoles.flatMap(
 );
 
 /**
+ * The surfaces a loading placeholder sits on beyond the plain ones: the quiet
+ * panel of a sidebar list and the washes a loading row paints. A skeleton row is
+ * hovered, pressed and selected like any other, and a placeholder that vanishes
+ * into the wash is a failed loading state, so each is held to the surface floor.
+ */
+const skeletonSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+  "hover",
+  "active",
+  "selected",
+] as const;
+
+/**
  * The fills that must stay perceivable on the surfaces they sit on: the soft
  * status tints and the loading skeleton.
  */
 const surfacePairs: readonly ContrastPair[] = [
   ...softSurfacePairs,
-  ...(["background", "card", "popover"] as const).map(
+  ...skeletonSurfaces.map(
     (background): ContrastPair => ["skeleton", background, "surface"],
   ),
 ];
@@ -214,7 +230,8 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * status text on a floating surface, the functional control
  * boundary on a floating surface, a quiet panel, the state washes and the soft
  * status fills a control sits in, the soft
- * status surfaces and the loading skeleton a canvas must distinguish, the
+ * status surfaces and the loading skeleton a canvas, a quiet panel or a row wash
+ * must distinguish, the
  * designed edge around each soft status surface, and the decorative dividers
  * that must stay visible, including on the fills a bordered control paints.
  */
@@ -472,7 +489,7 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
  * secondary text and the wash's own perceivability on those surfaces, the
- * loading skeleton measured on the surfaces it fills, the designed edge around
+ * loading skeleton measured on every surface and row wash it fills, the designed edge around
  * each soft status surface measured on its own fill, the selection wash and the
  * tone's own foreground on the four soft status surfaces a selected Alert,
  * Badge or Toast paints, the control edge measured

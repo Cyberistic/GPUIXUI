@@ -214,8 +214,11 @@ set measured 2.62:1 on the pressed wash, macOS light 2.52:1, and high-contrast
 dark 4.15:1 until plan 084 moved five boundary values, and identity dark's edge
 measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and 2.97:1 on
 `infoSoft` until plan 092 moved it to `#868FA0`. The same list holds the
-soft status surfaces and the loading skeleton at 1.05:1 against `background`,
-`card` and `popover`, and the decorative `border` at 1.05:1 (3:1 at high
+soft status surfaces at 1.05:1 against `background`, `card` and `popover`, and
+the loading skeleton on those three, the `muted` panel and the
+`hover`/`active`/`selected` washes a loading row paints — the identity and
+high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved
+them one ramp step — and the decorative `border` at 1.05:1 (3:1 at high
 contrast) on the plain surfaces and on the `secondary`, `hover`, `active` and
 `accent` fills a bordered control paints, so an Alert, Badge or Toast, a loading
 placeholder, every divider and every outlined control's edge stay perceivable.

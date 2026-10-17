@@ -148,7 +148,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface |
 | `disabledForeground` | `#A1A9B7` | `#545D6C` | disabled text |
-| `skeleton` | `#E1E5EC` | `#2A303B` | loading placeholder |
+| `skeleton` | `#CBD1DB` | `#3D4552` | loading placeholder |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#191D25` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
@@ -326,7 +326,7 @@ getTheme("light"); // the default light theme, unchanged
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface |
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
-| `skeleton` | `#D6D6D6` | `#3D3D3D` | loading placeholder |
+| `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#000000` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
@@ -385,7 +385,8 @@ radii, density, motion, surfaces (including the loading skeleton), accent and
 shadows; roles it does not name (status, disabled, scrollbar) and every
 non-colour scale inherit the identity, so the default stays the design system
 the library is built on. The dark variants carry their own `skeleton`, because a
-loading placeholder is a surface on that platform's card, not a fixed grey.
+loading placeholder is a surface on that platform's card and row washes, not a
+fixed grey.
 
 `getPlatformTheme` never mutates its base, keeps the requested mode and returns
 a normal `Theme`:
@@ -1080,7 +1081,8 @@ the high-contrast variants. The boundary is also measured on the `muted` panel,
 the four washes and the four soft status fills, because an unchecked checkbox or
 a field keeps its `borderStrong` edge while the row moves or inside an Alert.
 It also fails if a soft status surface is indistinguishable from `background`,
-`card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
+`card` or `popover` (floor 1.05:1), or if a loading skeleton is indistinguishable
+on any surface or row wash it fills (also 1.05:1), if a decorative `border` is imperceptible on
 those surfaces or on the `secondary`, `hover`, `active` and `accent` fills a
 bordered control paints (1.05:1, and 3:1 at high contrast), or if body text over
 the composited `selection` wash drops below its body floor on any surface a glyph
@@ -1090,7 +1092,11 @@ Each soft surface also has a role for its edge (`xSoftBorder`), held to the same
 divider floor on that fill; the 30% mixture it replaced measured 1.12:1 on the
 high-contrast light `warning` surface, under the 3:1 that theme requires.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
-`card` and `popover`, so a placeholder never disappears into the card it fills.
+`card`, `popover`, `muted`, `hover`, `active` and `selected`, so a placeholder
+never disappears into the card it fills or the row it sits in. The audit found
+the placeholder was the `active` fill in the identity and high-contrast themes,
+so a pressed loading row erased the placeholder (1.000:1); the light and dark skeleton moved
+one ramp step away, and each dark platform style carries its own.
 Brand-toned text is checked on the six surfaces a link paints — `background`,
 `card`, `popover`, `muted` and the `hover`/`active` washes — so a platform accent
 cannot ship as an unreadable link: the audit found macOS light at 4.21:1 on its

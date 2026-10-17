@@ -15,6 +15,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * levels apply their own alpha to the `shadow` tint, so a copied style retints
  * all three by editing one role (plan 085). The dark soft destructive fill is a
  * step darker so the light-accent wash stays visible on it (plan 091).
+ * The dark skeleton is one step off the pressed wash, so a loading row keeps its
+ * placeholder visible (plan 094).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -63,7 +65,7 @@ export const linuxPlatformStyle = {
       inputForeground: "#FFFFFF",
       hover: "#3A3A3A",
       active: "#464646",
-      skeleton: "#3E3E3E",
+      skeleton: "#585858",
       secondary: "#3A3A3A",
       secondaryForeground: "#FFFFFF",
       primary: "#78AEED",

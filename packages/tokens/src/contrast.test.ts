@@ -73,6 +73,13 @@
  * eight surfaces a control normally sits on. Every shipped set already clears
  * the floor — identity light `warningSoft` at 3.37:1 is the tightest — so no
  * colour moves; the four fills join the boundary class as `ringSoftPairs`.
+ *
+ * Plan 094 closes the last painted surface: the loading skeleton was measured on
+ * the canvas, card and popover, but a skeleton row is hovered, pressed and
+ * selected like any other and also sits on the `muted` panel. Seventeen shipped
+ * pairs were under 1.05:1, ten exactly 1.000:1, because the identity and
+ * high-contrast skeletons were the `active` fill; the four surfaces join the
+ * surface class and seven skeleton values move.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -294,7 +301,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(117);
+    expect(contrastPairs.length).toBe(121);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
