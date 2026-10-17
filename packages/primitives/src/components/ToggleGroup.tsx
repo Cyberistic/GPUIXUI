@@ -58,6 +58,15 @@ export interface ToggleGroupState {
   readonly disabled: boolean;
 }
 
+/** The public state a `ToggleGroup` item callback receives. */
+export interface ToggleItemState {
+  readonly value: string;
+  readonly index: number;
+  readonly pressed: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+}
+
 interface ToggleGroupBase {
   readonly options: ReadonlyArray<ToggleGroupOption>;
   /** Arrow axis and flex direction. Defaults to `horizontal`. */
@@ -72,6 +81,11 @@ interface ToggleGroupBase {
   readonly label?: string;
   /** An object, or a callback over the group's public state. */
   readonly style?: StateStyle<ToggleGroupState>;
+  /**
+   * An object, or a callback over each item's own state. Merged last, after the
+   * focused item's ring.
+   */
+  readonly itemStyle?: StateStyle<ToggleItemState>;
   readonly testId?: string;
 }
 
@@ -167,11 +181,12 @@ export const renderToggleGroup = (
           size,
           disabled,
         };
+        const itemFocused = Option.exists(
+          focus.focusedIndex,
+          (focused) => focused === index,
+        );
         const itemFocus: FocusState = {
-          focused: Option.exists(
-            focus.focusedIndex,
-            (focused) => focused === index,
-          ),
+          focused: itemFocused,
           onFocus: () => focus.onFocus(index),
           onBlur: () => focus.onBlur(index),
         };
@@ -204,14 +219,22 @@ export const renderToggleGroup = (
             onKeyUp={onKey("up")}
             onFocus={itemFocus.onFocus}
             onBlur={itemFocus.onBlur}
-            style={
-              itemFocus.focused
+            style={resolvePartStyle(
+              itemFocused
                 ? mergeStyle(
                     controlStyle(spec, theme),
                     controlFocusStyle(spec, theme),
                   )
-                : controlStyle(spec, theme)
-            }
+                : controlStyle(spec, theme),
+              props.itemStyle,
+              {
+                value: option.value,
+                index,
+                pressed,
+                disabled,
+                focused: itemFocused,
+              },
+            )}
           >
             {option.label}
           </div>

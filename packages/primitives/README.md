@@ -68,9 +68,18 @@ property; an object style behaves exactly as before. State types are exported
 `CheckboxGroupState`, `RadioGroupState`, `ToggleGroupState`, `RatingState`,
 `OTPFieldState`, `SliderState`, `RangeSliderState`, `LabelState`,
 `ScrollAreaState`, `SelectState`). Group and root `style` reports the state the
-container owns; a radio option, a slider thumb or an OTP cell is data, so its
-own state is not yet styleable (an open API question, TODO). Two fields extend
-the contract's vocabulary
+container owns.
+
+Parts built from data take a second, per-item prop with the same contract:
+`CheckboxGroup.rowStyle` (`CheckboxRowState`), `RadioGroup.optionStyle`
+(`RadioOptionState`), `ToggleGroup.itemStyle` (`ToggleItemState`),
+`Rating.starStyle` (`RatingStarState`), `OTPField.cellStyle` (`OTPCellState`),
+`Slider.thumbStyle` (`SliderThumbState`), `RangeSlider.thumbStyle`
+(`RangeSliderThumbState`) and `Select.triggerStyle` (the runtime's
+`SelectTriggerState`, re-exported). The item state carries its identity
+(`value`/`index`, or `end` for a range thumb) plus the facts the component
+already derives for it, so one callback styles every item and branches on that
+identity. Two fields extend the contract's vocabulary
 because this package has real states its parts do not: `ButtonState.loading`
 and `CheckboxState.indeterminate`. `resolvePartStyle` in `components/internal.ts`
 is the single merge point; the type and resolver are the published ones, not a

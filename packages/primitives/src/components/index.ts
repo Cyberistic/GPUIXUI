@@ -42,6 +42,7 @@ export type {
   ToggleGroupProps,
   ToggleGroupSingleProps,
   ToggleGroupState,
+  ToggleItemState,
 } from "./ToggleGroup.js";
 
 export { Input } from "./Input.js";
@@ -51,7 +52,7 @@ export { NumberField, numberRange } from "./NumberField.js";
 export type { NumberFieldProps } from "./NumberField.js";
 
 export { OTPField, otpCellLabel } from "./OTPField.js";
-export type { OTPFieldProps, OTPFieldState } from "./OTPField.js";
+export type { OTPCellState, OTPFieldProps, OTPFieldState } from "./OTPField.js";
 
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
@@ -66,6 +67,7 @@ export type {
   CheckboxGroupOption,
   CheckboxGroupProps,
   CheckboxGroupState,
+  CheckboxRowState,
 } from "./CheckboxGroup.js";
 
 export { Switch } from "./Switch.js";
@@ -76,20 +78,23 @@ export type {
   RadioGroupProps,
   RadioGroupState,
   RadioOption,
+  RadioOptionState,
 } from "./RadioGroup.js";
 
 export { Progress } from "./Progress.js";
 export type { ProgressProps } from "./Progress.js";
 
 export { Rating, ratingMax } from "./Rating.js";
-export type { RatingProps, RatingState } from "./Rating.js";
+export type { RatingProps, RatingStarState, RatingState } from "./Rating.js";
 
 export { RangeSlider, Slider, sliderRange, sliderValueText } from "./Slider.js";
 export type {
   RangeSliderProps,
   RangeSliderState,
+  RangeSliderThumbState,
   SliderProps,
   SliderState,
+  SliderThumbState,
 } from "./Slider.js";
 
 export { Meter } from "./Meter.js";
@@ -108,6 +113,7 @@ export type {
   SelectOptionGroup,
   SelectProps,
   SelectState,
+  SelectTriggerState,
 } from "./Select.js";
 
 export { Tooltip } from "./Tooltip.js";

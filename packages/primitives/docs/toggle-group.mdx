@@ -66,7 +66,8 @@ the selection actually changed.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | control height and padding from the density scale |
 | `disabled` | `boolean` | `false` | every item inert and out of the tab order |
 | `label` | `string` | none | the group's accessible name |
-| `style` | `StateStyle<ToggleGroupState>` | — | merged over the group container, not its items; an object or a state callback |
+| `style` | `StateStyle<ToggleGroupState>` | — | merged over the group container; an object or a state callback |
+| `itemStyle` | `StateStyle<ToggleItemState>` | — | merged last on each item, after its focus ring; an object or a state callback |
 | `testId` | `string` | — | the group's locator; items become `${testId}-${value}` |
 
 Each item paints exactly like a standalone `Toggle`: rest from
@@ -117,7 +118,7 @@ theme roles.
 ## Style by state
 
 `style` takes an object or a callback over `ToggleGroupState` — the runtime's own
-`StateStyle` type — merged last on the group container (items are data):
+`StateStyle` type — merged last on the group container:
 
 ```tsx
 <ToggleGroup style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
@@ -130,6 +131,29 @@ theme roles.
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
 
+### Per-item style
+
+`itemStyle` takes the same `StateStyle` over `ToggleItemState`, merged last on
+the item — after its own paint and focus ring:
+
+```tsx
+<ToggleGroup
+  type="multiple"
+  itemStyle={(item) => (item.pressed ? { fontWeight: 600 } : {})}
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `value` | `string` | the item's value |
+| `index` | `number` | position in `options` |
+| `pressed` | `boolean` | this item is pressed |
+| `disabled` | `boolean` | the item is disabled |
+| `focused` | `boolean` | the item holds native focus |
+
+`ToggleItemState` is exported. One callback receives every item; branch on
+`value` or `index`.
+
 ## Limitations
 
 
@@ -137,9 +161,9 @@ property; returning `{}` keeps the default look. The state type is exported.
 - The group has no container chrome: it is a flex row of buttons. Wrap it in a
   `Box` when you want a rounded segmented container, as `ButtonGroup` does for
   attached buttons.
-- No per-item style or arbitrary children: options are data (the `RadioGroup`
-  decision, D16/D25). Use `Toggle` when an item needs an icon, a count or a
-  custom paint.
+- No arbitrary children: options are data (the `RadioGroup` decision, D16/D25).
+  A per-item look is available through `itemStyle`; use `Toggle` when an item
+  needs an icon or a count inside it.
 - No `loading` state — a mode switch is instant; disable the group while a
   request is in flight.
 - Pressing Space cannot be `preventDefault`ed in 0.10.0 (no
@@ -148,10 +172,12 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Verification
 
-- `src/components/state-style.test.tsx` — the state payload and the callback
-  winning over the component's own rules (plan 080).
-- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
-  a select's open state reaching the paint (plan 080).
+- `src/components/state-style.test.tsx` — the container state payload, each
+  per-item payload, and the callback winning over the component's own rules
+  (plans 080, 081).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
+  select's open state, and the per-item states reaching the paint (plans 080,
+  081).
 
 - `src/core/toggle-group.test.ts` — single replaces and returns the same array
   on a re-press (no spurious `onChange`); multiple appends, removes and

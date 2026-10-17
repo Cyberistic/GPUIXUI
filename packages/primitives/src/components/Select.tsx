@@ -67,7 +67,12 @@ import {
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export type { SelectEntry, SelectOption, SelectOptionGroup };
+export type {
+  SelectEntry,
+  SelectOption,
+  SelectOptionGroup,
+  SelectTriggerState,
+};
 
 /** The public state a `Select` style callback receives. */
 export interface SelectState {
@@ -99,6 +104,11 @@ export interface SelectProps {
   readonly label?: string;
   /** An object, or a callback over the select's public state. */
   readonly style?: StateStyle<SelectState>;
+  /**
+   * An object, or a callback over the visible trigger's own state. Merged last
+   * on the trigger's field chrome.
+   */
+  readonly triggerStyle?: StateStyle<SelectTriggerState>;
   readonly testId?: string;
 }
 
@@ -112,6 +122,16 @@ export const selectTriggerStyle =
     mergeStyle(controlStyle({ ...spec, disabled: state.disabled }, theme), {
       justifyContent: "space-between",
     });
+
+/** The trigger's paint with a caller's contribution merged last. */
+export const selectTriggerPartStyle =
+  (
+    spec: ControlSpec,
+    theme: PrimitiveTheme,
+    style?: StateStyle<SelectTriggerState>,
+  ): ((state: SelectTriggerState) => StyleDesc) =>
+  (state) =>
+    resolvePartStyle(selectTriggerStyle(spec, theme)(state), style, state);
 
 /**
  * The list: the popover surface, one step of padding, at least as wide as the
@@ -291,6 +311,7 @@ export const renderSelect = (
     fullWidth,
     label,
     style,
+    triggerStyle,
     testId,
   }: SelectProps,
   theme: PrimitiveTheme,
@@ -364,7 +385,7 @@ export const renderSelect = (
         aria-expanded={open}
         aria-valuetext={selectedLabel ?? placeholder}
         disabled={disabled}
-        style={selectTriggerStyle(spec, theme)}
+        style={selectTriggerPartStyle(spec, theme, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

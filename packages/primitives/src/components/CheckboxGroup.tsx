@@ -57,6 +57,20 @@ export interface CheckboxGroupState {
   readonly invalid: boolean;
 }
 
+/** The public state a `CheckboxGroup` row callback receives. */
+export interface CheckboxRowState {
+  /** The option's value; `None` for the optional select-all row. */
+  readonly value: Option.Option<string>;
+  /** Paint order, select-all included (the parent is index 0 when present). */
+  readonly index: number;
+  /** True for the select-all row only. */
+  readonly parent: boolean;
+  readonly selection: SelectionState;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
+}
+
 export interface CheckboxGroupProps {
   readonly options: ReadonlyArray<CheckboxGroupOption>;
   /** Controlled selection. Omit to let the group hold its own. */
@@ -82,6 +96,11 @@ export interface CheckboxGroupProps {
   readonly label?: string;
   /** An object, or a callback over the group's public state. */
   readonly style?: StateStyle<CheckboxGroupState>;
+  /**
+   * An object, or a callback over each row's own state. Merged last on the row
+   * that owns the hit area, the tab stop and the accessible name.
+   */
+  readonly rowStyle?: StateStyle<CheckboxRowState>;
   readonly testId?: string;
 }
 
@@ -99,6 +118,7 @@ export interface CheckboxGroupHandlers {
 }
 
 interface RowSpec {
+  readonly value: Option.Option<string>;
   readonly state: SelectionState;
   readonly label: string;
   readonly description?: string;
@@ -111,9 +131,13 @@ interface RowSpec {
   readonly onActivate: () => void;
   readonly focus: CheckboxGroupFocus;
   readonly index: number;
+  readonly style?: StateStyle<CheckboxRowState>;
 }
 
-const rowStyle = (disabled: boolean, theme: PrimitiveTheme): StyleDesc => ({
+const rowLayoutStyle = (
+  disabled: boolean,
+  theme: PrimitiveTheme,
+): StyleDesc => ({
   display: "flex",
   flexDirection: "row",
   alignItems: "flex-start",
@@ -130,6 +154,7 @@ const rowTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
 /** One checkbox row: the hit area, the tab stop and the accessible name. */
 const renderRow = (
   {
+    value,
     state,
     label,
     description,
@@ -142,6 +167,7 @@ const renderRow = (
     onActivate,
     focus,
     index,
+    style,
   }: RowSpec,
   theme: PrimitiveTheme,
   key: string,
@@ -153,6 +179,15 @@ const renderRow = (
     invalid,
     disabled,
     focused,
+  };
+  const partState: CheckboxRowState = {
+    value,
+    index,
+    parent: Option.isNone(value),
+    selection: state,
+    disabled,
+    focused,
+    invalid,
   };
   const onKey =
     (phase: "down" | "up") =>
@@ -175,7 +210,11 @@ const renderRow = (
       onKeyUp={onKey("up")}
       onFocus={() => focus.onFocus(index)}
       onBlur={() => focus.onBlur(index)}
-      style={rowStyle(disabled, theme)}
+      style={resolvePartStyle(
+        rowLayoutStyle(disabled, theme),
+        style,
+        partState,
+      )}
     >
       <div style={selectionBoxStyle(painted, theme)}>
         {state === "unchecked" ? null : (
@@ -229,6 +268,7 @@ export const renderCheckboxGroup = (
       ? null
       : renderRow(
           {
+            value: Option.none(),
             state: parentState,
             label: selectAll,
             disabled: parentDisabled,
@@ -240,6 +280,7 @@ export const renderCheckboxGroup = (
             onActivate: handlers.onToggleAll,
             focus,
             index: 0,
+            style: props.rowStyle,
           },
           theme,
           "-all",
@@ -255,6 +296,7 @@ export const renderCheckboxGroup = (
     const disabled = props.disabled === true || option.disabled === true;
     return renderRow(
       {
+        value: Option.some(option.value),
         state: rowState,
         label: option.label,
         description: option.description,
@@ -267,6 +309,7 @@ export const renderCheckboxGroup = (
         onActivate: () => handlers.onToggle(option.value),
         focus,
         index,
+        style: props.rowStyle,
       },
       theme,
       option.value,

@@ -72,6 +72,18 @@ export interface RangeSliderState {
   readonly invalid: boolean;
 }
 
+/** The public state a `Slider` thumb callback receives. */
+export interface SliderThumbState {
+  readonly focused: boolean;
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
+
+/** The public state a `RangeSlider` thumb callback receives. */
+export interface RangeSliderThumbState extends SliderThumbState {
+  readonly end: "start" | "end";
+}
+
 /** A single value on a track. */
 export interface SliderProps {
   /** Controlled value. Omit to let the slider hold its own. */
@@ -95,6 +107,8 @@ export interface SliderProps {
   readonly formatValue?: (value: number) => string;
   /** An object, or a callback over the slider's public state. */
   readonly style?: StateStyle<SliderState>;
+  /** An object, or a callback over the thumb's own state. Merged last. */
+  readonly thumbStyle?: StateStyle<SliderThumbState>;
   readonly testId?: string;
 }
 
@@ -114,6 +128,8 @@ export interface RangeSliderProps {
   readonly formatValue?: (value: number) => string;
   /** An object, or a callback over the range slider's public state. */
   readonly style?: StateStyle<RangeSliderState>;
+  /** An object, or a callback over each thumb's own state. Merged last. */
+  readonly thumbStyle?: StateStyle<RangeSliderThumbState>;
   readonly testId?: string;
 }
 
@@ -188,7 +204,20 @@ export const renderSlider = (
         <div
           style={sliderFillStyle(valueFraction(value, range), spec, theme)}
         />
-        <div style={sliderThumbStyle(spec, theme)} />
+        <div
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-thumb`
+          }
+          style={resolvePartStyle(
+            sliderThumbStyle(spec, theme),
+            props.thumbStyle,
+            {
+              focused: focus.focused,
+              disabled: props.disabled === true,
+              invalid: props.invalid === true,
+            },
+          )}
+        />
       </div>
     </div>
   );
@@ -243,6 +272,11 @@ export const renderRangeSlider = (
       : ([`${props.label} minimum`, `${props.label} maximum`] as const);
   const thumb = (index: 0 | 1): ReactElement => {
     const value = index === 0 ? span.start : span.end;
+    const end = index === 0 ? "start" : "end";
+    const focused = Option.exists(
+      focus.focusedIndex,
+      (focusedIndex) => focusedIndex === index,
+    );
     return (
       <div
         ref={handlers.registerThumb(index)}
@@ -254,7 +288,6 @@ export const renderRangeSlider = (
         onBlur={() => focus.onBlur(index)}
         onKeyDown={(event) => {
           if (props.disabled === true) return;
-          const end = index === 0 ? "start" : "end";
           Option.match(decideValueKey(value, range, event.key ?? ""), {
             onNone: () => {},
             onSome: (next) =>
@@ -263,15 +296,20 @@ export const renderRangeSlider = (
               ),
           });
         }}
-        style={sliderThumbStyle(
+        testId={
+          props.testId === undefined
+            ? undefined
+            : `${props.testId}-thumb-${end}`
+        }
+        style={resolvePartStyle(
+          sliderThumbStyle({ ...base, focused }, theme),
+          props.thumbStyle,
           {
-            ...base,
-            focused: Option.exists(
-              focus.focusedIndex,
-              (focused) => focused === index,
-            ),
+            end,
+            focused,
+            disabled: props.disabled === true,
+            invalid: props.invalid === true,
           },
-          theme,
         )}
       />
     );

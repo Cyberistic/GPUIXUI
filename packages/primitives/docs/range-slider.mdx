@@ -48,7 +48,8 @@ ends can touch but never cross.
 | `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
 | `style` | `StateStyle<RangeSliderState>` | — | merged last, on the track; an object or a state callback |
-| `testId` | `string` | — | stable locator for the track |
+| `thumbStyle` | `StateStyle<RangeSliderThumbState>` | — | merged last on each thumb; an object or a state callback |
+| `testId` | `string` | — | names the track; thumbs become `${testId}-thumb-start` / `-thumb-end` |
 
 ## Keyboard
 
@@ -99,6 +100,29 @@ values are painted as two fills; the second fill is the length between the ends.
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
 
+### Per-item style
+
+`thumbStyle` takes the same `StateStyle` over `RangeSliderThumbState`, merged
+last on each thumb:
+
+```tsx
+<RangeSlider
+  thumbStyle={(thumb) =>
+    thumb.end === "start" && thumb.focused ? { opacity: 1 } : {}
+  }
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `end` | `"start" \| "end"` | which end of the range this thumb paints |
+| `focused` | `boolean` | this thumb holds native focus |
+| `disabled` | `boolean` | refuses pointer and keys |
+| `invalid` | `boolean` | paints the destructive role |
+
+`RangeSliderThumbState` extends `SliderThumbState`, so a callback written for
+one slider reads the same focus/disabled/invalid fields on the other.
+
 ## Limitations
 
 
@@ -108,10 +132,12 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Verification
 
-- `src/components/state-style.test.tsx` — the state payload and the callback
-  winning over the component's own rules (plan 080).
-- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
-  a select's open state reaching the paint (plan 080).
+- `src/components/state-style.test.tsx` — the container state payload, each
+  per-item payload, and the callback winning over the component's own rules
+  (plans 080, 081).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
+  select's open state, and the per-item states reaching the paint (plans 080,
+  081).
 
 - `src/core/value.test.ts` — span ordering, the crossing guard, the nearest-end
   rule (including both thumbs at one value).

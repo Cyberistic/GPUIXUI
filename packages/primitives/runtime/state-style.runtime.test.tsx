@@ -14,7 +14,10 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { Checkbox } from "../src/components/Checkbox.js";
+import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { Input } from "../src/components/Input.js";
+import { RadioGroup } from "../src/components/RadioGroup.js";
+import { Rating } from "../src/components/Rating.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
 import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
@@ -137,6 +140,108 @@ it("a labelled ScrollArea's callback follows its own focus", async () => {
   expect(background(runtime, "area")).toBe(IDLE);
   runtime.focusNext();
   expect(background(runtime, "area")).toBe(FOCUSED);
+});
+
+it("a RadioGroup's option callback follows the selection", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Choice"
+        defaultValue="alpha"
+        options={[
+          { value: "alpha", label: "Alpha" },
+          { value: "beta", label: "Beta" },
+        ]}
+        optionStyle={(state) => ({
+          backgroundColor: state.checked ? FOCUSED : IDLE,
+        })}
+      />
+    </Surface>,
+  );
+  expect(background(runtime, "rg-alpha")).toBe(FOCUSED);
+  expect(background(runtime, "rg-beta")).toBe(IDLE);
+  runtime.click("rg-beta");
+  expect(background(runtime, "rg-alpha")).toBe(IDLE);
+  expect(background(runtime, "rg-beta")).toBe(FOCUSED);
+});
+
+it("a Rating's star callback follows the filled state", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating
+        testId="rt"
+        label="Rating"
+        max={3}
+        defaultValue={2}
+        starStyle={(state) => ({
+          backgroundColor: state.filled ? FOCUSED : IDLE,
+        })}
+      />
+    </Surface>,
+  );
+  expect(background(runtime, "rt-star-1")).toBe(FOCUSED);
+  expect(background(runtime, "rt-star-2")).toBe(FOCUSED);
+  expect(background(runtime, "rt-star-3")).toBe(IDLE);
+  runtime.click("rt-star-3");
+  expect(background(runtime, "rt-star-3")).toBe(FOCUSED);
+});
+
+it("a CheckboxGroup's row callback sees the parent's mixed state", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <CheckboxGroup
+        testId="cg"
+        label="Choices"
+        selectAll="All"
+        options={[
+          { value: "alpha", label: "Alpha" },
+          { value: "beta", label: "Beta" },
+        ]}
+        rowStyle={(state) => ({
+          backgroundColor:
+            state.parent && state.selection === "indeterminate"
+              ? FOCUSED
+              : IDLE,
+        })}
+      />
+    </Surface>,
+  );
+  expect(background(runtime, "cg-all")).toBe(IDLE);
+  runtime.click("cg-alpha");
+  expect(background(runtime, "cg-all")).toBe(FOCUSED);
+});
+
+it("a Select trigger's callback follows the open state", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        placeholder="Pick one"
+        options={[{ value: "apple", label: "Apple" }]}
+        triggerStyle={(state) => ({
+          backgroundColor: state.open ? FOCUSED : IDLE,
+        })}
+      />
+    </Surface>,
+  );
+  const trigger = () =>
+    Option.getOrElse(
+      Option.flatMap(runtime.element("sel"), (element) =>
+        Option.flatMap(Option.fromNullishOr(element.children[0]), (id) =>
+          Option.fromNullishOr(runtime.renderer.getElement(id)),
+        ),
+      ),
+      () => expect.fail("the Select painted no trigger"),
+    );
+  expect(trigger().style.backgroundColor).toBe(IDLE);
+  runtime.clickElement(trigger());
+  expect(trigger().style.backgroundColor).toBe(FOCUSED);
 });
 
 it("a Select's callback follows the open state", async () => {

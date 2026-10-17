@@ -49,6 +49,7 @@ leaving a hole.
 | `label` | `string` | none | group name; each cell is named `<label> digit N` |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount; its ring paints from mount |
 | `style` | `StateStyle<OTPFieldState>` | — | merged last on the group; an object or a state callback |
+| `cellStyle` | `StateStyle<OTPCellState>` | — | merged last on each cell; an object or a state callback |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
 Only letters and digits are kept. A pasted `123-456` becomes `123456`, and a
@@ -103,7 +104,7 @@ No literal colour, size or radius is named.
 ## Style by state
 
 `style` takes an object or a callback over `OTPFieldState` — the runtime's own
-`StateStyle` type — merged last on the group box (the cells are internal):
+`StateStyle` type — merged last on the group box:
 
 ```tsx
 <OTPField style={(state) => ({ opacity: state.disabled ? 0.9 : 1 })} />
@@ -116,6 +117,26 @@ No literal colour, size or radius is named.
 
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
+
+### Per-item style
+
+`cellStyle` takes the same `StateStyle` over `OTPCellState`, merged last on each
+native `<input>` cell:
+
+```tsx
+<OTPField cellStyle={(cell) => (cell.filled ? { opacity: 1 } : { opacity: 0.7 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `index` | `number` | 0-based cell position |
+| `filled` | `boolean` | the cell holds a character |
+| `focused` | `boolean` | the cell holds native focus |
+| `disabled` | `boolean` | the field is disabled |
+| `invalid` | `boolean` | every cell paints the destructive border |
+
+`OTPCellState` is exported. One callback receives every cell; branch on `index`
+or `filled`.
 
 ## Limitations
 
@@ -135,10 +156,12 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Verification
 
-- `src/components/state-style.test.tsx` — the state payload and the callback
-  winning over the component's own rules (plan 080).
-- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
-  a select's open state reaching the paint (plan 080).
+- `src/components/state-style.test.tsx` — the container state payload, each
+  per-item payload, and the callback winning over the component's own rules
+  (plans 080, 081).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
+  select's open state, and the per-item states reaching the paint (plans 080,
+  081).
 
 - `src/core/otp.test.ts` — normalisation and truncation, cell padding, one-char
   replacement and advance, accumulated-text stripping, multi-character fill,

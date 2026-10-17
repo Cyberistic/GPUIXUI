@@ -14,6 +14,7 @@
 
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { initValueState } from "../core/state.js";
@@ -23,6 +24,7 @@ import {
   renderCheckboxGroup,
   type CheckboxGroupHandlers,
   type CheckboxGroupState,
+  type CheckboxRowState,
 } from "./CheckboxGroup.js";
 import { renderCheckbox, type CheckboxState } from "./Checkbox.js";
 import { fieldChrome, type FieldState } from "./Input.js";
@@ -30,6 +32,7 @@ import { renderLabel, type LabelState } from "./Label.js";
 import { renderNumberField, type NumberFieldHandlers } from "./NumberField.js";
 import {
   renderOtpField,
+  type OTPCellState,
   type OTPFieldHandlers,
   type OTPFieldState,
 } from "./OTPField.js";
@@ -37,25 +40,31 @@ import {
   renderRadioGroup,
   type RadioGroupHandlers,
   type RadioGroupState,
+  type RadioOptionState,
 } from "./RadioGroup.js";
 import {
   renderRating,
   type RatingHandlers,
+  type RatingStarState,
   type RatingState,
 } from "./Rating.js";
 import { renderScrollArea, type ScrollAreaState } from "./ScrollArea.js";
 import {
   renderSelect,
+  selectTriggerPartStyle,
   type SelectHandlers,
   type SelectState,
+  type SelectTriggerState,
 } from "./Select.js";
 import {
   renderRangeSlider,
   renderSlider,
   type RangeSliderHandlers,
   type RangeSliderState,
+  type RangeSliderThumbState,
   type SliderHandlers,
   type SliderState,
+  type SliderThumbState,
 } from "./Slider.js";
 import { renderSwitch, type SwitchState } from "./Switch.js";
 import { renderToggle, type ToggleState } from "./Toggle.js";
@@ -63,9 +72,16 @@ import {
   renderToggleGroup,
   type ToggleGroupHandlers,
   type ToggleGroupState,
+  type ToggleItemState,
 } from "./ToggleGroup.js";
+import { fieldVariant } from "../core/variants.js";
 import type { FocusState, StateStyle } from "./internal.js";
-import { elementProp, expectSome, hostStyleString } from "./testing/element.js";
+import {
+  elementChildren,
+  elementProp,
+  expectSome,
+  hostStyleString,
+} from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
 const focused: FocusState = {
@@ -490,5 +506,308 @@ describe("group roots and overlays", () => {
       invalid: true,
     });
     expect(componentBackground(element)).toBe(PAINT);
+  });
+});
+
+describe("per-item style", () => {
+  const painted = (element: ReactElement): string =>
+    expectSome(hostStyleString(element, "backgroundColor"));
+
+  it("CheckboxGroup gives each row its own value, index and tri-state", () => {
+    const record = recorder<CheckboxRowState>();
+    const handlers: CheckboxGroupHandlers = {
+      onToggle: vi.fn(),
+      onToggleAll: vi.fn(),
+    };
+    const element = renderCheckboxGroup(
+      {
+        options: [option("alpha"), option("beta")],
+        selectAll: "All",
+        rowStyle: record.style,
+      },
+      testTheme,
+      arrayState(["alpha"]),
+      groupFocus,
+      handlers,
+    );
+    expect(record.seen).toStrictEqual([
+      {
+        value: Option.none(),
+        index: 0,
+        parent: true,
+        selection: "indeterminate",
+        disabled: false,
+        focused: false,
+        invalid: false,
+      },
+      {
+        value: Option.some("alpha"),
+        index: 1,
+        parent: false,
+        selection: "checked",
+        disabled: false,
+        focused: false,
+        invalid: false,
+      },
+      {
+        value: Option.some("beta"),
+        index: 2,
+        parent: false,
+        selection: "unchecked",
+        disabled: false,
+        focused: false,
+        invalid: false,
+      },
+    ]);
+    expect(Arr.map(elementChildren(element), painted)).toStrictEqual([
+      PAINT,
+      PAINT,
+      PAINT,
+    ]);
+  });
+
+  it("RadioGroup gives each option its own value, index and checked state", () => {
+    const record = recorder<RadioOptionState>();
+    const handlers: RadioGroupHandlers = {
+      onSelect: vi.fn(),
+      onFocusMove: vi.fn(),
+      registerItem: () => () => {},
+    };
+    const element = renderRadioGroup(
+      {
+        options: [option("alpha"), option("beta")],
+        optionStyle: record.style,
+      },
+      testTheme,
+      textState("alpha"),
+      0,
+      groupFocus,
+      handlers,
+    );
+    expect(record.seen).toStrictEqual([
+      {
+        value: "alpha",
+        index: 0,
+        checked: true,
+        disabled: false,
+        focused: false,
+        invalid: false,
+      },
+      {
+        value: "beta",
+        index: 1,
+        checked: false,
+        disabled: false,
+        focused: false,
+        invalid: false,
+      },
+    ]);
+    expect(Arr.map(elementChildren(element), painted)).toStrictEqual([
+      PAINT,
+      PAINT,
+    ]);
+  });
+
+  it("ToggleGroup gives each item its own pressed state", () => {
+    const record = recorder<ToggleItemState>();
+    const handlers: ToggleGroupHandlers = {
+      onPress: vi.fn(),
+      onFocusMove: vi.fn(),
+      registerItem: () => () => {},
+    };
+    const element = renderToggleGroup(
+      {
+        type: "multiple",
+        options: [option("bold"), option("italic")],
+        itemStyle: record.style,
+      },
+      testTheme,
+      arrayState(["bold"]),
+      0,
+      groupFocus,
+      handlers,
+    );
+    expect(record.seen).toStrictEqual([
+      {
+        value: "bold",
+        index: 0,
+        pressed: true,
+        disabled: false,
+        focused: false,
+      },
+      {
+        value: "italic",
+        index: 1,
+        pressed: false,
+        disabled: false,
+        focused: false,
+      },
+    ]);
+    expect(Arr.map(elementChildren(element), painted)).toStrictEqual([
+      PAINT,
+      PAINT,
+    ]);
+  });
+
+  it("Rating gives each star its 1-based index and filled state", () => {
+    const record = recorder<RatingStarState>();
+    const handlers: RatingHandlers = {
+      onSelect: vi.fn(),
+      onMove: vi.fn(),
+      registerItem: () => () => {},
+    };
+    const element = renderRating(
+      { max: 3, starStyle: record.style },
+      testTheme,
+      initValueState(Option.some(2), 0),
+      groupFocus,
+      handlers,
+    );
+    expect(record.seen).toStrictEqual([
+      {
+        index: 1,
+        filled: true,
+        disabled: false,
+        readOnly: false,
+        invalid: false,
+        focused: false,
+      },
+      {
+        index: 2,
+        filled: true,
+        disabled: false,
+        readOnly: false,
+        invalid: false,
+        focused: false,
+      },
+      {
+        index: 3,
+        filled: false,
+        disabled: false,
+        readOnly: false,
+        invalid: false,
+        focused: false,
+      },
+    ]);
+    expect(Arr.map(elementChildren(element), painted)).toStrictEqual([
+      PAINT,
+      PAINT,
+      PAINT,
+    ]);
+  });
+
+  it("OTPField gives each cell its own index and filled state", () => {
+    const record = recorder<OTPCellState>();
+    const handlers: OTPFieldHandlers = {
+      onEdit: vi.fn(),
+      onKey: vi.fn(),
+      onPick: vi.fn(),
+      registerCell: () => () => {},
+    };
+    const element = renderOtpField(
+      { length: 3, cellStyle: record.style },
+      testTheme,
+      textState("12"),
+      groupFocus,
+      handlers,
+    );
+    expect(record.seen).toStrictEqual([
+      {
+        index: 0,
+        filled: true,
+        focused: false,
+        disabled: false,
+        invalid: false,
+      },
+      {
+        index: 1,
+        filled: true,
+        focused: false,
+        disabled: false,
+        invalid: false,
+      },
+      {
+        index: 2,
+        filled: false,
+        focused: false,
+        disabled: false,
+        invalid: false,
+      },
+    ]);
+    expect(Arr.map(elementChildren(element), painted)).toStrictEqual([
+      PAINT,
+      PAINT,
+      PAINT,
+    ]);
+  });
+
+  it("Slider gives its thumb the focus and validation state", () => {
+    const record = recorder<SliderThumbState>();
+    const handlers: SliderHandlers = {
+      onValueChange: vi.fn(),
+      registerTrack: () => {},
+      onPointerDown: vi.fn(),
+      onPointerMove: vi.fn(),
+      onPointerUp: vi.fn(),
+    };
+    const element = renderSlider(
+      { thumbStyle: record.style, disabled: true, invalid: true },
+      testTheme,
+      initValueState(Option.some(50), 0),
+      focused,
+      handlers,
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      focused: true,
+      disabled: true,
+      invalid: true,
+    });
+    const rail = expectSome(Arr.get(elementChildren(element), 0));
+    expect(painted(expectSome(Arr.get(elementChildren(rail), 1)))).toBe(PAINT);
+  });
+
+  it("RangeSlider names the end each thumb paints", () => {
+    const record = recorder<RangeSliderThumbState>();
+    const handlers: RangeSliderHandlers = {
+      onSpanChange: vi.fn(),
+      registerTrack: () => {},
+      registerThumb: () => () => {},
+      onPointerDown: vi.fn(),
+      onPointerMove: vi.fn(),
+      onPointerUp: vi.fn(),
+    };
+    const element = renderRangeSlider(
+      { thumbStyle: record.style },
+      testTheme,
+      spanState([20, 80]),
+      { ...rangeFocus, focusedIndex: Option.some(1) },
+      handlers,
+    );
+    expect(record.seen).toStrictEqual([
+      { end: "start", focused: false, disabled: false, invalid: false },
+      { end: "end", focused: true, disabled: false, invalid: false },
+    ]);
+    const rail = expectSome(Arr.get(elementChildren(element), 0));
+    expect(
+      Arr.map([1, 3], (index) =>
+        painted(expectSome(Arr.get(elementChildren(rail), index))),
+      ),
+    ).toStrictEqual([PAINT, PAINT]);
+  });
+
+  it("Select's trigger takes a style over the runtime's trigger state", () => {
+    const record = recorder<SelectTriggerState>();
+    const paint = selectTriggerPartStyle(
+      { variant: fieldVariant, size: "md" },
+      testTheme,
+      record.style,
+    );
+    const style = paint({ open: true, disabled: false, placeholder: false });
+    expect(lastState(record.seen)).toStrictEqual({
+      open: true,
+      disabled: false,
+      placeholder: false,
+    });
+    expect(style.backgroundColor).toBe(PAINT);
   });
 });

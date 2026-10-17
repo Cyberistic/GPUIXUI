@@ -56,6 +56,15 @@ export interface OTPFieldState {
   readonly invalid: boolean;
 }
 
+/** The public state an `OTPField` cell callback receives. */
+export interface OTPCellState {
+  readonly index: number;
+  readonly filled: boolean;
+  readonly focused: boolean;
+  readonly disabled: boolean;
+  readonly invalid: boolean;
+}
+
 export interface OTPFieldProps {
   /** Number of cells. Defaults to 6. */
   readonly length?: number;
@@ -78,6 +87,11 @@ export interface OTPFieldProps {
   readonly autoFocus?: boolean;
   /** An object, or a callback over the field's public state. */
   readonly style?: StateStyle<OTPFieldState>;
+  /**
+   * An object, or a callback over each cell's own state. Merged last on the
+   * native `<input>` cell.
+   */
+  readonly cellStyle?: StateStyle<OTPCellState>;
   readonly testId?: string;
 }
 
@@ -153,17 +167,30 @@ export const renderOtpField = (
           tabIndex={disabled || index !== tabStop ? -1 : 0}
           theme={nativeTextTheme(theme)}
           aria-label={otpCellLabel(props.label, index)}
-          style={otpCellStyle(
+          style={resolvePartStyle(
+            otpCellStyle(
+              {
+                size: props.size ?? "md",
+                invalid: props.invalid,
+                disabled: props.disabled,
+                focused: Option.exists(
+                  focus.focusedIndex,
+                  (focused) => focused === index,
+                ),
+              },
+              theme,
+            ),
+            props.cellStyle,
             {
-              size: props.size ?? "md",
-              invalid: props.invalid,
-              disabled: props.disabled,
+              index,
+              filled: cell !== "",
               focused: Option.exists(
                 focus.focusedIndex,
                 (focused) => focused === index,
               ),
+              disabled,
+              invalid: props.invalid === true,
             },
-            theme,
           )}
           onChange={(event: EventPayload) => {
             if (disabled) return;

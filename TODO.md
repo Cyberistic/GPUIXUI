@@ -381,11 +381,10 @@ retired once both branches are one
       `Slider`, `RangeSlider`), `Label`, `ScrollArea` and `Select` accept and
       export their state type; 9 element-tree + 2 runtime tests, both directions
       proven (plan 080)
-`[ ]` `packages/primitives`: **per-item styling for the data-driven groups** —
+`[x]` `packages/primitives`: **per-item styling for the data-driven groups** —
       `optionStyle`/`rowStyle`/`itemStyle`/`thumbStyle`/`starStyle`/`cellStyle`
-      and a `Select` `triggerStyle` are new props over data, not a `style` on an
-      existing part; decide the shape before adding them (recorded in plan 080
-      §6)
+      and a `Select` `triggerStyle`; each state includes the item's identity
+      (plan 081; 8 element-tree + 4 runtime tests, both directions proven)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

@@ -58,6 +58,16 @@ export interface RadioGroupState {
   readonly invalid: boolean;
 }
 
+/** The public state a `RadioGroup` option callback receives. */
+export interface RadioOptionState {
+  readonly value: string;
+  readonly index: number;
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly focused: boolean;
+  readonly invalid: boolean;
+}
+
 export interface RadioGroupProps {
   /** Controlled selection. Omit to let the group hold its own. */
   readonly value?: string;
@@ -81,6 +91,11 @@ export interface RadioGroupProps {
   readonly label?: string;
   /** An object, or a callback over the group's public state. */
   readonly style?: StateStyle<RadioGroupState>;
+  /**
+   * An object, or a callback over each option's own state. Merged last on the
+   * option row that holds the tab stop and the accessible name.
+   */
+  readonly optionStyle?: StateStyle<RadioOptionState>;
   readonly testId?: string;
 }
 
@@ -182,6 +197,10 @@ export const renderRadioGroup = (
       {Arr.map(options, (option, index) => {
         const current = itemState(option, state.current);
         const disabled = props.disabled === true || option.disabled === true;
+        const focused = Option.exists(
+          focus.focusedIndex,
+          (focusedIndex) => focusedIndex === index,
+        );
         const spec: SelectionSpec = {
           state: current,
           size,
@@ -189,10 +208,7 @@ export const renderRadioGroup = (
           shape: "circle",
           invalid: props.invalid === true,
           disabled,
-          focused: Option.exists(
-            focus.focusedIndex,
-            (focused) => focused === index,
-          ),
+          focused,
         };
         return (
           <div
@@ -202,18 +218,34 @@ export const renderRadioGroup = (
             aria-label={option.label}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
+            testId={
+              props.testId === undefined
+                ? undefined
+                : `${props.testId}-${option.value}`
+            }
             onClick={() => {
               if (!disabled) select(index);
             }}
             onFocus={() => focus.onFocus(index)}
             onBlur={() => focus.onBlur(index)}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: theme.spacing.sm,
-              cursor: disabled ? "not-allowed" : "pointer",
-            }}
+            style={resolvePartStyle(
+              {
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: theme.spacing.sm,
+                cursor: disabled ? "not-allowed" : "pointer",
+              },
+              props.optionStyle,
+              {
+                value: option.value,
+                index,
+                checked: current === "checked",
+                disabled,
+                focused,
+                invalid: props.invalid === true,
+              },
+            )}
           >
             <div style={selectionBoxStyle(spec, theme)}>
               {current === "checked" ? (

@@ -62,6 +62,7 @@ Uncontrolled, with no parent row:
 | `invalid` | `boolean` | `false` | every **empty** box takes the destructive border |
 | `label` | `string` | none | the group's accessible name |
 | `style` | `StateStyle<CheckboxGroupState>` | — | merged last on the group; an object or a state callback |
+| `rowStyle` | `StateStyle<CheckboxRowState>` | — | merged last on each row; an object or a state callback |
 | `testId` | `string` | — | names the group; rows become `${testId}-${value}` and the parent `${testId}-all` |
 
 ### The select-all parent
@@ -136,6 +137,36 @@ on the control the way it does in `Checkbox`.
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
 
+### Per-item style
+
+`rowStyle` takes the same `StateStyle` over `CheckboxRowState`, merged last on
+the row that owns the hit area, the tab stop and the accessible name:
+
+```tsx
+<CheckboxGroup
+  selectAll="All"
+  rowStyle={(row) =>
+    row.parent && row.selection === "indeterminate"
+      ? { backgroundColor: theme.colors.selected }
+      : {}
+  }
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `value` | `Option.Option<string>` | the option's value; `None` on the select-all row |
+| `index` | `number` | paint order, select-all included (the parent is 0 when present) |
+| `parent` | `boolean` | true on the select-all row only |
+| `selection` | `"checked" \| "unchecked" \| "indeterminate"` | the row's own tri-state |
+| `disabled` | `boolean` | the row is disabled |
+| `focused` | `boolean` | the row holds native focus |
+| `invalid` | `boolean` | the group's failed validation |
+
+`CheckboxRowState` is exported. One callback receives every row; branch on
+`value`/`index`/`parent`. The select-all row never reports a value — absence is
+`Option`, not an empty string.
+
 ## Limitations
 
 
@@ -149,10 +180,12 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Verification
 
-- `src/components/state-style.test.tsx` — the state payload and the callback
-  winning over the component's own rules (plan 080).
-- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
-  a select's open state reaching the paint (plan 080).
+- `src/components/state-style.test.tsx` — the container state payload, each
+  per-item payload, and the callback winning over the component's own rules
+  (plans 080, 081).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
+  select's open state, and the per-item states reaching the paint (plans 080,
+  081).
 
 - `src/core/checkbox-group.test.ts` — toggling, the parent tri-state over enabled
   options only, select-all that leaves a disabled value alone, and the identity

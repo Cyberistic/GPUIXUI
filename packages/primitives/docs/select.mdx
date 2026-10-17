@@ -67,6 +67,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 | `side` | `FloatingSide` | auto — below, flipped above when it does not fit | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
 | `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
+| `triggerStyle` | `StateStyle<SelectTriggerState>` | — | merged last on the visible trigger; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 ```ts
@@ -188,6 +189,24 @@ scrolls instead of squashing the options.
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
 
+### Per-item style
+
+`triggerStyle` takes the runtime's own `StateStyle<SelectTriggerState>` — the
+state `SelectTrigger` already reports — merged last on the visible trigger:
+
+```tsx
+<Select triggerStyle={(state) => ({ opacity: state.open ? 0.9 : 1 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `open` | `boolean` | the list is open |
+| `disabled` | `boolean` | the trigger is disabled |
+| `placeholder` | `boolean` | the trigger is showing the placeholder |
+
+`SelectTriggerState` is re-exported by this package, so a consumer never imports
+from `@gpuix/react/select` for it.
+
 ## Limitations
 
 
@@ -208,10 +227,12 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Verification
 
-- `src/components/state-style.test.tsx` — the state payload and the callback
-  winning over the component's own rules (plan 080).
-- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
-  a select's open state reaching the paint (plan 080).
+- `src/components/state-style.test.tsx` — the container state payload, each
+  per-item payload, and the callback winning over the component's own rules
+  (plans 080, 081).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
+  select's open state, and the per-item states reaching the paint (plans 080,
+  081).
 
 - `src/components/Select.test.tsx` — trigger chrome, list surface, item states,
   the measured `minWidth` (present with a width, absent without), the decoded

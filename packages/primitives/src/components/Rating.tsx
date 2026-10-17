@@ -34,6 +34,17 @@ export interface RatingState {
   readonly invalid: boolean;
 }
 
+/** The public state a `Rating` star callback receives. */
+export interface RatingStarState {
+  /** 1-based, matching the star's announced "N of max". */
+  readonly index: number;
+  readonly filled: boolean;
+  readonly disabled: boolean;
+  readonly readOnly: boolean;
+  readonly invalid: boolean;
+  readonly focused: boolean;
+}
+
 export interface RatingProps {
   /** Controlled rating, `0..max` (0 is unrated). */
   readonly value?: number;
@@ -52,6 +63,11 @@ export interface RatingProps {
   readonly label?: string;
   /** An object, or a callback over the rating's public state. */
   readonly style?: StateStyle<RatingState>;
+  /**
+   * An object, or a callback over each star's own state. Merged last on the
+   * star that holds its own focus and announces "N of max".
+   */
+  readonly starStyle?: StateStyle<RatingStarState>;
   readonly testId?: string;
 }
 
@@ -86,39 +102,58 @@ export const renderRating = (
   const value = clampRating(state.current, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
-  const star = (index: number): ReactElement => (
-    <div
-      key={index}
-      ref={handlers.registerItem(index)}
-      role="radio"
-      aria-label={`${index} of ${max}`}
-      aria-valuetext={index <= value ? "checked" : "unchecked"}
-      tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
-      onClick={() => {
-        if (interactive) handlers.onSelect(index);
-      }}
-      onFocus={() => focus.onFocus(index)}
-      onBlur={() => focus.onBlur(index)}
-      style={ratingStarStyle(
-        {
-          size: props.size ?? "md",
-          disabled: props.disabled,
-          readOnly: props.readOnly,
-          focused: Option.exists(
-            focus.focusedIndex,
-            (focused) => focused === index,
+  const star = (index: number): ReactElement => {
+    const focused = Option.exists(
+      focus.focusedIndex,
+      (focusedIndex) => focusedIndex === index,
+    );
+    return (
+      <div
+        key={index}
+        ref={handlers.registerItem(index)}
+        role="radio"
+        aria-label={`${index} of ${max}`}
+        aria-valuetext={index <= value ? "checked" : "unchecked"}
+        tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
+        testId={
+          props.testId === undefined
+            ? undefined
+            : `${props.testId}-star-${index}`
+        }
+        onClick={() => {
+          if (interactive) handlers.onSelect(index);
+        }}
+        onFocus={() => focus.onFocus(index)}
+        onBlur={() => focus.onBlur(index)}
+        style={resolvePartStyle(
+          ratingStarStyle(
+            {
+              size: props.size ?? "md",
+              disabled: props.disabled,
+              readOnly: props.readOnly,
+              focused,
+            },
+            theme,
           ),
-        },
-        theme,
-      )}
-    >
-      <Icon
-        name={index <= value ? "star-filled" : "star"}
-        size={props.size ?? "md"}
-        color={ratingStarColor(index <= value, theme, props.invalid === true)}
-      />
-    </div>
-  );
+          props.starStyle,
+          {
+            index,
+            filled: index <= value,
+            disabled: props.disabled === true,
+            readOnly: props.readOnly === true,
+            invalid: props.invalid === true,
+            focused,
+          },
+        )}
+      >
+        <Icon
+          name={index <= value ? "star-filled" : "star"}
+          size={props.size ?? "md"}
+          color={ratingStarColor(index <= value, theme, props.invalid === true)}
+        />
+      </div>
+    );
+  };
   return (
     <div
       role="radiogroup"

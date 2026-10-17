@@ -41,7 +41,8 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `invalid` | `boolean` | `false` | a failed validation: the empty circles take the destructive border |
 | `label` | `string` | none | accessible name for the group |
 | `style` | `StateStyle<RadioGroupState>` | — | merged last; an object or a state callback |
-| `testId` | `string` | — | stable locator |
+| `optionStyle` | `StateStyle<RadioOptionState>` | — | merged last on each option row; an object or a state callback |
+| `testId` | `string` | — | names the group; options become `${testId}-${value}` |
 
 `RadioOption` is `{ value, label, description?, disabled? }`. `description` is a
 caption beside the name, not an accessible description.
@@ -100,6 +101,31 @@ same size are the same square/circle family. Gaps use `spacing.sm`.
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
 
+### Per-item style
+
+`optionStyle` takes the same `StateStyle` over `RadioOptionState`, merged last on
+the option row:
+
+```tsx
+<RadioGroup
+  optionStyle={(option) =>
+    option.disabled ? { opacity: 0.6 } : {}
+  }
+/>
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `value` | `string` | the option's value |
+| `index` | `number` | position in `options` |
+| `checked` | `boolean` | this option is the selection |
+| `disabled` | `boolean` | the option is disabled |
+| `focused` | `boolean` | the option holds native focus (and paints the ring) |
+| `invalid` | `boolean` | the group's failed validation |
+
+`RadioOptionState` is exported. One callback receives every option; branch on
+`value` or `index`.
+
 ## Limitations
 
 
@@ -109,10 +135,12 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Verification
 
-- `src/components/state-style.test.tsx` — the state payload and the callback
-  winning over the component's own rules (plan 080).
-- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
-  a select's open state reaching the paint (plan 080).
+- `src/components/state-style.test.tsx` — the container state payload, each
+  per-item payload, and the callback winning over the component's own rules
+  (plans 080, 081).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
+  select's open state, and the per-item states reaching the paint (plans 080,
+  081).
 
 - `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, and
   Home/End landing on the nearest enabled end.

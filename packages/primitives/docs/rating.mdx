@@ -43,7 +43,8 @@ key (`Delete`/`Backspace`) or the app calling `onChange(0)`.
 | `invalid` | `boolean` | `false` | a failed validation paints the empty stars destructive |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
 | `style` | `StateStyle<RatingState>` | — | merged last; an object or a state callback |
-| `testId` | `string` | — | stable locator on the group |
+| `starStyle` | `StateStyle<RatingStarState>` | — | merged last on each star; an object or a state callback |
+| `testId` | `string` | — | names the group; stars become `${testId}-star-N` (1-based) |
 
 Values are truncated to whole stars and clamped to `0..max`; a value that is not
 a number reads as unrated.
@@ -99,6 +100,27 @@ The star size is `theme.iconSize[size]` and the focus ring is the shared
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
 
+### Per-item style
+
+`starStyle` takes the same `StateStyle` over `RatingStarState`, merged last on
+each star:
+
+```tsx
+<Rating starStyle={(star) => (star.filled ? { opacity: 1 } : { opacity: 0.7 })} />
+```
+
+| Field | Type | Meaning |
+| ----- | ---- | ------- |
+| `index` | `number` | 1-based, matching the star's announced "N of max" |
+| `filled` | `boolean` | this star is at or below the value |
+| `disabled` | `boolean` | the rating is disabled |
+| `readOnly` | `boolean` | the rating is read-only |
+| `invalid` | `boolean` | paints the empty stars destructive |
+| `focused` | `boolean` | this star holds native focus |
+
+`RatingStarState` is exported. One callback receives every star; branch on
+`index` or `filled`.
+
 ## Limitations
 
 
@@ -116,10 +138,12 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Verification
 
-- `src/components/state-style.test.tsx` — the state payload and the callback
-  winning over the component's own rules (plan 080).
-- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus and
-  a select's open state reaching the paint (plan 080).
+- `src/components/state-style.test.tsx` — the container state payload, each
+  per-item payload, and the callback winning over the component's own rules
+  (plans 080, 081).
+- `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
+  select's open state, and the per-item states reaching the paint (plans 080,
+  081).
 
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
   the tab-stop choice, a zero or fractional `max`.
