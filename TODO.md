@@ -147,6 +147,7 @@ the `@gpuixui/tokens/react` provider
     - [x] SearchInput ref and TabsTrigger onBlur forwarding — plan 136
     - [x] ListItem caller `onClick` forwarding — plan 137
     - [x] Combobox pointer selection coverage — plan 138
+    - [~] Inventory test counts and the drifted rows — plan 139
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
