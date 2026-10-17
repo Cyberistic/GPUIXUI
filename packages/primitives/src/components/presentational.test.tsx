@@ -14,6 +14,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderBox } from "./Box.js";
+import { renderButton } from "./Button.js";
 import { renderButtonGroup } from "./ButtonGroup.js";
 import { labelledBy, renderLabel } from "./Label.js";
 import { renderScrollArea } from "./ScrollArea.js";
@@ -170,7 +171,14 @@ describe("type", () => {
   });
 
   it("hands a control its name, because GPUix has no aria-labelledby", () => {
-    expect(labelledBy("Email")).toStrictEqual({ "aria-label": "Email" });
+    // The helper is only useful if a control can consume it: every control
+    // takes `label` and writes the host's `aria-label` itself.
+    const button = renderButton(
+      { ...labelledBy("Email"), children: "Send" },
+      testTheme,
+      { focused: false },
+    );
+    expect(expectSome(hostProp(button, "aria-label"))).toBe("Email");
     // `Label` composes rather than renders, so its own contribution is the
     // column stack it asks for; the text inside is `Text`'s.
     expect(expectSome(elementProp(renderLabel({}), "direction"))).toBe(

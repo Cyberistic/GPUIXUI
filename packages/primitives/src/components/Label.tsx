@@ -4,8 +4,8 @@
  * The runtime has **no `aria-labelledby`** (plan 020 §1.4), so a label cannot be
  * associated with a control by reference. The honest arrangement is that the
  * control carries its own `aria-label` and `Label` is the visible text beside
- * it; `labelledBy` builds the prop so a caller writes the name once and passes
- * the same string to both.
+ * it; `labelledBy` builds the control's own `label` prop so a caller writes the
+ * name once and spreads it into the control.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -26,11 +26,18 @@ export interface LabelProps {
   readonly testId?: string;
 }
 
-/** The accessible name for a control whose visible name is `Label`'s child. */
-export const labelledBy = (
-  name: string,
-): { readonly "aria-label": string } => ({
-  "aria-label": name,
+/**
+ * The props that give a control the name its visible `Label` shows.
+ *
+ * Returns the `label` prop every control reads, so the name is written once:
+ *
+ * ```tsx
+ * <Label>{name}</Label>
+ * <Input {...labelledBy(name)} />
+ * ```
+ */
+export const labelledBy = (name: string): { readonly label: string } => ({
+  label: name,
 });
 
 export const renderLabel = ({

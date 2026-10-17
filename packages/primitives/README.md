@@ -72,7 +72,7 @@ and `core/selection.ts`; none paints a literal and none scripts hover or press
 | `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`) |
-| `aria-labelledby` | absent | a control carries its own `aria-label`; `labelledBy` builds the prop so the name is written once |
+| `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
 | scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
 | `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |
