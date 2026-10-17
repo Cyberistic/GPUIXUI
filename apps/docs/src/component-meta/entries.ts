@@ -587,25 +587,53 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  planned(
+  delivered(
     "dropdown-menu",
     "Dropdown menus",
     "2",
     "A list of actions from a trigger.",
-    { related: ["context-menu", "navigation-menu"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/dropdown-menu.tsx",
+      related: ["context-menu", "command-menu"],
+      limitations: [
+        "No aria-haspopup, aria-controls or aria-checked in 0.10.0.",
+        "No submenus and no type-ahead in v1.",
+        "A hover does not preview the highlight.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "context-menu",
     "Context menus",
     "2",
     "A list of actions for a region or item.",
-    { related: ["dropdown-menu"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/context-menu.tsx",
+      related: ["dropdown-menu", "command-menu"],
+      limitations: [
+        "No onContextMenu: opens from onAuxClick + isRightClick.",
+        "No keyboard path to open; it is a pointer gesture.",
+        "No portal, submenus or type-ahead.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "command-menu",
     "Command menus",
     "2",
     "A searchable list of commands and destinations.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/command-menu.tsx",
+      related: ["dialog", "combobox"],
+      limitations: [
+        "No aria-activedescendant or aria-controls in 0.10.0.",
+        "The input is the host element until primitives lands.",
+        "No fuzzy matching or recent-command memory in v1.",
+      ],
+    },
   ),
   planned("tabs", "Tabs", "2", "Switches between sibling views in place.", {
     related: ["button-group"],

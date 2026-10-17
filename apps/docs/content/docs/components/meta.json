@@ -32,6 +32,9 @@
     "toast",
     "dialog",
     "confirm-dialog",
-    "popover"
+    "popover",
+    "dropdown-menu",
+    "context-menu",
+    "command-menu"
   ]
 }

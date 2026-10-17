@@ -1,0 +1,96 @@
+---
+title: Command menus
+description: A searchable list of commands and destinations.
+---
+
+<ComponentState slug="command-menu" />
+
+<NativePreview slug="command-menu" />
+
+`CommandMenu` puts a filterable list of actions in a modal surface. It composes
+the parts instead of reinventing them: Dialog owns the surface and Escape, the
+GPUix `input` owns typing, and `menu/logic.ts` owns which row is active.
+
+## Usage
+
+```tsx
+import { CommandMenu } from "@gpuixui/components/command-menu";
+
+<CommandMenu
+  open={open}
+  onOpenChange={setOpen}
+  actions={[
+    { id: "save", label: "Save", group: "File", shortcut: "⌘S", perform: save },
+  ]}
+/>;
+```
+
+## Variants
+
+No visual variant. `actions` carry `id`, `label`, optional `group`, `shortcut`,
+`disabled` and `perform`; `placeholder`, `emptyLabel` and `filter` are
+configurable. Groups follow the caller's order.
+
+## Sizes
+
+The surface is the dialog's; the input and rows use the shared control metrics.
+There is no size prop.
+
+## States
+
+Controlled only: `open` and `onOpenChange` are required because the app owns the
+shortcut that opens the palette. The search input keeps focus the whole time; the
+active row is highlighted, not focused, so typing survives the arrow keys.
+
+## Composition
+
+The command-menu example is a real palette with grouped commands and shortcuts:
+
+<include lang="tsx" meta='title="packages/components/examples/command-menu.example.tsx"'>
+  ../../../../../packages/components/examples/command-menu.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/command-menu.tsx" name="CommandMenuProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| ---- | ------ |
+| type | filters; the highlight resets to the first enabled match |
+| ArrowDown / ArrowUp | move the highlight, wrapping and skipping disabled rows |
+| Home / End | first / last enabled row |
+| Enter | run the highlighted action and close |
+| Escape | close |
+| Tab | follows the dialog's focus trap |
+
+`Enter` arrives as the input's `submit` event in 0.10.0, which is why Space types
+a space instead of activating a row.
+
+## Theming
+
+The surface is the dialog's (`colors.popover`, `radius.xl`, `lg` elevation); the
+input uses `colors.input`/`inputForeground`; rows use the shared `hover` plus 2px
+`accent` highlight.
+
+## Accessibility and limitations
+
+- The dialog is named "Command menu", the input "Search commands"; rows are
+  `role="option"` with `aria-selected` for the highlight.
+- **No `aria-activedescendant` or `aria-controls`** in 0.10.0: the relation
+  between input and highlighted row is visual only for assistive technology.
+- The `input` is the host element until the primitives input lands.
+- No fuzzy matching and no recent-commands memory in v1; the default is a
+  case-insensitive substring, replaceable with `filter`.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/command-menu.tsx"'>
+  ../../../../../packages/components/src/command-menu.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="command-menu" />

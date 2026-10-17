@@ -1,0 +1,102 @@
+---
+title: Dropdown menus
+description: A list of actions from a trigger.
+---
+
+<ComponentState slug="dropdown-menu" />
+
+<NativePreview slug="dropdown-menu" />
+
+`DropdownMenu` shows a short list of actions next to its trigger. The surface is
+an anchored GPUix layer, so it flips and shifts to stay inside the window; the
+component owns the open state, the highlight, dismissal and focus return.
+
+## Usage
+
+```tsx
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@gpuixui/components/dropdown-menu";
+
+<DropdownMenu>
+  <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+  <DropdownMenuContent label="File actions">
+    <DropdownMenuItem onSelect={rename}>Rename</DropdownMenuItem>
+    <DropdownMenuItem disabled>Duplicate</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem tone="destructive" onSelect={remove}>Delete</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>;
+```
+
+## Variants
+
+Parts: trigger, content, item, checkbox item, separator, label and group.
+Checkbox rows stay open after toggling; `tone="destructive"` paints a row in the
+destructive role but is not a confirmation step.
+
+## Sizes
+
+The surface has a 180px minimum width; rows are `controlHeight(theme, "sm")`
+tall and use the `label` type role. `side`, `align`, `sideOffset` (4) and
+`collisionPadding` (8) control placement.
+
+## States
+
+Controlled (`open`/`onOpenChange`) or uncontrolled (`defaultOpen`). The
+highlighted row **is** the focused row, so Enter always runs what looks active.
+Disabled rows are skipped by arrows and `Home`/`End` and ignored by clicks.
+
+## Composition
+
+The dropdown example is a real file-actions menu with a destructive item:
+
+<include lang="tsx" meta='title="packages/components/examples/dropdown-menu.example.tsx"'>
+  ../../../../../packages/components/examples/dropdown-menu.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/dropdown-menu.tsx" name="DropdownMenuProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| ---- | ------ |
+| Enter / Space on trigger | open or close |
+| ArrowDown / ArrowUp | next / previous enabled row, wrapping |
+| Home / End | first / last enabled row |
+| Enter / Space | run the highlighted row and close |
+| Escape | close and return focus to the trigger |
+| Tab | close and move on; a menu is not modal |
+
+Menus share the dismiss stack with Dialog and Popover: the topmost layer closes
+first.
+
+## Theming
+
+The surface paints `colors.popover`, `radius.md`, a thin border and the `md`
+elevation. Rows highlight with `colors.hover` plus a 2px `colors.accent` bar; the
+destructive tone uses `colors.destructive`.
+
+## Accessibility and limitations
+
+- `role="menu"` on the surface, `menuitem`/`menuitemcheckbox` on rows,
+  `aria-expanded` on the trigger.
+- **No `aria-haspopup`, `aria-controls`, `aria-checked` or
+  `aria-activedescendant`** in 0.10.0; checkbox rows use `aria-selected`.
+- No submenus and no type-ahead in v1. A correct type-ahead needs a timed buffer
+  on the Effect clock, not `setTimeout`.
+- A hover does not preview the highlight; a click activates directly.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/dropdown-menu.tsx"'>
+  ../../../../../packages/components/src/dropdown-menu.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="dropdown-menu" />

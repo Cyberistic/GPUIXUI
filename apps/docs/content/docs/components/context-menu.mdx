@@ -1,0 +1,104 @@
+---
+title: Context menus
+description: A list of actions for a region or item.
+---
+
+<ComponentState slug="context-menu" />
+
+<NativePreview slug="context-menu" />
+
+`ContextMenu` is the right-click counterpart of Dropdown menu. It uses the same
+rows, highlight rules and keyboard handling; only positioning differs — the
+surface is placed at the pointer in window coordinates rather than anchored to a
+control.
+
+## Usage
+
+```tsx
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem,
+  ContextMenuSeparator, ContextMenuTrigger,
+} from "@gpuixui/components/context-menu";
+
+<ContextMenu>
+  <ContextMenuTrigger>
+    <text>GPUIXUI</text>
+  </ContextMenuTrigger>
+  <ContextMenuContent label="Project actions">
+    <ContextMenuItem onSelect={open}>Open</ContextMenuItem>
+    <ContextMenuItem onSelect={copyPath}>Copy path</ContextMenuItem>
+    <ContextMenuSeparator />
+    <ContextMenuItem tone="destructive" onSelect={remove}>Delete…</ContextMenuItem>
+  </ContextMenuContent>
+</ContextMenu>;
+```
+
+## Variants
+
+The same parts as Dropdown menu: trigger, content, item, checkbox item,
+separator, label and group. There is no separate visual variant.
+
+## Sizes
+
+The surface and rows use the shared menu metrics (180px minimum width, `sm`
+control height, `label` type). Positioning comes from the pointer, not a `side`
+prop.
+
+## States
+
+Open/closed, controlled or uncontrolled. `@gpuix/native@0.10.0` has no
+`onContextMenu`: a non-primary click arrives as `onAuxClick` and the payload's
+`isRightClick` decides. A second right click on the trigger moves the surface; an
+outside right click closes it.
+
+## Composition
+
+The context-menu example opens a file's actions at the pointer:
+
+<include lang="tsx" meta='title="packages/components/examples/context-menu.example.tsx"'>
+  ../../../../../packages/components/examples/context-menu.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/context-menu.tsx" name="ContextMenuProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| ---- | ------ |
+| ArrowDown / ArrowUp | next / previous enabled row, wrapping |
+| Home / End | first / last enabled row |
+| Enter / Space | run the highlighted row and close |
+| Escape | close |
+| Tab | close and move on |
+
+The surface takes focus on open; the highlighted row is the focused row. There is
+no keyboard path to open a context menu — it is a pointer gesture.
+
+## Theming
+
+The surface and rows are the shared menu look (`colors.popover`, `radius.md`,
+thin border, `md` elevation, `hover` + 2px `accent` highlight). The trigger is a
+card-like box with a border and `spacing.md` padding.
+
+## Accessibility and limitations
+
+- `role="menu"` on the surface, `menuitem`/`menuitemcheckbox` on rows; the trigger
+  is a plain region with no `aria-haspopup`.
+- There is no portal: the surface is a sibling painted at window coordinates, so
+  a scroll container does not clip it.
+- No submenus and no type-ahead in v1.
+- No keyboard path to open; for keyboard-first action lists use Dropdown menu or
+  Command menu.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/context-menu.tsx"'>
+  ../../../../../packages/components/src/context-menu.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="context-menu" />
