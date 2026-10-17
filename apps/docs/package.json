@@ -30,6 +30,7 @@
     "@cloudflare/vite-plugin": "1.64.0",
     "@gpuix/native": "0.10.0",
     "@gpuix/react": "catalog:",
+    "@gpuixui/components": "workspace:*",
     "@gpuixui/config": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@tailwindcss/vite": "4.3.3",

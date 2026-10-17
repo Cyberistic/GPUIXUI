@@ -96,6 +96,9 @@ importers:
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.10.0(react@19.3.0)
+      '@gpuixui/components':
+        specifier: workspace:*
+        version: link:../../packages/components
       '@gpuixui/config':
         specifier: workspace:*
         version: link:../../packages/config

@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene`; click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -32,8 +32,11 @@ must choose it, and the only way to render one is through
 source, the same tokens and the same GPUI layout, and it is the only tier a
 reader can interact with without leaving the page. It is not evidence that the
 desktop binary, the native window or the published native binding works — that
-is tier N/S/V. A live surface's scene is built from `@gpuixui/primitives`, and
-`smoke:preview` proves the scene's text reached GPUI's tree in headless Chrome.
+is tier N/S/V. A live scene is built from the real package code:
+`@gpuixui/primitives` (Button) and `@gpuixui/components` (Tabs, Dropdown menu,
+Dialog). An interactive scene opens in the state it documents — the menu and the
+dialog start open — so the surface proves the real composition without a pointer.
+`smoke:preview` proves every scene's text reached GPUI's tree in headless Chrome.
 Its output is a canvas, so browser assistive technology cannot read it: the
 page's accessibility notes and source remain the accessible description, and the
 live surface never stands in for them.
@@ -61,6 +64,15 @@ suite is a stopped condition (plan 432 §9), never a silent tier X.
 - GPUix exposes an automation API whose `screenshot({ path })` "reads the GPU
   surface", and `launch()` can run a window with `GPUIX_BACKGROUND=1` so an
   agent captures evidence without stealing focus. — same README.
+- **The window handle is not ready when `render()` returns.** `render()` starts
+  asynchronous graphics init, and the DOM canvas appears at the start of that
+  init, so neither is a readiness signal. `isInitialized()` reports the app
+  handle, which is assigned too early as well. Until the window handle exists,
+  any renderer query that goes through `update_web_window` throws `GPUIX web
+  window is not ready` (measured from the pinned source and in the dialog scene
+  on 2026-10-18). `preview/renderer-ready.ts` polls `getFocusedElementId` — the
+  same query the dialog makes — and mounts the scene when it stops throwing; the
+  document reports `ready` only after the scene is mounted. — plan 456 §10.
 
 ## Screenshot provenance
 
@@ -172,4 +184,5 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame.
+  blank frame. Four scenes ship today — Button, Tabs, Dropdown menu and Dialog —
+  chosen because an interaction is exactly what a static preview cannot show.

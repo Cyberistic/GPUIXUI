@@ -889,6 +889,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/dialog.tsx",
       api: ["DialogProps"],
+      liveScene: "dialog",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/dialog.test.tsx",
@@ -958,6 +959,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/dropdown-menu.tsx",
       api: ["DropdownMenuProps"],
+      liveScene: "dropdown-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/dropdown-menu.test.tsx",
@@ -1027,6 +1029,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "partial",
     sourcePath: "packages/components/src/tabs.tsx",
     api: ["TabsProps"],
+    liveScene: "tabs",
     runtime: nativeSuite("@gpuixui/components", "src/behaviour/tabs.test.tsx"),
     status: "done",
     dependencies: [

@@ -1,25 +1,29 @@
 /** @jsxImportSource @gpuix/react */
 /**
- * Renders one live surface (plan 455): the real library component on GPUix's
- * published WebAssembly renderer, in the docs' active mode and platform style.
+ * Renders one live surface (plans 455 and 456): the real library component on
+ * GPUix's published WebAssembly renderer, in the docs' active mode and platform
+ * style.
  *
  * The document is isolated from the docs app on purpose. It publishes one fact
- * to its parent and to the smoke check — `data-gpuix="ready"` once the GPUI
- * canvas exists, `data-gpuix="failed"` with a reason in `data-reason` — so a
- * broken surface degrades to a labelled notice and is never mistaken for a
- * painted one.
+ * to its parent and to the smoke check — `data-gpuix="ready"` once GPUI's window
+ * is initialised and the scene is mounted, `data-gpuix="failed"` with a reason in
+ * `data-reason` — so a broken surface degrades to a labelled notice and is never
+ * mistaken for a painted one.
  */
-import { initGpuixWeb } from "./gpuix-web";
-import { render, useWindowSize } from "@gpuix/react";
-import { ThemeProvider } from "@gpuixui/primitives";
+import { render, useGpuix, useWindowSize } from "@gpuix/react";
+import { Text, ThemeProvider } from "@gpuixui/primitives";
 import {
   platformTheme,
   themes,
   type PlatformName,
+  type Theme,
   type ThemeMode,
 } from "@gpuixui/tokens";
+import { useEffect, useState } from "react";
+import { initGpuixWeb } from "./gpuix-web";
+import { isWindowReady } from "./renderer-ready";
 import { LIVE_SCENE_VIEWS, LiveSurface } from "./scene-views";
-import { isLiveScene } from "./scenes";
+import { isLiveScene, type LiveScene } from "./scenes";
 
 const READY_TIMEOUT_MS = 10_000;
 
@@ -52,17 +56,79 @@ const markFailed = (reason: string): void => {
   if (status !== null) status.textContent = reason;
 };
 
-/** Wait for GPUI to append and size its own canvas, then report success. */
-const whenPainted = (deadline: number): void => {
-  if (document.querySelector("canvas") !== null) {
-    markReady();
-    return;
-  }
-  if (Date.now() > deadline) {
-    markFailed("GPUix did not create its canvas in time.");
-    return;
-  }
-  requestAnimationFrame(() => whenPainted(deadline));
+/**
+ * The surface chrome. It renders before the renderer is ready, so the document
+ * has something to paint rather than a blank frame.
+ */
+const Surface = ({
+  scene: activeScene,
+  theme,
+  ready,
+}: {
+  readonly scene: LiveScene;
+  readonly theme: Theme;
+  readonly ready: boolean;
+}) => {
+  const size = useWindowSize();
+  const View = LIVE_SCENE_VIEWS[activeScene];
+  return (
+    <ThemeProvider theme={theme}>
+      <LiveSurface size={{ width: size.width, height: size.height }}>
+        {ready ? (
+          <View />
+        ) : (
+          <Text role="caption" tone="muted">
+            Preparing the scene…
+          </Text>
+        )}
+      </LiveSurface>
+    </ThemeProvider>
+  );
+};
+
+/**
+ * Mounts the scene only once GPUI's window exists. `render()` returns before
+ * asynchronous graphics init finishes, and neither that return nor the DOM
+ * canvas is the signal: both precede the window handle. `isWindowReady` asks the
+ * renderer precisely when the handle exists, which is the point at which
+ * `focusElement` and friends stop throwing "GPUIX web window is not ready". The
+ * Dialog scene needs exactly that, because it moves focus during its first
+ * layout effect (plan 456 §10).
+ */
+const SceneRoot = ({
+  scene: activeScene,
+  theme,
+}: {
+  readonly scene: LiveScene;
+  readonly theme: Theme;
+}) => {
+  const { renderer } = useGpuix();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (ready) return;
+    const deadline = Date.now() + READY_TIMEOUT_MS;
+    let frame = 0;
+    const poll = (): void => {
+      if (isWindowReady(renderer)) {
+        setReady(true);
+        return;
+      }
+      if (Date.now() > deadline) {
+        markFailed("GPUix's window did not initialise in time.");
+        return;
+      }
+      frame = requestAnimationFrame(poll);
+    };
+    frame = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(frame);
+  }, [ready, renderer]);
+
+  useEffect(() => {
+    if (ready) markReady();
+  }, [ready]);
+
+  return <Surface scene={activeScene} theme={theme} ready={ready} />;
 };
 
 const renderSurface = (): void => {
@@ -70,24 +136,12 @@ const renderSurface = (): void => {
     markFailed(`No live scene is named "${scene}".`);
     return;
   }
-  const View = LIVE_SCENE_VIEWS[scene];
   const theme = platformTheme(themes[mode], platform);
-  const Surface = () => {
-    const size = useWindowSize();
-    return (
-      <ThemeProvider theme={theme}>
-        <LiveSurface size={{ width: size.width, height: size.height }}>
-          <View />
-        </LiveSurface>
-      </ThemeProvider>
-    );
-  };
-  render(<Surface />, {
+  render(<SceneRoot scene={scene} theme={theme} />, {
     title: "GPUixUI live preview",
     width: 640,
     height: 360,
   });
-  whenPainted(Date.now() + READY_TIMEOUT_MS);
 };
 
 window.addEventListener("error", (event) => {

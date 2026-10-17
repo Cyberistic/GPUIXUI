@@ -11,6 +11,10 @@
  * - the scene's real text in `getAllText()` — the component reached the tree;
  * - an unknown scene reports `data-gpuix="failed"` with a reason.
  *
+ * Every `LIVE_SCENES` key is driven, and its expected text comes from the same
+ * JSX-free table the docs test guards (plan 456), so a scene cannot ship with no
+ * composition behind it.
+ *
  *   nub scripts/smoke-live-preview.ts [--base-url <url>] [--chrome <path>] [--no-build]
  *
  * Exit `0` pass, `1` the surface is wrong, `2` the check could not run.
@@ -22,6 +26,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { LIVE_SCENES, SCENE_TEXT } from "../preview/scenes.ts";
 import {
   SetupError,
   startDocsPreview,
@@ -243,6 +248,28 @@ const waitForSurface = async (session: Session): Promise<SurfaceState> => {
   }
 };
 
+/**
+ * Navigate, wait until the new document owns the address bar, then read the
+ * surface. Without the address check a scene can pass on the **previous**
+ * document's `data-gpuix="ready"`, which is exactly the stale claim the check
+ * exists to catch.
+ */
+const openScene = async (
+  session: Session,
+  url: string,
+): Promise<SurfaceState> => {
+  await session.navigate(url);
+  const wanted = new URL(url).search;
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    if (String(await session.evaluate("location.search")) === wanted) {
+      return waitForSurface(session);
+    }
+    await sleep(100);
+  }
+  return { state: "timeout", canvas: [0, 0] };
+};
+
 const paintedText = async (
   session: Session,
 ): Promise<ReadonlyArray<string>> => {
@@ -324,34 +351,40 @@ const main = async (): Promise<number> => {
     }
 
     session = await startSession(chrome);
-    const scene = `${baseUrl}/gpuix-preview/?scene=button&platform=win32&mode=dark`;
-    console.log(`smoke: loading ${scene}`);
-    await session.navigate(scene);
-    const surface = await waitForSurface(session);
 
-    if (surface.state !== "ready") {
-      console.error(
-        `FAIL live surface: state=${surface.state}${surface.reason === undefined ? "" : ` reason=${surface.reason}`}`,
+    // Every scene runs standalone, in the dark Windows style, so the check
+    // covers the composition itself before the page wiring below.
+    for (const scene of LIVE_SCENES) {
+      const url = `${baseUrl}/gpuix-preview/?scene=${scene}&platform=win32&mode=dark`;
+      console.log(`smoke: loading ${scene}`);
+      const surface = await openScene(session, url);
+
+      if (surface.state !== "ready") {
+        console.error(
+          `FAIL live scene ${scene}: state=${surface.state}${surface.reason === undefined ? "" : ` reason=${surface.reason}`}`,
+        );
+        return 1;
+      }
+      if (surface.canvas[0] === 0 || surface.canvas[1] === 0) {
+        console.error(`FAIL live scene ${scene}: GPUI created no sized canvas`);
+        return 1;
+      }
+      const text = await paintedText(session);
+      if (!text.includes(SCENE_TEXT[scene])) {
+        console.error(
+          `FAIL live scene ${scene}: expected "${SCENE_TEXT[scene]}" in the GPUI tree (${JSON.stringify(text)})`,
+        );
+        return 1;
+      }
+      console.log(
+        `smoke: scene ${scene} ready — ${surface.canvas[0]}x${surface.canvas[1]} canvas, ${text.length} text nodes`,
       );
-      return 1;
     }
-    if (surface.canvas[0] === 0 || surface.canvas[1] === 0) {
-      console.error("FAIL live surface: GPUI created no sized canvas");
-      return 1;
-    }
-    const text = await paintedText(session);
-    if (!text.includes("Save changes")) {
-      console.error(
-        `FAIL live surface: the Button scene did not reach the GPUI tree (${JSON.stringify(text)})`,
-      );
-      return 1;
-    }
-    console.log(
-      `smoke: live surface ready — ${surface.canvas[0]}x${surface.canvas[1]} canvas, ${text.length} text nodes`,
+
+    const failed = await openScene(
+      session,
+      `${baseUrl}/gpuix-preview/?scene=not-a-scene`,
     );
-
-    await session.navigate(`${baseUrl}/gpuix-preview/?scene=not-a-scene`);
-    const failed = await waitForSurface(session);
     if (failed.state !== "failed" || failed.reason === undefined) {
       console.error(
         `FAIL live surface: an unknown scene reported ${failed.state}, not a reason`,
@@ -362,27 +395,35 @@ const main = async (): Promise<number> => {
 
     // The surface working on its own is not the feature: the page must load it
     // on request, with the docs' platform and mode, and the iframe must reach
-    // GPUI. This drives the real component page, then the Theming page with the
+    // GPUI. Every scene's page is driven, then the Theming page with the
     // Windows platform in the URL.
-    const componentPage = await openPageSurface(
-      session,
-      `${baseUrl}/docs/components/button`,
-    );
-    if (componentPage.state !== "ready") {
-      console.error(
-        `FAIL live surface: the component page reported ${componentPage.state}${componentPage.reason === undefined ? "" : ` (${componentPage.reason})`}`,
+    const pageScenes = [
+      { slug: "button", scene: "button" },
+      { slug: "tabs", scene: "tabs" },
+      { slug: "dropdown-menu", scene: "dropdown-menu" },
+      { slug: "dialog", scene: "dialog" },
+    ] as const;
+    for (const { slug, scene: key } of pageScenes) {
+      const componentPage = await openPageSurface(
+        session,
+        `${baseUrl}/docs/components/${slug}`,
       );
-      return 1;
-    }
-    if (!(componentPage.src ?? "").includes("scene=button")) {
-      console.error(
-        `FAIL live surface: the component page's iframe lost its scene (${componentPage.src ?? ""})`,
+      if (componentPage.state !== "ready") {
+        console.error(
+          `FAIL live surface: /docs/components/${slug} reported ${componentPage.state}${componentPage.reason === undefined ? "" : ` (${componentPage.reason})`}`,
+        );
+        return 1;
+      }
+      if (!(componentPage.src ?? "").includes(`scene=${key}`)) {
+        console.error(
+          `FAIL live surface: /docs/components/${slug} lost its scene (${componentPage.src ?? ""})`,
+        );
+        return 1;
+      }
+      console.log(
+        `smoke: /docs/components/${slug} loaded the live iframe — ${componentPage.src} (${componentPage.canvas?.[0] ?? 0}x${componentPage.canvas?.[1] ?? 0})`,
       );
-      return 1;
     }
-    console.log(
-      `smoke: component page loaded the live iframe — ${componentPage.src} (${componentPage.canvas?.[0] ?? 0}x${componentPage.canvas?.[1] ?? 0})`,
-    );
 
     const themed = await openPageSurface(
       session,

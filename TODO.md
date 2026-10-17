@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–455)
+## Docs site workstream (plans 410–456)
 
-`[~]` `[██████████]` 53/55
+`[~]` `[██████████]` 54/56
 
 `[x]` The registry mirrors the inventory's GPUix-support column (plan 443) — `ours`/`reuse` are real values, the nine flattened records are corrected, a test reads `COMPONENTS.md`, and `done` is backed by its native suite rather than by GPUix writing the primitive
 `[x]` Preview surfaces follow the docs' dark mode (plan 444) — a dark page painted light previews because the surface took `next-themes`' pre-hydration `undefined` and never re-rendered; one tested `previewMode` + `useSyncExternalStore` snapshot fixes it, verified in headless Chrome in both modes
@@ -480,7 +480,8 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` The measured GPUix capability page (plan 448) — `/docs/capabilities` renders all 15 inventory capabilities from one docs module, guarded against `COMPONENTS.md` and the playground scenario registry; Workspace and Data display now show their measured subset instead of a promise paragraph; 39 files / 228 tests, 68-page crawl
 `[x]` The component index finds what the registry proves (plan 454) — the filter matches documented props types and limitations, and the built-site smoke queries a component's prose so a production index that lost the component pages fails the gate
 `[x]` **Live GPUix surface previews (plan 455)** — the published 0.10.0 wasm renderer runs the real Button scene behind a labelled click-to-load iframe on the Buttons and Theming pages; the native tier stays beneath it, `smoke:preview` proves the scene reaches GPUI's tree in headless Chrome (real time), the page wiring, and that `?platform=win32` reaches the renderer
-`[ ]` Live scenes for the rest of the delivered components — one per interaction record first (Tabs, Dropdown menu, Dialog), each with its own `LIVE_SCENES` key, a real composition and a smoke assertion; the tier-A list and the components' platform-styled previews stay as they are
+`[x]` Live scenes for the rest of the delivered components — one per interaction record first (Tabs, Dropdown menu, Dialog), each with its own `LIVE_SCENES` key, a real composition and a smoke assertion; the tier-A list and the components' platform-styled previews stay as they are — plan 456: four scenes with a JSX-free expectation table, the per-page iframe check, and a readiness probe for the renderer's window handle
+`[ ]` More live scenes once each has a real composition: Command menu, Context menu, Popover, Date picker. Each is a key, an expectation, a view and a page record; `scene-contract.test.ts` and `smoke:preview` already cover the wiring
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` A props type name (`ButtonProps`) reaches its component page from search (plan 442)

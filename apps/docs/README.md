@@ -52,21 +52,27 @@ after a layout or content change.
 real library components on `@gpuix/native@0.10.0`'s published WebAssembly
 renderer (the browser's GPU backend) and exports one document per scene:
 
-- `preview/scenes.ts` lists the scene keys; `preview/scene-views.tsx` holds the
-  components. A registry record opts in with `liveScene: "<key>"` and
-  `registry.test.ts` fails on a key no scene ships.
+- `preview/scenes.ts` lists the scene keys and the text each one must paint;
+  `preview/scene-views.tsx` holds the compositions. A registry record opts in
+  with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
+  and `scene-contract.test.ts` fails when a scene's expected text no longer
+  occurs in its view. Live scenes ship for Buttons, Tabs, Dropdown menus and
+  Dialogs.
 - `vite.preview.config.ts` builds it to `public/gpuix-preview/` (gitignored,
   ~20 MB). `build` and `dev` run `build:preview` first. The published browser
   entry uses Bun's `with { type: "file" }`, so the config names the two
   wasm-bindgen artefacts explicitly.
-- The page carries `data-gpuix="ready"` once GPUI has created its canvas, and
-  `data-gpuix="failed"` with `data-reason` otherwise. `<LiveSurface>` only
-  mounts the iframe after a click, and says the renderer is ~20 MB.
+- The page carries `data-gpuix="ready"` once GPUI's window handle exists and the
+  scene is mounted, and `data-gpuix="failed"` with `data-reason` otherwise.
+  Neither `render()` returning nor the DOM canvas is that signal: both precede
+  asynchronous graphics init, so `preview/renderer-ready.ts` asks the renderer's
+  own window query. `<LiveSurface>` only mounts the iframe after a click, and
+  says the renderer is ~20 MB.
 
 `smoke:preview` drives Chrome over CDP **in real time** — a virtual-time
-screenshot is black — and asserts the scene's text is in GPUI's tree, that an
-unknown scene reports a reason, that the real component page loads the iframe on
-a click (after hydration) with its platform and mode in the URL, and that
+screenshot is black — and asserts every scene's text is in GPUI's tree, that an
+unknown scene reports a reason, that each component page loads the iframe on a
+click (after hydration) with its platform and mode in the URL, and that
 `/docs/theming?platform=win32` passes the platform through to the renderer. `--no-build` reuses the current build. Exit
 `1` is a broken surface, `2` means it could not run.
 
