@@ -14,13 +14,19 @@
  * per-platform mono families and the icon-to-label gap, so the rationale cannot
  * name a family or a spacing value the package does not ship.
  *
+ * The figures the catalogue quotes in prose — the status ratios, the
+ * design-system's warning figure and the selection wash percentage — are
+ * derived here from `contrastRatio`, `contrastFloors` and the alpha byte
+ * (plan 075), and the `xText` surfaces from `contrastPairs`, so a palette, floor
+ * or contract edit cannot leave a sentence quoting the old values.
+ *
  * `node:fs` is used deliberately: this is a documentation test over the tree's
  * own files, and the tokens package ships zero runtime dependencies by design.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { colorRoles, palette } from "./color.js";
-import { contrastFloors } from "./contrast.js";
+import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
 import {
   darkElevation,
   lightElevation,
@@ -80,6 +86,13 @@ const designSystem = readFileSync(
 ).replace(/\s+/g, " ");
 
 const documented = documentedRows(markdown);
+
+/** The catalogue's prose, collapsed so a wrapped sentence can be matched. */
+const markdownProse = markdown.replace(/\s+/g, " ");
+
+/** The alpha a role carries, as the whole percentage the catalogue quotes. */
+const washPercent = (color: string): number =>
+  Math.round((Number.parseInt(color.slice(7, 9), 16) / 255) * 100);
 
 const expected = colorRoles.map((role) => ({
   role,
@@ -281,6 +294,79 @@ describe("docs/tokens.md status table", () => {
     );
     expect(positions).not.toContain(-1);
     expect(positions).toEqual(positions.toSorted((a, b) => a - b));
+  });
+
+  it("names every surface the contract checks status text on, in both tables", () => {
+    statusTones.forEach((tone) => {
+      const surfaces = contrastPairs
+        .filter(([foreground]) => foreground === `${tone}Text`)
+        .map(([, background]) => `\`${background}\``);
+      const rows = markdown
+        .split("\n")
+        .filter((line) => line.startsWith(`| \`${tone}Text\` |`));
+
+      expect(surfaces.length, tone).toBe(3);
+      expect(rows.length, tone).toBe(2);
+      rows.forEach((tableRow) =>
+        surfaces.forEach((surface) =>
+          expect(tableRow, `${tone}Text on ${surface}`).toContain(surface),
+        ),
+      );
+    });
+  });
+});
+
+describe("docs/tokens.md quoted figures", () => {
+  it("quotes the status ratios the light palette produces", () => {
+    const light = themes.light.colors;
+    const sentence =
+      "The solid roles are fills, not foregrounds. " +
+      `Light \`warning\` (\`${light.warning}\`) is ` +
+      `${contrastRatio(light.warning, light.background).toFixed(2)}:1 against \`background\` and ` +
+      `${contrastRatio(light.warning, light.card).toFixed(2)}:1 against \`card\`, under the ` +
+      `${contrastFloors.default.boundary}:1 non-text floor, and light \`success\` is ` +
+      `${contrastRatio(light.success, light.background).toFixed(2)}:1, under the ` +
+      `${contrastFloors.default.secondary}:1 text floor.`;
+
+    expect(markdownProse).toContain(sentence);
+  });
+
+  it("quotes the selection wash strength both modes and both contrasts share", () => {
+    const { light, dark } = themes;
+    const high = highContrastThemes;
+
+    expect(washPercent(dark.colors.selection)).toBe(
+      washPercent(light.colors.selection),
+    );
+    expect(washPercent(high.dark.colors.selection)).toBe(
+      washPercent(high.light.colors.selection),
+    );
+
+    const sentence =
+      "The wash is translucent (" +
+      `${washPercent(light.colors.selection)}% in the default themes, ` +
+      `${washPercent(high.light.colors.selection)}% at high contrast), ` +
+      "so selected text keeps the foreground's contrast.";
+    expect(markdownProse).toContain(sentence);
+  });
+
+  it("states the wash strength in both colour tables", () => {
+    const cell = (color: string): string =>
+      `text selection wash (${washPercent(color)}% alpha; \`selectionColor\`)`;
+
+    expect(markdown).toContain(
+      `| \`selection\` | \`${themes.light.colors.selection}\` | \`${themes.dark.colors.selection}\` | ${cell(themes.light.colors.selection)} |`,
+    );
+    expect(markdown).toContain(
+      `| \`selection\` | \`${highContrastThemes.light.colors.selection}\` | \`${highContrastThemes.dark.colors.selection}\` | ${cell(highContrastThemes.light.colors.selection)} |`,
+    );
+  });
+
+  it("quotes the warning figure the design system repeats", () => {
+    const light = themes.light.colors;
+    const sentence = `The solid roles are fills: light \`warning\` is ${contrastRatio(light.warning, light.background).toFixed(2)}:1 against the canvas, so it is never the colour of text or a dot.`;
+
+    expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 });
 

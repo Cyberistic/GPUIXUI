@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 41/57
+`[x]` `[███████░░░]` 42/58
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -130,6 +130,11 @@ layering model already name — the focus ring on the `hover`/`active`/`selected
 washes a focused row paints, and status text and the control boundary on
 `popover` — so an edited theme is held to the pairs an app actually paints
 (plan 074)
+`[x]` Guard the figures the catalogue quotes in prose — the light
+`warning`/`success` ratios, the design-system's warning figure and the selection
+wash percentage — derive the `xText` surfaces from `contrastPairs` so the
+high-contrast table names `popover`, and correct the `compositeOver` example
+that printed `#808080` for a `#7F7F7F` composite (plan 075)
 `[x]` Guard the palette ramps in `docs/tokens.md` — the last hand-written value
 table without a drift test (plan 072)
 `[x]` Make a theme declare its contrast level so `applyPlatformStyle` and

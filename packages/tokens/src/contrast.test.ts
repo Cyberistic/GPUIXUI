@@ -7,7 +7,12 @@
  * check is the same one the suites run — known ratios, the shipped themes
  * passing, and a brand theme, an opaque selection wash and a malformed role
  * each failing with the pair named.
+ *
+ * It also holds the `compositeOver` JSDoc example to the function (plan 075):
+ * the example printed `#808080` for `#00000080`, which composites to `#7F7F7F`,
+ * so a reader copying it wrote an assertion the library itself would fail.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   compositeOver,
@@ -55,6 +60,19 @@ describe("compositeOver", () => {
   it("blends a translucent overlay onto an opaque base", () => {
     expect(compositeOver("#0000007F", "#FFFFFF")).toBe("#808080");
     expect(compositeOver("#FFFFFF7F", "#000000")).toBe("#7F7F7F");
+  });
+
+  it("keeps its JSDoc example at the value the function returns", () => {
+    const source = readFileSync(
+      new URL("./contrast.ts", import.meta.url),
+      "utf8",
+    );
+    const composited = compositeOver("#00000080", "#FFFFFF");
+
+    expect(composited).toBe("#7F7F7F");
+    expect(source).toContain(
+      `compositeOver("#00000080", "#FFFFFF"); // "${composited}"`,
+    );
   });
 
   it("keeps the base when the overlay is fully transparent", () => {

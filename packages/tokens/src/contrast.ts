@@ -134,7 +134,7 @@ export function contrastRatio(foreground: string, background: string): number {
  *
  * @example
  * ```ts
- * compositeOver("#00000080", "#FFFFFF"); // "#808080"
+ * compositeOver("#00000080", "#FFFFFF"); // "#7F7F7F"
  * ```
  */
 export function compositeOver(color: string, background: string): string {

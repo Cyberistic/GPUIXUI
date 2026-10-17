@@ -263,10 +263,10 @@ getTheme("light"); // the default light theme, unchanged
 | `warningSoftForeground` | `#2A1B00` | `#FFEFC6` | text and icons on `warningSoft` |
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
-| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card` |
-| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card` |
-| `warningText` | `#6B4500` | `#FFEFC6` | warning text and indicators on `background`/`card` |
-| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card` |
+| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover` |
+| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover` |
+| `warningText` | `#6B4500` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover` |
+| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover` |
 | `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
@@ -967,8 +967,11 @@ covered.
 they disagree with the shipped themes or fall out of role order; it also holds
 the type table to `textRoles` order and content, the status-tone table to
 `statusTones` order and content, the platform rows to `platformNames` order,
-and the palette ramps to `palette` order and values, so this page cannot drift
-from the implementation. The same file holds
+and the palette ramps to `palette` order and values, and the ratios and selection
+wash percentages quoted above to `contrastRatio` and the alpha byte, so this
+page cannot drift from the implementation. The high-contrast table's `xText`
+rows name every surface `contrastPairs` measures status text on, so the two
+tables describe the contract the library enforces. The same file holds
 `docs/design-system.md`'s numeric claims
 — the identity metrics, role count, theme surfaces, type summary and the
 spacing, density, radius, icon and avatar scales — so the rationale cannot drift
