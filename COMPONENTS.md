@@ -131,13 +131,13 @@ carries an evidenced limitation. The capability evidence lives in
 | Tooltips | wip | reuse | [tooltip](packages/primitives/docs/tooltip.mdx) · feedback | **Runtime (041):** opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. A thin wrapper over `@gpuix/react/tooltip`; a mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). |
 | Skeletons | wip | partial | [skeleton](packages/primitives/docs/skeleton.mdx) · feedback | **Runtime (041):** opacity samples take both `1` and `0.6`. Opacity pulse only: the runtime's `motion` animates width/height/opacity/insets/borderRadius and nothing else, so no shimmer sweep. |
 | Loading indicators | wip | partial | [spinner](packages/primitives/docs/spinner.mdx) · feedback | **Runtime (041):** the lit dot changes index (the accent-coloured dot proves a theme colour reaches the paint) and AccessKit reports role `Status` with its label. `Spinner` **cannot rotate**; `Progress` with no `value` is the alternative. |
-| Slider | todo | ? | — | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
-| Range slider | todo | ? | — | Two-thumb variant of Slider; its own runtime for min/max ordering and thumb crossing. No host element. |
-| Meter | todo | ? | — | Distinct from Progress: a value in a range, not task completion. No host element. |
-| Number Field | todo | ? | — | `<input>` exists (API-shape for the text part); stepper buttons, drag-to-scrub, clamping and locale formatting are ours. |
-| OTP Field | todo | ? | — | `<input>` exists; segmented rendering, paste distribution and keyboard movement are ours. |
-| Toggle | todo | ? | — | Momentary pressed mode, distinct from Switches. No `Button` in published 0.10.0; built on `div` + the shared keyboard contract. |
-| Rating | todo | ? | — | Radio-group-like input; no host element. Reuses the radio roving-focus contract. |
+| Slider | todo | ? | — | **Owner unassigned.** No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
+| Range slider | todo | ? | — | **Owner unassigned.** Two-thumb variant of Slider; its own runtime for min/max ordering and thumb crossing. No host element. |
+| Meter | todo | ? | — | **Owner unassigned.** Distinct from Progress: a value in a range, not task completion. No host element. |
+| Number Field | todo | ? | — | **Owner unassigned.** `<input>` exists (API-shape for the text part); stepper buttons, drag-to-scrub, clamping and locale formatting are ours. |
+| OTP Field | todo | ? | — | **Owner unassigned.** `<input>` exists; segmented rendering, paste distribution and keyboard movement are ours. |
+| Toggle | todo | ? | — | **Owner unassigned.** Momentary pressed mode, distinct from Switches. No `Button` in published 0.10.0; built on `div` + the shared keyboard contract. |
+| Rating | todo | ? | — | **Owner unassigned.** Radio-group-like input; no host element. Reuses the radio roving-focus contract. |
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (68 tests in 7
