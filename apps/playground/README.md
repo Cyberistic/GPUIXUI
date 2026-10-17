@@ -570,8 +570,9 @@ narrower. Each deviation is deliberate and measured:
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
-  probe and the drag-autoscroll probe pass in real GPUix 0.10.0 on this host
-  (44/44), with a written report and screenshots.
+  probe, the drag-autoscroll probe, the command-palette probe and the
+  tabbed-pane probe pass in real GPUix 0.10.0 on this host (46/46), with a
+  written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

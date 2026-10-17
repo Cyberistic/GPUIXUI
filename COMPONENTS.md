@@ -57,7 +57,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
 
-The suite is **44/44 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **46/46 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
