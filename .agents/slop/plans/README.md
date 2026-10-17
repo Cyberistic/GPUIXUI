@@ -17,11 +17,28 @@ Naming: `NNN-kebab-title.md`, numbered in dependency order. One plan per phase,
 one per package, plus a plan for each cross-cutting concern (native smoke test,
 licensing, docs site).
 
+**Number ranges by workstream**, so parallel agents cannot collide:
+`000–099` cross-cutting/platform, `100–199` playground (`apps/playground`,
+`packages/testing`), `200–299` tokens+theme, `300–399` primitives+icons,
+`400–499` components, `500–599` docs site. Take the next free number in your
+range.
+
 ## The plan set
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| — | *(nothing yet — the first agents write these)* | A | — | — |
+| `100` | `packages/testing` — the platform-free smoke harness | B | — | ready to execute |
+| `110` | The native smoke test (cross-cutting) | B | 100, 120 | ready; 0.10 suite exits 2 here, 0.5.1 legacy probe runs (ADR 0002) |
+| `120` | `apps/playground` — native playground + smoke runner | B | 100 | ready to execute |
+| `130` | Tier 3/4 feasibility probes | B→D | 100, 110, 120 | ready; verdicts need a supported host |
+
+Cross-cutting records:
+
+- `.agents/adr/0001-native-smoke-host.md` — the 0.10.0 binding gap and what it
+  means for every `done` row (superseded in part).
+- `.agents/adr/0002-two-gpuix-versions.md` — the library targets 0.10.0; 0.5.1
+  is the newest version that runs on this Intel Mac, and the measured matrix of
+  what it does and does not verify (focus and wheel scroll are the gaps).
 
 ## How to use a plan
 
