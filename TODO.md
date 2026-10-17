@@ -212,7 +212,7 @@ retired once both branches are one
   - Tier 2 gap rows (plan 205; each row gets its own plan before implementation)
     - [x] Fieldset — plan 306: groups fields, propagates `disabled` to `FieldInput` (7 native tests; both-direction proof)
     - [x] Stepper — plan 307: read-only multi-step indicator, statuses derived from `value` (8 native tests; both-direction proof)
-    - [ ] Form — plan 308 written; implementation pending (render-prop submit lifecycle)
+    - [x] Form — plan 308: owned-value schema validation, one alert summary, decoded `onSubmit`, pending guard (7 native tests; both-direction proof)
     - [ ] Drawer, Navigation Menu, Preview Card, Timeline, Countdown, Keyboard shortcuts / keycap display, Carousel, Inline edit, Tag/token input, Mention input, Hotkey-recorder input, Color picker — plans not yet written
 `[x]` Verify every component in both themes
 

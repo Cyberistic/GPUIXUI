@@ -23,6 +23,7 @@ import { dropdownMenuMeta } from "./dropdown-menu.js";
 import { emptyStateMeta } from "./empty-state.js";
 import { fieldMeta } from "./field.js";
 import { fieldsetMeta } from "./fieldset.js";
+import { formMeta } from "./form.js";
 import { listMeta } from "./list.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
@@ -68,6 +69,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   emptyStateMeta,
   fieldMeta,
   fieldsetMeta,
+  formMeta,
   listMeta,
   paginationMeta,
   popoverMeta,

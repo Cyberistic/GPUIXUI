@@ -230,6 +230,7 @@ parts.
 | Time pickers | `TimePicker`, `TimePickerSegment`, `TimePickerSeparator`, `TimePickerClear` | — | plan 132, 303 |
 | Fieldset | `Fieldset`, `FieldsetLegend` | `FieldsetRoot`/`Legend` | plan 306 |
 | Stepper | `Stepper`, `StepperStep` | — | plan 307 |
+| Form | `Form` (render prop; one part) | `Form` | plan 308 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -245,7 +246,6 @@ implementation cannot invent a shape):
 | Message scroller | `MessageScrollerRoot`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | plan 206 |
 | Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
 | Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
-| Form | `Form` | plan 205 |
 | Navigation menu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink` | plan 205 |
 | Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | plan 205 |

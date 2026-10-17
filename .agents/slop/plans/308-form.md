@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `115` (Field + `validation/logic.ts`), `205` §3 (B3), `306` |
-| Status | planned |
+| Status | done — 7 native tests; both-direction proof measured |
 | Source | `docs/component-api.md` §8 (planned parts: `Form`); `COMPONENTS.md` → Tier 2 → Form; plan `205` B3 |
 
 This plan is self-contained. It adds `Form` to `packages/components` at the Tier 2
@@ -171,3 +171,22 @@ guard and test 5 fails.
 - Example, docs page, inventory record, `COMPONENTS.md` row and the contract's
   §8 table agree; the render-prop decision is recorded in the docs page.
 - All gates and the behaviour suite green.
+
+## 8. Result
+
+Landed 2026-10-17:
+
+- `src/form.tsx` — the single `Form` part: decode with `Schema.decodeUnknownResult`,
+  show every `validateAll` message in one `role="alert"`, call `onSubmit` with
+  the decoded value, refuse submit while `pending`. The submit handler runs the
+  pure validator with `Effect.runSync` at the React event boundary; the module
+  header records why.
+- `src/behaviour/form.test.tsx` — 7 tests. Expected messages are computed with
+  `validateAll` itself, so the suite asserts the component shows the validator's
+  output rather than a copy of the formatter's text.
+- Example, docs page, inventory record, `COMPONENTS.md` row and the contract's §8
+  table updated; Form left the planned list.
+- **Both directions:** dropping the messages from the failure branch fails the
+  message test (and cascades through the rest of the suite because the failed
+  assertion leaves the root mounted). Restored: 332 behaviour tests green,
+  `nub run check` green.
