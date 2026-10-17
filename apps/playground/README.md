@@ -217,17 +217,36 @@ the only visual evidence, never an assertion. Charts and the colour picker
 cannot use `<canvas>`; `<svg>` and `<img>` + `setImagePixels` are the honest
 alternatives.
 
+## Cross-element drag and file drops (plan `162`)
+
+`drag-targets` logs every mouse and drop event on three adjacent boxes and
+records exactly where a captured gesture goes. It answers the question tab
+dragging and drag-and-drop depend on:
+
+| Fact | Result |
+| ---- | ------ |
+| capture | every move (8 of 8) and the up stay on the element that received the press; the element under the pointer gets neither |
+| hover during the drag | **frozen**: the target sees no enter/leave until the button is released, then `A:leave>B:enter` settle in that order |
+| the end of a drag | **a click on the source** fires even after 170 px of movement |
+| `onFileDrop` | receives both absolute paths and the window drop point (`218,58`); the simulation also emits moves around the drop |
+| a drop with no handler | no drop event — **but the element still gets a click** (`C:up>C:click`) |
+| after the gesture | a click and a hover work immediately (`B:click`, then `B:leave>A:enter>A:move`); nothing stays captured |
+
+So a drop target must be found by hit-testing pointer coordinates, not hover,
+and both the drag-ending click and a failed-drop click must be suppressed. The
+log is deterministic across runs.
+
 ## Evidence on this host
 
-The suite is **27/27 green** here (`exit 0`):
+The suite is **28/28 green** here (`exit 0`):
 
 ```
-27/27 scenarios passed · capabilities: layout=verified text=verified
+28/28 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
-theme=verified workspace=verified content=verified
+theme=verified workspace=verified content=verified drag=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -242,6 +261,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | popups | Select and Combobox open, commit and close under synthetic input, including native keys after `autoFocus`; Select returns focus to its trigger on every close. `nativeSimulateMouseMove` delivers enter/leave, so a hover tooltip is measurable; its close is a JS timer, not the GPUI clock |
 | a11y | the AccessKit dump maps every typed ARIA token to a role; names come only from `aria-label`; CheckBox/Switch have no checked state; the tree follows the painted virtual window |
 | content | `<svg>`/`<img>`/`<diff>` are retained **and** painted (bounds fire from `on_painted`); `<canvas>` is retained but renders nothing and drops its children; `setImagePixels` uploads a bitmap through the ref |
+| drag | capture owns every move and the up; hover is frozen during the drag; the gesture ends in a click on the source; a drop on a handler-less element still clicks; `onFileDrop` carries paths and coordinates |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -277,6 +297,7 @@ src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/popups.tsx    Select, Combobox and Tooltip in the runtime
 src/scenarios/a11y.tsx      the AccessKit dump: roles, names, states, window
 src/scenarios/surfaces.tsx  svg, img (fallbacks, data URL, ref upload), diff, canvas
+src/scenarios/drag-targets.tsx capture, hover during drag, file drops
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -311,9 +332,9 @@ narrower. Each deviation is deliberate and measured:
 
 - The sixteen core capabilities (including the token gallery, the modal
   contract, floating placement, the three published popups, the accessibility
-  tree and the content surfaces), the Tier 3/4 probes and the app-level shortcut
-  probe pass in real GPUix 0.10.0 on this host (27/27), with a written report
-  and screenshots.
+  tree and the content surfaces), the Tier 3/4 probes, the drag/file-drop probe
+  and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
+  (28/28), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

@@ -50,8 +50,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse` | verified |
 | content | `native-surfaces` | verified |
+| drag | `drag-targets` | verified |
 
-The suite is **27/27 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **28/28 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -107,6 +108,16 @@ Charts must use `<svg>` or `<img>` + `setImagePixels`. The honest limit: there i
 no pixel readback, so a corrupt PNG with a valid MIME type is indistinguishable
 from a decoded one by these checks — the screenshot artifact is the only visual
 evidence, never an assertion.
+
+`drag-targets` measures the pointer model behind tab dragging, drag and drop and
+file upload. What holds: a captured gesture keeps **every move and the up** on
+the element that received the press; `onFileDrop` receives the absolute paths
+and the window drop point. What surprises: **hover is frozen during the drag**
+(the element under the pointer gets no enter/leave until the button is
+released), the gesture still ends in a **click on the source** after 170 px of
+movement, and a file dropped on an element **without** `onFileDrop` produces no
+drop but still a **click**. A drag-and-drop component must hit-test the pointer
+itself and swallow the gesture-ending click.
 
 `select-choose`, `combobox-filter` and `tooltip-open` are the runtime verdicts
 for the three interactive components GPUix ships, which the library composes
@@ -197,6 +208,7 @@ is ahead of the published release — the divergence is called out below.
 | Diff viewer | `<diff>` (unified) | **verified** (runtime: `native-surfaces`) |
 | Image preview | `<img>` (path, data URL, http(s)) | **verified** (runtime: `native-surfaces`) |
 | File / folder selection | `GpuixRenderer.promptForPaths` | **verified** |
+| File drops | `onFileDrop` + `nativeSimulateFileDrop` | **verified** (runtime: `drag-targets`) |
 
 **Primitives only — still needs implementation:** Popovers / Dropdown menus /
 Context menus (`floating`'s `FloatingLayer` + `<anchored>` give positioning and
@@ -355,7 +367,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Panel groups | todo | ? | Composition over split panes. |
 | Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. |
 | Tabbed panels | todo | ? | Tabs + panels. |
-| Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. |
+| Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. |
 | Docking layouts | todo | ? | Composition over split panes + tabs. |
 | Nested panel arrangements | todo | ? | Composition. |
 | Workspace layouts | todo | ? | Composition + persistence. |
@@ -384,13 +396,13 @@ carries an evidenced limitation. The capability evidence lives in
 | Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). |
 | Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. Evidence: `native-surfaces` — a valid PNG data URL lays out at its box with no fallback, a missing `src` paints `img: no src`, an undecodable one paints `img: load failed`, and `setImagePixels` through the ref uploaded a bitmap without throwing. No pixel readback, so a corrupt bitmap with a valid MIME is indistinguishable from a decoded one. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
-| Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `onFileDrop` handles file drops only. |
+| Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `drag-targets`: pointer capture keeps moves and the up on the source, **hover is frozen during the drag**, the drag ends in a click on the source, and a drop on an element without `onFileDrop` still fires a click. The component owns hit-testing, the drop indicator and the click suppression. |
 | Notification centre | todo | ? | Composition over toasts + panels. |
 | Multi-step forms | todo | ? | Variant merged here: Form (adabraka `form`) — partial coverage; validation orchestration is the Tier 2 Form row. |
 | Virtualized hierarchical data | todo | ? | Tree views + `<virtual-list>`; hierarchical virtualization is ours. Only the painted window reaches the accessibility tree, so a keyboard-focusable row outside it is invisible to assistive technology (`a11y-tree`). |
 | Advanced filtering / query builders | todo | ? | Composition over inputs + menus. |
 | QR code | todo | ? | Render the matrix as a grid of `div`s or one `<svg>`; both are provided. The encoder is ours (dependency not yet chosen). |
-| File upload | todo | ? | Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists. |
+| File upload | todo | ? | Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists and `drag-targets` measured it: absolute paths plus the window drop point, but the simulation also emits moves, and a drop on an element without a handler fires a click. |
 | Video / audio player + waveform | todo | ? | **No media host element** (verified: not in `ElementType`). Playback needs a platform surface — **unverified**; a waveform can only be drawn via `<svg>` or the planned `<canvas>`. |
 | Crop area | todo | ? | Draggable handles over `<img>`; crop geometry and constraints are ours. No custom-paint requirement unless the mask is drawn — **unverified**. |
 | Chat (AI conversation) | todo | ? | Behaviour ported from **shadcn/ui's AI Elements `chat`** (credited in `LICENSES/`): a message list in a Message scroller, a composer with attachments, submit/stop, `idle/submitting/streaming/error` states, empty state. Plan `207`. |

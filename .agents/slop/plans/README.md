@@ -85,7 +85,7 @@ in the same block.
 | [159](./159-native-popups.md) | Native popups: `Select`, `Combobox` and `Tooltip` | B→C | 100, 110, 120, 140 | **landed**: `select-choose`, `combobox-filter`, `tooltip-open` — all three published popups work and are now `verified` (25/25); adds the `hover` host call and records the `ComboboxList` function-child trap (§8) |
 | [160](./160-native-a11y-tree.md) | The accessibility tree in the real runtime | B→C/D | 100, 110, 120, 140 | **landed**: `a11y-tree` — roles map; names are **not** derived from text; CheckBox/Switch expose no checked state; the tree follows the painted virtual window; 26/26 green (§8) |
 | [161](./161-native-content-surfaces.md) | Native content surfaces: `<svg>`, `<img>`, `<diff>` and the `<canvas>` trap | B→C/E | 100, 110, 120, 140 | **landed**: `native-surfaces` — svg/img/diff are retained and painted; **`<canvas>` is retained as a node but renders `gpui::Empty`** (no bounds, children dropped from paint); a corrupt PNG is indistinguishable without pixels; 27/27 green (§8) |
-| [162](./162-drag-targets.md) | Cross-element drag targets and file drops | B→D/E | 100, 110, 120, 140 | planned — measures where `onMouseUp` lands after a captured drag, whether hover edges fire during the gesture, and whether `onFileDrop` receives paths and coordinates |
+| [162](./162-drag-targets.md) | Cross-element drag targets and file drops | B→D/E | 100, 110, 120, 140 | **landed**: `drag-targets` — capture keeps moves and up on the source; **hover is frozen during the drag** and settles after release; the gesture ends in a click on the source; a drop on an element without a handler emits **no drop but a click**; 28/28 green (§8) |
 
 Cross-cutting records:
 

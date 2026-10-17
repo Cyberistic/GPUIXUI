@@ -130,7 +130,57 @@ Steps (assertions in this order; measurements replace hypotheses in §8):
 
 ## 8. Measured facts
 
-_To be filled by the implementation run. Record: the exact full log; which
-element received the up; whether hover edges fired during capture; the drop
-payload and coordinates; the behaviour of an element with no handler; the
-after-gesture click/hover; the two-direction outputs._
+**Suite: 28/28 green on this host, exit `0`**, `drag=verified`, with the 27
+prior scenarios unchanged. Two runs produced the **identical** event log, so
+the sequence is deterministic.
+
+The full log (A source, B target): 
+
+```
+A:down>A:enter>A:move×8>A:up>A:click>A:leave>B:enter
+```
+
+then, in order, a drop on B, a drop on C, a click on B and a hover on A:
+
+```
+B:leave>B:move>B:drop:/tmp/report.png+/tmp/data.csv@218,58>B:enter
+C:move>B:leave>C:up>C:click>C:enter
+B:down>B:enter>C:leave>B:up>B:click
+B:leave>A:enter>A:move
+```
+
+- **Capture** — the source keeps every move (8 of 8) and receives the up; the
+  element under the pointer receives neither `onMouseMove` nor `onMouseUp`
+  during the gesture.
+- **Hover is frozen during the gesture.** B gets no `enter` while the button is
+  down; after the up the hover settles in the order `A:leave>B:enter`. A
+  drag-and-drop component therefore **cannot** use hover to pick a target — it
+  must hit-test the pointer against known bounds (or compute from
+  `onMouseMove` coordinates on the captured source).
+- **A captured drag still ends in a click on the source.** `A:click` fires
+  after the 170 px drag, so a draggable tab/button must suppress the click when
+  the gesture moved past a threshold, or it will activate after every drag.
+- **File drop** — `nativeSimulateFileDrop` reaches `onFileDrop` with both paths
+  and the window drop point (`218,58`). The simulation itself emits mouse
+  events around the drop (`B:leave>B:move>…>B:enter`), so a component tracking
+  moves sees the drop as a move too.
+- **An element without `onFileDrop` receives no drop — but still gets a click.**
+  The C drop produced `C:up>C:click`; a failed file drop looks like a click on
+  the hovered element. A drop surface must ignore a click that follows a drop,
+  the same guard the drag-click needs.
+- **No stuck state** — after the gesture, a click on B fires `B:click` and a
+  hover on A produces `B:leave>A:enter>A:move`. Hover and focus are usable
+  immediately; a hovering pointer always ends on a move, not an enter.
+- **Two-direction proof** (both run, outputs quoted):
+  1. swapping the gesture to start on B: **exit `1`**, `the press reached the
+     source: expected a string containing "A:down", got
+     "B:down>B:enter>B:move>B:move>B:move>B:move>B:move>B:move>B:move>B:move>B:up>B:click>A:enter>B:leave"`.
+     The same log shows `B:move` and no `A:move`, so the capture assertion
+     would also fail.
+  2. removing `onFileDrop` from B: **exit `1`**, `the target receives both
+     paths: expected a string containing "B:drop:…", got ""`. Restored.
+- **Consequence for the library**: tab dragging and drag-and-drop compute the
+  drop target from pointer coordinates (the `workspace-tab-drag` probe already
+  does this); they must not use hover during the drag, and must swallow the
+  gesture-ending click.
+
