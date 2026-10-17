@@ -90,6 +90,7 @@ B1, so it is planned, not done.
 | `419-search-component-registry.md` | Index the component registry in `/api/search` so ⌘K finds component names from any page | B/F | 411, 410, 417 | implemented |
 | `420-docs-platform-toggle.md` | The docs platform toggle: macOS · Linux · Windows · Default, URL + storage, package values | B/F | 410, 416, 051 | implemented |
 | `421-component-search-deep-link.md` | A planned component's search result opens the component index filtered to it (`?q=`) | F | 417, 419, 420 | implemented |
+| `422-first-real-component-page.md` | The first real component page (Buttons): registry → page → real source → API table → honest preview; planned related links no longer 404 | B/C | 411, 412, 414, 415; primitives 047 | in progress |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
