@@ -103,7 +103,16 @@ live_agents() {
 }
 
 plan_count() {
-  find "$REPO/.agents/slop/plans" -name '*.md' ! -name 'README.md' 2>/dev/null | wc -l | tr -d ' '
+  # Plans live on each workstream's branch, so the aggregate counts distinct
+  # plan files across the shared checkout and every worktree.
+  find "$REPO/.agents/slop/plans" "$REPO"/workspaces/*/.agents/slop/plans \
+    -name '*.md' ! -name 'README.md' 2>/dev/null |
+    xargs -n1 basename 2>/dev/null | sort -u | wc -l | tr -d ' '
+}
+
+plans_in() {
+  find "$1/.agents/slop/plans" -name '*.md' ! -name 'README.md' 2>/dev/null |
+    wc -l | tr -d ' '
 }
 
 todo_progress() {
@@ -130,8 +139,9 @@ snapshot() {
       "$(component_progress)" \
       "$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo none)"
     for ws in $WORKSTREAMS; do
-      printf '  %s %s\n' "$ws" \
-        "$(git -C "$REPO" log -1 --format='%h %s' "agent/$ws" 2>/dev/null || echo 'no branch yet')"
+      printf '  %s %s plans=%s\n' "$ws" \
+        "$(git -C "$REPO" log -1 --format='%h %s' "agent/$ws" 2>/dev/null || echo 'no branch yet')" \
+        "$(plans_in "$REPO/workspaces/$ws")"
     done
   } >>"$STATUS_LOG"
 }

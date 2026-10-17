@@ -119,6 +119,11 @@ explicit boundaries.
 - One writer per tree. Agents work in their own `git worktree` under
   `workspaces/<workstream>/` on branch `agent/<workstream>`. Never edit the
   shared checkout while an agent owns a workstream.
+- **The shared checkout's `main` is the integration branch.** A workstream
+  merges its own branch into `main` once its plan set is complete and the gates
+  in §7 pass, so the plan index, `TODO.md` and `COMPONENTS.md` in the shared
+  checkout stay current for the next agent. Resolve conflicts in your own
+  branch, never on `main`.
 - Commit often with meaningful messages. Small, reviewable commits.
 
 ## 7. Completion gate
