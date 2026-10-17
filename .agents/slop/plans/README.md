@@ -52,7 +52,7 @@ workstream declares in its own section below.
 | [132](./132-time-picker.md) | Time picker: the time half of "date/time pickers" | C/F | 110, 117, 119 | done — 12 logic + 8 native tests + 1 theme-matrix row (behaviour 259); both-direction proof |
 | [133](./133-command-menu-fuzzy.md) | Command menu fuzzy matching and in-group ranking | C/F | 114, 129, 117 | done — 12 logic + 4 native tests (CommandMenu 12, behaviour 263); both-direction proof |
 | [134](./134-list-activation.md) | List row activation on Enter and click | C/F | 111, 120, 125, 130, 117 | done — 6 native tests (List 36, behaviour 269); both-direction proof; double-click probe documented |
-| [135](./135-submenu-pointer-activation.md) | Submenu pointer activation and ContextMenu submenus | C/F | 112, 114, 131, 134 | planned — pointer regression + shared `menu/sub.tsx`; target ContextMenu 16, DropdownMenu 33 |
+| [135](./135-submenu-pointer-activation.md) | Submenu pointer activation and ContextMenu submenus | C/F | 112, 114, 131, 134 | done — shared `menu/sub.tsx`, 5 native tests (ContextMenu 17, DropdownMenu 33, behaviour 274); both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

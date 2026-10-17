@@ -11,9 +11,12 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
   ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
 } from "../src/context-menu.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
@@ -61,6 +64,21 @@ export const ContextMenuExample = () => {
             <ContextMenuItem onSelect={() => setLastAction("Copy path")}>
               Copy path
             </ContextMenuItem>
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>Share</ContextMenuSubTrigger>
+              <ContextMenuSubContent label="Share">
+                <ContextMenuItem
+                  onSelect={() => setLastAction("Share → Copy link")}
+                >
+                  Copy link
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onSelect={() => setLastAction("Share → Email")}
+                >
+                  Email
+                </ContextMenuItem>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
             <ContextMenuSeparator />
             <ContextMenuItem
               tone="destructive"

@@ -4,9 +4,9 @@ description: The shared menu rows, positioned at the pointer or opened from the 
 ---
 
 `ContextMenu` is the right-click counterpart of **Dropdown menu**. It uses the
-same rows, highlight rules and keyboard handling; only the positioning differs —
-the surface is placed at the pointer in window coordinates rather than anchored
-to a control.
+same rows, submenus, highlight rules and keyboard handling; only the positioning
+differs — the surface is placed at the pointer in window coordinates rather than
+anchored to a control.
 
 ```tsx
 import {
@@ -14,6 +14,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@gpuixui/components/context-menu";
 
@@ -41,6 +44,7 @@ import {
 | `ContextMenuContent` | the surface at the pointer, rendered while open |
 | `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows |
 | `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure |
+| `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | one secondary level |
 
 ## Right click
 
@@ -71,6 +75,8 @@ pointer point, which is why this component uses `anchored` directly.
 | `ArrowDown` / `ArrowUp` | next/previous enabled row, wrapping |
 | `Home` / `End` | first/last enabled row |
 | `Enter` / `Space` | runs the highlighted row and closes |
+| `ArrowRight` on a submenu trigger | opens it and focuses its first row |
+| `ArrowLeft` inside a submenu | closes that level and returns focus to its trigger |
 | Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
 | `Escape` | closes; a keyboard-opened menu returns focus to the trigger |
 | `Tab` | closes and moves on |
@@ -84,6 +90,28 @@ menu → Type-ahead**).
 Focus returns to the trigger on `Escape` and on activation only when the menu was
 opened from the keyboard; a pointer-opened menu leaves focus where the pointer
 put it.
+
+## Submenus
+
+A submenu groups actions behind one secondary level, using the same parts as
+**Dropdown menu**:
+
+```tsx
+<ContextMenuSub>
+  <ContextMenuSubTrigger>Share</ContextMenuSubTrigger>
+  <ContextMenuSubContent label="Share">
+    <ContextMenuItem onSelect={copyLink}>Copy link</ContextMenuItem>
+    <ContextMenuItem onSelect={email}>Email</ContextMenuItem>
+  </ContextMenuSubContent>
+</ContextMenuSub>;
+```
+
+The trigger is an ordinary row: arrows and type-ahead reach it, and clicking,
+`Enter`, `Space`, `ArrowRight` or hovering opens the submenu and focuses its first
+row. Only one submenu is open at a time. `Escape` and `ArrowLeft` close one level
+and return focus to the sub-trigger; choosing a row (by keyboard or pointer)
+runs it once, closes both levels, and a pointer-opened menu leaves focus where
+the click put it. A press elsewhere closes both levels.
 
 ## Theming
 
@@ -100,19 +128,23 @@ match the row it represents.
   is documented rather than announced.
 - There is no portal. The surface is a sibling of the trigger painted at window
   coordinates, so it is correct visually but not clipped by a scroll container.
-- No submenus in v1; the shared reasons are in `menu/logic.ts`.
+- One level of submenus is tested; deeper nesting follows the same rule but is
+  not exercised by a suite. A submenu trigger announces `aria-expanded` only —
+  0.10.0 has no `aria-haspopup`.
 - `Shift+F10` opens at the trigger's bottom-left, not at a text caret; a
   keyboard-opened menu returns focus to its trigger on Escape and activation.
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (12 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (17 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
 opening, `Shift+F10` opening at the trigger's bottom-left with focus in the menu,
 keyboard activation running a row, Escape returning focus to the trigger, a
-disabled trigger ignoring `Shift+F10`, and type-ahead jumping to a row.
+disabled trigger ignoring `Shift+F10`, type-ahead jumping to a row, and the
+submenu rules — `ArrowRight` opening and focusing the first row, a pointer click
+running a row and closing both levels, and one-level Escape/ArrowLeft.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

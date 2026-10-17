@@ -162,9 +162,14 @@ an extra arrow press. Only one submenu per menu is open at a time; moving onto
 another row closes the open one.
 
 The surface is positioned at the trigger row's right edge in window coordinates
-and clamped by GPUix's `fit="snap"`. It is a child of the parent menu in the
-element tree, so a press on a submenu row is not an outside press, while a press
-on the parent menu's background still closes the whole menu.
+and clamped by GPUix's `fit="snap"`. A press on the submenu is geometrically
+outside the parent surface, so the runtime reports it to the parent's outside
+handler first; the submenu's own dismiss layer recognises the press inside its
+painted bounds and lets it reach the row. A press on the parent menu's background
+does not land in those bounds and still closes the whole menu.
+
+A row is chosen by pointer as well as by keyboard: clicking it runs the action
+once and closes both levels.
 
 `Escape` and `ArrowLeft` close **one** level: the submenu disappears, focus
 returns to its trigger, and the parent menu stays open. Choosing a submenu action
@@ -206,16 +211,17 @@ with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (32
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (33
 tests): the `menu` role, keyboard opening on the first/last enabled row, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
 dismissal, checkbox toggling and its check mark, the destructive colour, the
 surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
-Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard
-and hover opening, right-edge placement, focus entering the first row, arrows and
-type-ahead staying inside, one submenu at a time, one-level Escape/ArrowLeft, and
-an outside press closing both levels.
+Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard,
+hover and pointer opening, right-edge placement, focus entering the first row,
+arrows and type-ahead staying inside, one submenu at a time, one-level
+Escape/ArrowLeft, a pointer click running the row and closing both levels, and an
+outside press closing both levels.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

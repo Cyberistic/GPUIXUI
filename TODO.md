@@ -143,7 +143,7 @@ the `@gpuixui/tokens/react` provider
     - [x] Time picker, the time half of the date/time item — plan 132
     - [x] Command menu fuzzy matching and in-group ranking — plan 133
     - [x] List row activation on Enter and click — plan 134
-    - [~] Submenu pointer activation and ContextMenu submenus — plan 135
+    - [x] Submenu pointer activation and ContextMenu submenus — plan 135
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

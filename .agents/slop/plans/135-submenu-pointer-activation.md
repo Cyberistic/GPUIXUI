@@ -4,7 +4,8 @@
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 112 (overlays/dismiss stack), 114 (menus), 131 (submenus),
   134 (inventory gate)
-- **Status:** planned.
+- **Status:** done, 2026-10-17. 5 native tests (DropdownMenu 33, ContextMenu 17,
+  behaviour 274); shared `menu/sub.tsx`, docs and inventory updated.
 
 A submenu row can be chosen with the keyboard but not with the pointer. Measured
 on 2026-10-17: with a `DropdownMenu` open and its `Share` submenu showing, a real
@@ -207,7 +208,7 @@ with a fixture that has one `Share` submenu):
 3. Remove the `ContextMenuSub*` exports → `tsc` fails on the new imports.
 4. Restore, then run the whole behaviour suite.
 
-Expected counts: DropdownMenu 32 → 33; ContextMenu 12 → 16; behaviour 269 → 274;
+Expected counts: DropdownMenu 32 → 33; ContextMenu 13 → 17; behaviour 269 → 274;
 logic suites stay 223.
 
 ## 6. Docs, example, inventory, ledgers
@@ -219,7 +220,7 @@ logic suites stay 223.
     it came from; pointer and keyboard both select a row;
   - keyboard table: `ArrowRight` opens a submenu, `ArrowLeft` closes it;
   - limitations: replace "No submenus in v1" with one-level + no `aria-haspopup`;
-  - verification: 12 → 16 tests and the new cases.
+  - verification: 13 → 17 tests and the new cases.
 - `docs/dropdown-menu.mdx`: one sentence in the submenu section that a row is
   chosen by pointer as well as keyboard (the bug fix).
 - `examples/context-menu.example.tsx`: add a `Share` submenu with
@@ -257,3 +258,26 @@ nub run test                                          # exit 0
 ```
 
 ## 9. Deviations, recorded during implementation
+
+1. **ContextMenu already had 13 tests, not 12.** The docs and `COMPONENTS.md`
+   were one behind (the plan's own text repeated the stale number). The suite is
+   now 17, which is the number both carry.
+2. **The submenu block moved with no public name change** — the Dropdown parts
+   still export as `DropdownMenuSub*`, so the existing 32 tests compiled
+   untouched. The shared module is the only structural change.
+3. **Both-direction proof, recorded from the actual runs.**
+   - Removing the `insideSurface` early return made *runs a submenu row clicked
+     with the pointer* (DropdownMenu) and *runs a submenu row clicked with the
+     pointer and closes both levels* (ContextMenu) fail with
+     `expected "vi.fn()" to be called 1 times, but got 0 times`. The failures
+     then cascaded into the remaining submenu tests because the first failure
+     left a root mounted; the pointer failures are the signal.
+   - Restored; DropdownMenu 33/33, ContextMenu 17/17, behaviour 274/274.
+4. **A combined `"down down right"` keystroke string is too fast for the Context
+   menu fixture**: the submenu is not mounted when the same call's `right` is
+   dispatched, so the test helper sends three separate calls. The Dropdown suite
+   can use the combined form because its rows are already registered; this is a
+   harness timing detail, not a behaviour difference.
+5. **A pointer-opened ContextMenu leaves focus nowhere after a submenu row is
+   clicked** (the probe read `focus: null`). That is the existing pointer-dismiss
+   contract; the test asserts the action and the two unmounts, not a focus move.
