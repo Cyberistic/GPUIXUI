@@ -18,6 +18,7 @@ import {
   lastEnabled,
   nextEnabled,
   remove,
+  upsertValue,
   type CollectionItem,
 } from "./collection.js";
 
@@ -151,5 +152,43 @@ describe("createCollection", () => {
     expect(nextEnabled(collection.items(), Option.some(0), 1)).toEqual(
       Option.some(2),
     );
+  });
+});
+
+describe("upsertValue", () => {
+  const valued = (value: string, id: number, disabled = false) => ({
+    value,
+    id,
+    disabled,
+  });
+
+  it("appends a new value at the end", () => {
+    const items = upsertValue(
+      upsertValue([], valued("first", 10)),
+      valued("second", 20),
+    );
+
+    expect(items.map((item) => item.value)).toEqual(["first", "second"]);
+  });
+
+  it("replaces an existing value in place", () => {
+    const items = upsertValue(
+      upsertValue(upsertValue([], valued("first", 10)), valued("second", 20)),
+      valued("first", 11),
+    );
+
+    expect(items).toEqual([
+      { value: "first", id: 11, disabled: false },
+      { value: "second", id: 20, disabled: false },
+    ]);
+  });
+
+  it("keeps the length and the order on a re-register", () => {
+    const items = upsertValue(
+      upsertValue([], valued("only", 10)),
+      valued("only", 10),
+    );
+
+    expect(items.map((item) => item.value)).toEqual(["only"]);
   });
 });

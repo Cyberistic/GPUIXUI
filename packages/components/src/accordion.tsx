@@ -9,8 +9,10 @@
  * has no `transform` in `StyleDesc` (see `host.ts:121-237`).
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -28,7 +30,14 @@ import {
   toggle,
   type AccordionState,
 } from "./accordion/logic.js";
-import { isActivation } from "./internal/key.js";
+import {
+  firstEnabled,
+  lastEnabled,
+  nextEnabled,
+  upsertValue,
+  type ValueItem,
+} from "./internal/collection.js";
+import { isActivation, isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import {
   controlHeight,
   focusRing,
@@ -42,7 +51,12 @@ interface AccordionContextValue {
   readonly toggle: (item: string) => void;
   /** The last item in declaration order, so it draws no divider. */
   readonly lastValue: Option.Option<string>;
-  readonly register: (item: string) => () => void;
+  /** Register a header row; returns the unregister function. */
+  readonly registerTrigger: (row: ValueItem) => () => void;
+  /** Move focus one enabled header from `value`. */
+  readonly moveFrom: (value: string, delta: 1 | -1) => void;
+  /** Focus the first or last enabled header. */
+  readonly jumpTo: (edge: "first" | "last") => void;
 }
 
 const AccordionContext = createContext<AccordionContextValue | undefined>(
@@ -113,7 +127,7 @@ const singleState = (
         collapsible: collapsible ?? false,
       });
 
-/** The frame every mode shares: the registry, the divider order and the box. */
+/** The frame every mode shares: the trigger registry, the divider order and the box. */
 const AccordionFrame = ({
   state,
   onToggle,
@@ -124,28 +138,60 @@ const AccordionFrame = ({
   readonly state: AccordionState;
   readonly onToggle: (item: string) => void;
 }) => {
-  const [order, setOrder] = useState<ReadonlyArray<string>>([]);
+  const renderer = useGpuix().renderer;
+  const [rows, setRows] = useState<ReadonlyArray<ValueItem>>([]);
 
-  const register = useCallback((item: string) => {
-    setOrder((currentOrder) =>
-      Arr.contains(currentOrder, item)
-        ? currentOrder
-        : Arr.append(currentOrder, item),
-    );
+  const registerTrigger = useCallback((row: ValueItem) => {
+    setRows((current) => upsertValue(current, row));
     return () =>
-      setOrder((currentOrder) =>
-        Arr.filter(currentOrder, (value) => value !== item),
+      setRows((current) =>
+        Arr.filter(current, (candidate) => candidate.value !== row.value),
       );
   }, []);
+
+  const focusRow = useCallback(
+    (row: ValueItem) => {
+      renderer?.focusElement?.(row.id);
+    },
+    [renderer],
+  );
+
+  const moveFrom = useCallback(
+    (value: string, delta: 1 | -1) => {
+      pipe(
+        nextEnabled(
+          rows,
+          Arr.findFirstIndex(rows, (row) => row.value === value),
+          delta,
+        ),
+        Option.flatMap((index) => Arr.get(rows, index)),
+        Option.match({ onNone: () => undefined, onSome: focusRow }),
+      );
+    },
+    [focusRow, rows],
+  );
+
+  const jumpTo = useCallback(
+    (edge: "first" | "last") => {
+      const index = edge === "first" ? firstEnabled(rows) : lastEnabled(rows);
+      pipe(
+        Option.flatMap(index, (position) => Arr.get(rows, position)),
+        Option.match({ onNone: () => undefined, onSome: focusRow }),
+      );
+    },
+    [focusRow, rows],
+  );
 
   const context = useMemo<AccordionContextValue>(
     () => ({
       isOpen: (item) => isOpenState(state, item),
       toggle: onToggle,
-      lastValue: Arr.last(order),
-      register,
+      lastValue: Option.map(Arr.last(rows), (row) => row.value),
+      registerTrigger,
+      moveFrom,
+      jumpTo,
     }),
-    [onToggle, order, register, state],
+    [jumpTo, moveFrom, onToggle, registerTrigger, rows, state],
   );
 
   return (
@@ -269,9 +315,7 @@ export const AccordionItem = ({
   ...rest
 }: AccordionItemProps) => {
   const theme = useTheme();
-  const { lastValue, register } = useAccordionContext();
-
-  useLayoutEffect(() => register(value), [register, value]);
+  const { lastValue } = useAccordionContext();
 
   const item = useMemo<AccordionItemContextValue>(
     () => ({ value, disabled }),
@@ -314,13 +358,41 @@ export const AccordionTrigger = ({
   ...rest
 }: Props) => {
   const theme = useTheme();
-  const { isOpen, toggle } = useAccordionContext();
+  const { isOpen, toggle, registerTrigger, moveFrom, jumpTo } =
+    useAccordionContext();
   const { value, disabled } = useAccordionItemContext();
   const [focused, setFocused] = useState(false);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
   const open = isOpen(value);
+
+  // Stable identity: a fresh ref callback each render would re-register the row
+  // on every paint (ListItem has the same constraint).
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+
+  useLayoutEffect(() => {
+    // The native id only exists after commit, and it is what `moveFrom` focuses.
+    if (instance === undefined) return;
+    return registerTrigger({ id: instance.id, value, disabled });
+  }, [disabled, instance, registerTrigger, value]);
 
   const flip = (): void => {
     if (!disabled) toggle(value);
+  };
+
+  const handleKeyDown = (event: EventPayload): void => {
+    if (disabled) return;
+    Match.value(event).pipe(
+      Match.when(isActivation, flip),
+      Match.when(isDown, () => moveFrom(value, 1)),
+      Match.when(isUp, () => moveFrom(value, -1)),
+      Match.when(isFirst, () => jumpTo("first")),
+      Match.when(isLast, () => jumpTo("last")),
+      Match.orElse(() => undefined),
+    );
   };
 
   return (
@@ -328,6 +400,7 @@ export const AccordionTrigger = ({
       role="button"
       aria-expanded={open}
       {...rest}
+      ref={attach}
       tabIndex={disabled ? -1 : 0}
       onClick={
         disabled
@@ -338,7 +411,7 @@ export const AccordionTrigger = ({
             }
       }
       onKeyDown={(event: EventPayload) => {
-        if (isActivation(event)) flip();
+        handleKeyDown(event);
         onKeyDown?.(event);
       }}
       onFocus={(event) => {

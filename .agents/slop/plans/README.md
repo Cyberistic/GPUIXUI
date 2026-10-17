@@ -38,6 +38,7 @@ workstream declares in its own section below.
 | [118](./118-single-writer-components.md) | B3 in the components worktree: two live writers, one tree | cross-cutting | — | resolved in this worktree; permanent `scripts/` fix pending |
 | [119](./119-tier2-date-picker.md) | Date picker: the deferred Tier 2 item | C | 110, 112, 117 | done — 13 calendar tests + 9 native behaviour tests |
 | [120](./120-list-multi-select.md) | List multiple selection + the duplicate inventory row | C/F | 111, 117 | done — 13 selection tests + 8 native behaviour tests; duplicate-row regression |
+| [121](./121-accordion-keyboard.md) | Accordion header keyboard navigation | C/F | 111, 113 | done — 4 upsert tests + 4 native tests; both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

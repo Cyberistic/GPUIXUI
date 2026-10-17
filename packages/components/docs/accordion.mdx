@@ -65,9 +65,17 @@ is why it is not used for the closed state. Multiple mode reports the array.
 
 ## Keyboard
 
-The trigger is a button: Tab reaches it, Enter and Space toggle it. There is no
-arrow-key navigation between section headers in v1; the browser/desktop
-convention of Up/Down between accordion headers is not implemented.
+The trigger is a button: Tab reaches it, Enter and Space toggle it.
+
+| Key | Effect |
+| --- | ------ |
+| `Enter` / `Space` | toggle the focused section |
+| `↓` / `↑` | focus the next/previous enabled header, wrapping |
+| `Home` / `End` | focus the first/last enabled header |
+
+Arrow movement changes focus only — it never opens or closes a section. Disabled
+headers are skipped, and a control inside an open section keeps its own arrow
+keys because the handler lives on the trigger, not the accordion root.
 
 ## Theming
 
@@ -82,17 +90,20 @@ has no `transform` — a rotation is not available.
 - `aria-expanded` on each trigger; the trigger names the section.
 - **No `aria-controls`** in 0.10.0; the relationship is positional.
 - The indicator glyph carries `aria-label="Expand"` / `"Collapse"`.
-- No arrow-key movement between headers, and no height animation (see
-  **Collapsible** for the measured reason).
+- Arrow keys move focus between enabled headers; they do not activate them.
+- No height animation (see **Collapsible** for the measured reason).
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (12 tests):
 single mode closing the previous section, the non-collapsible no-op, the
 collapsible close, multiple mode keeping sections, the disabled section, Enter
-activation, and the controlled contract including the `null` close.
+activation, the controlled contract including the `null` close, and arrow /
+`Home` / `End` movement between headers (wrapping past a disabled one, without
+opening it).
 
-`src/accordion/logic.test.ts` covers the transition table (15 cases).
+`src/accordion/logic.test.ts` covers the transition table (15 cases), and
+`src/internal/collection.test.ts` covers the shared movement arithmetic.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
