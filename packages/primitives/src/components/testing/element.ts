@@ -29,6 +29,11 @@ const HostHandler = Schema.declare(
 
 const decodeString = Schema.decodeUnknownOption(Schema.String);
 
+const propsOf = (
+  element: ReactElement,
+): Option.Option<Record<string, unknown>> =>
+  Schema.decodeUnknownOption(HostProps)(element.props);
+
 /** The host tag a host element renders — `div`, `input`, `text`. */
 export const hostTag = (element: ReactElement): Option.Option<string> =>
   decodeString(element.type);
@@ -37,24 +42,31 @@ export const hostTag = (element: ReactElement): Option.Option<string> =>
 export const hostProps = (
   element: ReactElement,
 ): Option.Option<Record<string, unknown>> =>
-  Option.flatMap(hostTag(element), () =>
-    Schema.decodeUnknownOption(HostProps)(element.props),
-  );
+  Option.flatMap(hostTag(element), () => propsOf(element));
+
+const propOf =
+  (props: (element: ReactElement) => Option.Option<Record<string, unknown>>) =>
+  (element: ReactElement, name: string): Option.Option<unknown> =>
+    Option.flatMap(props(element), (record) =>
+      Option.flatMap(R.get(record, name), (value) =>
+        Option.fromNullishOr(value),
+      ),
+    );
 
 /**
- * One named prop, decoded.
+ * One named prop of any element, host or component — how a test asserts on the
+ * props a wrapper passes *down* to the component it composes.
+ */
+export const elementProp = propOf(propsOf);
+
+/**
+ * One named prop of a host element, decoded.
  *
  * A prop the element carries but leaves `undefined` — React keeps the key — is
  * reported as absent, which is what a caller means by "the element does not
  * set this".
  */
-export const hostProp = (
-  element: ReactElement,
-  name: string,
-): Option.Option<unknown> =>
-  Option.flatMap(hostProps(element), (props) =>
-    Option.flatMap(R.get(props, name), (value) => Option.fromNullishOr(value)),
-  );
+export const hostProp = propOf(hostProps);
 
 /** A named event handler, decoded. */
 export const hostHandler = (
