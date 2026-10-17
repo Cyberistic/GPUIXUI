@@ -9,6 +9,18 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
+## Harness — the supervisor that keeps the swarm alive
+
+`[x]` `[██████████]` 5/5
+
+`[x]` Repo on `proserver` with the required shape, mission, rules and plan index
+`[x]` opencode 2.0.31 installed with the provider credentials and a trimmed config
+`[x]` Verified a real run on `opencode-go-braven/deepseek-v4.1-flash`
+`[x]` Supervisor: 30-minute tick, ≥5 agents, one worktree each, idempotent and crash-safe
+`[x]` Scheduler installed (launchd agent + daemon driver; see `.agents/slop/README.md`)
+
+---
+
 ## Phase A — audit and feasibility
 
 `[ ]` `[░░░░░░░░░░]` 0/6
