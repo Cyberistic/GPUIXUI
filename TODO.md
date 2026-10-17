@@ -119,8 +119,10 @@ back (plan 053) so motion tokens (019) and platform type styles (051) are one
 branch; `main` compiles `@gpuixui/tokens` from source, so `primitives`,
 `components` and `docs-site` can drop their structural copies
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
-so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows;
-this agent was instructed not to push `main`
+so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
+and retires the now-redundant `agent/tokens-platform` worktree (its branch is
+`main`; `agent/tokens-theme` is the union); this agent was instructed not to push
+`main`
 
 ## Phase C — Tier 1–2 components
 

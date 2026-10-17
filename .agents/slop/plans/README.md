@@ -32,7 +32,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 
 ## The plan set
 
-### `tokens-theme` (block `010–019`, plus one overflow plan)
+### `tokens-theme` (block `010–019`, plus overflow plans `050–053`)
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
