@@ -21,8 +21,8 @@ import * as Option from "effect/Option";
 import { textStyle } from "@gpuixui/tokens";
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { paletteIds, palettes, type PaletteId } from "./palettes.js";
+import type { PlaygroundScenario } from "./types.js";
 import { Body, Readout } from "./ui.js";
-import { scenarios } from "./scenarios/index.js";
 
 const PaletteSwitch = ({
   active,
@@ -77,20 +77,22 @@ const PaletteSwitch = ({
 const Shell = ({
   palette,
   onPalette,
+  list,
 }: {
   readonly palette: PaletteId;
   readonly onPalette: (palette: PaletteId) => void;
+  readonly list: ReadonlyArray<PlaygroundScenario>;
 }) => {
   const theme = useTheme();
   const [selected, setSelected] = useState(
-    Option.match(Arr.head(scenarios), {
+    Option.match(Arr.head(list), {
       onNone: () => "",
       onSome: (scenario) => scenario.id,
     }),
   );
   const current = pipe(
-    Arr.findFirst(scenarios, (scenario) => scenario.id === selected),
-    Option.orElse(() => Arr.head(scenarios)),
+    Arr.findFirst(list, (scenario) => scenario.id === selected),
+    Option.orElse(() => Arr.head(list)),
   );
 
   return (
@@ -124,42 +126,55 @@ const Shell = ({
         >
           Scenarios
         </text>
-        {Arr.map(scenarios, (scenario) => (
-          <div
-            key={scenario.id}
-            testId={`nav-${scenario.id}`}
-            tabIndex={0}
-            role="button"
-            onClick={() => setSelected(scenario.id)}
-            style={{
-              padding: theme.spacing.md,
-              borderRadius: theme.radius.md,
-              cursor: "pointer",
-              backgroundColor:
-                selected === scenario.id
-                  ? theme.colors.accent
-                  : theme.colors.background,
-              hover: { backgroundColor: theme.colors.muted },
-            }}
-          >
-            <text
+        <div
+          testId="shell-nav-list"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            flexGrow: 1,
+            minHeight: 0,
+            overflowY: "scroll",
+          }}
+        >
+          {Arr.map(list, (scenario) => (
+            <div
+              key={scenario.id}
+              testId={`nav-${scenario.id}`}
+              tabIndex={0}
+              role="button"
+              onClick={() => setSelected(scenario.id)}
               style={{
-                ...textStyle(theme, "label"),
-                color: theme.colors.foreground,
+                padding: theme.spacing.md,
+                borderRadius: theme.radius.md,
+                cursor: "pointer",
+                flexShrink: 0,
+                backgroundColor:
+                  selected === scenario.id
+                    ? theme.colors.accent
+                    : theme.colors.background,
+                hover: { backgroundColor: theme.colors.muted },
               }}
             >
-              {scenario.title}
-            </text>
-            <text
-              style={{
-                ...textStyle(theme, "caption"),
-                color: theme.colors.mutedForeground,
-              }}
-            >
-              {scenario.capability}
-            </text>
-          </div>
-        ))}
+              <text
+                style={{
+                  ...textStyle(theme, "label"),
+                  color: theme.colors.foreground,
+                }}
+              >
+                {scenario.title}
+              </text>
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                {scenario.capability}
+              </text>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div
@@ -214,12 +229,16 @@ const Shell = ({
   );
 };
 
-export const App = () => {
+export const App = ({
+  list,
+}: {
+  readonly list: ReadonlyArray<PlaygroundScenario>;
+}) => {
   const [palette, setPalette] = useState<PaletteId>("dark");
 
   return (
     <ThemeProvider theme={palettes[palette]}>
-      <Shell palette={palette} onPalette={setPalette} />
+      <Shell palette={palette} onPalette={setPalette} list={list} />
     </ThemeProvider>
   );
 };

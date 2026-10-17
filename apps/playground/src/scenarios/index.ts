@@ -23,6 +23,7 @@ import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
 import { workspaceScenario } from "./workspace.js";
 import { shortcutScenario } from "./shortcuts.js";
+import { shellNavigationScenario } from "./shell.js";
 import {
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
@@ -60,6 +61,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   shortcutScenario,
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
+  shellNavigationScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

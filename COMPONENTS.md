@@ -29,7 +29,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 
 | Capability | Scenario | Verdict |
 | ---------- | -------- | ------- |
-| layout | `layout-flex` | verified |
+| layout | `layout-flex`, `shell-navigation` | verified |
 | text | `text-native` | verified |
 | input | `input-edit` | verified |
 | focus | `focus-traversal` | verified |
@@ -41,7 +41,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 
-The suite is **14/14 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **15/15 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); synthetic wheel scrolling **does** work
 (`deltaY` negative scrolls down, the opposite of the DOM); a `<virtual-list>`
@@ -50,6 +50,9 @@ paints no surface of its own, so overlay handlers belong on the content div;
 `autoFocus` takes native focus without dispatching `onFocus`; and the app-level
 window key handler (`render({ onKeyDown })`) receives a keystroke after the
 focused element's `onKeyDown` — the command-palette / application-menu path.
+`shell-navigation` adds the shell's own rule: a flex child needs `minHeight: 0`
+before `overflowY: "scroll"` can make it scroll, which is what keeps the
+15-entry sidebar reachable in the 720px window.
 
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,

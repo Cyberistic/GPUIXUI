@@ -11,6 +11,7 @@
 import { Console, Effect } from "effect";
 import { Runtime } from "@gpuixui/testing";
 import { App } from "./app.js";
+import { scenarios } from "./scenarios/index.js";
 
 const UNSUPPORTED = 2;
 
@@ -36,7 +37,11 @@ const program = Effect.gen(function* () {
     catch: (cause) => cause,
   }).pipe(Effect.orDie);
 
-  render(<App />, { title: "GPUIXUI playground", width: 1100, height: 720 });
+  render(<App list={scenarios} />, {
+    title: "GPUIXUI playground",
+    width: 1100,
+    height: 720,
+  });
   return 0;
 });
 
