@@ -26,6 +26,7 @@ const related = (status: ComponentMetaInput["status"]): ComponentMetaInput => ({
   related: [],
   playgroundScreen: null,
   screenshots: [],
+  runtime: null,
   limitations: [],
 });
 

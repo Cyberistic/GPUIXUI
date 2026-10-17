@@ -45,6 +45,19 @@ export class ComponentPart extends Schema.Class<ComponentPart>("ComponentPart")(
   },
 ) {}
 
+/**
+ * The automated suite that drives the component in the real GPUix renderer
+ * (plan 432). A suite is not a capture: it proves coverage, never a visual.
+ */
+export class RuntimeCoverage extends Schema.Class<RuntimeCoverage>(
+  "RuntimeCoverage",
+)({
+  /** The exact command that runs the suite. */
+  command: Schema.NonEmptyString,
+  /** Repo-relative path to the suite file. */
+  testFile: Schema.NonEmptyString,
+}) {}
+
 export class ComponentMeta extends Schema.Class<ComponentMeta>("ComponentMeta")(
   {
     /** URL segment under `/docs/components/<slug>`. */
@@ -80,6 +93,12 @@ export class ComponentMeta extends Schema.Class<ComponentMeta>("ComponentMeta")(
     playgroundScreen: Schema.OptionFromNullOr(Schema.String),
     /** Real native screenshot paths under `public/`, relative to it. */
     screenshots: Schema.Array(Schema.NonEmptyString),
+    /**
+     * The suite that drives this component in the real GPUix renderer. `null`
+     * for a planned component; the preview falls to tier X, never to a
+     * fabricated claim of coverage.
+     */
+    runtime: Schema.OptionFromNullOr(RuntimeCoverage),
     limitations: Schema.Array(Schema.String),
   },
 ) {}

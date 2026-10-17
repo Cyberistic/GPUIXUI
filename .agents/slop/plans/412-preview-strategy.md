@@ -88,7 +88,9 @@ screenshots) and does not block on a capability that may not be available.
 This document is a deliverable in its own right (`docs/README.md` lists it as a Phase
 B document). It must contain:
 
-1. The four tiers and the table above, verbatim in intent.
+1. The four tiers and the table above, verbatim in intent. Plan `432` adds tier
+   **V** (native coverage by an automated suite) between N and X; that tier is
+   the one a delivered component with no capture reaches.
 2. The evidence from `references/gpuix` (the quotes and file paths in §1), and the
    Phase A probe result for the Wasm build with its exact command + outcome.
 3. The label text each tier renders, so a reader can audit one string against the doc.

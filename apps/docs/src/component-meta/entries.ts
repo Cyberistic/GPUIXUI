@@ -10,6 +10,25 @@ import type { ComponentMetaInput } from "./schema";
 type Tier = "1" | "2";
 type Support = ComponentMetaInput["gpuix"];
 
+/**
+ * The automated suite a component's record points at (plan 432). One line per
+ * record; `native-coverage.test.ts` derives the same path and command from the
+ * repository, so the label cannot drift from the suite that runs.
+ */
+const nativeSuite = (
+  packageName: "@gpuixui/primitives" | "@gpuixui/components",
+  testFile: string,
+): NonNullable<ComponentMetaInput["runtime"]> => {
+  const directory =
+    packageName === "@gpuixui/primitives" ? "primitives" : "components";
+  return {
+    command: `nub run --filter ${packageName} ${
+      packageName === "@gpuixui/primitives" ? "test:runtime" : "test:behaviour"
+    }`,
+    testFile: `packages/${directory}/${testFile}`,
+  };
+};
+
 interface PlannedOptions {
   readonly gpuix?: Support;
   readonly related?: readonly string[];
@@ -55,12 +74,15 @@ const planned = (
   related: options.related ?? [],
   playgroundScreen: null,
   screenshots: [],
+  runtime: null,
   limitations: [],
 });
 
 interface DeliveredOptions extends PlannedOptions {
   /** Repo-relative path to the shipped component. */
   readonly sourcePath: string;
+  /** The suite that drives the component in the real GPUix renderer. */
+  readonly runtime: NonNullable<ComponentMetaInput["runtime"]>;
   /**
    * The `COMPONENTS.md` status. `registry.test.ts` fails when the two disagree;
    * Tier 1 is held at `wip` by the primitives rule, Tier 2 passed its gate.
@@ -86,6 +108,7 @@ const delivered = (
   ...planned(slug, title, tier, summary, options),
   status: options.status ?? "wip",
   sourcePath: options.sourcePath,
+  runtime: options.runtime,
   dependencies: options.dependencies ?? [],
   limitations: options.limitations,
 });
@@ -99,6 +122,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Text.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/layout.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["label", "icon"],
       limitations: [
@@ -113,6 +140,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "yes",
     packageName: "@gpuixui/icons",
     sourcePath: "packages/icons/src/Icon.tsx",
+    runtime: nativeSuite(
+      "@gpuixui/primitives",
+      "runtime/icons.runtime.test.tsx",
+    ),
     dependencies: [],
     related: ["text", "button"],
     limitations: [
@@ -129,6 +160,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Separator.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/layout.runtime.test.tsx",
+      ),
       dependencies: ["text"],
       related: ["spacer", "stack"],
       limitations: [
@@ -146,6 +181,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Separator.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/layout.runtime.test.tsx",
+      ),
       dependencies: ["text"],
       related: ["stack", "separator"],
       limitations: [
@@ -163,6 +202,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Stack.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/layout.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["box", "spacer"],
       limitations: [
@@ -180,6 +223,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Box.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/layout.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["stack", "separator"],
       limitations: [
@@ -197,6 +244,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/ScrollArea.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/layout.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["box", "stack"],
       limitations: [
@@ -215,6 +266,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Button.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/controls.runtime.test.tsx",
+      ),
       dependencies: ["spinner"],
       related: ["button-group"],
       limitations: [
@@ -233,6 +288,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/ButtonGroup.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/controls.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["button", "separator"],
       limitations: [
@@ -245,6 +304,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("label", "Labels", "1", "Names a control for sighted users.", {
     gpuix: "partial",
     sourcePath: "packages/primitives/src/components/Label.tsx",
+    runtime: nativeSuite(
+      "@gpuixui/primitives",
+      "runtime/layout.runtime.test.tsx",
+    ),
     dependencies: ["stack", "text"],
     related: ["text-input", "text"],
     limitations: [
@@ -261,6 +324,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Input.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/fields.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["label", "text-area"],
       limitations: [
@@ -279,6 +346,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/TextArea.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/fields.runtime.test.tsx",
+      ),
       dependencies: ["text-input"],
       related: ["text-input", "label"],
       limitations: [
@@ -296,6 +367,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Checkbox.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/controls.runtime.test.tsx",
+      ),
       dependencies: ["@gpuixui/icons"],
       related: ["switch", "radio-group"],
       limitations: [
@@ -313,6 +388,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/RadioGroup.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/controls.runtime.test.tsx",
+      ),
       dependencies: ["effect/Array", "effect/Option", "text"],
       related: ["checkbox", "select"],
       limitations: [
@@ -325,6 +404,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("select", "Selects", "1", "Selects one value from a list.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Select.tsx",
+    runtime: nativeSuite(
+      "@gpuixui/primitives",
+      "runtime/fields.runtime.test.tsx",
+    ),
     dependencies: [
       "@gpuix/react/floating",
       "@gpuix/react/select",
@@ -340,6 +423,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("switch", "Switches", "1", "Toggles a setting on or off.", {
     gpuix: "partial",
     sourcePath: "packages/primitives/src/components/Switch.tsx",
+    runtime: nativeSuite(
+      "@gpuixui/primitives",
+      "runtime/controls.runtime.test.tsx",
+    ),
     dependencies: [],
     related: ["checkbox", "radio-group"],
     limitations: [
@@ -356,6 +443,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Progress.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/loading.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["spinner", "skeleton"],
       limitations: [
@@ -368,6 +459,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("tooltip", "Tooltips", "1", "Labels a control on hover or focus.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Tooltip.tsx",
+    runtime: nativeSuite(
+      "@gpuixui/primitives",
+      "runtime/fields.runtime.test.tsx",
+    ),
     dependencies: ["@gpuix/react/floating", "@gpuix/react/tooltip"],
     related: ["button", "select"],
     limitations: [
@@ -384,6 +479,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Skeleton.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/loading.runtime.test.tsx",
+      ),
       dependencies: [],
       related: ["spinner", "progress"],
       limitations: [
@@ -401,6 +500,10 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Spinner.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/primitives",
+        "runtime/loading.runtime.test.tsx",
+      ),
       dependencies: ["effect/Array"],
       related: ["progress", "skeleton"],
       limitations: [
@@ -454,6 +557,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/card.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/card.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["list", "empty-state"],
@@ -467,6 +574,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("badge", "Badges", "2", "A compact status or count label.", {
     gpuix: "yes",
     sourcePath: "packages/components/src/badge.tsx",
+    runtime: nativeSuite("@gpuixui/components", "src/behaviour/badge.test.tsx"),
     status: "done",
     dependencies: ["@gpuix/react/floating", "effect"],
     related: ["alert", "avatar"],
@@ -483,6 +591,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/avatar.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/avatar.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["badge", "list"],
@@ -501,6 +613,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/list.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/list.test.tsx",
+      ),
       status: "done",
       dependencies: [
         "@gpuix/react/floating",
@@ -531,6 +647,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/empty-state.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/empty-state.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["card", "list"],
@@ -549,6 +669,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/alert.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/alert.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["toast", "badge"],
@@ -567,6 +691,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/field.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/field.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Option"],
       related: ["alert", "toast"],
@@ -585,6 +713,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/toast/provider.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/toast.test.tsx",
+      ),
       status: "done",
       dependencies: [
         "effect",
@@ -608,6 +740,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dialog.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/dialog.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["confirm-dialog", "popover"],
@@ -626,6 +762,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/confirm-dialog.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/confirm-dialog.test.tsx",
+      ),
       status: "done",
       dependencies: ["dialog", "effect"],
       related: ["dialog", "alert"],
@@ -644,6 +784,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/popover.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/popover.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect"],
       related: ["dialog", "dropdown-menu"],
@@ -662,6 +806,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dropdown-menu.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/dropdown-menu.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["context-menu", "command-menu"],
@@ -680,6 +828,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/context-menu.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/context-menu.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["dropdown-menu", "command-menu"],
@@ -698,6 +850,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/command-menu.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/command-menu.test.tsx",
+      ),
       status: "done",
       dependencies: [
         "dialog",
@@ -716,6 +872,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("tabs", "Tabs", "2", "Switches between sibling views in place.", {
     gpuix: "partial",
     sourcePath: "packages/components/src/tabs.tsx",
+    runtime: nativeSuite("@gpuixui/components", "src/behaviour/tabs.test.tsx"),
     status: "done",
     dependencies: [
       "@gpuix/react/floating",
@@ -738,6 +895,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/accordion.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/accordion.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Array", "effect/Option"],
       related: ["collapsible", "tabs"],
@@ -756,6 +917,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/collapsible.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/collapsible.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["accordion", "card"],
@@ -774,6 +939,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/breadcrumb.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/breadcrumb.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Array"],
       related: ["tabs", "pagination"],
@@ -792,6 +961,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/pagination.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/pagination.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating", "effect/Array"],
       related: ["breadcrumb", "list"],
@@ -810,6 +983,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/search-input.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/search-input.test.tsx",
+      ),
       status: "done",
       dependencies: ["@gpuix/react/floating"],
       related: ["combobox", "inline-validation"],
@@ -828,6 +1005,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/combobox.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/combobox.test.tsx",
+      ),
       status: "done",
       dependencies: ["effect/Array", "effect/Option"],
       related: ["search-input", "list"],
@@ -846,6 +1027,10 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/date-picker.tsx",
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/date-picker.test.tsx",
+      ),
       status: "done",
       dependencies: [
         "effect",

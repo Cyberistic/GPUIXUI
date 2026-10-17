@@ -5,7 +5,7 @@ site is a browser app. This document records how the site shows a native
 component without pretending a browser imitation is the real thing. It is the
 source of truth for every preview; plan `412-preview-strategy.md` implements it.
 
-## The four honest tiers
+## The five honest tiers
 
 Every preview on the site is exactly one of these, and carries the label that
 names it.
@@ -15,14 +15,20 @@ names it.
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
+| **V** | Native coverage by an automated suite, with no image | `Native coverage: <suite> drives this component in the real GPUix renderer. Run <command>. No capture is published for this page yet.` | When the component has a real runtime suite but no screenshot or playground screen |
 | **A** | A browser approximation of the component's documented layout | `Illustrative approximation — not GPUix. Run it in the playground for real behaviour.` | Only for static layout/typography/spacing; never for an interaction presented as native |
-| **X** | Source plus a limitation notice | `Not verified in the GPUix runtime — <reason>` | When the runtime does not support the behaviour, or it is not yet verified |
+| **X** | Source plus a limitation notice | `Not verified in the GPUix runtime — <reason>` | When no runtime suite exists, or the runtime does not support the behaviour |
 
 `<NativePreview slug>` chooses the highest honest tier from the component's
-registry record: screenshots first, then a playground screen, then unavailable.
-An approximation is never a fallback — a page author must choose it, and the
-only way to render one is through `<IllustrativeApproximation>`, which always
-renders the banner.
+registry record: screenshots first, then a playground screen, then native
+coverage, then unavailable. An approximation is never a fallback — a page author
+must choose it, and the only way to render one is through
+`<IllustrativeApproximation>`, which always renders the banner.
+
+**Tier V is coverage, not a pass.** It names the suite file and the exact
+command; the component's status badge (mirrored from `COMPONENTS.md`) is the
+only place that says how far verification got. A delivered component with no
+suite is a stopped condition (plan 432 §9), never a silent tier X.
 
 ## Evidence
 
@@ -76,9 +82,9 @@ still an approximation of the docs site, not of the native window.
 
 ## How source is reproduced
 
-Tier **X** shows "source plus a limitation notice", and tier **N/S** pages carry
-the component's source too — always the **real file**, read at build time by
-Fumadocs' `<include>` tag (`remarkInclude`), never a hand-pasted copy. The
+Tier **X** shows "source plus a limitation notice", and tier **N/S/V** pages
+carry the component's source too — always the **real file**, read at build time
+by Fumadocs' `<include>` tag (`remarkInclude`), never a hand-pasted copy. The
 included path is the component's registry `sourcePath`, so the page and the
 registry cannot disagree, and `apps/docs/src/content-references.test.ts` fails
 if a page points at a file that does not exist, names a missing region, or omits
@@ -88,6 +94,8 @@ the source for a component that is no longer `planned`.
 
 - That a browser approximation runs GPUix. It does not; it is labelled.
 - That an unverified component works. It is shown as unavailable.
+- That native coverage is a capture. Tier V names the suite and the command, and
+  says that no image is published.
 - That a screenshot proves an interaction. A screenshot is a still frame; the
   playground is the interactive proof.
 - That a GPUix rendering surface is embedded in this site. Until the conditional

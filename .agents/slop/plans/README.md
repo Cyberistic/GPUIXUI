@@ -139,6 +139,7 @@ pages, examples and prop types (plan `425`).
 | `429-inventory-status-is-registry-status.md` | `COMPONENTS.md` owns status; the registry mirrors it and the landing page stops reporting "Implemented 0" | F | 411, 425; components 117 | implemented — status agreement test, 22 Tier 2 rows corrected |
 | `430-theming-token-scales.md` | Theming page completeness: render every token group (spacing, radius, border, icon, density, elevation) from the package | F | 410, 416; tokens `Theme` | implemented — `<TokenScales />`, 151 docs tests; both directions proven |
 | `431-search-relevance.md` | Search relevance: a component's exact name reaches its page; a blank query returns `[]`; one page listed once | F | 410, 411, 417, 419, 421 | implemented — title ranking, empty guard, page dedupe; 157 docs tests; every rule proven to fail when removed |
+| [`432-native-coverage-preview.md`](./432-native-coverage-preview.md) | Previews stop calling runtime-verified components unverified: tier V names the native suite and its command | F | 412, 411, 425; primitives 041, components 117 | implemented — every delivered record declares its suite; the registry guard derives the command and the import |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

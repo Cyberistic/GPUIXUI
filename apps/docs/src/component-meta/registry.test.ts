@@ -201,6 +201,7 @@ describe("compound record contract", () => {
     related: [],
     playgroundScreen: null,
     screenshots: [],
+    runtime: null,
     limitations: [],
   };
 
@@ -306,6 +307,7 @@ describe("status contract", () => {
     related: [],
     playgroundScreen: null,
     screenshots: [],
+    runtime: null,
     limitations: [],
   };
 

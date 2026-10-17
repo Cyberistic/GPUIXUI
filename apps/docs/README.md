@@ -294,6 +294,8 @@ capture sidecars (`src/components/preview/select-preview.ts`):
   a sidecar with `kind: "interaction"` is captioned `Recorded in GPUix — …`
   instead of `Captured from GPUix — …`;
 - otherwise a `playgroundScreen` → the run instructions (tier N);
+- otherwise the record's `runtime` suite → the native-coverage notice (tier V:
+  the suite path plus its command, and that no capture is published);
 - otherwise the "not verified" notice (tier X).
 
 An approximation is never a fallback. The only way to render one is

@@ -3,6 +3,7 @@ import { captureFor } from "./captures";
 import { NativeScreenshot } from "./screenshot";
 import { PlaygroundScreen } from "./playground-screen";
 import { PreviewUnavailable } from "./preview-unavailable";
+import { RuntimeCoverage } from "./runtime-coverage";
 import { selectPreview } from "./select-preview";
 
 interface NativePreviewProps {
@@ -40,6 +41,12 @@ export function NativePreview({ slug }: NativePreviewProps) {
 
   if (preview.tier === "playground") {
     return <PlaygroundScreen screen={preview.screen} />;
+  }
+
+  if (preview.tier === "runtime") {
+    return (
+      <RuntimeCoverage command={preview.command} testFile={preview.testFile} />
+    );
   }
 
   return <PreviewUnavailable reason={preview.reason} />;

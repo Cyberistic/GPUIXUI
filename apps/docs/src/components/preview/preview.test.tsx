@@ -37,6 +37,7 @@ const record = (
   related: [],
   playgroundScreen: null,
   screenshots: [],
+  runtime: null,
   limitations: [],
   ...overrides,
 });
@@ -66,9 +67,19 @@ describe("preview labels", () => {
   });
 
   it("shows an unverified component as unavailable, never approximated", () => {
-    const html = renderToStaticMarkup(<NativePreview slug="button" />);
+    const html = renderToStaticMarkup(<NativePreview slug="slider" />);
     expect(html).toContain("Not verified in the GPUix runtime");
     expect(html).not.toContain(APPROXIMATION_NOTICE);
+  });
+
+  it("names the native suite for a component with no capture yet", () => {
+    const html = renderToStaticMarkup(<NativePreview slug="button" />);
+    expect(html).toContain('data-preview-tier="runtime"');
+    expect(html).toContain(
+      "packages/primitives/runtime/controls.runtime.test.tsx",
+    );
+    expect(html).toContain("nub run --filter @gpuixui/primitives test:runtime");
+    expect(html).not.toContain("Not verified in the GPUix runtime");
   });
 
   it("reports an unknown component instead of rendering nothing", () => {
@@ -113,7 +124,46 @@ describe("preview tier selection", () => {
     expect(tier).toEqual({ tier: "playground", screen: "Button gallery" });
   });
 
-  it("reports unavailable when there is neither a capture nor a screen", () => {
+  it("reports native coverage when there is a suite but no capture", () => {
+    const tier = selectPreview(
+      record({
+        runtime: {
+          command: "nub run --filter @gpuixui/primitives test:runtime",
+          testFile: "runtime/layout.runtime.test.tsx",
+        },
+      }),
+      proven,
+    );
+    expect(tier).toEqual({
+      tier: "runtime",
+      command: "nub run --filter @gpuixui/primitives test:runtime",
+      testFile: "runtime/layout.runtime.test.tsx",
+    });
+  });
+
+  it("prefers a capture and a playground screen over native coverage", () => {
+    const runtime = {
+      command: "nub run --filter @gpuixui/primitives test:runtime",
+      testFile: "runtime/layout.runtime.test.tsx",
+    };
+    expect(
+      selectPreview(
+        record({
+          runtime,
+          screenshots: ["screenshots/demo/default.png"],
+        }),
+        proven,
+      ).tier,
+    ).toBe("screenshot");
+    expect(
+      selectPreview(
+        record({ runtime, playgroundScreen: "Demo gallery" }),
+        proven,
+      ).tier,
+    ).toBe("playground");
+  });
+
+  it("reports unavailable when there is neither a capture, a screen nor a suite", () => {
     const tier = selectPreview(record({}), proven);
     expect(tier).toEqual({
       tier: "unavailable",

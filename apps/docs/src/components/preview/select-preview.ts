@@ -9,12 +9,19 @@ import type { Capture } from "./captures";
 export type PreviewTier =
   | { readonly tier: "screenshot"; readonly captures: readonly Capture[] }
   | { readonly tier: "playground"; readonly screen: string }
+  | {
+      readonly tier: "runtime";
+      readonly command: string;
+      readonly testFile: string;
+    }
   | { readonly tier: "unavailable"; readonly reason: string };
 
 /**
  * Picks the highest honest tier. A screenshot the registry lists but no sidecar
  * proves is **not** shown: it reports the missing sidecar, because a caption
- * taken from a file name would be invented provenance.
+ * taken from a file name would be invented provenance. A component with no
+ * capture and no playground screen but a real native suite is **covered**, not
+ * unverified: it reports tier V rather than the tier-X notice (plan 432).
  */
 export const selectPreview = (
   record: ComponentMetaInput,
@@ -41,6 +48,14 @@ export const selectPreview = (
 
   if (record.playgroundScreen !== null) {
     return { tier: "playground", screen: record.playgroundScreen };
+  }
+
+  if (record.runtime !== null) {
+    return {
+      tier: "runtime",
+      command: record.runtime.command,
+      testFile: record.runtime.testFile,
+    };
   }
 
   return {
