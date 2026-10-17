@@ -14,6 +14,7 @@
  */
 
 import { useState, type ReactElement } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { decideActivation, decideMove } from "../core/keyboard.js";
@@ -67,10 +68,14 @@ export const initialActiveIndex = (
   options: ReadonlyArray<RadioOption>,
   value: string,
 ): number => {
-  const selected = options.findIndex((option) => option.value === value);
+  const indexOf = (matches: (option: RadioOption) => boolean): number =>
+    Option.getOrElse(Arr.findFirstIndex(options, matches), () => -1);
+  const selected = indexOf((option) => option.value === value);
   if (selected >= 0) return selected;
-  const firstEnabled = options.findIndex((option) => option.disabled !== true);
-  return firstEnabled >= 0 ? firstEnabled : 0;
+  return Math.max(
+    indexOf((option) => option.disabled !== true),
+    0,
+  );
 };
 
 const itemState = (option: RadioOption, value: string): SelectionState =>
@@ -93,7 +98,7 @@ export const renderRadioGroup = (
     size = "md",
     accent = "primary",
   } = props;
-  const count = options.length;
+  const count = Arr.length(options);
   const move = (key: string): boolean =>
     Option.match(decideMove(activeIndex, count, key, orientation), {
       onNone: () => false,
@@ -132,7 +137,7 @@ export const renderRadioGroup = (
         props.style,
       )}
     >
-      {options.map((option, index) => {
+      {Arr.map(options, (option, index) => {
         const current = itemState(option, state.current);
         const disabled = props.disabled === true || option.disabled === true;
         const spec: SelectionSpec = {

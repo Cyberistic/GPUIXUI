@@ -152,9 +152,9 @@ describe("type", () => {
     expect(labelledBy("Email")).toStrictEqual({ "aria-label": "Email" });
     // `Label` composes rather than renders, so its own contribution is the
     // column stack it asks for; the text inside is `Text`'s.
-    expect(
-      expectSome(elementProp(renderLabel({}, testTheme), "direction")),
-    ).toBe("column");
+    expect(expectSome(elementProp(renderLabel({}), "direction"))).toBe(
+      "column",
+    );
   });
 });
 

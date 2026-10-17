@@ -23,7 +23,6 @@ import {
 } from "@gpuix/react/tooltip";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
@@ -64,7 +63,7 @@ export const renderTooltip = (
     <TooltipContent
       side={side}
       align={align}
-      style={mergeStyle(tooltipStyle(theme), undefined)}
+      style={tooltipStyle(theme)}
       testId={testId}
     >
       {content}

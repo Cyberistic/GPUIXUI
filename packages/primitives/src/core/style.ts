@@ -13,6 +13,7 @@
  */
 
 import type { GpuixTheme, StyleDesc } from "@gpuix/react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type {
   ColorRef,
@@ -260,7 +261,7 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     fontSize: role.fontSize,
     lineHeight: role.lineHeight,
     fontWeight: role.fontWeight,
-    fontFamily: MONO_ROLES.includes(spec.role)
+    fontFamily: Arr.contains(MONO_ROLES, spec.role)
       ? theme.typography.mono
       : theme.typography.sans,
     color: toneColor(theme, spec.tone),

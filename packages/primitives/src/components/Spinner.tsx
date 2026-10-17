@@ -9,6 +9,7 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import * as Arr from "effect/Array";
 import {
   SPINNER_SEGMENTS,
   spinnerDotStyle,
@@ -51,7 +52,7 @@ export const renderSpinner = (
         style,
       )}
     >
-      {spinnerDots(step, 3).map((point, index) => (
+      {Arr.map(spinnerDots(step, 3), (point, index) => (
         <div
           key={index}
           style={spinnerDotStyle({ size: dot, accent }, point, theme)}

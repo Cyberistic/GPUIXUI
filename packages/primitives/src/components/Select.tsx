@@ -15,6 +15,7 @@
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
+import * as Arr from "effect/Array";
 import {
   Select as GpuixSelect,
   SelectContent,
@@ -127,7 +128,7 @@ export const renderSelect = (
   theme: PrimitiveTheme,
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
-  const items = options.map((option) => ({
+  const items = Arr.map(options, (option) => ({
     value: option.value,
     label: option.label,
     textValue: option.label,
@@ -154,7 +155,7 @@ export const renderSelect = (
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent side={side} style={selectContentStyle(theme)}>
-        {options.map((option) => (
+        {Arr.map(options, (option) => (
           <SelectItem
             key={option.value}
             value={option.value}
