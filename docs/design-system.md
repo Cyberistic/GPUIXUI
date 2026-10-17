@@ -461,8 +461,10 @@ mixed palette is reported rather than silently repaired.
 
 Overrides merge by group; typography merges field by field, density metrics size
 by size, motion timing by timing and easing by easing; elevation levels are
-replaced as whole arrays; the mode is immutable. Nothing mutates the base, so a
-theme can be created once at startup and shared.
+replaced as whole arrays; the mode is immutable. An explicit `undefined` is
+treated as omitted in every group, so a partial config spread cannot erase a
+role, a metric or a shadow level. Nothing mutates the base, so a theme can be
+created once at startup and shared.
 
 Verify an edited theme with `themeContrastFailures(theme)` — it checks at the
 level the theme declares, so a high-contrast theme needs no second argument. An

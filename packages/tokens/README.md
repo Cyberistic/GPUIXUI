@@ -115,7 +115,8 @@ selects the palette (`"high"` builds on the AAA set) and defaults to
 `"default"`. `extendTheme` derives from any theme, including a high-contrast
 one. Neither mutates its base. Typography merges field by field, density
 metrics size by size, elevation levels replace whole arrays, and the mode is not
-overridable.
+overridable. An explicitly `undefined` value is treated as omitted, so a partial
+config spread cannot erase a token.
 
 ```ts
 import { createTheme } from "@gpuixui/tokens";

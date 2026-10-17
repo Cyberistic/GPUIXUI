@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 88/114
+`[x]` `[████████░░]` 89/118
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -167,6 +167,10 @@ tone-tinted root (`xSoft`), but `foreground` was measured on the plain surfaces
 and row washes only, so an edited theme could erase an Alert body while the
 checker returned `[]`; every shipped set clears 7:1, so no colour moves and the
 contract grows 257 → 261 (plan 320)
+`[x]` Make every theme merge total — an explicit `undefined` in a partial
+override erased a colour role, a type field, a motion timing, a density metric or
+an elevation level, and the last one crashed `elevationShadow`; every group now
+treats it as omitted (plan 321)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

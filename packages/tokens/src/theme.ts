@@ -155,6 +155,28 @@ export interface ThemeConfig extends Omit<ThemeOverrides, "contrast"> {
   readonly contrast?: ThemeContrast;
 }
 
+/**
+ * Merge the defined entries of `override` over `base`. An explicit `undefined`
+ * is treated as omitted, so a partial config spread cannot erase a role, a
+ * metric or an elevation level.
+ */
+const mergeDefined = <T extends object>(
+  base: T,
+  override: Partial<T> | undefined,
+): T => {
+  if (override === undefined) {
+    return base;
+  }
+  const merged = { ...base };
+  Object.assign(
+    merged,
+    Object.fromEntries(
+      Object.entries(override).filter(([, value]) => value !== undefined),
+    ),
+  );
+  return merged;
+};
+
 const mergeMotion = (
   base: Motion,
   override:
@@ -167,13 +189,11 @@ const mergeMotion = (
     return base;
   }
   const { ease, ...timings } = override;
-  return { ...base, ...timings, ease: { ...base.ease, ...ease } };
+  return {
+    ...mergeDefined(base, timings),
+    ease: mergeDefined(base.ease, ease),
+  };
 };
-
-const mergeTextStyle = (
-  base: TextStyle,
-  override: Partial<TextStyle> | undefined,
-): TextStyle => (override === undefined ? base : { ...base, ...override });
 
 const mergeTypography = (
   base: Typography,
@@ -185,16 +205,16 @@ const mergeTypography = (
   return {
     sans: override.sans ?? base.sans,
     mono: override.mono ?? base.mono,
-    display: mergeTextStyle(base.display, override.display),
-    h1: mergeTextStyle(base.h1, override.h1),
-    h2: mergeTextStyle(base.h2, override.h2),
-    h3: mergeTextStyle(base.h3, override.h3),
-    body: mergeTextStyle(base.body, override.body),
-    bodyStrong: mergeTextStyle(base.bodyStrong, override.bodyStrong),
-    label: mergeTextStyle(base.label, override.label),
-    caption: mergeTextStyle(base.caption, override.caption),
-    code: mergeTextStyle(base.code, override.code),
-    codeBlock: mergeTextStyle(base.codeBlock, override.codeBlock),
+    display: mergeDefined(base.display, override.display),
+    h1: mergeDefined(base.h1, override.h1),
+    h2: mergeDefined(base.h2, override.h2),
+    h3: mergeDefined(base.h3, override.h3),
+    body: mergeDefined(base.body, override.body),
+    bodyStrong: mergeDefined(base.bodyStrong, override.bodyStrong),
+    label: mergeDefined(base.label, override.label),
+    caption: mergeDefined(base.caption, override.caption),
+    code: mergeDefined(base.code, override.code),
+    codeBlock: mergeDefined(base.codeBlock, override.codeBlock),
   };
 };
 
@@ -209,14 +229,13 @@ const mergeDensity = (
     return densityPresets[override];
   }
   return {
-    ...base,
-    ...override,
-    controlHeight: { ...base.controlHeight, ...override.controlHeight },
-    controlPaddingX: {
-      ...base.controlPaddingX,
-      ...override.controlPaddingX,
-    },
     name: base.name,
+    controlHeight: mergeDefined(base.controlHeight, override.controlHeight),
+    controlPaddingX: mergeDefined(
+      base.controlPaddingX,
+      override.controlPaddingX,
+    ),
+    rowHeight: override.rowHeight ?? base.rowHeight,
   };
 };
 
@@ -350,16 +369,16 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     name: overrides.name ?? base.name,
     mode: base.mode,
     contrast: overrides.contrast ?? base.contrast,
-    colors: { ...base.colors, ...overrides.colors },
+    colors: mergeDefined(base.colors, overrides.colors),
     typography: mergeTypography(base.typography, overrides.typography),
-    spacing: { ...base.spacing, ...overrides.spacing },
-    radius: { ...base.radius, ...overrides.radius },
+    spacing: mergeDefined(base.spacing, overrides.spacing),
+    radius: mergeDefined(base.radius, overrides.radius),
     density: mergeDensity(base.density, overrides.density),
-    elevation: { ...base.elevation, ...overrides.elevation },
+    elevation: mergeDefined(base.elevation, overrides.elevation),
     motion: mergeMotion(base.motion, overrides.motion),
-    borderWidth: { ...base.borderWidth, ...overrides.borderWidth },
-    iconSize: { ...base.iconSize, ...overrides.iconSize },
-    avatarSize: { ...base.avatarSize, ...overrides.avatarSize },
+    borderWidth: mergeDefined(base.borderWidth, overrides.borderWidth),
+    iconSize: mergeDefined(base.iconSize, overrides.iconSize),
+    avatarSize: mergeDefined(base.avatarSize, overrides.avatarSize),
   };
 }
 

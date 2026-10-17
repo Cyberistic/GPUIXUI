@@ -1031,7 +1031,9 @@ application's boundary and belongs to its `Schema`.
 
 Merge rules:
 
-- groups are partial: omitted values inherit from the base;
+- groups are partial: omitted values inherit from the base; an explicit
+  `undefined` is treated as omitted, so a partial config spread cannot erase a
+  role, a metric or an elevation level;
 - colour, spacing, radius, border width, icon and avatar overrides merge key by
   key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
