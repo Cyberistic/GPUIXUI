@@ -64,7 +64,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (55/55 green); -> 2 on a host with no binding
+# -> 0 here (56/56 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -648,12 +648,39 @@ The action for `@gpuixui/components`: `dismiss-layer.ts` must use the field clai
 `event-claim.ts` already implements. The submenu's containment branch is correct
 as shipped.
 
+
+## Text entry (plan `188`)
+
+`text-entry` measures the editor **inside** a field — the contract every search
+box, inline edit, tag input and date field depends on. Caret, selection and
+deletion turn out to be the native editor's, so a component must not
+re-implement text handling:
+
+| Fact | Measured |
+| ---- | -------- |
+| typing | one `onChange` per character, each carrying the accumulated value |
+| caret | `left` twice then `x` gave `axbc`; `home`/`end` move to the line start/end |
+| selection | `shift-left` twice then `q` replaced exactly the selected run (`0axq`); `cmd-a` then `w` replaced the whole value (`w`) |
+| deletion | Backspace removes one character, and is a safe no-op on an empty field |
+| `readOnly` | keeps focus and value and fires **no** change event; without it the same keys fire two |
+| placeholder | exposed in the dump **and** painted, and it stops painting once text exists |
+| fixed width | 40 characters left the field at `158` px before and after; `width: "auto"` also fills rather than grows |
+| textarea autosize | `minRows={2}` paints `64` px, four lines `116`, six lines `168`, seven lines `168` — it grows 26 px per line to `maxRows`, then scrolls |
+
+Two limits worth stating rather than hiding. **The accessibility `value` is the
+authored prop, not the live editor**: an uncontrolled field reports no value
+after typing, so a test observes `onChange` and `getPaintedText`. And there is
+**no masked entry surface** — `InputProps` has no `type`, `secureTextEntry` or
+mask, so a typed secret is held, announced and painted in clear. A password
+field is an app-owned OS prompt, not a component; the shipped library must not
+pretend otherwise.
+
 ## Evidence on this host
 
-The suite is **55/55 green** here (`exit 0`):
+The suite is **56/56 green** here (`exit 0`):
 
 ```
-55/55 scenarios passed · capabilities: layout=verified text=verified
+56/56 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -788,7 +815,7 @@ narrower. Each deviation is deliberate and measured:
   probe, the terminal-grid probe, the chart probe, the markdown probe, the
   toast-viewport probe, the shell probe, the pinned-grid probe, the
   collapsible-height probe and the nested-layer probe pass in real
-  GPUix 0.10.0 on this host (55/55), with a written report and screenshots.
+  GPUix 0.10.0 on this host (56/56), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

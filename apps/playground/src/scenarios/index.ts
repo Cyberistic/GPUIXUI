@@ -28,6 +28,7 @@ import { searchScenario } from "./search.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { inputScenario } from "./input.js";
+import { textEntryScenario } from "./text-entry.js";
 import { focusScenario } from "./focus.js";
 import { rovingFocusScenario } from "./roving-focus.js";
 import { overlayScenario } from "./overlay.js";
@@ -115,6 +116,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   layoutScenario,
   textScenario,
   inputScenario,
+  textEntryScenario,
   focusScenario,
   rovingFocusScenario,
   overlayScenario,

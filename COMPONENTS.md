@@ -31,7 +31,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | ---------- | -------- | ------- |
 | layout | `layout-flex`, `shell-navigation`, `shell-selection` | verified |
 | text | `text-native` | verified |
-| input | `input-edit` | verified |
+| input | `input-edit`, `text-entry` | verified |
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus` | verified |
 | overlay | `overlay-dialog` | verified |
 | modal | `modal-focus-trap` | verified |
@@ -63,7 +63,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | grid | `grid-wide-table` | verified |
 | layers | `nested-layer-dismiss` | verified |
 
-The suite is **55/55 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **56/56 green here** (exit `0`, `.artifacts/smoke-report.json`).
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -463,7 +463,10 @@ Grouped by tier. The GPUix primitive each will be built on is in the row's Notes
 - **Tier 1:** Labels (association needs `aria-labelledby` — unsupported), Button
   groups, Checkboxes, Radio groups, Switches, Progress, Skeletons, Loading
   indicators, Slider, Range slider, Meter, Number Field, OTP Field, Toggle,
-  Rating.
+  Rating. **Masked / password entry is `unsupported` with evidence:** no
+  masking prop exists on `<input>` and the editor holds, announces and paints
+  the typed text in clear (`text-entry`, plan `188` §9), so a password field is
+  an app-owned OS prompt, not a component.
 - **Tier 2:** Cards, Badges, Avatars, Lists / list items, Empty states, Alerts,
   Inline validation, Toasts / notifications, Dialogs, Confirmation dialogs,
   Popovers, Dropdown menus, Context menus, Command menus, Tabs, Accordions,
@@ -506,8 +509,8 @@ carries an evidenced limitation. The capability evidence lives in
 | Buttons | wip | ours | [button](packages/primitives/docs/button.mdx) · form | **Runtime (041):** a hit-tested click activates once; Enter on key **down**, Space on key **up**, a held key ignored; `disabled` refuses both; `loading` refuses both and announces `Loading`. `@gpuix/react` publishes **no `./button`**, so the keyboard contract is this package's. Variants merged here: Floating action button and Copy button (adabraka `floating_action_button`, `copy_button`). |
 | Button groups | wip | yes | [button-group](packages/primitives/docs/button-group.mdx) · form | **Runtime (041/048):** attached children are 0px apart, separated ones the theme's `sm` gap. `role="group"` with `aria-label` from `label`; `attached` rounds and clips the group — it does not reshape each child (no `:first-child`, no child cloning). Variants merged here: Toggle Group (base-gpui `ToggleGroup`) and Segmented control (adabraka `segmented_nav`) — pressed-state variants, not separate rows. |
 | Labels | wip | partial | [label](packages/primitives/docs/label.mdx) · form | **Runtime (041):** the visible name is an a11y `Label`; the control's own `label` is the `TextInput`'s name. There is **no `aria-labelledby`**, so `labelledBy(name)` returns the control's `label` prop (045). |
-| Text inputs | wip | yes | [input](packages/primitives/docs/input.mdx) · form | **Runtime (041):** runtime keystrokes reach `onChange` with the accumulated text; Enter reaches `onSubmit`; a controlled field reports each edit. The native `<input>` holds its text; `core/state.ts` decides controlled/uncontrolled. **`disabled`** is emulated (plan 025): the host has no `disabled` prop, so the field is read-only, out of the tab order and handler-guarded; AT hears read-only. |
-| Text areas | wip | yes | [textarea](packages/primitives/docs/textarea.mdx) · form | **Runtime (041):** height follows `rows` and a newline is accepted; **no `onSubmit`** — with one the runtime turns Enter into a submit and costs the newline (046). `minRows`/`maxRows` are the runtime's own height controls. **`disabled`** is the same read-only + tab-order + handler guard as `Input` (plan 025). |
+| Text inputs | wip | yes | [input](packages/primitives/docs/input.mdx) · form | **Runtime (041):** runtime keystrokes reach `onChange` with the accumulated text; Enter reaches `onSubmit`; a controlled field reports each edit. The native `<input>` holds its text; `core/state.ts` decides controlled/uncontrolled. **`disabled`** is emulated (plan 025): the host has no `disabled` prop, so the field is read-only, out of the tab order and handler-guarded; AT hears read-only. **Editor contract (`text-entry`, plan `188`):** one `onChange` per character; Left/Right/Home/End move the caret and typing inserts at it; `shift-arrow` extends a selection and `cmd-a` selects all, and typing replaces either exactly; Backspace deletes one and is a safe no-op on an empty field; `readOnly` keeps focus and value and fires **no** change event (native-enforced); the placeholder is both exposed and painted, and stops painting once text exists; a fixed-width field **clips** a long value (`158` px before and after 40 characters — it does not grow). **No masked entry:** `InputProps` has no `type`/`secureTextEntry`/`mask`, so a typed secret is held, announced and painted in clear — do not ship a `PasswordInput` (evidence in plan `188` §9). |
+| Text areas | wip | yes | [textarea](packages/primitives/docs/textarea.mdx) · form | **Runtime (041):** height follows `rows` and a newline is accepted; **no `onSubmit`** — with one the runtime turns Enter into a submit and costs the newline (046). **Autosize is real (`text-entry`, plan `188`):** `minRows={2}` paints `64` px, four lines `116`, six lines `168`, seven lines `168` — it grows exactly 26 px per line to `maxRows` and then scrolls, so no component measurement is needed. **`disabled`** is the same read-only + tab-order + handler guard as `Input` (plan 025). |
 | Checkboxes | wip | partial | [checkbox](packages/primitives/docs/checkbox.mdx) · selection | **Runtime (041):** click and Space-up toggle, and `aria-valuetext` flips `unchecked → checked`; indeterminate reads `mixed`; AccessKit role is `CheckBox`. **No `aria-checked`.** Variant merged here: Checkbox Group (base-gpui `CheckboxGroup`). |
 | Radio groups | wip | partial | [radio-group](packages/primitives/docs/radio-group.mdx) · selection | **Runtime (041/044/048/049):** AccessKit roles are `RadioGroup` and `RadioButton`; arrows move the selection, wrap, and **skip disabled options** (044); Home/End jump to the nearest **enabled** end (048); arrows **move native focus with the selection** and the focused option paints the ring (049); the roving index is derived from the value, so a controlled change moves the tab stop (049); a click on the circle selects. Options are **data**, not compound children (D16). **Playground:** `primitives-choice` — a click selects, Down/Up move the selection and wrap. |
 | Selects | wip | reuse | [select](packages/primitives/docs/select.mdx) · form | **Runtime (041):** opens, paints its options, commits a clicked option. A thin themed wrapper over `@gpuix/react/select`; open state and dismissal are GPUix's. |

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned — no implementation until this file is indexed |
+| Status | landed (measured facts in §9) |
 | Phase | B (feasibility) → feeds C (Tag input, Inline edit, Search and replace), D (date entry) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `160` |
@@ -286,22 +286,83 @@ with no masking prop in the typed API, then:
 
 This is a documented limitation with evidence, not a decorative placeholder.
 
-## 9. Measured facts (to be filled in by the executor)
+## 9. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
 
-Scenario `text-entry`, capability `input`, **N checks**, suite `55 → 56`,
-exit `0`. Record, with the readouts that produced them:
+Scenario `text-entry`, capability `input`, **56 checks**, suite `55 → 56`,
+exit `0`.
 
-- whether the a11y `value` tracks an uncontrolled editor;
-- the caret keys that work (left/right/home/end) and one measured position;
-- whether shift-arrow selects (and the replacement result);
-- whether `cmd-a` selects all (and the replacement result);
-- Backspace/Delete behaviour at the start, middle and end of the value;
-- `readOnly`: focus retained, value unchanged, a11y value;
-- placeholder: painted while empty, absent after typing, still in a11y;
-- textarea heights at 2, 4 and 6+ rows and whether `maxRows` clamps;
-- fixed-width input width before and after 40 characters;
-- the secret field's a11y `value` and painted text;
-- each mutation's exit code and failing label.
+**The accessibility `value` is the authored prop, not the live editor.** An
+**uncontrolled** `<input>` (no `value`) reported `value: none` in the dump after
+`abc` was typed, while `onChange` reported `abc` — so the dump cannot observe an
+editor that diverges from its prop. Every value assertion here therefore reads a
+**controlled** field: its authored value is React's echo of the editor, which is
+also what `getPaintedText` shows. This is the reason the plan's first STOP
+condition fired, and the reason a component test must assert `onChange` (and
+paint) rather than the dump for live text. An **empty** field omits `value`
+entirely, so the probe reads an absent value as `""`; every non-empty reading is
+its own check.
+
+**Typing and the placeholder.** One `onChange` per character (`events=3` for
+`abc`), each carrying the accumulated value. The placeholder is both exposed
+(`placeholder: "enter name"`) and **painted**, and it stops painting as soon as
+text exists.
+
+**Caret and selection — all supported natively.** Left twice then `x` gave
+`axbc`; `home` + `0` gave `0axbc`; `end` + `9` gave `0axbc9`; `backspace`
+removed one character; `shift-left` twice + `q` replaced exactly the selected
+`bc` (`0axq`); `cmd-a` + `w` replaced the whole value (`w`). Deleting the last
+character leaves a working empty field, and a second Backspace is a safe no-op.
+So a search box, inline edit, tag input or date field can rely on the native
+editor for caret and selection instead of re-implementing text handling.
+
+**`readOnly` is enforced by the native editor, not only by a handler guard.**
+The field takes and keeps native focus, its value stays `locked`, and **no
+change event fires** (`lockedEdits=0`); removing `readOnly` fired two
+(`lockedEdits=2`). A read-only display field is honest.
+
+**There is no masked entry surface.** `InputProps` is
+`{ value, placeholder, readOnly, theme }` — no `type`, no `secureTextEntry`, no
+mask. The typed secret is held **in clear** (`s3cr3t9` in the a11y `value`) and
+**painted in clear** (`getPaintedText` contains the string; the readout reports
+only its length, so the paint can only come from the field). A password input
+cannot be built honestly on 0.10.0; masking with a controlled `value` would be
+overwritten by the next `onChange`, and hiding the field removes its tab stop and
+focus path. The alternatives are an OS-native prompt owned by the app, or not
+accepting secrets in a GPUix surface.
+
+**A fixed-width field clips.** 40 characters left the field at `158` px before
+and `158` px after; `width: "auto"` also measured `158` (it fills rather than
+grows with content), so the component owns the field's width.
+
+**Textarea autosize is real and exact.** `minRows={2}` painted `64` px; four
+lines `116`; six lines `168`; seven lines `168` (clamped at `maxRows`, then it
+scrolls). That is 26 px per line above a 12 px base — a prompt composer or
+comment box can grow between two and six rows with no measurement code of its
+own.
+
+**Harness note:** a synthetic keystroke's character ignores Shift — `shift-1`
+produced `1`, not `!`. The probe uses plain characters only; punctuation that
+needs a shifted key cannot be typed through `simulateKeystrokes`.
+
+Two-direction proofs (file restored after each run):
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | drop the two `left` keys before `x` | exit `1`, *Left moves the caret, and typing inserts at it*: got `abcx` |
+| M2 | `home` → `right` | exit `1`, *Home moves to the start*: got `axb0c` |
+| M3 | remove `readOnly` from the locked field | exit `1`, *readOnly refuses the edit, so no change is reported*: got `lockedEdits=2` |
+| M4 | `maxRows={2}` | exit `1`, *the textarea grows with its content*: got `false` |
+| M5 | size the wide field from its value length | exit `1`, *a fixed-width field clips…*: expected `158 ± 1`, got `318` |
+| M6 | remove the placeholder | exit `1`, *the empty field exposes its placeholder*: got `none` |
+| M7 | `cmd-a` → nothing (append instead of replace) | exit `1`, *select-all then typing replaces the whole value*: got `0axqw` |
+| M8 | `shift-left` → `left` | exit `1`, *a selection replaced by typing…*: got `0axqbc` |
+| M9 | make the secret field `readOnly` | exit `1`, *the editor holds the typed secret in clear*: got `""` |
+
+**Action for the library.** Use the native editor for caret/selection/delete on
+every text-bearing component; do not ship a `PasswordInput`; keep `readOnly`
+for copyable display fields; give a fixed-width field an explicit width and
+let it clip; use `minRows`/`maxRows` for autosize rather than measuring the
+textarea.
 
 ## 10. Acceptance criteria
 

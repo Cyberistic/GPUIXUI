@@ -16,15 +16,13 @@
  */
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Effect } from "effect";
-import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import * as Str from "effect/String";
 import { motion, useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Body, Readout } from "../ui.js";
-import { read, node, treeOf } from "./probes.js";
+import { read, node, readoutNumber, treeOf } from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const DURATION_MS = 200;
@@ -33,25 +31,6 @@ const READOUT = "collapse-readout";
 
 /** One decimal place, so the readout and the paint can be compared. */
 const round1 = (value: number): number => Math.round(value * 10) / 10;
-
-/** A `key=value` field of the readout. */
-const field = (ctx: Smoke.SmokeContext, key: string): Option.Option<string> =>
-  Option.flatMap(Option.fromNullishOr(ctx.host.text(READOUT)), (readout) =>
-    Option.map(
-      Arr.findFirst(Str.split(readout, " "), Str.startsWith(`${key}=`)),
-      (part) => Str.replace(`${key}=`, "")(part),
-    ),
-  );
-
-/** A numeric field, or `none` when it is absent or unparseable. */
-const numberField = (
-  ctx: Smoke.SmokeContext,
-  key: string,
-): Option.Option<number> =>
-  Option.flatMap(field(ctx, key), (value) => {
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) ? Option.some(parsed) : Option.none();
-  });
 
 /** The painted rectangle of `testId`, or a labelled failure. */
 const boundsOf = (
@@ -299,7 +278,7 @@ export const collapsibleHeightScenario: PlaygroundScenario = {
       );
       const natural = yield* ctx.expectSome(
         "the component measured the content while opening",
-        numberField(ctx, "natural"),
+        readoutNumber(ctx, READOUT, "natural"),
       );
       yield* ctx.expectNear(
         "the measurement is the painted content height",

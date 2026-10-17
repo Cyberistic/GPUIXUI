@@ -20,13 +20,12 @@ import { useCallback, useRef, useState } from "react";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import * as Str from "effect/String";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Body, Readout } from "../ui.js";
-import { read } from "./probes.js";
+import { read, readoutNumber } from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const SUBMENU_GAP = 4;
@@ -35,24 +34,6 @@ const OUTSIDE_POINT = { x: 520, y: 640 };
 
 /** A layer's dismiss handler, as `dismiss-layer.ts` defines it. */
 type Dismiss = (event: EventPayload) => void;
-
-/** The `key=value` fields a scenario reads back. */
-const field = (ctx: Smoke.SmokeContext, key: string): Option.Option<string> =>
-  Option.flatMap(Option.fromNullishOr(ctx.host.text(READOUT)), (readout) =>
-    Option.map(
-      Arr.findFirst(Str.split(readout, " "), Str.startsWith(`${key}=`)),
-      (part) => Str.replace(`${key}=`, "")(part),
-    ),
-  );
-
-const numberField = (
-  ctx: Smoke.SmokeContext,
-  key: string,
-): Option.Option<number> =>
-  Option.flatMap(field(ctx, key), (value) => {
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) ? Option.some(parsed) : Option.none();
-  });
 
 const boundsOf = (
   ctx: Smoke.SmokeContext,
@@ -578,11 +559,11 @@ export const nestedLayerScenario: PlaygroundScenario = {
       ctx.host.key("x");
       const handlers = yield* ctx.expectSome(
         "the key event was recorded",
-        numberField(ctx, "keyHandlers"),
+        readoutNumber(ctx, READOUT, "keyHandlers"),
       );
       const objects = yield* ctx.expectSome(
         "the payload copies were counted",
-        numberField(ctx, "keyObjects"),
+        readoutNumber(ctx, READOUT, "keyObjects"),
       );
       yield* ctx.expectEqual(
         "the key reached the inner and the enclosing handler",

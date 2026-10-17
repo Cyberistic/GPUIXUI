@@ -8,6 +8,7 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 import type { Smoke } from "@gpuixui/testing";
 
 /** A readout's text, or `"none"` so a failure names the absence. */
@@ -21,6 +22,34 @@ export const text = (value: Option.Option<string>): string =>
 /** The `testId` of whatever holds native focus, or `"none"`. */
 export const focusedId = (ctx: Smoke.SmokeContext): string =>
   Option.getOrElse(Option.fromNullishOr(ctx.host.focused()), () => "none");
+
+/** A `key=value` field of a readout's text, or `None` when the key is absent. */
+export const fieldOf = (readout: string, key: string): Option.Option<string> =>
+  Option.map(
+    Arr.findFirst(Str.split(readout, " "), Str.startsWith(`${key}=`)),
+    (part) => Str.replace(`${key}=`, "")(part),
+  );
+
+/** A `key=value` field of `testId`'s readout, or `None` when it is absent. */
+export const readoutField = (
+  ctx: Smoke.SmokeContext,
+  testId: string,
+  key: string,
+): Option.Option<string> =>
+  Option.flatMap(Option.fromNullishOr(ctx.host.text(testId)), (readout) =>
+    fieldOf(readout, key),
+  );
+
+/** A numeric readout field, or `None` when it is absent or unparseable. */
+export const readoutNumber = (
+  ctx: Smoke.SmokeContext,
+  testId: string,
+  key: string,
+): Option.Option<number> =>
+  Option.flatMap(readoutField(ctx, testId, key), (value) => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? Option.some(parsed) : Option.none();
+  });
 
 /** The painted accessibility tree, or a labelled assertion failure. */
 export const treeOf = (ctx: Smoke.SmokeContext) =>
