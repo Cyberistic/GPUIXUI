@@ -29,7 +29,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 
 | Capability | Scenario | Verdict |
 | ---------- | -------- | ------- |
-| layout | `layout-flex`, `shell-navigation` | verified |
+| layout | `layout-flex`, `shell-navigation`, `shell-selection` | verified |
 | text | `text-native` | verified |
 | input | `input-edit` | verified |
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus` | verified |
@@ -59,7 +59,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | terminal | `terminal-grid` | verified |
 | chart | `chart-svg` | verified |
 
-The suite is **49/49 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **50/50 green here** (exit `0`, `.artifacts/smoke-report.json`).
+One harness rule the shell probe added: every scenario mounts under a `Fragment`
+keyed by its id, because React otherwise reconciles consecutive views that share
+a component type and keeps their state — two `<App>` scenarios shared the
+sidebar's native scroll offset, so a later click landed outside the viewport
+(plan `182` §7). A full run is a fresh mount per scenario.
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -330,7 +335,7 @@ README/types document it, but no run has confirmed it here).
 | Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the runtime, and `focus-traversal` the events. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. |
 | Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land, and by the playground shell. **Runtime (055):** a control's painted height follows the active density preset, colours stay the theme's, and selection boxes remain icon-sized. |
 | Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests; `theme-type-and-shadow` proves the resolved family and size reach the renderer. **Runtime (055):** a code role's `fontFamily` changes with `platformTheme`, and switching platform repaints the mounted tree. **Playground (`theme-platform`):** the mono role paints `Menlo` (default/macOS), `DejaVu Sans Mono` (Linux) and `Consolas` (Windows) through the runtime's own style report, `sans` stays `.SystemUIFont`, and the surface colour does not move. |
-| Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`), plus the platform type-style cycle `theme-platform` (plan `170`). |
+| Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`), plus the platform type-style cycle `theme-platform` (plan `170`). **The shell path (plan `182`, `shell-selection`):** clicking `theme-mode-light` repaints the whole shell to the light background, keeps the selected scenario and leaves its view mounted. |
 
 ---
 

@@ -21,10 +21,11 @@ placement), the Tier 3/4 probes
 command surface probe (`command-palette`), the tabbed-pane probe
 (`workspace-panes`), the app-level shortcut probe
 (`window-key-shortcut`), the chart probe (`chart-svg`), the markdown probe
-(`markdown-surface`) and
-the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
-proves its sidebar scrolls — the registry is longer than the window, so an
-unreachable entry would be a scenario the app cannot open.
+(`markdown-surface`), the shell probes (`shell-navigation`, `shell-selection`),
+which mount the real `App` — the first proves the sidebar scrolls (the registry
+is longer than the window, so an unreachable entry would be a scenario the app
+cannot open), the second proves selecting an entry, the keyboard contract and
+the palette switch.
 
 ## Run it
 
@@ -60,7 +61,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (49/49 green); -> 2 on a host with no binding
+# -> 0 here (50/50 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -136,6 +137,19 @@ Two honest notes:
   entry correctly; the mapping is typecheck-only and `tsconfig.json` (which nub
   reads) stays clean. The durable fix belongs in `packages/tokens` and is
   tracked in `TODO.md`.
+
+## The shell itself (plan `182`)
+
+`shell-navigation` guards reachability; `shell-selection` guards the shell's
+behaviour. It mounts the real `App` and drives navigation and the palette with
+native input:
+
+| Fact | Measured |
+| ---- | -------- |
+| selection | clicking `nav-text-native` mounts that scenario's real view (`text-plain` = `hello gpuix`), paints the entry with `colors.accent` and the first entry with `colors.background` |
+| keyboard | Enter on key **down** switches; Space on key **up** switches; Space on the down alone does nothing. The nav uses the shipped `Button`'s `decideActivation`, not a second copy |
+| palette | `theme-mode-light` repaints `app-shell` from `#11141A` to the light `#F6F8FA`, keeps the selected scenario and leaves its view mounted |
+| isolation | the full suite mounts every scenario under a `Fragment` keyed by id: without it React kept the previous `<App>`'s Shell state and native scroll offset, and a click landed outside the viewport (found by this probe; `--only` passed, the full run did not) |
 
 ## The shipped Tier 1 components (plan `168`)
 
@@ -520,10 +534,10 @@ blocks are not addressable elements.
 
 ## Evidence on this host
 
-The suite is **49/49 green** here (`exit 0`):
+The suite is **50/50 green** here (`exit 0`):
 
 ```
-49/49 scenarios passed · capabilities: layout=verified text=verified
+50/50 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -563,7 +577,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | components | the shipped `@gpuixui/primitives` mount and behave in the runtime through the token theme: click/Enter-down/Space-up activation, a focus ring that the component merges and drops, controlled `Input` edits plus `onSubmit`, `Checkbox`/`Switch` state on `aria-valuetext`, the themed `Select` commit/dismiss, `Slider` arrow steps, `Progress`/`Meter` value text, a painted `Skeleton`, and a hover `Tooltip`. `simulateKeystrokes("space")` delivers no key up, so the harness now exposes `keyDown`/`keyUp` (plan `168`) |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
-| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
+| shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. **Selection:** clicking an entry mounts its view and paints the accent active state; Enter (down) and Space (up) switch entries; the light palette repaints the shell and keeps the selection. **Harness:** each scenario mounts under a keyed Fragment, or consecutive `<App>` scenarios share Shell state and the sidebar scroll offset |
 | chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
 | markdown | `<markdown>` paints GFM blocks as addressable text; a crossing drag copies the document; a coordinate click on a link fires `onLinkClick`; children are retained but unpainted; one named `Article` node, with no per-heading nodes |
 
@@ -585,7 +599,7 @@ src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
 src/scenarios/primitives.tsx the shipped Tier 1 components (actions, fields, display)
 src/scenarios/primitives-advanced.tsx choice and entry controls (radio, rating, number, OTP)
 src/scenarios/theme.tsx  also the platform type-style cycle (`theme-platform`)
-src/scenarios/shell.tsx  mounts the real App; guards the sidebar's scrolling
+src/scenarios/shell.tsx  mounts the real App: sidebar scroll, selection, keys, palette
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
 src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
@@ -646,9 +660,9 @@ narrower. Each deviation is deliberate and measured:
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
-  probe, the terminal-grid probe, the chart probe and the markdown probe pass
-  in real GPUix 0.10.0 on this host (49/49), with a written report and
-  screenshots.
+  probe, the terminal-grid probe, the chart probe, the markdown probe and the
+  shell probe pass in real GPUix 0.10.0 on this host (50/50), with a written
+  report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

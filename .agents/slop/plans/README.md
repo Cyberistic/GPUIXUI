@@ -131,7 +131,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–181` is used; `182+` continues
+playground shell and the feasibility probes. `100–182` is used; `183+` continues
 in the same block.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -173,6 +173,7 @@ in the same block.
 | [179](./179-terminal-feasibility.md) | Tier 4 feasibility: a terminal surface | B→D | 100, 110, 120, 140, 154, 176 | **landed**: `terminal-grid` — a click natively focuses the `div` surface (even without `tabIndex`), printable keys reach `onKeyDown`, Enter/Up/Backspace/Escape and `ctrl-c` (`modifiers.ctrl`) are delivered, 18 px rows align at equal widths in the mono family, per-run colour carries `destructive`/`success`, a 200-line scrollback starts at the tail and the sibling prompt keeps focus across jumps; **no PTY/process API** in 0.10.0; 27 checks, suite `46 → 47` (§8) |
 | [180](./180-chart-feasibility.md) | Tier 3 feasibility: a chart surface | B→D | 100, 110, 120, 140, 160, 161 | **landed**: `chart-svg` — bars from `div`s keep exact geometry, token colour and hit-testing; a sourced `<svg>` is an **alpha mask tinted by one `color`** (one layer per series), SVG-internal text is painted but absent from `getPaintedText`/a11y, `<svg>` children are retained and unpainted; an `<img>` SVG data URL is the **full-colour** path (linear + radial gradient and two fills); 52 checks, suite `47 → 48` (§8) |
 | [181](./181-markdown-feasibility.md) | Tier 5 feasibility: a markdown surface | B→D | 100, 110, 120, 140, 160, 163 | **landed**: `markdown-surface` — GFM blocks (heading, list, table, fenced code with highlighting) paint as addressable text, a crossing drag copies the document, a coordinate click fires `onLinkClick` with the URL, React children are retained but unpainted, and `role="article"` is one named AccessKit region; 21 checks, suite `48 → 49` (§8) |
+| [182](./182-shell-selection.md) | The playground shell selects, repaints and answers keys | B | 120, 140, 150, 151, 170 | **landed**: `shell-selection` — selecting an entry mounts that scenario's real view and paints its active state; Enter (down) and Space (up) switch entries through the shipped `decideActivation`; the palette switch repaints the shell and keeps the selection. Exposed and fixed a **harness state leak**: consecutive `<App>` scenarios shared Shell state and the sidebar scroll offset, so every scenario now mounts under a `Fragment` keyed by id; 17 checks, suite `49 → 50` (§7) |
 
 Cross-cutting records:
 

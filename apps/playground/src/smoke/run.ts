@@ -27,7 +27,7 @@ import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
-import { createElement, type ReactNode } from "react";
+import { createElement, Fragment, type ReactNode } from "react";
 import type { PlaygroundScenario } from "../types.js";
 import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
@@ -197,10 +197,19 @@ const mount =
         onNone: () => {},
         onSome: (view) =>
           root.render(
+            // The key makes every scenario a **fresh mount**. Without it React
+            // reconciles the next view against the previous one; two scenarios
+            // that both render `<App>` keep its state (and the native scroll
+            // offset of the sidebar), so a later scenario starts where the
+            // earlier one stopped and a click lands outside the viewport.
             createElement(
-              ThemeProvider,
-              { theme: palettes.dark },
-              withWindowKeyProvider(registerWindowKey, view()),
+              Fragment,
+              { key: scenario.id },
+              createElement(
+                ThemeProvider,
+                { theme: palettes.dark },
+                withWindowKeyProvider(registerWindowKey, view()),
+              ),
             ),
           ),
       }),

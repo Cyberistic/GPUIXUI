@@ -18,11 +18,23 @@ import { useState } from "react";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { EventPayload } from "@gpuix/native";
+import { decideActivation, type KeyPhase } from "@gpuixui/primitives";
 import { textStyle } from "@gpuixui/tokens";
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { paletteIds, palettes, type PaletteId } from "./palettes.js";
 import type { PlaygroundScenario } from "./types.js";
 import { Body, Readout } from "./ui.js";
+
+/**
+ * A button-like surface's keyboard contract, shared with the shipped `Button`:
+ * Enter activates on key down, Space on key up, a repeat never activates.
+ */
+const activate =
+  (phase: KeyPhase, run: () => void) =>
+  (event: EventPayload): void => {
+    if (decideActivation(event.key ?? "", phase, event.isHeld === true)) run();
+  };
 
 const PaletteSwitch = ({
   active,
@@ -50,6 +62,8 @@ const PaletteSwitch = ({
             tabIndex={0}
             role="button"
             onClick={() => onSelect(palette)}
+            onKeyDown={activate("down", () => onSelect(palette))}
+            onKeyUp={activate("up", () => onSelect(palette))}
             style={{
               padding: theme.spacing.xs,
               borderRadius: theme.radius.sm,
@@ -97,6 +111,7 @@ const Shell = ({
 
   return (
     <div
+      testId="app-shell"
       style={{
         display: "flex",
         width: "100%",
@@ -137,43 +152,48 @@ const Shell = ({
             overflowY: "scroll",
           }}
         >
-          {Arr.map(list, (scenario) => (
-            <div
-              key={scenario.id}
-              testId={`nav-${scenario.id}`}
-              tabIndex={0}
-              role="button"
-              onClick={() => setSelected(scenario.id)}
-              style={{
-                padding: theme.spacing.md,
-                borderRadius: theme.radius.md,
-                cursor: "pointer",
-                flexShrink: 0,
-                backgroundColor:
-                  selected === scenario.id
-                    ? theme.colors.accent
-                    : theme.colors.background,
-                hover: { backgroundColor: theme.colors.muted },
-              }}
-            >
-              <text
+          {Arr.map(list, (scenario) => {
+            const select = () => setSelected(scenario.id);
+            return (
+              <div
+                key={scenario.id}
+                testId={`nav-${scenario.id}`}
+                tabIndex={0}
+                role="button"
+                onClick={select}
+                onKeyDown={activate("down", select)}
+                onKeyUp={activate("up", select)}
                 style={{
-                  ...textStyle(theme, "label"),
-                  color: theme.colors.foreground,
+                  padding: theme.spacing.md,
+                  borderRadius: theme.radius.md,
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  backgroundColor:
+                    selected === scenario.id
+                      ? theme.colors.accent
+                      : theme.colors.background,
+                  hover: { backgroundColor: theme.colors.muted },
                 }}
               >
-                {scenario.title}
-              </text>
-              <text
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.mutedForeground,
-                }}
-              >
-                {scenario.capability}
-              </text>
-            </div>
-          ))}
+                <text
+                  style={{
+                    ...textStyle(theme, "label"),
+                    color: theme.colors.foreground,
+                  }}
+                >
+                  {scenario.title}
+                </text>
+                <text
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    color: theme.colors.mutedForeground,
+                  }}
+                >
+                  {scenario.capability}
+                </text>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -186,6 +206,7 @@ const Shell = ({
         }}
       >
         <div
+          testId="stage-title"
           style={{
             padding: theme.spacing.lg,
             borderBottomWidth: theme.borderWidth.thin,

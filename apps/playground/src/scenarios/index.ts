@@ -43,7 +43,7 @@ import { workspaceRestoreScenario } from "./workspace-restore.js";
 import { shortcutScenario } from "./shortcuts.js";
 import { commandPaletteScenario } from "./command-palette.js";
 import { workspacePanesScenario } from "./workspace-panes.js";
-import { shellNavigationScenario } from "./shell.js";
+import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
@@ -141,6 +141,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   scrollIntoViewScenario,
   textSelectionScenario,
   shellNavigationScenario,
+  shellSelectionScenario,
   virtualizedTableScenario,
   treeScenario,
   logViewerScenario,
