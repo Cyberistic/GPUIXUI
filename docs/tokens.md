@@ -485,10 +485,12 @@ does. Naming `"default"` on a high-contrast base applies the platform colours, s
 the returned theme declares `default` — the AAA palette is no longer there.
 Naming `"high"` on a default base applies only families and shape, so the theme
 stays `default`; a style with no colour overrides keeps the base's level because
-it changes no colour. A style overrides only the roles it names, so a mixed
-palette can still miss a default-floor pair — for example the AAA `border` it
-does not override on an inherited soft tint — and `themeContrastFailures` reports
-it rather than rewriting the consumer's palette (plan `301`).
+it changes no colour. A colour key set to `undefined` is not an override either:
+the role inherits and the declaration stays with the base (plan `323`). A style
+overrides only the roles it names, so a mixed palette can still miss a
+default-floor pair — for example the AAA `border` it does not override on an
+inherited soft tint — and `themeContrastFailures` reports it rather than
+rewriting the consumer's palette (plan `301`).
 
 ### Authoring a platform style
 

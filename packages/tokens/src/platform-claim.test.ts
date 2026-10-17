@@ -4,6 +4,10 @@
  * `contrast: "high"` declaration, so the theme claimed floors it could not meet
  * and the library's own checker reported 46 failures for a call made on purpose.
  * The returned declaration now follows the palette the theme actually carries.
+ *
+ * Plan 323 closes the same claim one input shape over: a colour key set to
+ * `undefined` is not a colour override, so it must not downgrade an AAA theme's
+ * declaration while the palette still inherits the AAA roles.
  */
 import { describe, expect, it } from "vitest";
 import { themeContrastFailures } from "./contrast.js";
@@ -67,5 +71,38 @@ describe("applied platform style contrast", () => {
 
     expect(themed.contrast).toBe("high");
     expect(themed.colors).toEqual(highContrastLightTheme.colors);
+  });
+
+  it("does not count an undefined colour as an override", () => {
+    const style: PlatformStyle = {
+      ...platformStyles.default,
+      types: { ...platformStyles.default.types, label: "Undefined colour" },
+      colors: { light: { primary: undefined }, dark: {} },
+    };
+
+    const themed = applyPlatformStyle(highContrastLightTheme, style, "default");
+
+    expect(themed.contrast).toBe("high");
+    expect(themed.colors).toEqual(highContrastLightTheme.colors);
+    expect(themeContrastFailures(themed)).toEqual([]);
+  });
+
+  it("declares default when one colour beside an undefined one applies", () => {
+    const style: PlatformStyle = {
+      ...platformStyles.default,
+      types: { ...platformStyles.default.types, label: "One colour" },
+      colors: {
+        light: {
+          primary: undefined,
+          background: "#FAFAFA",
+        },
+        dark: {},
+      },
+    };
+
+    const themed = applyPlatformStyle(highContrastLightTheme, style, "default");
+
+    expect(themed.contrast).toBe("default");
+    expect(themed.colors.background).toBe("#FAFAFA");
   });
 });

@@ -431,7 +431,9 @@ Runnable examples live in
 The applied theme declares the level of the palette it carries (plan 301):
 `applyPlatformStyle(highBase, style)` keeps the AAA palette and the `high` claim,
 while naming `"default"` applies the platform colours and returns a `default`
-theme, and a style with no colour overrides keeps the base's level.
+theme, and a style with no colour overrides keeps the base's level. A colour key
+set to `undefined` is not an override: the role inherits and the level stays with
+the base (plan 323).
 
 ## Custom typefaces
 

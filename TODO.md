@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 90/119
+`[x]` `[████████░░]` 91/120
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -176,6 +176,10 @@ hovers — `skeletonSurfaces` covered `hover`/`active`/`selected` but not `accen
 so an edited theme could erase a placeholder row while the checker returned `[]`;
 every shipped set passes, so no colour moves and the contract grows 261 → 262
 (plan 322)
+`[x]` Make an `undefined` platform colour not count as an override —
+`applyPlatformStyle(highBase, style, "default")` keyed its contrast declaration
+off `Object.keys`, so an all-undefined colour object inherited the AAA palette
+but declared `default`; the predicate reads defined values now (plan 323)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

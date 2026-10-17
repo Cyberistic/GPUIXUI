@@ -445,12 +445,16 @@ const platformOverrides = (
     return structural;
   }
   const colors = style.colors[base.mode];
+  const appliesColors = Object.values(colors).some(
+    (color) => color !== undefined,
+  );
   return {
     ...structural,
     colors,
-    contrast: Object.keys(colors).length === 0 ? base.contrast : "default",
-    // The declaration follows the palette: platform colours are designed at the
-    // default floors, while a shape-only style leaves the base's palette alone.
+    contrast: appliesColors ? "default" : base.contrast,
+    // The declaration follows the palette: a defined platform colour is an
+    // override designed at the default floors, while an undefined one inherits
+    // the base role and leaves the base's level alone.
     elevation: style.elevation[base.mode],
   };
 };
