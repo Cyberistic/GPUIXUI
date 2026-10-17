@@ -400,6 +400,18 @@ describe("CheckboxGroup", () => {
         Option.isNone,
       ),
     ).toBe(true);
+    // With nothing left to select, the parent is disabled even though the group
+    // itself is not: "select all" of an empty enabled set is not an action.
+    const allDisabled = render(
+      {
+        options: [{ value: "email", label: "Email", disabled: true }],
+        selectAll: "All channels",
+      },
+      [],
+    );
+    expect(hostProp(row(allDisabled, 0), "tabIndex")).toStrictEqual(
+      Option.none(),
+    );
   });
 
   it("paints every empty box destructive under invalid, and a selected one on its accent", () => {
