@@ -72,7 +72,9 @@ the `@gpuixui/tokens/react` provider
     - [x] Package scaffold (package.json, tsconfig, vitest config, README)
     - [x] `internal/collection.ts` (index arithmetic), `internal/key.ts` (key predicates)
     - [x] `internal/theme.ts` adapter over the landed token API (plan 110 §6) — the tokens workstream is merged into this branch
-    - [ ] Native test harness (`internal/test-root.tsx`, `runtime.test.tsx`) — needs a supported host, see Blockers
+    - [x] `runtime.test.tsx` — the renderer guard (plan 117 §5b): a lifted dynamic import decides `available` / `unsupported-host` / `missing`, and fails on a supported host. Proven to fail by adding this host to `supportedHosts`.
+    - [ ] `internal/test-root.tsx` (`renderComponent`) — needs a supported host, see Blockers
+    - [ ] Behaviour suites under a second config (`src/behaviour/`, `test:behaviour`): a static GPUix import fails to *load* on an unsupported host, so `describe.skipIf` cannot gate them (plan 117 §5a/§5c)
   - [ ] Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List
     - [x] `internal/collection.ts` (List single-selection core, shared with Tabs/menus)
     - [ ] Card, Badge, Avatar, Alert, EmptyState, List

@@ -117,33 +117,79 @@ environment" AGENTS.md §4 allows.
 | macOS arm64 | available | behaviour suites run |
 | Linux x64 (glibc) | available | behaviour suites run |
 | Windows x64 | available | behaviour suites run |
-| **macOS x64 (this machine)** | **unavailable** | behaviour suites skip with a recorded reason; logic suites run |
+| **macOS x64 (this machine)** | **unavailable** | logic suites and the renderer guard run; behaviour suites are not collected |
 
 GPUix ships no `darwin-x64` native binary and its WASM build exports no test
 renderer. Evidence and the alternatives are in `TODO.md` → Blockers. This is an
 environment limitation, not a library limitation: the code under test is the
 same, and the suites are runnable unchanged on a supported host.
 
-### 5b. The one rule that survives the limitation
+**Corrected 2026-10-17, measured.** The binding is resolved *eagerly*:
+`@gpuix/native/index.js` requires `./gpuix-native.darwin-x64.node`, then the
+optional package, then the WASI build, and throws `Cannot find native binding`
+with that chain. So on this host a **static** `import "@gpuix/react/testing"`
+(section 1 of this plan, and the first version of `runtime.test.tsx`) does not
+produce a skipped test — it makes the whole *file* fail to load:
 
-Never let a missing renderer look like a passing test. `src/runtime.test.tsx`
-always runs and asserts the environment is one of the states above:
-
-```tsx
-const state = hasNativeTestRenderer
-  ? "available"
-  : process.platform === "darwin" && process.arch === "x64"
-    ? "unsupported-host"
-    : "missing";
-
-it("knows why the native renderer is or is not available", () => {
-  expect(state).not.toBe("missing"); // missing on a supported host is a failure
-});
+```
+FAIL src/runtime.test.tsx [ src/runtime.test.tsx ]
+Error: Cannot find native binding. …
+  ❯ @gpuix/native/index.js:706:19
+  ❯ src/runtime.test.tsx:16:1        ← the import statement
 ```
 
-Behaviour suites then use `describe.skipIf(state !== "available")` **and** state
-the reason in the file header and the test title suffix. A skipped suite is
-visible in the output; it is never silent.
+Two consequences, both now part of this plan:
+
+1. `describe.skipIf(state !== "available")` **cannot** protect a behaviour
+   suite. Any test file that statically imports a component (and so
+   `@gpuix/react`) fails to load on an unsupported host, and a failing file is
+   not a visible skip.
+2. The state therefore has to be established through a **lifted dynamic import**
+   that catches the load failure, and behaviour suites have to keep their GPUix
+   imports out of the default collection path.
+
+### 5b. The guard — the one place that decides
+
+`src/runtime.test.tsx` loads the testing entry with
+`Effect.tryPromise(() => import("@gpuix/react/testing"))` and maps the outcome to
+`available` / `unsupported-host` / `missing`. The load failure is modelled as a
+`Schema.TaggedError` (`NativeRendererUnavailable`), never swallowed, so the
+guard also proves the failure is the *missing binding* and not something else.
+
+```tsx
+const loadTesting = Effect.tryPromise({
+  try: () => import("@gpuix/react/testing"),
+  catch: (cause) => new NativeRendererUnavailable({ host, reason: String(cause) }),
+});
+
+// A supported host that cannot load the renderer is a failure, never a skip.
+expect(state === "available" || !supportedHosts.includes(host)).toBe(true);
+expect(state).not.toBe("missing");
+```
+
+`supportedHosts` is the list `@gpuix/native`'s `optionalDependencies` publishes
+for: `darwin-arm64`, `linux-x64`, `win32-x64`. Flipping this host into that list
+is how the test is proven to fail: it reports `expected false to be true` at that
+line. That is the two-directions check for this file, and it is reproducible here
+— unlike a run that needs the renderer.
+
+### 5c. Where behaviour suites live
+
+They go in `src/behaviour/*.test.tsx`, **excluded** by the package's default
+`vitest.config.ts` and included by a second config (`vitest.behaviour.config.ts`)
+that is run on a supported host:
+
+```
+nub run --filter @gpuixui/components test              # logic + guard: every host
+nub run --filter @gpuixui/components test:behaviour    # behaviour: supported host only
+```
+
+This is the honest form of "a skipped suite is visible, never silent": on an
+unsupported host the behaviour suites are *not collected* rather than reported as
+passing, and §5b's guard fails loudly if a supported host ever loses its
+renderer. A `describe.skipIf` may still be used *inside* the behaviour config for
+a capability the renderer lacks (plan 110 §12 STOP 3), and then it names the
+capability in the test title.
 
 ### 5c. Visual check (when the renderer is available)
 
