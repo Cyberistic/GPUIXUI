@@ -32,7 +32,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | layout | `layout-flex`, `shell-navigation`, `shell-selection` | verified |
 | text | `text-native` | verified |
 | input | `input-edit`, `text-entry` | verified |
-| focus | `focus-traversal`, `roving-focus`, `tab-strip-focus` | verified |
+| focus | `focus-traversal`, `roving-focus`, `tab-strip-focus`, `live-focus` | verified |
 | overlay | `overlay-dialog` | verified |
 | modal | `modal-focus-trap` | verified |
 | floating | `floating-placement` | verified |
@@ -67,17 +67,22 @@ The suite is **56/56 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`): `layout`, `input`,
-`overlay`, `scroll`, `panel`, `docking`, `components` and `table` are confirmed
-there too — the shell fills the window and navigates by click and Enter, typing
-reaches `onChange`/`onSubmit` in a live editor, a modal opens centred and Escape
-closes it, a wheel moves a live container with its `onScroll` delta, a paced
-divider drag resizes a live split (`320 → 400`), a paced tab drag onto a pane
-edge splits it (`panel-1=notes@notes`), a virtual row is hit-testable and its
-list scrolls while keeping the selection, and the **shipped**
-`Button`/`Toggle` run (`live-primitives`). Colour, accessibility,
-virtual-list anchors, highlights and focus traversal stay `TestRenderer`-only:
-the automation protocol does not expose them, and a synthetic `tab` does not
-traverse in a live window either.
+`overlay`, `scroll`, `panel`, `focus`, `docking`, `components` and `table` are
+confirmed there too — the shell fills the window and navigates by click and
+Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
+centred and Escape closes it, a wheel moves a live container with its
+`onScroll` delta, a paced divider drag resizes a live split (`320 → 400`), a
+paced tab drag onto a pane edge splits it (`panel-1=notes@notes`), a virtual
+row is hit-testable and its list scrolls while keeping the selection, and the
+**shipped** `Button`/`Toggle` run (`live-primitives`). **`live-focus` (plan
+`190`)** proves focus in the window: it enters the modal, Tab walks
+`a → b → open-popover → close` and wraps back to the content, Shift-Tab is the
+reverse, Escape returns focus to the trigger, and a nested popover's Escape
+closes only the popover and returns focus to its opener. The live host reads
+`getFocusedElementId` from the renderer it created (the automation protocol
+itself has no focus query) and maps the id through the automation tree.
+Colour, accessibility, virtual-list anchors and highlights stay
+`TestRenderer`-only: the automation protocol does not expose them.
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -592,7 +597,7 @@ in-package and an end-to-end native verdict.
 | Alerts | todo | ? | `div` + `<text>` + Icons. |
 | Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |
 | Toasts / notifications | todo | partial (probe) | The toast system is ours. **`createPortal` is not exported by `@gpuix/react` 0.10.0** — the path is an absolutely positioned viewport that is the app root's **last child** (paint order is the only stacking model). **Measured (`toast-lifecycle`, plan `183`):** `position: "absolute"` + `right`/`bottom` is exact (24 px insets) and the bottom-anchored stack grows upward; the viewport's `pointerEvents: "none"` is load-bearing (a page control under its transparent strip takes the click; `auto` blocks it) while a **painted** card is hit without `pointerEvents: "auto"`; a card over a page control keeps the click (`behind=0`); `role="status"` + `aria-label` is an AccessKit `Status`, and the dismiss control is a `Button`; a toast does not steal focus and its dismiss is one Tab away; a per-toast JS timer is real time (the dispatcher clock does not move it) and its frozen exit needs a dispatched frame before the motion clock can advance it. Removal must be asserted with `bounds` — `getPaintedText()` can retain the removed card's text for that frame. There is **no live-region/announcement field** in the dump. `motion-collapse` measured the exit contract: a leaving child stays mounted until the native exit target settles (`onExitComplete`), and `onMotionComplete` needs `dispatchNativeEvents`. The shipped `ToastProvider`/`ToastViewport` is not on the integration branch yet; this row stays `todo` until it mounts here. |
-| Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. Focus entry, the Tab trap and focus return are measured natively by `modal-focus-trap` (playground plan `155`). |
+| Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. Focus entry, the Tab trap and focus return are measured natively by `modal-focus-trap` (playground plan `155`) and again in a real window by `live-focus` (plan `190`). |
 | Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
 | Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. Focus in/out and “Escape closes only the popover” are measured natively (`modal-focus-trap`). Placement (`floating-placement`): `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is short by half the panel size** and `fit="snap"` clamps without flipping, so a near-bottom popover must choose `side="top"` itself. |
 | Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). **Menus open with `align="center"` must compensate for the half-panel offset, and a near-bottom menu must pick `side="top"`** — `fit="snap"` does not flip (`floating-placement`). **Nested layers (`nested-layer-dismiss`, plan `187`):** one key event reaches a submenu and its menu as **separate payload objects**, so a dismiss stack keyed on `EventPayload` identity closes **both** on one Escape; key the stack on the event's fields (the `event-claim.ts` model) and one Escape closes one layer. A press inside the submenu fires the parent's `onMouseDownOutside` with `x`/`y`, so containment by `getElementBounds` is required and sufficient. |
@@ -655,7 +660,7 @@ in-package and an end-to-end native verdict.
 | Nested panel arrangements | todo | partial (probe) | Composition. A vertical outer split holding a horizontal inner split is measured end to end: both axes resize, the nested drag leaves `outer = 228`, and the top pane's painted height/width track the readouts (`panel-nested`). |
 | Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. **Composition (`workspace-panes`)**: a hidden pane keeps its own state and anchor; a resized pane re-windows its list (`5 → 2` painted rows at `240 → 180`) and keeps the anchor; a nested scroller needs the `pointerEvents: "auto"` wheel guard. |
 | Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. **Recursive layouts (`docking-layout`)**: the tree owns every split size; `encodeDock`/`decodeDock` are the JSON boundary (`Schema.fromJsonString`), and a restore is a **keyed remount** so each `SplitPane` re-reads `initial` — the live instance's state is not mutated. A corrupt snapshot decodes to `None` and is reported, never thrown. |
-| Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. |
+| Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. **`live-focus` (plan `190`)** proves the modal's Tab/Shift-Tab containment and focus return in a real window, not only in `TestRenderer`. |
 | Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. |
 | Application menus | todo | unsupported (in-window only) | **The published 0.10.0 has no menu/tray API**: `@gpuix/native`'s `NativeRenderer` exposes only window controls (`setWindowTitle`, `activateWindow`, `minimizeWindow`, `zoomWindow`, `toggleFullscreen`), and no `menu`/`Menu`/`tray` symbol exists in the native or React types. An application menu must therefore be an **in-window** surface opened by a window key — the path `command-palette` measures end to end (`cmd-k`, Escape delivery, focus return). A true macOS menu bar would need a renderer API that is not in this version. |
 | Status bars | todo | ? | `div` + `<text>`. |

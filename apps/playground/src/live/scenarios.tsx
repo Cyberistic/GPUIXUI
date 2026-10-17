@@ -17,7 +17,7 @@ import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { inputScenario } from "../scenarios/input.js";
-import { modalScenario } from "../scenarios/modal.js";
+import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { primitivesActionsScenario } from "../scenarios/primitives.js";
 import { scrollScenario } from "../scenarios/scroll.js";
@@ -77,6 +77,25 @@ const offsetOf = (ctx: LiveContext, testId: string) =>
       Option.fromNullishOr(offset),
     );
   });
+
+/** The focused `testId`, or `"none"` when nothing has focus. */
+const focusedOf = (ctx: LiveContext) =>
+  Effect.map(ctx.host.focused(), (id) =>
+    Option.getOrElse(Option.fromNullishOr(id), () => "none"),
+  );
+
+/** Presses `key` `times` times, returning the focused id after each press. */
+const walkFocus = (ctx: LiveContext, key: string, times: number) =>
+  Effect.forEach(
+    Arr.range(1, times),
+    () =>
+      Effect.gen(function* () {
+        yield* ctx.host.key(key);
+        yield* settle;
+        return yield* ctx.host.focused();
+      }),
+    { concurrency: 1 },
+  );
 
 const shell: LiveScenario = {
   id: "live-shell",
@@ -292,6 +311,122 @@ const overlay: LiveScenario = {
     }),
 };
 
+const focus: LiveScenario = {
+  id: "live-focus",
+  title: "Live focus: entry, the modal Tab trap and focus return",
+  capability: "focus",
+  view: modalScenario.view,
+  ready: "modal-trigger",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("modal-trigger");
+      yield* ctx.host.waitFor("modal-content");
+      yield* settle;
+      const opened = yield* textOf(ctx, "modal-readout");
+      yield* ctx.expectContains(
+        "the trigger opened the modal",
+        opened,
+        "open=true",
+      );
+      yield* ctx.expectEqual(
+        "focus entered the modal",
+        yield* focusedOf(ctx),
+        "modal-content",
+      );
+
+      const tabbed = yield* walkFocus(ctx, "tab", 4);
+      const tabIds = Arr.getSomes(Arr.map(tabbed, Option.fromNullishOr));
+      yield* ctx.expectEqual(
+        `Tab moved focus [${Arr.join(tabIds, ",")}]`,
+        Arr.length(Arr.dedupe(tabIds)) > 1,
+        true,
+      );
+      yield* ctx.expectEqual(
+        `Tab stayed inside the modal [${Arr.join(tabIds, ",")}]`,
+        Arr.every(tabIds, (id) => Arr.contains(MODAL_FOCUS_IDS, id)),
+        true,
+      );
+      yield* ctx.host.key("tab");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Tab wrapped back to the content",
+        yield* focusedOf(ctx),
+        "modal-content",
+      );
+
+      const shifted = yield* walkFocus(ctx, "shift-tab", 4);
+      const shiftIds = Arr.getSomes(Arr.map(shifted, Option.fromNullishOr));
+      yield* ctx.expectEqual(
+        `Shift-Tab moved focus [${Arr.join(shiftIds, ",")}]`,
+        Arr.length(Arr.dedupe(shiftIds)) > 1,
+        true,
+      );
+      yield* ctx.expectEqual(
+        `Shift-Tab stayed inside the modal [${Arr.join(shiftIds, ",")}]`,
+        Arr.every(shiftIds, (id) => Arr.contains(MODAL_FOCUS_IDS, id)),
+        true,
+      );
+      yield* ctx.host.key("shift-tab");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Shift-Tab wrapped back to the content",
+        yield* focusedOf(ctx),
+        "modal-content",
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      const dismissed = yield* textOf(ctx, "modal-readout");
+      yield* ctx.expectContains(
+        "Escape closed the modal",
+        dismissed,
+        "open=false popover=false last=escape",
+      );
+      yield* ctx.expectEqual(
+        "focus returned to the trigger",
+        yield* focusedOf(ctx),
+        "modal-trigger",
+      );
+
+      yield* ctx.host.click("modal-trigger");
+      yield* ctx.host.waitFor("modal-content");
+      yield* settle;
+      yield* ctx.host.click("modal-open-popover");
+      yield* ctx.host.waitFor("nested-content");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "focus entered the nested popover",
+        yield* focusedOf(ctx),
+        "nested-content",
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      const nested = yield* textOf(ctx, "modal-readout");
+      yield* ctx.expectContains(
+        "Escape closed only the popover",
+        nested,
+        "open=true popover=false last=popover-escape",
+      );
+      yield* ctx.expectEqual(
+        "focus returned from the popover",
+        yield* focusedOf(ctx),
+        "modal-open-popover",
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      const closed = yield* textOf(ctx, "modal-readout");
+      yield* ctx.expectContains(
+        "the second Escape closed the modal",
+        closed,
+        "open=false",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${focus.id}.png`);
+    }),
+};
+
 const docking: LiveScenario = {
   id: "live-docking",
   title: "Live docking: a tab drag splits a pane in a real window",
@@ -439,6 +574,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   scroll,
   panel,
   overlay,
+  focus,
   docking,
   primitives,
   table,

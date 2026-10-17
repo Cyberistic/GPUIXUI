@@ -425,8 +425,9 @@ export class SmokeHostError extends Schema.TaggedError<SmokeHostError>()(
  * Deliberately smaller than {@link SmokeHost}: the automation protocol exposes
  * bounds, the tree, painted text, scroll offsets, input, the clock and
  * screenshots — and no style report, no accessibility dump, no list anchor and
- * no focus query. A live scenario only asserts what this interface can observe;
- * the rest stays with the `TestRenderer` suite.
+ * no focus **query**. `focused` is still answerable because the live runner owns
+ * the renderer it created: `getFocusedElementId` is a renderer method, and the
+ * host maps the id back to a `testId` through the automation tree (plan `190`).
  */
 export interface AsyncSmokeHost {
   readonly text: (
@@ -439,6 +440,8 @@ export interface AsyncSmokeHost {
   readonly bounds: (
     testId: string,
   ) => Effect.Effect<Bounds | null, SmokeHostError>;
+  /** The `testId` of the natively focused element, or `null` when none has focus. */
+  readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
   readonly hover: (testId: string) => Effect.Effect<void, SmokeHostError>;
   /** Waits until `testId` exists — a mount or a re-render can lag the input. */

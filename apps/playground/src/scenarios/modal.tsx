@@ -29,7 +29,7 @@ import { Body, Pressable, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
 
 /** Every element the modal surface owns; nothing else may hold focus. */
-const MODAL_IDS: ReadonlyArray<string> = [
+export const MODAL_FOCUS_IDS: ReadonlyArray<string> = [
   "modal-content",
   "modal-a",
   "modal-b",
@@ -38,7 +38,7 @@ const MODAL_IDS: ReadonlyArray<string> = [
 ];
 
 const focusWithinModal = (testId: string): boolean =>
-  Arr.contains(MODAL_IDS, testId);
+  Arr.contains(MODAL_FOCUS_IDS, testId);
 
 const ModalProbe = () => {
   const theme = useTheme();

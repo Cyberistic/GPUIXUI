@@ -128,7 +128,7 @@ export const program: Effect.Effect<
       ),
     catch: (cause) => new NoWindowError({ stage: "open", cause }),
   });
-  const host = createHost(app);
+  const host = createHost(app, renderer);
 
   yield* fileSystem.makeDirectory(LIVE_ARTIFACTS, { recursive: true });
   const startedAt = yield* Clock.currentTimeMillis;

@@ -301,12 +301,16 @@ proves also holds when the surface is a real window layer.
 The platform's own Tab handling is not part of the synthetic key path, which is
 the same result the `TestRenderer` recorded (`focusNext` does traverse, a
 synthetic `"tab"` does not). Consequence: focus movement is component code
-(`renderer.focusElement` / `focusNextWithin`), and a live run cannot observe
-Tab traversal because the automation protocol has neither a focus query nor a
-`focusNext` call. The `focus` verdict stays with the headless suite.
+(`renderer.focusElement` / `focusNextWithin`). **Superseded by plan `190`:** the
+live runner owns the renderer, so `getFocusedElementId` *is* readable and the
+modal's own `onKeyDown` does the traversal — `live-focus` now proves focus entry,
+the Tab/Shift-Tab trap and focus return in a real window. What remains impossible
+to observe live is a focus query over the automation protocol alone; the harness
+does not have to use only the protocol.
 
 **What stays `TestRenderer`-only:** `paintedStyle`, the AccessKit dump,
-`getListScrollTop`, `scrollIntoView`/`scrollToItem`, `getPaintedHighlights`
-and focus traversal. The automation tree carries `id`, `type`, `testId`,
+`getListScrollTop`, `scrollIntoView`/`scrollToItem` and
+`getPaintedHighlights`. The automation tree carries `id`, `type`, `testId`,
 `text`, `bounds` and `children` — no style — and the protocol has no call for
 the rest. Every such verdict in `COMPONENTS.md` still cites the headless suite.
+Focus is no longer in that list (plan `190`).

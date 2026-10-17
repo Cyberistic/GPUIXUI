@@ -13,8 +13,11 @@
  */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
+import type { GpuixRenderer } from "@gpuix/native";
 import type { App, Locator } from "@gpuix/native/automation";
 import { Smoke } from "@gpuixui/testing";
+import { testIdOf } from "./focus.js";
 
 /** How long a live scenario waits for an element a click should have mounted. */
 const WAIT_FOR_MS = 5_000;
@@ -52,13 +55,35 @@ const idOf = (app: App, testId: string): Promise<number> =>
 const at = (app: App, testId: string): Locator => app.getByTestId(testId);
 
 /** A `Smoke.AsyncSmokeHost` over a connected automation `App`. */
-export const createHost = (app: App): Smoke.AsyncSmokeHost => ({
+export const createHost = (
+  app: App,
+  renderer: Pick<GpuixRenderer, "getFocusedElementId">,
+): Smoke.AsyncSmokeHost => ({
   text: (testId) => verb(`text ${testId}`, () => at(app, testId).textContent()),
   paintedText: () =>
     verb("paintedText", () =>
       app.call("getPaintedText", {}).then((result) => result.text),
     ),
   bounds: (testId) => verb(`bounds ${testId}`, () => at(app, testId).bounds()),
+  focused: () =>
+    Effect.gen(function* () {
+      const id = yield* Effect.try({
+        try: () => renderer.getFocusedElementId(),
+        catch: (cause) => new Smoke.SmokeHostError({ verb: "focused", cause }),
+      });
+      return yield* Option.match(Option.fromNullishOr(id), {
+        onNone: () => Effect.succeed(null),
+        onSome: (elementId) =>
+          Effect.map(
+            verb(`focused tree ${elementId}`, () =>
+              app
+                .call("getTree", {})
+                .then((result) => testIdOf(result.tree, elementId)),
+            ),
+            Option.getOrNull,
+          ),
+      });
+    }),
   click: (testId) => verb(`click ${testId}`, () => at(app, testId).click()),
   hover: (testId) => verb(`hover ${testId}`, () => at(app, testId).hover()),
   waitFor: (testId) =>

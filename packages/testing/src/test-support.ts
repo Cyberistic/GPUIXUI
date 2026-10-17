@@ -62,6 +62,7 @@ export const nullAsyncHost: AsyncSmokeHost = {
   text: () => Effect.succeed(null),
   paintedText: () => Effect.succeed([]),
   bounds: () => Effect.succeed(null),
+  focused: () => Effect.succeed(null),
   click: () => Effect.void,
   hover: () => Effect.void,
   waitFor: () => Effect.void,

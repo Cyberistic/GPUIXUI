@@ -669,6 +669,7 @@ live pass is citable evidence rather than a second log format.
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
 | `live-overlay` | the modal trigger opens a painted 280 × 236 surface centred in the window, and Escape closes it (`open=false last=escape`) |
+| `live-focus` | focus enters the modal (`modal-content`), Tab and Shift-Tab walk `a → b → open-popover → close` and wrap back to the content, Escape returns focus to the trigger, and a nested popover's Escape closes only the popover and returns focus to its opener — 18 checks |
 | `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, and the selection survives |
@@ -692,13 +693,16 @@ window (CI, a locked session, a missing binding) — and no report is written on
 `2`. The window appears for a few seconds and takes focus while it runs; it is
 opt-in for that reason.
 
-What it cannot assert: colour, the accessibility dump, virtual-list anchors,
-highlights and focus traversal. The automation tree carries
-`id`/`type`/`testId`/`text`/`bounds` and no style, and the protocol has no a11y,
-list-anchor or focus query. A synthetic `tab` does not traverse in a live window
-either (measured: `a`, `tab`, `x` left the field reading `value=ax`), so Tab
-traversal — like in the `TestRenderer` — is component code, not a runtime
-service.
+What it cannot assert: colour, the accessibility dump, virtual-list anchors and
+highlights. The automation tree carries `id`/`type`/`testId`/`text`/`bounds` and
+no style, and the protocol has no a11y, list-anchor or highlight call. A
+synthetic `tab` does not traverse in a live window either (measured: `a`, `tab`,
+`x` left the field reading `value=ax` in plan `189`). That is not the end of the
+focus story: the component owns traversal (`focusNextWithin`) and the live host
+owns the renderer, so `live-focus` reads `getFocusedElementId` and maps it
+through the automation tree. Focus entry, the modal Tab/Shift-Tab trap, focus
+return and a nested popover's Escape are measured in the window; style, a11y,
+list anchors and highlights remain `TestRenderer`-only.
 
 ## Text entry (plan `188`)
 
@@ -867,6 +871,10 @@ narrower. Each deviation is deliberate and measured:
   toast-viewport probe, the shell probe, the pinned-grid probe, the
   collapsible-height probe and the nested-layer probe pass in real
   GPUix 0.10.0 on this host (56/56), with a written report and screenshots.
+  The **real-window** suite (`smoke:live`) is 9/9 — layout, input, scroll,
+  panel, overlay, **focus**, docking, the shipped primitives and a virtual
+  table — including the modal's Tab/Shift-Tab trap and focus return (plan
+  `190`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

@@ -97,10 +97,12 @@ returns the **same** `SmokeReport`, which is what lets a live run reuse
 
 `AsyncSmokeHost` is deliberately **smaller** than `SmokeHost`: bounds, text,
 painted text, input (click/hover/keys/wheel/drag), `waitFor`, scroll offsets,
-screenshots and the motion clock. That is the automation protocol's surface. It
-has no style report, accessibility dump, list anchor or focus query, so those
-assertions stay with the synchronous `TestRenderer` suite rather than being
-approximated.
+focus, screenshots and the motion clock. That is the automation protocol's
+surface — plus focus, because the live runner owns the renderer it created and
+`getFocusedElementId` is a renderer method (the protocol itself has no focus
+query; the host maps the id back through the automation tree — plan `190`). It
+has no style report, accessibility dump or list anchor, so those assertions stay
+with the synchronous `TestRenderer` suite rather than being approximated.
 
 A verb that throws becomes `SmokeHostError` (`verb` names the call) and is
 recorded as an `errored` check — never a silent pass and never a failed
