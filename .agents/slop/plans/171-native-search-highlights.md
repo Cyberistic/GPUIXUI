@@ -197,7 +197,7 @@ Stop and report with evidence if:
 
 Executed on this host on 2026-10-17; **40/40 green**, exit `0`,
 `search=verified` in `.artifacts/smoke-report.json`. `search-highlights` records
-**40 checks**.
+**41 checks**.
 
 Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
 

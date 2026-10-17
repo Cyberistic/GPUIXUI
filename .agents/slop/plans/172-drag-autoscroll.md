@@ -156,7 +156,7 @@ outputs in §8.
 ## 8. Outcome
 
 Executed on this host on 2026-10-17; **41/41 green**, exit `0`, `drag=verified`
-in `.artifacts/smoke-report.json`. `drag-autoscroll` records **16 checks**.
+in `.artifacts/smoke-report.json`. `drag-autoscroll` records **17 checks**.
 
 Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
 
