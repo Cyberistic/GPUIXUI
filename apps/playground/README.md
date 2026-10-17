@@ -236,17 +236,39 @@ So a drop target must be found by hit-testing pointer coordinates, not hover,
 and both the drag-ending click and a failed-drop click must be suppressed. The
 log is deterministic across runs.
 
+## Native text selection (plan `163`)
+
+`text-selection` drives the renderer's own `dragSelect` and reads
+`getSelectedText`. Copy is a core desktop interaction for the log viewer, code
+blocks and diffs, so the claims are measured rather than assumed:
+
+| Drag | Selection |
+| ---- | --------- |
+| heading → second body line | exactly `Selection heading\nfirst line\nsecond line` |
+| anchored inside `userSelect: "none"` | **empty** — no selection at all |
+| body line → past the unselectable toolbar | both text runs, toolbar excluded |
+| across a `<code>` block with line numbers | `alpha();\nbeta();` — no line numbers |
+| across a `<diff>` | only the line text — no file header, hunk header, gutter or marker |
+
+`clearSelection` empties an existing selection and a plain click selects
+nothing. The surprising half is the anchor rule: a selection that **crosses**
+`userSelect: "none"` skips it, but one **anchored** inside it selects nothing,
+so a gutter or toolbar must never start a drag. One harness note: ending a drag
+2 px inside the right edge truncates the last glyph, so `selectText` ends at the
+edge.
+
 ## Evidence on this host
 
-The suite is **28/28 green** here (`exit 0`):
+The suite is **29/29 green** here (`exit 0`):
 
 ```
-28/28 scenarios passed · capabilities: layout=verified text=verified
+29/29 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified content=verified drag=verified
+selection=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -262,6 +284,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | a11y | the AccessKit dump maps every typed ARIA token to a role; names come only from `aria-label`; CheckBox/Switch have no checked state; the tree follows the painted virtual window |
 | content | `<svg>`/`<img>`/`<diff>` are retained **and** painted (bounds fire from `on_painted`); `<canvas>` is retained but renders nothing and drops its children; `setImagePixels` uploads a bitmap through the ref |
 | drag | capture owns every move and the up; hover is frozen during the drag; the gesture ends in a click on the source; a drop on a handler-less element still clicks; `onFileDrop` carries paths and coordinates |
+| selection | cross-element selection joins with newlines; `<code>`/`<diff>` copy is chrome-free; an anchor inside `userSelect: "none"` selects nothing; a click selects nothing |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -298,6 +321,7 @@ src/scenarios/popups.tsx    Select, Combobox and Tooltip in the runtime
 src/scenarios/a11y.tsx      the AccessKit dump: roles, names, states, window
 src/scenarios/surfaces.tsx  svg, img (fallbacks, data URL, ref upload), diff, canvas
 src/scenarios/drag-targets.tsx capture, hover during drag, file drops
+src/scenarios/text-selection.tsx selection across text, code, diff and chrome
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -332,9 +356,9 @@ narrower. Each deviation is deliberate and measured:
 
 - The sixteen core capabilities (including the token gallery, the modal
   contract, floating placement, the three published popups, the accessibility
-  tree and the content surfaces), the Tier 3/4 probes, the drag/file-drop probe
-  and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
-  (28/28), with a written report and screenshots.
+  tree, the content surfaces and text selection), the Tier 3/4 probes, the
+  drag/file-drop probe and the app-level shortcut probe pass in real GPUix
+  0.10.0 on this host (29/29), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

@@ -86,7 +86,7 @@ in the same block.
 | [160](./160-native-a11y-tree.md) | The accessibility tree in the real runtime | B→C/D | 100, 110, 120, 140 | **landed**: `a11y-tree` — roles map; names are **not** derived from text; CheckBox/Switch expose no checked state; the tree follows the painted virtual window; 26/26 green (§8) |
 | [161](./161-native-content-surfaces.md) | Native content surfaces: `<svg>`, `<img>`, `<diff>` and the `<canvas>` trap | B→C/E | 100, 110, 120, 140 | **landed**: `native-surfaces` — svg/img/diff are retained and painted; **`<canvas>` is retained as a node but renders `gpui::Empty`** (no bounds, children dropped from paint); a corrupt PNG is indistinguishable without pixels; 27/27 green (§8) |
 | [162](./162-drag-targets.md) | Cross-element drag targets and file drops | B→D/E | 100, 110, 120, 140 | **landed**: `drag-targets` — capture keeps moves and up on the source; **hover is frozen during the drag** and settles after release; the gesture ends in a click on the source; a drop on an element without a handler emits **no drop but a click**; 28/28 green (§8) |
-| [163](./163-text-selection.md) | Native text selection and copy | B→D/E | 100, 110, 120, 140, 161 | planned — measures cross-element selection, selectable `<code>`/`<diff>` content, chrome exclusion and `userSelect: "none"` |
+| [163](./163-text-selection.md) | Native text selection and copy | B→D/E | 100, 110, 120, 140, 161 | **landed**: `text-selection` — cross-element selection joins with newlines; `<code>`/`<diff>` copy is chrome-free; an anchor inside `userSelect: "none"` selects **nothing**, a cross-selection skips it; 29/29 green (§8) |
 
 Cross-cutting records:
 

@@ -44,8 +44,7 @@ The probe turns those claims into a failing test.
 ## 3. Scenario `text-selection` (capability `selection`)
 
 New view `apps/playground/src/scenarios/text-selection.tsx`. A column, all
-colours from `useTheme`, one `selection-note` readout that shows
-`len=<selected length>` so a human can see the current selection.
+colours from `useTheme`.
 
 | Element | Props |
 | ------- | ----- |
@@ -60,9 +59,11 @@ Steps:
 
 1. drag from `select-heading` to the second body text: the selection contains
    `Selection heading`, `first line` and `second line`, in that order.
-2. drag from `select-toolbar` to `select-after`: the selection contains
-   `after toolbar` and **not** `toolbar chrome` — `userSelect: "none"` is
-   excluded even though the drag starts inside it.
+2. drag from `select-toolbar` to `select-after`: the selection is **empty** —
+   an anchor inside `userSelect: "none"` produces no selection at all (measured,
+   §8); the drag is then repeated from `select-body-2` to `select-after` and
+   contains `second line` and `after toolbar` but **not** `toolbar chrome` —
+   a selection that crosses the region excludes it.
 3. drag across `select-code`: the selection contains `alpha();` and `beta();`
    and **no line numbers** (the code has no digits of its own, so any `1`/`2`
    would be a gutter leak).
@@ -89,8 +90,8 @@ Steps:
 | `TODO.md` | one new task, ticked on landing; suite count updated |
 
 `selectText` starts at the first element's top-left inset by 2 px and ends at
-the last element's bottom-right inset by 2 px, so the drag anchors inside the
-text rather than on its border.
+the last element's right edge, vertically inset by 2 px. Ending 2 px inside the
+right edge truncates the last glyph, so the drag must reach the edge.
 
 ## 5. Commands and expected results
 
@@ -134,6 +135,46 @@ text rather than on its border.
 
 ## 8. Measured facts
 
-_To be filled by the implementation run. Record: the exact selections for each
-step; whether `null` or `""` comes back for an empty selection; whether clicks
-select; the two-direction outputs._
+**Suite: 29/29 green on this host, exit `0`**, `selection=verified`, with the 28
+prior scenarios unchanged.
+
+Exact selections from the run:
+
+| Drag | Selection |
+| ---- | --------- |
+| `select-heading` → `select-body-2` | `Selection heading\nfirst line\nsecond line` |
+| `select-toolbar` → `select-after` (anchor inside `userSelect: "none"`) | **`""` — no selection at all** |
+| `select-body-2` → `select-after` (crossing the toolbar) | contains `second line` and `after toolbar`, **not** `toolbar chrome` |
+| `select-code` → itself | `alpha();\nbeta();` — **no line numbers** |
+| `select-before-diff` → `select-diff` | `before diff\nconst removed = 1\nconst added = 1` — **no file header, hunk header, gutter or marker** |
+| `clearSelection()` | `""` |
+| a click on `select-body-1` | `""` — a tap is not a drag |
+
+- **Cross-element selection works.** Adjacent `<text>` nodes join with a newline
+  in document order, exactly as the README documents.
+- **`userSelect: "none"` is stronger than "excluded":** an anchor inside the
+  unselectable subtree produces **no selection at all**, not a selection that
+  starts at the next selectable run. A cross-selection that merely passes over
+  the region (body → after) skips it correctly. Consequence: a log viewer must
+  start the drag in a text row, never in a gutter or toolbar.
+- **Native content is selectable with clean copy.** `<code>` yields only code
+  lines (line numbers are `chrome_text`), and `<diff>` yields only line text —
+  the file header, hunk header, gutters and `+`/`−` markers are all excluded.
+  The removed line precedes the added one, matching the patch.
+- **`clearSelection` and taps** both leave the selection empty.
+- **Harness note:** a drag that ends 2 px inside the right edge truncates the
+  last glyph (`second lin`); `SmokeHost.selectText` ends at the element's right
+  edge and starts 2 px inside the top-left. The first attempt is recorded in
+  §7's spirit: the failure named the truncated selection.
+- **Two-direction proof** (both run, outputs quoted):
+  1. removing `userSelect: "none"` from the toolbar wrapper: **exit `1`**, `a
+     drag anchored in userSelect none selects nothing: expected "", got
+     "toolbar chrome\nafter toolbar"`. Restored.
+  2. removing `clearSelection()`: **exit `1`**, `clearSelection empties the
+     selection: expected "", got "before diff\nconst removed = 1\nconst added =
+     1"`. Restored.
+- **Not force-failed:** the line-number and diff-header exclusions are positive
+  assertions (the selection string contains none of the chrome); forcing a leak
+  would need an upstream change to `chrome_text`, which is out of scope. The
+  `userSelect` proof above is the demonstrated two-direction case.
+

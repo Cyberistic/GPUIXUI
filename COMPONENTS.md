@@ -51,8 +51,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | motion | `motion-collapse` | verified |
 | content | `native-surfaces` | verified |
 | drag | `drag-targets` | verified |
+| selection | `text-selection` | verified |
 
-The suite is **28/28 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **29/29 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -118,6 +119,14 @@ released), the gesture still ends in a **click on the source** after 170 px of
 movement, and a file dropped on an element **without** `onFileDrop` produces no
 drop but still a **click**. A drag-and-drop component must hit-test the pointer
 itself and swallow the gesture-ending click.
+
+`text-selection` is the runtime verdict for copy in the log viewer, code block
+and diff. It selects across `<text>` nodes (joined with newlines in document
+order), confirms `<code>` and `<diff>` copy only their line text — line numbers,
+gutters, markers and file/hunk headers are `chrome_text` and excluded — and
+measures `userSelect: "none"`: a selection that **crosses** it skips it, but a
+drag **anchored** inside it selects nothing at all, so a gutter must not be the
+start of a selection. `clearSelection` and a plain click both leave it empty.
 
 `select-choose`, `combobox-filter` and `tooltip-open` are the runtime verdicts
 for the three interactive components GPUix ships, which the library composes
@@ -209,6 +218,7 @@ is ahead of the published release — the divergence is called out below.
 | Image preview | `<img>` (path, data URL, http(s)) | **verified** (runtime: `native-surfaces`) |
 | File / folder selection | `GpuixRenderer.promptForPaths` | **verified** |
 | File drops | `onFileDrop` + `nativeSimulateFileDrop` | **verified** (runtime: `drag-targets`) |
+| Text selection / copy | window selection + `getSelectedText` | **verified** (runtime: `text-selection`) |
 
 **Primitives only — still needs implementation:** Popovers / Dropdown menus /
 Context menus (`floating`'s `FloatingLayer` + `<anchored>` give positioning and
@@ -381,7 +391,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Inspector panels | todo | ? | Property panels + panels. |
 | Property editors | todo | ? | Fieldset + inputs. |
 | File trees | todo | ? | Tree views (verified) + `<virtual-list>`; hierarchical virtualization is ours. |
-| Log viewers | todo | yes (probe) | `log-viewer`: `<virtual-list alignment="bottom" followTail>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up then appending does **not** snap back, so a follow toggle is app state plus a scroll. `<text>`; text search/highlight hooks exist. |
+| Log viewers | todo | yes (probe) | `log-viewer`: `<virtual-list alignment="bottom" followTail>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up then appending does **not** snap back, so a follow toggle is app state plus a scroll. `<text>`; text search/highlight hooks exist. Copy is native: `text-selection` selects across text rows and `<code>`/`<diff>` copy excludes chrome, but a drag anchored in a `userSelect: "none"` gutter selects nothing — a text row, not the gutter, must anchor the selection. |
 | Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
 | Multi-pane editing layouts | todo | ? | Composition over split panes + editors. |
@@ -390,10 +400,10 @@ carries an evidenced limitation. The capability evidence lives in
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Code editor integration | todo | ? | `<code>` renders highlighted code; there is **no editable code surface** (verified). |
+| Code editor integration | todo | ? | `<code>` renders highlighted code; there is **no editable code surface** (verified). `<code>` text is selectable and copies without line numbers (`text-selection`), so a read-only viewer can offer copy today. |
 | Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages. API-shape work, not implementation. |
-| Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. Evidence: `native-surfaces` — the file header, hunk header and changed lines all reach the paint log, and the surface is painted at its declared width. |
-| Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). |
+| Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. Evidence: `native-surfaces` — the file header, hunk header and changed lines all reach the paint log, and the surface is painted at its declared width. `text-selection` — a drag across the diff copies only line text (no header, hunk, gutter or marker). |
+| Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). Its text is selectable and copyable (`text-selection` covers the shared selection path). |
 | Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. Evidence: `native-surfaces` — a valid PNG data URL lays out at its box with no fallback, a missing `src` paints `img: no src`, an undecodable one paints `img: load failed`, and `setImagePixels` through the ref uploaded a bitmap without throwing. No pixel readback, so a corrupt bitmap with a valid MIME is indistinguishable from a decoded one. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
 | Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `drag-targets`: pointer capture keeps moves and the up on the source, **hover is frozen during the drag**, the drag ends in a click on the source, and a drop on an element without `onFileDrop` still fires a click. The component owns hit-testing, the drop indicator and the click suppression. |
