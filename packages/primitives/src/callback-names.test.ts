@@ -90,7 +90,13 @@ describe("the value callback name", () => {
     const hits = await Effect.runPromise(
       Effect.all(
         [
-          hitsIn(["docs"], Arr.filter(docs, Str.endsWith(".mdx")), /onChange/),
+          // A page may quote the GPUix host's own `onChange`; what it may not
+          // do is document or call ours.
+          hitsIn(
+            ["docs"],
+            Arr.filter(docs, Str.endsWith(".mdx")),
+            /onChange=\{|^[|] `onChange` /,
+          ),
           hitsIn(
             ["examples"],
             Arr.filter(examples, Str.endsWith(".tsx")),
