@@ -704,6 +704,10 @@ high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background` or
 `card` (floor 1.05:1). Palette edits must keep it green.
 
+`packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
+they disagree with the shipped themes or fall out of role order, so this page
+cannot drift from the implementation.
+
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label and both families, `sans` is the GPUI sentinel, no family is a comma
 stack, `systemMonoFamily` and the default typography follow `currentPlatform`, and

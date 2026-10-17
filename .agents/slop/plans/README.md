@@ -52,6 +52,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [053](./053-reconcile-tokens-branches.md) | Reconcile the two `tokens` branches into one | B | 010–019, 050–052 | done |
 | [054](./054-avatar-size-scale.md) | The avatar diameter scale | B | 011, 016 | done |
 | [055](./055-filled-control-hover-roles.md) | Designed hover roles for filled controls | B | 011, 013–016 | done |
+| [056](./056-docs-truth-guard.md) | Docs truth guard for the token catalogue | F | 010–019, 050–055 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -67,7 +68,9 @@ avatar diameter scale (`components/TODO.md` interlocks, row *"An avatar diameter
 scale"*) and the designed filled-control hover roles (the `primaryHover` /
 `destructiveHover` row). The earlier interlock rows — the soft status pairs, the
 `alpha` helper and the `info` role — were already shipped by plan 014 and only
-need the consumer to drop its structural copy.
+need the consumer to drop its structural copy. 056 is the Phase F docs-truth
+slice for this workstream: it makes `docs/tokens.md`'s colour catalogue fail the
+test suite if it drifts from the shipped themes.
 
 ### Reference adoption (block `200–299`)
 

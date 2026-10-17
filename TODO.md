@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 20/26
+`[x]` `[████████░░]` 21/26
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -76,6 +76,7 @@ platform toggle (plan 051)
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls
 stop faking hover with an alpha fill (plan 055)
+`[x]` Guard the token catalogue against drift from the implementation (plan 056)
 `[x]` Add motion tokens (durations/easings); three `primitives` call sites held
 `120`/`700` as literals (plan 019)
 `[x]` Guard that all four shipped themes carry every theme group (part of plan
