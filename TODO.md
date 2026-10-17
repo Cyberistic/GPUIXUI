@@ -9,6 +9,18 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
+## Harness — the supervisor that keeps the swarm alive
+
+`[x]` `[██████████]` 5/5
+
+`[x]` Repo on `proserver` with the required shape, mission, rules and plan index
+`[x]` opencode 2.0.31 installed with the provider credentials and a trimmed config
+`[x]` Verified a real run on `opencode-go-braven/deepseek-v4.1-flash`
+`[x]` Supervisor: 30-minute tick, ≥5 agents, one worktree each, idempotent and crash-safe
+`[x]` Scheduler installed (launchd agent + daemon driver; see `.agents/slop/README.md`)
+
+---
+
 ## Phase A — audit and feasibility
 
 `[ ]` `[░░░░░░░░░░]` 0/6
@@ -22,14 +34,32 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Phase B — working foundation
 
-`[ ]` `[░░░░░░░░░░]` 0/6
+`[x]` `[██░░░░░░░░]` 1/6
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
-`[ ]` Land tokens and the theming architecture (light + dark, semantic roles)
+`[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[ ]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
 `[ ]` Land the docs shell and document that component in Fumadocs
+
+### Design tokens and theming (`tokens-theme`)
+
+`[x]` `[██████████]` 7/8
+
+`[x]` Write and index the tokens/theme plan set (plans 010–013)
+`[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
+radii, density, elevation, light + dark themes
+`[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
+the `@gpuixui/tokens/react` provider
+`[x]` Add high-contrast (AAA) light and dark themes (`getTheme(mode, "high")`)
+`[x]` Write `docs/tokens.md` (every token + extension API)
+`[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
+`[x]` Add the design-system rows to `COMPONENTS.md`
+`[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
+`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
+(owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
+`references` symlink in `.gitignore` (owner: repo tooling)
 
 ## Phase C — Tier 1–2 components
 

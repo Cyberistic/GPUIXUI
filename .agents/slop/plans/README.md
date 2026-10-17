@@ -20,8 +20,8 @@ licensing, docs site).
 ## The plan set
 
 Numbering is reserved per workstream so concurrent agents never collide:
-`100–199` components, `200–299` tokens/theme, `300–399` primitives,
-`400–499` playground, `500–599` docs site.
+`010–099` tokens and theming, `100–199` components, and whatever each other
+workstream declares in its own section below.
 
 ### Components workstream (Tier 2 composition and feedback)
 
@@ -38,9 +38,25 @@ Numbering is reserved per workstream so concurrent agents never collide:
 
 Interlocks this workstream depends on and does not own:
 
-- `@gpuixui/tokens` roles listed in plan 110 §6, or a documented mapping;
 - `@gpuixui/primitives` exports listed in plan 110 §7;
-- `apps/playground` mounting the Tier 2 examples (recorded as a TODO task).
+- `apps/playground` mounting the Tier 2 examples (recorded as a TODO task);
+- a decision on the GPUix version: 0.10.0 is the latest published release and is
+  behind the reference clone, so it ships no `Dialog`, `Button` or
+  `DismissableLayer` (evidence in `TODO.md` → Blockers).
+
+### Tokens and theme workstream
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [010](./010-phase-b-design-tokens.md) | Phase B: design tokens and theming | B | Phase A audit | done |
+| [011](./011-package-tokens.md) | Package: `@gpuixui/tokens` | B | 010 | done |
+| [012](./012-docs-design-system.md) | Docs: design system and token catalogue | B | 011 | done |
+| [013](./013-high-contrast-theme.md) | High-contrast accessibility themes | B | 011 | done |
+| [014](./014-status-tones-and-colour-helpers.md) | Status tones and colour helpers | B | 011, 013 | in progress |
+
+Plans 010–014 own `packages/tokens`, `docs/tokens.md` and
+`docs/design-system.md`; the components workstream consumes them and never
+edits them.
 
 ## How to use a plan
 

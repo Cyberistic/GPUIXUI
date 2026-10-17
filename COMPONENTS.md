@@ -10,6 +10,16 @@ Status: `todo` · `wip` · `done` · `blocked (reason)` · `unsupported (evidenc
 Every row also records **GPUix support** and, when it is not `yes`, the evidence
 and the strongest honest alternative.
 
+## Design system
+
+| Capability | Status | GPUix support | Notes / limitations |
+| ---------- | ------ | ------------- | ------------------- |
+| Design tokens | wip | yes (inline style values) | 37 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark; 118 tests incl. WCAG floors. Native visual proof pending the playground gallery. |
+| Theme extension | wip | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. Provider test is a server render; native switch pending. |
+| High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 37 roles; `getTheme(mode, "high")`; contrast test covers both variants. Docs in `docs/tokens.md`. |
+| Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land. |
+| Native theme gallery | todo | yes | `apps/playground`; visual evidence for the rows above. Owner: playground workstream. |
+
 ## Tier 1 — foundational
 
 | Component | Status | GPUix support | Notes / limitations |
