@@ -77,10 +77,12 @@ the `@gpuixui/tokens/react` provider
     - [ ] Behaviour suites under a second config (`src/behaviour/`, `test:behaviour`): a static GPUix import fails to *load* on an unsupported host, so `describe.skipIf` cannot gate them (plan 117 §5a/§5c)
   - [ ] Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List
     - [x] `internal/collection.ts` (List single-selection core, shared with Tabs/menus)
-    - [ ] Card, Badge, Avatar, Alert, EmptyState, List
+    - [x] Card: `src/card.tsx`, behaviour suite, example, docs page, inventory record — code lands; the behaviour suite is unrun here (no native binding)
+    - [ ] Badge, Avatar, Alert, EmptyState, List
   - [ ] Overlays: Dialog, Confirmation dialog, Popover
     - [ ] `internal/dismiss-layer.ts` + `internal/button-props.ts` (0.10.0 has neither)
     - [ ] Plans 112/113 reference `keyboardFocusDim` and `focusVisible`, which 0.10.0's `StyleDesc` does not have — correct the plans before writing the styles
+    - [ ] `StyleDesc` has per-side border *widths* but a single `borderColor`; a separator that needs its own colour uses a 1px `div` or `borderColor` (as `CardFooter` does). Correct plan 111's footer row.
     - [ ] Fix plan 112's `DialogContent` to name the surface focus through `aria-label` only (no `aria-labelledby` in 0.10.0 either)
   - [ ] Disclosure and navigation: Tabs, Accordion, Collapsible, Breadcrumb, Pagination
     - [x] Logic: `accordion/logic.ts`, `breadcrumb/logic.ts`, `pagination/logic.ts`

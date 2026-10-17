@@ -115,10 +115,13 @@ describe("tone", () => {
 
   it("keeps text and fill distinct for every tone", () => {
     Arr.forEach(themes, ([, theme]) => {
-      Arr.forEach(["info", "success", "warning", "danger"] as const, (value) => {
-        const style = tone(theme, value);
-        expect(style.fg).not.toBe(style.bg);
-      });
+      Arr.forEach(
+        ["info", "success", "warning", "danger"] as const,
+        (value) => {
+          const style = tone(theme, value);
+          expect(style.fg).not.toBe(style.bg);
+        },
+      );
     });
   });
 });

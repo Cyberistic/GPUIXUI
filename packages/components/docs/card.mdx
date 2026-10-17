@@ -1,0 +1,111 @@
+---
+title: Card
+description: A bounded surface that groups related content.
+---
+
+`Card` groups related content on one surface. It is **composition only**: it has
+no state, does not focus, scroll, dismiss or trap anything, and never wraps an
+overlay. Anything interactive inside a card is a control you put there.
+
+## Anatomy
+
+```
+┌ Card ────────────────────────────────┐
+│ CardHeader                           │
+│   CardTitle                          │
+│   CardDescription                    │  ← any number of lines
+├ CardContent ─────────────────────────┤
+│ your rows, forms or charts           │
+├ CardFooter ──────────────────────────┤  ← separated by a hairline
+│ always right-aligned actions         │
+└──────────────────────────────────────┘
+```
+
+Only `Card` is required. Drop the parts you do not need; the surface is the same
+shape either way.
+
+## Usage
+
+```tsx
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+
+<Card>
+  <CardHeader>
+    <CardTitle>Pro plan</CardTitle>
+    <CardDescription>Everything in Starter, plus seats and invoicing.</CardDescription>
+  </CardHeader>
+  <CardContent>{/* rows, a form, a chart */}</CardContent>
+  <CardFooter>{/* actions */}</CardFooter>
+</Card>;
+```
+
+The full build is the `card` example in
+`packages/components/examples/card.example.tsx`, which the native playground
+mounts.
+
+## Variants
+
+| `variant` | Surface |
+| --------- | ------- |
+| `outline` (default) | 1px `border` and the `card` fill |
+| `elevated` | the `card` fill and the `md` elevation shadow |
+| `plain` | the `card` fill only — for a card inside another surface |
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and **merges `style` last**, so a consumer can override
+any rule without forking the component.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Card` | `div` | `variant?: "outline" \| "elevated" \| "plain"` (default `"outline"`) |
+| `CardHeader` | `div` | — |
+| `CardTitle` | `text` | — (`role="heading"`, `aria-level={3}`) |
+| `CardDescription` | `text` | — |
+| `CardContent` | `div` | — |
+| `CardFooter` | `div` | — |
+
+```tsx
+<Card variant="elevated" style={{ maxWidth: 420 }} />
+```
+
+## Theming
+
+All colour, spacing, radius, elevation and type come from the theme
+(`colors.card`, `colors.border`, `spacing.*`, `radius.lg`, `elevation.md`,
+`textStyle("h3")` / `textStyle("body")`). There are no literal colours or sizes
+in the component, so a custom theme changes the card with no code change. See
+`docs/tokens.md` for the roles and the extension mechanism.
+
+## Accessibility
+
+- `CardTitle` renders a `<text>` with `role="heading"` and `aria-level={3}`.
+- A card is not focusable and not a landmark; it contributes no role of its own.
+- A card's accessible name comes from its heading, not from a wrapper label.
+
+## Limitations
+
+- **Native behaviour is unverified on this development host.** GPUix publishes no
+  `darwin-x64` native binding, so the behaviour suite
+  (`src/behaviour/card.test.tsx`) is written but has not been executed anywhere.
+  Run `nub run --filter @gpuixui/components test:behaviour` on a supported host
+  (macOS arm64, Linux x64, Windows x64) before treating this component as done.
+  `TODO.md` → Blockers has the evidence.
+- The card does not clip a scrollable body: `overflow` is `hidden` on the
+  surface, so a scroller belongs in `CardContent` with its own height.
+- The docs site cannot render this component live — it is a GPUix host tree, not
+  DOM. The code above is the real source.
+
+## Related
+
+- **List** — rows inside `CardContent`.
+- **Dialog** — a card-shaped surface that does focus and dismiss.
+- **EmptyState** — the "nothing here yet" panel for a card body.

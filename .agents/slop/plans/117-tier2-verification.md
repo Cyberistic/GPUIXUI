@@ -53,6 +53,7 @@ export interface ComponentMeta {
   readonly limitations: ReadonlyArray<string>;
   readonly docs: string;      // "docs/card.mdx"
   readonly example: string;   // "examples/card.example.tsx"
+  readonly testFile: string;  // "src/behaviour/card.test.tsx"
 }
 
 export const inventory: ReadonlyArray<ComponentMeta>;

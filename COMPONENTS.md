@@ -49,7 +49,7 @@ and the strongest honest alternative.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Cards | todo | ? | |
+| Cards | wip | yes | `variant` outline/elevated/plain; behaviour suite written but **unrun** — no GPUix darwin-x64 binding here (`TODO.md` → Blockers); example + docs page + inventory record landed |
 | Badges | todo | ? | |
 | Avatars | todo | ? | |
 | Lists / list items | todo | ? | |
