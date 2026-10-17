@@ -30,6 +30,7 @@ const record = (
   summary: "A demo component.",
   packageName: "@gpuixui/primitives",
   sourcePath: null,
+  api: [],
   parts: [],
   pattern: "static",
   persistence: null,

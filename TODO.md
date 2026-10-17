@@ -469,11 +469,12 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–440)
+## Docs site workstream (plans 410–441)
 
-`[x]` `[██████████]` 39/40
+`[~]` `[██████████]` 40/41
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
+`[x]` `/docs/api-reference` is an index of every documented component's real props types, generated from the registry instead of a demo type (plan 441)
 `[x]` Curated native theme captures on Theming (plan 433) — a real 20/20 capture run, two frames + provenance sidecar, `<ThemeCaptures />` refuses an unproven frame
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)

@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { missingPartSources } from "./component-meta/contract";
+import { apiDrift, missingPartSources } from "./component-meta/contract";
 import { generator } from "./lib/type-table-generator";
 import { components } from "./component-meta/registry";
 
@@ -217,6 +217,18 @@ describe("content references", () => {
       }),
     );
     expect(report(empty.flat())).toEqual([]);
+  });
+
+  it("declares in the registry exactly the props types a page generates", () => {
+    const drift = components.flatMap((component) =>
+      apiDrift(
+        component,
+        typeTables
+          .filter((table) => table.page === `components/${component.slug}.mdx`)
+          .flatMap((table) => attribute(table.attributes, "name") ?? []),
+      ).map((detail) => ({ page: `components/${component.slug}.mdx`, detail })),
+    );
+    expect(report(drift)).toEqual([]);
   });
 
   it("shows the real source on every finished component's page", () => {

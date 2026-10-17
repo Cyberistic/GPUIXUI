@@ -19,6 +19,7 @@ const related = (status: ComponentMetaInput["status"]): ComponentMetaInput => ({
   summary: "Groups related buttons into one control.",
   packageName: "@gpuixui/primitives",
   sourcePath: null,
+  api: [],
   parts: [],
   pattern: "static",
   persistence: null,

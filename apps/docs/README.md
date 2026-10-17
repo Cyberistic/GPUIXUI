@@ -123,7 +123,11 @@ runtime-mounted example. Copy their shape.
    must carry at least one documented limitation; `done` never sits on
    `unverified` support. The `planned`/`delivered` helpers default `parts` to
    `[]`, `pattern` to `"static"` and `persistence` to `null`; a compound or
-   workspace record overrides them (plan 427).
+   workspace record overrides them (plan 427). A `delivered` record also names
+   its props types in `api` — `api: ["ButtonProps"]` — because
+   `/docs/api-reference` is generated from the registry, and
+   `content-references.test.ts` fails when that set and the page's prop tables
+   disagree (plan 441).
 2. Add `content/docs/components/<slug>.mdx` using the template below, and add
    the slug to `content/docs/components/meta.json`. `registry.test.ts` asserts
    that sidebar equals `index` plus every non-planned slug, so a forgotten

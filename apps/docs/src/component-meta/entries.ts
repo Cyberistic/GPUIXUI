@@ -67,6 +67,7 @@ const planned = (
   summary,
   packageName: options.packageName ?? packageOf(tier),
   sourcePath: null,
+  api: [],
   parts: options.parts ?? [],
   pattern: options.pattern ?? "static",
   persistence: options.persistence ?? null,
@@ -81,6 +82,8 @@ const planned = (
 interface DeliveredOptions extends PlannedOptions {
   /** Repo-relative path to the shipped component. */
   readonly sourcePath: string;
+  /** The exported props types the page's `## API reference` section generates. */
+  readonly api: readonly string[];
   /** The suite that drives the component in the real GPUix renderer. */
   readonly runtime: NonNullable<ComponentMetaInput["runtime"]>;
   /**
@@ -108,6 +111,7 @@ const delivered = (
   ...planned(slug, title, tier, summary, options),
   status: options.status ?? "wip",
   sourcePath: options.sourcePath,
+  api: options.api,
   runtime: options.runtime,
   dependencies: options.dependencies ?? [],
   limitations: options.limitations,
@@ -122,6 +126,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Text.tsx",
+      api: ["TextProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/layout.runtime.test.tsx",
@@ -140,6 +145,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "yes",
     packageName: "@gpuixui/icons",
     sourcePath: "packages/icons/src/Icon.tsx",
+    api: ["IconProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/icons.runtime.test.tsx",
@@ -160,6 +166,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Separator.tsx",
+      api: ["SeparatorProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/layout.runtime.test.tsx",
@@ -181,6 +188,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Separator.tsx",
+      api: ["SpacerProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/layout.runtime.test.tsx",
@@ -202,6 +210,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Stack.tsx",
+      api: ["StackProps", "GridProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/layout.runtime.test.tsx",
@@ -223,6 +232,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Box.tsx",
+      api: ["BoxProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/layout.runtime.test.tsx",
@@ -244,6 +254,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/ScrollArea.tsx",
+      api: ["ScrollAreaProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/layout.runtime.test.tsx",
@@ -266,6 +277,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Button.tsx",
+      api: ["ButtonProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/controls.runtime.test.tsx",
@@ -288,6 +300,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/ButtonGroup.tsx",
+      api: ["ButtonGroupProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/controls.runtime.test.tsx",
@@ -304,6 +317,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("label", "Labels", "1", "Names a control for sighted users.", {
     gpuix: "partial",
     sourcePath: "packages/primitives/src/components/Label.tsx",
+    api: ["LabelProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/layout.runtime.test.tsx",
@@ -324,6 +338,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Input.tsx",
+      api: ["InputProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/fields.runtime.test.tsx",
@@ -346,6 +361,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/TextArea.tsx",
+      api: ["TextAreaProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/fields.runtime.test.tsx",
@@ -367,6 +383,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Checkbox.tsx",
+      api: ["CheckboxProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/controls.runtime.test.tsx",
@@ -388,6 +405,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/RadioGroup.tsx",
+      api: ["RadioGroupProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/controls.runtime.test.tsx",
@@ -404,6 +422,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("select", "Selects", "1", "Selects one value from a list.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Select.tsx",
+    api: ["SelectProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/fields.runtime.test.tsx",
@@ -423,6 +442,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("switch", "Switches", "1", "Toggles a setting on or off.", {
     gpuix: "partial",
     sourcePath: "packages/primitives/src/components/Switch.tsx",
+    api: ["SwitchProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/controls.runtime.test.tsx",
@@ -443,6 +463,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Progress.tsx",
+      api: ["ProgressProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/loading.runtime.test.tsx",
@@ -459,6 +480,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("tooltip", "Tooltips", "1", "Labels a control on hover or focus.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Tooltip.tsx",
+    api: ["TooltipProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/fields.runtime.test.tsx",
@@ -479,6 +501,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Skeleton.tsx",
+      api: ["SkeletonProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/loading.runtime.test.tsx",
@@ -500,6 +523,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/primitives/src/components/Spinner.tsx",
+      api: ["SpinnerProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/loading.runtime.test.tsx",
@@ -521,6 +545,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Slider.tsx",
+      api: ["SliderProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/value.runtime.test.tsx",
@@ -542,6 +567,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Slider.tsx",
+      api: ["RangeSliderProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/value.runtime.test.tsx",
@@ -563,6 +589,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/Meter.tsx",
+      api: ["MeterProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/value.runtime.test.tsx",
@@ -584,6 +611,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/NumberField.tsx",
+      api: ["NumberFieldProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/number-field.runtime.test.tsx",
@@ -606,6 +634,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/primitives/src/components/OTPField.tsx",
+      api: ["OTPFieldProps"],
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/otp.runtime.test.tsx",
@@ -623,6 +652,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("toggle", "Toggle", "1", "A button whose pressed state persists.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Toggle.tsx",
+    api: ["ToggleProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/toggle.runtime.test.tsx",
@@ -638,6 +668,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("rating", "Rating", "1", "A whole-number star rating, or none.", {
     gpuix: "yes",
     sourcePath: "packages/primitives/src/components/Rating.tsx",
+    api: ["RatingProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/rating.runtime.test.tsx",
@@ -662,6 +693,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/card.tsx",
+      api: ["CardProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/card.test.tsx",
@@ -679,6 +711,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("badge", "Badges", "2", "A compact status or count label.", {
     gpuix: "yes",
     sourcePath: "packages/components/src/badge.tsx",
+    api: ["BadgeProps"],
     runtime: nativeSuite("@gpuixui/components", "src/behaviour/badge.test.tsx"),
     status: "done",
     dependencies: ["@gpuix/react/floating", "effect"],
@@ -696,6 +729,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/avatar.tsx",
+      api: ["AvatarProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/avatar.test.tsx",
@@ -718,6 +752,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/list.tsx",
+      api: ["ListProps", "ListItemProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/list.test.tsx",
@@ -752,6 +787,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/empty-state.tsx",
+      api: ["EmptyStateProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/empty-state.test.tsx",
@@ -774,6 +810,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/alert.tsx",
+      api: ["AlertProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/alert.test.tsx",
@@ -796,6 +833,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/field.tsx",
+      api: ["FieldProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/field.test.tsx",
@@ -818,6 +856,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/toast/provider.tsx",
+      api: ["ToastProviderProps", "ToastViewportProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/toast.test.tsx",
@@ -845,6 +884,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dialog.tsx",
+      api: ["DialogProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/dialog.test.tsx",
@@ -867,6 +907,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/confirm-dialog.tsx",
+      api: ["ConfirmDialogProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/confirm-dialog.test.tsx",
@@ -889,6 +930,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/popover.tsx",
+      api: ["PopoverProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/popover.test.tsx",
@@ -911,6 +953,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dropdown-menu.tsx",
+      api: ["DropdownMenuProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/dropdown-menu.test.tsx",
@@ -933,6 +976,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/context-menu.tsx",
+      api: ["ContextMenuProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/context-menu.test.tsx",
@@ -955,6 +999,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/command-menu.tsx",
+      api: ["CommandMenuProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/command-menu.test.tsx",
@@ -977,6 +1022,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("tabs", "Tabs", "2", "Switches between sibling views in place.", {
     gpuix: "partial",
     sourcePath: "packages/components/src/tabs.tsx",
+    api: ["TabsProps"],
     runtime: nativeSuite("@gpuixui/components", "src/behaviour/tabs.test.tsx"),
     status: "done",
     dependencies: [
@@ -1000,6 +1046,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/accordion.tsx",
+      api: ["AccordionProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/accordion.test.tsx",
@@ -1022,6 +1069,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/collapsible.tsx",
+      api: ["CollapsibleProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/collapsible.test.tsx",
@@ -1044,6 +1092,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/breadcrumb.tsx",
+      api: ["BreadcrumbProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/breadcrumb.test.tsx",
@@ -1066,6 +1115,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/pagination.tsx",
+      api: ["PaginationProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/pagination.test.tsx",
@@ -1088,6 +1138,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/search-input.tsx",
+      api: ["SearchInputProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/search-input.test.tsx",
@@ -1110,6 +1161,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/combobox.tsx",
+      api: ["ComboboxProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/combobox.test.tsx",
@@ -1132,6 +1184,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/date-picker.tsx",
+      api: ["DatePickerProps"],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/date-picker.test.tsx",

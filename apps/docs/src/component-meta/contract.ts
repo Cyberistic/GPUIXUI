@@ -77,6 +77,34 @@ export const missingPartSources = (
   );
 
 /**
+ * Props types the page generates but the record does not declare, and the
+ * reverse (plan 441). The registry is the index at `/docs/api-reference`; the
+ * page owns the generated table. The two are a set: page order is not a
+ * contract, but membership is.
+ */
+export const apiDrift = (
+  record: Pick<ComponentMetaInput, "slug" | "api">,
+  pageTypes: readonly string[],
+): readonly string[] => {
+  const declared = new Set(record.api);
+  const generated = new Set(pageTypes);
+  return [
+    ...pageTypes
+      .filter((name) => !declared.has(name))
+      .map(
+        (name) =>
+          `${record.slug}: page generates ${name} but the registry does not declare it`,
+      ),
+    ...record.api
+      .filter((name) => !generated.has(name))
+      .map(
+        (name) =>
+          `${record.slug}: registry declares ${name} but the page does not generate it`,
+      ),
+  ];
+};
+
+/**
  * Status coherence for a record. The inventory (`COMPONENTS.md`) owns the
  * status itself; this checks that a `done` row is credible (verified support,
  * and a documented limitation when support is only partial) and that the other

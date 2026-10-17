@@ -75,6 +75,13 @@ export class ComponentMeta extends Schema.Class<ComponentMeta>("ComponentMeta")(
     /** Repo-relative path to the component source the API table reads. */
     sourcePath: Schema.OptionFromNullOr(Schema.String),
     /**
+     * The exported props types the page's API section generates tables from,
+     * in page order. The page owns the table; the registry owns the
+     * `/docs/api-reference` index, and `content-references.test.ts` keeps the
+     * two equal.
+     */
+    api: Schema.Array(Schema.NonEmptyString),
+    /**
      * The compound sub-components this record exports. Empty for a single
      * component; `entries.ts` supplies the default so no record repeats it.
      */
