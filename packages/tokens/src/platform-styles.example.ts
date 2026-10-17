@@ -49,7 +49,9 @@ export const resolveEditedPlatformTheme = (mode: ThemeMode): Theme =>
 /**
  * A style file authored from scratch, as a consumer would after copying one from
  * `platform-styles/`. It names only what Contoso changes; every other role and
- * every scale inherits the identity.
+ * every scale inherits the identity. The accent family moves whole — fill,
+ * foreground, hover and press — because an inherited state keeps the base hue:
+ * this example's hover and press were the identity iris until plan 330.
  */
 export const contosoPlatformStyle = {
   types: { label: "Contoso", sans: systemUiFont, mono: "Cascadia Mono" },
@@ -62,6 +64,8 @@ export const contosoPlatformStyle = {
       ...contosoPrimary.light,
       accent: "#E8F1FB",
       accentForeground: "#004578",
+      accentHover: "#D5E8F7",
+      accentActive: "#B7D4F0",
       ring: "#0F6CBD",
       selected: "#DCEEFB",
       selectedForeground: "#003A6B",
@@ -70,6 +74,8 @@ export const contosoPlatformStyle = {
       ...contosoPrimary.dark,
       accent: "#0C3559",
       accentForeground: "#BCE0FF",
+      accentHover: "#17497A",
+      accentActive: "#245F96",
       ring: "#5CB8FF",
       selected: "#0A3A63",
       selectedForeground: "#D6EBFF",

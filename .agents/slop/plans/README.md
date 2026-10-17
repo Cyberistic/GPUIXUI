@@ -126,7 +126,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [327](./327-accent-states.md) | The accent family's missing hover and press | F | 063, 071, 080, 097, 309, 311, 318 | done |
 | [328](./328-recipe-windows-dark.md) | A recipe is an edition of Windows in dark too | F | 063, 071, 311 | done |
 | [329](./329-recipe-filled-states.md) | The filled-state matrix must include the shipped recipes | F | 097, 311, 328 | done |
-| [330](./330-authored-accent-family.md) | The authored platform example's unfinished accent family | F | 063, 310, 327 | planned |
+| [330](./330-authored-accent-family.md) | The authored platform example's unfinished accent family | F | 063, 310, 327 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

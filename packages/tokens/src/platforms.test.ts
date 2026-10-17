@@ -52,6 +52,7 @@ import {
   darkTheme,
   extendTheme,
   getPlatformTheme,
+  getTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
@@ -450,6 +451,23 @@ describe("platform style examples", () => {
       ).forEach((role) => {
         expect(authored[role], `${mode} ${role}`).toBe(edited[role]);
       });
+    });
+  });
+
+  // Plan 330: the authored style moved `accent` and `accentForeground` but
+  // inherited the identity iris `accentHover`/`accentActive`, so the documented
+  // Contoso toggle turned lavender while hovered and pressed. Every contrast
+  // pair still passed, which is why the contract could not catch it.
+  it("moves the whole accent family when the authored style moves the accent", () => {
+    modes.forEach((mode) => {
+      const authored = resolveAuthoredPlatformStyle(mode).colors;
+      const base = getTheme(mode).colors;
+      expect(authored.accent, mode).not.toBe(base.accent);
+      (["accentForeground", "accentHover", "accentActive"] as const).forEach(
+        (role) => {
+          expect(authored[role], `${mode} ${role}`).not.toBe(base[role]);
+        },
+      );
     });
   });
 

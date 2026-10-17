@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 97/126
+`[x]` `[████████░░]` 98/127
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -210,6 +210,12 @@ dark (plan 328)
 iterated the identity and three platform variants but not XP/Aero, so a recipe
 could collapse a family's hover/press while the suite stayed green; the loop and
 a presence case now cover both recipes in both modes (plan 329)
+`[x]` Hold the authored platform example to the whole-family rule — it moved
+`accent` and `accentForeground` but inherited the identity iris
+`accentHover`/`accentActive`, so the documented Contoso toggle turned lavender
+while hovered and pressed while every contrast pair stayed green; both states now
+belong to the Contoso blue family, and a regression case holds the moved roles to
+the base (plan 330)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

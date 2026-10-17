@@ -393,6 +393,20 @@ describe("docs/tokens.md platform recipes", () => {
   });
 });
 
+describe("docs/tokens.md authored platform style", () => {
+  // Plan 330: the executed example moved `accent` but inherited the identity
+  // iris hover and press, and the page said only that it names the primary
+  // family — so the defect it shipped was not described anywhere.
+  it("states that the authored style moves both filled families", () => {
+    expect(markdown).toContain(
+      "and the whole accent family — fill, foreground, hover",
+    );
+    expect(markdown).toContain(
+      "A style that moves `accent` but not its states inherits the base hue's",
+    );
+  });
+});
+
 describe("docs/tokens.md status table", () => {
   it("lists every tone with its solid, soft and text roles", () => {
     statusTones.forEach((tone) => {

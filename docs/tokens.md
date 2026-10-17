@@ -572,11 +572,13 @@ interface PlatformStyle {
 A complete file authored from scratch lives in
 [`src/platform-styles.example.ts`](../packages/tokens/src/platform-styles.example.ts)
 (`contosoPlatformStyle`). It names the whole primary family — fill, foreground,
-hover, pressed and text — and is compiled, applied and held to
+hover, pressed and text — and the whole accent family — fill, foreground, hover
+and pressed — and is compiled, applied and held to
 `themeContrastFailures` in `platforms.test.ts`, so the shape above is the one the
 library tests, not a sketch. A style that names only the fill inherits a
 foreground designed for another fill; that is the 2.96:1 failure plan `310`
-fixed.
+fixed. A style that moves `accent` but not its states inherits the base hue's
+hover and press; that is the lavender Contoso toggle plan `330` fixed.
 
 `applyPlatformStyle(getTheme(mode), contosoPlatformStyle)` is the same call the
 shipped variants use, so a copied file cannot take a path the library does not
