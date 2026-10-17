@@ -35,6 +35,24 @@ const contrast = (foreground: string, background: string): number => {
   return (high + 0.05) / (low + 0.05);
 };
 
+/** A colour channel at a byte offset of the full `#RRGGBB…` string. */
+const byteAt = (color: string, at: number): number =>
+  Number.parseInt(color.slice(at, at + 2), 16);
+
+/**
+ * Blend an 8-digit `#RRGGBBAA` overlay onto an opaque 6-digit `#RRGGBB` base.
+ * Only used for translucent roles, which the tests assert are 8-digit first.
+ */
+const composite = (overlay: string, base: string): string => {
+  const opacity = byteAt(overlay, 7) / 255;
+  const channels = [1, 3, 5].map((at) =>
+    Math.round(byteAt(overlay, at) * opacity + byteAt(base, at) * (1 - opacity))
+      .toString(16)
+      .padStart(2, "0"),
+  );
+  return `#${channels.join("")}`.toUpperCase();
+};
+
 /** The contrast floor a pair is held to, by the class of text it carries. */
 type PairClass = "body" | "secondary" | "boundary";
 
@@ -46,6 +64,12 @@ const pairs: readonly Pair[] = [
   ["cardForeground", "card", "body"],
   ["popoverForeground", "popover", "body"],
   ["mutedForeground", "muted", "secondary"],
+  ["mutedForeground", "background", "secondary"],
+  ["mutedForeground", "card", "secondary"],
+  ["mutedForeground", "popover", "secondary"],
+  ["inputForeground", "input", "body"],
+  ["foreground", "hover", "body"],
+  ["foreground", "active", "body"],
   ["secondaryForeground", "secondary", "secondary"],
   ["primaryForeground", "primary", "secondary"],
   ["primaryForeground", "primaryHover", "secondary"],
@@ -130,6 +154,28 @@ describe("high-contrast boundaries", () => {
       expect(contrast(colors.border, colors.background)).toBeGreaterThanOrEqual(
         3,
       );
+    });
+  });
+});
+
+describe("text selection", () => {
+  const surfaces = ["background", "card"] as const;
+
+  colourSets.forEach(({ label, colors, floors }) => {
+    it(`${label}: selection is a translucent wash`, () => {
+      expect(colors.selection).toMatch(/^#[0-9A-F]{8}$/);
+    });
+
+    surfaces.forEach((surface) => {
+      it(`${label}: body text stays readable on ${surface} under the selection wash`, () => {
+        expect(
+          contrast(
+            colors.foreground,
+            composite(colors.selection, colors[surface]),
+          ),
+          `${label} ${surface}`,
+        ).toBeGreaterThanOrEqual(floors.body);
+      });
     });
   });
 });

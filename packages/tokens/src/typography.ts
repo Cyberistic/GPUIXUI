@@ -13,6 +13,34 @@ export interface TextStyle {
   readonly fontWeight: FontWeight;
 }
 
+/**
+ * Every type role, in the order the token documentation lists them. A
+ * documentation site iterates this to build a type table from the package
+ * without an unsafe cast, the way `colorRoles` indexes the colour roles.
+ *
+ * @example
+ * ```ts
+ * import { textRoles, typography } from "@gpuixui/tokens";
+ *
+ * const rows = textRoles.map((role) => ({ role, ...typography[role] }));
+ * ```
+ */
+export const textRoles = [
+  "display",
+  "h1",
+  "h2",
+  "h3",
+  "body",
+  "bodyStrong",
+  "label",
+  "caption",
+  "code",
+  "codeBlock",
+] as const;
+
+/** A typographic role name, excluding the font family fields. */
+export type TextRole = (typeof textRoles)[number];
+
 /** Font families and the named type roles components use. */
 export interface Typography {
   /** UI font family. */
@@ -40,9 +68,6 @@ export interface Typography {
   /** Code blocks and terminal output. */
   readonly codeBlock: TextStyle;
 }
-
-/** A typographic role name, excluding the font family fields. */
-export type TextRole = Exclude<keyof Typography, "sans" | "mono">;
 
 const text = (
   fontSize: number,

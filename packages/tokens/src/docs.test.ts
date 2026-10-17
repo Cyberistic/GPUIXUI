@@ -33,7 +33,7 @@ import {
   spacing,
 } from "./scale.js";
 import { highContrastThemes, themes } from "./theme.js";
-import { typography } from "./typography.js";
+import { textRoles, typography } from "./typography.js";
 
 interface DocumentedRole {
   readonly role: string;
@@ -109,14 +109,20 @@ const documentedShadow = (shadows: readonly BoxShadow[]): string => {
 
 describe("docs/tokens.md numeric tables", () => {
   it("lists every type role with its size, leading and weight", () => {
-    Object.entries(typography).forEach(([role, style]) => {
-      if (typeof style === "string") {
-        return;
-      }
+    textRoles.forEach((role) => {
+      const style = typography[role];
       expect(markdown, `typography.${role}`).toContain(
         `| \`${role}\` | ${style.fontSize} | ${style.lineHeight} | ${style.fontWeight} |`,
       );
     });
+  });
+
+  it("lists the type roles in index order", () => {
+    const positions = textRoles.map((role) =>
+      markdown.indexOf(`| \`${role}\` |`),
+    );
+    expect(positions).not.toContain(-1);
+    expect(positions).toEqual(positions.toSorted((a, b) => a - b));
   });
 
   it("lists every spacing step", () => {

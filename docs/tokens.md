@@ -31,6 +31,7 @@ import {
   platformTypes,
   statusTone,
   systemUiFont,
+  textRoles,
   textStyle,
   type FocusRing,
   type PlatformName,
@@ -283,6 +284,9 @@ does not define tracking.
 | `caption` | 12 | 16 | 400 | metadata and helper text |
 | `code` | 13 | 20 | 400 | inline code |
 | `codeBlock` | 12 | 18 | 400 | code blocks and terminal output |
+
+`textRoles` lists the ten roles in this order, so a table can be generated
+without retyping them.
 
 `textStyle(theme, role)` resolves a role to GPUix style properties, choosing the
 mono family for `code` and `codeBlock`:
@@ -704,8 +708,18 @@ const rows = colorRoles.map((role) => ({
 }));
 ```
 
-The other groups are already plain data with their own keys: `typography`,
-`spacing`, `radius`, `densityPresets`, `borderWidth`, `iconSize` and `palette`.
+The other groups are already plain data with their own keys: `spacing`,
+`radius`, `densityPresets`, `borderWidth`, `iconSize` and `palette`.
+
+`textRoles` does the same for type: it lists the ten typographic roles in
+documentation order and excludes the `sans` and `mono` families, so a type table
+is generated without a cast:
+
+```ts
+import { textRoles, typography } from "@gpuixui/tokens";
+
+const rows = textRoles.map((role) => ({ role, ...typography[role] }));
+```
 
 ## Verification
 
@@ -717,17 +731,20 @@ nub run --filter @gpuixui/tokens test
 
 The test covers every shipped colour set — light, dark and both high-contrast
 variants — and fails if a semantic text/surface pair drops below its floor (7:1
-for primary body pairs, soft status text and all high-contrast text; 4.5:1 for
-secondary and on-colour text in the default themes, including text on a hovered
-filled action, which is held to the same floor as text on the resting fill, and
-status text (`xText`) on `background` and `card`; 3:1 for focus and essential
-boundaries in the default themes; 4.5:1 for them in the high-contrast variants).
+for primary body pairs, typed input text, soft status text and all high-contrast
+text; 4.5:1 for secondary and on-colour text in the default themes, including
+text on a hovered filled action, ghost text on the `hover` and `active` washes,
+muted text on `background`, `card` and `popover`, and status text (`xText`) on
+`background` and `card`; 3:1 for focus and essential boundaries in the default
+themes; 4.5:1 for them in the high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background` or
-`card` (floor 1.05:1). Palette edits must keep it green.
+`card` (floor 1.05:1), or if body text over the composited `selection` wash on
+`background`/`card` drops below its body floor. Palette edits must keep it green.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
-they disagree with the shipped themes or fall out of role order, so this page
-cannot drift from the implementation.
+they disagree with the shipped themes or fall out of role order; it also holds
+the type table to `textRoles` order and content, so this page cannot drift from
+the implementation.
 
 `packages/tokens/src/platforms.test.ts` covers the platform table: every platform
 has a label and both families, `sans` is the GPUI sentinel, no family is a comma

@@ -55,6 +55,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [056](./056-docs-truth-guard.md) | Docs truth guard for the token catalogue | F | 010–019, 050–055 | done |
 | [057](./057-status-text-roles.md) | Status text roles: a readable status tonality on plain surfaces | B | 010–019, 050–056 | done |
 | [058](./058-docs-numeric-tables-guard.md) | Docs-truth guard for the numeric token tables | F | 056 | done |
+| [059](./059-catalogue-index-and-contrast-completeness.md) | The type-role index and the unguarded colour pairs | F | 010–019, 050–058 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -75,7 +76,11 @@ slice for this workstream: it makes `docs/tokens.md`'s colour catalogue fail the
 test suite if it drifts from the shipped themes. 057 closes the status-tone
 contract: the solid fills are tuned as backgrounds, so status text, icons and
 dots drawn on `background`/`card` get their own `xText` tonality (light
-`warning` measured 1.78:1 against the canvas).
+`warning` measured 1.78:1 against the canvas). 059 closes the last two drift
+surfaces: a `textRoles` index beside `colorRoles` (the docs site had retyped the
+ten roles) and the contrast pairs the catalogue claimed but never guarded —
+muted text on plain surfaces, typed input text, ghost text on the `hover`/
+`active` washes, and the composited `selection` wash.
 
 ### Reference adoption (block `200–299`)
 

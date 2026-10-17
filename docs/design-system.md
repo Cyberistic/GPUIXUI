@@ -104,6 +104,12 @@ Ten roles, one job each:
 - `caption` — metadata and helper text at 12/16.
 - `code` / `codeBlock` — mono at 13/20 and 12/18.
 
+The scale is two ladders: prose (`display` → `caption`) and code (`code` →
+`codeBlock`). `bodyStrong` shares `body`'s size and is a weight variant, so it is
+on neither ladder. `textRoles` is the index of all ten roles in documentation
+order; the package test holds it, the `Typography` interface and the docs table
+in agreement, so the type scale is enumerated in one place.
+
 Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.
@@ -222,10 +228,11 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |
-| body text on background/card/popover | 7:1 | 7:1 |
-| secondary text, on-colour text, placeholder | 4.5:1 | 7:1 |
+| body text on background/card/popover/input | 7:1 | 7:1 |
+| secondary text (`mutedForeground` on plain surfaces), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card` | 4.5:1 | 7:1 |
+| text selection (`foreground` over the composited `selection` wash) | 7:1 | 7:1 |
 | focus ring and essential boundaries | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 

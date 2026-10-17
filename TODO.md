@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 24/32
+`[x]` `[███████░░░]` 26/36
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -80,6 +80,10 @@ stop faking hover with an alpha fill (plan 055)
 `[x]` Guard the numeric token tables in `docs/tokens.md` (typography,
 spacing, radius, density, elevation, motion, borders/icons/avatars) against
 drift from the implementation (plan 058)
+`[x]` Expose `textRoles` and guard it against the `Typography` interface
+(plan 059)
+`[x]` Guard every documented colour pair — muted text on plain surfaces, input
+text, ghost text on `hover`/`active`, the composited `selection` wash (plan 059)
 `[x]` Ship status text roles (`infoText`/`successText`/`warningText`/
 `destructiveText`) so status labels, icons and indicator dots have a readable
 colour on plain surfaces — light `warning` was 1.78:1 on `background` — and
@@ -135,6 +139,9 @@ layering rule and the no-portal limitation are documented in `docs/tokens.md`
 package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
 it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
 `components`)
+`[ ]` Cross-team: `docs-site` generates its type table from `textRoles` instead
+of its local role array, so an eleventh role cannot be silently omitted (owner:
+`docs-site`; plan 059)
 `[ ]` Cross-team: `LICENSES/adabraka-ui.md` (MIT, `Copyright (c) 2025 Adabraka
 Team`, "token structure referenced, no assets copied") — plan 202 §7, not this
 workstream's path. Owner: licensing

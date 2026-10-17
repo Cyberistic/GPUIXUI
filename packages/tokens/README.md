@@ -225,6 +225,15 @@ const rows = colorRoles.map((role) => ({
 }));
 ```
 
+`textRoles` does the same for type: the ten typographic roles in documentation
+order, without the `sans`/`mono` families.
+
+```ts
+import { textRoles, typography } from "@gpuixui/tokens";
+
+const rows = textRoles.map((role) => ({ role, ...typography[role] }));
+```
+
 ## Boundaries
 
 - No imports from any other workspace package.
