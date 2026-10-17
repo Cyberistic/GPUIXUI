@@ -44,7 +44,7 @@ export const ToggleGroupExample = (): ReactElement => {
               { value: "right", label: "Align right" },
             ]}
             value={align}
-            onChange={setAlign}
+            onValueChange={setAlign}
           />
         </Stack>
 
@@ -62,7 +62,7 @@ export const ToggleGroupExample = (): ReactElement => {
               { value: "underline", label: "Underline", disabled: true },
             ]}
             value={format}
-            onChange={setFormat}
+            onValueChange={setFormat}
           />
         </Stack>
 

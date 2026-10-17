@@ -76,12 +76,12 @@ const Toggle = ({
   name,
   description,
   checked,
-  onChange,
+  onValueChange,
 }: {
   readonly name: string;
   readonly description: string;
   readonly checked: boolean;
-  readonly onChange: (next: boolean) => void;
+  readonly onValueChange: (next: boolean) => void;
 }): ReactElement => (
   <Stack direction="row" align="center" gap="md">
     <Stack direction="column" gap="2xs" grow>
@@ -90,7 +90,7 @@ const Toggle = ({
         {description}
       </Text>
     </Stack>
-    <Switch checked={checked} onChange={onChange} label={name} />
+    <Switch checked={checked} onValueChange={onValueChange} label={name} />
   </Stack>
 );
 
@@ -174,7 +174,7 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                   >
                     <Input
                       value={workspace}
-                      onChange={setWorkspace}
+                      onValueChange={setWorkspace}
                       label="Workspace name"
                       fullWidth
                     />
@@ -191,7 +191,7 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                   >
                     <Input
                       value={email}
-                      onChange={setEmail}
+                      onValueChange={setEmail}
                       label="Contact email"
                       placeholder="you@example.com"
                       invalid={badEmail}
@@ -203,7 +203,7 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                   <Field name="About this workspace">
                     <TextArea
                       value={bio}
-                      onChange={setBio}
+                      onValueChange={setBio}
                       label="About this workspace"
                       placeholder="What is this workspace for?"
                       minRows={3}
@@ -216,7 +216,7 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                   <Field name="Plan">
                     <Select
                       value={plan}
-                      onChange={setPlan}
+                      onValueChange={setPlan}
                       label="Plan"
                       fullWidth
                       options={[
@@ -240,7 +240,7 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                     <RadioGroup
                       label="Density"
                       value={density}
-                      onChange={setDensity}
+                      onValueChange={setDensity}
                       options={[
                         { value: "compact", label: "Compact" },
                         {
@@ -267,19 +267,19 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                       name="Weekly digest"
                       description="A summary every Monday morning."
                       checked={digest}
-                      onChange={setDigest}
+                      onValueChange={setDigest}
                     />
                     <Toggle
                       name="Anonymous telemetry"
                       description="Usage counts only, never your content."
                       checked={telemetry}
-                      onChange={setTelemetry}
+                      onValueChange={setTelemetry}
                     />
                   </Stack>
 
                   <Checkbox
                     checked={terms}
-                    onChange={setTerms}
+                    onValueChange={setTerms}
                     label="I accept the terms"
                   />
                   <Text role="caption" tone="muted">

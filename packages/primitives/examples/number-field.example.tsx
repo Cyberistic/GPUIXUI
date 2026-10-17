@@ -61,7 +61,7 @@ export const NumberFieldExample = (): ReactElement => {
               testId="number-field-example-copies"
               label="Copies"
               value={copies}
-              onChange={setCopies}
+              onValueChange={setCopies}
               min={1}
               max={99}
             />
@@ -80,7 +80,7 @@ export const NumberFieldExample = (): ReactElement => {
               testId="number-field-example-dpi"
               label="Resolution"
               value={dpi}
-              onChange={setDpi}
+              onValueChange={setDpi}
               min={72}
               max={600}
               step={12}

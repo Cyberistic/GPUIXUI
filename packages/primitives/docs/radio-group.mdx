@@ -17,7 +17,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 <RadioGroup
   label="Digest cadence"
   value={cadence}
-  onChange={setCadence}
+  onValueChange={setCadence}
   options={[
     { value: "daily", label: "Daily" },
     { value: "weekly", label: "Weekly", description: "Every Monday." },
@@ -33,7 +33,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `options` | `ReadonlyArray<RadioOption>` | — (required) | the choices, in order |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | `""` | initial selection when uncontrolled |
-| `onChange` | `(value: string) => void` | none | the selected option's value |
+| `onValueChange` | `(value: string) => void` | none | the selected option's value |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | layout and the arrow axis |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | radio circle size |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the dot's fill |

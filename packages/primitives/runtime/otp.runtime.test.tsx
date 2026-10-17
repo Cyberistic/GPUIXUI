@@ -2,7 +2,7 @@
  * `OTPField` in the real GPUix runtime.
  *
  * The runtime facts this suite proves are the ones the element tree cannot: a
- * code can be typed into the native inputs and reaches `onChange` as one
+ * code can be typed into the native inputs and reaches `onValueChange` as one
  * contiguous string, focus follows the character into the next cell, arrows and
  * Backspace move it, and every cell is a named text input inside a named group.
  *
@@ -28,7 +28,7 @@ import { Surface, openWindow, testTheme } from "./fixture.js";
 const recorder = (): {
   readonly values: ReadonlyArray<string>;
   readonly complete: ReadonlyArray<string>;
-  readonly onChange: (value: string) => void;
+  readonly onValueChange: (value: string) => void;
   readonly onComplete: (value: string) => void;
 } => {
   const values: string[] = [];
@@ -40,7 +40,7 @@ const recorder = (): {
     get complete() {
       return complete;
     },
-    onChange: (value) => {
+    onValueChange: (value) => {
       values.push(value);
     },
     onComplete: (value) => {
@@ -76,7 +76,7 @@ it("fills the code one key at a time and completes once", async () => {
       testId="otp"
       label="Verification code"
       autoFocus
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
       onComplete={field.onComplete}
     />,
   );
@@ -124,7 +124,7 @@ it("clears backwards on Backspace in an empty cell", async () => {
       testId="otp"
       label="Verification code"
       defaultValue="12"
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   runtime.keyUp("otp-cell-3", "backspace");
@@ -139,7 +139,7 @@ it("deletes only one character when Backspace empties a filled cell", async () =
       testId="otp"
       label="Verification code"
       defaultValue="123"
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   runtime.keyDown("otp-cell-3", "backspace");
@@ -256,7 +256,7 @@ it("refuses input and leaves the tab order while disabled", async () => {
         testId="otp"
         label="Verification code"
         disabled
-        onChange={field.onChange}
+        onValueChange={field.onValueChange}
       />
     </Stack>,
   );

@@ -15,7 +15,7 @@ import { Switch } from "@gpuixui/primitives";
 
 <Switch
   checked={paused}
-  onChange={setPaused}
+  onValueChange={setPaused}
   label="Pause all notifications"
 />;
 ```
@@ -26,7 +26,7 @@ import { Switch } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `checked` | `boolean` | — | controlled; omit to let the switch keep its own state |
 | `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
-| `onChange` | `(next: boolean) => void` | none | the next boolean |
+| `onValueChange` | `(next: boolean) => void` | none | the next boolean |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
 | `invalid` | `boolean` | `false` | the track takes the destructive role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |

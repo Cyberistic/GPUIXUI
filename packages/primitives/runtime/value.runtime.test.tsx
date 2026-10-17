@@ -90,16 +90,16 @@ const mount = async (node: ReactNode): Promise<Runtime> => {
 
 const values = (): {
   readonly seen: Array<number>;
-  readonly onChange: (value: number) => void;
+  readonly onValueChange: (value: number) => void;
 } => {
   const seen: Array<number> = [];
-  return { seen, onChange: (value) => seen.push(value) };
+  return { seen, onValueChange: (value) => seen.push(value) };
 };
 
 it("maps a real click to the value under the pointer", async () => {
-  const { seen, onChange } = values();
+  const { seen, onValueChange } = values();
   const runtime = await mount(
-    <Slider testId="s" label="Volume" onChange={onChange} />,
+    <Slider testId="s" label="Volume" onValueChange={onValueChange} />,
   );
   const point = pointAt(runtime, "s", 0.25);
   runtime.clickAt(point.x, point.y);
@@ -108,9 +108,14 @@ it("maps a real click to the value under the pointer", async () => {
 });
 
 it("clamps a press in the track's inset to its nearest end", async () => {
-  const { seen, onChange } = values();
+  const { seen, onValueChange } = values();
   const runtime = await mount(
-    <Slider testId="s" label="Volume" defaultValue={50} onChange={onChange} />,
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onValueChange={onValueChange}
+    />,
   );
   const box = boundsOf(runtime, "s");
   runtime.clickAt(box.x + 1, box.y + box.height / 2);
@@ -134,11 +139,16 @@ it("moves by a step, a page and to the ends with the keyboard", async () => {
 });
 
 it("refuses a press and a key while disabled, and stays out of the tab order", async () => {
-  const { seen, onChange } = values();
+  const { seen, onValueChange } = values();
   const runtime = await mount(
     <Stack direction="row">
       <Button testId="b">Before</Button>
-      <Slider testId="s" label="Volume" disabled onChange={onChange} />
+      <Slider
+        testId="s"
+        label="Volume"
+        disabled
+        onValueChange={onValueChange}
+      />
     </Stack>,
   );
   const point = pointAt(runtime, "s", 0.5);
@@ -163,7 +173,7 @@ it("paints the thumb centred on the value it represents", async () => {
           key={value}
           testId={`s${value}`}
           value={value}
-          onChange={() => {}}
+          onValueChange={() => {}}
           label={`Value ${value}`}
         />
       ))}
@@ -200,9 +210,14 @@ it("keeps tracking a drag after the pointer leaves the track", async () => {
   // is not limited to the track's own paint box. Without the move handler (or
   // with a handler that checks where the pointer is), leaving the track would
   // freeze the value at the last inside position.
-  const { seen, onChange } = values();
+  const { seen, onValueChange } = values();
   const runtime = await mount(
-    <Slider testId="s" label="Volume" defaultValue={25} onChange={onChange} />,
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={25}
+      onValueChange={onValueChange}
+    />,
   );
   const box = boundsOf(runtime, "s");
   const start = pointAt(runtime, "s", 0.25);
@@ -215,9 +230,14 @@ it("keeps tracking a drag after the pointer leaves the track", async () => {
 });
 
 it("clamps a drag that runs past either end", async () => {
-  const { seen, onChange } = values();
+  const { seen, onValueChange } = values();
   const runtime = await mount(
-    <Slider testId="s" label="Volume" defaultValue={50} onChange={onChange} />,
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onValueChange={onValueChange}
+    />,
   );
   const box = boundsOf(runtime, "s");
   const middle = pointAt(runtime, "s", 0.5);
@@ -232,9 +252,14 @@ it("clamps a drag that runs past either end", async () => {
 it("refuses a non-primary press, and a left click still moves the value", async () => {
   // The bug guarded: a press on any button started a gesture, so a right or
   // middle click moved the value (measured 25 → 75 in plan 063 §0.2).
-  const { seen, onChange } = values();
+  const { seen, onValueChange } = values();
   const runtime = await mount(
-    <Slider testId="s" label="Volume" defaultValue={25} onChange={onChange} />,
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={25}
+      onValueChange={onValueChange}
+    />,
   );
   const point = pointAt(runtime, "s", 0.75);
   runtime.renderer.nativeSimulateMouseDown(point.x, point.y, 2);

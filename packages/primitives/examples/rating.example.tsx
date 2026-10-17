@@ -38,7 +38,7 @@ export const RatingExample = (): ReactElement => {
             testId="rating-example-your"
             label="Your rating"
             value={score}
-            onChange={setScore}
+            onValueChange={setScore}
           />
         </Stack>
 

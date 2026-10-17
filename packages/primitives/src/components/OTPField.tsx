@@ -10,7 +10,7 @@
  *
  * The value is **one string**, contiguous from the first cell, so a caller never
  * juggles an array. There is no `onPaste` in 0.10.0: a pasted code reaches this
- * component as one multi-character `onChange`, and `applyOtpInput` fills it
+ * component as one multi-character host `onChange`, and `applyOtpInput` fills it
  * forward from the cell that received it — a behaviour identical to typing the
  * same characters quickly.
  *
@@ -22,7 +22,7 @@
  * Left/Right/Home/End/Backspace/Delete on key down; only their key-up events
  * reach the element (measured 2026-10-17). A held arrow therefore moves one
  * cell rather than repeating. Backspace on a filled cell is the native edit and
- * arrives through `onChange`; the key-up handler must not delete the previous
+ * arrives through the host `onChange`; the key-up handler must not delete the previous
  * cell as well, so it remembers that this key already emptied the cell.
  */
 
@@ -72,7 +72,7 @@ export interface OTPFieldProps {
   readonly value?: string;
   readonly defaultValue?: string;
   /** Called with the code after every edit, only when it actually changed. */
-  readonly onChange?: (value: string) => void;
+  readonly onValueChange?: (value: string) => void;
   /** Called once when an edit makes the code complete. */
   readonly onComplete?: (value: string) => void;
   /** Defaults to `md`. */
@@ -228,7 +228,7 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   const state = useControlState(
     props.value,
     normalizeOtp(props.defaultValue ?? "", limit),
-    props.onChange,
+    props.onValueChange,
   );
   const focusCell = (index: number): void => {
     setFocusedIndex(Option.some(index));

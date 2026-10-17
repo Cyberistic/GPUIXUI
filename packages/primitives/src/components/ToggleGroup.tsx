@@ -94,7 +94,7 @@ export interface ToggleGroupSingleProps extends ToggleGroupBase {
   readonly type: "single";
   readonly value?: string;
   readonly defaultValue?: string;
-  readonly onChange?: (value: string) => void;
+  readonly onValueChange?: (value: string) => void;
 }
 
 /** Any number of pressed values. Activating an item adds or removes it. */
@@ -102,7 +102,7 @@ export interface ToggleGroupMultipleProps extends ToggleGroupBase {
   readonly type: "multiple";
   readonly value?: readonly string[];
   readonly defaultValue?: readonly string[];
-  readonly onChange?: (value: readonly string[]) => void;
+  readonly onValueChange?: (value: readonly string[]) => void;
 }
 
 export type ToggleGroupProps =
@@ -274,11 +274,11 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
       if (props.type === "single") {
         Option.match(Arr.get(next, 0), {
           onNone: () => {},
-          onSome: (value) => props.onChange?.(value),
+          onSome: (value) => props.onValueChange?.(value),
         });
         return;
       }
-      props.onChange?.(next);
+      props.onValueChange?.(next);
     },
   );
   const activeIndex =

@@ -43,7 +43,7 @@ export interface CheckboxProps {
   /** Controlled. Omit to let the checkbox hold its own state. */
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
-  readonly onChange?: (next: boolean) => void;
+  readonly onValueChange?: (next: boolean) => void;
   /** A third state, drawn as a dash. Overrides `checked` when true. */
   readonly indeterminate?: boolean;
   readonly disabled?: boolean;
@@ -150,7 +150,7 @@ export const Checkbox = (props: CheckboxProps): ReactElement => {
   const state = useControlState(
     props.checked,
     props.defaultChecked ?? false,
-    props.onChange,
+    props.onValueChange,
   );
   return renderCheckbox(props, theme, state.value, focus, state.set);
 };

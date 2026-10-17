@@ -60,7 +60,7 @@ export const TextArea = (props: TextAreaProps): ReactElement => {
   const field = useControlState(
     props.value,
     props.defaultValue ?? "",
-    props.onChange,
+    props.onValueChange,
   );
   return renderTextArea(props, theme, field.value, focus, field.set);
 };

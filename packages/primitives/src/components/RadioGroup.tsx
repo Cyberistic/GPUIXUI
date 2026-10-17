@@ -72,7 +72,7 @@ export interface RadioGroupProps {
   /** Controlled selection. Omit to let the group hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
-  readonly onChange?: (value: string) => void;
+  readonly onValueChange?: (value: string) => void;
   readonly options: ReadonlyArray<RadioOption>;
   /** Arrow-key axis. Defaults to `vertical`. */
   readonly orientation?: "vertical" | "horizontal";
@@ -278,7 +278,7 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const selected = useControlState(
     props.value,
     props.defaultValue ?? "",
-    props.onChange,
+    props.onValueChange,
   );
   return renderRadioGroup(
     props,

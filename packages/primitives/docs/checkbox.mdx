@@ -14,7 +14,7 @@ import { Checkbox } from "@gpuixui/primitives";
 
 <Checkbox
   checked={email}
-  onChange={setEmail}
+  onValueChange={setEmail}
   label="Email notifications"
 />;
 ```
@@ -36,7 +36,7 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `checked` | `boolean` | — | controlled state; omit to let the box keep its own |
 | `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
-| `onChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
+| `onValueChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
 | `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
 | `invalid` | `boolean` | `false` | the empty box takes the destructive border |

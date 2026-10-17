@@ -125,13 +125,13 @@ export interface ControlState<Value> {
  * The shared controlled/uncontrolled behaviour for any control.
  *
  * `value` present means the parent owns the value; absent means the control
- * keeps its own copy. `onChange` is only called when the value actually changed,
+ * keeps its own copy. `onValueChange` is only called when the value actually changed,
  * so a parent is not woken by an interaction that changed nothing.
  */
 export const useControlState = <Value>(
   value: Value | undefined,
   defaultValue: Value,
-  onChange: ((next: Value) => void) | undefined,
+  onValueChange: ((next: Value) => void) | undefined,
 ): ControlState<Value> => {
   const [state, setState] = useState(() =>
     initValueState(Option.fromNullishOr(value), defaultValue),
@@ -142,7 +142,7 @@ export const useControlState = <Value>(
     set: (next) => {
       const applied = setValue(current, next);
       setState(applied.state);
-      if (applied.notify) onChange?.(next);
+      if (applied.notify) onValueChange?.(next);
     },
   };
 };

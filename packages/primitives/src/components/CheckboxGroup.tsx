@@ -76,7 +76,7 @@ export interface CheckboxGroupProps {
   /** Controlled selection. Omit to let the group hold its own. */
   readonly value?: readonly string[];
   readonly defaultValue?: readonly string[];
-  readonly onChange?: (value: readonly string[]) => void;
+  readonly onValueChange?: (value: readonly string[]) => void;
   /** Row flow. Defaults to `vertical`. */
   readonly orientation?: "vertical" | "horizontal";
   /**
@@ -351,7 +351,7 @@ export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
   const state = useControlState<ReadonlyArray<string>>(
     props.value,
     props.defaultValue ?? [],
-    props.onChange,
+    props.onValueChange,
   );
   return renderCheckboxGroup(
     props,

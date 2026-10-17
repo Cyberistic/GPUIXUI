@@ -41,7 +41,7 @@ export const OtpExample = (): ReactElement => {
           testId="otp-example-code"
           label="Verification code"
           value={code}
-          onChange={(next) => {
+          onValueChange={(next) => {
             setCode(next);
             if (status === "rejected") setStatus("idle");
           }}

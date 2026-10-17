@@ -101,6 +101,15 @@ Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
 none paints a literal and none scripts hover or press
 (GPUIx applies `style.hover`/`style.active` natively).
 
+### One value callback
+
+A controlled value is `value` / `defaultValue` / `onValueChange(value)`; a
+`Toggle`'s pressed state is `pressed` / `onPressedChange` and an overlay's open
+state is `onOpenChange`. There is no `onChange` prop: our callback carries a
+value, not the host event, and the accepted cross-package contract names one
+value callback (`docs/component-api.md` §2, plan `088`). `src/callback-names.test.ts`
+fails by file and line if a component, page or example reintroduces it.
+
 ### What GPUix does not provide, and what this package does instead
 
 | Capability | GPUix 0.10.0 | Here |

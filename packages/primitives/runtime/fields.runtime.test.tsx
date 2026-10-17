@@ -4,7 +4,7 @@
  * `Input` and `TextArea` are the components whose editing is entirely the
  * runtime's (the native `<input>`/`<textarea>` holds the text), so the only
  * honest proof that they work is the runtime reporting an edit back — which is
- * what `simulateKeystrokes` plus `onChange` shows here.
+ * what `simulateKeystrokes` plus `onValueChange` shows here.
  *
  * `Select` and `Tooltip` are thin wrappers over GPUix's own headless components
  * (PLAN.md D15), so this suite's job is the wrapper's contract: the trigger's
@@ -39,23 +39,23 @@ const boundsOf = (runtime: Runtime, testId: string): Bounds =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
 
-/** The values `onChange` was called with, in order. */
+/** The values `onValueChange` was called with, in order. */
 const recorder = (): {
   readonly values: ReadonlyArray<string>;
-  readonly onChange: (value: string) => void;
+  readonly onValueChange: (value: string) => void;
 } => {
   const values: string[] = [];
   return {
     get values() {
       return values;
     },
-    onChange: (value) => {
+    onValueChange: (value) => {
       values.push(value);
     },
   };
 };
 
-/** The last value `onChange` reported. */
+/** The last value `onValueChange` reported. */
 const lastValue = (values: ReadonlyArray<string>): string =>
   Option.getOrElse(Arr.last(values), () =>
     expect.fail("the field reported no edit at all"),
@@ -86,7 +86,12 @@ it("edits an Input through the runtime's own text handling", async () => {
   const field = recorder();
   runtime.render(
     <Surface>
-      <Input testId="field" label="Name" autoFocus onChange={field.onChange} />
+      <Input
+        testId="field"
+        label="Name"
+        autoFocus
+        onValueChange={field.onValueChange}
+      />
     </Surface>,
   );
   expect(Option.getOrUndefined(runtime.focused())).toBe("field");
@@ -153,7 +158,7 @@ it("reports an Input's Enter through onSubmit", async () => {
         testId="field"
         label="Name"
         autoFocus
-        onChange={field.onChange}
+        onValueChange={field.onValueChange}
         onSubmit={() => {
           submitted += 1;
         }}
@@ -175,7 +180,7 @@ it("gives a controlled Input's owner the value after each edit", async () => {
         label="Name"
         autoFocus
         value=""
-        onChange={field.onChange}
+        onValueChange={field.onValueChange}
       />
     </Surface>,
   );
@@ -193,7 +198,7 @@ it("refuses to edit or submit a disabled Input", async () => {
         testId="field"
         label="Name"
         disabled
-        onChange={field.onChange}
+        onValueChange={field.onValueChange}
         onSubmit={() => {
           submitted += 1;
         }}
@@ -213,7 +218,7 @@ it("accepts no newline in a disabled TextArea", async () => {
   const field = recorder();
   runtime.render(
     <Surface>
-      <TextArea testId="area" disabled onChange={field.onChange} />
+      <TextArea testId="area" disabled onValueChange={field.onValueChange} />
     </Surface>,
   );
   runtime.click("area");
@@ -242,7 +247,7 @@ it("edits a TextArea across lines", async () => {
   const field = recorder();
   runtime.render(
     <Surface>
-      <TextArea testId="area" autoFocus onChange={field.onChange} />
+      <TextArea testId="area" autoFocus onValueChange={field.onValueChange} />
     </Surface>,
   );
   runtime.type("a b enter c d");
@@ -295,7 +300,7 @@ it("selects a Select option by clicking it", async () => {
         testId="sel"
         label="Fruit"
         placeholder="Pick one"
-        onChange={field.onChange}
+        onValueChange={field.onValueChange}
         options={[
           { value: "apple", label: "Apple" },
           { value: "pear", label: "Pear" },
@@ -417,7 +422,7 @@ it("returns focus to a ringed Select trigger after committing an option", async 
   const field = recorder();
   runtime.render(
     <Surface>
-      <Select {...selectProps} onChange={field.onChange} />
+      <Select {...selectProps} onValueChange={field.onValueChange} />
     </Surface>,
   );
   runtime.focusNext();
@@ -603,7 +608,7 @@ it("keeps a grouped Select's keyboard order flat across a heading", async () => 
   const field = recorder();
   runtime.render(
     <Surface>
-      <Select {...groupedProps} onChange={field.onChange} />
+      <Select {...groupedProps} onValueChange={field.onValueChange} />
     </Surface>,
   );
   runtime.focusNext();

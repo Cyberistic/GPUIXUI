@@ -47,7 +47,7 @@ it("is a named group of stars that reports the rating", async () => {
   const runtime = await openWindow();
   runtime.render(
     <Surface>
-      <Rating testId="ra" label="Quality" value={3} onChange={() => {}} />
+      <Rating testId="ra" label="Quality" value={3} onValueChange={() => {}} />
     </Surface>,
   );
   expect(
@@ -73,7 +73,7 @@ it("selects the star that a real click lands on", async () => {
         testId="ra"
         label="Quality"
         defaultValue={1}
-        onChange={(value) => seen.push(value)}
+        onValueChange={(value) => seen.push(value)}
       />
     </Surface>,
   );
@@ -193,7 +193,7 @@ it("refuses input and leaves the tab order when disabled", async () => {
           label="Quality"
           disabled
           defaultValue={3}
-          onChange={(value) => seen.push(value)}
+          onValueChange={(value) => seen.push(value)}
         />
       </Stack>
     </Surface>,

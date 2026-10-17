@@ -39,7 +39,7 @@ export interface SwitchProps {
   /** Controlled. Omit to let the switch hold its own state. */
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
-  readonly onChange?: (next: boolean) => void;
+  readonly onValueChange?: (next: boolean) => void;
   readonly disabled?: boolean;
   readonly invalid?: boolean;
   /** Defaults to `md`. */
@@ -117,7 +117,7 @@ export const Switch = (props: SwitchProps): ReactElement => {
   const state = useControlState(
     props.checked,
     props.defaultChecked ?? false,
-    props.onChange,
+    props.onValueChange,
   );
   return renderSwitch(props, theme, state.value, focus, state.set);
 };

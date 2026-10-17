@@ -89,7 +89,7 @@ export interface SliderProps {
   /** Controlled value. Omit to let the slider hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
-  readonly onChange?: (value: number) => void;
+  readonly onValueChange?: (value: number) => void;
   /** Defaults to 0. */
   readonly min?: number;
   /** Defaults to 100. */
@@ -116,7 +116,7 @@ export interface SliderProps {
 export interface RangeSliderProps {
   readonly value?: readonly [number, number];
   readonly defaultValue?: readonly [number, number];
-  readonly onChange?: (value: readonly [number, number]) => void;
+  readonly onValueChange?: (value: readonly [number, number]) => void;
   readonly min?: number;
   readonly max?: number;
   readonly step?: number;
@@ -373,7 +373,7 @@ export const Slider = (props: SliderProps): ReactElement => {
   const state = useControlState(
     props.value,
     clampValue(props.defaultValue ?? range.min, range),
-    props.onChange,
+    props.onValueChange,
   );
   const inset = sliderInset(props.size ?? "md", theme);
   const apply = (event: EventPayload): void =>
@@ -427,7 +427,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   const state = useControlState<readonly [number, number]>(
     props.value,
     [initial.start, initial.end],
-    props.onChange,
+    props.onValueChange,
   );
   const inset = sliderInset(props.size ?? "md", theme);
   const focusThumb = (index: 0 | 1): void => {

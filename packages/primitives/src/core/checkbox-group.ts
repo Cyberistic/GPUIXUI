@@ -7,7 +7,7 @@
  * not silently drop a disabled option's value.
  *
  * A change that produces the same membership returns the current array **by
- * identity**, so the shared `useControlState` does not call `onChange` and wake
+ * identity**, so the shared `useControlState` does not call `onValueChange` and wake
  * the parent for an interaction that changed nothing.
  */
 

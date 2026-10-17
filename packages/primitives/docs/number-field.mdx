@@ -18,7 +18,7 @@ const [copies, setCopies] = useState(1);
 
 <Stack direction="column" gap="xs">
   <Label description="1–99">Copies</Label>
-  <NumberField label="Copies" value={copies} onChange={setCopies} min={1} max={99} />
+  <NumberField label="Copies" value={copies} onValueChange={setCopies} min={1} max={99} />
 </Stack>;
 ```
 
@@ -31,7 +31,7 @@ way a native number field does — it does not start with a zero to delete.
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | none | start value; the field shows empty without one |
-| `onChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
+| `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
 | `min` / `max` | `number` | none | bound the value; absent means unbounded |
 | `step` | `number` | `1` | arrow step |
 | `precision` | `number` | `0` | decimals shown on commit |
@@ -47,7 +47,7 @@ way a native number field does — it does not start with a zero to delete.
 
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
-through `onChange`; on blur or `Enter` the draft is reformatted to `precision`.
+through `onValueChange`; on blur or `Enter` the draft is reformatted to `precision`.
 
 A **decimal step is exact**: `stepNumber` trims its result to 12 decimal places,
 so `0.2` stepped by `0.1` is `0.3` rather than `0.30000000000000004`. `precision`

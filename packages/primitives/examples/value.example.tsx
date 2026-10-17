@@ -65,7 +65,7 @@ export const ValueExample = (): ReactElement => {
             testId="value-example-quality"
             label="Quality"
             value={quality}
-            onChange={setQuality}
+            onValueChange={setQuality}
             formatValue={(value) => `${value}%`}
           />
         </Row>
@@ -77,7 +77,7 @@ export const ValueExample = (): ReactElement => {
             testId="value-example-budget"
             label="Budget"
             value={price}
-            onChange={setPrice}
+            onValueChange={setPrice}
             step={5}
             formatValue={(value) => `$${value}`}
           />

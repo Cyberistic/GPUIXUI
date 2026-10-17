@@ -33,7 +33,7 @@ const [format, setFormat] = useState<ReadonlyArray<string>>(["bold"]);
     { value: "right", label: "Align right" },
   ]}
   value={align}
-  onChange={setAlign}
+  onValueChange={setAlign}
 />;
 
 <ToggleGroup
@@ -45,12 +45,12 @@ const [format, setFormat] = useState<ReadonlyArray<string>>(["bold"]);
     { value: "underline", label: "Underline", disabled: true },
   ]}
   value={format}
-  onChange={setFormat}
+  onValueChange={setFormat}
 />;
 ```
 
 Omit `value` to let the group own its selection; `defaultValue` sets the start
-(`"left"` for `single`, `["bold"]` for `multiple`). `onChange` fires only when
+(`"left"` for `single`, `["bold"]` for `multiple`). `onValueChange` fires only when
 the selection actually changed.
 
 ## API
@@ -60,7 +60,7 @@ the selection actually changed.
 | `type` | `"single" \| "multiple"` | required | which selection rule applies |
 | `options` | `ReadonlyArray<{ value, label, disabled? }>` | required | the items, in visual order |
 | `value` / `defaultValue` | `string` for `single`, `readonly string[]` for `multiple` | — | controlled selection, or the uncontrolled start |
-| `onChange` | `(value) => void` | — | the new selection, only on a real change |
+| `onValueChange` | `(value) => void` | — | the new selection, only on a real change |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | flex direction and arrow axis |
 | `variant` | `"default" \| "outline"` | `"default"` | `Toggle`'s two rest paints |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | control height and padding from the density scale |
@@ -180,7 +180,7 @@ the item — after its own paint and focus ring:
   081).
 
 - `src/core/toggle-group.test.ts` — single replaces and returns the same array
-  on a re-press (no spurious `onChange`); multiple appends, removes and
+  on a re-press (no spurious `onValueChange`); multiple appends, removes and
   preserves a value the options do not contain.
 - `src/components/ToggleGroup.test.tsx` — named group and buttons, value text
   and no `aria-pressed`, one tab stop in both modes, disabled item out of the

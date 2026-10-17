@@ -13,7 +13,7 @@
  * distribution is the same.
  *
  * GPUix also has no `onBeforeInput`: Backspace on a filled cell is the native
- * input's own edit (and arrives through `onChange`), while Backspace on an
+ * input's own edit (and arrives through the host `onChange`), while Backspace on an
  * **empty** cell has nothing to delete, so `decideOtpKey` is what clears the
  * cell before it and moves focus there.
  */
@@ -138,7 +138,7 @@ export const applyOtpInput = (
  * Left/Right/Home/End move between cells instead of the caret — each cell holds
  * one character, so a caret has nowhere to go. Backspace is ours only when the
  * cell is empty: otherwise the input deletes its own character and reports it
- * through `onChange`, and handling it here too would delete twice.
+ * through the host `onChange`, and handling it here too would delete twice.
  */
 export const decideOtpKey = (
   current: string,

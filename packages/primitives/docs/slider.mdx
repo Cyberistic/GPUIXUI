@@ -22,7 +22,7 @@ const [quality, setQuality] = useState(62);
   <Slider
     label="Quality"
     value={quality}
-    onChange={setQuality}
+    onValueChange={setQuality}
     formatValue={(value) => `${value}%`}
   />
 </Stack>;
@@ -36,7 +36,7 @@ Omit `value` to let the slider own its state (`defaultValue` sets the start).
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | `min` | uncontrolled start |
-| `onChange` | `(value: number) => void` | — | called only when the value changed |
+| `onValueChange` | `(value: number) => void` | — | called only when the value changed |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous (arrows move 1% of the span) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb `iconSize`, track `density.controlHeight` |

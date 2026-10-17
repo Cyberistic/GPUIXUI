@@ -17,7 +17,7 @@ import { Label, Select } from "@gpuixui/primitives";
 <Label>Region</Label>
 <Select
   value={region}
-  onChange={setRegion}
+  onValueChange={setRegion}
   label="Region"
   fullWidth
   options={[
@@ -34,7 +34,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 <Select
   label="Region"
   value={region}
-  onChange={setRegion}
+  onValueChange={setRegion}
   options={[
     {
       label: "Europe",
@@ -58,7 +58,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 | `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | choices in paint order (`{ value, label, disabled? }`), optionally under a heading |
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
-| `onChange` | `(value: string) => void` | none | committed value |
+| `onValueChange` | `(value: string) => void` | none | committed value |
 | `placeholder` | `string` | none | shown before a choice |
 | `disabled` | `boolean` | `false` | refuses opening |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |

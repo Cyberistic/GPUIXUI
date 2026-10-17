@@ -85,7 +85,7 @@ export const FormExample = (): ReactElement => {
           </Label>
           <Input
             value={name}
-            onChange={setName}
+            onValueChange={setName}
             label="Project name"
             placeholder="Atlas"
             autoFocus
@@ -100,7 +100,7 @@ export const FormExample = (): ReactElement => {
           </Label>
           <Input
             value={owner}
-            onChange={setOwner}
+            onValueChange={setOwner}
             label="Owner email"
             placeholder="you@example.com"
             fullWidth
@@ -111,7 +111,7 @@ export const FormExample = (): ReactElement => {
           <Label>Region</Label>
           <Select
             value={region}
-            onChange={setRegion}
+            onValueChange={setRegion}
             label="Region"
             fullWidth
             options={REGIONS}
@@ -122,7 +122,7 @@ export const FormExample = (): ReactElement => {
           <Label description="Markdown is not interpreted.">Description</Label>
           <TextArea
             value={notes}
-            onChange={setNotes}
+            onValueChange={setNotes}
             label="Description"
             placeholder="What is this project for?"
             minRows={3}

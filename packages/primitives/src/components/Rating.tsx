@@ -49,7 +49,7 @@ export interface RatingProps {
   /** Controlled rating, `0..max` (0 is unrated). */
   readonly value?: number;
   readonly defaultValue?: number;
-  readonly onChange?: (value: number) => void;
+  readonly onValueChange?: (value: number) => void;
   /** Defaults to 5. */
   readonly max?: number;
   /** Defaults to `md`. */
@@ -196,7 +196,7 @@ export const Rating = (props: RatingProps): ReactElement => {
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
-    props.onChange,
+    props.onValueChange,
   );
   return renderRating(
     props,

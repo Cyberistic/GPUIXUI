@@ -21,7 +21,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
   <RangeSlider
     label="Budget"
     value={price}
-    onChange={setPrice}
+    onValueChange={setPrice}
     step={5}
     formatValue={(value) => `$${value}`}
   />
@@ -39,7 +39,7 @@ ends can touch but never cross.
 | ---- | ---- | ------- | ----------- |
 | `value` | `readonly [number, number]` | — | controlled span |
 | `defaultValue` | `readonly [number, number]` | `[min, max]` | uncontrolled start |
-| `onChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
+| `onValueChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |

@@ -53,7 +53,7 @@ export interface NumberFieldProps {
   readonly value?: number;
   readonly defaultValue?: number;
   /** Called with the clamped value after a valid edit or a step. */
-  readonly onChange?: (value: number) => void;
+  readonly onValueChange?: (value: number) => void;
   /** No lower bound when omitted. */
   readonly min?: number;
   /** No upper bound when omitted. */
@@ -209,7 +209,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   const state = useControlState(
     props.value,
     clampNumeric(props.defaultValue ?? 0, range),
-    props.onChange,
+    props.onValueChange,
   );
   const display = (value: number): string =>
     props.formatValue?.(value) ?? formatNumber(value, props.precision ?? 0);

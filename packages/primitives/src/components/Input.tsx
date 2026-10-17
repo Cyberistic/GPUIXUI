@@ -42,7 +42,7 @@ export interface FieldProps {
   /** Initial text when uncontrolled. */
   readonly defaultValue?: string;
   /** Called with the text after every edit, only when it actually changed. */
-  readonly onChange?: (value: string) => void;
+  readonly onValueChange?: (value: string) => void;
   /**
    * Enter in an `<input>`. A `TextArea` does not take this: the runtime would
    * turn Enter into a submit and take the newline away (plan 046).
@@ -134,7 +134,7 @@ export const Input = (props: InputProps): ReactElement => {
   const field = useControlState(
     props.value,
     props.defaultValue ?? "",
-    props.onChange,
+    props.onValueChange,
   );
   return renderInput(props, theme, field.value, focus, field.set);
 };

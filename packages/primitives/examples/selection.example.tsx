@@ -61,7 +61,7 @@ export const SelectionExample = (): ReactElement => {
           label="Notification channels"
           selectAll="All channels"
           value={channels}
-          onChange={setChannels}
+          onValueChange={setChannels}
           options={[
             {
               value: "email",
@@ -83,7 +83,7 @@ export const SelectionExample = (): ReactElement => {
           <RadioGroup
             label="Digest cadence"
             value={cadence}
-            onChange={setCadence}
+            onValueChange={setCadence}
             options={[
               { value: "daily", label: "Daily" },
               {
@@ -104,7 +104,7 @@ export const SelectionExample = (): ReactElement => {
         >
           <Switch
             checked={paused}
-            onChange={setPaused}
+            onValueChange={setPaused}
             label="Pause all notifications"
             testId="selection-example-pause"
           />

@@ -98,7 +98,7 @@ export interface SelectProps {
   /** Controlled selection. Omit to let the select hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
-  readonly onChange?: (value: string) => void;
+  readonly onValueChange?: (value: string) => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   /** Validation failed: the trigger's border takes the destructive role. */
@@ -469,7 +469,7 @@ export const Select = (props: SelectProps): ReactElement => {
   const state = useControlState(
     props.value,
     props.defaultValue ?? "",
-    props.onChange,
+    props.onValueChange,
   );
   /**
    * The renderer scrolls a highlighted row into its nearest scroll container.

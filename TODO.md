@@ -168,6 +168,8 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
+`[~]` `[█████████░]` 61/63
+
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
 `[x]` `packages/primitives`: the `core/` layer (theme re-export, style
@@ -439,6 +441,15 @@ retired once both branches are one
       clickable and not associated (no `aria-labelledby`). The docs now say so
       and point at `CheckboxGroup` for a clickable labelled row; a runtime test
       measures that a label click does not toggle the box (plan 087)
+`[x]` `packages/primitives`: **one value callback, `onValueChange`** — the
+      accepted cross-package contract names `onValueChange` as the only value
+      callback, but thirteen public props were `onChange`, a name that promises
+      React's event shape while receiving a value (and the text fields kept it
+      "because the table says so"). Every controlled value is now
+      `value`/`defaultValue`/`onValueChange`; `Toggle` keeps `onPressedChange`
+      and overlays `onOpenChange`. `src/callback-names.test.ts` fails by file
+      and line if a component, page or example reintroduces it, and both guard
+      directions plus the runtime suites were run (plan `088`)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
@@ -463,16 +474,22 @@ retired once both branches are one
       trigger wiring in `internal/button.tsx` keeps working when the stand-in is
       deleted.
 
-`[ ]` **primitives + components — the change-callback name.** The accepted
-      contract (`docs/component-api.md` §2) says `onValueChange` is the only
-      change callback, but Tier 1's value controls use `onChange` (`Checkbox`,
-      `Switch`, `RadioGroup`, `CheckboxGroup`, `ToggleGroup`, `Select`,
-      `Slider`, `RangeSlider`, `Rating`), while the text fields keep `onChange`
-      because plan `110` §7's own table names it. Decide once, before a Tier 2
-      example teaches consumers two names: either rename the value controls (a
-      mechanical change with no behaviour), or amend §2 to name the text-field
-      exception. Do not rename `Input`/`TextArea`/`NumberField`/`OTPField`
-      without updating that table.
+`[x]` **primitives + components — the change-callback name: decided and
+      landed.** Every controlled value is now `value` / `defaultValue` /
+      `onValueChange(value)` — including the text fields, whose callback already
+      carried a value rather than the host event, so `onChange` was a name that
+      promised React's shape while delivering ours. `Toggle` keeps
+      `pressed`/`onPressedChange` and overlays keep `onOpenChange`, because a
+      callback is named after the state it reports. `src/callback-names.test.ts`
+      fails by file and line if a component, page or example reintroduces
+      `onChange`; both guard directions were proven (plan `088`).
+
+`[ ]` **components workstream — the change-callback table.** Their plan `110`
+      §7 table and `docs/component-api.md`'s adoption note still say the text
+      fields keep `onChange`; this package now exposes `onValueChange` on every
+      control, text fields included (plan `088`), so the import contract and the
+      source agree again. Their local input stand-in passes
+      `onChange: onValueChange` to the raw host, which stays correct.
 
 `[ ]` **components workstream**: plan `201` §2.3 tells the thin context to call
       `useControllableState` from `@gpuix/react/floating`, but that function is

@@ -498,7 +498,7 @@ it("does not toggle a standalone Checkbox from a Label beside it", async () => {
         <Checkbox
           testId="cb"
           label="Email"
-          onChange={() => {
+          onValueChange={() => {
             toggles += 1;
           }}
         />
@@ -853,7 +853,7 @@ it("follows a controlled value change with the tab stop", async () => {
         testId="rg"
         label="Pick"
         value={value}
-        onChange={() => {}}
+        onValueChange={() => {}}
         options={[
           { value: "a", label: "Alpha" },
           { value: "b", label: "Beta" },

@@ -21,7 +21,7 @@ import { CheckboxGroup } from "@gpuixui/primitives";
   label="Notification channels"
   selectAll="All channels"
   value={channels}
-  onChange={setChannels}
+  onValueChange={setChannels}
   options={[
     {
       value: "email",
@@ -53,7 +53,7 @@ Uncontrolled, with no parent row:
 | `options` | `CheckboxGroupOption[]` | required | `value`, `label`, optional `description` and `disabled` |
 | `value` | `readonly string[]` | — | controlled selection; omit to let the group keep its own |
 | `defaultValue` | `readonly string[]` | `[]` | initial selection when uncontrolled |
-| `onChange` | `(value: readonly string[]) => void` | none | the next set, only when it changed |
+| `onValueChange` | `(value: readonly string[]) => void` | none | the next set, only when it changed |
 | `selectAll` | `string` | none | renders one parent row with this visible name and a derived state |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | row flow |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
@@ -83,7 +83,7 @@ it for them. A group with no enabled option renders the parent disabled.
 
 The selection is an array in **selection order**: a toggle appends the newly
 selected value, and select-all appends the missing enabled values in option
-order. A press that changes nothing does not call `onChange`.
+order. A press that changes nothing does not call `onValueChange`.
 
 ## Keyboard
 

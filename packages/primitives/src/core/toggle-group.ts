@@ -8,7 +8,7 @@
  * keeps the single and multiple paths from drifting.
  *
  * A press that changes nothing returns `current` **by identity**, so the shared
- * `useControlState` does not call `onChange` and wake the parent. A segmented
+ * `useControlState` does not call `onValueChange` and wake the parent. A segmented
  * control re-pressing its active item is the common case.
  */
 

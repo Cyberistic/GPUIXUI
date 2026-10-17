@@ -26,14 +26,14 @@ const boundsOf = (runtime: Runtime, testId: string): Bounds =>
 
 const recorder = (): {
   readonly values: ReadonlyArray<number>;
-  readonly onChange: (value: number) => void;
+  readonly onValueChange: (value: number) => void;
 } => {
   const values: number[] = [];
   return {
     get values() {
       return values;
     },
-    onChange: (value) => {
+    onValueChange: (value) => {
       values.push(value);
     },
   };
@@ -68,7 +68,7 @@ it("edits through the runtime's text pipeline and reports the number", async () 
       testId="nf"
       label="Quantity"
       autoFocus
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   runtime.type("1 2");
@@ -112,7 +112,7 @@ it("keeps a trailing dot as a draft instead of rewriting it mid-edit", async () 
       label="Amount"
       autoFocus
       precision={2}
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   runtime.type("1 .");
@@ -131,7 +131,7 @@ it("clamps a typed value to the field's maximum", async () => {
       label="Percent"
       autoFocus
       max={100}
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   runtime.type("9 9 9");
@@ -146,7 +146,7 @@ it("steps with the arrow keys, and pages ten at a time", async () => {
       label="Quantity"
       autoFocus
       defaultValue={50}
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   const input = inputOf(runtime, "nf");
@@ -166,7 +166,7 @@ it("steps a decimal field to an exact decimal", async () => {
       defaultValue={0.2}
       step={0.1}
       precision={1}
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   const input = inputOf(runtime, "nf");
@@ -184,7 +184,7 @@ it("steps from a hit-tested click on the spin column and refocuses the input", a
       testId="nf"
       label="Quantity"
       defaultValue={50}
-      onChange={field.onChange}
+      onValueChange={field.onValueChange}
     />,
   );
   const box = boundsOf(runtime, "nf");
@@ -221,7 +221,7 @@ it("refuses edits, keys and steps while disabled", async () => {
         label="Quantity"
         disabled
         defaultValue={50}
-        onChange={field.onChange}
+        onValueChange={field.onValueChange}
       />
     </Stack>,
   );
