@@ -19,6 +19,7 @@ import {
   createTheme,
   currentPlatform,
   darkTheme,
+  densityNames,
   elevationShadow,
   extendTheme,
   focusRing,
@@ -27,6 +28,8 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   highContrastThemes,
+  isDensityName,
+  isStatusTone,
   lightTheme,
   motionTransition,
   platformNames,
@@ -190,6 +193,17 @@ tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
 tone.border; // alpha(theme.colors.info, 0.3)
 tone.text; // theme.colors.infoText — labels and dots on background/card
+```
+
+A tone can arrive as data — a server payload, a stored notification. It is
+`unknown` until narrowed: `isStatusTone(value)` accepts the four shipped
+families and falls back at the caller.
+
+```ts
+import { isStatusTone, type StatusTone } from "@gpuixui/tokens";
+
+const resolveTone = (value: unknown): StatusTone =>
+  isStatusTone(value) ? value : "info";
 ```
 
 A runnable example spreads the result onto a container and its text; see
@@ -478,6 +492,18 @@ controlPaddingX(theme, "md");
 A theme's `density` always names the preset it is based on, including after a
 partial metric override.
 
+`densityNames` lists the three presets in documentation order, and
+`DensityName` derives from it, so a preset cannot exist without a table row or a
+value in `densityPresets`. A persisted density is `unknown`; narrow it before it
+reaches `extendTheme`, or a stale setting becomes a theme with no metrics:
+
+```ts
+import { isDensityName, type DensityName } from "@gpuixui/tokens";
+
+const resolveDensity = (stored: unknown): DensityName =>
+  isDensityName(stored) ? stored : "comfortable";
+```
+
 ## Elevation
 
 Shadows are structured objects (`offsetX`, `offsetY`, `blurRadius`,
@@ -680,10 +706,11 @@ export const scoped = extendTheme(darkTheme, {
 
 A persisted choice arrives as `unknown`. The package guards its own unions, so a
 consumer does not retype them: `isPlatformName(value)` narrows to a shipped
-platform (including `default`), `isThemeMode(value)` to `light`/`dark`, and
-`isThemeContrast(value)` to `default`/`high`. They narrow a choice; decoding a
-whole theme object from a file or URL is still the application's boundary and
-belongs to its `Schema`.
+platform (including `default`), `isThemeMode(value)` to `light`/`dark`,
+`isThemeContrast(value)` to `default`/`high`, and `isDensityName(value)` to a
+preset. A tone from a payload is the same kind of choice and narrows with
+`isStatusTone(value)`. They narrow a choice; decoding a whole theme object from a
+file or URL is still the application's boundary and belongs to its `Schema`.
 
 Merge rules:
 
@@ -796,7 +823,9 @@ const rows = colorRoles.map((role) => ({
 ```
 
 The other groups are already plain data with their own keys: `spacing`,
-`radius`, `densityPresets`, `borderWidth`, `iconSize` and `palette`.
+`radius`, `densityNames`, `densityPresets`, `borderWidth`, `iconSize` and
+`palette`. `densityNames` is the order to render; `densityPresets` holds the
+metrics.
 
 `textRoles` does the same for type: it lists the ten typographic roles in
 documentation order and excludes the `sans` and `mono` families, so a type table

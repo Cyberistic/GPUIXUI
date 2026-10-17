@@ -64,6 +64,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [065](./065-readme-truth-guard.md) | Guard the package README against drift | F | 056, 058, 059, 062, 064 | done |
 | [066](./066-public-value-coverage.md) | Name every public value; author a platform style | F | 056–065 | done |
 | [067](./067-persisted-choice-guards.md) | Narrowing guards for the persisted theme choices | F | 063, 064, 066 | done |
+| [068](./068-density-and-tone-guards.md) | The last two unions a consumer narrows: density and status tone | F | 064, 066, 067 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -130,7 +131,15 @@ that owns the union must ship the narrowing guard. `apps/docs` had already
 retyped the platform table and hand-written `isPlatformName`; the package now
 exports that guard beside `platformNames`, plus `isThemeMode` and
 `isThemeContrast`, and the docs say theming's boundary half is narrowing a
-choice, not decoding a theme object.
+choice, not decoding a theme object. 068 finishes that contract for the two
+unions 067 parked: density is a theme choice and a tone is a payload field, so
+`densityNames` / `isDensityName` join the preset registry and `isStatusTone`
+joins the status index. The package's private `typeof value === "string"` check
+is gone — it accepted `"spacious "` and then produced `undefined` metrics through
+`extendTheme` — and `scale.test.ts` no longer retypes the preset names. Both
+guards narrow `unknown` and are documented under Density, Status tones and Theme
+API; the example file resolves a stored density and a payload tone, so the
+fallback path runs in the suite rather than being sketched.
 
 ### Reference adoption (block `200–299`)
 

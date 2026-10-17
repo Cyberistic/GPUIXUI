@@ -18,6 +18,7 @@ import {
   defaultDensity,
   densityPresets,
   iconSize,
+  isDensityName,
   radius,
   spacing,
   type AvatarSize,
@@ -168,9 +169,6 @@ const mergeTypography = (
   };
 };
 
-const isDensityName = (
-  value: DensityName | Partial<Omit<Density, "name">>,
-): value is DensityName => typeof value === "string";
 const mergeDensity = (
   base: Density,
   override: DensityName | Partial<Omit<Density, "name">> | undefined,

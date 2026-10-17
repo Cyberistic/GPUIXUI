@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   avatarSize,
+  densityNames,
   densityPresets,
   spacing,
   type ControlSize,
@@ -8,7 +9,6 @@ import {
 } from "./scale.js";
 
 const sizes: readonly ControlSize[] = ["sm", "md", "lg"];
-const presetNames = ["compact", "comfortable", "spacious"] as const;
 
 const ascendingSpacing = [
   [spacing["2xs"], spacing.xs],
@@ -80,7 +80,7 @@ describe("density presets", () => {
   });
 
   it("orders sizes within every preset", () => {
-    presetNames.forEach((preset) => {
+    densityNames.forEach((preset) => {
       expect(densityPresets[preset].controlHeight.sm).toBeLessThan(
         densityPresets[preset].controlHeight.md,
       );

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 34/48
+`[x]` `[███████░░░]` 36/51
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -97,6 +97,10 @@ absent — guard coverage with a namespace-wide test, ship a compiled
 system (plan 066)
 `[x]` Ship `isPlatformName` / `isThemeMode` / `isThemeContrast` so a persisted
 choice narrows through the union owner instead of a retyped guard (plan 067)
+`[x]` Close the last two unions — `densityNames` / `isDensityName` and
+`isStatusTone` — so a stored density and a payload tone narrow through the
+package too; the private string check in `theme.ts` is gone and the preset
+names are no longer retyped in `scale.test.ts` (plan 068)
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)

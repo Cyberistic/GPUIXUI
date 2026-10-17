@@ -209,7 +209,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` translucent wash |
-| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface |
+| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface; a tone from untrusted data narrows with `isStatusTone` |
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
 so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
@@ -290,11 +290,12 @@ The extension mechanism is deliberately small:
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
 
-A choice that survives a restart — the mode, the contrast variant, the platform
-style — arrives as `unknown`. Narrow it with `isThemeMode`, `isThemeContrast` and
-`isPlatformName` before building or resolving the theme; the package owns those
-unions, so no consumer should retype them. A whole theme object from a file is a
-different boundary: decode it with the application's `Schema`.
+A choice that survives a restart — the mode, the contrast variant, the density,
+the platform style — arrives as `unknown`. Narrow it with `isThemeMode`,
+`isThemeContrast`, `isDensityName` and `isPlatformName` before building or
+resolving the theme; the package owns those unions, so no consumer should retype
+them. A whole theme object from a file is a different boundary: decode it with
+the application's `Schema`.
 
 Overrides merge by group; typography merges field by field, motion timing by
 timing and easing by easing; elevation levels are replaced as whole arrays; the

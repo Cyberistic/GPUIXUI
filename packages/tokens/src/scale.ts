@@ -105,8 +105,21 @@ export interface AvatarSize {
 /** Default avatar diameters. */
 export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
 
-/** Named control density presets. */
-export type DensityName = "compact" | "comfortable" | "spacious";
+/**
+ * Named control density presets, in documentation order. `DensityName` derives
+ * from this list, so a new preset must also gain a value in `densityPresets`.
+ */
+export const densityNames = ["compact", "comfortable", "spacious"] as const;
+
+/** A named control density preset. */
+export type DensityName = (typeof densityNames)[number];
+
+/**
+ * Narrow an unknown value — a stored preference or a settings row — to a shipped
+ * density preset. A consumer never retypes the three names.
+ */
+export const isDensityName = (value: unknown): value is DensityName =>
+  densityNames.some((name) => name === value);
 
 /** Control sizes every interactive component supports. */
 export type ControlSize = "sm" | "md" | "lg";

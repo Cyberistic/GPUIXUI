@@ -68,6 +68,13 @@ export const statusTones = [
 /** The status colour families a component can announce. */
 export type StatusTone = (typeof statusTones)[number];
 
+/**
+ * Narrow an unknown value — a tone in a server payload or a stored preference —
+ * to a shipped status family. A consumer never retypes the four names.
+ */
+export const isStatusTone = (value: unknown): value is StatusTone =>
+  statusTones.some((tone) => tone === value);
+
 /** The soft status roles an Alert, Badge or Toast spreads. */
 export interface StatusToneStyle {
   /** The tone's soft surface (`xSoft`). */

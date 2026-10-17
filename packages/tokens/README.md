@@ -114,14 +114,15 @@ A complete, executed example lives in
 ## Persisted choices
 
 A stored preference or a URL parameter arrives as `unknown`. `isPlatformName`,
-`isThemeMode` and `isThemeContrast` narrow it, so a consumer never retypes a
-union; a whole theme object loaded from a file is still the application’s
-`Schema` boundary.
+`isThemeMode`, `isThemeContrast` and `isDensityName` narrow it, so a consumer
+never retypes a union; a whole theme object loaded from a file is still the
+application’s `Schema` boundary.
 
 ```ts
-import { isPlatformName } from "@gpuixui/tokens";
+import { isDensityName, isPlatformName } from "@gpuixui/tokens";
 
 const platform = isPlatformName(stored) ? stored : "default";
+const density = isDensityName(storedDensity) ? storedDensity : "comfortable";
 ```
 
 ## High contrast
@@ -145,7 +146,7 @@ have a solid role with a readable foreground, a soft pair for alerts, badges and
 toasts, and an `xText` role for labels, icons and indicator dots on a plain
 surface. `statusTone` resolves the soft surface, its readable foreground, a
 30%-alpha edge and the text role; `alpha` turns any hex role into a translucent
-one.
+one. A tone from a payload is unknown until `isStatusTone` narrows it.
 
 ```ts
 import { alpha, statusTone } from "@gpuixui/tokens";
