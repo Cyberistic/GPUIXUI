@@ -32,7 +32,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | layout | `layout-flex`, `shell-navigation` | verified |
 | text | `text-native` | verified |
 | input | `input-edit` | verified |
-| focus | `focus-traversal` | verified |
+| focus | `focus-traversal`, `roving-focus` | verified |
 | overlay | `overlay-dialog` | verified |
 | modal | `modal-focus-trap` | verified |
 | floating | `floating-placement` | verified |
@@ -46,7 +46,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 | motion | `motion-collapse` | verified |
 
-The suite is **21/21 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **22/22 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -78,6 +78,16 @@ exit settled. Two caveats: `onMotionComplete` reaches React only after
 published `motion.div` prop type omits `testId`/`role`/`aria-*`, so an animated
 surface is not directly addressable by a smoke test or an accessible role
 without a typed wrapper.
+
+`roving-focus` measures the keyboard model a menu, tab strip, radio group or
+data grid needs. `renderer.focusElement` focuses a row that was never clicked,
+and the **next keystroke is delivered to the row that just received focus** —
+so a roving tabindex is real, not a visual selection. Inside a `<virtual-list>`
+the same works, and focus is **not** lost when the window scrolls past the
+focused row: `focused()` still reports it, the next arrow key still moves it,
+and the focused row stays in `getPaintedText()` outside the window's run. A
+virtualized grid must therefore treat the painted set as "the window **plus**
+the focused row", not as exactly the visible rows.
 
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
@@ -260,7 +270,7 @@ carries an evidenced limitation. The capability evidence lives in
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Tables | todo | ? | No `<table>` element; grid + `div` rows. |
+| Tables | todo | ? | No `<table>` element; grid + `div` rows. Keyboard row navigation builds on the `roving-focus` contract. |
 | Sortable tables | todo | ? | Grid + keyboard headers. |
 | Row selection | todo | ? | `aria-selected` is supported (verified). |
 | Column configuration | todo | ? | Grid tracks + a menu. |
@@ -269,7 +279,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
 | Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. |
-| Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. GPUix cannot move native focus from component code, so a roving-tabindex contract is still ours. |
+| Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `roving-focus` proved component code can move focus between rows with `renderer.focusElement`, so a roving-tabindex tree is buildable. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
@@ -289,7 +299,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Nested panel arrangements | todo | ? | Composition. |
 | Workspace layouts | todo | ? | Composition + persistence. |
 | Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. |
-| Keyboard navigation | todo | ? | Real native focus handles (verified); the roving-focus model is ours. |
+| Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. |
 | Command palette | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). |
 | Application menus | todo | ? | The macOS menu bar is a renderer API (`README.md` "The macOS menu bar"); cross-platform app menus are ours. |
 | Status bars | todo | ? | `div` + `<text>`. |

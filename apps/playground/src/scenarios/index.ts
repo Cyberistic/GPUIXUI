@@ -16,6 +16,7 @@ import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { inputScenario } from "./input.js";
 import { focusScenario } from "./focus.js";
+import { rovingFocusScenario } from "./roving-focus.js";
 import { overlayScenario } from "./overlay.js";
 import { scrollScenario } from "./scroll.js";
 import { panelScenario } from "./panel.js";
@@ -65,6 +66,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   textScenario,
   inputScenario,
   focusScenario,
+  rovingFocusScenario,
   overlayScenario,
   modalScenario,
   floatingScenario,

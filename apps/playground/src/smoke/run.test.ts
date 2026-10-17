@@ -57,6 +57,9 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
       expect.arrayContaining(["table", "workspace", "motion"]),
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "roving-focus",
+    );
   });
 
   it("flags duplicated ids", () => {
