@@ -27,7 +27,7 @@ export const captionType: CSSProperties = {
   lineHeight: "var(--preview-text-caption-leading)",
   fontWeight: "var(--preview-text-caption-weight)",
   fontFamily: "var(--preview-font-sans)",
-  color: "var(--preview-color-muted-foreground)",
+  color: "var(--preview-color-mutedForeground)",
 };
 
 export const bodyType: CSSProperties = {
@@ -61,7 +61,7 @@ export const keycap: CSSProperties = {
   padding: "0 var(--preview-space-xs)",
   border: "var(--preview-border-thin) solid var(--preview-color-border)",
   borderRadius: "var(--preview-radius-sm)",
-  color: "var(--preview-color-muted-foreground)",
+  color: "var(--preview-color-mutedForeground)",
 };
 
 /** The chrome `Input` and `TextArea` draw, with the invalid and disabled states. */
@@ -81,7 +81,7 @@ export const fieldChrome = (
       : "var(--preview-color-border)"
   }`,
   backgroundColor: "var(--preview-color-input)",
-  color: "var(--preview-color-input-foreground)",
+  color: "var(--preview-color-inputForeground)",
   opacity: state.disabled === true ? 0.5 : 1,
 });
 

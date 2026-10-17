@@ -102,10 +102,13 @@ does not relabel a macOS capture as Windows.
 approximation renders through `PreviewSurface`, which maps the whole active
 `Theme` — every colour role, type role, spacing step, radius, border width,
 density metric, icon size and elevation level — to `--preview-*` custom
-properties. `theme-surface.test.ts` proves the mapping is complete and that a
-theme override reaches every group; `approximations.test.tsx` proves each
-preview changes when the platform theme changes. No preview may contain a colour
-literal; the test reads the source and fails on one.
+properties. `theme-surface.test.ts` proves the mapping is complete, that every
+name a preview reads is one the surface defines, and that a theme override
+reaches every group; `approximations.test.tsx` proves each preview changes when
+the platform theme changes. No preview may contain a colour literal; the test
+reads the source and fails on one. The variable-name rule was added after the
+shipped previews used kebab-case names (`--preview-color-primary-foreground`)
+for the camelCase roles (`primaryForeground`), which CSS resolves to nothing.
 
 Today the shipped platform styles differ in **type families and theme name
 only** (`packages/tokens` plan 051). The visible change on a preview is therefore

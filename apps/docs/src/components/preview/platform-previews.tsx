@@ -45,7 +45,7 @@ export function PlatformPreviews() {
             fontFamily: "var(--preview-font-mono)",
             fontSize: "var(--preview-text-code-size)",
             lineHeight: "var(--preview-text-code-leading)",
-            color: "var(--preview-color-muted-foreground)",
+            color: "var(--preview-color-mutedForeground)",
           }}
         >
           {`platformTheme(themes.${theme.mode}, "${platform}")`}

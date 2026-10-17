@@ -27,6 +27,15 @@ const vars = previewVars(lightTheme);
 const source = (file: string): string =>
   readFileSync(fileURLToPath(new URL(file, import.meta.url)), "utf8");
 
+const previewSources = [
+  "./theme-surface.tsx",
+  "./approximations.tsx",
+  "./preview-styles.ts",
+  "./control-previews.tsx",
+  "./feedback-previews.tsx",
+  "./platform-previews.tsx",
+];
+
 describe("parsePreviewState", () => {
   it("reads a shared platform link in dark mode", () => {
     expect(parsePreviewState("win32|dark")).toEqual({
@@ -154,12 +163,22 @@ describe("previewVars", () => {
 
   it("keeps a colour literal out of the preview source", () => {
     const forbidden = /#[0-9a-fA-F]{3,8}\b|\brgb|\bhsl|\boklch/;
-    [
-      "./theme-surface.tsx",
-      "./approximations.tsx",
-      "./preview-styles.ts",
-      "./control-previews.tsx",
-      "./feedback-previews.tsx",
-    ].forEach((file) => expect(source(file), file).not.toMatch(forbidden));
+    previewSources.forEach((file) =>
+      expect(source(file), file).not.toMatch(forbidden),
+    );
+  });
+
+  it("only names custom properties the surface defines", () => {
+    const undefinedNames = previewSources.flatMap((file) =>
+      [
+        ...source(file).matchAll(
+          /var\((--preview-[A-Za-z]+(?:-[A-Za-z]+)*)(?=[),;\s])/g,
+        ),
+      ]
+        .map((match) => match[1] ?? "")
+        .filter((name) => !(name in vars))
+        .map((name) => `${file}: ${name}`),
+    );
+    expect(undefinedNames).toEqual([]);
   });
 });

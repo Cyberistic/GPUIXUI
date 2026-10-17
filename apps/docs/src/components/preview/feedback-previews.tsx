@@ -28,12 +28,12 @@ const badgeLooks: ReadonlyArray<{ readonly label: string } & BadgeLook> = [
   {
     label: "Neutral",
     background: "var(--preview-color-muted)",
-    foreground: "var(--preview-color-muted-foreground)",
+    foreground: "var(--preview-color-mutedForeground)",
   },
   {
     label: "Primary",
     background: "var(--preview-color-primary)",
-    foreground: "var(--preview-color-primary-foreground)",
+    foreground: "var(--preview-color-primaryForeground)",
   },
   {
     label: "Success",
@@ -57,7 +57,7 @@ const badgeLooks: ReadonlyArray<{ readonly label: string } & BadgeLook> = [
   },
   {
     label: "Outline",
-    foreground: "var(--preview-color-muted-foreground)",
+    foreground: "var(--preview-color-mutedForeground)",
     border: "var(--preview-color-border)",
   },
 ];
@@ -198,7 +198,7 @@ const dotFill: Readonly<Record<(typeof avatars)[number]["status"], string>> = {
   online: "var(--preview-color-success)",
   away: "var(--preview-color-warning)",
   busy: "var(--preview-color-destructive)",
-  offline: "var(--preview-color-muted-foreground)",
+  offline: "var(--preview-color-mutedForeground)",
 };
 
 export function AvatarPreview({ theme }: PreviewProps) {

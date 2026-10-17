@@ -110,6 +110,29 @@ const documentedStates: ReadonlyArray<readonly [string, readonly string[]]> = [
     "avatar",
     ["Ada Lovelace", "Jean Sammet", "Margaret Hamilton", "Radia Perlman"],
   ],
+  [
+    "text-area",
+    [
+      "Release notes",
+      "Use lowercase letters, numbers and dashes.",
+      "Managed by your organisation",
+    ],
+  ],
+  ["radio-group", ["Digest cadence", "Daily", "Weekly", "Never"]],
+  ["select", ["Region", "Europe — West", "legacy region"]],
+  ["range-slider", ["Budget", "$20 – $80"]],
+  [
+    "meter",
+    [
+      "Disk usage · 68 of 100 GB",
+      "Memory · 42 of 64 GB",
+      "Quota · 96 of 100 GB",
+    ],
+  ],
+  ["number-field", ["Copies", "1–99", "Retries", "Must be between 1 and 99."]],
+  ["otp-field", ["Verification code", "Six digits from your authenticator."]],
+  ["toggle", ["Pin to sidebar", "Show grid", "Bold", "Italic"]],
+  ["rating", ["4 of 5", "No rating yet"]],
 ];
 
 describe("preview state coverage", () => {

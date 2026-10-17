@@ -1,9 +1,18 @@
 import type { ReactElement, ReactNode } from "react";
 import {
   CheckboxPreview,
+  MeterPreview,
+  NumberFieldPreview,
+  OTPFieldPreview,
+  RadioGroupPreview,
+  RangeSliderPreview,
+  RatingPreview,
+  SelectPreview,
   SliderPreview,
   SwitchPreview,
+  TextAreaPreview,
   TextInputPreview,
+  TogglePreview,
 } from "./control-previews";
 import {
   AlertPreview,
@@ -62,11 +71,11 @@ interface VariantLook {
 const variantStyle: Readonly<Record<ButtonVariant, VariantLook>> = {
   primary: {
     background: "var(--preview-color-primary)",
-    color: "var(--preview-color-primary-foreground)",
+    color: "var(--preview-color-primaryForeground)",
   },
   secondary: {
     background: "var(--preview-color-secondary)",
-    color: "var(--preview-color-secondary-foreground)",
+    color: "var(--preview-color-secondaryForeground)",
   },
   outline: {
     color: "var(--preview-color-foreground)",
@@ -75,7 +84,7 @@ const variantStyle: Readonly<Record<ButtonVariant, VariantLook>> = {
   ghost: { color: "var(--preview-color-foreground)" },
   destructive: {
     background: "var(--preview-color-destructive)",
-    color: "var(--preview-color-destructive-foreground)",
+    color: "var(--preview-color-destructiveForeground)",
   },
   link: {
     color: "var(--preview-color-primary)",
@@ -171,7 +180,7 @@ export function TabsPreview({ theme }: PreviewProps) {
                 padding: "var(--preview-space-sm) 0",
                 color: tab.selected
                   ? "var(--preview-color-primary)"
-                  : "var(--preview-color-muted-foreground)",
+                  : "var(--preview-color-mutedForeground)",
                 borderBottom: tab.selected
                   ? "var(--preview-border-strong) solid var(--preview-color-primary)"
                   : "var(--preview-border-strong) solid transparent",
@@ -204,7 +213,7 @@ export function MenuPreview({ theme }: PreviewProps) {
         style={{
           maxWidth: "18rem",
           background: "var(--preview-color-popover)",
-          color: "var(--preview-color-popover-foreground)",
+          color: "var(--preview-color-popoverForeground)",
           border:
             "var(--preview-border-thin) solid var(--preview-color-border)",
           borderRadius: "var(--preview-radius-lg)",
@@ -232,8 +241,8 @@ export function MenuPreview({ theme }: PreviewProps) {
                 item.tone === "destructive"
                   ? "var(--preview-color-destructive)"
                   : index === 0
-                    ? "var(--preview-color-selected-foreground)"
-                    : "var(--preview-color-popover-foreground)",
+                    ? "var(--preview-color-selectedForeground)"
+                    : "var(--preview-color-popoverForeground)",
             }}
           >
             <span>{item.label}</span>
@@ -252,7 +261,7 @@ export function CardPreview({ theme }: PreviewProps) {
         style={{
           maxWidth: "22rem",
           background: "var(--preview-color-card)",
-          color: "var(--preview-color-card-foreground)",
+          color: "var(--preview-color-cardForeground)",
           border:
             "var(--preview-border-thin) solid var(--preview-color-border)",
           borderRadius: "var(--preview-radius-lg)",
@@ -311,4 +320,13 @@ export const previewsBySlug: ReadonlyMap<
   ["alert", AlertPreview],
   ["progress", ProgressPreview],
   ["avatar", AvatarPreview],
+  ["text-area", TextAreaPreview],
+  ["radio-group", RadioGroupPreview],
+  ["select", SelectPreview],
+  ["range-slider", RangeSliderPreview],
+  ["meter", MeterPreview],
+  ["number-field", NumberFieldPreview],
+  ["otp-field", OTPFieldPreview],
+  ["toggle", TogglePreview],
+  ["rating", RatingPreview],
 ]);
