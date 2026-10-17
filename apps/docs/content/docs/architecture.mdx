@@ -3,40 +3,60 @@ title: Architecture
 description: How the packages fit together, and how this site stays honest about previews.
 ---
 
-GPUIXUI is a TypeScript-first monorepo. Dependencies point one way:
+GPUIXUI is a TypeScript-first monorepo. The library packages point one way:
 
 ```
-tokens → primitives → components → data-grid · docking · editor
+tokens → icons → primitives → components → data-grid · docking · editor
 ```
 
-- `@gpuixui/tokens` — colour, spacing, typography, radii and density roles.
-- `@gpuixui/primitives` — foundational parts (layout, text, buttons, inputs).
-- `@gpuixui/components` — composition and feedback components.
-- `@gpuixui/data-grid`, `@gpuixui/docking`, `@gpuixui/editor` — specialised
-  packages built on the components.
+## Library packages
 
-No package is on a registry yet. The [component index](/docs/components) records
-what exists and what is still planned, so this page never has to claim that a
-package is further along than it is.
+- `@gpuixui/tokens` — colour, spacing, typography, radii and density roles. It
+  depends on nothing else in the repository.
+- `@gpuixui/icons` — the monochrome SVG icon set, sized from the token scale.
+- `@gpuixui/primitives` — foundational parts: layout, text, buttons, inputs and
+  the value controls. It depends on tokens and icons.
+- `@gpuixui/components` — composition and feedback components. It reads tokens
+  directly and wraps GPUix's headless `select`, `combobox` and `tooltip` where
+  those exist.
 
-The native runtime never depends on this documentation site. The full document
-will live at `docs/architecture.md` in the repository; it is registered as a
-Phase A/B deliverable in `docs/README.md` and is not written yet.
+`@gpuixui/data-grid`, `@gpuixui/docking` and `@gpuixui/editor` are planned and
+have no package yet; the [component index](/docs/components) records what exists
+and what is still planned.
+
+## Tooling
+
+- `@gpuixui/config` — the shared TypeScript configuration.
+- `@gpuixui/testing` — the platform-free smoke harness.
+- `@gpuixui/deploy` — the Alchemy stack declarations.
+
+No library package is published to a registry yet.
+
+## The site and the runtime
+
+The native runtime never depends on this documentation site. `apps/docs` is a
+browser app: it reads package source files at build time for prop tables and
+copyable source, and its **shell** never imports the native runtime. The one
+GPUix surface it can show is an isolated, opt-in WebAssembly document under
+`/gpuix-preview/` — a real GPUix renderer in the browser, not the desktop
+binary.
 
 ## Preview strategy
 
-The library renders through GPUix; this site is a browser app. Rather than fake
-a native surface, every preview is one of:
+Rather than fake a native surface, every preview is one of:
 
-1. a **real native run** in the playground, named per component when a screen
+1. a **live GPUix surface** — the real component code on the published
+   WebAssembly renderer, in an isolated document that loads on request;
+2. a **real native run** in the playground, named per component when a screen
    exists;
-2. a **real screenshot** captured from the GPUix runtime;
-3. **native coverage** by an automated suite, naming the suite and its command;
-4. a **browser approximation**, always labelled "not GPUix";
-5. **source and a limitation notice** when the runtime cannot do something.
+3. a **real screenshot** captured from the GPUix runtime;
+4. **native coverage** by an automated suite, naming the suite and its command;
+5. a **browser approximation**, always labelled "not GPUix";
+6. **source and a limitation notice** when the runtime cannot do something.
 
-Today most delivered pages name their native coverage, and the static ones
-carry a labelled approximation; no per-component playground screen exists yet. The decision, its
-evidence and the exact label text are recorded in `docs/preview-strategy.md` in
-the repository. What the pinned runtime can and cannot do — measured, with the
-scenario that proves each row — is on [GPUix capabilities](/docs/capabilities).
+Which tier a page gets, the exact label text and the rules for a capture are in
+`docs/preview-strategy.md` in the repository. What the pinned runtime can and
+cannot do — measured, with the scenario that proves each row — is on
+[GPUix capabilities](/docs/capabilities). No per-component playground screen
+exists yet, so most delivered pages name their native coverage or show the live
+surface, and the static ones carry a labelled approximation.

@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–458)
+## Docs site workstream (plans 410–459)
 
-`[~]` `[██████████]` 56/58
+`[~]` `[██████████]` 57/59
 
 `[x]` The registry mirrors the inventory's GPUix-support column (plan 443) — `ours`/`reuse` are real values, the nine flattened records are corrected, a test reads `COMPONENTS.md`, and `done` is backed by its native suite rather than by GPUix writing the primitive
 `[x]` Preview surfaces follow the docs' dark mode (plan 444) — a dark page painted light previews because the surface took `next-themes`' pre-hydration `undefined` and never re-rendered; one tested `previewMode` + `useSyncExternalStore` snapshot fixes it, verified in headless Chrome in both modes
@@ -485,6 +485,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[ ]` Live scenes for Context menu and Date picker — blocked on the component API: `ContextMenu` needs a `point` prop (its surface is fixed at the internal `{ x: 0, y: 0 }`) and `DatePicker` needs `defaultOpen`; owner: `components`; a scene is never faked
 `[x]` Live scenes for the five pages a real surface can show without a new component API (plan 458) — Icons, Scrollable containers, Skeletons, Loading indicators and Confirmation dialogs; eleven scenes, and `scene-contract.test.ts` fails on a delivered page with neither a live scene nor an illustration unless its reason is listed
 `[x]` Every `liveScene` gap is measured: Tooltip, Combobox and Select hide their open state behind a wrapper with no `open`/`defaultOpen`; Toast races its own dismissal and pulls the Effect runtime into the shared scene bundle (`TODO.md` cross-team row, `docs/preview-strategy.md`)
+`[x]` Architecture page truth (plan 459) — it names all seven packages with real edges, includes the live surface in the preview list, and no longer promises `docs/architecture.md`; `prose-truth.test.ts` reads `packages/*/package.json` and fails on an absent `docs/*.md`
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` A props type name (`ButtonProps`) reaches its component page from search (plan 442)
@@ -551,7 +552,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[ ]` **Deploy: confirm the production host serves `/gpuix-preview/`** — the live surface adds a 19.1 MB wasm asset to `apps/docs/public/` (under Workers' 25 MiB per-asset limit). Run `smoke:preview --base-url <deploy>` once the deploy path is verified; owner: packages/deploy, with `docs-site` verifying.
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
-`[ ]` **Repo docs**: `docs/architecture.md` is listed as an A/B deliverable in `docs/README.md`, and the Architecture page says it is not written. This workstream owns `apps/docs`, not that maintainer document — write it there or drop the promise from both surfaces.
+`[ ]` **Repo docs**: `docs/architecture.md` is listed as a deliverable in `docs/README.md`, but the site no longer promises it (plan 459 rewrote the Architecture page). Write the maintainer document there, or drop the row from `docs/README.md`; owner: this workstream owns `apps/docs`, not `docs/README.md`
 `[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
 `[ ]` Repo tooling: `.gitignore`'s `references/` does not match the worktree's `references` symlink, so it shows as untracked and can be committed by accident; ignore the symlink too
 `[x]` Root `nub.lock` is committed — `master` tracks it, so a clean install resolves the same versions

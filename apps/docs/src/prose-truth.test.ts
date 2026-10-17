@@ -195,4 +195,29 @@ describe("prose truth", () => {
     );
     expect(missing).toEqual([]);
   });
+
+  /**
+   * The Architecture page is the repository overview a reader opens first
+   * (plan 459). It had drifted twice: it named three of the seven packages, and
+   * it promised `docs/architecture.md`, a document that does not exist. Both
+   * checks read the repository, so neither can pass on prose alone.
+   */
+  it("names every implemented package on the architecture page", () => {
+    const page = pages.find(({ path }) => path === "architecture.mdx");
+    expect(page).toBeDefined();
+    const body = page?.body ?? "";
+    const missing = implementedPackages.filter(
+      (name) => !body.includes(`@gpuixui/${name}`),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it("does not promise a maintainer document that does not exist", () => {
+    const page = pages.find(({ path }) => path === "architecture.mdx");
+    const body = page?.body ?? "";
+    const missing = [...body.matchAll(/docs\/[\w-]+\.md/g)]
+      .map((match) => match[0])
+      .filter((named) => !existsSync(join(repoRoot, named)));
+    expect(missing).toEqual([]);
+  });
 });
