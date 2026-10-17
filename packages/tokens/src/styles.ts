@@ -1,3 +1,4 @@
+import { alpha } from "./color.js";
 import type { ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { FontWeight, TextRole } from "./typography.js";
@@ -54,3 +55,41 @@ export const controlHeight = (theme: Theme, size: ControlSize): number =>
 /** Horizontal control padding for a size at the theme's density. */
 export const controlPaddingX = (theme: Theme, size: ControlSize): number =>
   theme.density.controlPaddingX[size];
+
+/** The four status colour families a component can announce. */
+export type StatusTone = "info" | "success" | "warning" | "destructive";
+
+/** The soft status roles an Alert, Badge or Toast spreads. */
+export interface StatusToneStyle {
+  /** The tone's soft surface (`xSoft`). */
+  readonly background: string;
+  /** Readable text and icons for that surface (`xSoftForeground`). */
+  readonly foreground: string;
+  /** The tone's solid colour at 30% alpha, for the surface edge. */
+  readonly border: string;
+}
+
+/**
+ * Resolve a status tone to the roles a soft status surface needs. The soft
+ * foreground is designed per theme, so no component has to mix a readable text
+ * colour from the solid status colour.
+ *
+ * @example
+ * ```tsx
+ * const tone = statusTone(theme, "info");
+ * <div
+ *   style={{
+ *     backgroundColor: tone.background,
+ *     borderColor: tone.border,
+ *     borderWidth: theme.borderWidth.thin,
+ *   }}
+ * />
+ * ```
+ */
+export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
+  return {
+    background: theme.colors[`${tone}Soft`],
+    foreground: theme.colors[`${tone}SoftForeground`],
+    border: alpha(theme.colors[tone], 0.3),
+  };
+}

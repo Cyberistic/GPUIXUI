@@ -5,10 +5,12 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  alpha,
   darkColors,
   highContrastDarkColors,
   highContrastLightColors,
   lightColors,
+  palette,
   type ThemeColors,
 } from "./color.js";
 
@@ -48,6 +50,11 @@ const pairs: readonly Pair[] = [
   ["destructiveForeground", "destructive", "secondary"],
   ["successForeground", "success", "secondary"],
   ["warningForeground", "warning", "secondary"],
+  ["infoForeground", "info", "secondary"],
+  ["infoSoftForeground", "infoSoft", "body"],
+  ["successSoftForeground", "successSoft", "body"],
+  ["warningSoftForeground", "warningSoft", "body"],
+  ["destructiveSoftForeground", "destructiveSoft", "body"],
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],
@@ -116,6 +123,30 @@ describe("high-contrast boundaries", () => {
   });
 });
 
+const softRoles = [
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
+] as const;
+
+describe("soft status surfaces", () => {
+  colourSets.forEach(({ label, colors }) => {
+    softRoles.forEach((role) => {
+      it(`${label}: ${role} is perceivable on both surfaces`, () => {
+        expect(
+          contrast(colors[role], colors.background),
+          `${label} ${role} on background`,
+        ).toBeGreaterThanOrEqual(1.05);
+        expect(
+          contrast(colors[role], colors.card),
+          `${label} ${role} on card`,
+        ).toBeGreaterThanOrEqual(1.05);
+      });
+    });
+  });
+});
+
 describe("colour roles", () => {
   it("uses a colour grammar GPUix can paint", () => {
     const grammar = /^(#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{8})$/;
@@ -145,5 +176,48 @@ describe("colour roles", () => {
     );
     expect(highContrastLightColors.background).not.toBe(lightColors.background);
     expect(highContrastDarkColors.background).not.toBe(darkColors.background);
+  });
+});
+
+describe("palette", () => {
+  it("holds only colours GPUix can paint", () => {
+    const grammar = /^#[0-9A-Fa-f]{6}$/;
+    Object.entries(palette).forEach(([ramp, steps]) => {
+      Object.entries(steps).forEach(([step, value]) => {
+        expect(value, `${ramp}.${step}`).toMatch(grammar);
+      });
+    });
+  });
+});
+
+describe("alpha", () => {
+  it("adds an alpha byte to a 6-digit colour", () => {
+    expect(alpha("#2559D6", 0.3)).toBe("#2559D64D");
+    expect(alpha("#2559D6", 0)).toBe("#2559D600");
+    expect(alpha("#2559D6", 1)).toBe("#2559D6FF");
+  });
+
+  it("replaces the alpha byte of an 8-digit colour", () => {
+    expect(alpha("#2559D64D", 0.5)).toBe("#2559D680");
+    expect(alpha("#2559D6FF", 0.5)).toBe("#2559D680");
+  });
+
+  it("clamps an out-of-range amount", () => {
+    expect(alpha("#2559D6", 2)).toBe("#2559D6FF");
+    expect(alpha("#2559D6", -1)).toBe("#2559D600");
+  });
+
+  it("returns a colour it cannot parse unchanged", () => {
+    expect(alpha("transparent", 0.5)).toBe("transparent");
+    expect(alpha("rgb(1, 2, 3)", 0.5)).toBe("rgb(1, 2, 3)");
+    expect(alpha("#FFF", 0.5)).toBe("#FFF");
+  });
+
+  it("normalises the result to upper case", () => {
+    expect(alpha("#2559d6", 0.3)).toBe("#2559D64D");
+  });
+
+  it("composes: a full-alpha result is opaque", () => {
+    expect(alpha(alpha("#2559D6", 0.3), 1)).toBe("#2559D6FF");
   });
 });
