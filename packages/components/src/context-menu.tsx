@@ -322,6 +322,18 @@ export type {
   MenuItemProps as ContextMenuItemProps,
 } from "./menu/item.js";
 
+export {
+  MenuSub as ContextMenuSub,
+  MenuSubContent as ContextMenuSubContent,
+  MenuSubTrigger as ContextMenuSubTrigger,
+} from "./menu/sub.js";
+
+export type {
+  MenuSubContentProps as ContextMenuSubContentProps,
+  MenuSubProps as ContextMenuSubProps,
+  MenuSubTriggerProps as ContextMenuSubTriggerProps,
+} from "./menu/sub.js";
+
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const contextMenuMeta = {
   name: "Context menus",
@@ -331,7 +343,8 @@ export const contextMenuMeta = {
   limitations: [
     "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",
-    "no submenus, as with DropdownMenu; type-ahead follows the same rules there",
+    "one level of submenus is tested; deeper nesting follows the same rule but is untested",
+    "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
   ],
   docs: "docs/context-menu.mdx",
   example: "examples/context-menu.example.tsx",

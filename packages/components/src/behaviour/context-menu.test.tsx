@@ -9,6 +9,10 @@
  *
  * Type-ahead regression: typing in the pointer-positioned menu selected nothing,
  * although it shares the Dropdown menu's rows.
+ *
+ * Submenu regression: the Context menu had no submenu parts, and in both menus a
+ * pointer press on a submenu row was treated as an outside press, closing both
+ * levels before the click ran the row.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -29,6 +33,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "../context-menu.js";
 
@@ -96,6 +103,38 @@ const menuOrigin = (
 const focusRow = (root: ComponentTestRoot): void => {
   root.renderer.focusElement(root.renderer.findByTestId("row")?.id ?? -1);
 };
+
+/** A project row whose menu offers a Share submenu. */
+const WithSubmenu = ({
+  onSelect,
+}: {
+  readonly onSelect: (action: string) => void;
+}) => (
+  <ContextMenu defaultOpen>
+    <ContextMenuTrigger testId="row" style={{ width: 320, height: 120 }}>
+      <text>Project</text>
+    </ContextMenuTrigger>
+    <ContextMenuContent testId="menu" label="Project actions">
+      <ContextMenuItem testId="open" onSelect={() => onSelect("open")}>
+        Open
+      </ContextMenuItem>
+      <ContextMenuSub>
+        <ContextMenuSubTrigger testId="share">Share</ContextMenuSubTrigger>
+        <ContextMenuSubContent testId="submenu" label="Share">
+          <ContextMenuItem
+            testId="copy-link"
+            onSelect={() => onSelect("copy-link")}
+          >
+            Copy link
+          </ContextMenuItem>
+          <ContextMenuItem testId="email" onSelect={() => onSelect("email")}>
+            Email
+          </ContextMenuItem>
+        </ContextMenuSubContent>
+      </ContextMenuSub>
+    </ContextMenuContent>
+  </ContextMenu>
+);
 
 describe("ContextMenu", () => {
   it("opens on a right click but not on a left click", () => {
@@ -286,6 +325,72 @@ describe("ContextMenu", () => {
     row.renderer.simulateKeystrokes("c");
 
     expect(focusedTestId(row)).toEqual(Option.some("copy"));
+
+    row.unmount();
+  });
+});
+
+describe("ContextMenu submenus", () => {
+  /** Open the submenu through the keyboard: first row, Share, ArrowRight. */
+  const openSubmenu = (root: ComponentTestRoot): void => {
+    root.renderer.simulateKeystrokes("down");
+    root.renderer.simulateKeystrokes("down");
+    root.renderer.simulateKeystrokes("right");
+  };
+
+  it("runs a submenu row clicked with the pointer and closes both levels", () => {
+    const onSelect = vi.fn();
+    const row = renderComponent(<WithSubmenu onSelect={onSelect} />);
+    openSubmenu(row);
+
+    clickCentreOf(row, "copy-link");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("copy-link");
+    expect(row.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+
+    row.unmount();
+  });
+
+  it("opens from ArrowRight and focuses its first row", () => {
+    const row = renderComponent(<WithSubmenu onSelect={vi.fn()} />);
+
+    openSubmenu(row);
+
+    expect(row.renderer.findByTestId("submenu")?.customProps?.role).toBe(
+      "menu",
+    );
+    expect(
+      row.renderer.findByTestId("share")?.customProps?.["aria-expanded"],
+    ).toBe(true);
+    expect(focusedTestId(row)).toEqual(Option.some("copy-link"));
+
+    row.unmount();
+  });
+
+  it("closes one level on Escape and returns focus to the sub trigger", () => {
+    const row = renderComponent(<WithSubmenu onSelect={vi.fn()} />);
+    openSubmenu(row);
+
+    row.renderer.simulateKeystrokes("escape");
+
+    expect(row.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(row.renderer.findByTestId("menu")).toBeDefined();
+    expect(focusedTestId(row)).toEqual(Option.some("share"));
+
+    row.unmount();
+  });
+
+  it("closes one level on ArrowLeft and keeps the parent menu", () => {
+    const row = renderComponent(<WithSubmenu onSelect={vi.fn()} />);
+    openSubmenu(row);
+
+    row.renderer.simulateKeystrokes("left");
+
+    expect(row.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(row.renderer.findByTestId("menu")).toBeDefined();
+    expect(focusedTestId(row)).toEqual(Option.some("share"));
 
     row.unmount();
   });

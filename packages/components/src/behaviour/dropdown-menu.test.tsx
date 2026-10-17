@@ -16,6 +16,10 @@
  * Type-ahead regression: typing a prefix selected nothing, a disabled row could
  * win the match, a repeated letter did not advance, the buffer never expired so a
  * later search inherited the old prefix, and Shift+R never matched `Rename`.
+ *
+ * Submenu regression: a pointer press on a submenu row counted as an outside
+ * press on the parent surface, so both levels closed before the click landed and
+ * `onSelect` never ran. Only the keyboard path was covered.
  */
 
 import * as Option from "effect/Option";
@@ -598,6 +602,22 @@ describe("DropdownMenu submenus", () => {
     expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
     expect(menu.renderer.findByTestId("menu")).toBeUndefined();
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
+
+    menu.unmount();
+  });
+
+  it("runs a submenu row clicked with the pointer", () => {
+    const onSelect = vi.fn();
+    const menu = renderComponent(<WithSubmenus onSelect={onSelect} />);
+    clickCentreOf(menu, "trigger");
+    clickCentreOf(menu, "share");
+
+    clickCentreOf(menu, "copy-link");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("copy-link");
+    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
 
     menu.unmount();
   });
