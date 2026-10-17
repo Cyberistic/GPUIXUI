@@ -33,6 +33,9 @@ never as a promise.
 | [radio-group](radio-group.mdx) | `RadioGroup` | [selection](../examples/selection.example.tsx) |
 | [switch](switch.mdx) | `Switch` | [selection](../examples/selection.example.tsx) |
 | [select](select.mdx) | `Select` | [form](../examples/form.example.tsx) |
+| [slider](slider.mdx) | `Slider` | [value](../examples/value.example.tsx) |
+| [range-slider](range-slider.mdx) | `RangeSlider` | [value](../examples/value.example.tsx) |
+| [meter](meter.mdx) | `Meter` | [value](../examples/value.example.tsx) |
 | [progress](progress.mdx) | `Progress` | [form](../examples/form.example.tsx) |
 | [skeleton](skeleton.mdx) | `Skeleton` | [feedback](../examples/feedback.example.tsx) |
 | [spinner](spinner.mdx) | `Spinner` | [feedback](../examples/feedback.example.tsx) |

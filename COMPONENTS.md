@@ -131,19 +131,19 @@ carries an evidenced limitation. The capability evidence lives in
 | Tooltips | wip | reuse | [tooltip](packages/primitives/docs/tooltip.mdx) · feedback | **Runtime (041):** opens on hover and on keyboard focus, and its content stays inside the frame it anchors to. A thin wrapper over `@gpuix/react/tooltip`; a mouse-opened tip looks the same as a keyboard-opened one (no `focusVisible`). |
 | Skeletons | wip | partial | [skeleton](packages/primitives/docs/skeleton.mdx) · feedback | **Runtime (041):** opacity samples take both `1` and `0.6`. Opacity pulse only: the runtime's `motion` animates width/height/opacity/insets/borderRadius and nothing else, so no shimmer sweep. |
 | Loading indicators | wip | partial | [spinner](packages/primitives/docs/spinner.mdx) · feedback | **Runtime (041):** the lit dot changes index (the accent-coloured dot proves a theme colour reaches the paint) and AccessKit reports role `Status` with its label. `Spinner` **cannot rotate**; `Progress` with no `value` is the alternative. |
-| Slider | todo | ? | — | **Owner unassigned.** No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
-| Range slider | todo | ? | — | **Owner unassigned.** Two-thumb variant of Slider; its own runtime for min/max ordering and thumb crossing. No host element. |
-| Meter | todo | ? | — | **Owner unassigned.** Distinct from Progress: a value in a range, not task completion. No host element. |
-| Number Field | todo | ? | — | **Owner unassigned.** `<input>` exists (API-shape for the text part); stepper buttons, drag-to-scrub, clamping and locale formatting are ours. |
-| OTP Field | todo | ? | — | **Owner unassigned.** `<input>` exists; segmented rendering, paste distribution and keyboard movement are ours. |
-| Toggle | todo | ? | — | **Owner unassigned.** Momentary pressed mode, distinct from Switches. No `Button` in published 0.10.0; built on `div` + the shared keyboard contract. |
-| Rating | todo | ? | — | **Owner unassigned.** Radio-group-like input; no host element. Reuses the radio roving-focus contract. |
+| Slider | wip | ours | [slider](packages/primitives/docs/slider.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** a real click at 25% of the track reports `25`; the thumb is centred within 1 px of the value at 0/50/100; arrows/page/Home/End move by step, page, end; a disabled slider refuses pointer and keys and leaves the tab order; the ring lands on the thumb. **No pointer capture** — a drag only tracks while the pointer is over the track. **No `aria-valuenow`/`min`/`max`**; the value rides on `aria-valuetext`. |
+| Range slider | wip | ours | [range-slider](packages/primitives/docs/range-slider.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** a press at 10% moves the start, at 90% the end; native focus follows the grabbed thumb and an arrow moves only that end; a start driven past the end stops on it. Two `role="slider"` thumbs in a named `group`, each announcing its own value text. Ends may touch, never cross. Same pointer-capture and `aria-valuenow` limits as Slider. |
+| Meter | wip | yes (a bar, no host element) | [meter](packages/primitives/docs/meter.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** AccessKit role `Meter`; the value text is the formatted measurement; the fill's painted width is the measurement's fraction of its own range; Tab never lands on it. Reuses `Progress`'s track/fill. No `aria-valuenow`. |
+| Number Field | todo | ? | — | **Owner: primitives** (plan 054). `<input>` exists (API-shape for the text part); stepper buttons, clamping and formatting are ours. |
+| OTP Field | todo | ? | — | **Owner: primitives** (plan 054). `<input>` exists; segmented rendering and keyboard movement are ours. Paste distribution depends on a runtime probe. |
+| Toggle | todo | ? | — | **Owner: primitives** (plan 054). Momentary pressed button; no `aria-pressed` in 0.10.0, so state must ride on `aria-valuetext`. |
+| Rating | todo | ? | — | **Owner: primitives** (plan 054). Radio-group-shaped input over `max` stars; reuses the radio roving-focus contract. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (68 tests in 7
-files after the 049 follow-ups; 54 at the 041 baseline, locally-built GPUix
-0.10.0 binding). Details: plan 041 §9. The seventh file mounts every example in
-`packages/primitives/examples/` (plan 047).
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (82 tests in 8
+files after the 053 value controls; 54 at the 041 baseline, 68 after 049, locally
+built GPUix 0.10.0 binding). Details: plan 041 §9 and plan 053 §11. The eighth
+file mounts every example in `packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
 active palette, and re-rendering with the dark palette repaints every asserted

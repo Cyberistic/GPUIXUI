@@ -59,6 +59,7 @@ subpaths; the package root needs a native binding.
 **Actions** `Button` `ButtonGroup`
 **Fields** `Input` `TextArea` `Select`
 **Selection** `Checkbox` `RadioGroup` `Switch`
+**Value** `Slider` `RangeSlider` `Meter`
 **Feedback** `Progress` `Spinner` `Skeleton` `Tooltip`
 **Theming** `ThemeProvider`
 
@@ -73,7 +74,8 @@ none paints a literal and none scripts hover or press
 | ---------- | ------------ | ---- |
 | `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
-| `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`) |
+| `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
+| pointer capture | absent | a slider drag only tracks while the pointer is over the track; click-to-position and the keyboard are the precise paths |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once |
 | scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
@@ -87,7 +89,7 @@ Every Tier 1 component has a page and a composed example beside the source:
 
 - `docs/` — one page per component (`docs/README.md` indexes them) with usage,
   API, keyboard, accessibility, theming, limitations and verification;
-- `examples/` — five realistic compositions plus the icon set, registered in
+- `examples/` — six realistic compositions plus the icon set, registered in
   `examples/index.ts` for `apps/playground`;
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
@@ -109,12 +111,12 @@ function (`renderButton`, `renderCheckbox`, …) instead. The glue in between
 type checker and by the native runtime, not by these suites.
 
 **Verified in the real runtime** (`nub run --filter @gpuixui/primitives test:runtime`):
-six suites in `runtime/` mount the components in the GPUix 0.10.0
+seven suites in `runtime/` mount the components in the GPUix 0.10.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
-offset, PNG captures. A seventh suite mounts every example from
+offset, PNG captures. An eighth suite mounts every example from
 `examples/index.ts`, so the documentation's compositions are runtime-proven too.
-Measured 2026-10-17: **7 files, 68 tests, all passing** — including a theme
+Measured 2026-10-17: **8 files, 82 tests, all passing** — including a theme
 switch on a mounted tree, using the shipped `lightTheme` / `darkTheme` from
 `@gpuixui/tokens`, and a check that no painted colour is outside the active
 palette.

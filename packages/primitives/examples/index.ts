@@ -14,6 +14,7 @@ import { IconsExample } from "./icons.example.js";
 import { LayoutExample } from "./layout.example.js";
 import { SelectionExample } from "./selection.example.js";
 import { TypographyExample } from "./typography.example.js";
+import { ValueExample } from "./value.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
@@ -23,4 +24,5 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   layout: LayoutExample,
   selection: SelectionExample,
   typography: TypographyExample,
+  value: ValueExample,
 };
