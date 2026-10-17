@@ -78,6 +78,8 @@ the `@gpuixui/tokens/react` provider
     - [ ] Card, Badge, Avatar, Alert, EmptyState, List
   - [ ] Overlays: Dialog, Confirmation dialog, Popover
     - [ ] `internal/dismiss-layer.ts` + `internal/button-props.ts` (0.10.0 has neither)
+    - [ ] Plans 112/113 reference `keyboardFocusDim` and `focusVisible`, which 0.10.0's `StyleDesc` does not have — correct the plans before writing the styles
+    - [ ] Fix plan 112's `DialogContent` to name the surface focus through `aria-label` only (no `aria-labelledby` in 0.10.0 either)
   - [ ] Disclosure and navigation: Tabs, Accordion, Collapsible, Breadcrumb, Pagination
     - [x] Logic: `accordion/logic.ts`, `breadcrumb/logic.ts`, `pagination/logic.ts`
   - [ ] Menus: Dropdown, Context, Command
@@ -144,6 +146,23 @@ until `packages/primitives` and a newer `@gpuix/react` land. Plans 110 §1/§7 a
 
 Related: the reference clone must not be treated as the API of the pinned
 dependency anywhere in this repo, and `package.json` pins must stay explicit.
+
+`[!]` **Two sessions were writing this worktree at once** (observed 2026-10-17).
+A second components session rewrote `src/internal/theme.ts` and left an
+untracked `src/toast/{model,store}.ts` while this session was committing, so
+`nub run --filter @gpuixui/components check-types` currently fails on those three
+files only (all other files are clean):
+
+- `src/toast/store.ts:169` — `Layer.scoped` does not exist in Effect 4.0.5; use
+  `Layer.effect`, which runs its effect in the layer's own scope.
+- `src/toast/store.ts:163` and `:167` — `push` returns a `SchemaError`-carrying
+  effect, so the service member's error type cannot be `never`.
+- `src/toast/model.ts` — same `never` mismatch on the `SchemaError` channel.
+
+The toast files were left untouched: another writer owns them right now.
+`packages/components/src/internal/theme.test.ts` was retargeted to the surviving
+`elevation`/`focusRing` exports after the rewrite removed `withAlpha`/`tone`.
+Recommendation: the supervisor must serialise writers per tree.
 
 ## Interlocks (cross-workstream dependencies)
 

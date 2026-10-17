@@ -7,8 +7,8 @@
  * (plan 110 §6).
  */
 
-import type { BoxShadow, StyleDesc } from "@gpuix/react";
-import type { Elevation, Theme } from "@gpuixui/tokens";
+import type { StyleDesc } from "@gpuix/react";
+import type { BoxShadow, Elevation, Theme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
