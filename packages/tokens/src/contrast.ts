@@ -158,6 +158,16 @@ const ringPairs: readonly ContrastPair[] = ringSurfaces.map(
 );
 
 /**
+ * The soft status fills a focused control can sit on. An Alert or Toast carries
+ * actions — a Retry or Dismiss button — and the ring is the only indicator of
+ * which control holds focus, so each fill is held to the boundary floor like the
+ * surfaces a control normally sits on.
+ */
+export const ringSoftPairs: readonly ContrastPair[] = softSurfaceRoles.map(
+  (background): ContrastPair => ["ring", background, "boundary"],
+);
+
+/**
  * The state washes a row paints behind a status label, icon or indicator dot:
  * pointer hover, press, the accent a selectable row uses on hover, and the
  * selected fill. A status dot in a list, table or menu sits on all four, so the
@@ -200,7 +210,8 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * secondary text and status text on the state washes, brand-toned text on the
  * plain surfaces and washes a link paints, default body text on the quiet panel
  * and the floating surface, the focus ring on every surface a focused control
- * can sit on, status text on a floating surface, the functional control
+ * can sit on, the ring on the soft status fills a toast's action button sits on,
+ * status text on a floating surface, the functional control
  * boundary on a floating surface, a quiet panel, the state washes and the soft
  * status fills a control sits in, the soft
  * status surfaces and the loading skeleton a canvas must distinguish, the
@@ -217,6 +228,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["mutedForeground", "popover", "secondary"],
   ["inputForeground", "input", "body"],
   ...ringPairs,
+  ...ringSoftPairs,
   ["secondaryForeground", "secondary", "secondary"],
   ["primaryForeground", "primary", "secondary"],
   ["primaryForeground", "primaryHover", "secondary"],
@@ -464,7 +476,8 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * each soft status surface measured on its own fill, the selection wash and the
  * tone's own foreground on the four soft status surfaces a selected Alert,
  * Badge or Toast paints, the control edge measured
- * on the fills a bordered control paints, and the functional boundary measured
+ * on the fills a bordered control paints, the focus ring on the soft status fills
+ * a toast's action button sits on, and the functional boundary measured
  * on the quiet panel, the state washes and the soft status fills a bounded
  * control sits on. The level
  * defaults to the one the theme declares, so a high-contrast theme is checked

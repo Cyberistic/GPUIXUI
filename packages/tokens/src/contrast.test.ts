@@ -67,6 +67,12 @@
  * measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and 2.97:1 on
  * `infoSoft`, so the four soft fills join the boundary class and the identity
  * dark edge moves one half-step lighter.
+ *
+ * Plan 093 closes the last composition on those fills: a Toast's action button
+ * is focused while it sits on the soft tint, but the ring was measured on the
+ * eight surfaces a control normally sits on. Every shipped set already clears
+ * the floor — identity light `warningSoft` at 3.37:1 is the tightest — so no
+ * colour moves; the four fills join the boundary class as `ringSoftPairs`.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -288,7 +294,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(113);
+    expect(contrastPairs.length).toBe(117);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
@@ -381,7 +387,20 @@ describe("themeContrastFailures", () => {
   it("checks the focus ring on every surface a focused control sits on", () => {
     expect(quietRingTheme.colors.ring).toBe("#EFF4FF");
     const ringFailures = quietRingFailures
-      .filter(({ foreground }) => foreground === "ring")
+      .filter(
+        ({ foreground, background }) =>
+          foreground === "ring" &&
+          [
+            "background",
+            "card",
+            "popover",
+            "muted",
+            "accent",
+            "hover",
+            "active",
+            "selected",
+          ].includes(background),
+      )
       .map(({ background, pairClass, floor }) => ({
         background,
         pairClass,

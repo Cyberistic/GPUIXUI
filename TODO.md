@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 60/79
+`[x]` `[█████████░]` 61/80
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -303,10 +303,10 @@ identity dark `borderStrong` measured 2.77:1 on `successSoft`, 2.94:1 on
 checkbox or field edge can sit inside an Alert or Toast and plan 084 measured
 the boundary only on the `muted` panel and the state washes; the four fills join
 the `boundary` class and the identity dark edge moves to `#868FA0` (plan 092)
-`[ ]` Hold the focus ring on the four soft status fills — `ring` already clears
-its floor on all four, but a toast's action button is a real composition and
-`ringSurfaces` still names only the eight surfaces a focused control sits on
-(next plan 093)
+`[x]` Hold the focus ring on the four soft status fills — a toast's action
+button is focused while it sits on `warningSoft` or `destructiveSoft`, but
+`ringSoftPairs` now adds the four fills to the `boundary` class; every shipped
+variant already cleared the floor, so no colour moves (plan 093)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)

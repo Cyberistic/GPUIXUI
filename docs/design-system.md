@@ -276,7 +276,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
-| focus ring on `background`/`card`/`popover`/`muted`/`accent` and the `hover`/`active`/`selected` washes, and essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills | 3:1 | 4.5:1 |
+| focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, and essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft`) | 1.05:1 | 3:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |

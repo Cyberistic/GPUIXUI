@@ -4,7 +4,8 @@
  * washes but not the `muted` panel a sidebar control sits on or the `accent`
  * wash a selectable row paints. Both shipped pairs passed, so no colour moves;
  * this suite keeps them measured, and keeps the eight-surface list from being
- * edited by accident.
+ * edited by accident. The soft status fills a toast's action button sits on are a
+ * separate composition, guarded by `ring-soft.test.ts` (plan 093).
  */
 
 import { describe, expect, it } from "vitest";
@@ -76,7 +77,11 @@ describe("the focus ring", () => {
 
   it("publishes the eight ring surfaces in documented order", () => {
     const backgrounds = contrastPairs
-      .filter(([foreground]) => foreground === "ring")
+      .filter(
+        ([foreground, background]) =>
+          foreground === "ring" &&
+          ringSurfaces.some((surface) => surface === background),
+      )
       .map(([, background]) => background);
 
     expect(backgrounds).toEqual([...ringSurfaces]);
@@ -99,7 +104,11 @@ describe("the focus ring", () => {
       colors: { ring: getTheme("light").colors.background },
     });
     const failures = themeContrastFailures(invisible)
-      .filter(({ foreground }) => foreground === "ring")
+      .filter(
+        ({ foreground, background }) =>
+          foreground === "ring" &&
+          ringSurfaces.some((surface) => surface === background),
+      )
       .map(({ background, pairClass, floor }) => ({
         background,
         pairClass,

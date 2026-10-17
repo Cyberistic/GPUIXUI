@@ -900,7 +900,8 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 against `contrastFloors`. The list holds text pairs, secondary text and status
 text on the state washes (`hover`, `active`, `accent` and `selected`), the other
 status pairs, the focus ring on the plain surfaces, the `muted` panel, the
-`accent` wash and the three state washes a focused control can sit on, the
+`accent` wash, the three state washes a focused control can sit on and the four
+soft status fills (`ringSoftPairs`), the
 functional control boundary on the `muted` panel, those washes and the four soft
 status fills (`controlBoundarySoftPairs`), the selection
 wash — body and secondary text through it, and the wash's own perceivability —
@@ -1139,7 +1140,11 @@ byte-for-byte.
 The focus ring is measured on the eight surfaces a focused control can sit on —
 the canvas, card and popover, the `muted` panel a sidebar control sits on, the
 `accent` wash a selectable row paints, and the `hover`, `active` and `selected`
-washes — because focus and selection co-occur in rows. A field's own `input` fill
+washes — because focus and selection co-occur in rows. It is also measured on the
+four soft status fills, because a Toast's action button is focused while it sits
+on its own tint; every shipped variant already clears the floor there, so no
+colour moves, and the pairs exist so an edited theme cannot remove the ring. A
+field's own `input` fill
 and a control's `secondary` fill are what the ring surrounds, not what it sits
 on, so they are deliberately not ring surfaces. `ringSurfaces` in
 `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public

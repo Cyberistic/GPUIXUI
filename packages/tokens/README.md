@@ -192,7 +192,10 @@ so the four light soft foregrounds moved one family step darker, the dark ones
 one step lighter with a 20% identity wash, Windows dark's wash moved to 40%, and
 Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091). The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
-washes, so a ring that vanishes on a selected row is caught. Default body text
+washes, so a ring that vanishes on a selected row is caught, and on the four soft
+status fills, because a toast's action button is focused while it sits on its own
+tint; every shipped variant already clears that floor, so the pairs are a
+guarantee rather than a fix (plan 093). Default body text
 is checked on the canvas, card, the `muted` panel, `popover` and the
 `hover`/`active` washes, so an avatar's initials on the quiet panel and a date
 picker's month header on its floating surface are held to the body floor.
