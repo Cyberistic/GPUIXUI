@@ -38,6 +38,7 @@ export const CAPABILITIES = [
   "log",
   "theme",
   "workspace",
+  "docking",
   "command",
   "content",
   "drag",

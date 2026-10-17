@@ -131,7 +131,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–183` is used; `184+` continues
+playground shell and the feasibility probes. `100–184` is used; `185+` continues
 in the same block.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -175,6 +175,7 @@ in the same block.
 | [181](./181-markdown-feasibility.md) | Tier 5 feasibility: a markdown surface | B→D | 100, 110, 120, 140, 160, 163 | **landed**: `markdown-surface` — GFM blocks (heading, list, table, fenced code with highlighting) paint as addressable text, a crossing drag copies the document, a coordinate click fires `onLinkClick` with the URL, React children are retained but unpainted, and `role="article"` is one named AccessKit region; 21 checks, suite `48 → 49` (§8) |
 | [182](./182-shell-selection.md) | The playground shell selects, repaints and answers keys | B | 120, 140, 150, 151, 170 | **landed**: `shell-selection` — selecting an entry mounts that scenario's real view and paints its active state; Enter (down) and Space (up) switch entries through the shipped `decideActivation`; the palette switch repaints the shell and keeps the selection. Exposed and fixed a **harness state leak**: consecutive `<App>` scenarios shared Shell state and the sidebar scroll offset, so every scenario now mounts under a `Fragment` keyed by id; 17 checks, suite `49 → 50` (§7) |
 | [183](./183-toast-feasibility.md) | Tier 2 feasibility: a toast viewport in the real runtime | B→C/D | 100, 110, 120, 140, 155, 156, 157, 159, 177, 182 | **landed**: `toast-lifecycle` — `right`/`bottom` resolve exactly (24 px insets), the bottom-anchored stack grows upward, the viewport's `pointerEvents: "none"` lets a page control under its strip take the click while a painted card is hit without `auto`, paint order covers the app (`behind=0`), `role="status"` is an AccessKit `Status` and dismiss is a `Button`, a toast does not steal focus and its dismiss is one Tab away, and a per-toast JS timer dismisses only its own card through a frozen exit. Six two-direction proofs, including `right`→`left`, `none`→`auto` and the removed role; 55 checks, suite `50 → 51` (§7) |
+| [184](./184-docking-layout.md) | Tier 4 feasibility: a docking layout with edge drop zones and restore | D | 100, 110, 120, 140, 155, 162, 165, 167, 173, 175, 177, 182 | **landed**: `docking-layout` — the surface rectangle is read from component code (`ref` + `renderer.getElementBounds`) and every model-derived pane box matches the runtime; a pixel-exact drop bar inside a nested `position: "relative"` pane; a captured tab drag survives indicator re-renders; an edge drop splits the target, a centre drop merges; an emptied group is pruned and its split collapses; every split must be `key`ed by node id or a reparented split keeps the wrong size; a recursive layout with nested sizes restores exactly through a keyed remount; AccessKit exposes `Region`/`TabList`/`TabPanel`/`Tab`/`Splitter`. 80 checks, suite `51 → 52`, four two-direction proofs (§7) |
 
 Cross-cutting records:
 

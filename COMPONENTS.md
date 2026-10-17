@@ -46,6 +46,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag`, `workspace-restore`, `workspace-panes` | verified |
+| docking | `docking-layout` | verified |
 | command | `command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
@@ -60,7 +61,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | chart | `chart-svg` | verified |
 | toast | `toast-lifecycle` | verified |
 
-The suite is **51/51 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **52/52 green here** (exit `0`, `.artifacts/smoke-report.json`).
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -320,6 +321,30 @@ anchor kept) against the clipped intersection. Fill layouts by passing an
 explicit height from the split: a `height: "100%"` chain through the strip leaves
 a virtual list with no viewport.
 
+`docking-layout` is the runtime verdict for a **docking grid**, and it is the
+first probe that reads a rectangle **from component code during a gesture**. A
+`ref` gives a `PublicInstance.id`; `useGpuix().renderer.getElementBounds(id)`
+gives the surface's window box, and every pane box the pure `rects` model
+projects from it matched the runtime within 1 px — including splits created
+mid-run and nested ones. The drop indicator is an **absolute child of a
+`position: "relative"` group**: its bar is pixel-exact (`right − 4`, 4 px thick;
+the whole pane for a centre zone), it is `pointerEvents: "none"`, and
+`paintedStyle.backgroundColor` is the palette's `primary`. The zone is a 48 px
+edge band and the nearest edge wins a corner. A captured tab drag keeps
+delivering moves **while the indicator re-renders on every move**, and the `up`
+applies exactly one drop; the drop handler must therefore live on the pressed
+tab, not on the group. A right/bottom edge drop puts the new group **secondary**
+and left/top **primary** at half the pane's extent; a centre drop merges into the
+strip with no split; dropping a group's last tab **prunes the group and collapses
+its split to the survivor**, including at the top level. One rule is load
+bearing: **key every split by its node id**, or a collapse that reparents a
+surviving split reuses the parent's size state (measured: `320` instead of
+`324`). The recursive layout restores exactly through a keyed remount of the
+model (outer `280`, nested `324`/`197`), and the dump exposes the panes as
+`Region` + `TabList` + `TabPanel` + `Tab` with labels and `aria-selected`. A
+gesture-ending click on the source tab is a measured `drag-targets` fact and is
+not asserted here; a shipped component must suppress it.
+
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
 run by `apps/playground/legacy-probe`; ADR 0002) and `docs` (the upstream
@@ -566,14 +591,14 @@ in-package and an end-to-end native verdict.
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
 | Resizable split panes | todo | partial (probe) | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). **Both axes + keyboard (`panel-nested`, plan `175`):** `dy` drives a vertical split exactly (`180 → 228`, painted height agrees), arrows resize the focused divider by 16 px, and the divider is exposed as an AccessKit `Splitter` with its size on `aria-valuetext` (no `aria-valuenow`/`aria-orientation` exist). A `focusNext` leaves the divider; the nested reverse edge does not re-enter it (§8). |
-| Panel groups | todo | partial (probe) | Composition over split panes. A split nested in a pane resizes **independently** of its parent (`panel-nested`: inner `300 → 360` while the outer stayed `228`). |
+| Panel groups | todo | partial (probe) | Composition over split panes. A split nested in a pane resizes **independently** of its parent (`panel-nested`: inner `300 → 360` while the outer stayed `228`). **`docking-layout`:** each group is a named `Region` containing a `TabList`, `Tab`s and a labelled `TabPanel`, and the dump exposes all four roles (plus the divider's `Splitter`); every split must be `key`ed by its node id, because a collapse reparents a surviving split into its parent's position and React otherwise reuses the parent's size state. |
 | Collapsible sidebars | todo | partial (probe) | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. **`panel-nested`:** width `0` paints `0` with no residual border or padding and the neighbour absorbs the space; re-opening paints the full width. |
 | Tabbed panels | todo | partial (probe) | Tabs + panels. The strip's overflow contract is measured by `tab-strip-overflow` (horizontal pan, clipped children keeping bounds, component-owned reveal; clamp the near end — the renderer stops at `x = -5`, not `0`) and its keyboard contract by `tab-strip-focus` (a clipped tab is a tab stop that focus does not reveal; a roving strip is one stop and reveals on End/Home). **The pane body (`workspace-panes`, plan `177`):** `display: "none"` is a **no-op** in 0.10.0 — the inactive pane still laid out and stole a click — so panes stay mounted and overlap in absolutely positioned slots with `visibility: "hidden"` + `pointerEvents: "none"`. That keeps the pane's draft, pick and virtual-list anchor across a switch and also removes its tab stop. Pass a content height derived from the split (a `height: "100%"` chain gives a virtual list no viewport). A nested scroller **chains** the wheel unless it sets `pointerEvents: "auto"`. |
-| Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. **`drag-autoscroll`:** the runtime does **not** scroll a held drag at an edge — the strip must own an edge loop (`renderer.scrollTo` per held move), which keeps the capture and the up, and derive the drop index from the pointer and the live offset. A new OS window is not available either: 0.10.0 exposes one app window (`render` + `WindowOptions`), no `openWindow`. |
-| Docking layouts | todo | partial (probe) | Composition over split panes + tabs. The overflowed strip contract is measured (`tab-strip-overflow`, plan `173`): x-axis wheel, exact `scrollTo`, `scrollIntoView` reveal, and clipped nodes that keep bounds. |
+| Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. **`drag-autoscroll`:** the runtime does **not** scroll a held drag at an edge — the strip must own an edge loop (`renderer.scrollTo` per held move), which keeps the capture and the up, and derive the drop index from the pointer and the live offset. **`docking-layout` is the in-window destination:** a held tab drag keeps arriving while the drop indicator re-renders on every move, the release applies exactly one drop, an edge drop splits the target and a centre drop merges, and moving a group's last tab out prunes it and collapses its split. A new OS window is not available: 0.10.0 exposes one app window (`render` + `WindowOptions`), no `openWindow`. |
+| Docking layouts | todo | partial (probe) | Composition over split panes + tabs. **`docking-layout` measures the mechanism:** a pane layout is a recursive React tree whose surface rectangle comes from component code (`ref` → `PublicInstance.id` → `renderer.getElementBounds`), and the pure model's boxes for every group match the runtime; the drop indicator is an **absolute child of a `position: "relative"` pane**, pixel-exact (a 4 px bar on the edge, the whole pane for a centre), `pointerEvents: "none"`, tinted by the theme's `primary`; the zone is a 48 px edge band with the nearest edge winning a corner; a right/bottom drop puts the new group **secondary**, left/top **primary**; an emptied group is pruned and its split collapses to the survivor (measured at the top level too); and a recursive layout — outer `280`, nested `324`/`197` — restores exactly through a keyed remount of the model. |
 | Nested panel arrangements | todo | partial (probe) | Composition. A vertical outer split holding a horizontal inner split is measured end to end: both axes resize, the nested drag leaves `outer = 228`, and the top pane's painted height/width track the readouts (`panel-nested`). |
 | Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. **Composition (`workspace-panes`)**: a hidden pane keeps its own state and anchor; a resized pane re-windows its list (`5 → 2` painted rows at `240 → 180`) and keeps the anchor; a nested scroller needs the `pointerEvents: "auto"` wheel guard. |
-| Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. |
+| Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. **Recursive layouts (`docking-layout`)**: the tree owns every split size; `encodeDock`/`decodeDock` are the JSON boundary (`Schema.fromJsonString`), and a restore is a **keyed remount** so each `SplitPane` re-reads `initial` — the live instance's state is not mutated. A corrupt snapshot decodes to `None` and is reported, never thrown. |
 | Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. |
 | Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. |
 | Application menus | todo | unsupported (in-window only) | **The published 0.10.0 has no menu/tray API**: `@gpuix/native`'s `NativeRenderer` exposes only window controls (`setWindowTitle`, `activateWindow`, `minimizeWindow`, `zoomWindow`, `toggleFullscreen`), and no `menu`/`Menu`/`tray` symbol exists in the native or React types. An application menu must therefore be an **in-window** surface opened by a window key — the path `command-palette` measures end to end (`cmd-k`, Escape delivery, focus return). A true macOS menu bar would need a renderer API that is not in this version. |

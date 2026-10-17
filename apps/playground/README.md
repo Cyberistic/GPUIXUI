@@ -19,8 +19,9 @@ placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
 command surface probe (`command-palette`), the tabbed-pane probe
-(`workspace-panes`), the app-level shortcut probe
-(`window-key-shortcut`), the chart probe (`chart-svg`), the markdown probe
+(`workspace-panes`), the docking probe (`docking-layout`), the app-level
+shortcut probe (`window-key-shortcut`), the chart probe (`chart-svg`), the
+markdown probe
 (`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
@@ -61,7 +62,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (51/51 green); -> 2 on a host with no binding
+# -> 0 here (52/52 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -464,6 +465,31 @@ The component contract: keep tab panes mounted and hide them with
 wheel with `pointerEvents: "auto"`, and pass an explicit content height down from
 the split.
 
+## Docking layouts (plan `184`)
+
+`docking-layout` is the composition a docking grid needs: a recursive tree of
+groups and splits (`src/panels/dock.ts`, pure and unit-tested), a drag between
+panes, edge drop zones and an app-owned restore. It is also the first probe that
+reads geometry **from component code during a gesture**.
+
+| Fact | Measured |
+| ---- | -------- |
+| pane geometry | a `ref` gives a `PublicInstance.id`; `useGpuix().renderer.getElementBounds(id)` returns the surface's window box; every group box the `rects` model projects from it matched the runtime within 1 px, including splits created mid-run |
+| drop indicator | an **absolute child of a `position: "relative"` pane**: the right bar sits at `pane.right − 4` (4 × pane height), the top bar on the pane's top edge; the centre zone covers the pane. `paintedStyle.backgroundColor` is the palette's `primary`; `pointerEvents: "none"` keeps it out of the hit path |
+| zones | a 48 px edge band; the nearest edge wins a corner, otherwise the centre |
+| captured drag | every held move reached the pressed tab **while the indicator re-rendered on each move**; the `up` applied exactly one drop. The handler must be on the tab, not the group |
+| edge drop | right/bottom puts the new group **secondary**, left/top **primary**, at half the target's extent |
+| centre drop | merges into the target's strip, no split |
+| prune | moving a group's last tab out removes the group and collapses its split to the survivor — measured both inside a nested split and at the top level |
+| keys | every split must be `key`ed by its node id: a collapse reparents the survivor into its parent's position and React otherwise reuses the parent's size state (`320` instead of `324` in the two-direction proof) |
+| restore | the tree owns every size; save → reset → restore re-applies the outer `280` and nested `324`/`197` through a keyed remount, and the restored tree answers a tab click |
+| a11y | the dump exposes `Region` (the pane, labelled), `TabList`, `TabPanel`, `Tab` (with `aria-selected`) and `Splitter`. Role names are AccessKit's capitalised names, not the authored tokens |
+
+Limits: there is no docking package yet; the indicator's paint order is inferred
+from the last-child rule (`toast-lifecycle`) and not asserted; the
+gesture-ending click is a measured `drag-targets` fact and must be suppressed by
+a component; a detached tab stays in-window (0.10.0 has one app window).
+
 ## Terminal surfaces (plan `179`)
 
 `terminal-grid` asks whether a Tier 4 terminal is feasible. The runtime has no
@@ -558,15 +584,16 @@ integration branch.
 
 ## Evidence on this host
 
-The suite is **51/51 green** here (`exit 0`):
+The suite is **52/52 green** here (`exit 0`):
 
 ```
-51/51 scenarios passed · capabilities: layout=verified text=verified
+52/52 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
-theme=verified workspace=verified command=verified content=verified drag=verified
+theme=verified workspace=verified docking=verified command=verified
+content=verified drag=verified
 selection=verified menu=verified components=verified search=verified
 terminal=verified chart=verified toast=verified
 ```
@@ -582,6 +609,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | popups | Select and Combobox open, commit and close under synthetic input, including native keys after `autoFocus`; Select returns focus to its trigger on every close. `nativeSimulateMouseMove` delivers enter/leave, so a hover tooltip is measurable; its close is a JS timer, not the GPUI clock |
 | a11y | the AccessKit dump maps every typed ARIA token to a role; names come only from `aria-label`; CheckBox/Switch have no checked state; the tree follows the painted virtual window |
+| docking | the surface's window rectangle is read from component code (`ref` → `renderer.getElementBounds`), and every model-derived pane box matches; an absolute drop bar resolves to its nested `position: "relative"` pane and paints the palette's `primary`; a captured tab drag survives indicator re-renders and applies one drop; edge drops split (new group secondary on right/bottom, primary on left/top), a centre drop merges; an emptied group prunes and its split collapses; **every split needs `key={node.id}`**; a recursive layout restores exactly through a keyed remount; AccessKit exposes `Region`/`TabList`/`TabPanel`/`Tab`/`Splitter` |
 | content | `<svg>`/`<img>`/`<diff>` are retained **and** painted (bounds fire from `on_painted`); `<canvas>` is retained but renders nothing and drops its children; `setImagePixels` uploads a bitmap through the ref |
 | drag | capture owns every move and the up; hover is frozen during the drag; the gesture ends in a click on the source; a drop on a handler-less element still clicks; `onFileDrop` carries paths and coordinates |
 | drag autoscroll | the runtime does **not** scroll a held drag at an edge; component code scrolls with `renderer.scrollTo` on each held move, keeps the capture and the up, and derives the drop index from the pointer and the live offset |
@@ -619,6 +647,8 @@ src/ui.tsx               Readout / Panel / Pressable / … reading useTheme()
 src/types.ts             PlaygroundScenario = SmokeScenario + view
 src/panels/resize.ts     pure resize math (nextSize, clamped)
 src/panels/split-pane.tsx the pointer-captured divider
+src/panels/dock.ts      the docking model: tree, geometry, drops, JSON boundary
+src/panels/dock.test.ts the pure docking rules
 src/scenarios/*.tsx      one view + one steps effect per capability
 src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
 src/scenarios/primitives.tsx the shipped Tier 1 components (actions, fields, display)
@@ -645,6 +675,7 @@ src/scenarios/tab-focus.tsx     clipped tab stops and the roving strip
 src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible sidebar
 src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filtering and focus
 src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
+src/scenarios/docking.tsx   docking: drop zones, split creation, prune, restore
 src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
 src/scenarios/chart.tsx     chart: bars, one svg layer per series, SVG text, img gradients
 src/scenarios/markdown.tsx  markdown: blocks, selection, links, children, a11y
@@ -687,7 +718,7 @@ narrower. Each deviation is deliberate and measured:
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
   probe, the terminal-grid probe, the chart probe, the markdown probe, the
   toast-viewport probe and the shell probe pass in real GPUix 0.10.0 on this
-  host (51/51), with a written report and screenshots.
+  host (52/52), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
