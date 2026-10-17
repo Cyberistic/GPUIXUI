@@ -5,7 +5,7 @@
 | Phase | F (accessibility truth) |
 | Owner | **tokens-theme workstream** (`packages/tokens`, `docs/tokens.md`, `docs/design-system.md`) |
 | Depends on | plans `078` (the skeleton surface pairs), `079` (secondary text on the washes), `087` (selection on the washes), `093` (the ring on the soft fills) |
-| Status | planned |
+| Status | done |
 
 Self-contained. A weaker executor can follow it in order.
 
@@ -249,19 +249,40 @@ Record the exact failure text in §8.
 | `docs.test.ts` sentences and §9 row | unit | a document that stops naming a surface the contract checks |
 | `readme.test.ts` | unit | the front door drifting from the contract |
 
-## 8. Outcome
+## 8. Outcome (executed on this host, 2026-10-17)
 
-Filled in after execution; the numbers and the commands that produced them are
-recorded here, not predicted.
+- `contrastPairs` now holds **121** pairs: 117 + `skeleton` on `muted`, `hover`,
+  `active` and `selected`.
+- Seven values moved as designed: light `neutral[300]`, dark `neutral[700]`,
+  high-contrast light `#B0B0B0`, high-contrast dark `#565656`, macOS dark
+  `#525254`, Linux dark `#585858`, Windows dark `#525252`. The tightest pair
+  after the move is Linux dark on `selected` at **1.19:1**.
+- Two-direction proof (`nub run --filter @gpuixui/tokens test`):
+  - restoring the light skeleton to `neutral[200]` failed **2** tests and named
+    six pairs: `identity light default: skeleton on active at 1`,
+    `darwin light default: skeleton on hover at 1.0346699410512776`,
+    `linux light default: skeleton on hover at 1.0420462959987806`,
+    `linux light default: skeleton on selected at 1.0026791477865824`,
+    `win32 light default: skeleton on active at 1.0447807824829132`,
+    `win32 light default: skeleton on selected at 1.0039…`;
+  - restoring the dark skeleton to `neutral[800]` failed **2** tests with
+    `identity dark default: skeleton on active at 1` and
+    `identity dark default: skeleton on selected at 1.0038936920735946`;
+  - removing the four surfaces from the pair list failed **3** tests:
+    `expected 117 to be 121`, the checker regression test
+    (`expected [] to deeply equal [ { background: 'active', …(2) } ]`) and the
+    seven-pair test (`expected [ …(3) ] to have a length of 7 but got 3`);
+  - restored, the package suite is green: **32 files, 1566 tests**.
+- `nub run check`, `nub run lint` and `nub run test` all pass.
 
 ## 9. Acceptance
 
-- [ ] The skeleton is measured on `muted`, `hover`, `active` and `selected` and
+- [x] The skeleton is measured on `muted`, `hover`, `active` and `selected` and
       reported by `themeContrastFailures`.
-- [ ] Every shipped theme clears 1.05:1 on all seven surfaces.
-- [ ] The 1.000/1.004 regressions are guarded in both directions.
-- [ ] `docs/tokens.md`, `docs/design-system.md`, the package README and
+- [x] Every shipped theme clears 1.05:1 on all seven surfaces.
+- [x] The 1.000/1.004 regressions are guarded in both directions.
+- [x] `docs/tokens.md`, `docs/design-system.md`, the package README and
       `COMPONENTS.md` name the surfaces, values and counts, all built from the
       implementation.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
-- [ ] The plan index row is marked done and the `TODO.md` row is ticked.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] The plan index row is marked done and the `TODO.md` row is ticked.
