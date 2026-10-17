@@ -48,9 +48,9 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█████████░]` 10/12
+`[x]` `[██████████]` 11/13
 
-`[x]` Write and index the tokens/theme plan set (plans 010–016)
+`[x]` Write and index the tokens/theme plan set (plans 010–017)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -60,6 +60,9 @@ the `@gpuixui/tokens/react` provider
 `[x]` Expose `colorRoles` for the docs site's generated token tables
 `[x]` Make `@gpuixui/tokens` resolvable from source so a clean checkout needs no
 prebuilt `dist` (plan 016)
+`[x]` Ship `focusRing(theme)` and correct the focus claims in `docs/tokens.md` and
+`docs/design-system.md` — GPUix 0.10.0 has no `outline*` and no `focusVisible`
+(plan 017)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`
@@ -69,8 +72,10 @@ prebuilt `dist` (plan 016)
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
 `references` symlink in `.gitignore` (owner: repo tooling)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
-directly and delete their structural copies of the theme and role list, now that
-the package resolves from source (owner: those workstreams; plan 016)
+directly and delete their structural copies of the theme and role list, plus
+their local focus-ring helpers (`primitives/src/core/style.ts`,
+`components/src/internal/theme.ts`), now that `focusRing` exists and the package
+resolves from source (owner: those workstreams; plans 016–017)
 
 ## Phase C — Tier 1–2 components
 

@@ -1,4 +1,5 @@
 import { alpha } from "./color.js";
+import type { BoxShadow } from "./elevation.js";
 import type { ControlSize } from "./scale.js";
 import type { Theme } from "./theme.js";
 import type { FontWeight, TextRole } from "./typography.js";
@@ -91,5 +92,38 @@ export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
     background: theme.colors[`${tone}Soft`],
     foreground: theme.colors[`${tone}SoftForeground`],
     border: alpha(theme.colors[tone], 0.3),
+  };
+}
+
+/** A focus ring, as the runtime's single-shadow shape. */
+export interface FocusRing {
+  /** The shadow a component paints while it holds focus. */
+  readonly boxShadow: BoxShadow;
+}
+
+/**
+ * The keyboard-focus ring.
+ *
+ * The published runtime has no `outline*` properties and no `focusVisible`
+ * state, and `StyleDesc.boxShadow` is one shadow, so the ring is a zero-offset,
+ * zero-blur shadow spread by the theme's `borderWidth.strong`. It draws outside
+ * the border box and takes no layout space, which is what an outline would do.
+ * Apply it while the control is focused: there is no way to tell a Tab from a
+ * click.
+ *
+ * @example
+ * ```tsx
+ * <div style={focused ? focusRing(theme) : undefined} />
+ * ```
+ */
+export function focusRing(theme: Theme): FocusRing {
+  return {
+    boxShadow: {
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: theme.borderWidth.strong,
+      color: theme.colors.ring,
+    },
   };
 }

@@ -154,15 +154,21 @@ between surfaces is lower.
 | pressed | `active` wash |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
-| focus | `ring` as an **outline**, offset outside the border box |
+| focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` translucent wash |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
-Focus is an outline, not a border, so gaining focus never changes layout. GPUix
-supports `outlineWidth`, `outlineColor` and `outlineOffset` and a
-`focusVisible` state style; components use them rather than inventing a focus
-border. Selection never relies on colour alone for meaning: selected rows also
-carry `aria-selected` where the runtime exposes it.
+Focus never changes layout: the ring is a shadow, painted outside the border box,
+so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
+no `focusVisible` state** — a nested style offers only `hover` and `active`, and
+`boxShadow` is a single shadow — so `focusRing(theme)` is the one shape the
+runtime can draw. The component applies it while it holds focus, which means a
+mouse press shows the ring too: there is no `:focus-visible` to distinguish a Tab
+from a click. A design that needs that distinction must keep a press from
+focusing the control (that limitation is real and is not worked around).
+
+Selection never relies on colour alone for meaning: selected rows also carry
+`aria-selected` where the runtime exposes it.
 
 Components that cannot express hover or active in the runtime (for example
 `virtual-list`, whose GPUI list has no pressed or hovered style) put the state
@@ -206,6 +212,7 @@ design system cannot compensate for a missing role.
 | no inherited `color` | every `<text>` sets `color` explicitly |
 | no `letterSpacing` | no display tracking or all-caps tracking |
 | no OS appearance query | the app owns the mode |
+| no `outline*`, no `focusVisible`, one `boxShadow` | the focus ring is a spread shadow; overlays and menus cannot animate |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are objects, not CSS strings |
 | invalid colour strings are ignored per property | a typo paints the previous/black value; tests restrict roles to hex |

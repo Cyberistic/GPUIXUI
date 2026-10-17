@@ -111,6 +111,21 @@ tone.border; // alpha(theme.colors.info, 0.3)
 A runnable example lives in
 [`src/status-tone.example.ts`](./src/status-tone.example.ts).
 
+## Focus
+
+GPUix 0.10.0 has no `outline*` properties and no `focusVisible` state, so a focus
+ring is a shadow: zero offset, zero blur, spread by `borderWidth.strong`.
+
+```tsx
+import { focusRing } from "@gpuixui/tokens";
+
+<div style={focused ? focusRing(theme) : undefined} />;
+```
+
+Apply it while the control is focused. A mouse press shows the ring too, because
+the runtime has no `:focus-visible` equivalent. A runnable example lives in
+[`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
+
 ## For documentation sites
 
 `colorRoles` lists every semantic role in documentation order, typed as

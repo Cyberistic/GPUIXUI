@@ -18,6 +18,7 @@ import {
   createTheme,
   darkTheme,
   extendTheme,
+  focusRing,
   getTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
@@ -25,6 +26,7 @@ import {
   lightTheme,
   statusTone,
   textStyle,
+  type FocusRing,
   type StatusTone,
   type Theme,
   type ThemeContrast,
@@ -328,6 +330,34 @@ Shadows are structured objects (`offsetX`, `offsetY`, `blurRadius`,
 | `iconSize.lg` | 20 |
 | `iconSize.xl` | 24 |
 
+## Focus
+
+GPUix 0.10.0's `StyleDesc` has **no `outline*` properties and no `focusVisible`
+state** — a nested style only offers `hover` and `active` — and `boxShadow` is a
+single shadow. The focus ring is therefore a shadow that takes no layout space: a
+zero-offset, zero-blur ring spread by `borderWidth.strong`.
+
+```tsx
+import { focusRing, type Theme } from "@gpuixui/tokens";
+
+const ringStyle = (theme: Theme, focused: boolean) =>
+  focused ? focusRing(theme) : undefined;
+
+// ringStyle(theme, true)
+// {
+//   boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 0,
+//                spreadRadius: 2, color: theme.colors.ring }
+// }
+```
+
+A control applies the ring **while it is focused**, so a mouse press shows it
+too: the published runtime has no `:focus-visible` equivalent. The ring never
+changes an element's size or position, because a shadow is painted outside the
+border box and takes no space in layout.
+
+A runnable example lives in
+[`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).
+
 ## Theme API
 
 ```ts
@@ -422,7 +452,9 @@ Rules:
 3. Spread `textStyle` rather than repeating the family rule.
 4. Use `borderStrong` for essential control boundaries and `border` for
    dividers.
-5. Focus is an outline using `ring`, not a border, so it never shifts layout.
+5. Focus is `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by
+   `borderWidth.strong`. The runtime has no `outline*` and no `focusVisible`, so
+   the ring is never a border and never changes layout. See [Focus](#focus).
 
 ```tsx
 const theme = useTheme();
@@ -487,6 +519,9 @@ It also fails if a soft status surface is indistinguishable from `background` or
 - No CSS variables or CSS pipeline; GPUix paints inline values.
 - No `letterSpacing` in the runtime.
 - No OS appearance detection; the application selects the mode and contrast.
+- No `outline*` and no `focusVisible` in the runtime (GPUix 0.10.0): the focus
+  ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
+  `borderRadius` only because a shadow does.
 - No motion tokens yet; no component consumes them.
 - Native visual proof is the playground's theme gallery, not this document. See
   `TODO.md`.
