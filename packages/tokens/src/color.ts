@@ -202,7 +202,7 @@ export interface ThemeColors {
    * scrollbar and exposes no tint.
    */
   readonly scrollbar: string;
-  /** Elevation tint. */
+  /** Opaque elevation tint; each level applies its own alpha. */
   readonly shadow: string;
 }
 
@@ -267,7 +267,7 @@ export const lightColors = {
   disabledForeground: palette.neutral[400],
   skeleton: palette.neutral[200],
   scrollbar: palette.neutral[300],
-  shadow: "#191D2526",
+  shadow: "#191D25",
 } satisfies ThemeColors;
 
 /**
@@ -330,7 +330,7 @@ export const darkColors = {
   disabledForeground: palette.neutral[600],
   skeleton: palette.neutral[800],
   scrollbar: palette.neutral[700],
-  shadow: "#00000080",
+  shadow: "#000000",
 } satisfies ThemeColors;
 
 /**
@@ -391,7 +391,7 @@ export const highContrastLightColors = {
   disabledForeground: "#5A5A5A",
   skeleton: "#D6D6D6",
   scrollbar: "#9A9A9A",
-  shadow: "#00000040",
+  shadow: "#000000",
 } satisfies ThemeColors;
 
 /**
@@ -455,7 +455,7 @@ export const highContrastDarkColors = {
   disabledForeground: "#8A8A8A",
   skeleton: "#3D3D3D",
   scrollbar: "#8A8A8A",
-  shadow: "#000000B3",
+  shadow: "#000000",
 } satisfies ThemeColors;
 
 const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;

@@ -13,7 +13,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * `#64B5FF` dark: the fill's `#0071E3` measures 4.21:1 on the canvas and
  * `#0A84FF` 3.82:1 on a dark card (plan 082). The light boundary is Apple's
  * secondary label grey (`#6E6E73`), so a checkbox in a row keeps its edge on
- * every wash (plan 084).
+ * every wash (plan 084). Elevation levels apply their own alpha to the `shadow`
+ * tint, so a copied style retints all three by editing one role (plan 085).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -48,7 +49,7 @@ export const macosPlatformStyle = {
       selected: "#E7F1FF",
       selectedForeground: "#0055B3",
       placeholder: "#6E6E73",
-      shadow: "#00000026",
+      shadow: "#000000",
     },
     dark: {
       background: "#1C1C1E",
@@ -76,7 +77,7 @@ export const macosPlatformStyle = {
       selected: "#123A5C",
       selectedForeground: "#CFE8FF",
       placeholder: "#9A9AA0",
-      shadow: "#00000080",
+      shadow: "#000000",
     },
   },
   elevation: {
@@ -87,7 +88,7 @@ export const macosPlatformStyle = {
           offsetY: 1,
           blurRadius: 3,
           spreadRadius: 0,
-          color: "#00000014",
+          alpha: 0.08,
         },
       ],
       md: [
@@ -96,7 +97,7 @@ export const macosPlatformStyle = {
           offsetY: 6,
           blurRadius: 18,
           spreadRadius: -2,
-          color: "#0000001F",
+          alpha: 0.12,
         },
       ],
       lg: [
@@ -105,7 +106,7 @@ export const macosPlatformStyle = {
           offsetY: 20,
           blurRadius: 48,
           spreadRadius: -8,
-          color: "#00000029",
+          alpha: 0.16,
         },
       ],
     },
@@ -116,7 +117,7 @@ export const macosPlatformStyle = {
           offsetY: 1,
           blurRadius: 3,
           spreadRadius: 0,
-          color: "#00000066",
+          alpha: 0.4,
         },
       ],
       md: [
@@ -125,7 +126,7 @@ export const macosPlatformStyle = {
           offsetY: 10,
           blurRadius: 28,
           spreadRadius: -4,
-          color: "#00000099",
+          alpha: 0.6,
         },
       ],
       lg: [
@@ -134,7 +135,7 @@ export const macosPlatformStyle = {
           offsetY: 28,
           blurRadius: 64,
           spreadRadius: -12,
-          color: "#000000CC",
+          alpha: 0.8,
         },
       ],
     },

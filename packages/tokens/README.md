@@ -77,8 +77,11 @@ a link paints. A brand that changes `primary` should set `primaryText` beside it
 ## Shadows
 
 The runtime paints one shadow per element and its `BoxShadow` has five fields —
-no `inset`, no list. `elevationShadow(theme, level)` returns the shadow a level
-paints (`undefined` for the reserved empty `overlay` level).
+no `inset`, no list. A level is geometry plus an alpha applied to the `shadow`
+colour role, so retinting every elevation is one value.
+`elevationShadow(theme, level)` returns the shadow a level paints (`undefined`
+for the reserved empty `overlay` level); `elevationShadows` returns the resolved
+list for a renderer that composites.
 
 ```tsx
 const shadow = elevationShadow(theme, "md");

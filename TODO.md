@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 52/68
+`[x]` `[███████░░░]` 53/71
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -277,6 +277,15 @@ tones join the four washes and the two warning steps move (plan 083)
 washes — a checkbox edge in a pressed row measured 2.52:1 on macOS light, 2.62:1
 on the identity and 4.15:1 at high-contrast dark; five values move one step
 (plan 084)
+`[x]` Make the documented elevation tint real — `colors.shadow` was never read,
+so editing it in a copied platform style retinted nothing while three colour
+strings duplicated the same value; a level is now geometry plus an alpha resolved
+by `elevationShadow`, with `elevationShadows` for a compositing renderer, and
+every shipped hex is unchanged (plan 085)
+`[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
+`theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
+and must use `elevationShadow(theme, level).color`; a custom level is now
+`{ …geometry, alpha }` (owner: those workstreams; plan 085)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is

@@ -142,7 +142,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `disabledForeground` | `#A1A9B7` | `#545D6C` | disabled text |
 | `skeleton` | `#E1E5EC` | `#2A303B` | loading placeholder |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
-| `shadow` | `#191D2526` | `#00000080` | elevation tint |
+| `shadow` | `#191D25` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
 ### Palette ramps
 
@@ -309,7 +309,7 @@ getTheme("light"); // the default light theme, unchanged
 | `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
 | `skeleton` | `#D6D6D6` | `#3D3D3D` | loading placeholder |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
-| `shadow` | `#00000040` | `#000000B3` | elevation tint |
+| `shadow` | `#000000` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
 ## Typography
 
@@ -541,9 +541,11 @@ const resolveDensity = (stored: unknown): DensityName =>
 
 ## Elevation
 
-Shadows are structured objects (`offsetX`, `offsetY`, `blurRadius`,
-`spreadRadius`, `color`) — the exact five fields of GPUix's
-`StyleDesc.boxShadow`. There is no `inset` and no shadow list: **the runtime
+A level is geometry, not a colour: `offsetX`, `offsetY`, `blurRadius`,
+`spreadRadius` and the `alpha` to apply to the theme's `colors.shadow` tint.
+`elevationShadow` composes the two into a shadow — the exact five fields of
+GPUix's `StyleDesc.boxShadow` (`offsetX`, `offsetY`, `blurRadius`,
+`spreadRadius`, `color`). There is no `inset` and no shadow list: **the runtime
 paints one shadow per element.**
 
 | Level | Light | Dark | Use |
@@ -553,20 +555,35 @@ paints one shadow per element.**
 | `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | dialogs and command palettes |
 | `overlay` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
 
+The table shows the resolved shadow. The tint itself is one role, so retinting
+every level is one value:
+
+```ts
+import { extendTheme } from "@gpuixui/tokens";
+
+// Every elevation level now paints with a black tint, at its own alpha.
+const brand = extendTheme(theme, { colors: { shadow: "#000000" } });
+```
+
 A level is a list so a web renderer can composite several shadows; a shipped
-level carries at most one entry, and a consumer reads the one that paints with
-`elevationShadow`:
+level carries at most one entry. A consumer reads the one the runtime paints
+with `elevationShadow`, and the whole list with `elevationShadows`:
 
 ```tsx
-import { elevationShadow } from "@gpuixui/tokens";
+import { elevationShadow, elevationShadows } from "@gpuixui/tokens";
 
 <div style={{ boxShadow: elevationShadow(theme, "md") }} />;
+
+const layered = elevationShadows(theme, "lg"); // every entry, tint composed
 ```
 
 `elevationShadow(theme, level)` returns the level's shadow, or `undefined` for
-the reserved empty `overlay` level (which `boxShadow` accepts). A shipped level
-with two entries would silently render only the first, so
-`packages/tokens/src/elevation.test.ts` fails if one appears.
+the reserved empty `overlay` level (which `boxShadow` accepts).
+`elevationShadows` returns the resolved list. A shipped level with two entries
+would silently render only the first, so
+`packages/tokens/src/elevation.test.ts` fails if one appears, and
+`elevation-tint.test.ts` fails if editing `colors.shadow` stops retinting a
+level.
 
 ## Motion
 
@@ -804,7 +821,8 @@ Merge rules:
   key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight;
-- elevation levels **replace** the whole shadow array;
+- elevation levels **replace** the whole level list; a level is geometry plus an
+  alpha applied to the `shadow` tint;
 - motion merges timing by timing and easing by easing, so overriding `normal`
   keeps `fast` and `enter`;
 - `density` accepts a preset name or partial metrics; a partial override keeps
@@ -871,6 +889,8 @@ The role and shadow sets behind the shipped themes are exported as
 objects each theme points at, exported for tooling and table generation;
 component source reads `theme.colors` and `theme.elevation`, never a fixed set. A
 consumer theme may share an untouched set or replace it through `extendTheme`.
+An elevation level is geometry plus an alpha, so a replaced level composes with
+the theme's `colors.shadow` tint like a shipped one.
 
 ## React binding
 
@@ -1032,6 +1052,13 @@ functional control boundary is held to them too: a checkbox edge in a pressed
 row measured 2.52:1 on macOS light and 2.62:1 on the identity, 2.80–2.81 in the
 dark identity and 4.15:1 at high-contrast dark, so plan `084` moved five
 boundary values one step. Palette edits must keep it green.
+
+Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
+level is geometry plus an alpha and paints exactly the runtime's five fields, and
+editing `colors.shadow` retints all three levels. Before plan `085` each level
+carried its own complete colour, so the documented tint changed nothing and the
+same value was duplicated three times per set; the split keeps every shipped hex
+byte-for-byte.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,
 `active` and `selected` washes, because focus and selection co-occur in rows;

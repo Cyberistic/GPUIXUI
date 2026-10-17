@@ -62,7 +62,7 @@ export const contosoPlatformStyle = {
           offsetY: 6,
           blurRadius: 16,
           spreadRadius: -4,
-          color: "#00000024",
+          alpha: 0.14,
         },
       ],
     },

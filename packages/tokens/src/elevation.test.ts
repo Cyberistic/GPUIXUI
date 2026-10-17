@@ -4,11 +4,25 @@
  * that could hold several shadows ("painted in order") and an `inset` field the
  * runtime ignores. A level with two shadows renders as one, and an `inset` ring
  * renders as nothing — both silently.
+ *
+ * Plan 085 split the stored level from the painted shadow: a level is geometry
+ * plus an alpha, and `elevationShadow` composes it with the theme's `shadow`
+ * tint. These guards hold both halves to the runtime's shape.
  */
 
 import { describe, expect, it } from "vitest";
-import { darkElevation, elevationShadow, lightElevation } from "./elevation.js";
-import { darkTheme, highContrastDarkTheme, lightTheme } from "./theme.js";
+import {
+  darkElevation,
+  elevationShadow,
+  lightElevation,
+  type ElevationShape,
+} from "./elevation.js";
+import {
+  darkTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  lightTheme,
+} from "./theme.js";
 
 /** The five fields the installed runtime's `BoxShadow` has, and nothing else. */
 const runtimeFields = [
@@ -19,73 +33,100 @@ const runtimeFields = [
   "spreadRadius",
 ];
 
+/** The five fields a stored level holds: geometry plus the tint opacity. */
+const shapeFields = [
+  "alpha",
+  "blurRadius",
+  "offsetX",
+  "offsetY",
+  "spreadRadius",
+];
+
 const levels = ["sm", "md", "lg", "overlay"] as const;
 
 const color = /^#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?$/;
 
 const shipped = [
+  ["light", lightTheme],
+  ["dark", darkTheme],
+  ["high-contrast light", highContrastLightTheme],
+  ["high-contrast dark", highContrastDarkTheme],
+] as const;
+
+const shapes = [
   ["light", lightElevation],
   ["dark", darkElevation],
-  ["light theme", lightTheme.elevation],
-  ["dark theme", darkTheme.elevation],
-  ["high-contrast dark theme", highContrastDarkTheme.elevation],
 ] as const;
 
 describe("elevation levels", () => {
   it("never carries more than the one shadow the runtime paints", () => {
-    shipped.forEach(([label, elevation]) => {
+    shipped.forEach(([label, theme]) => {
       levels.forEach((level) => {
         expect(
-          elevation[level].length,
+          theme.elevation[level].length,
           `${label} ${level}`,
         ).toBeLessThanOrEqual(1);
       });
     });
   });
 
-  it("uses exactly the runtime's shadow fields", () => {
-    shipped.forEach(([label, elevation]) => {
+  it("stores geometry and opacity, never a ready-made colour", () => {
+    shapes.forEach(([label, elevation]) => {
       levels.forEach((level) => {
-        elevation[level].forEach((shadow, index) => {
+        elevation[level].forEach((shape: ElevationShape, index) => {
           expect(
-            Object.keys(shadow).toSorted(),
+            Object.keys(shape).toSorted(),
             `${label} ${level} ${index}`,
-          ).toEqual(runtimeFields);
+          ).toEqual(shapeFields);
         });
+      });
+    });
+  });
+
+  it("resolves to exactly the runtime's shadow fields", () => {
+    shipped.forEach(([label, theme]) => {
+      levels.forEach((level) => {
+        const shadow = elevationShadow(theme, level);
+        if (shadow === undefined) {
+          return;
+        }
+        expect(Object.keys(shadow).toSorted(), `${label} ${level}`).toEqual(
+          runtimeFields,
+        );
       });
     });
   });
 
   it("paints a colour the runtime can parse", () => {
-    shipped.forEach(([label, elevation]) => {
+    shipped.forEach(([label, theme]) => {
       levels.forEach((level) => {
-        elevation[level].forEach((shadow) => {
-          expect(shadow.color, `${label} ${level}`).toMatch(color);
-        });
+        const shadow = elevationShadow(theme, level);
+        if (shadow === undefined) {
+          return;
+        }
+        expect(shadow.color, `${label} ${level}`).toMatch(color);
       });
     });
   });
 
   it("keeps the overlay level reserved and empty", () => {
-    expect(lightElevation.overlay).toEqual([]);
-    expect(darkElevation.overlay).toEqual([]);
+    shipped.forEach(([label, theme]) => {
+      expect(theme.elevation.overlay, label).toEqual([]);
+    });
   });
 
   it("paints a different shadow in light and dark", () => {
-    expect(lightElevation.md).not.toEqual(darkElevation.md);
-    expect(lightElevation.md[0]?.color).not.toBe(darkElevation.md[0]?.color);
+    expect(elevationShadow(lightTheme, "md")).not.toEqual(
+      elevationShadow(darkTheme, "md"),
+    );
   });
 });
 
 describe("elevationShadow", () => {
   it("resolves a level to the one shadow that paints", () => {
     levels.slice(0, 3).forEach((level) => {
-      expect(elevationShadow(lightTheme, level)).toBe(
-        lightTheme.elevation[level][0],
-      );
-      expect(elevationShadow(darkTheme, level)).toBe(
-        darkTheme.elevation[level][0],
-      );
+      expect(elevationShadow(lightTheme, level)).toBeDefined();
+      expect(elevationShadow(darkTheme, level)).toBeDefined();
     });
   });
 
@@ -94,9 +135,9 @@ describe("elevationShadow", () => {
     expect(elevationShadow(darkTheme, "overlay")).toBeUndefined();
   });
 
-  it("follows a high-contrast theme's elevation", () => {
-    expect(elevationShadow(highContrastDarkTheme, "lg")).toBe(
-      highContrastDarkTheme.elevation.lg[0],
+  it("follows a high-contrast theme's tint", () => {
+    expect(elevationShadow(highContrastDarkTheme, "lg")?.color).toMatch(
+      /^#000000CC$/,
     );
   });
 });

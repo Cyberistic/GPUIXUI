@@ -7,7 +7,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * selection wash uses the light accent as its base so white text keeps the body
  * floor on the fills a row paints (plan 081). The accent's readable text step is
  * `#005BA1` light and `#76D0FF` dark; the fill's `#0067C0` is 4.30:1 on the
- * pressed wash (plan 082).
+ * pressed wash (plan 082). Elevation levels apply their own alpha to the
+ * `shadow` tint, so a copied style retints all three by editing one role
+ * (plan 085).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -42,7 +44,7 @@ export const windowsPlatformStyle = {
       selected: "#CCE8FF",
       selectedForeground: "#003A6B",
       placeholder: "#6B6B6B",
-      shadow: "#00000026",
+      shadow: "#000000",
     },
     dark: {
       background: "#202020",
@@ -70,7 +72,7 @@ export const windowsPlatformStyle = {
       selected: "#094771",
       selectedForeground: "#CFE9FF",
       placeholder: "#A6A6A6",
-      shadow: "#00000080",
+      shadow: "#000000",
     },
   },
   elevation: {
@@ -81,7 +83,7 @@ export const windowsPlatformStyle = {
           offsetY: 1,
           blurRadius: 2,
           spreadRadius: 0,
-          color: "#0000001A",
+          alpha: 0.1,
         },
       ],
       md: [
@@ -90,7 +92,7 @@ export const windowsPlatformStyle = {
           offsetY: 4,
           blurRadius: 10,
           spreadRadius: -2,
-          color: "#00000029",
+          alpha: 0.16,
         },
       ],
       lg: [
@@ -99,7 +101,7 @@ export const windowsPlatformStyle = {
           offsetY: 12,
           blurRadius: 32,
           spreadRadius: -6,
-          color: "#00000033",
+          alpha: 0.2,
         },
       ],
     },
@@ -110,7 +112,7 @@ export const windowsPlatformStyle = {
           offsetY: 1,
           blurRadius: 2,
           spreadRadius: 0,
-          color: "#00000066",
+          alpha: 0.4,
         },
       ],
       md: [
@@ -119,7 +121,7 @@ export const windowsPlatformStyle = {
           offsetY: 6,
           blurRadius: 18,
           spreadRadius: -2,
-          color: "#000000A6",
+          alpha: 0.65,
         },
       ],
       lg: [
@@ -128,7 +130,7 @@ export const windowsPlatformStyle = {
           offsetY: 18,
           blurRadius: 44,
           spreadRadius: -8,
-          color: "#000000CC",
+          alpha: 0.8,
         },
       ],
     },

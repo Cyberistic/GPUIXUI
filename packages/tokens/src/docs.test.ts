@@ -28,8 +28,7 @@ import { describe, expect, it } from "vitest";
 import { colorRoles, palette } from "./color.js";
 import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
 import {
-  darkElevation,
-  lightElevation,
+  elevationShadow,
   type BoxShadow,
   type ElevationLevel,
 } from "./elevation.js";
@@ -136,12 +135,10 @@ const elevationLevels: readonly ElevationLevel[] = [
   "overlay",
 ];
 
-const documentedShadow = (shadows: readonly BoxShadow[]): string => {
-  const [shadow] = shadows;
-  return shadow === undefined
+const documentedShadow = (shadow: BoxShadow | undefined): string =>
+  shadow === undefined
     ? "`[]`"
     : `\`${shadow.offsetX} ${shadow.offsetY} ${shadow.blurRadius} ${shadow.spreadRadius} ${shadow.color}\``;
-};
 
 describe("docs/tokens.md numeric tables", () => {
   it("lists every type role with its size, leading and weight", () => {
@@ -194,9 +191,14 @@ describe("docs/tokens.md numeric tables", () => {
   it("lists every elevation level with both modes' shadow", () => {
     elevationLevels.forEach((level) => {
       expect(markdown, `elevation.${level}`).toContain(
-        `| \`${level}\` | ${documentedShadow(lightElevation[level])} | ${documentedShadow(darkElevation[level])} |`,
+        `| \`${level}\` | ${documentedShadow(elevationShadow(themes.light, level))} | ${documentedShadow(elevationShadow(themes.dark, level))} |`,
       );
     });
+  });
+
+  it("names the tint role elevation is composed from", () => {
+    expect(markdown).toContain("`colors.shadow`");
+    expect(markdown).toContain("`elevationShadows`");
   });
 
   it("lists every motion level in milliseconds", () => {

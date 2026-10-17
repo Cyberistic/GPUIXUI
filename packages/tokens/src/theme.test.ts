@@ -8,10 +8,11 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { resolveTheme } from "./high-contrast.example.js";
-import { densityPresets, type BoxShadow } from "./index.js";
+import { alpha, densityPresets, type ElevationShape } from "./index.js";
 import {
   createTheme,
   darkTheme,
+  elevationShadow,
   extendTheme,
   getTheme,
   highContrastDarkTheme,
@@ -115,16 +116,19 @@ describe("extendTheme", () => {
   });
 
   it("replaces a whole elevation level", () => {
-    const shadow: BoxShadow = {
+    const shape: ElevationShape = {
       offsetX: 0,
       offsetY: 2,
       blurRadius: 4,
       spreadRadius: 0,
-      color: "#000000",
+      alpha: 0.2,
     };
-    const custom = extendTheme(lightTheme, { elevation: { md: [shadow] } });
-    expect(custom.elevation.md).toEqual([shadow]);
+    const custom = extendTheme(lightTheme, { elevation: { md: [shape] } });
+    expect(custom.elevation.md).toEqual([shape]);
     expect(custom.elevation.sm).toBe(lightTheme.elevation.sm);
+    expect(elevationShadow(custom, "md")?.color).toBe(
+      alpha(lightTheme.colors.shadow, 0.2),
+    );
   });
 
   it("applies a density preset", () => {

@@ -8,7 +8,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * body floor on the fills a row paints (plan 081). The accent's readable text
  * step is `#12488F` light and `#99C1F1` dark; the fill's `#1C71D8` is 3.51:1 on
  * the pressed wash (plan 082). The dark boundary is one step lighter so a
- * checkbox edge clears the floor on the selected row (plan 084).
+ * checkbox edge clears the floor on the selected row (plan 084). Elevation
+ * levels apply their own alpha to the `shadow` tint, so a copied style retints
+ * all three by editing one role (plan 085).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -43,7 +45,7 @@ export const linuxPlatformStyle = {
       selected: "#D7E6F9",
       selectedForeground: "#0F3D77",
       placeholder: "#6A6865",
-      shadow: "#00000026",
+      shadow: "#000000",
     },
     dark: {
       background: "#242424",
@@ -71,7 +73,7 @@ export const linuxPlatformStyle = {
       selected: "#2B4F76",
       selectedForeground: "#D6E7FA",
       placeholder: "#A8A7A3",
-      shadow: "#00000080",
+      shadow: "#000000",
     },
   },
   elevation: {
@@ -82,7 +84,7 @@ export const linuxPlatformStyle = {
           offsetY: 2,
           blurRadius: 4,
           spreadRadius: 0,
-          color: "#0000001A",
+          alpha: 0.1,
         },
       ],
       md: [
@@ -91,7 +93,7 @@ export const linuxPlatformStyle = {
           offsetY: 6,
           blurRadius: 16,
           spreadRadius: -2,
-          color: "#00000024",
+          alpha: 0.14,
         },
       ],
       lg: [
@@ -100,7 +102,7 @@ export const linuxPlatformStyle = {
           offsetY: 18,
           blurRadius: 44,
           spreadRadius: -8,
-          color: "#00000030",
+          alpha: 0.19,
         },
       ],
     },
@@ -111,7 +113,7 @@ export const linuxPlatformStyle = {
           offsetY: 2,
           blurRadius: 4,
           spreadRadius: 0,
-          color: "#00000066",
+          alpha: 0.4,
         },
       ],
       md: [
@@ -120,7 +122,7 @@ export const linuxPlatformStyle = {
           offsetY: 8,
           blurRadius: 20,
           spreadRadius: -2,
-          color: "#000000A6",
+          alpha: 0.65,
         },
       ],
       lg: [
@@ -129,7 +131,7 @@ export const linuxPlatformStyle = {
           offsetY: 22,
           blurRadius: 52,
           spreadRadius: -10,
-          color: "#000000CC",
+          alpha: 0.8,
         },
       ],
     },

@@ -1,3 +1,4 @@
+import { alpha } from "./color.js";
 import type { Theme } from "./theme.js";
 
 /** A drop shadow, structurally identical to GPUix's `StyleDesc.boxShadow`. */
@@ -10,8 +11,27 @@ export interface BoxShadow {
   readonly blurRadius: number;
   /** Spread radius in pixels. */
   readonly spreadRadius: number;
-  /** Shadow colour, usually the theme's `shadow` role with alpha. */
+  /** Shadow colour: the theme's opaque tint at this level's alpha. */
   readonly color: string;
+}
+
+/**
+ * One elevation level's geometry and opacity, before the theme's tint is
+ * applied. The tint is the `shadow` colour role, so editing one role retints
+ * every level; {@link elevationShadow} composes the two into the runtime's
+ * five-field {@link BoxShadow}.
+ */
+export interface ElevationShape {
+  /** Horizontal offset in pixels. */
+  readonly offsetX: number;
+  /** Vertical offset in pixels. */
+  readonly offsetY: number;
+  /** Blur radius in pixels. */
+  readonly blurRadius: number;
+  /** Spread radius in pixels. */
+  readonly spreadRadius: number;
+  /** Opacity of the `shadow` tint, `0…1`. */
+  readonly alpha: number;
 }
 
 /**
@@ -22,20 +42,25 @@ export interface BoxShadow {
  */
 export interface Elevation {
   /** Resting cards and raised rows. */
-  readonly sm: BoxShadow[];
+  readonly sm: ElevationShape[];
   /** Menus, popovers and tooltips. */
-  readonly md: BoxShadow[];
+  readonly md: ElevationShape[];
   /** Dialogs and command palettes. */
-  readonly lg: BoxShadow[];
+  readonly lg: ElevationShape[];
   /**
    * Reserved and empty. Nothing is designed for this level yet, so it paints
    * no shadow until one is.
    */
-  readonly overlay: BoxShadow[];
+  readonly overlay: ElevationShape[];
 }
 
 /** A level a surface can be raised to. */
 export type ElevationLevel = keyof Elevation;
+
+const paint = (theme: Theme, shape: ElevationShape): BoxShadow => {
+  const { alpha: opacity, ...geometry } = shape;
+  return { ...geometry, color: alpha(theme.colors.shadow, opacity) };
+};
 
 /**
  * The shadow an elevation level paints. The runtime paints one shadow per
@@ -51,69 +76,47 @@ export function elevationShadow(
   theme: Theme,
   level: ElevationLevel,
 ): BoxShadow | undefined {
-  return theme.elevation[level][0];
+  const [shape] = theme.elevation[level];
+  return shape === undefined ? undefined : paint(theme, shape);
+}
+
+/**
+ * Every shadow an elevation level holds, resolved with the theme's tint — for a
+ * web renderer that composites a list. The native runtime paints only the first;
+ * use {@link elevationShadow} for it.
+ *
+ * @example
+ * ```ts
+ * const shadows = elevationShadows(theme, "lg");
+ * ```
+ */
+export function elevationShadows(
+  theme: Theme,
+  level: ElevationLevel,
+): ReadonlyArray<BoxShadow> {
+  return theme.elevation[level].map((shape) => paint(theme, shape));
 }
 
 /** Light theme elevation. */
 export const lightElevation: Elevation = {
-  sm: [
-    {
-      offsetX: 0,
-      offsetY: 1,
-      blurRadius: 2,
-      spreadRadius: 0,
-      color: "#191D2514",
-    },
-  ],
+  sm: [{ offsetX: 0, offsetY: 1, blurRadius: 2, spreadRadius: 0, alpha: 0.08 }],
   md: [
-    {
-      offsetX: 0,
-      offsetY: 4,
-      blurRadius: 12,
-      spreadRadius: -2,
-      color: "#191D251F",
-    },
+    { offsetX: 0, offsetY: 4, blurRadius: 12, spreadRadius: -2, alpha: 0.12 },
   ],
   lg: [
-    {
-      offsetX: 0,
-      offsetY: 16,
-      blurRadius: 40,
-      spreadRadius: -8,
-      color: "#191D2529",
-    },
+    { offsetX: 0, offsetY: 16, blurRadius: 40, spreadRadius: -8, alpha: 0.16 },
   ],
   overlay: [],
 };
 
 /** Dark theme elevation; darker and more opaque because the canvas is darker. */
 export const darkElevation: Elevation = {
-  sm: [
-    {
-      offsetX: 0,
-      offsetY: 1,
-      blurRadius: 2,
-      spreadRadius: 0,
-      color: "#00000066",
-    },
-  ],
+  sm: [{ offsetX: 0, offsetY: 1, blurRadius: 2, spreadRadius: 0, alpha: 0.4 }],
   md: [
-    {
-      offsetX: 0,
-      offsetY: 8,
-      blurRadius: 24,
-      spreadRadius: -4,
-      color: "#000000A6",
-    },
+    { offsetX: 0, offsetY: 8, blurRadius: 24, spreadRadius: -4, alpha: 0.65 },
   ],
   lg: [
-    {
-      offsetX: 0,
-      offsetY: 24,
-      blurRadius: 56,
-      spreadRadius: -12,
-      color: "#000000CC",
-    },
+    { offsetX: 0, offsetY: 24, blurRadius: 56, spreadRadius: -12, alpha: 0.8 },
   ],
   overlay: [],
 };

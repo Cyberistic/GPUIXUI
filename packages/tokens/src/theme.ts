@@ -58,7 +58,7 @@ export interface Theme {
   readonly radius: Radius;
   /** Control metrics for the active density. */
   readonly density: Density;
-  /** Shadow levels. */
+  /** Elevation levels: geometry plus the alpha applied to the `shadow` tint. */
   readonly elevation: Elevation;
   /** Motion timings and easings. */
   readonly motion: Motion;

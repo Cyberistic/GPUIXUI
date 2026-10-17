@@ -63,6 +63,9 @@ export interface PlatformStyle {
   readonly structure: PlatformStyleStructure;
   /** Surface and accent roles per mode. Omitted roles inherit the identity. */
   readonly colors: Readonly<Record<ThemeMode, Partial<ThemeColors>>>;
-  /** Shadow levels per mode. Omitted levels inherit the identity. */
+  /**
+   * Elevation levels per mode, before the theme's tint is applied. Omitted
+   * levels inherit the identity.
+   */
   readonly elevation: Readonly<Record<ThemeMode, Partial<Elevation>>>;
 }

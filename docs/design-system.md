@@ -82,7 +82,7 @@ Dark mode is designed, not inverted:
 | floating surface | `#FFFFFF` | `#222730` |
 | primary | dark iris `#5F4BDB`, white text | light iris `#A7A9FF`, near-black text |
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
-| shadow | graphite at low alpha | black at high alpha |
+| shadow | graphite tint | black tint |
 
 Both themes expose exactly the same 54 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
@@ -201,10 +201,12 @@ Two border roles:
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 `md` for menus and popovers, `lg` for dialogs and the command palette. The
 runtime paints one shadow per element — no `inset`, no shadow list — so a level
-is exactly one shadow, read with `elevationShadow(theme, level)`. Overlay
-layering uses the `overlay` scrim colour; `elevation.overlay` is reserved and
-empty so the shape stays stable. Dark shadows are darker and more opaque because
-contrast between surfaces is lower.
+is exactly one shadow, read with `elevationShadow(theme, level)`. A level is
+geometry plus an alpha; the tint is the single `shadow` role, so a brand retints
+every level by editing one value. Overlay layering uses the `overlay` scrim
+colour; `elevation.overlay` is reserved and empty so the shape stays stable.
+Dark shadows are darker and more opaque because contrast between surfaces is
+lower.
 
 Motion is a scale beside elevation, not a component detail: `step` (a spinner's
 frame) and `pulse` (a skeleton's half cycle) drive interval indicators, and
