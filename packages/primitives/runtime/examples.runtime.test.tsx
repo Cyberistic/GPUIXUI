@@ -31,6 +31,11 @@ const SCREENS = [
   { id: "feedback", root: "feedback-example", headline: "Revenue" },
   { id: "icons", root: "icons-example", headline: "Icon set" },
   { id: "value", root: "value-example", headline: "Render settings" },
+  {
+    id: "numberField",
+    root: "number-field-example",
+    headline: "Export settings",
+  },
 ] as const;
 
 const renderExample = (
@@ -124,6 +129,22 @@ it("moves the value example's quality slider and repaints its readout", async ()
     Option.getOrUndefined(a11yValueOf(runtime.a11y(), { label: "Quality" })),
   ).toBe("50%");
   expect(runtime.allText()).toContain("50%");
+});
+
+it("steps the number-field example's copies and repaints its summary", async () => {
+  const runtime = await openWindow();
+  renderExample(runtime, "numberField");
+  const field = Option.getOrElse(
+    runtime.bounds("number-field-example-copies"),
+    () => expect.fail("the copies field painted no box"),
+  );
+  runtime.clickAt(field.x + field.width - 8, field.y + field.height * 0.25);
+  expect(runtime.allText()).toContain("3 ×");
+  expect(
+    Arr.some(runtime.allText(), (line) =>
+      line.startsWith("3 prints at 144 DPI."),
+    ),
+  ).toBe(true);
 });
 
 it("paints every example from the dark palette", async () => {

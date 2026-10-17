@@ -1,0 +1,119 @@
+---
+title: NumberField
+description: A number in a text field, with steps and optional bounds.
+---
+
+`NumberField` is a numeric text field. GPUix's `<input>` has **no numeric
+mode** — no `type`, no `min`, no spinner — so parsing, clamping, stepping and
+the draft text are this package's (`core/number.ts`). It is not a slider: the
+user types an exact number, and the arrows are a convenience.
+
+## Usage
+
+```tsx
+import { NumberField, Label, Stack } from "@gpuixui/primitives";
+import { useState } from "react";
+
+const [copies, setCopies] = useState(1);
+
+<Stack direction="column" gap="xs">
+  <Label description="1–99">Copies</Label>
+  <NumberField label="Copies" value={copies} onChange={setCopies} min={1} max={99} />
+</Stack>;
+```
+
+An untouched field with neither `value` nor `defaultValue` renders empty, the
+way a native number field does — it does not start with a zero to delete.
+
+## Variants, sizes and states
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | — | controlled value |
+| `defaultValue` | `number` | none | start value; the field shows empty without one |
+| `onChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
+| `min` / `max` | `number` | none | bound the value; absent means unbounded |
+| `step` | `number` | `1` | arrow step |
+| `precision` | `number` | `0` | decimals shown on commit |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
+| `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
+| `invalid` | `boolean` | `false` | destructive border |
+| `label` | `string` | none | accessible name |
+| `placeholder` | `string` | none | empty-field hint |
+| `autoFocus` | `boolean` | `false` | focus on mount |
+| `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator on the field's chrome |
+
+While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
+the caret never jumps. Every edit that parses reports the clamped number
+through `onChange`; on blur or `Enter` the draft is reformatted to `precision`.
+
+## Keyboard
+
+| Key | Effect |
+| --- | ------ |
+| `ArrowUp` / `ArrowRight` | + one step |
+| `ArrowDown` / `ArrowLeft` | − one step |
+| `PageUp` / `PageDown` | ± ten steps |
+| `Home` / `End` | `min` / `max` — only when the field has that bound |
+| `Enter` | commit and reformat |
+
+The spin buttons are pointer affordances, **not tab stops**: the field is one
+tab stop and the arrows are the keyboard path, as in a native spinner. A click
+on a stepper returns focus to the input so the next arrow works.
+
+## Accessibility
+
+- The input is a `TextInput` with the name from `label`; the steppers are
+  `presentation`, so a screen reader sees one named number field rather than
+  three controls.
+- The value is the native input's text, which the runtime exposes to AccessKit.
+  There is no `aria-valuenow`/`min`/`max` in GPUix 0.10.0.
+- A disabled field is `readOnly`, out of the tab order and paints the disabled
+  chrome; assistive technology hears read-only, which is the honest state (the
+  host has no `disabled` prop).
+
+## Theming
+
+The field uses the shared field chrome (`colors.input`, `colors.border`,
+`colors.inputForeground`), the `controlFocusStyle` ring on the **wrapper**, and
+`colors.mutedForeground` icons in the spin column. Height and padding come from
+`density`; nothing names a literal.
+
+## Limitations
+
+- **Decimal text only.** `1,5`, `0x10` and `Infinity` are rejected rather than
+  guessed at; a locale decimal needs `formatValue` for display and parsing
+  before the value reaches the field.
+- **No `type="number"`, `inputMode` or `maxLength`.** The host input takes
+  `value`, `placeholder`, `readOnly`, `theme` and its events — nothing else.
+- **No drag-to-scrub.** The runtime has the coordinates and bounds for it, but a
+  scrub that keeps tracking outside the field would need pointer capture, which
+  does not exist; the steppers are the honest gesture.
+- **`autoFocus` paints no ring on mount.** The runtime focuses the input without
+  dispatching a focus event, so the wrapper's ring appears at the next focus
+  change (a click or Tab). The same is true of `Input`.
+
+## Verification
+
+- `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
+  stepping, Home/End only with a bound.
+- `src/components/NumberField.test.tsx` — the draft value, the key contract, the
+  raw edit report, steppers as presentation, one tab stop, disabled/invalid.
+- `runtime/number-field.runtime.test.tsx` — real typing through the native input
+  reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
+  `100`; arrow/PageDown step; a hit-tested stepper press steps and refocuses;
+  the ring paints on the chrome; a disabled field refuses text, keys and clicks.
+  Measured 2026-10-17 (plan 054 §9).
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Input** — free text.
+- **Slider** — a value chosen by gesture rather than typed.
+- **Label** — the visible name; the control carries its own `aria-label`.

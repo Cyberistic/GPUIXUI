@@ -57,7 +57,7 @@ subpaths; the package root needs a native binding.
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
 **Text** `Text` `Label`
 **Actions** `Button` `ButtonGroup`
-**Fields** `Input` `TextArea` `Select`
+**Fields** `Input` `TextArea` `NumberField` `Select`
 **Selection** `Checkbox` `RadioGroup` `Switch`
 **Value** `Slider` `RangeSlider` `Meter`
 **Feedback** `Progress` `Spinner` `Skeleton` `Tooltip`
@@ -89,7 +89,7 @@ Every Tier 1 component has a page and a composed example beside the source:
 
 - `docs/` — one page per component (`docs/README.md` indexes them) with usage,
   API, keyboard, accessibility, theming, limitations and verification;
-- `examples/` — six realistic compositions plus the icon set, registered in
+- `examples/` — seven realistic compositions plus the icon set, registered in
   `examples/index.ts` for `apps/playground`;
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
@@ -111,12 +111,12 @@ function (`renderButton`, `renderCheckbox`, …) instead. The glue in between
 type checker and by the native runtime, not by these suites.
 
 **Verified in the real runtime** (`nub run --filter @gpuixui/primitives test:runtime`):
-seven suites in `runtime/` mount the components in the GPUix 0.10.0
+eight suites in `runtime/` mount the components in the GPUix 0.10.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
-offset, PNG captures. An eighth suite mounts every example from
+offset, PNG captures. A ninth suite mounts every example from
 `examples/index.ts`, so the documentation's compositions are runtime-proven too.
-Measured 2026-10-17: **8 files, 82 tests, all passing** — including a theme
+Measured 2026-10-17: **9 files, 90 tests, all passing** — including a theme
 switch on a mounted tree, using the shipped `lightTheme` / `darkTheme` from
 `@gpuixui/tokens`, and a check that no painted colour is outside the active
 palette.

@@ -2,8 +2,9 @@
 
 - **Phase:** C (Tier 1 completion). **Owner:** primitives workstream.
 - **Depends on:** `030`, `040`, `041`, `047`, `049`, `053` (value maths).
-- **Status:** planned. Not started; `053` lands first because both NumberField
-  and Rating reuse its stepping and focus rules.
+- **Status:** in progress. `NumberField` is implemented and measured (§9);
+  `OTPField`, `Toggle` and `Rating` are pending, and `053`'s stepping/focus
+  maths is in place for them.
 - **Why:** these four rows in `COMPONENTS.md` were marked *owner unassigned*.
   They are all single-purpose input/selection primitives (`div` + `<input>` +
   our keyboard contract) and belong to this package, not to the Tier 2
@@ -49,9 +50,13 @@ export interface NumberFieldProps {
 }
 ```
 
-Structure: a field row (`controlStyle` with `fieldVariant`) containing
-`decrement` (`role="button"`, icon `minus`), the native `<input>`, `increment`
-(icon `plus`). Buttons are `div`s with the shared activation contract.
+Structure: a field row (`controlStyle` with `fieldVariant`) containing the
+native `<input>` and a spin column of two `role="presentation"` `div`s
+(chevron up/down). **Deviation from the first draft of this plan:** the steppers
+are pointer affordances, not tab stops — the input's arrow keys are the keyboard
+path, as in a native spinner, and a field adds exactly one tab stop. A stepper
+press returns focus to the input. An untouched field with no `value` and no
+`defaultValue` renders **empty**, like a native number field.
 
 ### 2.2 Behaviour (`core/number.ts`)
 
@@ -63,8 +68,8 @@ commitNumber(text, range, precision): Option.Option<number>
   // parse -> clampValue (053) -> round to precision
 formatNumber(value, precision): string
   // fixed decimals, no thousands separators (a locale claim needs a formatValue)
-isPartialNumericText(text): boolean
-  // "", "-", "+", "1.", "-1." — legal to leave in the field while typing
+  // A trailing dot parses as the number it already is; the *draft* is what keeps
+  // "1." visible, so no separate "partial text" predicate is needed.
 ```
 
 The field keeps its **own draft text** while focused (so `1.` does not become
@@ -80,16 +85,15 @@ the probe, otherwise documented as unsupported.
 
 ### 2.3 Tests
 
-- `core/number.test.ts`: partial text is not committed; a comma decimal is
-  rejected; precision rounds; `min`/`max` clamp; step maths reuses `053`.
-- `NumberField.test.tsx`: two `role="button"` steppers with labels
-  "Decrease"/"Increase"; the input carries the accessible name; `invalid` maps
-  to the destructive border; disabled removes the tab stops and guards handlers;
-  a key event is wired to the input.
-- Runtime: type `12`, Enter → `onChange(12)`; `1.` stays while typing and
-  commits to `1`; Up from `12` → `13`; typing `999` with `max=100` commits
-  `100`; steppers click once each; disabled ignores keys and clicks; the ring
-  paints on the input.
+- `core/number.test.ts`: decimal-only parsing ("1,5", "0x10", "Infinity"
+  rejected), clamping, precision, stepping, Home/End only with a bound.
+- `NumberField.test.tsx`: the draft value is shown verbatim; the key contract;
+  the raw edit text is reported; the steppers are `presentation` and step;
+  one tab stop; disabled/invalid.
+- Runtime: typing `12` reports `12`; `1.5` with `precision={2}`; `999` against
+  `max=100` reports `100`; arrow/PageDown step; a hit-tested spin press steps
+  and refocuses; the ring paints on the chrome; disabled refuses text, keys and
+  presses. Measured in §9.
 
 ## 3. `OTPField`
 
@@ -272,7 +276,42 @@ count before it is measured.
 - Rating needs a filled icon the icon package cannot paint: use the outline
   star with the two role colours and record the visual limitation.
 
-## 9. Acceptance
+## 9. Evidence — `NumberField` (measured 2026-10-17)
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter @gpuixui/primitives test` | 20 files, **235 tests passed** (214 before; +21) |
+| `nub run --filter @gpuixui/primitives test:runtime` | 9 files, **90 tests passed** (82 before; +8: seven for the field, one for its example) |
+| `nub run check` | tests-can-fail, lint, fmt and `check-types` pass |
+
+Two-direction probes (each change reverted on its own):
+
+| Guard | Revert | Result |
+| ----- | ------ | ------ |
+| draft text | replace `text` with `display(state.value.current)` | runtime `keeps a trailing dot…` → **expected 1.005 to be 1.5** (the field reformatted to `1.00` and the next digit appended to it) |
+| disabled stepper | drop `if (disabled \|\| blocked) return` | runtime `refuses edits, keys and steps…` → **expected [ 51 ] to strictly equal []** |
+| typed clamp | `state.set(parsed)` instead of `state.set(clampNumeric(parsed, range))` | runtime `clamps a typed value…` → **expected 999 to be 100** |
+
+Facts measured beyond the plan:
+
+- The first implementation formatted an untouched field as `0.00`; typing then
+  appended to that (`0.001`). The field now renders **empty** when it has neither
+  `value` nor `defaultValue`, like a native number field.
+- **`autoFocus` focuses the input but dispatches no focus event**, so the chrome
+  ring does not paint until the next focus change. Recorded as a limitation
+  (it applies to `Input` too); the runtime ring test clicks the input instead.
+- A stepper press moves native focus back to the input (`focusedElement().type`
+  is `input`), so the next arrow works.
+- The spin buttons are `presentation` and never enter the tab order.
+
+Not proven:
+
+- paste into the field: there is no `onPaste`, so the runtime's text pipeline
+  delivers it as an edit and `parseNumericText` decides — no separate path to
+  claim;
+- the published `darwin-x64` binding (same provenance as every runtime claim).
+
+## 10. Acceptance
 
 - Each component exports a typed API, paints only from theme roles, and has a
   test that fails when its stated guard is removed (recorded both ways).

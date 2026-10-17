@@ -134,15 +134,15 @@ carries an evidenced limitation. The capability evidence lives in
 | Slider | wip | ours | [slider](packages/primitives/docs/slider.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** a real click at 25% of the track reports `25`; the thumb is centred within 1 px of the value at 0/50/100; arrows/page/Home/End move by step, page, end; a disabled slider refuses pointer and keys and leaves the tab order; the ring lands on the thumb. **No pointer capture** — a drag only tracks while the pointer is over the track. **No `aria-valuenow`/`min`/`max`**; the value rides on `aria-valuetext`. |
 | Range slider | wip | ours | [range-slider](packages/primitives/docs/range-slider.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** a press at 10% moves the start, at 90% the end; native focus follows the grabbed thumb and an arrow moves only that end; a start driven past the end stops on it. Two `role="slider"` thumbs in a named `group`, each announcing its own value text. Ends may touch, never cross. Same pointer-capture and `aria-valuenow` limits as Slider. |
 | Meter | wip | yes (a bar, no host element) | [meter](packages/primitives/docs/meter.mdx) · [value](packages/primitives/examples/value.example.tsx) | **Runtime (053):** AccessKit role `Meter`; the value text is the formatted measurement; the fill's painted width is the measurement's fraction of its own range; Tab never lands on it. Reuses `Progress`'s track/fill. No `aria-valuenow`. |
-| Number Field | todo | ? | — | **Owner: primitives** (plan 054). `<input>` exists (API-shape for the text part); stepper buttons, clamping and formatting are ours. |
+| Number Field | wip | ours | [number-field](packages/primitives/docs/number-field.mdx) · [number-field](packages/primitives/examples/number-field.example.tsx) | **Runtime (054):** real typing reports `12`; `999` against `max=100` reports `100`; arrows step, PageDown pages, a hit-tested spin press steps and refocuses the input; the ring paints on the field's chrome; a disabled field refuses text, keys and presses. The input has **no numeric mode** (no `type`, `min`, `maxLength`), so parsing/clamping/drafts are ours. The spin buttons are `presentation`, not tab stops. `autoFocus` paints no ring on mount (no focus event is dispatched). |
 | OTP Field | todo | ? | — | **Owner: primitives** (plan 054). `<input>` exists; segmented rendering and keyboard movement are ours. Paste distribution depends on a runtime probe. |
 | Toggle | todo | ? | — | **Owner: primitives** (plan 054). Momentary pressed button; no `aria-pressed` in 0.10.0, so state must ride on `aria-valuetext`. |
 | Rating | todo | ? | — | **Owner: primitives** (plan 054). Radio-group-shaped input over `max` stars; reuses the radio roving-focus contract. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (82 tests in 8
-files after the 053 value controls; 54 at the 041 baseline, 68 after 049, locally
-built GPUix 0.10.0 binding). Details: plan 041 §9 and plan 053 §11. The eighth
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (90 tests in 9
+files after the 054 NumberField; 54 at the 041 baseline, 68 after 049, 82 after
+053, locally built GPUix 0.10.0 binding). Details: plan 041 §9 and plan 053 §11. The eighth
 file mounts every example in `packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the

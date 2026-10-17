@@ -172,10 +172,11 @@ retired once both branches are one
 `[x]` `packages/primitives`: the extra Tier 1 controls are claimed here (D18):
       `Slider`, `RangeSlider` and `Meter` (plan 053) — value maths, paint,
       element trees, runtime geometry and focus proofs, docs pages and a
-      composed example; `NumberField`, `OTPField`, `Toggle`, `Rating` are
-      planned as plan 054
-`[ ]` `packages/primitives`: `NumberField`, `OTPField`, `Toggle`, `Rating`
-      (plan 054) — one core module, tests, docs page and runtime proof each
+      composed example; the rest of the claimed rows are plan 054
+`[~]` `packages/primitives`: `NumberField` landed (plan 054): `core/number.ts`,
+      element-tree and runtime suites, docs page and an example. `OTPField`,
+      `Toggle`, `Rating` remain — one core module, test, docs page and runtime
+      proof each
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

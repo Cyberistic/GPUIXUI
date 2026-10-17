@@ -29,6 +29,7 @@ never as a promise.
 | [button-group](button-group.mdx) | `ButtonGroup` | [form](../examples/form.example.tsx) |
 | [input](input.mdx) | `Input` | [form](../examples/form.example.tsx) |
 | [textarea](textarea.mdx) | `TextArea` | [form](../examples/form.example.tsx) |
+| [number-field](number-field.mdx) | `NumberField` | [number-field](../examples/number-field.example.tsx) |
 | [checkbox](checkbox.mdx) | `Checkbox` | [selection](../examples/selection.example.tsx) |
 | [radio-group](radio-group.mdx) | `RadioGroup` | [selection](../examples/selection.example.tsx) |
 | [switch](switch.mdx) | `Switch` | [selection](../examples/selection.example.tsx) |
