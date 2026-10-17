@@ -480,7 +480,9 @@ const FloatProbe = () => {
                 role="tab"
                 aria-selected={group.active === tab.id}
                 tabIndex={0}
-                onClick={() => setDock(activate(dock, group.id, tab.id))}
+                onClick={() =>
+                  setDock((current) => activate(current, group.id, tab.id))
+                }
                 onMouseDown={tabPressed(tab.id)}
                 onMouseMove={tabMoved}
                 onMouseUp={tabReleased}

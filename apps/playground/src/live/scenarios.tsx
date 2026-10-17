@@ -18,6 +18,7 @@ import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { contextMenuScenario } from "../scenarios/context-menu.js";
 import { dockingScenario } from "../scenarios/docking.js";
+import { floatScenario } from "../scenarios/float.js";
 import { inputScenario } from "../scenarios/input.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
@@ -104,6 +105,16 @@ const walkFocus = (ctx: LiveContext, key: string, times: number) =>
 /** The selection as a string, treating `null` as empty. */
 const selectionText = (value: string | null): string =>
   Option.getOrElse(Option.fromNullishOr(value), () => "");
+
+/** The painted box of `testId`, or a failure naming the missing id. */
+const boxOf = (ctx: LiveContext, testId: string) =>
+  Effect.gen(function* () {
+    const bounds = yield* ctx.host.bounds(testId);
+    return yield* ctx.expectSome(
+      `${testId} is painted`,
+      Option.fromNullishOr(bounds),
+    );
+  });
 
 /** The painted left edge of `testId`, or a failure naming the missing id. */
 const leftOf = (ctx: LiveContext, testId: string) =>
@@ -848,6 +859,144 @@ const docking: LiveScenario = {
     }),
 };
 
+const float: LiveScenario = {
+  id: "live-float",
+  title: "Live float: a tab torn out in a real window",
+  capability: "float",
+  view: floatScenario.view,
+  ready: "float-app",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const app = yield* boxOf(ctx, "float-app");
+      const alpha = yield* boxOf(ctx, "float-tab-alpha");
+
+      yield* ctx.host.drag(
+        "float-tab-alpha",
+        app.x + 560 - (alpha.x + alpha.width / 2),
+        app.y + 320 - (alpha.y + alpha.height / 2),
+        8,
+      );
+      yield* ctx.host.waitFor("float-window");
+      yield* settle;
+
+      const dockAfter = yield* textOf(ctx, "float-dock-state");
+      yield* ctx.expectContains(
+        "the tab left the dock",
+        dockAfter,
+        "main=beta,gamma@beta",
+      );
+      const state = yield* textOf(ctx, "float-state");
+      yield* ctx.expectContains(
+        "the float holds the torn tab",
+        state,
+        "float=alpha",
+      );
+
+      const opened = yield* boxOf(ctx, "float-window");
+      yield* ctx.expectNear(
+        "the panel paints at the release x",
+        opened.x,
+        app.x + 560,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the panel paints at the release y",
+        opened.y,
+        app.y + 320,
+        1,
+      );
+
+      yield* ctx.host.drag("float-title", -360, -260, 8);
+      yield* settle;
+      const moved = yield* boxOf(ctx, "float-window");
+      yield* ctx.expectNear(
+        "the title drag moved the window x",
+        moved.x,
+        app.x + 200,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the title drag moved the window y",
+        moved.y,
+        app.y + 60,
+        1,
+      );
+
+      yield* ctx.host.click("float-window-tab-alpha");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the float tab takes native focus",
+        yield* focusedOf(ctx),
+        "float-window-tab-alpha",
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      const closed = yield* textOf(ctx, "float-state");
+      yield* ctx.expectContains(
+        "Escape closed the float",
+        closed,
+        "float=none",
+      );
+      const closedLog = yield* textOf(ctx, "float-log");
+      yield* ctx.expectContains(
+        "the reason is Escape",
+        closedLog,
+        "closed=escape",
+      );
+      yield* ctx.expectEqual(
+        "focus returned to the dock's active tab",
+        yield* focusedOf(ctx),
+        "float-tab-beta",
+      );
+
+      const beta = yield* boxOf(ctx, "float-tab-beta");
+      yield* ctx.host.drag(
+        "float-tab-beta",
+        app.x + 540 - (beta.x + beta.width / 2),
+        app.y + 320 - (beta.y + beta.height / 2),
+        8,
+      );
+      yield* ctx.host.waitFor("float-window");
+      yield* settle;
+      const reopened = yield* textOf(ctx, "float-state");
+      yield* ctx.expectContains(
+        "the second tear-off opened a float",
+        reopened,
+        "float=beta",
+      );
+
+      yield* ctx.host.click("float-close");
+      yield* settle;
+      const afterClose = yield* textOf(ctx, "float-state");
+      yield* ctx.expectContains(
+        "the close button closed the float",
+        afterClose,
+        "float=none",
+      );
+      const closeLog = yield* textOf(ctx, "float-log");
+      yield* ctx.expectContains(
+        "the reason is the button",
+        closeLog,
+        "closed=button",
+      );
+      const finalDock = yield* textOf(ctx, "float-dock-state");
+      yield* ctx.expectContains(
+        "the closed float's tab was dropped",
+        finalDock,
+        "main=gamma@gamma",
+      );
+      const removed = yield* ctx.host.bounds("float-window");
+      yield* ctx.expectEqual(
+        "the closed panel is not painted",
+        Option.isNone(Option.fromNullishOr(removed)),
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${float.id}.png`);
+    }),
+};
+
 const primitives: LiveScenario = {
   id: "live-primitives",
   title: "Live primitives: the shipped Button and Toggle in a window",
@@ -944,6 +1093,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   selection,
   contextMenu,
   docking,
+  float,
   primitives,
   table,
 ];

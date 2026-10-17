@@ -524,6 +524,17 @@ and pointer-following paint was not measured here. And a close control nested
 as a sibling of the title bar does. A floating panel should keep its drag
 surface and its controls separate.
 
+`live-float` repeats the mechanism in a real window (plan `195`) and caught a
+live-only race: the runtime ends a captured drag with a **click on the source
+tab** (`drag-targets`), and that click re-applied the pre-drag `dock` from a
+stale closure — resurrecting the tab that had just been torn off. The headless
+gesture (`press`/`releasePointer`) does not synthesize that click, so `float-tab`
+could not see it. The fix is a functional `setDock((current) => ...)`, so the
+click applies to the post-tear-off state and is a no-op; a component whose tab
+click is destructive must suppress the gesture-ending click outright. In the
+window the panel lands on the release point within 1 px, the title drag is
+exact, and focus/Escape and the close button hold. The live suite is `13/13`.
+
 ## Pinned grid chrome (plan `185`)
 
 `grid-wide-table` is the wide-table contract: a header that stays put, a frozen
@@ -704,6 +715,7 @@ live pass is citable evidence rather than a second log format.
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
 | `live-context-menu` | a right click opens a pointer-placed menu (its painted box equals the click point within 1 px); a disabled row is inert, Copy runs and closes, outside/Escape dismiss, a child click bubbles, and a right click inside a **scrolled** container still places the menu at the pointer — 31 checks |
 | `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) |
+| `live-float` | a paced drag from the Alpha tab, released outside the dock, opens the floating panel at the release point within 1 px; its title bar drags it to exactly `(200, 60)`; its tab takes focus, Escape closes it and returns focus to `float-tab-beta`; the close button drops the reopened tab — 28 checks |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, and the selection survives |
 
@@ -901,21 +913,23 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The eighteen core capabilities (including the token gallery, the modal
-  contract, floating placement, the three published popups, the accessibility
-  tree, the content surfaces and text selection), the Tier 3/4 probes, the
-  drag/file-drop probe, the app-level shortcut probe, the search-highlight
+- The eighteen core capabilities (including the modal contract, floating
+  placement, the three published popups, the accessibility tree, the content
+  surfaces, text selection and the detachable-tab float), the Tier 3/4 probes,
+  the drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
   probe, the terminal-grid probe, the chart probe, the markdown probe, the
   toast-viewport probe, the shell probe, the pinned-grid probe, the
   collapsible-height probe and the nested-layer probe pass in real
-  GPUix 0.10.0 on this host (56/56), with a written report and screenshots.
-  The **real-window** suite (`smoke:live`) is 12/12 — layout, input, scroll,
+  GPUix 0.10.0 on this host (57/57), with a written report and screenshots.
+  The **real-window** suite (`smoke:live`) is 13/13 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
-  docking, the shipped primitives and a virtual table — including the modal's
-  Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
-  with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween frame
-  (plan `192`) and a pointer-placed menu in a scrolled container (plan `193`).
+  docking, the detachable-tab float, the shipped primitives and a virtual
+  table — including the modal's Tab/Shift-Tab trap and focus return (plan
+  `190`), a real pointer drag-select with `userSelect: none` exclusion (plan
+  `191`), a paused-clock mid-tween frame (plan `192`), a pointer-placed menu in
+  a scrolled container (plan `193`) and a tab torn out into a floating panel
+  (plan `195`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
