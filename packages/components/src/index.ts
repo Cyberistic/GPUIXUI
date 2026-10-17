@@ -7,12 +7,17 @@
  */
 
 export * from "./alert.js";
+export * from "./accordion.js";
 export * from "./avatar.js";
 export * from "./badge.js";
+export * from "./breadcrumb.js";
 export * from "./card.js";
+export * from "./collapsible.js";
 export * from "./confirm-dialog.js";
 export * from "./dialog.js";
 export * from "./dropdown-menu.js";
 export * from "./empty-state.js";
 export * from "./list.js";
+export * from "./pagination.js";
 export * from "./popover.js";
+export * from "./tabs.js";

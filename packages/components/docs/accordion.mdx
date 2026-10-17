@@ -1,0 +1,105 @@
+---
+title: Accordion
+description: Stacked sections where one — or several — can be open.
+---
+
+`Accordion` is a list of collapsible sections that agree on which ones are open.
+The two modes have genuinely different state: a single optional value, or an
+ordered set. That is modelled as a tagged union in `accordion/logic.ts`, not as a
+list plus a boolean.
+
+```tsx
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@gpuixui/components/accordion";
+
+<Accordion type="single" collapsible={false} defaultValue="what">
+  <AccordionItem value="what">
+    <AccordionTrigger>What is GPUix?</AccordionTrigger>
+    <AccordionContent>A native rendering runtime…</AccordionContent>
+  </AccordionItem>
+</Accordion>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Accordion` | the open state, the mode rules, the divider order |
+| `AccordionItem` | one section, its value and its disabled flag |
+| `AccordionTrigger` | a full-width button with `aria-expanded` and the glyph |
+| `AccordionContent` | the body; unmounts while its section is closed |
+
+## The two modes
+
+| Mode | Rules |
+| ---- | ----- |
+| `type="single"` | opening another section closes the first; toggling the open one is a no-op unless `collapsible` |
+| `type="single" collapsible` | toggling the open section closes it, leaving nothing open |
+| `type="multiple"` | toggling adds or removes; the order sections were opened in is preserved and duplicates are impossible |
+
+Disabled items are skipped by clicks and keys, and their trigger leaves the tab
+order.
+
+## Controlled and uncontrolled
+
+```tsx
+<Accordion type="multiple" defaultValue={["one"]}>…</Accordion>;
+
+<Accordion
+  type="single"
+  collapsible
+  value={openSection}                 // `null` means "nothing open"
+  onValueChange={setOpenSection}
+>
+  …
+</Accordion>;
+```
+
+Single mode reports `string | null` — `null` is how a controlled, collapsible
+accordion expresses "closed". `undefined` is reserved for "uncontrolled", which
+is why it is not used for the closed state. Multiple mode reports the array.
+
+## Keyboard
+
+The trigger is a button: Tab reaches it, Enter and Space toggle it. There is no
+arrow-key navigation between section headers in v1; the browser/desktop
+convention of Up/Down between accordion headers is not implemented.
+
+## Theming
+
+Triggers use the `label` type role at `controlHeight(theme, "lg")`, with
+`colors.foreground` and `colors.primary` on hover. Sections are separated by a
+`borderWidth.thin` divider in `colors.border`; the last section draws none. The
+indicator is a text glyph (`⌄` closed, `⌃` open) because 0.10.0's `StyleDesc`
+has no `transform` — a rotation is not available.
+
+## Accessibility and limitations
+
+- `aria-expanded` on each trigger; the trigger names the section.
+- **No `aria-controls`** in 0.10.0; the relationship is positional.
+- The indicator glyph carries `aria-label="Expand"` / `"Collapse"`.
+- No arrow-key movement between headers, and no height animation (see
+  **Collapsible** for the measured reason).
+
+## Verification
+
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (8 tests):
+single mode closing the previous section, the non-collapsible no-op, the
+collapsible close, multiple mode keeping sections, the disabled section, Enter
+activation, and the controlled contract including the `null` close.
+
+`src/accordion/logic.test.ts` covers the transition table (15 cases).
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Collapsible** — one section, no shared state.
+- **Tabs** — peers where exactly one is visible.
+- **List** — dense, non-disclosure navigation.

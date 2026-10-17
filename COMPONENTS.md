@@ -64,11 +64,11 @@ and the strongest honest alternative.
 | Dropdown menus | todo | ? | |
 | Context menus | todo | ? | |
 | Command menus | todo | ? | |
-| Tabs | todo | ? | |
-| Accordions | todo | ? | |
-| Collapsible sections | todo | ? | |
-| Breadcrumbs | todo | ? | |
-| Pagination | todo | ? | |
+| Tabs | done | partial | roving tab stop on the selected trigger, arrow wrap skipping disabled tabs, Home/End, automatic and manual activation; 8 native behaviour tests, both themes. 0.10.0 has no `aria-orientation`/`aria-controls`, so the panel is named by its value |
+| Accordions | done | yes | single (with `collapsible`) and multiple modes over a tagged-union state; divider order, disabled sections, glyph indicator; 8 native behaviour tests + 15 transition tests. No arrow-key movement between headers, no height animation; no `transform` for a rotating chevron |
+| Collapsible sections | done | partial | trigger with `aria-expanded`, content unmounts while closed; 4 native behaviour tests. Mounts instantly: 0.10.0's motion needs a numeric height and an auto-height reveal needs a measured first paint |
+| Breadcrumbs | done | partial | declarative trail with `maxItems` collapsing the middle (first + … + tail), separators follow their item; 5 native behaviour tests + 7 collapse tests. No `aria-current` in 0.10.0, so the current page is text and colour |
+| Pagination | done | partial | stable-width page window with siblings/edges, disabled edges, ellipsis; 8 native behaviour tests + 9 window tests, both themes. Current page uses `aria-selected` because 0.10.0 has no `aria-current`; no page-size control |
 | Search inputs | todo | ? | |
 | Comboboxes | todo | ? | |
 | Date / time pickers | todo | ? | |

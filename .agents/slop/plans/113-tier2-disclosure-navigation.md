@@ -3,6 +3,8 @@
 - **Phase:** C-3
 - **Workstream:** components · **Owns:** `packages/components/**`
 - **Depends on:** plan 110, plan 111 (`internal/collection.ts`)
+- **Status:** done, 2026-10-17. 5 components, 3 logic suites, 33 native
+  behaviour tests, examples, docs and inventory rows. Deviations recorded in §10.
 
 Four of these five are **pure logic plus a thin renderer**, which makes them the
 cheapest place to establish the "logic module tested hard, component wired
@@ -198,9 +200,10 @@ itself; the result is ascending with no duplicates.
 **Tests (`pagination/logic.test.ts`)** — this is arithmetic, so a table is the
 right shape and every row can fail:
 - `pageCount` 0 → `[]`; 1 → `[1]`; 2 → `[1,2]`.
-- page 1 of 10 with sibling 1 → `[1,2,3,"…end",10]`.
+- page 1 of 10 with sibling 1 → `[1,2,3,4,5,"…end",10]` (the window keeps its
+  width instead of collapsing to three at the edge).
 - page 5 of 10 → `[1,"…start",4,5,6,"…end",10]`.
-- page 10 of 10 → `[1,"…start",8,9,10]`.
+- page 10 of 10 → `[1,"…start",6,7,8,9,10]`.
 - gap of exactly one page renders the page, not an ellipsis.
 - `siblingCount:2` widens the window; `showEdges:false` drops the edges.
 - page 0 clamps to 1; page 99 clamps to `pageCount`.
@@ -257,8 +260,32 @@ Expected: exits 0; the two logic suites and five component suites ran.
 
 ## 9. Acceptance criteria
 
-- [ ] Five components with the APIs above.
-- [ ] Three pure logic modules with table-driven tests that fail on regression.
-- [ ] Component tests for every behaviour bullet, run in the native renderer.
-- [ ] Examples, docs pages, `COMPONENTS.md` rows.
-- [ ] Keyboard behaviour proven, not described.
+- [x] Five components with the APIs above.
+- [x] Three pure logic modules with table-driven tests that fail on regression.
+- [x] Component tests for every behaviour bullet, run in the native renderer.
+- [x] Examples, docs pages, `COMPONENTS.md` rows.
+- [x] Keyboard behaviour proven, not described.
+
+## 10. Deviations, recorded during implementation (2026-10-17)
+
+1. **`TabsList` gained `label?: string`** (not in the draft API) so the tab list
+   has an accessible name; 0.10.0 has no `aria-orientation`, so the orientation
+   is conveyed by layout and keys only. Documented in the docs page.
+2. **Accordion single mode reports `string | null`**, not `string | undefined`.
+   `undefined` already means "uncontrolled" in the controlled/uncontrolled
+   convention, so a controlled collapsible accordion had no way to express
+   "closed". `null` is that state; `value`/`onValueChange` use it consistently.
+3. **Breadcrumb collapse reads `BreadcrumbList`'s direct children.** The parts
+   stay declarative (the plan's `items?: never`), and each authored separator is
+   paired with the item that follows it, so hiding an item hides its separator.
+   A custom wrapper element around an item is counted as one entry — documented.
+4. **The Pagination window keeps its width at the edges** (`1 2 3 4 5 … 10`,
+   not `1 2 3 … 10`) because that is what the landed `pagination/logic.ts` and
+   its suite implement, and it avoids a control that jumps in size. The table in
+   §5 is corrected above.
+5. **The collapsible/accordion bodies mount instantly.** No height animation is
+   promised; the measured limitation and the follow-up are in the components.
+6. **`Collapsible` paints a wrapper column.** A compound root with two top-level
+   children made the native test renderer's tree JSON root switch to the content
+   when it mounted, so `findByTestId` lost the trigger. The wrapper is also the
+   right layout primitive for a trigger + body pair.

@@ -9,26 +9,36 @@
 
 import type { ComponentType } from "react";
 import { AlertExample } from "./alert.example.js";
+import { AccordionExample } from "./accordion.example.js";
 import { AvatarExample } from "./avatar.example.js";
 import { BadgeExample } from "./badge.example.js";
+import { BreadcrumbExample } from "./breadcrumb.example.js";
 import { CardExample } from "./card.example.js";
+import { CollapsibleExample } from "./collapsible.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
 import { DialogExample } from "./dialog.example.js";
 import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { ListExample } from "./list.example.js";
+import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
+import { TabsExample } from "./tabs.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
+  accordion: AccordionExample,
   alert: AlertExample,
   avatar: AvatarExample,
   badge: BadgeExample,
+  breadcrumb: BreadcrumbExample,
   card: CardExample,
+  collapsible: CollapsibleExample,
   "confirm-dialog": ConfirmDialogExample,
   dialog: DialogExample,
   "dropdown-menu": DropdownMenuExample,
   "empty-state": EmptyStateExample,
   list: ListExample,
+  pagination: PaginationExample,
   popover: PopoverExample,
+  tabs: TabsExample,
 };
