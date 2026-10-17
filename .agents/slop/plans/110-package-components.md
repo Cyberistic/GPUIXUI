@@ -37,6 +37,24 @@ file or `className`.
 and helper this package needs; a direct native import means the abstraction
 boundary was crossed.
 
+### The installed GPUix surface (verified 2026-10-17)
+
+`@gpuix/react@0.10.0` is the latest published release and is **behind** the
+reference clone. Build against the installed package, never the clone. Present:
+host elements (`div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`,
+`anchored`, `virtual-list`, `code`, `diff`, `markdown`), `Select` + parts,
+`Combobox` + parts, `Tooltip` + parts, `motion`/`AnimatePresence`, `useGpuix`,
+`createRoot`/`render`, `@gpuix/react/testing`, and
+`FloatingLayer`/`renderSlot`/`mergeStyles`/`resolveStyle`/`setRefs`/
+`useControllableState`/`floatingRootStyle` from `@gpuix/react/floating`.
+
+Absent, and therefore this package's responsibility to provide thinly:
+`KeyEvent` (handlers receive `EventPayload`, so there is **no
+`preventDefault`**), `Button`/`buttonProps`, the `Dialog` parts,
+`DismissableLayer` and the dismiss-layer stack. Escape handling, layer
+stacking, focus restore and Tab trapping are built on `renderer.focusElement`,
+`focusNextWithin`, `focusPreviousWithin` and element-level `onKeyDown`.
+
 ---
 
 ## 2. Files to create
@@ -265,27 +283,39 @@ component file, and never fork a second token module.
 
 ## 7. The primitives contract
 
-Only these imports are allowed, with only these props used:
+`@gpuixui/primitives` owns **behavioural** foundational parts. A component adds
+the dependency only when it needs one; until then it composes GPUix host
+elements and tokens directly, exactly as shadcn composes plain elements.
+
+| Component | Needs from primitives |
+| --------- | --------------------- |
+| Card, Badge, Avatar, Alert, EmptyState, List | **nothing** (tokens + host elements) |
+| Dialog, ConfirmDialog, Popover | `Button`, `IconButton` |
+| Dropdown / Context / Command menu | `Button`, `Input`, `Icon` |
+| Tabs, Accordion, Collapsible | `Button` (full-width triggers) |
+| Toast | `IconButton`, `Spinner` |
+| Field (validation) | `Input`, `Label` |
+| SearchInput, Combobox | `Input`, `IconButton` |
+
+Allowed imports once needed, with only these props used:
 
 ```ts
-import { Box, HStack, VStack, Text, Separator } from "@gpuixui/primitives";
-import { Button, IconButton } from "@gpuixui/primitives";
-import { Input, Label, Skeleton, Spinner, Icon } from "@gpuixui/primitives";
+import { Button, IconButton, Input, Label, Icon, Spinner, Skeleton } from "@gpuixui/primitives";
 ```
 
-`Box`/`HStack`/`VStack` accept `style?: StyleDesc` and `children`. `Text` accepts
-`tone?: "default" | "muted" | "faint" | "danger"` plus `style`. `Button` accepts
-`variant?: "primary" | "secondary" | "ghost" | "danger"`, `size?: "sm" | "md" | "lg"`,
-`disabled`, `onClick`. `Input` accepts `value`, `placeholder`, `onChange`, `onSubmit`,
-`autoFocus`, `disabled`, `style`.
+`Button` accepts `variant?: "primary" | "secondary" | "ghost" | "danger"`,
+`size?: "sm" | "md" | "lg"`, `disabled`, `onClick`, `style`. `Input` accepts
+`value`, `placeholder`, `onChange`, `onSubmit`, `autoFocus`, `disabled`,
+`style`. `IconButton` adds `label` (accessible name).
+
+Genuinely optional parts (`Skeleton`, `Spinner`, `Icon`) have a documented
+fallback in this package: a `text` glyph or a plain `div`, never a broken
+import. A component that falls back says so in its docs page.
 
 **Interlock rule.** If a primitive is missing or its props differ: STOP, write
 the discrepancy in `TODO.md` under `Interlocks`, and report. Do not copy the
 primitive into this package — a second copy is exactly the drift the boundary
 law forbids.
-
-Rationale for the rule: `packages/components` may not import from a higher
-package, and `packages/primitives` may not be edited by this workstream.
 
 ---
 

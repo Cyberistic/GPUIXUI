@@ -108,8 +108,44 @@ matrix fails. That is the point.
 
 The native test renderer (`@gpuix/react/testing`) dispatches through GPUI's real
 hit-testing and event pipeline, which is the "verified compatible test
-environment" AGENTS.md §4 allows. It does not prove a human sees the right
-pixels, so add one visual check per component family:
+environment" AGENTS.md §4 allows.
+
+### 5a. Environment matrix (recorded 2026-10-17)
+
+| Host | Native renderer | How the suite behaves |
+| ---- | --------------- | --------------------- |
+| macOS arm64 | available | behaviour suites run |
+| Linux x64 (glibc) | available | behaviour suites run |
+| Windows x64 | available | behaviour suites run |
+| **macOS x64 (this machine)** | **unavailable** | behaviour suites skip with a recorded reason; logic suites run |
+
+GPUix ships no `darwin-x64` native binary and its WASM build exports no test
+renderer. Evidence and the alternatives are in `TODO.md` → Blockers. This is an
+environment limitation, not a library limitation: the code under test is the
+same, and the suites are runnable unchanged on a supported host.
+
+### 5b. The one rule that survives the limitation
+
+Never let a missing renderer look like a passing test. `src/runtime.test.tsx`
+always runs and asserts the environment is one of the states above:
+
+```tsx
+const state = hasNativeTestRenderer
+  ? "available"
+  : process.platform === "darwin" && process.arch === "x64"
+    ? "unsupported-host"
+    : "missing";
+
+it("knows why the native renderer is or is not available", () => {
+  expect(state).not.toBe("missing"); // missing on a supported host is a failure
+});
+```
+
+Behaviour suites then use `describe.skipIf(state !== "available")` **and** state
+the reason in the file header and the test title suffix. A skipped suite is
+visible in the output; it is never silent.
+
+### 5c. Visual check (when the renderer is available)
 
 - `renderer.captureScreenshot(path)` into `.agents/slop/evidence/` (agent state,
   not repo content), open the PNG, and confirm: text is not clipped, the surface
@@ -193,8 +229,9 @@ statuses into `COMPONENTS.md`. Honesty over completeness:
    against the two *different* theme constants explicitly.
 3. `nub run test` at the root skips a package with no test script → report the
    package; do not add a fake test to make the run green.
-4. A skipped native test would let the suite pass with no renderer → forbidden;
-   the runtime guard in plan 110 §10 must fail instead.
+4. A skipped native test would let the suite pass with no renderer → forbidden.
+   The runtime guard in §5b must be the only place that decides, and it must
+   fail on a supported host with a missing renderer.
 
 ## 10. Acceptance criteria
 
