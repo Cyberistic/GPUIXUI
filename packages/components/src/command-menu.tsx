@@ -7,20 +7,21 @@
  * not focused** — the input must keep focus or typing would stop after the first
  * arrow key. `Tab`/`Escape` follow the dialog; Enter runs the active action.
  *
- * No fuzzy scoring in v1: the default filter is a case-insensitive substring on
- * the label. `filter` is the extension point.
+ * No custom scoring is required: the default filter is a case-insensitive
+ * subsequence match, ranked within each group so a group's heading never
+ * repeats. `filter` replaces it with a boolean predicate.
  */
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import * as Str from "effect/String";
 import { Fragment, useRef, useState } from "react";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
 import { Dialog, DialogContent } from "./dialog.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { MenuLabel, menuRowStyle } from "./menu/item.js";
+import { fuzzyMatches, rankByGroup } from "./menu/fuzzy.js";
 import {
   move,
   type MenuAction,
@@ -50,14 +51,19 @@ export interface CommandMenuProps {
   readonly placeholder?: string;
   /** Default `"No matching commands"`. */
   readonly emptyLabel?: string;
-  /** Replace the default case-insensitive substring match. */
+  /** Replace the default ranked fuzzy match; accepted rows keep declaration order. */
   readonly filter?: (action: CommandAction, query: string) => boolean;
 }
 
-const normalise = (value: string): string => Str.toLowerCase(Str.trim(value));
-
-const defaultFilter = (action: CommandAction, query: string): boolean =>
-  Str.includes(normalise(query))(normalise(action.label));
+/** The default: rank a subsequence match within each declared group. */
+const defaultMatches = (
+  actions: ReadonlyArray<CommandAction>,
+  query: string,
+): ReadonlyArray<CommandAction> =>
+  rankByGroup(
+    fuzzyMatches(actions, query, (action) => action.label),
+    (action) => action.group,
+  );
 
 /** The specs `menu/logic.ts` navigates over: filtered position and disabled. */
 const specs = (
@@ -94,9 +100,10 @@ export const CommandMenu = ({
   );
   const input = useRef<PublicInstance | null>(null);
 
-  const matches = Arr.filter(actions, (action) =>
-    (filter ?? defaultFilter)(action, query),
-  );
+  const matches =
+    filter === undefined
+      ? defaultMatches(actions, query)
+      : Arr.filter(actions, (action) => filter(action, query));
   const rows = specs(matches);
 
   // The stored index may point at a filtered-out row after typing. Fall back to
@@ -278,7 +285,7 @@ export const commandMenuMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no fuzzy scoring in v1: the default filter is a case-insensitive substring; pass filter for anything else",
+    "ranking is per group, not global, so a group's heading never repeats; a custom filter opts out and keeps declaration order",
     "the input is the GPUix <input> host element until @gpuixui/primitives lands",
     "the active row is highlighted, not focused, so typing keeps working; screen readers get aria-selected but no aria-activedescendant",
   ],

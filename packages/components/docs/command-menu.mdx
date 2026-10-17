@@ -33,7 +33,7 @@ import { CommandMenu } from "@gpuixui/components/command-menu";
 | `actions` | id, label, optional group/shortcut, disabled, `perform` |
 | `placeholder` | default `"Type a command…"` |
 | `emptyLabel` | default `"No matching commands"` |
-| `filter` | replaces the default matcher |
+| `filter` | replaces the default ranked fuzzy match; accepted rows keep declaration order |
 
 Groups are rendered in the caller's order; a heading appears when `group`
 changes between consecutive matches. `shortcut` is **display only** — the
@@ -60,13 +60,27 @@ the pure `menu/logic.ts` arithmetic.
 
 ## Filtering
 
-The default matcher is a case-insensitive **substring** on the label. There is
-no fuzzy scoring in v1: fuzzy ranking is a product decision with a scoring model
-to test, not something to smuggle into a substring check. Pass `filter` when a
-different rule is wanted.
+The default matcher is a case-insensitive **subsequence**: the query's characters
+must appear in order in the label, not necessarily together. Initials work.
 
-Disabled actions stay visible and cannot be run by click or `Enter`; the initial
-highlight lands on the first enabled match.
+| Query | Matches |
+| ----- | ------- |
+| `opfl` | **Op**en **f**i**l**e — a non-contiguous match |
+| `open` | `Open file` ranks above `Reopen file` — a word start beats a mid-word run |
+| `of` | `Open file` ranks above `Proofread` — the `f` starts a word |
+
+Scoring is deterministic: ten points per matched character, eight more when the
+character starts a word, and two per character in the current consecutive run.
+The palette then ranks **within each group** and keeps the caller's group order,
+so a heading never repeats because a lower group happened to score higher.
+Equal scores keep declaration order; an empty query shows every action in
+declaration order.
+
+Pass `filter` to replace all of it with a boolean predicate. A custom filter
+receives the action and the raw query, and its accepted rows stay in declaration
+order — no hidden fuzzy pass and no reordering. Disabled actions stay visible and
+cannot be run by click or `Enter`; the initial highlight lands on the first
+enabled match.
 
 ## Controlled only
 
@@ -90,14 +104,26 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
   technology.
 - The `<input>` is the host element until `@gpuixui/primitives` lands; it is the
   documented stand-in, not a styled wrapper.
-- No fuzzy matching and no recent-commands memory in v1.
+- Ranking is **per group**, not global: a group's heading stays where the caller
+  declared it even when another group holds the best match. There is no
+  recent-commands memory and no per-query history.
+- No `aria-activedescendant`: the highlight is visible but the input does not
+  point assistive technology at the active row.
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (12 tests):
 focus landing on the input, typing filtering the list while focus stays put,
 ArrowDown + Enter running the second match and closing, a clicked row, the empty
-label, a custom filter, a disabled action refusing to run, and Escape closing.
+label, a custom filter, a disabled action refusing to run, Escape closing, a
+non-contiguous query matching initials, ranking deciding the default `Enter`
+target, group order surviving ranking, and an empty query keeping declaration
+order.
+
+`src/menu/fuzzy.test.ts` (12 tests) covers empty and whitespace queries, case and
+trim, word-start versus mid-word scores, separator boundaries, subsequence and
+non-subsequence queries, over-long queries, repeated letters, declaration
+indices, group order, in-group ranking, stable ties and empty groups.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

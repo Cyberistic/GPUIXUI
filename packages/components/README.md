@@ -33,7 +33,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
 | `src/dropdown-menu.tsx`, `src/menu/*` | DropdownMenu over the shared row registry, rows, type-ahead buffer and menu surface, with one level of `Sub`/`SubTrigger`/`SubContent` |
 | `src/context-menu.tsx` | ContextMenu: the same rows and type-ahead at the pointer (`onAuxClick` + `isRightClick`) or at the trigger from `Shift+F10` |
-| `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts` |
+| `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts`, with ranked subsequence matching inside each declared group |
 | `src/tabs.tsx` | Tabs: roving tab stop, automatic/manual activation, arrow wrap |
 | `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a body that unmounts |
 | `src/accordion.tsx` | Accordion: single (collapsible) and multiple modes over a tagged union, with arrow/Home/End header movement |
