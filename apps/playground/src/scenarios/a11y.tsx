@@ -21,28 +21,11 @@ import * as Str from "effect/String";
 import type { Props } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
+import { fieldText as text, nodeFor } from "../a11y.js";
 import { Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const VROWS = 50;
-
-/** The accessible node authored as `aria-id={authorId}`, when one exists. */
-const nodeFor = (
-  tree: Smoke.A11yTree,
-  authorId: string,
-): Option.Option<Smoke.A11yNode> =>
-  Option.flatMap(
-    Arr.findFirst(R.values(tree.nodes), (entry) =>
-      Option.exists(entry.aria, (aria) =>
-        Option.contains(aria.author_id, authorId),
-      ),
-    ),
-    (entry) => entry.aria,
-  );
-
-/** A node's field, or `"none"` so an assertion can name its absence. */
-const text = (value: Option.Option<string>): string =>
-  Option.getOrElse(value, () => "none");
 
 const A11yProbe = () => {
   const theme = useTheme();

@@ -40,7 +40,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | combobox | `combobox-filter` | verified |
 | tooltip | `tooltip-open` | verified |
 | scroll | `scroll-container`, `scroll-into-view`, `tab-strip-overflow` | verified |
-| panel | `panel-resize` | verified |
+| panel | `panel-resize`, `panel-nested` | verified |
 | virtual-list | `virtual-list-window` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
 | tree | `tree-view`, `virtualized-tree` | verified |
@@ -56,7 +56,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
 
-The suite is **43/43 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **44/44 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -493,13 +493,13 @@ in-package and an end-to-end native verdict.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Resizable split panes | todo | ? | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). |
-| Panel groups | todo | ? | Composition over split panes. |
-| Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. |
+| Resizable split panes | todo | partial (probe) | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). **Both axes + keyboard (`panel-nested`, plan `175`):** `dy` drives a vertical split exactly (`180 → 228`, painted height agrees), arrows resize the focused divider by 16 px, and the divider is exposed as an AccessKit `Splitter` with its size on `aria-valuetext` (no `aria-valuenow`/`aria-orientation` exist). A `focusNext` leaves the divider; the nested reverse edge does not re-enter it (§8). |
+| Panel groups | todo | partial (probe) | Composition over split panes. A split nested in a pane resizes **independently** of its parent (`panel-nested`: inner `300 → 360` while the outer stayed `228`). |
+| Collapsible sidebars | todo | partial (probe) | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. **`panel-nested`:** width `0` paints `0` with no residual border or padding and the neighbour absorbs the space; re-opening paints the full width. |
 | Tabbed panels | todo | partial (probe) | Tabs + panels. The strip's overflow contract is measured by `tab-strip-overflow` (horizontal pan, clipped children keeping bounds, component-owned reveal; clamp the near end — the renderer stops at `x = -5`, not `0`) and its keyboard contract by `tab-strip-focus` (a clipped tab is a tab stop that focus does not reveal; a roving strip is one stop and reveals on End/Home). |
 | Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. **`drag-autoscroll`:** the runtime does **not** scroll a held drag at an edge — the strip must own an edge loop (`renderer.scrollTo` per held move), which keeps the capture and the up, and derive the drop index from the pointer and the live offset. A new OS window is not available either: 0.10.0 exposes one app window (`render` + `WindowOptions`), no `openWindow`. |
 | Docking layouts | todo | partial (probe) | Composition over split panes + tabs. The overflowed strip contract is measured (`tab-strip-overflow`, plan `173`): x-axis wheel, exact `scrollTo`, `scrollIntoView` reveal, and clipped nodes that keep bounds. |
-| Nested panel arrangements | todo | ? | Composition. |
+| Nested panel arrangements | todo | partial (probe) | Composition. A vertical outer split holding a horizontal inner split is measured end to end: both axes resize, the nested drag leaves `outer = 228`, and the top pane's painted height/width track the readouts (`panel-nested`). |
 | Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. |
 | Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. |
 | Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. |

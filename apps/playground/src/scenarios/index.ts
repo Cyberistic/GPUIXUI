@@ -32,6 +32,7 @@ import { scrollScenario } from "./scroll.js";
 import { tabOverflowScenario } from "./tab-overflow.js";
 import { tabFocusScenario } from "./tab-focus.js";
 import { panelScenario } from "./panel.js";
+import { panelNestedScenario } from "./panel-nested.js";
 import { motionScenario } from "./motion.js";
 import { virtualListScenario } from "./virtual-list.js";
 import { tableColumnResizeScenario, tableSelectSortScenario } from "./table.js";
@@ -110,6 +111,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tabOverflowScenario,
   tabFocusScenario,
   panelScenario,
+  panelNestedScenario,
   motionScenario,
   virtualListScenario,
   tableSelectSortScenario,
