@@ -39,11 +39,11 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 10/10 plans-and-harness
+`[x]` `[████████░░]` 14/17 plans-and-harness
 
-`[x]` Plans `100`–`140` written and indexed for the playground workstream
+`[x]` Plans `100`–`150` written and indexed for the playground workstream
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
-`[x]` **The native smoke suite is 11/11 green on this host** — `nub run --filter playground build && node apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and 9 screenshots. Two-direction proof recorded (plan `140` §4: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
+`[x]` **The native smoke suite is 14/14 green on this host** — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and 14 screenshots. Two-direction proof recorded (plan `140` §4, plan `150` §4: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
 `[x]` Record the build host's missing 0.10 binding as ADR 0001 (evidence + consequence)
 `[x]` Probe GPUix 0.5.1 on this host: it runs (real window, layout/input/overlay/panel/virtual-list/programmatic scroll) and it never delivers focus or wheel-scroll events — ADR 0002
 `[x]` Establish the GPUix capability map from docs/types and measured probes (layout, input, focus, overlay, scroll, panel, virtual-list, Tier 3/4)
@@ -53,8 +53,10 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` Land the Tier 3/4 probe scenarios per plan `130` (`table-select-sort`, `table-column-resize`, `workspace-tab-drag`) — now run green on this host
 `[x]` Correct the scenarios to the measured 0.10.0 contract (wheel sign, painted-window virtual-list, visible-row selection, pointer-capture `onMouseMove`, focus traversal, overlay handlers on the content div) — plan `140` §4
 `[x]` Add the app-level window-key probe (`window-key-shortcut`: cmd-k palette, Escape) so the command-palette/app-menu path is covered — 12/12 green
+`[x]` Land the native theme gallery per plan `150`: `paintedStyle` on the smoke host (schema-decoded at the boundary), `theme` capability, `theme-color-roles` + `theme-type-and-shadow`, and the shell wired to `@gpuixui/tokens` — 14/14 green; `src/theme.ts` deleted
 `[ ]` **Gold standard (outside this workstream):** add `.github/workflows/native-smoke.yml` running `nub run --filter playground smoke` on `macos-14` (Apple Silicon) to confirm with the **published** binary (this host's verdict uses a locally-built binding, ADR 0003). The repo is public, so the runners are free. Owner: whoever owns CI/platform
-`[ ]` Wire the playground to `@gpuixui/tokens` once the tokens workstream lands (replace `src/theme.ts`)
+`[x]` Wire the playground to `@gpuixui/tokens` and delete the app-local `src/theme.ts` (plan `150`) — the shell, shared helpers and every scenario read `useTheme()`; the smoke runner wraps each view in `ThemeProvider`
+`[ ]` Make `@gpuixui/tokens/react` consumable by a GPUix app without a tsconfig shim: its JSX compiles against `@gpuix/react/jsx-runtime` because the consumer sets that `jsxImportSource`, but `packages/tokens` cannot resolve it, so `apps/playground` maps the type path in `tsconfig.check.json`/`tsconfig.build.json`. Fix in `packages/tokens` (a `/** @jsxImportSource react */` pragma, or `createElement`) and remove the mapping. Owner: `tokens` workstream
 `[ ]` Replace the jj-based `scripts/verify-two-directions.sh` with a git implementation (outside this workstream)
 
 #### Process — one writer per tree
@@ -68,7 +70,7 @@ changes from another pid. Owners: whoever owns `scripts/swarm-supervisor.sh`.
 
 ## Phase B — working foundation
 
-`[x]` `[██░░░░░░░░]` 1/6
+`[x]` `[███░░░░░░░]` 2/6
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
@@ -105,9 +107,9 @@ platform toggle (plan 051)
 `[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
 runtime, and record the licence review for any bundled family — plan 052, native
 proof blocked by B1 (rescued from the abandoned `agent/fonts` branch)
-`[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
-docs platform toggle (macOS / Linux / Windows / Default) built on
+`[x]` Cross-team: native theme gallery in `apps/playground` (owner:
+`playground`) — landed as plan `150`; Fumadocs Theming page from `docs/tokens.md`
+and the docs platform toggle (macOS / Linux / Windows / Default) built on
 `platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
 **symlink** — a `references/` rule does not match a symlink, so every worktree
 shows it as untracked (owner: repo tooling; `packages/README.md` already lists

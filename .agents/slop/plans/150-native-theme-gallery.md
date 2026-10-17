@@ -228,3 +228,50 @@ half is proved by the CLI run in §4 — that is the run the `done` row cites.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 - `COMPONENTS.md`, `TODO.md`, `PLAN.md`, the app README and this index are
   updated to match what actually ran.
+
+## 8. Outcome (executed on this host, 2026-10-17)
+
+**14/14 green**, exit `0`, `theme=verified`. `theme-color-roles` records 148
+checks (47 roles × 3 palettes + the switch/readout checks); `theme-type-and-shadow`
+records 30 (10 roles × size+family, plus the mono-family distinction, the ring and
+the `md` elevation). 14 screenshots and `smoke-report.json` are in
+`.artifacts/`.
+
+Two-direction proof:
+
+1. Pointing `swatch-background` at `theme.colors.card` and rebuilding produced
+   `swatch background: expected "#11141A", got "#191D25"`, `theme=failed`,
+   exit `1`. Reverted.
+2. In `packages/testing`, typing `boxShadow` as `Schema.Number` failed the
+   `StyleSnapshot` unit test (`expected Option.Some, got Option.None`); deleting
+   the field failed `tsc` in the test file (`Property 'boxShadow' does not exist`).
+   Reverted; the suite is green again.
+
+Deviations from this plan, and why:
+
+- **The app runs through `nub`, not `node`.** `@gpuixui/tokens/react` exports
+  its TypeScript + JSX source; nub transpiles it, plain `node dist/...` cannot.
+  `dev`/`smoke` scripts and every documented command use nub. No STOP condition
+  was triggered: `nub` loads the provider, and both scenarios prove it paints.
+- **`tsconfig.check.json` + a `paths` entry in `tsconfig.build.json`**, not
+  `tsconfig.json`. `@gpuixui/tokens/react` is React-only JSX, but this app's
+  `jsxImportSource` is `@gpuix/react`, so type-checking the dependency source
+  from this project needs `@gpuix/react/jsx-runtime` resolvable from a package
+  that does not depend on it. The mapping must stay out of `tsconfig.json`
+  because nub's runtime loader honours `paths` and would load the `.d.ts`. The
+  durable fix belongs in `packages/tokens`; recorded in `TODO.md` as a
+  cross-team task.
+- `BoxShadowSnapshot` omits `inset`, matching `BoxShadow` in
+  `@gpuix/native@0.10.0`; a runtime that reports an extra key is not a failure
+  because the decode is not strict on excess properties.
+- The gallery's high-contrast palette is `getTheme("dark", "high")`, per the
+  plan's dark → light → high-contrast order; the light high-contrast variant is
+  covered by the tokens package's contrast tests, not by a fourth native step.
+- **One React in the workspace.** Wiring the playground to the token provider
+  made a pre-existing lock inconsistency visible: the tokens importer pinned
+  `react` 19.2.4 while `react-dom` resolved 19.3.1(react@19.3.1), and the SSR
+  tests in `packages/tokens` failed with `null.useContext`. The playground's
+  exact `react` pin is now `^19.2.0`, `nub install --force --lockfile-only`
+  re-resolved one React 19.3.1 for every importer, and both the token tests
+  (196) and the native suite (14/14) pass with it. `@gpuix/react@0.10.0` allows
+  `^19.0.0`.
