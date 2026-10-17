@@ -3,17 +3,10 @@ import { Link } from "fumadocs-core/link";
 import {
   components,
   groups,
+  tierGroupTitle,
   type ComponentGroup,
 } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
-
-const groupTitles: Record<string, string> = {
-  foundational: "Foundational",
-  composition: "Composition and feedback",
-  "data-display": "Data presentation",
-  workspace: "Desktop workspace",
-  specialised: "Specialised",
-};
 
 const card =
   "flex flex-col gap-1 rounded-lg border border-fd-border bg-fd-card p-3";
@@ -156,7 +149,7 @@ export function ComponentIndex() {
         visible.map((group) => (
           <section key={`${group.tier}-${group.group}`}>
             <h3 className="mb-3 text-lg font-medium">
-              Tier {group.tier} — {groupTitles[group.group] ?? group.group}
+              {tierGroupTitle(group.tier, group.group)}
             </h3>
             <ul className="grid gap-2 sm:grid-cols-2">
               {group.items.map((component) => (

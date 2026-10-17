@@ -20,6 +20,21 @@ export interface ComponentGroup {
 }
 
 /**
+ * The heading a tier/group section uses in the index and the sidebar. One rule
+ * for both surfaces, so a new tier cannot be named differently in each.
+ */
+export const groupTitles: Readonly<Record<string, string>> = {
+  foundational: "Foundational",
+  composition: "Composition and feedback",
+  "data-display": "Data presentation",
+  workspace: "Desktop workspace",
+  specialised: "Specialised",
+};
+
+export const tierGroupTitle = (tier: string, group: string): string =>
+  `Tier ${tier} — ${groupTitles[group] ?? group}`;
+
+/**
  * Groups consecutive entries by tier and group. `entries.ts` authors the
  * records in tier/group order; `registry.test.ts` asserts that order, so a
  * misordered entry fails the suite instead of silently splitting a group.

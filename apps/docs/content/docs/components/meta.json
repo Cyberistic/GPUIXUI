@@ -2,6 +2,7 @@
   "title": "Components",
   "pages": [
     "index",
+    "---Tier 1 — Foundational---",
     "text",
     "icon",
     "separator",
@@ -29,6 +30,7 @@
     "otp-field",
     "toggle",
     "rating",
+    "---Tier 2 — Composition and feedback---",
     "card",
     "badge",
     "avatar",

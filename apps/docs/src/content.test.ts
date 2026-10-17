@@ -24,6 +24,9 @@ const decodeMeta = Schema.decodeUnknownSync(Schema.fromJsonString(meta));
 const readPages = (dir: URL): ReadonlyArray<string> =>
   decodeMeta(readFileSync(new URL("meta.json", dir), "utf8")).pages;
 
+/** A Fumadocs sidebar separator is `---Title---`, not a page (plan 437). */
+const isSeparator = (page: string): boolean => /^---.*---$/.test(page);
+
 /**
  * Every `MISSION.md` IA section and the page that delivers it. The `label` is
  * asserted to be present in `MISSION.md`; the `page` is asserted to be ordered
@@ -105,7 +108,7 @@ describe("information architecture", () => {
     const dangling = sections.flatMap((section) => {
       const dir = new URL(`${section}/`, contentDir);
       return readPages(dir)
-        .filter((page) => !pageExists(dir, page))
+        .filter((page) => !isSeparator(page) && !pageExists(dir, page))
         .map((page) => `${section}/${page}`);
     });
     expect(dangling).toEqual([]);

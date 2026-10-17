@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { exportedNames } from "../lib/source-exports";
 import { registryViolations, statusViolations } from "./contract";
-import { components } from "./registry";
+import { components, tierGroupTitle } from "./registry";
 import { decodeComponentMeta } from "./schema";
 
 /**
@@ -167,11 +167,24 @@ describe("component registry", () => {
     const sidebar = decodeSidebar(
       readFileSync(new URL("meta.json", pagesDirectory), "utf8"),
     );
+    const sections = components
+      .filter((entry) => entry.status !== "planned")
+      .reduce<{ title: string; slugs: string[] }[]>((all, entry) => {
+        const title = tierGroupTitle(entry.tier, entry.group);
+        const last = all.at(-1);
+        return last?.title === title
+          ? [
+              ...all.slice(0, -1),
+              { ...last, slugs: [...last.slugs, entry.slug] },
+            ]
+          : [...all, { title, slugs: [entry.slug] }];
+      }, []);
     const expected = [
       "index",
-      ...components
-        .filter((entry) => entry.status !== "planned")
-        .map((entry) => entry.slug),
+      ...sections.flatMap((section) => [
+        `---${section.title}---`,
+        ...section.slugs,
+      ]),
     ];
     expect(sidebar.pages).toEqual(expected);
   });
