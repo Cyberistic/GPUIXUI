@@ -37,8 +37,10 @@ Plan 433 keeps Recipe B open.
    edition of one.
 4. Windows XP never shipped a dark mode, and neither did Windows 7. Their dark
    variants are **interpretations**, documented as such: they keep the Windows
-   dark surfaces (which already clear every floor) and carry the era's accent
-   and shape. Do not invent an "authentic" dark palette.
+   dark palette (which already clears every floor) and carry the era's shape.
+   The dark accent is the Windows dark step, not a rebuilt era accent. Do not
+   invent an "authentic" dark palette. Plan 328 makes the recipe data carry the
+   Windows dark colours; the first cut left `dark: {}` and inherited identity.
 5. Aero's glass is an approximation. GPUix 0.10.0 has no backdrop blur, no inset
    shadows, no conic/radial gradients and no clip-path (capability map, plan
    203). The recipe uses solid layered surfaces; the documentation says so.

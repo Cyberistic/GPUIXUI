@@ -10,7 +10,7 @@ import { windowsPlatformStyle } from "../windows.js";
  * Aero's glass is an approximation: GPUix 0.10.0 has no backdrop blur, inset
  * shadow, radial/conic gradient or clip-path, so the layers are solid tinted
  * surfaces, not translucency. Windows 7 shipped no dark mode: the dark half
- * keeps the Windows dark surfaces and is documented as an interpretation. The
+ * carries the Windows dark palette and is documented as an interpretation. The
  * values are held to `themeContrastFailures` in both modes by
  * `platform-recipes.test.ts`.
  */
@@ -58,7 +58,7 @@ export const aeroPlatformRecipe = {
       skeleton: "#BDCFE4",
       shadow: "#0B1F33",
     },
-    dark: {},
+    dark: windowsPlatformStyle.colors.dark,
   },
   elevation: windowsPlatformStyle.elevation,
 } as const satisfies PlatformStyle;

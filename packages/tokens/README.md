@@ -403,8 +403,9 @@ mode, contrast?)` resolves it through the same path. `platformRecipeNames` and
 `isPlatformRecipeName` do for a stored recipe choice what the platform index and
 guard do for a platform. The files live in
 [`src/platform-styles/recipes/`](./src/platform-styles/recipes/) and are held to
-the contrast contract in both modes; their dark halves are interpretations,
-because neither Windows version shipped a dark mode.
+the contrast contract in both modes; their dark halves are interpretations that
+carry the Windows dark palette, because neither Windows version shipped a dark
+mode.
 
 High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
 applies only the families and shape, because a platform accent must not drop the

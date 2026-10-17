@@ -73,7 +73,7 @@ describe("platform recipe resolution", () => {
       });
 
       it(`${recipe} ${mode}: inherits every role the recipe does not name`, () => {
-        const base = getTheme(mode).colors;
+        const base = getPlatformTheme("win32", mode).colors;
         const theme = getPlatformRecipeTheme(recipe, mode);
         const declared = platformRecipes[recipe].colors[mode];
         (
@@ -99,6 +99,19 @@ describe("platform recipe resolution", () => {
           themeContrastFailures(getPlatformRecipeTheme(recipe, mode)),
           `${recipe} ${mode}`,
         ).toEqual([]);
+      });
+    });
+  });
+
+  platformRecipeNames.forEach((recipe) => {
+    it(`${recipe}: carries the Windows dark palette in dark mode`, () => {
+      const windows = getPlatformTheme("win32", "dark").colors;
+      const theme = getPlatformRecipeTheme(recipe, "dark");
+
+      colorRoles.forEach((role) => {
+        expect(theme.colors[role], `${recipe} dark ${role}`).toBe(
+          windows[role],
+        );
       });
     });
   });

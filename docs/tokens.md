@@ -635,9 +635,10 @@ composition over these roles, not a token — a genuine limit of the role model,
 documented rather than hidden.
 
 **Dark is an interpretation.** Neither Windows XP nor Windows 7 shipped a dark
-mode. Their dark themes keep the Windows dark surfaces and motion and carry the
-era's accent and shape, so they are honest extensions, not reconstructions; both
-are held to the contrast contract in each mode.
+mode. Their dark themes carry the Windows dark palette (the recipe's `dark`
+colours are the Windows variant's) and the era's shape, so they are honest
+extensions, not reconstructions; both are held to the contrast contract in each
+mode. The dark accent is the Windows dark step, not a rebuilt Luna or Aero one.
 
 **Aero's glass is an approximation.** GPUix 0.10.0 has no backdrop blur, inset
 shadow, radial/conic gradient or clip-path, so Aero's layers are solid tinted

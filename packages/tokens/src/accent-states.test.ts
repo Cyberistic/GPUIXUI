@@ -88,7 +88,7 @@ describe("the accent family's states", () => {
     );
   });
 
-  it("gives every shipped set its own designed steps", () => {
+  it("gives every shipped set designed steps", () => {
     realPlatforms.forEach((platform) => {
       themeModes.forEach((mode) => {
         (["accentHover", "accentActive"] as const).forEach((role) => {
@@ -106,9 +106,12 @@ describe("the accent family's states", () => {
           platformRecipes[recipe].colors.light[role],
           `${recipe} light ${role}`,
         ).toBeDefined();
-        // A recipe's dark half is the Windows dark interpretation, so it
-        // inherits the identity family rather than inventing one.
-        expect(platformRecipes[recipe].colors.dark[role]).toBeUndefined();
+        // The dark half is the Windows dark interpretation, so it carries the
+        // Windows accent steps rather than the identity family (plan 328).
+        expect(
+          platformRecipes[recipe].colors.dark[role],
+          `${recipe} dark ${role}`,
+        ).toBe(platformStyles.win32.colors.dark[role]);
       });
     });
   });

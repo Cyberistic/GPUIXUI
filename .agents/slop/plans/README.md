@@ -124,6 +124,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [325](./325-invalid-field-edge.md) | The invalid field edge the contract never measures | F | 057, 071, 074, 084, 092, 306, 312 | done |
 | [326](./326-contract-count-truth.md) | The contract's surface counts and pair history | F | 086, 306, 307, 325 | done |
 | [327](./327-accent-states.md) | The accent family's missing hover and press | F | 063, 071, 080, 097, 309, 311, 318 | done |
+| [328](./328-recipe-windows-dark.md) | A recipe is an edition of Windows in dark too | F | 063, 071, 311 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -683,8 +684,9 @@ in both modes. The recipes are deliberately **not** a fifth platform — they st
 out of `platformNames` and the docs platform toggle — because the mission's
 platform axis stays macOS · Linux · Windows · Default. Both dark variants are
 documented as interpretations: neither Windows XP nor Windows 7 shipped a dark
-mode, so they keep the Windows dark surfaces and carry the era's accent and
-shape rather than inventing a palette. Aero's glass is a two-surface
+mode, so they keep the Windows dark palette and carry the era's shape — the dark
+accent is the Windows step — rather than inventing a palette. Plan 328 makes the
+recipe data carry that palette, which the first cut only described. Aero's glass is a two-surface
 approximation, because 0.10.0 has no backdrop blur, inset shadow or gradient.
 Recipe B of plan 433 (Omarchy's live system theme) stays out of this plan: its
 own STOP condition requires the on-disk palette contract to be verified on a

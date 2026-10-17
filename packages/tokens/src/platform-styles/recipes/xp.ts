@@ -8,8 +8,8 @@ import { windowsPlatformStyle } from "../windows.js";
  * `platformNames`.
  *
  * XP's 3D bevel cannot be an inset shadow (GPUix has none), so it is a designed
- * light/dark border pair. XP shipped no dark mode: the dark half keeps the
- * Windows dark surfaces and motion, and is documented as an interpretation.
+ * light/dark border pair. XP shipped no dark mode: the dark half carries the
+ * Windows dark palette and is documented as an interpretation.
  * The values are held to `themeContrastFailures` in both modes by
  * `platform-recipes.test.ts`.
  */
@@ -57,7 +57,7 @@ export const xpPlatformRecipe = {
       skeleton: "#CFC8AE",
       shadow: "#000000",
     },
-    dark: {},
+    dark: windowsPlatformStyle.colors.dark,
   },
   elevation: windowsPlatformStyle.elevation,
 } as const satisfies PlatformStyle;

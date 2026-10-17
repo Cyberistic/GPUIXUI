@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 95/125
+`[x]` `[████████░░]` 96/125
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -200,6 +200,12 @@ backdrop and had no contrast pair while plan 097 had fixed the other three
 families; `accentHover` and `accentActive` are designed, platform-specific,
 contrast-checked roles (62 → 64 roles, 264 → 276 pairs), and the primitives
 migration is recorded cross-team (plan 327)
+`[x]` Make the XP and Aero recipes carry the Windows dark palette their docs
+promise — both declared `dark: {}` over the identity base, so a recipe's dark
+half was the identity graphite/iris instead of `#202020`/`#4CC2FF`; the recipe
+data now names the Windows dark colours, a regression test compares every dark
+role with the Windows variant, and the docs no longer claim an era accent in
+dark (plan 328)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
