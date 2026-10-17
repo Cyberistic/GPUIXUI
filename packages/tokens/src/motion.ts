@@ -2,7 +2,7 @@
  * Motion timings and easings.
  *
  * GPUix animates only through `motion` props — there is no `transition` or
- * `animation` style, and `MotionStyle` reaches seven properties (`width`,
+ * `animation` style, and `MotionStyle` reaches eight properties (`width`,
  * `height`, `opacity`, `top`, `right`, `bottom`, `left`, `borderRadius`). The
  * runtime's `MotionTransition` takes **seconds**; the step indicators that drive
  * a spinner or a skeleton interval take **milliseconds**, so the tokens store

@@ -56,6 +56,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [057](./057-status-text-roles.md) | Status text roles: a readable status tonality on plain surfaces | B | 010–019, 050–056 | done |
 | [058](./058-docs-numeric-tables-guard.md) | Docs-truth guard for the numeric token tables | F | 056 | done |
 | [059](./059-catalogue-index-and-contrast-completeness.md) | The type-role index and the unguarded colour pairs | F | 010–019, 050–058 | done |
+| [060](./060-motion-property-count-truth.md) | The animated-property count and the reserved `overlay` level | F | 018, 019, 058, 059 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -80,7 +81,10 @@ dots drawn on `background`/`card` get their own `xText` tonality (light
 surfaces: a `textRoles` index beside `colorRoles` (the docs site had retyped the
 ten roles) and the contrast pairs the catalogue claimed but never guarded —
 muted text on plain surfaces, typed input text, ghost text on the `hover`/
-`active` washes, and the composited `selection` wash.
+`active` washes, and the composited `selection` wash. 060 closes the two remaining
+false statements in the motion and elevation prose: the runtime animates eight
+`MotionStyle` properties, not seven, and the reserved `overlay` level paints
+nothing (the "inset ring" comment survived plan 018).
 
 ### Reference adoption (block `200–299`)
 

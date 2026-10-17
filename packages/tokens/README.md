@@ -266,7 +266,7 @@ persisted theme at its own boundary, where `Schema` belongs.
 - No OS appearance detection; the app selects the mode and contrast, and also
   which platform style to render.
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
-  only animate the seven `MotionStyle` properties, and there is no
+  only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.
 - Exports point at `src/`: the package is private, so a consumer compiles it
   directly and no build step is required. Phase G flips `exports` to `dist` when

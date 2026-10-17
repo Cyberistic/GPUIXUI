@@ -292,6 +292,6 @@ roles in the tokens package, not fork components.
   per-component token file would duplicate the same decisions.
 - No theme editor or theme marketplace.
 - No animation the runtime cannot draw. Motion goes through `motion` props and
-  the seven `MotionStyle` properties; a design that needs a transform, a
+  the eight `MotionStyle` properties; a design that needs a transform, a
   rotation or colour interpolation is out of scope until GPUix supports it.
 - No web preview pretending to be native. The playground is the visual proof.

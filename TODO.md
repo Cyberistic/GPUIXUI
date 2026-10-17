@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 26/36
+`[x]` `[███████░░░]` 27/37
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -84,6 +84,8 @@ drift from the implementation (plan 058)
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input
 text, ghost text on `hover`/`active`, the composited `selection` wash (plan 059)
+`[x]` Correct the runtime's animated-property count (eight, not seven) and the
+reserved `overlay` JSDoc; evidence in the pinned `MotionStyle` (plan 060)
 `[x]` Ship status text roles (`infoText`/`successText`/`warningText`/
 `destructiveText`) so status labels, icons and indicator dots have a readable
 colour on plain surfaces — light `warning` was 1.78:1 on `background` — and

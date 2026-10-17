@@ -69,13 +69,17 @@ Facts that shape the tokens:
    indicators) takes **milliseconds**. Two units, one API. The token stores
    milliseconds — the unit a designer reads and a component's timer wants — and
    a helper converts to the runtime's seconds.
-2. **Only seven properties animate** (`width`, `height`, `opacity`, `top`,
+2. **Only eight properties animate** (`width`, `height`, `opacity`, `top`,
    `right`, `bottom`, `left`, `borderRadius`). No transform, no colour.
 3. **Easings are the five CSS names or a cubic-bezier tuple.** Tokens name the
    five; a brand that needs a bezier passes the tuple itself, which the runtime
    already accepts (the token type is the runtime's union, so no cast is needed).
 4. There is **no `transition` CSS property** and no `animation` keyframes; motion
    exists only through `motion` props.
+
+> **Correction (plan 060).** The runtime's `MotionStyle` has eight optional
+> properties, not seven; the list in fact 2 was always right and the count was
+> wrong. The shipped documents were corrected together.
 
 ## 2. Design decisions (do not re-litigate)
 
@@ -244,7 +248,7 @@ by the test.
 ### 3.5 Docs
 
 - `docs/tokens.md`: a `## Motion` section after `## Elevation` — the level table,
-  the ms/seconds rule, `motionTransition`, the seven animatable properties, the
+  the ms/seconds rule, `motionTransition`, the eight animatable properties, the
   absence of `transition`/`animation`, and the reduced-motion recipe
   (`extendTheme(base, { motion: { step: 0, pulse: 0 } })`). Add the new exports to
   the `## Import` block. Add a limitation bullet.

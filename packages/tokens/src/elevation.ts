@@ -27,7 +27,10 @@ export interface Elevation {
   readonly md: BoxShadow[];
   /** Dialogs and command palettes. */
   readonly lg: BoxShadow[];
-  /** Reserved for surfaces that need an additional inset ring. */
+  /**
+   * Reserved and empty. Nothing is designed for this level yet, so it paints
+   * no shadow until one is.
+   */
   readonly overlay: BoxShadow[];
 }
 

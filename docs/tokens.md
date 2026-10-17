@@ -442,7 +442,7 @@ with two entries would silently render only the first, so
 ## Motion
 
 There is no `transition` and no `animation` in the runtime: motion exists only
-through `motion` props, and `MotionStyle` reaches seven properties — `width`,
+through `motion` props, and `MotionStyle` reaches eight properties — `width`,
 `height`, `opacity`, `top`, `right`, `bottom`, `left`, `borderRadius`. No
 transform, no rotation, no colour interpolation.
 
@@ -773,7 +773,7 @@ against; see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
   ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
   `borderRadius` only because a shadow does.
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
-  only animate the seven `MotionStyle` properties, and there is no
+  only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.
 - No breakpoints. Responsiveness is application-level, through GPUix's
   `useWindowSize` and `useWindowInsets`; a breakpoint token would describe a
