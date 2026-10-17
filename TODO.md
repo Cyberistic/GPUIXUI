@@ -11,13 +11,14 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Harness — the supervisor that keeps the swarm alive
 
-`[x]` `[██████████]` 5/5
+`[x]` `[████████████]` 6/6
 
 `[x]` Repo on `proserver` with the required shape, mission, rules and plan index
 `[x]` opencode 2.0.31 installed with the provider credentials and a trimmed config
 `[x]` Verified a real run on `opencode-go-braven/deepseek-v4.1-flash`
 `[x]` Supervisor: 30-minute tick, ≥5 agents, one worktree each, idempotent and crash-safe
 `[x]` Scheduler installed (launchd agent + daemon driver; see `.agents/slop/README.md`)
+`[x]` Model fallback chain with limit detection, one active model for the whole swarm, and an hourly recovery probe (see `scripts/README.md`)
 
 ---
 
@@ -81,3 +82,10 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`)
+
+## Swarm-owned blockers (fix these)
+
+- **B1** GPUix native bindings fail to install (blocks the playground + every native smoke test).
+- **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
+
+Both are specified in ; each fix starts with a plan under .

@@ -20,6 +20,7 @@ workspaces/
 # Agent scratch and transient session logs — never repository content
 .agents/slop/*.log
 .agents/slop/swarm/
+.agents/slop/swarm-model.state
 .scratch/
 
 # Environment variables

@@ -16,12 +16,17 @@
 # Each workstream is a persistent loop that runs `opencode run` repeatedly, so a
 # finished turn continues from the state the agent left in TODO.md rather than
 # leaving the swarm short-handed until the next tick.
+#
+# The model is not fixed here: every loop reads the active model from
+# scripts/swarm-model.sh before each turn, so a limit hit by one workstream moves
+# all five to the next rung together. This tick also runs the recovery probe,
+# which returns the swarm to the primary once the primary answers again.
 
 set -uo pipefail
 
 REPO="${GPUIXUI_REPO:-$HOME/GPUIXUI}"
 OPENCODE="${OPENCODE_BIN:-$HOME/.opencode/bin/opencode}"
-MODEL="${GPUIXUI_MODEL:-opencode-go-braven/deepseek-v4.1-flash}"
+MODELS="$REPO/scripts/swarm-model.sh"
 MIN_AGENTS="${GPUIXUI_MIN_AGENTS:-5}"
 
 export PATH="$HOME/.opencode/bin:$HOME/.nub/bin:$HOME/.nub/node-shim:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -133,8 +138,9 @@ snapshot() {
   local ws live started
   live=$(live_agents)
   {
-    printf '%s agents=%s/%s plans=%s todo=%s components=%s head=%s\n' \
+    printf '%s model=%s agents=%s/%s plans=%s todo=%s components=%s head=%s\n' \
       "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      "$("$MODELS" current 2>/dev/null || echo unknown)" \
       "$live" "$MIN_AGENTS" "$(plan_count)" "$(todo_progress)" \
       "$(component_progress)" \
       "$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo none)"
@@ -185,23 +191,50 @@ Own only the paths in your workstream. Another agent owns everything else; if
 you need a change outside your paths, record it as a task in TODO.md instead of
 editing it. Commit often with meaningful messages. Never claim a test passed
 unless it ran.
+BLOCKERS: read ~/GPUIXUI/BLOCKERS.md first. If one of them applies to your workstream it takes priority over your normal queue: fix it, and write its plan under .agents/slop/plans/ before implementing. If neither applies, continue. Do not wait for a human.
+Push: commit often with meaningful messages, and push your branch to origin regularly (at least once per coherent unit of work) so progress is visible remotely. Never push to master.
 PROMPT
 
   cat >"$runner" <<RUNNER
 #!/usr/bin/env bash
 # Launched by scripts/swarm-supervisor.sh. One workstream, one tree, one loop.
+#
+# The active model is re-read before every turn, so a limit on one workstream
+# moves all of them to the next rung together. A limit is not a broken
+# workstream: it escalates and the loop keeps going. Five real failures in a row
+# is a broken workstream: exit so the next tick starts a fresh session.
 cd "$dir" || exit 1
 export PATH="$PATH"
-MODEL="$MODEL"
 OPENCODE="$OPENCODE"
+MODELS="$MODELS"
 PROMPT="\$(cat "$prompt")"
+out=\$(mktemp)
+err=\$(mktemp)
+trap 'rm -f "\$out" "\$err"' EXIT
 fails=0
 while :; do
-  "\$OPENCODE" run --model "\$MODEL" --auto --title "swarm:$ws" "\$PROMPT"
-  code=\$?
-  if [ "\$code" -ne 0 ]; then fails=\$((fails + 1)); else fails=0; fi
-  # Five failures in a row is a broken workstream, not a transient one: exit so
-  # the supervisor's next tick reports it and starts a fresh session.
+  model=\$("\$MODELS" current)
+  # stdout streams to this workstream's log and is captured for the detector;
+  # stderr (the model banner and any provider error) is captured and echoed
+  # after the turn, so the log still shows why a turn failed.
+  "\$OPENCODE" run --model "\$model" --auto --title "swarm:$ws" "\$PROMPT" 2>"\$err" | tee "\$out"
+  code=\${PIPESTATUS[0]}
+  cat "\$err" >&2
+  if [ "\$code" -eq 0 ]; then
+    fails=0
+    sleep 20
+    continue
+  fi
+  if signature=\$("\$MODELS" classify "\$code" "\$out" "\$err"); then
+    if "\$MODELS" advance "\$model" "limit on \$model (exit \$code): \$signature"; then
+      sleep 20
+    else
+      # The last rung is limited too; wait for the supervisor's recovery probe.
+      sleep 300
+    fi
+    continue
+  fi
+  fails=\$((fails + 1))
   [ "\$fails" -ge 5 ] && exit 1
   sleep 20
 done
@@ -231,6 +264,11 @@ main() {
 
   git -C "$REPO" worktree prune >>"$SUPERVISOR_LOG" 2>&1
 
+  # Seed the active model on first run, then try to come back up to the primary
+  # if the swarm is on a lower rung. The cadence lives in swarm-model.sh.
+  "$MODELS" current >/dev/null
+  "$MODELS" probe >>"$SUPERVISOR_LOG" 2>&1
+
   local live started=0 ws
   live=$(live_agents)
   for ws in $WORKSTREAMS; do
@@ -242,7 +280,7 @@ main() {
     fi
   done
 
-  log "tick: live=$live/$MIN_AGENTS started=$started plans=$(plan_count) todo=$(todo_progress) components=$(component_progress)"
+  log "tick: model=$("$MODELS" current) live=$live/$MIN_AGENTS started=$started plans=$(plan_count) todo=$(todo_progress) components=$(component_progress)"
   snapshot
 }
 
