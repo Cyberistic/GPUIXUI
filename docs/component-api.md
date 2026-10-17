@@ -229,6 +229,7 @@ parts.
 | Date pickers | `DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar` | — | plan 119, 303 |
 | Time pickers | `TimePicker`, `TimePickerSegment`, `TimePickerSeparator`, `TimePickerClear` | — | plan 132, 303 |
 | Fieldset | `Fieldset`, `FieldsetLegend` | `FieldsetRoot`/`Legend` | plan 306 |
+| Stepper | `Stepper`, `StepperStep` | — | plan 307 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -248,7 +249,6 @@ implementation cannot invent a shape):
 | Navigation menu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink` | plan 205 |
 | Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | plan 205 |
-| Stepper | `Stepper`, `StepperStep` | plan 205 |
 | Timeline | `Timeline`, `TimelineItem` | plan 205 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
 | Mention input | `MentionInput`, `MentionInputList`, `MentionInputItem` | plan 205 |

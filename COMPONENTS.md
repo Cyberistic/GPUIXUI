@@ -172,7 +172,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Navigation Menu | todo | ? | 13-part nav whose items open content panels; distinct from Dropdown menus. `FloatingLayer` + `<anchored>`. |
 | Preview Card | todo | ? | Hover-triggered rich card with a positioner (base-gpui, 8 parts). `FloatingLayer` + `<anchored>`. |
 | Drawer | todo | ? | Edge-anchored panel with swipe-to-dismiss and nesting. `Dialog` is main-only in 0.10.0; `div` + `motion` (width/left/opacity) + `createPortal`. |
-| Stepper | todo | ? | Multi-step progress indicator (adabraka `StepItem`/`StepStatus`). `div` + `<text>`. |
+| Stepper | done | partial | `Stepper` + `StepperStep` over `role="list"`: statuses (`complete`/`current`/`upcoming`) derived from the one `value`, horizontal or vertical, `StateStyle<StepperStepState>`; 8 native behaviour tests. Display-only by design (no step click), no connector line, and `aria-selected` stands in for the missing `aria-current` |
 | Timeline | todo | ? | Event timeline with connector styles. `div` + `<text>`. |
 | Color picker | todo | ? | HSL/RGB/HEX + alpha + swatches. **Limitation (unverified for GPUix):** the saturation/value square needs radial or multi-stop gradients, which GPUix does not support (two-stop linear only — verified). Alternative: a discrete swatch grid or a pre-rendered bitmap. |
 | Tag / token input | todo | ? | `<input>` + chip `div`s; the token keyboard contract is ours. |

@@ -80,7 +80,7 @@ workstream declares in its own section below.
 | [304](./304-typed-by-position-children.md) | Typed-by-position children: the render check and the measured compile-time limit | F | 200, 201, 158, 300–303 | done — 32 family-scoped checks across 19 modules, `PartChildren` narrowing, 6 unit + 7 native tests (behaviour 298); part identity is not expressible in React 19's JSX types |
 | [305](./305-state-aware-style.md) | State-aware `style` on interactive parts | F | 200, 201, 304 | done — 11 parts use the runtime's `StateStyle`/`resolveStyle`, 11 native tests (behaviour 309); button-shaped triggers recorded out of scope until primitives owns the button |
 | [306](./306-fieldset.md) | Fieldset: a named group of fields, with disabled propagation to `FieldInput` | C | 200, 201, 115, 205 | done — 7 native tests + 1 Field regression; both-direction proof (behaviour 317) |
-| [307](./307-stepper.md) | Stepper: a read-only multi-step progress indicator | C | 200, 201, 205, 306 | in progress |
+| [307](./307-stepper.md) | Stepper: a read-only multi-step progress indicator | C | 200, 201, 205, 306 | done — 8 native tests; both-direction proof (behaviour 325) |
 | [308](./308-form.md) | Form: validation orchestration and the submit lifecycle | C | 200, 201, 115, 205, 306 | planned — implementation pending |
 
 Interlocks this workstream depends on and does not own:

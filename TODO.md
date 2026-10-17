@@ -211,7 +211,7 @@ retired once both branches are one
     - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
   - Tier 2 gap rows (plan 205; each row gets its own plan before implementation)
     - [x] Fieldset — plan 306: groups fields, propagates `disabled` to `FieldInput` (7 native tests; both-direction proof)
-    - [~] Stepper — plan 307: read-only multi-step indicator, statuses derived from `value`
+    - [x] Stepper — plan 307: read-only multi-step indicator, statuses derived from `value` (8 native tests; both-direction proof)
     - [ ] Form — plan 308 written; implementation pending (render-prop submit lifecycle)
     - [ ] Drawer, Navigation Menu, Preview Card, Timeline, Countdown, Keyboard shortcuts / keycap display, Carousel, Inline edit, Tag/token input, Mention input, Hotkey-recorder input, Color picker — plans not yet written
 `[x]` Verify every component in both themes

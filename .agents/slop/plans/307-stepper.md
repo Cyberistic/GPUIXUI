@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §3 (B5), `306` (the form group) |
-| Status | planned |
+| Status | done — 8 native tests, both-direction proof measured |
 | Source | `docs/component-api.md` §8 (planned parts: `Stepper`, `StepperStep`); `COMPONENTS.md` → Tier 2 → Stepper; plan `205` B5 |
 
 This plan is self-contained. It adds `Stepper` to `packages/components` at the
@@ -134,3 +134,20 @@ step: tests 2, 3, 4 and 8 fail. Restore; green. A second useful break: swap
 - Example, docs page, inventory record, `COMPONENTS.md` row and the contract's
   §8 table agree.
 - All gates and the behaviour suite green.
+
+## 8. Result
+
+Landed 2026-10-17:
+
+- `src/stepper.tsx` — `Stepper` (`role="list"`, optional name, axis) and
+  `StepperStep` (`role="listitem"`, `aria-selected` on the current step,
+  `StateStyle<StepperStepState>`), with the status derived in one function.
+- `src/behaviour/stepper.test.tsx` — 8 tests. Two renderer facts were measured on
+  the way: `findByText` returns the **text leaf**, so a styled value needs two
+  `getElement` hops (`leaf → <text> → the styled box`); and `aria-selected` on a
+  `listitem` does reach the accessibility dump, so the current step is announced.
+- Example, docs page, inventory record, `COMPONENTS.md` row and the contract's §8
+  table updated; `docs/component-api.md` moved Stepper out of the planned list.
+- **Both directions:** forcing every step to `current` fails the status test (and
+  cascades through the rest of the suite because the failed assertion leaves the
+  root mounted). Restored: 325 behaviour tests green; `nub run check` green.
