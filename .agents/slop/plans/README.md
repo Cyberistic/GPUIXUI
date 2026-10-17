@@ -95,6 +95,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [096](./096-control-size-index.md) | The control size index and its narrowing guard | F | 011, 016, 067, 068, 089 | done |
 | [097](./097-filled-control-states.md) | Designed hover and pressed roles for every filled control | F | 011, 014, 055, 063, 071, 080, 084 | done |
 | [098](./098-brand-theme-truth.md) | The documented brand theme must pass the contract it teaches | F | 011, 013, 055, 071, 082, 097 | done |
+| [099](./099-modal-scrim-perceivability.md) | The modal scrim must be perceivable on every surface it covers | F | 013, 071, 073, 076, 086, 087, 094 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -494,6 +495,20 @@ hover/pressed steps belong to the brand rather than the base iris, and
 "change a fill, move the family" rule is stated in the Theme API section, the
 design system and the README, with the documented snippet identical to the
 executed example.
+
+099 closes the last role the contrast contract left unmeasured by choice:
+`colors.overlay` is the wash a Dialog paints across the whole window, and it was
+exempt on the reasoning that "the content beneath it is the measured surface" —
+which confuses the content with the scrim. The scrim's job is to change the
+surface beneath it, so a scrim that composites to that surface is invisible. The
+audit found the defect at the accessibility end: high-contrast dark's
+`#000000CC` **is** `#000000` after compositing on its pure black canvas, a
+**1.000:1** modal backdrop in the theme that exists to be unmistakable, while the
+other nine sets cleared 1.05:1. `overlayWashPairs` measures the scrim over the
+four base surfaces (`background`, `card`, `muted`, `popover`) at the `surface`
+floor, `overlay` leaves the exemption list, and the AAA dark theme veils with
+light (`#FFFFFF26`) because a dark veil cannot darken black. The other nine
+scrims keep their exact pixels.
 
 ### Reference adoption (block `200–299`)
 
