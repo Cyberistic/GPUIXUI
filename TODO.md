@@ -36,11 +36,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[~]` Inspect GPUI Kit (hierarchy, theming, layout, interaction, licence)
 `[ ]` Study shadcn/ui organisation and semantic tokens; review PanelUI; review Fumadocs setup
 `[~]` Write and index every phase and package plan in `.agents/slop/plans/`
-`[!]` **BLOCKER: no GPUix runtime can run on this machine.** Intel macOS + no
-      `darwin-x64` native binary + no Aqua session (SSH background). Evidence and
-      the three honest ways out are in
-      `.agents/slop/plans/020-gpuix-runtime-capability.md` §3. Owned by
-      playground workstream (wasm path) with a human decision for the GUI path.
+`[x]` **Blocker B1 resolved: the GPUix runtime runs on this machine.** The
+      `darwin-x64` 0.10.0 binding is built from source with
+      `gpui_macos/runtime_shaders` and the native suite runs on it — plan `140`,
+      ADR 0003. The original evidence and the three honest routes are kept in
+      `.agents/slop/plans/020-gpuix-runtime-capability.md` §3; the wasm path
+      remains a docs-site question (D21), not native evidence.
 `[!]` **BLOCKER B3: several live agents are writing the same worktree.** Measured
       2026-10-17 07:40: 5 live `swarm:primitives` sessions (and 2–6 for every
       other workstream) editing `workspaces/primitives` concurrently, clobbering
@@ -91,7 +92,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` Probe the shipped Tier 1 primitives natively per plan `168`: mount `@gpuixui/primitives` (`Button`, `Toggle`, `Input`, `Checkbox`, `Switch`, `Select`, `Slider`, `Progress`, `Meter`, `Skeleton`, `Tooltip`) through the tokens theme and add the `components` capability — 36/36 green, two-direction proofs recorded
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)
 `[ ]` Cross-team: `motion.div`'s published `MotionDivProps` omits `testId`, `role` and the `aria-*` props, so an animated surface cannot be addressed in a smoke test or given an accessible role through the typed API. Add a typed motion wrapper (published `HostProps` + `motion`) in `@gpuixui/components` and use it for Collapsible/sidebar/toast surfaces (owner: `components`; evidence: plan `157` §8)
-`[ ]` **Promote the playground workstream to the integration branch**: `origin/master` still carries only the `apps/playground/README.md` placeholder — none of the 57 commits (plans `100`–`166`, `packages/testing`, the playground, ADR 0001–0003) are on it. `agent/playground` is a **fast-forward** of `origin/master` (0 commits behind), so the promotion is conflict-free; the workstream's own instruction is *never push to master*, so an owner/supervisor performs the merge
+`[ ]` **Promote the playground workstream to the integration branch**: `origin/master` still carries only the `apps/playground/README.md` placeholder — none of the 143 commits ahead (plans `100`–`182`, `packages/testing`, the playground, ADR 0001–0003) are on it. `agent/playground` is a **fast-forward** of `origin/master` (0 behind), so the promotion is conflict-free; the workstream's own instruction is *never push to master*, so an owner/supervisor performs the merge
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: **drag-and-drop and detachable tabs must hit-test pointer coordinates** — hover is frozen during a captured drag, the drag still ends in a click on the source, and a drop on an element without `onFileDrop` produces a click. The component owns the drop indicator and click suppression (owner: `components`/`docking`; evidence: plan `162` §8)
@@ -359,7 +360,7 @@ retired once both branches are one
 
 ## Swarm-owned blockers (fix these)
 
-- **B1** GPUix native bindings fail to install (blocks the playground + every native smoke test).
+- **B1** ~~GPUix native bindings fail to install~~ **resolved** — the `darwin-x64` 0.10.0 binding builds from source (`gpui_macos/runtime_shaders`) and the native suite is 50/50 on this host (plan `140`, ADR 0003).
 - **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
 
 Both are specified in ; each fix starts with a plan under .
