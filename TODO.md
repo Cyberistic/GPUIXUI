@@ -57,13 +57,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[~]` `[██░░░░░░░░]` 2/6
+`[~]` `[███░░░░░░░]` 3/6
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[x]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
-`[ ]` Land one fully working component running in GPUix
+`[x]` Land one fully working component running in GPUix — all 19 Tier 1
+      components mount in the real `TestRenderer` (plan 041; 70 runtime tests)
 `[ ]` Land the docs shell and document that component in Fumadocs
 
 ### Design tokens and theming (`tokens-theme`)
