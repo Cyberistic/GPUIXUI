@@ -4,7 +4,7 @@ Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
 Plans for this package and every component it holds are in
-`.agents/slop/plans/` (110–127). Read those before adding a component.
+`.agents/slop/plans/` (110–132). Read those before adding a component.
 
 ## Boundary
 
@@ -42,7 +42,8 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/field.tsx` | Field: label, control, one message slot; the inline-validation surface |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |
 | `src/combobox.tsx` | Combobox: GPUix's headless combobox over our ranked option core |
-| `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover, with bounded selection and a clear action |
+| `src/date-picker.tsx`, `src/date-picker/calendar.ts` | DatePicker: a pure `DateTime` month grid in a Popover, with bounded selection and a clear action (the day half) |
+| `src/time-picker.tsx`, `src/time-picker/time.ts` | TimePicker: a 24-hour `HH:mm` field in two labelled segments, with clamped typing, arrow carry/wrap, `minuteStep` and an optional clear |
 | `src/toast.tsx`, `src/toast/*` | the toast provider, viewport and Effect store, with pointer/focus pause/resume |
 | `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
 | `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |

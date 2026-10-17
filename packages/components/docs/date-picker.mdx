@@ -123,8 +123,9 @@ focus ring is `colors.ring`.
   are strings in `date-picker/calendar.ts`. Wiring a locale means a real message
   catalogue, not a prop that silently does nothing.
 - **No adjacent-month days** and no range selection in v1.
-- **No time picker.** GPUix has no native time input; a time control needs its own
-  decision (two number fields or a scroll list) and is not folded in here.
+- **No time of day.** A day and a time are separate values; compose **Time
+  picker** beside this control when a form needs both. Folding them together
+  would force a timestamp on every consumer that only needs one half.
 - The calendar uses `DateTime` from Effect; there is no `Date` or `Intl` in
   `date-picker/calendar.ts`. The only clock read is `DateTime.nowUnsafe` for the
   default "today" — pass the `today` prop to make a test or a server boundary
@@ -154,4 +155,5 @@ nub run --filter @gpuixui/components test:behaviour
 
 - **Popover** — the surface this composes.
 - **Calendar** is not a separate export; the grid is internal to the picker.
+- **Time picker** — the time-of-day half of a scheduling field.
 - **Field** — wrap the trigger when the date needs a label and a message slot.

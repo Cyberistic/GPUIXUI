@@ -42,6 +42,7 @@ import { EmptyState } from "../empty-state.js";
 import { darkTheme, lightTheme, type Theme } from "../internal/theme.js";
 import { List, ListItem, ListItemTitle } from "../list.js";
 import { SearchInput } from "../search-input.js";
+import { TimePicker } from "../time-picker.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -228,6 +229,20 @@ describe("theme matrix", () => {
       () => <SearchInput testId="search" defaultValue="query" />,
       (root, theme) => {
         expect(root.renderer.findByTestId("search")?.style.color).toBe(
+          theme.colors.inputForeground,
+        );
+      },
+    );
+  });
+
+  it("TimePicker takes its field surface and text from the theme", () => {
+    bothThemes(
+      () => <TimePicker testId="time" defaultValue="09:30" />,
+      (root, theme) => {
+        expect(root.renderer.findByTestId("time")?.style.backgroundColor).toBe(
+          theme.colors.input,
+        );
+        expect(root.renderer.findByTestId("time-hours")?.style.color).toBe(
           theme.colors.inputForeground,
         );
       },

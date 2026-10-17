@@ -27,6 +27,7 @@ import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
 import { searchInputMeta } from "./search-input.js";
 import { tabsMeta } from "./tabs.js";
+import { timePickerMeta } from "./time-picker.js";
 import { toastMeta } from "./toast.js";
 
 /** One component's inventory record. */
@@ -69,5 +70,6 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   popoverMeta,
   searchInputMeta,
   tabsMeta,
+  timePickerMeta,
   toastMeta,
 ];

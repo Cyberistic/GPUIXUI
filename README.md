@@ -9,7 +9,7 @@ source of truth for what is left to do. `COMPONENTS.md` is the inventory.
 ## Status
 
 Phase C — Tier 1–2 components. **Tier 2 is complete in `packages/components`**:
-22 components/areas, each with a native behaviour suite, at least one working
+23 components/areas, each with a native behaviour suite, at least one working
 example, a docs page and an inventory record checked against `COMPONENTS.md`.
 The design tokens and theming layer (light, dark, high-contrast, density) is
 landed. Tier 1, data presentation, workspace and specialised components are

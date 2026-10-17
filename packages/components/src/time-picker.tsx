@@ -1,0 +1,300 @@
+/**
+ * TimePicker: one time of day, entered as an `HH:mm` hour and minute segment.
+ *
+ * The public value is `HH:mm` in 24-hour form, or `null` for none: never a
+ * `DateTime`, never a locale string. Display is fixed 24-hour because the repo
+ * has no i18n layer; AM/PM belongs to a message catalogue, not to this control.
+ *
+ * The two segments are real `<input>` host elements, not an invented
+ * `role="spinbutton"`: `@gpuix/native@0.10.0` has `aria-valuetext` but no
+ * `aria-valuenow`, so a custom spinbutton would never announce its value, while
+ * an input announces its value natively. Typing clamps each segment (hours
+ * `00..23`, minutes `00..59`); `minuteStep` only changes the arrow-key step.
+ * Arrow keys add minutes through one clock function, so hours and minutes cannot
+ * disagree at the hour or midnight boundary. Emptying a segment clears the
+ * whole value; blur pads both segments. Disabled is `readOnly` on both inputs
+ * because 0.10.0 has no `aria-disabled`.
+ */
+
+import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
+import { Match } from "effect";
+import * as Option from "effect/Option";
+import { useLayoutEffect, useRef, useState } from "react";
+import { useControllableState } from "./internal/controllable.js";
+import {
+  addMinutes,
+  clampSegment,
+  composeIsoTime,
+  digitsOf,
+  formatIsoTime,
+  normalizeStep,
+  padSegment,
+  parseIsoTime,
+  type TimeOfDay,
+} from "./time-picker/time.js";
+import {
+  controlHeight,
+  focusRing,
+  textStyle,
+  useTheme,
+} from "./internal/theme.js";
+
+/** {@link TimePicker} props. */
+export interface TimePickerProps {
+  /** The controlled `HH:mm` value, or `null` for none. `undefined` means uncontrolled. */
+  readonly value?: string | null;
+  readonly defaultValue?: string | null;
+  /** Every accepted edit, including the clear path. */
+  readonly onValueChange?: (value: string | null) => void;
+  /** The field group's accessible name; default `"Time"`. */
+  readonly label?: string;
+  /** Minutes per arrow-key step, normalised to 1..59. Typed minutes are not restricted. Default `1`. */
+  readonly minuteStep?: number;
+  /** Show a clear control while a time is set. Default `false`. */
+  readonly clearable?: boolean;
+  readonly disabled?: boolean;
+  /** Base id for the parts: `<testId>-hours`, `-minutes`, `-clear`. Default `"time-picker"`. */
+  readonly testId?: string;
+}
+
+const SEGMENT_WIDTH = 26;
+
+/** {@link TimePicker}. */
+export const TimePicker = ({
+  value,
+  defaultValue,
+  onValueChange,
+  label,
+  minuteStep,
+  clearable = false,
+  disabled = false,
+  testId = "time-picker",
+}: TimePickerProps) => {
+  const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const step = normalizeStep(minuteStep);
+  const groupLabel = label ?? "Time";
+  const initialValue = value !== undefined ? value : defaultValue;
+  const initialTime = Option.flatMap(
+    Option.fromNullishOr(initialValue),
+    parseIsoTime,
+  );
+  const [hoursText, setHoursText] = useState(() =>
+    Option.match(initialTime, {
+      onNone: () => "",
+      onSome: (time) => padSegment(time.hours),
+    }),
+  );
+  const [minutesText, setMinutesText] = useState(() =>
+    Option.match(initialTime, {
+      onNone: () => "",
+      onSome: (time) => padSegment(time.minutes),
+    }),
+  );
+  const [focused, setFocused] = useState(false);
+  const [selected, setSelected] = useControllableState<string | null>({
+    value,
+    defaultValue: defaultValue ?? null,
+    onChange: onValueChange,
+  });
+  const hoursInput = useRef<PublicInstance | null>(null);
+
+  /** Adopt an external value; keep raw text while it still canonicalises to it. */
+  useLayoutEffect(() => {
+    if (Option.getOrNull(composeIsoTime(hoursText, minutesText)) === selected) {
+      return;
+    }
+    Option.match(Option.flatMap(Option.fromNullishOr(selected), parseIsoTime), {
+      onNone: () => {
+        setHoursText("");
+        setMinutesText("");
+      },
+      onSome: (time) => {
+        setHoursText(padSegment(time.hours));
+        setMinutesText(padSegment(time.minutes));
+      },
+    });
+  }, [selected, hoursText, minutesText]);
+
+  const emit = (next: string | null): void => setSelected(next);
+
+  const edit = (segment: "hours" | "minutes", raw: string): void => {
+    const digits = digitsOf(raw);
+    if (digits === "") {
+      setHoursText("");
+      setMinutesText("");
+      emit(null);
+      return;
+    }
+    const max = segment === "hours" ? 23 : 59;
+    const clamped = Option.getOrElse(clampSegment(digits, max), () => 0);
+    const text = Number(digits) > max ? padSegment(clamped) : digits;
+    const nextHours = segment === "hours" ? text : hoursText;
+    const nextMinutes = segment === "minutes" ? text : minutesText;
+    if (segment === "hours") setHoursText(text);
+    else setMinutesText(text);
+    emit(Option.getOrNull(composeIsoTime(nextHours, nextMinutes)));
+  };
+
+  const shift = (delta: number): void => {
+    const from = Option.getOrElse(
+      Option.flatMap(Option.fromNullishOr(selected), parseIsoTime),
+      (): TimeOfDay => ({ hours: 0, minutes: 0 }),
+    );
+    const next = addMinutes(from, delta);
+    setHoursText(padSegment(next.hours));
+    setMinutesText(padSegment(next.minutes));
+    emit(formatIsoTime(next));
+  };
+
+  const onSegmentKeyDown = (
+    segment: "hours" | "minutes",
+  ): ((event: EventPayload) => void) => {
+    return (event) => {
+      Match.value(event.key).pipe(
+        Match.when("up", () => shift(segment === "hours" ? 60 : step)),
+        Match.when("down", () => shift(segment === "hours" ? -60 : -step)),
+        Match.orElse(() => undefined),
+      );
+    };
+  };
+
+  const normalize = (): void => {
+    Option.match(Option.flatMap(Option.fromNullishOr(selected), parseIsoTime), {
+      onNone: () => undefined,
+      onSome: (time) => {
+        setHoursText(padSegment(time.hours));
+        setMinutesText(padSegment(time.minutes));
+      },
+    });
+  };
+
+  const clear = (): void => {
+    setHoursText("");
+    setMinutesText("");
+    emit(null);
+    const instance = hoursInput.current;
+    if (instance !== null) renderer?.focusElement?.(instance.id);
+  };
+
+  const hasValue = Option.isSome(
+    Option.flatMap(Option.fromNullishOr(selected), parseIsoTime),
+  );
+
+  const inputProps = (
+    segment: "hours" | "minutes",
+    text: string,
+  ): InputProps => ({
+    testId: `${testId}-${segment}`,
+    "aria-label": `${groupLabel} ${segment}`,
+    value: text,
+    placeholder: segment === "hours" ? "HH" : "MM",
+    readOnly: disabled,
+    tabIndex: disabled ? -1 : 0,
+    onChange: (event) => edit(segment, event.value ?? ""),
+    onKeyDown: onSegmentKeyDown(segment),
+    onFocus: () => setFocused(true),
+    onBlur: () => {
+      normalize();
+      setFocused(false);
+    },
+    style: {
+      ...textStyle(theme, "body"),
+      color: theme.colors.inputForeground,
+      width: SEGMENT_WIDTH,
+      height: "100%",
+      padding: 0,
+      textAlign: "center",
+      backgroundColor: undefined,
+    },
+  });
+
+  return (
+    <div
+      role="group"
+      aria-label={groupLabel}
+      testId={testId}
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: theme.spacing["2xs"],
+        height: controlHeight(theme, "md"),
+        paddingLeft: theme.spacing.sm,
+        paddingRight: theme.spacing.sm,
+        backgroundColor: theme.colors.input,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.border,
+        borderRadius: theme.radius.md,
+        opacity: disabled ? 0.5 : 1,
+        ...(focused && !disabled ? focusRing(theme) : {}),
+      }}
+    >
+      <input
+        {...inputProps("hours", hoursText)}
+        ref={(instance) => {
+          hoursInput.current = instance;
+        }}
+      />
+      <text
+        role="presentation"
+        style={{
+          ...textStyle(theme, "body"),
+          color: theme.colors.mutedForeground,
+          userSelect: "none",
+        }}
+      >
+        :
+      </text>
+      <input {...inputProps("minutes", minutesText)} />
+      {clearable && hasValue && !disabled ? (
+        <div
+          role="button"
+          aria-label="Clear time"
+          testId={`${testId}-clear`}
+          tabIndex={0}
+          onClick={clear}
+          onKeyDown={(event: EventPayload) => {
+            if (event.key === "enter" || event.key === "space") clear();
+          }}
+          style={{
+            ...textStyle(theme, "caption"),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 18,
+            height: 18,
+            borderRadius: theme.radius.sm,
+            color: theme.colors.mutedForeground,
+            cursor: "pointer",
+            hover: {
+              backgroundColor: theme.colors.accent,
+              color: theme.colors.accentForeground,
+            },
+          }}
+        >
+          <text>✕</text>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+/** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
+export const timePickerMeta = {
+  name: "Time pickers",
+  tier: 2,
+  status: "done",
+  gpuixSupport: "yes",
+  limitations: [
+    "fixed 24-hour display: no AM/PM and no locale, because the repo has no i18n layer",
+    "two labelled text segments instead of a spinbutton: 0.10.0 has no aria-valuenow",
+    "minuteStep affects the arrow keys only; typed minutes accept 00..59",
+    "disabled is readOnly plus dimming: 0.10.0 has no aria-disabled",
+    "no seconds and no timezone: the value is a time of day, not an instant",
+  ],
+  docs: "docs/time-picker.mdx",
+  example: "examples/time-picker.example.tsx",
+  testFile: "src/behaviour/time-picker.test.tsx",
+} as const;

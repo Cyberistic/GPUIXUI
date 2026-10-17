@@ -27,4 +27,5 @@ export * from "./pagination.js";
 export * from "./popover.js";
 export * from "./search-input.js";
 export * from "./tabs.js";
+export * from "./time-picker.js";
 export * from "./toast.js";

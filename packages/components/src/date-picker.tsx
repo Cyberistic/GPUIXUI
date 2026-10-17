@@ -12,7 +12,8 @@
  * `clearable` adds the reset to `null`; none of that rewrites a controlled value.
  *
  * Known scope, recorded in the docs: fixed English month/day labels (no i18n
- * layer in the repo yet), no adjacent-month days in the grid, and no time picker.
+ * layer in the repo yet), no adjacent-month days in the grid, and no time: a time
+ * of day is the separate TimePicker.
  */
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
@@ -482,14 +483,14 @@ export const DatePicker = ({
 
 /** Inventory record, mirrored into `COMPONENTS.md` (plan 117 §2). */
 export const datePickerMeta = {
-  name: "Date / time pickers",
+  name: "Date pickers",
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
   limitations: [
     "day and month labels are fixed English strings: the repo has no i18n layer",
     "the grid shows only the current month; adjacent-month days are blank",
-    "no time picker: GPUix has no native time input, and a second control would need its own plan",
+    "time is a separate TimePicker: this control owns one day only",
     "0.10.0 has no aria-current, so today is marked by a border only",
     "0.10.0 has no aria-disabled: an unavailable day leaves the tab order and its accessible name ends in ', unavailable'",
     "a min after max makes no day selectable; the grid is visible and inert rather than throwing from render",
