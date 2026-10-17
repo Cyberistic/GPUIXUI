@@ -1,0 +1,274 @@
+# 140 — Plan: build `@gpuix/native` for `darwin-x64` on this host (blocker B1)
+
+| Field | Value |
+| ----- | ----- |
+| Status | ready to execute |
+| Phase | B (unblocks the native smoke test — B1) |
+| Owner | playground workstream (`apps/playground`, `packages/testing`) |
+| Depends on | `110`, `120`, `130` (all landed) |
+| Feeds | `COMPONENTS.md` GPUix-support column; ADR 0001's `unverified` verdicts; every component `done` row |
+| Blocker | `~/GPUIXUI/BLOCKERS.md` **B1** — "GPUix native bindings fail to install" |
+
+## 1. Goal
+
+Resolve B1 **on this Intel Mac** by building the pinned `gpuix-native` cdylib for
+`x86_64-apple-darwin` from source, so `apps/playground` can mount a real
+`TestRenderer` and the plan-`110` smoke suite can produce a report — turning the
+eight `unverified` capability rows into measured verdicts without faking a run.
+
+The whole reason this is possible at all is the feature found in §2.4: the only
+missing build dependency (`xcrun metal`) is **optional**. `gpui_macos` ships a
+`runtime_shaders` feature that compiles the identical shader source at runtime
+through the OS Metal framework, so the pinned toolchain (Rust + Command Line
+Tools) is sufficient.
+
+## 2. Verified facts (commands run in this worktree, results quoted)
+
+### 2.1 The host has no package manager and no Rust
+
+```
+$ for t in cargo rustc rustup brew; do command -v $t; done   # all missing
+$ xcode-select -p        # /Library/Developer/CommandLineTools
+$ xcrun -f metal         # error: unable to find utility "metal"
+$ sw_vers                # macOS 15.8.1 (24H32)
+$ uname -m               # x86_64
+$ df -h / | tail -1      # 121 GiB available
+```
+
+### 2.2 Network is fast enough to fetch Rust and the zed tree
+
+```
+$ curl -sS -m 60 -o /dev/null -w '%{speed_download}' \
+    https://static.rust-lang.org/rustup/dist/x86_64-apple-darwin/rustup-init
+2164458 B/s          # 12.9 MB rustup-init in 6.0 s
+$ curl -sS -m 30 https://static.rust-lang.org/dist/channel-rust-1.97.1.toml
+# http 200 — the pinned channel exists (cargo 0.98.0, 2026-06-30)
+$ curl -sS -m 60 -r 0-5242879 https://codeload.github.com/zed-industries/zed/tar.gz/2565b8a3e33537c3d3f56d0d45f11e50a17e512d
+# http 200, ~24 MB in 10.7 s (~2.2 MB/s); the pinned revision is fetchable
+```
+
+### 2.3 The pinned versions, from the reference clone
+
+```
+$ cat references/gpuix/rust-toolchain.toml
+[toolchain]
+channel = "1.97.1"
+profile = "minimal"
+$ git -C references/gpuix submodule status
+-2565b8a3e33537c3d3f56d0d45f11e50a17e512d zed     # NOT checked out
+```
+
+`references/gpuix/packages/native/Cargo.toml` depends on `../../zed/crates/gpui`,
+`gpui_platform`, `gpui_macos`, `reqwest_client`, `http_client`. It has a
+`Cargo.lock` (819 packages) and no `[workspace]`; there is **no** root
+`Cargo.toml` in `references/gpuix`, so `packages/native` is a standalone package.
+
+### 2.4 The decisive fact: shader compilation is optional
+
+`references/gpuix/packages/native/build.rs` is only `napi_build::setup()` — no
+Metal. The Metal step lives in `zed/crates/gpui_apple/build.rs`:
+
+```rust
+#[cfg(feature = "runtime_shaders")]
+emit_stitched_shaders(&header_path);
+#[cfg(not(feature = "runtime_shaders"))]
+compile_metal_shaders(&header_path);   // the only `xcrun metal` caller
+```
+
+`zed/crates/gpui_macos/Cargo.toml` forwards it:
+
+```toml
+[features]
+runtime_shaders = ["gpui_apple/runtime_shaders"]
+```
+
+With `runtime_shaders`, `metal_renderer.rs` uses
+`include_str!("…/stitched_shaders.metal")` and builds the pipeline through the
+Metal runtime compiler (`MTLDevice.newLibraryWithSource`), which ships with
+macOS — **no Xcode Metal toolchain required**.
+
+### 2.5 Where the built binding must land
+
+`@gpuix/native`'s generated loader resolves the file
+`./gpuix-native.darwin-x64.node` (installed `index.js:209`, `index.cjs:206`),
+falling back to the optional `@gpuix/native-darwin-x64` package. This host has
+neither (verified: `find apps/playground/node_modules/@gpuix -name '*.node'` →
+no output), which is exactly why `detectRuntime` reports unsupported.
+
+### 2.6 `@gpuix/native-darwin-x64` is published only up to 0.5.1
+
+```
+$ curl -sS https://registry.npmjs.org/@gpuix%2Fnative-darwin-x64 | node -e …
+0.1.0 0.2.0 0.3.0 0.4.0 0.5.0 0.5.1        # latest 0.5.1
+```
+
+Confirms ADR 0002: no prebuilt path to 0.10.0. A source build is the only route.
+
+## 3. Design
+
+Build in a **writable scratch tree**, never in `references/` (read-only per
+`AGENTS.md`): `.agents/slop/scratch/gpuix-build/` (gitignored agent state).
+
+```
+.agents/slop/scratch/gpuix-build/
+  gpuix/            # copy of references/gpuix (writable)
+  gpuix/zed/        # the zed tree at 2565b8a3… (tarball extract)
+  toolchain/        # rustup CARGO_HOME/RUSTUP_HOME (kept out of $HOME)
+  out/              # the produced gpuix-native.darwin-x64.node
+```
+
+The one source change (the whole point of the plan):
+
+```toml
+# gpuix/packages/native/Cargo.toml
+# before
+gpui_macos = { path = "../../zed/crates/gpui_macos", default-features = false, features = ["font-kit"] }
+# after — add the feature that removes the build-time Metal dependency
+gpui_macos = { path = "../../zed/crates/gpui_macos", default-features = false, features = ["font-kit", "runtime_shaders"] }
+```
+
+Build the cdylib (release, LTO disabled so 16 codegen units parallelise; the
+crate's own `[profile.release] lto = true` is overridden by the env var):
+
+```sh
+CARGO_PROFILE_RELEASE_LTO=false \
+  cargo build --release --locked --target x86_64-apple-darwin
+```
+
+The cdylib is `target/x86_64-apple-darwin/release/libgpuix_native.dylib`;
+copy it to `gpuix-native.darwin-x64.node` and drop it into
+`apps/playground/node_modules/@gpuix/native/`. A napi-rs `.node` is a dylib that
+exports `napi_register_module_v1`; `napi_build::setup()` (run by the crate's
+build script) sets the linker flags, so no `@napi-rs/cli` is required.
+
+The artifact is **gitignored** (it is a build product, not source) but its
+provenance is recorded: same version (0.10.0), same source revision, same Rust
+code, only the shader-compilation feature differs. The smoke report's `host`
+string must name this so no row overclaims.
+
+## 4. Steps
+
+Each step states its exact command and expected result.
+
+1. **Plan only.** Write this file and index it; commit
+   `plan(playground): build the darwin-x64 GPUix binding from source (B1)`.
+   (STOP: do not start step 2 before the plan is committed.)
+
+2. **Install the pinned toolchain** (no sudo; fully under
+   `.agents/slop/scratch/gpuix-build/toolchain`):
+
+   ```sh
+   cd .agents/slop/scratch/gpuix-build
+   curl -sS -o rustup-init https://static.rust-lang.org/rustup/dist/x86_64-apple-darwin/rustup-init
+   chmod +x rustup-init
+   RUSTUP_HOME=$PWD/toolchain/rustup CARGO_HOME=$PWD/toolchain/cargo \
+     ./rustup-init -y --no-modify-path --default-toolchain 1.97.1 --profile minimal \
+     --target x86_64-apple-darwin
+   ```
+
+   Expected: `rustup` installs; `…/toolchain/cargo/bin/cargo --version` →
+   `cargo 1.97.1`. **STOP** if the channel is unavailable or the install needs
+   sudo.
+
+3. **Materialise the source tree**:
+
+   ```sh
+   cp -R references/gpuix gpuix
+   curl -sSL -o zed.tar.gz \
+     https://codeload.github.com/zed-industries/zed/tar.gz/2565b8a3e33537c3d3f56d0d45f11e50a17e512d
+   mkdir gpuix/zed && tar -xzf zed.tar.gz -C gpuix/zed --strip-components=1
+   ```
+
+   Expected: `gpuix/zed/crates/gpui/Cargo.toml` and
+   `gpuix/zed/crates/gpui_apple/build.rs` exist. **STOP** if the tarball's top
+   directory is not `zed-2565b8a3…` (adjust `--strip-components`, do not guess
+   further).
+
+4. **Apply the one-line feature change** (§3) with `edit`.
+
+5. **Build** (§3 command), run from `gpuix/packages/native`, with
+   `RUSTUP_HOME`/`CARGO_HOME` pointing at `toolchain/`. Expected: a
+   `libgpuix_native.dylib` in the target dir. Long build (hundreds of crates);
+   run it in the background and keep working. **STOP** if it fails in
+   `gpui_apple`'s build script (the feature was not applied) or in a Metal
+   linker step (the runtime-shader path is not real — record it and go to
+   step 8's fallback).
+
+6. **Install the artifact** into the app's `@gpuix/native`:
+
+   ```sh
+   cp gpuix/packages/native/target/x86_64-apple-darwin/release/libgpuix_native.dylib \
+      apps/playground/node_modules/@gpuix/native/gpuix-native.darwin-x64.node
+   ```
+
+   Expected: `node -e "import('@gpuix/native').then(m => console.log('loaded'))"`
+   from `apps/playground` prints `loaded` (not the "Cannot find native binding"
+   error).
+
+7. **Run the smoke suite for real**:
+
+   ```sh
+   nub run --filter playground build && node apps/playground/dist/smoke/run.js; echo $?
+   ```
+
+   Expected: exit `0`, a written `apps/playground/.artifacts/smoke-report.json`,
+   and screenshots. Paste the report summary into `TODO.md` and
+   `COMPONENTS.md`. If any scenario `failed`, record the measured numbers — a
+   real regression is a finding, not a reason to weaken the check (plan `110`
+   §6).
+
+8. **Fallback (only if step 5 or 7 fails).** Do **not** improvise a second
+   shader path. Record the exact error in `legacy-probe/REPORT.md`-style
+   evidence under `.agents/slop/rd/`, update ADR 0001 with the new fact
+   ("a source build was attempted; it failed at <step> because <error>"), keep
+   every row `unverified`, and record the CI-runner option as a task for the
+   owner of `.github/` (this workstream does not own that path):
+
+   > Add a `.github/workflows/native-smoke.yml` running `nub run --filter
+   > playground smoke` on `macos-14` (Apple Silicon) — a supported host per ADR
+   > 0001 §3 — and paste the report.
+
+9. **Update the records**: `COMPONENTS.md` GPUix-support cells get the report
+   field they came from; `PLAN.md` §4 gains a decision row; ADR 0001 is marked
+   resolved (or amended by the fallback). Commit in slices.
+
+## 5. Test plan
+
+1. **The binding loads** — `node -e "import('@gpuix/native')"` from
+   `apps/playground` exits `0`. Fails (with the §2.5 error) if the artifact is
+   missing or misnamed.
+2. **The suite reports, not exits 2** — step 7 exits `0`/`1`, never `2`, and
+   writes a report. Fails if `detectRuntime` still sees an unsupported host.
+3. **A real regression fails the suite** (plan `110` §5.1) — temporarily change
+   `panel-resize`'s expected delta `+80 → +81`, confirm exit `1` naming that
+   check, revert. This is the proof the run is real and not a stub.
+4. **The report is honest** — `capabilities` contains no `verified` for a
+   capability whose scenarios errored; `host` names the locally-built binding.
+5. **`packages/testing`'s own tests still pass** — unaffected (platform-free).
+
+## 6. STOP conditions
+
+- **If the toolchain or the source build needs `sudo`**, stop and report.
+- **If `gpui_apple`'s build script still calls `xcrun metal` after the feature
+  change**, stop: the feature is not what this plan claims, and the premise is
+  wrong.
+- **If the built binding loads but the first scenario crashes the process**
+  (e.g. an ObjC selector or a missing symbol), stop and report the crash; do
+  not "fix" it by editing GPUix source beyond the §3 feature line without a new
+  plan.
+- **Never** mark a capability `verified` from a screenshot or from a build that
+  did not actually run the scenario.
+- **Never** commit the `.node` artifact or the scratch tree (both gitignored);
+  commit only the report *numbers* and their provenance.
+- **Never** edit anything under `references/` — copy out first (§3).
+
+## 7. Acceptance criteria
+
+- The scratch build produces `gpuix-native.darwin-x64.node`, `@gpuix/native`
+  loads it, and `node apps/playground/dist/smoke/run.js` exits `0`/`1` with a
+  written `smoke-report.json` — **or** the fallback records a precise,
+  reproduced failure and the CI task.
+- `COMPONENTS.md` rows cite the report field and the provenance of the binding.
+- `nub run check`, `nub run lint`, `nub run test` still pass.
+- ADR 0001/0002 reflect the outcome; `PLAN.md` gains the decision row; `TODO.md`
+  ticks B1's task (or records the fallback).
