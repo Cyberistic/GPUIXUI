@@ -7,6 +7,10 @@
  * after Enter or Escape; a press on the open trigger flickering the menu back open;
  * a checkbox row toggling the wrong way; and a destructive row that is not painted
  * with the destructive role.
+ *
+ * Keyboard-opening regression: a menu opened from the trigger landed on the
+ * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
+ * the closed trigger did nothing.
  */
 
 import * as Option from "effect/Option";
@@ -15,7 +19,11 @@ import { describe, expect, it, vi } from "vitest";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
-import { renderComponent, type TestTheme } from "../internal/test-root.js";
+import {
+  renderComponent,
+  type ComponentTestRoot,
+  type TestTheme,
+} from "../internal/test-root.js";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -76,7 +84,63 @@ const FileActions = ({
   );
 };
 
+/** Focus the trigger, as Tab would. */
+const focusTrigger = (root: ComponentTestRoot): void => {
+  root.renderer.focusElement(root.renderer.findByTestId("trigger")?.id ?? -1);
+};
+
 describe("DropdownMenu", () => {
+  it("opens on the first enabled row from ArrowDown", () => {
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
+    focusTrigger(menu);
+
+    menu.renderer.simulateKeystrokes("down");
+
+    expect(menu.renderer.findByTestId("menu")?.customProps?.role).toBe("menu");
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.unmount();
+  });
+
+  it("opens on the last enabled row from ArrowUp", () => {
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
+    focusTrigger(menu);
+
+    menu.renderer.simulateKeystrokes("up");
+
+    expect(focusedTestId(menu)).toEqual(Option.some("delete"));
+
+    menu.unmount();
+  });
+
+  it("opens on the first row from Enter, and a second Enter runs it", () => {
+    const onSelect = vi.fn();
+    const menu = renderComponent(<FileActions onSelect={onSelect} />);
+    focusTrigger(menu);
+
+    menu.renderer.simulateKeystrokes("enter");
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.renderer.simulateKeystrokes("enter");
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("rename");
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
+
+    menu.unmount();
+  });
+
+  it("still focuses the surface when a pointer opens the menu", () => {
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
+
+    clickCentreOf(menu, "trigger");
+
+    expect(focusedTestId(menu)).toEqual(Option.some("menu"));
+
+    menu.unmount();
+  });
+
   it("opens as a menu on the trigger", () => {
     const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
 

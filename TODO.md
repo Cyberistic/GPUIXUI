@@ -133,6 +133,7 @@ the `@gpuixui/tokens/react` provider
     - [x] Toast pause-on-hover with remaining-time resume — plan 123
     - [x] Toast hold on keyboard focus, composed with hover — plan 124
     - [x] List select-all (`Cmd`/`Ctrl`+A) over enabled rows — plan 125
+    - [x] Dropdown menu keyboard opening lands on the first/last row — plan 126
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

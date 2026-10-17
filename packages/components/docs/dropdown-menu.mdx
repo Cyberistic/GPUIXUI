@@ -59,17 +59,24 @@ hover does not move the highlight; clicked rows activate directly.
 
 | Key | Result |
 | ---- | ------ |
-| `Enter` / `Space` on the trigger | opens or closes the menu |
+| `Enter` / `Space` on the trigger | opens on the first enabled row, or closes when open |
+| `ArrowDown` on the trigger | opens on the first enabled row |
+| `ArrowUp` on the trigger | opens on the last enabled row |
 | `ArrowDown` / `ArrowUp` | moves to the next/previous enabled row, wrapping |
 | `Home` / `End` | first/last enabled row |
 | `Enter` / `Space` | runs the highlighted row and closes |
 | `Escape` | closes and returns focus to the trigger |
 | `Tab` | closes and lets focus move on — a menu is not modal |
 
+A keyboard open lands on a row, so a second `Enter` runs the first action without
+an extra arrow press. A pointer click leaves focus on the menu surface with no
+row highlighted, which is the desktop menu convention; the first arrow key then
+picks the first enabled row.
+
 Disabled rows are skipped by every arrow key and by `Home`/`End`, and a click on
 one does nothing. There is no type-ahead in v1: a correct one needs a timed
 buffer, which the component would have to host on the Effect clock rather than a
-`setTimeout`. Recorded in `src/menu/logic.ts` as a `TODO`.
+`setTimeout`. Recorded in `dropdownMenuMeta.limitations`.
 
 ## Dismissal
 
@@ -130,11 +137,12 @@ with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (9 tests):
-the `menu` role, arrow focus skipping a disabled row and wrapping, `Home`/`End`,
-Enter firing once and restoring focus, clicked and disabled rows, Escape/outside
-press/trigger re-press dismissal, checkbox toggling and its check mark, the
-destructive colour, and the surface in both themes.
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (13
+tests): the `menu` role, keyboard opening on the first/last enabled row, arrow
+focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
+restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
+dismissal, checkbox toggling and its check mark, the destructive colour, and the
+surface in both themes.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

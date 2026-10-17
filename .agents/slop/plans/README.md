@@ -43,6 +43,7 @@ workstream declares in its own section below.
 | [123](./123-toast-pause.md) | Toast pause on hover (timing adjustable) | C/F | 115, 117 | done — 3 store tests + 1 real-time native test; both-direction proof |
 | [124](./124-toast-focus-hold.md) | Toast timers respect keyboard focus, not only the pointer | C/F | 115, 123 | done — 2 native tests (Toast: 10); both-direction proof |
 | [125](./125-list-select-all.md) | List select-all (`Cmd`/`Ctrl`+`A`) | C/F | 111, 120, 117 | done — 3 selector tests + 2 native tests (List: 22); both-direction proof |
+| [126](./126-menu-keyboard-open.md) | Dropdown menu keyboard opening lands on a row | C/F | 114, 117 | done — 4 native tests (DropdownMenu: 13); both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

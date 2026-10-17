@@ -4,7 +4,8 @@
  * The menu is uncontrolled — it remembers whether it is open — while the
  * "Show hidden" checkbox is app state, because the row behind the menu shows the
  * effect. A menu action is an ordinary callback: the component does not own what
- * "Delete" means.
+ * "Delete" means. Keyboard opens (`Enter`, `ArrowDown`, `ArrowUp`) land on the
+ * first/last action.
  */
 
 import { useState } from "react";

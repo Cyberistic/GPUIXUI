@@ -33,6 +33,7 @@ import { textStyle, useTheme } from "./internal/theme.js";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { isActivation, isDown, isUp } from "./internal/key.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
@@ -55,6 +56,8 @@ interface DropdownContextValue {
   readonly trigger: RefObject<PublicInstance | null>;
   /** Set by a dismissing outside press, consumed by the click that follows it. */
   readonly dismissedByOutsidePress: RefObject<boolean>;
+  /** The row a keyboard open should focus once the rows have registered. */
+  readonly pendingFocus: RefObject<"first" | "last" | null>;
 }
 
 const DropdownContext = createContext<DropdownContextValue | undefined>(
@@ -100,6 +103,8 @@ export const DropdownMenu = ({
   const dismissedByOutsidePress = useRef(false);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
+  /** The edge a keyboard open should land on once the rows register. */
+  const pendingFocus = useRef<"first" | "last" | null>(null);
 
   // A re-render must not re-push the layer: that would move this menu above an
   // overlay opened after it. The handler reads the latest setter through a ref.
@@ -144,8 +149,12 @@ export const DropdownMenu = ({
     if (target !== null) renderer?.focusElement?.(target.id);
   }, [open, renderer]);
 
+  useLayoutEffect(() => {
+    if (!open) pendingFocus.current = null;
+  }, [open]);
+
   const context = useMemo<DropdownContextValue>(
-    () => ({ open, setOpen, trigger, dismissedByOutsidePress }),
+    () => ({ open, setOpen, trigger, dismissedByOutsidePress, pendingFocus }),
     [open, setOpen],
   );
 
@@ -159,17 +168,40 @@ export const DropdownMenu = ({
 };
 
 /** Opens the menu it sits in. An ordinary button in every other respect. */
-export const DropdownMenuTrigger = ({ onClick, ...rest }: ButtonProps) => {
-  const { open, setOpen, trigger, dismissedByOutsidePress } =
+export const DropdownMenuTrigger = ({
+  onClick,
+  onKeyDown,
+  ...rest
+}: ButtonProps) => {
+  const { open, setOpen, trigger, dismissedByOutsidePress, pendingFocus } =
     useDropdownContext();
+
+  const openAt = (edge: "first" | "last"): void => {
+    pendingFocus.current = edge;
+    setOpen(true);
+  };
 
   return (
     <Button
       {...rest}
       ref={trigger}
       aria-expanded={open}
+      onKeyDown={(event) => {
+        // The local Button runs its activation click before this handler, so a
+        // keyboard toggle has already opened the menu; record the edge anyway.
+        if (!open) {
+          if (isDown(event)) openAt("first");
+          else if (isUp(event)) openAt("last");
+          else if (isActivation(event)) openAt("first");
+        }
+        onKeyDown?.(event);
+      }}
       onClick={(event) => {
         onClick?.(event);
+        // A pointer open keeps focus on the surface; only a keyboard open names
+        // a row. Clearing here cannot undo the key handler: activation clicks
+        // run before onKeyDown within the same render.
+        pendingFocus.current = null;
         // The press that dismissed the menu owns this click: toggling here would
         // re-open what the same gesture just closed.
         if (dismissedByOutsidePress.current) {
@@ -208,9 +240,19 @@ export const DropdownMenuContent = ({
   ...rest
 }: DropdownMenuContentProps) => {
   const theme = useTheme();
-  const { open } = useDropdownContext();
+  const { open, pendingFocus } = useDropdownContext();
   const menu = useMenuContext();
   const keys = menuKeyHandler(menu);
+
+  // Rows register in child layout effects, which run before this one. If the
+  // root has not published them yet, the effect runs again when `rows` changes.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const edge = pendingFocus.current;
+    if (edge === null || menu.rows.length === 0) return;
+    pendingFocus.current = null;
+    menu.step({ _tag: edge === "first" ? "First" : "Last" });
+  }, [menu, open, pendingFocus]);
 
   if (!open) return null;
 
