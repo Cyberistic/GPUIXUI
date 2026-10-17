@@ -87,6 +87,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [088](./088-body-text-on-panels.md) | Default body text on the quiet panel and the floating surface | F | 071, 079, 086, 087 | done |
 | [089](./089-density-metric-merge.md) | Density metrics merge by size | B/F | 011, 068, 070 | done |
 | [090](./090-soft-status-border-role.md) | The soft status edge: a designed role, held to its floor | F | 014, 057, 071, 076, 083, 086 | done |
+| [091](./091-selection-in-soft-surfaces.md) | Selection inside a soft status surface | F | 014, 063, 071, 081, 087, 090 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -395,6 +396,18 @@ today's pixels exactly (each value is the composite it replaces), the AAA sets
 get a designed ramp step (4.41:1 at the lowest), and the edge joins the
 `divider` class on its own fill (105 → 109 pairs), so an edited theme is held to
 the floor `themeContrastFailures` already enforces for every other divider.
+
+091 closes the same class of gap one composition over: the selection contract
+named nine surfaces but not the four soft status fills an Alert, Badge or Toast
+paints, so selecting their text was unmeasured. Identity light
+`successSoftForeground` measured 5.83:1 through the wash — under the 7:1 body
+floor — and Windows dark's wash over `destructiveSoft` measured 1.005:1, an
+invisible highlight. `selectionSoftPairs` and `selectionSoftWashPairs` join the
+checker (4 + 4 pairs), the light soft foregrounds move one family step darker,
+the dark ones one step lighter with a 20% identity wash (the alpha every platform
+dark style already used), Windows dark's wash moves to 40%, and Linux dark's soft
+destructive fill moves to `#3A0B0D` so its light-accent wash stays visible while
+the body text keeps its floor on the pressed wash.
 
 ### Reference adoption (block `200–299`)
 
