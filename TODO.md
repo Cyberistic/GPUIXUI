@@ -28,14 +28,32 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase A — audit and feasibility
 
-`[ ]` `[░░░░░░░░░░]` 0/6
+`[~]` `[███░░░░░░░]` 3/7
 
-`[ ]` Inspect the environment, package manager and toolchain; record the findings
-`[ ]` Establish the GPUix version, APIs, primitives, events, layout and limits
-`[ ]` Read GPUix docs and examples; write the capability map
-`[ ]` Inspect GPUI Kit (hierarchy, theming, layout, interaction, licence)
+`[x]` Inspect the environment, package manager and toolchain; record the findings
+`[x]` Establish the GPUix version, APIs, primitives, events, layout and limits
+`[x]` Read GPUix docs and examples; write the capability map
+`[~]` Inspect GPUI Kit (hierarchy, theming, layout, interaction, licence)
 `[ ]` Study shadcn/ui organisation and semantic tokens; review PanelUI; review Fumadocs setup
-`[ ]` Write and index every phase and package plan in `.agents/slop/plans/`
+`[~]` Write and index every phase and package plan in `.agents/slop/plans/`
+`[!]` **BLOCKER: no GPUix runtime can run on this machine.** Intel macOS + no
+      `darwin-x64` native binary + no Aqua session (SSH background). Evidence and
+      the three honest ways out are in
+      `.agents/slop/plans/020-gpuix-runtime-capability.md` §3. Owned by
+      playground workstream (wasm path) with a human decision for the GUI path.
+`[!]` **BLOCKER B3: several live agents are writing the same worktree.** Measured
+      2026-10-17 07:40: 5 live `swarm:primitives` sessions (and 2–6 for every
+      other workstream) editing `workspaces/primitives` concurrently, clobbering
+      each other's files. `scripts/swarm-supervisor.sh`'s runner loops
+      `opencode run` without a session id, so each CLI return leaves a live turn
+      and starts another. Evidence, mitigation and the fix:
+      `.agents/slop/plans/022-swarm-single-writer.md`. Fix lives in `scripts/`
+      (shared checkout) — needs a coordinator or the human.
+      **Update 2026-10-17 08:40:** the primitives tree is back to one writer —
+      the duplicate session was removed (§4) after the tree was committed, and
+      the tree then went green (`nub run check`, 133 + 18 tests). The runner
+      **still forks a new session per loop iteration**, so every workstream will
+      re-acquire a duplicate until §5.1 lands in the shared `scripts/`.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
@@ -96,13 +114,15 @@ changes from another pid. Owners: whoever owns `scripts/swarm-supervisor.sh`.
 
 ## Phase B — working foundation
 
-`[x]` `[███░░░░░░░]` 2/6
+`[~]` `[████░░░░░░]` 4/6
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
-`[ ]` Land the primitives package
+`[x]` Land the primitives package
 `[x]` **Native smoke test**: layout, input, focus, overlay, scroll, panel and virtual-list primitives verified in real GPUix 0.10.0 on this host (11/11, plan `140` §4)
-`[ ]` Land one fully working component running in GPUix
+`[x]` Land one fully working component running in GPUix — all 19 Tier 1
+      components mount in the real `TestRenderer` (plan 041; 119 runtime tests
+      after plan 055)
 `[ ]` Land the docs shell and document that component in Fumadocs
 
 ### Design tokens and theming (`tokens-theme`)
@@ -146,7 +166,9 @@ local focus-ring helpers (`primitives/src/core/style.ts`,
 `components/src/internal/theme.ts`) and their first-shadow helpers
 (`primitives/src/core/style.ts` `firstShadow`, `components/src/internal/theme.ts`
 `elevation`), now that `focusRing` and `elevationShadow` exist and the package
-resolves from source (owner: those workstreams; plans 016–018)
+resolves from source (owner: those workstreams; plans 016–018).
+**Primitives half done** in plan 021 (`Theme` re-export, `focusRing`,
+`elevationShadow`); `components` is still outstanding.
 `[ ]` Cross-team: `components` still carries a whole structural copy of the
 package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
 it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
@@ -161,13 +183,120 @@ this workstream, created because two live sessions shared one worktree (see
 `.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`), and should be
 retired once both branches are one
 
+### Primitives workstream (owner: primitives)
+
+`[x]` Write and index the primitives, icons and Tier 1 plans
+`[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
+`[x]` `packages/primitives`: the `core/` layer (theme re-export, style
+      resolution, variants, keyboard, state, layout, selection, loading) with
+      tests
+`[x]` `packages/primitives`: `ThemeProvider` + density override
+`[x]` `packages/primitives`: layout primitives (Box, Stack, Grid, Separator, Spacer, ScrollArea)
+`[x]` `packages/primitives`: Text + typography scale
+`[x]` `packages/primitives`: Button + ButtonGroup
+`[x]` `packages/primitives`: Label, Input, TextArea
+`[x]` `packages/primitives`: Checkbox, RadioGroup, Switch, Select
+`[x]` `packages/primitives`: Progress, Skeleton, Spinner, Tooltip
+`[x]` `packages/primitives`: element-tree test harness + component suites
+      (`src/components/testing/element.ts`; render is impossible here, so a test
+      asserts on the tree the runtime would receive)
+`[x]` `packages/primitives`: package README (theme port, density, component
+      list, and the runtime-verification status)
+`[x]` `packages/primitives`: docs page + composed example for every Tier 1
+      component, co-located in the package (`docs/`, `examples/`); one runtime
+      suite mounts every example (plan 047)
+`[x]` `packages/icons`: docs page and the icon-gallery example (plan 047)
+`[x]` `packages/icons`: the size scale is `@gpuixui/tokens`' `iconSize`, not a
+      second copy (plan 024)
+`[x]` `packages/primitives`: `Input`/`TextArea` gain an honest `disabled` state
+      (read-only, out of the tab order, guarded handlers) — plan 025
+`[x]` `packages/primitives`: close three fixable limitations — a named
+      `ButtonGroup`, `ScrollArea` scroll deltas, RadioGroup Home/End (plan 048)
+`[x]` `packages/primitives`: the RadioGroup focus contract — a per-item focus
+      ring, focus following the selection, a derived roving index, and
+      `Switch`'s ignored `invalid` prop (plan 049)
+`[x]` `packages/primitives`: Tier 1 runtime suites in `runtime/` — 46 tests
+      against the real GPUix 0.10.0 `TestRenderer` (layout, controls, fields,
+      loading, icons), with the two-direction proof; results in plan 041 §9
+`[x]` `packages/primitives`: consume `@gpuixui/tokens` directly — delete the
+      structural theme port and the local ring/shadow helpers, use `focusRing`
+      and `elevationShadow`, and verify both shipped themes in the runtime
+      (plan 021)
+`[x]` `packages/primitives`: `alpha` comes from `@gpuixui/tokens`; delete the
+      local copy and its test (plan 023)
+`[x]` `examples/basic-app`: compose the Tier 1 set into one settings-form workflow
+      (typed + `check-types` green; the app itself is **never run** — it needs a
+      desktop session, while the primitives it composes are runtime-verified)
+`[x]` `packages/primitives`: the extra Tier 1 controls are claimed here (D18):
+      `Slider`, `RangeSlider` and `Meter` (plan 053) — value maths, paint,
+      element trees, runtime geometry and focus proofs, docs pages and a
+      composed example; the rest of the claimed rows are plan 054
+`[x]` `packages/primitives`: `NumberField`, `OTPField`, `Toggle` and `Rating`
+      landed (plan 054) — core modules, element-tree and runtime suites, docs
+      pages and examples. `OTPField`'s multi-character fill is proven as a pure
+      rule; a real clipboard paste is unverifiable in 0.10.0 (no `onPaste`, no
+      clipboard simulation) and is documented as such
+`[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
+      055) — the high-contrast palettes in both modes, a density override
+      measured against the preset metrics, and `platformTheme`'s mono family
+      reaching the paint; 13 files / 119 runtime tests
+`[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
+`[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
+      into the shared smoke framework once the package lands — plan 041 §2.2
+      records why it is duplicated for now
+
+### Cross-workstream dependencies (do not edit their paths — record only)
+
+`[x]` **resolved (D18)**: `COMPONENTS.md`'s extra Tier 1 rows — Slider, Range
+      slider, Meter, Number Field, OTP Field, Toggle, Rating — are claimed by
+      the primitives workstream: they are single-purpose input/selection/value
+      primitives built from `div` + `<input>` + our keyboard contract, which is
+      this package's definition (plans 053, 054). They stay outside MISSION's
+      Tier 1 list but are in the inventory, so they are built to the same bar.
+
+`[x]` **root**: `nub.lock` is generated by `nub install`; `master` now tracks it,
+      so a clean install resolves the same versions (Phase G).
+`[ ]` **root**: `.gitignore` ignores `references/`, which does not match the
+      `references` **symlink** the supervisor creates in each worktree. It
+      therefore shows as untracked, and a `git add -A` at the root would commit a
+      symlink to an absolute path outside the repo. Ignore `references` without
+      the trailing slash.
+
+`[!]` **swarm runner**: one writer per worktree. Add
+      `opencode run --session swarm-<ws>` to the generated runner, count live
+      sessions in `agent_alive`, and land `scripts/check-single-writer.sh` as the
+      regression guard. Full evidence and the fix:
+      `.agents/slop/plans/022-swarm-single-writer.md`.
+`[x]` **root**: `PLAN.md`'s "GPUix cannot run" decision (now D10 after merging
+      `master`'s infrastructure decisions) is marked superseded: plan 140 built
+      the binding and plan 041 used it.
+`[x]` **tokens workstream**: `packages/tokens` exports light and dark themes that
+      are the primitives' `PrimitiveTheme` (plan 021 proves it in the offline and
+      runtime suites)
+`[ ]` **playground workstream**: resolve the runtime blocker — either run the
+      published wasm renderer in headless Chrome
+      (`@gpuix/native@0.10.0/wasm`, COOP/COEP headers, `--enable-unsafe-swiftshader`),
+      or get a `darwin-x64` source build / a GUI session
+`[ ]` **playground workstream**: Tier 1 runtime tests in `packages/testing` —
+      render, hit-test, Tab order, Enter/Space activation, checkbox/switch toggle,
+      radio arrow navigation, scroll offset, a11y-tree dump. These are the tests
+      that move a `wip` component row to `done`
+`[ ]` **docs-site workstream**: Tier 1 component pages + the `docs/preview-strategy.md`
+      decision (code examples plus a companion native playground, never a silent
+      HTML/CSS reimplementation)
+`[ ]` **licensing**: record the GPUix (Apache-2.0) and Lucide (ISC) provenance and
+      any icon/blend decision in `LICENSES/`
+
 ## Phase C — Tier 1–2 components
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[~]` `[███░░░░░░░]` 1/3
 
-`[ ]` Tier 1 foundational components (code + test + example + docs + inventory)
+`[~]` Tier 1 foundational components (code + test + example + docs + inventory):
+      all 19 components have code, tests, a runtime-verified interaction, an
+      in-package docs page, a mounted example and an inventory row; **docs-site
+      pages are still pending** (docs-site workstream)
 `[ ]` Tier 2 composition/feedback components (same bar)
-`[ ]` Verify every component in both themes
+`[x]` Verify every component in both themes (`runtime/theme.runtime.test.tsx`: both palettes, a live switch, and no colour outside the active palette)
 
 ## Phase D — data and workspace components
 

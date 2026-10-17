@@ -1,0 +1,113 @@
+---
+title: Rating
+description: A whole number of stars, or none.
+---
+
+`Rating` is a radio group shaped input: one tab stop, arrows move the selection
+and native focus with it. It differs from `RadioGroup` in two ways a rating
+needs — the arrows **clamp** at the ends instead of wrapping, and `Delete`
+clears it back to zero. It is not a slider: the value is a small whole number,
+not a position.
+
+## Usage
+
+```tsx
+import { Rating, Stack, Text } from "@gpuixui/primitives";
+import { useState } from "react";
+
+const [score, setScore] = useState(0);
+
+<Stack direction="column" gap="xs">
+  <Rating label="Quality" value={score} onChange={setScore} />
+  <Text role="caption" tone="muted">
+    {score === 0 ? "Not rated" : `${score} of 5`}
+  </Text>
+</Stack>;
+```
+
+Omit `value` to let the rating own its state; `defaultValue` sets the start
+(`0` is unrated). Clicking the selected star keeps it — clearing is a deliberate
+key (`Delete`/`Backspace`) or the app calling `onChange(0)`.
+
+## Variants, sizes and states
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | — | controlled rating, `0..max` |
+| `defaultValue` | `number` | `0` | uncontrolled start |
+| `onChange` | `(value: number) => void` | — | the new rating; `0` means cleared |
+| `max` | `number` | `5` | how many stars to paint |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
+| `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
+| `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
+| `label` | `string` | none | the group's name; stars are announced "N of max" |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator on the group |
+
+Values are truncated to whole stars and clamped to `0..max`; a value that is not
+a number reads as unrated.
+
+## Keyboard
+
+| Key | Effect |
+| --- | ------ |
+| `ArrowRight` / `ArrowUp` | + one star, clamped at `max` |
+| `ArrowLeft` / `ArrowDown` | − one star, clamped at `0` |
+| `Home` / `End` | one star / `max` |
+| `Delete` / `Backspace` | clear to `0` |
+
+The group holds **one tab stop** — on the current rating, or on the first star
+when unrated — and an arrow moves the selection and native focus together, so
+the ring is always on the star the value came from.
+
+## Accessibility
+
+- Roles: `radiogroup` with the group's `label`, and one `radio` per star
+  (AccessKit `RadioGroup` / `RadioButton`).
+- Each star's name is `"N of max"` and its state is announced through
+  **`aria-valuetext`** (`"checked"` / `"unchecked"`), because GPUix 0.10.0 has no
+  `aria-checked`.
+- `readOnly` keeps the group visible to assistive technology but removes it from
+  the tab order; `disabled` also paints it muted.
+
+## Theming
+
+A selected star paints `colors.primary`, an empty one
+`colors.mutedForeground`, using two icons of the same geometry: `star-filled`
+and `star`. The filled icon is still monochrome — its `#000` fill is what GPUix
+retints — so a theme change repaints both states. The star size is
+`theme.iconSize[size]` and the focus ring is the shared `focusRing`.
+
+## Limitations
+
+- **Whole stars only.** Half stars would need clipping or a transform, neither of
+  which exists in GPUix 0.10.0; a caller that needs a finer score can keep it in
+  state and paint the label beside the stars.
+- **No hover preview.** A hover-filled preview needs per-star hover state and a
+  re-render per movement; the runtime gives hover styles but not a cheap
+  "which star is under the pointer" query for a group.
+- **Clearing is explicit** (Delete/Backspace or the app), not "click the selected
+  star again" — a rating is not a toggle.
+
+## Verification
+
+- `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
+  the tab-stop choice, a zero or fractional `max`.
+- `src/components/Rating.test.tsx` — group and star labels, checked states, the
+  single tab stop, filled vs outline icons, keys, click, disabled/readOnly, ring.
+- `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
+  arrow moves the checked star and native focus; Right at five stays at five;
+  Delete clears; filled stars paint `colors.primary`; Tab enters on the rating
+  and the next Tab leaves the group; disabled refuses input. Measured
+  2026-10-17 (plan 054 §9).
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **RadioGroup** — a small exclusive choice, with wrapping arrows.
+- **Switch** — an immediate on/off setting.
+- **Slider** — a value across a range.

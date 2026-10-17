@@ -1,0 +1,127 @@
+---
+title: ThemeProvider
+description: Supplies the theme every primitive draws with — and refuses to invent one.
+---
+
+`ThemeProvider` puts a `PrimitiveTheme` in React context. Every primitive reads it
+through `useTheme()`. It is **not** a theme builder and it ships **no default
+palette**: without a provider above it, a primitive throws
+`MissingThemeProviderError` at the moment it renders.
+
+## Usage
+
+```tsx
+import { ThemeProvider, Box, Text } from "@gpuixui/primitives";
+import { darkTheme } from "@gpuixui/tokens";
+
+<ThemeProvider theme={darkTheme}>
+  <Box tone="background" padding="lg">
+    <Text role="h2">Settings</Text>
+  </Box>
+</ThemeProvider>;
+```
+
+The theme is `Theme` from **`@gpuixui/tokens`**, re-exported here as
+`PrimitiveTheme` (`src/core/theme.ts`). The tokens package owns every value and
+the runtime-shaped helpers (`focusRing`, `elevationShadow`); this package resolves
+a semantic spec into a GPUix `StyleDesc` from that theme. There is one theme
+declaration in the library (plan 021), so a token change reaches every component
+without an adapter.
+
+## Density
+
+```tsx
+<ThemeProvider theme={theme} density={compactDensity}>
+  …
+</ThemeProvider>
+```
+
+Density replaces the theme's **numeric** metrics only (`controlHeight`,
+`controlPaddingX`, `rowHeight`). It cannot change colour, so a density switch can
+never produce a second palette. Build presets with tokens' `extendTheme`; this
+package owns no copy of them. Selection boxes stay icon-sized by design, so
+density never stretches a checkbox or a switch.
+
+## Contrast and platform
+
+Contrast is another theme, not a component prop:
+
+```tsx
+import { getTheme } from "@gpuixui/tokens";
+
+<ThemeProvider theme={getTheme("dark", "high")}>…</ThemeProvider>;
+```
+
+`getTheme(mode, contrast)` returns the shipped high-contrast palette. Every
+Tier 1 component paints from that palette and nothing else; the runtime suite
+below keeps that invariant in both modes.
+
+The platform styles are themes too. `platformTheme` re-types the base theme
+without touching its colours or metrics, which is exactly what the docs site's
+platform toggle feeds the provider:
+
+```tsx
+import { platformTheme, lightTheme } from "@gpuixui/tokens";
+
+<ThemeProvider theme={platformTheme(lightTheme, "win32")}>…</ThemeProvider>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `theme` | `PrimitiveTheme` | — (required) | every colour, size, radius and font a primitive paints |
+| `density` | `Density` | `theme.density` | swaps the numeric metrics group; colours stay |
+| `children` | `ReactNode` | — | the tree that may render primitives |
+
+`useTheme(): PrimitiveTheme` returns the active theme and throws
+`MissingThemeProviderError` when there is none.
+
+## Keyboard
+
+Not interactive. It renders no element of its own.
+
+## Accessibility
+
+No role, no announcement. It only supplies values; the accessibility tree is
+whatever the components below it produce. Because there is no silent default, a
+missing provider is a **visible crash in development**, not a wrong palette
+shipped to a user.
+
+## Theming
+
+This is the seam: light and dark are two `Theme` values from `@gpuixui/tokens`. Switching is a
+re-render with a different `theme` prop — verified natively by
+`runtime/theme.runtime.test.tsx`, which mounts the shipped `lightTheme` and
+`darkTheme` and checks that every painted colour comes from the active one.
+
+## Limitations
+
+- The density override is a whole group, not a partial patch; a partial override
+  would make "compact" mean something different at each call site.
+- There is no built-in light/dark toggle and no persistence: theme choice is
+  application state, owned by the app.
+- Providers do not merge: the nearest `ThemeProvider` supplies the whole theme.
+
+## Verification
+
+- `src/components/ThemeProvider.test.tsx` — the missing-provider error and the
+  density swap are proven on the render boundary.
+- `src/core/theme.test.ts` — the colour-literal scan and density metrics.
+- `runtime/theme.runtime.test.tsx` — both palettes paint only their own colours;
+  a live theme switch repaints every asserted role.
+- `runtime/theme-axes.runtime.test.tsx` — the high-contrast palettes paint only
+  their own colours in both modes; a density override moves control heights to
+  the preset and leaves colour alone; `platformTheme`'s mono family reaches the
+  paint and a platform switch repaints the same tree (plan 055).
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Box** — the surface most primitives sit on.
+- **Text** — the typography roles the theme resolves.
+- `@gpuixui/tokens` — the package that builds real light and dark themes.

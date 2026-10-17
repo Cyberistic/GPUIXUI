@@ -1,0 +1,105 @@
+---
+title: Toggle
+description: A button whose action has a persistent on/off state.
+---
+
+`Toggle` is a button that stays on: bold, grid view, snap-to-grid, mute. It is
+**not** a `Switch` — a switch changes a setting immediately ("dark mode"), while a
+toggle sets a mode for what happens next and usually sits in a toolbar beside
+other actions.
+
+## Usage
+
+```tsx
+import { Toggle } from "@gpuixui/primitives";
+import { useState } from "react";
+
+const [grid, setGrid] = useState(true);
+
+<Toggle pressed={grid} onPressedChange={setGrid} label="Grid" variant="outline">
+  Grid
+</Toggle>;
+```
+
+Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start).
+
+## Variants, sizes and states
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `pressed` | `boolean` | — | controlled state |
+| `defaultPressed` | `boolean` | `false` | uncontrolled start |
+| `onPressedChange` | `(pressed: boolean) => void` | — | called with the new state |
+| `variant` | `"default" \| "outline"` | `"default"` | no chrome at rest, or a border |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | from the density scale |
+| `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
+| `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
+| `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
+| `label` | `string` | none | accessible name; required when icon-only |
+| `style` | `StyleDesc` | — | merged last |
+| `children` | `ReactNode` | — | the visible label |
+| `testId` | `string` | — | stable locator |
+
+Pressing paints `colors.accent` with `colors.accentForeground` — the role the
+theme reserves for a selected surface — so pressed, hover and focus are three
+different states.
+
+## Keyboard
+
+| Key | Effect |
+| --- | ------ |
+| `Enter` | activates on key **down** |
+| `Space` | activates on key **up** |
+| a held key | ignored, so it does not repeat |
+
+A click activates as well. The toggle is one tab stop and paints the focus ring
+while it holds focus.
+
+## Accessibility
+
+- Role: `button` (AccessKit `Button`).
+- **GPUix 0.10.0 has no `aria-pressed`**, so the state is announced through
+  `aria-valuetext` — `"pressed"` or `"not pressed"` — exactly like `Checkbox`
+  uses that channel for its state. A screen reader therefore hears a button with
+  a value, not a pressed button. That is the limitation of the runtime, and the
+  component does not pretend otherwise.
+- Give an icon-only toggle a `label`; the icon is decorative.
+
+## Theming
+
+Rest and pressed are two rows of `core/variants.ts`' `toggleVariants`, so the
+docs and the component read one table. Rest paints no fill (or a border for
+`outline`); pressed paints `colors.accent`/`colors.accentForeground`; hover and
+press lift the accent's alpha like a filled button. Nothing names a literal.
+
+## Limitations
+
+- No `aria-pressed` (above).
+- No `loading` state: a toggle sets a mode instantly; a toggle that waits for a
+  request should disable itself and show the result elsewhere.
+- `square` sizes the button; it does not size the icon — pass an icon whose size
+  matches the control (`theme.iconSize`).
+
+## Verification
+
+- `src/components/Toggle.test.tsx` — role and value text, no `aria-pressed`,
+  the pressed paint from the accent role, the outline border, click/Enter/Space
+  activation, held keys, disabled, the focus ring.
+- `runtime/toggle.runtime.test.tsx` — a real click flips the announced state and
+  repaints the accent fill; Enter down and Space up each activate once; a
+  disabled toggle leaves the tab order; the ring follows focus. Measured
+  2026-10-17 (plan 054 §9).
+- The disabled **handler** guard is proven at the element-tree level: a
+  tabIndex-less toggle cannot be focused natively, so the runtime test can only
+  prove the tab order.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Button** — an action with no state.
+- **Switch** — an immediate setting.
+- **Checkbox** — an independent choice in a form.

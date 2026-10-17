@@ -1,0 +1,110 @@
+---
+title: Text
+description: One run of type, named by a theme role and a semantic tone.
+---
+
+`Text` names a role from the theme's type scale and a tone that decides its
+colour. It adds no behaviour: the runtime has one `text` host element, so every
+typographic role is the same element with a different resolved `StyleDesc`. It is
+not a heading element in the accessibility tree — see Limitations.
+
+## Usage
+
+```tsx
+import { Text, Stack } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="2xs">
+  <Text role="h2">Version 0.10.0</Text>
+  <Text role="body" tone="muted">
+    Released 17 October 2026.
+  </Text>
+  <Text role="code">nub add @gpuixui/primitives</Text>
+</Stack>;
+```
+
+## Roles
+
+| `role` | Family | Typical use |
+| ------ | ------ | ----------- |
+| `display` | sans | a landing or empty-state headline |
+| `h1`, `h2`, `h3` | sans | page, section and subsection titles |
+| `body` | sans | running text |
+| `bodyStrong` | sans | the lead sentence of a section |
+| `label` | sans | a control's visible name |
+| `caption` | sans | metadata and helper text |
+| `code` | mono | an inline identifier or command |
+| `codeBlock` | mono | a block of code |
+
+Sizes, line heights and weights come from `theme.typography`. No component picks
+a font size.
+
+## Tones
+
+| `tone` | Colour role | Use for |
+| ------ | ----------- | ------- |
+| `default` | `foreground` | body and headings |
+| `muted` | `mutedForeground` | metadata, help, disabled-adjacent copy |
+| `primary` | `primary` | a link-like non-interactive emphasis |
+| `destructive` | `destructive` | an error or a breaking change |
+| `inherit` | none | text on a coloured surface, taking its parent's colour |
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `role` | `TextRole` | `"body"` | size, leading, weight and family |
+| `tone` | `TextTone` | `"default"` | colour role |
+| `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment |
+| `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
+| `clamp` | `number` | none | clip after N lines |
+| `selectable` | `boolean` | `false` | `userSelect: "text"`; off for chrome, on for content |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+| `children` | `ReactNode` | — | the string (or inline nodes) |
+
+## Keyboard
+
+Not focusable. Selectable text is pointer-selectable when `selectable` is on;
+there is no copy command binding in the component.
+
+## Accessibility
+
+`Text` is a plain text node. GPUix's `<text>` has no heading level, no paragraph
+role and no semantics beyond its string; the `role` prop is **visual only**.
+A screen-reader user hears the words in reading order, not a document outline.
+If a heading level matters, the application must supply the semantics with a host
+element the runtime exposes — and 0.10.0 exposes no heading element.
+
+## Theming
+
+`textStyle` reads `typography[role]`, the mono/sans family and the tone's colour
+role. `userSelect` defaults to `"none"` so chrome does not accept a text
+selection by accident; turn it on for content.
+
+## Limitations
+
+- No heading semantics (above). Do not claim a `role="h2"` is announced as a
+  heading.
+- No rich text: one run, one role. Composition is several `Text` nodes in a
+  `Stack`.
+- No responsive type scale or fluid sizing.
+- `truncate` needs a bounded width to truncate against.
+
+## Verification
+
+- `src/core/variants.test.ts` — every role resolves from the theme.
+- `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
+  selectable.
+- `runtime/layout.runtime.test.tsx` — the string is painted and its box height
+  equals the role's line height.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Label** — a control's visible name, with required/invalid states.
+- **Icons** — decoration that aligns with the type scale.
+- **ThemeProvider** — supplies the scale.

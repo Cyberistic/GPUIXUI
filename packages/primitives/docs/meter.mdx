@@ -1,0 +1,84 @@
+---
+title: Meter
+description: A measurement inside a range — distinct from a task's progress.
+---
+
+`Meter` reports where a measurement sits in a known range: disk used, signal
+strength, a score out of 16. It is not `Progress`: a progress bar reports how
+far a task has got, is always 0–100, and often has no known end. A meter has a
+`min` and a `max` that mean something, and it is never a control.
+
+## Usage
+
+```tsx
+import { Meter, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="xs">
+  <Text role="caption" tone="muted">Disk usage · 68 of 100 GB</Text>
+  <Meter label="Disk usage" value={68} max={100} formatValue={(v) => `${v} GB`} />
+</Stack>;
+```
+
+## Variants, sizes and states
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `value` | `number` | required | the measurement; clamped into the range |
+| `min` / `max` | `number` | `0` / `100` | the range the fill is a fraction of |
+| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
+| `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm` |
+| `label` | `string` | none | accessible name |
+| `formatValue` | `(value: number) => string` | `String` | the announced measurement |
+| `style` | `StyleDesc` | — | merged last, on the track |
+| `testId` | `string` | — | stable locator |
+
+There is no `aria-valuemax` in the runtime, so pair the meter with visible text
+when the range matters ("68 of 100 GB" above) — the announcement is the value
+alone unless `formatValue` says more.
+
+## Keyboard
+
+Not focusable and not interactive. A meter is status; there is no slider
+behaviour and no tab stop.
+
+## Accessibility
+
+- Role: `meter` (AccessKit `Meter` — verified in the real renderer).
+- The measurement is announced through **`aria-valuetext`**, because GPUix
+  0.10.0 has no `aria-valuenow`/`min`/`max`.
+- The name comes from `label`. Without one the meter is unnamed; give it the
+  measurement's subject ("Disk usage").
+
+## Theming
+
+The paint is `Progress`'s: `colors.muted` track, the tone's role for the fill
+(`colors.primary`, `colors.success`, `colors.destructive`,
+`colors.mutedForeground`), height a spacing step, both ends `radius.full`. One
+bar painter means `Progress` and `Meter` cannot drift apart.
+
+## Limitations
+
+- No `aria-valuenow`/`min`/`max` (above).
+- No threshold segments, tick marks or a label inside the track.
+- The fill cannot animate between values; `motion` is not used here, so a
+  changing measurement repaints rather than interpolates.
+
+## Verification
+
+- `src/core/value.test.ts` — the fraction and clamping the paint depends on.
+- `src/components/Meter.test.tsx` — role, announced value, clamped range, the
+  formatted measurement, and that it is neither a tab stop nor a handler target.
+- `runtime/value.runtime.test.tsx` — AccessKit reports `Meter` with the value,
+  the fill's painted width is the measurement's fraction of the track, and Tab
+  never lands on it. Measured 2026-10-17 (plan 053 §11).
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Progress** — task completion.
+- **Slider** — a value the user can change.
+- **Spinner** — activity with no known proportion.

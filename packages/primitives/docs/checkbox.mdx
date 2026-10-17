@@ -1,0 +1,107 @@
+---
+title: Checkbox
+description: An independent yes/no, optionally indeterminate.
+---
+
+`Checkbox` is a square selection control for an independent choice. It shares one
+three-state paint (`unchecked`, `checked`, `indeterminate`) with `Switch` and
+`RadioGroup` through `core/selection.ts`, so they cannot drift apart.
+
+## Usage
+
+```tsx
+import { Checkbox } from "@gpuixui/primitives";
+
+<Checkbox
+  checked={email}
+  onChange={setEmail}
+  label="Email notifications"
+/>;
+```
+
+An indeterminate parent:
+
+```tsx
+<Checkbox
+  checked={email && push}
+  indeterminate={!email !== !push}
+  onChange={(next) => {
+    setEmail(next);
+    setPush(next);
+  }}
+  label="All channels"
+/>;
+```
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `checked` | `boolean` | — | controlled state; omit to let the box keep its own |
+| `defaultChecked` | `boolean` | `false` | initial state when uncontrolled |
+| `onChange` | `(next: boolean) => void` | none | the next boolean, only when it changed |
+| `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
+| `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
+| `invalid` | `boolean` | `false` | the empty box takes the destructive border |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
+| `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
+| `label` | `string` | none | accessible name |
+| `style` | `StyleDesc` | — | merged last |
+| `testId` | `string` | — | stable locator |
+
+`indeterminate` is a **paint override**: activation still toggles the underlying
+boolean, so an indeterminate parent becomes checked on the next click rather than
+clearing.
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| Space | toggles on key **up** |
+| Enter | toggles on key **down** |
+| held key | repeat events do nothing |
+| Tab | reaches the box when it is not disabled |
+
+## Accessibility
+
+- Role: `CheckBox` in the runtime's accessibility tree.
+- State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
+  `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
+- `disabled` removes the tab stop; there is no `aria-disabled`.
+- The visible name is a separate `Label`; the `label` prop is the accessible
+  name, and there is no `aria-labelledby`.
+
+## Theming
+
+`selectionBoxStyle` resolves box side from `iconSize`, radius from `radius.sm`,
+border from `input`/`destructive`, fill from the accent role and the mark from
+`selectionMarkColor`. Hover and press are declared in `style.hover`/`style.active`,
+not scripted. Disabled adds half opacity and removes pointer feedback. Focus
+paints the selection ring (`colors.ring`, spread by `borderWidth.strong`).
+
+## Limitations
+
+- No `aria-checked` (above).
+- No label-inside-the-control composition: pair it with a `Label` or use the
+  `label` prop for the accessible name only.
+- No partial-state animation and no custom mark.
+
+## Verification
+
+- `src/core/selection.test.ts` — the three-state paint and mark colour.
+- `src/components/selection.test.tsx` — toggle, indeterminate and disabled
+  wiring at the render seam.
+- `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
+  value flips `unchecked → checked`; indeterminate reads `mixed`; the AccessKit
+  role is `CheckBox`; focus paints the ring and moves it with focus.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime
+```
+
+## Related
+
+- **Switch** — an immediate on/off with a different intent.
+- **RadioGroup** — one choice from a set.
+- **Label** — the visible name.
