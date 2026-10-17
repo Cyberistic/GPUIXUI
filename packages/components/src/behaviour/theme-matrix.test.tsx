@@ -30,7 +30,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../collapsible.js";
-import { CommandMenu } from "../command-menu.js";
+import {
+  CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
+} from "../command-menu.js";
 import { ConfirmDialog } from "../confirm-dialog.js";
 import {
   ContextMenu,
@@ -284,7 +289,11 @@ describe("theme matrix", () => {
           open
           onOpenChange={() => undefined}
           actions={[{ id: "save", label: "Save", perform: () => undefined }]}
-        />
+        >
+          <CommandMenuInput />
+          <CommandMenuList />
+          <CommandMenuEmpty />
+        </CommandMenu>
       ),
       (root, theme) => {
         expect(
