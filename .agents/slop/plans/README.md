@@ -99,7 +99,8 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [300](./300-soft-status-quiet-panel.md) | The soft status surface on the quiet panel | F | 014, 063, 071, 076, 090, 094 | done |
 | [301](./301-applied-style-contrast-claim.md) | An applied platform style must declare the contrast it carries | F | 063, 071, 073 | done |
 | [302](./302-platform-type-bridge.md) | The removed `platformTheme` and its merged consumer | F | 051, 063, primitives `021`/`055` on `master` | done |
-| [303](./303-inventory-truth-guard.md) | The inventory row that still called `overlay` exempt | F | 056, 062, 099 | in progress |
+| [303](./303-inventory-truth-guard.md) | The inventory row that still called `overlay` exempt | F | 056, 062, 099 | done |
+| [304](./304-create-theme-contrast-selection.md) | `createTheme` starts from the contrast variant it names | F | 013, 071, 073, 301 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -539,6 +540,20 @@ returned declaration now follows the palette: applied platform colours declare
 applies only families and shape), while the no-argument call and a shape-only
 style with no colour overrides keep the base's level. No colour moves, and plan
 073's default-call guarantee is unchanged.
+
+304 closes the same class of gap one entry point over: `ThemeConfig extends
+ThemeOverrides`, so `contrast` on `createTheme` was the `extendTheme` **claim**
+rather than a choice of palette. `createTheme({ mode, contrast: "high" })` — the
+call that reads as "build me the AAA theme" — returned the default palette with
+the AAA declaration, and the library's own checker reported **66** failures for
+light and **32** for dark. The builder simply cannot reach the high-contrast
+sets without first knowing `getTheme` or `extendTheme`. `ThemeConfig` now omits
+the claim and re-adds `contrast` as a selector, so `createTheme` starts from
+`getTheme(mode, contrast)` and the builder has no claim path; `extendTheme`
+keeps the claim, which is what `applyPlatformStyle` relies on. The default call
+is unchanged, the name follows the selected variant, and the suite rebuilds all
+four shipped variants from their own `mode`/`contrast` and holds each to
+`themeContrastFailures`.
 
 ### Reference adoption (block `200–299`)
 
