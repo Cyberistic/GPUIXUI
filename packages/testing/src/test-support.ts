@@ -34,6 +34,7 @@ export const nullHost: SmokeHost = {
   focusPrevious: () => {},
   wheel: () => {},
   drag: () => {},
+  fileDrop: () => {},
   scrollOffset: () => null,
   screenshot: () => {},
   advance: () => {},

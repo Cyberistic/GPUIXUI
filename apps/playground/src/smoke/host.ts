@@ -174,6 +174,12 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
         renderer.nativeSimulateMouseUp(point.x + deltaX, point.y + deltaY);
       },
     }),
+  fileDrop: (testId, paths) =>
+    Option.match(center(renderer, testId), {
+      onNone: () => {},
+      onSome: (point) =>
+        renderer.nativeSimulateFileDrop(point.x, point.y, [...paths]),
+    }),
   scrollOffset: (testId) =>
     Option.match(elementId(renderer, testId), {
       onNone: () => null,

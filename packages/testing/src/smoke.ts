@@ -39,6 +39,7 @@ export const CAPABILITIES = [
   "theme",
   "workspace",
   "content",
+  "drag",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -243,6 +244,8 @@ export interface SmokeHost {
     deltaY: number,
     steps?: number,
   ) => void;
+  /** Drops `paths` on `testId` through GPUI's file-drop hit test. */
+  readonly fileDrop: (testId: string, paths: ReadonlyArray<string>) => void;
   readonly scrollOffset: (testId: string) => Offset | null;
   readonly screenshot: (absolutePath: string) => void;
   /** Advances GPUI's dispatcher and timers. Not motion time; see `pauseMotion`. */

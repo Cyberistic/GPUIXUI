@@ -14,6 +14,7 @@ import { Smoke } from "@gpuixui/testing";
 import type { PlaygroundScenario } from "../types.js";
 import { a11yScenario } from "./a11y.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
+import { dragTargetsScenario } from "./drag-targets.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { inputScenario } from "./input.js";
@@ -59,13 +60,14 @@ export const CORE_CAPABILITIES = [
   "content",
 ] as const;
 
-/** The Tier 3/4 capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`). */
+/** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`). */
 export const PROBE_CAPABILITIES = [
   "table",
   "tree",
   "log",
   "workspace",
   "motion",
+  "drag",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -93,6 +95,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   themeTypeAndShadowScenario,
   a11yScenario,
   nativeSurfacesScenario,
+  dragTargetsScenario,
   shellNavigationScenario,
   virtualizedTableScenario,
   treeScenario,

@@ -67,6 +67,7 @@ describe("scenarioProblems", () => {
         "tooltip",
         "a11y",
         "content",
+        "drag",
       ]),
     );
   });
