@@ -19,6 +19,7 @@ import { dockingScenario } from "../scenarios/docking.js";
 import { inputScenario } from "../scenarios/input.js";
 import { modalScenario } from "../scenarios/modal.js";
 import { panelScenario } from "../scenarios/panel.js";
+import { primitivesActionsScenario } from "../scenarios/primitives.js";
 import { scrollScenario } from "../scenarios/scroll.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -346,6 +347,45 @@ const docking: LiveScenario = {
     }),
 };
 
+const primitives: LiveScenario = {
+  id: "live-primitives",
+  title: "Live primitives: the shipped Button and Toggle in a window",
+  capability: "components",
+  view: primitivesActionsScenario.view,
+  ready: "action-save",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("action-save");
+      yield* settle;
+      const saved = yield* textOf(ctx, "action-readout");
+      yield* ctx.expectContains(
+        "the shipped Button activates",
+        saved,
+        "activations=1",
+      );
+
+      yield* ctx.host.click("action-disabled");
+      yield* settle;
+      const refused = yield* textOf(ctx, "action-readout");
+      yield* ctx.expectContains(
+        "a disabled Button refuses the click",
+        refused,
+        "activations=1",
+      );
+
+      yield* ctx.host.click("action-toggle");
+      yield* settle;
+      const toggled = yield* textOf(ctx, "action-readout");
+      yield* ctx.expectContains(
+        "the Toggle reports pressed",
+        toggled,
+        "pressed=true",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${primitives.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -354,4 +394,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   panel,
   overlay,
   docking,
+  primitives,
 ];
