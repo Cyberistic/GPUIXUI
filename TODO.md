@@ -60,7 +60,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[█████████░]` 53/58 plans-and-harness
 
-`[x]` Plans `100`–`182` written and indexed for the playground workstream
+`[x]` Plans `100`–`189` written and indexed for the playground workstream (188 text entry, 189 the real-window run)
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
 `[x]` **The native smoke suite is green on this host** (44/44 when the blocker closed; **56/56** today) — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and one screenshot per scenario. Two-direction proof recorded (plan `140` §4, plan `150` §4, plans `151`–`187` §7/§8/§9/§10: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
 `[x]` Probe the modal contract per plan `155`: `modal-focus-trap` — component code moves native focus (`renderer.focusElement`), Tab wraps inside the surface (`focusNextWithin`/`focusPreviousWithin`), focus returns to the trigger, and a nested popover's Escape closes only the popover — 19/19 green (fails with exit `1` when the Tab trap or the focus return is removed)
