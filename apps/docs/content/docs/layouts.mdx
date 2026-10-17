@@ -1,12 +1,30 @@
 ---
 title: Layouts
-description: Stacks, boxes, separators and the layout primitives.
+description: Stacks, boxes, grids, separators and scroll containers from @gpuixui/primitives.
 ---
 
-The layout primitives are the foundation every other component is built from:
-horizontal and vertical stacks, boxes, separators, spacers and scrollable
-containers. They map onto GPUix's flexbox layout rather than a browser's.
+The layout primitives are the foundation every other component is built from.
+They map onto GPUix's flexbox and fixed-track grid, not a browser's CSS layout:
+there are no media queries, no auto-flow and no percentage tracks beyond the
+runtime's own.
 
-These will live in `@gpuixui/primitives`, which is not published yet. The
-[component index](/docs/components) records each primitive's real status, GPUix
-support and a link to the native playground where it runs.
+They ship in `@gpuixui/primitives` and each has its own page with the real
+source, a generated props table and its runtime observations:
+
+- [`Box`](/docs/components/box) — the surface and padding container; the place an
+  application overrides a background or a border.
+- [`Stack`](/docs/components/stack) — one axis, a theme-owned `gap`, and explicit
+  alignment. `direction` is required so a row cannot silently become a column.
+- [`Grid`](/docs/components/grid) — equal numeric tracks. GPUix's grid is
+  `columns` + `rows`; there is no auto-placement and no named areas.
+- [`Separator`](/docs/components/separator) — one border step across the surface.
+- [`Spacer`](/docs/components/spacer) — a flexible filler that pushes siblings to
+  the far edge.
+- [`ScrollArea`](/docs/components/scroll-area) — a scroll container that reports
+  its deltas; the scrollbar itself is platform-themed and cannot be tinted on
+  the pinned runtime.
+
+Spacing is always a theme step (`2xs` … `5xl`), never a pixel value at the call
+site, so a layout cannot drift from the design system. What the runtime cannot
+do — responsive breakpoints, ragged grids, a tinted scrollbar — is recorded on
+the component page rather than worked around in a wrapper.

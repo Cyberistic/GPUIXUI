@@ -1,20 +1,49 @@
 ---
 title: Examples
-description: Runnable native example applications.
+description: Runnable native applications that compose the real components.
 ---
 
-Examples will be runnable applications, not screenshots. They will live under
-`examples/` and run through the native playground. Neither exists yet:
+Examples are applications, not screenshots. They live under `examples/`, import
+the workspace packages directly and run on GPUix. Each one shows a composition an
+application would actually build, and every component it uses links back to its
+own page.
+
+## `basic-app` — the Tier 1 set in one settings workflow
+
+[`examples/basic-app`](https://github.com/Cyberistic/GPUIXUI/tree/master/examples/basic-app)
+composes the whole Tier 1 set into a settings form: labelled fields with live
+validation, a select, a checkbox, switches and a radio group, a save action with
+progress, a loading skeleton, a scroll area, a tooltip and a light/dark switch.
+
+It is deliberately not a gallery of swatches. It is the end-to-end answer to
+"what does an application using this library look like", and it is the example
+new components are checked against.
 
 ```sh
-nub run dev:playground
+nub run --filter @gpuixui/basic-app dev
 ```
 
-Each example shows a real composition — a settings window, a workspace layout,
-a data-heavy table — and each component it uses links back to its own page.
+**What is verified, and what is not:**
 
-<Callout>
-Examples are added as the components they use are implemented and verified.
-This page will list the runnable apps and their commands; it will not describe
-an app that does not run.
-</Callout>
+| Check | Status |
+| ----- | ------ |
+| `nub run --filter @gpuixui/basic-app check-types` | passes — every component is used with its real props |
+| the components themselves | type-checked and covered by their packages' element-tree suites |
+| the window, layout, hit-testing and focus order | **never run** — this host has no desktop session, so the app has not been launched |
+
+That gap is the repository's, not the example's: a component moves to `done` on
+the component index only when it runs in the real runtime. Until then the example
+is a real, type-checked composition whose visual result is unverified.
+
+## The native playground
+
+The companion playground (`apps/playground`) is where a compiled screen becomes
+an interactive proof. It is a Phase B deliverable and has not been built yet:
+`apps/playground` currently contains its README and no `package.json`, so
+`nub run dev:playground` does not resolve. Component pages point at the
+playground screen they will use; today they show the honest "not verified"
+notice instead.
+
+Future examples — a workspace layout, a data-heavy table, a command palette —
+appear once the components they compose exist and run. This page will list their
+commands at that point; it will not describe an app that does not run.

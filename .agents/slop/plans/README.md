@@ -133,6 +133,7 @@ pages, examples and prop types (plan `425`).
 | `423-tier1-component-pages.md` | The remaining 19 Tier 1 pages: every implemented primitive becomes a real page with generated props and source | C | 422; primitives 047 | implemented — 20 pages total, every Tier 1 row `wip` with a real source path; sitemap and search verified |
 | `424-docs-truth-pass.md` | Phase F truth pass: every path a component page names exists or is a registered plan, and no placeholder prose ships | F | 410 §13, 422, 423 | implemented — 20 pages audited; guard covers paths, placeholders and real package exports |
 | `425-tier2-component-pages.md` | The 22 delivered Tier 2 components become real pages with generated props, examples and source | C | 422–424; components 110–118 | implemented — 42 pages total, every Tier 2 row `wip`; sitemap and all URLs verified |
+| `426-prose-truth-and-examples.md` | Prose truth pass (layouts, examples, getting started, installation) and a drift guard | F | 410, 424; primitives 047; components 110–119 | implemented — `prose-truth.test.ts` failed on the stale pages first, then passed; 111 docs tests, type-check and build green |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

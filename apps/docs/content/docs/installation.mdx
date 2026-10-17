@@ -15,8 +15,12 @@ release they will not resolve. The packages are built from this repository:
 
 ```sh
 nub install
-nub run dev:playground
+nub run --filter @gpuixui/basic-app dev
 ```
+
+`basic-app` is the example that composes the Tier 1 components; it needs the
+GPUix native binding and a desktop session. [Examples](/docs/examples) records
+what it verifies.
 
 ## The intended install
 

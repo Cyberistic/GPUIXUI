@@ -25,18 +25,31 @@ render(<App />, { title: "My app" });
 nub app.tsx
 ```
 
-## Try it in the playground
+## Try the library in an example
 
-The library will run in a native playground in this repository, which is the
-only place where components run for real. It is not built yet:
+[`examples/basic-app`](https://github.com/Cyberistic/GPUIXUI/tree/master/examples/basic-app)
+composes the Tier 1 components into a settings workflow and is the one example
+in the repository today:
 
 ```sh
-nub run dev:playground
+nub install
+nub run --filter @gpuixui/basic-app dev
 ```
 
-Each component page names the playground screen that demonstrates it. When a
-component is not yet in the playground, its page says so instead of showing a
-browser imitation.
+It needs the GPUix native binding and a desktop session; on a host without one
+the app is type-checked but never launched. See [Examples](/docs/examples) for
+what that does and does not prove.
+
+## The native playground
+
+A companion playground (`apps/playground`) will host a screen per component and
+the screenshot capture used by these pages. It is a Phase B deliverable: the
+repository holds its design and README, but no app and no `package.json` yet, so
+`nub run dev:playground` does not resolve.
+
+Each component page names the playground screen that will demonstrate it. Until
+that screen exists, the page shows the honest "not verified in the GPUix
+runtime" notice instead of a browser imitation.
 
 ## Native previews
 

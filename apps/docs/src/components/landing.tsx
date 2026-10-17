@@ -6,7 +6,10 @@ import { components, statusCounts } from "@/component-meta/registry";
  * them identical to the first shell block in `installation.mdx`, so the two
  * places a newcomer reads cannot drift apart.
  */
-export const QUICK_START = ["nub install", "nub run dev:playground"] as const;
+export const QUICK_START = [
+  "nub install",
+  "nub run --filter @gpuixui/basic-app dev",
+] as const;
 
 /** The landing page body. Extracted from the route so it can be tested. */
 export function Landing() {
@@ -23,8 +26,8 @@ export function Landing() {
       <p className="max-w-2xl text-fd-muted-foreground">
         GPUIXUI is a reusable component library rendered by GPUix — the GPU
         runtime behind Zed's UI toolkit. The components run in the real native
-        runtime; this site documents them honestly and links to a native
-        playground for every preview.
+        runtime; this site documents them honestly and points at the native
+        playground once a screen exists.
       </p>
       <div className="flex flex-wrap gap-3">
         <Link
@@ -45,8 +48,8 @@ export function Landing() {
         <h2 className="text-xl font-medium">Quick start</h2>
         <p className="text-sm text-fd-muted-foreground">
           The packages are not on a registry yet, so start from a checkout. The
-          playground is where the components actually run — this site never
-          renders GPUix.
+          example is a real native application; this site never renders GPUix,
+          so it links to the playground instead of imitating it.
         </p>
         <pre className="overflow-x-auto rounded-lg border border-fd-border bg-fd-card p-4 text-sm">
           <code>{QUICK_START.map((command) => `${command}\n`).join("")}</code>

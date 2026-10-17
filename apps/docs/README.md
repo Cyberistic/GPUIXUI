@@ -193,6 +193,28 @@ The page's `<title>`, `description`, `og:title`, `og:description` and canonical
 link come from its frontmatter through `src/lib/page-meta.ts`, so a new page
 never inherits the site title.
 
+## Prose truth
+
+The pages outside `components/` make factual claims about the repository —
+which packages exist, which example runs, whether the playground is built.
+Those claims drift silently: a page still builds after a package lands. Plan
+`426-prose-truth-and-examples.md` adds `src/prose-truth.test.ts`, which derives
+the facts from the tree (a package is real when it has a `package.json`) and
+fails when a page contradicts them:
+
+- no page may call an implemented package "future work";
+- no page may deny that an example exists while `examples/*` has a package;
+- once `apps/playground/package.json` lands, every "not built yet" playground
+  claim fails until the page is updated;
+- every backticked `packages/`, `apps/`, `examples/`, `docs/` or `LICENSES/`
+  path on any page must exist, or be registered as planned in its directory
+  README.
+
+When you add a page, name real paths and re-read the package/example state you
+describe. When the playground becomes runnable, update `getting-started.mdx`
+and `examples/index.mdx` in the same change — the guard is inverted so it fails
+until you do.
+
 ## Previews
 
 `<NativePreview slug>` picks the strongest honest tier from the record plus the
