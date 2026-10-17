@@ -53,7 +53,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
   - [ ] Menus: Dropdown, Context, Command
     - [x] Logic: `menu/logic.ts` over the shared collection
   - [ ] Choice inputs: Search input, Combobox
-    - [ ] Logic: `combobox/logic.ts` (ranking + selection)
+    - [x] Logic: `combobox/logic.ts` (ranking + selection)
   - [ ] Feedback: Toast system, inline validation (`Field`)
   - [ ] Date / time picker (design in plan 116 §5; not started)
   - [ ] Tier 2 verification matrix and inventory sync check (plan 117)
