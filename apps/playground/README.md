@@ -975,9 +975,9 @@ narrower. Each deviation is deliberate and measured:
   probe, the search-highlight probe, the drag-autoscroll probe, the
   command-palette probe, the tabbed-pane probe, the terminal-grid probe, the
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
-  the pinned-grid probe, the collapsible-height probe and the nested-layer
-  probe pass in real GPUix 0.10.0 on this host (59/59), with a written report
-  and screenshots.
+  the pinned-grid probe, the collapsible-height probe, the nested-layer probe
+  and the variable-row-height probe pass in real GPUix 0.10.0 on this host
+  (59/59), with a written report and screenshots.
   The **real-window** suite (`smoke:live`) is 15/15 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
@@ -985,8 +985,9 @@ narrower. Each deviation is deliberate and measured:
   Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
   with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
   frame (plan `192`), a pointer-placed menu in a scrolled container (plan
-  `193`), a tab torn out into a floating panel (plan `195`), and highlights plus
-  `getListScrollTop` read from the renderer (plan `197`).
+  `193`), a tab torn out into a floating panel (plan `195`), highlights plus
+  `getListScrollTop` read from the renderer (plan `197`), and a live hover card
+  with its grace close (plan `199`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
