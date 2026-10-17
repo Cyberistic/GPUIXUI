@@ -42,6 +42,14 @@ export type { NumberRange } from "./number.js";
 
 export { clampRating, decideRating, ratingTabStop } from "./rating.js";
 
+export { isSelectGroup, selectOptions, selectRowCounts } from "./select.js";
+export type {
+  SelectEntry,
+  SelectOption,
+  SelectOptionGroup,
+  SelectRowCounts,
+} from "./select.js";
+
 export {
   isPressed,
   nextSelection,

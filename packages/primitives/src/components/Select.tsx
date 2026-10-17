@@ -33,12 +33,22 @@ import * as Option from "effect/Option";
 import {
   Select as GpuixSelect,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
   type SelectItemState,
   type SelectTriggerState,
 } from "@gpuix/react/select";
+import {
+  isSelectGroup,
+  selectOptions,
+  selectRowCounts,
+  type SelectEntry,
+  type SelectOption,
+  type SelectOptionGroup,
+} from "../core/select.js";
 import { controlStyle, surfaceStyle, type ControlSpec } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -52,14 +62,14 @@ import {
 import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface SelectOption {
-  readonly value: string;
-  readonly label: string;
-  readonly disabled?: boolean;
-}
+export type { SelectEntry, SelectOption, SelectOptionGroup };
 
 export interface SelectProps {
-  readonly options: ReadonlyArray<SelectOption>;
+  /**
+   * Choices in paint order. A group paints a heading and its options; the
+   * heading is not selectable, and option values stay unique across groups.
+   */
+  readonly options: ReadonlyArray<SelectEntry>;
   /** Controlled selection. Omit to let the select hold its own. */
   readonly value?: string;
   readonly defaultValue?: string;
@@ -150,21 +160,63 @@ export const selectItemStyle =
   });
 
 /**
- * The height the list will paint, from the values its two styles use.
+ * A group's heading row.
+ *
+ * The caption role on the muted foreground, inset like an option so the heading
+ * and the rows share a left edge. It is not interactive, so it carries no state
+ * resolver — the runtime has no `aria-labelledby`, and the group wrapper below
+ * carries the name instead.
+ */
+export const selectHeadingStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  paddingLeft: theme.spacing.sm,
+  paddingRight: theme.spacing.sm,
+  paddingTop: theme.spacing["2xs"],
+  paddingBottom: theme.spacing["2xs"],
+  fontSize: theme.typography.caption.fontSize,
+  lineHeight: theme.typography.caption.lineHeight,
+  fontWeight: theme.typography.caption.fontWeight,
+  color: theme.colors.mutedForeground,
+  flexShrink: 0,
+});
+
+/**
+ * A group's box: a column with the list's own gap, so a grouped list keeps the
+ * spacing it had before it was grouped. The height estimate counts one gap
+ * between every pair of painted rows, which is exactly what this produces
+ * across group boundaries.
+ */
+export const selectGroupStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "column",
+  gap: theme.spacing["2xs"],
+  flexShrink: 0,
+});
+
+/** The height a group heading paints, from the values its style uses. */
+export const selectHeadingHeight = (theme: PrimitiveTheme): number =>
+  theme.typography.caption.lineHeight + 2 * theme.spacing["2xs"];
+
+/**
+ * The height the list will paint, from the values its three styles use.
  *
  * The side must be chosen before the list exists, so the height is derived:
- * the surface's padding and gaps plus one `controlHeight.sm` row per option and
- * its border. `selectListHeight` sits beside those styles and a test pins the
- * three together, so a restyle that forgets this estimate fails.
+ * the surface's padding and gaps plus one `controlHeight.sm` row per option,
+ * one caption row per non-empty group, and its border. `selectListHeight` sits
+ * beside those styles and a test pins all of them together, so a restyle that
+ * forgets this estimate fails (plans 066, 075).
  */
 export const selectListHeight = (
   optionCount: number,
   theme: PrimitiveTheme,
+  headingCount = 0,
 ): number => {
-  const rows = Math.max(optionCount, 0);
+  const options = Math.max(optionCount, 0);
+  const headings = Math.max(headingCount, 0);
+  const rows = options + headings;
   return (
     2 * theme.spacing.xs +
-    rows * theme.density.controlHeight.sm +
+    options * theme.density.controlHeight.sm +
+    headings * selectHeadingHeight(theme) +
     Math.max(rows - 1, 0) * theme.spacing["2xs"] +
     2 * theme.borderWidth.thin
   );
@@ -188,12 +240,12 @@ export interface SelectHandlers {
   readonly onValueChange: (value: string) => void;
   /** The trigger's host instance, so the wrapper can measure its width. */
   readonly registerTrigger: (instance: PublicInstance | null) => void;
-  /** An option's host instance, so its row can be scrolled into view. */
+  /** An option's host instance, keyed by value, so its row can be scrolled. */
   readonly registerItem: (
-    index: number,
+    value: string,
   ) => (instance: PublicInstance | null) => void;
-  /** Called when an option becomes highlighted, by keyboard or pointer. */
-  readonly onHighlight: (index: number) => void;
+  /** Called with the value of the option that became highlighted. */
+  readonly onHighlight: (value: string) => void;
 }
 
 /**
@@ -205,13 +257,13 @@ export interface SelectHandlers {
  * fits is left alone.
  */
 const ScrollWhenHighlighted = ({
-  index,
+  value,
   onHighlight,
 }: {
-  readonly index: number;
-  readonly onHighlight: (index: number) => void;
+  readonly value: string;
+  readonly onHighlight: (value: string) => void;
 }): null => {
-  useEffect(() => onHighlight(index), [index, onHighlight]);
+  useEffect(() => onHighlight(value), [value, onHighlight]);
   return null;
 };
 
@@ -235,20 +287,45 @@ export const renderSelect = (
   placement: SelectPlacement = { collisionPadding: FLOATING_MARGIN },
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
+  const flat = selectOptions(options);
   const selected = state.current === "" ? undefined : state.current;
   const selectedLabel = Option.getOrElse(
     Option.map(
-      Arr.findFirst(options, (option) => option.value === selected),
+      Arr.findFirst(flat, (option) => option.value === selected),
       (option) => option.label,
     ),
     () => undefined,
   );
-  const items = Arr.map(options, (option) => ({
+  const items = Arr.map(flat, (option) => ({
     value: option.value,
     label: option.label,
     textValue: option.label,
     disabled: option.disabled === true,
   }));
+  const row = (choice: SelectOption): ReactElement => (
+    <SelectItem
+      key={choice.value}
+      ref={handlers.registerItem(choice.value)}
+      value={choice.value}
+      role="option"
+      aria-label={choice.label}
+      aria-selected={choice.value === selected}
+      disabled={choice.disabled}
+      style={selectItemStyle(theme)}
+    >
+      {(state) => (
+        <>
+          {state.highlighted ? (
+            <ScrollWhenHighlighted
+              value={choice.value}
+              onHighlight={handlers.onHighlight}
+            />
+          ) : null}
+          {choice.label}
+        </>
+      )}
+    </SelectItem>
+  );
   return (
     <GpuixSelect
       items={items}
@@ -284,30 +361,23 @@ export const renderSelect = (
           placement.maxHeight,
         )}
       >
-        {Arr.map(options, (option, index) => (
-          <SelectItem
-            key={option.value}
-            ref={handlers.registerItem(index)}
-            value={option.value}
-            role="option"
-            aria-label={option.label}
-            aria-selected={option.value === selected}
-            disabled={option.disabled}
-            style={selectItemStyle(theme)}
-          >
-            {(state) => (
-              <>
-                {state.highlighted ? (
-                  <ScrollWhenHighlighted
-                    index={index}
-                    onHighlight={handlers.onHighlight}
-                  />
-                ) : null}
-                {option.label}
-              </>
-            )}
-          </SelectItem>
-        ))}
+        {Arr.map(options, (entry, index) =>
+          isSelectGroup(entry) ? (
+            <SelectGroup
+              key={`${index}-${entry.label}`}
+              role="group"
+              aria-label={entry.label}
+              style={selectGroupStyle(theme)}
+            >
+              <SelectLabel style={selectHeadingStyle(theme)}>
+                {entry.label}
+              </SelectLabel>
+              {Arr.map(entry.options, row)}
+            </SelectGroup>
+          ) : (
+            row(entry)
+          ),
+        )}
       </SelectContent>
     </GpuixSelect>
   );
@@ -330,7 +400,7 @@ export const Select = (props: SelectProps): ReactElement => {
     undefined,
   );
   const trigger = useRef<number | null>(null);
-  const items = useRef<Map<number, number>>(new Map());
+  const items = useRef<Map<string, number>>(new Map());
   const state = useControlState(
     props.value,
     props.defaultValue ?? "",
@@ -340,11 +410,13 @@ export const Select = (props: SelectProps): ReactElement => {
    * The renderer scrolls a highlighted row into its nearest scroll container.
    *
    * Stable across renders so a highlighted row is not scrolled again on an
-   * unrelated re-render, which would fight a user's wheel scroll.
+   * unrelated re-render, which would fight a user's wheel scroll. Keyed by the
+   * option's value, not its position: a heading between options makes the two
+   * differ.
    */
   const scrollToOption = useCallback(
-    (index: number) => {
-      Option.match(Option.fromNullishOr(items.current.get(index)), {
+    (value: string) => {
+      Option.match(Option.fromNullishOr(items.current.get(value)), {
         onNone: () => {},
         onSome: (id) => renderer?.scrollIntoView?.(id),
       });
@@ -362,12 +434,13 @@ export const Select = (props: SelectProps): ReactElement => {
       bottom: bounds.y + bounds.height,
     });
   }, [renderer, open, props.size, props.fullWidth, viewport.height]);
+  const counts = selectRowCounts(props.options);
   const request = Option.map(
     Option.fromNullishOr(triggerBox),
     (box): PlacementRequest => ({
       triggerTop: box.top,
       triggerBottom: box.bottom,
-      layerHeight: selectListHeight(props.options.length, theme),
+      layerHeight: selectListHeight(counts.options, theme, counts.headings),
       viewportHeight: viewport.height,
       margin: FLOATING_MARGIN,
     }),
@@ -396,9 +469,9 @@ export const Select = (props: SelectProps): ReactElement => {
       registerTrigger: (instance) => {
         trigger.current = instance?.id ?? null;
       },
-      registerItem: (index) => (instance) => {
-        if (instance === null) items.current.delete(index);
-        else items.current.set(index, instance.id);
+      registerItem: (value) => (instance) => {
+        if (instance === null) items.current.delete(value);
+        else items.current.set(value, instance.id);
       },
       onHighlight: scrollToOption,
     },

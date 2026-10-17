@@ -23,10 +23,18 @@ import {
 } from "../src/index.js";
 
 const REGIONS = [
-  { value: "eu-west", label: "Europe — West" },
-  { value: "us-east", label: "United States — East" },
-  { value: "ap-south", label: "Asia — South" },
-  { value: "legacy", label: "Legacy region (read-only)", disabled: true },
+  {
+    label: "Europe",
+    options: [{ value: "eu-west", label: "Europe — West" }],
+  },
+  {
+    label: "Americas and Asia",
+    options: [
+      { value: "us-east", label: "United States — East" },
+      { value: "ap-south", label: "Asia — South" },
+      { value: "legacy", label: "Legacy region (read-only)", disabled: true },
+    ],
+  },
 ] as const;
 
 /** A form with four controls, a byte-sized progress state and a busy action. */

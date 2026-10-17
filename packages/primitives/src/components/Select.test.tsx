@@ -19,6 +19,9 @@ import { fieldVariant } from "../core/variants.js";
 import {
   renderSelect,
   selectContentStyle,
+  selectGroupStyle,
+  selectHeadingHeight,
+  selectHeadingStyle,
   selectItemStyle,
   selectListHeight,
   selectTriggerStyle,
@@ -99,16 +102,32 @@ describe("Select", () => {
 
   it("estimates the painted list height from the styles it mirrors", () => {
     // The side is chosen before the list exists, so the estimate must stay in
-    // step with the two styles that paint it (plan 066).
+    // step with the styles that paint it (plans 066, 075).
     const content = selectContentStyle(testTheme);
     const row = selectItemStyle(testTheme)(rest);
-    const paintedHeight = (rows: number): number =>
+    const heading = selectHeadingStyle(testTheme);
+    const paintedHeight = (rows: number, headings: number): number =>
       2 * Number(content.padding) +
       rows * Number(row.height) +
-      Math.max(rows - 1, 0) * Number(content.gap) +
+      headings * selectHeadingHeight(testTheme) +
+      Math.max(rows + headings - 1, 0) * Number(content.gap) +
       2 * Number(content.borderWidth);
-    expect(selectListHeight(2, testTheme)).toBe(paintedHeight(2));
-    expect(selectListHeight(0, testTheme)).toBe(paintedHeight(0));
+    expect(selectListHeight(2, testTheme)).toBe(paintedHeight(2, 0));
+    expect(selectListHeight(0, testTheme)).toBe(paintedHeight(0, 0));
+    expect(selectListHeight(2, testTheme, 1)).toBe(paintedHeight(2, 1));
+    // The heading's own estimate must follow the caption line and its padding.
+    expect(selectHeadingHeight(testTheme)).toBe(
+      2 * Number(heading.paddingTop) + Number(heading.lineHeight),
+    );
+  });
+
+  it("keeps the list's gap inside a group as well as between entries", () => {
+    // A group is one flex child, so without this its rows would lose the gap
+    // the flat list had — and the height estimate counts every row pair.
+    const group = selectGroupStyle(testTheme);
+    const content = selectContentStyle(testTheme);
+    expect(group.flexDirection).toBe("column");
+    expect(group.gap).toBe(content.gap);
   });
 
   it("caps a list taller than its space and makes it scroll", () => {
@@ -196,6 +215,56 @@ describe("Select", () => {
     expect(
       entries.map((item) => expectSome(elementProp(item, "aria-selected"))),
     ).toStrictEqual([false, true]);
+  });
+
+  it("renders a named group with its heading and options, and reads its label", () => {
+    // The bug guarded (plan 075): a grouped list could not be expressed, so a
+    // long list was one undifferentiated run of options.
+    const element = renderSelect(
+      {
+        options: [
+          {
+            label: "Europe",
+            options: [{ value: "eu", label: "Europe West" }],
+          },
+          { value: "us", label: "United States" },
+        ],
+        label: "Region",
+      },
+      testTheme,
+      valueState("eu"),
+      true,
+      handlers,
+    );
+    const trigger = childAt(element, 0);
+    expect(expectSome(elementProp(trigger, "aria-valuetext"))).toBe(
+      "Europe West",
+    );
+    expect(
+      Option.map(Arr.head(itemsOf(element)), (item) => item["label"]),
+    ).toStrictEqual(Option.some("Europe West"));
+
+    const list = childAt(element, 1);
+    const children = elementChildren(list);
+    expect(children).toHaveLength(2);
+    const group = expectSome(Arr.head(children));
+    expect(expectSome(elementProp(group, "role"))).toBe("group");
+    expect(expectSome(elementProp(group, "aria-label"))).toBe("Europe");
+    expect(expectSome(elementProp(group, "style"))).toStrictEqual(
+      selectGroupStyle(testTheme),
+    );
+    const groupChildren = elementChildren(group);
+    expect(groupChildren).toHaveLength(2);
+    const heading = expectSome(Arr.head(groupChildren));
+    expect(expectSome(elementProp(heading, "style"))).toStrictEqual(
+      selectHeadingStyle(testTheme),
+    );
+    expect(
+      groupChildren.map((child) =>
+        Option.getOrUndefined(elementProp(child, "role")),
+      ),
+    ).toStrictEqual([undefined, "option"]);
+    expect(expectSome(elementProp(childAt(list, 1), "role"))).toBe("option");
   });
 });
 

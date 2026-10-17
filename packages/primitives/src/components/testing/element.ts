@@ -130,6 +130,8 @@ const ReactElement = Schema.declare(
  * component composes — a slider's thumb, a group's options. A child that paints
  * no element (a plain string, or a `null` from a conditional branch) is omitted,
  * which is why an array is filtered rather than decoded as `Array(ReactElement)`.
+ * A nested array (a mapped run beside a literal child) is flattened, because
+ * React sees the same child list either way.
  */
 export const elementChildren = (
   element: ReactElement,
@@ -143,11 +145,13 @@ export const elementChildren = (
       onSome: (child) => [child],
       onNone: () => [],
     });
-  return Option.match(
-    Schema.decodeUnknownOption(Schema.Array(Schema.Unknown))(children),
-    {
-      onSome: (values) => Arr.flatMap(values, asElement),
-      onNone: () => asElement(children),
-    },
-  );
+  const flatten = (value: unknown): ReadonlyArray<ReactElement> =>
+    Option.match(
+      Schema.decodeUnknownOption(Schema.Array(Schema.Unknown))(value),
+      {
+        onSome: (values) => Arr.flatMap(values, flatten),
+        onNone: () => asElement(value),
+      },
+    );
+  return flatten(children);
 };

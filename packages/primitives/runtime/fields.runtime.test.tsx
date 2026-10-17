@@ -21,7 +21,11 @@ import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { Spacer } from "../src/components/Separator.js";
-import { Select, selectListHeight } from "../src/components/Select.js";
+import {
+  Select,
+  selectHeadingHeight,
+  selectListHeight,
+} from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
@@ -395,6 +399,141 @@ it("marks the chosen option selected and reports it as the combobox value", asyn
   ).toBe(false);
 });
 
+/** Two named groups: the shape a long region picker needs. */
+const groupedProps = {
+  testId: "sel",
+  label: "Region",
+  options: [
+    {
+      label: "Europe",
+      options: [
+        { value: "eu", label: "Europe West" },
+        { value: "eu-north", label: "Europe North" },
+      ],
+    },
+    {
+      label: "Americas",
+      options: [{ value: "us", label: "United States" }],
+    },
+  ],
+} as const;
+
+it("paints a grouped Select's headings and names each group", async () => {
+  // The bug guarded (plan 075): a list could not be grouped, so this shape was
+  // unexpressible and the docs called it a limitation.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select {...groupedProps} />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  runtime.flush();
+  expect(runtime.allText()).toEqual(
+    expect.arrayContaining([
+      "Europe",
+      "Europe West",
+      "Europe North",
+      "Americas",
+    ]),
+  );
+  const group = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Group", label: "Europe" }),
+    () => expect.fail("the first group produced no accessibility node"),
+  );
+  expect(group.aria?.role).toBe("Group");
+  const heading = textElement(runtime, "Europe");
+  const headingRow = Option.getOrElse(
+    Option.fromNullishOr(heading.parentId),
+    () => expect.fail("the heading has no row"),
+  );
+  const headingBox = Option.getOrElse(runtime.boundsOfId(headingRow), () =>
+    expect.fail("the heading row painted no box"),
+  );
+  expect(
+    Math.abs(headingBox.height - selectHeadingHeight(testTheme)),
+  ).toBeLessThanOrEqual(1);
+  // The estimate used to choose a side counts both headings; if it did not,
+  // the list would paint taller than the space it was capped to.
+  const list = selectListBoundsOf(runtime);
+  expect(
+    Math.abs(list.height - selectListHeight(3, testTheme, 2)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("counts group headings when choosing the list's side", async () => {
+  // The bug guarded (plan 075): a heading-blind estimate says this list fits
+  // below the trigger (about 128 px in 140 px of room) when it really paints
+  // about 216 px, so the list would open over the field and run off the window.
+  const runtime = await openWindow();
+  const groups = Arr.map(Arr.range(1, 4), (index) => ({
+    label: `Group ${index}`,
+    options: [{ value: `value-${index}`, label: `Option ${index}` }],
+  }));
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 640 }}>
+        <Spacer />
+        <Select testId="sel" label="Grouped" options={groups} />
+      </Stack>
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  const list = selectListBoundsOf(runtime);
+  expect(list.y + list.height).toBeLessThanOrEqual(triggerBox.y);
+  expect(
+    Math.abs(list.height - selectListHeight(4, testTheme, 4)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("keeps a grouped Select's keyboard order flat across a heading", async () => {
+  const runtime = await openWindow();
+  const field = recorder();
+  runtime.render(
+    <Surface>
+      <Select {...groupedProps} onChange={field.onChange} />
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.type("enter");
+  runtime.type("down");
+  runtime.type("enter");
+  runtime.flush();
+  // The first Down lands on the first option, not on the "Europe" heading.
+  expect(lastValue(field.values)).toBe("eu");
+  expect(runtime.allText()).not.toContain("Europe North");
+  expect(ariaOf(runtime, { role: "ComboBox", label: "Region" })?.value).toBe(
+    "Europe West",
+  );
+});
+
+it("commits a click on an option inside a group", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select {...groupedProps} />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  runtime.clickElement(
+    Option.getOrElse(
+      Option.flatMap(
+        Option.fromNullishOr(textElement(runtime, "Europe North").parentId),
+        (id) => Option.fromNullishOr(runtime.renderer.getElement(id)),
+      ),
+      () => expect.fail("the grouped option has no row"),
+    ),
+  );
+  expect(ariaOf(runtime, { role: "ComboBox", label: "Region" })?.value).toBe(
+    "Europe North",
+  );
+});
+
 /** The Select's trigger: the root's first child, which wears `testId`'s chrome. */
 const selectTriggerOf = (runtime: Runtime, testId: string) => {
   const root = Option.getOrElse(runtime.element(testId), () =>
@@ -443,6 +582,19 @@ const selectListBounds = (runtime: Runtime, option: string): Bounds =>
         ),
     ),
     () => expect.fail(`the list painted no ${option} option`),
+  );
+
+/** The listbox itself, whatever rows a group puts between it and an option. */
+const selectListBoundsOf = (runtime: Runtime): Bounds =>
+  Option.getOrElse(
+    Option.flatMap(
+      Arr.findFirst(
+        runtime.all(),
+        (element) => element.customProps?.["role"] === "listbox",
+      ),
+      (list) => runtime.boundsOfId(list.id),
+    ),
+    () => expect.fail("the Select painted no listbox"),
   );
 
 it("opens the Select's list at least as wide as its trigger", async () => {
