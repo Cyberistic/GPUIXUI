@@ -14,6 +14,7 @@ import type { ReactElement } from "react";
 import { isValidElement } from "react";
 import type { EventPayload } from "@gpuix/react";
 import { expect } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
@@ -126,8 +127,9 @@ const ReactElement = Schema.declare(
  * An element's children, as elements.
  *
  * The tree is not rendered, so this is the only way to reach the parts a
- * component composes — a slider's thumb, a group's options. A child that is a
- * plain string (painted text) is not an element and is omitted.
+ * component composes — a slider's thumb, a group's options. A child that paints
+ * no element (a plain string, or a `null` from a conditional branch) is omitted,
+ * which is why an array is filtered rather than decoded as `Array(ReactElement)`.
  */
 export const elementChildren = (
   element: ReactElement,
@@ -136,13 +138,16 @@ export const elementChildren = (
     elementProp(element, "children"),
     () => undefined,
   );
-  const many = Schema.decodeUnknownOption(Schema.Array(ReactElement));
-  return Option.match(many(children), {
-    onSome: (elements) => elements,
-    onNone: () =>
-      Option.match(Schema.decodeUnknownOption(ReactElement)(children), {
-        onSome: (element) => [element],
-        onNone: () => [],
-      }),
-  });
+  const asElement = (value: unknown): ReadonlyArray<ReactElement> =>
+    Option.match(Schema.decodeUnknownOption(ReactElement)(value), {
+      onSome: (child) => [child],
+      onNone: () => [],
+    });
+  return Option.match(
+    Schema.decodeUnknownOption(Schema.Array(Schema.Unknown))(children),
+    {
+      onSome: (values) => Arr.flatMap(values, asElement),
+      onNone: () => asElement(children),
+    },
+  );
 };

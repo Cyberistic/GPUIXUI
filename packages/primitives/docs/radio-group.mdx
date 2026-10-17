@@ -38,12 +38,17 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | radio circle size |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the dot's fill |
 | `disabled` | `boolean` | `false` | disables every option |
+| `invalid` | `boolean` | `false` | a failed validation: the empty circles take the destructive border |
 | `label` | `string` | none | accessible name for the group |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
 `RadioOption` is `{ value, label, description?, disabled? }`. `description` is a
 caption beside the name, not an accessible description.
+
+`invalid` is the same failed-validation paint as `Checkbox`, `Switch` and the
+fields: an **empty** circle's border takes `colors.destructive`; a chosen one
+keeps its accent, so the error cannot be mistaken for the selection.
 
 ## Keyboard
 
@@ -90,12 +95,14 @@ same size are the same square/circle family. Gaps use `spacing.sm`.
   Home/End landing on the nearest enabled end.
 - `src/core/selection.test.ts` — circle and dot paint, including the focus ring.
 - `src/components/selection.test.tsx` — roving index and data options; an arrow
-  asks the group to move focus to the option it landed on.
+  asks the group to move focus to the option it landed on; an `invalid` group
+  paints the empty circles destructive and leaves the chosen one on its accent.
 - `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
   options (plan 044); Home/End jump to the enabled ends (plan 048); the focused
   option paints the ring and no other does; arrows move native focus with the
   selection and a controlled value moves the tab stop (plan 049); a click on the
-  circle selects.
+  circle selects; `invalid` paints the measured `borderColor` and the same tree
+  without it paints the input role (plan 061).
 
 ```sh
 nub run --filter @gpuixui/primitives test

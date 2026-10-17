@@ -243,6 +243,18 @@ retired once both branches are one
       align is half a panel off. The root now hugs the trigger and the default
       align is `start`; three runtime and two offline tests, both directions
       proven (plan 060)
+`[x]` `packages/primitives`: `RadioGroup` gains `invalid` — every other
+      selectable control could show a failed validation, the radio could not.
+      The empty circles take the destructive border, a chosen one keeps its
+      accent; measured in the runtime and in the element tree (plan 061)
+`[ ]` `packages/primitives`: **`Select`'s list never matches its trigger.**
+      Measured 2026-10-17 in the runtime: `minWidth: "100%"` in
+      `selectContentStyle` resolves against the layer, so a 108 px trigger and
+      a 900 px `fullWidth` trigger both open a 57 px list that hugs its labels;
+      `width: "100%"` behaves the same. Either measure the trigger once (ref +
+      `renderer.getElementBounds`) and set a numeric `minWidth`, or drop the
+      dead style and correct the "full trigger width" comment, `select.mdx` and
+      `COMPONENTS.md`. Write the plan (062) before implementing.
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

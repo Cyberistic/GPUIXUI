@@ -517,6 +517,37 @@ it("rings the radio that holds focus, and only that one", async () => {
   expect(ringed(runtime, "Alpha")).toBe(false);
 });
 
+it("paints a RadioGroup's failed validation on the empty circles", async () => {
+  const runtime = await openWindow();
+  const radioGroup = (invalid: boolean) => (
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        invalid={invalid}
+        defaultValue="a"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>
+  );
+  runtime.render(radioGroup(true));
+  runtime.flush();
+  expect(circleOf(runtime, "Alpha").style.borderColor).toBe(
+    testTheme.colors.primary,
+  );
+  expect(circleOf(runtime, "Beta").style.borderColor).toBe(
+    testTheme.colors.destructive,
+  );
+  runtime.render(radioGroup(false));
+  runtime.flush();
+  expect(circleOf(runtime, "Beta").style.borderColor).toBe(
+    testTheme.colors.input,
+  );
+});
+
 it("rings a focused Checkbox and Switch, and clears it when focus leaves", async () => {
   const runtime = await openWindow();
   runtime.render(

@@ -62,6 +62,11 @@ export interface RadioGroupProps {
   readonly accent?: SelectionAccent;
   /** Disables every option. */
   readonly disabled?: boolean;
+  /**
+   * A failed validation paints the empty circles with the destructive border,
+   * like every other field control. A checked circle keeps its accent.
+   */
+  readonly invalid?: boolean;
   /** Accessible name for the group. */
   readonly label?: string;
   readonly style?: StyleDesc;
@@ -167,6 +172,7 @@ export const renderRadioGroup = (
           size,
           accent,
           shape: "circle",
+          invalid: props.invalid === true,
           disabled,
           focused: Option.exists(
             focus.focusedIndex,

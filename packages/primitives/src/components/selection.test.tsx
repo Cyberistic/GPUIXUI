@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -31,6 +32,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyleString,
   hostTag,
   elementChildren,
 } from "./testing/element.js";
@@ -249,6 +251,44 @@ describe("RadioGroup", () => {
     );
     expect(selectionValueText(checkboxState({ checked: true }))).toBe(
       "checked",
+    );
+  });
+
+  it("paints a failed validation on the empty circles only", () => {
+    const element = renderRadioGroup(
+      { options, invalid: true },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const circleBorder = (index: number): string => {
+      const row = expectSome(Arr.get(elementChildren(element), index));
+      const circle = expectSome(Arr.get(elementChildren(row), 0));
+      return expectSome(hostStyleString(circle, "borderColor"));
+    };
+    // The chosen circle keeps its accent; the unanswered ones take the error.
+    expect(circleBorder(0)).toBe(testTheme.colors.primary);
+    expect(circleBorder(1)).toBe(testTheme.colors.destructive);
+    expect(circleBorder(2)).toBe(testTheme.colors.destructive);
+
+    const valid = renderRadioGroup(
+      { options },
+      testTheme,
+      text(""),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const firstCircle = expectSome(
+      Arr.get(
+        elementChildren(expectSome(Arr.get(elementChildren(valid), 0))),
+        0,
+      ),
+    );
+    expect(expectSome(hostStyleString(firstCircle, "borderColor"))).toBe(
+      testTheme.colors.input,
     );
   });
 });
