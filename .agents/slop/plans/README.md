@@ -97,6 +97,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [098](./098-brand-theme-truth.md) | The documented brand theme must pass the contract it teaches | F | 011, 013, 055, 071, 082, 097 | done |
 | [099](./099-modal-scrim-perceivability.md) | The modal scrim must be perceivable on every surface it covers | F | 013, 071, 073, 076, 086, 087, 094 | done |
 | [300](./300-soft-status-quiet-panel.md) | The soft status surface on the quiet panel | F | 014, 063, 071, 076, 090, 094 | done |
+| [301](./301-applied-style-contrast-claim.md) | An applied platform style must declare the contrast it carries | F | 063, 071, 073 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -524,6 +525,18 @@ small step deeper — `#DEE9FF` → `#D6E3FF`, `#C2F4D6` → `#B8EDCE`, `#FFE3A3
 1.081–1.111 while keeping the soft text (≥9.87:1) and edge (≥1.096:1) floors. A
 soft chip inside a hovered or selected row is deliberately not a fill pair: it is
 bounded by its designed `xSoftBorder` edge, unlike a full Alert panel.
+
+301 closes a truth gap in the extension mechanism rather than in the palette.
+Plan 073 made a theme declare the floors it is designed against, but
+`applyPlatformStyle(highBase, style, "default")` applied the platform's default
+colours and left the base's `contrast: "high"` claim in place — so the library's
+own checker reported **46** failures for a theme the caller had built on purpose,
+and `theme.contrast` described a palette the theme no longer carried. The
+returned declaration now follows the palette: applied platform colours declare
+`default` (the shipped platform palettes are designed at the default floors; AAA
+applies only families and shape), while the no-argument call and a shape-only
+style with no colour overrides keep the base's level. No colour moves, and plan
+073's default-call guarantee is unchanged.
 
 ### Reference adoption (block `200–299`)
 
