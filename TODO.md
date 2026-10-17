@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 74/98
+`[x]` `[████████░░]` 75/99
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -373,6 +373,11 @@ painted `disabledForeground` on `popover` at 1.99:1 (Linux dark) and 2.26:1
 `muted`/`hover`, and nothing held the edge; `inactive` is a 3:1 / 4.5:1 floor on
 nine surfaces and `border` on `disabled`/`muted` joins the divider class
 (plan 306)
+`[x]` Hold the inactive label inside a status panel — an Alert's or Toast's
+action can be disabled, but `disabledForeground` was measured on the nine
+surfaces of plan 306, not the four soft status fills; the four pairs
+(`inactiveSoftPairs`) already pass in every shipped set, so no colour moves and
+an edited theme can no longer erase a disabled "Retry" (plan 307)
 `[ ]` Cross-team: `primitives` and `components` replace `opacity: 0.5` disabled
 dimming with the designed `disabled` / `disabledForeground` pair plus the
 `border` edge — an alpha composite makes the label's readability depend on the

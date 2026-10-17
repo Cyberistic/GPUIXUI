@@ -340,9 +340,9 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(144);
+    expect(contrastPairs.length).toBe(148);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
-    expect(inactivePairs.length).toBe(9);
+    expect(inactivePairs.length).toBe(13);
     expect(inactivePairs.map(([, background]) => background)).toEqual([
       "disabled",
       "background",
@@ -353,6 +353,10 @@ describe("themeContrastFailures", () => {
       "active",
       "accent",
       "selected",
+      "infoSoft",
+      "successSoft",
+      "warningSoft",
+      "destructiveSoft",
     ]);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);

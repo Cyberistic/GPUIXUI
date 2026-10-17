@@ -1012,10 +1012,12 @@ deliberately not scrim surfaces: the pointer leaves the row to reach the dialog,
 so a scrim over a transient hover is not a composition the system supports.
 
 The inactive state has its own floor. `disabledForeground` is measured on the
-nine surfaces an unavailable label paints — the `disabled` fill (`inactivePairs`),
-the four plain surfaces, and the `hover`/`active`/`accent`/`selected` washes a
-disabled control inside a row sits on (`inactiveSurfaces` is the list) — at 3:1,
-and at 4.5:1 in the high-contrast themes. WCAG 1.4.3 exempts inactive components;
+thirteen surfaces an unavailable label paints — the `disabled` fill
+(`inactivePairs`), the four plain surfaces, the `hover`/`active`/`accent`/
+`selected` washes a disabled control inside a row sits on, and the four soft
+status fills a Toast's or Alert's action sits on (`inactiveSoftPairs`;
+`inactiveSurfaces` is the ordered list) — at 3:1, and at 4.5:1 in the
+high-contrast themes. WCAG 1.4.3 exempts inactive components;
 that exemption is not a licence to erase the state, because the point of an
 unavailable control is that a reader can find out what is unavailable. A disabled
 `Select` item paints this role straight onto the menu's `popover` with no fill

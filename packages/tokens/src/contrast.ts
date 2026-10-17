@@ -122,13 +122,13 @@ const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
 );
 
 /**
- * The surfaces an inactive label paints on: its own `disabled` fill, the plain
- * surfaces a ghost disabled action sits on, and the row washes a disabled
- * control inside a hovered or selected row paints. A disabled `Select` item is
- * the shipped case — it paints `disabledForeground` on the menu's `popover`
- * with no fill behind it.
+ * The surfaces an inactive label paints on, beyond the soft status fills: its
+ * own `disabled` fill, the plain surfaces a ghost disabled action sits on, and
+ * the row washes a disabled control inside a hovered or selected row paints. A
+ * disabled `Select` item is the shipped case — it paints `disabledForeground` on
+ * the menu's `popover` with no fill behind it.
  */
-export const inactiveSurfaces = [
+const inactiveBaseSurfaces = [
   "disabled",
   "background",
   "card",
@@ -140,10 +140,33 @@ export const inactiveSurfaces = [
   "selected",
 ] as const;
 
-/** The inactive label measured on each surface in {@link inactiveSurfaces}. */
-export const inactivePairs: readonly ContrastPair[] = inactiveSurfaces.map(
+/**
+ * The soft status fills a disabled action sits on. An Alert or Toast carries
+ * actions — Retry, Undo, Dismiss — and one can be unavailable while the panel is
+ * open, so the label needs the inactive floor there like it does on a plain
+ * surface.
+ */
+export const inactiveSoftPairs: readonly ContrastPair[] = softSurfaceRoles.map(
   (background): ContrastPair => ["disabledForeground", background, "inactive"],
 );
+
+/** Every surface an inactive label paints on, in documentation order. */
+export const inactiveSurfaces = [
+  ...inactiveBaseSurfaces,
+  ...softSurfaceRoles,
+] as const;
+
+/** The inactive label measured on each surface in {@link inactiveSurfaces}. */
+export const inactivePairs: readonly ContrastPair[] = [
+  ...inactiveBaseSurfaces.map(
+    (background): ContrastPair => [
+      "disabledForeground",
+      background,
+      "inactive",
+    ],
+  ),
+  ...inactiveSoftPairs,
+];
 
 /**
  * The surfaces a bounded control sits on beyond the plain ones: the quiet panel

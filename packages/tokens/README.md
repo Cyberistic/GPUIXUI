@@ -260,7 +260,8 @@ theme passes it —
 platform variants on their own canvas, not the identity's.
 The inactive state is measured too, and its floor is a design floor rather than a
 WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
-`disabled` fill, the four plain surfaces and the four row washes, because a
+`disabled` fill, the four plain surfaces, the four row washes and the four soft
+status fills a Toast's or Alert's action sits on (`inactiveSoftPairs`), because a
 disabled `Select` item paints the label straight onto the menu's `popover` and
 measured 1.99:1 on Linux dark until plan 306. The `disabled` fill is allowed to
 sit near the panel — no neutral clears both a white card and the quiet panel — so

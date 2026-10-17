@@ -103,6 +103,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [304](./304-create-theme-contrast-selection.md) | `createTheme` starts from the contrast variant it names | F | 013, 071, 073, 301 | done |
 | [305](./305-theme-axis-indexes.md) | The last two unions without an ordered index | F | 067, 068, 096, 304 | done |
 | [306](./306-inactive-control-state.md) | The inactive control: a readable label and an edge that holds its shape | F | 014, 056–062, 071, 073, 076, 084, 086–088, 094, 095, 097 | done |
+| [307](./307-inactive-label-soft-fills.md) | The inactive label inside a status panel | F | 090–093, 306 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -592,6 +593,15 @@ outline survives on any panel. The `disabled` fill stays exempt with the
 corrected reason, `disabledForeground` does not, and the consumer migration off
 `opacity: 0.5` is recorded cross-team rather than edited in another workstream's
 tree.
+
+307 closes the same floor one composition over: plans 090–093 treat the four soft
+status fills as surfaces a composition paints on — the surface, its edge, the
+selection wash, the essential boundary and the focus ring — but a disabled
+"Retry" in a Toast or Alert had no pair behind it. `inactiveSoftPairs` adds the
+four fills to the inactive contract (144 → 148 pairs); every shipped set already
+clears 3:1 / 4.5:1 there (3.41 at the lowest, light `destructiveSoft`), so no
+colour moves, and the public checker now reports an edited theme that erases the
+label on its own status panel.
 
 ### Reference adoption (block `200–299`)
 
