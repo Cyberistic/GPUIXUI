@@ -62,7 +62,7 @@ inherits its title and description from its frontmatter.
 export interface DocsPageLike {
   readonly url: string;
   readonly data: {
-    readonly title: string;
+    readonly title?: string | undefined;   // see §9: optional in the type, required by the schema
     readonly description?: string | undefined;
   };
 }
@@ -75,33 +75,40 @@ export interface DocsPageMeta {
 }
 
 export const docsPageMeta = (page: DocsPageLike): DocsPageMeta => ...
+export const docsPageTitle = (title: string): string => `${title} — GPUIXUI`
 
-/** The `head()` payload: the page's title, description, OpenGraph tags and canonical URL. */
+/** The `head()` payload: title, description, OpenGraph tags and canonical URL. */
 export const docsPageHead = (meta: DocsPageMeta) => ({ meta: [...], links: [...] });
 ```
 
 Title format: `` `${title} — GPUIXUI` `` (em dash, matching the site's existing
 prose). `og:title` keeps the bare page title. A page without a description emits
 **no** `description`/`og:description` meta rather than an empty one, so the root
-description is not replaced by a blank string.
+description is not replaced by a blank string. A page without a title raises
+`DocsPageTitleMissing` instead of borrowing the site title (§9).
 
-No `string | undefined` leaks into the rendered tags and no text is retyped:
-`docsPageMeta` reads the page, `docsPageHead` formats it.
+No text is retyped: `docsPageMeta` reads the page, `docsPageHead` formats it, and
+the route passes the record through the existing server loader.
 
 ## 5. Commands and expected results
 
 Run from the worktree root (`/Users/cyberistic/GPUIXUI/workspaces/docs-site`).
 
-| Command | Expected |
-| --- | --- |
-| `nub run --filter docs check-types` | exit 0; `tsc` accepts the real loader page as `DocsPageLike` (if `data.title` is optional in the installed Fumadocs types, **STOP** and report — see §7) |
-| `nub run --filter docs test` | `src/lib/page-meta.test.ts` passes with the existing suites |
-| `nub run --filter docs build` | exit 0; the SSR output for a page contains that page's title (spot-check with `rg '<title>' apps/docs/dist/server`) |
-| `nub run lint`, `nub run check` | exit 0 |
+| Command | Expected | Result |
+| --- | --- | --- |
+| `nub run --filter docs check-types` | exit 0 | pass |
+| `nub run --filter docs test` | the new suite passes with the existing ones | 39 tests, 8 files, pass |
+| `nub run --filter docs build` | exit 0 | pass |
+| `nub run --filter docs dev` + `curl /docs/installation` | the page's own title in the HTML | pass — see §9 |
+| `nub run lint`, `nub run check`, `nub run test` | exit 0 | pass |
 
-Two-direction proof (AGENTS §3): delete the `head:` option from the route and
-show the wiring guard fails; restore it and show it passes. Record both runs in
-the commit message.
+Two-direction proof (AGENTS §3), both required:
+
+1. **Unit level.** Remove the `head:` option from the route: the wiring test
+   fails (`1 failed | 38 passed`). Restore it: all pass (`8 files, 39 tests`).
+2. **Runtime level.** With the dev server running, remove the `head:` option:
+   `/docs/installation` returns `<title>GPUIXUI</title>` — the defect. Restore
+   it: `<title>Installation — GPUIXUI</title>`. Recorded in §9.
 
 ## 6. Test plan — `apps/docs/src/lib/page-meta.test.ts`
 
@@ -117,27 +124,62 @@ visible in the test. Test 4 is a wiring guard and its header comment says so.
 
 ## 7. STOP conditions
 
-- **`data.title` is optional in the installed Fumadocs types.** Stop and report:
-  do not invent a fallback title from the URL. (Expected outcome is that it is
-  required — every page in `content/docs` has a title — but the plan must not
-  assume it.)
+- **`data.title` is optional in the installed Fumadocs types.** **Hit, resolved
+  in §9**: a page without a title raises `DocsPageTitleMissing`; no title is ever
+  fabricated from the URL, and the runtime guarantee is recorded with its
+  evidence.
 - **The route's `head` cannot see `loaderData`** (a different TanStack Router
   major than the one verified in §2). Stop and report the installed version and
   the type error; do not fetch the page again on the client.
 - **Anything would need a site-wide absolute URL** (for an absolute canonical or
   `og:url`). The domain lives in `packages/deploy/alchemy.run.docs.ts`, which is
-  outside this workstream. Keep the canonical relative and record the task.
+  outside this workstream. Keep the canonical relative and record the task
+  (recorded in `TODO.md`).
 - A gate fails for a reason outside this workstream. Report the failing
   workspace and leave it untouched.
 
 ## 8. Acceptance criteria
 
-- [ ] A docs page's `<title>` is its own frontmatter title plus the site name.
-- [ ] A docs page's description, `og:title`, `og:description` and canonical link
+- [x] A docs page's `<title>` is its own frontmatter title plus the site name.
+- [x] A docs page's description, `og:title`, `og:description` and canonical link
       come from the page, not from a constant.
-- [ ] A page without a description emits no empty description meta.
-- [ ] `page-meta.test.ts` proves the mapping from the real content tree and the
+- [x] A page without a description emits no empty description meta.
+- [x] `page-meta.test.ts` proves the mapping from the real content tree and the
       route wiring; the wiring guard has been shown to fail in both directions.
-- [ ] `nub run check`, `nub run lint`, `nub run test` pass.
-- [ ] The docs rows in `TODO.md` and the plans index are current; committed on
+- [x] `nub run check`, `nub run lint`, `nub run test` pass.
+- [x] The docs rows in `TODO.md` and the plans index are current; committed on
       `agent/docs-site`.
+
+## 9. Findings and verification
+
+**Finding — `PageData.title` is optional.** `fumadocs-core@16.17.3` declares
+`interface PageData { title?: string | undefined; ... }`
+(`dist/index-CzLpE50a.d.ts:404`), and `fumadocs-mdx@15.4.7`'s
+`MacroDocsCollection<Frontmatter extends PageData = PageData>` only ever requires
+`extends PageData`, so no loader type can prove a title
+(`dist/runtime/macro.d.ts`). The frontmatter schema, however, requires one:
+`frontmatterSchema = { title: ZodString, description: ZodOptional<ZodString>, ... }`
+(`dist/index-DosG5f9I.d.ts:10`), which `fumadocs-mdx` validates MDX frontmatter
+against at build time.
+
+Resolution: the type is loosened at this boundary (`DocsPageLike.data.title?`),
+checked once in `requireTitle`, and a violation raises `DocsPageTitleMissing`
+with the page's URL. Nothing is fabricated. The failure is unreachable for
+content that built, which is why the guard is a `throw` in a browser-app
+boundary module (the same deliberate exception as `captures.ts`: `effect` must
+not enter the client bundle, so `Option`/`Effect.fail` are not available here).
+
+**Verification — dev server, both directions.** `nub run --filter docs dev`, then:
+
+```
+head: removed     GET /docs/installation → <title>GPUIXUI</title>
+head: restored    GET /docs/installation → <title>Installation — GPUIXUI</title>
+                  <meta name="description" content="Add GPUIXUI to a GPUix application."/>
+                  <meta property="og:title" content="Installation"/>
+                  <link rel="canonical" href="/docs/installation"/>
+                  GET /docs/theming       → <title>Theming — GPUIXUI</title>
+```
+
+Unit level: the wiring guard fails with `head:` removed (`1 failed | 38 passed`)
+and passes with it (`8 files, 39 tests`). `check-types`, `build`, `lint`, `check`
+and `test` all pass.
