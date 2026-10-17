@@ -82,6 +82,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [083](./083-status-text-state-washes.md) | The status text on the state washes | F | 014, 057, 063, 071–082 | done |
 | [084](./084-control-boundary-on-state-washes.md) | The control boundary on the washes a row paints | F | 014, 063, 071–083 | done |
 | [085](./085-elevation-tint-role.md) | The elevation tint role the theme never painted | F | 011, 018, 056–066 | done |
+| [086](./086-total-contrast-contract.md) | A total contrast contract, and the ring on every surface a control sits on | F | 059, 071–085 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -332,6 +333,16 @@ A level is now geometry plus the alpha to apply to the tint, and
 resolves the whole list for a compositing renderer. The alphas are chosen so
 every shipped pixel is unchanged, and a new suite proves that editing the role
 retints all three levels.
+086 makes the contract total, which is the end state of the 076–084 sequence.
+The focus ring is measured on the eight surfaces a focused control can sit on —
+plan 074 had added the three state washes but not the `muted` panel a sidebar
+control sits on or the `accent` wash a selectable row paints. Both shipped pairs
+already cleared the floor, so no colour moves (101 → 103 pairs). The same plan
+turns the one-at-a-time audit into a guard: a completeness suite fails when a
+colour role is neither measured by `contrastPairs`/`selectionPairs` nor on a
+declared exemption list with a reason (`disabled`/`disabledForeground`,
+`overlay`, `scrollbar`, `shadow`), so a 55th role cannot ship with no contrast
+story.
 
 ### Reference adoption (block `200–299`)
 
