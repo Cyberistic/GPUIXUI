@@ -214,6 +214,8 @@ it("scrolls a labelled ScrollArea with the keyboard", async () => {
   // one (plan 072 §1). The label is what makes the region a scroll stop.
   const runtime = await openWindow();
   runtime.render(scrollScene({ label: "Properties" }));
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("s");
   runtime.keyDown("s", "pagedown");
   const page = offsetOf(runtime);
   expect(page.y).toBeLessThan(0);
