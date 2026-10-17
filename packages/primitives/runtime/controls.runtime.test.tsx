@@ -10,12 +10,14 @@
  *
  * Each test names the bug it guards: Enter firing on key up, Space on key down,
  * a held key activating, a disabled control activating, the roving tab stop
- * staying behind the selection.
+ * staying behind the selection, and a button wired with the familiar `onClick`
+ * that no key could reach (plan 085).
  */
 
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { EventPayload } from "@gpuix/react";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -188,6 +190,66 @@ it("refuses to activate a loading Button, and still announces itself busy", asyn
   expect(
     Option.isSome(a11yNode(runtime.a11y(), { role: "Button", label: "Save" })),
   ).toBe(true);
+});
+
+/**
+ * A Button wired the way a consumer (and the components contract) writes it:
+ * the familiar `onClick`, with no `onActivate` beside it.
+ */
+const renderOnClickButton = async (
+  props: Partial<Parameters<typeof Button>[0]> = {},
+): Promise<{ runtime: Runtime; clicks: ReadonlyArray<EventPayload> }> => {
+  const runtime = await openWindow();
+  const clicks: EventPayload[] = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="b" onClick={(event) => clicks.push(event)} {...props}>
+          Save
+        </Button>
+      </Stack>
+    </Surface>,
+  );
+  return { runtime, clicks };
+};
+
+it("reports a keyboard activation through onClick when only onClick is wired", async () => {
+  // The bug guarded (plan 085): the key path called onActivate alone, so the
+  // familiar prop left a keyboard user with a button that did nothing.
+  const { runtime, clicks } = await renderOnClickButton();
+  runtime.keyDown("b", "enter");
+  expect(clicks).toHaveLength(1);
+  expect(clicks[0]?.key).toBe("enter");
+});
+
+it("reports Space through onClick on key up, never on the key down before it", async () => {
+  const { runtime, clicks } = await renderOnClickButton();
+  runtime.keyDown("b", "space");
+  expect(clicks).toHaveLength(0);
+  runtime.keyUp("b", "space");
+  expect(clicks).toHaveLength(1);
+});
+
+it("reports no onClick for a held key, a disabled button or a busy one", async () => {
+  const held = await renderOnClickButton();
+  held.runtime.keyDown("b", "enter", true);
+  expect(held.clicks).toHaveLength(0);
+
+  const disabled = await renderOnClickButton({ disabled: true });
+  disabled.runtime.keyDown("b", "enter");
+  disabled.runtime.click("b");
+  expect(disabled.clicks).toHaveLength(0);
+
+  const loading = await renderOnClickButton({ loading: true });
+  loading.runtime.keyDown("b", "enter");
+  expect(loading.clicks).toHaveLength(0);
+});
+
+it("reports a real click through onClick with the click's own event", async () => {
+  const { runtime, clicks } = await renderOnClickButton();
+  runtime.click("b");
+  expect(clicks).toHaveLength(1);
+  expect(clicks[0]?.key).toBeUndefined();
 });
 
 it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", async () => {

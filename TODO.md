@@ -416,6 +416,14 @@ retired once both branches are one
       exactly one `focusRing`, of the exact value, inside the control. 17/17
       green; both the zero-ring and the two-ring direction fail as they should
       (plan 084)
+`[x]` `packages/primitives`: **`Button.onClick` was mouse-only** — measured: a
+      button wired with the familiar `onClick` reported **0** calls on Enter and
+      1 on a click, because the key path called `onActivate` alone, so every
+      consumer using the obvious prop shipped a keyboard-dead control (the
+      components workstream's contract passes `onClick`). Pointer and key now
+      share one path: `onClick(event)` then `onActivate()`, with held/disabled/
+      loading refused. 2 offline + 4 runtime tests, both directions proven
+      (plan 085)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

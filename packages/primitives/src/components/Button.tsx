@@ -61,6 +61,10 @@ export interface ButtonProps {
   readonly label?: string;
   /** Called for a click or an activating key. Not called while busy or disabled. */
   readonly onActivate?: () => void;
+  /**
+   * Called with the event that activated the button: the pointer click, or the
+   * key event (Enter down / Space up). Runs before `onActivate`.
+   */
   readonly onClick?: (event: EventPayload) => void;
   /** An object, or a callback over this button's public state. */
   readonly style?: StateStyle<ButtonState>;
@@ -94,8 +98,9 @@ export const renderButton = (
     fullWidth: props.fullWidth,
     disabled: props.disabled,
   };
-  const activate = (): void => {
+  const activate = (event: EventPayload): void => {
     if (busy) return;
+    props.onClick?.(event);
     props.onActivate?.();
   };
   const state: ButtonState = {
@@ -107,7 +112,7 @@ export const renderButton = (
     (phase: "down" | "up") =>
     (event: EventPayload): void => {
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
-        activate();
+        activate(event);
     };
   return (
     <div
@@ -118,11 +123,7 @@ export const renderButton = (
         props.disabled === true && props.loading !== true ? undefined : 0
       }
       testId={props.testId}
-      onClick={(event) => {
-        if (busy) return;
-        props.onClick?.(event);
-        props.onActivate?.();
-      }}
+      onClick={activate}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
       onKeyDown={onKey("down")}

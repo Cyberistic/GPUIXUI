@@ -6,7 +6,8 @@
  * below flips a real bug: Enter firing on key *up* (double activation with the
  * platform's own click), Space on key *down* (repeating while held), a held key
  * activating, a busy button still firing, and a disabled button keeping its tab
- * stop.
+ * stop. Plan 085 adds the one the props disagreed on: a key activation reported
+ * through `onClick`, not only through `onActivate`.
  */
 
 import type { ReactElement } from "react";
@@ -14,7 +15,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton } from "./Button.js";
-import { keyEvent } from "./testing/event.js";
+import { keyEvent, clickEvent } from "./testing/event.js";
 import {
   expectSome,
   hostHandler,
@@ -61,25 +62,66 @@ describe("Button", () => {
 
   it("activates on Enter key down, never on key up", () => {
     const onActivate = vi.fn();
-    const element = resting({ onActivate });
+    const onClick = vi.fn();
+    const element = resting({ onActivate, onClick });
     press(element, "enter", "down");
     press(element, "enter", "up");
     expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it("activates on Space key up, never on key down", () => {
     const onActivate = vi.fn();
-    const element = resting({ onActivate });
+    const onClick = vi.fn();
+    const element = resting({ onActivate, onClick });
     press(element, "space", "down");
     expect(onActivate).toHaveBeenCalledTimes(0);
+    expect(onClick).toHaveBeenCalledTimes(0);
     press(element, "space", "up");
     expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it("ignores a repeating key", () => {
     const onActivate = vi.fn();
-    press(resting({ onActivate }), "enter", "down", true);
+    const onClick = vi.fn();
+    press(resting({ onActivate, onClick }), "enter", "down", true);
     expect(onActivate).toHaveBeenCalledTimes(0);
+    expect(onClick).toHaveBeenCalledTimes(0);
+  });
+
+  it("reports the activating key to onClick, before onActivate", () => {
+    // The bug guarded: only onActivate ran for a key, so a consumer using the
+    // familiar `onClick` (as React's own button supports, and as the components
+    // contract requires) had no keyboard activation at all (plan 085).
+    const onActivate = vi.fn();
+    const onClick = vi.fn();
+    press(resting({ onActivate, onClick }), "enter", "down");
+    expect(onClick).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "enter" }),
+    );
+    expect(onClick.mock.invocationCallOrder[0]).toBeLessThan(
+      onActivate.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it("gives a pointer click the same path, and refuses it when disabled", () => {
+    const onActivate = vi.fn();
+    const onClick = vi.fn();
+    expectSome(hostHandler(resting({ onActivate, onClick }), "onClick"))(
+      clickEvent,
+    );
+    expect(onClick).toHaveBeenCalledWith(clickEvent);
+    expect(onActivate).toHaveBeenCalledTimes(1);
+
+    const disabled = {
+      disabled: true as const,
+      onActivate: vi.fn(),
+      onClick: vi.fn(),
+    };
+    expectSome(hostHandler(resting(disabled), "onClick"))(clickEvent);
+    expect(disabled.onClick).toHaveBeenCalledTimes(0);
+    expect(disabled.onActivate).toHaveBeenCalledTimes(0);
   });
 
   it("is a named button the runtime can hit-test", () => {
@@ -90,9 +132,11 @@ describe("Button", () => {
 
   it("stays focusable while loading but refuses to activate", () => {
     const onActivate = vi.fn();
-    const loading = resting({ loading: true, onActivate });
+    const onClick = vi.fn();
+    const loading = resting({ loading: true, onActivate, onClick });
     press(loading, "enter", "down");
     expect(onActivate).toHaveBeenCalledTimes(0);
+    expect(onClick).toHaveBeenCalledTimes(0);
     expect(expectSome(hostProp(loading, "tabIndex"))).toBe(0);
     expect(expectSome(hostProp(loading, "aria-description"))).toBe("Loading");
   });
