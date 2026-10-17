@@ -64,6 +64,14 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | layers | `nested-layer-dismiss` | verified |
 
 The suite is **56/56 green here** (exit `0`, `.artifacts/smoke-report.json`).
+
+A second, smaller suite runs the shipped playground in a **real window**
+(`nub run --filter playground smoke:live`, plan `189`): `layout`, `input` and
+`scroll` are confirmed there too — the shell fills the window and navigates by
+click and Enter, typing reaches `onChange`/`onSubmit` in a live editor, and a
+wheel moves a live container with its `onScroll` delta. Colour, accessibility,
+virtual-list anchors and highlights stay `TestRenderer`-only: the automation
+protocol does not expose them.
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the

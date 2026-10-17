@@ -11,8 +11,14 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { CheckOutcome, HighlightMatch, StyleSnapshot } from "./smoke.js";
-import { nullHost } from "./test-support.js";
+import {
+  CheckOutcome,
+  HighlightMatch,
+  SmokeHostError,
+  StyleSnapshot,
+  runAsyncScenarios,
+} from "./smoke.js";
+import { asyncScenario, nullAsyncHost, nullHost } from "./test-support.js";
 import { runScenarios } from "./smoke.js";
 import { checkOf, labelsOf, run, scenario, statusOf } from "./test-support.js";
 
@@ -214,6 +220,76 @@ describe("expectSome", () => {
       ]);
       expect(holds(checkOf(report, 0), CheckOutcome.guards.passed)).toBe(true);
       expect(holds(checkOf(report, 1), CheckOutcome.guards.failed)).toBe(true);
+    }),
+  );
+});
+
+describe("runAsyncScenarios", () => {
+  it.effect("aggregates the same report from effectful host verbs", () =>
+    Effect.gen(function* () {
+      const report = yield* runAsyncScenarios(
+        {
+          ...nullAsyncHost,
+          text: (testId) => Effect.succeed(testId === "x" ? "hi" : null),
+        },
+        [
+          asyncScenario("reads", "text", (ctx) =>
+            Effect.gen(function* () {
+              const reported = yield* ctx.host.text("x");
+              const text = yield* ctx.expectSome(
+                "the host reports text",
+                Option.fromNullishOr(reported),
+              );
+              yield* ctx.expectEqual("the text", text, "hi");
+            }),
+          ),
+          asyncScenario("misses", "input", (ctx) =>
+            Effect.gen(function* () {
+              const reported = yield* ctx.host.text("y");
+              yield* ctx.expectSome(
+                "a missing node",
+                Option.fromNullishOr(reported),
+              );
+            }),
+          ),
+        ],
+        { host: "async fixture", startedAt: 0 },
+      );
+      expect(Option.getOrUndefined(statusOf(report, "text"))).toBe("verified");
+      expect(Option.getOrUndefined(statusOf(report, "input"))).toBe("failed");
+      expect(labelsOf(report, 0)).toEqual([
+        "the host reports text",
+        "the text",
+      ]);
+    }),
+  );
+
+  it.effect("a failed host verb is an errored check, never a silent pass", () =>
+    Effect.gen(function* () {
+      // The automation protocol reports over promises, so a live host can fail
+      // where the sync test host cannot. That failure must be visible as a
+      // harness error with the verb's name — a scenario that treated it as
+      // "no value" would report a missing element instead.
+      const report = yield* runAsyncScenarios(
+        {
+          ...nullAsyncHost,
+          text: () =>
+            Effect.fail(new SmokeHostError({ verb: "text", cause: "boom" })),
+        },
+        [
+          asyncScenario("broken", "text", (ctx) =>
+            Effect.asVoid(ctx.host.text("x")),
+          ),
+          asyncScenario("after", "text", (ctx) =>
+            ctx.expectEqual("still runs", 1, 1),
+          ),
+        ],
+        { host: "async fixture", startedAt: 0 },
+      );
+      expect(Option.getOrUndefined(statusOf(report, "text"))).toBe("failed");
+      expect(labelsOf(report, 0)).toEqual(["host text"]);
+      expect(holds(checkOf(report, 0), CheckOutcome.guards.errored)).toBe(true);
+      expect(labelsOf(report, 1)).toEqual(["still runs"]);
     }),
   );
 });

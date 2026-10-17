@@ -173,7 +173,7 @@ const hostLabel = (): string =>
 
 const viewOf = (
   views: ReadonlyArray<PlaygroundScenario>,
-  scenario: Smoke.SmokeScenario,
+  scenario: { readonly id: string },
 ): Option.Option<() => ReactNode> =>
   Option.map(
     Arr.findFirst(views, (candidate) => candidate.id === scenario.id),
@@ -191,7 +191,7 @@ const mount =
     path: Path.Path,
     registerWindowKey: (handler: Option.Option<WindowKeyHandler>) => void,
   ) =>
-  (scenario: Smoke.SmokeScenario): Effect.Effect<void> => {
+  (scenario: { readonly id: string }): Effect.Effect<void> => {
     const render = Effect.sync(() =>
       Option.match(viewOf(scenarios, scenario), {
         onNone: () => {},

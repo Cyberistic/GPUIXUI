@@ -35,6 +35,7 @@ selecting an entry, the keyboard contract and the palette switch.
 ```sh
 nub run dev:playground              # from the repo root: opens the playground window
 nub run --filter playground smoke   # the native smoke suite, headless
+nub run --filter playground smoke:live  # a real window, driven by automation
 ```
 
 `dev` and `smoke` both **preflight first**: they import the native binding only
@@ -648,6 +649,43 @@ The action for `@gpuixui/components`: `dismiss-layer.ts` must use the field clai
 `event-claim.ts` already implements. The submenu's containment branch is correct
 as shipped.
 
+
+
+## The live window run (plan `189`)
+
+The 56-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+a **real GPUix window**, mounts the shipped `App`, and drives it through
+`@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
+`screenshot`. It reports through the same `Smoke` model and exit codes, so a
+live pass is citable evidence rather than a second log format.
+
+| Scenario | What it asserts in the window |
+| -------- | ------------------------------ |
+| `live-shell` | `app-shell` fills the 1100 × 720 window; clicking a sidebar entry mounts that view and paints its own text; `Enter` on a focused entry switches the stage |
+| `live-input` | a click focuses the field, `h i` reaches `onChange` (`value=hi`), and `Enter` reaches `onSubmit` (`submits=1`) |
+| `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
+
+Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
+under `.artifacts/live/` (gitignored).
+
+Two rules the runner needs, both measured:
+
+- the renderer must be built with `createRenderer()`, not `new GpuixRenderer()`
+  — the bare constructor has no React event callback, so the window paints but
+  receives no input;
+- the automation protocol has **no frame boundary**, so every scenario settles
+  (~120 ms) or `waitFor`s the element a click should have mounted before it
+  reads. `simulateClick` returning is not the same as React having committed.
+
+Exit codes match the headless suite: `0` passed, `1` a failed check, `2` no
+window (CI, a locked session, a missing binding) — and no report is written on
+`2`. The window appears for a few seconds and takes focus while it runs; it is
+opt-in for that reason.
+
+What it cannot assert: colour, the accessibility dump, virtual-list anchors and
+highlights. The automation tree carries `id`/`type`/`testId`/`text`/`bounds` and
+no style, and the protocol has no a11y or list-anchor call — those verdicts stay
+with the `TestRenderer` suite.
 
 ## Text entry (plan `188`)
 

@@ -374,8 +374,8 @@ export class SmokeAssertionError extends Schema.TaggedError<SmokeAssertionError>
 }
 
 /** What a scenario is handed to act on and to assert against. */
-export interface SmokeContext {
-  readonly host: SmokeHost;
+export interface SmokeContext<Host = SmokeHost> {
+  readonly host: Host;
   readonly expectEqual: (
     label: string,
     actual: Scalar,
@@ -403,6 +403,76 @@ export interface SmokeContext {
   ) => Effect.Effect<void, SmokeAssertionError>;
 }
 
+/**
+ * A host verb the live renderer failed to answer.
+ *
+ * The automation protocol reports over promises, so a live run's host effects
+ * can fail where the sync `TestRenderer` host cannot. `verb` names the call, so
+ * a failed scenario says which input or lookup broke rather than only that the
+ * check failed.
+ */
+export class SmokeHostError extends Schema.TaggedError<SmokeHostError>()(
+  "SmokeHostError",
+  {
+    verb: Schema.String,
+    cause: Schema.Unknown,
+  },
+) {}
+
+/**
+ * The verbs a **live window** can answer.
+ *
+ * Deliberately smaller than {@link SmokeHost}: the automation protocol exposes
+ * bounds, the tree, painted text, scroll offsets, input, the clock and
+ * screenshots — and no style report, no accessibility dump, no list anchor and
+ * no focus query. A live scenario only asserts what this interface can observe;
+ * the rest stays with the `TestRenderer` suite.
+ */
+export interface AsyncSmokeHost {
+  readonly text: (
+    testId: string,
+  ) => Effect.Effect<string | null, SmokeHostError>;
+  readonly paintedText: () => Effect.Effect<
+    ReadonlyArray<string>,
+    SmokeHostError
+  >;
+  readonly bounds: (
+    testId: string,
+  ) => Effect.Effect<Bounds | null, SmokeHostError>;
+  readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  readonly hover: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /** Waits until `testId` exists — a mount or a re-render can lag the input. */
+  readonly waitFor: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  readonly key: (keystroke: string) => Effect.Effect<void, SmokeHostError>;
+  readonly keyDown: (
+    testId: string,
+    key: string,
+  ) => Effect.Effect<void, SmokeHostError>;
+  readonly keyUp: (
+    testId: string,
+    key: string,
+  ) => Effect.Effect<void, SmokeHostError>;
+  readonly wheel: (
+    testId: string,
+    deltaX: number,
+    deltaY: number,
+  ) => Effect.Effect<void, SmokeHostError>;
+  readonly drag: (
+    testId: string,
+    deltaX: number,
+    deltaY: number,
+    steps?: number,
+  ) => Effect.Effect<void, SmokeHostError>;
+  readonly scrollOffset: (
+    testId: string,
+  ) => Effect.Effect<Offset | null, SmokeHostError>;
+  readonly screenshot: (path: string) => Effect.Effect<void, SmokeHostError>;
+  readonly pauseMotion: () => Effect.Effect<number, SmokeHostError>;
+  readonly fastForwardMotion: (
+    ms: number,
+  ) => Effect.Effect<number, SmokeHostError>;
+}
+
 /** One capability, one view, one `steps` effect. */
 export interface SmokeScenario {
   readonly id: string;
@@ -412,6 +482,31 @@ export interface SmokeScenario {
     ctx: SmokeContext,
   ) => Effect.Effect<void, SmokeAssertionError>;
 }
+
+/** One asynchronous scenario: the live twin of {@link SmokeScenario}. */
+export interface AsyncSmokeScenario {
+  readonly id: string;
+  readonly title: string;
+  readonly capability: Capability;
+  readonly steps: (
+    ctx: SmokeContext<AsyncSmokeHost>,
+  ) => Effect.Effect<void, SmokeAssertionError | SmokeHostError>;
+}
+
+/** What both runners need from a scenario, independent of the host's shape. */
+interface ScenarioShape<Host> {
+  readonly id: string;
+  readonly title: string;
+  readonly capability: Capability;
+  readonly steps: (
+    ctx: SmokeContext<Host>,
+  ) => Effect.Effect<void, SmokeAssertionError | SmokeHostError>;
+}
+
+/** The mount seam both runners share: called once, before the steps. */
+type Mount = (scenario: {
+  readonly id: string;
+}) => Effect.Effect<void, SmokeHostError>;
 
 const scalarEq = Schema.toEquivalence(Scalar);
 
@@ -441,7 +536,7 @@ const assert = (
     ? record(checks, label)
     : Effect.fail(new SmokeAssertionError({ label, expected, actual }));
 
-const context = (host: SmokeHost, checks: CheckSink): SmokeContext => ({
+const context = <Host>(host: Host, checks: CheckSink): SmokeContext<Host> => ({
   host,
   expectEqual: (label, actual, expected) =>
     assert(
@@ -495,6 +590,21 @@ const failed = (
     ),
   );
 
+/** A host verb that could not answer is a harness failure, not a failed check. */
+const hostErrored = (
+  checks: CheckSink,
+  error: SmokeHostError,
+): Effect.Effect<void> =>
+  Ref.update(checks, (previous) =>
+    Arr.append(
+      previous,
+      new CheckResult({
+        label: `host ${error.verb}`,
+        outcome: new Errored({ detail: Cause.pretty(Cause.fail(error)) }),
+      }),
+    ),
+  );
+
 const errored =
   (
     checks: CheckSink,
@@ -511,10 +621,10 @@ const errored =
       ),
     );
 
-const runScenario = (
-  host: SmokeHost,
-  scenario: SmokeScenario,
-  mount: Option.Option<(scenario: SmokeScenario) => Effect.Effect<void>>,
+const runScenario = <Host>(
+  host: Host,
+  scenario: ScenarioShape<Host>,
+  mount: Option.Option<Mount>,
 ): Effect.Effect<ScenarioResult> =>
   Effect.gen(function* () {
     const checks = yield* Ref.make<ReadonlyArray<CheckResult>>([]);
@@ -524,7 +634,10 @@ const runScenario = (
       onSome: (before) => before(scenario),
     }).pipe(
       Effect.flatMap(() => scenario.steps(context(host, checks))),
-      Effect.catch((error) => failed(checks, error)),
+      Effect.catchTags({
+        SmokeAssertionError: (error) => failed(checks, error),
+        SmokeHostError: (error) => hostErrored(checks, error),
+      }),
       Effect.catchCause(errored(checks, scenario.id)),
     );
     const endedAt = yield* Clock.currentTimeMillis;
@@ -584,7 +697,29 @@ export const runScenarios = (
   host: SmokeHost,
   scenarios: ReadonlyArray<SmokeScenario>,
   meta: { readonly host: string; readonly startedAt: number },
-  beforeEach?: (scenario: SmokeScenario) => Effect.Effect<void>,
+  beforeEach?: Mount,
+): Effect.Effect<SmokeReport> => runSuite(host, scenarios, meta, beforeEach);
+
+/**
+ * Runs an async scenario set and aggregates the **same** report.
+ *
+ * A live renderer answers over a promise API, so its host verbs are effects.
+ * The report, the check model and the exit code are shared with
+ * {@link runScenarios}, which is what makes a real-window run citable evidence
+ * rather than a second, differently-shaped log.
+ */
+export const runAsyncScenarios = (
+  host: AsyncSmokeHost,
+  scenarios: ReadonlyArray<AsyncSmokeScenario>,
+  meta: { readonly host: string; readonly startedAt: number },
+  beforeEach?: Mount,
+): Effect.Effect<SmokeReport> => runSuite(host, scenarios, meta, beforeEach);
+
+const runSuite = <Host>(
+  host: Host,
+  scenarios: ReadonlyArray<ScenarioShape<Host>>,
+  meta: { readonly host: string; readonly startedAt: number },
+  beforeEach: Mount | undefined,
 ): Effect.Effect<SmokeReport> =>
   Effect.gen(function* () {
     const mount = Option.fromNullishOr(beforeEach);

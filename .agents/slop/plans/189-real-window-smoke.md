@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §9) |
 | Phase | B (foundation) → F (release evidence) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `188` |
@@ -193,3 +193,62 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
   mutation's failing label.
 - `COMPONENTS.md`, `TODO.md` and the playground README state exactly which
   verdicts are now window-confirmed and which remain `TestRenderer`-only.
+
+## 9. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
+
+`nub run --filter playground smoke:live` — **3/3 scenarios**, `layout=input=scroll=verified`,
+exit `0`, ~1.5 s, three real-window screenshots under `.artifacts/live/` and
+`.artifacts/live-report.json`.
+
+**The window opens on this host.** `renderer.init` created a 1100 × 720 window
+and `render` reported `[gpuix] mount complete` — the earlier "no display
+session" assumption (ADR 0001) does not hold for this worktree. The shell's
+bounds equal the window exactly (`1100 × 720`, ±1).
+
+**Navigation works in the window.** Clicking `nav-text-native` mounted that
+view (`stage-title` changed to the registry title and `app-shell`'s text
+contained `hello gpuix`); `Enter` delivered through `keyDown` on
+`nav-input-edit` switched the stage. A **right** click, a11y, style and
+highlights are not in the automation protocol and are not claimed here.
+
+**Text entry works in the window.** Clicking `input-field` and sending `h i`
+made `input-readout` read `value=hi`; `Enter` set `submits=1`.
+
+**The wheel works in the window.** `scroll-view` started at offset `0`, a
+`deltaY` of `-200` scrolled it (`y < 0`), and `onScroll` reported `delta=-200`
+— the same sign convention the `TestRenderer` suite records.
+
+**Two rules the runner depends on.**
+
+- The renderer must be built with `createRenderer()`. A bare
+  `new GpuixRenderer()` paints (the spike's text appeared) but **receives no
+  input**, because the event callback React dispatches through is installed by
+  `createNativeRenderer`.
+- The automation protocol has **no frame boundary**. `simulateClick` returns
+  after a tick while React commits on a later frame; without a ~120 ms settle (or
+  a `waitFor` on the element a click should have mounted) the next read returns
+  the previous frame's text. This was the first failure of all three scenarios
+  and is why `AsyncSmokeHost` has `waitFor`.
+
+**The no-window path exits `2`.** Forcing `renderer.init` to throw printed
+`live smoke: no real window (open)`, the cause, and `exit 2: the live suite
+produced no evidence`, with exit code `2` and no report written.
+
+Two-direction proofs (file restored after each run):
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| L1 | remove the nav entry's `onClick` | exit `1`, scenario `errored`: `host waitFor text-plain` timed out (the click mounted nothing) |
+| L2 | remove the nav entry's `onKeyDown` | exit `1`, scenario `errored`: `host waitFor input-field` timed out (Enter mounted nothing) |
+| L3 | make `input-field` `readOnly` | exit `1`, *typing reaches onChange in the live editor*: got `value= submits=0 area=` |
+| L4 | remove `overflowY: "scroll"` from `scroll-view` | exit `1`, *scroll-view reports an offset*: got `none` |
+
+L1 and L2 surface as errored scenarios rather than a failed label because the
+scenario waits for the result of the interaction; a mutation that mounted the
+*wrong* view would fail the title check instead.
+
+**What stays `TestRenderer`-only:** `paintedStyle`, the AccessKit dump,
+`getListScrollTop`, `scrollIntoView`/`scrollToItem` and
+`getPaintedHighlights`. The automation tree carries `id`, `type`, `testId`,
+`text`, `bounds` and `children` — no style — and the protocol has no call for
+the rest. Every such verdict in `COMPONENTS.md` still cites the headless suite.

@@ -9,6 +9,8 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  type AsyncSmokeHost,
+  type AsyncSmokeScenario,
   type Capability,
   type CheckResult,
   type SmokeHost,
@@ -54,6 +56,37 @@ export const nullHost: SmokeHost = {
   pauseMotion: () => 0,
   fastForwardMotion: () => 0,
 };
+
+/** The async twin of {@link nullHost}: answers every verb with its empty value. */
+export const nullAsyncHost: AsyncSmokeHost = {
+  text: () => Effect.succeed(null),
+  paintedText: () => Effect.succeed([]),
+  bounds: () => Effect.succeed(null),
+  click: () => Effect.void,
+  hover: () => Effect.void,
+  waitFor: () => Effect.void,
+  key: () => Effect.void,
+  keyDown: () => Effect.void,
+  keyUp: () => Effect.void,
+  wheel: () => Effect.void,
+  drag: () => Effect.void,
+  scrollOffset: () => Effect.succeed(null),
+  screenshot: () => Effect.void,
+  pauseMotion: () => Effect.succeed(0),
+  fastForwardMotion: () => Effect.succeed(0),
+};
+
+/** Builds an async scenario whose `title` is derived from its id. */
+export const asyncScenario = (
+  id: string,
+  capability: Capability,
+  steps: AsyncSmokeScenario["steps"],
+): AsyncSmokeScenario => ({
+  id,
+  title: `scenario ${id}`,
+  capability,
+  steps,
+});
 
 /** Builds a scenario whose `title` is derived from its id. */
 export const scenario = (
