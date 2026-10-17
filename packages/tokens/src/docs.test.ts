@@ -1,5 +1,5 @@
 /**
- * Guards `docs/tokens.md` against drift: its colour tables repeat the 49
+ * Guards `docs/tokens.md` against drift: its colour tables repeat the 53
  * semantic roles for both default and high-contrast themes, so a palette or
  * role edit that is not mirrored in the docs would ship a catalogue that
  * disagrees with the theme. The test parses the documented rows and compares

@@ -22,7 +22,7 @@ The four status families ship two tonalities: a **solid** role
 That is not a style preference, it is a measurable hole:
 
 - `warning` is `#F5B01F` in the light theme. Against `background` (`#F6F8FA`)
-  that is **1.78:1**, and against `card` (`#FFFFFF`) **1.79:1**. In the
+  that is **1.78:1**, and against `card` (`#FFFFFF`) **1.89:1**. In the
   high-contrast light theme it is **1.89:1**. WCAG 1.4.11 requires 3:1 for a
   meaningful non-text indicator and 4.5:1 for text, so a warning dot or label is
   invisible today.
@@ -56,22 +56,26 @@ resolved hex values. Do not invent a step.
 
 | Role | `lightColors` | `darkColors` | `highContrastLightColors` | `highContrastDarkColors` |
 | ---- | ------------- | ------------ | ------------------------- | ------------------------ |
-| `infoText` | `blue.700` `#1B45AC` | `blue.200` `#C5D8FF` | `blue.800` `#173A88` | `blue.200` `#C5D8FF` |
-| `successText` | `green.700` `#116A43` | `green.200` `#A8F0C6` | `green.800` `#0E5135` | `green.200` `#A8F0C6` |
-| `warningText` | `amber.700` `#8E5B00` | `amber.200` `#FFDE8A` | `amber.800` `#6B4500` | `amber.200` `#FFDE8A` |
-| `destructiveText` | `red.700` `#A5262B` | `red.200` `#FFC6C6` | `red.800` `#7E1D21` | `red.200` `#FFC6C6` |
+| `infoText` | `blue.700` `#1B45AC` | `blue.200` `#C5D8FF` | `blue.900` `#152F6B` | `blue.100` `#DEE9FF` |
+| `successText` | `green.700` `#116A43` | `green.200` `#A8F0C6` | `green.900` `#0A3A26` | `green.100` `#D3F9E2` |
+| `warningText` | `amber.700` `#8E5B00` | `amber.200` `#FFDE8A` | `amber.800` `#6B4500` | `amber.100` `#FFEFC6` |
+| `destructiveText` | `red.700` `#A5262B` | `red.200` `#FFC6C6` | `red.900` `#5C1619` | `red.100` `#FFE0E0` |
 
 Measured contrast (background / card), computed with the test's WCAG formula:
 
 | Set | `infoText` | `successText` | `warningText` | `destructiveText` | Floor |
 | --- | ---------- | ------------- | ------------- | ----------------- | ----- |
 | light | 7.91 / 8.42 | 6.23 / 6.63 | 5.41 / 5.76 | 6.77 / 7.21 | 4.5 |
-| dark | 9.91 / 9.07 | 11.30 / 10.34 | 12.04 / 11.03 | 9.34 / 8.55 | 4.5 |
-| HC light | 10.51 | 9.35 | 8.48 | 10.07 | 7 |
-| HC dark | 14.64 / 13.55 | 15.94 / 14.76 | 16.07 / 14.87 | 14.15 / 13.09 | 7 |
+| dark | 12.86 / 11.77 | 14.00 / 12.82 | 14.11 / 12.92 | 12.42 / 11.37 | 4.5 |
+| HC light | 12.72 | 12.76 | 8.48 | 13.26 | 7 |
+| HC dark | 17.21 / 15.92 | 18.42 / 17.05 | 18.41 / 17.04 | 16.99 / 15.72 | 7 |
 
-`darkColors` and `highContrastDarkColors` share the same values; that is honest
-(the 200 steps already clear both floors on both dark canvases).
+The high-contrast sets step one ramp step beyond their solid role so the text
+tonality stays distinct from the fill; the measured column is the source of
+truth and the test enforces it.
+
+`darkColors` and `highContrastDarkColors` use different steps (200 and 100):
+dark mode's solids are already light, so the text tonality steps beyond them.
 
 ## 3. Files to create or change
 

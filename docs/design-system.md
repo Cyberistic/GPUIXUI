@@ -54,12 +54,15 @@ palette (raw ramps)  →  semantic roles  →  component composition
   do not add a `buttonBackgroundHover` token.
 
 The four status families — `info`, `success`, `warning`, `destructive` — each
-carry a solid role with a readable foreground and a soft pair (`xSoft`,
-`xSoftForeground`) for alerts, badges and toasts. `info` has its own blue ramp,
-so an informational message can never be mistaken for a primary action. A
-component names a status family and reads its roles; it never mixes a readable
-text colour out of a solid status colour at runtime, and never special-cases a
-mode to make a tint readable.
+carry a solid role with a readable foreground, a soft pair (`xSoft`,
+`xSoftForeground`) for alerts, badges and toasts, and a text role (`xText`) for
+labels, icons and indicator dots on `background` or `card`. `info` has its own
+blue ramp, so an informational message can never be mistaken for a primary
+action. A component names a status family and reads its roles; it never mixes a
+readable text colour out of a solid status colour at runtime, and never
+special-cases a mode to make a tint readable. The solid roles are fills: light
+`warning` is 1.78:1 against the canvas, so it is never the colour of text or a
+dot.
 
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library.
@@ -77,7 +80,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite at low alpha | black at high alpha |
 
-Both themes expose exactly the same 49 roles; the type system and the colour
+Both themes expose exactly the same 53 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -195,7 +198,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` translucent wash |
-| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
+| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface |
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
 so gaining focus reflows nothing. GPUix 0.10.0 has **no `outline*` properties and
@@ -222,6 +225,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | body text on background/card/popover | 7:1 | 7:1 |
 | secondary text, on-colour text, placeholder | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
+| status text (`xText`) on `background`/`card` | 4.5:1 | 7:1 |
 | focus ring and essential boundaries | 3:1 | 4.5:1 |
 | soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 

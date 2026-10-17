@@ -157,6 +157,14 @@ export interface ThemeColors {
   readonly destructiveSoft: string;
   /** Text and icons on `destructiveSoft`. */
   readonly destructiveSoftForeground: string;
+  /** Informational status text and indicators on `background` and `card`. */
+  readonly infoText: string;
+  /** Success status text and indicators on `background` and `card`. */
+  readonly successText: string;
+  /** Warning status text and indicators on `background` and `card`. */
+  readonly warningText: string;
+  /** Destructive status text and indicators on `background` and `card`. */
+  readonly destructiveText: string;
   /** Dividers and decorative borders. */
   readonly border: string;
   /** Essential control boundaries, held to a non-text contrast floor. */
@@ -227,6 +235,10 @@ export const lightColors = {
   warningSoftForeground: palette.amber[900],
   destructiveSoft: palette.red[100],
   destructiveSoftForeground: palette.red[800],
+  infoText: palette.blue[700],
+  successText: palette.green[700],
+  warningText: palette.amber[700],
+  destructiveText: palette.red[700],
   border: palette.neutral[200],
   borderStrong: "#848E9E",
   input: palette.neutral[0],
@@ -280,6 +292,10 @@ export const darkColors = {
   warningSoftForeground: palette.amber[100],
   destructiveSoft: palette.red[900],
   destructiveSoftForeground: palette.red[100],
+  infoText: palette.blue[200],
+  successText: palette.green[200],
+  warningText: palette.amber[200],
+  destructiveText: palette.red[200],
   border: palette.neutral[800],
   borderStrong: "#6B7484",
   input: palette.neutral[900],
@@ -300,7 +316,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 49 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 53 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries.
  */
 export const highContrastLightColors = {
@@ -336,6 +352,10 @@ export const highContrastLightColors = {
   warningSoftForeground: palette.amber[950],
   destructiveSoft: palette.red[200],
   destructiveSoftForeground: palette.red[950],
+  infoText: palette.blue[900],
+  successText: palette.green[900],
+  warningText: palette.amber[800],
+  destructiveText: palette.red[900],
   border: "#6E7683",
   borderStrong: "#4A4F58",
   input: "#FFFFFF",
@@ -356,7 +376,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 49 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 53 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}.
  */
 export const highContrastDarkColors = {
@@ -392,6 +412,10 @@ export const highContrastDarkColors = {
   warningSoftForeground: palette.amber[100],
   destructiveSoft: palette.red[900],
   destructiveSoftForeground: palette.red[100],
+  infoText: palette.blue[100],
+  successText: palette.green[100],
+  warningText: palette.amber[100],
+  destructiveText: palette.red[100],
   border: "#7A7A7A",
   borderStrong: "#A0A0A0",
   input: "#0D0D0D",
@@ -485,6 +509,10 @@ export const colorRoles = [
   "warningSoftForeground",
   "destructiveSoft",
   "destructiveSoftForeground",
+  "infoText",
+  "successText",
+  "warningText",
+  "destructiveText",
   "border",
   "borderStrong",
   "input",

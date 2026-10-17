@@ -68,12 +68,19 @@ export interface StatusToneStyle {
   readonly foreground: string;
   /** The tone's solid colour at 30% alpha, for the surface edge. */
   readonly border: string;
+  /**
+   * Status text and indicators drawn on `background` or `card` (`xText`).
+   * The solid roles are fills, so they cannot carry this: the light `warning`
+   * is 1.78:1 against the canvas.
+   */
+  readonly text: string;
 }
 
 /**
  * Resolve a status tone to the roles a soft status surface needs. The soft
  * foreground is designed per theme, so no component has to mix a readable text
- * colour from the solid status colour.
+ * colour from the solid status colour. `text` is the tone's plain-surface
+ * foreground, for inline status labels, icons and indicator dots.
  *
  * @example
  * ```tsx
@@ -92,6 +99,7 @@ export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
     background: theme.colors[`${tone}Soft`],
     foreground: theme.colors[`${tone}SoftForeground`],
     border: alpha(theme.colors[tone], 0.3),
+    text: theme.colors[`${tone}Text`],
   };
 }
 

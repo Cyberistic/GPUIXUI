@@ -111,7 +111,7 @@ A complete, executed example lives in
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 49 roles, so no component changes.
+essential boundaries. It reuses the same 53 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";
@@ -125,9 +125,11 @@ lives in [`src/high-contrast.example.ts`](./src/high-contrast.example.ts).
 ## Status tones
 
 The four status families — `info`, `success`, `warning` and `destructive` — each
-have a solid role with a readable foreground and a soft pair for alerts, badges
-and toasts. `statusTone` resolves the soft surface, its readable foreground and a
-30%-alpha edge; `alpha` turns any hex role into a translucent one.
+have a solid role with a readable foreground, a soft pair for alerts, badges and
+toasts, and an `xText` role for labels, icons and indicator dots on a plain
+surface. `statusTone` resolves the soft surface, its readable foreground, a
+30%-alpha edge and the text role; `alpha` turns any hex role into a translucent
+one.
 
 ```ts
 import { alpha, statusTone } from "@gpuixui/tokens";

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { alpha } from "./color.js";
 import { statusToneStyles } from "./status-tone.example.js";
+import { statusTextStyles } from "./status-text.example.js";
 import {
   controlHeight,
   controlPaddingX,
@@ -102,6 +103,9 @@ describe("statusTone", () => {
         expect(style.border, `${label} ${tone}`).toBe(
           alpha(theme.colors[tone], 0.3),
         );
+        expect(style.text, `${label} ${tone}`).toBe(
+          theme.colors[`${tone}Text`],
+        );
       });
     });
   });
@@ -130,10 +134,25 @@ describe("statusTone", () => {
       expect(style.foreground).toBe(
         highContrastLightTheme.colors[`${tone}SoftForeground`],
       );
+      expect(style.text).toBe(highContrastLightTheme.colors[`${tone}Text`]);
       expect(style.background).not.toBe(
         statusTone(lightTheme, tone).background,
       );
     });
+  });
+});
+
+describe("status text example", () => {
+  it("paints the label and the indicator dot from the tone's text role", () => {
+    const style = statusTextStyles(lightTheme, "warning");
+    expect(style.label.color).toBe(lightTheme.colors.warningText);
+    expect(style.dot.backgroundColor).toBe(lightTheme.colors.warningText);
+    expect(style.dot.width).toBe(lightTheme.iconSize.xs);
+  });
+
+  it("uses a text role that is not the solid fill", () => {
+    const style = statusTextStyles(lightTheme, "warning");
+    expect(style.label.color).not.toBe(lightTheme.colors.warning);
   });
 });
 

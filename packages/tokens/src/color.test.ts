@@ -58,6 +58,14 @@ const pairs: readonly Pair[] = [
   ["successSoftForeground", "successSoft", "body"],
   ["warningSoftForeground", "warningSoft", "body"],
   ["destructiveSoftForeground", "destructiveSoft", "body"],
+  ["infoText", "background", "secondary"],
+  ["infoText", "card", "secondary"],
+  ["successText", "background", "secondary"],
+  ["successText", "card", "secondary"],
+  ["warningText", "background", "secondary"],
+  ["warningText", "card", "secondary"],
+  ["destructiveText", "background", "secondary"],
+  ["destructiveText", "card", "secondary"],
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],
@@ -189,6 +197,17 @@ describe("colour roles", () => {
     colourSets.forEach(({ label, colors }) => {
       expect(colors.primaryHover, label).not.toBe(colors.primary);
       expect(colors.destructiveHover, label).not.toBe(colors.destructive);
+    });
+  });
+
+  it("gives status text a tonality of its own", () => {
+    const families = ["info", "success", "warning", "destructive"] as const;
+    colourSets.forEach(({ label, colors }) => {
+      families.forEach((family) => {
+        expect(colors[`${family}Text`], `${label} ${family}`).not.toBe(
+          colors[family],
+        );
+      });
     });
   });
 

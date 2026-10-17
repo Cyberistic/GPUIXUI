@@ -55,12 +55,14 @@ intent, so a brand theme changes values without touching component source.
 `border` is decorative; `borderStrong` is the essential control boundary held
 to 3:1.
 
-There are 49 roles. The four status families — `info`, `success`, `warning` and
-`destructive` — each have a solid role with a readable foreground and a soft
-pair (`xSoft` / `xSoftForeground`) for alerts, badges and toasts. A filled
-action also has a designed hover — `primaryHover` and `destructiveHover` — so a
-component never composites an alpha fill over whatever surface sits behind it.
-`info` is blue, not iris, so it can never be confused with `primary`.
+There are 53 roles. The four status families — `info`, `success`, `warning` and
+`destructive` — each have three tonalities: a solid fill with a readable
+foreground on it, a soft pair (`xSoft` / `xSoftForeground`) for alerts, badges
+and toasts, and a text role (`xText`) for status labels, icons and indicator
+dots drawn on `background` or `card`. A filled action also has a designed
+hover — `primaryHover` and `destructiveHover` — so a component never composites
+an alpha fill over whatever surface sits behind it. `info` is blue, not iris, so
+it can never be confused with `primary`.
 
 | Role | Light | Dark | Use |
 | ---- | ----- | ---- | --- |
@@ -96,6 +98,10 @@ component never composites an alpha fill over whatever surface sits behind it.
 | `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
 | `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
+| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card` |
+| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card` |
+| `warningText` | `#8E5B00` | `#FFDE8A` | warning text and indicators on `background`/`card` |
+| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
 | `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -151,17 +157,25 @@ alpha("transparent", 0.3); // "transparent"
 
 Alert, Badge and Toast share four status families. Each has a solid role, a
 readable foreground and a designed soft pair, so a component never mixes a
-readable text colour from the solid colour at runtime.
+readable text colour from the solid colour at runtime. Each also has a text
+role for the case the other two cannot serve: a status label, icon or indicator
+dot drawn directly on `background` or `card`.
 
-| Tone | Solid | Soft surface | Text on the soft surface |
-| ---- | ----- | ------------ | ------------------------ |
-| `info` | `info` / `infoForeground` | `infoSoft` | `infoSoftForeground` |
-| `success` | `success` / `successForeground` | `successSoft` | `successSoftForeground` |
-| `warning` | `warning` / `warningForeground` | `warningSoft` | `warningSoftForeground` |
-| `destructive` | `destructive` / `destructiveForeground` | `destructiveSoft` | `destructiveSoftForeground` |
+| Tone | Solid fill | Soft surface | Text on the soft surface | Text on a plain surface |
+| ---- | ---------- | ------------ | ----------------------- | ----------------------- |
+| `info` | `info` / `infoForeground` | `infoSoft` | `infoSoftForeground` | `infoText` |
+| `success` | `success` / `successForeground` | `successSoft` | `successSoftForeground` | `successText` |
+| `warning` | `warning` / `warningForeground` | `warningSoft` | `warningSoftForeground` | `warningText` |
+| `destructive` | `destructive` / `destructiveForeground` | `destructiveSoft` | `destructiveSoftForeground` | `destructiveText` |
 
-`statusTone(theme, tone)` resolves the soft surface, its readable foreground and
-a 30%-alpha edge from the solid role:
+The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
+1.78:1 against `background` and 1.89:1 against `card`, under the 3:1 non-text
+floor, and light `success` is 4.26:1, under the 4.5:1 text floor. `xText` is the
+readable tonality for plain surfaces: it is held to 4.5:1 in the default themes
+and 7:1 in the high-contrast variants.
+
+`statusTone(theme, tone)` resolves the soft surface, its readable foreground, a
+30%-alpha edge from the solid role, and the plain-surface text role:
 
 ```ts
 import { statusTone } from "@gpuixui/tokens";
@@ -170,15 +184,18 @@ const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
 tone.border; // alpha(theme.colors.info, 0.3)
+tone.text; // theme.colors.infoText — labels and dots on background/card
 ```
 
 A runnable example spreads the result onto a container and its text; see
 [`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
+[`src/status-text.example.ts`](../packages/tokens/src/status-text.example.ts)
+does the same for a status label and an indicator dot on a plain surface.
 
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 49 roles and the same type, spacing, radius, density, border
+`Theme` — the same 53 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -225,6 +242,10 @@ getTheme("light"); // the default light theme, unchanged
 | `warningSoftForeground` | `#2A1B00` | `#FFEFC6` | text and icons on `warningSoft` |
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
+| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card` |
+| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card` |
+| `warningText` | `#6B4500` | `#FFEFC6` | warning text and indicators on `background`/`card` |
+| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card` |
 | `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
@@ -698,9 +719,9 @@ The test covers every shipped colour set — light, dark and both high-contrast
 variants — and fails if a semantic text/surface pair drops below its floor (7:1
 for primary body pairs, soft status text and all high-contrast text; 4.5:1 for
 secondary and on-colour text in the default themes, including text on a hovered
-filled action, which is held to the same floor as text on the resting fill; 3:1
-for focus and essential boundaries in the default themes; 4.5:1 for them in the
-high-contrast variants).
+filled action, which is held to the same floor as text on the resting fill, and
+status text (`xText`) on `background` and `card`; 3:1 for focus and essential
+boundaries in the default themes; 4.5:1 for them in the high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background` or
 `card` (floor 1.05:1). Palette edits must keep it green.
 
