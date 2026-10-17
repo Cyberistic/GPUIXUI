@@ -257,7 +257,17 @@ cannot return.
 Four shipped sets had the divider equal to the fill it sits on (1.00:1) until
 plan 080, so an edge vanished exactly while a control was pressed. Every shipped
 theme passes it —
-platform variants on their own canvas, not the identity's. A runnable example
+platform variants on their own canvas, not the identity's.
+The inactive state is measured too, and its floor is a design floor rather than a
+WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
+`disabled` fill, the four plain surfaces and the four row washes, because a
+disabled `Select` item paints the label straight onto the menu's `popover` and
+measured 1.99:1 on Linux dark until plan 306. The `disabled` fill is allowed to
+sit near the panel — no neutral clears both a white card and the quiet panel — so
+a disabled control paints its `border` edge, measured on `disabled` and on the
+`muted` panel a settings sidebar divides. A disabled control is not an
+`opacity: 0.5` composite; it paints the designed pair and the edge.
+A runnable example
 lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 
 ## Status tones

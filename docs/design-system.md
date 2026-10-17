@@ -250,7 +250,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every surface and row wash a placeholder fills — the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground` |
 | link | `primaryText` on the plain surfaces and the `hover`/`active` washes a link paints; `primary` is a fill and is never the colour of text |
-| disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
+| disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
 | text selection | `selection` wash via `selectionColor`; body and secondary text keep their floors through the composited wash on every surface a glyph is selected on, including the four soft status fills (`xSoftForeground`), and the wash itself stays perceivable; `userSelect: "none"` opts chrome out |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair and designed edge through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone` |
@@ -273,6 +273,13 @@ control paints; they are not a filled control's states. The neutral fill needs
 its own roles most: `secondary` is only just distinguishable from the canvas, so
 a 90% alpha "hover" changed it by 1.009:1, and the press came out lighter than
 the hover.
+
+An inactive control is not an opacity composite. It paints the `disabled` fill
+with `disabledForeground` on it and its `border` edge around it: the label keeps a
+readable dim (3:1, 4.5:1 at AAA) and the edge keeps the shape, because the fill
+is allowed to sit within the panel's own value — no neutral clears a white card
+and the quiet panel at once. A filled primary action at 50% opacity measures
+2.25:1 on the light canvas, which is the state a designed pair replaces.
 
 A row's metadata keeps its `mutedForeground` role on every wash the row paints —
 `hover` and `active` for pointer state, `accent` where a selectable row hovers,
@@ -309,8 +316,9 @@ Colour is checked, not assumed. The token suite enforces:
 | focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, and essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft`) | 1.05:1 | 3:1 |
+| inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`selected` washes | 1.05:1 | 1.05:1 |
-| decorative dividers (`border`) on `background`/`card`/`popover`, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`popover`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
@@ -323,6 +331,21 @@ Alert in a sidebar is a real composition, and the platform light variants change
 `muted` while inheriting the identity's pastel tints — macOS, Linux and Windows
 light measured 1.036:1, 1.023:1 and 1.043:1 until plan `300` moved the four light
 tints one small step deeper.
+The inactive state is measured too, and it is the one floor that is **not** a
+WCAG requirement: 1.4.3 exempts inactive components, but an unavailable control
+is still read — a reader has to find out what they cannot do — so the library
+requires 3:1 for a disabled label (4.5:1 at AAA) while keeping it far below
+secondary text. What is exempt is the `disabled` fill's distance from the panel:
+no neutral can clear both a white card and the quiet panel, so a disabled control
+keeps its shape with its `border` edge, held to the divider floor on `disabled`
+itself. The audit found the opposite in the shipped library: a disabled `Select`
+item painted its label straight onto the menu's `popover` at **1.99:1** on Linux
+dark, the designed pair measured 2.09:1, and `disabled` was exactly the value of
+`muted` and `hover` — a disabled control with neither a readable label nor a
+visible shape until plan `306`. Every disabled control in the component packages
+reaches the state through `opacity: 0.5`, which composites the label with
+whatever is behind it (a disabled primary action measures 2.25:1 on the light
+canvas); the designed pair is what a control should paint instead.
 It can fail: a palette edit that reduces contrast fails the gate. The same check
 is public: `themeContrastFailures(theme)` returns every pair an edited theme
 misses, so a brand theme or copied platform style can be held to these floors in
@@ -335,7 +358,6 @@ implementation, as it does for the catalogue in [`tokens.md`](./tokens.md).
 
 Not covered, deliberately:
 
-- disabled text (WCAG exempts inactive controls); it stays visibly dimmed;
 - placeholder as a substitute for a label — placeholders are hints, labels are
   required;
 - colour as the only status signal — status components pair colour with text or

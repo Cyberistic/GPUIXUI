@@ -153,8 +153,8 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
 | `selected` | `#EEF0FF` | `#2E2370` | selected row or item |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
-| `disabled` | `#EEF1F5` | `#222730` | disabled surface |
-| `disabledForeground` | `#A1A9B7` | `#545D6C` | disabled text |
+| `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
+| `disabledForeground` | `#6E7787` | `#A1A9B7` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#3D4552` | loading placeholder |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#191D25` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
@@ -346,8 +346,8 @@ carries, so it cannot claim another.
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
 | `selected` | `#E0E3FF` | `#1C1547` | selected row or item |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
-| `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface |
-| `disabledForeground` | `#5A5A5A` | `#8A8A8A` | disabled text |
+| `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
+| `disabledForeground` | `#5A5A5A` | `#A9A9A9` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#000000` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
@@ -1011,6 +1011,21 @@ darken black. The failures are reported with `wash: "overlay"`. Row washes are
 deliberately not scrim surfaces: the pointer leaves the row to reach the dialog,
 so a scrim over a transient hover is not a composition the system supports.
 
+The inactive state has its own floor. `disabledForeground` is measured on the
+nine surfaces an unavailable label paints — the `disabled` fill (`inactivePairs`),
+the four plain surfaces, and the `hover`/`active`/`accent`/`selected` washes a
+disabled control inside a row sits on (`inactiveSurfaces` is the list) — at 3:1,
+and at 4.5:1 in the high-contrast themes. WCAG 1.4.3 exempts inactive components;
+that exemption is not a licence to erase the state, because the point of an
+unavailable control is that a reader can find out what is unavailable. A disabled
+`Select` item paints this role straight onto the menu's `popover` with no fill
+behind it, and measured **1.99:1** on Linux dark and 2.09:1 on the identity until
+plan `306` moved the value. The `disabled` fill itself is deliberately not held
+to a floor against the panel: no neutral can clear both a white card and the
+quiet panel, so a disabled control keeps its shape with its `border` edge, which
+is held to the divider floor on `disabled` and on the previously unmeasured
+`muted` panel.
+
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
 can never pass — `compositeOver(colour, background)` composites a translucent
@@ -1020,8 +1035,8 @@ check and the test suite both read:
 ```ts
 import { contrastFloors } from "@gpuixui/tokens";
 
-contrastFloors.default; // { body: 7, secondary: 4.5, boundary: 3, surface: 1.05, divider: 1.05 }
-contrastFloors.high; // { body: 7, secondary: 7, boundary: 4.5, surface: 1.05, divider: 3 }
+contrastFloors.default; // { body: 7, secondary: 4.5, inactive: 3, boundary: 3, surface: 1.05, divider: 1.05 }
+contrastFloors.high; // { body: 7, secondary: 7, inactive: 4.5, boundary: 4.5, surface: 1.05, divider: 3 }
 ```
 
 The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).
@@ -1162,7 +1177,15 @@ muted text on `background`, `card` and `popover`, secondary text on the `hover`,
 `active`, `accent` and `selected` washes a row paints behind a description, and
 status text (`xText`) on `background`, `card`, `popover` and those four washes;
 3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
-the high-contrast variants. The boundary is also measured on the `muted` panel,
+the high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
+high contrast). The inactive floor is new in plan `306`: `inactivePairs`
+measures `disabledForeground` on its own fill, the plain surfaces and the four
+row washes, because a disabled `Select` item paints it on the menu's `popover`
+with no fill behind it and measured 1.99:1 on Linux dark. The `disabled` fill
+stays near the panel by design, so a disabled control's shape is carried by its
+`border` edge — held to the divider floor on `disabled`, and on the `muted` panel
+a settings sidebar divides (plan `306`).
+The boundary is also measured on the `muted` panel,
 the four washes and the four soft status fills, because an unchecked checkbox or
 a field keeps its `borderStrong` edge while the row moves or inside an Alert.
 It also fails if a soft status surface is indistinguishable from `background`,
@@ -1293,11 +1316,10 @@ reported with `wash: "overlay"` (plan `099`).
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs` and
-`overlayWashPairs` measure the painted roles, and `contrast.test.ts` keeps a
-declared exemption list for the four that are not pairs — `disabled` and
-`disabledForeground` (WCAG exempts
-inactive controls, and the design system requires a visible dim rather than a
-floor), `scrollbar` (reserved; the
+`overlayWashPairs` measure the painted roles — `inactivePairs` is the nine-surface
+inactive list and `disabled` is measured as its own fill — and
+`contrast.test.ts` keeps a
+declared exemption list for the two that are not pairs: `scrollbar` (reserved; the
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones

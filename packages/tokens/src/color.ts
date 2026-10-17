@@ -211,9 +211,9 @@ export interface ThemeColors {
   readonly selected: string;
   /** Text and icons on `selected`. */
   readonly selectedForeground: string;
-  /** Disabled surface. */
+  /** Disabled surface. Deliberately allowed to sit near the panel: no neutral clears both a white card and the quiet panel, so a disabled control paints its `border` edge on this fill to keep its shape. */
   readonly disabled: string;
-  /** Disabled text and icons. */
+  /** Disabled text and icons; held to the `inactive` floor (3:1, 4.5:1 at AAA) so an unavailable control stays readable. */
   readonly disabledForeground: string;
   /** Loading placeholder, held to the perceivability floor on every surface and row wash it fills. */
   readonly skeleton: string;
@@ -239,7 +239,11 @@ export interface ThemeColors {
  * so a badge in a sidebar stays perceivable (plan 300). The skeleton is
  * one ramp step darker than the pressed wash so a loading row never erases it
  * (plan 094). The filled-control hover and pressed steps are designed opaque
- * roles, so no state composites an alpha fill (plan 097).
+ * roles, so no state composites an alpha fill (plan 097). `disabledForeground` is
+ * a half-step between neutral 500 and 600 so an inactive label clears the 3:1
+ * `inactive` floor on the darkest platform pressed wash with margin, while the
+ * fill stays near the panel and the control's `border` edge carries its shape
+ * (plan 306).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -300,7 +304,7 @@ export const lightColors = {
   selected: palette.iris[50],
   selectedForeground: palette.iris[800],
   disabled: palette.neutral[100],
-  disabledForeground: palette.neutral[400],
+  disabledForeground: "#6E7787",
   skeleton: palette.neutral[300],
   scrollbar: palette.neutral[300],
   shadow: "#191D25",
@@ -319,7 +323,9 @@ export const lightColors = {
  * edge on all four soft status fills (plan 092). The skeleton is one ramp step
  * lighter than the pressed wash so a loading row never erases it (plan 094).
  * The filled-control hover and pressed steps lighten away from the canvas
- * (plan 097).
+ * (plan 097). `disabledForeground` is neutral 400 — one step dimmer than the
+ * neutral-300 `mutedForeground` — because the lightest dark platform wash needs
+ * it to clear the 3:1 `inactive` floor (plan 306).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -380,7 +386,7 @@ export const darkColors = {
   selected: palette.iris[900],
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],
-  disabledForeground: palette.neutral[600],
+  disabledForeground: palette.neutral[400],
   skeleton: palette.neutral[700],
   scrollbar: palette.neutral[700],
   shadow: "#000000",
@@ -462,7 +468,8 @@ export const highContrastLightColors = {
  * pressed fill so the edge clears the AAA divider floor on it (plan 080), and
  * the selection wash is a darker tint so white text keeps the body floor on the
  * fills a row paints (plan 081). The skeleton is a perceivable step off the
- * pressed wash (plan 094).
+ * pressed wash (plan 094). `disabledForeground` is a mid grey because the pressed
+ * wash needs 4.5:1 for an inactive label (plan 306).
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -523,7 +530,7 @@ export const highContrastDarkColors = {
   selected: "#1C1547",
   selectedForeground: "#E0E3FF",
   disabled: "#2E2E2E",
-  disabledForeground: "#8A8A8A",
+  disabledForeground: "#A9A9A9",
   skeleton: "#565656",
   scrollbar: "#8A8A8A",
   shadow: "#000000",

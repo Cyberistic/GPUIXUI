@@ -100,6 +100,15 @@
  * and inherit the tints — shipped a sidebar badge at 1.023:1 on Linux, 1.036:1 on
  * macOS and 1.043:1 on Windows. `muted` joins the soft-surface pairs and the four
  * light tints move one step deeper.
+ *
+ * Plan 306 closes the last state the contract exempted wholesale. `disabled` and
+ * `disabledForeground` were "inactive, so WCAG exempts them" — but a disabled
+ * `Select` item paints `disabledForeground` on the menu's `popover` with no fill,
+ * measuring 1.99:1 on Linux dark and 2.09:1 on the identity, and the designed
+ * pair itself measured 2.09:1. `inactive` is a 3:1 / 4.5:1 class on the nine
+ * surfaces an inactive label paints, the three values move, and `border` joins
+ * the divider class on the `disabled` fill and the previously unmeasured quiet
+ * panel, so a disabled control keeps its shape.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -114,6 +123,7 @@ import {
   getTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
+  inactivePairs,
   lightTheme,
   overlayWashPairs,
   selectionPairs,
@@ -187,11 +197,19 @@ describe("contrastFloors", () => {
       default: {
         body: 7,
         secondary: 4.5,
+        inactive: 3,
         boundary: 3,
         surface: 1.05,
         divider: 1.05,
       },
-      high: { body: 7, secondary: 7, boundary: 4.5, surface: 1.05, divider: 3 },
+      high: {
+        body: 7,
+        secondary: 7,
+        inactive: 4.5,
+        boundary: 4.5,
+        surface: 1.05,
+        divider: 3,
+      },
     });
   });
 });
@@ -322,8 +340,20 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(133);
+    expect(contrastPairs.length).toBe(144);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
+    expect(inactivePairs.length).toBe(9);
+    expect(inactivePairs.map(([, background]) => background)).toEqual([
+      "disabled",
+      "background",
+      "card",
+      "popover",
+      "muted",
+      "hover",
+      "active",
+      "accent",
+      "selected",
+    ]);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
     expect(selectionWashPairs.length).toBe(9);
@@ -403,6 +433,8 @@ describe("themeContrastFailures", () => {
       "background",
       "card",
       "popover",
+      "muted",
+      "disabled",
       "secondary",
       "hover",
       "active",
@@ -462,11 +494,6 @@ describe("contract completeness", () => {
    * so a new role cannot ship unmeasured.
    */
   const exempt = [
-    [
-      "disabled",
-      "an inactive surface; WCAG exempts inactive controls, and the design system requires a visible dim rather than a floor",
-    ],
-    ["disabledForeground", "the text of that inactive state; same exemption"],
     [
       "scrollbar",
       "reserved; the pinned runtime paints the platform scrollbar and exposes no tint",

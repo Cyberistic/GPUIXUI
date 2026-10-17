@@ -49,6 +49,7 @@ const floorRow = (contrast: keyof typeof contrastFloors): string => {
   return [
     floors.body,
     floors.secondary,
+    floors.inactive,
     floors.boundary,
     floors.surface,
     floors.divider,

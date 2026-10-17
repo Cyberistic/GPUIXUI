@@ -15,6 +15,8 @@ import type { Theme, ThemeContrast } from "./theme.js";
 export type ContrastPairClass =
   | "body"
   | "secondary"
+  /** An inactive label: dimmed but readable (a design floor, not a WCAG one). */
+  | "inactive"
   | "boundary"
   /** One surface must be perceivable against another (`xSoft` on a canvas). */
   | "surface"
@@ -117,6 +119,29 @@ const controlFillRoles = ["secondary", "hover", "active", "accent"] as const;
 
 const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
   (background): ContrastPair => ["border", background, "divider"],
+);
+
+/**
+ * The surfaces an inactive label paints on: its own `disabled` fill, the plain
+ * surfaces a ghost disabled action sits on, and the row washes a disabled
+ * control inside a hovered or selected row paints. A disabled `Select` item is
+ * the shipped case — it paints `disabledForeground` on the menu's `popover`
+ * with no fill behind it.
+ */
+export const inactiveSurfaces = [
+  "disabled",
+  "background",
+  "card",
+  "popover",
+  "muted",
+  "hover",
+  "active",
+  "accent",
+  "selected",
+] as const;
+
+export const inactivePairs: readonly ContrastPair[] = inactiveSurfaces.map(
+  (background): ContrastPair => ["disabledForeground", background, "inactive"],
 );
 
 /**
@@ -248,8 +273,11 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * status surfaces and the loading skeleton a canvas, a quiet panel or a row wash
  * must distinguish, the
  * designed edge around each soft status surface, the plain divider on those
- * soft fills, and the decorative dividers
- * that must stay visible, including on the fills a bordered control paints.
+ * soft fills, the decorative dividers
+ * that must stay visible, including on the fills a bordered control paints and
+ * on the inactive fill a disabled control keeps its shape with, and the inactive
+ * label an unavailable control, menu item or row paints on its fill, the plain
+ * surfaces and the state washes.
  *
  * The filled families are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
@@ -298,6 +326,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],
+  ...inactivePairs,
   ["borderStrong", "background", "boundary"],
   ["borderStrong", "card", "boundary"],
   ["borderStrong", "input", "boundary"],
@@ -312,6 +341,8 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["border", "background", "divider"],
   ["border", "card", "divider"],
   ["border", "popover", "divider"],
+  ["border", "muted", "divider"],
+  ["border", "disabled", "divider"],
   ...controlFillPairs,
 ];
 
@@ -322,11 +353,19 @@ export const contrastFloors: Readonly<
   default: {
     body: 7,
     secondary: 4.5,
+    inactive: 3,
     boundary: 3,
     surface: 1.05,
     divider: 1.05,
   },
-  high: { body: 7, secondary: 7, boundary: 4.5, surface: 1.05, divider: 3 },
+  high: {
+    body: 7,
+    secondary: 7,
+    inactive: 4.5,
+    boundary: 4.5,
+    surface: 1.05,
+    divider: 3,
+  },
 };
 
 const opaqueHex = /^#([0-9A-Fa-f]{6})$/;
@@ -577,7 +616,9 @@ const washVisibilityFailures = (
  * on the fills a bordered control paints, the focus ring on the soft status fills
  * a toast's action button sits on, and the functional boundary measured
  * on the quiet panel, the state washes and the soft status fills a bounded
- * control sits on, and the modal scrim composited over the base surfaces it
+ * control sits on, the inactive label on the nine surfaces a disabled control
+ * paints, the disabled control's own edge and the divider on the quiet panel,
+ * and the modal scrim composited over the base surfaces it
  * covers (reported with `wash: "overlay"`; the AAA dark scrim was 1.000:1 on its
  * own canvas). The level
  * defaults to the one the theme declares, so a high-contrast theme is checked
