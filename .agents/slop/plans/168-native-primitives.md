@@ -137,8 +137,11 @@ Steps:
 
 | File | Change |
 | ---- | ------ |
-| `packages/testing/src/smoke.ts` | add `"components"` to `CAPABILITIES` |
+| `packages/testing/src/smoke.ts` | add `"components"` to `CAPABILITIES`; add `keyDown`/`keyUp` to `SmokeHost` (Space-on-up needs the pair) |
+| `packages/testing/src/test-support.ts` | the inert fixture gains the two new no-ops |
+| `packages/testing/README.md` | document `keyDown`/`keyUp` and why `key` is not enough |
 | `apps/playground/package.json` | add `"@gpuixui/primitives": "workspace:*"` |
+| `apps/playground/src/smoke/host.ts` | adapt `keyDown`/`keyUp` to `nativeSimulateKeyDown`/`KeyUp` |
 | `apps/playground/src/scenarios/primitives.tsx` | new: the three scenarios above |
 | `apps/playground/src/scenarios/index.ts` | import and append the three scenarios; add `"components"` to `CORE_CAPABILITIES` |
 | `apps/playground/src/smoke/run.test.ts` | assert the registry covers `components` (the regression guard) |
@@ -220,4 +223,60 @@ Stop and report with evidence if:
 
 ## 8. Outcome (executed on this host, 2026-10-17)
 
-_To be filled when the plan runs._
+**36/36 green**, exit `0`; `components=verified`. The three scenarios record
+24 (`primitives-actions`), 20 (`primitives-fields`) and 15
+(`primitives-display`) checks.
+
+Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
+
+- **The published package mounts and behaves through the token theme.** All
+  three views read `@gpuixui/tokens/react`'s theme and pass it to
+  `@gpuixui/primitives`' own `ThemeProvider`; without that bridge the render
+  throws `MissingThemeProviderError` and the scenario fails (proof 2).
+- **`Button`'s keyboard contract is native.** A click activates; Enter
+  activates on **key down**; Space does **not** activate on key down and does
+  on **key up** — exactly `core/keyboard.ts`'s contract. `disabled` and
+  `loading` refuse all three, and the loading button's AccessKit node carries
+  `description = "Loading"`.
+- **The focus ring is the component's, and the runtime reports it.**
+  `paintedStyle("action-save").boxShadow` is present while the button holds
+  focus and absent after focus moves to the loading button. This is the first
+  proof that a component's `onFocus`/`onBlur` state reaches the paint, not just
+  that GPUix can focus a div.
+- **`Toggle` announces through `aria-valuetext`**: `pressed` after a click,
+  `not pressed` after Enter.
+- **`Input` forwards the native edit and `onSubmit`.** Typing `atlas` reaches
+  the controlled value; Enter records one submit. A disabled field refuses the
+  edit and still exposes `value = "locked"` on its `TextInput` node.
+- **`Checkbox` toggles by click and Space-up** and announces
+  `checked`/`unchecked`; **`Switch`** toggles by click and announces `checked`.
+- **The themed `Select` opens, commits and dismisses**: its options paint, Down
+  + Enter commits `us-east` and the trigger paints `United States — East`, and
+  Escape closes the list while keeping the value.
+- **`Slider` steps by one** with Right/Left and announces its formatted value;
+  `Progress` reports `42%`, `Meter` `68 GB`; `Skeleton` paints a 14 px box with
+  a themed background; the primitive `Tooltip` opens on a native mouse enter.
+- **A harness gap surfaced.** `simulateKeystrokes("space")` does not deliver a
+  key **up**, so a Space-on-up contract could not be exercised. `SmokeHost`
+  gained `keyDown`/`keyUp` (renderer `nativeSimulateKeyDown`/`KeyUp`), and the
+  actions/fields probes use the pair.
+
+Two-direction proofs:
+
+1. Removing `disabled` from the probe's delete button:
+   `disabled and loading buttons refuse activation: expected a string containing
+   "activations=3", got "activations=4 pressed=false"` → `components=failed`,
+   exit `1`.
+2. Removing the primitives `ThemeProvider` from the display view: the render
+   throws `MissingThemeProviderError` and the scenario fails its first check
+   (`the click set a value on the track`), `components=failed`, exit `1`.
+
+Deviations from this plan:
+
+- The focus-ring proof uses **focus moving to another control**, not
+  `clickWindow`: clicking empty window space does not blur in the
+  `TestRenderer` (the first implementation failed with `blur removes the
+  ring`). The assertion is the same property — the ring belongs to focus.
+- Proof 2 surfaces as a failed first check rather than an `errored` check,
+  because the render throw is printed by React and the mounted tree stays
+  empty; the exit code and the failure are still honest.

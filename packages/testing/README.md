@@ -36,6 +36,11 @@ hover, key, wheel, drag) and an inspection surface (text, bounds, scroll offset,
 the runtime's own painted style, accessibility tree, screenshot). The adapter is the only place a GPUix
 type appears; scenarios see plain values.
 
+`key` runs the renderer's keystroke parser (typed text, `enter`, `escape`, …).
+A control whose contract is "activate on Space **up**" needs the two halves
+separately, so `keyDown(testId, key)` and `keyUp(testId, key)` deliver them the
+way a physical keyboard does — `simulateKeystrokes("space")` does not.
+
 `paintedStyle(testId)` is the **runtime's own style report**, decoded into a
 `StyleSnapshot` at the adapter boundary: `backgroundColor`/`color`/`fontFamily`/
 `fontSize`/`boxShadow` as `Option`s. A property the runtime did not report is

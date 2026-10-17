@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (33/33 green); -> 2 on a host with no binding
+# -> 0 here (36/36 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -128,6 +128,25 @@ Two honest notes:
   entry correctly; the mapping is typecheck-only and `tsconfig.json` (which nub
   reads) stays clean. The durable fix belongs in `packages/tokens` and is
   tracked in `TODO.md`.
+
+## The shipped Tier 1 components (plan `168`)
+
+The scenarios above prove runtime mechanisms; these three mount
+`@gpuixui/primitives` — the package a consumer imports — through the shipped
+token theme, so the report covers the composition and not only the renderer.
+Each view bridges the two providers: the runner's `@gpuixui/tokens/react`
+theme is read with `useTheme()` and passed to the primitives' own
+`ThemeProvider`, which has no default palette.
+
+| Scenario | What it asserts |
+| -------- | --------------- |
+| `primitives-actions` | `Button` activates on a click, on Enter **down** and on Space **up**; `disabled` and `loading` refuse all three; the loading button announces `Loading`; the focus ring `controlFocusStyle` merges into the runtime's own style report and disappears when focus moves; `Toggle` flips and announces `pressed` / `not pressed` |
+| `primitives-fields` | a controlled `Input` receives the native edit and `onSubmit`; a disabled `Input` refuses the edit and still exposes its value as a `TextInput`; `Checkbox` toggles by click and Space-up with `aria-valuetext`; `Switch` toggles and announces checked; `Select` paints its options, commits the next one with Down + Enter, and Escape closes without losing the value |
+| `primitives-display` | `Slider` steps by one with the arrow keys and announces its formatted value; `Progress` reports `42%` and `Meter` `68 GB`; `Skeleton` paints a 14 px box with a themed background; `Tooltip` opens on a native mouse enter |
+
+The harness gained `keyDown`/`keyUp` for this: `simulateKeystrokes("space")`
+does not deliver the key **up** a button contract needs. Measured facts are in
+plan `168` §8.
 
 ## The modal contract (plan `155`)
 
@@ -331,16 +350,16 @@ focus restore.
 
 ## Evidence on this host
 
-The suite is **33/33 green** here (`exit 0`):
+The suite is **36/36 green** here (`exit 0`):
 
 ```
-33/33 scenarios passed · capabilities: layout=verified text=verified
+36/36 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified content=verified drag=verified
-selection=verified menu=verified
+selection=verified menu=verified components=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -368,6 +387,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. Focus movement from component code is measured separately (`modal`), so a roving-tabindex tree can use `renderer.focusElement` |
 | log | bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up and appending does **not** snap back — a follow toggle is app state plus a scroll |
 | theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
+| components | the shipped `@gpuixui/primitives` mount and behave in the runtime through the token theme: click/Enter-down/Space-up activation, a focus ring that the component merges and drops, controlled `Input` edits plus `onSubmit`, `Checkbox`/`Switch` state on `aria-valuetext`, the themed `Select` commit/dismiss, `Slider` arrow steps, `Progress`/`Meter` value text, a painted `Skeleton`, and a hover `Tooltip`. `simulateKeystrokes("space")` delivers no key up, so the harness now exposes `keyDown`/`keyUp` (plan `168`) |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable |
 
@@ -386,6 +406,7 @@ src/panels/resize.ts     pure resize math (nextSize, clamped)
 src/panels/split-pane.tsx the pointer-captured divider
 src/scenarios/*.tsx      one view + one steps effect per capability
 src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
+src/scenarios/primitives.tsx the shipped Tier 1 components (actions, fields, display)
 src/scenarios/shell.tsx  mounts the real App; guards the sidebar's scrolling
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
@@ -436,7 +457,7 @@ narrower. Each deviation is deliberate and measured:
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe and the app-level shortcut probe pass in real GPUix
-  0.10.0 on this host (33/33), with a written report and screenshots.
+  0.10.0 on this host (36/36), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
@@ -452,7 +473,11 @@ narrower. Each deviation is deliberate and measured:
   hover with a click fails the open check — all exit `1` (plan `159` §8).
   Dropping `aria-label` from the probe button fails with
   `expected "Save", got "none"`, and dropping `aria-level` fails the heading
-  with `expected 3, got 0` (plan `160` §8).
+  with `expected 3, got 0` (plan `160` §8). Dropping `disabled` from the probe's
+  delete button makes `disabled and loading buttons refuse activation` fail
+  (`got "activations=4"`), and removing the primitives theme bridge makes
+  `primitives-display` fail at its first check with
+  `MissingThemeProviderError` — both exit `1` (plan `168` §8).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).

@@ -53,8 +53,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | drag | `drag-targets` | verified |
 | selection | `text-selection` | verified |
 | menu | `context-menu-pointer` | verified |
+| components | `primitives-actions`, `primitives-fields`, `primitives-display` | verified |
 
-The suite is **33/33 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **36/36 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -370,6 +371,19 @@ role (plan 042 §8). Since plan 021 the palettes are the shipped `lightTheme` /
 (docs-site workstream) has its page. The in-package docs page and the mounted
 example exist for every row (plan 047); the runtime column is the honest
 locally-built-binding result.
+
+**End-to-end native composition (playground plan `168`).** The rows above are
+backed by this package's own runtime suites; `primitives-actions`,
+`primitives-fields` and `primitives-display` additionally mount the shipped
+package through `@gpuixui/tokens` in the playground's shared smoke harness and
+drive it with native input. That suite is what a `done` row cites for the
+consumer path: click / Enter-down / Space-up activation, the merged focus ring
+(appears on focus, drops when focus moves), a controlled `Input` edit and
+`onSubmit`, state announced through `aria-valuetext` for `Checkbox`/`Switch`,
+the themed `Select` commit and Escape dismissal, `Slider` arrow steps,
+`Progress`/`Meter` value text, a painted `Skeleton` and a hover `Tooltip`.
+`simulateKeystrokes("space")` delivers no key up, so `@gpuixui/testing` now
+exposes `keyDown`/`keyUp`.
 
 ## Tier 2 — composition and feedback
 
