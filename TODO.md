@@ -246,7 +246,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–422)
 
-`[x]` `[██████████]` 21/21
+`[~]` `[██████████]` 21/22
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -269,6 +269,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Docs platform toggle (macOS · Linux · Windows · Default) built on `platformTypes` + `platformTheme`; URL + storage state, live values on Theming (plan 420)
 `[x]` A planned component's search result opens the index filtered to it (plan 421)
 `[x]` Docs truth pass against the implementation (plan 424) — 20 pages audited against source, inventory and the shared keyboard module; `component-truth.test.ts` guards repo paths, placeholder prose and real package exports; one tooltip import defect fixed
+`[~]` Document every delivered Tier 2 component (plan 425) — 22 components handed over by the components workstream; pages in batches with generated props and their examples
 
 ## Cross-team tasks raised by the docs-site workstream
 
