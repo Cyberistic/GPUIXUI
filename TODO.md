@@ -69,3 +69,25 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`)
+
+## Docs site workstream (plans 410–412)
+
+`[ ]` `[░░░░░░░░░░]` 0/8
+
+`[x]` Write and index the docs-site plans (410, 411, 412)
+`[ ]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work)
+`[ ]` Docs identity: light/dark themes from the tokens theme
+`[ ]` Working search (server route + UI)
+`[ ]` Information architecture pages (`content/docs/**`) + landing page
+`[ ]` Component metadata contract, registry test, generated index (plan 411)
+`[ ]` Preview components + `docs/preview-strategy.md` (plan 412)
+`[ ]` Document the first real component page (needs the primitives/components workstream)
+
+## Cross-team tasks raised by the docs-site workstream
+
+`[ ]` `[░░░░░░░░░░]` 0/4
+
+`[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
+`[ ]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables
+`[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables
+`[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5)

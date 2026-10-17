@@ -62,6 +62,9 @@ unmet.
 | D3 | **One `git worktree` per agent workstream** under `workspaces/` | The reference repo's rule: never two writers in one tree | 2026-10-17 |
 | D4 | Package scope `@gpuixui/*` | Placeholder: the original branding and package name are a Phase A deliverable. **Finalise the scope in Phase A, before packages proliferate** | 2026-10-17 |
 | D5 | Planning before implementation | The mission's first deliverable is the plan set; a weaker executor must be able to run each plan unaided | 2026-10-17 |
+| D6 | Docs site is **Fumadocs + TanStack Start (SSR)** on Cloudflare Workers via `Cloudflare.Website.Vite` | Fumadocs' documented Vite/Start path; alchemy supports TanStack Start in one call; SSR gives search + SEO; the deploy `rootDir` is already fixed to `apps/docs` (plan 410) | 2026-10-17 |
+| D7 | Honest preview default is **companion playground + real native screenshots**; labelled browser approximations only; live Wasm embed only if proven | GPUix has a browser Wasm build but it needs nightly Rust, ~19 MB Wasm and COOP/COEP, so it is an upgrade path, not a default; `MISSION.md` forbids faking native (plan 412) | 2026-10-17 |
+| D8 | Component metadata is **docs-owned** under `apps/docs` in Phase B, typed by an Effect Schema contract; hoisting it into the packages is a tracked task | The component packages are another workstream; a single schema keeps the index, sidebar and status generated and makes the hoist a file move (plan 411) | 2026-10-17 |
 
 ## 5. Open questions
 
@@ -71,5 +74,7 @@ answer into §4 or an ADR.
 - Which GPUix primitives actually exist for layout, input, focus, overlays and
   panels? (Phase A — the biggest risk; answered by the native smoke test.)
 - Can a GPUix rendering surface be embedded in the Fumadocs site, or is the
-  companion playground the only honest preview? (Phase A/B.)
+  companion playground the only honest preview? (**Answered as a default** in D7 /
+  plan 412: playground + screenshots; the browser Wasm embed stays a conditional
+  upgrade pending the Phase A probe.)
 - What is the original package name and branding identity? (Phase A.)

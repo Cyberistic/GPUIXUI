@@ -19,9 +19,14 @@ licensing, docs site).
 
 ## The plan set
 
+Numbering is per workstream so two agents never collide on a filename. The
+docs-site workstream owns the `4xx` range.
+
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| — | *(nothing yet — the first agents write these)* | A | — | — |
+| `410-docs-site.md` | `apps/docs`: the Fumadocs site (IA, themes, search, build, deploy) | B–F | 001; `0xx` tokens docs | written |
+| `411-component-page-template.md` | Component metadata contract, page template, API tables | B–F | 410; `1xx` components | written |
+| `412-preview-strategy.md` | Honest native-preview mechanism (`docs/preview-strategy.md`) | A–F | 001; playground | written |
 
 ## How to use a plan
 
