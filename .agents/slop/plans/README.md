@@ -85,7 +85,11 @@ muted text on plain surfaces, typed input text, ghost text on the `hover`/
 `active` washes, and the composited `selection` wash. 060 closes the two remaining
 false statements in the motion and elevation prose: the runtime animates eight
 `MotionStyle` properties, not seven, and the reserved `overlay` level paints
-nothing (the "inset ring" comment survived plan 018).
+nothing (the "inset ring" comment survived plan 018). 061 closes the last
+cross-team interlock on the package's React entry: it carried the package's only
+JSX, so a consumer's `jsxImportSource` (`@gpuix/react`) forced the playground to
+map a jsx-runtime path that `tokens` must not depend on. The entry now uses
+`createElement`, and a consumer-shaped type check guards it.
 
 ### Reference adoption (block `200–299`)
 
