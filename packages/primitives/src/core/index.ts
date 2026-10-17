@@ -36,6 +36,15 @@ export type { NumberRange } from "./number.js";
 export { clampRating, decideRating, ratingTabStop } from "./rating.js";
 
 export {
+  applyOtpInput,
+  decideOtpKey,
+  normalizeOtp,
+  otpCells,
+  otpLength,
+} from "./otp.js";
+export type { OtpEdit } from "./otp.js";
+
+export {
   clampValue,
   decideValueKey,
   fractionValue,
@@ -109,6 +118,8 @@ export {
   numberInputStyle,
   numberStepperColumnStyle,
   numberStepperStyle,
+  otpCellStyle,
+  otpGroupStyle,
   progressFillStyle,
   progressPercent,
   progressTrackStyle,
@@ -131,6 +142,7 @@ export {
 export type {
   ControlSpec,
   ControlVariant,
+  OtpCellSpec,
   ProgressSpec,
   ProgressTone,
   RatingStarSpec,

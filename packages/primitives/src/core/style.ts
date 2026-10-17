@@ -25,6 +25,7 @@ import type {
   SpaceStep,
   TextRole,
 } from "./theme.js";
+import { fieldVariant } from "./variants.js";
 
 /**
  * A colour reference into the theme, or nothing at all.
@@ -613,3 +614,59 @@ export const ratingStarColor = (
   filled: boolean,
   theme: PrimitiveTheme,
 ): string => (filled ? theme.colors.primary : theme.colors.mutedForeground);
+
+// ── One-time-code fields ─────────────────────────────────────────────
+
+/** The row the cells sit in. */
+export const otpGroupStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: theme.spacing.sm,
+});
+
+export interface OtpCellSpec {
+  readonly size: ControlSize;
+  readonly invalid?: boolean;
+  readonly disabled?: boolean;
+  readonly focused?: boolean;
+}
+
+/**
+ * One cell.
+ *
+ * It is a real `<input>`, so the cell's own surface is the field: the shared
+ * control chrome resolves to one square per cell (equal width and height from
+ * the density scale), the body type centres the character, and the focus ring
+ * lands on the cell the caret is in rather than on the wrapper.
+ */
+export const otpCellStyle = (
+  spec: OtpCellSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const control = controlStyle(
+    {
+      variant: fieldVariant,
+      size: spec.size,
+      square: true,
+      invalid: spec.invalid,
+      disabled: spec.disabled,
+    },
+    theme,
+  );
+  return {
+    ...control,
+    justifyContent: "center",
+    textAlign: "center",
+    fontSize: theme.typography.body.fontSize,
+    lineHeight: theme.typography.body.lineHeight,
+    fontWeight: theme.typography.body.fontWeight,
+    cursor: spec.disabled === true ? "not-allowed" : "text",
+    ...(spec.focused === true && spec.disabled !== true
+      ? controlFocusStyle(
+          { variant: fieldVariant, size: spec.size, invalid: spec.invalid },
+          theme,
+        )
+      : {}),
+  };
+};

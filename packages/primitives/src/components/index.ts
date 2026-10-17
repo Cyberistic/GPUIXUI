@@ -40,6 +40,9 @@ export type { FieldProps, InputProps } from "./Input.js";
 export { NumberField, numberRange } from "./NumberField.js";
 export type { NumberFieldProps } from "./NumberField.js";
 
+export { OTPField, otpCellLabel } from "./OTPField.js";
+export type { OTPFieldProps } from "./OTPField.js";
+
 export { TextArea } from "./TextArea.js";
 export type { TextAreaProps } from "./TextArea.js";
 
