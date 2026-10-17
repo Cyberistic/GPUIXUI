@@ -85,6 +85,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [086](./086-total-contrast-contract.md) | A total contrast contract, and the ring on every surface a control sits on | F | 059, 071–085 | done |
 | [087](./087-selected-secondary-text.md) | Selected secondary text, and the wash that must stay visible | F | 057, 071, 079, 081, 086 | done |
 | [088](./088-body-text-on-panels.md) | Default body text on the quiet panel and the floating surface | F | 071, 079, 086, 087 | done |
+| [089](./089-density-metric-merge.md) | Density metrics merge by size | B/F | 011, 068, 070 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -372,6 +373,16 @@ accepts `muted` and `popover`, and the default `Text` tone is `foreground`. Both
 pairs pass in all ten shipped colour sets (11.65:1 at the lowest), so no colour
 moves; the pair list grows 103 → 105 and the gate now catches an edited theme
 that darkens its quiet panel or floating surface.
+
+089 closes a gap between the documentation and the extension mechanism rather
+than between two checks: `docs/tokens.md` promised `density` accepts "partial
+metrics", but `Partial<Density>` only made each *field* optional — a consumer
+changing one control height had to retype all three sizes — and `mergeDensity`
+replaced the record wholesale, so a forced partial override dropped the sizes it
+omitted. `DensityOverrides` makes the promise expressible and the merge
+deep-merges `controlHeight` and `controlPaddingX` size by size, the way
+typography merges field by field; a preset name still selects the whole preset
+and keeps its identity, and the base preset's name is never overridable.
 
 ### Reference adoption (block `200–299`)
 
