@@ -1,7 +1,7 @@
 # apps/playground — the native GPUix playground
 
-**Status: Phase B, implemented** (plan `120`,
-`.agents/slop/plans/120-app-playground.md`). One app, three jobs:
+**Status: Phase B, implemented and verified** (plans `120`, `140`). One app,
+three jobs:
 
 1. **The playground** — a real GPUix window showing every scenario, so a human
    can drive each primitive by hand.
@@ -41,7 +41,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && node apps/playground/dist/smoke/run.js; echo $?
-# -> 2 on this host
+# -> 0 here (11/11 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -54,30 +54,51 @@ Flags: `--json`, `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`.
 Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
 is no evidence, and a stale report must never be mistaken for a fresh one.
 
-## Evidence on this host (read this before believing a status row)
+## The binding on this host
 
-The library targets `@gpuix/react@0.10.0` + `@gpuix/native@0.10.0`, and this
-Intel Mac has **no `darwin-x64` binding** for it, so the 0.10.0 smoke suite
-cannot run here (`.agents/adr/0001-native-smoke-host.md`). `@gpuix/native@0.5.1`
-is the last release with that binding and **does** run; `legacy-probe/` measures
-what GPUI does on this hardware, and `legacy-probe/REPORT.md` is the measured
-table (`./legacy-probe/run.sh probe` reproduces it):
+The library targets `@gpuix/react@0.10.0` + `@gpuix/native@0.10.0`. GPUix
+publishes **no `darwin-x64` binding** for 0.10.0, so this Intel Mac has none by
+default and the suite would exit `2`.
 
-| Capability | Measured on 0.5.1 here |
-| ---------- | ---------------------- |
-| Layout, text, input editing, click, overlay anchoring, pointer-capture resize, virtual list, programmatic scroll | works |
-| Focus / blur events | **never delivered** — no focus state can be built on 0.5.1 |
-| Synthetic wheel scroll | **not applied** — only the `onScroll` delta fires |
-| `<canvas>` | element type exists, nothing paints |
+It is built from source instead: the blocking `xcrun metal` step is **optional**
+— `gpui_macos`'s `runtime_shaders` feature compiles the identical shader source
+through the OS Metal compiler at runtime, so the pinned Rust toolchain plus
+Command Line Tools suffice. The recipe, commands, STOP conditions and the
+measured per-capability facts are in
+`.agents/slop/plans/140-gpuix-native-darwin-x64-build.md`; the decision is
+`.agents/adr/0003-darwin-x64-source-build.md`.
 
-Those verdicts are evidence about the runtime and the hardware. They are
-**never** the basis for marking a 0.10 component `done`; that needs the smoke
-suite run on a supported host (Apple Silicon macOS, x64 Windows, or x64 Linux
-for the live-app path).
+The artifact is a build product (gitignored). A fresh checkout has no binding
+and reports exit `2` until the build in plan `140` §5 is repeated. Its
+provenance: same version, same source revision, same Rust code as the published
+package; only the shader-compilation feature differs. Confirming with the
+**published** binary on an Apple Silicon CI runner is the gold standard, tracked
+in `TODO.md`.
 
-On this host the suite exits `2`. The phase's "runs in GPUix" exit condition is
-therefore met by `legacy-probe` only, and the eight scenarios stay `unverified`
-until a supported host runs them.
+## Evidence on this host
+
+The suite is **11/11 green** here (`exit 0`):
+
+```
+11/11 scenarios passed · capabilities: layout=verified text=verified
+input=verified focus=verified overlay=verified scroll=verified panel=verified
+virtual-list=verified table=verified workspace=verified
+```
+
+The measurements that shaped the scenarios (full list: plan `140` §4):
+
+| Capability | Measured on 0.10.0 here |
+| ---------- | ----------------------- |
+| layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
+| focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
+| overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
+| scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
+| panel | pointer capture + inclusive clamp |
+| virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
+| table, workspace | row click/sort/keyboard, column drag; tab drag between panes, split resize |
+
+`legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
+(`./legacy-probe/run.sh probe`); they never set a component status.
 
 ## Structure
 
@@ -102,18 +123,14 @@ narrower. Each deviation is deliberate and measured:
 
 - **The host adapter is synchronous, over `TestRenderer`** (`smoke/host.ts`),
   not the async `automation` `Locator`/`App`. Every renderer input and
-  inspection method is synchronous and the `SmokeHost` contract is synchronous;
-  the async locator would force every scenario to await for no extra capability.
+  inspection method is synchronous and the `SmokeHost` contract is synchronous.
 - **0.10.0 has no `getElementsAt`, `onLayout` or `onScrollChange`** (verified by
-  grep over the installed `dist`). The overlay scenario asserts the popup is
-  *painted* and dismissible rather than hit-tested; the panel's `max` is a prop
-  rather than an observed layout; the scroll scenario reads the `getScrollOffset`
-  the renderer exposes instead of a layout event.
+  grep over the installed `dist`). The overlay asserts the popup is *painted*
+  and dismissible rather than hit-tested; the panel's `max` is a prop; the
+  scroll scenario reads `getScrollOffset`.
 - **No programmatic focus from component code.** `PublicInstance` has no
   `focus()`, so "focus returns to the trigger" cannot be implemented or checked
-  from a component; the overlay scenario does not claim it. The app boundary
-  could call `renderer.focusElement`, but injecting renderer calls the component
-  itself cannot make would be dishonest.
+  from a component; the overlay scenario does not claim it.
 - **`style.gridTemplateColumns` is a column count**, not a CSS track list, so
   the (plan `130`) table probe uses flex rows with fixed widths instead.
 - **`panels/resize.ts` + `panels/split-pane.tsx`**, not `split.ts` +
@@ -123,14 +140,16 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- `node apps/playground/dist/smoke/run.js` exits `2` on this host with the
-  loader message and the `darwin-arm64` remedy, and writes no report. (`nub run
-  … smoke` prints the same lines but returns `1`; see the exit-code note.)
+- The eight core capabilities and three Tier 3/4 probes pass in real GPUix
+  0.10.0 on this host, with a written report and screenshots.
+- The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
+  it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
-- The resize arithmetic clamps inclusively (`resize.test.ts`; proven to fail
-  without the clamp).
+- The resize arithmetic clamps inclusively (`resize.test.ts`).
 - The CLI's unsupported path returns `2` without evaluating the suite
   (`run.test.ts`).
-- The eight core scenarios and the three Tier 3/4 probes are **authored, not
-  verified** here: running them needs a supported host, per ADR 0001/0002.
+
+Not proven here: the verdicts use a **locally-built** binding (ADR 0003), not the
+published binary; and detaching a tab into a new window is impossible (no
+multiple windows).

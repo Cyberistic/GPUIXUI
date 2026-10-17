@@ -34,21 +34,22 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[████████░░]` 8/12 plans-and-harness
+`[x]` `[██████████]` 10/10 plans-and-harness
 
-`[x]` Plans `100`–`130` written and indexed for the playground workstream
-`[~]` **Blocker B1: build the `darwin-x64` GPUix binding from source** per plan `140` — the blocking `xcrun metal` step is optional (`gpui_macos/runtime_shaders`); Rust 1.97.1 + the zed tree are staged in `.agents/slop/scratch/gpuix-build/`, the one-line feature change is applied, and the release build is running. If it succeeds, the smoke suite produces a real report on this host; if not, the fallback records the exact failure and the CI-runner task below
+`[x]` Plans `100`–`140` written and indexed for the playground workstream
+`[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
+`[x]` **The native smoke suite is 11/11 green on this host** — `nub run --filter playground build && node apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and 9 screenshots. Two-direction proof recorded (plan `140` §4: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
 `[x]` Record the build host's missing 0.10 binding as ADR 0001 (evidence + consequence)
 `[x]` Probe GPUix 0.5.1 on this host: it runs (real window, layout/input/overlay/panel/virtual-list/programmatic scroll) and it never delivers focus or wheel-scroll events — ADR 0002
 `[x]` Establish the GPUix capability map from docs/types and measured probes (layout, input, focus, overlay, scroll, panel, virtual-list, Tier 3/4)
 `[x]` Land `packages/testing` (harness, report, runtime preflight) per plan `100`
 `[x]` Land the `legacy-probe` (0.5.1) so the documented capability matrix is reproducible per plan `110` §3.4
-`[x]` Land `apps/playground` shell + `SplitPane` + the eight core scenarios per plan `120` (the built CLI `node apps/playground/dist/smoke/run.js` exits `2` here with the ADR 0001 evidence and writes no report; `nub run … smoke` prints it but returns `1` — nub collapses non-zero codes, plan `120` §2.1.8)
-`[x]` Land the Tier 3/4 probe scenarios per plan `130` (`table-select-sort`, `table-column-resize`, `workspace-tab-drag`; verdicts still need a supported host)
-`[ ]` **Blocked: run the 0.10 native smoke suite on a supported host** (Apple Silicon Mac / x64 Windows / x64 Linux) and paste the report into `COMPONENTS.md` — no supported host on this machine (ADR 0001/0002)
+`[x]` Land `apps/playground` shell + `SplitPane` + the eight core scenarios per plan `120`
+`[x]` Land the Tier 3/4 probe scenarios per plan `130` (`table-select-sort`, `table-column-resize`, `workspace-tab-drag`) — now run green on this host
+`[x]` Correct the scenarios to the measured 0.10.0 contract (wheel sign, painted-window virtual-list, visible-row selection, pointer-capture `onMouseMove`, focus traversal, overlay handlers on the content div) — plan `140` §4
+`[ ]` **Gold standard (outside this workstream):** add `.github/workflows/native-smoke.yml` running `nub run --filter playground smoke` on `macos-14` (Apple Silicon) to confirm with the **published** binary (this host's verdict uses a locally-built binding, ADR 0003). The repo is public, so the runners are free. Owner: whoever owns CI/platform
 `[ ]` Wire the playground to `@gpuixui/tokens` once the tokens workstream lands (replace `src/theme.ts`)
 `[ ]` Replace the jj-based `scripts/verify-two-directions.sh` with a git implementation (outside this workstream)
-`[ ]` **Fallback if B1's source build fails (plan `140` §4.8):** add `.github/workflows/native-smoke.yml` running `nub run --filter playground smoke` on `macos-14` (Apple Silicon — a supported host per ADR 0001 §3) and paste the report. The repo is public, so the runners are free. **Outside this workstream** (`.github/` is not `apps/playground`/`packages/testing`); owner: whoever owns CI/platform
 
 #### Process — one writer per tree
 
@@ -66,7 +67,7 @@ changes from another pid. Owners: whoever owns `scripts/swarm-supervisor.sh`.
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[ ]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[ ]` Land the primitives package
-`[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
+`[x]` **Native smoke test**: layout, input, focus, overlay, scroll, panel and virtual-list primitives verified in real GPUix 0.10.0 on this host (11/11, plan `140` §4)
 `[ ]` Land one fully working component running in GPUix
 `[ ]` Land the docs shell and document that component in Fumadocs
 
