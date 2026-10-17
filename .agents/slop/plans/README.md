@@ -83,6 +83,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [084](./084-control-boundary-on-state-washes.md) | The control boundary on the washes a row paints | F | 014, 063, 071–083 | done |
 | [085](./085-elevation-tint-role.md) | The elevation tint role the theme never painted | F | 011, 018, 056–066 | done |
 | [086](./086-total-contrast-contract.md) | A total contrast contract, and the ring on every surface a control sits on | F | 059, 071–085 | done |
+| [087](./087-selected-secondary-text.md) | Selected secondary text, and the wash that must stay visible | F | 057, 071, 079, 081, 086 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -343,6 +344,24 @@ colour role is neither measured by `contrastPairs`/`selectionPairs` nor on a
 declared exemption list with a reason (`disabled`/`disabledForeground`,
 `overlay`, `scrollbar`, `shadow`), so a 55th role cannot ship with no contrast
 story.
+087 closes the other half of plan 081's selection story: the wash was measured
+with the body text role each surface uses, but a drag-select also covers the
+`mutedForeground` row description, card caption, table metadata and timestamp
+under it. Seven of the ten shipped sets were below the 4.5:1 secondary floor
+there — identity light 4.06:1 and identity dark 3.49:1 on a pressed row, macOS
+light 3.96:1, macOS dark 3.89:1, Linux light 3.87:1, Linux dark 4.10:1 on a
+selected row and Windows light 3.88:1. The same audit found the wash itself had
+no perceivability pair: a future edit could make the new pairs pass by erasing
+the highlight. `mutedForeground` moves one step away from the canvas in the
+seven failing sets (identity to neutral 700/300, each platform inside its own
+grey family), `selectionPairs` gains the nine secondary pairs (9 → 18),
+`selectionWashPairs` adds one `surface` pair per surface a glyph is selected on
+(9), and `themeContrastFailures` reports both. Windows dark and both
+high-contrast sets already passed and do not move. Accent-toned text under a
+wash is documented as a deliberate omission: at AAA no wash that stays visible
+can keep a link or status tone at 7:1 (high-contrast light's `primaryText`
+measures 6.75:1 on the `muted` panel and 5.48:1 on `active` with the shipped
+wash).
 
 ### Reference adoption (block `200–299`)
 
