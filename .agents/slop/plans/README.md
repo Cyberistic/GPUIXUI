@@ -82,6 +82,7 @@ B1, so it is planned, not done.
 | `413-docs-page-metadata.md` | Per-page document metadata (title, description, OpenGraph, canonical) | B | 410 | landed |
 | `414-copyable-component-source.md` | Copyable real source on component pages via Fumadocs `<include>`, guarded by a test | B–C | 410, 411, 412 | implemented |
 | `415-api-type-table.md` | The API type table: verified in this app, landed, and guarded (`@internal`, optionality, unresolved names) | B–C | 410, 411 | implemented |
+| `416-docs-identity-from-tokens.md` | Docs identity from `@gpuixui/tokens`: the palette pinned by test, generated colour/type tables, theming + typography truth | B/F | 410, 011–018 | implemented |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
