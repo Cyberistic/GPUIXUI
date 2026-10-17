@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 94/123
+`[x]` `[████████░░]` 95/125
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -194,6 +194,12 @@ every shipped set passes, so no colour moves (plan 325)
 verification paragraph omitted the four soft fills from the same list, and the
 pair-count history ended at 262 while plan 325 shipped 264; the prose now derives
 both from the lists and the audit range names the latest plan (plan 326)
+`[x]` Complete the accent family's state matrix — the toggle-on fill still
+hovered and pressed at `alpha(accent, 0.9/0.8)`, so the state depended on the
+backdrop and had no contrast pair while plan 097 had fixed the other three
+families; `accentHover` and `accentActive` are designed, platform-specific,
+contrast-checked roles (62 → 64 roles, 264 → 276 pairs), and the primitives
+migration is recorded cross-team (plan 327)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
@@ -513,6 +519,11 @@ workstreams)
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
 owner: those workstreams)
+`[ ]` Cross-team: `primitives` reads `accentHover`/`accentActive` for a toggle
+that is on and deletes the `alpha(accent, 0.9/0.8)` hover and press in
+`packages/primitives/src/core/variants.ts` (`togglePressedBase`); the two roles
+are designed, platform-specific and measured in both modes now, and the outlined
+toggle's `border` edge is held on both (plan 327; owner: `primitives`)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now

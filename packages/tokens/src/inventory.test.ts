@@ -120,9 +120,9 @@ describe("COMPONENTS.md design-system rows", () => {
     });
   });
 
-  it("names the six designed filled-control roles", () => {
+  it("names the eight designed filled-control roles", () => {
     const filled = row("Filled control states");
-    ["primary", "secondary", "destructive"].forEach((family) => {
+    ["primary", "secondary", "destructive", "accent"].forEach((family) => {
       ["Hover", "Active"].forEach((state) => {
         const role = `${family}${state}`;
         expect(colorRoles, role).toContain(role);

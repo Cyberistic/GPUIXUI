@@ -72,7 +72,8 @@ contrast obligations: `primary` is a surface with `primaryForeground` on it, and
 surfaces and the washes a link paints.
 
 A brand that changes a fill moves the whole family: `primaryForeground`,
-`primaryHover`, `primaryActive` and `primaryText` belong beside `primary`. An
+`primaryHover`, `primaryActive` and `primaryText` belong beside `primary`, and
+`accentForeground`, `accentHover` and `accentActive` belong beside `accent`. An
 inherited state keeps the base theme's hue running the interaction, and an
 inherited foreground can miss the on-colour floor — the dark example's inherited
 foreground measured 4.24:1 on its brand fill. The executed example in
@@ -92,7 +93,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite tint | black tint |
 
-Both themes expose exactly the same 62 roles; the type system and the colour
+Both themes expose exactly the same 64 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -266,7 +267,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on the canvas, card, popover and quiet panel it paints on; filled actions step to their family's `xHover` (opaque, contrast-checked) instead of compositing an alpha fill |
 | pressed | `active` wash on ghost and subtle surfaces, held to the same floor on the same four surfaces; filled actions step to `xActive`, one step past their hover |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every surface and row wash a placeholder fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
-| selected | `selected` + `selectedForeground`, the fill held to the perceivability floor on the surface it marks |
+| selected | `selected` + `selectedForeground`, the fill held to the perceivability floor on the surface it marks; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
 | link | `primaryText` on the plain surfaces, the `muted` panel, the `hover`/`active` washes a link paints and the `accent`/`selected` fills a selectable row paints under it; `primary` is a fill and is never the colour of text |
 | disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
 | invalid | a `destructive` edge on the `input` fill a field paints and on the `background` canvas a transparent field paints, held to the essential-boundary floor (3:1, 4.5:1 at AAA); the message itself uses `destructiveText`, not the fill |
@@ -285,7 +286,8 @@ focusing the control (that limitation is real and is not worked around).
 
 A filled control steps through its own family — `x` → `xHover` → `xActive` — so
 the state is an editable, measured fill, not a translucent tint that takes its
-colour from the surface behind it. `primary`, `secondary` and `destructive` each
+colour from the surface behind it. `primary`, `secondary`, `destructive` and
+`accent` each
 carry the full trio, and the on-colour foreground is held to its floor on all
 three. The generic `hover` and `active` roles are the washes a ghost or outline
 control paints; they are not a filled control's states. The outlined neutral
@@ -341,7 +343,7 @@ Colour is checked, not assumed. The token suite enforces:
 | a menu row's label (`popoverForeground` on `hover`/`active`, and on `selected` for a selected `Select` option) | 7:1 | 7:1 |
 | selected row label (`selectedForeground` on `selected`, the `accent` wash a hovered selectable row paints and the `hover`/`active` pointer washes) | 4.5:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
-| filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
+| filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground`/`accentForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
@@ -356,7 +358,7 @@ Colour is checked, not assumed. The token suite enforces:
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes | 1.05:1 | 1.05:1 |
-| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`popover`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on

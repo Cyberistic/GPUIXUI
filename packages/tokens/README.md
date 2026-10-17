@@ -139,7 +139,8 @@ export const brandTheme = createTheme({
 
 A theme that moves a filled family moves the whole family: the brand's
 `primaryForeground`, `primaryHover`, `primaryActive` and `primaryText` are set
-beside `primary`. An inherited state keeps the base hue running the interaction,
+beside `primary`, and `accentForeground`, `accentHover` and `accentActive` belong
+beside `accent`. An inherited state keeps the base hue running the interaction,
 and an inherited foreground can miss the on-colour floor.
 
 A complete, executed example lives in
@@ -166,7 +167,7 @@ const size = isControlSize(storedSize) ? storedSize : "md";
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 62 roles, so no component changes.
+essential boundaries. It reuses the same 64 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";
@@ -263,7 +264,8 @@ the loading skeleton on those three, the `muted` panel and the
 high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved
 them one ramp step — and the decorative `border` at 1.05:1 (3:1 at high
 contrast) on the plain surfaces, on the `secondary`, `secondaryHover`,
-`secondaryActive`, `hover`, `active` and `accent` fills a bordered control
+`secondaryActive`, `hover`, `active`, `accent`, `accentHover` and
+`accentActive` fills a bordered control
 paints and on the four soft status fills a
 status panel divides, so an Alert, Badge or Toast, a loading placeholder, every
 divider and every outlined control's edge stay perceivable. The inherited dark
@@ -288,8 +290,9 @@ fills join the contract, the three light pressed steps and the two AAA dividers
 moved, and every shipped theme passes it —
 platform variants on their own canvas, not the identity's.
 An interactive fill is a surface in its own right: `stateFillSurfacePairs` holds
-every interactive fill — the two washes, `accent`, `selected` and the
-`primary`/`secondary`/`destructive` families — to 1.05:1 on `background`, `card`,
+every interactive fill — the two washes, the `accent` family at rest, hover and
+press, `selected` and the `primary`/`secondary`/`destructive` families — to
+1.05:1 on `background`, `card`,
 `popover` and `muted`, because a fill that matches its panel is not a state. The
 identity light `muted` was the same value as its `hover` and `secondary`, the
 identity dark `hover` was its `muted` and `popover`, macOS light `selected`

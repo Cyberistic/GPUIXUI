@@ -105,7 +105,7 @@ missing here is not public.
 | `TextStyle` | Font size, line height and weight for one role. |
 | `TextStyleProperties` | A resolved role for `StyleDesc`, family included. |
 | `Theme` | A complete resolved theme. |
-| `ThemeColors` | The 62 semantic colour roles. |
+| `ThemeColors` | The 64 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
@@ -128,18 +128,18 @@ control is hovered or pressed, the generic `hover`/`active` washes on a ghost or
 outline control, and `accent` for an outline toggle that is on — so the divider
 is held to its floor on those fills too, not only on the plain surfaces.
 
-There are 62 roles. The four status families — `info`, `success`, `warning` and
+There are 64 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
 a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
 edge (`xSoftBorder`) for alerts, badges and toasts, and a text role (`xText`) for
 status labels, icons and indicator dots drawn on `background`, `card` or
 `popover`. Every filled action has designed hover and pressed steps —
-`primaryHover`/`primaryActive`, `secondaryHover`/`secondaryActive` and
-`destructiveHover`/`destructiveActive` — so a component never composites an
-alpha fill over whatever surface sits behind it. The generic `hover` and
-`active` roles are different: they are the washes a ghost or outline control
-paints, not the fill of a filled control. `info` is blue, not iris, so it can
-never be confused with `primary`.
+`primaryHover`/`primaryActive`, `secondaryHover`/`secondaryActive`,
+`destructiveHover`/`destructiveActive` and `accentHover`/`accentActive` — so a
+component never composites an alpha fill over whatever surface sits behind it.
+The generic `hover` and `active` roles are different: they are the washes a ghost
+or outline control paints, not the fill of a filled control. `info` is blue, not
+iris, so it can never be confused with `primary`.
 
 The same fill-versus-text split applies to the brand action. `primary` is a
 surface: it carries `primaryForeground`, and it is measured only as a fill.
@@ -169,8 +169,10 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `secondaryActive` | `#CBD1DB` | `#545D6C` | secondary action while pressed |
 | `muted` | `#FBFCFD` | `#222730` | quiet surface |
 | `mutedForeground` | `#3D4552` | `#CBD1DB` | secondary text |
-| `accent` | `#EEF0FF` | `#2E2370` | tinted emphasis surface |
+| `accent` | `#EEF0FF` | `#2E2370` | selection and toggle-on surface |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
+| `accentHover` | `#E0E3FF` | `#42319F` | toggle-on surface while hovered |
+| `accentActive` | `#C7CBFF` | `#4C39B5` | toggle-on surface while pressed |
 | `destructive` | `#CC3439` | `#FF6B6B` | destructive action, and the invalid field edge |
 | `destructiveForeground` | `#FFFFFF` | `#3A0B0D` | text on `destructive` |
 | `destructiveHover` | `#A5262B` | `#FF9E9E` | destructive action while hovered |
@@ -333,7 +335,7 @@ does the same for a status label and an indicator dot on a plain surface.
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 62 roles and the same type, spacing, radius, density, border
+`Theme` — the same 64 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -372,8 +374,10 @@ carries, so it cannot claim another.
 | `secondaryActive` | `#B8B8B8` | `#4A4A4A` | secondary action while pressed |
 | `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
 | `mutedForeground` | `#1F1F1F` | `#E0E0E0` | secondary text |
-| `accent` | `#E0E3FF` | `#251B5C` | tinted emphasis surface |
+| `accent` | `#E0E3FF` | `#251B5C` | selection and toggle-on surface |
 | `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
+| `accentHover` | `#D5D8FF` | `#33257A` | toggle-on surface while hovered |
+| `accentActive` | `#BFC2FF` | `#42319F` | toggle-on surface while pressed |
 | `destructive` | `#7E1D21` | `#FF9E9E` | destructive action, and the invalid field edge |
 | `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
 | `destructiveHover` | `#5C1619` | `#FFC6C6` | destructive action while hovered |
@@ -1136,7 +1140,9 @@ the soft status surfaces, the designed edge on its own fill and on the eight
 surfaces a chip sits on (`softBorderSurfacePairs`), the plain divider on those
 fills, and the decorative
 dividers — including on the `secondary`, `hover`, `active` and `accent` fills a
-bordered control paints, and on the `input` fill a field sits on.
+bordered control paints, the `secondaryHover`/`secondaryActive` and
+`accentHover`/`accentActive` steps it presses through, and on the `input` fill a
+field sits on.
 The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
@@ -1474,7 +1480,9 @@ the four soft status fills an Alert paints, taking it from 257 to **261**. Plan
 `322` adds the `accent` wash a selectable row hovers to the skeleton surfaces,
 taking it from 261 to **262**. Plan `325` adds the invalid field edge
 (`destructive` on the `input` fill and on the `background` canvas a transparent
-field paints), taking it from 262 to **264**.
+field paints), taking it from 262 to **264**. Plan `327` adds the accent family's
+designed hover and press to the fill, on-colour and control-edge contracts,
+taking it from 264 to **276**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1495,10 +1503,21 @@ lighter in dark. The outlined neutral family keeps its `border` edge on all thre
 steps, so a press changes the fill without erasing the edge: the
 divider contract covers `secondary`, `secondaryHover` and `secondaryActive`.
 
-An interactive fill is a surface too. `stateFillSurfacePairs` holds the thirteen
+The accent family completes the matrix (plan `327`). A toggle that is on paints
+`accent` with `accentForeground`; before `accentHover` and `accentActive`
+existed, the only way to show a pointer state was
+`alpha(accent, 0.9)` / `alpha(accent, 0.8)`, the same defect one family over —
+the composite took its colour from the backdrop, moved *toward* the canvas in
+dark mode, could not be tuned in a copied platform style and had no pair the
+contract could check. The family now steps through its own designed values, and
+an outlined toggle keeps its `border` edge on both, so the edge's divider
+contract covers `accent`, `accentHover` and `accentActive` as well.
+
+An interactive fill is a surface too. `stateFillSurfacePairs` holds the fifteen
 fills a control or row paints as its own shape — the `hover` and `active` washes,
-`accent` and `selected`, and the `primary`, `secondary` and `destructive`
-families at rest, hover and press — to the 1.05:1 surface floor on the four
+the `accent` family at rest, hover and press, `selected`, and the `primary`,
+`secondary` and `destructive` families at rest, hover and press — to the 1.05:1
+surface floor on the four
 surfaces they paint on: `background`, `card`, `popover` and the quiet `muted`
 panel. `stateFillRoles` is the fill list and `stateFillSurfaces` the surface
 list, so a fifth surface or a new filled family joins one place. The audit found
@@ -1581,7 +1600,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`325` closed.
+plans `076`–`327` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

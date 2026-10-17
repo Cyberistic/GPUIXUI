@@ -195,13 +195,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 262 to **${contrastPairs.length}**`,
+      `taking it from 264 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`325` closed");
+    expect(prose).toContain("plans `076`–`327` closed");
   });
 });
 
@@ -918,7 +918,7 @@ describe("docs/design-system.md", () => {
       `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, and on \`selected\` for a selected \`Select\` option) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| selected row label (\`selectedForeground\` on \`selected\`, the \`accent\` wash a hovered selectable row paints and the \`hover\`/\`active\` pointer washes) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder text on the \`input\` fill and the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
@@ -932,7 +932,7 @@ describe("docs/design-system.md", () => {
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
@@ -947,7 +947,7 @@ describe("docs/design-system.md", () => {
     );
 
     expect(pairs).toEqual(stateFillSurfacePairs);
-    expect(pairs).toHaveLength(52);
+    expect(pairs).toHaveLength(60);
     stateFillRoles.forEach((fill) => {
       expect(markdown, fill).toContain(`\`${fill}\``);
     });
