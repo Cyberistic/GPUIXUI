@@ -148,6 +148,16 @@ layering uses the `overlay` scrim colour; `elevation.overlay` is reserved and
 empty so the shape stays stable. Dark shadows are darker and more opaque because
 contrast between surfaces is lower.
 
+Motion is a scale beside elevation, not a component detail: `step` (a spinner's
+frame) and `pulse` (a skeleton's half cycle) drive interval indicators, and
+`fast`/`normal`/`slow` align with the `sm`/`md`/`lg` surface classes, so a
+tooltip, a menu and a dialog move at the pace their elevation suggests. The
+tokens hold milliseconds because that is what a timer takes;
+`motionTransition(theme, level, phase)` converts to the seconds the runtime's
+`motion` prop takes. GPUix animates only `width`, `height`, `opacity`,
+`top`/`right`/`bottom`/`left` and `borderRadius` — there is no transform, no
+rotation and no colour interpolation — so the design never promises them.
+
 ## 8. Interaction states
 
 | State | Role / mechanism |
@@ -229,9 +239,10 @@ The extension mechanism is deliberately small:
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
 
-Overrides merge by group; typography merges field by field; elevation levels are
-replaced as whole arrays; the mode is immutable. Nothing mutates the base, so a
-theme can be created once at startup and shared.
+Overrides merge by group; typography merges field by field, motion timing by
+timing and easing by easing; elevation levels are replaced as whole arrays; the
+mode is immutable. Nothing mutates the base, so a theme can be created once at
+startup and shared.
 
 A brand may change any value but should not remove roles: every component
 expects the full role set. A brand that needs a different structure should add
@@ -242,6 +253,7 @@ roles in the tokens package, not fork components.
 - No component-level token catalogue. Semantic roles plus scales are enough; a
   per-component token file would duplicate the same decisions.
 - No theme editor or theme marketplace.
-- No motion tokens yet. Motion is a component concern until a second consumer
-  needs shared durations/easings.
+- No animation the runtime cannot draw. Motion goes through `motion` props and
+  the seven `MotionStyle` properties; a design that needs a transform, a
+  rotation or colour interpolation is out of scope until GPUix supports it.
 - No web preview pretending to be native. The playground is the visual proof.

@@ -69,6 +69,24 @@ const shadow = elevationShadow(theme, "md");
 <div style={{ boxShadow: shadow }} />;
 ```
 
+## Motion
+
+Timings are milliseconds in the tokens and seconds in the runtime's transition.
+`motionTransition(theme, level, phase)` does the conversion; a step indicator
+reads `theme.motion.step` directly for `setInterval`.
+
+```tsx
+import { motionTransition } from "@gpuixui/tokens";
+
+const transition = motionTransition(theme, "normal", "enter"); // 0.2s, easeOut
+<div style={{ height }} motion={{ animate: { height }, transition }} />;
+```
+
+`step`, `fast`, `normal`, `slow` and `pulse` are the levels; `standard`, `enter`,
+`exit` and `linear` are the easings. Override any level to `0` to remove motion.
+A runnable example lives in
+[`src/motion.example.ts`](./src/motion.example.ts).
+
 ## Extending a theme
 
 `createTheme` starts from a built-in theme; `extendTheme` derives from any

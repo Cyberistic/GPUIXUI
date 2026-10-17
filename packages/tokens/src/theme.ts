@@ -6,6 +6,7 @@ import {
   type ThemeColors,
 } from "./color.js";
 import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
+import { motion, type Motion, type MotionEasings } from "./motion.js";
 import {
   borderWidth,
   defaultDensity,
@@ -46,6 +47,8 @@ export interface Theme {
   readonly density: Density;
   /** Shadow levels. */
   readonly elevation: Elevation;
+  /** Motion timings and easings. */
+  readonly motion: Motion;
   /** Border thicknesses. */
   readonly borderWidth: BorderWidth;
   /** Icon sizes. */
@@ -93,6 +96,13 @@ export interface ThemeOverrides {
   readonly density?: DensityName | Partial<Omit<Density, "name">>;
   /** Replace individual elevation levels. */
   readonly elevation?: Partial<Elevation>;
+  /**
+   * Override motion timings, or the easings inside `ease`. A partial override
+   * keeps the other timings and the other phasings.
+   */
+  readonly motion?: Partial<Omit<Motion, "ease">> & {
+    readonly ease?: Partial<MotionEasings>;
+  };
   /** Override border thicknesses. */
   readonly borderWidth?: Partial<BorderWidth>;
   /** Override icon sizes. */
@@ -103,6 +113,21 @@ export interface ThemeOverrides {
 export interface ThemeConfig extends ThemeOverrides {
   readonly mode: ThemeMode;
 }
+
+const mergeMotion = (
+  base: Motion,
+  override:
+    | (Partial<Omit<Motion, "ease">> & {
+        readonly ease?: Partial<MotionEasings>;
+      })
+    | undefined,
+): Motion => {
+  if (override === undefined) {
+    return base;
+  }
+  const { ease, ...timings } = override;
+  return { ...base, ...timings, ease: { ...base.ease, ...ease } };
+};
 
 const mergeTextStyle = (
   base: TextStyle,
@@ -135,7 +160,6 @@ const mergeTypography = (
 const isDensityName = (
   value: DensityName | Partial<Omit<Density, "name">>,
 ): value is DensityName => typeof value === "string";
-
 const mergeDensity = (
   base: Density,
   override: DensityName | Partial<Omit<Density, "name">> | undefined,
@@ -159,6 +183,7 @@ export const lightTheme: Theme = {
   radius,
   density: defaultDensity,
   elevation: lightElevation,
+  motion,
   borderWidth,
   iconSize,
 };
@@ -173,6 +198,7 @@ export const darkTheme: Theme = {
   radius,
   density: defaultDensity,
   elevation: darkElevation,
+  motion,
   borderWidth,
   iconSize,
 };
@@ -196,6 +222,7 @@ export const highContrastLightTheme: Theme = {
   radius,
   density: defaultDensity,
   elevation: lightElevation,
+  motion,
   borderWidth,
   iconSize,
 };
@@ -210,6 +237,7 @@ export const highContrastDarkTheme: Theme = {
   radius,
   density: defaultDensity,
   elevation: darkElevation,
+  motion,
   borderWidth,
   iconSize,
 };
@@ -257,6 +285,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     radius: { ...base.radius, ...overrides.radius },
     density: mergeDensity(base.density, overrides.density),
     elevation: { ...base.elevation, ...overrides.elevation },
+    motion: mergeMotion(base.motion, overrides.motion),
     borderWidth: { ...base.borderWidth, ...overrides.borderWidth },
     iconSize: { ...base.iconSize, ...overrides.iconSize },
   };

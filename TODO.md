@@ -48,9 +48,9 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████████]` 12/14
+`[x]` `[███████████]` 12/13
 
-`[x]` Write and index the tokens/theme plan set (plans 010–018)
+`[x]` Write and index the tokens/theme plan set (plans 010–019)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -68,7 +68,8 @@ prebuilt `dist` (plan 016)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`
-`[ ]` Add motion tokens (durations/easings) once a component consumes them
+`[x]` Add motion tokens (durations/easings); three `primitives` call sites held
+`120`/`700` as literals (plan 019)
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the
@@ -80,6 +81,10 @@ local focus-ring helpers (`primitives/src/core/style.ts`,
 (`primitives/src/core/style.ts` `firstShadow`, `components/src/internal/theme.ts`
 `elevation`), now that `focusRing` and `elevationShadow` exist and the package
 resolves from source (owner: those workstreams; plans 016–018)
+`[ ]` Cross-team: `primitives` replaces the `useStep(…, 120)` / `useStep(…, 700)`
+literals with `theme.motion.step` / `theme.motion.pulse`, and the Tier 2 overlay
+components take enter/exit transitions from `motionTransition` (owner:
+`primitives` and `components`; plan 019)
 
 ## Phase C — Tier 1–2 components
 

@@ -25,6 +25,7 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   lightTheme,
+  motionTransition,
   statusTone,
   textStyle,
   type FocusRing,
@@ -335,6 +336,58 @@ the reserved empty `overlay` level (which `boxShadow` accepts). A shipped level
 with two entries would silently render only the first, so
 `packages/tokens/src/elevation.test.ts` fails if one appears.
 
+## Motion
+
+There is no `transition` and no `animation` in the runtime: motion exists only
+through `motion` props, and `MotionStyle` reaches seven properties — `width`,
+`height`, `opacity`, `top`, `right`, `bottom`, `left`, `borderRadius`. No
+transform, no rotation, no colour interpolation.
+
+Timings are **milliseconds** in the tokens; the runtime's transition takes
+**seconds**. The step levels follow the surface classes `elevation` names.
+
+| Level | Milliseconds | Runs on | Used by |
+| ----- | ------------ | ------- | ------- |
+| `none` | 0 | — | a theme that removes motion |
+| `step` | 120 | `linear` | spinner and indeterminate bar frames |
+| `fast` | 160 | `enter` / `exit` | tooltips, badges |
+| `normal` | 200 | `enter` / `exit` | menus, dropdowns, combobox lists |
+| `slow` | 320 | `enter` / `exit` | dialogs, panel expansion, accordions |
+| `pulse` | 700 | `linear` | a skeleton's half cycle |
+
+Easings are named per phase: `standard` (`easeInOut`), `enter` (`easeOut`),
+`exit` (`easeIn`) and `linear`. The runtime also takes a cubic-bezier tuple, so
+`extendTheme(base, { motion: { ease: { enter: [0.4, 0, 0.2, 1] } } })` works
+without a cast.
+
+```tsx
+import { motionTransition } from "@gpuixui/tokens";
+
+// { duration: 0.32, ease: "easeOut" } — seconds, the unit the runtime takes.
+const transition = motionTransition(theme, "slow", "enter");
+
+<div style={{ height }} motion={{ animate: { height }, transition }} />;
+```
+
+`motionTransition(theme, level, phase)` defaults to the `standard` phase. A step
+indicator reads the token directly, because `setInterval` takes milliseconds:
+
+```ts
+const intervalMs = theme.motion.step; // 120
+```
+
+To remove motion — there is no reduced-motion query in the runtime — override
+every level to `0`:
+
+```ts
+const still = extendTheme(base, {
+  motion: { step: 0, fast: 0, normal: 0, slow: 0, pulse: 0 },
+});
+```
+
+A runnable example lives in
+[`src/motion.example.ts`](../packages/tokens/src/motion.example.ts).
+
 ## Borders and icons
 
 | Token | Pixels |
@@ -389,6 +442,7 @@ interface Theme {
   radius: Radius;
   density: Density;
   elevation: Elevation;
+  motion: Motion;
   borderWidth: BorderWidth;
   iconSize: IconSize;
 }
@@ -424,6 +478,8 @@ Merge rules:
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight;
 - elevation levels **replace** the whole shadow array;
+- motion merges timing by timing and easing by easing, so overriding `normal`
+  keeps `fast` and `enter`;
 - `density` accepts a preset name or partial metrics; a partial override keeps
   the base preset name;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
@@ -539,6 +595,8 @@ It also fails if a soft status surface is indistinguishable from `background` or
 - No `outline*` and no `focusVisible` in the runtime (GPUix 0.10.0): the focus
   ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
   `borderRadius` only because a shadow does.
-- No motion tokens yet; no component consumes them.
+- No `transition`, `animation`, `transform` or colour interpolation: motion can
+  only animate the seven `MotionStyle` properties, and there is no
+  reduced-motion query, so a theme that wants none overrides the levels to `0`.
 - Native visual proof is the playground's theme gallery, not this document. See
   `TODO.md`.
