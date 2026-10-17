@@ -74,8 +74,8 @@ describe("selected secondary text", () => {
 
   it("names the identity regression when the secondary grey is reverted", () => {
     const regressed = extendTheme(getTheme("light"), {
-      // The pre-087 secondary grey.
-      colors: { mutedForeground: "#545D6C" },
+      // The pre-087 secondary grey on the pre-309 quiet panel.
+      colors: { mutedForeground: "#545D6C", muted: "#EEF1F5" },
     });
     const failures = themeContrastFailures(regressed).filter(
       ({ foreground, wash }) =>

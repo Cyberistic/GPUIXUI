@@ -17,7 +17,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * The dark skeleton is one step off the pressed wash, so a loading row keeps its
  * placeholder visible (plan 094). The filled-control hover and pressed steps are
  * designed opaque roles in Fluent's blue and grey families, not alpha composites
- * (plan 097).
+ * (plan 097). The light quiet panel and accent are a step toward the card, so a
+ * sidebar wash, a neutral filled control and a toggle-on fill stay perceivable
+ * on the surface they paint on (plan 309).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -31,7 +33,7 @@ export const windowsPlatformStyle = {
       background: "#F3F3F3",
       card: "#FFFFFF",
       popover: "#FFFFFF",
-      muted: "#EDEDED",
+      muted: "#F7F7F7",
       mutedForeground: "#4A4A4A",
       border: "#D6D6D6",
       borderStrong: "#767676",
@@ -48,7 +50,7 @@ export const windowsPlatformStyle = {
       primaryHover: "#005BA1",
       primaryActive: "#004E8C",
       primaryText: "#005BA1",
-      accent: "#E5F1FB",
+      accent: "#DCEBF8",
       accentForeground: "#004A8F",
       ring: "#0067C0",
       selection: "#0067C033",

@@ -104,7 +104,8 @@ describe("the control boundary on the state washes", () => {
 
   it("names every wash when a theme regresses", () => {
     const regressed = extendTheme(getTheme("light"), {
-      colors: { borderStrong: "#848E9E" },
+      // Dim enough to fail on the quiet panel plan 309 lightened as well.
+      colors: { borderStrong: "#9AA3B1" },
     });
     // The soft status fills have their own contract and suite (plan 092).
     const failures = themeContrastFailures(regressed).filter(({ background }) =>

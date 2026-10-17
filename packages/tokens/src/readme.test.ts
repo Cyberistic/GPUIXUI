@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import packageJson from "../package.json";
 import { colorRoles } from "./color.js";
-import { contrastFloors } from "./contrast.js";
+import { contrastFloors, stateFillSurfaces } from "./contrast.js";
 import { motion } from "./motion.js";
 import {
   platformNames,
@@ -74,6 +74,16 @@ describe("packages/tokens/README.md", () => {
   it("states the state washes and floating surface the ring is checked on", () => {
     expect(readme).toContain(
       "The focus ring is checked on the canvas, card, popover and the `hover`, `active` and `selected` washes, so a ring that vanishes on a selected row is caught, and on the four soft status fills, because a toast's action button is focused while it sits on its own tint",
+    );
+  });
+
+  it("states the interactive fills and the surfaces they are checked on", () => {
+    const surfaces = sentenceList(
+      stateFillSurfaces.map((surface) => `\`${surface}\``),
+    );
+    expect(readme).toContain(
+      "`stateFillSurfacePairs` holds every interactive fill — the two washes, `accent`, `selected` and the `primary`/`secondary`/`destructive` families — to " +
+        `${contrastFloors.default.surface}:1 on ${surfaces}`,
     );
   });
 

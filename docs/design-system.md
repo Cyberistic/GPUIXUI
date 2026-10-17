@@ -107,6 +107,14 @@ There is no automatic OS appearance detection: GPUix exposes no appearance
 query. The application chooses `lightTheme` or `darkTheme` and passes the
 result.
 
+The quiet `muted` panel is a grouping surface, not a second canvas. In light mode
+it sits one step toward the card — canvas, panel, card — so the `hover`,
+`accent`, `selected` and filled-control values painted on a sidebar row or a
+settings-group control stay perceivable; in dark mode the panel is a raised
+neutral and the `hover` wash is a designed step between it and the `active`
+press (plan `309`). A fill that matches its panel is not a state. A design that
+draws a panel edge uses `border`, whose floor already covers the panel.
+
 ## 5. Typography
 
 Ten roles, one job each:
@@ -245,10 +253,10 @@ the mounting rule and its no-portal limitation are documented once, under
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces; filled actions step to their family's `xHover` (opaque, contrast-checked) instead of compositing an alpha fill |
-| pressed | `active` wash on ghost and subtle surfaces; filled actions step to `xActive`, one step past their hover |
+| hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on the canvas, card, popover and quiet panel it paints on; filled actions step to their family's `xHover` (opaque, contrast-checked) instead of compositing an alpha fill |
+| pressed | `active` wash on ghost and subtle surfaces, held to the same floor on the same four surfaces; filled actions step to `xActive`, one step past their hover |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every surface and row wash a placeholder fills — the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
-| selected | `selected` + `selectedForeground` |
+| selected | `selected` + `selectedForeground`, the fill held to the perceivability floor on the surface it marks |
 | link | `primaryText` on the plain surfaces and the `hover`/`active` washes a link paints; `primary` is a fill and is never the colour of text |
 | disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
@@ -272,7 +280,16 @@ three. The generic `hover` and `active` roles are the washes a ghost or outline
 control paints; they are not a filled control's states. The neutral fill needs
 its own roles most: `secondary` is only just distinguishable from the canvas, so
 a 90% alpha "hover" changed it by 1.009:1, and the press came out lighter than
-the hover.
+the hover. A filled control is still a surface in its own right, so every fill
+and wash is also held to 1.05:1 against the four surfaces it paints on —
+`background`, `card`, `popover` and the quiet `muted` panel (plan `309`). The
+audit found the identity light panel was the same value as its `hover`,
+`secondary`, `accent` and `selected` fills, so a sidebar row had no pointer
+feedback and a selected row was invisible; the identity dark `hover` was its
+`muted` and `popover`; macOS light `selected` was 1.021:1 on its canvas and
+Linux light `accent` 1.001:1 on the panel. The light panel now sits one step
+toward the card and the two light accents and the AAA dark accent move one
+designed step; no text, edge, ring, selection or tint pair changes.
 
 An inactive control is not an opacity composite. It paints the `disabled` fill
 with `disabledForeground` on it and its `border` edge around it: the label keeps a
@@ -305,6 +322,7 @@ Colour is checked, not assumed. The token suite enforces:
 | body text on `background`/`card`/`muted`/`popover`/`input` and the `hover`/`active` washes | 7:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
+| interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted` and the `hover`/`active` washes | 4.5:1 | 7:1 |

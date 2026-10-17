@@ -19,7 +19,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * The dark skeleton is one step off the pressed wash, so a loading row keeps its
  * placeholder visible (plan 094). The filled-control hover and pressed steps are
  * designed opaque roles, not an alpha composite, and each keeps Apple's blue and
- * grey families (plan 097).
+ * grey families (plan 097). The light quiet panel and accent are a step toward
+ * the card, so a sidebar wash, a selected row and a toggle-on fill stay
+ * perceivable on the surface they paint on (plan 309).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -33,7 +35,7 @@ export const macosPlatformStyle = {
       background: "#F2F2F7",
       card: "#FFFFFF",
       popover: "#FFFFFF",
-      muted: "#ECECF0",
+      muted: "#F7F7FA",
       mutedForeground: "#48484A",
       border: "#D1D1D6",
       borderStrong: "#6E6E73",
@@ -50,11 +52,11 @@ export const macosPlatformStyle = {
       primaryHover: "#0063CC",
       primaryActive: "#004C99",
       primaryText: "#0055B3",
-      accent: "#E7F1FF",
+      accent: "#D9EAFD",
       accentForeground: "#0055B3",
       ring: "#0071E3",
       selection: "#0071E333",
-      selected: "#E7F1FF",
+      selected: "#D9EAFD",
       selectedForeground: "#0055B3",
       placeholder: "#6E6E73",
       shadow: "#000000",

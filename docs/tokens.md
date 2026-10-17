@@ -111,7 +111,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
 | `secondaryActive` | `#CBD1DB` | `#545D6C` | secondary action while pressed |
-| `muted` | `#EEF1F5` | `#222730` | quiet surface |
+| `muted` | `#FBFCFD` | `#222730` | quiet surface |
 | `mutedForeground` | `#3D4552` | `#CBD1DB` | secondary text |
 | `accent` | `#EEF0FF` | `#2E2370` | tinted emphasis surface |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
@@ -149,7 +149,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
-| `hover` | `#EEF1F5` | `#222730` | hover wash for ghost surfaces |
+| `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
 | `selected` | `#EEF0FF` | `#2E2370` | selected row or item |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
@@ -313,7 +313,7 @@ carries, so it cannot claim another.
 | `secondaryActive` | `#B8B8B8` | `#4A4A4A` | secondary action while pressed |
 | `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
 | `mutedForeground` | `#1F1F1F` | `#E0E0E0` | secondary text |
-| `accent` | `#E0E3FF` | `#1C1547` | tinted emphasis surface |
+| `accent` | `#E0E3FF` | `#251B5C` | tinted emphasis surface |
 | `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
 | `destructive` | `#7E1D21` | `#FF9E9E` | destructive action |
 | `destructiveForeground` | `#FFFFFF` | `#000000` | text on `destructive` |
@@ -351,7 +351,7 @@ carries, so it cannot claim another.
 | `overlay` | `#000000A6` | `#FFFFFF26` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
-| `selected` | `#E0E3FF` | `#1C1547` | selected row or item |
+| `selected` | `#E0E3FF` | `#251B5C` | selected row or item |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#5A5A5A` | `#A9A9A9` | disabled text, held to the `inactive` floor |
@@ -1279,6 +1279,31 @@ RGB change that no pointer user can see. Each filled family now steps through
 is held to the secondary floor on all three steps in every shipped theme, and
 `filled-states.test.ts` proves the direction follows the mode — darker in light,
 lighter in dark.
+
+An interactive fill is a surface too. `stateFillSurfacePairs` holds the thirteen
+fills a control or row paints as its own shape — the `hover` and `active` washes,
+`accent` and `selected`, and the `primary`, `secondary` and `destructive`
+families at rest, hover and press — to the 1.05:1 surface floor on the four
+surfaces they paint on: `background`, `card`, `popover` and the quiet `muted`
+panel. `stateFillRoles` is the fill list and `stateFillSurfaces` the surface
+list, so a fifth surface or a new filled family joins one place. The audit found
+21 shipped pairs under the floor: the identity light `muted`, `hover` and
+`secondary` were the same value (`#EEF1F5`), so a sidebar row had no hover
+feedback, a secondary button had no shape and a selected row was invisible; the
+identity dark `hover` was its `muted` and `popover`, so a menu item did not react
+to the pointer; macOS light `selected` measured 1.021:1 on its own canvas,
+Windows light `secondary` was its panel and Linux light `accent` 1.001:1 on it;
+the AAA dark `accent` sat 1.034:1 from the quiet panel. Rather than darkening
+five shared washes that already sit within 1.05:1 of the control `border` edge
+and the `secondaryHover`/`secondaryActive` steps, the light quiet panel moves one
+step toward the card (`#FBFCFD` in the identity, `#F7F7FA` on macOS, `#FBFBFA`
+on Linux and `#F7F7F7` on Windows), which keeps every wash, edge, ring and text
+pair on it above its floor. The two light accents the canvas also failed move one
+step (`#D9EAFD` on macOS, `#DCEBF8` on Windows); the identity dark `hover`
+becomes a designed step between the 850 panel and the 800 press (`#262C36`) and
+the AAA dark accent lightens to `#251B5C`, so a selected row is perceivable on
+the AAA panel and popover. Light mode therefore layers canvas → quiet panel →
+card, a deliberate decision rather than an accident.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and

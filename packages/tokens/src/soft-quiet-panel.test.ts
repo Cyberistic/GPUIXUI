@@ -55,6 +55,8 @@ describe("soft status surface on the quiet panel", () => {
   it("reports the previous tints one step under the floor", () => {
     const regressed = extendTheme(getPlatformTheme("linux", "light"), {
       colors: {
+        // The pre-309 quiet panel this regression was measured on.
+        muted: "#EBEBEA",
         infoSoft: "#DEE9FF",
         successSoft: "#C2F4D6",
         warningSoft: "#FFE3A3",
@@ -62,7 +64,8 @@ describe("soft status surface on the quiet panel", () => {
       },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ background }) => background === "muted",
+      ({ foreground, background }) =>
+        background === "muted" && tones.some(([fill]) => fill === foreground),
     );
     expect(
       failures.map(({ foreground, pairClass, floor }) => ({

@@ -152,6 +152,48 @@ const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
 );
 
 /**
+ * The interactive fills a control or a row paints as its own shape: the two
+ * generic washes, the accent and selected fills, and the filled-action families
+ * at rest, hover and press. A filled control is a surface, so its fill has to
+ * stay perceivable on the surface behind it.
+ */
+export const stateFillRoles = [
+  "primary",
+  "primaryHover",
+  "primaryActive",
+  "secondary",
+  "secondaryHover",
+  "secondaryActive",
+  "destructive",
+  "destructiveHover",
+  "destructiveActive",
+  "accent",
+  "hover",
+  "active",
+  "selected",
+] as const;
+
+/**
+ * The surfaces an interactive fill is painted on: the canvas, a card, a
+ * popover (a menu item) and the quiet `muted` panel (a sidebar row or a
+ * settings-group control). A fill that matches its panel is not a state.
+ */
+export const stateFillSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+] as const;
+
+/** Every interactive fill, measured on each surface it paints on. */
+export const stateFillSurfacePairs: readonly ContrastPair[] =
+  stateFillRoles.flatMap((fill) =>
+    stateFillSurfaces.map(
+      (background): ContrastPair => [fill, background, "surface"],
+    ),
+  );
+
+/**
  * The surfaces an inactive label paints on, beyond the soft status fills: its
  * own `disabled` fill, the plain surfaces a ghost disabled action sits on, and
  * the row washes a disabled control inside a hovered or selected row paints. A
@@ -336,7 +378,12 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  *
  * The filled families are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
- * generic `hover`/`active` washes a ghost or outline control paints.
+ * generic `hover`/`active` washes a ghost or outline control paints. Every
+ * interactive fill — the washes, the accent and selected fills and the three
+ * filled families at rest, hover and press — is a surface in its own right and
+ * is held to the surface floor on the canvas, a card, a popover and the quiet
+ * `muted` panel it paints on, because a fill that matches its panel is not a
+ * state.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ...bodyTextPairs,
@@ -400,6 +447,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["border", "muted", "divider"],
   ["border", "disabled", "divider"],
   ...controlFillPairs,
+  ...stateFillSurfacePairs,
 ];
 
 /** WCAG floors by contrast level and pair class. */
@@ -676,7 +724,11 @@ const washVisibilityFailures = (
  * paints, the disabled control's own edge and the divider on the quiet panel,
  * and the modal scrim composited over the base surfaces it
  * covers (reported with `wash: "overlay"`; the AAA dark scrim was 1.000:1 on its
- * own canvas). The level
+ * own canvas). It also measures every interactive fill — the two washes, the
+ * accent and selected fills and the three filled families at rest, hover and
+ * press — against the canvas, card, popover and quiet panel it paints on,
+ * because the identity light panel was the same value as its `hover`,
+ * `secondary`, `accent` and `selected` fills. The level
  * defaults to the one the theme declares, so a high-contrast theme is checked
  * against its own floors. An empty array is the library's guarantee; a consumer
  * test asserts exactly that:

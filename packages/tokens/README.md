@@ -263,6 +263,15 @@ Four shipped sets had the divider equal to the fill it sits on (1.00:1) until
 plan 080, so an edge vanished exactly while a control was pressed. Every shipped
 theme passes it —
 platform variants on their own canvas, not the identity's.
+An interactive fill is a surface in its own right: `stateFillSurfacePairs` holds
+every interactive fill — the two washes, `accent`, `selected` and the
+`primary`/`secondary`/`destructive` families — to 1.05:1 on `background`, `card`,
+`popover` and `muted`, because a fill that matches its panel is not a state. The
+identity light `muted` was the same value as its `hover` and `secondary`, the
+identity dark `hover` was its `muted` and `popover`, macOS light `selected`
+measured 1.021:1 on its canvas and Linux light `accent` 1.001:1 on the panel
+until plan 309 moved the light panel one step toward the card and the two light
+accents one step deeper.
 The inactive state is measured too, and its floor is a design floor rather than a
 WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
 `disabled` fill, the four plain surfaces, the four row washes and the four soft

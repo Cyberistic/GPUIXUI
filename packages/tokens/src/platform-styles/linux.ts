@@ -18,7 +18,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * The dark skeleton is one step off the pressed wash, so a loading row keeps its
  * placeholder visible (plan 094). The filled-control hover and pressed steps are
  * designed opaque roles in Adwaita's blue and grey families, not alpha
- * composites (plan 097).
+ * composites (plan 097). The light quiet panel is a step toward the card, so a
+ * sidebar wash and a neutral filled control stay perceivable on it (plan 309).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -32,7 +33,7 @@ export const linuxPlatformStyle = {
       background: "#F6F5F4",
       card: "#FFFFFF",
       popover: "#FFFFFF",
-      muted: "#EBEBEA",
+      muted: "#FBFBFA",
       mutedForeground: "#4A4844",
       border: "#D4D2CF",
       borderStrong: "#77767B",

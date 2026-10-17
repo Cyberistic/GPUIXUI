@@ -341,7 +341,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(180);
+    expect(contrastPairs.length).toBe(232);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(
@@ -408,10 +408,16 @@ describe("themeContrastFailures", () => {
       ["successSoft", "background"],
       ["successSoft", "card"],
       ["successSoft", "popover"],
+      ["successSoft", "muted"],
     ]);
     expect(
-      failures.every(({ floor, ratio }) => floor === 1.05 && ratio === 1),
+      failures
+        .filter(({ background }) => background !== "muted")
+        .every(({ floor, ratio }) => floor === 1.05 && ratio === 1),
     ).toBe(true);
+    expect(
+      failures.find(({ background }) => background === "muted")?.ratio,
+    ).toBeLessThan(1.05);
   });
 
   it("reports a loading skeleton that vanishes into every surface", () => {
@@ -438,8 +444,16 @@ describe("themeContrastFailures", () => {
       { background: "background", pairClass: "surface", floor: 1.05 },
       { background: "card", pairClass: "surface", floor: 1.05 },
       { background: "popover", pairClass: "surface", floor: 1.05 },
+      { background: "muted", pairClass: "surface", floor: 1.05 },
     ]);
-    expect(failures.every(({ ratio }) => ratio === 1)).toBe(true);
+    expect(
+      failures
+        .filter(({ background }) => background !== "muted")
+        .every(({ ratio }) => ratio === 1),
+    ).toBe(true);
+    expect(
+      failures.find(({ background }) => background === "muted")?.ratio,
+    ).toBeLessThan(1.05);
   });
 
   it("reports an invisible divider at the level it declares", () => {

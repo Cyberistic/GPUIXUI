@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 76/100
+`[x]` `[████████░░]` 77/101
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -384,6 +384,13 @@ shape, but the edge was measured only on its own fill, so the macOS light
 warning edge measured 1.036:1 and the Linux light one 1.042:1 on their pressed
 washes and a warning Badge there had no visible boundary at all; the four edges
 are divider pairs on the eight surfaces a chip sits on (plan 308)
+`[x]` Hold every interactive fill to the surface it paints on — the identity
+light `muted`/`hover`/`secondary` were the same value, the identity dark `hover`
+was its `muted` and `popover`, macOS light `selected` measured 1.021:1 on its
+canvas, Linux light `accent` 1.001:1 on the panel and the AAA dark `accent`
+1.034:1; `stateFillSurfacePairs` adds the 13 fills on the four surfaces (180 →
+232 pairs), the light quiet panel moves one step toward the card and the failing
+accents one step (plan 309)
 `[ ]` Cross-team: `primitives` and `components` replace `opacity: 0.5` disabled
 dimming with the designed `disabled` / `disabledForeground` pair plus the
 `border` edge — an alpha composite makes the label's readability depend on the

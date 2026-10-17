@@ -32,6 +32,9 @@ import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
+  stateFillRoles,
+  stateFillSurfacePairs,
+  stateFillSurfaces,
 } from "./contrast.js";
 import {
   elevationShadow,
@@ -780,6 +783,7 @@ describe("docs/design-system.md", () => {
       `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\` and the \`hover\`/\`active\` washes | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
@@ -797,6 +801,25 @@ describe("docs/design-system.md", () => {
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
     });
+  });
+
+  it("names every interactive fill and the surfaces it is held against", () => {
+    const fillRoles: ReadonlySet<string> = new Set(stateFillRoles);
+    const pairs = contrastPairs.filter(([foreground]) =>
+      fillRoles.has(foreground),
+    );
+
+    expect(pairs).toEqual(stateFillSurfacePairs);
+    expect(pairs).toHaveLength(52);
+    stateFillRoles.forEach((fill) => {
+      expect(markdown, fill).toContain(`\`${fill}\``);
+    });
+    stateFillSurfaces.forEach((surface) => {
+      expect(markdown, surface).toContain(`\`${surface}\``);
+    });
+    expect(markdown).toContain("stateFillSurfacePairs");
+    expect(markdown).toContain("stateFillRoles");
+    expect(markdown).toContain("stateFillSurfaces");
   });
 
   it("names every surface default body text is measured on", () => {
