@@ -1,4 +1,12 @@
 {
   "title": "Components",
-  "pages": ["index", "button"]
+  "pages": [
+    "index",
+    "separator",
+    "spacer",
+    "stack",
+    "box",
+    "scroll-area",
+    "button"
+  ]
 }

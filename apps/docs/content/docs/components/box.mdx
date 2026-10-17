@@ -1,0 +1,99 @@
+---
+title: Boxes / containers
+description: A styled rectangular container.
+---
+
+<ComponentState slug="box" />
+
+<NativePreview slug="box" />
+
+`Box` is a `div` with a resolved surface: tone, padding, radius, border,
+elevation and the flex facts a layout needs. It is the only primitive that
+merges a caller's `style` over a resolved one, and the escape hatch for anything
+the named props do not cover. It is not a card, a panel or a dialog; those are
+compositions.
+
+## Usage
+
+```tsx
+import { Box, Text } from "@gpuixui/primitives";
+
+<Box tone="card" padding="md" radius="md" border>
+  <Text role="body">A surface with the card role.</Text>
+</Box>;
+```
+
+## Variants
+
+`tone` selects the semantic surface; there is no colour prop.
+
+| `tone` | Background role | Use for |
+| ------ | --------------- | ------- |
+| `none` | none | a layout wrapper that must not paint |
+| `background` | `background` | the application frame |
+| `card` | `card` | a raised content surface |
+| `popover` | `popover` | menus, overlays, tooltips |
+| `muted` | `muted` | a quiet inset region |
+| `accent` | `accent` | a highlighted region |
+| `selected` | `selected` | a selected row or tile |
+| `skeleton` | `skeleton` | a placeholder block |
+
+## Sizes
+
+`padding` takes a spacing step from the theme (`2xs` … `5xl`); there is no pixel
+value. `radius` takes `none | sm | md | lg | xl | full`, `border` adds one thin
+border on the `border` role, and `elevation` takes the theme's first shadow at
+`sm | md | lg | overlay`.
+
+## States
+
+`Box` is not interactive, so it has no hover, focus or disabled state. It
+provides `grow`, `shrink`, `fullWidth` and `fullHeight` layout facts. `shrink`
+defaults to `false` deliberately: chrome must not squash, unlike the browser's
+flex default.
+
+## Composition
+
+The layout example is an inspector sidebar built from `Box`, `Stack`, `Grid`,
+`Separator`, `Spacer` and `ScrollArea`:
+
+<include lang="tsx" meta='title="packages/primitives/examples/layout.example.tsx"'>
+  ../../../../../packages/primitives/examples/layout.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Box.tsx" name="BoxProps" />
+
+## Keyboard and focus
+
+Not focusable and not interactive. A clickable surface is a `Button` or an
+application-level host element with its own contract.
+
+## Theming
+
+`surfaceStyle` resolves every tone from the active theme; padding, radius and
+border width come from `spacing`, `radius` and `borderWidth`; elevation resolves
+to the theme's first shadow. A caller's `style` is merged last and wins property
+by property.
+
+## Accessibility and limitations
+
+- `Box` contributes no role and no `aria-*`; a decorative container stays out of
+  the accessibility tree. Semantic regions belong to the content or to a composed
+  component such as `ButtonGroup`.
+- No `role`, `tabIndex` or event props: compose a host element when you need
+  semantics.
+- No gradient, background image or border-style control: the runtime's
+  `StyleDesc` paints solid roles only.
+- One shadow per element — GPUix paints a single `boxShadow`.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Box.tsx"'>
+  ../../../../../packages/primitives/src/components/Box.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="box" />

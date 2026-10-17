@@ -1,0 +1,88 @@
+---
+title: Stack / layout primitives
+description: Horizontal and vertical flex stacks with gaps.
+---
+
+<ComponentState slug="stack" />
+
+<NativePreview slug="stack" />
+
+`Stack` is flexbox in one direction with a theme-owned gap; `Grid` is the
+runtime's fixed-track grid. `direction` is required on a stack — a default
+direction is how a row silently becomes a column. Neither is a scroll container
+or a list.
+
+## Usage
+
+```tsx
+import { Button, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="sm">
+  <Text role="h3">Danger zone</Text>
+  <Stack direction="row" justify="end" gap="sm">
+    <Button variant="outline">Cancel</Button>
+    <Button variant="destructive">Delete</Button>
+  </Stack>
+</Stack>;
+```
+
+## Variants
+
+- `Stack` lays children out along `row` or `column`.
+- `Grid` lays them out in equal tracks: a numeric `columns` count and an optional
+  `rowHeight`. There is no auto-flow and no named areas.
+
+## Sizes
+
+Gaps and padding are theme steps: `2xs xs sm md lg xl 2xl 3xl 4xl 5xl`. There is
+no pixel `gap` prop, so a call site cannot introduce a one-off spacing value.
+`fullWidth` / `fullHeight` stretch an axis; `grow` takes leftover space.
+
+## States
+
+Not interactive; there is no hover, focus or disabled state. Tab order follows
+the children's own order. Responsive changes are application state, not a prop:
+the runtime has no media queries.
+
+## Composition
+
+The layout example composes `Stack` and `Grid` inside a real inspector sidebar:
+
+<include lang="tsx" meta='title="packages/primitives/examples/layout.example.tsx"'>
+  ../../../../../packages/primitives/examples/layout.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Stack.tsx" name="StackProps" />
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Stack.tsx" name="GridProps" />
+
+## Keyboard and focus
+
+Not focusable. Tab order follows the children's own order.
+
+## Theming
+
+`stackStyle` and `gridStyle` in `core/layout.ts` resolve the axis, gap,
+alignment and tracks. The only value they read is `theme.spacing[gap]`; alignment
+names map to the runtime's flex strings in one table.
+
+## Accessibility and limitations
+
+- No role on either primitive. A row of related controls is `ButtonGroup`, which
+  sets `role="group"`; a navigation landmark is application-level.
+- No responsive breakpoints: a layout change is application state.
+- No `order`, `basis` or per-child flex control; use a child `Box` with `grow`.
+- The runtime's grid is numeric only: no auto-flow, no named areas.
+- No CSS class or selector hooks — styling is per element.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Stack.tsx"'>
+  ../../../../../packages/primitives/src/components/Stack.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="stack" />

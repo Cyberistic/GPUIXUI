@@ -1,0 +1,88 @@
+---
+title: Separators
+description: A one-pixel divider between regions.
+---
+
+<ComponentState slug="separator" />
+
+<NativePreview slug="separator" />
+
+`Separator` paints a single border step: horizontal or vertical, optionally
+inset, optionally carrying a centred caption. It is a visual divider, not a
+sectioning element and not a resizable splitter.
+
+## Usage
+
+```tsx
+import { Separator, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="md">
+  <Text role="h3">Account</Text>
+  <Separator orientation="horizontal" />
+  <Text role="body">Profile and sign-in details.</Text>
+</Stack>;
+```
+
+A labelled rule is still one call:
+
+```tsx
+<Separator orientation="horizontal" label="Advanced" />
+```
+
+## Variants
+
+`orientation` is `horizontal` or `vertical` and is required. `label` adds a
+centred caption (horizontal only); a labelled separator is composed from two
+rules and a `caption`-role text rather than a second visual primitive.
+
+## Sizes
+
+The rule is always `borderWidth.thin`. `inset` adds a spacing step at both ends,
+from the theme scale (`2xs` … `5xl`); there is no thickness prop and no pixel
+value.
+
+## States
+
+Not interactive: no hover, focus, disabled or selected state. A vertical rule
+does not stretch to its parent automatically; give it a bounded parent or a
+`fullHeight` box around it.
+
+## Composition
+
+The layout example uses separators between the inspector's regions:
+
+<include lang="tsx" meta='title="packages/primitives/examples/layout.example.tsx"'>
+  ../../../../../packages/primitives/examples/layout.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Separator.tsx" name="SeparatorProps" />
+
+## Keyboard and focus
+
+Not focusable. A focusable divider is a resize handle, which is a docking
+component, not this one.
+
+## Theming
+
+`ruleStyle` reads `spacing[inset]`, `borderWidth.thin` and `colors.border`. No
+literal colour or thickness appears in the component.
+
+## Accessibility and limitations
+
+- No role. The rule is decorative: it conveys grouping visually, so a region
+  whose only structure is a rule must still be understandable from headings and
+  order. The optional label is painted text, not an association with a region.
+- No dashed or dotted style: the runtime paints solid borders.
+- No draggable splitter and no resize event.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Separator.tsx"'>
+  ../../../../../packages/primitives/src/components/Separator.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="separator" />

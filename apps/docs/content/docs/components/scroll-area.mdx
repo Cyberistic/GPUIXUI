@@ -1,0 +1,89 @@
+---
+title: Scrollable containers
+description: A container that scrolls overflow content.
+---
+
+<ComponentState slug="scroll-area" />
+
+<NativePreview slug="scroll-area" />
+
+`ScrollArea` sets the overflow axes and nothing else. GPUix paints the
+scrollbar with the platform theme, so the thumb cannot be tinted and there is no
+fade mask. It is a `div`: the runtime has no separate scroller element.
+
+## Usage
+
+```tsx
+import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
+
+<ScrollArea axis="vertical" style={{ height: 240 }}>
+  <Stack direction="column" gap="sm">
+    {rows.map((row) => (
+      <Text role="body" key={row}>{row}</Text>
+    ))}
+  </Stack>
+</ScrollArea>;
+```
+
+**Give it a bounded size.** A scroll container with no height constraint grows
+with its content and never scrolls.
+
+## Variants
+
+`axis` is `vertical` (default), `horizontal` or `both`. The chosen axes become
+`overflow: scroll`; the others are hidden.
+
+## Sizes
+
+The container has no intrinsic size. Put the bounded size in `style`; it is
+merged last. The scrollbar's width is the platform's, not a prop.
+
+## States
+
+Not focusable by itself. The runtime scrolls with the wheel; keyboard scrolling
+belongs to the focused content inside the area. The wrapper does not intercept
+keys, so Space and PageDown reach whatever holds focus.
+
+## Composition
+
+The layout example puts the inspector's property list in a scroll area:
+
+<include lang="tsx" meta='title="packages/primitives/examples/layout.example.tsx"'>
+  ../../../../../packages/primitives/examples/layout.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/ScrollArea.tsx" name="ScrollAreaProps" />
+
+## Keyboard and focus
+
+Not focusable by itself. Scrolling with the keyboard belongs to the focused
+content, not the wrapper.
+
+## Theming
+
+`scrollStyle` resolves the axes only. The scrollbar's colour and width belong to
+the platform theme; `theme.colors.scrollbar` exists but cannot reach the 0.10.0
+scrollbar.
+
+## Accessibility and limitations
+
+- No role. The content inside is what assistive technology traverses; a scroll
+  region with no label is not announced as a region. Pair it with a heading.
+- No scrollbar tint and no scrollbar width control in GPUix 0.10.0.
+- No fade mask at the edges.
+- No absolute scroll position: `onScroll` carries deltas only; there is no
+  `onScrollChange` and no offset field. A consumer accumulates and clamps.
+- No virtualisation: a long list mounts every row. `packages/data-grid` owns the
+  virtual-list work when it lands.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/ScrollArea.tsx"'>
+  ../../../../../packages/primitives/src/components/ScrollArea.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="scroll-area" />

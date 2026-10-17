@@ -1,0 +1,83 @@
+---
+title: Spacers
+description: Fixed or flexible empty space in a layout.
+---
+
+<ComponentState slug="spacer" />
+
+<NativePreview slug="spacer" />
+
+`Spacer` is layout, not decoration. With no `size` it is a flexible filler
+(`flexGrow: 1`, `flexBasis: 0`) that pushes the next sibling to the far edge.
+With a `size` it is a fixed gap from the theme's spacing scale.
+
+## Usage
+
+```tsx
+import { Spacer, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="row" align="center" gap="sm">
+  <Text role="caption" tone="muted">Read-only</Text>
+  <Spacer />
+  <Text role="caption" tone="primary">Reset all</Text>
+</Stack>;
+```
+
+## Variants
+
+Two forms, selected by whether `size` is set:
+
+- no `size` — flexible: grows on the parent's main axis;
+- `size` — fixed: a square gap of that step on both axes, so it works in a row
+  or a column without a direction prop.
+
+## Sizes
+
+`size` takes the theme's spacing scale (`2xs` … `5xl`). There is no pixel value,
+so a one-off gap cannot enter the layout.
+
+## States
+
+Not focusable, not interactive, and no state: spacing carries no interaction.
+
+## Composition
+
+The layout example uses a flexible spacer to pin metadata to the far edge of a
+header row:
+
+<include lang="tsx" meta='title="packages/primitives/examples/layout.example.tsx"'>
+  ../../../../../packages/primitives/examples/layout.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Separator.tsx" name="SpacerProps" />
+
+## Keyboard and focus
+
+Not focusable and not interactive.
+
+## Theming
+
+The fixed size is `theme.spacing[size]`. There is no pixel `size`, so the theme
+owns every spacing value.
+
+## Accessibility and limitations
+
+- No role and no content. Spacing carries no meaning to assistive technology,
+  and must not be the only thing separating two concepts.
+- A flexible spacer needs a parent with a definite main-axis size; inside an
+  unbounded column it has nothing to grow into.
+- It is not a margin: it occupies a flex item slot, so a parent using `justify`
+  may distribute around it differently than expected.
+- No negative space or overlapping.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Separator.tsx"'>
+  ../../../../../packages/primitives/src/components/Separator.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="spacer" />

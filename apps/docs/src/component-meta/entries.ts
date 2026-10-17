@@ -46,6 +46,33 @@ const planned = (
   limitations: [],
 });
 
+interface DeliveredOptions extends PlannedOptions {
+  /** Repo-relative path to the shipped component. */
+  readonly sourcePath: string;
+  /** The runtime gaps a reader must know before adopting it. */
+  readonly limitations: readonly string[];
+  readonly dependencies?: readonly string[];
+}
+
+/**
+ * A component that exists in the repository. `wip`, not `done`: the docs page,
+ * the props table and the source are real, while `done` waits on the published
+ * GPUix binary (the primitives workstream's rule).
+ */
+const delivered = (
+  slug: string,
+  title: string,
+  tier: Tier,
+  summary: string,
+  options: DeliveredOptions,
+): ComponentMetaInput => ({
+  ...planned(slug, title, tier, summary, options),
+  status: "wip",
+  sourcePath: options.sourcePath,
+  dependencies: options.dependencies ?? [],
+  limitations: options.limitations,
+});
+
 const foundational: ReadonlyArray<ComponentMetaInput> = [
   planned(
     "text",
@@ -58,36 +85,86 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "yes",
     packageName: "@gpuixui/icons",
   }),
-  planned(
+  delivered(
     "separator",
     "Separators",
     "1",
     "A one-pixel divider between regions.",
-    { gpuix: "yes" },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Separator.tsx",
+      related: ["spacer", "stack"],
+      limitations: [
+        "No dashed or dotted style: the runtime paints solid borders.",
+        "No draggable splitter and no resize event.",
+        "A vertical rule does not stretch to its parent automatically.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "spacer",
     "Spacers",
     "1",
     "Fixed or flexible empty space in a layout.",
-    { gpuix: "yes" },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Separator.tsx",
+      related: ["stack", "separator"],
+      limitations: [
+        "A flexible spacer needs a parent with a definite main-axis size.",
+        "It occupies a flex item slot, so a parent's justify distributes around it.",
+        "No negative space or overlapping.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "stack",
     "Stack / layout primitives",
     "1",
     "Horizontal and vertical flex stacks with gaps.",
-    { gpuix: "yes" },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Stack.tsx",
+      related: ["box", "spacer"],
+      limitations: [
+        "No responsive breakpoints: the runtime has no media queries.",
+        "No order, basis or per-child flex control.",
+        "The runtime's grid is numeric only: no auto-flow, no named areas.",
+      ],
+    },
   ),
-  planned("box", "Boxes / containers", "1", "A styled rectangular container.", {
-    gpuix: "yes",
-  }),
-  planned(
+  delivered(
+    "box",
+    "Boxes / containers",
+    "1",
+    "A styled rectangular container.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/primitives/src/components/Box.tsx",
+      related: ["stack", "separator"],
+      limitations: [
+        "No role, tabIndex or event props: compose a host element for semantics.",
+        "No gradient, background image or border-style control.",
+        "One shadow per element: GPUix paints a single boxShadow.",
+      ],
+    },
+  ),
+  delivered(
     "scroll-area",
     "Scrollable containers",
     "1",
     "A container that scrolls overflow content.",
-    { gpuix: "yes" },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/primitives/src/components/ScrollArea.tsx",
+      related: ["box", "stack"],
+      limitations: [
+        "No scrollbar tint or width control in GPUix 0.10.0.",
+        "No fade mask at the edges.",
+        "onScroll carries deltas only; there is no absolute offset.",
+        "No virtualisation: a long list mounts every row.",
+      ],
+    },
   ),
   {
     slug: "button",
