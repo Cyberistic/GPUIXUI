@@ -45,6 +45,9 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | done |
 | [050](./050-docs-layering-and-omissions.md) | The layering model and the deliberate token omissions | B | 011, 017–019 | done |
+| [051](./051-platform-type-styles.md) | Platform type styles (`platformTypes`, `platformTheme`) | B | 011, 016 | done |
+| [052](./052-register-font.md) | `registerFont`: the library's own typefaces in the native runtime | B | 011, 051 | blocked (B1) |
+| [053](./053-reconcile-tokens-branches.md) | Reconcile the two `tokens` branches into one | B | 010–019, 050–052 | done |
 | `200` | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | `020`, `030`, `110–117` | planned |
 | `201` | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | planned |
 | `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | planned |
