@@ -30,6 +30,9 @@ What becomes easier, what becomes harder, what is now impossible.
 
 ## Records
 
-None yet. Phase A writes the first ones (rendering target and package
-boundaries, the preview strategy for the docs site, and the branding/package
-name).
+- `0001-native-smoke-host.md` — the 0.10.0 binding gap on this host (amended by
+  0003: the gap is closed by a source build).
+- `0002-two-gpuix-versions.md` — 0.10.0 is the library target; 0.5.1 is the last
+  runnable published binding and its measured limits.
+- `0003-darwin-x64-source-build.md` — the `darwin-x64` binding is built from
+  source with `runtime_shaders`; the native smoke suite is green on this host.

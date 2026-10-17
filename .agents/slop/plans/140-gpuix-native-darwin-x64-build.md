@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | ready to execute |
+| Status | **landed** — the binding builds, loads, and the suite is **11/11 green on this host** (§4) |
 | Phase | B (unblocks the native smoke test — B1) |
 | Owner | playground workstream (`apps/playground`, `packages/testing`) |
 | Depends on | `110`, `120`, `130` (all landed) |
@@ -146,7 +146,51 @@ provenance is recorded: same version (0.10.0), same source revision, same Rust
 code, only the shader-compilation feature differs. The smoke report's `host`
 string must name this so no row overclaims.
 
-## 4. Steps
+## 4. Measured facts (this host, `@gpuix/native@0.10.0` from source)
+
+The build succeeded and the suite ran. Verbatim outcomes; the suite is
+reproducible with `apps/playground/dist/smoke/run.js` after the build in §5.
+
+**Build**
+
+- Rust `1.97.1` (cargo `0.98.0`), zed `2565b8a3…`, `runtime_shaders` on.
+- `cargo build --release --locked --target x86_64-apple-darwin` → `EXIT=0` in
+  **9 m 59 s**; `libgpuix_native.dylib`, 25.7 MB, `Mach-O x86_64`.
+- `import("@gpuix/native")` loads and exports `TestGpuixRenderer`,
+  `hasTestGpuixRenderer`.
+- Binding provenance: same version (0.10.0), same source revision, same Rust
+  code as the published package; **only** the shader-compilation feature
+  differs (runtime Metal compilation instead of a build-time `metallib`).
+
+**Suite**
+
+```
+11/11 scenarios passed · capabilities: layout=verified text=verified
+input=verified focus=verified overlay=verified scroll=verified panel=verified
+virtual-list=verified table=verified workspace=verified
+```
+
+Exit `0`; `smoke-report.json` and 9 screenshots written. Two-direction proof
+(§6.3): with `panel-resize`'s expected delta changed `+80 → +81` the suite
+exits `1`, names `drag grew the pane by 80`, and reports `panel=failed`.
+
+**Per-capability findings** (each shaped a scenario; the scenario comments cite
+this section)
+
+| Capability | Measured |
+| ---------- | -------- |
+| layout | flex/grid/gap/absolute bounds exact; `div` is block unless `display:"flex"` |
+| text | `getAllText` for `<text>`; `getPaintedText` for `<code>`/`<markdown>` |
+| input | `nativeSimulateKeystrokes`/`simulateKeystrokes` edit; `onChange`/`onSubmit` fire |
+| focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them) on a click and on native traversal. `autoFocus` takes **native** focus but does **not** dispatch `onFocus`. A synthetic `"tab"` keystroke reaches the focused element's `onKeyDown` but does **not** itself traverse in the `TestRenderer`; `focusNext()`/`focusPrevious()` (GPUI's `window.focus_next`) do — and need an explicit `dispatchNativeEvents()` to deliver the focus events to React |
+| overlay | the `<anchored>` node paints **no surface of its own** (`getElementBounds` is `null`), so `onMouseDownOutside`/`onKeyDown` must be on the **content div inside** it (as GPUix's own `FloatingLayer` does). The popup takes focus on open (`autoFocus`); Escape then reaches its `onKeyDown`; a click outside the content div fires `onMouseDownOutside`. Escape does **not** bubble to a `deferred` `<anchored>` ancestor |
+| scroll | wheel **works**; `deltaY` is **negative to scroll down** (the opposite of the DOM `WheelEvent` — a positive delta clamps at the top). `onScroll` fires; `scrollTo`/`scrollIntoView` work |
+| panel | pointer-capture divider drag + inclusive clamp verified |
+| virtual-list | children mode **retains every row** (5 000) but GPUI **paints only ~9** — `getPaintedText()`, not the retained count, is the window. The element has no own bounds (`getElementBounds` is `null`). `onVisibleRange` fires **on scroll**; its first event reports the *pre-scroll* range, so the window moving is asserted on the painted rows |
+| table | row click, sort, `onKeyDown` down/up, wheel scroll and column drag all verified. A row scrolled out of a `overflow:"scroll"` parent is laid out beyond the window, so a click at its bounds **misses** — select a visible row |
+| workspace | tab click, tab drag between panes and split resize verified. **Pointer capture needs `onMouseMove`**: a `mouseUp` after the pointer left the pressed element only reaches it when the element also declares `onMouseMove` (the drop is therefore decided during the move) |
+
+## 5. Steps
 
 Each step states its exact command and expected result.
 
@@ -232,7 +276,7 @@ Each step states its exact command and expected result.
    field they came from; `PLAN.md` §4 gains a decision row; ADR 0001 is marked
    resolved (or amended by the fallback). Commit in slices.
 
-## 5. Test plan
+## 6. Test plan
 
 1. **The binding loads** — `node -e "import('@gpuix/native')"` from
    `apps/playground` exits `0`. Fails (with the §2.5 error) if the artifact is
@@ -246,7 +290,7 @@ Each step states its exact command and expected result.
    capability whose scenarios errored; `host` names the locally-built binding.
 5. **`packages/testing`'s own tests still pass** — unaffected (platform-free).
 
-## 6. STOP conditions
+## 7. STOP conditions
 
 - **If the toolchain or the source build needs `sudo`**, stop and report.
 - **If `gpui_apple`'s build script still calls `xcrun metal` after the feature
@@ -262,7 +306,7 @@ Each step states its exact command and expected result.
   commit only the report *numbers* and their provenance.
 - **Never** edit anything under `references/` — copy out first (§3).
 
-## 7. Acceptance criteria
+## 8. Acceptance criteria
 
 - The scratch build produces `gpuix-native.darwin-x64.node`, `@gpuix/native`
   loads it, and `node apps/playground/dist/smoke/run.js` exits `0`/`1` with a

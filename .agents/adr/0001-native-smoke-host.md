@@ -2,7 +2,8 @@
 
 - Status: **superseded in part by `0002-two-gpuix-versions.md`** (its 0.10.0
   evidence stands; a 0.5.1 legacy probe *does* run here and its consequences are
-  recorded in 0002)
+  recorded in 0002), and **amended by `0003-darwin-x64-source-build.md`** (the
+  0.10.0 binding is built from source on this host, so the suite runs here)
 - Date: 2026-10-17
 - Deciders: playground workstream (swarm)
 - Related: `.agents/slop/plans/100-package-testing.md`,

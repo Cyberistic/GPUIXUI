@@ -31,7 +31,7 @@ range.
 | `110` | The native smoke test (cross-cutting) | B | 100, 120 | 0.10 suite exits 2 on this host (ADR 0001); the 0.5.1 legacy probe is landed at `apps/playground/legacy-probe` (ADR 0002) |
 | `120` | `apps/playground` — native playground + smoke runner | B | 100 | **landed**: shell, `SplitPane`, 8 scenarios, CLI; `smoke` exits `2` on this host with the ADR 0001 evidence and writes no report (§2.1 of the plan records the API deviations) |
 | `130` | Tier 3/4 feasibility probes | B→D | 100, 110, 120 | **landed**: `table-select-sort`, `table-column-resize`, `workspace-tab-drag` registered (§3 records the deviations); verdicts need a supported host |
-| `140` | Build the `darwin-x64` GPUix binding from source (blocker B1) | B | 110, 120, 130 | ready to execute |
+| `140` | Build the `darwin-x64` GPUix binding from source (blocker B1) | B | 110, 120, 130 | **landed**: the binding builds with `gpui_macos/runtime_shaders` (no `xcrun metal`) and loads; the suite is **11/11 green on this host**, exit `0` (§4 records every measured fact) |
 
 Cross-cutting records:
 
