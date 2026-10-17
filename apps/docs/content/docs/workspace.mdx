@@ -13,3 +13,21 @@ They will live in `@gpuixui/docking`, which is not published yet, and depend on
 inventory row may say `done`; where GPUix cannot support an interaction (for
 example, detachable windows), the page records the limitation with evidence
 rather than shipping a placeholder.
+
+## Proven today
+
+The package is not published, but the runtime primitives it will compose are
+measured. The scenarios below drive a real split pane, a real tab drag and a
+real divider resize in GPUix; run them yourself:
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js --only workspace-tab-drag
+```
+
+<CapabilityMatrix only={["panel", "workspace"]} />
+
+Persistence is the app's, not the renderer's: the workspace probe resets on
+remount because GPUix 0.10.0 has no storage primitive. The
+[GPUix capabilities](/docs/capabilities) page carries the full matrix, the
+measured limits and the provenance of the run.

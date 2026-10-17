@@ -12,3 +12,21 @@ promising it.
 These will live in `@gpuixui/data-grid`, which is not published yet. They depend
 on `@gpuixui/components` and are verified in the native playground before their
 inventory row moves to `done`.
+
+## Proven today
+
+The package is not published, but the runtime primitives it will compose are
+measured. The scenarios below paint a real virtualised table, a real tree and a
+real bottom-anchored log list, and hit-test a row and a column divider:
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js --only virtualized-table
+```
+
+<CapabilityMatrix only={["table", "virtual-list", "tree", "log"]} />
+
+A `<virtual-list>` retains every row but paints a window of about nine, so the
+table's own contract is written against the painted rows. The
+[GPUix capabilities](/docs/capabilities) page carries the full matrix, the
+measured limits and the provenance of the run.

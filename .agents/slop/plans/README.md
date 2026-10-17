@@ -198,6 +198,7 @@ Cross-cutting records:
 | [`445-preview-platform-snapshot.md`](./445-preview-platform-snapshot.md) | Previews follow the platform toggle too: one document-state snapshot for mode and platform | F | 420, 434, 444 | implemented — `parsePreviewState` reads `data-platform` + `dark`; unit + browser proofs in §8 |
 | [`446-browser-smoke.md`](./446-browser-smoke.md) | A browser smoke check for hydrated previews (dark mode + platform) | F/G | 439, 420, 434, 444, 445 | implemented — `smoke:browser` hydrates the production build in Chrome; exit 1/2 proofs in §8 |
 | [`447-tokens-api-reference.md`](./447-tokens-api-reference.md) | The tokens and theming API reference: generated `ThemeConfig`/`Theme` tables, every exported helper, and the React provider | F | 410, 415, 441; `@gpuixui/tokens` exports | implemented — 13 helper rows, both shapes generated, three two-direction proofs; 215 docs tests, 67-page built-site crawl (§8) |
+| [`448-capability-evidence-page.md`](./448-capability-evidence-page.md) | The GPUix capability page: the measured support matrix, the surprises and the limits, generated from `COMPONENTS.md` and the playground scenario registry | E/F | 410, 412; `COMPONENTS.md`; playground 140–156 | implemented — `/docs/capabilities` and the measured subset on Workspace and Data display; 39 files / 228 tests, 68-page crawl (§6) |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

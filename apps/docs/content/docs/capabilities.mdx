@@ -1,0 +1,66 @@
+---
+title: GPUix capabilities
+description: What the pinned GPUix 0.10.0 runtime can do — measured, with the scenario that proves it.
+---
+
+GPUIXUI renders through `@gpuix/react` and `@gpuix/native` **0.10.0**. The matrix
+below is not an API listing: every row is a run of the native smoke suite
+against that version, on this host, and the scenario id is what you can run
+yourself. A capability the runtime does not provide is recorded here rather than
+implied by a component that only looks right in a browser.
+
+<CapabilityMatrix />
+
+## Reproduce it
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js
+
+# one scenario only
+nub apps/playground/dist/smoke/run.js --only floating-placement
+```
+
+The suite writes `.artifacts/smoke-report.json` and exits `0` only when every
+scenario passed. The binding used for the recorded run is a locally built
+`darwin-x64` 0.10.0 artifact with `gpui_macos/runtime_shaders` (ADR 0003); a
+published-binary run on CI is still open. Treat a verdict as measured for the
+version that ran, not as a permanent promise.
+
+## What the measurements changed
+
+These are the facts a consumer hits when writing against 0.10.0. Each one
+changed at least one component in this library.
+
+| Measured fact | Evidence | What it means |
+| ------------- | -------- | ------------- |
+| Focus and blur **do** work on 0.10.0 | plan 140 | Components paint their own focus ring; the ring also appears on a mouse press because there is no `focusVisible` |
+| `autoFocus` takes native focus without dispatching `onFocus` | plan 140 | Mount-time focus cannot be the only source of an "on focus" side effect |
+| Wheel `deltaY` is **negative** to scroll down | plan 140 | Scroll deltas are the opposite sign of the DOM; `ScrollArea` maps them before calling your handler |
+| `<virtual-list>` retains every row but paints a window | plan 140, plan 152 | Hit-test and assert on the painted rows, not the tree |
+| An `<anchored>` layer paints no surface of its own | plan 112 | Overlay handlers belong on the content element, and the veil is its own anchored layer |
+| `align="center"` is off by half the panel; `fit="snap"` clamps without flipping | plan 156 | Prefer `align="start"` or an explicit side near the window edge |
+| Tab wraps inside a modal surface | plan 155 | A dialog traps focus with `focusNextWithin` / `focusPreviousWithin`, and Escape closes only the topmost layer |
+| There is no `focusVisible` and no `outline*` | plan 017 | Focus is a zero-blur spread `boxShadow` in the `ring` role |
+| `onVisibleRange` lags the painted window by one gesture | plan 152 | Read the painted rows, not the event, as the current window |
+| A tree cannot be focus-programmed from component code | plan 153 | Roving focus is the component's contract, not the runtime's |
+| A log list does not snap back after the user scrolls up | plan 154 | "Follow tail" is app state plus a scroll, not a runtime mode |
+
+## What is not verified yet
+
+- **Per-component native screens.** The playground's scenarios are capability
+  probes, not a screen per component, so component pages use tier V (native
+  coverage) and four labelled browser approximations. A per-component screen
+  moves a page to tier S; the capture contract is enforced by the docs
+  (plan 432).
+- **The published binding on CI.** This host builds the `darwin-x64` artifact
+  from source. A `macos-14` runner with the published binary is the gold
+  standard and is tracked in `TODO.md`.
+
+## Where the verdicts come from
+
+`COMPONENTS.md` owns the inventory: one row per component with its status, the
+GPUix support word and the measured native evidence. This page renders the
+capability half of that table and the [component index](/docs/components)
+renders the component half. The docs test fails when the two drift, so a verdict
+cannot be upgraded on the site alone.

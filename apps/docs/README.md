@@ -76,6 +76,15 @@ props types a component documents are indexed too, so `ButtonProps` and
 and one page is listed once. `src/lib/search.test.ts` guards all four rules
 (plan 431).
 
+## Capabilities
+
+`/docs/capabilities` renders the measured GPUix matrix (plan 448) from
+`src/lib/capabilities.ts`. `COMPONENTS.md` owns the verdicts and
+`apps/playground/src/scenarios` owns the scenario ids, so
+`src/lib/capabilities.test.ts` fails when the page invents either. `Workspace`
+and `Data display` render the measured subset for their tiers, and the matrix
+component lives in `src/components/capability-matrix.tsx`.
+
 ## Layout
 
 ```
