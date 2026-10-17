@@ -400,7 +400,9 @@ export const darkColors = {
 /**
  * High-contrast light roles. The same 62 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
- * skeleton is a perceivable step off the pressed wash (plan 094).
+ * skeleton is a perceivable step off the pressed wash (plan 094). The divider is
+ * darker than the neutral press step, so an outlined control keeps its 3:1 edge
+ * while pressed (plan 318).
  */
 export const highContrastLightColors = {
   background: "#FFFFFF",
@@ -448,7 +450,7 @@ export const highContrastLightColors = {
   successText: palette.green[900],
   warningText: palette.amber[900],
   destructiveText: palette.red[900],
-  border: "#6E7683",
+  border: "#575E6B",
   borderStrong: "#4A4F58",
   input: "#FFFFFF",
   inputForeground: "#000000",
@@ -470,7 +472,8 @@ export const highContrastLightColors = {
 /**
  * High-contrast dark roles. The same 62 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
- * pressed fill so the edge clears the AAA divider floor on it (plan 080), and
+ * pressed fill so the edge clears the AAA divider floor on it — the generic
+ * `active` wash (plan 080) and the designed neutral press step (plan 318) — and
  * the selection wash is a darker tint so white text keeps the body floor on the
  * fills a row paints (plan 081). The skeleton is a perceivable step off the
  * pressed wash (plan 094). `disabledForeground` is a mid grey because the pressed
@@ -524,7 +527,7 @@ export const highContrastDarkColors = {
   successText: palette.green[100],
   warningText: palette.amber[100],
   destructiveText: palette.red[100],
-  border: "#8A8A8A",
+  border: "#A0A0A0",
   borderStrong: "#AAAAAA",
   input: "#0D0D0D",
   inputForeground: "#FFFFFF",

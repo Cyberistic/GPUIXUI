@@ -114,6 +114,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [315](./315-canvas-input-text.md) | Typed text on the canvas field | F | 059, 071–095, 088, 306–314 | done |
 | [316](./316-selected-label-accent-wash.md) | The selected row's inherited label on the accent wash | F | 059, 071–095, 300, 306–315 | done |
 | [317](./317-placeholder-surfaces.md) | The placeholder on every surface a field sits on | F | 059, 071–095, 300, 306–316 | done |
+| [318](./318-neutral-press-edge.md) | The neutral control's edge on its designed hover and press | F | 055, 071–095, 097, 306–317 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -749,6 +750,26 @@ step to `#858F9F` (4.59:1 on the quiet panel, 5.17 on the input fill, 5.95 on
 the canvas) while staying dimmer than `mutedForeground`, and the field on a row
 wash and the disabled field are documented as out of scope — the latter reads
 `disabledForeground`, which plan 306 measures.
+
+318 closes the edge plan 080 fixed, one role generation later. 080 held the
+decorative `border` on the fill a bordered control paints — `secondary` at
+rest, the `hover`/`active` washes and the toggle-on `accent` — because an
+outlined control lost its edge exactly while pressed. Plan 097 then gave every
+filled control a designed family (`x` → `xHover` → `xActive`), so a secondary
+control now paints `secondaryHover` and `secondaryActive` instead of the generic
+washes, and the two new fills had no pair. The audit found the same defect the
+older pair list was written to prevent: macOS light and Windows light
+`secondaryActive` **are** their `border` (1.000:1) and Linux light measured
+1.009:1, while every other default-contrast set clears the 1.05:1 divider floor;
+the two AAA sets are held to 3:1 and the neutral press step sat at 2.310:1
+(light) and 2.567:1 (dark). The two fills join the `divider` class (252 → 254
+pairs), the three light pressed steps move one designed step (`#C7C7CC`,
+`#CAC8C6`, `#CCCCCC`), each 1.105–1.107 from its divider and still clearing the
+hover→press step and the on-colour floor, and the two AAA dividers move away from
+their neutral ladder (`#575E6B` light, `#A0A0A0` dark, 3.289 / 3.389 on the press)
+because a fill cannot recede past its mode direction. `neutral-press-edge.test.ts`
+states the shipped ratios and holds the public checker to them, and both
+documents now name the designed steps beside the washes they replaced.
 
 ### Reference adoption (block `200–299`)
 

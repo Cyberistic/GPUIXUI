@@ -21,7 +21,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * designed opaque roles, not an alpha composite, and each keeps Apple's blue and
  * grey families (plan 097). The light quiet panel and accent are a step toward
  * the card, so a sidebar wash, a selected row and a toggle-on fill stay
- * perceivable on the surface they paint on (plan 309).
+ * perceivable on the surface they paint on (plan 309). The pressed neutral step
+ * is Apple's `systemGray3`, one designed step below the separator, so an
+ * outlined control keeps its edge while pressed (plan 318).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -46,7 +48,7 @@ export const macosPlatformStyle = {
       secondary: "#E8E8ED",
       secondaryForeground: "#1D1D1F",
       secondaryHover: "#DEDEE3",
-      secondaryActive: "#D1D1D6",
+      secondaryActive: "#C7C7CC",
       primary: "#0071E3",
       primaryForeground: "#FFFFFF",
       primaryHover: "#0063CC",

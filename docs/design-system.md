@@ -215,7 +215,8 @@ Two border roles:
 - `border` is decorative — dividers and card edges. It is intentionally subtle,
   but held to a 1.05:1 perceivability floor (3:1 at high contrast), so subtle
   never means invisible. A bordered control paints it on the fill behind it —
-  `secondary` at rest, the `hover` and `active` washes, and `accent` for an
+  `secondary` at rest, the `secondaryHover`/`secondaryActive` steps of a filled
+  neutral control, the generic `hover` and `active` washes, and `accent` for an
   outline toggle that is on — so the floor covers those fills as well, and a
   pointer state never turns the fill into the divider's own value. A status
   panel that separates a footer or an action row with a line paints it on a soft
@@ -286,7 +287,9 @@ the state is an editable, measured fill, not a translucent tint that takes its
 colour from the surface behind it. `primary`, `secondary` and `destructive` each
 carry the full trio, and the on-colour foreground is held to its floor on all
 three. The generic `hover` and `active` roles are the washes a ghost or outline
-control paints; they are not a filled control's states. The neutral fill needs
+control paints; they are not a filled control's states. The outlined neutral
+family keeps its `border` edge through all three steps, so the press is a fill
+change rather than an edge erasure. The neutral fill needs
 its own roles most: `secondary` is only just distinguishable from the canvas, so
 a 90% alpha "hover" changed it by 1.009:1, and the press came out lighter than
 the hover. A filled control is still a surface in its own right, so every fill
@@ -312,8 +315,13 @@ A row's metadata keeps its `mutedForeground` role on every wash the row paints �
 and `selected` when it is selected. That is why the secondary floor covers the
 washes, not only the plain surfaces: a description is read while the row moves.
 A bordered control keeps its `border` edge on the fill it paints, so the divider
-floor covers `secondary`, `hover`, `active` and `accent`; a state fill never
-takes the divider's own value, or the edge would disappear as the pointer lands.
+floor covers `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`
+and `accent`; a state fill never takes the divider's own value, or the edge would
+disappear as the pointer lands. The audit found the defect plan `080` had already
+fixed for the generic washes on the three light platform pressed steps (1.000:1
+on macOS and Windows, 1.009:1 on Linux) and on both AAA sets, whose 3:1 divider
+floor the neutral press sat under at 2.31:1 and 2.57:1; the three pressed steps
+and the two AAA dividers moved, and plan `318` records the values.
 
 Selection never relies on colour alone for meaning: selected rows also carry
 `aria-selected` where the runtime exposes it.
@@ -347,7 +355,7 @@ Colour is checked, not assumed. The token suite enforces:
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`selected` washes | 1.05:1 | 1.05:1 |
-| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`hover`/`active`/`accent` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`popover`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on

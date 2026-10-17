@@ -140,12 +140,19 @@ const secondaryTextPairs: readonly ContrastPair[] = stateWashes.map(
 );
 
 /**
- * The fills a bordered control paints behind its own edge: a secondary control's
- * resting fill, the hover and pressed washes an outline control uses, and the
- * accent fill a pressed outline toggle takes. `border` is painted on all four,
- * so the divider floor applies to each.
+ * The fills a bordered control paints behind its own edge: a secondary
+ * control's resting, hovered and pressed fills, the hover and pressed washes an
+ * outline control uses, and the accent fill a pressed outline toggle takes.
+ * `border` is painted on all six, so the divider floor applies to each.
  */
-const controlFillRoles = ["secondary", "hover", "active", "accent"] as const;
+const controlFillRoles = [
+  "secondary",
+  "secondaryHover",
+  "secondaryActive",
+  "hover",
+  "active",
+  "accent",
+] as const;
 
 const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
   (background): ContrastPair => ["border", background, "divider"],
@@ -419,7 +426,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * designed edge around each soft status surface, measured on its own fill and
  * on the eight surfaces a chip sits on, the plain divider on those
  * soft fills, the decorative dividers
- * that must stay visible, including on the fills a bordered control paints and
+ * that must stay visible, including on the fills a bordered control paints —
+ * the neutral family's resting, hovered and pressed fills and the generic washes
+ * an outline control uses — and
  * on the inactive fill a disabled control keeps its shape with, and the inactive
  * label an unavailable control, menu item or row paints on its fill, the plain
  * surfaces and the state washes. The default text role of a list or menu row is

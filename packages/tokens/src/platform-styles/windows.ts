@@ -19,7 +19,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * designed opaque roles in Fluent's blue and grey families, not alpha composites
  * (plan 097). The light quiet panel and accent are a step toward the card, so a
  * sidebar wash, a neutral filled control and a toggle-on fill stay perceivable
- * on the surface they paint on (plan 309).
+ * on the surface they paint on (plan 309), and the pressed neutral step sits one
+ * designed step below the divider so an outlined control keeps its edge while
+ * pressed (plan 318).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -44,7 +46,7 @@ export const windowsPlatformStyle = {
       secondary: "#EDEDED",
       secondaryForeground: "#1A1A1A",
       secondaryHover: "#E0E0E0",
-      secondaryActive: "#D6D6D6",
+      secondaryActive: "#CCCCCC",
       primary: "#0067C0",
       primaryForeground: "#FFFFFF",
       primaryHover: "#005BA1",

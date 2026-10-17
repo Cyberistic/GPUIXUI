@@ -672,12 +672,26 @@ describe("docs/tokens.md contrast surfaces", () => {
           .map(([, background]) => background),
       ),
     ].filter((background) =>
-      ["secondary", "hover", "active", "accent"].includes(background),
+      [
+        "secondary",
+        "secondaryHover",
+        "secondaryActive",
+        "hover",
+        "active",
+        "accent",
+      ].includes(background),
     );
 
-    expect(fills).toEqual(["secondary", "hover", "active", "accent"]);
+    expect(fills).toEqual([
+      "secondary",
+      "secondaryHover",
+      "secondaryActive",
+      "hover",
+      "active",
+      "accent",
+    ]);
     const sentence =
-      "the `secondary`, `hover`, `active` and `accent` fills a bordered control paints";
+      "the `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active` and `accent` fills a bordered control paints";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -838,7 +852,7 @@ describe("docs/design-system.md", () => {
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);

@@ -69,9 +69,10 @@ to 3:1 (4.5:1 at high contrast) on the plain surfaces, the `muted` panel, the
 `hover`/`active`/`accent`/`selected` washes a bounded control sits on, and the
 four soft status fills an Alert, Badge or Toast paints. A bordered
 control paints `border` on the fill behind it —
-`secondary` at rest, `hover`/`active` while the pointer moves, and `accent` for
-an outline toggle that is on — so the divider is held to its floor on those
-fills too, not only on the plain surfaces.
+`secondary` at rest, `secondaryHover`/`secondaryActive` while a filled neutral
+control is hovered or pressed, the generic `hover`/`active` washes on a ghost or
+outline control, and `accent` for an outline toggle that is on — so the divider
+is held to its floor on those fills too, not only on the plain surfaces.
 
 There are 62 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
@@ -345,7 +346,7 @@ carries, so it cannot claim another.
 | `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `border` | `#6E7683` | `#8A8A8A` | dividers and decorative borders |
+| `border` | `#575E6B` | `#A0A0A0` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input, on the `input` fill or the `background` canvas a transparent field paints |
@@ -1290,8 +1291,8 @@ small Alert in a sidebar sat at 1.023:1 on Linux light, 1.036:1 on macOS light
 and 1.043:1 on Windows light until plan `300` moved the four light tints one step
 deeper — or if a loading skeleton is indistinguishable
 on any surface or row wash it fills (also 1.05:1), if a decorative `border` is imperceptible on
-those surfaces, on the `secondary`, `hover`, `active` and `accent` fills a
-bordered control paints, or on the four soft status fills a status panel
+those surfaces, on the `secondary`, `secondaryHover`, `secondaryActive`, `hover`,
+`active` and `accent` fills a bordered control paints, or on the four soft status fills a status panel
 divides (1.05:1, and 3:1 at high contrast), or if body text over
 the composited `selection` wash drops below its body floor on any surface a glyph
 is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
@@ -1332,7 +1333,15 @@ shipped sets had `border` equal to the fill it sits on (identity light `active`,
 identity dark `secondary`/`active`/`accent`, macOS dark `hover`/`secondary`/
 `accent`, and high-contrast dark's `active` at 2.53:1 under the AAA floor), so
 an outlined control's edge disappeared exactly while pressed; plan `080` moved
-the four dividers. The selection wash is held there too: high-contrast dark
+the four dividers. The same defect returned one role generation later: plan `097`
+gave the neutral family `secondaryHover`/`secondaryActive`, the fills a bordered
+secondary control now paints, but the edge was still measured on the pre-097
+list. macOS light and Windows light shipped their pressed fill *as* the divider
+(**1.000:1**) and Linux light at **1.009:1**, while the AAA sets, whose divider
+floor is 3:1, measured 2.31:1 (light) and 2.57:1 (dark). The two fills join the
+divider class; the three light pressed steps move one designed step and the two
+AAA dividers move away from their neutral ladder (`#575E6B` light, `#A0A0A0`
+dark). The selection wash is held there too: high-contrast dark
 shipped at 6.48:1 on `hover` and 5.49:1 on `active`, Linux dark at 6.92:1 and
 Windows dark at 6.84:1 on `active`, under the body floor a selected glyph needs;
 plan `081` darkened those three wash bases. Status text is held to the same
@@ -1386,7 +1395,9 @@ floor. These seven pairs take `contrastPairs` from 232 to 239; plan `314` adds
 the selected option, the sidebar status label and the row link, plan `315` adds
 typed text on the canvas field, plan `316` adds the `accent` fill a selected
 row inherits its label on, and plan `317` adds the placeholder on the four
-`Surface` tones, taking the contract from 248 to 252.
+`Surface` tones, taking the contract from 248 to 252. Plan `318` adds the neutral
+family's designed hover and press to the control edge, taking it from 252 to
+**254**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1403,7 +1414,9 @@ RGB change that no pointer user can see. Each filled family now steps through
 `x` → `xHover` → `xActive` with opaque, editable values; the on-colour foreground
 is held to the secondary floor on all three steps in every shipped theme, and
 `filled-states.test.ts` proves the direction follows the mode — darker in light,
-lighter in dark.
+lighter in dark. The outlined neutral family keeps its `border` edge on all three
+steps, so a press changes the fill without erasing the edge: the
+divider contract covers `secondary`, `secondaryHover` and `secondaryActive`.
 
 An interactive fill is a surface too. `stateFillSurfacePairs` holds the thirteen
 fills a control or row paints as its own shape — the `hover` and `active` washes,

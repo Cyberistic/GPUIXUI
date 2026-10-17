@@ -259,8 +259,9 @@ the loading skeleton on those three, the `muted` panel and the
 `hover`/`active`/`selected` washes a loading row paints — the identity and
 high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved
 them one ramp step — and the decorative `border` at 1.05:1 (3:1 at high
-contrast) on the plain surfaces, on the `secondary`, `hover`, `active` and
-`accent` fills a bordered control paints and on the four soft status fills a
+contrast) on the plain surfaces, on the `secondary`, `secondaryHover`,
+`secondaryActive`, `hover`, `active` and `accent` fills a bordered control
+paints and on the four soft status fills a
 status panel divides, so an Alert, Badge or Toast, a loading placeholder, every
 divider and every outlined control's edge stay perceivable. The inherited dark
 `successSoft` measured 1.015:1 on Windows, 1.023:1 on the identity and 1.047:1
@@ -275,8 +276,13 @@ pressed wash and 1.042:1 on the Linux light one until plan 308 moved it to
 `#EFC055`, and the 30% mixture that measured 1.12:1 at high contrast cannot
 return.
 Four shipped sets had the divider equal to the fill it sits on (1.00:1) until
-plan 080, so an edge vanished exactly while a control was pressed. Every shipped
-theme passes it —
+plan 080, so an edge vanished exactly while a control was pressed. The designed
+neutral family repeated the defect one role generation later: a secondary control
+paints `secondaryHover`/`secondaryActive`, but the edge was still measured on the
+pre-097 fills, so macOS light and Windows light measured 1.000:1 and Linux light
+1.009:1 on the pressed fill, and both AAA sets sat under their 3:1 floor. The two
+fills join the contract, the three light pressed steps and the two AAA dividers
+moved, and every shipped theme passes it —
 platform variants on their own canvas, not the identity's.
 An interactive fill is a surface in its own right: `stateFillSurfacePairs` holds
 every interactive fill — the two washes, `accent`, `selected` and the

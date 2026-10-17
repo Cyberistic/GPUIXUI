@@ -19,7 +19,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * placeholder visible (plan 094). The filled-control hover and pressed steps are
  * designed opaque roles in Adwaita's blue and grey families, not alpha
  * composites (plan 097). The light quiet panel is a step toward the card, so a
- * sidebar wash and a neutral filled control stay perceivable on it (plan 309).
+ * sidebar wash and a neutral filled control stay perceivable on it (plan 309),
+ * and the pressed neutral step sits one designed step below the divider so an
+ * outlined control keeps its edge while pressed (plan 318).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -44,7 +46,7 @@ export const linuxPlatformStyle = {
       secondary: "#E8E7E6",
       secondaryForeground: "#1D1D1D",
       secondaryHover: "#DEDDDB",
-      secondaryActive: "#D4D3D1",
+      secondaryActive: "#CAC8C6",
       primary: "#1C71D8",
       primaryForeground: "#FFFFFF",
       primaryHover: "#1A65C0",

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 85/111
+`[x]` `[████████░░]` 86/112
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -148,6 +148,13 @@ had no pair, and the identity dark `#7C8595` measured 4.03:1 on `muted` and
 `popover` while the XP and Aero dark recipes inherited it; the four `Surface`
 tones join the contract (248 → 252), identity dark moves to `#858F9F` and every
 shipped set clears 4.5:1 (plan 317)
+`[x]` Hold the outlined control's edge on the neutral family's designed hover
+and press — plan 097 replaced the generic washes with
+`secondaryHover`/`secondaryActive` but the edge was measured only on the pre-097
+fills, so macOS light and Windows light measured 1.000:1 and Linux light 1.009:1
+on the pressed fill, and both AAA sets sat under their 3:1 floor; the two fills
+join the divider contract (252 → 254), the three light pressed steps and the two
+AAA dividers move one designed step (plan 318)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
