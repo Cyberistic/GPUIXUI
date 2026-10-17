@@ -23,7 +23,7 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { Density } from "../src/core/theme.js";
-import { a11yNodes, type Bounds, type Runtime } from "./harness.js";
+import { a11yNode, a11yNodes, type Bounds, type Runtime } from "./harness.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const next = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;
@@ -216,6 +216,14 @@ it("scrolls a labelled ScrollArea with the keyboard", async () => {
   runtime.render(scrollScene({ label: "Properties" }));
   runtime.focusNext();
   expect(Option.getOrUndefined(runtime.focused())).toBe("s");
+  // The region's name reaches assistive technology, not just the prop.
+  expect(Option.isSome(a11yNode(runtime.a11y(), { role: "Region" }))).toBe(
+    true,
+  );
+  const ring = Option.flatMap(runtime.element("s"), (element) =>
+    Option.fromNullishOr(element.style.boxShadow),
+  );
+  expect(Option.isSome(ring)).toBe(true);
   runtime.keyDown("s", "pagedown");
   const page = offsetOf(runtime);
   expect(page.y).toBeLessThan(0);

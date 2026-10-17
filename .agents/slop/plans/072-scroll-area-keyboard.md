@@ -152,8 +152,10 @@ Implemented and measured on this host with the locally built 0.10.0 binding
   `ScrollArea.test.tsx` adds 3 element-tree tests. The package suite is **30
   files / 350 tests**, green.
 - Native: `layout.runtime.test.tsx` gained 5 tests. The full run is **15 files /
-  172 tests**, green (`nub run --filter @gpuixui/primitives test:runtime`,
-  2026-10-17). The measured numbers: PageDown moves the 120 px viewport,
+  172 tests**, green at the time of plan 072 (the suite is 16 files / 175 after
+  plan 073). The measured numbers: `focusNext` lands on the labelled area (a
+  real tab stop), its `Region` node and painted focus ring are present,
+  PageDown moves the 120 px viewport,
   Home returns to `0`, End lands on `-480` (600 px of content), ArrowDown moves
   exactly `-54` = 3 × the 18 px body leading, ArrowRight moves the horizontal
   axis by the same step while ArrowDown leaves `x` alone, an unlabelled area is
