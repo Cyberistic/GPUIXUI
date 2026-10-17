@@ -25,7 +25,7 @@ licensing, docs site).
 | [011](./011-package-tokens.md) | Package: `@gpuixui/tokens` | B | 010 | done |
 | [012](./012-docs-design-system.md) | Docs: design system and token catalogue | B | 011 | done |
 | [013](./013-high-contrast-theme.md) | High-contrast accessibility themes | B | 011 | done |
-| [014](./014-status-tones-and-colour-helpers.md) | Status tones and colour helpers | B | 011, 013 | in progress |
+| [014](./014-status-tones-and-colour-helpers.md) | Status tones and colour helpers | B | 011, 013 | done |
 
 Plans 010–014 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

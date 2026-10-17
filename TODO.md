@@ -11,13 +11,16 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Harness — the supervisor that keeps the swarm alive
 
-`[x]` `[██████████]` 5/5
+`[x]` `[█████████░]` 5/6
 
 `[x]` Repo on `proserver` with the required shape, mission, rules and plan index
 `[x]` opencode 2.0.31 installed with the provider credentials and a trimmed config
 `[x]` Verified a real run on `opencode-go-braven/deepseek-v4.1-flash`
 `[x]` Supervisor: 30-minute tick, ≥5 agents, one worktree each, idempotent and crash-safe
 `[x]` Scheduler installed (launchd agent + daemon driver; see `.agents/slop/README.md`)
+`[ ]` Enforce one live session per worktree: the `opencode run` loop currently
+starts a new session before the previous one closes (evidence:
+`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`)
 
 ---
 
@@ -45,17 +48,19 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 7/8
+`[x]` `[████████░░]` 8/10
 
-`[x]` Write and index the tokens/theme plan set (plans 010–013)
+`[x]` Write and index the tokens/theme plan set (plans 010–014)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
 the `@gpuixui/tokens/react` provider
 `[x]` Add high-contrast (AAA) light and dark themes (`getTheme(mode, "high")`)
+`[x]` Add status tone roles plus `alpha` and `statusTone` helpers
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add the design-system rows to `COMPONENTS.md`
+`[ ]` Add motion tokens (durations/easings) once a component consumes them
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md`
 (owner: `docs-site`); add `tokens` to `packages/README.md` and ignore the

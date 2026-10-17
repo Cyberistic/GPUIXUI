@@ -53,6 +53,14 @@ palette (raw ramps)  →  semantic roles  →  component composition
   needs a value with no semantic home, the role set is incomplete — add a role,
   do not add a `buttonBackgroundHover` token.
 
+The four status families — `info`, `success`, `warning`, `destructive` — each
+carry a solid role with a readable foreground and a soft pair (`xSoft`,
+`xSoftForeground`) for alerts, badges and toasts. `info` has its own blue ramp,
+so an informational message can never be mistaken for a primary action. A
+component names a status family and reads its roles; it never mixes a readable
+text colour out of a solid status colour at runtime, and never special-cases a
+mode to make a tint readable.
+
 This keeps a brand theme small: overriding `primary` changes every primary
 action in the library.
 
@@ -69,7 +77,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite at low alpha | black at high alpha |
 
-Both themes expose exactly the same 37 roles; the type system and the colour
+Both themes expose exactly the same 47 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -148,6 +156,7 @@ between surfaces is lower.
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `ring` as an **outline**, offset outside the border box |
 | text selection | `selection` translucent wash |
+| status | a family (`info`/`success`/`warning`/`destructive`) via its solid role, or a soft pair through `statusTone(theme, tone)` |
 
 Focus is an outline, not a border, so gaining focus never changes layout. GPUix
 supports `outlineWidth`, `outlineColor` and `outlineOffset` and a
@@ -167,7 +176,9 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | ---------- | ------- | ------------- |
 | body text on background/card/popover | 7:1 | 7:1 |
 | secondary text, on-colour text, placeholder | 4.5:1 | 7:1 |
+| soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | focus ring and essential boundaries | 3:1 | 4.5:1 |
+| soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set and is part of the normal test suite.
 It can fail: a palette edit that reduces contrast fails the gate.

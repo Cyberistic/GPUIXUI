@@ -13,6 +13,7 @@ with a different `Theme` object.
 
 ```ts
 import {
+  alpha,
   createTheme,
   darkTheme,
   extendTheme,
@@ -21,7 +22,9 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   lightTheme,
+  statusTone,
   textStyle,
+  type StatusTone,
   type Theme,
   type ThemeContrast,
   type ThemeMode,
@@ -41,6 +44,11 @@ Components use semantic roles, never ramp shades. The role names describe
 intent, so a brand theme changes values without touching component source.
 `border` is decorative; `borderStrong` is the essential control boundary held
 to 3:1.
+
+There are 47 roles. The four status families — `info`, `success`, `warning` and
+`destructive` — each have a solid role with a readable foreground and a soft
+pair (`xSoft` / `xSoftForeground`) for alerts, badges and toasts. `info` is blue,
+not iris, so it can never be confused with `primary`.
 
 | Role | Light | Dark | Use |
 | ---- | ----- | ---- | --- |
@@ -64,6 +72,16 @@ to 3:1.
 | `successForeground` | `#FFFFFF` | `#042015` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
 | `warningForeground` | `#2A1B00` | `#2A1B00` | text on `warning` |
+| `info` | `#2559D6` | `#9FBEFF` | informational status, distinct from `primary` |
+| `infoForeground` | `#FFFFFF` | `#11141A` | text and icons on `info` |
+| `infoSoft` | `#DEE9FF` | `#152F6B` | soft informational surface |
+| `infoSoftForeground` | `#173A88` | `#DEE9FF` | text and icons on `infoSoft` |
+| `successSoft` | `#D3F9E2` | `#0A3A26` | soft success surface |
+| `successSoftForeground` | `#0E5135` | `#D3F9E2` | text and icons on `successSoft` |
+| `warningSoft` | `#FFEFC6` | `#4B3100` | soft warning surface |
+| `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
+| `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
+| `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#E1E5EC` | `#2A303B` | dividers and decorative borders |
 | `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -94,15 +112,59 @@ import { palette } from "@gpuixui/tokens";
 | Ramp | Steps |
 | ---- | ----- |
 | `neutral` | 0 `#FFFFFF` · 25 `#FBFCFD` · 50 `#F6F8FA` · 100 `#EEF1F5` · 200 `#E1E5EC` · 300 `#CBD1DB` · 400 `#A1A9B7` · 500 `#737C8C` · 600 `#545D6C` · 700 `#3D4552` · 800 `#2A303B` · 850 `#222730` · 900 `#191D25` · 950 `#11141A` · 1000 `#0B0D11` |
+| `blue` | 50 `#EFF4FF` · 100 `#DEE9FF` · 200 `#C5D8FF` · 300 `#9FBEFF` · 400 `#6E9CFF` · 500 `#3B76F6` · 600 `#2559D6` · 700 `#1B45AC` · 800 `#173A88` · 900 `#152F6B` · 950 `#0C1D42` |
 | `iris` | 50 `#EEF0FF` · 100 `#E0E3FF` · 200 `#C7CBFF` · 300 `#A7A9FF` · 400 `#8B85FB` · 500 `#7567F2` · 600 `#5F4BDB` · 700 `#4C39B5` · 800 `#3B2C8F` · 900 `#2E2370` · 950 `#1C1547` |
 | `red` | 50 `#FFF1F1` · 100 `#FFE0E0` · 200 `#FFC6C6` · 300 `#FF9E9E` · 400 `#FF6B6B` · 500 `#E5484D` · 600 `#CC3439` · 700 `#A5262B` · 800 `#7E1D21` · 900 `#5C1619` · 950 `#3A0B0D` |
 | `green` | 50 `#ECFDF3` · 100 `#D3F9E2` · 200 `#A8F0C6` · 300 `#6FE0A3` · 400 `#3BC97F` · 500 `#1FA968` · 600 `#158754` · 700 `#116A43` · 800 `#0E5135` · 900 `#0A3A26` · 950 `#042015` |
 | `amber` | 50 `#FFF8E8` · 100 `#FFEFC6` · 200 `#FFDE8A` · 300 `#FFC94D` · 400 `#F5B01F` · 500 `#D99400` · 600 `#B57600` · 700 `#8E5B00` · 800 `#6B4500` · 900 `#4B3100` · 950 `#2A1B00` |
 
+### `alpha`
+
+`alpha(color, amount)` returns an 8-digit hex colour. A 6-digit `#RRGGBB` gains
+an alpha byte; an 8-digit `#RRGGBBAA` has its alpha replaced. `amount` is clamped
+to `0…1` and rounded to the nearest byte. A colour the parser does not recognise
+is returned unchanged, so a non-hex value stays solid rather than becoming
+transparent.
+
+```ts
+import { alpha } from "@gpuixui/tokens";
+
+alpha("#2559D6", 0.3); // "#2559D64D"
+alpha("transparent", 0.3); // "transparent"
+```
+
+## Status tones
+
+Alert, Badge and Toast share four status families. Each has a solid role, a
+readable foreground and a designed soft pair, so a component never mixes a
+readable text colour from the solid colour at runtime.
+
+| Tone | Solid | Soft surface | Text on the soft surface |
+| ---- | ----- | ------------ | ------------------------ |
+| `info` | `info` / `infoForeground` | `infoSoft` | `infoSoftForeground` |
+| `success` | `success` / `successForeground` | `successSoft` | `successSoftForeground` |
+| `warning` | `warning` / `warningForeground` | `warningSoft` | `warningSoftForeground` |
+| `destructive` | `destructive` / `destructiveForeground` | `destructiveSoft` | `destructiveSoftForeground` |
+
+`statusTone(theme, tone)` resolves the soft surface, its readable foreground and
+a 30%-alpha edge from the solid role:
+
+```ts
+import { statusTone } from "@gpuixui/tokens";
+
+const tone = statusTone(theme, "info");
+tone.background; // theme.colors.infoSoft
+tone.foreground; // theme.colors.infoSoftForeground
+tone.border; // alpha(theme.colors.info, 0.3)
+```
+
+A runnable example spreads the result onto a container and its text; see
+[`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
+
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 37 roles and the same type, spacing, radius, density, border
+`Theme` — the same 47 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -137,6 +199,16 @@ getTheme("light"); // the default light theme, unchanged
 | `successForeground` | `#FFFFFF` | `#000000` | text on `success` |
 | `warning` | `#F5B01F` | `#FFC94D` | warning |
 | `warningForeground` | `#000000` | `#000000` | text on `warning` |
+| `info` | `#1B45AC` | `#C5D8FF` | informational status, distinct from `primary` |
+| `infoForeground` | `#FFFFFF` | `#000000` | text and icons on `info` |
+| `infoSoft` | `#C5D8FF` | `#152F6B` | soft informational surface |
+| `infoSoftForeground` | `#0C1D42` | `#DEE9FF` | text and icons on `infoSoft` |
+| `successSoft` | `#A8F0C6` | `#0A3A26` | soft success surface |
+| `successSoftForeground` | `#042015` | `#D3F9E2` | text and icons on `successSoft` |
+| `warningSoft` | `#FFDE8A` | `#4B3100` | soft warning surface |
+| `warningSoftForeground` | `#2A1B00` | `#FFEFC6` | text and icons on `warningSoft` |
+| `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
+| `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `border` | `#6E7683` | `#7A7A7A` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#A0A0A0` | essential control boundaries |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
@@ -379,10 +451,11 @@ nub run --filter @gpuixui/tokens test
 
 The test covers every shipped colour set — light, dark and both high-contrast
 variants — and fails if a semantic text/surface pair drops below its floor (7:1
-for primary body pairs and all high-contrast text, 4.5:1 for secondary and
-on-colour text in the default themes, 3:1 for focus and essential boundaries in
-the default themes, 4.5:1 in the high-contrast variants). Palette edits must keep
-it green.
+for primary body pairs, soft status text and all high-contrast text; 4.5:1 for
+secondary and on-colour text in the default themes; 3:1 for focus and essential
+boundaries in the default themes; 4.5:1 for them in the high-contrast variants).
+It also fails if a soft status surface is indistinguishable from `background` or
+`card` (floor 1.05:1). Palette edits must keep it green.
 
 ## Limitations and future work
 
