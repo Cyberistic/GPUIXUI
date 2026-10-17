@@ -155,7 +155,11 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
 
           <Separator orientation="horizontal" />
 
-          <ScrollArea axis="vertical" style={{ flexGrow: 1 }}>
+          <ScrollArea
+            axis="vertical"
+            label="Workspace settings"
+            style={{ flexGrow: 1 }}
+          >
             <Stack direction="column" gap="xl">
               {loading ? (
                 <Stack direction="column" gap="sm">

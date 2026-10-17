@@ -16,6 +16,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
+import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
 import { Separator, Spacer } from "../src/components/Separator.js";
@@ -183,6 +184,97 @@ it("forwards a ScrollArea's scroll deltas to the caller", async () => {
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
   expect(deltas).toContain(-100);
+});
+
+/** A labelled scroll region with 600 px of content in a 120 px viewport. */
+const scrollScene = (props: {
+  readonly axis?: "vertical" | "horizontal" | "both";
+  readonly label?: string;
+}) => (
+  <Surface>
+    <ScrollArea
+      axis={props.axis ?? "vertical"}
+      label={props.label}
+      style={{ height: 120, width: 300 }}
+      testId="s"
+    >
+      <Box tone="card" style={{ width: 600, height: 600 }} testId="tall" />
+    </ScrollArea>
+  </Surface>
+);
+
+const offsetOf = (runtime: Runtime) =>
+  Option.getOrElse(runtime.scrollOffset("s"), () =>
+    expect.fail("the ScrollArea painted no scrollable box"),
+  );
+
+it("scrolls a labelled ScrollArea with the keyboard", async () => {
+  // The bug guarded: the runtime never scrolled a container from the keyboard
+  // and focus does not bubble from a child, so a wheel was the only way to move
+  // one (plan 072 §1). The label is what makes the region a scroll stop.
+  const runtime = await openWindow();
+  runtime.render(scrollScene({ label: "Properties" }));
+  runtime.keyDown("s", "pagedown");
+  const page = offsetOf(runtime);
+  expect(page.y).toBeLessThan(0);
+  runtime.keyDown("s", "home");
+  expect(offsetOf(runtime).y).toBe(0);
+  // The runtime clamps End to the content's end: 600 px of content minus the
+  // 120 px viewport.
+  runtime.keyDown("s", "end");
+  expect(offsetOf(runtime).y).toBe(-480);
+});
+
+it("moves one line per arrow key, and only on the scrolled axis", async () => {
+  const runtime = await openWindow();
+  runtime.render(scrollScene({ label: "Properties" }));
+  runtime.keyDown("s", "down");
+  const line = 3 * testTheme.typography.body.lineHeight;
+  expect(offsetOf(runtime).y).toBe(-line);
+  runtime.keyDown("s", "right");
+  expect(offsetOf(runtime).x).toBe(0);
+});
+
+it("scrolls a horizontal area with Left/Right only", async () => {
+  const runtime = await openWindow();
+  runtime.render(scrollScene({ axis: "horizontal", label: "Columns" }));
+  runtime.keyDown("s", "right");
+  const line = 3 * testTheme.typography.body.lineHeight;
+  expect(offsetOf(runtime).x).toBe(-line);
+  runtime.keyDown("s", "down");
+  expect(offsetOf(runtime)).toStrictEqual({ x: -line, y: 0 });
+});
+
+it("does not make an unlabelled ScrollArea a tab stop", async () => {
+  const runtime = await openWindow();
+  runtime.render(scrollScene({}));
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBeUndefined();
+  runtime.keyDown("s", "pagedown");
+  expect(offsetOf(runtime).y).toBe(0);
+});
+
+it("keeps an Input's arrow keys when the field is inside the region", async () => {
+  // The handler compares the runtime's focused id with the region's own, so a
+  // focused field keeps its arrows instead of scrolling its container (plan 072).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        label="Properties"
+        style={{ height: 120, width: 300 }}
+        testId="s"
+      >
+        <Input testId="field" label="Name" autoFocus />
+        {card("tall", 300, 600)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.type("a b c");
+  runtime.keyDown("field", "down");
+  expect(Option.getOrUndefined(runtime.focused())).toBe("field");
+  expect(offsetOf(runtime).y).toBe(0);
 });
 
 it("paints the type scale, not just the style", async () => {

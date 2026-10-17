@@ -316,6 +316,14 @@ retired once both branches are one
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family
       reaching the paint; 13 files / 119 runtime tests
+`[x]` `packages/primitives`: **`ScrollArea` could not be scrolled by keyboard**
+      — the runtime never scrolled a focused container, focus does not bubble
+      from a child, and Tab could land on a control painted outside the region.
+      A labelled area is now a named focusable `region` with
+      arrow/page/Home/End scrolling through the renderer, guarded by the
+      runtime's focused id so fields inside keep their keys; an unlabelled area
+      stays inert. 7 core + 3 element + 5 runtime tests, both directions proven
+      (plan 072)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

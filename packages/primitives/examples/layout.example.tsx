@@ -68,7 +68,11 @@ export const LayoutExample = (): ReactElement => {
 
       <Separator orientation="horizontal" />
 
-      <ScrollArea axis="vertical" testId="layout-example-properties">
+      <ScrollArea
+        axis="vertical"
+        label="Component properties"
+        testId="layout-example-properties"
+      >
         <Stack
           direction="column"
           gap="xs"

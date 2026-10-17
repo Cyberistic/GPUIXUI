@@ -78,7 +78,7 @@ none paints a literal and none scripts hover or press
 | pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once; a label beside a control is inert, so `CheckboxGroup` makes the whole row one interactive element instead of pairing a box with a `Text` |
 | `aria-describedby` | absent | `Tooltip` writes a string tip onto the trigger as `aria-description` and exposes the open tip as a named `role="tooltip"` node; the trigger still owns its role and name, and a non-string tip has no description (plan `071`) |
-| scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed |
+| scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed. A **labelled** area is a named focusable `region` whose arrows/page/Home/End scroll it through the runtime's `scrollTo`; the handler only fires when the region itself holds focus, so fields inside keep their keys (plan `072`). |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
 | `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |
 | an anchor that resists its parent | `<anchored>` positions against its parent, and a block-level flex parent stretches on the cross axis | `Tooltip` hugs its trigger with `alignSelf: "flex-start"` so the layer anchors to the trigger, and defaults `align` to the exact `start` (`center` is half a panel off — plan 060) |
@@ -123,7 +123,7 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **15 files, 165 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **15 files, 172 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -137,8 +137,10 @@ slider drag measured outside the track with the non-primary buttons refused
 (plan 063),
 an `autoFocus` field's ring painted from mount and cleared on blur (plan
 064), a checkbox group's row hit area, derived select-all state and skipped
-disabled tab stop (plan 065), and a rating's failed validation painted on the
-empty stars only (plan 070).
+disabled tab stop (plan 065), a rating's failed validation painted on the
+empty stars only (plan 070), and a labelled scroll region scrolled by
+PageDown/arrow/Home/End through the runtime while an `Input` inside it kept its
+arrow keys (plan 072).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

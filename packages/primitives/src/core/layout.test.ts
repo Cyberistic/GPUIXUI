@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { boxStyle, gridStyle, stackStyle } from "./layout.js";
+import * as Option from "effect/Option";
+import {
+  boxStyle,
+  decideScroll,
+  gridStyle,
+  resolveScroll,
+  scrollLine,
+  stackStyle,
+  type ScrollMove,
+} from "./layout.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
 /**
@@ -93,5 +102,94 @@ describe("boxStyle", () => {
     expect(style.borderRadius).toBe(testTheme.radius.md);
     expect(style.borderColor).toBe(testTheme.colors.border);
     expect(style.borderWidth).toBe(testTheme.borderWidth.thin);
+  });
+});
+
+const move = (
+  key: string,
+  axis: "vertical" | "horizontal" | "both",
+): Option.Option<ScrollMove> => decideScroll(key, axis);
+
+describe("decideScroll", () => {
+  it("maps the keys a platform scroll region uses", () => {
+    expect(move("down", "vertical")).toStrictEqual(
+      Option.some({ axis: "vertical", direction: "line-forward" }),
+    );
+    expect(move("up", "vertical")).toStrictEqual(
+      Option.some({ axis: "vertical", direction: "line-back" }),
+    );
+    expect(move("pagedown", "vertical")).toStrictEqual(
+      Option.some({ axis: "vertical", direction: "page-forward" }),
+    );
+    expect(move("pageup", "vertical")).toStrictEqual(
+      Option.some({ axis: "vertical", direction: "page-back" }),
+    );
+    expect(move("End", "vertical")).toStrictEqual(
+      Option.some({ axis: "vertical", direction: "end" }),
+    );
+  });
+
+  it("ignores keys the axis cannot scroll, and keys that are not scrolls", () => {
+    expect(move("right", "vertical")).toStrictEqual(Option.none());
+    expect(move("down", "horizontal")).toStrictEqual(Option.none());
+    expect(move("enter", "both")).toStrictEqual(Option.none());
+    expect(move("space", "both")).toStrictEqual(Option.none());
+  });
+
+  it("scrolls both axes on Home/End only when the area does", () => {
+    expect(move("home", "vertical")).toStrictEqual(
+      Option.some({ axis: "vertical", direction: "start" }),
+    );
+    expect(move("end", "horizontal")).toStrictEqual(
+      Option.some({ axis: "horizontal", direction: "end" }),
+    );
+    expect(move("home", "both")).toStrictEqual(
+      Option.some({ axis: "both", direction: "start" }),
+    );
+  });
+});
+
+describe("resolveScroll", () => {
+  const geometry = {
+    offset: { x: -20, y: -100 },
+    viewport: { width: 200, height: 400 },
+    line: 40,
+  };
+
+  it("moves one line, or one page less one line, and leaves the other axis", () => {
+    expect(
+      resolveScroll({ axis: "vertical", direction: "line-forward" }, geometry),
+    ).toStrictEqual({ x: -20, y: -140 });
+    expect(
+      resolveScroll({ axis: "vertical", direction: "page-forward" }, geometry),
+    ).toStrictEqual({ x: -20, y: -460 });
+    expect(
+      resolveScroll({ axis: "horizontal", direction: "line-back" }, geometry),
+    ).toStrictEqual({ x: 20, y: -100 });
+  });
+
+  it("starts at zero and ends at the runtime's clamp sentinel", () => {
+    expect(
+      resolveScroll({ axis: "vertical", direction: "start" }, geometry),
+    ).toStrictEqual({ x: -20, y: 0 });
+    expect(
+      resolveScroll({ axis: "both", direction: "end" }, geometry),
+    ).toStrictEqual({
+      x: -Number.MAX_SAFE_INTEGER,
+      y: -Number.MAX_SAFE_INTEGER,
+    });
+  });
+
+  it("never pages by less than one line, whatever the viewport", () => {
+    const tiny = { ...geometry, viewport: { width: 200, height: 10 } };
+    expect(
+      resolveScroll({ axis: "vertical", direction: "page-forward" }, tiny),
+    ).toStrictEqual({ x: -20, y: -140 });
+  });
+
+  it("takes the line step from the theme's body leading", () => {
+    expect(scrollLine(testTheme)).toBe(
+      3 * testTheme.typography.body.lineHeight,
+    );
   });
 });

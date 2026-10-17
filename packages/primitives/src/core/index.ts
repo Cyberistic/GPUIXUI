@@ -84,7 +84,11 @@ export type { TrackBox, ValueRange, ValueSpan } from "./value.js";
 
 export {
   boxStyle,
+  decideScroll,
   gridStyle,
+  resolveScroll,
+  SCROLL_DIRECTIONS,
+  scrollLine,
   stackStyle,
   STACK_ALIGNS,
   STACK_DIRECTIONS,
@@ -93,6 +97,9 @@ export {
 export type {
   BoxSpec,
   GridSpec,
+  ScrollDirection,
+  ScrollGeometry,
+  ScrollMove,
   StackAlign,
   StackDirection,
   StackJustify,
