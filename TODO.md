@@ -152,12 +152,13 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–413)
 
-`[x]` `[██████████████░░]` 14/16
+`[x]` `[███████████████░]` 15/17
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
 `[x]` Docs identity: light/dark themes from the tokens theme — reconciled to `@gpuixui/tokens` (plan 416); every `--color-fd-*` role is pinned to a library role by `theme.test.ts`
 `[x]` Theming and typography pages generated from the package (plan 416) — all 47 colour roles and 10 text roles render from `@gpuixui/tokens`, and the pinned runtime's missing `registerFont` is documented
+`[x]` Searchable component index (plan 417) — title/summary filter with live count and empty state; verified hydrated in headless Chrome (`combobox` → 1 of 64, `zzz` → 0, clear → 64)
 `[x]` Working search (server route + UI) — `/api/search?query=button` returns real results
 `[x]` Information architecture pages (`content/docs/**`) + landing page — guarded by `src/content.test.ts`
 `[x]` Component metadata contract, registry test, generated index (plan 411)

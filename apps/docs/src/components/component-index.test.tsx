@@ -1,16 +1,26 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
-import { components, groups } from "@/component-meta/registry";
-import { ComponentIndex } from "./component-index";
+import { bySlug, components, groups } from "@/component-meta/registry";
+import {
+  ComponentIndex,
+  filterGroups,
+  matchesComponent,
+} from "./component-index";
 
 /**
- * Guards the generated component index (plan 411 §1): every record must appear
- * once, with its status **and** its GPUix support, grouped under its tier. The
- * failures it catches are an index that drops the support column (a reader can
- * no longer tell `unverified` from `yes`) and a group whose heading vanished.
+ * Guards the generated component index (plan 411 §1) and its local filter
+ * (plan 417): every record must appear once with its status **and** GPUix
+ * support, grouped under its tier, and the filter must search titles and
+ * summaries case-insensitively. The failures it catches are an index that drops
+ * the support column (a reader can no longer tell `unverified` from `yes`), a
+ * group whose heading vanished, and a filter that silently matches nothing.
  */
 const html = renderToStaticMarkup(<ComponentIndex />);
+
+const button = bySlug.get("button");
+if (button === undefined)
+  throw new Error("registry is missing the button record");
 
 describe("component index", () => {
   it("renders one card per registry record", () => {
@@ -42,5 +52,56 @@ describe("component index", () => {
     Arr.forEach(planned, (component) => {
       expect(html).not.toContain(`href="/docs/components/${component.slug}"`);
     });
+  });
+});
+
+describe("component filter", () => {
+  it("renders one labelled search input and the live count", () => {
+    expect(html.match(/id="component-filter"/g)).toHaveLength(1);
+    expect(html.match(/for="component-filter"/g)).toHaveLength(1);
+    expect(html).toContain(
+      `${components.length} of ${components.length} components`,
+    );
+    expect(html).toContain('aria-live="polite"');
+  });
+
+  it("matches a title case-insensitively", () => {
+    expect(matchesComponent(button, "BUTTON")).toBe(true);
+    expect(matchesComponent(button, "  button  ")).toBe(true);
+  });
+
+  it("matches a summary, not only the title", () => {
+    const words = button.summary.split(" ");
+    const phrase = words.slice(0, 2).join(" ");
+    expect(matchesComponent(button, phrase)).toBe(true);
+  });
+
+  it("treats blank queries as match-all and unknown queries as match-none", () => {
+    expect(Arr.filter(components, (c) => matchesComponent(c, ""))).toHaveLength(
+      components.length,
+    );
+    expect(
+      Arr.filter(components, (c) => matchesComponent(c, "   ")),
+    ).toHaveLength(components.length);
+    expect(
+      Arr.filter(components, (c) => matchesComponent(c, "zzz")),
+    ).toHaveLength(0);
+  });
+
+  it("drops empty groups and keeps only matching items", () => {
+    const filtered = filterGroups("combobox");
+    expect(filtered.length).toBeGreaterThan(0);
+    expect(filtered.length).toBeLessThan(groups.length);
+    expect(
+      Arr.every(
+        filtered,
+        (group) =>
+          group.items.length > 0 &&
+          group.items.every(
+            (item) => matchesComponent(item, "combobox") === true,
+          ),
+      ),
+    ).toBe(true);
+    expect(filterGroups("zzz")).toHaveLength(0);
   });
 });
