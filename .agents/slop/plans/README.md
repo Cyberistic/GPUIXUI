@@ -84,6 +84,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [085](./085-elevation-tint-role.md) | The elevation tint role the theme never painted | F | 011, 018, 056–066 | done |
 | [086](./086-total-contrast-contract.md) | A total contrast contract, and the ring on every surface a control sits on | F | 059, 071–085 | done |
 | [087](./087-selected-secondary-text.md) | Selected secondary text, and the wash that must stay visible | F | 057, 071, 079, 081, 086 | done |
+| [088](./088-body-text-on-panels.md) | Default body text on the quiet panel and the floating surface | F | 071, 079, 086, 087 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -362,6 +363,15 @@ wash is documented as a deliberate omission: at AAA no wash that stays visible
 can keep a link or status tone at 7:1 (high-contrast light's `primaryText`
 measures 6.75:1 on the `muted` panel and 5.48:1 on `active` with the shipped
 wash).
+
+088 closes the surface gap the role-level guard from 086 cannot see: `foreground`
+is measured, but on four of the six surfaces it paints. An avatar's fallback
+initials sit on the `muted` disc and a date picker's month header sits on its
+`popover`, and the primitives make both compositions first-class — `Surface`
+accepts `muted` and `popover`, and the default `Text` tone is `foreground`. Both
+pairs pass in all ten shipped colour sets (11.65:1 at the lowest), so no colour
+moves; the pair list grows 103 → 105 and the gate now catches an edited theme
+that darkens its quiet panel or floating surface.
 
 ### Reference adoption (block `200–299`)
 
