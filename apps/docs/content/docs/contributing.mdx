@@ -33,3 +33,17 @@ regression fix lands with a test that fails without it and passes with it.
 Every component needs code, a test appropriate to its behaviour, a working
 example, a docs page and an inventory record in `COMPONENTS.md`. An interaction
 is not complete until it is verified in the real GPUix runtime.
+
+## Docs site
+
+`apps/docs` is a Fumadocs app whose unit suite reads the content source. The
+built-site check builds and crawls the production output instead:
+
+```sh
+nub run --filter docs smoke:build
+```
+
+It fails when a page does not render, loses its title, `<h1>`, `<main>` or
+canonical, an internal link breaks, search stops answering or an unknown slug is
+not a 404. It exits `2` when it cannot run, never `0` — an unverified site is
+not a passing one.

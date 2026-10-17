@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–437)
+## Docs site workstream (plans 410–439)
 
-`[x]` `[██████████]` 37/38
+`[x]` `[██████████]` 38/39
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` Curated native theme captures on Theming (plan 433) — a real 20/20 capture run, two frames + provenance sidecar, `<ThemeCaptures />` refuses an unproven frame
@@ -510,6 +510,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Prose truth: the site no longer calls the built playground missing (plan 436) — getting-started, examples, architecture and the intro now describe it, the five preview tiers and the quick start's Bun/`check-types` prerequisite; the widened `prose-truth.test.ts` failed on both stale pages first (8 claims) and the command-resolves guard is proven in both directions
 `[x]` The component sidebar names its tiers (plan 437) — `meta.json` separators at the Tier 1/Tier 2 boundary, one shared `tierGroupTitle` rule with the index, the registry guard proves a missing or misplaced separator fails, and the IA guard no longer treats a separator as a page
 `[x]` Internal link integrity (plan 438) — every literal `/docs` link in the content tree and the app resolves to a real page; the guard failed on the shipped `layouts.mdx` → `/docs/components/grid` link first, the page now points at the Stack page that documents `Grid`, and 184 docs tests pass
+`[x]` Built-site smoke check (plan 439) — `nub run --filter docs smoke:build` builds, serves and crawls the production output (66 pages, 85 links, search, 404, robots); it found and fixed two nested `<main>` landmarks on `/` and the 404, exits `1` on a broken canonical and `2` when it cannot verify, and the default suite guards the landmark regression without a server
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed
@@ -520,7 +521,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[~]` `[███░░░░░░░]` 6/22
+`[~]` `[███░░░░░░░]` 6/23
 
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
 `[ ]` **Repo docs**: `docs/architecture.md` is listed as an A/B deliverable in `docs/README.md`, and the Architecture page says it is not written. This workstream owns `apps/docs`, not that maintainer document — write it there or drop the promise from both surfaces.
@@ -539,6 +540,13 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[ ]` **Primitives**: declare `effect` as a runtime dependency — `RadioGroup`, `Select` and `Spinner` import `effect/Array` / `effect/Option` at runtime, but `packages/primitives/package.json` lists `effect` only in `devDependencies`. Found while deriving the docs dependency lists (plan 428)
 `[ ]` **Examples**: `examples/basic-app`'s `dev` script runs `bun src/main.tsx`; Bun is not installed on this host and AGENTS pins nub as the toolchain, so the documented quick start (`nub run --filter @gpuixui/basic-app dev`) fails before it reaches GPUix. Replace the runner (nub/tsx) and verify, or document Bun as a prerequisite. The Examples page now states the current truth
 `[x]` Canonical and OpenGraph URLs are absolute — resolved in the docs workstream by plan 418: `SITE_URL` defaults to the deploy domain (`docs.gpuixui.dev`) and is overridable with `VITE_SITE_URL`; no change to `packages/deploy` was needed
+`[ ]` **Plan numbering collision in the docs block**: `origin/master` adds
+      `.agents/slop/plans/433-platform-theme-recipes.md` while `agent/docs-site`
+      already ships `433-theming-native-captures.md`. Renumber one before either
+      is executed. The recipes' docs half is also blocked: it needs editable
+      per-platform variants in `packages/tokens` (the row above) and a
+      Linux/Omarchy host for Recipe B; `apps/docs` must not invent the colours.
+      Owner: coordinator / tokens-theme.
 `[ ]` Owner: the Alchemy deploy path (`nub run deploy:docs`) is unverified — it needs Cloudflare credentials and lives in `packages/deploy`. The stand-down path is verified locally (plan 410 §3)
 `[ ]` Repo: `README.md` still says "Phase A (audit and feasibility)" although Phase B tokens and the docs site are implemented; update the ledger to match `TODO.md`
 `[ ]` Owner: `packages/README.md` still lists only `config` and `deploy` under "Present"; `tokens`, `primitives`, `components` and `icons` have shipped (the docs prose now describes them, plan 426)

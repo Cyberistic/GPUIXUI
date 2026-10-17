@@ -46,6 +46,13 @@ describe("landing page", () => {
     expect(html).toContain("check-types");
   });
 
+  it("does not open a second main landmark", () => {
+    // Bug guarded (plan 439): `Landing` rendered its own <main> inside
+    // HomeLayout's <main id="nd-home-layout">, so `/` shipped two landmarks.
+    // The build smoke failed on it; the layout owns the page landmark.
+    expect(html).not.toContain("<main");
+  });
+
   it("links to the docs it describes", () => {
     Arr.forEach(
       [

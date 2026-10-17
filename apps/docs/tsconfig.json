@@ -16,6 +16,7 @@
     "src/**/*.tsx",
     "content/**/*.mdx",
     ".source/**/*.ts",
+    "scripts/**/*.ts",
     "*.ts"
   ],
   "exclude": ["node_modules", "dist", ".output", "public"]

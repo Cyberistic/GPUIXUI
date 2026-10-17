@@ -17,8 +17,30 @@ nub run --filter docs dev           # http://localhost:3000
 nub run --filter docs build         # SSR bundle + client assets
 nub run --filter docs check-types   # fumadocs-mdx generate + tsc --noEmit
 nub run --filter docs test          # registry, IA, search, theme and preview tests
+nub run --filter docs smoke:build   # build, serve and crawl the production output
 nub run check                       # repo gate: test quality, lint, format, types
 ```
+
+## Built-site smoke check
+
+The unit suite reads the source tree. `smoke:build` reads the **production
+build**: it builds, serves the worker with `vite preview` on a free loopback
+port, and crawls the result (plan 439). It fails when a page does not render,
+loses its title, `<h1>`, `<main>` landmark, `lang` or canonical link; when an
+internal link or asset 404s; when `/api/search` stops answering; when an unknown
+slug is not 404; or when `robots.txt` loses its sitemap. It exits `2` — not `0`
+— when the check could not run (build or preview failure), so "unverified" is
+never reported as a pass.
+
+```sh
+nub run --filter docs smoke:build
+# or crawl a server that is already running:
+nub apps/docs/scripts/smoke-build.ts --base-url http://127.0.0.1:4173
+```
+
+It is deliberately **not** part of `nub run test`: the build takes ~13 s and
+starts a worker, which would slow every checkout. Run it before a release and
+after a layout or content change.
 
 ## Search
 

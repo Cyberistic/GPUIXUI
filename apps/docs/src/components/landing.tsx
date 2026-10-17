@@ -18,7 +18,7 @@ export function Landing() {
   ).length;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-20">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-20">
       <p className="text-sm font-medium text-fd-muted-foreground">
         A native UI component library
       </p>
@@ -77,6 +77,6 @@ export function Landing() {
           <dd className="text-2xl font-semibold">{documented}</dd>
         </div>
       </dl>
-    </main>
+    </div>
   );
 }
