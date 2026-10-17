@@ -73,6 +73,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [074](./074-contrast-state-and-overlay-surfaces.md) | The state washes and floating surfaces the contrast contract never checked | F | 059, 063, 071, 073 | done |
 | [075](./075-quoted-contrast-figures.md) | The contrast figures the catalogue quotes | F | 056–059, 071–074 | done |
 | [076](./076-contrast-surface-and-divider-pairs.md) | The soft surfaces and dividers the contrast contract never checked | F | 013, 014, 059, 063, 071–075 | done |
+| [077](./077-alpha-nan.md) | `alpha` must not emit a colour the runtime ignores | F | 014, 056–059 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -216,7 +217,12 @@ to tints that clear every shipped canvas with margin, the soft surfaces and the
 divider become `surface` and `divider` pairs in `contrastPairs`, and
 `themeContrastFailures` now returns them, so an edited platform style is held to
 the same guarantee. The pair count moves from 48 to 63, and both documents
-derive the new rows and counts from the implementation.
+derive the new rows and counts from the implementation. 077 fixes a smaller
+silent failure on the same palette path: `alpha(color, Number.NaN)` produced
+`#2559D6NAN`, a colour GPUix ignores, so a computed fraction with no value could
+erase a role. The amount guard returns the input unchanged — the helper's
+documented fallback for a value it cannot parse — while `Infinity` and
+`-Infinity` keep clamping as before.
 
 ### Reference adoption (block `200–299`)
 
