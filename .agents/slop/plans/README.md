@@ -48,7 +48,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | done |
 | [050](./050-docs-layering-and-omissions.md) | The layering model and the deliberate token omissions | B | 011, 017–019 | done |
 | [051](./051-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
-| [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | blocked (B1), code + tests + docs landed |
+| [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | blocked (upstream: not in 0.10.0) |
 | [053](./053-reconcile-tokens-branches.md) | Reconcile the two `tokens` branches into one | B | 010–019, 050–052 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
@@ -56,9 +56,10 @@ Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 agent that owns its paths. The block was full at 019 (`010–019` in the table
 above) and 020–049 belongs to primitives, icons and Phase C, so the overflow
 plans take the free `050–099` block: 050 layering, 051 platform type, 052 font
-registration (rescued from the abandoned `agent/fonts` branch, `6fc7641`, with
-its step 1 answered from the pinned runtime's source), and 053 the reconciliation
-of this workstream's two branches.
+registration (rescued from the abandoned `agent/fonts` branch, `6fc7641`; its
+step 1 was first answered from `references/gpuix` main and then re-checked
+against the pinned runtime, which **does not expose the API** — see the plan's
+decision section), and 053 the reconciliation of this workstream's two branches.
 
 ### Reference adoption (block `200–299`)
 

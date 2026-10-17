@@ -118,13 +118,13 @@ colours, scales, mode and density of its base and changing only the two
 families, so the docs platform toggle previews exactly what a native build
 renders. A platform is a font decision here, never a second design system.
 
-An application that brings its own face registers it with the native runtime and
-derives the same kind of theme: `registerFonts(renderer, { sans: … })` returns
-the family names, and `extendTheme(base, { typography: fonts })` names them. The
-identity therefore travels with an application instead of stopping at the OS
-default. Registration is idempotent per renderer, and a role the application
-leaves out keeps the platform family. The library ships no font file; choosing and
-licensing the face is the consumer's, and proving it paints is a native check.
+An application can name an **installed** family the same way, with
+`extendTheme(base, { typography: { sans: … } })`, so a brand face that every target
+machine has can travel in the theme. A face shipped **with** the application
+cannot: GPUix 0.10.0 has no `registerFont`, and the capability is unreleased on the
+GPUix main branch. The identity therefore stops at the operating system's fonts
+today. The library ships no font file; choosing and licensing a face is the
+consumer's.
 
 **Limitation.** GPUix has no `letterSpacing`. Tight display tracking and
 all-caps label tracking are therefore impossible without per-glyph layout. The

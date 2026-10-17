@@ -183,42 +183,29 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 A runnable example lives in
 [`src/platforms.example.ts`](./src/platforms.example.ts).
 
-## Fonts
+## Custom typefaces
 
-GPUix's `registerFont` takes the **bytes** of a `.ttf`/`.otf` file and makes the
-family in the font's own name table available to `fontFamily`. `registerFonts`
-takes the renderer and the typefaces the application brings, registers each file
-once per renderer, and returns the family names ready to spread into
-`extendTheme`:
+**Unavailable in the pinned runtime.** GPUix `0.10.0` has no `registerFont`, so a
+family must already be installed on the machine. `sans` is GPUI's `.SystemUIFont`
+sentinel and `mono` comes from `platformTypes`; a brand can name an **installed**
+family through the theme:
 
-```tsx
-import { readFileSync } from "node:fs";
-import { extendTheme, registerFonts, themes } from "@gpuixui/tokens";
+```ts
+import { extendTheme, themes } from "@gpuixui/tokens";
 
-// Once, where the native renderer is available (an effect, or app startup).
-const fonts = registerFonts(renderer, {
-  sans: { family: "Inter", files: [readFileSync("./Inter-Regular.ttf")] },
+const theme = extendTheme(themes.dark, {
+  typography: { sans: "Helvetica Neue" },
 });
-const theme = extendTheme(themes.dark, { typography: fonts });
 ```
 
-Four things the API cannot do for you:
-
-- **The family must match the file.** The runtime reads the name from the
-  font's name table, so `family` here is a declaration. A different name falls
-  back silently at render time; only the native runtime can prove the face.
-- **WOFF/WOFF2 are unsupported.** Ship `.ttf` or `.otf` bytes.
-- **Unusable bytes throw.** The runtime's error is left to the caller, and a
-  rejected file is not recorded, so a later call retries it.
-- **The browser renderer has no `registerFont`.** Call this on the native renderer
-  (`useGpuixRequired`), not in the docs site.
-
-The package bundles **no font files**: a consumer picks a face whose licence
-permits redistribution and ships its licence with the application. A consumer's
-own family wins over the platform default because the derived theme names it;
-nothing else in the theme changes.
-
-A runnable example lives in [`src/fonts.example.ts`](./src/fonts.example.ts).
+A family the machine does not have falls back silently, so only name one the
+target platforms install. Shipping a typeface with the application needs the
+runtime API: `references/gpuix` main carries it as an **unreleased** change (a
+minor bump for `@gpuix/native`, `@gpuix/react` and `@gpuix/solid`), and
+`@gpuix/native@0.10.0`'s `GpuixRenderer` does not declare it. Plan `052` holds the
+design — a `registerFonts(registrar, typefaces)` registry that is idempotent per
+renderer and returns the families for `extendTheme` — ready for the release that
+exposes it. No font is bundled, so `LICENSES/` has no font entry.
 
 ## For documentation sites
 
