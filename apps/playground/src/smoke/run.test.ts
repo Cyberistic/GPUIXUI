@@ -110,6 +110,9 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
       expect.arrayContaining(["command"]),
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "workspace-panes",
+    );
   });
 
   it("flags duplicated ids", () => {

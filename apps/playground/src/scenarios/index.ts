@@ -40,6 +40,7 @@ import { workspaceScenario } from "./workspace.js";
 import { workspaceRestoreScenario } from "./workspace-restore.js";
 import { shortcutScenario } from "./shortcuts.js";
 import { commandPaletteScenario } from "./command-palette.js";
+import { workspacePanesScenario } from "./workspace-panes.js";
 import { shellNavigationScenario } from "./shell.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
@@ -121,6 +122,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   workspaceScenario,
   workspaceRestoreScenario,
   commandPaletteScenario,
+  workspacePanesScenario,
   shortcutScenario,
   themeColorRolesScenario,
   themeTypeAndShadowScenario,

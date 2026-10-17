@@ -45,7 +45,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
 | tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
-| workspace | `workspace-tab-drag`, `workspace-restore` | verified |
+| workspace | `workspace-tab-drag`, `workspace-restore`, `workspace-panes` | verified |
 | command | `command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
@@ -266,6 +266,21 @@ whose **sibling** surface takes row clicks above it, and a veil click dismisses;
 an unmatched query paints `No commands` and Enter commits nothing. The
 limitation: there is no `aria-activedescendant`, so the visual selection is
 not announced as focus — `aria-selected` is the only AT-visible form.
+
+`workspace-panes` is the runtime verdict for a **tabbed panel body** and the
+composition it lives in. The decisive finding: **`display: "none"` is a no-op**
+— the binding applies `display` only for `"flex"`/`"grid"`, so a pane hidden that
+way still laid out (`y 205.5`, `h 78`), painted and swallowed a click meant for
+the row beneath it. The working mechanism is absolute overlapping slots with
+`visibility: "hidden"` and `pointerEvents: "none"`: the pane leaves the paint and
+the tab order while staying mounted, so its draft, pick and virtual-list anchor
+(`20`) survive a switch. Two more composition facts: a nested scroller **chains
+the wheel** into its ancestor (both moved to `−240`; `pointerEvents: "auto"` on
+the inner keeps the outer at `0` and the inner still clamps at `−480`), and a
+resized pane **re-windows** its list (`5 → 2` painted rows at `240 → 180`,
+anchor kept) against the clipped intersection. Fill layouts by passing an
+explicit height from the split: a `height: "100%"` chain through the strip leaves
+a virtual list with no viewport.
 
 Two further sources are recorded and are **never** the basis for a `done` row:
 `verified 0.5.1` (the published 0.5.1 binding, the last `darwin-x64` release,
@@ -498,7 +513,7 @@ in-package and an end-to-end native verdict.
 | Resizable columns | todo | ? | Pointer events + grid tracks. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
-| Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. API-shape work, not implementation. |
+| Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. **A resized pane (`workspace-panes`)** re-windows the list against the **clipped** intersection (a list fixed at `120` still painted fewer rows when its pane shrank), and the anchor survives the resize and a tab switch. The list needs a resolved height: derive it from the split. |
 | Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). |
 | Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `virtualized-tree` adds the virtualized form: 16 px per depth inside `<virtual-list>`, a count change from 8 to 48 rows repaints correctly, and Down/Up move native focus by roving index even for a row outside the window. |
 | Expandable rows | todo | ? | `motion` height. |
@@ -514,11 +529,11 @@ in-package and an end-to-end native verdict.
 | Resizable split panes | todo | partial (probe) | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). **Both axes + keyboard (`panel-nested`, plan `175`):** `dy` drives a vertical split exactly (`180 → 228`, painted height agrees), arrows resize the focused divider by 16 px, and the divider is exposed as an AccessKit `Splitter` with its size on `aria-valuetext` (no `aria-valuenow`/`aria-orientation` exist). A `focusNext` leaves the divider; the nested reverse edge does not re-enter it (§8). |
 | Panel groups | todo | partial (probe) | Composition over split panes. A split nested in a pane resizes **independently** of its parent (`panel-nested`: inner `300 → 360` while the outer stayed `228`). |
 | Collapsible sidebars | todo | partial (probe) | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. **`panel-nested`:** width `0` paints `0` with no residual border or padding and the neighbour absorbs the space; re-opening paints the full width. |
-| Tabbed panels | todo | partial (probe) | Tabs + panels. The strip's overflow contract is measured by `tab-strip-overflow` (horizontal pan, clipped children keeping bounds, component-owned reveal; clamp the near end — the renderer stops at `x = -5`, not `0`) and its keyboard contract by `tab-strip-focus` (a clipped tab is a tab stop that focus does not reveal; a roving strip is one stop and reveals on End/Home). |
+| Tabbed panels | todo | partial (probe) | Tabs + panels. The strip's overflow contract is measured by `tab-strip-overflow` (horizontal pan, clipped children keeping bounds, component-owned reveal; clamp the near end — the renderer stops at `x = -5`, not `0`) and its keyboard contract by `tab-strip-focus` (a clipped tab is a tab stop that focus does not reveal; a roving strip is one stop and reveals on End/Home). **The pane body (`workspace-panes`, plan `177`):** `display: "none"` is a **no-op** in 0.10.0 — the inactive pane still laid out and stole a click — so panes stay mounted and overlap in absolutely positioned slots with `visibility: "hidden"` + `pointerEvents: "none"`. That keeps the pane's draft, pick and virtual-list anchor across a switch and also removes its tab stop. Pass a content height derived from the split (a `height: "100%"` chain gives a virtual list no viewport). A nested scroller **chains** the wheel unless it sets `pointerEvents: "auto"`. |
 | Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. **`drag-autoscroll`:** the runtime does **not** scroll a held drag at an edge — the strip must own an edge loop (`renderer.scrollTo` per held move), which keeps the capture and the up, and derive the drop index from the pointer and the live offset. A new OS window is not available either: 0.10.0 exposes one app window (`render` + `WindowOptions`), no `openWindow`. |
 | Docking layouts | todo | partial (probe) | Composition over split panes + tabs. The overflowed strip contract is measured (`tab-strip-overflow`, plan `173`): x-axis wheel, exact `scrollTo`, `scrollIntoView` reveal, and clipped nodes that keep bounds. |
 | Nested panel arrangements | todo | partial (probe) | Composition. A vertical outer split holding a horizontal inner split is measured end to end: both axes resize, the nested drag leaves `outer = 228`, and the top pane's painted height/width track the readouts (`panel-nested`). |
-| Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. |
+| Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. **Composition (`workspace-panes`)**: a hidden pane keeps its own state and anchor; a resized pane re-windows its list (`5 → 2` painted rows at `240 → 180`) and keeps the anchor; a nested scroller needs the `pointerEvents: "auto"` wheel guard. |
 | Persistent panel state | todo | ? | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. |
 | Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. |
 | Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. |

@@ -18,7 +18,8 @@ capabilities (including the theme gallery, the modal contract and floating
 placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
-command surface probe (`command-palette`), the app-level shortcut probe
+command surface probe (`command-palette`), the tabbed-pane probe
+(`workspace-panes`), the app-level shortcut probe
 (`window-key-shortcut`) and
 the shell-navigation guard (`shell-navigation`), which mounts the real `App` and
 proves its sidebar scrolls — the registry is longer than the window, so an
@@ -58,7 +59,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (45/45 green); -> 2 on a host with no binding
+# -> 0 here (46/46 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -426,12 +427,34 @@ selection, handles arrows on key down and Enter through `onSubmit`, never routes
 commit/dismiss through window keys alone, and treats the window handler as a
 chord shortcut layer that may also see plain typing.
 
+## Tabbed panes (plan `177`)
+
+`workspace-panes` composes a vertical split, a tab strip, two panes and a
+`<virtual-list>`, and records the composition rules a workspace needs — 29
+checks. The first rule is a trap:
+
+| Fact | Measured |
+| ---- | -------- |
+| `display: "none"` | **a no-op**: the binding maps `display` only for `"flex"`/`"grid"`. An inactive pane rendered this way still laid out (`y 205.5`, `h 78`), painted its text and **stole a click** from the tree row under it |
+| hiding a pane | absolute overlapping slots + `visibility: "hidden"` + `pointerEvents: "none"`: no paint, no click, still mounted |
+| state | a hidden pane keeps its draft (`notes`), its pick (`2`) and its `<virtual-list>` anchor (index `20`) across switches |
+| tab order | `visibility: "hidden"` also removes the pane's tab stop (`focusNext` reaches the visible pane's input); a hidden slot with `tabIndex={0}` did **not** become a stop |
+| nested scrolling | a wheel over a nested scroller scrolls **both** it and its ancestor (`−240`, `−240`) — it chains |
+| the wheel guard | `pointerEvents: "auto"` on the inner scroller keeps the ancestor at `0`; the inner still scrolls and clamps at `−480` |
+| a resized pane | `240 → 180` re-windows the list `5 → 2` painted rows and keeps the anchor; the painted window follows the **clipped** intersection, not only the list's own height |
+| heights | a `height: "100%"` chain through the split, strip and two flex levels gives the list no viewport; derive the pane height from the split size instead |
+
+The component contract: keep tab panes mounted and hide them with
+`visibility: "hidden"` in absolutely positioned slots, guard a nested scroller's
+wheel with `pointerEvents: "auto"`, and pass an explicit content height down from
+the split.
+
 ## Evidence on this host
 
-The suite is **45/45 green** here (`exit 0`):
+The suite is **46/46 green** here (`exit 0`):
 
 ```
-45/45 scenarios passed · capabilities: layout=verified text=verified
+46/46 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -510,6 +533,7 @@ src/scenarios/tab-overflow.tsx horizontal pan, tab-strip overflow and reveal
 src/scenarios/tab-focus.tsx     clipped tab stops and the roving strip
 src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible sidebar
 src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filtering and focus
+src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
