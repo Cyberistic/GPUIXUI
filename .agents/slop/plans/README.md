@@ -88,6 +88,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [089](./089-density-metric-merge.md) | Density metrics merge by size | B/F | 011, 068, 070 | done |
 | [090](./090-soft-status-border-role.md) | The soft status edge: a designed role, held to its floor | F | 014, 057, 071, 076, 083, 086 | done |
 | [091](./091-selection-in-soft-surfaces.md) | Selection inside a soft status surface | F | 014, 063, 071, 081, 087, 090 | done |
+| [092](./092-control-boundary-soft-fills.md) | The control boundary on the soft status fills | F | 084, 090, 091 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -408,6 +409,17 @@ the dark ones one step lighter with a 20% identity wash (the alpha every platfor
 dark style already used), Windows dark's wash moves to 40%, and Linux dark's soft
 destructive fill moves to `#3A0B0D` so its light-accent wash stays visible while
 the body text keeps its floor on the pressed wash.
+
+092 closes the same surface gap one composition over: the control boundary was
+measured on the plain surfaces, the quiet panel and the four row washes, but not
+the four soft status fills an Alert, Badge or Toast paints, where an action
+button, a field or a "don't show again" checkbox sits. Identity dark's
+`borderStrong` measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and
+2.97:1 on `infoSoft`, under the 3:1 boundary floor, while every other shipped set
+already cleared it. The four fills join the `boundary` class (109 → 113 pairs)
+and the identity dark edge moves one half-step lighter to `#868FA0`, which also
+lifts its tightest existing pair from 3.31:1 to 4.06:1 without touching any fill.
+The focus ring on the same four fills is the next row, plan 093.
 
 ### Reference adoption (block `200–299`)
 
