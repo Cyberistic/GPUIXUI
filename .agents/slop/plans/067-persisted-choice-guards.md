@@ -57,8 +57,11 @@ caller never needs a cast before the guard. `platformNames.some((name) => name
 fight.
 
 `isPlatformName` lives in `platform-types.ts` so every platform style file and
-the registry share one source; `platforms.ts` already re-exports from there, so
-the index exports it with no new plumbing.
+the registry share one source. `platforms.ts` re-exports `platformNames` and
+`systemUiFont` explicitly, so it **must add `isPlatformName` to that list** — the
+index only sees what `platforms.ts` forwards. The test imports from `./index.js`
+for exactly this reason: a guard that exists in a leaf module but not on the
+public entry is not shipped.
 
 The guards are documented once, under Theme API, as the **boundary** half of the
 extension mechanism: they narrow a persisted choice; `createTheme`/`extendTheme`
@@ -73,6 +76,7 @@ All paths relative to the **tokens-theme worktree**:
 | ---- | ------ |
 | `.agents/slop/plans/067-persisted-choice-guards.md` | **create** (this file) |
 | `packages/tokens/src/platform-types.ts` | **add** `isPlatformName` |
+| `packages/tokens/src/platforms.ts` | **re-export** `isPlatformName` beside `platformNames` |
 | `packages/tokens/src/theme.ts` | **add** `isThemeMode` and `isThemeContrast` |
 | `packages/tokens/src/guards.test.ts` | **create** — the behavioural tests |
 | `docs/tokens.md` | **add** a "Persisted choices" paragraph under Theme API |
@@ -174,6 +178,9 @@ Stop and report if:
 
 - Remove `"default"` from `isPlatformName`’s accepted set (or from
   `platformNames`) and observe the membership test fail — then restore.
+- Remove `isPlatformName` from the `platforms.ts` re-export and observe
+  `check-types` fail on the test’s `./index.js` import — then restore. (Observed:
+  `TS2724: '"./index.js"' has no exported member named 'isPlatformName'`.)
 - Make `isThemeMode` return `true` unconditionally and observe the rejection
   test fail — then restore.
 - Do not claim a direction that was not run.

@@ -7,13 +7,14 @@
  * not require editing another package.
  */
 import { describe, expect, it } from "vitest";
-import { isPlatformName, platformNames } from "./platform-types.js";
 import {
   highContrastThemes,
+  isPlatformName,
   isThemeContrast,
   isThemeMode,
+  platformNames,
   themes,
-} from "./theme.js";
+} from "./index.js";
 
 const nonStrings: ReadonlyArray<unknown> = [null, undefined, 0, {}, [], true];
 
