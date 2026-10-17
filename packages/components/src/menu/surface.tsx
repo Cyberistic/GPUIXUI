@@ -27,7 +27,7 @@ import {
   typedChar,
 } from "../internal/key.js";
 import {
-  elevation,
+  elevationShadow,
   textStyle,
   useTheme,
   type Theme,
@@ -46,7 +46,7 @@ export const menuSurfaceStyle = (theme: Theme): StyleDesc => ({
   borderRadius: theme.radius.md,
   borderWidth: theme.borderWidth.thin,
   borderColor: theme.colors.border,
-  boxShadow: elevation(theme, "md"),
+  boxShadow: elevationShadow(theme, "md"),
   pointerEvents: "auto",
 });
 

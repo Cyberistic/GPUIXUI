@@ -3,6 +3,17 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "@gpuix/react",
+    // `@gpuixui/tokens/react` is consumed from source; its JSX is compiled with
+    // this program's `jsxImportSource`, but the isolated linker puts
+    // `@gpuix/react` under this package's node_modules, not tokens'.
+    "paths": {
+      "@gpuix/react/jsx-runtime": [
+        "./node_modules/@gpuix/react/jsx-runtime.d.ts"
+      ],
+      "@gpuix/react/jsx-dev-runtime": [
+        "./node_modules/@gpuix/react/jsx-dev-runtime.d.ts"
+      ]
+    },
     "noEmit": true,
     "types": ["node"]
   },

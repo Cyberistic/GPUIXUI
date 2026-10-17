@@ -39,7 +39,7 @@ import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import {
-  elevation,
+  elevationShadow,
   textStyle,
   useTheme,
   type Theme,
@@ -189,7 +189,7 @@ const surfaceStyle = (
   borderRadius: theme.radius.xl,
   borderWidth: theme.borderWidth.thin,
   borderColor: theme.colors.border,
-  boxShadow: elevation(theme, "lg"),
+  boxShadow: elevationShadow(theme, "lg"),
   position: "relative",
   pointerEvents: "auto",
 });

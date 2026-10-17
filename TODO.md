@@ -83,17 +83,22 @@ docs platform toggle (macOS / Linux / Windows / Default) built on
 **symlink** — a `references/` rule does not match a symlink, so every worktree
 shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `tokens`)
-`[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
-directly and delete their structural copies of the theme and role list, their
-local focus-ring helpers (`primitives/src/core/style.ts`,
-`components/src/internal/theme.ts`) and their first-shadow helpers
-(`primitives/src/core/style.ts` `firstShadow`, `components/src/internal/theme.ts`
-`elevation`), now that `focusRing` and `elevationShadow` exist and the package
-resolves from source (owner: those workstreams; plans 016–018)
-`[ ]` Cross-team: `components` still carries a whole structural copy of the
-package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
-it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
-`components`)
+`[x]` Components consume `@gpuixui/tokens` directly: the local `withAlpha`,
+`focusRing`, `elevation` and hand-mixed `tone` palette are gone; `internal/theme.ts`
+re-exports the token helpers and keeps only the `danger` → `destructive` mapping
+(plan 157)
+`[ ]` Cross-team: `primitives` still carries its local focus-ring and
+first-shadow helpers (`primitives/src/core/style.ts`) — delete them now that
+`focusRing` and `elevationShadow` are in tokens (owner: `primitives`; plan 157
+records the components half)
+`[x]` Components carry no structural copy of `@gpuixui/tokens` and import the
+package directly (plan 157)
+`[!]` Tokens' `src/react.tsx` is compiled inside the components program when
+tokens resolves from source; the isolated linker puts `@gpuix/react` only under
+`packages/components/node_modules`, so components' `tsconfig.json` maps the JSX
+runtime to its own dependency. The durable fix is a tokens-side
+`@gpuix/react` devDependency or an `@jsxImportSource react` pragma (owner:
+tokens-theme — do not edit from this workstream)
 `[x]` Promote the workstream to `main`: plans 010–019 and 051, `packages/tokens`
 and the union plan index are on `main` (commit `458fe10`); `main` now compiles
 `@gpuixui/tokens` from source, so `primitives`, `components` and `docs-site` can
@@ -297,9 +302,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `@gpuixui/tokens` roles in plan 110 §6 | tokens-theme | **resolved** — the workstream is merged into `agent/components`; `internal/theme.ts` is the seam over it |
 | Serialise writers per worktree: a second live session writes `packages/components` alongside the supervisor's; root cause in plan `022` (primitives), this worktree's measurement in plan `118` | repo tooling (`scripts/`) | **pending — components work paused until fixed** |
 | Decide the GPUix version: stay on 0.10.0 and implement dismiss layers/focus locally, or ship a release that includes `Dialog`/`Button`/`DismissableLayer` (0.10.0 is the latest published) | owner / playground | pending |
-| Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) so the local `tone()` helper can be deleted | tokens-theme | pending |
-| `alpha(color, amount)` helper so the local `withAlpha()` can be deleted | tokens-theme | pending |
-| An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | pending |
+| Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) | tokens-theme | **resolved** — landed on `main`; `internal/theme.ts` consumes `statusTone` (plan 157) |
+| `alpha(color, amount)` helper | tokens-theme | **resolved** — landed on `main`; the local `withAlpha` is deleted (plan 157) |
+| An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | **resolved** — `infoSoft`/`infoSoftForeground` are the tone's roles (plan 157) |
+| `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |

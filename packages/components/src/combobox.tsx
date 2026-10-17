@@ -38,7 +38,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
 import {
   controlHeight,
-  elevation,
+  elevationShadow,
   textStyle,
   useTheme,
   type Theme,
@@ -282,7 +282,7 @@ export const Combobox = ({
           borderRadius: theme.radius.md,
           borderWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
-          boxShadow: elevation(theme, "md"),
+          boxShadow: elevationShadow(theme, "md"),
           pointerEvents: "auto",
         }}
       >

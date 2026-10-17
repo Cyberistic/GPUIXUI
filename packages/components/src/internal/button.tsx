@@ -21,17 +21,14 @@ import { Match } from "effect";
 import { useState } from "react";
 import { isActivation } from "./key.js";
 import {
+  alpha,
   controlHeight,
   controlPaddingX,
   focusRing,
   textStyle,
   useTheme,
-  withAlpha,
   type Theme,
 } from "./theme.js";
-
-/** How much of the control's own fill a filled variant keeps on hover. */
-const HOVER_ALPHA = "80";
 
 /** The five looks a control can take. */
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -66,13 +63,13 @@ const variantStyle = (theme: Theme, value: ButtonVariant): StyleDesc =>
       color: theme.colors.primaryForeground,
       // Tokens ship no `primaryHover`; a half-alpha fill is the closest honest
       // step, and the interlock records the missing role.
-      hover: { backgroundColor: withAlpha(theme.colors.primary, HOVER_ALPHA) },
+      hover: { backgroundColor: alpha(theme.colors.primary, 0.5) },
     })),
     Match.when("danger", () => ({
       backgroundColor: theme.colors.destructive,
       color: theme.colors.destructiveForeground,
       hover: {
-        backgroundColor: withAlpha(theme.colors.destructive, HOVER_ALPHA),
+        backgroundColor: alpha(theme.colors.destructive, 0.5),
       },
     })),
     Match.when("secondary", () => ({

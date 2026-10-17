@@ -11,7 +11,7 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import {
-  elevation,
+  elevationShadow,
   textStyle,
   useTheme,
   type Theme,
@@ -33,7 +33,7 @@ const surface = (theme: Theme, variant: CardVariant) =>
       borderWidth: theme.borderWidth.thin,
       borderColor: theme.colors.border,
     })),
-    Match.when("elevated", () => ({ boxShadow: elevation(theme, "md") })),
+    Match.when("elevated", () => ({ boxShadow: elevationShadow(theme, "md") })),
     Match.when("plain", () => ({})),
     Match.exhaustive,
   );

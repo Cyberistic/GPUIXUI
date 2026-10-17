@@ -14,7 +14,7 @@ import * as Option from "effect/Option";
 import { useRef, type ReactNode } from "react";
 import { IconButton } from "../internal/button.js";
 import {
-  elevation,
+  elevationShadow,
   textStyle,
   tone,
   useTheme,
@@ -75,7 +75,7 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
         borderWidth: theme.borderWidth.thin,
         borderColor: theme.colors.border,
         borderRadius: theme.radius.md,
-        boxShadow: elevation(theme, "md"),
+        boxShadow: elevationShadow(theme, "md"),
         overflow: "hidden",
         pointerEvents: "auto",
       }}

@@ -43,7 +43,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { isDismiss, isTab } from "./internal/key.js";
-import { elevation, textStyle, useTheme } from "./internal/theme.js";
+import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
 
 /** The rules a {@link PopoverContent} follows; throws outside a {@link Popover}. */
 interface PopoverContextValue {
@@ -227,7 +227,7 @@ export const PopoverContent = ({
           borderRadius: theme.radius.lg,
           borderWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
-          boxShadow: elevation(theme, "md"),
+          boxShadow: elevationShadow(theme, "md"),
           pointerEvents: "auto",
         },
         style,

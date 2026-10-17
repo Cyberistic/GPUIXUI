@@ -48,6 +48,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/inventory.ts` | the Tier 2 inventory records, checked against `COMPONENTS.md` |
 | `src/internal/dismiss-layer.ts` | the overlay stack: topmost layer wins, one event closes one overlay |
 | `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
+| `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
