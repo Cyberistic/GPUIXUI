@@ -56,7 +56,41 @@ above) and 020–049 belongs to primitives, icons and Phase C, so 051 takes the
 first free block — as the tokens workstream's docs-layering plan (050) does.
 052 is rescued from the abandoned `agent/fonts` branch (`6fc7641`), with its
 step 1 answered from the pinned runtime's source; its native proof is blocked by
-B1, so it is planned, not done.
+B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
+052's and 017's native proofs are unblocked; the playground runs a locally built
+`darwin-x64` 0.10.0 binding.
+
+### `playground` (block `100–199`)
+
+Owns `apps/playground` and `packages/testing`: the native smoke harness, the
+playground shell and the feasibility probes. `100–150` is used; `151+` continues
+in the same block.
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [100](./100-package-testing.md) | `packages/testing` — the platform-free smoke harness | B | — | **landed** |
+| [110](./110-native-smoke-test.md) | The native smoke test (cross-cutting) | B | 100, 120 | **landed**: the suite runs on this host against a locally built 0.10.0 binding; the 0.5.1 legacy probe is at `apps/playground/legacy-probe` (ADR 0002) |
+| [120](./120-app-playground.md) | `apps/playground` — native playground + smoke runner | B | 100 | **landed**: shell, `SplitPane`, the scenario registry and the CLI (§2.1 records the API deviations) |
+| [130](./130-tier3-4-feasibility-probes.md) | Tier 3/4 feasibility probes | B→D | 100, 110, 120 | **landed**: `table-select-sort`, `table-column-resize`, `workspace-tab-drag` green on this host (§3 records the deviations) |
+| [140](./140-gpuix-native-darwin-x64-build.md) | Build the `darwin-x64` GPUix binding from source (blocker B1) | B | 110, 120, 130 | **landed**: `gpui_macos/runtime_shaders` removes the blocking `xcrun metal` step; **12/12 green on this host**, exit `0` (§4 records every measured fact) |
+| [150](./150-native-theme-gallery.md) | Native theme gallery: the token layer in the real runtime | B | 140, 011 | **landed**: `paintedStyle` on the smoke host, `theme` capability, two scenarios; **14/14 green on this host**, exit `0`; the shell is on `@gpuixui/tokens` (§8 records both two-direction proofs) |
+| [151](./151-playground-shell-navigation.md) | The playground shell navigates: a scrollable scenario list | B | 120, 140 | **landed**: `shell-navigation` mounts the real `App`; the sidebar is a scroll container |
+| [152](./152-virtualized-table-probe.md) | The virtualized table probe (Tier 3 feasibility) | B→D | 130, 140, 151 | **landed**: `virtualized-table` — fixed cells in virtual rows, painted-row click, selection across scroll; `onVisibleRange` lags one gesture (§8) |
+| [153](./153-tree-view-probe.md) | The tree-view probe (Tier 3 feasibility) | B→D | 130, 140, 152 | **landed**: `tree-view` — exact indentation, expand/collapse repaint, click-to-focus and arrow keys; no programmatic focus (§8) |
+| [154](./154-log-viewer-probe.md) | The log-viewer probe (Tier 4 feasibility) | B→D | 130, 140, 152 | **landed**: `log-viewer` — starts at the tail, re-anchors on appends; `alignment`/`followTail` overlap and no snap-back after scroll (§8) |
+| [155](./155-modal-focus-semantics.md) | Modal focus and nested-overlay semantics (Tier 2 feasibility) | B→C | 120, 140, 117 | **landed**: `modal-focus-trap` — focus entry/return via `renderer.focusElement`, the Tab trap wraps inside the surface, a nested popover's Escape closes only the popover; 19/19 green (§8) |
+| [156](./156-floating-placement.md) | Floating-layer placement and collision (Tier 2 feasibility) | B→C | 120, 140, 155 | **landed**: `floating-placement` — `side`/`gap`/`align=start` are exact; **`align=center` is off by half the panel** and `fit=snap` clamps but does not flip; 20/20 green (§8) |
+
+Cross-cutting records:
+
+- `.agents/adr/0001-native-smoke-host.md` — the 0.10.0 binding gap and what it
+  means for every `done` row (superseded in part).
+- `.agents/adr/0002-two-gpuix-versions.md` — the library targets 0.10.0; 0.5.1
+  is the newest version that runs on this Intel Mac, and the measured matrix of
+  what it does and does not verify (focus and wheel scroll are the gaps).
+- `.agents/adr/0003-darwin-x64-source-build.md` — the locally built
+  `darwin-x64` 0.10.0 binding and the provenance of every `verified 0.10.0`
+  verdict.
 
 ### Reference adoption (block `200–299`)
 
