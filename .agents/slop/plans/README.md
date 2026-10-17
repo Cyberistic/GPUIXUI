@@ -123,6 +123,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [324](./324-public-type-index.md) | Name every public type in the reference | F | 066, 071, 086, 311 | done |
 | [325](./325-invalid-field-edge.md) | The invalid field edge the contract never measures | F | 057, 071, 074, 084, 092, 306, 312 | done |
 | [326](./326-contract-count-truth.md) | The contract's surface counts and pair history | F | 086, 306, 307, 325 | done |
+| [327](./327-accent-states.md) | The accent family's missing hover and press | F | 063, 071, 080, 097, 309, 311, 318 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -880,6 +881,21 @@ counts from `selectionSurfaces`, `inactiveSurfaces` and
 `softBorderSurfacePairs`, holds the history's last step to `contrastPairs.length`,
 and names the audit series through plan 325. No token, pair, floor or colour
 changes.
+
+327 closes the last filled family plan 097 left as an alpha composite. `accent`
+is a surface with a foreground — the toggle-on paint and the selected surface of
+a row — but only `primary`, `secondary` and `destructive` gained designed hover
+and pressed roles; the shipped `togglePressedBase` still paints
+`alpha(accent, 0.9)` and `alpha(accent, 0.8)`, so a pressed toggle's state took
+its colour from the surface behind it, moved *toward* the canvas in dark mode and
+had no pair the contract could measure. `accentHover` and `accentActive` join the
+palette (62 → 64 roles) in every identity set, platform variant and recipe light
+half, each chosen to step away from the canvas, keep `accentForeground` at its
+floor and keep the outlined toggle's `border` edge perceivable on the fill; the
+on-colour and edge pairs plus the two fills as surfaces move the contract
+264 → 276. `accent-states.test.ts` states the regression, and the primitives
+migration off the alpha composite is recorded cross-team rather than edited in
+another workstream's tree.
 
 ### Reference adoption (block `200–299`)
 
