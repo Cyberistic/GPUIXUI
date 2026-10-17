@@ -70,6 +70,7 @@ workstream declares in its own section below.
 | [137](./137-list-item-click-forwarding.md) | ListItem's caller onClick | C/F | 111, 134, 136 | done — 1 native test (List 37, behaviour 277); both-direction proof |
 | [138](./138-combobox-pointer-coverage.md) | Combobox pointer selection coverage | C/F | 116, 117, 134 | done — 3 native tests (Combobox 13, behaviour 280); liveness proof |
 | [139](./139-inventory-test-counts.md) | Inventory test counts, and the rows that drifted | C/F | 117, 128, 134 | done — +1 inventory check (unit 224); 3 counts + Cards row corrected; both-direction proof |
+| [157](./157-components-consume-token-helpers.md) | `@gpuixui/components` consumes the token helpers instead of copying them | F | 014, 016, 017, 018 | done — theme test fails against the old `accent` tone; behaviour 280 green |
 | [200](./200-adopt-compound-part-api.md) | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | 020, 030, 110–117 | **in progress** — owned by this workstream; the 200-block plan is now local |
 
 Interlocks this workstream depends on and does not own:
