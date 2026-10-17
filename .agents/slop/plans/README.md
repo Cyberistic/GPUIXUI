@@ -197,6 +197,7 @@ Cross-cutting records:
 | [`444-preview-dark-mode.md`](./444-preview-dark-mode.md) | Preview surfaces follow the docs' dark mode after hydration | F | 412, 416, 434 | implemented — `previewMode` gated with `useSyncExternalStore`; unit + browser two-direction proofs in §8. **Superseded in part by 445**, which reads both mode and platform from the published document state |
 | [`445-preview-platform-snapshot.md`](./445-preview-platform-snapshot.md) | Previews follow the platform toggle too: one document-state snapshot for mode and platform | F | 420, 434, 444 | implemented — `parsePreviewState` reads `data-platform` + `dark`; unit + browser proofs in §8 |
 | [`446-browser-smoke.md`](./446-browser-smoke.md) | A browser smoke check for hydrated previews (dark mode + platform) | F/G | 439, 420, 434, 444, 445 | implemented — `smoke:browser` hydrates the production build in Chrome; exit 1/2 proofs in §8 |
+| [`447-tokens-api-reference.md`](./447-tokens-api-reference.md) | The tokens and theming API reference: generated `ThemeConfig`/`Theme` tables, every exported helper, and the React provider | F | 410, 415, 441; `@gpuixui/tokens` exports | implemented — 13 helper rows, both shapes generated, three two-direction proofs; 215 docs tests, 67-page built-site crawl (§8) |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

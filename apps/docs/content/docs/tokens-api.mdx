@@ -1,0 +1,61 @@
+---
+title: Tokens API
+description: Theme shapes, extension helpers and the React provider in @gpuixui/tokens.
+---
+
+`@gpuixui/tokens` is plain data plus pure helpers. The values — every colour
+role, spacing step, radius, border width, icon size, density metric and
+elevation level — are on [Theming](/docs/theming); this page is the API. The
+React provider is a separate entry point, `@gpuixui/tokens/react`.
+
+## Theme shapes
+
+A consumer writes a `ThemeConfig`: the mode, plus any group it wants to change.
+Every group is optional, and an omitted group inherits from the shipped base.
+
+<auto-type-table path="../../../../packages/tokens/src/theme.ts" name="ThemeConfig" />
+
+Overrides merge group by group — a partial `typography.body` keeps the base
+leading and weight — except `elevation`, where an array replaces the level, and
+`mode`, which no override can change. What components receive is the resolved
+`Theme`, never a partial one:
+
+<auto-type-table path="../../../../packages/tokens/src/theme.ts" name="Theme" />
+
+## Functions
+
+| Function | Signature | Returns |
+| -------- | --------- | ------- |
+| `createTheme` | `createTheme(config: ThemeConfig): Theme` | a theme for `config.mode`, built from the shipped base |
+| `extendTheme` | `extendTheme(base: Theme, overrides: ThemeOverrides): Theme` | a new theme; `base` is never mutated |
+| `getTheme` | `getTheme(mode: ThemeMode, contrast: ThemeContrast = "default"): Theme` | a shipped theme, including the high-contrast pair |
+| `platformTheme` | `platformTheme(base: Theme, platform: PlatformName): Theme` | `base` with that platform's font families and a named variant |
+| `alpha` | `alpha(color: string, amount: number): string` | an 8-digit hex colour; non-hex input is returned unchanged |
+| `statusTone` | `statusTone(theme: Theme, tone: StatusTone): StatusToneStyle` | the soft surface, its readable foreground and a 30%-alpha edge |
+| `focusRing` | `focusRing(theme: Theme): FocusRing` | the zero-offset, zero-blur ring the runtime can paint |
+| `elevationShadow` | `elevationShadow(theme: Theme, level: ElevationLevel): BoxShadow \| undefined` | the level's single shadow; `overlay` resolves to `undefined` |
+| `textStyle` | `textStyle(theme: Theme, role: TextRole): TextStyleProperties` | size, leading, weight and family for a type role |
+| `controlHeight` | `controlHeight(theme: Theme, size: ControlSize): number` | the control height at the active density |
+| `controlPaddingX` | `controlPaddingX(theme: Theme, size: ControlSize): number` | the horizontal padding at the active density |
+| `ThemeProvider` | `ThemeProvider({ theme, children }: ThemeProviderProps)` | the provider, from `@gpuixui/tokens/react` |
+| `useTheme` | `useTheme(): Theme` | the nearest theme, or `lightTheme` with no provider |
+
+## React
+
+```tsx
+import { darkTheme } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+<ThemeProvider theme={darkTheme}>{children}</ThemeProvider>;
+```
+
+Nested providers scope a brand theme to a subtree. GPUix has no OS appearance
+query, so the application owns the mode switch and passes the resolved theme.
+
+## Values
+
+Import the data rather than copying it: `themes`, `highContrastThemes`,
+`colorRoles`, `spacing`, `radius`, `borderWidth`, `iconSize`, `densityPresets`,
+`lightElevation` and `darkElevation`. [Theming](/docs/theming) renders each of
+them from the package at build time, so a value changed in `@gpuixui/tokens`
+changes that page and this API cannot disagree with it.
