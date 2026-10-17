@@ -336,6 +336,11 @@ retired once both branches are one
       runtime's focused id so fields inside keep their keys; an unlabelled area
       stays inert. 7 core + 3 element + 5 runtime tests, both directions proven
       (plan 072)
+`[x]` `packages/primitives`: **docs/export coverage guard** — the docs half of
+      the component bar (a page per component, indexed, with frontmatter) was
+      hand-maintained and unenforced. `src/exports.test.ts` now fails by name for
+      an undocumented PascalCase export, a missing page, or an unindexed page;
+      three failure directions proven (plan 074)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
