@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ------- |
-| Status | planned (measured facts land in §8) |
+| Status | landed (measured facts in §8) |
 | Phase | B (feasibility) → feeds Tier 2 Context menu, Dropdown menu, Command menu |
 | Owner | playground workstream (`apps/playground`, `packages/testing`) |
 | Depends on | `100`, `110`, `120`, `140`, `155`, `156`, `162` |
@@ -60,8 +60,7 @@ that does not exist yet in an actionable form.
 | Element | Shape |
 | ------- | ----- |
 | `ctx-target` | 200×100 `div`, `onMouseDown`/`onMouseUp`/`onAuxClick`/`onClick` all log; a right click opens the **root** menu at the pointer. Contains `<text testId="ctx-target-label">right-click me</text>` |
-| `ctx-target-b` | 200×100 sibling; a right click on it opens the same root menu at the new point (repositions, never duplicates) |
-| `ctx-outside` | 200×48 box below; a left click here must dismiss |
+| `ctx-outside` | 200×48 box to the right of the targets; a left click here must dismiss |
 | `ctx-key-target` | 200×40 focusable `div` (`tabIndex={0}`); `onKeyDown` logs the key and shift flag, and on Shift+F10 opens the root menu at its own bottom-left and remembers to restore focus |
 | `ctx-scroll` | 260×160 `div`, `overflowY: "scroll"`, 40 fixed 40 px rows; row 12 is `ctx-scroll-target` (a right click opens the **in-container** menu at the pointer) |
 | `ctx-menu` | the root menu: `<anchored position={point} deferred priority={1} occlude>` → inner `div` `ctx-menu` (`role="menu"`, `tabIndex={-1}`, `autoFocus`, `onMouseDownOutside`, `onKeyDown`), rows `ctx-item-copy`, `ctx-item-delete`, `ctx-item-disabled` |
@@ -172,5 +171,55 @@ No change outside `apps/playground`, `packages/testing` and the ledgers.
 
 ## 8. Measured facts
 
-_(Filled in by the run; every number below must come from the report's checks
-and the artifact, never from expectation.)_
+**Suite: 30/30 green on this host, exit `0`**, `menu=verified`, with the 29
+prior scenarios unchanged. `context-menu-pointer` records **38 checks**.
+
+Event order for one right click on `ctx-target` (200×100 at `0,0`):
+
+```
+A:down:0 > A:up:0 > A:click:false            ← the left click in step 1
+A:down:2 > A:aux:100,50:true:b-1 > open > A:up:2   ← the right click
+```
+
+| Question | Measured |
+| -------- | -------- |
+| Does a right click arrive? | **yes** — `onAuxClick` fires, before `onMouseUp` |
+| Is `isRightClick` set? | **yes**, `true`; `event.button` is **undefined** on `auxClick` (`b-1`) |
+| Is `onClick` also emitted? | **no** — `onClick` is primary-only, despite the earlier left click in the same log |
+| Do the coordinates match the pointer? | **yes** — `100,50` for the element centre, in **window** coordinates |
+| Does a right click on a child reach the trigger? | **yes** — events bubble |
+| Is `<anchored position={pointer}>` exact? | **yes** — a 180×110 surface at exactly `(100,50)` |
+| Does an outside press dismiss? | **yes** — the press reaches the outside element, then `mouseDownOutside` closes |
+| Does Escape dismiss? | **yes** |
+| Does `shift-f10` reach a focused `div`? | **yes** — `key=f10 shift=true`, opens at the trigger's bottom-left |
+| Does the menu take focus, and does Escape return it? | **yes** — `ctx-menu` on open, `ctx-key-target` on close via `focusElement` |
+| Does a scrolled ancestor offset the anchored layer? | **no** — scroll offset `-400`, row centre `(130,241)`, the in-container menu measured **exactly** `(130,241)` |
+| Is an in-container menu clipped by `overflowY: "scroll"`? | **no** — a 180×110 menu at `y=241` extends ~50 px below the 160 px viewport; the third item still **paints** and still **activates** |
+
+Consequences for the library:
+
+- **Guard on `isRightClick`, never `button === 2`.** `auxClick` does not carry a
+  button; the components' `ContextMenu` guard (`event.isRightClick !== true`) is
+  the correct one, and its `onClick` handlers do not need a right-click guard
+  because `onClick` never fires for button 2.
+- **`<anchored position>` is the honest window-coordinate primitive**, including
+  under a scrolled ancestor. A context menu can be mounted where the component
+  is; no portal or root mount is required in 0.10.0.
+- **The keyboard route is real**: `shift-f10` is deliverable, the surface
+  auto-focuses, and `renderer.focusElement` returns focus. Plan `122`'s
+  predicate is correct as written.
+
+**Two-direction proofs** (all run, outputs quoted):
+
+1. dropping the `onAuxClick` open call: **exit `1`**, `the right click opened the
+   root menu at the pointer: expected "open=true x=100 y=50 scope=root", got
+   "open=false last=none"`. Restored.
+2. hard-coding the anchored `position` to `{x:0, y:0}`: **exit `1`**, `the menu
+   paints at the pointer's x: expected 100 ± 1, got 0`. Restored.
+3. removing the focus return from `close`: **exit `1`**, `Escape returns focus to
+   the trigger: expected "ctx-key-target", got "none"`. Restored.
+
+**Not measured / out of scope:** a right click inside an `<input>` (selection
+behaviour), a submenu, and a right click that opens a second menu while the
+first is open — each component owns those.
+

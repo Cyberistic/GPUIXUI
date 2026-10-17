@@ -52,8 +52,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | content | `native-surfaces` | verified |
 | drag | `drag-targets` | verified |
 | selection | `text-selection` | verified |
+| menu | `context-menu-pointer` | verified |
 
-The suite is **29/29 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **30/30 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -127,6 +128,18 @@ gutters, markers and file/hunk headers are `chrome_text` and excluded — and
 measures `userSelect: "none"`: a selection that **crosses** it skips it, but a
 drag **anchored** inside it selects nothing at all, so a gutter must not be the
 start of a selection. `clearSelection` and a plain click both leave it empty.
+
+`context-menu-pointer` is the runtime verdict for the right click behind Context
+menus. A right click arrives as `onAuxClick` with `isRightClick: true`, window
+coordinates and **no `button`**, before `mouseUp`; `onClick` is primary-only, so
+a row action does not need a right-click guard and the menu must not guard on
+`button === 2`. A right click on a child bubbles to the trigger, a
+pointer-positioned `<anchored>` paints at the point exactly, and — the fact the
+component design turns on — it stays exact and **unclipped** inside an
+`overflowY: "scroll"` ancestor (scroll offset `-400`; an item ~50 px below the
+160 px viewport still paints and activates), so a context menu needs no portal.
+`shift-f10` is delivered as `key: "f10"` with `modifiers.shift`, the surface
+auto-focuses, and Escape returns focus through `renderer.focusElement`.
 
 `select-choose`, `combobox-filter` and `tooltip-open` are the runtime verdicts
 for the three interactive components GPUix ships, which the library composes
@@ -323,7 +336,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
 | Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. Focus in/out and “Escape closes only the popover” are measured natively (`modal-focus-trap`). Placement (`floating-placement`): `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is short by half the panel size** and `fit="snap"` clamps without flipping, so a near-bottom popover must choose `side="top"` itself. |
 | Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). **Menus open with `align="center"` must compensate for the half-panel offset, and a near-bottom menu must pick `side="top"`** — `fit="snap"` does not flip (`floating-placement`). |
-| Context menus | todo | ? | As Dropdown menus, triggered by `onAuxClick` / right-click position. One Escape dismisses one layer (measured: `modal-focus-trap`). The panel is positioned at the pointer with an explicit `position`, so the `align="center"` defect does not apply; the window-edge snap still does (`floating-placement`). |
+| Context menus | todo | ? | As Dropdown menus, triggered by a right click. **Measured (`context-menu-pointer`)**: a right click is `onAuxClick` + `isRightClick` — `auxClick` carries **no `button`** and `onClick` never fires for button 2, so guard on `isRightClick`; a child's right click bubbles to the trigger; `<anchored position={pointer}>` is exact, including inside a **scrolled** container (no offset, no clipping — an item below the viewport still paints and activates); outside press and Escape dismiss; `shift-f10` opens and Escape returns focus. One Escape dismisses one layer (`modal-focus-trap`). |
 | Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
 | Tabs | todo | ? | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. |
 | Accordions | todo | ? | `div` + `motion` (height). |

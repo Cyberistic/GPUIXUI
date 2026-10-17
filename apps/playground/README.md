@@ -257,18 +257,38 @@ so a gutter or toolbar must never start a drag. One harness note: ending a drag
 2 px inside the right edge truncates the last glyph, so `selectText` ends at the
 edge.
 
+## Native context menus (plan `164`)
+
+`context-menu-pointer` drives the right click and a real `<anchored>` surface at
+the pointer, then repeats it on a row inside a scrolled container. What holds:
+
+| Gesture | Measured |
+| ------- | -------- |
+| right click on the trigger | `mouseDown(button 2)` → `auxClick` → `mouseUp`; `isRightClick` is `true` and the payload carries **window coordinates** (`100,50` at the element centre) |
+| `auxClick` payload | **no `button`** (`undefined`); guard on `isRightClick`, never `button === 2` |
+| `onClick` for a right click | **never fires** — `onClick` is primary-only |
+| a right click on a child | bubbles to the trigger, so a row's label can carry the gesture |
+| `<anchored position={pointer}>` | exact — 180×110 at exactly the pointer point |
+| outside press / Escape | both dismiss; the outside element receives the press first |
+| `shift-f10` | arrives as `key=f10` with `modifiers.shift`; the surface auto-focuses; Escape returns focus to the trigger |
+| a **scrolled** ancestor | scroll offset `-400`, row centre `(130,241)`, the in-container surface measured exactly `(130,241)` — **no double offset and no clipping**: an item ~50 px below the viewport still paints and still activates |
+
+The honest consequence: a context menu does **not** need a portal or a root
+mount in 0.10.0 — the anchored surface is window-positioned even inside
+`overflowY: "scroll"`.
+
 ## Evidence on this host
 
-The suite is **29/29 green** here (`exit 0`):
+The suite is **30/30 green** here (`exit 0`):
 
 ```
-29/29 scenarios passed · capabilities: layout=verified text=verified
+30/30 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified content=verified drag=verified
-selection=verified
+selection=verified menu=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -285,6 +305,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | content | `<svg>`/`<img>`/`<diff>` are retained **and** painted (bounds fire from `on_painted`); `<canvas>` is retained but renders nothing and drops its children; `setImagePixels` uploads a bitmap through the ref |
 | drag | capture owns every move and the up; hover is frozen during the drag; the gesture ends in a click on the source; a drop on a handler-less element still clicks; `onFileDrop` carries paths and coordinates |
 | selection | cross-element selection joins with newlines; `<code>`/`<diff>` copy is chrome-free; an anchor inside `userSelect: "none"` selects nothing; a click selects nothing |
+| menu | a right click is `onAuxClick` + `isRightClick` (no `button`, no `onClick`); `<anchored position>` is exact at the pointer, even inside a **scrolled** container (no offset, no clipping); `shift-f10` opens and Escape returns focus |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -322,6 +343,7 @@ src/scenarios/a11y.tsx      the AccessKit dump: roles, names, states, window
 src/scenarios/surfaces.tsx  svg, img (fallbacks, data URL, ref upload), diff, canvas
 src/scenarios/drag-targets.tsx capture, hover during drag, file drops
 src/scenarios/text-selection.tsx selection across text, code, diff and chrome
+src/scenarios/context-menu.tsx right click, pointer placement, dismissal
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -354,11 +376,11 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The sixteen core capabilities (including the token gallery, the modal
+- The seventeen core capabilities (including the token gallery, the modal
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe and the app-level shortcut probe pass in real GPUix
-  0.10.0 on this host (29/29), with a written report and screenshots.
+  0.10.0 on this host (30/30), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
