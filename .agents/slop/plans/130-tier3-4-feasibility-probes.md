@@ -205,7 +205,9 @@ Verdicts remain `unverified` on this host: the suite exits `2` before running
   in virtual rows, a painted row is hittable and selects, selection survives
   scroll, and `onVisibleRange` lags the painted window by one gesture.
 - `packages/docking` plan: split/tab/drag from `workspace-tab-drag`; persistence
-  is an app-boundary concern, and there is no multi-window detach.
+  is an app-boundary concern, and there is no multi-window detach. File trees
+  use `tree-view` (plan `153`): indentation and expand/collapse are verified,
+  but click-to-focus is the only focus path (no programmatic focus).
 - `packages/editor` plan: `<code>` viewer is real; editable highlighted editing
   is a probe; rich text is unsupported.
 - Charts: the only honest native path is `<img>` + `setImagePixels`; the

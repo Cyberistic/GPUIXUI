@@ -25,6 +25,7 @@ import { workspaceScenario } from "./workspace.js";
 import { shortcutScenario } from "./shortcuts.js";
 import { shellNavigationScenario } from "./shell.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
+import { treeScenario } from "./tree.js";
 import {
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
@@ -43,8 +44,8 @@ export const CORE_CAPABILITIES = [
   "theme",
 ] as const;
 
-/** The Tier 3/4 capabilities the feasibility probes cover (plan `130`). */
-export const PROBE_CAPABILITIES = ["table", "workspace"] as const;
+/** The Tier 3/4 capabilities the feasibility probes cover (plan `130`, `152`, `153`). */
+export const PROBE_CAPABILITIES = ["table", "tree", "workspace"] as const;
 
 /** One view per capability, in the order the suite runs them. */
 export const scenarios: ReadonlyArray<PlaygroundScenario> = [
@@ -64,6 +65,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   themeTypeAndShadowScenario,
   shellNavigationScenario,
   virtualizedTableScenario,
+  treeScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

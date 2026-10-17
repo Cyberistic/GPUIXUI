@@ -38,10 +38,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | panel | `panel-resize` | verified |
 | virtual-list | `virtual-list-window` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
+| tree | `tree-view` | verified |
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 
-The suite is **16/16 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **17/17 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); synthetic wheel scrolling **does** work
 (`deltaY` negative scrolls down, the opposite of the DOM); a `<virtual-list>`
@@ -243,7 +244,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
 | Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. |
-| Tree views | todo | ? | `<virtual-list>` + indentation; hierarchical virtualization is ours. |
+| Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. GPUix cannot move native focus from component code, so a roving-tabindex contract is still ours. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
 | Property panels | todo | ? | Fieldset + Inline validation + Key-value displays. |
@@ -271,7 +272,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |
 | Inspector panels | todo | ? | Property panels + panels. |
 | Property editors | todo | ? | Fieldset + inputs. |
-| File trees | todo | ? | Tree views + `<virtual-list>`. |
+| File trees | todo | ? | Tree views (verified) + `<virtual-list>`; hierarchical virtualization is ours. |
 | Log viewers | todo | ? | `<virtual-list>` + `<text>`; text search/highlight hooks exist. |
 | Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. |
