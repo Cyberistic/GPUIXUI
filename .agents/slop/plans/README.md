@@ -99,6 +99,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [300](./300-soft-status-quiet-panel.md) | The soft status surface on the quiet panel | F | 014, 063, 071, 076, 090, 094 | done |
 | [301](./301-applied-style-contrast-claim.md) | An applied platform style must declare the contrast it carries | F | 063, 071, 073 | done |
 | [302](./302-platform-type-bridge.md) | The removed `platformTheme` and its merged consumer | F | 051, 063, primitives `021`/`055` on `master` | done |
+| [303](./303-inventory-truth-guard.md) | The inventory row that still called `overlay` exempt | F | 056, 062, 099 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 70/94
+`[x]` `[████████░░]` 71/95
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -356,6 +356,10 @@ add the four soft fills to the selection contract (plan 091)
 — `platformTheme(base, platform)` returns as a deprecated families-and-name-only
 bridge, held to its pre-063 contract, after plan 063 deleted it while `master`'s
 primitives runtime suite still imports it (plan 302)
+`[x]` Guard the design-system ledger — the contrast row still called `overlay`
+exempt after plan 099 measured it, and its pair counts, floor table, role/type
+counts, motion levels/easings and platform count had no test while both prose
+documents did (plan 303)
 `[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
