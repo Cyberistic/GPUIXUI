@@ -3,7 +3,8 @@
 - **Phase:** C/F (Tier 2 hardening)
 - **Workstream:** components · **Owns:** `packages/components/**`, `COMPONENTS.md`
 - **Depends on:** 116 (Combobox), 117 (verification), 134 (inventory gate)
-- **Status:** planned.
+- **Status:** done, 2026-10-17. 3 native tests (Combobox 13, behaviour 280);
+  liveness check recorded in §6.
 
 The Combobox suite has ten tests and every one drives the list from the
 keyboard. The pointer path — the primary way a person uses a combobox — is
@@ -73,3 +74,12 @@ nub run test                                          # exit 0
 4. A test is flaky across two runs → STOP.
 
 ## 6. Deviations, recorded during implementation
+
+1. **Liveness proof, recorded from the actual run.** Removing `setSelected(next)`
+   from the wrapper's `onValueChange` made *selects an option with the pointer*
+   fail with `expected "vi.fn()" to be called 1 times, but got 0 times` (run with
+   `-t` so the earlier keyboard tests did not cascade). Restored; Combobox 13/13.
+2. **The outside-press fixture needs an absolutely positioned target.** A target
+   rendered below the trigger sits under the floating panel; the press is then
+   inside the popup and correctly does not dismiss it. The test places
+   `elsewhere` at the window's bottom-right.

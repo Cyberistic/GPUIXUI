@@ -101,10 +101,12 @@ scrolling, and rows highlight with `colors.hover`. The selected check is
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (10 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (13 tests):
 open + input focus, filtering, ArrowDown + Enter selecting the **value**,
 the empty state, single replacement, multi add/remove with order, the disabled
-row, Escape restoring focus, prefix-before-substring ranking, and both themes.
+row, Escape restoring focus, prefix-before-substring ranking, both themes, and
+the pointer path — selecting an option, toggling several while skipping a
+disabled one, and closing on an outside press.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf` and
 `toggledSelection`.
