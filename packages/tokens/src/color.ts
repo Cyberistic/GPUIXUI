@@ -131,6 +131,10 @@ export interface ThemeColors {
   readonly accent: string;
   /** Text and icons on `accent`. */
   readonly accentForeground: string;
+  /** Tinted emphasis surface while hovered. */
+  readonly accentHover: string;
+  /** Tinted emphasis surface while pressed. */
+  readonly accentActive: string;
   /** Destructive action background. */
   readonly destructive: string;
   /** Text and icons on `destructive`. */
@@ -267,6 +271,8 @@ export const lightColors = {
   mutedForeground: palette.neutral[700],
   accent: palette.iris[50],
   accentForeground: palette.iris[800],
+  accentHover: palette.iris[100],
+  accentActive: palette.iris[200],
   destructive: palette.red[600],
   destructiveForeground: palette.neutral[0],
   destructiveHover: palette.red[700],
@@ -352,6 +358,8 @@ export const darkColors = {
   mutedForeground: palette.neutral[300],
   accent: palette.iris[900],
   accentForeground: palette.iris[200],
+  accentHover: "#42319F",
+  accentActive: palette.iris[700],
   destructive: palette.red[400],
   destructiveForeground: palette.red[950],
   destructiveHover: palette.red[300],
@@ -398,7 +406,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 62 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 64 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
  * skeleton is a perceivable step off the pressed wash (plan 094). The divider is
  * darker than the neutral press step, so an outlined control keeps its 3:1 edge
@@ -424,6 +432,8 @@ export const highContrastLightColors = {
   mutedForeground: "#1F1F1F",
   accent: "#E0E3FF",
   accentForeground: "#2E2370",
+  accentHover: "#D5D8FF",
+  accentActive: "#BFC2FF",
   destructive: "#7E1D21",
   destructiveForeground: "#FFFFFF",
   destructiveHover: palette.red[900],
@@ -470,7 +480,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 62 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 64 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it — the generic
  * `active` wash (plan 080) and the designed neutral press step (plan 318) — and
@@ -501,6 +511,8 @@ export const highContrastDarkColors = {
   mutedForeground: "#E0E0E0",
   accent: "#251B5C",
   accentForeground: "#E0E3FF",
+  accentHover: "#33257A",
+  accentActive: "#42319F",
   destructive: "#FF9E9E",
   destructiveForeground: "#000000",
   destructiveHover: palette.red[200],
@@ -612,6 +624,8 @@ export const colorRoles = [
   "mutedForeground",
   "accent",
   "accentForeground",
+  "accentHover",
+  "accentActive",
   "destructive",
   "destructiveForeground",
   "destructiveHover",

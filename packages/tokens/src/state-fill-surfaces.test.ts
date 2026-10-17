@@ -49,7 +49,7 @@ describe("interactive fills on the surfaces they paint on", () => {
         stateFillSurfaces.map((surface) => [fill, surface]),
       ),
     );
-    expect(stateFillSurfacePairs).toHaveLength(52);
+    expect(stateFillSurfacePairs).toHaveLength(60);
   });
 
   it("holds the filled-action families, not only the neutral washes", () => {
@@ -63,6 +63,9 @@ describe("interactive fills on the surfaces they paint on", () => {
       "destructive",
       "destructiveHover",
       "destructiveActive",
+      "accent",
+      "accentHover",
+      "accentActive",
     ];
     filledRoles.forEach((role) => expect(stateFillRoles).toContain(role));
   });

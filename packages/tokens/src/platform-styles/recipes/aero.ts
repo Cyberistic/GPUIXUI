@@ -48,6 +48,8 @@ export const aeroPlatformRecipe = {
       primaryText: "#0F55A3",
       accent: "#D8EAFB",
       accentForeground: "#0B478A",
+      accentHover: "#CFE5FA",
+      accentActive: "#C4DEF9",
       ring: "#1565C0",
       selection: "#1565C03D",
       selected: "#CCE4FA",

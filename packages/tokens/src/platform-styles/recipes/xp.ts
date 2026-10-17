@@ -47,6 +47,8 @@ export const xpPlatformRecipe = {
       primaryText: "#0046BD",
       accent: "#C6DAFA",
       accentForeground: "#003C74",
+      accentHover: "#BDD4F9",
+      accentActive: "#B0CBF7",
       ring: "#0054E3",
       selection: "#5B8DE647",
       selected: "#C9DDFF",

@@ -146,8 +146,9 @@ const secondaryTextPairs: readonly ContrastPair[] = stateWashes.map(
 /**
  * The fills a bordered control paints behind its own edge: a secondary
  * control's resting, hovered and pressed fills, the hover and pressed washes an
- * outline control uses, and the accent fill a pressed outline toggle takes.
- * `border` is painted on all six, so the divider floor applies to each.
+ * outline control uses, and the accent family a pressed outline toggle takes —
+ * its resting fill and the designed hover and press it steps through. `border`
+ * is painted on all eight, so the divider floor applies to each.
  */
 const controlFillRoles = [
   "secondary",
@@ -156,6 +157,8 @@ const controlFillRoles = [
   "hover",
   "active",
   "accent",
+  "accentHover",
+  "accentActive",
 ] as const;
 
 const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
@@ -164,9 +167,10 @@ const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
 
 /**
  * The interactive fills a control or a row paints as its own shape: the two
- * generic washes, the accent and selected fills, and the filled-action families
- * at rest, hover and press. A filled control is a surface, so its fill has to
- * stay perceivable on the surface behind it.
+ * generic washes, the accent family at rest, hover and press, the selected
+ * fill, and the filled-action families at rest, hover and press. A filled
+ * control is a surface, so its fill has to stay perceivable on the surface
+ * behind it.
  */
 export const stateFillRoles = [
   "primary",
@@ -179,6 +183,8 @@ export const stateFillRoles = [
   "destructiveHover",
   "destructiveActive",
   "accent",
+  "accentHover",
+  "accentActive",
   "hover",
   "active",
   "selected",
@@ -483,7 +489,8 @@ const softBodyPairs: readonly ContrastPair[] = softSurfaceRoles.map(
  * `destructive` edge is a boundary pair on that fill and on the `background`
  * canvas a transparent field paints.
  *
- * The filled families are measured at rest, hover and pressed. The neutral
+ * The filled families — `primary`, `secondary`, `destructive` and `accent` —
+ * are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
  * generic `hover`/`active` washes a ghost or outline control paints. Every
  * interactive fill — the washes, the accent and selected fills and the three
@@ -507,6 +514,8 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["secondaryForeground", "secondary", "secondary"],
   ["secondaryForeground", "secondaryHover", "secondary"],
   ["secondaryForeground", "secondaryActive", "secondary"],
+  ["accentForeground", "accentHover", "secondary"],
+  ["accentForeground", "accentActive", "secondary"],
   ["primaryForeground", "primary", "secondary"],
   ["primaryForeground", "primaryHover", "secondary"],
   ["primaryForeground", "primaryActive", "secondary"],

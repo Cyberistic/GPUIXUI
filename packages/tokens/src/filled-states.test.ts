@@ -10,7 +10,9 @@
  * is invisible. Plan 097 replaced all of it with three opaque roles per family,
  * and this suite holds every shipped theme to the resulting contract: the three
  * steps exist, each is perceivable, the foreground keeps its floor on each, and
- * the direction follows the mode — away from the canvas, never toward it.
+ * the direction follows the mode — away from the canvas, never toward it. Plan
+ * 327 completes the matrix with the fourth filled family, `accent` — the paint
+ * of a toggle that is on — which had been left as an alpha composite.
  */
 import { describe, expect, it } from "vitest";
 import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
@@ -23,7 +25,7 @@ import {
   type Theme,
 } from "./theme.js";
 
-const families = ["primary", "secondary", "destructive"] as const;
+const families = ["primary", "secondary", "destructive", "accent"] as const;
 
 const modes = themeModes;
 
@@ -136,6 +138,8 @@ describe("filled control states", () => {
       "primaryActive",
       "secondaryHover",
       "secondaryActive",
+      "accentHover",
+      "accentActive",
     ] as const;
 
     realPlatforms.forEach((platform) => {
