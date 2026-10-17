@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 22/30
+`[x]` `[███████░░░]` 23/31
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -95,10 +95,13 @@ registration code lands. Evidence: `@gpuix/native@0.10.0`'s `GpuixRenderer`
 declares no such method and `@gpuix/react@0.10.0` re-exports that class. Plan 052
 is `blocked (upstream)` and keeps the ready design (idempotent `registerFonts`) and
 test plan for the release that exposes it. No font is bundled.
-`[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
-docs platform toggle (macOS / Linux / Windows / Default) built on
-`platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
+`[x]` Native theme gallery landed in `apps/playground` (plan 150, 14/14 green;
+owner: `playground`) — it paints every `colorRoles` entry and every type role
+across dark/light/high-contrast dark and asserts the runtime's own
+`paintedStyle`, which is the native proof these rows cite
+`[ ]` Cross-team: a visual per-platform comparison (macOS / Linux / Windows /
+Default) built on `platformTypes` + `platformTheme` (owner: `docs-site` and
+`playground`); ignore the `references`
 **symlink** — a `references/` rule does not match a symlink, so every worktree
 shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `tokens`)

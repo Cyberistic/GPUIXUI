@@ -248,8 +248,10 @@ persisted theme at its own boundary, where `Schema` belongs.
 - A platform style changes font families only. Per-platform control metrics have
   no evidence in GPUix 0.10.0, so a consumer layers `density` with
   `extendTheme` instead.
-- `.SystemUIFont` is verified against GPUI's documentation of the name, not yet
-  visually in the native runtime (B1 blocks the playground gallery).
+- `.SystemUIFont` is verified against GPUI's documentation of the name, and the
+  playground's `theme-type-and-shadow` gallery (plan 150) asserts every type role,
+  including the family the runtime reports. A visual per-platform comparison is
+  still open.
 - There is no runtime theme schema; theme objects authored in TypeScript are
   trusted at compile time. Persisted themes are decoded by the application.
 - No OS appearance detection; the app selects the mode and contrast, and also

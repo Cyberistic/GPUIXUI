@@ -745,9 +745,10 @@ against; see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
 - No per-platform control metrics: `platformTheme` changes families only, because
   GPUix 0.10.0 gives no evidence for platform-specific control heights. Layer
   `density` with `extendTheme` when a platform needs it.
-- `.SystemUIFont` is verified by GPUI's own documentation of the name, not yet
-  visually in the native runtime: the playground's platform gallery is blocked by
-  B1. See `COMPONENTS.md` and `TODO.md`.
+- `.SystemUIFont` is verified by GPUI's own documentation of the name, and the
+  playground's `theme-type-and-shadow` gallery (plan 150) asserts every type role
+  through `textStyle`, including the family the runtime reports. A visual
+  per-platform comparison is still open; see `COMPONENTS.md` and `TODO.md`.
 - No custom typeface in the pinned runtime: GPUix 0.10.0 has no `registerFont`, so
   the library can only name installed families. The API exists unreleased on
   `references/gpuix` main; plan `052` is ready for the release that ships it.
