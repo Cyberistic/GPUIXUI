@@ -932,8 +932,11 @@ platform (including `default`), `isThemeMode(value)` to `light`/`dark`,
 `isThemeContrast(value)` to `default`/`high`, and `isDensityName(value)` to a
 preset. A tone from a payload is the same kind of choice and narrows with
 `isStatusTone(value)`; a stored component size narrows with
-`isControlSize(value)`. They narrow a choice; decoding a whole theme object from a
-file or URL is still the application's boundary and belongs to its `Schema`.
+`isControlSize(value)`. The two theme axes also have ordered indexes beside
+their guards — `themeModes` and `themeContrasts` — so a settings row or a docs
+toggle iterates them instead of retyping `"light" | "dark"`. They narrow a
+choice; decoding a whole theme object from a file or URL is still the
+application's boundary and belongs to its `Schema`.
 
 Merge rules:
 

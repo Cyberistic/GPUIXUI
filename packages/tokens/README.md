@@ -148,8 +148,10 @@ A complete, executed example lives in
 
 A stored preference or a URL parameter arrives as `unknown`. `isPlatformName`,
 `isThemeMode`, `isThemeContrast`, `isDensityName` and `isControlSize` narrow it,
-so a consumer never retypes a union; a whole theme object loaded from a file is
-still the application’s `Schema` boundary.
+so a consumer never retypes a union; the ordered indexes — `platformNames`,
+`themeModes`, `themeContrasts`, `densityNames`, `statusTones` and
+`controlSizes` — are what a settings row or docs toggle iterates. A whole theme
+object loaded from a file is still the application’s `Schema` boundary.
 
 ```ts
 import { isControlSize, isDensityName, isPlatformName } from "@gpuixui/tokens";

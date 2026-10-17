@@ -385,8 +385,9 @@ A choice that survives a restart — the mode, the contrast variant, the density
 the platform style — arrives as `unknown`. Narrow it with `isThemeMode`,
 `isThemeContrast`, `isDensityName` and `isPlatformName` before building or
 resolving the theme; the package owns those unions, so no consumer should retype
-them. A whole theme object from a file is a different boundary: decode it with
-the application's `Schema`.
+them. `themeModes` and `themeContrasts` are the ordered indexes a settings row
+or a docs toggle iterates. A whole theme object from a file is a different
+boundary: decode it with the application's `Schema`.
 
 A theme carries its contrast level the way it carries its mode: `extendTheme`
 keeps the base's declaration and `applyPlatformStyle` and

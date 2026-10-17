@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 72/96
+`[x]` `[████████░░]` 73/97
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -364,6 +364,9 @@ documents did (plan 303)
 it only relabelled the default palette and the library's own checker rejected
 the result (66 failures light, 32 dark); `contrast` now selects the base through
 `getTheme` and the builder has no claim path (plan 304)
+`[x]` Ship `themeModes` / `themeContrasts` as ordered indexes and derive the
+unions and guards from them — the last two unions without an index, retyped in
+sixteen test loops, so a third mode would have shipped untested (plan 305)
 `[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
