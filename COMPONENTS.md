@@ -199,11 +199,12 @@ carries an evidenced limitation. The capability evidence lives in
 | Number Field | wip | ours | [number-field](packages/primitives/docs/number-field.mdx) · [number-field](packages/primitives/examples/number-field.example.tsx) | **Runtime (054/064):** real typing reports `12`; `999` against `max=100` reports `100`; arrows step, PageDown pages, a hit-tested spin press steps and refocuses the input; the ring paints on the field's chrome, and an `autoFocus` field paints it from mount; a disabled field refuses text, keys and presses. The input has **no numeric mode** (no `type`, `min`, `maxLength`), so parsing/clamping/drafts are ours. The spin buttons are `presentation`, not tab stops. |
 | OTP Field | wip | ours | [otp-field](packages/primitives/docs/otp-field.mdx) · [otp](packages/primitives/examples/otp.example.tsx) | **Runtime (054/064):** six digits typed one at a time fill six cells and `onComplete` fires once; focus advances with each character and Left moves it back; the first cell's ring paints from mount with `autoFocus`; Backspace in an empty cell clears the previous one, while Backspace on a filled cell deletes exactly one character; AccessKit reports a named `Group` with six named `TextInput`s; `invalid` paints the destructive border on every cell; a disabled field refuses input and leaves the tab order. **No `onPaste`** and no clipboard simulation in the `TestRenderer`, so the multi-character fill is proven only as a pure rule. Arrows/Home/End/Backspace are handled on **key up**: the native editor consumes their key down, so a held arrow does not repeat. |
 | Toggle | wip | ours | [toggle](packages/primitives/docs/toggle.mdx) · [toggle](packages/primitives/examples/toggle.example.tsx) | **Runtime (054):** a click flips the announced state and repaints the accent fill; Enter down and Space up each activate once; a disabled toggle leaves the tab order; the ring follows focus. **No `aria-pressed`** in 0.10.0 — the state rides on `aria-valuetext`, so a screen reader hears a button with a value. Activation, the ring and the name are this package's (`@gpuix/react` publishes no button). **Name (058):** text-only children become `aria-label`; an explicit `label` wins; non-text content stays unnamed. |
-| Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, state rides on `aria-valuetext`. |
+| Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. **Invalid (070):** `invalid` paints the empty stars `destructive` and leaves a chosen one on the brand role (the decoded element tree and the runtime `<svg>` tint agree). Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, and no `aria-invalid` — state rides on `aria-valuetext` and the error is paint only. |
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (163 tests in
-15 files after plan 069's keyboard scroll; 161 after plan 068's long-list cap;
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-17 (164 tests in
+15 files after plan 070's rating validation; 163 after plan 069's keyboard
+scroll; 161 after plan 068's long-list cap;
 160 after plan 067's tooltip placement;
 158 after plan 066's select placement; 156 after plan 065's checkbox group; 150 at 064's autoFocus ring; 145
 at 063's slider drag contract; 140 at 062's measured list width; 138 at 061's
@@ -213,7 +214,7 @@ OTPField, 54 at the 041 baseline, 68 after 049, 82 after 053, 90 after
 NumberField, 97 after Toggle, 106 after Rating, locally built GPUix 0.10.0
 binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan 056
 §12, plan 057 §8, plan 058 §8, plan 059 §8, plan 060 §6, plan 061 §6, plan 062
-§6, plan 065 §6, plan 066 §6, plan 067 §6, plan 068 §6 and plan 069 §6. The examples suite mounts every
+§6, plan 065 §6, plan 066 §6, plan 067 §6, plan 068 §6, plan 069 §6 and plan 070 §6. The examples suite mounts every
 example in `packages/primitives/examples/` (plan 047).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the

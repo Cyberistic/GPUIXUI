@@ -609,11 +609,22 @@ export const ratingStarStyle = (
   return style;
 };
 
-/** A filled star takes the brand role; an empty one the muted text role. */
+/**
+ * A filled star takes the brand role; an empty one the muted text role.
+ *
+ * A failed validation marks the **empty** stars destructive — what is missing,
+ * not what is chosen — the same rule as `RadioGroup` (plan `061`).
+ */
 export const ratingStarColor = (
   filled: boolean,
   theme: PrimitiveTheme,
-): string => (filled ? theme.colors.primary : theme.colors.mutedForeground);
+  invalid = false,
+): string =>
+  filled
+    ? theme.colors.primary
+    : invalid
+      ? theme.colors.destructive
+      : theme.colors.mutedForeground;
 
 // ── One-time-code fields ─────────────────────────────────────────────
 

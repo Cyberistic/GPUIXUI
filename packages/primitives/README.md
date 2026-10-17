@@ -85,6 +85,7 @@ none paints a literal and none scripts hover or press
 | a layer that clamps instead of flipping | `fit="snap"` clamps a layer inside the window **without flipping it**, so a bottom-side layer can cover its trigger, and a top-side one can cover it at the top edge | `Select` measures its trigger, estimates the list height from its own styles, and opens above when the list does not fit below; `Tooltip` measures its root and flips below when the tip does not fit above. An explicit `side` still wins in both (plans 066, 067) |
 | no list height cap | the layer grows past the window and the options past the edge are unreachable | `Select` caps a long list to the free space on its side and scrolls it; rows keep their height, so the list scrolls instead of squashing (plan 068) |
 | a highlighted option outside a capped layer | the layer scrolls only with the wheel, and the item's `highlighted` state is the only signal the runtime gives | `Select` scrolls the newly highlighted option into view through the renderer's `scrollIntoView`, so the arrows keep the active option visible (plan 069) |
+| `aria-invalid` | absent | a failed validation is paint only; `invalid` marks the empty selection or field border and the app pairs it with an error `Text` |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
@@ -121,7 +122,7 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **15 files, 163 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **15 files, 164 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -134,8 +135,9 @@ scrolled with the keyboard highlight kept in view (plans 062, 066, 068, 069), a
 slider drag measured outside the track with the non-primary buttons refused
 (plan 063),
 an `autoFocus` field's ring painted from mount and cleared on blur (plan
-064), and a checkbox group's row hit area, derived select-all state and skipped
-disabled tab stop (plan 065).
+064), a checkbox group's row hit area, derived select-all state and skipped
+disabled tab stop (plan 065), and a rating's failed validation painted on the
+empty stars only (plan 070).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

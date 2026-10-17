@@ -40,6 +40,7 @@ key (`Delete`/`Backspace`) or the app calling `onChange(0)`.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
 | `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
+| `invalid` | `boolean` | `false` | a failed validation paints the empty stars destructive |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator on the group |
@@ -74,12 +75,18 @@ the ring is always on the star the value came from.
 
 A selected star paints `colors.primary`, an empty one
 `colors.mutedForeground`, using two icons of the same geometry: `star-filled`
-and `star`. The filled icon is still monochrome — its `#000` fill is what GPUix
-retints — so a theme change repaints both states. The star size is
-`theme.iconSize[size]` and the focus ring is the shared `focusRing`.
+and `star`. With `invalid`, the **empty** stars paint `colors.destructive` while
+a chosen one keeps the brand role — the error marks what is missing, not what is
+chosen (the `RadioGroup` rule, plan `061`). The filled icon is still monochrome —
+its `#000` fill is what GPUix retints — so a theme change repaints both states.
+The star size is `theme.iconSize[size]` and the focus ring is the shared
+`focusRing`.
 
 ## Limitations
 
+- **Validation is paint only.** GPUix 0.10.0 has no `aria-invalid`, so `invalid`
+  marks the empty stars and is not announced; pair the rating with an error
+  `Text`, as with every other control.
 - **Whole stars only.** Half stars would need clipping or a transform, neither of
   which exists in GPUix 0.10.0; a caller that needs a finer score can keep it in
   state and paint the label beside the stars.
@@ -94,12 +101,14 @@ retints — so a theme change repaints both states. The star size is
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
   the tab-stop choice, a zero or fractional `max`.
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
-  single tab stop, filled vs outline icons, keys, click, disabled/readOnly, ring.
+  single tab stop, filled vs outline icons, the invalid tint rule, keys, click,
+  disabled/readOnly, ring.
 - `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
   arrow moves the checked star and native focus; Right at five stays at five;
   Delete clears; filled stars paint `colors.primary`; Tab enters on the rating
-  and the next Tab leaves the group; disabled refuses input. Measured
-  2026-10-17 (plan 054 §9).
+  and the next Tab leaves the group; disabled refuses input; an `invalid` rating
+  paints the empty stars' icons `destructive` and leaves the chosen ones
+  `primary` (plan `070`). Measured 2026-10-17 (plan 054 §9, plan 070 §6).
 
 ```sh
 nub run --filter @gpuixui/primitives test

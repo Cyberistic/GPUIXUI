@@ -301,6 +301,11 @@ retired once both branches are one
       renderer. Measured: 40 Down presses move the 60-option list from offset
       `0` to `-455` and keep "Option 39" inside it; a list that fits does not
       move. Two runtime tests, both directions proven (plan 069)
+`[x]` `packages/primitives`: **`Rating` could not show a failed validation** —
+      every other value-bearing control painted `invalid`; the rating's colour
+      resolver had no branch. Empty stars now take `destructive` and a chosen
+      one keeps `primary` (the `RadioGroup` rule); measured in the element tree
+      and the runtime (`<svg>` tint), both directions proven (plan 070)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

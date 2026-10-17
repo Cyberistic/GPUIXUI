@@ -36,6 +36,8 @@ export interface RatingProps {
   readonly disabled?: boolean;
   /** Shows the value but takes no input and no tab stop. */
   readonly readOnly?: boolean;
+  /** Validation failed: the empty stars take the destructive role. */
+  readonly invalid?: boolean;
   /** The group's name; each star is announced as "N of max". */
   readonly label?: string;
   readonly style?: StyleDesc;
@@ -102,7 +104,7 @@ export const renderRating = (
       <Icon
         name={index <= value ? "star-filled" : "star"}
         size={props.size ?? "md"}
-        color={ratingStarColor(index <= value, theme)}
+        color={ratingStarColor(index <= value, theme, props.invalid === true)}
       />
     </div>
   );

@@ -121,6 +121,28 @@ describe("Rating", () => {
     expect(iconName(stars[2] ?? expect.fail("no star"))).toBe("star");
   });
 
+  it("marks the empty stars as an error and leaves the chosen ones on the brand", () => {
+    const colorOf = (star: ReactElement): unknown =>
+      Option.getOrUndefined(
+        elementProp(
+          elementChildren(star)[0] ?? expect.fail("no icon"),
+          "color",
+        ),
+      );
+    const invalid = starsOf(render({ invalid: true }, 2)).map(colorOf);
+    expect(invalid).toStrictEqual([
+      testTheme.colors.primary,
+      testTheme.colors.primary,
+      testTheme.colors.destructive,
+      testTheme.colors.destructive,
+      testTheme.colors.destructive,
+    ]);
+    // The control: without `invalid`, an empty star keeps the muted role.
+    expect(colorOf(starsOf(render({}, 2))[2] ?? expect.fail("no star"))).toBe(
+      testTheme.colors.mutedForeground,
+    );
+  });
+
   it("moves with the arrows, clamps at the ends and clears with Delete", () => {
     const onMove = vi.fn();
     const element = render({}, 3, undefined, { onMove });

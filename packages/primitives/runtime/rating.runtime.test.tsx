@@ -205,3 +205,32 @@ it("refuses input and leaves the tab order when disabled", async () => {
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
 });
+
+it("paints a failed validation on the empty stars only", async () => {
+  const runtime = await openWindow();
+  const colorOf = (label: string): unknown => {
+    const star = byLabel(runtime, label);
+    const iconId = Option.getOrElse(
+      Option.fromNullishOr(star.children[0]),
+      () => expect.fail(`the star ${label} painted no icon`),
+    );
+    return Option.getOrElse(
+      Option.fromNullishOr(runtime.renderer.getElement(iconId)),
+      () => expect.fail(`the icon under ${label} vanished`),
+    ).style["color"];
+  };
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={2} invalid />
+    </Surface>,
+  );
+  expect(colorOf("1 of 5")).toBe(testTheme.colors.primary);
+  expect(colorOf("3 of 5")).toBe(testTheme.colors.destructive);
+  // The control: the same star is muted when nothing failed.
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={2} />
+    </Surface>,
+  );
+  expect(colorOf("3 of 5")).toBe(testTheme.colors.mutedForeground);
+});
