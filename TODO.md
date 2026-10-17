@@ -223,11 +223,11 @@ retired once both branches are one
 
 ## Phase F — integration and polish
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[~]` `[███░░░░░░░]` 1/3
 
 `[ ]` Consistency, keyboard, themes, composability pass
 `[ ]` Performance and packaging
-`[ ]` Docs truth pass against the implementation
+`[x]` Docs truth pass against the implementation — the 20 component pages and the pre-component pages audited (plans 410 §13, 424); guarded by `component-truth.test.ts`
 
 ## Phase G — release readiness
 
@@ -246,7 +246,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–422)
 
-`[x]` `[█████████░]` 20/21
+`[x]` `[██████████]` 21/21
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -268,11 +268,11 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Document every Tier 1 component (plan 423) — 20 pages with real source includes and generated props tables; sidebar, sitemap, search and index agree
 `[x]` Docs platform toggle (macOS · Linux · Windows · Default) built on `platformTypes` + `platformTheme`; URL + storage state, live values on Theming (plan 420)
 `[x]` A planned component's search result opens the index filtered to it (plan 421)
-`[ ]` Docs truth pass against the implementation (Phase F) — needs the component pages
+`[x]` Docs truth pass against the implementation (plan 424) — 20 pages audited against source, inventory and the shared keyboard module; `component-truth.test.ts` guards repo paths, placeholder prose and real package exports; one tooltip import defect fixed
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[x]` `[███░░░░░░░]` 4/13
+`[x]` `[███░░░░░░░]` 4/14
 
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
 `[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
@@ -284,6 +284,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables — `ButtonProps` generates the real 14-row table on the Buttons page (plan 422); the contract is executable in `apps/docs/src/lib/type-table.fixture.tsx` / `type-table.test.ts` (plan 415)
 `[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5) — the sidecar contract (`provenance.json` beside each PNG) is now enforced by `preview.test.tsx`, so a capture without it will not render
 `[x]` Docs site: the first real component page — Buttons shows its source via `<include>`, generates its API table from `ButtonProps`, sits in `content/docs/components/meta.json` and the sitemap, and relates to a planned component without a 404 link (plan 422)
+`[ ]` Primitives: the `packages/primitives/docs/tooltip.mdx` usage snippet imports `Icon` from `@gpuixui/primitives`; it lives in `@gpuixui/icons`. The docs-site page was corrected during the truth pass (plan 424); fix the package page too
 `[x]` Canonical and OpenGraph URLs are absolute — resolved in the docs workstream by plan 418: `SITE_URL` defaults to the deploy domain (`docs.gpuixui.dev`) and is overridable with `VITE_SITE_URL`; no change to `packages/deploy` was needed
 `[ ]` Owner: the Alchemy deploy path (`nub run deploy:docs`) is unverified — it needs Cloudflare credentials and lives in `packages/deploy`. The stand-down path is verified locally (plan 410 §3)
 `[ ]` Repo: `README.md` still says "Phase A (audit and feasibility)" although Phase B tokens and the docs site are implemented; update the ledger to match `TODO.md`
