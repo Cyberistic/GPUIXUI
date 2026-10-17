@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 23/31
+`[x]` `[███████░░░]` 24/32
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -77,6 +77,9 @@ its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls
 stop faking hover with an alpha fill (plan 055)
 `[x]` Guard the token catalogue against drift from the implementation (plan 056)
+`[x]` Guard the numeric token tables in `docs/tokens.md` (typography,
+spacing, radius, density, elevation, motion, borders/icons/avatars) against
+drift from the implementation (plan 058)
 `[x]` Ship status text roles (`infoText`/`successText`/`warningText`/
 `destructiveText`) so status labels, icons and indicator dots have a readable
 colour on plain surfaces — light `warning` was 1.78:1 on `background` — and

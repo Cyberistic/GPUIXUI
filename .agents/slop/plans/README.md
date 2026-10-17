@@ -54,6 +54,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [055](./055-filled-control-hover-roles.md) | Designed hover roles for filled controls | B | 011, 013–016 | done |
 | [056](./056-docs-truth-guard.md) | Docs truth guard for the token catalogue | F | 010–019, 050–055 | done |
 | [057](./057-status-text-roles.md) | Status text roles: a readable status tonality on plain surfaces | B | 010–019, 050–056 | done |
+| [058](./058-docs-numeric-tables-guard.md) | Docs-truth guard for the numeric token tables | F | 056 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
