@@ -59,7 +59,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (46/46 green); -> 2 on a host with no binding
+# -> 0 here (47/47 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -449,18 +449,43 @@ The component contract: keep tab panes mounted and hide them with
 wheel with `pointerEvents: "auto"`, and pass an explicit content height down from
 the split.
 
+## Terminal surfaces (plan `179`)
+
+`terminal-grid` asks whether a Tier 4 terminal is feasible. The runtime has no
+terminal host element — `ElementType` is `div`, `text`, `img`, `svg`, `canvas`,
+`input`, `textarea`, `anchored`, `code`, `diff`, `markdown`, `virtual-list` —
+and `GpuixRenderer` exposes no process or PTY API. A terminal is therefore **a
+component over a text grid, with the PTY owned by the app**; that boundary is the
+finding, and the probe measures the library's two halves:
+
+| Fact | Measured |
+| ---- | -------- |
+| input surface | a click focuses the surface natively; removing `tabIndex` did **not** stop that, so a clickable focus target does not need component focus code |
+| printable keys | `simulateKeystrokes("l")` / `"s"` reach a focused `div`'s `onKeyDown` and paint `$ ls` |
+| control keys | Enter commits and clears, `up` recalls history, `backspace` deletes one character, Escape clears with status `cancelled` |
+| chords | `ctrl-c` arrives as `key: "c"` with `modifiers.ctrl === true`; the surface aborts the line |
+| grid | rows paint at exactly `18 px`; two 8-character runs paint the **same width**, and the run reports the theme's `mono` family — the grid aligns without a cell hack |
+| colour | per-run `paintedStyle.color` equals `colors.destructive` / `colors.success`, so ANSI ranges can map to theme spans |
+| scrollback | the list starts at the tail of 200 lines; `scrollToItem(list, 0)` paints the head and `listScrollTop` reports index `0`; the tail is reachable again |
+| prompt | the prompt row is a **sibling** of the virtual list, so a scrollback jump keeps it painted and keeps native focus on the surface |
+
+The honest limits: there is no PTY/process surface, so terminal output and
+lifecycle belong to the app; there is no per-cell background or glyph atlas, so a
+block caret is a themed `div` and wide glyphs rely on the monospace font's
+advance. ANSI parsing is the component's (or the app's), not the renderer's.
+
 ## Evidence on this host
 
-The suite is **46/46 green** here (`exit 0`):
+The suite is **47/47 green** here (`exit 0`):
 
 ```
-46/46 scenarios passed · capabilities: layout=verified text=verified
+47/47 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified command=verified content=verified drag=verified
-selection=verified menu=verified components=verified search=verified
+selection=verified menu=verified components=verified search=verified terminal=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -534,6 +559,7 @@ src/scenarios/tab-focus.tsx     clipped tab stops and the roving strip
 src/scenarios/panel-nested.tsx  vertical split, nested isolation, collapsible sidebar
 src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filtering and focus
 src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
+src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -570,9 +596,9 @@ narrower. Each deviation is deliberate and measured:
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
-  probe, the drag-autoscroll probe, the command-palette probe and the
-  tabbed-pane probe pass in real GPUix 0.10.0 on this host (46/46), with a
-  written report and screenshots.
+  probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
+  probe and the terminal-grid probe pass in real GPUix 0.10.0 on this host
+  (47/47), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

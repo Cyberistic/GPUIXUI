@@ -42,6 +42,7 @@ import { shortcutScenario } from "./shortcuts.js";
 import { commandPaletteScenario } from "./command-palette.js";
 import { workspacePanesScenario } from "./workspace-panes.js";
 import { shellNavigationScenario } from "./shell.js";
+import { terminalScenario } from "./terminal.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
 import { logViewerScenario } from "./log-viewer.js";
@@ -95,6 +96,7 @@ export const PROBE_CAPABILITIES = [
   "drag",
   "menu",
   "search",
+  "terminal",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -145,6 +147,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   primitivesChoiceScenario,
   primitivesEntryScenario,
   searchScenario,
+  terminalScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

@@ -56,8 +56,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | menu | `context-menu-pointer` | verified |
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
+| terminal | `terminal-grid` | verified |
 
-The suite is **46/46 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **47/47 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -545,7 +546,7 @@ in-package and an end-to-end native verdict.
 | Property editors | todo | ? | Fieldset + inputs. |
 | File trees | todo | yes (probe) | Tree views + `<virtual-list>` — `virtualized-tree` proves the combination: 328 flattened rows, 16 px per depth inside a virtual row, expand/collapse from 8 to 48 rows, click/arrows with native focus, and focus surviving the window moving away. Hierarchical virtualization itself is ours; an off-window row is invisible to the accessibility tree (`a11y-tree`). |
 | Log viewers | todo | yes (probe) | `log-viewer`: `<virtual-list alignment="bottom" followTail>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up then appending does **not** snap back, so a follow toggle is app state plus a scroll. `<text>`; text search/highlight hooks exist. Copy is native: `text-selection` selects across text rows and `<code>`/`<diff>` copy excludes chrome, but a drag anchored in a `userSelect: "none"` gutter selects nothing — a text row, not the gutter, must anchor the selection. |
-| Terminal surfaces | todo | ? | No terminal host element; **unverified** whether a PTY surface is feasible. |
+| Terminal surfaces | partial (probe) | partial (`terminal-grid`) | **No terminal host element and no PTY/process API** in 0.10.0 (`ElementType` ends at `virtual-list`; `GpuixRenderer` has only window/focus/scroll/selection/image/prompt methods), so a terminal is a text grid with the PTY owned by the app. `terminal-grid` measures the library's half: a click focuses the surface (a `div` with `role="textbox"`; removing `tabIndex` did not stop the focus), printable keys reach its `onKeyDown`, Enter/Up/Backspace/Escape and `ctrl-c` (`modifiers.ctrl`) are delivered, 18 px rows align to the same width for equal character counts in the theme's mono family, per-run `paintedStyle.color` carries `destructive`/`success`, and a 200-line `<virtual-list>` starts at the tail while the prompt row — a **sibling**, not a list row — keeps focus and text across scrollback jumps. Limits: no per-cell background/glyph atlas (a caret is a themed `div`), ANSI parsing and the PTY are the component/app's. |
 | Search and replace | todo | ? | `useTextSearch`/`findRanges` highlight rendered text; the replace UI is ours. **Measured (`search-highlights`, plan `171`):** washes paint in window coordinates, a soft wrap paints one box per row, a surrogate-split range is refused, `<code>` is searched by `query` (not `ranges`), and a virtual row's `matchIndexOffset` numbers matches document-wide. The wash colour is not reported, so `color`/`activeColor` are unasserted. |
 | Multi-pane editing layouts | todo | ? | Composition over split panes + editors. |
 
