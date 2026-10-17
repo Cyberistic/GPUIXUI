@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 83/109
+`[x]` `[████████░░]` 84/110
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -136,6 +136,12 @@ input there, but `inputForeground` was measured only on the `input` fill, so an
 edited theme could erase a search query while the checker returned `[]`; every
 shipped set passes, so no colour moves and the contract grows 246 → 247 pairs
 (plan 315)
+`[x]` Hold a selected row's inherited label on the `accent` fill a selectable
+row hovers — `list.tsx` paints `accent` on hover while the label keeps
+`selectedForeground`, and plan 312 measured only `hover`/`active`, so an edited
+theme could erase it while the checker returned `[]`; every shipped set passes
+(5.81:1 at the tightest), so no colour moves and the contract grows 247 → 248
+pairs (plan 316)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

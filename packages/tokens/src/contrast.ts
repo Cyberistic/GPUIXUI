@@ -349,8 +349,10 @@ const statusTextSurfacePairs: readonly ContrastPair[] = statusTextTones.flatMap(
  * The default text roles a row paints on the washes it paints behind them. A
  * selectable list row uses `accent` on hover and `selected` when selected, a
  * selected row keeps its inherited `selectedForeground` while hovered or
- * pressed, a menu row paints `popoverForeground` on `hover`/`active`, and a
- * selected `Select` option paints `popoverForeground` on `selected`.
+ * pressed — the `accent` fill `list.tsx` paints on hover as well as the
+ * `hover`/`active` pointer washes — a menu row paints `popoverForeground` on
+ * `hover`/`active`, and a selected `Select` option paints `popoverForeground`
+ * on `selected`.
  */
 const rowTextPairs: readonly ContrastPair[] = [
   ["foreground", "accent", "body"],
@@ -360,6 +362,7 @@ const rowTextPairs: readonly ContrastPair[] = [
   ["popoverForeground", "selected", "body"],
   ["selectedForeground", "hover", "secondary"],
   ["selectedForeground", "active", "secondary"],
+  ["selectedForeground", "accent", "secondary"],
 ];
 
 /**
@@ -410,7 +413,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * on the inactive fill a disabled control keeps its shape with, and the inactive
  * label an unavailable control, menu item or row paints on its fill, the plain
  * surfaces and the state washes. The default text role of a list or menu row is
- * measured on the washes the row paints, a selected `Select` option's label on
+ * measured on the washes the row paints — including a selected row's inherited
+ * label on the `accent` fill a selectable row hovers and on the `hover`/`active`
+ * pointer washes — a selected `Select` option's label on
  * its `selected` fill, a status label or dot on the quiet `muted` panel, typed
  * text on the `input` fill and on the `background` canvas a transparent field
  * paints, and a text field's edge is measured on the `input` fill it sits on.

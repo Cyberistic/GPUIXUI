@@ -112,6 +112,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [313](./313-ledger-role-count.md) | The ledger's second role count | F | 015, 056–066, 303, 311 | done |
 | [314](./314-row-surface-text.md) | The selected menu row, the sidebar status label and the link on a row fill | F | 057, 071–095, 300, 306–313 | done |
 | [315](./315-canvas-input-text.md) | Typed text on the canvas field | F | 059, 071–095, 088, 306–314 | done |
+| [316](./316-selected-label-accent-wash.md) | The selected row's inherited label on the accent wash | F | 059, 071–095, 300, 306–315 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -721,6 +722,17 @@ erase typed text while `themeContrastFailures` returned `[]`. The one pair is
 247. The same audit records a cross-team `components` task: those transparent
 fields leave placeholder colour to the runtime default instead of painting the
 `placeholder` role.
+
+316 closes the mismatch plan 312 left between its own reasoning and its pair
+list: the §1 table, the `wash-text.test.ts` header and `docs/tokens.md` all said
+a selected row under the pointer keeps `selectedForeground` on the `accent` fill
+`list.tsx` paints on hover, but only `hover`/`active` were added to
+`contrastPairs`, so the documented `accent` composition had no pair. The audit
+found every shipped set already clears the 4.5:1 secondary floor there (5.81:1
+on macOS light), so no colour moves and the contract grows 247 → 248. The
+regression case sets `accent` to the light `selectedForeground` and asserts the
+public checker reports the pair, and the §9 design-system row now names the
+three pointer fills instead of two.
 
 ### Reference adoption (block `200–299`)
 

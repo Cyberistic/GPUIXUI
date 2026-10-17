@@ -4,8 +4,8 @@
  * a row paints. A selected list row's title is `foreground` on `selected`
  * because `ListItemTitle` overrides the row's inherited `selectedForeground`; a
  * hovered selectable row paints `foreground` on `accent`; a selected row under
- * the pointer keeps `selectedForeground` on `accent`/`active`; and a menu row
- * paints `popoverForeground` on `hover`/`active`. A text field's edge is
+ * the pointer keeps `selectedForeground` on `accent`, `hover` and `active`; and a
+ * menu row paints `popoverForeground` on `hover`/`active`. A text field's edge is
  * `border` on the `input` fill, which the divider contract never measured.
  *
  * Every shipped set clears its floor, so no colour moves. The pairs exist so an
@@ -47,6 +47,7 @@ const rowTextPairs = [
   ["popoverForeground", "active", "body"],
   ["selectedForeground", "hover", "secondary"],
   ["selectedForeground", "active", "secondary"],
+  ["selectedForeground", "accent", "secondary"],
 ] as const;
 
 const failureFor = (
@@ -113,6 +114,19 @@ describe("the row's own text on the washes it paints", () => {
       colors: { hover: "#3B2C8F" },
     });
     const failures = failureFor(regressed, "selectedForeground", "hover");
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.pairClass).toBe("secondary");
+    expect(failures[0]?.floor).toBe(contrastFloors.default.secondary);
+    expect(failures[0]?.ratio).toBeCloseTo(1, 4);
+  });
+
+  it("reports selected text erased on a hovered row's accent wash", () => {
+    const light = getTheme("light");
+    const regressed = extendTheme(light, {
+      colors: { accent: light.colors.selectedForeground },
+    });
+    const failures = failureFor(regressed, "selectedForeground", "accent");
 
     expect(failures).toHaveLength(1);
     expect(failures[0]?.pairClass).toBe("secondary");

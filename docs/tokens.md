@@ -1366,15 +1366,20 @@ The other row text roles have their own pairs. A menu row paints
 `popoverForeground` on `hover`/`active`, a selected `Select` option paints it on
 `selected` — the shipped `selectItemStyle` keeps the menu foreground when the row
 fills — and a selected row under the pointer keeps its inherited
-`selectedForeground` on `accent`/`active`; the latter takes the secondary floor,
-matching `selectedForeground` on `selected`. The tightest shipped values are
+`selectedForeground` on `accent`, `hover` and `active`; all three take the
+secondary floor, matching `selectedForeground` on `selected`. The `accent` fill
+is the one a selectable `ListItem` paints on hover, so it is a composition the
+list API invites, not a spare surface. The tightest shipped values are
 `foreground` on `selected` at **7.47:1** (Linux dark),
-`popoverForeground` on `selected` at **7.95:1** (Linux dark) and
-`selectedForeground` on `active` at **5.21:1** (macOS light), so no colour moves.
+`popoverForeground` on `selected` at **7.95:1** (Linux dark),
+`selectedForeground` on `active` at **5.21:1** (macOS light) and
+`selectedForeground` on `accent` at **5.81:1** (macOS light), so no colour moves.
 A text field's edge is `border` on its own `input` fill, measured at the divider
 floor; the weakest shipped set is Linux dark at **1.25:1**, above the 1.05:1
 floor. These seven pairs take `contrastPairs` from 232 to 239; plan `314` adds
-the selected option, the sidebar status label and the row link.
+the selected option, the sidebar status label and the row link, plan `315` adds
+typed text on the canvas field, and plan `316` adds the `accent` fill a selected
+row inherits its label on, taking the contract from 247 to 248.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the

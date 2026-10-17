@@ -226,8 +226,10 @@ checked on the `input` fill and on the `background` canvas a transparent field
 paints (plan 315), so a search box or inline edit cannot lose its text. A menu
 row's `popoverForeground` on
 `hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a
-selected row's inherited `selectedForeground` on the pointer washes are checked
-too, and a field's `border` edge is checked on its own `input` fill (plan 312).
+selected row's inherited `selectedForeground` on the `accent` wash a selectable
+row hovers and on the `hover`/`active` pointer washes are checked
+too (plan 316), and a field's `border` edge is checked on its own `input` fill
+(plan 312).
 Secondary text is
 checked on `hover`, `active`, `accent` and `selected` too, so a row description
 stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
