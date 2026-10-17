@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -50,12 +51,33 @@ const imports = walk(".").flatMap(fileImports);
 const describeImport = (entry: Import): string =>
   `${entry.file} -> ${entry.specifier}`;
 
+// The token root entry is dependency-free data (no React, no GPUix runtime), so
+// the site may read it for the palette and generated tables (plan 416). Its
+// `./react` adapter and every GPUix runtime package stay forbidden.
+const ALLOWED_GPU_PACKAGES = ["@gpuixui/tokens"];
+
 describe("docs-site boundaries", () => {
   it("imports no GPUix runtime package", () => {
     const offenders = imports
       .filter((entry) => /^@gpuix(\/|ui\/)/.test(entry.specifier))
+      .filter((entry) => !ALLOWED_GPU_PACKAGES.includes(entry.specifier))
       .map(describeImport);
     expect(offenders).toEqual([]);
+  });
+
+  it("consumes only the pure token data entry", () => {
+    // If a second pure-data package is ever admitted, widen the allow-list
+    // deliberately; a subpath such as `@gpuixui/tokens/react` must never pass.
+    expect(
+      Arr.dedupe(
+        Arr.map(
+          Arr.filter(imports, (entry) =>
+            /^@gpuix(\/|ui\/)/.test(entry.specifier),
+          ),
+          (entry) => entry.specifier,
+        ),
+      ),
+    ).toEqual(ALLOWED_GPU_PACKAGES);
   });
 
   // `component-meta/schema.ts` is the test-only Effect contract; every other

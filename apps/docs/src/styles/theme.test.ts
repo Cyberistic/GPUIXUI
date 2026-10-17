@@ -3,13 +3,13 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import { describe, expect, it } from "vitest";
+import { DOCS_COLOR_ROLES, themeColors } from "@/lib/docs-theme";
 
 /**
- * Guards the docs theme identity (plan 410 §3): the light and dark themes must
- * expose the *same* semantic roles, and must actually differ. The interesting
- * failure is a role added to one theme only — the site renders correctly in the
- * theme the author checked and silently falls back to a stock Fumadocs value in
- * the other (MISSION: "Verify every component in both themes").
+ * Guards the docs theme (plan 410 §3, plan 416): the palette is the library's
+ * own `@gpuixui/tokens` identity, in both modes, with no untethered literals.
+ * The interesting failure is a role that drifts — the site keeps rendering an
+ * old brand while the docs claim the package's values.
  */
 const css = readFileSync(
   fileURLToPath(new URL("./app.css", import.meta.url)),
@@ -37,7 +37,10 @@ const roleNames = (selector: string): ReadonlyArray<string> =>
 const roleValue = (selector: string, role: string): string =>
   block(selector)
     .match(new RegExp(`${role}:\\s*([^;]+);`))?.[1]
-    ?.trim() ?? "";
+    ?.trim()
+    .toLowerCase() ?? "";
+
+const mappedRoles = Object.keys(DOCS_COLOR_ROLES);
 
 describe("docs theme", () => {
   it("defines the same semantic roles in light and dark", () => {
@@ -59,5 +62,28 @@ describe("docs theme", () => {
       (role) => roleValue(":root", role) !== roleValue(".dark", role),
     );
     expect(differing).toEqual(["--color-fd-background", "--color-fd-primary"]);
+  });
+
+  it("pins every role to the library's light theme", () => {
+    Arr.forEach(Object.entries(DOCS_COLOR_ROLES), ([variable, role]) => {
+      expect({ variable, value: roleValue(":root", variable) }).toEqual({
+        variable,
+        value: themeColors.light[role].toLowerCase(),
+      });
+    });
+  });
+
+  it("pins every role to the library's dark theme", () => {
+    Arr.forEach(Object.entries(DOCS_COLOR_ROLES), ([variable, role]) => {
+      expect({ variable, value: roleValue(".dark", variable) }).toEqual({
+        variable,
+        value: themeColors.dark[role].toLowerCase(),
+      });
+    });
+  });
+
+  it("declares no colour role that is not tied to a token", () => {
+    expect(Arr.difference(roleNames(":root"), mappedRoles)).toEqual([]);
+    expect(Arr.difference(roleNames(".dark"), mappedRoles)).toEqual([]);
   });
 });

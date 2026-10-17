@@ -3,25 +3,81 @@ title: Theming
 description: Semantic roles, light and dark themes, and the extension mechanism.
 ---
 
-GPUIXUI themes are semantic. Components read roles such as background,
-foreground, border, muted, accent, primary, destructive and focus — never
-literal colours — so an application can rebrand the library without touching
-component source.
+GPUIXUI themes are semantic. Components read roles such as `background`,
+`foreground`, `border`, `muted`, `accent`, `primary`, `destructive` and `ring` —
+never literal colours — so an application can rebrand the library without
+touching component source.
 
-Both a **light** and a **dark** theme expose the same roles. Density, radii and
-typography are part of the same token set.
+A theme is **plain data**: colours, typography, spacing, radius, density,
+elevation, border widths and icon sizes, resolved together. There is no CSS
+cascade in the native runtime and no appearance query, so the application chooses
+`lightTheme` or `darkTheme` and passes the resulting object down. The full
+reference is [`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md);
+the reasoning is in [`docs/design-system.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/design-system.md).
 
-The authoritative documents are not written yet; they are produced by the
-tokens/theming workstream and will land beside the code:
+## Semantic roles
 
-- `docs/design-system.md` — the identity and the semantic roles.
-- `docs/tokens.md` — every public token and the extension mechanism.
+Three tiers, strictly ordered:
 
-<Callout>
-Once they land, this page renders the live token tables (generated from the
-package, not retyped) so the site cannot drift from the implementation.
-</Callout>
+```
+palette (raw ramps)  →  semantic roles  →  component composition
+```
 
-The docs site itself uses the same semantic roles for its own light/dark
-themes, so the documentation's identity and the library's identity stay
-consistent.
+A component reads the middle tier only. `primary` is an intent, not a shade, so
+overriding it changes every primary action at once. Both themes expose the same
+**47 roles**; the type system and the package's colour test enforce that parity.
+
+The table below is generated from `@gpuixui/tokens` at build time, so it always
+shows the values the library ships rather than a copy that can drift.
+
+<TokenColors />
+
+## Light and dark
+
+Dark mode is designed, not inverted. The light canvas is a cool near-white
+(`#F6F8FA`) with raised surfaces in white; the dark canvas is a near-black
+(`#11141A`) with raised surfaces one step lighter. Primary is dark iris in light
+mode and light iris in dark mode, and its foreground switches with it — text on
+`primary` is not always white.
+
+Status families — `info`, `success`, `warning`, `destructive` — each carry a
+solid role with a readable foreground and a soft pair (`xSoft` /
+`xSoftForeground`) for alerts, badges and toasts. `info` is blue, never iris, so
+an informational message cannot be mistaken for a primary action.
+
+## High contrast
+
+The package also ships `highContrastLightTheme` and `highContrastDarkTheme`.
+They expose the same roles with AAA body text (7:1) and 4.5:1 essential
+boundaries, using pure black and white canvases. Because it is a value variant of
+the same role set, no component changes.
+
+## Extending a theme
+
+`createTheme` takes a mode plus overrides; `extendTheme` derives from an existing
+theme and keeps everything not overridden:
+
+```ts
+import { createTheme, extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const brand = extendTheme(lightTheme, {
+  name: "Acme light",
+  colors: { primary: "#0F766E", primaryForeground: "#FFFFFF" },
+});
+```
+
+Overrides merge field by field for typography and density, so changing the body
+size keeps its leading and weight. Components never receive a partial theme.
+
+## The docs site itself
+
+This site's light and dark themes are the library's own roles, mapped onto
+Fumadocs' `--color-fd-*` variables in `apps/docs/src/styles/app.css`. The mapping
+is pinned by `apps/docs/src/styles/theme.test.ts`: changing a token without the
+stylesheet (or the reverse) fails the test suite.
+
+Fumadocs' informational callout colours (`--color-fd-info`, `--color-fd-warning`,
+`--color-fd-error`, `--color-fd-success`) stay on the documentation platform's
+defaults. The library's matching roles are **surface** colours with their own
+foregrounds; using them as text on a page canvas would reduce contrast — notably
+for `warning` in light mode.

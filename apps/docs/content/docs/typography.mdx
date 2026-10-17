@@ -4,12 +4,32 @@ description: How GPUIXUI scales and renders text.
 ---
 
 Text in GPUIXUI is a named role, not a font size at the call site. A role
-carries size, weight, line height and letter spacing together, so a heading
-cannot drift from the typographic scale.
+carries size, weight and line height together, so a heading cannot drift from the
+typographic scale. The scale is shared by both themes and is not changed by
+density.
 
-GPUIXUI does not ship fonts; an application registers its own (GPUix supports
-TrueType and OpenType — convert WOFF/WOFF2 first).
+The table is generated from `@gpuixui/tokens` at build time, with each sample
+rendered at the role it documents.
 
-The scale itself will be defined in `docs/design-system.md` and `docs/tokens.md`
-by the tokens/theming workstream; once they land, this page renders the live
-scale, generated from the package rather than retyped here.
+<TypeScale />
+
+## Families
+
+Sans is GPUI's `.SystemUIFont` sentinel, which the runtime resolves to the
+operating system's own UI font. The library therefore never names a UI face the
+machine may not have. Monospace is a named family per platform:
+
+<PlatformTypes />
+
+## Custom fonts on the pinned runtime
+
+The repository pins `@gpuix/react` and `@gpuix/native` to **0.10.0**. That
+published release exposes no `registerFont` API, so an application cannot
+register its own typeface with it: the library can only use the system UI font and
+the platform monospace families above.
+
+`registerFont` exists on GPUix's `main` branch but is not in the published
+release. Shipping a bundled UI or brand face is tracked as plan
+[`052-register-font.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/.agents/slop/plans/052-register-font.md)
+and its native proof is blocked by the binding-install blocker (B1). Until both
+land, treat custom faces as unsupported rather than documented-but-missing.

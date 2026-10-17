@@ -152,11 +152,12 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–413)
 
-`[x]` `[█████████████░]` 13/15
+`[x]` `[██████████████░░]` 14/16
 
-`[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415)
+`[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
-`[x]` Docs identity: light/dark themes from the tokens theme — provisional HSL roles in `app.css`, reconciled with the tokens workstream later
+`[x]` Docs identity: light/dark themes from the tokens theme — reconciled to `@gpuixui/tokens` (plan 416); every `--color-fd-*` role is pinned to a library role by `theme.test.ts`
+`[x]` Theming and typography pages generated from the package (plan 416) — all 47 colour roles and 10 text roles render from `@gpuixui/tokens`, and the pinned runtime's missing `registerFont` is documented
 `[x]` Working search (server route + UI) — `/api/search?query=button` returns real results
 `[x]` Information architecture pages (`content/docs/**`) + landing page — guarded by `src/content.test.ts`
 `[x]` Component metadata contract, registry test, generated index (plan 411)
@@ -180,7 +181,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[ ]` Owner: decide whether the root `nub.lock` (produced by `nub install`) is committed for reproducible installs or ignored; it is currently untracked
 `[ ]` Repo: AGENTS/PLAN name an integration branch `main`, but only `master` exists and the shared checkout is on it — confirm the name before workstreams merge. `agent/docs-site` is green and ready to integrate; it was not merged because the shared checkout had uncommitted edits from another agent
 `[ ]` **Supervisor: two writers in one worktree.** A docs-site loop session (`run-docs-site.sh` → `opencode run`) and the interactive docs-site session wrote `workspaces/docs-site` at the same time on 2026-10-17 08:38–08:52: the loop committed the other session's in-flight edit together with its own work, and reverted a line of it mid-run. Evidence in `.agents/slop/docs-site-concurrency.md`. Per AGENTS §6 this session stopped the loop (both pids) to become the single writer. Fix: treat a live writer as owning the tree — either track interactive sessions, or refuse to start a workstream whose tree has uncommitted changes from a different pid. Owner: whoever owns `scripts/swarm-supervisor.sh`
-`[ ]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables
+`[x]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables — `@gpuixui/tokens` (root entry) is consumed by the docs site; plan 416 renders the colour and type tables from it
 `[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables — the contract is now executable in `apps/docs/src/lib/type-table.fixture.tsx` / `type-table.test.ts` (plan 415): exported type, tsdoc per prop, `@internal` for hidden props, `?` for optional
 `[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5) — the sidecar contract (`provenance.json` beside each PNG) is now enforced by `preview.test.tsx`, so a capture without it will not render
 `[ ]` Docs site: the first real component page — it must show its source via `<include>` and include it in `content/docs/components/meta.json`. The copyable-source mechanism itself landed with plan 414; the page waits on the primitives/components workstream

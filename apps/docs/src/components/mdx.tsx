@@ -7,6 +7,8 @@ import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { NativePreview } from "./preview/native-preview";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
 import { RelatedComponents } from "./related-components";
+import { TokenColors } from "./token-colors";
+import { PlatformTypes, TypeScale } from "./type-scale";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -18,6 +20,9 @@ export function getMDXComponents(components?: MDXComponents) {
     NativePreview,
     IllustrativeApproximation,
     PreviewUnavailable,
+    TokenColors,
+    TypeScale,
+    PlatformTypes,
     ...components,
   } satisfies MDXComponents;
 }

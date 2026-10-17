@@ -31,6 +31,20 @@ src/component-meta/          the component registry (plan 411)
 public/screenshots/          real native screenshots (plan 412)
 ```
 
+## Theme
+
+The site's light and dark palette **is** the library's palette. The Fumadocs
+variables in `src/styles/app.css` are the semantic roles from `@gpuixui/tokens`,
+mapped in `src/lib/docs-theme.ts`; `src/styles/theme.test.ts` asserts every mapped
+value equals `lightTheme.colors` / `darkTheme.colors` in both modes. Change the
+token package first, then the stylesheet — a mismatch fails the suite.
+
+The theming and typography pages render `<TokenColors />`, `<TypeScale />` and
+`<PlatformTypes />` from the package's data, so the documented values are the
+shipped values. The token root entry is the **only** `@gpuixui/*` import the site
+may make (`@gpuixui/tokens/react` is forbidden, as is every GPUix runtime
+package); `src/architecture.test.ts` enforces the allow-list.
+
 ## Adding a component page
 
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
