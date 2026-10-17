@@ -265,6 +265,15 @@ retired once both branches are one
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
+`[ ]` **components workstream**: a visible label is inert beside a Tier 1
+      `Checkbox`/`Switch`. GPUix has no `htmlFor`/`aria-labelledby`, the control
+      keeps its name in `label`, and the visible `Text` beside it is not part of
+      the clickable element (`selection.example.tsx`'s `Row` demonstrates this).
+      A Tier 2 `Field`/`CheckboxRow` that puts the label inside one clickable
+      element (with its own keyboard contract) is the honest fix; do not add
+      `onClick` to `Box` for it — that stays documented as "a container, not an
+      interactive surface".
+
 `[x]` **resolved (D18)**: `COMPONENTS.md`'s extra Tier 1 rows — Slider, Range
       slider, Meter, Number Field, OTP Field, Toggle, Rating — are claimed by
       the primitives workstream: they are single-purpose input/selection/value
