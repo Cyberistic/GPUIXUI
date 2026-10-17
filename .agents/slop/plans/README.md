@@ -44,6 +44,7 @@ workstream declares in its own section below.
 | [124](./124-toast-focus-hold.md) | Toast timers respect keyboard focus, not only the pointer | C/F | 115, 123 | done — 2 native tests (Toast: 10); both-direction proof |
 | [125](./125-list-select-all.md) | List select-all (`Cmd`/`Ctrl`+`A`) | C/F | 111, 120, 117 | done — 3 selector tests + 2 native tests (List: 22); both-direction proof |
 | [126](./126-menu-keyboard-open.md) | Dropdown menu keyboard opening lands on a row | C/F | 114, 117 | done — 4 native tests (DropdownMenu: 13); both-direction proof |
+| [127](./127-date-picker-bounds-and-clear.md) | Date picker `min`/`max` bounds and a clear action | C/F | 119, 117 | done — 5 calendar tests + 5 native tests, plus the trigger-ref regression fix (3 native tests); behaviour 220 |
 
 Interlocks this workstream depends on and does not own:
 
