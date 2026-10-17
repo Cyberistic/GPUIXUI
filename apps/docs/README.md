@@ -380,7 +380,7 @@ capture sidecars (`src/components/preview/select-preview.ts`):
   the suite path plus its command, and that no capture is published);
 - otherwise the "not verified" notice (tier X).
 
-Twelve component pages carry a tier-A preview (plan 449): Button, Tabs,
+The static component pages carry a tier-A preview (plan 449): Button, Tabs,
 Dropdown menu and Card, plus Text input, Checkbox, Switch, Slider, Badge, Alert,
 Progress and Avatar. Every one is a static rest state built only from the
 `--preview-*` values of the active theme, so the platform toggle re-renders all

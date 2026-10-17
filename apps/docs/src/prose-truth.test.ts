@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { previewsBySlug } from "./components/preview/approximations";
 
 /**
  * Guards the prose pages against the Phase A -> Phase C drift (plan 426).
@@ -61,6 +62,43 @@ const registered = (path: string): boolean => {
 };
 
 const pathPattern = /`((?:packages|apps|examples|docs|LICENSES)\/[^`\s]+)`/g;
+
+const numberWords: Readonly<Record<string, number>> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+  twenty: 20,
+};
+
+/**
+ * A sentence that states how many previews the site carries. The number is a
+ * word or a digit, then within one sentence an `approximation`. A digit followed
+ * by `.` is an ordered-list marker, not a count.
+ */
+const previewCountClaim =
+  /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|\d+)\b(?![.\d])(?=(?:[^\n.]|\n(?!\n)){0,64}\bapproximations?\b)/gi;
+
+const previewCountClaims = (body: string): ReadonlyArray<number> =>
+  [...body.matchAll(previewCountClaim)].map((match) => {
+    const word = (match[1] ?? "").toLowerCase();
+    return numberWords[word] ?? Number(word);
+  });
 
 /** The wording class plan 436 shipped under: any way of saying the app is absent. */
 const stalePlaygroundClaims = [
@@ -124,6 +162,27 @@ describe("prose truth", () => {
         .map((script) => `${path}: nub run ${script}`),
     );
     expect(missing).toEqual([]);
+  });
+
+  it("recognises a preview total, so the count guard cannot pass vacuously", () => {
+    expect(previewCountClaims("two labelled browser approximations")).toEqual([
+      2,
+    ]);
+    expect(previewCountClaims("four carry a labelled approximation")).toEqual([
+      4,
+    ]);
+  });
+
+  it("never states a preview total that disagrees with the registry", () => {
+    const mismatches = pages.flatMap(({ path, body }) =>
+      previewCountClaims(body)
+        .filter((claimed) => claimed !== previewsBySlug.size)
+        .map(
+          (claimed) =>
+            `${path}: claims ${claimed}, registry has ${previewsBySlug.size}`,
+        ),
+    );
+    expect(mismatches).toEqual([]);
   });
 
   it("names only repository paths that exist or are registered as planned", () => {

@@ -50,7 +50,8 @@ changed at least one component in this library.
 
 - **Per-component native screens.** The playground's scenarios are capability
   probes, not a screen per component, so component pages use tier V (native
-  coverage) and four labelled browser approximations. A per-component screen
+  coverage), or a labelled browser approximation when the rest state is static.
+  A per-component screen
   moves a page to tier S; the capture contract is enforced by the docs
   (plan 432).
 - **The published binding on CI.** This host builds the `darwin-x64` artifact
