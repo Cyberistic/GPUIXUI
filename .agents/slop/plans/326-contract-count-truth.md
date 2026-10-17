@@ -48,23 +48,33 @@ Add the imports the case needs from `./contrast.js`:
 ```
 
 Add one describe block after the `docs/tokens.md` role-count block (around line
-143):
+143), with a word helper because the prose spells small counts:
 
 ```ts
 describe("docs/tokens.md contract counts", () => {
+  const countWords = [
+    "zero", "one", "two", "three", "four", "five", "six", "seven",
+    "eight", "nine", "ten", "eleven", "twelve", "thirteen",
+  ] as const;
+  const countWord = (count: number): string =>
+    countWords[count] ?? String(count);
+
   it("states the surface counts of the nested pair lists", () => {
     const prose = markdown.replace(/\s+/g, " ");
 
     expect(inactivePairs).toHaveLength(inactiveSurfaces.length);
     expect(prose).toContain(
-      `on all ${selectionSurfaces.length} surfaces`,
+      `on all ${countWord(selectionSurfaces.length)} surfaces`,
     );
     expect(prose).toContain(
-      `the ${inactiveSurfaces.length}-surface inactive list`,
+      `the ${countWord(inactiveSurfaces.length)}-surface inactive list`,
     );
     expect(prose).not.toContain("nine-surface inactive list");
     expect(prose).toContain(
-      `the ${softBorderSurfacePairs.length / statusTones.length}-surface chip edge`,
+      "`inactivePairs` measures `disabledForeground` on its own fill, the plain surfaces, the four row washes and the four soft status fills",
+    );
+    expect(prose).toContain(
+      `the ${countWord(softBorderSurfacePairs.length / statusTones.length)}-surface chip edge`,
     );
   });
 
@@ -101,6 +111,12 @@ normalisation is required because the prose wraps lines mid-sentence.
 
 - In the same paragraph, change "plans `076`–`099` closed" to
   "plans `076`–`325` closed".
+
+- In `## Verification`, the present-tense sentence "`inactivePairs` measures
+  `disabledForeground` on its own fill, the plain surfaces and the four row
+  washes" is the second description of the grown list; append "and the four soft
+  status fills a Toast's or Alert's action sits on (plan `307`)". The guard's
+  exact-phrase case holds it.
 
 No numeric claim in `docs/design-system.md`, `COMPONENTS.md` or the package
 README changes: they already state 264, thirteen surfaces or no count.
