@@ -106,7 +106,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [307](./307-inactive-label-soft-fills.md) | The inactive label inside a status panel | F | 090–093, 306 | done |
 | [308](./308-soft-edge-surfaces.md) | The soft status edge on the surfaces a badge sits on | F | 090–095, 300, 306 | done |
 | [309](./309-state-fills-on-panels.md) | The state fills on the panel they paint on | F | 063, 076–095, 300, 306–308 | done |
-| [310](./310-platform-edit-example-contract.md) | The copy-and-own platform example the contract rejects | F | 063, 098, 301, 309 | planned |
+| [310](./310-platform-edit-example-contract.md) | The copy-and-own platform example the contract rejects | F | 063, 098, 301, 309 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

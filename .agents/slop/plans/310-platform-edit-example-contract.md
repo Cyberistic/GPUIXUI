@@ -1,6 +1,6 @@
 # Plan 310: The copy-and-own platform example the contract rejects
 
-**Status:** planned
+**Status:** done
 **Phase:** F (docs truth and extension mechanism)
 **Owner:** `tokens-theme`
 **Depends on:** `063` (platform style variants), `098` (the brand example that
@@ -187,6 +187,19 @@ Run from the worktree root.
 - The two-direction proofs above were run and recorded in §8.
 - `nub run check`, `nub run lint`, `nub run test` are green.
 
-## 8. Verification record
+## 8. Verification record (2026-10-18)
 
-Filled in after implementation.
+- **Red before the fix.** With the new contract test and the shipped example,
+  `nub run --filter @gpuixui/tokens test -- platforms` failed four tests,
+  including `dark primary: expected 2.9561901796603074 to be greater than or
+  equal to 4.5` — the two pairs from §1 reproduced through the public checker.
+- **Green after the fix.** Same command: 43 files, 2846 tests pass.
+- **Second direction.** Deleting `primaryActive` from `contosoPrimary.dark`
+  failed `moves the whole Contoso family` with
+  `dark primaryActive: expected '#9BDDFF' not to be '#9BDDFF'` (the Windows
+  value) and `keeps the authored style on the same family` with
+  `expected '#E0E3FF' to be '#9BDDFF'`. Restored.
+- **Full gates.** `nub run test` → 2846 pass; `nub run check` → green;
+  `nub run lint` → green.
+- Values shipped exactly as §2.1; no theme, pair, floor or platform style file
+  changed.

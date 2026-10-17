@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 77/101
+`[x]` `[████████░░]` 78/102
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -391,6 +391,12 @@ canvas, Linux light `accent` 1.001:1 on the panel and the AAA dark `accent`
 1.034:1; `stateFillSurfacePairs` adds the 13 fills on the four surfaces (180 →
 232 pairs), the light quiet panel moves one step toward the card and the failing
 accents one step (plan 309)
+`[x]` Hold the copy-and-own platform example to the contract it teaches — it
+moved only `primary` and `primaryHover`, inherited the Windows dark black
+foreground onto a `#005A9E` fill and measured 2.96:1 on the fill and 2.12:1 on
+the hover, while only the brand example ran the checker; both platform examples
+now share one Contoso primary family, the authored style names the whole family,
+and both are held to `themeContrastFailures` in both modes (plan 310)
 `[ ]` Cross-team: `primitives` and `components` replace `opacity: 0.5` disabled
 dimming with the designed `disabled` / `disabledForeground` pair plus the
 `border` edge — an alpha composite makes the label's readability depend on the
