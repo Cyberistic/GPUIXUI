@@ -1,4 +1,4 @@
-# 020 — Platform type styles: one real theme per platform
+# 051 — Platform type styles: one real theme per platform
 
 **Workstream:** `tokens-theme`
 **Phase:** B (working foundation), extending plan 011
@@ -241,7 +241,7 @@ New row in **Design system**:
 
 ### 3.11 `TODO.md`
 
-Add and tick: `` `[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs platform toggle (plan 020)``.
+Add and tick: `` `[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs platform toggle (plan 051)``.
 
 ## 4. Commands and expected results
 

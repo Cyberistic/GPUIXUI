@@ -1,5 +1,5 @@
 /**
- * Guards the defect fixed in plan 020: the family a platform uses was a private
+ * Guards the defect fixed in plan 051: the family a platform uses was a private
  * `monoByPlatform` record inside `typography.ts` and the UI face was an
  * unverified literal, so nothing could ask for a platform's type, a preview
  * could not obtain a real theme, and nothing stopped a theme naming a CSS comma

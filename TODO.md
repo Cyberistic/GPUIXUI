@@ -50,7 +50,7 @@ starts a new session before the previous one closes (evidence:
 
 `[x]` `[████████████]` 13/15
 
-`[x]` Write and index the tokens/theme plan set (plans 010–020)
+`[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -68,7 +68,7 @@ prebuilt `dist` (plan 016)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
 `[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
-platform toggle (plan 020)
+platform toggle (plan 051)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[ ]` Add motion tokens (durations/easings) once a component consumes them
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:

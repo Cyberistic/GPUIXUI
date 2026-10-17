@@ -102,7 +102,7 @@ git -C ~/GPUIXUI worktree add workspaces/tokens-platform \
 nub install
 ```
 
-It then delivered plan 020 (`platforms.ts`, `platforms.test.ts`,
+It then delivered plan 051 (`platforms.ts`, `platforms.test.ts`,
 `platforms.example.ts` plus the docs and inventory rows) on `agent/tokens-platform`
 with all gates green, leaving `agent/tokens-theme` untouched. This is a workaround,
 not the fix: the supervisor only manages its five named workstreams, so an extra
