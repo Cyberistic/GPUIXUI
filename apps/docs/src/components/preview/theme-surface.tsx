@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useSyncExternalStore, type CSSProperties } from "react";
 import {
   elevationShadow,
   platformTheme,
@@ -81,19 +81,32 @@ export const previewVars = (theme: Theme): PreviewStyle => ({
 });
 
 /**
- * The docs' current mode. `next-themes` reports `resolvedTheme` only after the
- * client mounts; SSR and a stale read fall back to light, which is the same
- * default the site ships. The `undefined` is the library boundary, not a domain
- * value, so it is handled once here.
+ * `next-themes` cannot know the resolved mode until the client mounts, and the
+ * MDX body is rendered behind `use(page.load())`, so a surface that only reads
+ * the context keeps the server's `undefined` for good (plan 444). This snapshot
+ * is `false` in the server and hydration renders — matching the HTML — and
+ * React re-renders once on the client with `true`.
  */
-const docsMode = (resolved: string | undefined): ThemeMode =>
-  resolved === "dark" ? "dark" : "light";
+const subscribeToMount = () => () => {};
+const clientMounted = () => true;
+const serverMounted = () => false;
+
+/** The mode a preview paints: light until hydration, then the docs' mode. */
+export const previewMode = (
+  mounted: boolean,
+  resolved: string | undefined,
+): ThemeMode => (mounted && resolved === "dark" ? "dark" : "light");
 
 /** The active theme: the docs' mode resolved through the chosen platform. */
 export function usePreviewTheme(): Theme {
   const { resolvedTheme } = useTheme();
   const { platform } = usePlatform();
-  return platformTheme(themes[docsMode(resolvedTheme)], platform);
+  const mounted = useSyncExternalStore(
+    subscribeToMount,
+    clientMounted,
+    serverMounted,
+  );
+  return platformTheme(themes[previewMode(mounted, resolvedTheme)], platform);
 }
 
 /** The token surface every preview paints on; it reads no doc-site colour. */

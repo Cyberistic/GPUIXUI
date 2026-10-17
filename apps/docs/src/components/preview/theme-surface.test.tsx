@@ -7,19 +7,40 @@ import {
   platformTheme,
   darkTheme,
 } from "@gpuixui/tokens";
-import { previewVars } from "./theme-surface";
+import { previewMode, previewVars } from "./theme-surface";
 
 /**
  * Guards the token surface behind every labelled preview (plan 434). The
  * load-bearing failures are a preview that hard-codes a palette, and a surface
  * that reads only part of the theme — the latter would silently ignore the real
  * per-platform values when `packages/tokens` ships them.
+ *
+ * Plan 444 adds the mode rule: a dark docs page used to paint light previews
+ * because the surface took `next-themes`' pre-hydration `undefined` and never
+ * re-rendered. The three cases below pin both halves of the fix — the server
+ * render stays light (or React hydrates mismatched HTML) and the hydrated
+ * render follows the docs.
  */
 
 const vars = previewVars(lightTheme);
 
 const source = (file: string): string =>
   readFileSync(fileURLToPath(new URL(file, import.meta.url)), "utf8");
+
+describe("previewMode", () => {
+  it("paints the docs' dark palette once hydrated", () => {
+    expect(previewMode(true, "dark")).toBe("dark");
+  });
+
+  it("stays light before hydration so the client render matches the HTML", () => {
+    expect(previewMode(false, "dark")).toBe("light");
+  });
+
+  it("falls back to light when the mode is unknown or light", () => {
+    expect(previewMode(true, undefined)).toBe("light");
+    expect(previewMode(true, "light")).toBe("light");
+  });
+});
 
 describe("previewVars", () => {
   it("maps every colour role, scale and metric the theme carries", () => {

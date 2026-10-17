@@ -88,8 +88,11 @@ only the frames a page renders:
 
 Every preview renders with the site's active platform style (plan 420): the
 toggle in the navigation writes `?platform=darwin|linux|win32|default`, and the
-provider applies `platformTheme(theme, platform)` from `@gpuixui/tokens`. A
-screenshot capture records its platform in the sidecar and keeps that caption;
+provider applies `platformTheme(theme, platform)` from `@gpuixui/tokens`. It also
+follows the docs' light/dark mode: the preview paints `themes.light` on the
+server and, one client render after hydration, `themes.dark` when the site is
+dark (plan 444) — the server stays light so the HTML never hydrates mismatched.
+A screenshot capture records its platform in the sidecar and keeps that caption;
 the toggle does not relabel a macOS capture as Windows.
 
 **Tier A is token-driven, not a second palette** (plan 434). A labelled

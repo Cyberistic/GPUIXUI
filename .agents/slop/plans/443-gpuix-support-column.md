@@ -179,3 +179,10 @@ value (it already renders the whole index).
   `check-types`, `lint`, the docs build and `smoke:build` green; the dev server
   serves `/docs/components/button` with `data-gpuix="ours"` and the meaning.
 
+## 9. Follow-up found while verifying
+
+The browser check for this plan found a separate defect on the same page: in
+dark mode every tier-A preview painted the **light** palette. It is fixed and
+proven in plan `444-preview-dark-mode.md`.
+
+
