@@ -365,7 +365,7 @@ retired once both branches are one
 
 ## Swarm-owned blockers (fix these)
 
-- **B1** ~~GPUix native bindings fail to install~~ **resolved** — the `darwin-x64` 0.10.0 binding builds from source (`gpui_macos/runtime_shaders`) and the native suite is 52/52 on this host (plan `140`, ADR 0003).
+- **B1** ~~GPUix native bindings fail to install~~ **resolved** — the `darwin-x64` 0.10.0 binding builds from source (`gpui_macos/runtime_shaders`) and the native suite is 53/53 on this host (plan `140`, ADR 0003).
 - **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
 
 Both are specified in ; each fix starts with a plan under .
