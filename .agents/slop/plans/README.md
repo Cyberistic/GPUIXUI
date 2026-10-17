@@ -17,21 +17,63 @@ Naming: `NNN-kebab-title.md`, numbered in dependency order. One plan per phase,
 one per package, plus a plan for each cross-cutting concern (native smoke test,
 licensing, docs site).
 
-**Number ranges by workstream**, so parallel agents cannot collide:
-`000–099` cross-cutting/platform, `100–199` playground (`apps/playground`,
-`packages/testing`), `200–299` tokens+theme, `300–399` primitives+icons,
-`400–499` components, `500–599` docs site. Take the next free number in your
-range.
+**Number blocks.** Plans are counted across every worktree (see `PLAN.md` D7).
+Blocks are reserved so concurrent workstreams do not collide:
+
+| Block | Reserved for |
+| ----- | ------------ |
+| `010–019` | tokens and theming |
+| `020–049` | primitives, icons, Phase C |
+| `050–099` | free |
+| `100–199` | packages, apps, smoke test |
+| `200–299` | reference adoption and gap sequencing |
+| `300–399` | free |
+| `400–499` | docs site |
 
 ## The plan set
 
+### `tokens-theme` (block `010–019`, plus one overflow plan)
+
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| `100` | `packages/testing` — the platform-free smoke harness | B | — | **landed** (`packages/testing` green on this host) |
-| `110` | The native smoke test (cross-cutting) | B | 100, 120 | 0.10 suite exits 2 on this host (ADR 0001); the 0.5.1 legacy probe is landed at `apps/playground/legacy-probe` (ADR 0002) |
-| `120` | `apps/playground` — native playground + smoke runner | B | 100 | **landed**: shell, `SplitPane`, 8 scenarios, CLI; `smoke` exits `2` on this host with the ADR 0001 evidence and writes no report (§2.1 of the plan records the API deviations) |
-| `130` | Tier 3/4 feasibility probes | B→D | 100, 110, 120 | **landed**: `table-select-sort`, `table-column-resize`, `workspace-tab-drag` registered (§3 records the deviations); verdicts need a supported host |
-| `140` | Build the `darwin-x64` GPUix binding from source (blocker B1) | B | 110, 120, 130 | **landed**: the binding builds with `gpui_macos/runtime_shaders` (no `xcrun metal`) and loads; the suite is **11/11 green on this host**, exit `0` (§4 records every measured fact) |
+| [010](./010-phase-b-design-tokens.md) | Phase B: design tokens and theming | B | Phase A audit | done |
+| [011](./011-package-tokens.md) | Package: `@gpuixui/tokens` | B | 010 | done |
+| [012](./012-docs-design-system.md) | Docs: design system and token catalogue | B | 011 | done |
+| [013](./013-high-contrast-theme.md) | High-contrast accessibility themes | B | 011 | done |
+| [014](./014-status-tones-and-colour-helpers.md) | Status tones and colour helpers | B | 011, 013 | done |
+| [015](./015-colour-role-index.md) | Colour role index for documentation | B | 011, 013, 014 | done |
+| [016](./016-tokens-consumable-exports.md) | `@gpuixui/tokens` resolvable without a prebuilt `dist` | B | 011 | done |
+| [017](./017-focus-ring-and-docs-truth.md) | Focus ring helper and the focus documentation truth pass | B | 011, 016 | done |
+| [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
+| [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | in progress |
+| [051](./051-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
+| [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | planned — native proof blocked by B1 |
+
+Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
+`docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
+agent that owns its paths. The block was full at 019 (`010–019` in the table
+above) and 020–049 belongs to primitives, icons and Phase C, so 051 takes the
+first free block — as the tokens workstream's docs-layering plan (050) does.
+052 is rescued from the abandoned `agent/fonts` branch (`6fc7641`), with its
+step 1 answered from the pinned runtime's source; its native proof is blocked by
+B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
+052's and 017's native proofs are unblocked; the playground runs a locally built
+`darwin-x64` 0.10.0 binding.
+
+### `playground` (block `100–140`)
+
+Owns `apps/playground` and `packages/testing`: the native smoke harness, the
+playground shell and the feasibility probes. Every number in the block is used;
+`150+` is the next free number here.
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [100](./100-package-testing.md) | `packages/testing` — the platform-free smoke harness | B | — | **landed** |
+| [110](./110-native-smoke-test.md) | The native smoke test (cross-cutting) | B | 100, 120 | **landed**: the suite runs on this host against a locally built 0.10.0 binding; the 0.5.1 legacy probe is at `apps/playground/legacy-probe` (ADR 0002) |
+| [120](./120-app-playground.md) | `apps/playground` — native playground + smoke runner | B | 100 | **landed**: shell, `SplitPane`, the scenario registry and the CLI (§2.1 records the API deviations) |
+| [130](./130-tier3-4-feasibility-probes.md) | Tier 3/4 feasibility probes | B→D | 100, 110, 120 | **landed**: `table-select-sort`, `table-column-resize`, `workspace-tab-drag` green on this host (§3 records the deviations) |
+| [140](./140-gpuix-native-darwin-x64-build.md) | Build the `darwin-x64` GPUix binding from source (blocker B1) | B | 110, 120, 130 | **landed**: `gpui_macos/runtime_shaders` removes the blocking `xcrun metal` step; **12/12 green on this host**, exit `0` (§4 records every measured fact) |
+| [150](./150-native-theme-gallery.md) | Native theme gallery: the token layer in the real runtime | B | 140, 011 | planned |
 
 Cross-cutting records:
 
@@ -40,6 +82,26 @@ Cross-cutting records:
 - `.agents/adr/0002-two-gpuix-versions.md` — the library targets 0.10.0; 0.5.1
   is the newest version that runs on this Intel Mac, and the measured matrix of
   what it does and does not verify (focus and wheel scroll are the gaps).
+- `.agents/adr/0003-darwin-x64-source-build.md` — the locally built
+  `darwin-x64` 0.10.0 binding and the provenance of every `verified 0.10.0`
+  verdict.
+
+### Reference adoption (block `200–299`)
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| `200` | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | `020`, `030`, `110–117` | planned |
+| `201` | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | planned |
+| `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | planned |
+| `203` | Adopt `adabraka-ui`'s GPUI limits map as `docs/gpuix-capabilities.md`, re-verified against GPUix 0.10.0 | A | `020`, `110` | planned |
+| `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |
+| `205` | Implement the "not provided by GPUix" cluster | C/E | `200`, `201`, `203`, `030`, `110–117` | planned |
+
+> The `200` block was written by the reference-adoption executor on
+> 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
+> (`010–019`, `020–040`, `051`, `100–130`, `410–412`) live on their own branches
+> and are merged into `main` as each workstream completes; this index is the
+> union.
 
 ## How to use a plan
 
