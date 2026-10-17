@@ -25,6 +25,7 @@ import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
 import { FieldExample } from "./field.example.js";
 import { ListExample } from "./list.example.js";
+import { MessageScrollerExample } from "./message-scroller.example.js";
 import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
 import { SearchInputExample } from "./search-input.example.js";
@@ -51,6 +52,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "empty-state": EmptyStateExample,
   field: FieldExample,
   list: ListExample,
+  "message-scroller": MessageScrollerExample,
   pagination: PaginationExample,
   popover: PopoverExample,
   "search-input": SearchInputExample,

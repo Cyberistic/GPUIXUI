@@ -33,6 +33,7 @@ import { inlineEditMeta } from "./inline-edit.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
 import { mentionInputMeta } from "./mention-input.js";
+import { messageScrollerMeta } from "./message-scroller.js";
 import { navigationMenuMeta } from "./navigation-menu.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
@@ -91,6 +92,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   keyboardShortcutsMeta,
   listMeta,
   mentionInputMeta,
+  messageScrollerMeta,
   navigationMenuMeta,
   paginationMeta,
   popoverMeta,

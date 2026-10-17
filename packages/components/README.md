@@ -47,6 +47,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
 | `src/navigation-menu.tsx` | NavigationMenu: one open anchored panel, roving triggers |
 | `src/mention-input.tsx`, `src/mention/logic.ts` | MentionInput: ranked `@` suggestions over the anchored layer |
+| `src/message-scroller.tsx`, `src/message-scroller/logic.ts` | MessageScroller: pinned follow, no yank, unread count and jump-to-latest over a bounded scroll viewport |
 | `src/preview-card.tsx` | PreviewCard: hover/focus preview with pointer travel into the card |
 | `src/color-picker.tsx`, `src/color/hex.ts` | ColorPicker: theme swatches and a normalising HEX field (no gradients in 0.10.0) |
 | `src/hotkey-recorder.tsx`, `src/hotkey/logic.ts` | HotkeyRecorder: capture a chord, reusing the accelerator model |

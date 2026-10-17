@@ -46,6 +46,12 @@ import {
 import { EmptyState } from "../empty-state.js";
 import { darkTheme, lightTheme, type Theme } from "../internal/theme.js";
 import { List, ListItem, ListItemTitle } from "../list.js";
+import {
+  MessageScroller,
+  MessageScrollerItem,
+  MessageScrollerJumpToLatest,
+  MessageScrollerViewport,
+} from "../message-scroller.js";
 import { SearchInput } from "../search-input.js";
 import {
   TimePicker,
@@ -278,6 +284,26 @@ describe("theme matrix", () => {
         expect(root.renderer.findByTestId("menu")?.style.backgroundColor).toBe(
           theme.colors.popover,
         );
+      },
+    );
+  });
+
+  it("MessageScroller takes its viewport surface from the theme", () => {
+    bothThemes(
+      () => (
+        <MessageScroller label="Conversation">
+          <MessageScrollerViewport testId="transcript" style={{ height: 80 }}>
+            <MessageScrollerItem>
+              <text>Hello</text>
+            </MessageScrollerItem>
+          </MessageScrollerViewport>
+          <MessageScrollerJumpToLatest />
+        </MessageScroller>
+      ),
+      (root, theme) => {
+        expect(
+          root.renderer.findByTestId("transcript")?.style.backgroundColor,
+        ).toBe(theme.colors.background);
       },
     );
   });

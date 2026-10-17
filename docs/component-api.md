@@ -243,6 +243,7 @@ parts.
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
+| Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -255,7 +256,6 @@ implementation cannot invent a shape):
 
 | Component | Parts | Source |
 | --------- | ----- | ------ |
-| Message scroller | `MessageScrollerRoot`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | plan 206 |
 | Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
 | Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
