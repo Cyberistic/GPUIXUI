@@ -378,12 +378,79 @@ describe("platform style examples", () => {
   it("starts from a shipped variant and ships an edited look", () => {
     const edited = resolveEditedPlatformTheme("dark");
     expect(edited.name).toBe("Contoso");
-    expect(edited.colors.primary).toBe("#005A9E");
+    expect(edited.colors.primary).toBe("#5CB8FF");
     expect(edited.colors.background).toBe(
       platformStyles.win32.colors.dark.background,
     );
     expect(edited.typography.mono).toBe("Consolas");
     expect(edited.radius.md).toBe(3);
+  });
+
+  // Plan 310: the copy-and-own example named only `primary` and `primaryHover`
+  // and inherited the Windows dark `primaryForeground` (`#000000`), which is
+  // 2.96:1 on that fill and 2.12:1 on its hover — a documented extension path
+  // the package's own checker rejected.
+  it("holds both documented examples to the contrast contract", () => {
+    modes.forEach((mode) => {
+      expect(
+        themeContrastFailures(resolveEditedPlatformTheme(mode)),
+        `edited ${mode}`,
+      ).toEqual([]);
+      expect(
+        themeContrastFailures(resolveAuthoredPlatformStyle(mode)),
+        `authored ${mode}`,
+      ).toEqual([]);
+    });
+  });
+
+  it("moves the whole Contoso family, not only the fill", () => {
+    modes.forEach((mode) => {
+      const edited = resolveEditedPlatformTheme(mode).colors;
+      const base = platformStyles.win32.colors[mode];
+      (["primaryHover", "primaryActive", "primaryText"] as const).forEach(
+        (role) => {
+          expect(edited[role], `${mode} ${role}`).not.toBe(base[role]);
+        },
+      );
+      // The dark foreground has to move — the inherited black was the 2.96:1
+      // failure. A light brand may legitimately keep white, so the on-colour
+      // test below holds that one to the fill instead.
+      expect(edited.primaryForeground, "dark").not.toBe(
+        platformStyles.win32.colors.dark.primaryForeground,
+      );
+    });
+  });
+
+  it("keeps the on-colour foreground above the floor on every Contoso fill", () => {
+    modes.forEach((mode) => {
+      const colors = resolveEditedPlatformTheme(mode).colors;
+      (["primary", "primaryHover", "primaryActive"] as const).forEach(
+        (fill) => {
+          expect(
+            contrastRatio(colors.primaryForeground, colors[fill]),
+            `${mode} ${fill}`,
+          ).toBeGreaterThanOrEqual(contrastFloors.default.secondary);
+        },
+      );
+    });
+  });
+
+  it("keeps the authored style on the same family as the edited theme", () => {
+    modes.forEach((mode) => {
+      const edited = resolveEditedPlatformTheme(mode).colors;
+      const authored = resolveAuthoredPlatformStyle(mode).colors;
+      (
+        [
+          "primary",
+          "primaryForeground",
+          "primaryHover",
+          "primaryActive",
+          "primaryText",
+        ] as const
+      ).forEach((role) => {
+        expect(authored[role], `${mode} ${role}`).toBe(edited[role]);
+      });
+    });
   });
 
   it("applies a style authored from scratch and inherits what it omits", () => {

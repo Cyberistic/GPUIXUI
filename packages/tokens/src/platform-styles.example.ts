@@ -6,8 +6,33 @@ import {
   systemUiFont,
   type PlatformStyle,
   type Theme,
+  type ThemeColors,
   type ThemeMode,
 } from "./index.js";
+
+/**
+ * Contoso's primary family. A brand that moves a fill moves the whole family —
+ * fill, foreground, hover, pressed and text — because an inherited state keeps
+ * the base hue and an inherited foreground can miss the on-colour floor. The
+ * Windows dark foreground this example used to inherit measured 2.96:1 on the
+ * fill and 2.12:1 on the hover (plan 310).
+ */
+const contosoPrimary = {
+  light: {
+    primary: "#0F6CBD",
+    primaryForeground: "#FFFFFF",
+    primaryHover: "#0C5694",
+    primaryActive: "#0A4A7D",
+    primaryText: "#0A4A7D",
+  },
+  dark: {
+    primary: "#5CB8FF",
+    primaryForeground: "#001A33",
+    primaryHover: "#8CCFFF",
+    primaryActive: "#A6DBFF",
+    primaryText: "#8CCFFF",
+  },
+} as const satisfies Readonly<Record<ThemeMode, Partial<ThemeColors>>>;
 
 /**
  * The copy-and-own story: start from a shipped platform variant and edit any
@@ -17,7 +42,7 @@ import {
 export const resolveEditedPlatformTheme = (mode: ThemeMode): Theme =>
   extendTheme(getPlatformTheme("win32", mode), {
     name: "Contoso",
-    colors: { primary: "#005A9E", primaryHover: "#004578" },
+    colors: contosoPrimary[mode],
     radius: { md: 3, lg: 6 },
   });
 
@@ -34,9 +59,7 @@ export const contosoPlatformStyle = {
   },
   colors: {
     light: {
-      primary: "#0F6CBD",
-      primaryForeground: "#FFFFFF",
-      primaryHover: "#0C5694",
+      ...contosoPrimary.light,
       accent: "#E8F1FB",
       accentForeground: "#004578",
       ring: "#0F6CBD",
@@ -44,9 +67,7 @@ export const contosoPlatformStyle = {
       selectedForeground: "#003A6B",
     },
     dark: {
-      primary: "#5CB8FF",
-      primaryForeground: "#001A33",
-      primaryHover: "#8CCFFF",
+      ...contosoPrimary.dark,
       accent: "#0C3559",
       accentForeground: "#BCE0FF",
       ring: "#5CB8FF",
