@@ -84,6 +84,7 @@ none paints a literal and none scripts hover or press
 | percentage sizing inside a floating layer | `minWidth: "100%"` resolves against the layer, not the trigger | `Select` measures its trigger's painted width and passes a numeric `minWidth` to the list (plan 062) |
 | a layer that clamps instead of flipping | `fit="snap"` clamps a layer inside the window **without flipping it**, so a bottom-side layer can cover its trigger, and a top-side one can cover it at the top edge | `Select` measures its trigger, estimates the list height from its own styles, and opens above when the list does not fit below; `Tooltip` measures its root and flips below when the tip does not fit above. An explicit `side` still wins in both (plans 066, 067) |
 | no list height cap | the layer grows past the window and the options past the edge are unreachable | `Select` caps a long list to the free space on its side and scrolls it; rows keep their height, so the list scrolls instead of squashing (plan 068) |
+| a highlighted option outside a capped layer | the layer scrolls only with the wheel, and the item's `highlighted` state is the only signal the runtime gives | `Select` scrolls the newly highlighted option into view through the renderer's `scrollIntoView`, so the arrows keep the active option visible (plan 069) |
 
 `packages/icons` supplies the icons; `@gpuixui/tokens` supplies the themes.
 
@@ -120,7 +121,7 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-17: **15 files, 161 tests, all passing** —
+runtime-proven too. Measured 2026-10-17: **15 files, 163 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -128,8 +129,8 @@ measured against the preset's metrics, a platform theme's mono family reaching
 the paint (plan 055), a tooltip measured against its trigger in a column and a
 row and flipped below at the window's top edge (plans 060, 067), a radio group's failed validation measured on the circles (plan
 061), a select's list measured against its trigger's width and — at the window's
-bottom edge — opened above the trigger instead of over it and a long list capped and scrolled (plans 062, 066,
-068), a
+bottom edge — opened above the trigger instead of over it, a long list capped and
+scrolled with the keyboard highlight kept in view (plans 062, 066, 068, 069), a
 slider drag measured outside the track with the non-primary buttons refused
 (plan 063),
 an `autoFocus` field's ring painted from mount and cleared on blur (plan

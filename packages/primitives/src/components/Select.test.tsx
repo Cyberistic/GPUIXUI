@@ -41,6 +41,8 @@ const handlers: SelectHandlers = {
   onOpenChange: () => {},
   onValueChange: () => {},
   registerTrigger: () => {},
+  registerItem: () => () => {},
+  onHighlight: () => {},
 };
 
 const itemsOf = (element: Parameters<typeof elementProp>[0]) =>

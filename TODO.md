@@ -292,9 +292,15 @@ retired once both branches are one
       capped to the free space on its side and scrolls; option rows are
       `flexShrink: 0` so they keep their height instead of squashing. Measured
       cap + wheel scroll + last option reachable, with three regression
-      directions (plan 068). **Limitation recorded:** GPUix owns the highlight
-      and exposes no active index, so the keyboard does not scroll the list
-      (29 Down presses committed "Option 28" at offset `0`)
+      directions (plan 068). **Its recorded keyboard limitation is fixed by plan
+      069** (the published `SelectItem` does expose `highlighted`)
+`[x]` `packages/primitives`: **`Select`'s keyboard highlight did not scroll the
+      capped list.** Plan 068 concluded there was no active-index signal; the
+      published `SelectItem` passes `highlighted` to its state children, so the
+      wrapper now scrolls the newly highlighted option into view through the
+      renderer. Measured: 40 Down presses move the 60-option list from offset
+      `0` to `-455` and keep "Option 39" inside it; a list that fits does not
+      move. Two runtime tests, both directions proven (plan 069)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

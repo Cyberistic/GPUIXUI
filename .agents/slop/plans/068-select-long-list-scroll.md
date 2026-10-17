@@ -136,3 +136,9 @@ move past the fold. Measured: 29 Down presses moved the highlight to
 "Option 28" and Enter committed it with the list still at offset `0`. The wheel
 and pointer reach every option; a long list still wants a combobox.
 
+**Correction (plan 069, 2026-10-17):** the active-index conclusion was wrong.
+The published `SelectItem` passes `{ highlighted }` to its state children, and
+`renderer.scrollIntoView` scrolls the capped list (measured `0 → -455` after 40
+Down presses). Plan 069 adds the keyboard scroll; this plan's other result — the
+cap, the scroller and the kept row height — stands.
+

@@ -629,6 +629,104 @@ it("caps a long Select list to the window and scrolls it", async () => {
   expect(last.y + last.height).toBeLessThanOrEqual(list.y + list.height);
 });
 
+it("scrolls a capped Select list to follow the keyboard highlight", async () => {
+  // The bug guarded: the highlight moved but the capped list stayed at offset
+  // 0, so 40 Down presses highlighted "Option 39" at y 1249 — outside the list
+  // — and Enter committed an option the user never saw (plan 069).
+  const runtime = await openWindow();
+  const options = Array.from({ length: 60 }, (_, index) => ({
+    value: `option-${index}`,
+    label: `Option ${index}`,
+  }));
+  runtime.render(
+    <Surface>
+      <Select testId="sel" label="Many" placeholder="Pick" options={options} />
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const listId = selectListId(runtime, "Option 0");
+  const list = selectListBounds(runtime, "Option 0");
+  const before = runtime.renderer.getScrollOffset(listId);
+  expect(before).not.toBeNull();
+  const focusedId = Option.getOrElse(
+    Option.map(runtime.focusedElement(), (element) => element.id),
+    () => expect.fail("the open list holds no focus"),
+  );
+  Arr.forEach(Arr.range(1, 40), () => {
+    runtime.renderer.nativeSimulateKeyDown(focusedId, "down");
+    runtime.renderer.dispatchNativeEvents();
+    runtime.flush();
+  });
+  // The list scrolled...
+  const after = runtime.renderer.getScrollOffset(listId);
+  expect(
+    Option.getOrElse(Option.fromNullishOr(after?.[1]), () => 0),
+  ).toBeLessThan(Option.getOrElse(Option.fromNullishOr(before?.[1]), () => 0));
+  // ...to the highlighted row, which is now inside the list.
+  const highlighted = Option.getOrElse(
+    Arr.findFirst(runtime.all(), (element) => {
+      if (element.text === null) return false;
+      const row = Option.fromNullishOr(element.parentId);
+      return Option.exists(row, (parent) =>
+        Option.exists(
+          Option.fromNullishOr(runtime.renderer.getElement(parent)),
+          (node) => node.style["backgroundColor"] === testTheme.colors.hover,
+        ),
+      );
+    }),
+    () => expect.fail("no highlighted option row"),
+  );
+  expect(highlighted.text).toBe("Option 39");
+  const bounds = Option.getOrElse(runtime.boundsOfId(highlighted.id), () =>
+    expect.fail("the highlighted option painted no box"),
+  );
+  expect(bounds.y).toBeGreaterThanOrEqual(list.y);
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(list.y + list.height);
+});
+
+it("leaves a Select list that fits the window alone", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Few"
+        placeholder="Pick"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+          { value: "c", label: "Gamma" },
+        ]}
+      />
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const listId = selectListId(runtime, "Alpha");
+  const list = selectListBounds(runtime, "Alpha");
+  const focusedId = Option.getOrElse(
+    Option.map(runtime.focusedElement(), (element) => element.id),
+    () => expect.fail("the open list holds no focus"),
+  );
+  Arr.forEach(Arr.range(1, 2), () => {
+    runtime.renderer.nativeSimulateKeyDown(focusedId, "down");
+    runtime.renderer.dispatchNativeEvents();
+    runtime.flush();
+  });
+  expect(runtime.renderer.getScrollOffset(listId)).toBeNull();
+  const gamma = Option.getOrElse(
+    Arr.findFirst(runtime.all(), (element) => element.text === "Gamma"),
+    () => expect.fail("the last option vanished"),
+  );
+  const bounds = Option.getOrElse(runtime.boundsOfId(gamma.id), () =>
+    expect.fail("the last option painted no box"),
+  );
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(list.y + list.height);
+});
+
 it("opens a Tooltip below a trigger at the window's top edge", async () => {
   // The bug guarded: the runtime's floating layer defaults to `side="top"` and
   // `fit="snap"`, which clamps without flipping (plan 156 §8), so this tooltip

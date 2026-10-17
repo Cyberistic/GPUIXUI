@@ -18,7 +18,13 @@
  * for anything the data shape cannot express.
  */
 
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
@@ -182,7 +188,32 @@ export interface SelectHandlers {
   readonly onValueChange: (value: string) => void;
   /** The trigger's host instance, so the wrapper can measure its width. */
   readonly registerTrigger: (instance: PublicInstance | null) => void;
+  /** An option's host instance, so its row can be scrolled into view. */
+  readonly registerItem: (
+    index: number,
+  ) => (instance: PublicInstance | null) => void;
+  /** Called when an option becomes highlighted, by keyboard or pointer. */
+  readonly onHighlight: (index: number) => void;
 }
+
+/**
+ * Scrolls a newly highlighted option into view; renders nothing.
+ *
+ * Mounted only while its item is highlighted, so the effect fires once per
+ * highlight change and not on unrelated re-renders. `scrollIntoView` is the
+ * renderer's own API: it walks to the nearest scroll container, so a list that
+ * fits is left alone.
+ */
+const ScrollWhenHighlighted = ({
+  index,
+  onHighlight,
+}: {
+  readonly index: number;
+  readonly onHighlight: (index: number) => void;
+}): null => {
+  useEffect(() => onHighlight(index), [index, onHighlight]);
+  return null;
+};
 
 /** The element tree `Select` renders. Pure in its arguments. */
 export const renderSelect = (
@@ -253,9 +284,10 @@ export const renderSelect = (
           placement.maxHeight,
         )}
       >
-        {Arr.map(options, (option) => (
+        {Arr.map(options, (option, index) => (
           <SelectItem
             key={option.value}
+            ref={handlers.registerItem(index)}
             value={option.value}
             role="option"
             aria-label={option.label}
@@ -263,7 +295,17 @@ export const renderSelect = (
             disabled={option.disabled}
             style={selectItemStyle(theme)}
           >
-            {option.label}
+            {(state) => (
+              <>
+                {state.highlighted ? (
+                  <ScrollWhenHighlighted
+                    index={index}
+                    onHighlight={handlers.onHighlight}
+                  />
+                ) : null}
+                {option.label}
+              </>
+            )}
           </SelectItem>
         ))}
       </SelectContent>
@@ -288,10 +330,26 @@ export const Select = (props: SelectProps): ReactElement => {
     undefined,
   );
   const trigger = useRef<number | null>(null);
+  const items = useRef<Map<number, number>>(new Map());
   const state = useControlState(
     props.value,
     props.defaultValue ?? "",
     props.onChange,
+  );
+  /**
+   * The renderer scrolls a highlighted row into its nearest scroll container.
+   *
+   * Stable across renders so a highlighted row is not scrolled again on an
+   * unrelated re-render, which would fight a user's wheel scroll.
+   */
+  const scrollToOption = useCallback(
+    (index: number) => {
+      Option.match(Option.fromNullishOr(items.current.get(index)), {
+        onNone: () => {},
+        onSome: (id) => renderer?.scrollIntoView?.(id),
+      });
+    },
+    [renderer],
   );
   useEffect(() => {
     const id = trigger.current;
@@ -338,6 +396,11 @@ export const Select = (props: SelectProps): ReactElement => {
       registerTrigger: (instance) => {
         trigger.current = instance?.id ?? null;
       },
+      registerItem: (index) => (instance) => {
+        if (instance === null) items.current.delete(index);
+        else items.current.set(index, instance.id);
+      },
+      onHighlight: scrollToOption,
     },
     {
       minWidth: triggerBox?.width,

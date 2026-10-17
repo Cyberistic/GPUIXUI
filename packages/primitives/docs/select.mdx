@@ -50,7 +50,10 @@ import { Label, Select } from "@gpuixui/primitives";
 
 Owned by GPUix's Select: the trigger opens with Enter/Space, the arrows move the
 highlight, Enter commits, Escape dismisses. This wrapper does not intercept any
-key.
+key. It **does** follow the highlight: the option the arrows (or the pointer)
+newly highlight is scrolled into view through the renderer, so a capped list
+moves with the keyboard instead of leaving the active option beyond the fold
+(plan `069`).
 
 ## Accessibility
 
@@ -116,12 +119,6 @@ scrolls instead of squashing the options.
 - **The side uses an estimated list height.** It is exact for the styles this
   package paints, and a test pins the estimate to them; when neither side has
   room, the list is capped to the roomier one and scrolls.
-- **The keyboard does not scroll the list.** GPUix's Select owns the highlight
-  and exposes no active-index signal, so the wrapper cannot follow it. Measured:
-  29 Down presses moved the highlight to "Option 28" and Enter committed it
-  while the capped list stayed at offset `0` — an option beyond the fold can be
-  committed without being seen. The wheel and the pointer reach every option;
-  treat a long list as a job for a combobox (Tier 2).
 - The list's dismissal and positioning are GPUix's; this package cannot change
   the open animation or the outside-click rules.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
@@ -153,7 +150,11 @@ scrolls instead of squashing the options.
   (068):** a 30-option list is capped to the window margin, is a scroller, the
   wheel moves its offset, and the last option is reachable after scrolling
   (without the cap the layer is 916 px tall); dropping `overflowY` leaves it
-  unscrollable, and dropping `flexShrink` squashes the rows instead.
+  unscrollable, and dropping `flexShrink` squashes the rows instead. **Keyboard
+  (069):** 40 Down presses in a 60-option list scroll it to offset `-455` and
+  leave the highlighted "Option 39" inside the list (without the wrapper's
+  `scrollIntoView` the offset stays `0`); a three-option list is not a scroller
+  and does not move.
 
 
 ```sh
