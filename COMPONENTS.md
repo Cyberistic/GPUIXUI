@@ -14,9 +14,12 @@ and the strongest honest alternative.
 
 The **GPUix support** column answers *does GPUix already provide this
 primitive?* — `yes`, `?` (unknown or partly documented) or `unsupported` — read
-from the published `@gpuix/react` / `@gpuix/native` 0.10.0 types by the
-reference-adoption workstream (plan `203`). It describes the runtime's API
-surface, not our status.
+from the published `@gpuix/react` / `@gpuix/native` 0.10.0 types and recorded,
+row by row with evidence and workarounds, in
+[`docs/gpuix-capabilities.md`](docs/gpuix-capabilities.md) (plan `203`). It
+describes the runtime's API surface, not our status. **Read that document before
+citing a capability here**: it separates the published 0.10.0 surface from the
+features documented on `references/gpuix` `main`, which is ahead of the release.
 
 **Measured native evidence** is separate, and it is what a `done` row needs. It
 comes from the native smoke suite in this repo, run **on this host** against the

@@ -5,7 +5,7 @@
 | Phase | A (audit and feasibility) — the capability record every component plan cites |
 | Owner | primitives workstream (owns `020` and the capability doc); docs-site consumes it |
 | Depends on | `020-gpuix-runtime-capability.md` (**the probe record — do not duplicate it**), `110-native-smoke-test.md` (the executable verdicts) |
-| Status | planned |
+| Status | **done** — `docs/gpuix-capabilities.md` written from the published 0.10.0 declarations, the main-only section recorded, the doc contract test in `packages/primitives/src/capabilities.test.ts` (8 tests, both directions proven); the first licence record is `LICENSES/adabraka-ui.md` |
 | Source | `references/adabraka-ui/GAP_ANALYSIS.md` §2 (MIT, `Copyright (c) 2025 Adabraka Team`), commit `e158684`; `references/gpuix` README + `packages/native/js/host.ts` |
 
 This plan is self-contained. It writes **one document** by re-expressing
@@ -142,3 +142,46 @@ Stop and report if:
   workaround; every uncertain row says `unverified`.
 - `COMPONENTS.md` and the component plans can cite it instead of restating facts.
 - No `adabraka` asset and no `GAP_ANALYSIS.md` prose was copied.
+
+## 9. Execution record (2026-10-18)
+
+**What landed.** `docs/gpuix-capabilities.md`, the `LICENSES/adabraka-ui.md`
+record, the `COMPONENTS.md` / `PLAN.md` pointers, and a doc contract test at
+`packages/primitives/src/capabilities.test.ts` (8 tests). `nub run --filter
+@gpuixui/primitives test`: **35 files / 407 tests green**.
+
+**The plan's own §3 table was partially wrong, because it was checked against
+`references/gpuix` (`main`) rather than the published release.** The checkout
+reports 0.10.0 in `packages/*/package.json` but its README documents unreleased
+work. Corrected rows, each verified against the published declarations:
+
+| §3 said | 0.10.0 truth | Evidence |
+| ------- | ------------ | -------- |
+| `aspectRatio` supported | **not supported** | absent from `@gpuix/native@0.10.0 dist/host.d.ts` · `StyleDesc` |
+| `boxShadow` including `inset` supported | **one outset shadow, no `inset`** | `BoxShadow` has offset/blur/spread/colour only |
+| `borderStyle: solid\|dashed` supported | **not supported** | absent from `StyleDesc` |
+| `createPortal` provided | **not published** | not in any `@gpuix/react@0.10.0` export path |
+| `DismissableLayer` provided | **not published** | `./floating` exports `FloatingLayer` + style helpers only |
+| `useControllableState` provided | **internal only** | defined in `dist/components/floating`, not re-exported |
+| `onScrollChange`/`onLayout` exist | **not in 0.10.0** | absent from `HostProps` (main-only README) |
+| `registerFont` (plan `052`) | **not in 0.10.0** | absent from `NativeRenderer` (main-only README) |
+
+The document therefore has a "Documented on `main`, absent from published
+0.10.0" section; the contract test fails if any of the four critical rows drifts
+back to the main-only claim.
+
+**Two-direction proof.**
+
+- `aspectRatio` row flipped to `supported` → `keeps main-only style fields out
+  of the supported rows` fails (1 failed / 406 passed); restored → green.
+- `Reduced-motion` row flipped from `unverified` to `supported` → `marks at
+  least three capabilities unverified` fails; restored → green (407).
+
+**Re-verification.** §8 of the document carries the commands
+(`grep` against the published `host.d.ts`/`testing.d.ts`, the `unverified`
+count, and the package test). The native smoke suite remains the executable
+verdict (20/20, plan `140`; published-binary CI still a `TODO.md` task).
+
+**Follow-ups recorded in `TODO.md`.** The tokens workstream's plan `052` must
+not build on `registerFont` until the runtime supports it; the licensing
+workstream still owes the full `inventory.md` / `provenance.md` / `NOTICE`.

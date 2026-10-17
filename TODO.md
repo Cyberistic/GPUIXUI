@@ -385,12 +385,25 @@ retired once both branches are one
       `optionStyle`/`rowStyle`/`itemStyle`/`thumbStyle`/`starStyle`/`cellStyle`
       and a `Select` `triggerStyle`; each state includes the item's identity
       (plan 081; 8 element-tree + 4 runtime tests, both directions proven)
+`[x]` `packages/primitives`: **the capability reference** — `docs/gpuix-capabilities.md`
+      answers "does GPUix provide this?" row by row with verdict, evidence and
+      workaround, and separates the published 0.10.0 surface from the features
+      documented on `references/gpuix` `main`. 8 contract tests guard the rows
+      (both directions proven) and `LICENSES/adabraka-ui.md` records the
+      reference structure (plan 203)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
+
+`[ ]` **tokens workstream**: plan `052`'s `registerFont` does **not** exist in
+      published GPUix 0.10.0 — it is absent from the `NativeRenderer` type and
+      documented only on `references/gpuix` `main`, which the plan assumed was
+      available. Re-plan `052` around installed family names, or wait for a
+      runtime upgrade, before implementing (evidence:
+      `docs/gpuix-capabilities.md` §5).
 
 `[ ]` **components workstream**: a visible label is still inert beside a
       **standalone** Tier 1 `Checkbox`/`Switch`. GPUix has no

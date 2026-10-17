@@ -101,6 +101,9 @@ answer into §4 or an ADR.
   (`focusNext` does); wheel `deltaY` is negative to scroll down; a
   `<virtual-list>` retains every row but paints only a window; an `<anchored>`
   paints no surface of its own, so overlay handlers go on the content div.
+  The durable, row-by-row capability reference — including what is documented
+  on `references/gpuix` `main` but absent from published 0.10.0 — is
+  [`docs/gpuix-capabilities.md`](docs/gpuix-capabilities.md) (plan `203`).
 - Can a GPUix rendering surface be embedded in the Fumadocs site, or is the
   companion playground the only honest preview? (Phase A/B.) — GPUix ships a
   **wasm browser build** (`@gpuix/native/wasm`), so strategy 1 may be real; it
