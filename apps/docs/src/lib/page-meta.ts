@@ -11,6 +11,8 @@
  * runtime to the browser (plan 411 §5).
  */
 
+import { absoluteUrl } from "./site";
+
 const siteName = "GPUIXUI";
 
 /** The page fields the head is built from, read structurally from a Fumadocs page. */
@@ -82,6 +84,7 @@ export const docsPageHead = (meta: DocsPageMeta) => ({
       : []),
     { property: "og:title", content: meta.title },
     { property: "og:type", content: "article" },
+    { property: "og:url", content: absoluteUrl(meta.url) },
   ],
-  links: [{ rel: "canonical", href: meta.url }],
+  links: [{ rel: "canonical", href: absoluteUrl(meta.url) }],
 });

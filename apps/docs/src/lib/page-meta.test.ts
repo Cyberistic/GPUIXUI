@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { absoluteUrl } from "@/lib/site";
 import { source } from "@/lib/source";
 import { docsPageHead, docsPageMeta } from "./page-meta";
 
@@ -43,7 +44,16 @@ describe("docs page metadata", () => {
       name: "description",
       content: page.data.description,
     });
-    expect(head.links).toEqual([{ rel: "canonical", href: page.url }]);
+    expect(head.meta).toContainEqual({
+      property: "og:url",
+      content: absoluteUrl(page.url),
+    });
+    expect(head.links).toEqual([
+      { rel: "canonical", href: absoluteUrl(page.url) },
+    ]);
+    // The interesting half of plan 418: equality with `page.url` would pass
+    // even if both stayed relative.
+    expect(head.links[0]?.href).toMatch(/^https:\/\//);
   });
 
   it("emits no description tag for a blank description", () => {

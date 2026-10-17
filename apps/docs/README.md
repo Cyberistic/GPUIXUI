@@ -45,6 +45,21 @@ shipped values. The token root entry is the **only** `@gpuixui/*` import the sit
 may make (`@gpuixui/tokens/react` is forbidden, as is every GPUix runtime
 package); `src/architecture.test.ts` enforces the allow-list.
 
+## Public URL
+
+Canonical links, OpenGraph `og:url` and the sitemap use `SITE_URL` from
+`src/lib/site.ts`. It defaults to `https://docs.gpuixui.dev` — the domain
+declared by `packages/deploy/alchemy.run.docs.ts` — and `VITE_SITE_URL`
+overrides it for previews or self-hosting:
+
+```sh
+VITE_SITE_URL=https://preview.example.com nub run --filter docs build
+```
+
+`/sitemap.xml` and `/robots.txt` are generated from the Fumadocs source by
+`src/routes/sitemap[.]xml.ts` and `src/routes/robots[.]txt.ts`; a new page needs
+no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
+
 ## Adding a component page
 
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the

@@ -17,6 +17,7 @@ export const Route = createRootRoute({
         name: "description",
         content: "A native UI component library for GPUix.",
       },
+      { property: "og:site_name", content: "GPUIXUI" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),

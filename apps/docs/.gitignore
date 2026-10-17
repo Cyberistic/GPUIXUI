@@ -1,4 +1,5 @@
 # App-local artifacts. The root .gitignore covers node_modules, dist and .source.
 .cache/
+.tanstack/
 .wrangler/
 .output/
