@@ -1340,8 +1340,9 @@ status text (`xText`) on `background`, `card`, `popover`, the `muted` panel and 
 3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
 the high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
 high contrast). The inactive floor is new in plan `306`: `inactivePairs`
-measures `disabledForeground` on its own fill, the plain surfaces and the four
-row washes, because a disabled `Select` item paints it on the menu's `popover`
+measures `disabledForeground` on its own fill, the plain surfaces, the four row
+washes and the four soft status fills a Toast's or Alert's action sits on
+(plan `307`), because a disabled `Select` item paints it on the menu's `popover`
 with no fill behind it and measured 1.99:1 on Linux dark. The `disabled` fill
 stays near the panel by design, so a disabled control's shape is carried by its
 `border` edge — held to the divider floor on `disabled`, and on the `muted` panel
@@ -1471,7 +1472,9 @@ family's designed hover and press to the control edge, taking it from 252 to
 placeholder, taking it from 254 to **257**. Plan `320` adds default body text on
 the four soft status fills an Alert paints, taking it from 257 to **261**. Plan
 `322` adds the `accent` wash a selectable row hovers to the skeleton surfaces,
-taking it from 261 to **262**.
+taking it from 261 to **262**. Plan `325` adds the invalid field edge
+(`destructive` on the `input` fill and on the `background` canvas a transparent
+field paints), taking it from 262 to **264**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1570,7 +1573,7 @@ reported with `wash: "overlay"` (plan `099`).
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs` and
-`overlayWashPairs` measure the painted roles — `inactivePairs` is the nine-surface
+`overlayWashPairs` measure the painted roles — `inactivePairs` is the thirteen-surface
 inactive list, `softBorderSurfacePairs` the eight-surface chip edge and `disabled`
 is measured as its own fill — and
 `contrast.test.ts` keeps a
@@ -1578,7 +1581,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`099` closed.
+plans `076`–`325` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

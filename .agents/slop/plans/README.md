@@ -122,7 +122,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [323](./323-undefined-platform-colour.md) | An `undefined` platform colour is not a colour override | F | 301, 310, 311, 321 | done |
 | [324](./324-public-type-index.md) | Name every public type in the reference | F | 066, 071, 086, 311 | done |
 | [325](./325-invalid-field-edge.md) | The invalid field edge the contract never measures | F | 057, 071, 074, 084, 092, 306, 312 | done |
-| [326](./326-contract-count-truth.md) | The contract's surface counts and pair history | F | 086, 306, 307, 325 | ready |
+| [326](./326-contract-count-truth.md) | The contract's surface counts and pair history | F | 086, 306, 307, 325 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -866,6 +866,20 @@ the `boundary` class (262 → 264) and every shipped set already clears the floo
 no colour moves. `invalid-field-edge.test.ts` states the shipped guarantee and
 the erased-error regression, and the design system gains the `invalid` state and
 its floor row.
+
+326 closes the last place the catalogue described the contract's *size* rather
+than its content. Plan 307 grew `inactivePairs` from nine surfaces to thirteen
+when a disabled action inside a Toast or Alert gained a pair, but the
+Verification paragraph still called it "the nine-surface inactive list", and its
+second present-tense description of the same list still stopped at the four row
+washes. Plan 325 then added the invalid field edge while the pair-count history
+still ended at "261 to **262**", so a reader following the page's arithmetic
+arrived at a contract two pairs smaller than the 264 `contrast.test.ts` and the
+ledger enforce. `docs.test.ts` now derives the selection, inactive and chip-edge
+counts from `selectionSurfaces`, `inactiveSurfaces` and
+`softBorderSurfacePairs`, holds the history's last step to `contrastPairs.length`,
+and names the audit series through plan 325. No token, pair, floor or colour
+changes.
 
 ### Reference adoption (block `200–299`)
 

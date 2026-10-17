@@ -23,6 +23,13 @@
  *
  * `node:fs` is used deliberately: this is a documentation test over the tree's
  * own files, and the tokens package ships zero runtime dependencies by design.
+ *
+ * Plan 326 guards a different drift: the page described the contrast contract's
+ * own size, and plan 307 grew `inactivePairs` from nine surfaces to thirteen
+ * while "the nine-surface inactive list" stayed in the prose, and plan 325 added
+ * the invalid field edge while the pair-count history still ended at 262. Both
+ * are derived here from `inactiveSurfaces` and `contrastPairs`, so the document
+ * cannot state a size the package does not ship.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -32,6 +39,10 @@ import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
+  inactivePairs,
+  inactiveSurfaces,
+  selectionSurfaces,
+  softBorderSurfacePairs,
   stateFillRoles,
   stateFillSurfacePairs,
   stateFillSurfaces,
@@ -139,6 +150,58 @@ describe("docs/tokens.md", () => {
   it("states the role count the implementation ships", () => {
     expect(markdown).toContain(`There are ${colorRoles.length} roles.`);
     expect(markdown).toContain(`the same ${colorRoles.length} roles`);
+  });
+});
+
+describe("docs/tokens.md contract counts", () => {
+  const countWords = [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+  ] as const;
+  const countWord = (count: number): string =>
+    countWords[count] ?? String(count);
+
+  it("states the surface counts of the nested pair lists", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+
+    expect(inactivePairs).toHaveLength(inactiveSurfaces.length);
+    expect(prose).toContain(
+      `on all ${countWord(selectionSurfaces.length)} surfaces`,
+    );
+    expect(prose).toContain(
+      `the ${countWord(inactiveSurfaces.length)}-surface inactive list`,
+    );
+    expect(prose).not.toContain("nine-surface inactive list");
+    expect(prose).toContain(
+      "`inactivePairs` measures `disabledForeground` on its own fill, the plain surfaces, the four row washes and the four soft status fills",
+    );
+    expect(prose).toContain(
+      `the ${countWord(softBorderSurfacePairs.length / statusTones.length)}-surface chip edge`,
+    );
+  });
+
+  it("ends the pair-count history at the contract's shipped size", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+    expect(prose).toContain(
+      `taking it from 262 to **${contrastPairs.length}**`,
+    );
+  });
+
+  it("names the audit series through the latest plan", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+    expect(prose).toContain("plans `076`–`325` closed");
   });
 });
 

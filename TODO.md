@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 93/122
+`[x]` `[████████░░]` 94/123
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -189,6 +189,11 @@ on `input` and the ColorPicker hex field on `background`, but the contract
 measured `destructive` only as a fill, so an edited theme could erase the error
 signal while the checker returned `[]`; both pairs join the `boundary` class,
 every shipped set passes, so no colour moves (plan 325)
+`[x]` Hold the contract's own counts — `docs/tokens.md` still called
+`inactivePairs` the nine-surface list after plan 307 made it thirteen, its
+verification paragraph omitted the four soft fills from the same list, and the
+pair-count history ended at 262 while plan 325 shipped 264; the prose now derives
+both from the lists and the audit range names the latest plan (plan 326)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
