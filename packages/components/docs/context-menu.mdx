@@ -1,0 +1,164 @@
+---
+title: Context menu
+description: The shared menu rows, positioned at the pointer or opened from the keyboard.
+---
+
+`ContextMenu` is the right-click counterpart of **Dropdown menu**. It uses the
+same rows, submenus, highlight rules and keyboard handling; only the positioning
+differs — the surface is placed at the pointer in window coordinates rather than
+anchored to a control.
+
+```tsx
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "@gpuixui/components/context-menu";
+
+<ContextMenu>
+  <ContextMenuTrigger>
+    <text>GPUIXUI</text>
+  </ContextMenuTrigger>
+  <ContextMenuContent label="Project actions">
+    <ContextMenuItem onSelect={open}>Open</ContextMenuItem>
+    <ContextMenuItem onSelect={copyPath}>Copy path</ContextMenuItem>
+    <ContextMenuSeparator />
+    <ContextMenuItem tone="destructive" onSelect={remove}>
+      Delete…
+    </ContextMenuItem>
+  </ContextMenuContent>
+</ContextMenu>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `ContextMenu` | open state, the pointer point, the dismiss layer |
+| `ContextMenuTrigger` | the area whose right click or `Shift+F10` opens the menu |
+| `ContextMenuContent` | the surface at the pointer, rendered while open |
+| `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows |
+| `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure |
+| `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | one secondary level |
+
+## Right click
+
+`@gpuix/native@0.10.0` has no `onContextMenu`. A non-primary click arrives as
+`onAuxClick`, and the payload's `isRightClick` says whether it was the right
+button (`mutations.ts` maps `onAuxClick` → `"auxClick"`). The trigger stores
+`{ x, y }` from that event and opens.
+
+A second right click elsewhere **on the trigger** closes the old surface and
+opens a new one at the new point; a right click outside the trigger area closes
+the menu but cannot open another, because the trigger is what listens. That is a
+deliberate scope, not a portal.
+
+## Positioning
+
+`ContextMenuContent` renders an `anchored` element with the pointer as its
+`position`. `anchored position` is **window coordinates**, independent of the
+mount parent — measured in a nested container (plan 112 §1c) — so the point is
+passed through unchanged. `FloatingLayer` is anchor-relative and cannot take a
+pointer point, which is why this component uses `anchored` directly.
+
+## Keyboard and dismissal
+
+| Key | Result |
+| ---- | ------ |
+| `Shift+F10` / Menu key | opens at the trigger's bottom-left; focus enters the menu |
+| any right click on the trigger | opens at the pointer |
+| `ArrowDown` / `ArrowUp` | next/previous enabled row, wrapping |
+| `Home` / `End` | first/last enabled row |
+| `Enter` / `Space` | runs the highlighted row and closes |
+| `ArrowRight` on a submenu trigger | opens it and focuses its first row |
+| `ArrowLeft` inside a submenu | closes that level and returns focus to its trigger |
+| Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
+| `Escape` | closes; a keyboard-opened menu returns focus to the trigger |
+| `Tab` | closes and moves on |
+
+The trigger is a tab stop (unless disabled). The surface takes focus on open. The
+highlighted row is the focused row, exactly as in **Dropdown menu**. An outside
+press closes the menu without running anything. Type-ahead follows the same rules:
+a 500 ms, case-insensitive prefix search over enabled labels (see **Dropdown
+menu → Type-ahead**).
+
+Focus returns to the trigger on `Escape` and on activation only when the menu was
+opened from the keyboard; a pointer-opened menu leaves focus where the pointer
+put it.
+
+## Submenus
+
+A submenu groups actions behind one secondary level, using the same parts as
+**Dropdown menu**:
+
+```tsx
+<ContextMenuSub>
+  <ContextMenuSubTrigger>Share</ContextMenuSubTrigger>
+  <ContextMenuSubContent label="Share">
+    <ContextMenuItem onSelect={copyLink}>Copy link</ContextMenuItem>
+    <ContextMenuItem onSelect={email}>Email</ContextMenuItem>
+  </ContextMenuSubContent>
+</ContextMenuSub>;
+```
+
+The trigger is an ordinary row: arrows and type-ahead reach it, and clicking,
+`Enter`, `Space`, `ArrowRight` or hovering opens the submenu and focuses its first
+row. Only one submenu is open at a time. `Escape` and `ArrowLeft` close one level
+and return focus to the sub-trigger; choosing a row (by keyboard or pointer)
+runs it once, closes both levels, and a pointer-opened menu leaves focus where
+the click put it. A press elsewhere closes both levels.
+
+## Theming
+
+The surface and rows are the shared menu look: `colors.popover`, `radius.md`,
+`borderWidth.thin` in `colors.border`, the `md` elevation, `spacing.xs` padding;
+rows use `colors.hover` with a 2px `colors.accent` bar. The trigger is a card-like
+box in `colors.card` with a border and `spacing.md` padding; pass `style` to
+match the row it represents.
+
+## Style by state
+
+The rows are the shared menu parts: `ContextMenuItem.style` takes a
+`MenuItemState` (`{ disabled, highlighted }`) and `ContextMenuCheckboxItem.style`
+a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`). The
+[Dropdown menu](./dropdown-menu) page has the same section.
+
+## Accessibility and limitations
+
+- `role="menu"` on the surface, `menuitem`/`menuitemcheckbox` on rows. No
+  `aria-haspopup` on the trigger (not available in 0.10.0), so the keyboard route
+  is documented rather than announced.
+- There is no portal. The surface is a sibling of the trigger painted at window
+  coordinates, so it is correct visually but not clipped by a scroll container.
+- One level of submenus is tested; deeper nesting follows the same rule but is
+  not exercised by a suite. A submenu trigger announces `aria-expanded` only —
+  0.10.0 has no `aria-haspopup`.
+- `Shift+F10` opens at the trigger's bottom-left, not at a text caret; a
+  keyboard-opened menu returns focus to its trigger on Escape and activation.
+
+## Verification
+
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (17 tests):
+a left click doing nothing, a right click opening a `menu` surface, the surface
+landing within 12px of the pointer, a selected action running once and closing,
+a second right click moving the surface, Escape closing, a disabled trigger not
+opening, `Shift+F10` opening at the trigger's bottom-left with focus in the menu,
+keyboard activation running a row, Escape returning focus to the trigger, a
+disabled trigger ignoring `Shift+F10`, type-ahead jumping to a row, and the
+submenu rules — `ArrowRight` opening and focusing the first row, a pointer click
+running a row and closing both levels, and one-level Escape/ArrowLeft.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Dropdown menu** — the same rows anchored to a button, with a keyboard path.
+- **Command menu** — a searchable action list for the keyboard.
+- **Popover** — a pointer-anchored panel of content rather than actions.

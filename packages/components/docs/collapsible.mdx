@@ -1,0 +1,90 @@
+---
+title: Collapsible
+description: One section that reveals its body on demand.
+---
+
+`Collapsible` is the smallest disclosure: a trigger with `aria-expanded` and a
+body that is mounted only while open. Compose it when an accordion would be
+overkill — one advanced-options block, one "show details" row.
+
+```tsx
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@gpuixui/components/collapsible";
+
+<Collapsible defaultOpen={false}>
+  <CollapsibleTrigger>Advanced options</CollapsibleTrigger>
+  <CollapsibleContent>
+    <Option label="Retry budget" value="3 attempts" />
+  </CollapsibleContent>
+</Collapsible>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Collapsible` | open state and the column that holds the parts |
+| `CollapsibleTrigger` | a button with `aria-expanded`; click, Enter and Space toggle |
+| `CollapsibleContent` | the body; **unmounts** while closed |
+
+Unmounting is deliberate: a closed body holds no focus, no subscriptions and no
+stale values. The cost is that closing loses local state inside the body.
+
+## Controlled and uncontrolled
+
+```tsx
+<Collapsible defaultOpen>…</Collapsible>;                        // remembers
+<Collapsible open={open} onOpenChange={setOpen}>…</Collapsible>; // app remembers
+```
+
+In controlled mode the trigger reports `onOpenChange` and leaves the body where
+the consumer put it.
+
+## Theming
+
+The trigger uses the `label` type role, `colors.foreground`, `colors.hover` on
+hover and `colors.active` while pressed, with a focus ring on focus. The body
+uses `colors.mutedForeground` and the theme's spacing steps; there is no surface
+of its own, so it inherits the card or panel around it.
+
+## Style by state
+
+`CollapsibleTrigger` takes a `StyleDesc` or a function of
+`CollapsibleTriggerState` (`{ open, closed, focused }`).
+
+```tsx
+<CollapsibleTrigger
+  style={(state) => ({ opacity: state.closed ? 0.8 : 1 })}
+/>
+```
+
+## Accessibility and limitations
+
+- `aria-expanded` on the trigger, and real button semantics (Tab reaches it,
+  Enter/Space activate it).
+- **No height animation in v1.** GPUix's `motion` animates to a numeric height;
+  an auto-height reveal needs a measured first paint. The body mounts instantly
+  and the follow-up is recorded as a `TODO` in `src/collapsible.tsx` rather than
+  promised in this page.
+- No `aria-controls` in 0.10.0 (`HostProps`), so the trigger→body relationship
+  is positional.
+
+## Verification
+
+`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (4 tests):
+click toggling with the body unmounted while closed, `aria-expanded` following
+the body, Enter/Space activation on the focused trigger, and the controlled
+contract in both directions.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Accordion** — several collapsible sections with single/multiple rules.
+- **Card** — the surface this usually sits inside.
+- **Dialog** — when the revealed content deserves the whole window.

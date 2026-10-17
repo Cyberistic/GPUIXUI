@@ -1,0 +1,100 @@
+---
+title: Breadcrumb
+description: The trail to the current page, with an optional collapsed middle.
+---
+
+`Breadcrumb` shows where the current page sits in a hierarchy. The trail is
+declarative — `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage` — and
+`maxItems` collapses the middle while always keeping the first entry and the
+current page.
+
+```tsx
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@gpuixui/components/breadcrumb";
+
+<Breadcrumb maxItems={3}>
+  <BreadcrumbList>
+    <BreadcrumbItem>
+      <BreadcrumbLink onSelect={() => go("Projects")}>Projects</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbLink onSelect={() => go("GPUIXUI")}>GPUIXUI</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbPage>components</BreadcrumbPage>
+    </BreadcrumbItem>
+  </BreadcrumbList>
+</Breadcrumb>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Breadcrumb` | `role="navigation"`, the `maxItems` budget and an optional separator |
+| `BreadcrumbList` | `role="list"` and the collapse |
+| `BreadcrumbItem` | one `role="listitem"` |
+| `BreadcrumbLink` | a link (`role="link"`) with Enter/Space and `onSelect` |
+| `BreadcrumbPage` | the current page: plain text, no tab stop |
+| `BreadcrumbSeparator` | the glyph between entries; not focusable |
+
+## Collapse rule
+
+`maxItems` below 3 is clamped to 3, so the trail can always show its start, a gap
+and its end. When the trail fits, every entry renders. Otherwise the control
+keeps the first entry, an ellipsis, and the last `maxItems - 2` entries. A hidden
+entry takes its separator with it — the list pairs each separator with the item
+that follows it.
+
+`BreadcrumbList` reads its **direct** children to do this, which is why the parts
+are plain elements rather than wrappers: a custom component around an item is
+counted as one entry.
+
+## Keyboard
+
+Tab reaches each link in order. Enter and Space fire `onSelect`. The current page
+and the ellipsis are not focusable.
+
+## Theming
+
+Links and separators use the `caption` type role; links are
+`colors.mutedForeground` and hover to `colors.foreground`; the current page is
+`colors.foreground`. The root has no surface of its own.
+
+## Accessibility and limitations
+
+- `role="navigation"` with `aria-label="Breadcrumb"`, `role="list"`, and
+  `role="listitem"` on the entries.
+- **No `aria-current`** in `@gpuix/native@0.10.0`: the current page is marked by
+  `BreadcrumbPage` (text, not a link) and by colour, not by an attribute.
+- The collapsing ellipsis is a text node with `aria-label="More"`; it is not a
+  button and not in the tab order.
+- Separators are `role="presentation"`.
+
+## Verification
+
+`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (5 tests):
+the trail and its separator count, selecting a link but not the current page,
+Enter activation, collapsing the middle while keeping both ends, and the
+ellipsis staying out of the tab order.
+
+`src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8 and
+budgets 3–6.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Tabs** — switching between peers.
+- **Pagination** — moving through a linear result set.
+- **Breadcrumb navigation** in a desktop workspace is the same component.

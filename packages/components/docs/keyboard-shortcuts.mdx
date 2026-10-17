@@ -1,0 +1,138 @@
+---
+title: Keyboard shortcuts
+description: A cheat sheet of chords, rendered as platform-correct keycaps.
+---
+
+`KeyboardShortcuts` displays shortcuts; it does not bind them. A row is
+documentation, so it has no click handler and no key registration. The chord
+grammar and the platform glyphs are one pure module
+(`src/shortcut/accelerator.ts`) that the [hotkey recorder](/docs/hotkey-recorder)
+also uses.
+
+## Anatomy
+
+```
+File                     ← group heading
+───────────────────────  ← 1px separator
+New file          ⌘  N
+Save              ⌘  S
+───────────────────────
+Navigation
+Go to line     Ctrl  G
+```
+
+`KeyboardShortcuts` is the list, a `KeyboardShortcutsGroup` is a named section,
+`KeyboardShortcut` is one label-and-chord row and `Keycap` is one key.
+
+## Usage
+
+```tsx
+import {
+  KeyboardShortcut,
+  KeyboardShortcuts,
+  KeyboardShortcutsGroup,
+} from "@gpuixui/components";
+
+<KeyboardShortcuts label="Editor shortcuts">
+  <KeyboardShortcutsGroup label="File">
+    <KeyboardShortcut label="New file" accelerator="mod+n" />
+    <KeyboardShortcut label="Save" accelerator="mod+s" />
+  </KeyboardShortcutsGroup>
+</KeyboardShortcuts>;
+```
+
+The runnable build is `examples/keyboard-shortcuts.example.tsx`, which the
+native playground mounts and which shows the same chords on macOS and Windows.
+
+## The accelerator grammar
+
+A chord is `+`-separated tokens, case-insensitive, trimmed:
+
+| Token | macOS | Windows / Linux |
+| ----- | ----- | --------------- |
+| `mod` | `⌘` | `Ctrl` |
+| `cmd` / `meta` | `⌘` | `⌘` |
+| `ctrl` | `Ctrl` | `Ctrl` |
+| `alt` / `option` | `⌥` | `Alt` |
+| `shift` | `⇧` | `Shift` |
+| `enter` | `↵` | `Enter` |
+| `escape` | `Esc` | `Esc` |
+| `backspace` / `delete` | `⌫` / `⌦` | `Backspace` / `Del` |
+| `up` / `down` / `left` / `right` | `↑ ↓ ← →` | `Up Down Left Right` |
+| `pageup` / `pagedown` / `home` / `end` | `PgUp PgDn Home End` | same |
+| `f1`–`f12` | `F1`–`F12` | same |
+| one character | upper-cased | upper-cased |
+
+- **`mod` is the portable token**: on macOS it is Command, elsewhere Control.
+  Use `ctrl` only when you mean the Control key on every platform.
+- **Order is preserved.** `shift+mod+k` renders `⇧ ⌘ K`; the model does not
+  reorder it.
+- **Unknown multi-character tokens display verbatim** (title-cased), so a
+  consumer is never blocked by a missing entry.
+
+`KeyboardShortcut` takes `platform?: "darwin" | "linux" | "win32" | "default"`
+to render another platform's glyphs — this is what the docs platform toggle
+uses. The default is the host platform.
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `KeyboardShortcuts` | `div` with `role="list"` | `label?`, `children` |
+| `KeyboardShortcutsGroup` | `div` with `role="group"` and a level-3 heading | `label` (required), `children` |
+| `KeyboardShortcut` | `div` with `role="listitem"` | `label` (required), `accelerator` (required), `platform?`, `style?: StateStyle<KeyboardShortcutState>` |
+| `Keycap` | one key cap | `children: string`, `style?: StateStyle<KeycapState>` |
+
+`KeyboardShortcutState` is `{ keys: ReadonlyArray<string> }` — the formatted
+keycaps, so a style callback can react to a chord's width. `KeycapState` is
+`{ label: string }`.
+
+## Theming
+
+Keycaps use `muted` / `mutedForeground`, the `border` edge, `radius.sm` and
+`caption` type. Rows use the `foreground` role for the label and `spacing.*` for
+padding; separators are `border`-coloured 1px elements. A custom theme changes
+every cheat sheet with no code change — see [Theming](/docs/theming).
+
+## Accessibility
+
+- The root is a named `list`; every shortcut is a `listitem`; each group is a
+  named `group` with a level-3 heading.
+- Keycaps are text; a screen reader reads the chord's glyphs in order. On macOS
+  that is "⌘ N"; on Windows "Ctrl N".
+- There is no `aria-keyshortcuts` in `@gpuix/native@0.10.0`, so a keycap cannot
+  be attached to the control it activates. This is a display component; the
+  binding lives in the consumer.
+
+## Limitations
+
+- **Display-only:** no handler is registered, and no action fires.
+- No `aria-keyshortcuts` in 0.10.0.
+- Rows are separated by 1px elements rather than borders: one element has one
+  `borderColor` and per-side widths only (recorded in `COMPONENTS.md`).
+
+## Verification
+
+`src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer
+(6 tests): declaration order, list/group/listitem roles, level-3 headings, the
+muted keycap surface, a consumer style callback receiving the formatted keys,
+and both themes. `src/shortcut/accelerator.test.ts` adds 10 pure tests for the
+grammar.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+The behaviour suite needs a host with a GPUix native binding — macOS arm64,
+Linux x64, Windows x64, or this Intel Mac, where plan 140's locally built
+`darwin-x64` binding is installed.
+
+## Related
+
+- **Hotkey recorder** — capture a chord, using the same accelerator model.
+- **Dropdown menus** — a shortcut can be shown beside a menu action.
+- **Command menu** — the palette a `mod+k` chord usually opens.

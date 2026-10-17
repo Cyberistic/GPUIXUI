@@ -1,0 +1,105 @@
+---
+title: Search input
+description: A single-line search field with a clear affordance.
+---
+
+`SearchInput` is the field a filter bar uses: a leading glyph, the text, and a
+clear control that appears only when there is something to clear. It reports
+every keystroke and never debounces.
+
+```tsx
+import { SearchInput } from "@gpuixui/components/search-input";
+
+<SearchInput
+  placeholder="Filter files…"
+  onValueChange={setQuery}
+  onSubmit={runSearch}
+  onClear={() => setQuery("")}
+/>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| the field | text editing; `onChange` and `onValueChange` fire on every edit |
+| the glyph | a static `⌕` marker, not interactive |
+| the clear control | `aria-label="Clear search"`, shown only when the text is non-empty |
+
+There is no separate label part: put a **Field** around it when the search needs
+a visible label, or pass `aria-label` for a filter bar.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| any character | updates the text and calls `onValueChange` |
+| `Enter` | calls `onSubmit(currentText)` |
+| `Escape` | clears when non-empty and calls `onClear`; does nothing on an empty field, so it does not swallow the key from an enclosing dialog |
+
+`Enter` arrives as the input's `submit` event, not a key-down — measured in
+`@gpuix/native@0.10.0`.
+
+## Controlled and uncontrolled
+
+```tsx
+<SearchInput defaultValue="card" />;                       // remembers
+<SearchInput value={query} onValueChange={setQuery} />;     // app remembers
+```
+
+A controlled field whose consumer ignores the change keeps showing the prop
+value, while `onValueChange` still fires — the classic contract, tested.
+
+## Clearing
+
+Clicking the clear control (or pressing Escape) empties the field, calls
+`onClear`, and returns focus to the input so typing can continue immediately.
+
+## Theming
+
+The container paints `colors.background`, a `borderWidth.thin` border in
+`colors.border`, `radius.md`, `spacing.md` horizontal padding and
+`controlHeight(theme, "md")`. The clear control is 18×18 with `radius.sm` and a
+`colors.accent` hover. Focus draws the zero-blur `colors.ring` ring, because
+0.10.0 has no `outline`.
+
+## Style by state
+
+`SearchInput.style` takes a `StyleDesc` or a function of `SearchInputState`
+(`{ disabled, focused }`); the style is applied to the field surface, not the
+inner `<input>`.
+
+```tsx
+<SearchInput style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })} />
+```
+
+## Accessibility and limitations
+
+- The input carries the caller's `aria-label` (or the field's label); the clear
+  control is a labelled button.
+- **No debounce.** Debouncing is the consumer's: fire the query from
+  `onValueChange` through your own Effect schedule. A component-level timer would
+  both hide the policy and break the repo's clock rule.
+- No search history, no suggestions and no shortcut binding (`⌘F` belongs to the
+  app).
+- The glyph is text until an icon set lands.
+
+## Verification
+
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (7 tests):
+real keystrokes reaching `onValueChange`, the clear control appearing only with
+text, clearing and returning focus, Enter submitting, Escape clearing once, the
+controlled contract, and a caller `ref` composed with the internal one.
+
+The field merges its own focus ref with the caller's, so `ref` receives the same
+`<input>` instance that clearing focuses.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Combobox** — a search field over a list of options.
+- **Field** — a label and message around any input.
+- **Command menu** — search over actions rather than values.

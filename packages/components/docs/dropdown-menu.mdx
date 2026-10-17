@@ -1,0 +1,258 @@
+---
+title: Dropdown menu
+description: A list of actions anchored to the control that opened it.
+---
+
+`DropdownMenu` shows a short list of actions next to its trigger. The surface is
+an anchored GPUix layer, which snaps inside the window but does not flip; the
+component opens it on the opposite side when snapping would cover the trigger,
+centres a requested surface from measured bounds, and owns the open state, the
+highlight, the dismissal rules and focus return.
+
+```tsx
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@gpuixui/components/dropdown-menu";
+
+<DropdownMenu>
+  <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+  <DropdownMenuContent label="File actions">
+    <DropdownMenuItem onSelect={rename}>Rename</DropdownMenuItem>
+    <DropdownMenuItem disabled>Duplicate</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem tone="destructive" onSelect={remove}>
+      Delete
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `DropdownMenu` | open state, the dismiss layer, the positioning root |
+| `DropdownMenuTrigger` | a button that toggles the menu, `aria-expanded` included |
+| `DropdownMenuContent` | the floating `role="menu"` surface, rendered while open |
+| `DropdownMenuItem` | one action; `onSelect` runs, then the menu closes |
+| `DropdownMenuCheckboxItem` | an on/off row that stays open after toggling |
+| `DropdownMenuSub` | a group of actions behind a secondary level |
+| `DropdownMenuSubTrigger` | the row that opens the submenu |
+| `DropdownMenuSubContent` | the floating second level, rendered while open |
+| `DropdownMenuSeparator` | a hairline between groups |
+| `DropdownMenuLabel` | a small heading over a group |
+| `DropdownMenuGroup` | a labelled group of rows |
+
+`DropdownMenuContent` takes `side` (`top`/`right`/`bottom`/`left`, default
+`"bottom"`), `align` (`start`/`center`/`end`, default `"start"`), `sideOffset`
+(default `4`) and `collisionPadding` (default `8`, the margin kept from the
+window edge when the surface snaps). A surface that snaps over its trigger is
+opened on the opposite side when that side has room, otherwise on the roomier
+side. `align="center"` is exact and measured; `alignOffset` is added on top if
+the caller needs its own adjustment. `label` is the menu's accessible name.
+
+## Highlight is focus
+
+The highlighted row **is** the focused row. Every arrow move calls the renderer's
+`focusElement`, and every row that takes focus becomes the highlight, so a row
+can never look selected while Enter would activate a different one. A pointer
+hover does not move the highlight; clicked rows activate directly.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| `Enter` / `Space` on the trigger | opens on the first enabled row, or closes when open |
+| `ArrowDown` on the trigger | opens on the first enabled row |
+| `ArrowUp` on the trigger | opens on the last enabled row |
+| `ArrowDown` / `ArrowUp` | moves to the next/previous enabled row, wrapping |
+| `Home` / `End` | first/last enabled row |
+| `Enter` / `Space` | runs the highlighted row and closes |
+| Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
+| `Escape` | closes and returns focus to the trigger |
+| `Tab` | closes and lets focus move on — a menu is not modal |
+| `ArrowRight` on a submenu trigger | opens it and focuses its first row |
+| `ArrowDown` / `ArrowUp` on an open submenu trigger | enters the submenu at its first/last row |
+| `ArrowLeft` or `Escape` inside a submenu | closes that level and returns focus to its trigger |
+
+A keyboard open lands on a row, so a second `Enter` runs the first action without
+an extra arrow press. A pointer click leaves focus on the menu surface with no
+row highlighted, which is the desktop menu convention; the first arrow key then
+picks the first enabled row.
+
+Disabled rows are skipped by every arrow key, by `Home`/`End` and by type-ahead,
+and a click on one does nothing.
+
+## Type-ahead
+
+Typing a letter jumps to the next enabled row whose label starts with the typed
+prefix, so `Re` reaches **Rename** and `De` reaches **Delete**. The prefix is
+case-insensitive, ignores surrounding whitespace and is matched from the start of
+the label — not as a fuzzy substring.
+
+- The prefix lives for **500 ms** after the last keystroke. A later letter starts
+  a fresh search instead of extending an old one.
+- Typing the same letter again within the window advances to the next row that
+  starts with it, wrapping at the end — so `D`, `D`, `D` cycles every D row.
+- A prefix that matches nothing leaves the highlight where it was and clears the
+  buffer, so the next letter searches afresh.
+- A row whose `children` is not a plain string (a label with a badge beside it)
+  is matched through `textValue`:
+
+```tsx
+import { Badge } from "@gpuixui/components/badge";
+
+<DropdownMenuItem textValue="Rename" onSelect={rename}>
+  Rename <Badge>draft</Badge>
+</DropdownMenuItem>;
+```
+
+The window is a timestamp comparison, not a `setTimeout`: the buffer records the
+monotonic time of its last keystroke and the next keystroke decides whether it has
+expired. Nothing has to run while the menu is idle, so the component owns no
+timer and no provider.
+
+## Dismissal
+
+Pressing outside, pressing the open trigger, `Escape` and choosing a row all
+close the menu. Menus are layers in the same dismiss stack as `Dialog` and
+`Popover`, so a menu opened inside a dialog closes first and leaves the dialog
+open.
+
+The trigger records that the menu was open at **mouse-down**. The press itself is
+an outside press that closes the menu, so the click that follows the same gesture
+must not re-open it — without that guard the menu flickers shut and open.
+
+## Checkbox rows and tones
+
+```tsx
+<DropdownMenuCheckboxItem
+  checked={showHidden}
+  onCheckedChange={setShowHidden}
+>
+  Show hidden files
+</DropdownMenuCheckboxItem>
+```
+
+A checkbox row does not close the menu — toggling several settings in one visit
+is the point. It shows a text `✓` when checked and carries `aria-selected`.
+
+`tone="destructive"` paints the row in `colors.destructive`. It is a visual
+signal, not a confirmation step: pair a destructive row with **Confirmation
+dialog** when the action cannot be undone.
+
+## Submenus
+
+A submenu groups actions behind one secondary level:
+
+```tsx
+<DropdownMenuSub>
+  <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
+  <DropdownMenuSubContent label="Share">
+    <DropdownMenuItem onSelect={copyLink}>Copy link</DropdownMenuItem>
+    <DropdownMenuItem onSelect={email}>Email</DropdownMenuItem>
+  </DropdownMenuSubContent>
+</DropdownMenuSub>;
+```
+
+The trigger is an ordinary menu row: arrows and type-ahead reach it, and
+clicking, `Enter`, `Space`, `ArrowRight` or hovering opens the submenu. Opening a
+submenu focuses its first row, so the next `Enter` runs the first action without
+an extra arrow press. Only one submenu per menu is open at a time; moving onto
+another row closes the open one.
+
+The surface is positioned at the trigger row's right edge in window coordinates
+and clamped by GPUix's `fit="snap"`. A press on the submenu is geometrically
+outside the parent surface, so the runtime reports it to the parent's outside
+handler first; the submenu's own dismiss layer recognises the press inside its
+painted bounds and lets it reach the row. A press on the parent menu's background
+does not land in those bounds and still closes the whole menu.
+
+A row is chosen by pointer as well as by keyboard: clicking it runs the action
+once and closes both levels.
+
+`Escape` and `ArrowLeft` close **one** level: the submenu disappears, focus
+returns to its trigger, and the parent menu stays open. Choosing a submenu action
+closes both levels and returns focus to the dropdown trigger. An outside press
+also closes both.
+
+## Controlled and uncontrolled
+
+```tsx
+<DropdownMenu defaultOpen>…</DropdownMenu>;                        // remembers
+<DropdownMenu open={open} onOpenChange={setOpen}>…</DropdownMenu>;  // app remembers
+```
+
+## Theming
+
+The surface paints `colors.popover` / `colors.popoverForeground`, `radius.md`,
+`borderWidth.thin` in `colors.border`, the `md` elevation and `spacing.xs` padding,
+with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
+`label` type role, and highlight with `colors.hover` plus a 2px left bar in
+`colors.accent`.
+
+## Style by state
+
+A row takes a `StyleDesc` or a function of its state: `MenuItemState`
+(`{ disabled, highlighted }`) or `MenuCheckboxItemState`
+(`{ checked, disabled, highlighted }`). `highlighted` is the row the menu's real
+focus is on.
+
+```tsx
+<DropdownMenuItem
+  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+>
+  Rename
+</DropdownMenuItem>
+```
+
+## Accessibility and limitations
+
+- `role="menu"` on the surface, `role="menuitem"` / `role="menuitemcheckbox"` on
+  rows, `aria-expanded` on the trigger.
+- **No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`**
+  in `@gpuix/native@0.10.0`: `HostProps` exposes only `aria-label`,
+  `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
+  `aria-level`. The checkbox row therefore uses `aria-selected`, and the link
+  between trigger and surface is positional. A submenu trigger announces
+  `aria-expanded` but not `aria-haspopup`.
+- One level of submenus is tested. A submenu inside a submenu follows the same
+  rule but is not exercised by a suite.
+- Submenus open to the right of their trigger and rely on `fit="snap"` to stay
+  in the window; there is no left-side flip.
+- The root surface flips once per open, from measured bounds. A surface taller
+  than both sides can still cover its trigger, and `align="center"` is clamped by
+  the snap margin near a window edge.
+- Type-ahead is a prefix match with no fuzzy scoring, and it ignores a label that
+  is not plain text unless `textValue` is set.
+- A hover does not preview a highlight; the pointer activates on click.
+
+## Verification
+
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (35
+tests): the `menu` role, keyboard opening on the first/last enabled row, a
+centred surface and a near-bottom surface that opens above its trigger, arrow
+focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
+restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
+dismissal, checkbox toggling and its check mark, the destructive colour, the
+surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
+Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard,
+hover and pointer opening, right-edge placement, focus entering the first row,
+arrows and type-ahead staying inside, one submenu at a time, one-level
+Escape/ArrowLeft, a pointer click running the row and closing both levels, and an
+outside press closing both levels.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Popover** — a floating panel rather than a list of actions.
+- **Context menu** — the same rows, positioned at the pointer.
+- **Command menu** — a searchable action list in a dialog.
+- **Confirmation dialog** — the modal guard for a destructive action.

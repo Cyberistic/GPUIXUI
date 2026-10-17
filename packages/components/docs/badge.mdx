@@ -1,0 +1,106 @@
+---
+title: Badge
+description: A short status label on a pill.
+---
+
+`Badge` labels something — a state, a count, a category. It is **not a control**:
+a badge is never clickable, never focusable and never a button. If it should do
+something when pressed, use a `Button` and give it the badge's styling.
+
+## Usage
+
+```tsx
+import { Badge } from "@gpuixui/components/badge";
+
+<Badge variant="success" size="sm">
+  Passed
+</Badge>;
+```
+
+A badge is one line of type: it hugs its text and never wraps. Inside a column
+layout it also hugs horizontally (`alignSelf: "flex-start"`), so it does not
+stretch into a full-width bar; pass `style={{ alignSelf: "stretch" }}` when you
+do want that.
+
+## Variants
+
+| `variant` | Fill | Text | Border |
+| --------- | ---- | ---- | ------ |
+| `neutral` (default) | `muted` | `mutedForeground` | — |
+| `primary` | `primary` | `primaryForeground` | — |
+| `success` | soft `success` tint | tone text | tone tint |
+| `warning` | soft `warning` tint | tone text | tone tint |
+| `danger` | soft `destructive` tint | tone text | tone tint |
+| `info` | soft `accent` tint | tone text | tone tint |
+| `outline` | none | `mutedForeground` | `border` |
+
+The four status variants draw from one palette shared with `Alert` and the toast
+viewport (`src/internal/theme.ts`), so statuses cannot drift apart between
+components. In light mode the `warning` tone uses the darker `warningForeground`
+shade, because the light `warning` value does not reach readable contrast on the
+tint.
+
+## Sizes
+
+| `size` | Type role | Height | Padding |
+| ------ | --------- | ------ | ------- |
+| `sm` | `caption` (12/16) | 20px | 8px × 2px |
+| `md` (default) | `label` (13/18) | 22px | 8px × 2px |
+
+There is no height literal: the pill's height is the type role's line height plus
+its vertical padding, so a theme that changes type or spacing moves the badge with
+it.
+
+## API
+
+`Badge` takes the GPUix host props (`style`, `testId`, `role`, `aria-*`, pointer
+and key handlers) and **merges `style` last**, so a consumer can override any rule
+without forking the component.
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `variant` | `"neutral" \| "primary" \| "success" \| "warning" \| "danger" \| "info" \| "outline"` | `"neutral"` |
+| `size` | `"sm" \| "md"` | `"md"` |
+| `children` | `ReactNode` | — |
+
+## Accessibility
+
+- A badge contributes **no role of its own**: a status is announced as its text
+  ("Failed"), which is why the text has to carry the meaning and the colour must
+  not be the only signal.
+- A badge is not focusable and not reachable by keyboard, because it is not
+  interactive. `tabIndex` is not set.
+- The four status tints are decorative; the words are the label. A card whose
+  only indication of failure is a red pill fails this rule.
+
+## Theming
+
+Every colour is a semantic role (`colors.muted`, `colors.primary`, `colors.border`,
+`colors.accent`, …) and every size comes from `typography`, `spacing` and `radius`
+— there are no literal colours or heights in the component. See `docs/tokens.md`.
+
+## Limitations
+
+- No dismiss, no icon slot and no count animation. A badge that needs a close
+  affordance is a chip, which is not built yet.
+- The docs site cannot render this component live — it is a GPUix host tree, not
+  DOM. The code above is the real source.
+
+## Verification
+
+`src/behaviour/badge.test.tsx` runs in the real GPUix renderer (7 tests): the
+label renders as text, each non-status variant paints from its own theme role,
+each status variant paints from the shared tone palette, a status fill changes
+with the theme (so it cannot be a constant), each size's measured height matches
+its type role plus padding, every variant is pill-rounded, and a consumer `style`
+wins.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Alert** — the same status palette, for a message that stays in the flow.
+- **Card** — a surface a badge usually sits on.
+- **List** — rows whose status column is made of badges.

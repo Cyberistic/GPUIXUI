@@ -1,5 +1,8 @@
 # Plan 206: Message Scroller — follow-new-content scrolling with a pinned reader
 
+**Status: done (2026-10-18).** 11 rule tests, 10 native behaviour tests and one
+both-theme matrix case; both-direction proofs recorded below.
+
 ## Why
 
 A chat, a log, a streaming agent transcript and an activity feed all need the same
@@ -22,6 +25,26 @@ offers an explicit way back to the latest.
 - The compound-part API convention comes from plan `200`; follow it
   (`Root` / `Viewport` / `Item` / `JumpToLatest`), not a single mega-prop component.
 
+### Measured against the installed 0.10.0 (2026-10-18, this worktree)
+
+Probed in the real `TestRenderer` (`src/behaviour/_probe-scroll.test.tsx`, removed
+after the probe) with a 200px `overflow: "scroll"` column of 40 × 20px rows:
+
+| Need | Result |
+| ---- | ------ |
+| Scroll observation | `onScroll` fires; `deltaY` is **negative when scrolling down** toward the newest row, positive when scrolling up |
+| Scroll offset | `useGpuixRequired().getScrollOffset(id)` → `[x, y]`, `y` negative |
+| Distance from end | a 1px tail sentinel's `getElementBounds(id).y` is **below the viewport** while unpinned and equals `viewport.y + viewport.height` at the end — reliable even for offscreen bounds |
+| Scroll to end | `renderer.scrollIntoView(tailId)` (or `scrollTo(id, 0, very negative)`, which clamps) |
+| Wheel driving in tests | `nativeSimulateScrollWheel(x, y, 0, -80)` scrolls down 80px; `+80` scrolls up |
+| Virtualization | `getListScrollTop(id)` exists for `<virtual-list>`, but its item prop shape cannot carry compound children; the measured fallback below is a plain scroll viewport |
+
+**Decision:** implement the plain scroll viewport first (the plan's own STOP
+condition 1 authorises it). `<virtual-list>` keeps its native `followTail`, but the
+distance-from-end contract here is measured from the tail sentinel so it survives a
+future virtualization swap; the non-virtualized limitation is recorded in
+`COMPONENTS.md` and the docs page.
+
 ## Behaviour to implement
 
 1. **Pinned reading.** While the reader is at (or within a small threshold of) the
@@ -43,57 +66,133 @@ offers an explicit way back to the latest.
 ## API shape (target)
 
 ```tsx
-<MessageScroller.Root>
-  <MessageScroller.Viewport>
+<MessageScroller label="Conversation">
+  <MessageScrollerViewport style={{ height: 320 }}>
     {messages.map((m) => (
-      <MessageScroller.Item key={m.id}>{m.body}</MessageScroller.Item>
+      <MessageScrollerItem key={m.id}>{m.body}</MessageScrollerItem>
     ))}
-  </MessageScroller.Viewport>
-  <MessageScroller.JumpToLatest />
-</MessageScroller.Root>
+  </MessageScrollerViewport>
+  <MessageScrollerJumpToLatest />
+</MessageScroller>
 ```
+
+Named exports (not dot notation) so the package keeps one import style; the root
+is `MessageScroller` rather than `MessageScrollerRoot`, exactly as `Carousel` is
+not `CarouselRoot`. `MessageScrollerRoot` in the older shape is superseded.
 
 Compound parts, a controlled `pinned` / `onPinnedChange` for consumers that need to
 know, and no boolean-prop soup. Styling goes through the theme tokens; the parts are
 plain enough to restyle — the shadcn rule.
 
-## Steps
+## Steps (exact files)
 
-1. **A pure state machine first** (`messageScrollerLogic.ts` + its test): inputs are
-   the scroll position, the viewport size, the content size and item-height changes;
-   outputs are `pinned`, `unread` and `jumpRequested`. This is the part that must be
-   unit-tested without a window.
-2. **The parts**, on `<virtual-list>` + scroll handles, wired to that state machine.
-3. **The affordance** — `JumpToLatest` with the unread count, themed and focusable.
-4. **Docs page** with a live example: a simulated token stream, plus a "scroll up
-   while streaming" demo that proves the reader is not yanked.
-5. **Credit shadcn/ui** in `LICENSES/` (MIT) and on the docs page.
+1. **Pure state machine** — create `packages/components/src/message-scroller/logic.ts`:
+   `MessageScrollerState { pinned, unread }`, `initial`, `observeScroll(state,
+   { distanceFromEnd, threshold })`, `addItems(state, count)`, `requestLatest(state)`.
+   No React, no GPUix, no Effect runtime (pure data).
+2. **Pure test** — create `packages/components/src/message-scroller/logic.ts`'s suite
+   beside it (`logic.test.ts`).
+3. **Parts** — create `packages/components/src/message-scroller.tsx` exporting
+   `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`,
+   `MessageScrollerJumpToLatest`, their props and `messageScrollerMeta`.
+   - Root: context, `pinned`/`defaultPinned`/`onPinnedChange` through
+     `internal/controllable.ts`, `role="group"` with required `label`, threshold
+     defaults to `theme.spacing["2xl"]`.
+   - Viewport: `overflow: "scroll"`, a `ref` to itself and to a 1px tail sentinel,
+     `onScroll` computes `tail.y - (viewport.y + viewport.height)`, reports the
+     observation, counts appended direct children and calls `addItems`, and a
+     layout effect scrolls to the tail while pinned (covers appended rows and a
+     taller streamed row on re-render).
+   - Item: a `flexShrink: 0` row with the theme's small bottom gap; no surface.
+   - JumpToLatest: only rendered while unpinned; a themed local `Button` (sm,
+     secondary) whose text is `Jump to latest` or `N new messages`; activation
+     calls `requestLatest` and the pinned layout effect scrolls.
+4. **Behaviour suite** — create
+   `packages/components/src/behaviour/message-scroller.test.tsx` (see test plan).
+5. **Wiring** — add the module to `src/index.ts` and `src/inventory.ts`, add
+   `examples/message-scroller.example.tsx` to `examples/index.ts`, and add the row to
+   `docs/component-api.md` §8 (removing it from the planned table), `COMPONENTS.md`
+   and `TODO.md`.
+6. **Docs page** — create `packages/components/docs/message-scroller.mdx`: usage,
+   behaviour table, API, theming, accessibility gaps, the non-virtualized limitation,
+   and the shadcn/ui credit.
+7. **Example** — create `packages/components/examples/message-scroller.example.tsx`: a
+   bounded viewport, an "Append message" control, a "Stream a reply" control that
+   grows the last row, and a "scroll up while streaming" instruction.
+8. **Licence credit** — `LICENSES/shadcn-ui.md` is owned by the licensing workstream;
+   if it does not exist, record a TODO instead of editing outside this workstream.
+   The docs page credits the behaviour either way.
+
+## Commands
+
+Run from `workspaces/components`:
+
+```sh
+nub run --filter @gpuixui/components test            # logic + inventory; expect all pass
+nub run --filter @gpuixui/components test:behaviour  # native suites; expect all pass
+nub run --filter @gpuixui/components check-types
+nub run check && nub run lint && nub run test        # the completion gate
+```
+
+Tail `TODO.md` and `COMPONENTS.md` only after the native suite passes and the
+inventory's native-count check agrees with the row.
 
 ## Test plan
 
-- **Unit (must pass without a native window):** pinned when at the end; unpinned
-  when scrolled past the threshold; `unread` increments only while unpinned; a
-  content resize while pinned keeps it pinned; a content resize while unpinned does
-  not move the reader; `jumpToLatest` re-pins and clears `unread`. Each test must
-  fail without the logic (e.g. remove the threshold → the "not yanked" test fails).
-- **Native smoke (requires B1):** a real stream appends rows; the view follows while
-  pinned and does not move after scrolling up; the affordance re-pins.
+- **Unit (`logic.test.ts`, no window):**
+  1. `observeScroll` pins at the end (`distance <= threshold`) and unpins beyond it;
+  2. a pinned observation clears `unread`;
+  3. `addItems` increments only while unpinned, and ignores `0`/negative counts;
+  4. `requestLatest` pins and clears; it returns the same state when already there;
+  5. an unpinned observation keeps `unread` (it is not silently cleared).
+  Both directions: replace `distanceFromEnd <= threshold` with `true` → test 1
+  fails; remove the `pinned` guard in `addItems` → test 3 fails.
+- **Native (`behaviour/message-scroller.test.tsx`):**
+  1. a 40-row history starts pinned at the end and the last row is painted;
+  2. a short (2-row) history is pinned and shows no affordance;
+  3. appending a row while pinned keeps the end in view and shows no affordance;
+  4. scrolling up (wheel `+120`) then appending leaves `getScrollOffset` unchanged,
+     shows the affordance and reports one unread;
+  5. two more appends make it three;
+  6. clicking `JumpToLatest` returns to the end, clears the affordance and reports
+     `onPinnedChange(true)`;
+  7. scrolling back down with the wheel re-pins and clears the count;
+  8. growing the last row (same child count) while pinned keeps the end in view;
+  9. growing it while unpinned leaves the offset unchanged;
+  10. `onPinnedChange(false)` fires on the scroll-up.
+  Both directions: always scroll after an append (delete the pinned guard) → tests
+  4/9 fail; never scroll (delete the layout effect) → tests 1/3/6/8 fail.
 
 ## Acceptance
 
-- [ ] `MessageScroller` exists with compound parts and typed props.
-- [ ] Pinned / unpinned / streaming / empty / long-history states behave as above.
-- [ ] The pure state machine is unit-tested in both directions.
-- [ ] A docs page with a streaming example and a scroll-up-while-streaming example.
-- [ ] shadcn/ui credited in `LICENSES/` and on the page.
-- [ ] Native smoke test passes — blocked by B1 until the playground runs.
+- [x] `MessageScroller` exists with compound parts and typed props.
+- [x] Pinned / unpinned / streaming / empty / short-history states behave as above.
+- [x] The pure state machine is unit-tested in both directions.
+- [x] A docs page with a streaming example and a scroll-up-while-streaming example.
+- [x] shadcn/ui credited on the page; `LICENSES/` credit recorded in `TODO.md`
+      because that directory is owned by the licensing workstream.
+- [x] Native suite passes, and the `COMPONENTS.md` row's count matches it.
+- [x] Non-virtualized viewport recorded as the limitation (STOP condition 1).
+
+**Proof of failure (recorded 2026-10-18):** with the pinned guard removed from
+the layout effect, the native "does not yank a reader who scrolled up" test fails
+with offset `-1113` instead of `-1081`; with the layout effect disabled, the
+"starts pinned at the end" test fails with offset `0`. For the rules, replacing
+the threshold comparison with `pinned = true` fails two `observeScroll` tests, and
+removing `state.pinned ||` from `addItems` fails "ignores arrivals while pinned".
+All four mutations were reverted before the recorded green run.
 
 ## STOP conditions
 
 - `<virtual-list>` cannot report a reliable distance-from-end → implement against a
   non-virtualized viewport first and record the limitation; do not fake the pin.
+  **This is the chosen path** (see "Measured" above); do not silently claim
+  virtualization.
 - The runtime has no scroll handle to observe → STOP and report; a timer-based
-  approximation is not acceptable.
+  approximation is not acceptable. (`onScroll` + `getElementBounds` were measured,
+  so this does not apply.)
+- `getElementBounds` on the tail clamps at the viewport edge → STOP; the distance
+  contract needs an offscreen position.
 - Anything needs a change outside this workstream's paths → add a TODO, do not edit
   another workstream's files.
 
