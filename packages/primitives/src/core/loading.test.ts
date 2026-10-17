@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
+  indeterminateFillStyle,
+  indeterminateLeadStyle,
   indeterminateOffset,
   PULSE_STEPS,
   pulseOpacity,
   skeletonStyle,
+  SPINNER_SEGMENTS,
   spinnerDotStyle,
   spinnerDots,
 } from "./loading.js";
@@ -112,38 +115,43 @@ describe("spinnerDots", () => {
 });
 
 describe("indeterminateOffset", () => {
-  const track = 200;
-  const segment = 80;
+  const segment = 40;
 
   it("stays inside the track for the whole cycle", () => {
     const offsets = Arr.map(Arr.range(0, 64), (step) =>
-      indeterminateOffset(step, track, segment),
+      indeterminateOffset(step, segment),
     );
-    expect(
-      Arr.every(offsets, (value) => value >= 0 && value <= track - segment),
-    ).toBe(true);
-    expect(Arr.every(offsets, Number.isInteger)).toBe(true);
+    expect(Arr.every(offsets, (value) => value >= 0 && value <= 100 - segment)).toBe(
+      true,
+    );
+    // The cycle visits one distinct offset per segment step, so the bar is
+    // never still and never repeats a position inside a cycle.
+    expect(new Set(offsets).size).toBe(SPINNER_SEGMENTS);
   });
 
   it("moves and then wraps, so the bar is never still", () => {
-    expect(indeterminateOffset(1, track, segment)).toBeGreaterThan(
-      indeterminateOffset(0, track, segment),
+    expect(indeterminateOffset(1, segment)).toBeGreaterThan(
+      indeterminateOffset(0, segment),
     );
-    expect(indeterminateOffset(8, track, segment)).toBe(
-      indeterminateOffset(0, track, segment),
-    );
+    expect(indeterminateOffset(8, segment)).toBe(indeterminateOffset(0, segment));
   });
 
-  it("never paints the fill past the end of the track", () => {
+  it("never paints the segment past the end of the track", () => {
     const max = Math.max(
-      ...Arr.map(Arr.range(0, 40), (s) =>
-        indeterminateOffset(s, track, segment),
-      ),
+      ...Arr.map(Arr.range(0, 40), (s) => indeterminateOffset(s, segment)),
     );
-    expect(max + segment).toBeLessThanOrEqual(track);
+    expect(max + segment).toBeLessThanOrEqual(100);
   });
 
   it("cannot travel when the segment fills the track", () => {
-    expect(indeterminateOffset(3, 40, 40)).toBe(0);
+    expect(indeterminateOffset(3, 100)).toBe(0);
+  });
+
+  it("moves the segment with a percentage-width spacer, not a pixel offset", () => {
+    const offset = indeterminateOffset(3, segment);
+    expect(indeterminateLeadStyle(offset).width).toBe(`${offset}%`);
+    expect(indeterminateFillStyle(segment, testTheme.colors.primary, testTheme).width).toBe(
+      `${segment}%`,
+    );
   });
 });

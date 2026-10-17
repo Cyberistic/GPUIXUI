@@ -12,7 +12,7 @@
  * `.agents/slop/plans/020-gpuix-runtime-capability.md` §3).
  */
 
-import type { StyleDesc } from "@gpuix/react";
+import type { GpuixTheme, StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type {
   ColorRef,
@@ -171,6 +171,41 @@ export const controlFocusStyle = (
   theme: PrimitiveTheme,
 ): StyleDesc =>
   ring(spec.invalid === true ? theme.colors.destructive : theme.colors.ring);
+
+/**
+ * What a text field adds over the shared control chrome.
+ *
+ * A field is not a button: its content starts at the left, it takes the body
+ * type rather than the label type, and its text is selectable because it is
+ * the user's content.
+ */
+export const fieldTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  justifyContent: "flex-start",
+  fontSize: theme.typography.body.fontSize,
+  lineHeight: theme.typography.body.lineHeight,
+  fontWeight: theme.typography.body.fontWeight,
+  cursor: "text",
+  userSelect: "text",
+});
+
+/**
+ * The native text theme for an `<input>`/`<textarea>`/`<code>` element.
+ *
+ * GPUix's native text components take their own `theme` prop; mapping the
+ * design system onto it here keeps a field's placeholder, caret and selection
+ * in the same palette as everything else.
+ */
+export const nativeTextTheme = (theme: PrimitiveTheme): GpuixTheme => ({
+  appearance: theme.mode,
+  bg: theme.colors.input,
+  text: theme.colors.inputForeground,
+  textMuted: theme.colors.mutedForeground,
+  textFaint: theme.colors.placeholder,
+  accent: theme.colors.primary,
+  caret: theme.colors.primary,
+  fontSans: theme.typography.sans,
+  fontMono: theme.typography.mono,
+});
 
 // ── Text ─────────────────────────────────────────────────────────────
 

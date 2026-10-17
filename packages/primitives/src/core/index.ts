@@ -42,6 +42,7 @@ export type {
 } from "./layout.js";
 
 export {
+  radioDotStyle,
   SELECTION_ACCENTS,
   SELECTION_STATES,
   selectionBoxStyle,
@@ -57,6 +58,7 @@ export type {
 
 export {
   indeterminateFillStyle,
+  indeterminateLeadStyle,
   indeterminateOffset,
   PULSE_STEPS,
   pulseOpacity,
@@ -76,6 +78,8 @@ export type {
 export {
   controlFocusStyle,
   controlStyle,
+  fieldTextStyle,
+  nativeTextTheme,
   progressFillStyle,
   progressPercent,
   progressTrackStyle,

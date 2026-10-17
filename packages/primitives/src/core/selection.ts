@@ -28,6 +28,8 @@ export interface SelectionSpec {
   readonly state: SelectionState;
   readonly size: ControlSize;
   readonly accent: SelectionAccent;
+  /** A box for a checkbox; a circle for a radio. Defaults to `square`. */
+  readonly shape?: "square" | "circle";
   readonly invalid?: boolean;
   readonly disabled?: boolean;
 }
@@ -82,7 +84,7 @@ export const selectionBoxStyle = (
     width: side,
     height: side,
     flexShrink: 0,
-    borderRadius: theme.radius.sm,
+    borderRadius: spec.shape === "circle" ? theme.radius.full : theme.radius.sm,
     borderWidth: theme.borderWidth.thin,
     borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : undefined,
@@ -175,5 +177,25 @@ export const switchThumbStyle = (
     backgroundColor: filled(spec)
       ? accentRole(spec, theme).foreground
       : theme.colors.foreground,
+  };
+};
+
+/**
+ * The centre dot of a checked radio.
+ *
+ * Half the box, so it reads as a filled pip inside the ring rather than a
+ * second border; the colour is the same mark role the checkmark uses.
+ */
+export const radioDotStyle = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const side = Math.round(theme.iconSize[spec.size] / 2);
+  return {
+    width: side,
+    height: side,
+    flexShrink: 0,
+    borderRadius: theme.radius.full,
+    backgroundColor: selectionMarkColor(spec, theme),
   };
 };

@@ -117,39 +117,39 @@ export const spinnerDotStyle = (
 });
 
 /**
- * Where the moving segment of an indeterminate bar sits, in pixels.
+ * Where the moving segment of an indeterminate bar starts, as a percentage of
+ * the track.
  *
- * The runtime takes `left`/`right` as **numbers**, not percentages, so the
- * component measures its track with `onLayout` and this function turns the
- * step into an offset inside it. It travels from 0 to `trackWidth - width` and
- * wraps; the phase is the step's position in that cycle.
+ * The runtime has no `onLayout` (plan 020 §1.3), so the track's width is
+ * unknown; a percentage `width` is a length it does accept. The bar is a row
+ * whose first child is an empty spacer of this width and whose second is the
+ * segment, so varying the spacer moves the segment without measuring anything.
  *
  * @param step the discrete step the component is on
- * @param trackWidth the measured width of the track, in pixels
- * @param segmentWidth the width of the moving segment, in pixels
+ * @param segment the segment's width as a percentage of the track
  */
-export const indeterminateOffset = (
-  step: number,
-  trackWidth: number,
-  segmentWidth: number,
-): number => {
-  const travel = Math.max(0, trackWidth - segmentWidth);
+export const indeterminateOffset = (step: number, segment = 40): number => {
+  const travel = Math.max(0, 100 - segment);
   const phase =
     ((step % SPINNER_SEGMENTS) + SPINNER_SEGMENTS) % SPINNER_SEGMENTS;
-  return Math.round((phase / SPINNER_SEGMENTS) * travel);
+  return (phase / SPINNER_SEGMENTS) * travel;
 };
 
-/** The moving fill of an indeterminate bar, positioned in pixels. */
+/** The moving segment of an indeterminate bar: a percentage-width fill. */
 export const indeterminateFillStyle = (
-  offset: number,
-  width: number,
+  segment: number,
   color: string,
   theme: PrimitiveTheme,
 ): StyleDesc => ({
-  position: "absolute",
-  left: offset,
-  width,
+  width: `${segment}%`,
   height: "100%",
   borderRadius: theme.radius.full,
   backgroundColor: color,
 });
+
+/** The empty spacer that pushes the segment to its offset. */
+export const indeterminateLeadStyle = (offset: number): StyleDesc => ({
+  width: `${offset}%`,
+  flexShrink: 0,
+});
+
