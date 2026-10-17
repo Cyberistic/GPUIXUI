@@ -86,6 +86,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [087](./087-selected-secondary-text.md) | Selected secondary text, and the wash that must stay visible | F | 057, 071, 079, 081, 086 | done |
 | [088](./088-body-text-on-panels.md) | Default body text on the quiet panel and the floating surface | F | 071, 079, 086, 087 | done |
 | [089](./089-density-metric-merge.md) | Density metrics merge by size | B/F | 011, 068, 070 | done |
+| [090](./090-soft-status-border-role.md) | The soft status edge: a designed role, held to its floor | F | 014, 057, 071, 076, 083, 086 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -383,6 +384,17 @@ omitted. `DensityOverrides` makes the promise expressible and the merge
 deep-merges `controlHeight` and `controlPaddingX` size by size, the way
 typography merges field by field; a preset name still selects the whole preset
 and keeps its identity, and the base preset's name is never overridable.
+
+090 closes the last painted value that was not a role: `statusTone(...).border`
+is the edge an Alert, Badge or Toast paints around its soft status surface, and
+it was a 30% alpha mixture of the solid role recomputed at runtime — unmeasured,
+un-editable in a copied platform style, and 1.12:1 on the high-contrast light
+`warning` surface, under the 3:1 the design system gives a decorative divider.
+Four `xSoftBorder` roles join the palette (54 → 58), the default sets keep
+today's pixels exactly (each value is the composite it replaces), the AAA sets
+get a designed ramp step (4.41:1 at the lowest), and the edge joins the
+`divider` class on its own fill (105 → 109 pairs), so an edited theme is held to
+the floor `themeContrastFailures` already enforces for every other divider.
 
 ### Reference adoption (block `200–299`)
 
