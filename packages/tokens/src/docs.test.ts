@@ -582,6 +582,17 @@ describe("docs/tokens.md theme contract", () => {
     );
     expect(markdown).toContain("density: { controlHeight: { md: 34 } }");
   });
+
+  it("states how the builder selects its contrast variant", () => {
+    const page = markdown.replace(/\s+/g, " ");
+
+    expect(page).toContain(
+      '`createTheme(config)` starts from `getTheme(config.mode, config.contrast ?? "default")`, so `contrast` selects the palette it builds on;',
+    );
+    expect(page).not.toContain(
+      "`createTheme(config)` starts from `themes[config.mode]`",
+    );
+  });
 });
 
 describe("docs/tokens.md contrast surfaces", () => {

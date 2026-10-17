@@ -275,11 +275,17 @@ to know the variant exists. It also declares `contrast: "high"`, so the checks
 that read a theme default to the floor set it was built for.
 
 ```ts
-import { getTheme, highContrastThemes } from "@gpuixui/tokens";
+import { createTheme, getTheme, highContrastThemes } from "@gpuixui/tokens";
 
 getTheme("dark", "high"); // highContrastThemes.dark
 getTheme("light"); // the default light theme, unchanged
+createTheme({ mode: "dark", contrast: "high" }); // builds on the AAA dark set
 ```
+
+`createTheme` reads `contrast` the way `getTheme` does, so a brand built on the
+AAA palette starts from the AAA palette rather than from a relabelled default.
+Only `extendTheme` can declare a floor set; the builder selects the palette it
+carries, so it cannot claim another.
 
 | Role | HC light | HC dark | Use |
 | ---- | -------- | ------- | --- |
@@ -884,9 +890,10 @@ until `themeContrastFailures` proves it.
 `lightTheme`, `darkTheme`, `themes` and `getTheme(mode)` are the built-ins.
 Each mode also has a high-contrast variant (`highContrastLightTheme`,
 `highContrastDarkTheme`, `highContrastThemes`) reachable through
-`getTheme(mode, "high")`. `createTheme(config)` starts from `themes[config.mode]`;
-`extendTheme(base, overrides)` derives from any theme, including a high-contrast
-one.
+`getTheme(mode, "high")`. `createTheme(config)` starts from
+`getTheme(config.mode, config.contrast ?? "default")`, so `contrast` selects the
+palette it builds on; `extendTheme(base, overrides)` derives from any theme,
+including a high-contrast one.
 
 ```ts
 import { createTheme, extendTheme, darkTheme } from "@gpuixui/tokens";
@@ -943,8 +950,9 @@ Merge rules:
   changing the medium control height keeps the small and large ones, and a
   partial override keeps the base preset name;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
-- `contrast` defaults to the base's declaration; an override is a claim the
-  extension mechanism does not check;
+- `contrast` defaults to the base's declaration; an `extendTheme` override is a
+  claim the extension mechanism does not check, and `createTheme` has no claim
+  path at all — its `contrast` picks the built-in variant;
 - nothing is mutated. The returned theme may share untouched token objects. The
   contract is no mutation, not deep cloning.
 

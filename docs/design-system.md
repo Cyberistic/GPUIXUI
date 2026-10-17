@@ -371,7 +371,8 @@ design system cannot compensate for a missing role.
 
 The extension mechanism is deliberately small:
 
-- `createTheme({ mode, ...overrides })` — start from a built-in theme.
+- `createTheme({ mode, contrast, ...overrides })` — start from a built-in
+  variant; `contrast` selects the palette it builds on.
 - `extendTheme(base, overrides)` — derive from any theme, including another
   brand theme, a high-contrast theme or a platform variant.
 - `getPlatformTheme(platform, mode, contrast?)` — resolve a shipped platform
