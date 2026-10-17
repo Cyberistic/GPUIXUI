@@ -15,6 +15,7 @@ import type { PlaygroundScenario } from "../types.js";
 import { a11yScenario } from "./a11y.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
+import { textSelectionScenario } from "./text-selection.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
 import { inputScenario } from "./input.js";
@@ -58,6 +59,7 @@ export const CORE_CAPABILITIES = [
   "theme",
   "a11y",
   "content",
+  "selection",
 ] as const;
 
 /** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`). */
@@ -96,6 +98,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   a11yScenario,
   nativeSurfacesScenario,
   dragTargetsScenario,
+  textSelectionScenario,
   shellNavigationScenario,
   virtualizedTableScenario,
   treeScenario,

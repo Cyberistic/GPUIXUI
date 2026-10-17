@@ -180,6 +180,31 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onSome: (point) =>
         renderer.nativeSimulateFileDrop(point.x, point.y, [...paths]),
     }),
+  selectText: (fromTestId, toTestId) =>
+    Option.getOrNull(
+      Option.flatMap(
+        Option.flatMap(elementId(renderer, fromTestId), (id) =>
+          boundsOf(renderer, id),
+        ),
+        (from) =>
+          Option.flatMap(
+            Option.flatMap(elementId(renderer, toTestId), (id) =>
+              boundsOf(renderer, id),
+            ),
+            (to) =>
+              Option.fromNullishOr(
+                renderer.dragSelect(
+                  from.x + 2,
+                  from.y + 2,
+                  to.x + to.width,
+                  to.y + to.height - 2,
+                ),
+              ),
+          ),
+      ),
+    ),
+  selectedText: () => renderer.getSelectedText(),
+  clearSelection: () => renderer.clearSelection(),
   scrollOffset: (testId) =>
     Option.match(elementId(renderer, testId), {
       onNone: () => null,

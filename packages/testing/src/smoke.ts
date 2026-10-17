@@ -40,6 +40,7 @@ export const CAPABILITIES = [
   "workspace",
   "content",
   "drag",
+  "selection",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -246,6 +247,14 @@ export interface SmokeHost {
   ) => void;
   /** Drops `paths` on `testId` through GPUI's file-drop hit test. */
   readonly fileDrop: (testId: string, paths: ReadonlyArray<string>) => void;
+  /**
+   * Drag-selects from the start of `fromTestId` to the end of `toTestId`,
+   * flushing between steps as native selection requires; the selection or null.
+   */
+  readonly selectText: (fromTestId: string, toTestId: string) => string | null;
+  /** The runtime's current selection, joined in document order, or null. */
+  readonly selectedText: () => string | null;
+  readonly clearSelection: () => void;
   readonly scrollOffset: (testId: string) => Offset | null;
   readonly screenshot: (absolutePath: string) => void;
   /** Advances GPUI's dispatcher and timers. Not motion time; see `pauseMotion`. */

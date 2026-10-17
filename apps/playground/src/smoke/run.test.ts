@@ -68,6 +68,7 @@ describe("scenarioProblems", () => {
         "a11y",
         "content",
         "drag",
+        "selection",
       ]),
     );
   });
