@@ -68,10 +68,10 @@ There are 53 roles. The four status families — `info`, `success`, `warning` an
 `destructive` — each have three tonalities: a solid fill with a readable
 foreground on it, a soft pair (`xSoft` / `xSoftForeground`) for alerts, badges
 and toasts, and a text role (`xText`) for status labels, icons and indicator
-dots drawn on `background` or `card`. A filled action also has a designed
-hover — `primaryHover` and `destructiveHover` — so a component never composites
-an alpha fill over whatever surface sits behind it. `info` is blue, not iris, so
-it can never be confused with `primary`.
+dots drawn on `background`, `card` or `popover`. A filled action also has a
+designed hover — `primaryHover` and `destructiveHover` — so a component never
+composites an alpha fill over whatever surface sits behind it. `info` is blue,
+not iris, so it can never be confused with `primary`.
 
 | Role | Light | Dark | Use |
 | ---- | ----- | ---- | --- |
@@ -99,13 +99,13 @@ it can never be confused with `primary`.
 | `warningForeground` | `#2A1B00` | `#2A1B00` | text on `warning` |
 | `info` | `#2559D6` | `#9FBEFF` | informational status, distinct from `primary` |
 | `infoForeground` | `#FFFFFF` | `#11141A` | text and icons on `info` |
-| `infoSoft` | `#DEE9FF` | `#152F6B` | soft informational surface |
+| `infoSoft` | `#DEE9FF` | `#16356F` | soft informational surface |
 | `infoSoftForeground` | `#173A88` | `#DEE9FF` | text and icons on `infoSoft` |
-| `successSoft` | `#D3F9E2` | `#0A3A26` | soft success surface |
+| `successSoft` | `#C2F4D6` | `#0C452D` | soft success surface |
 | `successSoftForeground` | `#0E5135` | `#D3F9E2` | text and icons on `successSoft` |
-| `warningSoft` | `#FFEFC6` | `#4B3100` | soft warning surface |
+| `warningSoft` | `#FFE3A3` | `#4B3100` | soft warning surface |
 | `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
-| `destructiveSoft` | `#FFE0E0` | `#5C1619` | soft destructive surface |
+| `destructiveSoft` | `#FFE0E0` | `#6B1A1D` | soft destructive surface |
 | `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` |
 | `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` |
@@ -182,6 +182,9 @@ The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
 floor, and light `success` is 4.26:1, under the 4.5:1 text floor. `xText` is the
 readable tonality for the plain surfaces (`background`, `card` and `popover`);
 it is held to 4.5:1 in the default themes and 7:1 in the high-contrast variants.
+A soft surface is a surface in its own right: it is held to 1.05:1 against
+`background`, `card` and `popover`, so an Alert, Badge or Toast stays
+perceivable on every shipped canvas, platform variants included.
 
 `statusTone(theme, tone)` resolves the soft surface, its readable foreground, a
 30%-alpha edge from the solid role, and the plain-surface text role:
@@ -797,12 +800,13 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 ```
 
 `themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
-against `contrastFloors`. The default is the level the theme declares, so a
-high-contrast theme is checked against 7:1 without a second argument; naming a
-level asks a stricter question of a theme that does not claim it. It returns one
-entry per missed pair, naming the foreground, background, pair class, floor and
-measured ratio. The selection wash is measured as it paints: the foreground over
-`compositeOver(selection, background)` and over
+against `contrastFloors`. The list holds text pairs, status pairs, the selection
+wash, the soft status surfaces and the decorative dividers. The default is the
+level the theme declares, so a high-contrast theme is checked against 7:1 without
+a second argument; naming a level asks a stricter question of a theme that does
+not claim it. It returns one entry per missed pair, naming the two roles, the
+pair class, the floor and the measured ratio. The selection wash is measured as
+it paints: the foreground over `compositeOver(selection, background)` and over
 `compositeOver(selection, card)`, reported with `wash: "selection"`.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
@@ -814,8 +818,8 @@ check and the test suite both read:
 ```ts
 import { contrastFloors } from "@gpuixui/tokens";
 
-contrastFloors.default; // { body: 7, secondary: 4.5, boundary: 3 }
-contrastFloors.high; // { body: 7, secondary: 7, boundary: 4.5 }
+contrastFloors.default; // { body: 7, secondary: 4.5, boundary: 3, surface: 1.05, divider: 1.05 }
+contrastFloors.high; // { body: 7, secondary: 7, boundary: 4.5, surface: 1.05, divider: 3 }
 ```
 
 The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).
@@ -953,9 +957,13 @@ text on a hovered filled action, ghost text on the `hover` and `active` washes,
 muted text on `background`, `card` and `popover`, and status text (`xText`) on
 `background`, `card` and `popover`; 3:1 for focus and essential boundaries in
 the default themes; 4.5:1 for them in the high-contrast variants).
-It also fails if a soft status surface is indistinguishable from `background` or
-`card` (floor 1.05:1), or if body text over the composited `selection` wash on
-`background`/`card` drops below its body floor. Palette edits must keep it green.
+It also fails if a soft status surface is indistinguishable from `background`,
+`card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
+those surfaces (1.05:1, and 3:1 at high contrast), or if body text over the
+composited `selection` wash on `background`/`card` drops below its body floor.
+Every platform variant is checked on its own canvas, not the identity's, so a
+style that moves `background` or `card` is held to the status tints it inherits.
+Palette edits must keep it green.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,
 `active` and `selected` washes, because focus and selection co-occur in rows;
@@ -980,8 +988,9 @@ from the package either.
 Both suites import `contrastPairs` and `contrastFloors` from `src/contrast.ts`,
 so the documented contract and the tests that enforce it are one description,
 and `contrast.test.ts` proves the public checker passes every shipped theme and
-names the pairs a brand theme, an opaque selection wash or a malformed role
-misses. It also proves the checker reads the level a theme declares: a
+names the pairs a brand theme, an opaque selection wash, an invisible soft
+surface, a vanished divider or a malformed role misses. It also proves the
+checker reads the level a theme declares: a
 high-contrast theme with a 5.33:1 secondary role is reported at the 7:1 floors
 without a second argument. `docs.test.ts` holds the `Theme` block above to the
 interface, so a field cannot ship undocumented, and requires the two signatures

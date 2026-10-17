@@ -11,6 +11,11 @@
  * It also holds the `compositeOver` JSDoc example to the function (plan 075):
  * the example printed `#808080` for `#00000080`, which composites to `#7F7F7F`,
  * so a reader copying it wrote an assertion the library itself would fail.
+ *
+ * Plan 076 closes the two checks the suites ran outside the contract: the soft
+ * status surfaces (plan 073's audit found nine platform pairs below the 1.05:1
+ * floor, the worst being Linux dark's `destructiveSoft` at 1.005:1 on its card)
+ * and the high-contrast decorative divider. Both are `contrastPairs` now.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -88,8 +93,14 @@ describe("compositeOver", () => {
 describe("contrastFloors", () => {
   it("states the documented floors by level and pair class", () => {
     expect(contrastFloors).toEqual({
-      default: { body: 7, secondary: 4.5, boundary: 3 },
-      high: { body: 7, secondary: 7, boundary: 4.5 },
+      default: {
+        body: 7,
+        secondary: 4.5,
+        boundary: 3,
+        surface: 1.05,
+        divider: 1.05,
+      },
+      high: { body: 7, secondary: 7, boundary: 4.5, surface: 1.05, divider: 3 },
     });
   });
 });
@@ -179,8 +190,52 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(48);
+    expect(contrastPairs.length).toBe(63);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
+  });
+
+  it("reports a soft status surface that vanishes into its canvas", () => {
+    const white = "#FFFFFF";
+    const invisible = extendTheme(getTheme("light"), {
+      colors: {
+        background: white,
+        card: white,
+        popover: white,
+        successSoft: white,
+      },
+    });
+    const failures = themeContrastFailures(invisible).filter(
+      ({ pairClass }) => pairClass === "surface",
+    );
+
+    expect(
+      failures.map(({ foreground, background }) => [foreground, background]),
+    ).toEqual([
+      ["successSoft", "background"],
+      ["successSoft", "card"],
+      ["successSoft", "popover"],
+    ]);
+    expect(
+      failures.every(({ floor, ratio }) => floor === 1.05 && ratio === 1),
+    ).toBe(true);
+  });
+
+  it("reports an invisible divider at the level it declares", () => {
+    const invisible = extendTheme(getTheme("light", "high"), {
+      colors: { border: getTheme("light", "high").colors.background },
+    });
+    const failures = themeContrastFailures(invisible).filter(
+      ({ pairClass }) => pairClass === "divider",
+    );
+
+    expect(failures.map(({ background }) => background)).toEqual([
+      "background",
+      "card",
+      "popover",
+    ]);
+    expect(
+      failures.every(({ floor, ratio }) => floor === 3 && ratio === 1),
+    ).toBe(true);
   });
 
   it("checks the focus ring on the washes a focused row paints", () => {

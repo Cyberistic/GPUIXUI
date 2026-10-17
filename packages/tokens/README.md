@@ -165,7 +165,11 @@ themeContrastFailures(brandTheme); // []
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
 the parts, and the selection wash is measured as it paints. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
-washes, so a ring that vanishes on a selected row is caught. A runnable example
+washes, so a ring that vanishes on a selected row is caught. The same list holds
+the soft status surfaces at 1.05:1 against `background`, `card` and `popover`,
+and the decorative `border` at 1.05:1 (3:1 at high contrast), so an Alert, Badge
+or Toast and every divider stay perceivable. Every shipped theme passes it —
+platform variants on their own canvas, not the identity's. A runnable example
 lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 
 ## Status tones

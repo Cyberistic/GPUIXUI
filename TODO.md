@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 42/58
+`[x]` `[██████████]` 43/59
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -113,6 +113,13 @@ weight through layout bounds, not the retained style — `paintedStyle` reads
 `getElement().style`, so it shows what was authored rather than what painted; a
 native probe on the pinned 0.10.0 paints a three-line `lineHeight` 20/60 block at
 76/196px, which bounds can prove (owner: `playground`)
+`[ ]` Cross-team: `docs-site` moves the platform toggle from the pre-063
+`platformTheme(base, platform)` API to `getPlatformTheme(platform, mode,
+contrast)`, deletes its structural `packages/tokens` copy (still the 47-role
+package with no `platformStyles`), and makes every preview read the resolved
+theme — otherwise the MISSION acceptance "toggle macOS → Windows and every
+preview changes" does not survive the merge (owner: `docs-site`; plans 420 and
+063)
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)
@@ -135,6 +142,10 @@ washes a focused row paints, and status text and the control boundary on
 wash percentage — derive the `xText` surfaces from `contrastPairs` so the
 high-contrast table names `popover`, and correct the `compositeOver` example
 that printed `#808080` for a `#7F7F7F` composite (plan 075)
+`[x]` Hold the contrast contract to the soft status surfaces and decorative
+dividers it never checked, and fix the nine shipped platform pairs below the
+1.05:1 floor — Linux dark's `destructiveSoft` measured 1.005:1 on its own card
+(plan 076)
 `[x]` Guard the palette ramps in `docs/tokens.md` — the last hand-written value
 table without a drift test (plan 072)
 `[x]` Make a theme declare its contrast level so `applyPlatformStyle` and

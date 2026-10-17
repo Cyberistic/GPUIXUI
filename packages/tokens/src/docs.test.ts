@@ -406,6 +406,16 @@ describe("docs/tokens.md contrast contract", () => {
       expect(mentions(name), name).toBe(true);
     });
   });
+
+  it("states the floor table the checker reads", () => {
+    const line = (level: keyof typeof contrastFloors): string =>
+      `contrastFloors.${level}; // { ${Object.entries(contrastFloors[level])
+        .map(([pairClass, floor]) => `${pairClass}: ${floor}`)
+        .join(", ")} }`;
+
+    expect(markdown).toContain(line("default"));
+    expect(markdown).toContain(line("high"));
+  });
 });
 
 describe("docs/tokens.md theme contract", () => {
@@ -436,6 +446,24 @@ describe("docs/tokens.md contrast surfaces", () => {
     const sentence =
       "The focus ring is measured on the canvas, card and popover and on the `hover`, `active` and `selected` washes, because focus and selection co-occur in rows; status text (`xText`) and the `borderStrong` boundary are also measured on `popover`, so a status label or a control inside a dialog, popover or toast is covered.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
+  });
+
+  it("names every surface the soft status pairs are held against", () => {
+    const surfacePairs = contrastPairs.filter(
+      ([, , pairClass]) => pairClass === "surface",
+    );
+    const surfaces = [...new Set(surfacePairs.map(([, surface]) => surface))];
+    const names = surfaces.map((surface) => `\`${surface}\``);
+    const list = `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+    const sentence =
+      "A soft surface is a surface in its own right: it is held to " +
+      `${contrastFloors.default.surface}:1 against ${list}, so an Alert, Badge or Toast stays ` +
+      "perceivable on every shipped canvas, platform variants included.";
+
+    expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
+    expect(new Set(surfacePairs.map(([role]) => role))).toEqual(
+      new Set(statusTones.map((tone) => `${tone}Soft`)),
+    );
   });
 });
 
@@ -521,6 +549,8 @@ describe("docs/design-system.md", () => {
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (\`foreground\` over the composited \`selection\` wash) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| focus ring and essential boundaries, including the ring on the \`hover\`/\`active\`/\`selected\` washes and a control boundary on \`popover\` | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
+      `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);

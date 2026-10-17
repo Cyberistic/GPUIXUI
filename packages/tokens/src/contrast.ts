@@ -12,19 +12,41 @@ import type { ThemeColors } from "./color.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
 /** The floor class a documented pair belongs to. */
-export type ContrastPairClass = "body" | "secondary" | "boundary";
+export type ContrastPairClass =
+  | "body"
+  | "secondary"
+  | "boundary"
+  /** One surface must be perceivable against another (`xSoft` on a canvas). */
+  | "surface"
+  /** A decorative border (`border`) must stay visible on its surface. */
+  | "divider";
 
-/** A foreground/background role pair and the class of text it carries. */
+/** A role pair and the floor class it belongs to. */
 export type ContrastPair = readonly [
   keyof ThemeColors,
   keyof ThemeColors,
   ContrastPairClass,
 ];
 
+const softSurfaceRoles = [
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
+] as const;
+
+const softSurfacePairs: readonly ContrastPair[] = softSurfaceRoles.flatMap(
+  (role) =>
+    (["background", "card", "popover"] as const).map(
+      (background): ContrastPair => [role, background, "surface"],
+    ),
+);
+
 /**
- * Every documented text, status and boundary pair — including the focus ring on
- * the washes a focused row paints, and the status text and control boundary on a
- * floating surface.
+ * Every documented pair — text, status, surface and divider — including the
+ * focus ring on the washes a focused row paints, the status text and control
+ * boundary on a floating surface, the soft status surfaces a canvas must
+ * distinguish, and the decorative dividers that must stay visible.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ["foreground", "background", "body"],
@@ -75,14 +97,24 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["ring", "background", "boundary"],
   ["ring", "card", "boundary"],
   ["ring", "popover", "boundary"],
+  ...softSurfacePairs,
+  ["border", "background", "divider"],
+  ["border", "card", "divider"],
+  ["border", "popover", "divider"],
 ];
 
 /** WCAG floors by contrast level and pair class. */
 export const contrastFloors: Readonly<
   Record<ThemeContrast, Readonly<Record<ContrastPairClass, number>>>
 > = {
-  default: { body: 7, secondary: 4.5, boundary: 3 },
-  high: { body: 7, secondary: 7, boundary: 4.5 },
+  default: {
+    body: 7,
+    secondary: 4.5,
+    boundary: 3,
+    surface: 1.05,
+    divider: 1.05,
+  },
+  high: { body: 7, secondary: 7, boundary: 4.5, surface: 1.05, divider: 3 },
 };
 
 const opaqueHex = /^#([0-9A-Fa-f]{6})$/;
@@ -166,9 +198,9 @@ export function compositeOver(color: string, background: string): string {
 
 /** A documented pair that misses its floor in one theme. */
 export interface ContrastFailure {
-  /** The role carrying text. */
+  /** The role carrying text, or the surface being perceived. */
   readonly foreground: keyof ThemeColors;
-  /** The role painted behind it. */
+  /** The role painted behind it, or the surface it must stand out from. */
   readonly background: keyof ThemeColors;
   /** The translucent role composited over `background`, when the pair sits on a wash. */
   readonly wash?: keyof ThemeColors;
@@ -183,10 +215,11 @@ export interface ContrastFailure {
 const selectionSurfaces = ["background", "card"] as const;
 
 /**
- * Every documented pair a theme misses, including the selection wash measured
- * over `background` and `card`. The level defaults to the one the theme
- * declares, so a high-contrast theme is checked against its own floors. An
- * empty array is the library's guarantee; a consumer test asserts exactly that:
+ * Every documented pair a theme misses — text, status, selection, surface and
+ * divider — including the selection wash measured over `background` and `card`.
+ * The level defaults to the one the theme declares, so a high-contrast theme is
+ * checked against its own floors. An empty array is the library's guarantee; a
+ * consumer test asserts exactly that:
  *
  * @example
  * ```ts

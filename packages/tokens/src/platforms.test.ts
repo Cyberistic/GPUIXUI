@@ -7,6 +7,12 @@
  *
  * Plan 051's original contract is still covered: the family table names one
  * installed family per platform and never a comma stack.
+ *
+ * Plan 076 adds the regression: a variant changes the canvas but inherited the
+ * identity's soft status tints, so nine pairs sat below the 1.05:1 floor — Linux
+ * dark's `destructiveSoft` measured 1.005:1 on its card. The contract now holds
+ * the soft surfaces and dividers, so the generic loop below checks them on each
+ * variant's own canvas; no variant-specific assertion is needed.
  */
 
 import { describe, expect, it } from "vitest";

@@ -183,7 +183,9 @@ Pills and avatars use `full` (clamped by the renderer to half the short side).
 
 Two border roles:
 
-- `border` is decorative — dividers and card edges. It is intentionally subtle.
+- `border` is decorative — dividers and card edges. It is intentionally subtle,
+  but held to a 1.05:1 perceivability floor (3:1 at high contrast), so subtle
+  never means invisible.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
   against the canvas so a control is perceivable without relying on fill alone.
 
@@ -250,9 +252,11 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | status text (`xText`) on `background`/`card`/`popover` | 4.5:1 | 7:1 |
 | text selection (`foreground` over the composited `selection` wash) | 7:1 | 7:1 |
 | focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover` | 3:1 | 4.5:1 |
-| soft status surface against `background` and `card` | 1.05:1 | 1.05:1 |
+| soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover` | 1.05:1 | 3:1 |
 
-The test runs for every shipped colour set and is part of the normal test suite.
+The test runs for every shipped colour set — platform variants included, each on
+its own canvas — and is part of the normal test suite.
 It can fail: a palette edit that reduces contrast fails the gate. The same check
 is public: `themeContrastFailures(theme)` returns every pair an edited theme
 misses, so a brand theme or copied platform style can be held to these floors in

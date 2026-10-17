@@ -65,21 +65,6 @@ describe("semantic colour contrast", () => {
   });
 });
 
-describe("high-contrast boundaries", () => {
-  const sets = [
-    ["high-contrast light", highContrastLightColors],
-    ["high-contrast dark", highContrastDarkColors],
-  ] as const;
-
-  sets.forEach(([label, colors]) => {
-    it(`${label}: decorative border on background meets 3:1`, () => {
-      expect(
-        contrastRatio(colors.border, colors.background),
-      ).toBeGreaterThanOrEqual(3);
-    });
-  });
-});
-
 describe("text selection", () => {
   const surfaces = ["background", "card"] as const;
 
@@ -97,30 +82,6 @@ describe("text selection", () => {
           ),
           `${label} ${surface}`,
         ).toBeGreaterThanOrEqual(floors.body);
-      });
-    });
-  });
-});
-
-const softRoles = [
-  "infoSoft",
-  "successSoft",
-  "warningSoft",
-  "destructiveSoft",
-] as const;
-
-describe("soft status surfaces", () => {
-  colourSets.forEach(({ label, colors }) => {
-    softRoles.forEach((role) => {
-      it(`${label}: ${role} is perceivable on both surfaces`, () => {
-        expect(
-          contrastRatio(colors[role], colors.background),
-          `${label} ${role} on background`,
-        ).toBeGreaterThanOrEqual(1.05);
-        expect(
-          contrastRatio(colors[role], colors.card),
-          `${label} ${role} on card`,
-        ).toBeGreaterThanOrEqual(1.05);
       });
     });
   });
