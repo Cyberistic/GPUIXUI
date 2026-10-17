@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import { iconSize } from "@gpuixui/tokens";
 import { ICON_SIZES, iconPixels } from "./sizes.js";
 
 /**
@@ -38,5 +39,11 @@ describe("icon sizes", () => {
   it("keeps the default size in the middle of the scale", () => {
     expect(iconPixels("md")).toBeGreaterThan(iconPixels("xs"));
     expect(iconPixels("md")).toBeLessThan(iconPixels("xl"));
+  });
+});
+
+describe("the scale's source", () => {
+  it("is the token scale, not a second copy", () => {
+    expect(ICON_SIZES).toBe(iconSize);
   });
 });

@@ -1,17 +1,14 @@
+import { iconSize } from "@gpuixui/tokens";
+
 /**
  * Icon sizes.
  *
- * A named size is a number of logical pixels on the 24x24 grid, so an icon at
- * `md` is exactly the height of a line of `md` text's cap box and lines up with
- * it. Pass a number only when the icon is not inline with text.
+ * The scale is `@gpuixui/tokens`' `iconSize` (plan 024): a named size is a
+ * number of logical pixels on the 24x24 grid, so an icon at `md` is exactly the
+ * height of a line of `md` text's cap box and lines up with it. Pass a number
+ * only when the icon is not inline with text.
  */
-export const ICON_SIZES = {
-  xs: 12,
-  sm: 14,
-  md: 16,
-  lg: 20,
-  xl: 24,
-} as const;
+export const ICON_SIZES = iconSize;
 
 export type IconSize = keyof typeof ICON_SIZES;
 

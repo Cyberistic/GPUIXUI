@@ -14,6 +14,9 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@gpuixui/tokens": "workspace:*"
+  },
   "peerDependencies": {
     "@gpuix/react": "catalog:",
     "react": "catalog:"
