@@ -290,6 +290,12 @@ The extension mechanism is deliberately small:
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
 
+A choice that survives a restart — the mode, the contrast variant, the platform
+style — arrives as `unknown`. Narrow it with `isThemeMode`, `isThemeContrast` and
+`isPlatformName` before building or resolving the theme; the package owns those
+unions, so no consumer should retype them. A whole theme object from a file is a
+different boundary: decode it with the application's `Schema`.
+
 Overrides merge by group; typography merges field by field, motion timing by
 timing and easing by easing; elevation levels are replaced as whole arrays; the
 mode is immutable. Nothing mutates the base, so a theme can be created once at
