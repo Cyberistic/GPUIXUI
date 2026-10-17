@@ -1,4 +1,9 @@
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  createElement,
+  useContext,
+  type ReactNode,
+} from "react";
 import { lightTheme, type Theme } from "./theme.js";
 
 const ThemeContext = createContext<Theme>(lightTheme);
@@ -19,9 +24,7 @@ export interface ThemeProviderProps {
  * the application owns the mode switch and passes the resolved theme.
  */
 export function ThemeProvider({ theme, children }: ThemeProviderProps) {
-  return (
-    <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
-  );
+  return createElement(ThemeContext.Provider, { value: theme }, children);
 }
 
 /** Read the nearest theme, or the light theme when no provider exists. */

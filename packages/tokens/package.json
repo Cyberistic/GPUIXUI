@@ -11,8 +11,8 @@
       "default": "./src/index.ts"
     },
     "./react": {
-      "types": "./src/react.tsx",
-      "default": "./src/react.tsx"
+      "types": "./src/react.ts",
+      "default": "./src/react.ts"
     }
   },
   "scripts": {
