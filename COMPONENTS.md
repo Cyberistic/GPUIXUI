@@ -53,8 +53,8 @@ and the strongest honest alternative.
 | Badges | done | yes | seven variants (neutral/primary/4 status tones/outline), two sizes sized by type role; 7 native behaviour tests. Not interactive by design; no icon or dismiss slot yet |
 | Avatars | done | yes | four diameters, deterministic unicode-safe initials fallback (8 logic tests), presence dot; 7 native behaviour tests. No image loading/error state in v1 — a missing file paints nothing and does not restore the initials |
 | Alerts | done | yes | four tones from the shared status palette, required `title`, optional icon slot and dismiss control; 10 native behaviour tests (real click, keyboard activation, alert role). Dismiss uses the local button stand-in; live-region announcement not verifiable here |
-| Lists / list items | todo | ? | |
-| Empty states | todo | ? | |
+| Lists / list items | done | yes | `selectionMode` none/single with a roving tab stop, wrap-around over disabled rows, real focus (`focusElement`), controlled + uncontrolled; 12 native behaviour tests. Single selection only — no multi-select, type-ahead or virtualisation |
+| Empty states | done | yes | title + optional description/action/icon, no surface of its own; 6 native behaviour tests including a real click on the action. Wrap width is a component constant (no measure token) |
 | Inline validation | todo | ? | |
 | Toasts / notifications | todo | ? | |
 | Dialogs | todo | ? | |

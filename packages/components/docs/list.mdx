@@ -1,0 +1,137 @@
+---
+title: List
+description: A vertical collection of rows, optionally single-selectable.
+---
+
+`List` presents rows. With `selectionMode="single"` it becomes a `listbox`: arrow
+keys move a roving tab stop, a click selects, and the list behaves as a single tab
+stop instead of one per row.
+
+```tsx
+import {
+  List,
+  ListItem,
+  ListItemDescription,
+  ListItemTitle,
+} from "@gpuixui/components/list";
+
+<List selectionMode="single" defaultValue="readme">
+  <ListItem value="readme">
+    <ListItemTitle>README.md</ListItemTitle>
+    <ListItemDescription>~/GPUIXUI</ListItemDescription>
+  </ListItem>
+  <ListItem value="list">
+    <ListItemTitle>list.tsx</ListItemTitle>
+  </ListItem>
+</List>;
+```
+
+## Modes
+
+| `selectionMode` | Role | Tab stop | Keyboard |
+| --------------- | ---- | -------- | -------- |
+| `none` (default) | `list` / `listitem` | none — rows are not focusable | none |
+| `single` | `listbox` / `option` | exactly one row | see below |
+
+## Keyboard (single mode)
+
+| Key | Effect |
+| --- | ------ |
+| `↓` | focus the next enabled row, wrapping |
+| `↑` | focus the previous enabled row, wrapping |
+| `Ctrl+N` / `Ctrl+P` | the desktop equivalents of `↓` / `↑` |
+| `Home` | focus the first enabled row |
+| `End` | focus the last enabled row |
+| `Enter` / `Space` | select the focused row |
+
+A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it can
+never be selected.
+
+## Selection
+
+Controlled and uncontrolled both work, like every stateful component here:
+
+```tsx
+// Uncontrolled: the list remembers.
+<List selectionMode="single" defaultValue="a" onValueChange={log} />;
+
+// Controlled: the app remembers.
+<List selectionMode="single" value={selected} onValueChange={setSelected} />;
+```
+
+In controlled mode the list reports the change and leaves `aria-selected` where
+the consumer put it — a suite asserts exactly that, because silently updating
+would be the classic controlled-component bug.
+
+**Unselecting is not built**: there is no second click that clears the value, and
+no `selectionMode="multiple"`. Selecting the same row again reports nothing new.
+
+## API
+
+`List` and `ListItem` take the GPUix host props and merge `style` last.
+
+| `List` prop | Type | Default |
+| ----------- | ---- | ------- |
+| `selectionMode` | `"none" \| "single"` | `"none"` |
+| `value` / `defaultValue` | `string` | — / `""` |
+| `onValueChange` | `(value: string) => void` | — |
+| `dense` | `boolean` | `false` |
+
+| `ListItem` prop | Type | Default |
+| --------------- | ---- | ------- |
+| `value` | `string` (required) | — |
+| `disabled` | `boolean` | `false` |
+| `leading` | `ReactNode` | — |
+| `trailing` | `ReactNode` | — |
+
+`ListItemTitle` is the row's one line; `ListItemDescription` is its second, muted
+and ellipsised.
+
+`ListItem` used outside `List` throws — a programming error at the boundary, not a
+runtime state to recover from.
+
+## Sizing
+
+A row is `density.rowHeight + spacing.md` tall (40px on the default comfortable
+density) and `density.rowHeight` when `dense` (32px). Selection paints
+`colors.selected` / `colors.selectedForeground`; hover paints `colors.accent`;
+a disabled row is drawn at 50% opacity.
+
+## Accessibility
+
+- `role="list"`/`"listitem"` without selection and `listbox`/`option` with it, so
+  assistive technology reads a list of rows either way.
+- `aria-selected` is set on every row in single mode, so the selection is
+  announced rather than only painted.
+- **The active row's focus ring shows for a click too.** `@gpuix/native@0.10.0`
+  has no `focusVisible`, so a keyboard-only ring cannot be declared; the ring is
+  the runtime's honest maximum.
+- Rows are reached as one list; Tab does not stop at every row.
+
+## Limitations
+
+- Single selection only. No multi-select, no type-ahead, no drag reorder, no
+  group headers, no nested rows.
+- No virtualisation: a `List` renders every row. Long collections belong in
+  `virtual-list`, which is a separate component with its own API.
+- The rows are not accessible by index: the API is `value`-based.
+
+## Verification
+
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (12 tests) plus
+`src/internal/collection.test.ts` for the navigation arithmetic: the modes and
+their roles, the absence and uniqueness of the tab stop, selection by click and by
+key, a disabled row rejecting both, real focus moving with wrap-around past a
+disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
+height, and the controlled list not moving its own selection.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Card** — the surface a list sits in.
+- **Badge** — the usual `trailing` slot.
+- **Avatar** — the usual `leading` slot.
+- **Tabs** and the menus — they reuse the same item registry.

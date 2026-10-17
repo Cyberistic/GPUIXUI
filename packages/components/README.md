@@ -25,6 +25,9 @@ Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 | `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
 | `src/avatar.tsx`, `src/avatar/logic.ts` | Avatar with unicode-safe initials and a presence dot |
 | `src/alert.tsx` | Alert: four tones, a title, an optional icon and a dismiss control |
+| `src/empty-state.tsx` | EmptyState: the centred "nothing here yet" panel |
+| `src/list.tsx` | List / ListItem: rows with a roving tab stop and single selection |
+| `src/internal/controllable.ts` | `useControllableState` — `value`/`defaultValue`/`onValueChange` in one hook |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/pagination/logic.ts` | page-window arithmetic |

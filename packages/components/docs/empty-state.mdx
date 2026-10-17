@@ -1,0 +1,97 @@
+---
+title: EmptyState
+description: The "nothing here yet" panel for a list, table or panel.
+---
+
+`EmptyState` explains an absence and offers the way out of it: no projects yet,
+no matches for this filter, nothing selected. It is a **panel, not a surface** —
+it paints no background and no border, because the `Card`, panel or table body
+around it already supplies one.
+
+```tsx
+import { EmptyState } from "@gpuixui/components/empty-state";
+
+<EmptyState
+  title="No projects yet"
+  description="A project holds your files, runs and settings."
+  action={<Button variant="primary">New project</Button>}
+/>;
+```
+
+## Anatomy
+
+| Part | Required | Notes |
+| ---- | -------- | ----- |
+| `title` | yes | What is missing, in a few words |
+| `description` | no | Why, or what to do about it. Wraps at 360px |
+| `action` | no | The way out — usually one `Button` |
+| `icon` | no | A glyph above the title. Decorative |
+
+Everything is centred: `alignItems`/`justifyContent: "center"`, `gap: spacing.lg`,
+`padding: spacing["3xl"]`. Children render in the order title → description →
+action.
+
+## Two kinds of empty
+
+The distinction is worth making in the copy, not just in the component:
+
+| Case | Title | Action |
+| ---- | ----- | ------ |
+| Nothing ever existed | "No projects yet" | Create the first one |
+| Nothing matched the filter | "No runs match “failed”" | Clear the filter |
+
+The second is a *filter* empty state; showing the first one's "create" action
+there tells the user to make something they already have.
+
+## API
+
+`EmptyState` takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and **merges `style` last**.
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `title` | `string` (required) | — |
+| `description` | `string` | — |
+| `action` | `ReactNode` | — |
+| `icon` | `ReactNode` | — |
+
+## Accessibility
+
+- No role of its own: an empty state is ordinary content, and a `role="status"` on
+  it would announce whenever a filter changes, including when a parent re-renders.
+- The `title` carries the meaning. The `icon` is decorative and is not announced.
+- The action is a real control and keeps its own focus and keyboard behaviour —
+  the panel does not trap or intercept anything.
+
+## Theming
+
+The title uses `colors.foreground`, the description `colors.mutedForeground`, the
+icon slot `colors.mutedForeground`, and the spacing comes from `spacing.*`. No
+literal colours. See `docs/tokens.md`.
+
+## Limitations
+
+- The description's wrap width is a component constant (360px); `@gpuixui/tokens`
+  ships no measure scale.
+- No illustration slot: any `icon` is rendered in the muted foreground colour, so
+  a multi-colour illustration would need its own component.
+- The docs site cannot render this component live. The code above is the real
+  source.
+
+## Verification
+
+`src/behaviour/empty-state.test.tsx` runs in the real GPUix renderer (6 tests):
+title/description/action render in order, omitted parts render nothing at all, the
+panel is centred with the theme's padding, the title and description take their
+own colour roles, a click on the action still arrives, and a consumer `style`
+wins.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Card** — the surface an empty state usually sits in.
+- **List** — the collection that is empty.
+- **Alert** — a message about a state that is not empty.
