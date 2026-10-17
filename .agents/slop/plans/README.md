@@ -92,6 +92,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [093](./093-ring-on-soft-fills.md) | The focus ring on the soft status fills | F | 086, 090, 092 | done |
 | [094](./094-skeleton-on-row-washes.md) | The loading skeleton on the row washes | F | 078, 079, 087, 093 | done |
 | [095](./095-soft-fill-divider.md) | The decorative divider on the soft status fills | F | 076, 080, 090, 094 | done |
+| [096](./096-control-size-index.md) | The control size index and its narrowing guard | F | 011, 016, 067, 068, 089 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -450,6 +451,17 @@ the greys was rejected — they collide with their own pressed washes — so the
 identity soft fills move one step darker (card 1.53 → 1.39, Linux card 1.20 →
 1.09, both above the surface floor) and the four fills join the `divider` class
 (121 → 125 pairs).
+
+096 closes the last union neither 067 nor 068 reached: `ControlSize` was a bare
+`"sm" | "md" | "lg"` with no ordered index and no narrowing guard, so a consumer
+persisting a component size — a table's row setting, a toolbar control, a URL
+parameter — had to retype the union or cast, exactly the gap those plans removed
+for platforms, mode, contrast, density and status tone. `controlSizes` is the
+ordered index, `ControlSize` derives from it, and `isControlSize` narrows an
+`unknown`; `scale.test.ts` and `styles.test.ts` stop retyping the three literals,
+and a preset-coverage test fails if a size is added to the index without a metric
+in every density preset. The persisted-choice example resolves a stored size, so
+the fallback path runs in the suite.
 
 ### Reference adoption (block `200–299`)
 
