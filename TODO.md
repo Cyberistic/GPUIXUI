@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████████]` 44/60
+`[x]` `[████████░░]` 46/61
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -238,6 +238,9 @@ workstream's path. Owner: licensing
 back (plan 053) so motion tokens (019) and platform type styles (051) are one
 branch; `main` compiles `@gpuixui/tokens` from source, so `primitives`,
 `components` and `docs-site` can drop their structural copies
+`[x]` Guard the loading skeleton on every canvas — Linux dark's `skeleton`
+measured 1.004:1 on its card — join it to the surface floor and give each dark
+platform style its own value (plan 078)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is

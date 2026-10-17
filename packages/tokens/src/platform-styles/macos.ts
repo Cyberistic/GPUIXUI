@@ -53,6 +53,7 @@ export const macosPlatformStyle = {
       inputForeground: "#F5F5F7",
       hover: "#3A3A3C",
       active: "#48484A",
+      skeleton: "#3C3C3E",
       secondary: "#3A3A3C",
       secondaryForeground: "#F5F5F7",
       primary: "#0A84FF",

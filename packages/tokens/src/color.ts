@@ -193,7 +193,7 @@ export interface ThemeColors {
   readonly disabled: string;
   /** Disabled text and icons. */
   readonly disabledForeground: string;
-  /** Loading placeholder. */
+  /** Loading placeholder, held to the perceivability floor on every surface. */
   readonly skeleton: string;
   /**
    * Scrollbar thumb tint. Reserved in GPUix 0.10.0: the platform paints the

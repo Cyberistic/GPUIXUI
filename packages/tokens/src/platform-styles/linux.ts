@@ -51,6 +51,7 @@ export const linuxPlatformStyle = {
       inputForeground: "#FFFFFF",
       hover: "#3A3A3A",
       active: "#464646",
+      skeleton: "#3E3E3E",
       secondary: "#3A3A3A",
       secondaryForeground: "#FFFFFF",
       primary: "#78AEED",

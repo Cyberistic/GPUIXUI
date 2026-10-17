@@ -340,9 +340,11 @@ built-in identity.
 
 The Default variant has no overrides — `getPlatformTheme("default", mode)`
 returns the identity unchanged. Each real variant changes its type family,
-radii, density, motion, surfaces, accent and shadows; roles it does not name
-(status, disabled, skeleton, scrollbar) and every non-colour scale inherit the
-identity, so the default stays the design system the library is built on.
+radii, density, motion, surfaces (including the loading skeleton), accent and
+shadows; roles it does not name (status, disabled, scrollbar) and every
+non-colour scale inherit the identity, so the default stays the design system
+the library is built on. The dark variants carry their own `skeleton`, because a
+loading placeholder is a surface on that platform's card, not a fixed grey.
 
 `getPlatformTheme` never mutates its base, keeps the requested mode and returns
 a normal `Theme`:
@@ -962,8 +964,11 @@ It also fails if a soft status surface is indistinguishable from `background`,
 `card` or `popover` (floor 1.05:1), if a decorative `border` is imperceptible on
 those surfaces (1.05:1, and 3:1 at high contrast), or if body text over the
 composited `selection` wash on `background`/`card` drops below its body floor.
+A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
+`card` and `popover`, so a placeholder never disappears into the card it fills.
 Every platform variant is checked on its own canvas, not the identity's, so a
-style that moves `background` or `card` is held to the status tints it inherits.
+style that moves `background` or `card` is held to the status tints and skeleton
+it inherits.
 Palette edits must keep it green.
 
 The focus ring is measured on the canvas, card and popover and on the `hover`,

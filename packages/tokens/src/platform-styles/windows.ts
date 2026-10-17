@@ -51,6 +51,7 @@ export const windowsPlatformStyle = {
       inputForeground: "#FFFFFF",
       hover: "#383838",
       active: "#454545",
+      skeleton: "#3C3C3C",
       secondary: "#383838",
       secondaryForeground: "#FFFFFF",
       primary: "#4CC2FF",

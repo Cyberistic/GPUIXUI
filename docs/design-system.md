@@ -217,7 +217,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | ----- | ---------------- |
 | hover | `hover` wash on ghost and subtle surfaces; filled actions step to `primaryHover` / `destructiveHover` (opaque, contrast-checked) instead of compositing an alpha fill |
 | pressed | `active` wash |
-| loading | `skeleton` fill with `pulse` (or `step`) motion; the active indicator uses `primary` |
+| loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every shipped canvas; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
@@ -253,6 +253,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | text selection (`foreground` over the composited `selection` wash) | 7:1 | 7:1 |
 | focus ring and essential boundaries, including the ring on the `hover`/`active`/`selected` washes and a control boundary on `popover` | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
+| loading skeleton (`skeleton`) on `background`/`card`/`popover` | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover` | 1.05:1 | 3:1 |
 
 The test runs for every shipped colour set — platform variants included, each on

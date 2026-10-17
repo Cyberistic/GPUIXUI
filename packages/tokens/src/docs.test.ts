@@ -448,7 +448,7 @@ describe("docs/tokens.md contrast surfaces", () => {
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
-  it("names every surface the soft status pairs are held against", () => {
+  it("names every surface the surface pairs are held against", () => {
     const surfacePairs = contrastPairs.filter(
       ([, , pairClass]) => pairClass === "surface",
     );
@@ -462,8 +462,30 @@ describe("docs/tokens.md contrast surfaces", () => {
 
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
     expect(new Set(surfacePairs.map(([role]) => role))).toEqual(
-      new Set(statusTones.map((tone) => `${tone}Soft`)),
+      new Set([...statusTones.map((tone) => `${tone}Soft`), "skeleton"]),
     );
+  });
+
+  it("states the skeleton floor the contract enforces", () => {
+    const sentence =
+      "A loading skeleton is a surface too: it is held to " +
+      `${contrastFloors.default.surface}:1 against \`background\`, \`card\` and ` +
+      "`popover`, so a placeholder never disappears into the card it fills.";
+
+    expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
+  });
+
+  it("names the skeleton a real platform style carries", () => {
+    const real = platformNames.filter((platform) => platform !== "default");
+    real.forEach((platform) => {
+      expect(
+        platformStyles[platform].colors.dark.skeleton,
+        platform,
+      ).toBeDefined();
+    });
+    expect(markdown).toContain("surfaces (including the loading skeleton)");
+    expect(markdown).toContain("(status, disabled, scrollbar)");
+    expect(markdown).not.toContain("(status, disabled, skeleton, scrollbar)");
   });
 });
 
@@ -550,6 +572,7 @@ describe("docs/design-system.md", () => {
       `| text selection (\`foreground\` over the composited \`selection\` wash) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| focus ring and essential boundaries, including the ring on the \`hover\`/\`active\`/\`selected\` washes and a control boundary on \`popover\` | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {

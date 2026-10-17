@@ -13,6 +13,11 @@
  * dark's `destructiveSoft` measured 1.005:1 on its card. The contract now holds
  * the soft surfaces and dividers, so the generic loop below checks them on each
  * variant's own canvas; no variant-specific assertion is needed.
+ *
+ * Plan 078 adds the same defect one role over: the loading skeleton inherited the
+ * identity's grey while the card changed, so Linux dark's `skeleton` measured
+ * 1.004:1 on its own card. The surface pairs now include it, and each real
+ * variant carries its own dark neutral, so the generic loop guards it too.
  */
 
 import { describe, expect, it } from "vitest";

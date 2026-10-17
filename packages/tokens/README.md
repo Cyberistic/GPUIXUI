@@ -166,9 +166,10 @@ themeContrastFailures(brandTheme); // []
 the parts, and the selection wash is measured as it paints. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught. The same list holds
-the soft status surfaces at 1.05:1 against `background`, `card` and `popover`,
-and the decorative `border` at 1.05:1 (3:1 at high contrast), so an Alert, Badge
-or Toast and every divider stay perceivable. Every shipped theme passes it —
+the soft status surfaces and the loading skeleton at 1.05:1 against `background`,
+`card` and `popover`, and the decorative `border` at 1.05:1 (3:1 at high
+contrast), so an Alert, Badge or Toast, a loading placeholder and every divider
+stay perceivable. Every shipped theme passes it —
 platform variants on their own canvas, not the identity's. A runnable example
 lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 
@@ -240,7 +241,8 @@ The variants in `platformNames` are full token themes, not docs-only CSS:
 
 `sans` is GPUI's `.SystemUIFont` sentinel on every platform — GPUI resolves it to
 the operating system's own UI font. The Default variant has no overrides and
-returns the identity unchanged.
+returns the identity unchanged. Each real variant also carries its own dark
+`skeleton`, because a placeholder sits on that platform's card.
 
 ```tsx
 import { getPlatformTheme } from "@gpuixui/tokens";

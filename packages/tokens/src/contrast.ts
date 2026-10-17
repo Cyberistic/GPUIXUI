@@ -43,10 +43,22 @@ const softSurfacePairs: readonly ContrastPair[] = softSurfaceRoles.flatMap(
 );
 
 /**
+ * The fills that must stay perceivable on the surfaces they sit on: the soft
+ * status tints and the loading skeleton.
+ */
+const surfacePairs: readonly ContrastPair[] = [
+  ...softSurfacePairs,
+  ...(["background", "card", "popover"] as const).map(
+    (background): ContrastPair => ["skeleton", background, "surface"],
+  ),
+];
+
+/**
  * Every documented pair — text, status, surface and divider — including the
  * focus ring on the washes a focused row paints, the status text and control
- * boundary on a floating surface, the soft status surfaces a canvas must
- * distinguish, and the decorative dividers that must stay visible.
+ * boundary on a floating surface, the soft status surfaces and the loading
+ * skeleton a canvas must distinguish, and the decorative dividers that must
+ * stay visible.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ["foreground", "background", "body"],
@@ -97,7 +109,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["ring", "background", "boundary"],
   ["ring", "card", "boundary"],
   ["ring", "popover", "boundary"],
-  ...softSurfacePairs,
+  ...surfacePairs,
   ["border", "background", "divider"],
   ["border", "card", "divider"],
   ["border", "popover", "divider"],
@@ -216,10 +228,11 @@ const selectionSurfaces = ["background", "card"] as const;
 
 /**
  * Every documented pair a theme misses — text, status, selection, surface and
- * divider — including the selection wash measured over `background` and `card`.
- * The level defaults to the one the theme declares, so a high-contrast theme is
- * checked against its own floors. An empty array is the library's guarantee; a
- * consumer test asserts exactly that:
+ * divider — including the selection wash measured over `background` and `card`
+ * and the loading skeleton measured on the surfaces it fills. The level defaults
+ * to the one the theme declares, so a high-contrast theme is checked against its
+ * own floors. An empty array is the library's guarantee; a consumer test asserts
+ * exactly that:
  *
  * @example
  * ```ts

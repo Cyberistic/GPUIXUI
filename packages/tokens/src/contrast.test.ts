@@ -16,6 +16,11 @@
  * status surfaces (plan 073's audit found nine platform pairs below the 1.05:1
  * floor, the worst being Linux dark's `destructiveSoft` at 1.005:1 on its card)
  * and the high-contrast decorative divider. Both are `contrastPairs` now.
+ *
+ * Plan 078 closes the last painted role the contract never measured: the loading
+ * skeleton. It is the fill of a mission-named state, and the same audit found
+ * platform styles changing the canvas while inheriting the identity's skeleton —
+ * Linux dark's `skeleton` measured 1.004:1 on its own card.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -190,7 +195,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(63);
+    expect(contrastPairs.length).toBe(66);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 
@@ -218,6 +223,34 @@ describe("themeContrastFailures", () => {
     expect(
       failures.every(({ floor, ratio }) => floor === 1.05 && ratio === 1),
     ).toBe(true);
+  });
+
+  it("reports a loading skeleton that vanishes into every surface", () => {
+    const white = "#FFFFFF";
+    const invisible = extendTheme(getTheme("light"), {
+      colors: {
+        background: white,
+        card: white,
+        popover: white,
+        skeleton: white,
+      },
+    });
+    const failures = themeContrastFailures(invisible).filter(
+      ({ foreground }) => foreground === "skeleton",
+    );
+
+    expect(
+      failures.map(({ background, pairClass, floor }) => ({
+        background,
+        pairClass,
+        floor,
+      })),
+    ).toEqual([
+      { background: "background", pairClass: "surface", floor: 1.05 },
+      { background: "card", pairClass: "surface", floor: 1.05 },
+      { background: "popover", pairClass: "surface", floor: 1.05 },
+    ]);
+    expect(failures.every(({ ratio }) => ratio === 1)).toBe(true);
   });
 
   it("reports an invisible divider at the level it declares", () => {

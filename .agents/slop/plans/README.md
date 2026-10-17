@@ -74,6 +74,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [075](./075-quoted-contrast-figures.md) | The contrast figures the catalogue quotes | F | 056–059, 071–074 | done |
 | [076](./076-contrast-surface-and-divider-pairs.md) | The soft surfaces and dividers the contrast contract never checked | F | 013, 014, 059, 063, 071–075 | done |
 | [077](./077-alpha-nan.md) | `alpha` must not emit a colour the runtime ignores | F | 014, 056–059 | done |
+| [078](./078-skeleton-surface-pairs.md) | The loading skeleton the contrast contract never checked | F | 014, 019, 063, 071–077 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -222,7 +223,19 @@ silent failure on the same palette path: `alpha(color, Number.NaN)` produced
 `#2559D6NAN`, a colour GPUix ignores, so a computed fraction with no value could
 erase a role. The amount guard returns the input unchanged — the helper's
 documented fallback for a value it cannot parse — while `Infinity` and
-`-Infinity` keep clamping as before.
+`-Infinity` keep clamping as before. 078 closes the last painted role the
+contract never measured: the loading skeleton. `skeleton` is the fill of a
+mission-named state, but it was one of seven roles absent from `contrastPairs`,
+so a skeleton could sit invisibly on its card and still pass. The audit found
+the same class of platform defect plan 076 fixed for soft tints — Linux dark
+measured **1.004:1** on its own card, macOS 1.051 and Windows 1.068, all at or
+below the library's 1.05 floor, because every variant inherited the identity's
+cool graphite while changing the surface it sits on. The skeleton joins the
+`surface` class on `background`/`card`/`popover` (63 → 66 pairs), and the three
+real variants now carry their own dark neutral (1.228 / 1.234 / 1.284 on their
+cards), matching the identity's own 1.274. Light variants and high contrast are
+untouched: the identity value already clears every light canvas, and
+`applyPlatformStyle` applies no colours at AAA.
 
 ### Reference adoption (block `200–299`)
 

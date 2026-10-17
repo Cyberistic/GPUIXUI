@@ -19,6 +19,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import packageJson from "../package.json";
 import { colorRoles } from "./color.js";
+import { contrastFloors } from "./contrast.js";
 import { motion } from "./motion.js";
 import {
   platformNames,
@@ -73,6 +74,12 @@ describe("packages/tokens/README.md", () => {
   it("states the state washes and floating surface the ring is checked on", () => {
     expect(readme).toContain(
       "The focus ring is checked on the canvas, card, popover and the `hover`, `active` and `selected` washes, so a ring that vanishes on a selected row is caught.",
+    );
+  });
+
+  it("states the skeleton floor the checker enforces", () => {
+    expect(readme).toContain(
+      `the soft status surfaces and the loading skeleton at ${contrastFloors.default.surface}:1 against \`background\`, \`card\` and \`popover\``,
     );
   });
 
