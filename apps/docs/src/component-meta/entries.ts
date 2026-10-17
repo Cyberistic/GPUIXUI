@@ -203,6 +203,13 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     "A vertical collection of selectable rows.",
   ),
   planned(
+    "message-scroller",
+    "Message scroller",
+    "2",
+    "Keeps a transcript on new content while the reader stays in control.",
+    { related: ["list"] },
+  ),
+  planned(
     "empty-state",
     "Empty states",
     "2",
