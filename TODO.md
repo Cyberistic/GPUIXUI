@@ -31,6 +31,21 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[ ]` Land one fully working component running in GPUix
 `[ ]` Land the docs shell and document that component in Fumadocs
 
+### Design tokens and theming (`tokens-theme`)
+
+`[x]` `[█░░░░░░░░░]` 1/7
+
+`[x]` Write and index the tokens/theme plan set (plans 010–012)
+`[ ]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
+radii, density, elevation, light + dark themes
+`[ ]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
+the `@gpuixui/tokens/react` provider
+`[ ]` Write `docs/tokens.md` (every token + extension API)
+`[ ]` Write `docs/design-system.md` (identity, roles, state, accessibility)
+`[ ]` Add the design-system rows to `COMPONENTS.md`
+`[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
+`playground`); Fumadocs Theming page from `docs/tokens.md` (owner: `docs-site`)
+
 ## Phase C — Tier 1–2 components
 
 `[ ]` `[░░░░░░░░░░]` 0/3

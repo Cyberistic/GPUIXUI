@@ -21,7 +21,13 @@ licensing, docs site).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| — | *(nothing yet — the first agents write these)* | A | — | — |
+| [010](./010-phase-b-design-tokens.md) | Phase B: design tokens and theming | B | Phase A audit | in progress |
+| [011](./011-package-tokens.md) | Package: `@gpuixui/tokens` | B | 010 | in progress |
+| [012](./012-docs-design-system.md) | Docs: design system and token catalogue | B | 011 | in progress |
+
+Plans 010–012 are the `tokens-theme` workstream. They own `packages/tokens`,
+`docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
+agent that owns its paths.
 
 ## How to use a plan
 
