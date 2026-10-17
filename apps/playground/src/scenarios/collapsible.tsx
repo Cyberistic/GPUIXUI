@@ -24,7 +24,7 @@ import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Body, Readout } from "../ui.js";
-import { read } from "./probes.js";
+import { read, node, treeOf } from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const DURATION_MS = 200;
@@ -71,10 +71,12 @@ const Trigger = ({
   testId,
   onToggle,
   label,
+  expanded,
 }: {
   readonly testId: string;
   readonly onToggle: () => void;
   readonly label: string;
+  readonly expanded: boolean;
 }) => {
   const theme = useTheme();
   return (
@@ -82,7 +84,8 @@ const Trigger = ({
       testId={testId}
       tabIndex={0}
       role="button"
-      aria-expanded={false}
+      aria-label={label}
+      aria-expanded={expanded}
       onClick={onToggle}
       onKeyDown={(event: EventPayload) => {
         if (event.key === "enter") onToggle();
@@ -176,7 +179,12 @@ const CollapsibleProbe = () => {
         backgroundColor: theme.colors.background,
       }}
     >
-      <Trigger testId="collapse-trigger" onToggle={toggle} label="Section" />
+      <Trigger
+        testId="collapse-trigger"
+        onToggle={toggle}
+        label="Section"
+        expanded={open}
+      />
       <motion.div
         initial={false}
         animate={{ height: open ? natural : 0 }}
@@ -282,6 +290,13 @@ export const collapsibleHeightScenario: PlaygroundScenario = {
         read(ctx, READOUT),
         "open=1",
       );
+      const openedTree = yield* treeOf(ctx);
+      const openedTrigger = yield* node(ctx, openedTree, "Button", "Section");
+      yield* ctx.expectEqual(
+        "the trigger announces the open section",
+        Option.getOrElse(openedTrigger.expanded, () => false),
+        true,
+      );
       const natural = yield* ctx.expectSome(
         "the component measured the content while opening",
         numberField(ctx, "natural"),
@@ -355,6 +370,13 @@ export const collapsibleHeightScenario: PlaygroundScenario = {
         "the draft survived the collapse",
         read(ctx, READOUT),
         "draft=ab",
+      );
+      const closedTree = yield* treeOf(ctx);
+      const closedTrigger = yield* node(ctx, closedTree, "Button", "Section");
+      yield* ctx.expectEqual(
+        "the trigger announces the closed section",
+        Option.getOrElse(closedTrigger.expanded, () => true),
+        false,
       );
       yield* ctx.expectEqual(
         "the content stayed mounted while closed",

@@ -619,6 +619,7 @@ false.
 | the clip | content stays laid out at 140 px, but a click at a collapsed button's own painted centre does **not** activate it; deleting `overflow: "hidden"` lets the same click through. No `pointerEvents` guard is needed |
 | state | a draft typed while open survives collapse, re-open and a second collapse — the content is never unmounted. Unmounting it fails the first check (`collapse-content` is absent) |
 | completion | `onMotionComplete` fires once per height tween (`1`, `2`, `3`), with no stale completion; the measured target is stable across the cycle |
+| disclosure state | `role="button"` + `aria-label` + `aria-expanded` is an AccessKit `Button` whose `expanded` follows the section (`true` open, `false` closed) |
 | keyboard | `Enter` on key down re-opens through the same toggle (the trigger is a focused tab stop) |
 
 The recipe: keep the body mounted under an `overflow: "hidden"` motion

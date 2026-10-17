@@ -324,6 +324,11 @@ behaviour) fails at the first check — `collapse-content is painted: … none`.
 no stale completion from the previous cycle, and the measured target is stable
 across collapse/re-open (140 px every time).
 
+**The disclosure state is real.** The trigger carries `aria-label="Section"` +
+`aria-expanded` and reaches AccessKit as a `Button` whose `expanded` is `true`
+after the open and `false` after the collapse — the accordion's ARIA state does
+not have to be faked.
+
 **Keyboard** activation goes through the same `toggle`: `Enter` on key down
 re-opened the section (the trigger is in the tab order and the click focused it).
 
@@ -336,6 +341,7 @@ after each run):
 | M2 | delete `overflow: "hidden"` from the body | exit `1`, *the clip refuses input in the overflowing content*: expected `presses=0`, got `presses=1` |
 | M3 | render the content only while open (`{open ? <div …/> : null}`) | exit `1`, *collapse-content is painted*: none |
 | M4 | `setNatural(height)` → `setNatural(Math.min(height, 100))` | exit `1`, *the measurement is the painted content height*: expected `140 ± 1`, got `100` |
+| M5 | `aria-expanded={expanded}` → `aria-expanded={false}` | exit `1`, *the trigger announces the open section*: expected `true`, got `false` (TypeScript also flags the now-unused `expanded`) |
 
 **Recipe for `@gpuixui/components`.** Keep the content mounted; put
 `overflow: "hidden"` on the animated body; measure the content `div` with
