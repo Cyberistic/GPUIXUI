@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "check-types": "fumadocs-mdx && tsc --noEmit",
     "test": "vitest run",
-    "smoke:build": "nub scripts/smoke-build.ts"
+    "smoke:build": "nub scripts/smoke-build.ts",
+    "smoke:browser": "nub scripts/smoke-browser.ts"
   },
   "dependencies": {
     "@gpuixui/tokens": "workspace:*",

@@ -476,7 +476,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` The registry mirrors the inventory's GPUix-support column (plan 443) — `ours`/`reuse` are real values, the nine flattened records are corrected, a test reads `COMPONENTS.md`, and `done` is backed by its native suite rather than by GPUix writing the primitive
 `[x]` Preview surfaces follow the docs' dark mode (plan 444) — a dark page painted light previews because the surface took `next-themes`' pre-hydration `undefined` and never re-rendered; one tested `previewMode` + `useSyncExternalStore` snapshot fixes it, verified in headless Chrome in both modes
 `[x]` Previews follow the platform toggle on a shared link (plan 445) — `?platform=win32` showed Windows chrome with Menlo previews; previews now read the `data-platform`/`dark` state the providers publish, through one tested parser (`parsePreviewState`), superseding 444's mount gate
-`[ ]` Add the dark-mode and platform preview assertions to the release browser gate — the Node suite has no DOM and `smoke:build` crawls SSR HTML, so the hydration behaviour (plans 444/445) is measured manually today
+`[x]` Hydrated previews are in the release gate (plan 446) — `smoke:browser` loads the production build in headless Chrome and fails on a wrong palette or platform on every preview surface; exit `1` for a broken site, `2` when Chrome or the server is missing
 
 `[x]` Merge `master` (playground + `packages/testing` + ADRs 0001–0003) into `agent/docs-site`; reconcile PLAN/COMPONENTS/TODO/plan index and keep every gate green
 `[x]` A props type name (`ButtonProps`) reaches its component page from search (plan 442)

@@ -16,27 +16,19 @@
  * smoke suite (plan 020).
  */
 
-import { spawn, type ChildProcess } from "node:child_process";
-import { createServer } from "node:net";
-import { fileURLToPath } from "node:url";
+import {
+  SetupError,
+  startDocsPreview,
+  type PreviewServer,
+} from "./preview-server.ts";
 
-const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
-const READY_TIMEOUT_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 15_000;
 const CONCURRENCY = 6;
-
-/** The CLI boundary: a setup failure is reported, never mistaken for a pass. */
-class SetupError extends Error {}
 
 interface Options {
   readonly baseUrl: string | null;
   readonly build: boolean;
   readonly port: number | null;
-}
-
-interface Preview {
-  readonly child: ChildProcess;
-  output: () => string;
 }
 
 interface Problem {
@@ -98,94 +90,6 @@ const parseOptions = (argv: ReadonlyArray<string>): Options => {
   }
 
   return { baseUrl, build, port };
-};
-
-const run = (args: ReadonlyArray<string>): Promise<number> =>
-  new Promise((resolve) => {
-    const child = spawn("nub", [...args], { cwd: repoRoot, stdio: "inherit" });
-    child.once("error", (error) => {
-      console.error(`smoke: cannot run nub: ${error.message}`);
-      resolve(1);
-    });
-    child.once("exit", (code) => resolve(code ?? 1));
-  });
-
-const freePort = (): Promise<number> =>
-  new Promise((resolve, reject) => {
-    const server = createServer();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      const port =
-        address !== null && typeof address === "object" ? address.port : 0;
-      server.close(() => {
-        if (port === 0) reject(new SetupError("no free loopback port"));
-        else resolve(port);
-      });
-    });
-  });
-
-const startPreview = (port: number): Preview => {
-  const child = spawn(
-    "nub",
-    [
-      "run",
-      "--filter",
-      "docs",
-      "preview",
-      "--host",
-      "127.0.0.1",
-      "--port",
-      String(port),
-    ],
-    { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] },
-  );
-  let output = "";
-  child.stdout?.on("data", (chunk: Buffer) => {
-    output += chunk.toString();
-  });
-  child.stderr?.on("data", (chunk: Buffer) => {
-    output += chunk.toString();
-  });
-  return { child, output: () => output };
-};
-
-const stopPreview = (child: ChildProcess): Promise<void> =>
-  new Promise((resolve) => {
-    if (child.exitCode !== null || child.signalCode !== null) {
-      resolve();
-      return;
-    }
-    const timer = setTimeout(() => child.kill("SIGKILL"), 5_000);
-    child.once("exit", () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    child.kill("SIGTERM");
-  });
-
-const waitForServer = async (
-  baseUrl: string,
-  output: () => string,
-): Promise<void> => {
-  const deadline = Date.now() + READY_TIMEOUT_MS;
-  let lastError = "no attempt";
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(`${baseUrl}/`, {
-        signal: AbortSignal.timeout(2_000),
-      });
-      if (response.ok) return;
-      lastError = `HTTP ${response.status}`;
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  throw new SetupError(
-    `preview did not answer on ${baseUrl} within ${READY_TIMEOUT_MS}ms ` +
-      `(last: ${lastError})\n${output()}`,
-  );
 };
 
 const request = async (url: string): Promise<Fetched | null> => {
@@ -438,27 +342,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
 };
 
 const main = async (): Promise<number> => {
-  let preview: Preview | null = null;
+  let preview: PreviewServer | null = null;
   try {
     const options = parseOptions(process.argv.slice(2));
     let baseUrl = options.baseUrl;
 
     if (baseUrl === null) {
-      if (options.build) {
-        console.log("smoke: building apps/docs");
-        const code = await run(["run", "--filter", "docs", "build"]);
-        if (code !== 0) {
-          throw new SetupError("build failed; the site was not verified");
-        }
-      }
-      const port =
-        options.port ??
-        (await freePort().catch(() => {
-          throw new SetupError("could not find a free loopback port");
-        }));
-      baseUrl = `http://127.0.0.1:${port}`;
-      preview = startPreview(port);
-      await waitForServer(baseUrl, preview.output);
+      const server = await startDocsPreview({
+        build: options.build,
+        port: options.port,
+      });
+      preview = server;
+      baseUrl = server.baseUrl;
     }
 
     const problems = await audit(baseUrl);
@@ -475,7 +370,7 @@ const main = async (): Promise<number> => {
     }
     throw error;
   } finally {
-    if (preview !== null) await stopPreview(preview.child);
+    if (preview !== null) await preview.stop();
   }
 };
 

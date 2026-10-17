@@ -18,6 +18,7 @@ nub run --filter docs build         # SSR bundle + client assets
 nub run --filter docs check-types   # fumadocs-mdx generate + tsc --noEmit
 nub run --filter docs test          # registry, IA, search, theme and preview tests
 nub run --filter docs smoke:build   # build, serve and crawl the production output
+nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
 nub run check                       # repo gate: test quality, lint, format, types
 ```
 
@@ -41,6 +42,27 @@ nub apps/docs/scripts/smoke-build.ts --base-url http://127.0.0.1:4173
 It is deliberately **not** part of `nub run test`: the build takes ~13 s and
 starts a worker, which would slow every checkout. Run it before a release and
 after a layout or content change.
+
+## Hydrated-preview smoke check
+
+The crawler reads server HTML, so it cannot see anything that happens after
+hydration. `smoke:browser` loads the production build in headless Chrome and
+reads the live DOM; it is the guard for the preview mode and platform bugs
+(plans 444/445): a dark page must paint the dark palette, and a shared
+`?platform=win32` link must paint that platform on every preview surface.
+
+```sh
+nub run --filter docs smoke:browser
+# or against a server that is already running:
+nub apps/docs/scripts/smoke-browser.ts --base-url http://127.0.0.1:4173 --no-build
+```
+
+It finds Chrome via `CHROME_PATH`, then the macOS app path, `google-chrome`,
+`chromium` or `chromium-browser`; pass `--chrome <path>` to override. Exit `1`
+means the site is wrong (`FAIL <url>: <what>`), exit `2` means the check could
+not run (no build, no server, no Chrome) — never a pass. Expected values come
+from `@gpuixui/tokens`, so the script carries no colour or font literal.
+
 
 ## Search
 
