@@ -5,7 +5,7 @@
 | Phase | B (foundation) — the token contract, after the `tokens-theme` workstream's package landed |
 | Owner | **tokens-theme workstream** — it owns `packages/tokens`. Do not execute this in another tree without handing it over. |
 | Depends on | plans `010–014` (`@gpuixui/tokens` landed on `agent/tokens-theme`), `020-gpuix-runtime-capability.md` §1.2 (what GPUix can paint) |
-| Status | planned |
+| Status | done for the tokens scope; `LICENSES/adabraka-ui.md` is open with the licensing owner (recorded in `TODO.md`) |
 | Source | `references/adabraka-ui/src/theme/tokens.rs` and `src/theme/mod.rs` (MIT, `Copyright (c) 2025 Adabraka Team`), commit `e158684` |
 
 This plan is self-contained. It is a **reconciliation**, not a new token system:
