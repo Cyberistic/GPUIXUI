@@ -61,6 +61,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [062](./062-design-system-truth-guard.md) | Hold the design-system narrative to the implementation | F | 056, 058, 059 | done |
 | [063](./063-platform-style-variants.md) | Platform style variants: macOS, Linux, Windows and Default | B | 051, 053, 056–062 | done |
 | [064](./064-documentation-indexes.md) | Documentation indexes for platforms and status tones | F | 014, 015, 059, 063 | done |
+| [065](./065-readme-truth-guard.md) | Guard the package README against drift | F | 056, 058, 059, 062, 064 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -107,7 +108,13 @@ that were still retyped by hand: `platformNames` (the macOS · Linux · Windows 
 Default order the docs toggle and the tables need) and `statusTones` (the four
 status families), both derived types, so a fifth platform or tone cannot be
 added to the union while a table silently omits it; the status table in
-`docs/tokens.md` was unguarded and is now held to the index.
+`docs/tokens.md` was unguarded and is now held to the index. 065 closes the last
+unguarded document in the package: `packages/tokens/README.md` is the consumer's
+front door and repeated the role count, the platform table, the type-role
+count, the motion levels and the status families with no test behind them —
+its motion paragraph was already missing the `none` level. Both documents are
+now built from the implementation one way, like `docs/tokens.md` and
+`docs/design-system.md`.
 
 ### Reference adoption (block `200–299`)
 

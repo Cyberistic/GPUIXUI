@@ -1,9 +1,9 @@
 # `@gpuixui/tokens`
 
 The single source of truth for colour, typography, spacing, radii, density,
-elevation, border widths and icon sizes in GPUIXUI. Light and dark themes are
-designed, not inverted — each with a high-contrast variant — and every component
-reads semantic roles from here.
+elevation, border widths, icon sizes, avatar diameters and motion in GPUIXUI.
+Light and dark themes are designed, not inverted — each with a high-contrast
+variant — and every component reads semantic roles from here.
 
 - Core entry `@gpuixui/tokens` — pure data and pure functions, no runtime
   dependencies.
@@ -84,8 +84,9 @@ const transition = motionTransition(theme, "normal", "enter"); // 0.2s, easeOut
 <div style={{ height }} motion={{ animate: { height }, transition }} />;
 ```
 
-`step`, `fast`, `normal`, `slow` and `pulse` are the levels; `standard`, `enter`,
-`exit` and `linear` are the easings. Override any level to `0` to remove motion.
+`none`, `step`, `fast`, `normal`, `slow` and `pulse` are the levels;
+`standard`, `enter`, `exit` and `linear` are the easings. Override any level to
+`0` to remove motion.
 A runnable example lives in
 [`src/motion.example.ts`](./src/motion.example.ts).
 
@@ -161,9 +162,9 @@ the runtime has no `:focus-visible` equivalent. A runnable example lives in
 
 ## Platform styles
 
-Four variants ship: macOS, Linux, Windows and Default. They are full token
-themes, not docs-only CSS: `platformStyles` indexes one editable file per
-platform under [`src/platform-styles/`](./src/platform-styles/) and
+The variants in `platformNames` are full token themes, not docs-only CSS:
+`platformStyles` indexes one editable file per platform under
+[`src/platform-styles/`](./src/platform-styles/) and
 `getPlatformTheme(platform, mode, contrast?)` derives a real `Theme`.
 
 | Platform | `mono` | Radius `sm` / `md` / `lg` / `xl` | Density | Primary (light) | Primary (dark) |
@@ -171,7 +172,7 @@ platform under [`src/platform-styles/`](./src/platform-styles/) and
 | macOS (`darwin`) | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#0A84FF` |
 | Linux (`linux`) | `DejaVu Sans Mono` | 4 / 6 / 12 / 12 | `comfortable` | `#1C71D8` | `#78AEED` |
 | Windows (`win32`) | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
-| `default` | `Menlo` | identity | `comfortable` | `#5F4BDB` | `#A7A9FF` |
+| Default (`default`) | `Menlo` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |
 
 `sans` is GPUI's `.SystemUIFont` sentinel on every platform — GPUI resolves it to
 the operating system's own UI font. The Default variant has no overrides and
@@ -249,7 +250,7 @@ const rows = colorRoles.map((role) => ({
 }));
 ```
 
-`textRoles` does the same for type: the ten typographic roles in documentation
+`textRoles` does the same for type: all 10 typographic roles in documentation
 order, without the `sans`/`mono` families.
 
 ```ts
@@ -257,6 +258,9 @@ import { textRoles, typography } from "@gpuixui/tokens";
 
 const rows = textRoles.map((role) => ({ role, ...typography[role] }));
 ```
+
+`statusTones` and `platformNames` do the same for the four status families and
+the four platform variants, in documentation and toggle order.
 
 ## Boundaries
 
