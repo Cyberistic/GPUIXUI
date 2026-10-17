@@ -1,5 +1,6 @@
 import { Link } from "fumadocs-core/link";
 import { groups } from "@/component-meta/registry";
+import type { ComponentMetaInput } from "@/component-meta/schema";
 
 const groupTitles: Record<string, string> = {
   foundational: "Foundational",
@@ -9,7 +10,42 @@ const groupTitles: Record<string, string> = {
   specialised: "Specialised",
 };
 
-/** The component index, generated from the registry (plan 411). */
+const card =
+  "flex flex-col gap-1 rounded-lg border border-fd-border bg-fd-card p-3";
+
+function Card({ component }: { component: ComponentMetaInput }) {
+  return (
+    <>
+      <span className="flex items-center justify-between gap-2">
+        <span className="font-medium">{component.title}</span>
+        <span className="flex shrink-0 gap-1">
+          <span
+            className="rounded-md border border-fd-border px-2 py-0.5 text-xs text-fd-muted-foreground"
+            data-status={component.status}
+          >
+            {component.status}
+          </span>
+          <span
+            className="rounded-md border border-fd-border px-2 py-0.5 text-xs text-fd-muted-foreground"
+            data-gpuix={component.gpuix}
+          >
+            {component.gpuix}
+          </span>
+        </span>
+      </span>
+      <span className="text-sm text-fd-muted-foreground">
+        {component.summary}
+      </span>
+    </>
+  );
+}
+
+/**
+ * The component index, generated from the registry (plan 411). Only a record
+ * that has left `planned` has a page (`registry.test.ts` enforces that
+ * pairing), so a planned entry renders as plain text — the index must never
+ * offer a link to a page that does not exist.
+ */
 export function ComponentIndex() {
   return (
     <div className="not-prose flex flex-col gap-8">
@@ -21,31 +57,18 @@ export function ComponentIndex() {
           <ul className="grid gap-2 sm:grid-cols-2">
             {group.items.map((component) => (
               <li key={component.slug}>
-                <Link
-                  href={`/docs/components/${component.slug}`}
-                  className="flex flex-col gap-1 rounded-lg border border-fd-border bg-fd-card p-3 hover:bg-fd-accent"
-                >
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="font-medium">{component.title}</span>
-                    <span className="flex gap-1">
-                      <span
-                        className="rounded-md border border-fd-border px-2 py-0.5 text-xs text-fd-muted-foreground"
-                        data-status={component.status}
-                      >
-                        {component.status}
-                      </span>
-                      <span
-                        className="rounded-md border border-fd-border px-2 py-0.5 text-xs text-fd-muted-foreground"
-                        data-gpuix={component.gpuix}
-                      >
-                        {component.gpuix}
-                      </span>
-                    </span>
-                  </span>
-                  <span className="text-sm text-fd-muted-foreground">
-                    {component.summary}
-                  </span>
-                </Link>
+                {component.status === "planned" ? (
+                  <div className={card}>
+                    <Card component={component} />
+                  </div>
+                ) : (
+                  <Link
+                    href={`/docs/components/${component.slug}`}
+                    className={`${card} hover:bg-fd-accent`}
+                  >
+                    <Card component={component} />
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

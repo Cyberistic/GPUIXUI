@@ -34,4 +34,13 @@ describe("component index", () => {
       expect(html).toContain(`Tier ${group.tier}`);
     });
   });
+
+  it("links only to components that have a page", () => {
+    const planned = Arr.filter(components, (c) => c.status === "planned");
+    const linked = html.match(/href="\/docs\/components\/[^"]+"/g) ?? [];
+    expect(linked).toHaveLength(components.length - planned.length);
+    Arr.forEach(planned, (component) => {
+      expect(html).not.toContain(`href="/docs/components/${component.slug}"`);
+    });
+  });
 });
