@@ -12,10 +12,10 @@ not reshape individual buttons.
 ```tsx
 import { Button, ButtonGroup } from "@gpuixui/primitives";
 
-<ButtonGroup mode="attached">
-  <Button variant="ghost">Day</Button>
-  <Button variant="secondary">Week</Button>
-  <Button variant="ghost">Month</Button>
+<ButtonGroup mode="attached" label="Text alignment">
+  <Button variant="ghost">Left</Button>
+  <Button variant="secondary">Center</Button>
+  <Button variant="ghost">Right</Button>
 </ButtonGroup>;
 ```
 
@@ -37,6 +37,7 @@ rounded, pass per-button styles yourself.
 | ---- | ---- | ------- | ----------- |
 | `mode` | `"attached" \| "separated"` | `"attached"` | zero gap + clipped group, or a spaced row |
 | `gap` | spacing step | `"sm"` | the gap in separated mode |
+| `label` | `string` | none | the group's accessible name, written as `aria-label` |
 | `style` | `StyleDesc` | — | merged last, e.g. `justifyContent: "flex-end"` |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the buttons |
@@ -49,9 +50,10 @@ stop with arrow navigation is a radio group, not a button group.
 
 ## Accessibility
 
-- Role: `group`. The component exposes **no `label` prop** and the runtime has no
-  `aria-labelledby`, so the group has no accessible name of its own. Name it with
-  a visible heading or a surrounding labelled region.
+- Role: `group`. The runtime has no `aria-labelledby`, so a visible heading
+  cannot name the group by reference; pass its words as `label` and the group
+  carries `aria-label`. Without `label` the group is anonymous, exactly as the
+  runtime reports it.
 - Each button keeps its own name and role.
 
 ## Theming
@@ -60,17 +62,19 @@ The gap uses `spacing[gap]`; the group radius is `radius.md`. No literal.
 
 ## Limitations
 
-- No accessible name for the group (above).
-- No attached child reshaping: only the container is rounded and clipped.
+- No child reshaping: only the container is rounded and clipped.
+- The name must be passed as `label`; there is no automatic association with a
+  heading.
 - No overflow behaviour: a group wider than its parent does not collapse into a
   menu.
 
 ## Verification
 
 - `src/components/presentational.test.tsx` — attached and separated geometry
-  plus `role="group"`.
+  plus `role="group"`, and the `label` → `aria-label` contract.
 - `runtime/controls.runtime.test.tsx` — attached children are 0px apart,
-  separated children are the theme's `sm` gap.
+  separated children are the theme's `sm` gap; a labelled group is an
+  accessibility `Group` with that name.
 
 ```sh
 nub run --filter @gpuixui/primitives test

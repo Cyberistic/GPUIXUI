@@ -71,6 +71,8 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
       component, co-located in the package (`docs/`, `examples/`); one runtime
       suite mounts every example (plan 047)
 `[x]` `packages/icons`: docs page and the icon-gallery example (plan 047)
+`[x]` `packages/primitives`: close three fixable limitations — a named
+      `ButtonGroup`, `ScrollArea` scroll deltas, RadioGroup Home/End (plan 048)
 `[x]` `packages/primitives`: Tier 1 runtime suites in `runtime/` — 46 tests
       against the real GPUix 0.10.0 `TestRenderer` (layout, controls, fields,
       loading, icons), with the two-direction proof; results in plan 041 §9

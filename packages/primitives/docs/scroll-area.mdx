@@ -29,15 +29,20 @@ with its content and never scrolls.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` (the others are `hidden`) |
+| `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad **deltas** (`deltaX`, `deltaY`, `precise`, `touchPhase`) |
 | `style` | `StyleDesc` | — | merged last; put the bounded size here |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
 
+`onScroll` reports a delta, not a position: there is no `onScrollChange` and no
+absolute offset in `EventPayload`. A consumer that needs a position accumulates
+deltas itself and clamps at the content's ends.
+
 ## Keyboard
 
 Not focusable by itself. The runtime scrolls with the wheel; keyboard scrolling
-belongs to the focused content inside the area, and this wrapper exposes no
-`onScroll` or `onScrollChange` handler to intercept it.
+belongs to the focused content inside the area. The wrapper does not intercept
+keys, so Space/PageDown reach whatever holds focus.
 
 ## Accessibility
 
@@ -56,8 +61,8 @@ the 0.10.0 scrollbar.
 - **No scrollbar tint and no scrollbar width control** in GPUix 0.10.0
   (`scrollbarColor`/`scrollbarWidth` exist only on the unreleased `main`).
 - **No fade mask** at the edges.
-- **No scroll events exposed by this component.** The runtime has `onScroll` but
-  not `onScrollChange`; a consumer that needs the offset must own a host element.
+- **No absolute scroll position.** `onScroll` carries deltas only; the runtime
+  has no `onScrollChange` and no offset field.
 - No virtualisation: a long list mounts every row. `packages/data-grid` owns the
   virtual-list work when it lands.
 
@@ -65,7 +70,8 @@ the 0.10.0 scrollbar.
 
 - `src/core/style.test.ts` — the four axis combinations.
 - `runtime/layout.runtime.test.tsx` — a wheel with `deltaY -100` leaves the
-  offset at `y -100` in the real renderer.
+  offset at `y -100` in the real renderer, and a caller's `onScroll` receives
+  that `-100` delta.
 
 ```sh
 nub run --filter @gpuixui/primitives test
