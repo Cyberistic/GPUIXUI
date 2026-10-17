@@ -5,9 +5,10 @@
  * test, when a docs page or example named by a record does not exist, when a
  * `COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
  * finished Tier 2 row has no record, when two records claim the same name or
- * docs page, and when one Tier 2 component has two rows (a stray `todo` copy
- * beneath the real one used to hide there). It is the automated form of plan
- * 117 §1.
+ * docs page, when one Tier 2 component has two rows (a stray `todo` copy beneath
+ * the real one used to hide there), and when a row's stated native test count
+ * disagrees with the behaviour suite (plan 139). It is the automated form of
+ * plan 117 §1.
  *
  * The date picker landed in plan 119, so every Tier 2 row now has a record.
  * `node:fs` is used here only because this is a test-time repository check —
@@ -19,7 +20,7 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { inventory } from "./inventory.js";
+import { inventory, type ComponentMeta } from "./inventory.js";
 
 const packageRoot = new URL("../", import.meta.url);
 const repoRoot = new URL("../../../", import.meta.url);
@@ -31,7 +32,22 @@ interface Row {
   readonly name: string;
   readonly status: string;
   readonly support: string;
+  readonly notes: string;
 }
+
+/** One case in a behaviour suite: the suite convention is two spaces and `it(`. */
+const TEST_CASE = /^ {2}it\(/;
+
+/** The cases a behaviour suite declares, by that convention. */
+const countBehaviourTests = (relative: string): number =>
+  Arr.length(
+    Arr.filter(
+      readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8").split(
+        "\n",
+      ),
+      (line) => TEST_CASE.test(line),
+    ),
+  );
 
 /** The Tier 2 rows of `COMPONENTS.md`, parsed from its markdown table. */
 const tier2Rows = (): ReadonlyArray<Row> => {
@@ -55,6 +71,7 @@ const tier2Rows = (): ReadonlyArray<Row> => {
         name,
         status: cells[1] ?? "",
         support: cells[2] ?? "",
+        notes: cells[3] ?? "",
       },
     ];
   });
@@ -137,6 +154,42 @@ describe("inventory", () => {
     const names = Arr.map(tier2Rows(), (row) => row.name);
 
     expect(duplicates(names)).toEqual([]);
+  });
+
+  it("states the real native test count in every Tier 2 row", () => {
+    const rows = tier2Rows();
+    const problems = Arr.flatMap(
+      Arr.filter(inventory, (meta: ComponentMeta) => meta.status === "done"),
+      (meta: ComponentMeta) => {
+        const row = Arr.findFirst(
+          rows,
+          (candidate) => candidate.name === meta.name,
+        );
+        return Option.match(row, {
+          onNone: () => [`${meta.name}: no COMPONENTS.md row`],
+          onSome: (found) => {
+            const claimed = Option.flatMap(
+              Option.fromNullishOr(
+                /(\d+) native behaviour tests/.exec(found.notes),
+              ),
+              (match) => Option.fromNullishOr(match[1]),
+            );
+            const actual = countBehaviourTests(meta.testFile);
+            return Option.match(claimed, {
+              onNone: () => [
+                `${meta.name}: row does not state a native test count`,
+              ],
+              onSome: (count) =>
+                count === String(actual)
+                  ? []
+                  : [`${meta.name}: row says ${count}, suite has ${actual}`],
+            });
+          },
+        });
+      },
+    );
+
+    expect(problems).toEqual([]);
   });
 
   it("records limitations as an explicit array", () => {
