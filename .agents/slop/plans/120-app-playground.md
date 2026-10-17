@@ -181,9 +181,9 @@ prefixes exist because `@gpuixui/testing` is consumed from `dist`; document that
 in the README. `nub run dev:playground` at the root already points here.
 
 `tsconfig.json`: extends `@gpuixui/config/tsconfig.base.json`, adds
-`"jsx": "react-jsx"`, `"jsxImportSource": "@gpuix/react"`, `"module":
-"nodenext"`, `"moduleResolution": "nodenext"`, `"noEmit": true`,
-`"types": ["node"]`. `tsconfig.build.json` extends it with
+`"jsx": "react-jsx"`, `"jsxImportSource": "@gpuix/react"`, `"noEmit": true`,
+`"types": ["node"]`, and **nothing else** — in particular no `module` or
+`moduleResolution` override (§2.1.9). `tsconfig.build.json` extends it with
 `"noEmit": false, "outDir": "dist", "rootDir": "src"` and excludes `**/*.test.*`.
 Relative imports use `.js` specifiers (Node ESM output).
 
@@ -391,8 +391,10 @@ Two-direction proof for test 2: temporarily replace `Number.clamp` with a plain
 
 - `apps/playground` has the files in §3.1; `nub run --filter playground
   check-types` and `test` pass; root `nub run check` passes.
-- `nub run --filter playground smoke` exits `2` on this host with the §2.1
-  evidence and no report file (assert with `echo $?`).
+- On this host: `nub run --filter playground build && node
+  apps/playground/dist/smoke/run.js; echo $?` exits `2` with the §2.1 evidence
+  and no report file. **Not** through `nub run … smoke`, which collapses the
+  code to `1` (§2.1.8).
 - `nub run --filter playground dev` fails with the actionable preflight
   message on this host, not a stack trace. (The `dev` script itself is
   `node --watch dist/main.js`; `main.tsx` must therefore preflight *before*

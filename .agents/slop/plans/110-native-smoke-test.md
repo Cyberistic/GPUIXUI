@@ -109,10 +109,10 @@ verified before a report exists.
 | layout | flex/grid/gap/absolute; `div` is block unless `display:"flex"` | measured bounds match the arithmetic within 1px |
 | text | `<text>`, `<code>`, `<diff>`, `<markdown>`; `getPaintedText()` | `getAllText` for `<text>`; `getPaintedText` for native text |
 | input | `<input>`/`<textarea>`; `autoFocus` or a click required for keys | typing updates the value; `onChange`/`onSubmit` fire |
-| focus | `tabIndex`, `focusVisible`, `keyboardFocusDim`, Tab defaults, `getFocusedElementId` | Tab moves focus; Shift+Tab returns; click focuses |
-| overlay | `@gpuix/react/dialog` (anchored `fill="window"`), Escape layer stack, `getElementsAt` | open, topmost hit-test, Escape closes, focus returns |
-| scroll | `overflow:"scroll"`, `onScrollChange`, `getScrollOffset`, `scrollTo*` | wheel changes the offset; `onScrollChange` matches |
-| panel | pointer capture, `onLayout`, `cursor:"col-resize"` | divider drag changes measured widths; clamping holds |
+| focus | `tabIndex`, Tab defaults, `getFocusedElementId`, `role`/`aria-*`; **no** `focusVisible`/`keyboardFocusDim` in 0.10.0 | Tab moves focus; Shift+Tab returns; click focuses; a ring must be painted from React state (`onFocus`/`onBlur`), not declared in `style` (plan `120` §2.1.10) |
+| overlay | `@gpuix/react/dialog`-style `<anchored>`, Escape via `onKeyDown`, `onMouseDownOutside`; **no** `getElementsAt` in 0.10.0 (plan `120` §2.1.2) | open, the popup is painted, Escape closes, click-outside closes. No hit-test channel exists, so "topmost" is asserted by painted text, not by a point query |
+| scroll | `overflow:"scroll"`, `onScroll`, `getScrollOffset`, `scrollTo`/`scrollIntoView`/`scrollToItem`; **no** `onScrollChange` in 0.10.0 | wheel changes `getScrollOffset`; the `onScroll` delta readout agrees with it |
+| panel | pointer capture, `cursor:"col-resize"`; **no** `onLayout` in 0.10.0, so `max` is a prop | divider drag changes the measured pane width; clamping holds |
 | virtual-list | `<virtual-list>` children/`itemCount`, `onVisibleRange` | only a window of rows is built |
 
 Known 0.10 gaps the probes in `130` must record: no `canvas` (charts need
@@ -242,8 +242,16 @@ The smoke suite is itself a test, so it gets the same two-direction rule:
    `panel-resize`'s expected delta from `+80` to `+81` and confirm the suite
    exits `1` naming that check. Revert. (On this host the suite never runs;
    the proof is deferred with the run.)
-2. **Unsupported host exits `2`, not `0`.** On this host:
-   `nub run --filter playground smoke; echo $?` → `2`. Fails if the CLI
+2. **Unsupported host exits `2`, not `0`.** On this host, from the built CLI
+   (not through `nub run`, which collapses any non-zero code to `1` — plan
+   `120` §2.1.8):
+
+   ```sh
+   nub run --filter playground build && node apps/playground/dist/smoke/run.js; echo $?
+   # -> 2
+   ```
+
+   Fails if the CLI
    swallows the missing binding and reports success.
 3. **Preflight is pure-logic tested** by `packages/testing` tests (plan `100`
    tests 1–3), which run on every host.

@@ -34,7 +34,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[███████░░░]` 7/10 plans-and-harness
+`[x]` `[████████░░]` 8/10 plans-and-harness
 
 `[x]` Plans `100`–`130` written and indexed for the playground workstream
 `[x]` Record the build host's missing 0.10 binding as ADR 0001 (evidence + consequence)
@@ -42,8 +42,8 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 `[x]` Establish the GPUix capability map from docs/types and measured probes (layout, input, focus, overlay, scroll, panel, virtual-list, Tier 3/4)
 `[x]` Land `packages/testing` (harness, report, runtime preflight) per plan `100`
 `[x]` Land the `legacy-probe` (0.5.1) so the documented capability matrix is reproducible per plan `110` §3.4
-`[x]` Land `apps/playground` shell + `SplitPane` + the eight core scenarios per plan `120` (`smoke` exits `2` here with the ADR 0001 evidence and writes no report)
-`[ ]` Land the Tier 3/4 probe scenarios per plan `130`
+`[x]` Land `apps/playground` shell + `SplitPane` + the eight core scenarios per plan `120` (the built CLI `node apps/playground/dist/smoke/run.js` exits `2` here with the ADR 0001 evidence and writes no report; `nub run … smoke` prints it but returns `1` — nub collapses non-zero codes, plan `120` §2.1.8)
+`[x]` Land the Tier 3/4 probe scenarios per plan `130` (`table-select-sort`, `table-column-resize`, `workspace-tab-drag`; verdicts still need a supported host)
 `[ ]` **Blocked: run the 0.10 native smoke suite on a supported host** (Apple Silicon Mac / x64 Windows / x64 Linux) and paste the report into `COMPONENTS.md` — no supported host on this machine (ADR 0001/0002)
 `[ ]` Wire the playground to `@gpuixui/tokens` once the tokens workstream lands (replace `src/theme.ts`)
 `[ ]` Replace the jj-based `scripts/verify-two-directions.sh` with a git implementation (outside this workstream)

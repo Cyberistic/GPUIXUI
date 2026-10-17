@@ -33,12 +33,24 @@ exit `2`, never a stack trace.
 | `1`  | at least one scenario failed — a real regression |
 | `2`  | the runtime is unsupported here, or nothing ran — **no evidence** |
 
+**Observe the code from the built CLI, not through `nub run`.** nub 0.9.6
+collapses any non-zero child exit to `1`, so `nub run --filter playground smoke`
+reports `1` even when the suite said `2`:
+
+```sh
+nub run --filter playground build && node apps/playground/dist/smoke/run.js; echo $?
+# -> 2 on this host
+```
+
 Artifacts (gitignored, under `.artifacts/`):
 
 - `.artifacts/smoke-report.json` — the schema-encoded report (`Report.reportJson`);
 - `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
 
 Flags: `--json`, `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`.
+
+Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
+is no evidence, and a stale report must never be mistaken for a fresh one.
 
 ## Evidence on this host (read this before believing a status row)
 
@@ -109,8 +121,9 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- `nub run --filter playground smoke` exits `2` on this host with the loader
-  message and the `darwin-arm64` remedy, and writes no report.
+- `node apps/playground/dist/smoke/run.js` exits `2` on this host with the
+  loader message and the `darwin-arm64` remedy, and writes no report. (`nub run
+  … smoke` prints the same lines but returns `1`; see the exit-code note.)
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`; proven to fail
