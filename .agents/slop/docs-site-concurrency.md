@@ -42,3 +42,64 @@ session verified (`23c7789`): `nub run check`, `nub run lint`, `nub run fmt`,
 `nub run test` (16 tests), `nub run --filter docs build`, and a live dev-server
 smoke (`/`, `/docs`, `/docs/components` → 200; `/api/search?query=button`
 returns real results; light + dark `--color-fd-*` roles present in the built CSS).
+
+---
+
+# Second observation — the same worktree, later the same morning
+
+Observed 2026-10-17 between 08:38 and 08:58. Same root cause, with the two
+sessions now identified.
+
+## What happened
+
+Two docs-site sessions were live in this worktree simultaneously:
+
+| Session | Started | Role |
+| ------- | ------- | ---- |
+| `ses_eb7f0958fffepwdSPYUvaxw1da` | 07:12 | the other writer (a user-facing session) |
+| `ses_eb7a7c3e2ffeyIiveb3gnokv87` | 08:31 | the supervisor loop's session (`run-docs-site.sh` → `opencode run`) |
+
+The loop's session wrote `src/component-meta/registry.ts`, `entries.ts`,
+`src/components/component-index.*` and `src/architecture.test.ts`; the other
+wrote `content/docs/*.mdx` and `src/components/landing.*`. Damage observed:
+
+- the loop's session resolved and committed the *other* session's in-progress
+  `git merge master` as `2dce1a8`, capturing that session's uncommitted files;
+- it then overwrote a line of that session's in-flight route change
+  (`head: ({ loaderData }) => ({})` replacing the real expression), which the
+  type-check caught as an unused import;
+- both sessions committed to `agent/docs-site` within the same minute
+  (`99960f7`, `48fa9c0`), each staging only its own paths — the index survived,
+  by discipline rather than by design.
+
+## How to see the live writers (for the supervisor fix)
+
+`session_move` with no `sessionID` returns the **current** session's id, so any
+agent can learn which session it is. The OpenCode database lists every session
+with its directory and idle state, which is what a supervisor guard needs:
+
+```sh
+sqlite3 ~/.local/share/opencode/opencode.db \
+  "select id, directory, time_idle is null as live, datetime(time_updated/1000,'unixepoch')
+     from session_v2 where directory like '%workspaces/docs-site%' and time_idle is null;"
+```
+
+A non-empty result for a workstream means a writer already owns that tree; the
+supervisor should skip starting another loop for it. This is the same defect the
+playground worktree recorded (`workspaces/playground/TODO.md` → "Process — one
+writer per tree"), so it belongs in `scripts/swarm-supervisor.sh`.
+
+## What this session did
+
+Per `AGENTS.md` §6 it took ownership: it stopped the loop
+(`run-docs-site.sh` + its `opencode run`) so exactly one writer remains, and
+recorded the guard above as a cross-team task in `TODO.md`. The other session's
+work was left untouched and was not reverted.
+
+## State at the end of this observation
+
+`agent/docs-site` carries the metadata work (plan 413) plus the other session's
+truth pass. Gates green on this tree: `nub run check`, `nub run lint`,
+`nub run test` (9 files, 42 tests), `nub run --filter docs build`, and a
+dev-server check that `/docs/installation` serves
+`<title>Installation — GPUIXUI</title>`.
