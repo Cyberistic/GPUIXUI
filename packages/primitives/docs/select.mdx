@@ -41,7 +41,7 @@ import { Label, Select } from "@gpuixui/primitives";
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | trigger height and padding |
 | `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
-| `side` | `FloatingSide` | GPUix's choice | which side the list opens on |
+| `side` | `FloatingSide` | auto — below, flipped above when it does not fit | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
 | `style` | `StyleDesc` | — | merged last on the select root |
 | `testId` | `string` | — | stable locator |
@@ -86,12 +86,30 @@ anchored layer, so it painted a 57 px list under a 900 px field (measured, plan
 again when the list opens or `size`/`fullWidth` change. Rendered as an element
 tree (no renderer), the list hugs its labels.
 
+## Placement
+
+The list opens **below** the trigger, and **above** it when it does not fit
+below. That is the wrapper's job, not the runtime's: GPUix's layer is
+`side="bottom"` with `fit="snap"`, and snap clamps a layer into the window
+**without flipping it** (measured, plan `156` §8). A select at the window's
+bottom edge therefore opened a 68 px list at `y 724` over a trigger at `y 740` —
+covering the field the user had just pressed (plan `066` §1).
+
+The choice costs one estimate, because the side is decided before the list
+exists: the surface's padding and borders, one `controlHeight.sm` row per
+option, and the row gap — the same numbers `selectContentStyle` and
+`selectItemStyle` paint. When neither side has room, the side with more room
+wins (the runtime still clamps). An explicit `side` skips the decision.
+
 ## Limitations
 
 - **Options are data.** No option groups, no rich option content, no compound
   escape hatch in the public API; use `RadioGroup` for rich options.
 - **The width is measured, not live.** A resize while the list is closed is
   picked up the next time it opens; there is no resize observer in 0.10.0.
+- **The side uses an estimated list height.** It is exact for the styles this
+  package paints, and a test pins the estimate to them; a list taller than both
+  available spaces is clamped, not scrolled or flipped.
 - The list's dismissal and positioning are GPUix's; this package cannot change
   the open animation or the outside-click rules.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
@@ -102,8 +120,12 @@ tree (no renderer), the list hugs its labels.
 ## Verification
 
 - `src/components/Select.test.tsx` — trigger chrome, list surface, item states,
-  the measured `minWidth` (present with a width, absent without), and the
-  decoded role/name/expanded/selected props the wrapper passes down.
+  the measured `minWidth` (present with a width, absent without), the decoded
+  role/name/expanded/selected props the wrapper passes down, and the list-height
+  estimate checked against the styles it mirrors.
+- `src/core/floating.test.ts` — the side decision: fits below, does not fit
+  below but fits above, the collision margin, an exact fit, and the
+  more-room fallback.
 - `runtime/fields.runtime.test.tsx` — measured 2026-10-17: a closed Select is a
   named `ComboBox` with `expanded: false` and the placeholder as its value;
   opening flips `expanded` to `true` and paints a named `ListBox` of named
@@ -111,7 +133,11 @@ tree (no renderer), the list hugs its labels.
   `Pear`, and marks only that option `selected` when reopened (plan `057`). The
   same suite proves the list is at least as wide as a hugging trigger and
   matches a `fullWidth` one (plan `062`; without the measurement the list was 57
-  px under both a 108 px and a 900 px trigger).
+  px under both a 108 px and a 900 px trigger). **Placement (066):** a select at
+  the bottom of a 760 px column opens its list entirely above the trigger
+  (`792 <= 740` fails without the decision), a select with room opens below, and
+  the painted list height equals the estimate the decision used.
+
 
 ```sh
 nub run --filter @gpuixui/primitives test

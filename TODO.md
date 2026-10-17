@@ -272,6 +272,16 @@ retired once both branches are one
       label is the hit area and the tab stop), an optional select-all parent
       with a derived mixed state, and a core rule that never clears a disabled
       option (plan 065)
+`[x]` `packages/primitives`: **`Select`'s list covered its own trigger** at the
+      window's bottom edge — the runtime's `fit="snap"` clamps without flipping
+      (measured: list `y 724..792` over a trigger at `740..772`). The wrapper
+      now estimates the list height from its own styles and opens above when it
+      does not fit below; an explicit `side` still wins. Pure side rule,
+      estimate-vs-styles guard, and two runtime placement tests with both
+      directions proven (plan 066)
+`[ ]` `packages/primitives`: `Tooltip` carries the same clamp-without-flip
+      exposure at the top edge; its panel height is only known after content
+      renders, so it needs its own plan (recorded in plan 066 §2)
 `[x]` `packages/primitives`: the remaining theme axes are runtime-proven (plan
       055) — the high-contrast palettes in both modes, a density override
       measured against the preset metrics, and `platformTheme`'s mono family

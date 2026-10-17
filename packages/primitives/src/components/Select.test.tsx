@@ -20,6 +20,7 @@ import {
   renderSelect,
   selectContentStyle,
   selectItemStyle,
+  selectListHeight,
   selectTriggerStyle,
   type SelectHandlers,
 } from "./Select.js";
@@ -81,6 +82,20 @@ describe("Select", () => {
     // labels. A percentage was the old bug — it resolved against the layer.
     expect(selectContentStyle(testTheme).minWidth).toBeUndefined();
     expect(selectContentStyle(testTheme, 240).minWidth).toBe(240);
+  });
+
+  it("estimates the painted list height from the styles it mirrors", () => {
+    // The side is chosen before the list exists, so the estimate must stay in
+    // step with the two styles that paint it (plan 066).
+    const content = selectContentStyle(testTheme);
+    const row = selectItemStyle(testTheme)(rest);
+    const paintedHeight = (rows: number): number =>
+      2 * Number(content.padding) +
+      rows * Number(row.height) +
+      Math.max(rows - 1, 0) * Number(content.gap) +
+      2 * Number(content.borderWidth);
+    expect(selectListHeight(2, testTheme)).toBe(paintedHeight(2));
+    expect(selectListHeight(0, testTheme)).toBe(paintedHeight(0));
   });
 
   it("maps the options to the labels the trigger shows", () => {

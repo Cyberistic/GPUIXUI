@@ -7,13 +7,19 @@
  * paint comes from the state GPUix reports (`selected`, `highlighted`,
  * `disabled`). The open state, dismissal and arrow navigation stay GPUix's.
  *
+ * Placement is the one thing the wrapper must decide: the runtime's layer is
+ * `side="bottom"` and `fit="snap"`, and snap **clamps without flipping**
+ * (measured, plan 156 §8), so a select at the window's bottom edge opened its
+ * list over the trigger (plan 066). The trigger's measured box and the list's
+ * estimated height choose the side; an explicit `side` always wins.
+ *
  * The options are data rather than compound children because the trigger needs
  * their labels; the `SelectItem` composition below is the shadcn escape hatch
  * for anything the data shape cannot express.
  */
 
 import { useEffect, useRef, useState, type ReactElement } from "react";
-import { useGpuix } from "@gpuix/react";
+import { useGpuix, useWindowSize } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
@@ -31,8 +37,17 @@ import { controlStyle, surfaceStyle, type ControlSpec } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
+import { decideVerticalSide } from "../core/floating.js";
 import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+
+/**
+ * The gap the list keeps from the window edge.
+ *
+ * It is also `FloatingLayer`'s default `snapMargin`, and this wrapper passes it
+ * explicitly so the side decision and the runtime clamp cannot disagree.
+ */
+const COLLISION_PADDING = 8;
 
 export interface SelectOption {
   readonly value: string;
@@ -53,7 +68,7 @@ export interface SelectProps {
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly fullWidth?: boolean;
-  /** Which side the list opens on. GPUix picks when this is absent. */
+  /** Which side the list opens on. Omit to let the wrapper pick the side with room. */
   readonly side?: FloatingSide;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
@@ -121,6 +136,37 @@ export const selectItemStyle =
     cursor: state.disabled === true ? "not-allowed" : "pointer",
   });
 
+/**
+ * The height the list will paint, from the values its two styles use.
+ *
+ * The side must be chosen before the list exists, so the height is derived:
+ * the surface's padding and gaps plus one `controlHeight.sm` row per option and
+ * its border. `selectListHeight` sits beside those styles and a test pins the
+ * three together, so a restyle that forgets this estimate fails.
+ */
+export const selectListHeight = (
+  optionCount: number,
+  theme: PrimitiveTheme,
+): number => {
+  const rows = Math.max(optionCount, 0);
+  return (
+    2 * theme.spacing.xs +
+    rows * theme.density.controlHeight.sm +
+    Math.max(rows - 1, 0) * theme.spacing["2xs"] +
+    2 * theme.borderWidth.thin
+  );
+};
+
+/** The placement the wrapper has already resolved for the list. */
+export interface SelectPlacement {
+  /** The trigger's measured width, so the list is never narrower. */
+  readonly minWidth?: number;
+  /** The side the list opens on. Absent lets the runtime place it. */
+  readonly side?: FloatingSide;
+  /** The gap kept between the list and the window edge. */
+  readonly collisionPadding: number;
+}
+
 /** What the renderer does with the wrapper's own state. */
 export interface SelectHandlers {
   readonly onOpenChange: (open: boolean) => void;
@@ -138,7 +184,6 @@ export const renderSelect = (
     invalid,
     size = "md",
     fullWidth,
-    side,
     label,
     style,
     testId,
@@ -147,7 +192,7 @@ export const renderSelect = (
   state: ValueState<string>,
   open: boolean,
   handlers: SelectHandlers,
-  triggerWidth?: number,
+  placement: SelectPlacement = { collisionPadding: COLLISION_PADDING },
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
   const selected = state.current === "" ? undefined : state.current;
@@ -191,8 +236,9 @@ export const renderSelect = (
       <SelectContent
         role="listbox"
         aria-label={label}
-        side={side}
-        style={selectContentStyle(theme, triggerWidth)}
+        side={placement.side}
+        collisionPadding={placement.collisionPadding}
+        style={selectContentStyle(theme, placement.minWidth)}
       >
         {Arr.map(options, (option) => (
           <SelectItem
@@ -212,12 +258,20 @@ export const renderSelect = (
   );
 };
 
+/** The trigger's measured box, as the side decision needs it. */
+interface TriggerBox {
+  readonly width: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
 /** A list of options in a popover. */
 export const Select = (props: SelectProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
+  const viewport = useWindowSize();
   const [open, setOpen] = useState(false);
-  const [triggerWidth, setTriggerWidth] = useState<number | undefined>(
+  const [triggerBox, setTriggerBox] = useState<TriggerBox | undefined>(
     undefined,
   );
   const trigger = useRef<number | null>(null);
@@ -231,8 +285,25 @@ export const Select = (props: SelectProps): ReactElement => {
     if (id === null) return;
     const bounds = renderer?.getElementBounds?.(id);
     if (bounds === null || bounds === undefined || bounds.width <= 0) return;
-    setTriggerWidth(bounds.width);
-  }, [renderer, open, props.size, props.fullWidth]);
+    setTriggerBox({
+      width: bounds.width,
+      top: bounds.y,
+      bottom: bounds.y + bounds.height,
+    });
+  }, [renderer, open, props.size, props.fullWidth, viewport.height]);
+  const side =
+    props.side ??
+    Option.getOrUndefined(
+      Option.map(Option.fromNullishOr(triggerBox), (box) =>
+        decideVerticalSide({
+          triggerTop: box.top,
+          triggerBottom: box.bottom,
+          layerHeight: selectListHeight(props.options.length, theme),
+          viewportHeight: viewport.height,
+          margin: COLLISION_PADDING,
+        }),
+      ),
+    );
   return renderSelect(
     props,
     theme,
@@ -245,6 +316,10 @@ export const Select = (props: SelectProps): ReactElement => {
         trigger.current = instance?.id ?? null;
       },
     },
-    triggerWidth,
+    {
+      minWidth: triggerBox?.width,
+      side,
+      collisionPadding: COLLISION_PADDING,
+    },
   );
 };

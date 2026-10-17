@@ -20,7 +20,8 @@ import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
-import { Select } from "../src/components/Select.js";
+import { Spacer } from "../src/components/Separator.js";
+import { Select, selectListHeight } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
@@ -500,6 +501,69 @@ it("makes a full-width Select's list match the trigger", async () => {
   );
   const list = selectListBounds(runtime, "Apple");
   expect(Math.abs(list.width - trigger.width)).toBeLessThanOrEqual(1);
+});
+
+it("opens a Select's list above a trigger at the window's bottom edge", async () => {
+  // The bug guarded: `fit="snap"` clamps a layer into the window without
+  // flipping it (plan 156 §8), so this select used to open its list at
+  // y 724..792 over a trigger at 740..772 — covering the field it belongs to.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 760 }}>
+        <Spacer />
+        <Select
+          testId="sel"
+          label="Fruit"
+          placeholder="Choose a fruit"
+          options={[
+            { value: "apple", label: "Apple" },
+            { value: "pear", label: "Pear" },
+          ]}
+        />
+      </Stack>
+    </Surface>,
+  );
+  const triggerElement = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(triggerElement);
+  runtime.flush();
+  const trigger = Option.getOrElse(runtime.boundsOfId(triggerElement.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  const list = selectListBounds(runtime, "Apple");
+  expect(list.y + list.height).toBeLessThanOrEqual(trigger.y);
+  // The height the side decision estimated is the height the list paints.
+  expect(
+    Math.abs(list.height - selectListHeight(2, testTheme)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("opens a Select's list below a trigger with room", async () => {
+  // The other direction: the fix must not hard-code a side.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 200 }}>
+        <Select
+          testId="sel"
+          label="Fruit"
+          placeholder="Choose a fruit"
+          options={[
+            { value: "apple", label: "Apple" },
+            { value: "pear", label: "Pear" },
+          ]}
+        />
+      </Stack>
+    </Surface>,
+  );
+  const triggerElement = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(triggerElement);
+  runtime.flush();
+  const trigger = Option.getOrElse(runtime.boundsOfId(triggerElement.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  const list = selectListBounds(runtime, "Apple");
+  expect(list.y).toBeGreaterThanOrEqual(trigger.y + trigger.height);
 });
 
 it("opens a Tooltip on hover and dismisses it on click", async () => {

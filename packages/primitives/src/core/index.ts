@@ -24,6 +24,9 @@ export type { KeyName, KeyPhase, Orientation } from "./keyboard.js";
 export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";
 
+export { decideVerticalSide } from "./floating.js";
+export type { PlacementRequest, VerticalSide } from "./floating.js";
+
 export {
   clampNumeric,
   decideNumberKey,
