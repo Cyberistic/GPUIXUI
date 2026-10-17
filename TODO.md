@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 68/87
+`[x]` `[████████░░]` 69/88
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -341,6 +341,10 @@ measured over the four base surfaces and the AAA dark theme veils with 15% white
 sidebar inherited the pastel tints while the platform light styles changed
 `muted`, so macOS measured 1.036:1, Linux 1.023:1 and Windows 1.043:1; the four
 light tints move one small step and `muted` joins the surface pairs (plan 300)
+`[x]` Make an applied platform style declare the contrast it carries —
+`applyPlatformStyle(highBase, style, "default")` kept the base's `contrast:
+"high"` claim and produced 46 checker failures; the returned declaration now
+follows the palette, and a shape-only style keeps the base's level (plan 301)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)

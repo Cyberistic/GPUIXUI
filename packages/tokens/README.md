@@ -361,6 +361,11 @@ Runnable examples live in
 [`src/platforms.example.ts`](./src/platforms.example.ts) and
 [`src/platform-styles.example.ts`](./src/platform-styles.example.ts).
 
+The applied theme declares the level of the palette it carries (plan 301):
+`applyPlatformStyle(highBase, style)` keeps the AAA palette and the `high` claim,
+while naming `"default"` applies the platform colours and returns a `default`
+theme, and a style with no colour overrides keeps the base's level.
+
 ## Custom typefaces
 
 **Unavailable in the pinned runtime.** GPUix `0.10.0` has no `registerFont`, so a

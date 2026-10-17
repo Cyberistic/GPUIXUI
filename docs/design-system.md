@@ -389,8 +389,12 @@ the application's `Schema`.
 
 A theme carries its contrast level the way it carries its mode: `extendTheme`
 keeps the base's declaration and `applyPlatformStyle` and
-`themeContrastFailures` default to it, so the short call is the safe one. A
-declaration is a claim; `themeContrastFailures` is what proves it.
+`themeContrastFailures` default to it, so the short call is the safe one. An
+applied style declares the level of the palette it ends with: asking for the
+platform's default colours on an AAA base returns a `default` theme, because the
+AAA palette is gone, while a style with no colour overrides keeps the base's
+level. A declaration is a claim; `themeContrastFailures` is what proves it, and a
+mixed palette is reported rather than silently repaired.
 
 Overrides merge by group; typography merges field by field, density metrics size
 by size, motion timing by timing and easing by easing; elevation levels are
