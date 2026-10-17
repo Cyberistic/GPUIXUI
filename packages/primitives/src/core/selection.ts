@@ -162,6 +162,12 @@ export const switchTrackStyle = (
  * The foreground role rather than a literal white, so it contrasts with the
  * track in both modes; the accent foreground once checked, so the knob always
  * reads against the pill it sits on.
+ *
+ * `pointerEvents: "none"` is load-bearing, not decoration: GPUI hit-tests to the
+ * deepest element under the point and does not bubble an unhandled click to the
+ * track, so a filled child covering the switch's centre swallowed every click
+ * (measured: plan 041 §9 — the toggle never fired and the switch never took
+ * focus).
  */
 export const switchThumbStyle = (
   spec: SelectionSpec,
@@ -174,6 +180,7 @@ export const switchThumbStyle = (
     height: side,
     flexShrink: 0,
     borderRadius: theme.radius.full,
+    pointerEvents: "none",
     backgroundColor: filled(spec)
       ? accentRole(spec, theme).foreground
       : theme.colors.foreground,
