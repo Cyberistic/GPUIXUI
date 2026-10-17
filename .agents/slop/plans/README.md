@@ -94,6 +94,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [095](./095-soft-fill-divider.md) | The decorative divider on the soft status fills | F | 076, 080, 090, 094 | done |
 | [096](./096-control-size-index.md) | The control size index and its narrowing guard | F | 011, 016, 067, 068, 089 | done |
 | [097](./097-filled-control-states.md) | Designed hover and pressed roles for every filled control | F | 011, 014, 055, 063, 071, 080, 084 | done |
+| [098](./098-brand-theme-truth.md) | The documented brand theme must pass the contract it teaches | F | 011, 013, 055, 071, 082, 097 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -480,6 +481,19 @@ values in all three real styles, measured against their on-colour foregrounds
 (129 contrast pairs). `filled-states.test.ts` proves presence, perceivability,
 direction and platform ownership on all sixteen shipped themes, and the generic
 washes are documented as the ghost/outline mechanism they always were.
+
+098 closes a truth gap in the extension example rather than in the palette: the
+executed `brand-theme.example.ts` changed only `primary` (and `ring`), while
+`docs/tokens.md` taught that `themeContrastFailures(brandTheme)` returned an
+empty array. It returned one failure — the inherited dark foreground measured
+**4.243:1** on the brand fill, under the 4.5:1 on-colour floor — and nothing ran
+the checker on the example. Both examples now carry the complete primary family
+(fill, foreground, hover, pressed and text) in values that clear every floor, the
+hover/pressed steps belong to the brand rather than the base iris, and
+`theme.test.ts` holds both to `themeContrastFailures` and to the family rule. The
+"change a fill, move the family" rule is stated in the Theme API section, the
+design system and the README, with the documented snippet identical to the
+executed example.
 
 ### Reference adoption (block `200–299`)
 

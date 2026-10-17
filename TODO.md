@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 65/84
+`[x]` `[████████░░]` 66/85
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -327,6 +327,11 @@ index without a metric in every density preset (plan 096)
 control's hover and press are editable, measured fills instead of an alpha
 composite over the backdrop; the neutral fill's fake hover measured 1.009:1 and
 the light primary's press moved *lighter* than its hover (plan 097)
+`[x]` Make the documented brand example a theme the contract accepts — it
+inherited the dark `primaryForeground`, which measured 4.243:1 on the brand fill
+under the 4.5:1 floor, while `docs/tokens.md` claimed
+`themeContrastFailures(brandTheme)` was empty; a brand now moves its whole
+primary family and a test holds the example to the checker (plan 098)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)

@@ -870,7 +870,14 @@ import { createTheme, extendTheme, darkTheme } from "@gpuixui/tokens";
 export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
-  colors: { primary: "#7C5CFF", ring: "#9B8CFF" },
+  colors: {
+    primary: "#7C5CFF",
+    primaryForeground: "#000000",
+    primaryHover: "#8F73FF",
+    primaryActive: "#A28CFF",
+    primaryText: "#C9BDFF",
+    ring: "#9B8CFF",
+  },
   radius: { md: 8 },
   density: "compact",
 });
@@ -879,6 +886,14 @@ export const scoped = extendTheme(darkTheme, {
   typography: { body: { fontSize: 15 } },
 });
 ```
+
+A brand that changes `primary` sets the whole family — `primaryForeground`,
+`primaryHover`, `primaryActive` and `primaryText` — because an inherited state
+keeps the base hue running the interaction and can miss the on-colour floor: the
+dark example's inherited foreground measured 4.24:1 on its brand fill before
+this rule was written down. The executed example in
+[`src/brand-theme.example.ts`](../packages/tokens/src/brand-theme.example.ts) is
+this exact family, and `theme.test.ts` holds it to `themeContrastFailures`.
 
 A persisted choice arrives as `unknown`. The package guards its own unions, so a
 consumer does not retype them: `isPlatformName(value)` narrows to a shipped

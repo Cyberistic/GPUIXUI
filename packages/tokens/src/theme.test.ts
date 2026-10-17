@@ -20,6 +20,7 @@ import {
   highContrastThemes,
   lightTheme,
   themes,
+  themeContrastFailures,
 } from "./index.js";
 
 describe("built-in themes", () => {
@@ -241,5 +242,24 @@ describe("brand example", () => {
     expect(brandLightTheme.mode).toBe("light");
     expect(brandLightTheme.name).toBe("Acme Light");
     expect(brandLightTheme.colors.primary).toBe("#6A45F0");
+  });
+
+  it("holds the documented examples to the contrast contract", () => {
+    expect(themeContrastFailures(brandTheme)).toEqual([]);
+    expect(themeContrastFailures(brandLightTheme)).toEqual([]);
+  });
+
+  it("moves the whole brand family, not only the fill", () => {
+    [brandTheme, brandLightTheme].forEach((theme) => {
+      const base = theme.mode === "dark" ? darkTheme : lightTheme;
+      (["primaryHover", "primaryActive", "primaryText"] as const).forEach(
+        (role) => {
+          expect(theme.colors[role], role).not.toBe(base.colors[role]);
+        },
+      );
+      // A foreground may legitimately stay white, so the contract test above is
+      // what holds it to the brand fill rather than an inequality against base.
+      expect(theme.colors.primaryForeground).toMatch(/^#[0-9A-F]{6}$/);
+    });
   });
 });

@@ -120,14 +120,27 @@ import { createTheme } from "@gpuixui/tokens";
 export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
-  colors: { primary: "#7C5CFF", ring: "#9B8CFF" },
+  colors: {
+    primary: "#7C5CFF",
+    primaryForeground: "#000000",
+    primaryHover: "#8F73FF",
+    primaryActive: "#A28CFF",
+    primaryText: "#C9BDFF",
+    ring: "#9B8CFF",
+  },
   radius: { md: 8 },
   density: "compact",
 });
 ```
 
+A theme that moves a filled family moves the whole family: the brand's
+`primaryForeground`, `primaryHover`, `primaryActive` and `primaryText` are set
+beside `primary`. An inherited state keeps the base hue running the interaction,
+and an inherited foreground can miss the on-colour floor.
+
 A complete, executed example lives in
-[`src/brand-theme.example.ts`](./src/brand-theme.example.ts).
+[`src/brand-theme.example.ts`](./src/brand-theme.example.ts) and is held to
+`themeContrastFailures` by the package's tests.
 
 ## Persisted choices
 

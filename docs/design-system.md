@@ -71,6 +71,14 @@ contrast obligations: `primary` is a surface with `primaryForeground` on it, and
 `primaryText` is the readable step for a link, label or icon on the plain
 surfaces and the washes a link paints.
 
+A brand that changes a fill moves the whole family: `primaryForeground`,
+`primaryHover`, `primaryActive` and `primaryText` belong beside `primary`. An
+inherited state keeps the base theme's hue running the interaction, and an
+inherited foreground can miss the on-colour floor — the dark example's inherited
+foreground measured 4.24:1 on its brand fill. The executed example in
+`packages/tokens/src/brand-theme.example.ts` carries the complete family, and
+`themeContrastFailures` holds it to the same floors as the shipped themes.
+
 ## 4. Light and dark
 
 Dark mode is designed, not inverted:
