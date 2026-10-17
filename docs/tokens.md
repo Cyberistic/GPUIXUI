@@ -848,8 +848,10 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 `themeContrastFailures(theme, contrast = theme.contrast)` measures `contrastPairs`
 against `contrastFloors`. The list holds text pairs, secondary text and status
 text on the state washes (`hover`, `active`, `accent` and `selected`), the other
-status pairs, the functional control boundary on the `muted` panel and those
-washes, the selection wash, the soft status surfaces and the decorative dividers
+status pairs, the focus ring on the plain surfaces, the `muted` panel, the
+`accent` wash and the three state washes a focused control can sit on, the
+functional control boundary on the `muted` panel and those washes, the selection
+wash, the soft status surfaces and the decorative dividers
 — including on the `secondary`, `hover`, `active` and `accent` fills a bordered
 control paints.
 The default is the
@@ -1060,15 +1062,30 @@ carried its own complete colour, so the documented tint changed nothing and the
 same value was duplicated three times per set; the split keeps every shipped hex
 byte-for-byte.
 
-The focus ring is measured on the canvas, card and popover and on the `hover`,
-`active` and `selected` washes, because focus and selection co-occur in rows;
-secondary text is measured on `hover`, `active`, `accent` and `selected`, because
-a list row, a combobox option and a menu item paint those washes behind a
-description; status text (`xText`) is measured on those four washes as well as on
-`popover`, so a status label inside a hovered, pressed or selected row or a
-dialog is covered; the `borderStrong` boundary is measured on `popover`, the
-`muted` panel and those four washes, so a checkbox or field in a quiet panel, a
-hovered, pressed, selectable or selected row still shows its edge.
+The focus ring is measured on the eight surfaces a focused control can sit on —
+the canvas, card and popover, the `muted` panel a sidebar control sits on, the
+`accent` wash a selectable row paints, and the `hover`, `active` and `selected`
+washes — because focus and selection co-occur in rows. A field's own `input` fill
+and a control's `secondary` fill are what the ring surrounds, not what it sits
+on, so they are deliberately not ring surfaces. `ringSurfaces` in
+`src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public
+check to it. Secondary text is measured on `hover`, `active`, `accent` and
+`selected`, because a list row, a combobox option and a menu item paint those
+washes behind a description; status text (`xText`) is measured on those four
+washes as well as on `popover`, so a status label inside a hovered, pressed or
+selected row or a dialog is covered; the `borderStrong` boundary is measured on
+`popover`, the `muted` panel and those four washes, so a checkbox or field in a
+quiet panel, a hovered, pressed, selectable or selected row still shows its edge.
+
+Every colour role is accounted for: `contrastPairs` and `selectionPairs` measure
+the painted roles, and `contrast.test.ts` keeps a declared exemption list for the
+five that are not pairs — `disabled` and `disabledForeground` (WCAG exempts
+inactive controls, and the design system requires a visible dim rather than a
+floor), `overlay` (a scrim, whose job is to obscure), `scrollbar` (reserved; the
+pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
+never text or a bounded surface). A new role that is neither measured nor
+argued fails the suite, so the catalogue cannot grow a blind spot like the ones
+plans `076`–`084` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 53/71
+`[x]` `[███████░░░]` 54/72
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -282,6 +282,10 @@ so editing it in a copied platform style retinted nothing while three colour
 strings duplicated the same value; a level is now geometry plus an alpha resolved
 by `elevationShadow`, with `elevationShadows` for a compositing renderer, and
 every shipped hex is unchanged (plan 085)
+`[x]` Make the contrast contract total — five roles were silently unmeasured with
+no stated exemption, and the focus ring missed the `muted` panel and the
+`accent` wash a focused row paints; both are closed, and a new guard fails a role
+that is neither measured nor argued (plan 086)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now

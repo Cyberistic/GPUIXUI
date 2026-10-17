@@ -49,10 +49,17 @@
  * sets were below the non-text floor there — identity light 2.62:1 on `active`,
  * macOS light 2.52:1, identity dark 2.80–2.81, Linux dark 2.97 on `selected`,
  * and high-contrast dark 4.15 under its 4.5. Five values move one step.
+ *
+ * Plan 086 makes the contract total. The ring is measured on the quiet panel a
+ * sidebar control sits on and the accent wash a selectable row paints, not only
+ * on the plain surfaces and the three state washes, and a completeness suite
+ * fails when a colour role is neither measured by a pair nor on the stated
+ * exemption list.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  colorRoles,
   compositeOver,
   contrastFloors,
   contrastPairs,
@@ -63,6 +70,7 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
+  selectionPairs,
   themeContrastFailures,
   type Theme,
   type ThemeContrast,
@@ -238,7 +246,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(101);
+    expect(contrastPairs.length).toBe(103);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 
@@ -323,7 +331,7 @@ describe("themeContrastFailures", () => {
     ).toEqual(["background", "card", "popover"]);
   });
 
-  it("checks the focus ring on the washes a focused row paints", () => {
+  it("checks the focus ring on every surface a focused control sits on", () => {
     expect(quietRingTheme.colors.ring).toBe("#EFF4FF");
     const ringFailures = quietRingFailures
       .filter(({ foreground }) => foreground === "ring")
@@ -333,9 +341,65 @@ describe("themeContrastFailures", () => {
         floor,
       }));
     expect(ringFailures).toEqual(
-      ["hover", "active", "selected", "background", "card", "popover"].map(
-        (background) => ({ background, pairClass: "boundary", floor: 3 }),
-      ),
+      [
+        "background",
+        "card",
+        "popover",
+        "muted",
+        "accent",
+        "hover",
+        "active",
+        "selected",
+      ].map((background) => ({ background, pairClass: "boundary", floor: 3 })),
     );
+  });
+});
+
+describe("contract completeness", () => {
+  /**
+   * The roles no pair measures, each with the reason it is not a pair. A role
+   * that is neither here nor measured fails `every role is measured or exempt`,
+   * so a 55th role cannot ship unmeasured.
+   */
+  const exempt = [
+    [
+      "disabled",
+      "an inactive surface; WCAG exempts inactive controls, and the design system requires a visible dim rather than a floor",
+    ],
+    ["disabledForeground", "the text of that inactive state; same exemption"],
+    [
+      "overlay",
+      "a modal scrim; its job is to obscure, and the content beneath it is the measured surface",
+    ],
+    [
+      "scrollbar",
+      "reserved; the pinned runtime paints the platform scrollbar and exposes no tint",
+    ],
+    [
+      "shadow",
+      "an elevation tint applied at a level's alpha, never painted as text or a bounded surface",
+    ],
+  ] as const;
+
+  const measuredRoles = new Set<string>(
+    [...contrastPairs, ...selectionPairs].flatMap(
+      ([foreground, background]) => [foreground, background],
+    ),
+  );
+  measuredRoles.add("selection");
+
+  it("every role is measured or exempt", () => {
+    const unaccounted = colorRoles.filter(
+      (role) =>
+        !measuredRoles.has(role) && !exempt.some(([name]) => name === role),
+    );
+    expect(unaccounted).toEqual([]);
+  });
+
+  it("no stale exemption", () => {
+    exempt.forEach(([role]) => {
+      expect(colorRoles, role).toContain(role);
+      expect(measuredRoles.has(role), role).toBe(false);
+    });
   });
 });

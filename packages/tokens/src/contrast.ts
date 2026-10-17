@@ -114,6 +114,27 @@ const primaryTextPairs: readonly ContrastPair[] = primaryTextSurfaces.map(
 );
 
 /**
+ * The surfaces a focused control can sit on: the plain surfaces, the quiet
+ * panel a sidebar control sits on, the accent wash a selectable row paints, and
+ * the three state washes a focused row paints. The ring is painted outside the
+ * control, on the surface behind it, so each must keep it visible.
+ */
+const ringSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+  "accent",
+  "hover",
+  "active",
+  "selected",
+] as const;
+
+const ringPairs: readonly ContrastPair[] = ringSurfaces.map(
+  (background): ContrastPair => ["ring", background, "boundary"],
+);
+
+/**
  * The state washes a row paints behind a status label, icon or indicator dot:
  * pointer hover, press, the accent a selectable row uses on hover, and the
  * selected fill. A status dot in a list, table or menu sits on all four, so the
@@ -133,8 +154,9 @@ const statusTextWashPairs: readonly ContrastPair[] = statusTextTones.flatMap(
 /**
  * Every documented pair — text, status, surface and divider — including
  * secondary text and status text on the state washes, brand-toned text on the
- * plain surfaces and washes a link paints, the focus ring on the washes a
- * focused row paints, status text on a floating surface, the functional control
+ * plain surfaces and washes a link paints, the focus ring on every surface a
+ * focused control can sit on, status text on a floating surface, the functional
+ * control
  * boundary on a floating surface, a quiet panel and the state washes, the soft
  * status surfaces and the loading skeleton a canvas must distinguish, and the
  * decorative dividers that must stay visible, including on the fills a bordered
@@ -152,8 +174,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["inputForeground", "input", "body"],
   ["foreground", "hover", "body"],
   ["foreground", "active", "body"],
-  ["ring", "hover", "boundary"],
-  ["ring", "active", "boundary"],
+  ...ringPairs,
   ["secondaryForeground", "secondary", "secondary"],
   ["primaryForeground", "primary", "secondary"],
   ["primaryForeground", "primaryHover", "secondary"],
@@ -181,7 +202,6 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...statusTextWashPairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
-  ["ring", "selected", "boundary"],
   ["placeholder", "input", "secondary"],
   ["borderStrong", "background", "boundary"],
   ["borderStrong", "card", "boundary"],
@@ -189,9 +209,6 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["borderStrong", "popover", "boundary"],
   ...controlBoundaryPairs,
   ...primaryTextPairs,
-  ["ring", "background", "boundary"],
-  ["ring", "card", "boundary"],
-  ["ring", "popover", "boundary"],
   ...secondaryTextPairs,
   ...surfacePairs,
   ["border", "background", "divider"],

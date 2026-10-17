@@ -41,7 +41,8 @@ export const quietHighContrastFailures = themeContrastFailures(
 /**
  * A theme whose focus ring is a surface tint rather than a contrast ring: it
  * passes as a fill, not as a ring. Focus and selection co-occur, so the check
- * measures the ring on the washes a focused row paints, not only on the canvas.
+ * measures the ring on every surface a focused control sits on — the quiet
+ * panel and the accent wash included — not only on the canvas.
  */
 export const quietRingTheme = extendTheme(getTheme("light"), {
   name: "Quiet ring",
