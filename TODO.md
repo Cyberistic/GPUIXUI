@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████▎░░]` 33/45
+`[x]` `[███████▍░░]` 34/46
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -91,6 +91,10 @@ table in `docs/tokens.md` (plan 064)
 `[x]` Guard `packages/tokens/README.md` — role count, platform table,
 type-role count, motion levels and status families — and fix its motion list,
 which omitted `none` (plan 065)
+`[x]` Name every public value in `docs/tokens.md` — seven value exports were
+absent — guard coverage with a namespace-wide test, ship a compiled
+`PlatformStyle` authored from scratch, and add the loading state to the design
+system (plan 066)
 `[x]` Expose `textRoles` and guard it against the `Typography` interface
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input

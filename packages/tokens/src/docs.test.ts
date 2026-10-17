@@ -22,6 +22,7 @@ import {
   type BoxShadow,
   type ElevationLevel,
 } from "./elevation.js";
+import * as Tokens from "./index.js";
 import { motion } from "./motion.js";
 import {
   platformNames,
@@ -256,6 +257,15 @@ describe("docs/tokens.md status table", () => {
     );
     expect(positions).not.toContain(-1);
     expect(positions).toEqual(positions.toSorted((a, b) => a - b));
+  });
+});
+
+describe("docs/tokens.md public values", () => {
+  it("names every value the package exports", () => {
+    const undocumented = Object.keys(Tokens).filter(
+      (name) => !markdown.includes(name),
+    );
+    expect(undocumented).toEqual([]);
   });
 });
 

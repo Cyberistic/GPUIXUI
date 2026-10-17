@@ -204,6 +204,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | ----- | ---------------- |
 | hover | `hover` wash on ghost and subtle surfaces; filled actions step to `primaryHover` / `destructiveHover` (opaque, contrast-checked) instead of compositing an alpha fill |
 | pressed | `active` wash |
+| loading | `skeleton` fill with `pulse` (or `step`) motion; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground` |
 | disabled | `disabled` + `disabledForeground`, plus a non-colour cue where possible |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |

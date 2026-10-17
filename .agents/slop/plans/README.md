@@ -62,6 +62,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [063](./063-platform-style-variants.md) | Platform style variants: macOS, Linux, Windows and Default | B | 051, 053, 056–062 | done |
 | [064](./064-documentation-indexes.md) | Documentation indexes for platforms and status tones | F | 014, 015, 059, 063 | done |
 | [065](./065-readme-truth-guard.md) | Guard the package README against drift | F | 056, 058, 059, 062, 064 | done |
+| [066](./066-public-value-coverage.md) | Name every public value; author a platform style | F | 056–065 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -114,7 +115,15 @@ front door and repeated the role count, the platform table, the type-role
 count, the motion levels and the status families with no test behind them —
 its motion paragraph was already missing the `none` level. Both documents are
 now built from the implementation one way, like `docs/tokens.md` and
-`docs/design-system.md`.
+`docs/design-system.md`. 066 closes the last uncovered promise in the reference:
+`docs/tokens.md` says “if a token is not here, it is not public”, but seven
+public value exports were absent — `defaultDensity`, the four raw colour sets and
+the two elevation sets — and nothing enforced coverage. A namespace-wide guard
+now fails on any undocumented value export. The same plan makes the platform
+“copy a file and edit it” story real: a complete `PlatformStyle` authored from
+scratch joins the executed examples, so the documented shape is compiled and
+tested, not sketched; the design-system state table also gains the loading row
+the mission names.
 
 ### Reference adoption (block `200–299`)
 

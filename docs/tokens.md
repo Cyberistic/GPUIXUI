@@ -364,6 +364,33 @@ const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
 `applyPlatformStyle(base, style, contrast?)` takes the base theme's contrast
 level, so a copied style never overrides a high-contrast palette.
 
+### Authoring a platform style
+
+A style file is plain data. Copy one from `platform-styles/` and keep the shape;
+only `types` is required, and every omitted role inherits the identity:
+
+```ts
+interface PlatformStyle {
+  types: PlatformType; // label, sans, mono
+  structure: {
+    radius?: Partial<Radius>;
+    density?: DensityName;
+    motion?: Partial<Omit<Motion, "ease">>;
+  };
+  colors: Record<ThemeMode, Partial<ThemeColors>>;
+  elevation: Record<ThemeMode, Partial<Elevation>>;
+}
+```
+
+A complete file authored from scratch lives in
+[`src/platform-styles.example.ts`](../packages/tokens/src/platform-styles.example.ts)
+(`contosoPlatformStyle`). It is compiled and applied in `platforms.test.ts`, so
+the shape above is the one the library tests, not a sketch.
+
+`applyPlatformStyle(getTheme(mode), contosoPlatformStyle)` is the same call the
+shipped variants use, so a copied file cannot take a path the library does not
+test.
+
 The docs platform toggle and a native build call the same function, so a preview
 cannot show a theme the runtime cannot produce.
 
@@ -445,6 +472,10 @@ import { controlHeight, controlPaddingX } from "@gpuixui/tokens";
 controlHeight(theme, "md");
 controlPaddingX(theme, "md");
 ```
+
+`defaultDensity` is the `comfortable` preset, and every built-in theme uses it.
+A theme's `density` always names the preset it is based on, including after a
+partial metric override.
 
 ## Elevation
 
@@ -665,6 +696,13 @@ Merge rules:
 No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary.
+
+The role and shadow sets behind the shipped themes are exported as
+`lightColors`, `darkColors`, `highContrastLightColors`,
+`highContrastDarkColors`, `lightElevation` and `darkElevation`. They are the
+objects each theme points at, exported for tooling and table generation;
+component source reads `theme.colors` and `theme.elevation`, never a fixed set. A
+consumer theme may share an untouched set or replace it through `extendTheme`.
 
 ## React binding
 

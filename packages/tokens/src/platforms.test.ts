@@ -24,7 +24,11 @@ import {
   resolveDensePlatformTheme,
   resolvePlatformTheme,
 } from "./platforms.example.js";
-import { resolveEditedPlatformTheme } from "./platform-styles.example.js";
+import {
+  contosoPlatformStyle,
+  resolveAuthoredPlatformStyle,
+  resolveEditedPlatformTheme,
+} from "./platform-styles.example.js";
 import { densityPresets } from "./scale.js";
 import { textStyle } from "./styles.js";
 import {
@@ -360,6 +364,24 @@ describe("platform style examples", () => {
     );
     expect(edited.typography.mono).toBe("Consolas");
     expect(edited.radius.md).toBe(3);
+  });
+
+  it("applies a style authored from scratch and inherits what it omits", () => {
+    const light = resolveAuthoredPlatformStyle("light");
+    expect(light.name).toBe("Light · Contoso");
+    expect(light.colors.primary).toBe(
+      contosoPlatformStyle.colors.light.primary,
+    );
+    expect(light.colors.background).toBe(lightTheme.colors.background);
+    expect(light.radius.md).toBe(contosoPlatformStyle.structure.radius.md);
+    expect(light.density.name).toBe("spacious");
+    expect(light.typography.mono).toBe("Cascadia Mono");
+    expect(light.elevation.md).toEqual(contosoPlatformStyle.elevation.light.md);
+    expect(light.elevation.sm).toEqual(lightTheme.elevation.sm);
+
+    const dark = resolveAuthoredPlatformStyle("dark");
+    expect(dark.colors.primary).toBe(contosoPlatformStyle.colors.dark.primary);
+    expect(dark.colors.background).toBe(darkTheme.colors.background);
   });
 });
 
