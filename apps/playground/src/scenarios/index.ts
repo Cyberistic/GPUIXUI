@@ -15,6 +15,7 @@ import type { PlaygroundScenario } from "../types.js";
 import { a11yScenario } from "./a11y.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
+import { contextMenuScenario } from "./context-menu.js";
 import { textSelectionScenario } from "./text-selection.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
@@ -62,7 +63,7 @@ export const CORE_CAPABILITIES = [
   "selection",
 ] as const;
 
-/** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`). */
+/** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`, `164`). */
 export const PROBE_CAPABILITIES = [
   "table",
   "tree",
@@ -70,6 +71,7 @@ export const PROBE_CAPABILITIES = [
   "workspace",
   "motion",
   "drag",
+  "menu",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -98,6 +100,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   a11yScenario,
   nativeSurfacesScenario,
   dragTargetsScenario,
+  contextMenuScenario,
   textSelectionScenario,
   shellNavigationScenario,
   virtualizedTableScenario,

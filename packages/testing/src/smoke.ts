@@ -41,6 +41,7 @@ export const CAPABILITIES = [
   "content",
   "drag",
   "selection",
+  "menu",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -231,6 +232,8 @@ export interface SmokeHost {
   readonly focused: () => string | null;
   readonly click: (testId: string) => void;
   readonly clickWindow: (x: number, y: number) => void;
+  /** Right-clicks `testId`'s centre through GPUI's click pipeline (button 2). */
+  readonly rightClick: (testId: string) => void;
   /** Moves the pointer onto `testId`, delivering native enter/leave. */
   readonly hover: (testId: string) => void;
   readonly key: (keystroke: string) => void;

@@ -69,6 +69,7 @@ describe("scenarioProblems", () => {
         "content",
         "drag",
         "selection",
+        "menu",
       ]),
     );
   });
