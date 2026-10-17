@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 21/26
+`[x]` `[███████░░░]` 21/29
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -104,7 +104,10 @@ local focus-ring helpers (`primitives/src/core/style.ts`,
 `components/src/internal/theme.ts`) and their first-shadow helpers
 (`primitives/src/core/style.ts` `firstShadow`, `components/src/internal/theme.ts`
 `elevation`), now that `focusRing` and `elevationShadow` exist and the package
-resolves from source (owner: those workstreams; plans 016–018)
+resolves from source. `components` also deletes its local `DIAMETER`, `tone()`,
+`withAlpha`, `HOVER_ALPHA` and borrowed `accent` pair: `avatarSize`,
+`primaryHover` / `destructiveHover`, the soft status pairs, `alpha` and `info`
+now ship in the package (owner: those workstreams; plans 014, 016–018, 054, 055)
 `[ ]` Cross-team: `primitives` replaces the `useStep(…, 120)` / `useStep(…, 700)`
 literals with `theme.motion.step` / `theme.motion.pulse`, and the Tier 2 overlay
 components take enter/exit transitions from `motionTransition` (owner:
@@ -119,12 +122,6 @@ layering rule and the no-portal limitation are documented in `docs/tokens.md`
 package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
 it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
 `components`)
-`[ ]` Cross-team: plans 054 and 055 close the last token interlocks —
-`avatarSize` replaces `components`' local `DIAMETER` literal, and
-`primaryHover` / `destructiveHover` replace the `HOVER_ALPHA` fill; the soft
-status pairs, `alpha` and `info` were already shipped by plan 014. `components`
-deletes `tone()`, `withAlpha`, `HOVER_ALPHA` and the borrowed `accent` pair when
-it imports the package directly (owner: `components`)
 `[ ]` Cross-team: `LICENSES/adabraka-ui.md` (MIT, `Copyright (c) 2025 Adabraka
 Team`, "token structure referenced, no assets copied") — plan 202 §7, not this
 workstream's path. Owner: licensing

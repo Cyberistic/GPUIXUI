@@ -129,7 +129,8 @@ package README.
 
 - Add and tick: `[x]` Guard the token catalogue against drift from the
   implementation (plan 056).
-- Update the section's progress bar and count from 20/26 to 21/26.
+- Update the section's progress bar and count to the tracked total (21/29 at
+  the time of writing; plans 054 and 055 each add a task).
 
 ### 3.5 `COMPONENTS.md` (design-system section only)
 
