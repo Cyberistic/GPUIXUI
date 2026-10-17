@@ -16,6 +16,7 @@ import { a11yScenario } from "./a11y.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
 import { contextMenuScenario } from "./context-menu.js";
+import { virtualizedTreeScenario } from "./virtual-tree.js";
 import { textSelectionScenario } from "./text-selection.js";
 import { layoutScenario } from "./layout.js";
 import { textScenario } from "./text.js";
@@ -101,6 +102,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   nativeSurfacesScenario,
   dragTargetsScenario,
   contextMenuScenario,
+  virtualizedTreeScenario,
   textSelectionScenario,
   shellNavigationScenario,
   virtualizedTableScenario,

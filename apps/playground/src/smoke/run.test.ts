@@ -60,6 +60,9 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "roving-focus",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "virtualized-tree",
+    );
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toEqual(
       expect.arrayContaining([
         "select",
