@@ -15,7 +15,9 @@ import { BadgeExample } from "./badge.example.js";
 import { BreadcrumbExample } from "./breadcrumb.example.js";
 import { CardExample } from "./card.example.js";
 import { CollapsibleExample } from "./collapsible.example.js";
+import { CommandMenuExample } from "./command-menu.example.js";
 import { ConfirmDialogExample } from "./confirm-dialog.example.js";
+import { ContextMenuExample } from "./context-menu.example.js";
 import { DialogExample } from "./dialog.example.js";
 import { DropdownMenuExample } from "./dropdown-menu.example.js";
 import { EmptyStateExample } from "./empty-state.example.js";
@@ -33,7 +35,9 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   breadcrumb: BreadcrumbExample,
   card: CardExample,
   collapsible: CollapsibleExample,
+  "command-menu": CommandMenuExample,
   "confirm-dialog": ConfirmDialogExample,
+  "context-menu": ContextMenuExample,
   dialog: DialogExample,
   "dropdown-menu": DropdownMenuExample,
   "empty-state": EmptyStateExample,

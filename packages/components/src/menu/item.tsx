@@ -43,8 +43,8 @@ export interface MenuItemProps extends Props {
   readonly closeOnSelect?: boolean;
 }
 
-/** The row's own look, shared by actions and checkbox rows. */
-const rowStyle = (
+/** The row's own look, shared by actions, checkbox rows and the Command menu. */
+export const menuRowStyle = (
   theme: ReturnType<typeof useTheme>,
   tone: MenuItemTone,
   active: boolean,
@@ -158,7 +158,7 @@ export const MenuItem = ({
         onClick?.(event);
         action.current();
       }}
-      style={mergeStyles(rowStyle(theme, tone, active, disabled), style)}
+      style={mergeStyles(menuRowStyle(theme, tone, active, disabled), style)}
     >
       <Row leading={leading} trailing={trailing}>
         {children}

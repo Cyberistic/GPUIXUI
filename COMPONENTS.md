@@ -62,8 +62,8 @@ and the strongest honest alternative.
 | Popovers | done | yes | anchored through GPUix's `FloatingLayer`; Escape restores focus, Tab and outside presses do not; share the dismiss stack with Dialog and a mouse-down re-open guard; 8 native behaviour tests, both themes |
 | Dropdown menus | done | partial | anchored `FloatingLayer` surface with a shared row/highlight core; arrow/Home/End wrap and skip disabled rows, Enter activates and restores focus, checkbox and destructive rows; 9 native behaviour tests, both themes. No submenus, no type-ahead, `aria-selected` instead of `aria-checked` in 0.10.0 |
 | Dropdown menus | todo | ? | |
-| Context menus | todo | ? | |
-| Command menus | todo | ? | |
+| Context menus | done | partial | pointer-positioned `anchored` surface over the shared rows; 6 native behaviour tests (right click opens, land within 12px of the pointer, select runs once, second right click moves it). 0.10.0 has no `onContextMenu` — `onAuxClick` + `isRightClick`; no keyboard path to open and no portal |
+| Command menus | done | partial | dialog-hosted searchable palette composing Dialog and `menu/logic.ts`; input keeps focus while the highlight moves; 8 native behaviour tests. Substring filter only (no fuzzy), `aria-activedescendant` unavailable, input is the host element until primitives lands |
 | Tabs | done | partial | roving tab stop on the selected trigger, arrow wrap skipping disabled tabs, Home/End, automatic and manual activation; 8 native behaviour tests, both themes. 0.10.0 has no `aria-orientation`/`aria-controls`, so the panel is named by its value |
 | Accordions | done | yes | single (with `collapsible`) and multiple modes over a tagged-union state; divider order, disabled sections, glyph indicator; 8 native behaviour tests + 15 transition tests. No arrow-key movement between headers, no height animation; no `transform` for a rotating chevron |
 | Collapsible sections | done | partial | trigger with `aria-expanded`, content unmounts while closed; 4 native behaviour tests. Mounts instantly: 0.10.0's motion needs a numeric height and an auto-height reveal needs a measured first paint |

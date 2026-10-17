@@ -103,10 +103,12 @@ the `@gpuixui/tokens/react` provider
     - [x] `breadcrumb.tsx` + 5 native behaviour tests (collapse keeps the ends, separators follow their item)
     - [x] `pagination.tsx` + 8 native behaviour tests (edges, current page no-op, both themes)
     - [x] Examples, docs pages and inventory rows for all five
-  - [ ] Menus: Dropdown, Context, Command
+  - [x] Menus: Dropdown, Context, Command (plan 114)
     - [x] Logic: `menu/logic.ts` over the shared collection
     - [x] `menu/state.ts` + `menu/item.tsx` + `menu/surface.tsx` (the shared row registry, highlight-follows-focus, menu keyboard rules)
     - [x] `dropdown-menu.tsx`, behaviour suite (9/9), example, docs page, inventory row
+    - [x] `context-menu.tsx` on `onAuxClick` + `isRightClick` and an `anchored` surface at the pointer (6/6), example, docs, inventory
+    - [x] `command-menu.tsx` composing Dialog + the shared row look; input keeps focus, Enter arrives as `submit` (8/8), example, docs, inventory
   - [ ] Choice inputs: Search input, Combobox
     - [x] Logic: `combobox/logic.ts` (ranking + selection)
   - [ ] Feedback: Toast system, inline validation (`Field`)

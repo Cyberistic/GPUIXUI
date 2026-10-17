@@ -3,6 +3,9 @@
 - **Phase:** C-4
 - **Workstream:** components · **Owns:** `packages/components/**`
 - **Depends on:** plan 110, plan 111 (`collection.ts`, `Button`/`ListItem` idioms), plan 112 (dismissal patterns)
+- **Status:** done, 2026-10-17. `menu/logic.ts`, the shared registry/rows/surface,
+  DropdownMenu, ContextMenu and CommandMenu; 9 + 6 + 8 native behaviour tests;
+  examples, docs and inventory rows. Findings and deviations in §1a and §12.
 
 Three components share one keyboard/selection core. Write the core once
 (`src/menu/logic.ts` + `src/menu/menu-item.tsx`), then three thin roots. A
@@ -279,9 +282,32 @@ Expected: exits 0; the logic suite plus three component suites ran.
 
 ## 11. Acceptance criteria
 
-- [ ] One shared menu core; three roots that add no duplicate index math.
-- [ ] Logic tests that fail on wrap/skip regressions.
-- [ ] Keyboard, dismissal and focus-restore proven in the native renderer.
-- [ ] Examples, docs pages, `COMPONENTS.md` rows.
-- [ ] Limitations (no type-ahead, no fuzzy match, pointer coordinate space)
+- [x] One shared menu core; three roots that add no duplicate index math.
+- [x] Logic tests that fail on wrap/skip regressions.
+- [x] Keyboard, dismissal and focus-restore proven in the native renderer.
+- [x] Examples, docs pages, `COMPONENTS.md` rows.
+- [x] Limitations (no type-ahead, no fuzzy match, pointer coordinate space)
       documented with evidence.
+
+## 12. Findings during implementation (2026-10-17)
+
+1. **`Enter` in an `<input>` arrives as `submit`, not `keyDown`.** Measured in
+   the real renderer: typing produced `keyDown` events, Enter produced only
+   `eventType: "submit"` with the current `value`. CommandMenu therefore runs the
+   highlighted action from `onSubmit`; `Space` types a space and never activates
+   a row. Escape still arrives as `keyDown` and is offered to the dismiss layer.
+2. **STOP 4's composition is satisfied by not focusing rows.** The search input
+   keeps focus; the active row is highlighted only. That is why CommandMenu uses
+   the pure `menu/logic.ts` arithmetic and `menuRowStyle`, not `useMenuState`
+   (which focuses rows by design). No report is needed: this is the required
+   composition working.
+3. **ContextMenu renders a wrapper column.** A compound root with two top-level
+   children made the native test renderer's tree JSON root switch to the newly
+   mounted surface, hiding the trigger from `findByTestId`. The wrapper is inert;
+   the surface is absolutely positioned at window coordinates.
+4. **Right-click scope.** The trigger is what listens for `onAuxClick`, so a
+   right click outside it closes the menu (through `onMouseDownOutside`) but
+   cannot open a new one. Recorded as a limitation on the docs page and in
+   `COMPONENTS.md`.
+5. **`menuRowStyle` is exported** so CommandMenu shares the exact row look rather
+   than copying the style record.
