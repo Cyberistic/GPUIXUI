@@ -67,7 +67,7 @@ the `@gpuixui/tokens/react` provider
 
 `[ ]` Tier 1 foundational components (code + test + example + docs + inventory)
 `[x]` Tier 2 composition/feedback components (same bar)
-  - [x] Write and index the Tier 2 plan set (plans 110–117)
+  - [x] Write and index the Tier 2 plan set (plans 110–119)
   - [x] `packages/components` package, token/primitives adapters, native test harness
     - [x] Package scaffold (package.json, tsconfig, vitest config, README)
     - [x] `internal/collection.ts` (index arithmetic), `internal/key.ts` (key predicates)

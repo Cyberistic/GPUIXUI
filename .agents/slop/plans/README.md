@@ -33,9 +33,9 @@ workstream declares in its own section below.
 | [113](./113-tier2-disclosure-navigation.md) | Disclosure and navigation: Tabs, Accordion, Collapsible, Breadcrumb, Pagination | C-3 | 110, 111 | done — 5 components, 33 native behaviour tests |
 | [114](./114-tier2-menus.md) | Menus: Dropdown, Context, Command | C-4 | 110, 111, 112 | done — 3 menus, shared core, 23 native behaviour tests |
 | [115](./115-tier2-feedback.md) | Feedback: Toast system (Effect) and inline validation | C-5 | 110, 111, 112 | done — store + provider/viewport + Field, 12 native behaviour tests |
-| [116](./116-tier2-choice-inputs.md) | Choice inputs: Search input, Combobox (+ deferred date picker design) | C-6 | 110, 111, 114 | done — 16 native behaviour tests; date picker deferred with a design |
+| [116](./116-tier2-choice-inputs.md) | Choice inputs: Search input, Combobox (+ date picker delivered in 119) | C-6 | 110, 111, 114 | done — 16 native behaviour tests |
 | [117](./117-tier2-verification.md) | Tier 2 verification, inventory sync check and completion gate | C/F | 110–116 | done — inventory check + 11-test theme matrix; gate green |
-| [118](./118-single-writer-components.md) | B3 in the components worktree: two live writers, one tree | cross-cutting | — | **blocker** |
+| [118](./118-single-writer-components.md) | B3 in the components worktree: two live writers, one tree | cross-cutting | — | resolved in this worktree; permanent `scripts/` fix pending |
 | [119](./119-tier2-date-picker.md) | Date picker: the deferred Tier 2 item | C | 110, 112, 117 | done — 13 calendar tests + 9 native behaviour tests |
 
 Interlocks this workstream depends on and does not own:

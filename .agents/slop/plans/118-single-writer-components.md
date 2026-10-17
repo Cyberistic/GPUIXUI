@@ -5,7 +5,8 @@
 - **Owner of the fix:** `scripts/` in the shared checkout — outside every
   workstream's paths, so it needs the coordinator. This workstream must not
   edit it (AGENTS.md §6, and the user's "own only your paths" rule).
-- **Depends on:** nothing. **Status:** `BLOCKER (B3) — confirmed live`.
+- **Depends on:** nothing. **Status:** resolved in this worktree 2026-10-17; the
+  permanent `scripts/` fix (plan 022 §5) is still the coordinator's.
 - **Duplicates:** `022-swarm-single-writer.md` (primitives worktree) is the
   root-cause analysis, the mechanism and the permanent fix. This plan is the
   components-worktree measurement and the workstream's response; read 022 for
