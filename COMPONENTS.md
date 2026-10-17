@@ -134,6 +134,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Badges | todo | ? | `div` + `<text>`. |
 | Avatars | todo | ? | `<img>` provides the image; the fallback/initials surface is ours. |
 | Lists / list items | todo | ? | `div` rows; `<virtual-list>` for long collections. |
+| Message scroller | todo | ? | Behaviour ported from **shadcn/ui's Message Scroller** (credited in `LICENSES/`): follows new content while pinned, leaves the reader alone when they scroll up, jump-to-latest with an unread count, streaming rows. `<virtual-list>` + scroll handles; the pin/stream state machine is ours. Plan `206`. |
 | Empty states | todo | ? | `div` + `<text>` + Icons. |
 | Alerts | todo | ? | `div` + `<text>` + Icons. |
 | Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |
