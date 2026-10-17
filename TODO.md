@@ -205,6 +205,10 @@ retired once both branches are one
       panel and flip a snapped surface off its trigger — plan 323 (evidence:
       plan 156 §8; `PopoverContent`/`DropdownMenuContent` promised a runtime
       flip that 0.10.0 does not provide)
+    - [x] Cross-team: handle the playground's measured floating defects
+      (`align="center"` off by half the panel; `fit="snap"` clamping over the
+      trigger) in `PopoverContent`, `DropdownMenuContent` and
+      `ComboboxContent` — plan 323; 6 new native tests, both-direction proof
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
