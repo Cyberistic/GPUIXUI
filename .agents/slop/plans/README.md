@@ -63,6 +63,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [064](./064-documentation-indexes.md) | Documentation indexes for platforms and status tones | F | 014, 015, 059, 063 | done |
 | [065](./065-readme-truth-guard.md) | Guard the package README against drift | F | 056, 058, 059, 062, 064 | done |
 | [066](./066-public-value-coverage.md) | Name every public value; author a platform style | F | 056–065 | done |
+| [067](./067-persisted-choice-guards.md) | Narrowing guards for the persisted theme choices | F | 063, 064, 066 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -123,7 +124,13 @@ now fails on any undocumented value export. The same plan makes the platform
 “copy a file and edit it” story real: a complete `PlatformStyle` authored from
 scratch joins the executed examples, so the documented shape is compiled and
 tested, not sketched; the design-system state table also gains the loading row
-the mission names.
+the mission names. 067 closes the consumer boundary the package was leaving open:
+a persisted mode, contrast or platform arrives as `unknown`, and the workstream
+that owns the union must ship the narrowing guard. `apps/docs` had already
+retyped the platform table and hand-written `isPlatformName`; the package now
+exports that guard beside `platformNames`, plus `isThemeMode` and
+`isThemeContrast`, and the docs say theming's boundary half is narrowing a
+choice, not decoding a theme object.
 
 ### Reference adoption (block `200–299`)
 

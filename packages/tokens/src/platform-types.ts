@@ -23,6 +23,13 @@ export const platformNames = ["darwin", "linux", "win32", "default"] as const;
 /** A platform a GPUIXUI application runs on. */
 export type PlatformName = (typeof platformNames)[number];
 
+/**
+ * Narrow unknown input — a stored preference or a URL parameter — to a platform
+ * the library ships, `default` included. A consumer never retypes the names.
+ */
+export const isPlatformName = (value: unknown): value is PlatformName =>
+  platformNames.some((name) => name === value);
+
 /** The families one platform's type resolves to. */
 export interface PlatformType {
   /** Human-readable name for documentation and previews. */

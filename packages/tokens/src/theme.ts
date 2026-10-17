@@ -225,6 +225,14 @@ export const themes: Readonly<Record<ThemeMode, Theme>> = {
 /** Contrast variants the library ships, independent of light/dark mode. */
 export type ThemeContrast = "default" | "high";
 
+/** Narrow unknown input to a theme mode. Not a theme decoder. */
+export const isThemeMode = (value: unknown): value is ThemeMode =>
+  value === "light" || value === "dark";
+
+/** Narrow unknown input to a contrast variant. Not a theme decoder. */
+export const isThemeContrast = (value: unknown): value is ThemeContrast =>
+  value === "default" || value === "high";
+
 /** The high-contrast light theme. */
 export const highContrastLightTheme: Theme = {
   name: "High contrast light",

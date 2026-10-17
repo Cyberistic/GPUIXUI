@@ -95,6 +95,11 @@ which omitted `none` (plan 065)
 absent — guard coverage with a namespace-wide test, ship a compiled
 `PlatformStyle` authored from scratch, and add the loading state to the design
 system (plan 066)
+`[x]` Ship `isPlatformName` / `isThemeMode` / `isThemeContrast` so a persisted
+choice narrows through the union owner instead of a retyped guard (plan 067)
+`[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
+`@gpuixui/tokens` and deletes its local copies in
+`src/platform/platform.ts` (owner: `docs-site`; plan 067)
 `[x]` Expose `textRoles` and guard it against the `Typography` interface
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input

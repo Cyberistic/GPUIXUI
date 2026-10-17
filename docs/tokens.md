@@ -677,6 +677,13 @@ export const scoped = extendTheme(darkTheme, {
 });
 ```
 
+A persisted choice arrives as `unknown`. The package guards its own unions, so a
+consumer does not retype them: `isPlatformName(value)` narrows to a shipped
+platform (including `default`), `isThemeMode(value)` to `light`/`dark`, and
+`isThemeContrast(value)` to `default`/`high`. They narrow a choice; decoding a
+whole theme object from a file or URL is still the application's boundary and
+belongs to its `Schema`.
+
 Merge rules:
 
 - groups are partial: omitted values inherit from the base;
