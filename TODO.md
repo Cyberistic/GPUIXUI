@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[██████░░░░]` 37/56
+`[x]` `[██████░░░░]` 38/57
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -104,6 +104,10 @@ names are no longer retyped in `scale.test.ts` (plan 068)
 `[x]` Name the runtime's reach for the last two unapplied roles: ship
 `selectionStyle` for the inherited `selectionColor`, and re-document
 `scrollbar` as reserved because 0.10.0 exposes no tint (plan 069)
+`[x]` Make the README's install path honest — a workspace dependency while the
+package is private — and guard it against the manifest; hold the design-system's
+per-platform family sentence to `platformTypes`; document icon alignment, the
+last mission-named design-system item (plan 070)
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)

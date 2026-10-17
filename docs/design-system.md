@@ -165,6 +165,16 @@ Icon and avatar sizes are **fixed tiers**, not density metrics: icons run
 `theme.avatarSize`. A person chip is a size tier, not a spacing decision, so it
 does not move when the workspace gets denser.
 
+Icon size is a tier; alignment is a rule. An icon shares the horizontal flex row
+of the text it belongs to and is centred on the cross axis — never
+baseline-aligned, because the runtime's line box and the SVG's own box do not
+share a baseline. The gap between icon and label is `spacing.sm` (6px). An
+icon-only control is square at the control's height and takes no horizontal
+padding, so its hit target stays the size the density preset promises. Inline
+icons take `xs` so they do not raise the line box, control icons `md`, and
+toolbar or navigation icons `lg` or `xl`. The icon set owns its markup rules; the
+design system owns the size tier and the alignment.
+
 ## 7. Radii, borders and elevation
 
 Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.

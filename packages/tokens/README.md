@@ -15,9 +15,18 @@ variant — and every component reads semantic roles from here.
 
 ## Install and import
 
-```sh
-nub add @gpuixui/tokens
+The package is **private until Phase G**, so it installs from this workspace, not
+from a registry. Add it to the consuming package's `dependencies` and install:
+
+```json
+{ "dependencies": { "@gpuixui/tokens": "workspace:*" } }
 ```
+
+```sh
+nub install
+```
+
+Once published, the same entry installs with `nub add @gpuixui/tokens`.
 
 ```ts
 import { getTheme, textStyle } from "@gpuixui/tokens";

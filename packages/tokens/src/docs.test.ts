@@ -8,7 +8,10 @@
  * The numeric tables (typography, spacing, radius, density, elevation, motion,
  * border/icon/avatar sizes) are guarded the other way round: the test builds the
  * documented row from the implementation and requires the markdown to contain
- * it, so a value edit cannot ship a document that lies.
+ * it, so a value edit cannot ship a document that lies. The design-system
+ * assertions include the per-platform mono families and the icon-to-label gap,
+ * so the rationale cannot name a family or a spacing value the package does not
+ * ship.
  *
  * `node:fs` is used deliberately: this is a documentation test over the tree's
  * own files, and the tokens package ships zero runtime dependencies by design.
@@ -340,6 +343,19 @@ describe("docs/design-system.md", () => {
 
   it("states the icon and avatar tiers", () => {
     const sentence = `icons run ${Object.values(iconSize).join("/")} and avatars ${Object.values(avatarSize).join("/")},`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
+  it("names the platform families the implementation ships", () => {
+    const sentinel = `Sans is GPUI's \`${systemUiFont}\` sentinel`;
+    expect(designSystem.includes(sentinel), sentinel).toBe(true);
+
+    const families = `Mono comes from the platform table (\`platformTypes\`): \`${platformTypes.darwin.mono}\` on macOS, \`${platformTypes.linux.mono}\` on Linux, \`${platformTypes.win32.mono}\` on Windows, \`${platformTypes.default.mono}\` for a platform the library does not know.`;
+    expect(designSystem.includes(families), families).toBe(true);
+  });
+
+  it("states the icon-to-label gap the spacing scale defines", () => {
+    const sentence = `The gap between icon and label is \`spacing.sm\` (${spacing.sm}px).`;
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 

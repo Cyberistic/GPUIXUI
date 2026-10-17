@@ -6,6 +6,10 @@
  * README that lies while the whole suite stayed green — the motion paragraph had
  * already lost the `none` level.
  *
+ * It also holds the install path: a private workspace package is on no registry,
+ * so `nub add @gpuixui/tokens` is a dead command until Phase G publishes it. The
+ * manifest's `private` flag decides which instruction the front door must give.
+ *
  * The assertions build the exact sentence or row from the implementation and
  * require it to appear, the same one-way method as `docs.test.ts`. `node:fs` is
  * deliberate: this is a documentation test over the package's own files, and the
@@ -13,6 +17,7 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import packageJson from "../package.json";
 import { colorRoles } from "./color.js";
 import { motion } from "./motion.js";
 import {
@@ -37,6 +42,17 @@ const sentenceList = (values: ReadonlyArray<string>): string =>
     : `${values.slice(0, -1).join(", ")} and ${values.slice(-1).join("")}`;
 
 describe("packages/tokens/README.md", () => {
+  it("presents an install path that exists today", () => {
+    // A private workspace package is never on a registry, so `nub add` would be
+    // a dead command. The truthful instruction changes at publication, so the
+    // manifest decides which half the README must present.
+    const install =
+      packageJson.private === true
+        ? '"@gpuixui/tokens": "workspace:*"'
+        : "nub add @gpuixui/tokens";
+    expect(readme).toContain(install);
+  });
+
   it("states the role count the shipped themes carry", () => {
     expect(readme).toContain(`same ${colorRoles.length} roles`);
   });

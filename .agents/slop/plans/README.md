@@ -66,6 +66,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [067](./067-persisted-choice-guards.md) | Narrowing guards for the persisted theme choices | F | 063, 064, 066 | done |
 | [068](./068-density-and-tone-guards.md) | The last two unions a consumer narrows: density and status tone | F | 064, 066, 067 | done |
 | [069](./069-selection-and-scrollbar-reach.md) | Selection and scrollbar: what the pinned runtime reaches | F | 017, 018, 060 | done |
+| [070](./070-install-path-and-claim-guards.md) | Install-path truth and the last unguarded design-system claims | F | 062, 065, 066 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -149,7 +150,13 @@ types have **no** `scrollbarColor`/`scrollbarWidth` — both are unreleased
 changesets on GPUix main — so `scrollbar` is re-described as reserved instead of
 a paintable thumb, and no helper ships for a style the runtime ignores. Both
 claims are guarded in `docs.test.ts`, because the failure mode is a reference
-that silently stops saying how a token is applied.
+that silently stops saying how a token is applied. 070 closes the three claims
+that survived that pass: the README told a consumer to `nub add` a package that
+is private and has never been published; the design-system rationale named the
+per-platform mono families with no test behind them; and the mission's
+"icon sizing/alignment" item had sizes but no alignment rule. The install guard
+reads the manifest's `private` flag, so the README cannot present the wrong half
+before or after publication.
 
 ### Reference adoption (block `200–299`)
 
