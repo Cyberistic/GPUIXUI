@@ -10,7 +10,7 @@ import { usePreviewState } from "./theme-surface";
  */
 export const LIVE_SURFACE_NOTICE =
   "Live GPUix surface — the library's real component code, run by GPUix's " +
-  "WebAssembly renderer through WebGPU in this tab. It is not the native " +
+  "WebAssembly renderer on this tab's GPU backend. It is not the native " +
   "desktop window: run the playground for that.";
 
 /** The measured size of the published `gpuix-web_bg.wasm` in 0.10.0. */

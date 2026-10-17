@@ -50,7 +50,7 @@ after a layout or content change.
 
 `preview/` is a **second Vite project**, not part of the SSR app. It mounts the
 real library components on `@gpuix/native@0.10.0`'s published WebAssembly
-renderer and exports one document per scene:
+renderer (the browser's GPU backend) and exports one document per scene:
 
 - `preview/scenes.ts` lists the scene keys; `preview/scene-views.tsx` holds the
   components. A registry record opts in with `liveScene: "<key>"` and
