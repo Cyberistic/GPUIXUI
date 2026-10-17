@@ -33,13 +33,17 @@ live platform toggle. The stacked windows *are* the pitch.
 2. **The licence card** — the library's promise as a "licence": components, both themes,
    three platforms, native runtime, documented limits. A copyable card component that
    doubles as a real component in the library.
-3. **The three platforms** — the platform styles side by side, with the *real* theme files
-   (the XP/Aero and Omarchy recipes from plan `433` live here).
-4. **The library** — a component grid (from `COMPONENTS.md`) with status chips; the AI
+3. **The three platforms** — the **default** styles side by side: **macOS**, **Windows 11**
+   and **Linux/Arch**, each with its real theme file. These are what a consumer gets out of
+   the box; no themed variant is presented as a default.
+4. **Make it yours** — the same component with a platform's style reshaped: **Windows XP /
+   Windows 7 Aero**, and a **Linux/Arch** style that follows Omarchy's live theme (plan
+   `433`). The point: a platform style is a starting point, not a fixed skin.
+5. **The library** — a component grid (from `COMPONENTS.md`) with status chips; the AI
    surfaces (`206` scroller, `207` chat/message) called out as the differentiator.
-5. **Proof** — the native suite count, the both-theme matrix, the documented limitations.
+6. **Proof** — the native suite count, the both-theme matrix, the documented limitations.
    No fake "trusted by" logos.
-6. **Footer** — docs, licence/attribution (shadcn, base-gpui, adabraka, GPUI Kit, Omarchy),
+7. **Footer** — docs, licence/attribution (shadcn, base-gpui, adabraka, GPUI Kit, Omarchy),
    repository.
 
 ## Visual direction
