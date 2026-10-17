@@ -89,6 +89,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [090](./090-soft-status-border-role.md) | The soft status edge: a designed role, held to its floor | F | 014, 057, 071, 076, 083, 086 | done |
 | [091](./091-selection-in-soft-surfaces.md) | Selection inside a soft status surface | F | 014, 063, 071, 081, 087, 090 | done |
 | [092](./092-control-boundary-soft-fills.md) | The control boundary on the soft status fills | F | 084, 090, 091 | done |
+| [093](./093-ring-on-soft-fills.md) | The focus ring on the soft status fills | F | 086, 090, 092 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -419,7 +420,14 @@ button, a field or a "don't show again" checkbox sits. Identity dark's
 already cleared it. The four fills join the `boundary` class (109 → 113 pairs)
 and the identity dark edge moves one half-step lighter to `#868FA0`, which also
 lifts its tightest existing pair from 3.31:1 to 4.06:1 without touching any fill.
-The focus ring on the same four fills is the next row, plan 093.
+The focus ring on the same four fills follows in plan 093.
+
+093 closes the last composition plan 092 left open: the ring was measured on the
+eight surfaces a focused control sits on, but a toast's action button is focused
+while it sits directly on a soft status fill. No shipped set fails — identity
+light `warningSoft` at 3.37:1 is the tightest — so no colour moves; the four
+fills join the `boundary` class (113 → 117 pairs) so an edited theme cannot make
+a focused control lose its only focus indicator there.
 
 ### Reference adoption (block `200–299`)
 
