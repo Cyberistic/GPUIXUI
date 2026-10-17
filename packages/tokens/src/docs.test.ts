@@ -56,6 +56,16 @@ const markdown = readFileSync(
   "utf8",
 );
 
+/**
+ * The rationale document wraps its prose, so a claim can straddle a newline.
+ * Collapsing runs of whitespace lets each assertion be the sentence a reader
+ * sees rather than a column-limited fragment.
+ */
+const designSystem = readFileSync(
+  new URL("../../../docs/design-system.md", import.meta.url),
+  "utf8",
+).replace(/\s+/g, " ");
+
 const documented = documentedRows(markdown);
 
 const expected = colorRoles.map((role) => ({
@@ -190,5 +200,72 @@ describe("docs/tokens.md numeric tables", () => {
         `| \`avatarSize.${size}\` | ${pixels} |`,
       );
     });
+  });
+});
+
+describe("docs/design-system.md", () => {
+  it("states the identity's body, label and control metrics", () => {
+    const sentence = `${typography.body.fontSize}px body text, ${typography.label.fontSize}px labels, ${defaultDensity.controlHeight.md}px default controls`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
+  it("states the role count the shipped themes carry", () => {
+    const sentence = `exactly the same ${colorRoles.length} roles`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
+  it("states the canvas, raised and floating surface of both themes", () => {
+    const surfaces = [
+      ["canvas", "background"],
+      ["raised surface", "card"],
+      ["floating surface", "popover"],
+    ] as const;
+
+    surfaces.forEach(([label, role]) => {
+      const sentence = `| ${label} | \`${themes.light.colors[role]}\` | \`${themes.dark.colors[role]}\` |`;
+      expect(designSystem.includes(sentence), sentence).toBe(true);
+    });
+  });
+
+  it("states the filled action pairs of both themes", () => {
+    const primary = `| primary | dark iris \`${themes.light.colors.primary}\`, white text | light iris \`${themes.dark.colors.primary}\`, near-black text |`;
+    const destructive = `| destructive | \`${themes.light.colors.destructive}\`, white text | \`${themes.dark.colors.destructive}\`, near-black red text |`;
+    expect(designSystem.includes(primary), primary).toBe(true);
+    expect(designSystem.includes(destructive), destructive).toBe(true);
+  });
+
+  it("summarises every type role with its real metrics", () => {
+    const { body, label, caption, code, codeBlock } = typography;
+
+    [
+      `- \`body\` / \`bodyStrong\` — reading and emphasis at ${body.fontSize}/${body.lineHeight}.`,
+      `- \`label\` — controls and form labels at ${label.fontSize}/${label.lineHeight}, medium weight.`,
+      `- \`caption\` — metadata and helper text at ${caption.fontSize}/${caption.lineHeight}.`,
+      `- \`code\` / \`codeBlock\` — mono at ${code.fontSize}/${code.lineHeight} and ${codeBlock.fontSize}/${codeBlock.lineHeight}.`,
+    ].forEach((sentence) => {
+      expect(designSystem.includes(sentence), sentence).toBe(true);
+    });
+  });
+
+  it("states the spacing scale", () => {
+    const sentence = `Spacing is a 4px-derived scale: ${Object.values(spacing).join(", ")}.`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
+  it("states every density preset's metrics", () => {
+    Object.values(densityPresets).forEach((preset) => {
+      const sentence = `- \`${preset.name}\` — ${preset.controlHeight.sm}/${preset.controlHeight.md}/${preset.controlHeight.lg} controls, ${preset.rowHeight}px rows.`;
+      expect(designSystem.includes(sentence), sentence).toBe(true);
+    });
+  });
+
+  it("states the icon and avatar tiers", () => {
+    const sentence = `icons run ${Object.values(iconSize).join("/")} and avatars ${Object.values(avatarSize).join("/")},`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
+  it("states the radius scale", () => {
+    const sentence = `Radii: ${radius.none}, ${radius.sm}, ${radius.md}, ${radius.lg}, ${radius.xl}, full.`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 });

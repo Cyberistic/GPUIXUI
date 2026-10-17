@@ -239,6 +239,11 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 The test runs for every shipped colour set and is part of the normal test suite.
 It can fail: a palette edit that reduces contrast fails the gate.
 
+`packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
+the identity metrics, the shipped role count, the theme surfaces, the type
+summary, and the spacing, density, radius, icon and avatar scales — to the same
+implementation, as it does for the catalogue in [`tokens.md`](./tokens.md).
+
 Not covered, deliberately:
 
 - disabled text (WCAG exempts inactive controls); it stays visibly dimmed;

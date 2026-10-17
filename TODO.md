@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 29/40
+`[x]` `[███████░░░]` 30/41
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -80,6 +80,9 @@ stop faking hover with an alpha fill (plan 055)
 `[x]` Guard the numeric token tables in `docs/tokens.md` (typography,
 spacing, radius, density, elevation, motion, borders/icons/avatars) against
 drift from the implementation (plan 058)
+`[x]` Guard `docs/design-system.md`'s numeric claims — identity metrics, role
+count, theme surfaces, type summary, spacing, density, radii, icon/avatar
+tiers — against the implementation (plan 062)
 `[x]` Expose `textRoles` and guard it against the `Typography` interface
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input
