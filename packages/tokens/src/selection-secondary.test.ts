@@ -21,6 +21,7 @@ import {
   getPlatformTheme,
   getTheme,
   selectionPairs,
+  selectionSoftWashPairs,
   selectionSurfaces,
   selectionWashPairs,
   themeContrastFailures,
@@ -108,10 +109,10 @@ describe("selected secondary text", () => {
         foreground === "mutedForeground" && wash === "selection",
     );
 
-    expect(failures).toHaveLength(8);
+    expect(failures).toHaveLength(6);
     expect(
       failures.find(({ background }) => background === "active")?.ratio,
-    ).toBeCloseTo(3.49, 2);
+    ).toBeCloseTo(3.79, 2);
   });
 });
 
@@ -149,6 +150,7 @@ describe("the selection wash stays visible", () => {
 
     expect(failures.map(({ background }) => background)).toEqual([
       ...selectionSurfaces,
+      ...selectionSoftWashPairs.map(([, background]) => background),
     ]);
     expect(
       failures.every(

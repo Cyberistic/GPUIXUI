@@ -1,3 +1,4 @@
+import { palette } from "../color.js";
 import { systemUiFont, type PlatformStyle } from "../platform-types.js";
 
 /**
@@ -12,7 +13,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * the pressed wash (plan 082). The dark boundary is one step lighter so a
  * checkbox edge clears the floor on the selected row (plan 084). Elevation
  * levels apply their own alpha to the `shadow` tint, so a copied style retints
- * all three by editing one role (plan 085).
+ * all three by editing one role (plan 085). The dark soft destructive fill is a
+ * step darker so the light-accent wash stays visible on it (plan 091).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -75,6 +77,7 @@ export const linuxPlatformStyle = {
       selected: "#2B4F76",
       selectedForeground: "#D6E7FA",
       placeholder: "#A8A7A3",
+      destructiveSoft: palette.red[950],
       shadow: "#000000",
     },
   },

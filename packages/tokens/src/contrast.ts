@@ -419,12 +419,38 @@ export const selectionWashPairs: readonly ContrastPair[] =
   );
 
 /**
+ * The soft status surfaces a selected glyph is painted on. An Alert, Badge or
+ * Toast is text a reader copies, and the wash composites over its fill, so the
+ * tone's own foreground is held to the body floor like the plain surfaces.
+ */
+export const selectionSoftPairs: readonly ContrastPair[] = [
+  ["infoSoftForeground", "infoSoft", "body"],
+  ["successSoftForeground", "successSoft", "body"],
+  ["warningSoftForeground", "warningSoft", "body"],
+  ["destructiveSoftForeground", "destructiveSoft", "body"],
+];
+
+/**
+ * The surfaces the selection wash must stay visible on inside a soft status
+ * surface. A highlight that disappears on a dark destructive tint is still a
+ * failed selection, so each fill is compared with the composited wash.
+ */
+export const selectionSoftWashPairs: readonly ContrastPair[] = [
+  ["selection", "infoSoft", "surface"],
+  ["selection", "successSoft", "surface"],
+  ["selection", "warningSoft", "surface"],
+  ["selection", "destructiveSoft", "surface"],
+];
+
+/**
  * Every documented pair a theme misses — text, status, secondary text and status
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
  * secondary text and the wash's own perceivability on those surfaces, the
  * loading skeleton measured on the surfaces it fills, the designed edge around
- * each soft status surface measured on its own fill, the control edge measured
+ * each soft status surface measured on its own fill, the selection wash and the
+ * tone's own foreground on the four soft status surfaces a selected Alert,
+ * Badge or Toast paints, the control edge measured
  * on the fills a bordered control paints, and the functional boundary measured
  * on the quiet panel and state washes a bounded control sits on. The level
  * defaults to the one the theme declares, so a high-contrast theme is checked
@@ -505,5 +531,52 @@ export function themeContrastFailures(
             },
           ];
     });
-  return [...pairFailures, ...washFailures, ...washVisibilityFailures];
+  const softFailures: ReadonlyArray<ContrastFailure> =
+    selectionSoftPairs.flatMap(([foreground, background, pairClass]) => {
+      const ratio = contrastRatio(
+        theme.colors[foreground],
+        compositeOver(theme.colors.selection, theme.colors[background]),
+      );
+      const floor = floors[pairClass];
+      return ratio >= floor
+        ? []
+        : [
+            {
+              foreground,
+              background,
+              wash: "selection" as const,
+              pairClass,
+              floor,
+              ratio,
+            },
+          ];
+    });
+  const softWashFailures: ReadonlyArray<ContrastFailure> =
+    selectionSoftWashPairs.flatMap(([foreground, background, pairClass]) => {
+      const painted = compositeOver(
+        theme.colors.selection,
+        theme.colors[background],
+      );
+      const ratio = contrastRatio(painted, theme.colors[background]);
+      const floor = floors[pairClass];
+      return ratio >= floor
+        ? []
+        : [
+            {
+              foreground,
+              background,
+              wash: "selection" as const,
+              pairClass,
+              floor,
+              ratio,
+            },
+          ];
+    });
+  return [
+    ...pairFailures,
+    ...washFailures,
+    ...washVisibilityFailures,
+    ...softFailures,
+    ...softWashFailures,
+  ];
 }

@@ -118,16 +118,16 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `info` | `#2559D6` | `#9FBEFF` | informational status, distinct from `primary` |
 | `infoForeground` | `#FFFFFF` | `#11141A` | text and icons on `info` |
 | `infoSoft` | `#DEE9FF` | `#16356F` | soft informational surface |
-| `infoSoftForeground` | `#173A88` | `#DEE9FF` | text and icons on `infoSoft` |
+| `infoSoftForeground` | `#152F6B` | `#EFF4FF` | text and icons on `infoSoft` |
 | `infoSoftBorder` | `#A6BEF3` | `#3F5E9A` | edge around `infoSoft` |
 | `successSoft` | `#C2F4D6` | `#0C452D` | soft success surface |
-| `successSoftForeground` | `#0E5135` | `#D3F9E2` | text and icons on `successSoft` |
+| `successSoftForeground` | `#0A3A26` | `#ECFDF3` | text and icons on `successSoft` |
 | `successSoftBorder` | `#8ED3AF` | `#1A6D46` | edge around `successSoft` |
 | `warningSoft` | `#FFE3A3` | `#4B3100` | soft warning surface |
-| `warningSoftForeground` | `#4B3100` | `#FFEFC6` | text and icons on `warningSoft` |
+| `warningSoftForeground` | `#2A1B00` | `#FFF8E8` | text and icons on `warningSoft` |
 | `warningSoftBorder` | `#FCD47B` | `#815F17` | edge around `warningSoft` |
 | `destructiveSoft` | `#FFE0E0` | `#6B1A1D` | soft destructive surface |
-| `destructiveSoftForeground` | `#7E1D21` | `#FFE0E0` | text and icons on `destructiveSoft` |
+| `destructiveSoftForeground` | `#5C1619` | `#FFF1F1` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
 | `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
 | `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes |
@@ -139,7 +139,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input |
 | `placeholder` | `#66707F` | `#7C8595` | placeholder text |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
-| `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24% alpha; `selectionColor`) |
+| `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#EEF1F5` | `#222730` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
@@ -759,18 +759,28 @@ import { selectionStyle } from "@gpuixui/tokens";
 Both selection properties inherit down the tree, so an application sets the wash
 once on its root; chrome that must not be selectable — a toolbar, a tab strip,
 window controls — sets `userSelect: "none"` on its own subtree. The wash is
-translucent (24% in the default themes, 30% at high contrast), so selected text
-keeps the body contrast on every surface a glyph can be selected on:
-`background`, `card`, `muted`, `hover`, `active` and `accent` with `foreground`;
-`popover` with `popoverForeground`; `input` with `inputForeground`; and `selected`
-with `selectedForeground` at the secondary floor. Secondary text is held to the
-secondary floor through the same wash on all nine surfaces (`mutedForeground`),
-because a row description, a card caption or a message timestamp is selected
-with the body copy around it. `selectionSurfaces` is the list of surfaces,
-`selectionPairs` holds the body and secondary text pairs, and
-`selectionWashPairs` holds the wash itself to the 1.05:1 perceivability floor on
-each surface, so a highlight that is technically readable but invisible fails
-the check too.
+translucent (24% in the light default theme, 20% in dark and 30% at high
+contrast), so selected text keeps the body contrast on every surface a glyph can
+be selected on: `background`, `card`, `muted`, `hover`, `active` and `accent`
+with `foreground`; `popover` with `popoverForeground`; `input` with
+`inputForeground`; and `selected` with `selectedForeground` at the secondary
+floor; a soft status surface carries its own tone with `xSoftForeground`.
+Secondary text is held to the secondary floor through the same wash on all nine
+surfaces (`mutedForeground`), because a row description, a card caption or a
+message timestamp is selected with the body copy around it. The soft surfaces
+are held in both directions too: `selectionSoftPairs` measures the tone's text
+through the wash and `selectionSoftWashPairs` the wash's own perceivability, so
+a selected Alert, Badge or Toast keeps its body floor and still shows the
+highlight. The audit found two gaps: identity light `successSoftForeground`
+measured 5.83:1 through the wash, under the 7:1 body floor, and Windows dark's
+wash over `destructiveSoft` measured 1.005:1 — an invisible highlight. The four
+light soft foregrounds moved one family step darker, the dark ones one step
+lighter with a 20% identity wash, Windows dark's wash moved to 40%, and Linux
+dark's soft destructive fill moved to `#3A0B0D` so its light-accent wash stays
+visible. `selectionSurfaces` is the list of plain surfaces, `selectionPairs`
+holds their body and secondary text pairs, and `selectionWashPairs` holds the
+wash itself to the 1.05:1 perceivability floor on each surface, so a highlight
+that is technically readable but invisible fails the check too.
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";
@@ -905,7 +915,10 @@ it paints, with both text roles each surface carries: the body role over
 `accent`; `popoverForeground` over `popover`; `inputForeground` over `input`; and
 `selectedForeground` over `selected`; and `mutedForeground` on all nine surfaces
 at the secondary floor — reported with `wash: "selection"`. `selectionPairs` is
-the text list. The wash itself is compared with each surface it paints on, so a
+the text list. An Alert, Badge or Toast is measured the same way:
+`selectionSoftPairs` holds the tone's foreground through the wash and
+`selectionSoftWashPairs` the highlight's own perceivability on the four soft
+fills. The wash itself is compared with each surface it paints on, so a
 highlight that has become imperceptible is reported as well;
 `selectionWashPairs` is that list.
 
@@ -1136,11 +1149,15 @@ their floors, and `selectionWashPairs` holds the wash itself to the 1.05:1
 perceivability floor on each, because a highlight can be readable and still be
 invisible. Windows dark and both high-contrast sets already cleared the secondary
 floor through the wash; the other seven moved their secondary grey one step away
-from the canvas (plan `087`).
+from the canvas (plan `087`). The four soft status surfaces are measured the same
+way: `selectionSoftPairs` holds `xSoftForeground` to the body floor through the
+wash and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
+`successSoftForeground` measured 5.83:1 and Windows dark's wash over
+`destructiveSoft` 1.005:1 (plan `091`).
 
-Every colour role is accounted for: `contrastPairs`, `selectionPairs` and
-`selectionWashPairs` measure the painted roles, and `contrast.test.ts` keeps a
-declared exemption list for the
+Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
+`selectionWashPairs`, `selectionSoftPairs` and `selectionSoftWashPairs` measure
+the painted roles, and `contrast.test.ts` keeps a declared exemption list for the
 five that are not pairs — `disabled` and `disabledForeground` (WCAG exempts
 inactive controls, and the design system requires a visible dim rather than a
 floor), `overlay` (a scrim, whose job is to obscure), `scrollbar` (reserved; the

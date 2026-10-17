@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 58/76
+`[x]` `[████████░░]` 59/77
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -300,6 +300,10 @@ theme that changed one control height lost the other two (plan 089)
 `[x]` Give the soft status edge a designed `xSoftBorder` role — the 30% mixture
 was unmeasured and measured 1.12:1 on the high-contrast light `warning` surface —
 and hold it to the divider floor on its own fill (plan 090)
+`[x]` Hold the selection wash inside a soft status surface — an Alert's text is
+selectable, and identity light `successSoftForeground` measured 5.83:1 through
+the wash while Windows dark's wash over `destructiveSoft` measured 1.005:1 — and
+add the four soft fills to the selection contract (plan 091)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now

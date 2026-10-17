@@ -110,6 +110,15 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states that a soft status fill is a selection surface", () => {
+    expect(readme).toContain(
+      "is measured the same way: the tone's `xSoftForeground` is held to the body floor",
+    );
+    expect(readme).toContain(
+      "Windows dark's wash over `destructiveSoft` at 1.005:1 — an invisible highlight",
+    );
+  });
+
   it("states the soft status edge is a measured role", () => {
     expect(readme).toContain(
       "Each soft status surface has a designed edge (`xSoftBorder`) held to the divider floor on that surface",

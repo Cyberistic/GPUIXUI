@@ -221,6 +221,8 @@ export interface ThemeColors {
  * 200 and 300) so a bordered control's edge stays visible on the fill it paints
  * (plan 080). `mutedForeground` is neutral 700 rather than 600 so secondary text
  * keeps the secondary floor when it is selected on a pressed row (plan 087).
+ * The soft status foregrounds are the family's darkest step so an alert's text
+ * keeps the body floor through the selection wash (plan 091).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -249,16 +251,16 @@ export const lightColors = {
   info: palette.blue[600],
   infoForeground: palette.neutral[0],
   infoSoft: palette.blue[100],
-  infoSoftForeground: palette.blue[800],
+  infoSoftForeground: palette.blue[900],
   infoSoftBorder: "#A6BEF3",
   successSoft: "#C2F4D6",
-  successSoftForeground: palette.green[800],
+  successSoftForeground: palette.green[900],
   successSoftBorder: "#8ED3AF",
   warningSoft: "#FFE3A3",
-  warningSoftForeground: palette.amber[900],
+  warningSoftForeground: palette.amber[950],
   warningSoftBorder: "#FCD47B",
   destructiveSoft: palette.red[100],
-  destructiveSoftForeground: palette.red[800],
+  destructiveSoftForeground: palette.red[900],
   destructiveSoftBorder: "#F0ACAE",
   infoText: palette.blue[700],
   successText: palette.green[700],
@@ -289,6 +291,9 @@ export const lightColors = {
  * 800 and 700) so a bordered control's edge stays visible on the fill it paints
  * (plan 080). `mutedForeground` is neutral 300 rather than 400 so secondary text
  * keeps the secondary floor when it is selected on a pressed row (plan 087).
+ * The soft status foregrounds are the family's lightest step and the selection
+ * wash is 20%, so an alert's text keeps the body floor through it while the
+ * highlight stays visible (plan 091).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -317,16 +322,16 @@ export const darkColors = {
   info: palette.blue[300],
   infoForeground: palette.neutral[950],
   infoSoft: "#16356F",
-  infoSoftForeground: palette.blue[100],
+  infoSoftForeground: palette.blue[50],
   infoSoftBorder: "#3F5E9A",
   successSoft: "#0C452D",
-  successSoftForeground: palette.green[100],
+  successSoftForeground: palette.green[50],
   successSoftBorder: "#1A6D46",
   warningSoft: palette.amber[900],
-  warningSoftForeground: palette.amber[100],
+  warningSoftForeground: palette.amber[50],
   warningSoftBorder: "#815F17",
   destructiveSoft: "#6B1A1D",
-  destructiveSoftForeground: palette.red[100],
+  destructiveSoftForeground: palette.red[50],
   destructiveSoftBorder: "#983235",
   infoText: palette.blue[200],
   successText: palette.green[200],
@@ -338,7 +343,7 @@ export const darkColors = {
   inputForeground: palette.neutral[100],
   placeholder: "#7C8595",
   ring: palette.iris[300],
-  selection: "#A7A9FF3D",
+  selection: "#A7A9FF33",
   overlay: "#000000A6",
   hover: palette.neutral[850],
   active: palette.neutral[800],

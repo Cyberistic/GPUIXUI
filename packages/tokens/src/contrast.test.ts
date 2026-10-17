@@ -76,6 +76,8 @@ import {
   highContrastLightTheme,
   lightTheme,
   selectionPairs,
+  selectionSoftPairs,
+  selectionSoftWashPairs,
   selectionSurfaces,
   selectionWashPairs,
   themeContrastFailures,
@@ -241,6 +243,10 @@ describe("themeContrastFailures", () => {
       ["inputForeground", "input"],
       ["selectedForeground", "selected"],
       ...selectionSurfaces.map((surface) => ["mutedForeground", surface]),
+      ...selectionSoftPairs.map(([foreground, background]) => [
+        foreground,
+        background,
+      ]),
     ]);
   });
 
@@ -251,14 +257,16 @@ describe("themeContrastFailures", () => {
     // The glyph pairs pass trivially — the wash is the surface — so the only
     // failures are the wash's own perceivability pairs, one per surface.
     expect(themeContrastFailures(transparent)).toEqual(
-      selectionWashPairs.map(([foreground, background, pairClass]) => ({
-        foreground,
-        background,
-        wash: "selection" as const,
-        pairClass,
-        floor: contrastFloors.default.surface,
-        ratio: 1,
-      })),
+      [...selectionWashPairs, ...selectionSoftWashPairs].map(
+        ([foreground, background, pairClass]) => ({
+          foreground,
+          background,
+          wash: "selection" as const,
+          pairClass,
+          floor: contrastFloors.default.surface,
+          ratio: 1,
+        }),
+      ),
     );
   });
 
@@ -278,6 +286,8 @@ describe("themeContrastFailures", () => {
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
     expect(selectionWashPairs.length).toBe(9);
+    expect(selectionSoftPairs.length).toBe(4);
+    expect(selectionSoftWashPairs.length).toBe(4);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {
@@ -412,9 +422,13 @@ describe("contract completeness", () => {
   ] as const;
 
   const measuredRoles = new Set<string>(
-    [...contrastPairs, ...selectionPairs, ...selectionWashPairs].flatMap(
-      ([foreground, background]) => [foreground, background],
-    ),
+    [
+      ...contrastPairs,
+      ...selectionPairs,
+      ...selectionWashPairs,
+      ...selectionSoftPairs,
+      ...selectionSoftWashPairs,
+    ].flatMap(([foreground, background]) => [foreground, background]),
   );
 
   it("every role is measured or exempt", () => {

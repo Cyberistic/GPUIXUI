@@ -183,7 +183,14 @@ until plan 087 moved their secondary grey. `selectionWashPairs` also holds the
 wash itself to 1.05:1 against each surface, so a highlight cannot be made
 invisible to satisfy a text floor. High-contrast dark shipped at 6.48:1 on `hover`
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
-`active`, until plan 081 darkened the three wash bases. The focus ring is
+`active`, until plan 081 darkened the three wash bases. An Alert, Badge or Toast
+is measured the same way: the tone's `xSoftForeground` is held to the body floor
+through the wash and the wash itself to 1.05:1 on the four soft fills. The audit
+found identity light `successSoftForeground` at 5.83:1 through the wash and
+Windows dark's wash over `destructiveSoft` at 1.005:1 — an invisible highlight —
+so the four light soft foregrounds moved one family step darker, the dark ones
+one step lighter with a 20% identity wash, Windows dark's wash moved to 40%, and
+Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091). The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught. Default body text
 is checked on the canvas, card, the `muted` panel, `popover` and the

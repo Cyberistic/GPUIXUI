@@ -134,7 +134,9 @@ describe("the selection wash on painted surfaces", () => {
       colors: { selection: "#C7CBFF4D" },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ wash }) => wash === "selection",
+      ({ wash, background }) =>
+        wash === "selection" &&
+        selectionSurfaces.some((surface) => surface === background),
     );
 
     expect(failures.map(({ background }) => background)).toEqual([

@@ -362,26 +362,25 @@ describe("docs/tokens.md quoted figures", () => {
     expect(markdownProse).toContain(sentence);
   });
 
-  it("quotes the selection wash strength both modes and both contrasts share", () => {
+  it("quotes the selection wash strength each mode uses", () => {
     const { light, dark } = themes;
     const high = highContrastThemes;
 
-    expect(washPercent(dark.colors.selection)).toBe(
-      washPercent(light.colors.selection),
-    );
     expect(washPercent(high.dark.colors.selection)).toBe(
       washPercent(high.light.colors.selection),
     );
 
     const sentence =
       "The wash is translucent (" +
-      `${washPercent(light.colors.selection)}% in the default themes, ` +
+      `${washPercent(light.colors.selection)}% in the light default theme, ` +
+      `${washPercent(dark.colors.selection)}% in dark and ` +
       `${washPercent(high.light.colors.selection)}% at high contrast), ` +
       "so selected text keeps the body contrast on every surface a glyph can be " +
       "selected on: `background`, `card`, `muted`, `hover`, `active` and `accent` " +
       "with `foreground`; `popover` with `popoverForeground`; `input` with " +
       "`inputForeground`; and `selected` with `selectedForeground` at the " +
-      "secondary floor.";
+      "secondary floor; a soft status surface carries its own tone with " +
+      "`xSoftForeground`.";
     expect(markdownProse).toContain(sentence);
 
     const secondary =
@@ -391,23 +390,49 @@ describe("docs/tokens.md quoted figures", () => {
     expect(markdownProse).toContain(secondary);
 
     [
-      "`selectionSurfaces` is the list of surfaces",
-      "`selectionPairs` holds the body and secondary text pairs",
+      "`selectionSurfaces` is the list of plain surfaces",
+      "`selectionPairs` holds their body and secondary text pairs",
       "`selectionWashPairs` holds the wash itself",
+      "`selectionSoftPairs` measures the tone's text through the wash",
+      "`selectionSoftWashPairs` the wash's own perceivability",
     ].forEach((claim) => {
       expect(markdownProse, claim).toContain(claim);
     });
   });
 
+  it("quotes the two selection regressions and the fixes", () => {
+    const light = themes.light;
+    const washedSuccess = contrastRatio(
+      // The pre-091 light success foreground.
+      "#0E5135",
+      compositeOver(light.colors.selection, light.colors.successSoft),
+    );
+    const windows = getPlatformTheme("win32", "dark").colors;
+    const washedDestructive = contrastRatio(
+      // The pre-091 Windows dark wash.
+      compositeOver("#0067C033", windows.destructiveSoft),
+      windows.destructiveSoft,
+    );
+    const sentence =
+      "The audit found two gaps: identity light `successSoftForeground` measured " +
+      `${washedSuccess.toFixed(2)}:1 through the wash, under the ` +
+      `${contrastFloors.default.body}:1 body floor, and Windows dark's wash over ` +
+      `\`destructiveSoft\` measured ${washedDestructive.toFixed(3)}:1 — an invisible highlight.`;
+
+    expect(markdownProse).toContain(sentence);
+  });
+
   it("states the wash strength in both colour tables", () => {
-    const cell = (color: string): string =>
-      `text selection wash (${washPercent(color)}% alpha; \`selectionColor\`)`;
+    const cell = (light: string, dark: string): string =>
+      washPercent(light) === washPercent(dark)
+        ? `text selection wash (${washPercent(light)}% alpha; \`selectionColor\`)`
+        : `text selection wash (${washPercent(light)}% light, ${washPercent(dark)}% dark; \`selectionColor\`)`;
 
     expect(markdown).toContain(
-      `| \`selection\` | \`${themes.light.colors.selection}\` | \`${themes.dark.colors.selection}\` | ${cell(themes.light.colors.selection)} |`,
+      `| \`selection\` | \`${themes.light.colors.selection}\` | \`${themes.dark.colors.selection}\` | ${cell(themes.light.colors.selection, themes.dark.colors.selection)} |`,
     );
     expect(markdown).toContain(
-      `| \`selection\` | \`${highContrastThemes.light.colors.selection}\` | \`${highContrastThemes.dark.colors.selection}\` | ${cell(highContrastThemes.light.colors.selection)} |`,
+      `| \`selection\` | \`${highContrastThemes.light.colors.selection}\` | \`${highContrastThemes.dark.colors.selection}\` | ${cell(highContrastThemes.light.colors.selection, highContrastThemes.dark.colors.selection)} |`,
     );
   });
 
@@ -677,9 +702,10 @@ describe("docs/design-system.md", () => {
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| text selection on a soft status fill (\`xSoftForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\` and the \`hover\`/\`active\`/\`selected\` washes, and essential boundaries on \`popover\`, \`muted\` and the four state washes | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\`) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
