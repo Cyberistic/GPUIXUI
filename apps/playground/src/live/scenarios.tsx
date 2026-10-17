@@ -26,6 +26,7 @@ import { inputScenario } from "../scenarios/input.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
 import { panelScenario } from "../scenarios/panel.js";
+import { previewScenario } from "../scenarios/preview.js";
 import { primitivesActionsScenario } from "../scenarios/primitives.js";
 import { scrollScenario } from "../scenarios/scroll.js";
 import { searchScenario } from "../scenarios/search.js";
@@ -1108,6 +1109,129 @@ const table: LiveScenario = {
     }),
 };
 
+/** Waits out the preview card's 200 ms grace close on the real clock. */
+const graceClose = Effect.sleep(Duration.millis(300));
+
+const preview: LiveScenario = {
+  id: "live-preview",
+  title: "Live hover: enter/leave and a grace close in a window",
+  capability: "preview",
+  view: previewScenario.view,
+  ready: "preview-trigger",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectContains(
+        "the card starts closed",
+        yield* textOf(ctx, "preview-state"),
+        "open=false",
+      );
+
+      yield* ctx.host.hover("preview-trigger");
+      yield* settle;
+      const opened = yield* textOf(ctx, "preview-state");
+      yield* ctx.expectContains(
+        "a real mouse move opens the card",
+        opened,
+        "open=true",
+      );
+      yield* ctx.expectContains(
+        "the trigger reports the enter",
+        yield* textOf(ctx, "preview-order"),
+        "last=trigger:enter",
+      );
+      yield* ctx.expectEqual(
+        "hover does not move focus",
+        yield* focusedOf(ctx),
+        "none",
+      );
+
+      yield* ctx.host.hover("preview-card-body");
+      yield* graceClose;
+      const held = yield* textOf(ctx, "preview-state");
+      yield* ctx.expectContains(
+        "the card survives the trigger's leave",
+        held,
+        "open=true",
+      );
+      yield* ctx.expectContains(
+        "the fire-time presence check kept it open",
+        held,
+        "closes=0",
+      );
+      // The card's enter and the trigger's leave arrive in **one** batch live,
+      // so the `prev`/`last` readout collapses them; the append-only log is the
+      // honest record of the order (plan `199` §7).
+      yield* ctx.expectContains(
+        "the pointer reached the card",
+        yield* textOf(ctx, "preview-log"),
+        "body:enter",
+      );
+
+      yield* ctx.host.click("preview-card-action");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a control inside a hover-opened card works",
+        yield* textOf(ctx, "preview-actions"),
+        "actions=1",
+      );
+      yield* ctx.expectContains(
+        "the click does not close the card",
+        yield* textOf(ctx, "preview-state"),
+        "open=true",
+      );
+
+      yield* ctx.host.hover("preview-away");
+      yield* graceClose;
+      const left = yield* textOf(ctx, "preview-state");
+      yield* ctx.expectContains(
+        "leaving the card closes it",
+        left,
+        "open=false",
+      );
+      // Enter/leave are per element (plan `196`): the pointer last sat on the
+      // card's action, so that is the leave which schedules the close.
+      yield* ctx.expectContains(
+        "the close came from the last hovered child",
+        left,
+        "reason=action",
+      );
+      yield* ctx.expectContains("one close happened", left, "closes=1");
+
+      yield* ctx.host.hover("preview-trigger");
+      yield* ctx.host.hover("preview-away");
+      yield* ctx.host.hover("preview-trigger");
+      yield* graceClose;
+      const cancelled = yield* textOf(ctx, "preview-state");
+      yield* ctx.expectContains(
+        "a re-enter inside the delay cancels the close",
+        cancelled,
+        "open=true",
+      );
+      yield* ctx.expectContains(
+        "the cancelled close never counted",
+        cancelled,
+        "closes=1",
+      );
+
+      yield* ctx.host.hover("preview-away");
+      yield* graceClose;
+      const closed = yield* textOf(ctx, "preview-state");
+      yield* ctx.expectContains(
+        "a leave with no return closes",
+        closed,
+        "open=false",
+      );
+      yield* ctx.expectContains(
+        "the second close came from the trigger",
+        closed,
+        "reason=trigger",
+      );
+      yield* ctx.expectContains("two closes happened", closed, "closes=2");
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${preview.id}.png`);
+    }),
+};
+
 /** The two document lines whose washes the find query must paint. */
 const SEARCH_LINES = [
   "The error handler logs an error.",
@@ -1247,4 +1371,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   primitives,
   table,
   highlights,
+  preview,
 ];

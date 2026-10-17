@@ -581,7 +581,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `14/14`.
+exact, and focus/Escape and the close button hold. The live suite is `15/15`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -766,6 +766,7 @@ live pass is citable evidence rather than a second log format.
 | `live-float` | a paced drag from the Alpha tab, released outside the dock, opens the floating panel at the release point within 1 px; its title bar drags it to exactly `(200, 60)`; its tab takes focus, Escape closes it and returns focus to `float-tab-beta`; the close button drops the reopened tab — 28 checks |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, the selection survives, and `getListScrollTop` reports the logical anchor exactly — `[0, 0, h]` at rest, `[120, 0, h]` after `scrollToItem(120)` |
+| `live-preview` | the **first live hover** scenario: a real mouse move over the trigger opens the card (`open=true`), the pointer reaches the card body and the fire-time presence check keeps it open past the 200 ms grace close (`closes=0`), a control inside the hover-opened card clicks, leaving closes through the last hovered child (`reason=action`), a re-enter inside the delay cancels, and a final leave closes from the trigger (`closes=2`). The card enter and trigger leave arrive in **one batch** live, so the `prev`/`last` readout collapses them — the append-only log keeps both |
 | `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
@@ -977,10 +978,10 @@ narrower. Each deviation is deliberate and measured:
   the pinned-grid probe, the collapsible-height probe and the nested-layer
   probe pass in real GPUix 0.10.0 on this host (59/59), with a written report
   and screenshots.
-  The **real-window** suite (`smoke:live`) is 14/14 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 15/15 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
-  with its exact anchor and a painted **find** probe — including the modal's
+  with its exact anchor, a painted **find** probe and a **live hover** card — including the modal's
   Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
   with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
   frame (plan `192`), a pointer-placed menu in a scrolled container (plan

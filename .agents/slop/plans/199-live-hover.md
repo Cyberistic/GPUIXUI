@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts and the proof in §7) |
 | Phase | F (live runtime evidence) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `156`, `159`, `189`, `196` |
@@ -114,4 +114,40 @@ live, record it in §7 rather than changing the check.
 
 ## 7. Landed — measured results
 
-_(Filled when implemented.)_
+Run on 2026-10-18, this host, the locally built `darwin-x64` 0.10.0 binding.
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter playground build` | exit `0` |
+| `nub apps/playground/dist/live/run.js` | `15/15`, exit `0`, `preview=verified` |
+| `nub apps/playground/dist/smoke/run.js` | `59/59`, exit `0` (unchanged) |
+
+**Hover works live.** A real `mouse.move` to the trigger opens the card; a move
+to the card body sets `inside` and the 200 ms timer re-checks it, so the card
+stays open past the grace period (`closes=0`); a click on the card's action
+runs (`actions=1`) without closing it; leaving closes (`open=false`); a
+re-enter inside the delay cancels (`closes=1`); a final leave closes from the
+trigger (`closes=2`, `reason=trigger`).
+
+Two measured differences from the headless run:
+
+1. **The close reason after clicking the action is `action`, not `body`.** Enter
+   and leave are per element (plan `196`); the pointer's last hovered child was
+   the action, so that is the leave that schedules the close. The scenario
+   asserts `reason=action` and records the rule.
+2. **The card's enter and the trigger's leave arrive in one React batch live**,
+   so a readout built from separate `prev`/`last` state collapses them
+   (`prev=trigger:enter last=trigger:leave` while `open=true`). The view's
+   append-only log keeps both (`body:enter trigger:leave`), and the scenario
+   asserts on the log. Headless, the same two events are separated by a frame,
+   so `prev`/`last` shows the order.
+
+Two-direction proof: removing the `hover("preview-card-body")` step — so the
+trigger's leave closes the card — fails `exit 1` with `the pointer reached the
+card: expected a string containing "body:enter", got "trigger:enter"`. Restored,
+`15/15`, exit `0`.
+
+Landed note for components: a hover card's close timer may be scheduled by any
+hoverable child's leave, not only the body's; the `inside` ref must be set on
+every child (already the plan-196 rule), and a multiple-event batch must not be
+used to infer order.

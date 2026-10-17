@@ -48,7 +48,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | workspace | `workspace-tab-drag`, `workspace-restore`, `workspace-panes` | verified |
 | docking | `docking-layout` | verified |
 | float | `float-tab`, `live-float` | verified |
-| preview | `preview-card` | verified |
+| preview | `preview-card`, `live-preview` | verified |
 | command | `command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
@@ -68,10 +68,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 The suite is **59/59 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **14/14 green
+(`nub run --filter playground smoke:live`, plan `189`) and is **15/15 green
 here**: `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
-`selection`, `menu`, `docking`, `float`, `components`, `table` and `search`
-are confirmed there too
+`selection`, `menu`, `docking`, `float`, `components`, `table`, `search` and
+`preview` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -110,7 +110,14 @@ and asserts four document washes with window-space rects inside their line,
 clear/restore repainting, the find cursor moving, and document-wide
 `matchIndexOffset` numbering after a jump to row 90; **`live-table`** asserts
 the exact logical anchor `[0, 0, h]` and `[120, 0, h]` after
-`scrollToItem(120)`. Colour and the accessibility dump stay `TestRenderer`-only
+`scrollToItem(120)`. **`live-preview` (plan `199`)** is the first live hover probe: a real
+`mouse.move` opens the card, the pointer reaches the body, the fire-time
+presence check keeps it open past the 200 ms close, a control inside the
+hover-opened card clicks, the grace close fires from the last hovered child, a
+re-enter cancels, and a final leave closes (`closes=2`). It also measured that
+the card's enter and the trigger's leave arrive in **one React batch** live, so
+a `prev`/`last` readout collapses them while an append-only log keeps both.
+Colour and the accessibility dump stay `TestRenderer`-only
 for a measured reason, not an assumption: the live automation tree carries
 `id`/`type`/`testId`/`bounds` and **no `style`**, and `GpuixRenderer` exposes no
 a11y method (`getA11yTree` is on `TestRenderer` alone).
@@ -649,7 +656,7 @@ in-package and an end-to-end native verdict.
 | Fieldset | todo | ? | Form grouping (`FieldsetRoot`/`Legend` in base-gpui). `div` + `<text>`. |
 | Form | todo | ? | Validation orchestration and submit lifecycle (base-gpui `Form`). No host element; Effect-based validation lives in the package, not the renderer. |
 | Navigation Menu | todo | ? | 13-part nav whose items open content panels; distinct from Dropdown menus. `FloatingLayer` + `<anchored>`. Hover intent is the `preview-card` contract above (delayed close with a fire-time presence check). |
-| Preview Card | partial (probe) | partial (probe) | Hover-triggered rich card with a positioner (base-gpui, 8 parts). `FloatingLayer` + `<anchored>`. **An interactive card works (`preview-card`, plan `196`), with three rules:** the card enter arrives **before** the trigger leave, so a close scheduled on the leave must re-check an `inside` ref **when the timer fires** (200 ms); the leave payload has **no coordinates**; and enter/leave are delivered **per element**, so every hoverable child inside the card carries the handler (the root gets enter/leave but a child-to-child move can leave it). A card click runs and keeps it open, hover never moves focus, and a re-enter inside the delay cancels. Remove the fire-time check and the card closes the moment the pointer reaches it — measured. |
+| Preview Card | partial (probe) | partial (probe) | Hover-triggered rich card with a positioner (base-gpui, 8 parts). `FloatingLayer` + `<anchored>`. **An interactive card works (`preview-card`, plan `196`), with three rules:** the card enter arrives **before** the trigger leave, so a close scheduled on the leave must re-check an `inside` ref **when the timer fires** (200 ms); the leave payload has **no coordinates**; and enter/leave are delivered **per element**, so every hoverable child inside the card carries the handler (the root gets enter/leave but a child-to-child move can leave it). A card click runs and keeps it open, hover never moves focus, and a re-enter inside the delay cancels. Remove the fire-time check and the card closes the moment the pointer reaches it — measured. **Live (`live-preview`, plan `199`):** the same contract holds in a real window — a real `mouse.move` opens it, the pointer reaches the body, the fire-time check keeps it open, its action clicks, leaving closes from the last hovered child, a re-enter cancels and a final leave closes; the card enter and trigger leave arrive in **one React batch**, so an append-only log is the reliable event record. |
 | Drawer | todo | ? | Edge-anchored panel with swipe-to-dismiss and nesting. `Dialog` is main-only in 0.10.0; `div` + `motion` (width/left/opacity) + `createPortal`. |
 | Stepper | todo | ? | Multi-step progress indicator (adabraka `StepItem`/`StepStatus`). `div` + `<text>`. |
 | Timeline | todo | ? | Event timeline with connector styles. `div` + `<text>`. |
