@@ -14,6 +14,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Option from "effect/Option";
 import type { ReactNode } from "react";
+import { isEventClaimed } from "../internal/event-claim.js";
 import { dismissTopLayer } from "../internal/dismiss-layer.js";
 import {
   isActivation,
@@ -58,6 +59,9 @@ export const menuKeyHandler = (
   menu: MenuContextValue,
 ): ((event: EventPayload) => void) => {
   const step = (event: EventPayload): void => {
+    // A nested surface (a submenu) has already acted on this event; 0.10.0 has
+    // no stopPropagation, so the claim is how this menu stays out of it.
+    if (isEventClaimed(event)) return;
     pipe(
       typedChar(event),
       Option.match({
@@ -86,7 +90,7 @@ export const menuKeyHandler = (
 /** {@link MenuSurface} props: a labelled menu box. */
 export interface MenuSurfaceProps extends Props {
   /** The menu's accessible name. */
-  readonly label: string;
+  readonly label?: string;
   readonly children?: ReactNode;
 }
 

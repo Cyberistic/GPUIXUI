@@ -48,6 +48,7 @@ workstream declares in its own section below.
 | [128](./128-ref-composition-sweep.md) | Compose the caller's ref on every part that owns one | C/F | 127, 117 | done — 5 native tests (behaviour 225); both-direction proof |
 | [129](./129-menu-typeahead.md) | Menu type-ahead (`DropdownMenu`/`ContextMenu`) | C/F | 114, 126, 117 | done — 13 logic + 7 native tests (behaviour 232); both-direction proof |
 | [130](./130-list-typeahead.md) | List type-ahead over the shared type-ahead core | C/F | 111, 125, 129 | done — 13 logic (moved) + 7 native tests (List 29, behaviour 239); both-direction proof |
+| [131](./131-dropdown-submenus.md) | Dropdown menu submenus | C/F | 114, 122, 126, 129, 112 | done — 3 parts, 11 native tests (DropdownMenu 32, behaviour 250); both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

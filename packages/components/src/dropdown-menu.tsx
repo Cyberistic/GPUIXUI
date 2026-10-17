@@ -12,13 +12,15 @@
  */
 
 import { useGpuix } from "@gpuix/react";
-import type { PublicInstance } from "@gpuix/react";
+import type { Props, PublicInstance } from "@gpuix/react";
 import {
   FloatingLayer,
   floatingRootStyle,
   mergeStyles,
   type FloatingContentProps,
 } from "@gpuix/react/floating";
+import { Match } from "effect";
+import * as Option from "effect/Option";
 import {
   createContext,
   useCallback,
@@ -26,6 +28,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
   type RefObject,
 } from "react";
@@ -33,14 +36,16 @@ import { textStyle, useTheme } from "./internal/theme.js";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { claimEvent, isEventClaimed } from "./internal/event-claim.js";
 import { useMergedRef } from "./internal/ref.js";
-import { isActivation, isDown, isUp } from "./internal/key.js";
+import { isActivation, isDown, isLeft, isRight, isUp } from "./internal/key.js";
 import {
   MenuCheckboxItem,
   MenuGroup,
   MenuItem,
   MenuLabel,
   MenuSeparator,
+  type MenuItemProps,
 } from "./menu/item.js";
 import {
   MenuContext,
@@ -48,7 +53,11 @@ import {
   useMenuState,
   type MenuCloseReason,
 } from "./menu/state.js";
-import { menuKeyHandler, menuSurfaceStyle } from "./menu/surface.js";
+import {
+  menuKeyHandler,
+  menuSurfaceStyle,
+  MenuSurface,
+} from "./menu/surface.js";
 
 /** The rules a {@link DropdownMenuContent} follows. */
 interface DropdownContextValue {
@@ -116,6 +125,16 @@ export const DropdownMenu = ({
 
   const close = useCallback((reason: MenuCloseReason) => {
     restoreFocus.current = reason === "activate" || reason === "dismiss";
+    if (reason === "outside") {
+      // The press that dismissed the menu owns the click that follows it.
+      // Marking here (rather than in the dismiss handler) means a nested
+      // submenu's outside press gets the same guard. The microtask clears the
+      // mark before the next user gesture.
+      dismissedByOutsidePress.current = true;
+      queueMicrotask(() => {
+        dismissedByOutsidePress.current = false;
+      });
+    }
     setOpenRef.current(false);
   }, []);
 
@@ -124,17 +143,7 @@ export const DropdownMenu = ({
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
-      if (event.eventType === "keyDown") {
-        close("dismiss");
-        return;
-      }
-      // Mark the press so the click it belongs to cannot toggle the menu back
-      // open. The microtask clears the mark before the next user gesture.
-      dismissedByOutsidePress.current = true;
-      queueMicrotask(() => {
-        dismissedByOutsidePress.current = false;
-      });
-      close("outside");
+      close(event.eventType === "keyDown" ? "dismiss" : "outside");
     });
   }, [close, open]);
 
@@ -275,6 +284,7 @@ export const DropdownMenuContent = ({
         dismissTopLayer(event);
       }}
       onKeyDown={(event) => {
+        if (isEventClaimed(event)) return;
         keys(event);
         onKeyDown?.(event);
       }}
@@ -285,6 +295,277 @@ export const DropdownMenuContent = ({
     >
       {children}
     </FloatingLayer>
+  );
+};
+
+/** The rules a {@link DropdownMenuSubContent} follows; throws outside a sub. */
+interface SubContextValue {
+  readonly open: boolean;
+  readonly setOpen: (open: boolean) => void;
+  /** The SubTrigger row: it positions the surface and receives returned focus. */
+  readonly trigger: RefObject<PublicInstance | null>;
+  /** Set by the content while mounted: focus the submenu's first or last row. */
+  readonly focusEdge: RefObject<((edge: "first" | "last") => void) | null>;
+}
+
+const SubContext = createContext<SubContextValue | undefined>(undefined);
+
+/** The submenu a part belongs to. Throws when there is none (plan 110 §8.6). */
+const useSubContext = (): SubContextValue => {
+  const value = useContext(SubContext);
+  if (value === undefined) {
+    throw new Error("Submenu parts must be used inside DropdownMenuSub");
+  }
+  return value;
+};
+
+/** {@link DropdownMenuSub} props. */
+export interface DropdownMenuSubProps {
+  readonly children?: ReactNode;
+}
+
+/**
+ * A group of actions behind one secondary level. It owns its open state; only
+ * one submenu per menu is open at a time.
+ */
+export const DropdownMenuSub = ({ children }: DropdownMenuSubProps) => {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef<PublicInstance | null>(null);
+  const focusEdge = useRef<((edge: "first" | "last") => void) | null>(null);
+  const value = useMemo<SubContextValue>(
+    () => ({ open, setOpen, trigger, focusEdge }),
+    [open],
+  );
+
+  return <SubContext.Provider value={value}>{children}</SubContext.Provider>;
+};
+
+/** {@link DropdownMenuSubTrigger} props: an ordinary row that opens a submenu. */
+export interface DropdownMenuSubTriggerProps extends Omit<
+  MenuItemProps,
+  "onSelect" | "closeOnSelect" | "tone"
+> {}
+
+/**
+ * The row that opens its submenu. It is a normal menu row: arrow keys and
+ * type-ahead treat it like an action, and clicking, Enter, Space, `ArrowRight`
+ * or hover opens the secondary level.
+ */
+export const DropdownMenuSubTrigger = ({
+  children,
+  trailing,
+  textValue,
+  onKeyDown,
+  onFocus,
+  onMouseEnter,
+  ref,
+  ...rest
+}: DropdownMenuSubTriggerProps) => {
+  const theme = useTheme();
+  const { open, setOpen, trigger, focusEdge } = useSubContext();
+  const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
+
+  return (
+    <MenuItem
+      {...rest}
+      ref={setTrigger}
+      closeOnSelect={false}
+      aria-expanded={open}
+      textValue={textValue}
+      onSelect={() => setOpen(true)}
+      onFocus={(event) => {
+        // A pointer press focuses the row after React has opened the submenu
+        // and moved focus to its first row; the row's own focus event is the
+        // last word, so hand focus back into the submenu.
+        if (open) focusEdge.current?.("first");
+        onFocus?.(event);
+      }}
+      onMouseEnter={(event) => {
+        setOpen(true);
+        onMouseEnter?.(event);
+      }}
+      onKeyDown={(event) => {
+        if (!open) {
+          if (isRight(event)) setOpen(true);
+        } else if (isDown(event) || isUp(event)) {
+          // Focus is still on the trigger (a pointer open): Down/Up enter the
+          // submenu instead of moving the parent highlight past it.
+          claimEvent(event);
+          focusEdge.current?.(isDown(event) ? "first" : "last");
+        } else if (isLeft(event)) {
+          setOpen(false);
+        }
+        onKeyDown?.(event);
+      }}
+      trailing={
+        trailing ?? (
+          <text
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            ▸
+          </text>
+        )
+      }
+    >
+      {children}
+    </MenuItem>
+  );
+};
+
+/** The gap between the trigger row and its submenu surface, in pixels. */
+const SUBMENU_GAP = 4;
+
+/** {@link DropdownMenuSubContent} props: the secondary menu surface. */
+export interface DropdownMenuSubContentProps extends Props {
+  /** The submenu's accessible name. */
+  readonly label?: string;
+  readonly children?: ReactNode;
+}
+
+/**
+ * The floating second level, rendered only while open. Its position is the
+ * trigger row's right edge in window coordinates, clamped by the runtime's
+ * `fit="snap"`; it owns its dismiss layer so Escape closes one level only.
+ */
+export const DropdownMenuSubContent = ({
+  label,
+  children,
+  onKeyDown,
+  style,
+  testId,
+  ...rest
+}: DropdownMenuSubContentProps) => {
+  const renderer = useGpuix().renderer;
+  const { open, setOpen, trigger, focusEdge } = useSubContext();
+  const parent = useMenuContext();
+  const parentClose = parent.close;
+  const parentClaim = parent.claimSubmenu;
+  const restoreFocus = useRef(false);
+
+  const close = useCallback(
+    (reason: MenuCloseReason) => {
+      restoreFocus.current = reason === "dismiss";
+      setOpen(false);
+      Match.value(reason).pipe(
+        Match.when("activate", () => parentClose("activate")),
+        Match.when("leave", () => parentClose("leave")),
+        Match.when("outside", () => parentClose("outside")),
+        Match.when("dismiss", () => undefined),
+        Match.exhaustive,
+      );
+    },
+    [parentClose, setOpen],
+  );
+
+  const menu = useMenuState(close);
+
+  // The trigger stays focusable while its submenu is open. Down/Up and the
+  // row's own focus event use this to enter the submenu at the right edge.
+  useLayoutEffect(() => {
+    focusEdge.current = (edge) =>
+      menu.step({ _tag: edge === "first" ? "First" : "Last" });
+  }, [focusEdge, menu]);
+
+  useLayoutEffect(
+    () => () => {
+      focusEdge.current = null;
+    },
+    [focusEdge],
+  );
+
+  // The dismiss handler must keep reading the latest `close`, but the layer
+  // itself must not be re-pushed on every render: that would move it above an
+  // overlay opened after it.
+  const closeRef = useRef(close);
+  useLayoutEffect(() => {
+    closeRef.current = close;
+  });
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const release = parentClaim(() => setOpen(false));
+    const pop = pushDismissLayer((event) => {
+      closeRef.current(event.eventType === "keyDown" ? "dismiss" : "outside");
+    });
+    return () => {
+      pop();
+      release();
+    };
+  }, [open, parentClaim, setOpen]);
+
+  useLayoutEffect(() => {
+    if (open || !restoreFocus.current) return;
+    restoreFocus.current = false;
+    const instance = trigger.current;
+    if (instance !== null) renderer?.focusElement?.(instance.id);
+  }, [open, renderer, trigger]);
+
+  const [point, setPoint] = useState<{ x: number; y: number } | undefined>();
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPoint(undefined);
+      return;
+    }
+    const instance = trigger.current;
+    if (instance === null) return;
+    Option.match(
+      Option.fromNullishOr(renderer?.getElementBounds?.(instance.id)),
+      {
+        onNone: () => undefined,
+        onSome: (bounds) =>
+          setPoint({
+            x: bounds.x + bounds.width + SUBMENU_GAP,
+            y: bounds.y,
+          }),
+      },
+    );
+  }, [open, renderer, trigger]);
+
+  // Focus the first row once the submenu's rows have registered. The ref keeps
+  // the effect from re-running after its own focus move changes the highlight.
+  const pendingFocus = useRef(true);
+  useLayoutEffect(() => {
+    if (!open) {
+      pendingFocus.current = true;
+      return;
+    }
+    if (!pendingFocus.current || menu.rows.length === 0) return;
+    pendingFocus.current = false;
+    menu.step({ _tag: "First" });
+  }, [menu, open]);
+
+  if (!open || point === undefined) return null;
+
+  return (
+    <MenuContext.Provider value={menu}>
+      <anchored
+        position={point}
+        fit="snap"
+        snapMargin={8}
+        deferred
+        priority={1}
+        occlude
+      >
+        <MenuSurface
+          testId={testId}
+          label={label}
+          {...rest}
+          onKeyDown={(event) => {
+            // Claim every key: the parent menu must not also move its highlight.
+            claimEvent(event);
+            if (isLeft(event)) close("dismiss");
+            onKeyDown?.(event);
+          }}
+          style={mergeStyles({ maxHeight: 320, overflowY: "scroll" }, style)}
+        >
+          {children}
+        </MenuSurface>
+      </anchored>
+    </MenuContext.Provider>
   );
 };
 
@@ -308,8 +589,10 @@ export const dropdownMenuMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
+    "one level of submenus is tested; deeper nesting follows the same rule but is untested",
+    'submenus open to the right and are clamped by fit="snap"; there is no left-side flip',
+    "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
     "type-ahead is a case-insensitive 500 ms prefix search with no fuzzy scoring; a composed label needs textValue",
-    "no submenus in v1",
     "the checkbox row uses aria-selected and a text ✓ because 0.10.0 has no aria-checked and no icon set",
   ],
   docs: "docs/dropdown-menu.mdx",

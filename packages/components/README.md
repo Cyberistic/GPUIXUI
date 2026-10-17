@@ -31,7 +31,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/dialog.tsx` | Dialog: an anchored window veil, focus-in/return, Tab trap, Escape |
 | `src/confirm-dialog.tsx` | ConfirmDialog: Cancel-first, caller-owned close, a locked loading state |
 | `src/popover.tsx` | Popover: a `FloatingLayer` panel with the shared dismissal rules |
-| `src/dropdown-menu.tsx`, `src/menu/*` | DropdownMenu over the shared row registry, rows, type-ahead buffer and menu surface |
+| `src/dropdown-menu.tsx`, `src/menu/*` | DropdownMenu over the shared row registry, rows, type-ahead buffer and menu surface, with one level of `Sub`/`SubTrigger`/`SubContent` |
 | `src/context-menu.tsx` | ContextMenu: the same rows and type-ahead at the pointer (`onAuxClick` + `isRightClick`) or at the trigger from `Shift+F10` |
 | `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts` |
 | `src/tabs.tsx` | Tabs: roving tab stop, automatic/manual activation, arrow wrap |

@@ -39,6 +39,9 @@ import {
 | `DropdownMenuContent` | the floating `role="menu"` surface, rendered while open |
 | `DropdownMenuItem` | one action; `onSelect` runs, then the menu closes |
 | `DropdownMenuCheckboxItem` | an on/off row that stays open after toggling |
+| `DropdownMenuSub` | a group of actions behind a secondary level |
+| `DropdownMenuSubTrigger` | the row that opens the submenu |
+| `DropdownMenuSubContent` | the floating second level, rendered while open |
 | `DropdownMenuSeparator` | a hairline between groups |
 | `DropdownMenuLabel` | a small heading over a group |
 | `DropdownMenuGroup` | a labelled group of rows |
@@ -68,6 +71,9 @@ hover does not move the highlight; clicked rows activate directly.
 | Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
 | `Escape` | closes and returns focus to the trigger |
 | `Tab` | closes and lets focus move on — a menu is not modal |
+| `ArrowRight` on a submenu trigger | opens it and focuses its first row |
+| `ArrowDown` / `ArrowUp` on an open submenu trigger | enters the submenu at its first/last row |
+| `ArrowLeft` or `Escape` inside a submenu | closes that level and returns focus to its trigger |
 
 A keyboard open lands on a row, so a second `Enter` runs the first action without
 an extra arrow press. A pointer click leaves focus on the menu surface with no
@@ -135,6 +141,36 @@ is the point. It shows a text `✓` when checked and carries `aria-selected`.
 signal, not a confirmation step: pair a destructive row with **Confirmation
 dialog** when the action cannot be undone.
 
+## Submenus
+
+A submenu groups actions behind one secondary level:
+
+```tsx
+<DropdownMenuSub>
+  <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
+  <DropdownMenuSubContent label="Share">
+    <DropdownMenuItem onSelect={copyLink}>Copy link</DropdownMenuItem>
+    <DropdownMenuItem onSelect={email}>Email</DropdownMenuItem>
+  </DropdownMenuSubContent>
+</DropdownMenuSub>;
+```
+
+The trigger is an ordinary menu row: arrows and type-ahead reach it, and
+clicking, `Enter`, `Space`, `ArrowRight` or hovering opens the submenu. Opening a
+submenu focuses its first row, so the next `Enter` runs the first action without
+an extra arrow press. Only one submenu per menu is open at a time; moving onto
+another row closes the open one.
+
+The surface is positioned at the trigger row's right edge in window coordinates
+and clamped by GPUix's `fit="snap"`. It is a child of the parent menu in the
+element tree, so a press on a submenu row is not an outside press, while a press
+on the parent menu's background still closes the whole menu.
+
+`Escape` and `ArrowLeft` close **one** level: the submenu disappears, focus
+returns to its trigger, and the parent menu stays open. Choosing a submenu action
+closes both levels and returns focus to the dropdown trigger. An outside press
+also closes both.
+
 ## Controlled and uncontrolled
 
 ```tsx
@@ -158,21 +194,28 @@ with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
   in `@gpuix/native@0.10.0`: `HostProps` exposes only `aria-label`,
   `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
   `aria-level`. The checkbox row therefore uses `aria-selected`, and the link
-  between trigger and surface is positional.
-- No submenus in v1.
+  between trigger and surface is positional. A submenu trigger announces
+  `aria-expanded` but not `aria-haspopup`.
+- One level of submenus is tested. A submenu inside a submenu follows the same
+  rule but is not exercised by a suite.
+- Submenus open to the right of their trigger and rely on `fit="snap"` to stay
+  in the window; there is no left-side flip.
 - Type-ahead is a prefix match with no fuzzy scoring, and it ignores a label that
   is not plain text unless `textValue` is set.
 - A hover does not preview a highlight; the pointer activates on click.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (19
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (32
 tests): the `menu` role, keyboard opening on the first/last enabled row, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
 dismissal, checkbox toggling and its check mark, the destructive colour, the
-surface in both themes, and type-ahead (prefix, repeat cycling, disabled skip,
-Shift, window expiry, unmatched-prefix reset).
+surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
+Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard
+and hover opening, right-edge placement, focus entering the first row, arrows and
+type-ahead staying inside, one submenu at a time, one-level Escape/ArrowLeft, and
+an outside press closing both levels.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

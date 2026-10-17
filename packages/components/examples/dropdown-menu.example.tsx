@@ -16,6 +16,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../src/dropdown-menu.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
@@ -73,6 +76,20 @@ export const DropdownMenuExample = () => {
             >
               Show hidden files
             </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent label="Share">
+                <DropdownMenuItem onSelect={() => setLastAction("Copy link")}>
+                  Copy link
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setLastAction("Email a link")}
+                >
+                  Email a link
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               tone="destructive"

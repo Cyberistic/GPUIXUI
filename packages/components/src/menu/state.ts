@@ -15,6 +15,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTypeahead } from "../internal/typeahead.js";
@@ -58,6 +59,16 @@ export interface MenuContextValue {
    * `leave` (Tab) and `outside` (a press elsewhere) leave focus where it went.
    */
   readonly close: (reason: MenuCloseReason) => void;
+  /**
+   * Close the submenu opened from this menu, if one is open. Silent: the pointer
+   * is already where the user put it, so focus must not move.
+   */
+  readonly closeSubmenu: () => void;
+  /**
+   * Register an open submenu. Opening another closes the previous one. Returns
+   * the release function the submenu calls when it closes or unmounts.
+   */
+  readonly claimSubmenu: (close: () => void) => () => void;
 }
 
 export const MenuContext = createContext<MenuContextValue | undefined>(
@@ -162,6 +173,25 @@ export const useMenuState = (
     });
   }, [activate, activeId]);
 
+  // One submenu per menu. A ref, not state: this is an imperative handle, and
+  // putting it in state would re-render every row when a submenu opens.
+  const submenu = useRef<(() => void) | null>(null);
+
+  const closeSubmenu = useCallback(() => {
+    const close = submenu.current;
+    submenu.current = null;
+    close?.();
+  }, []);
+
+  const claimSubmenu = useCallback((close: () => void) => {
+    const previous = submenu.current;
+    submenu.current = close;
+    if (previous !== null && previous !== close) previous();
+    return () => {
+      if (submenu.current === close) submenu.current = null;
+    };
+  }, []);
+
   return useMemo(
     () => ({
       rows,
@@ -173,11 +203,15 @@ export const useMenuState = (
       typeahead,
       activateActive,
       close,
+      closeSubmenu,
+      claimSubmenu,
     }),
     [
       activateActive,
       activeId,
+      claimSubmenu,
       close,
+      closeSubmenu,
       focusRow,
       noteFocus,
       register,

@@ -25,7 +25,10 @@ export const boundsOf = (
   );
 
 /** The bounds of `testId`, or throws: a missing element is a broken suite. */
-const requireBounds = (root: ComponentTestRoot, testId: string): Bounds =>
+export const requireBounds = (
+  root: ComponentTestRoot,
+  testId: string,
+): Bounds =>
   Option.getOrElse(boundsOf(root, testId), () => {
     throw new Error(`behaviour: no element with testId "${testId}"`);
   });

@@ -119,6 +119,7 @@ export const MenuItem = ({
   children,
   onFocus,
   onClick,
+  onMouseEnter,
   style,
   ref,
   ...rest
@@ -126,7 +127,8 @@ export const MenuItem = ({
   const theme = useTheme();
   // Only stable members here: the context object changes whenever a row
   // registers, and depending on it would re-register in a loop.
-  const { activeId, register, noteFocus, close } = useMenuContext();
+  const { activeId, register, noteFocus, close, closeSubmenu } =
+    useMenuContext();
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -176,6 +178,13 @@ export const MenuItem = ({
         if (disabled) return;
         onClick?.(event);
         action.current();
+      }}
+      onMouseEnter={(event) => {
+        // Moving onto another row leaves the submenu that belonged to the row
+        // the pointer came from. A SubTrigger re-opens its own in the same
+        // event, so React's batch ends on `true`.
+        closeSubmenu();
+        onMouseEnter?.(event);
       }}
       style={mergeStyles(menuRowStyle(theme, tone, active, disabled), style)}
     >

@@ -139,6 +139,7 @@ the `@gpuixui/tokens/react` provider
     - [x] Every part that owns a ref composes the caller's too — plan 128
     - [x] Menu type-ahead (`DropdownMenu`/`ContextMenu`) — plan 129
     - [x] List type-ahead over the shared type-ahead core — plan 130
+    - [x] Dropdown menu submenus — plan 131
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
