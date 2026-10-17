@@ -231,6 +231,7 @@ parts.
 | Fieldset | `Fieldset`, `FieldsetLegend` | `FieldsetRoot`/`Legend` | plan 306 |
 | Stepper | `Stepper`, `StepperStep` | — | plan 307 |
 | Form | `Form` (render prop; one part) | `Form` | plan 308 |
+| Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -256,7 +257,6 @@ implementation cannot invent a shape):
 | Countdown | `Countdown` | plan 205 |
 | Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | plan 205 |
 | Inline edit | `InlineEdit` | plan 205 |
-| Keyboard shortcuts | `KeyboardShortcuts`, `Keycap` | plan 205 |
 
 ## 9. Landed deviations and migration
 

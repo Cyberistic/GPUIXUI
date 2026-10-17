@@ -181,7 +181,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Countdown | todo | ? | `div` + `<text>`; the time source is the app's (Effect `Clock`), never a renderer timer. |
 | Carousel | todo | ? | `motion` animates width/left/opacity only — **no transform/scale** (verified). Scroll snap is unavailable; discrete stepping is the honest alternative. |
 | Inline edit | todo | ? | Swaps `<text>` for `<input>` in place; focus/commit/cancel contract ours. |
-| Keyboard shortcuts / keycap display | todo | ? | Keycap `div`s + a categorised shortcut table. No host element. |
+| Keyboard shortcuts / keycap display | done | yes | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut` and `Keycap` over the shared accelerator model (`mod` adapts to the platform; order preserved; unknown tokens display verbatim); 6 native behaviour tests + 10 accelerator tests, both themes. Display-only by design (a row documents a chord, never binds it); no `aria-keyshortcuts` in 0.10.0; rows are separated by 1px elements because an element has one `borderColor` |
 
 ## Tier 3 — data presentation
 

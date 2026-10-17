@@ -17,12 +17,14 @@ import {
   alpha,
   controlHeight,
   controlPaddingX,
+  currentPlatform,
   darkTheme,
   elevationShadow,
   focusRing,
   lightTheme,
   statusTone,
   textStyle,
+  type PlatformName,
   type StatusTone,
   type Theme,
 } from "@gpuixui/tokens";
@@ -31,6 +33,7 @@ export {
   alpha,
   controlHeight,
   controlPaddingX,
+  currentPlatform,
   darkTheme,
   elevationShadow,
   focusRing,
@@ -38,7 +41,7 @@ export {
   statusTone,
   textStyle,
 };
-export type { StatusTone, Theme };
+export type { PlatformName, StatusTone, Theme };
 export { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 
 /** The four status tones Alert, Badge and Toast expose. */

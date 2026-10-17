@@ -24,6 +24,7 @@ export * from "./empty-state.js";
 export * from "./field.js";
 export * from "./fieldset.js";
 export * from "./form.js";
+export * from "./keyboard-shortcuts.js";
 export * from "./list.js";
 export * from "./pagination.js";
 export * from "./popover.js";

@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §4 (C4), `111` (Card), `113` (Tabs) |
-| Status | planned |
+| Status | done — 10 accelerator tests + 6 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned parts: `KeyboardShortcuts`, `Keycap`); `COMPONENTS.md` → Tier 2 → Keyboard shortcuts / keycap display; plan `205` C4 |
 
 This plan is self-contained. It adds the shortcut display and the accelerator
@@ -155,3 +155,22 @@ heading role: native test 4 fails. Restore after each.
   `COMPONENTS.md` row and the contract agree.
 - `HotkeyRecorder` (plan 316) can import the accelerator formatter.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-17:
+
+- `src/shortcut/accelerator.ts` — `parseAccelerator`, `formatAccelerator` and
+  the `AcceleratorPlatform` type; the default platform is the host's, and
+  `KeyboardShortcut` takes a `platform` override for the docs toggle.
+- `src/keyboard-shortcuts.tsx` — four parts. One measured fact changed the row
+  separator design: `0.10.0`'s style has per-side border *widths* but a single
+  `borderColor`, so group rows are separated by a 1px `div` and the group skips
+  the last row.
+- Two renderer facts: `findByText` matches the first text **containing** the
+  string, so a keycap lookup by text is ambiguous when a label contains the same
+  letter (the suite reads keycaps by child position instead); and the styled
+  `<text>` node is one hop from the leaf, while a styled box behind text is two.
+- **Both directions:** forcing `displayKey(token, "darwin")` fails three
+  accelerator tests; changing the keycap fill fails three native tests. Restored
+  after each. Unit 238 green, behaviour 338 green.

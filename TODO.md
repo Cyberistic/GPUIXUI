@@ -215,7 +215,7 @@ retired once both branches are one
     - [x] Stepper — plan 307: read-only multi-step indicator, statuses derived from `value` (8 native tests; both-direction proof)
     - [x] Form — plan 308: owned-value schema validation, one alert summary, decoded `onSubmit`, pending guard (7 native tests; both-direction proof)
     - [ ] Drawer — plan 309
-    - [ ] Keyboard shortcuts / keycap display — plan 310 (owns the accelerator model)
+    - [x] Keyboard shortcuts / keycap display — plan 310 (owns the accelerator model): 10 accelerator tests + 6 native tests; both-direction proof
     - [ ] Timeline — plan 311
     - [ ] Countdown — plan 312
     - [ ] Inline edit — plan 313
