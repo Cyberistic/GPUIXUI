@@ -55,6 +55,8 @@ is the authority on order, not the file name.
 | [047](047-tier1-docs-and-examples.md) | Tier 1 docs pages and runnable examples | C | 030, 031, 040, 041 | **done** — 21 primitives pages + the icons page, six composed examples, and a 7-file/60-test runtime run that mounts every example (§8) |
 | [048](048-tier1-fixable-limitations.md) | Three fixable Tier 1 limitations | C | 030, 040, 041, 047 | **done** — named `ButtonGroup`, `ScrollArea` deltas, RadioGroup Home/End; measured both directions in §7 (64 runtime tests) |
 | [049](049-radio-group-focus-contract.md) | The radio group's focus contract, and a Switch prop that did nothing | C | 030, 040, 041, 044, 048 | **done** — per-item ring, focus follows the selection, a derived roving index and `Switch.invalid`; six measured both-direction probes in §7 (68 runtime tests) |
+| [053](053-value-controls.md) | Value controls: `Slider`, `RangeSlider`, `Meter` — owner claimed | C | 030, 040, 041, 047, 049 | **planned** — one value-maths core, a negative-margin thumb geometry to prove, three runtime suites' worth of interaction |
+| [054](054-remaining-tier1-controls.md) | The remaining unclaimed Tier 1 rows: `NumberField`, `OTPField`, `Toggle`, `Rating` | C | 053 | **planned** — claimed for `packages/primitives`; each has a core module, a test plan and its runtime facts to verify |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |
