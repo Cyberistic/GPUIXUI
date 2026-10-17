@@ -29,6 +29,7 @@ import {
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isMenuKey } from "./internal/key.js";
+import { useMergedRef } from "./internal/ref.js";
 import { focusRing, useTheme } from "./internal/theme.js";
 import {
   MenuCheckboxItem,
@@ -183,6 +184,7 @@ export const ContextMenuTrigger = ({
   onFocus,
   onBlur,
   style,
+  ref,
   ...rest
 }: ContextMenuTriggerProps) => {
   const theme = useTheme();
@@ -198,6 +200,7 @@ export const ContextMenuTrigger = ({
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
+  const setElement = useMergedRef(attach, ref);
 
   useLayoutEffect(() => {
     // The native id is what focus returns to after a keyboard-opened menu.
@@ -220,7 +223,7 @@ export const ContextMenuTrigger = ({
   return (
     <div
       {...rest}
-      ref={attach}
+      ref={setElement}
       tabIndex={disabled ? -1 : 0}
       onAuxClick={(event: EventPayload) => {
         onAuxClick?.(event);

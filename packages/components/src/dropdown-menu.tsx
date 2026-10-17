@@ -33,6 +33,7 @@ import { textStyle, useTheme } from "./internal/theme.js";
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { useMergedRef } from "./internal/ref.js";
 import { isActivation, isDown, isUp } from "./internal/key.js";
 import {
   MenuCheckboxItem,
@@ -171,10 +172,12 @@ export const DropdownMenu = ({
 export const DropdownMenuTrigger = ({
   onClick,
   onKeyDown,
+  ref,
   ...rest
 }: ButtonProps) => {
   const { open, setOpen, trigger, dismissedByOutsidePress, pendingFocus } =
     useDropdownContext();
+  const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   const openAt = (edge: "first" | "last"): void => {
     pendingFocus.current = edge;
@@ -184,7 +187,7 @@ export const DropdownMenuTrigger = ({
   return (
     <Button
       {...rest}
-      ref={trigger}
+      ref={setTrigger}
       aria-expanded={open}
       onKeyDown={(event) => {
         // The local Button runs its activation click before this handler, so a

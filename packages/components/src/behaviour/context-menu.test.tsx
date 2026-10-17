@@ -4,10 +4,13 @@
  * The bugs these guard: a left click opening the menu; a right click that the
  * runtime reported but the component ignored; the surface appearing at the
  * parent's origin instead of the pointer; a selected action not running, or
- * running twice; and a second right click leaving the old point in place.
+ * running twice; and a second right click leaving the old point in place. A
+ * caller `ref` on the trigger was also discarded in favour of the internal one.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef } from "react";
 import * as Option from "effect/Option";
 import {
   boundsOf,
@@ -242,6 +245,32 @@ describe("ContextMenu", () => {
 
     expect(row.renderer.findByTestId("menu")).toBeUndefined();
     expect(row.renderer.findByTestId("row")?.customProps?.tabIndex).toBe(-1);
+
+    row.unmount();
+  });
+
+  it("feeds both the internal and the caller's trigger ref", () => {
+    const ref = createRef<PublicInstance>();
+    const row = renderComponent(
+      <ContextMenu>
+        <ContextMenuTrigger ref={ref} testId="row" style={{ height: 120 }}>
+          <text>Project</text>
+        </ContextMenuTrigger>
+        <ContextMenuContent testId="menu" label="Project actions">
+          <ContextMenuItem testId="open" onSelect={vi.fn()}>
+            Open
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+
+    expect(ref.current?.id).toBe(row.renderer.findByTestId("row")?.id);
+
+    // The internal registration still works: Escape returns focus to the row.
+    focusRow(row);
+    row.renderer.simulateKeystrokes("shift-f10");
+    row.renderer.simulateKeystrokes("escape");
+    expect(focusedTestId(row)).toEqual(Option.some("row"));
 
     row.unmount();
   });

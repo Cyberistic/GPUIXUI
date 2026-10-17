@@ -10,11 +10,13 @@
  *
  * Keyboard-opening regression: a menu opened from the trigger landed on the
  * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
- * the closed trigger did nothing.
+ * the closed trigger did nothing. A caller `ref` on the trigger was discarded in
+ * favour of the internal one.
  */
 
 import * as Option from "effect/Option";
-import { useState } from "react";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -297,5 +299,30 @@ describe("DropdownMenu", () => {
 
     assertTheme("dark", darkTheme.colors.popover);
     assertTheme("light", lightTheme.colors.popover);
+  });
+
+  it("feeds both the internal and the caller's trigger ref", () => {
+    const ref = createRef<PublicInstance>();
+    const menu = renderComponent(
+      <DropdownMenu>
+        <DropdownMenuTrigger ref={ref} testId="trigger">
+          Actions
+        </DropdownMenuTrigger>
+        <DropdownMenuContent testId="menu" label="File actions">
+          <DropdownMenuItem testId="rename" onSelect={vi.fn()}>
+            Rename
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+
+    expect(ref.current?.id).toBe(menu.renderer.findByTestId("trigger")?.id);
+
+    // The internal ref still works: Escape returns focus to the trigger.
+    clickCentreOf(menu, "trigger");
+    menu.renderer.simulateKeystrokes("escape");
+    expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
+
+    menu.unmount();
   });
 });

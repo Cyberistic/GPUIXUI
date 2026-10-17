@@ -41,6 +41,7 @@ import {
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { useMergedRef } from "./internal/ref.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import { elevation, textStyle, useTheme } from "./internal/theme.js";
 
@@ -107,14 +108,15 @@ export const Popover = ({
 };
 
 /** Opens the popover it sits in. An ordinary button in every other respect. */
-export const PopoverTrigger = ({ onClick, ...rest }: ButtonProps) => {
+export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
   const { open, setOpen, trigger, dismissedByOutsidePress } =
     usePopoverContext();
+  const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
     <Button
       {...rest}
-      ref={trigger}
+      ref={setTrigger}
       aria-expanded={open}
       onClick={(event) => {
         onClick?.(event);

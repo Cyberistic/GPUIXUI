@@ -5,11 +5,14 @@
  * trigger; a side other than the default being ignored; Escape not closing or not
  * returning focus; an outside press closing the panel and then the same click
  * re-opening it; a press inside the panel closing it; Tab trapping focus in a
- * non-modal surface; and a controlled popover that opens itself.
+ * non-modal surface; and a controlled popover that opens itself. A caller `ref`
+ * on the trigger was also discarded in favour of the internal one, so the
+ * picker that composes this trigger lost focus after a selection.
  */
 
 import * as Option from "effect/Option";
-import { useState } from "react";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -201,6 +204,29 @@ describe("Popover", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(true);
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+
+    popover.unmount();
+  });
+
+  it("feeds both the internal and the caller's trigger ref", () => {
+    const ref = createRef<PublicInstance>();
+    const popover = renderComponent(
+      <Popover>
+        <PopoverTrigger ref={ref} testId="trigger">
+          Filters
+        </PopoverTrigger>
+        <PopoverContent testId="panel">
+          <text>Visible columns</text>
+        </PopoverContent>
+      </Popover>,
+    );
+
+    expect(ref.current?.id).toBe(popover.renderer.findByTestId("trigger")?.id);
+
+    // The internal ref still works: Escape returns focus to the trigger.
+    clickCentreOf(popover, "trigger");
+    popover.renderer.simulateKeystrokes("escape");
+    expect(focusedTestId(popover)).toEqual(Option.some("trigger"));
 
     popover.unmount();
   });
