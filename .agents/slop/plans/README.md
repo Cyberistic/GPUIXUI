@@ -76,6 +76,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [077](./077-alpha-nan.md) | `alpha` must not emit a colour the runtime ignores | F | 014, 056–059 | done |
 | [078](./078-skeleton-surface-pairs.md) | The loading skeleton the contrast contract never checked | F | 014, 019, 063, 071–077 | done |
 | [079](./079-secondary-text-state-washes.md) | Secondary text on the state washes | F | 014, 057, 063, 071–078 | done |
+| [080](./080-control-edge-on-fills.md) | The control edge on the fills it paints | F | 014, 063, 071–079 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -250,6 +251,22 @@ pressed wash to `#404042` (5.13 / 4.68 / 5.30 / 5.32 on the four washes), and
 `state-text.test.ts` guards both the shipped sets and the exact regression. The
 quiet AAA example moves to `#5D5D5D` so it still fails at 7:1 and still passes
 the default floors, which is what makes its declared-level assertion meaningful.
+080 closes the last decorative role the contract measured only on plain
+surfaces: `border`. An outlined control — the secondary Button in `components`,
+the `outline` Button and outline toggle in `primitives` — paints its edge on
+`secondary`, `hover`, `active` and, when toggled on, `accent`, while the
+contract measured it only on `background`, `card` and `popover`. The audit found
+the edge and the fill were the **same value** in four colour sets: the identity
+light `active`, the identity dark `secondary`/`active`/`accent`, macOS dark
+`hover`/`secondary`/`accent`, and high-contrast dark's `active` at 2.53:1 under
+the 3:1 AAA divider floor. So an outlined control lost its edge exactly while
+pressed. The four fills join the `divider` class
+(70 → 74 pairs) and `border` moves one half-step off the fill ladder — light
+`#D6DAE1`, dark `#343B47`, macOS dark `#48484A` (Apple's separator grey) and AA
+dark `#8A8A8A` — rather than restyling the state fills, which would have pulled
+the focus ring or the accent hover wash with them. `control-edge.test.ts` guards
+the shipped sets, the exact regression and the public checker, and both
+documents derive the new surfaces from the implementation.
 
 ### Reference adoption (block `200–299`)
 
