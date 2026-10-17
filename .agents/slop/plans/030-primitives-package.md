@@ -3,7 +3,10 @@
 **Phase:** B and C. **Owner:** primitives workstream.
 **Depends on:** `020-gpuix-runtime-capability.md`, `packages/tokens` (contract only —
 see §2.2; no build-time dependency, so this plan is not blocked by tokens).
-**Status:** `planned`
+**Status:** `implemented` — the shipped tree supersedes §2.2/§3; see §9. All 19
+Tier 1 components plus the claimed extras (plans `053`, `054`, `056`, `065`) have
+code, tests, an in-package docs page, a mounted example and a runtime proof. The
+`apps/docs` pages and the published-binary CI run remain (other workstreams).
 
 Foundational render primitives **and** the Tier 1 component set (the swarm
 assignment gives both to this workstream). Tier 2+ lives in `packages/components`.
@@ -389,8 +392,9 @@ both directions) and the plan set in this directory.
 ## 10. Delivered state (2026-10-17)
 
 The tree was reconciled and finished: `nub run check` and `nub run test` are
-green from the worktree root (`packages/primitives` 136 tests, `packages/icons`
-18, `examples/basic-app` type-checks). What exists:
+green from the worktree root (`packages/primitives` 338 offline + 164 runtime
+tests at plan `070`, `packages/icons` 19, `examples/basic-app` type-checks).
+What exists:
 
 - `core/`: `theme`, `style` (spec → `StyleDesc`), `variants`, `keyboard`,
   `state`, `layout`, `selection`, `loading`, `color` — each with a suite.
@@ -401,11 +405,15 @@ green from the worktree root (`packages/primitives` 136 tests, `packages/icons`
 - `packages/primitives/README.md`: the theme port, density, the component list
   and the runtime-verification gap.
 
-What remains, and who owns it: **docs pages** (docs-site), **runtime
-verification** — render, hit-test, focus order, scroll offset, the a11y tree
-(playground, tracked in `TODO.md`), and the **tokens hand-off** (the example's
-`src/theme.ts` is a stand-in until `@gpuixui/tokens` lands). Every Tier 1
-`COMPONENTS.md` row is `wip` and says why.
+What remains, and who owns it: **the `apps/docs` pages** (docs-site) and the
+**published-binary native run** (gold-standard CI task, playground workstream).
+Everything else this section once listed has since landed: the runtime suite is
+15 files / 164 tests against the locally built 0.10.0 binding (plans `041`, `042`,
+`055`, and the per-component regression plans `043`–`070`), the tokens hand-off is
+plan `021` (`Theme` is `@gpuixui/tokens`' `Theme`, `focusRing`/`elevationShadow`
+come from there), and every component has an in-package docs page and a mounted
+example (plan `047`). Every Tier 1 `COMPONENTS.md` row stays `wip` until the two
+external items land; each row already carries its measured runtime evidence.
 
 Proven in both directions: the RadioGroup arrow-select wiring
 (`src/components/selection.test.tsx` fails when `renderRadioGroup` stops calling
