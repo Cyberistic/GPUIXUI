@@ -1,0 +1,157 @@
+/**
+ * The month grid.
+ *
+ * The bugs these guard: a leap-year February rendered as 28 days; a month that
+ * starts mid-week rendered the previous month's days as if they belonged to it;
+ * the grid changing height between months; and `addMonths` walking off the end of
+ * a year.
+ */
+
+import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Option from "effect/Option";
+import {
+  addMonths,
+  formatDayLabel,
+  formatIsoDay,
+  formatMonthLabel,
+  isSameDay,
+  lastDayOfMonth,
+  monthGrid,
+  parseIsoDay,
+  startOfMonth,
+  weekdayLabels,
+} from "./calendar.js";
+
+/** A parsed day, or a broken fixture. */
+const day = (iso: string): DateTime.Utc =>
+  Option.getOrElse(parseIsoDay(iso), () => {
+    throw new Error(`fixture: ${iso} is not a day`);
+  });
+
+const days = (
+  grid: ReadonlyArray<ReadonlyArray<Option.Option<DateTime.Utc>>>,
+): ReadonlyArray<DateTime.Utc> => Arr.getSomes(Arr.flatten(grid));
+
+const leadingBlanks = (
+  grid: ReadonlyArray<ReadonlyArray<Option.Option<DateTime.Utc>>>,
+): number => {
+  const firstWeek = Arr.head(grid);
+  if (Option.isNone(firstWeek)) return 0;
+  return Arr.findFirstIndex(firstWeek.value, (cell) =>
+    Option.isSome(cell),
+  ).pipe(Option.getOrElse(() => 7));
+};
+
+describe("monthGrid", () => {
+  it("renders a leap February with 29 days and a common one with 28", () => {
+    expect(days(monthGrid(day("2024-02-10"), 1))).toHaveLength(29);
+    expect(days(monthGrid(day("2025-02-10"), 1))).toHaveLength(28);
+  });
+
+  it("follows the week start when the month begins mid-week", () => {
+    // 1 October 2026 is a Thursday.
+    expect(leadingBlanks(monthGrid(day("2026-10-15"), 1))).toBe(3);
+    expect(leadingBlanks(monthGrid(day("2026-10-15"), 0))).toBe(4);
+  });
+
+  it("starts at the first cell when the month begins on the week start", () => {
+    // 1 June 2026 is a Monday.
+    expect(leadingBlanks(monthGrid(day("2026-06-15"), 1))).toBe(0);
+  });
+
+  it("always has six rows of seven cells", () => {
+    const grid = monthGrid(day("2026-02-01"), 1);
+    expect(grid).toHaveLength(6);
+    expect(Arr.every(grid, (week) => week.length === 7)).toBe(true);
+    expect(days(grid)).toHaveLength(28);
+  });
+
+  it("contains every day of the month exactly once and nothing else", () => {
+    const grid = monthGrid(day("2026-08-01"), 0);
+    const rendered = Arr.map(days(grid), formatIsoDay);
+
+    expect(rendered).toHaveLength(31);
+    expect(Arr.dedupe(rendered)).toHaveLength(31);
+    expect(Arr.every(rendered, (value) => value.startsWith("2026-08-"))).toBe(
+      true,
+    );
+    expect(rendered[0]).toBe("2026-08-01");
+    expect(Arr.last(rendered)).toEqual(Option.some("2026-08-31"));
+  });
+});
+
+describe("month arithmetic", () => {
+  it("clears the time when starting a month", () => {
+    const start = startOfMonth(day("2026-10-17"));
+    expect(DateTime.toPartsUtc(start)).toMatchObject({
+      year: 2026,
+      month: 10,
+      day: 1,
+      hour: 0,
+      minute: 0,
+      second: 0,
+      millisecond: 0,
+    });
+  });
+
+  it("crosses a year boundary in both directions", () => {
+    expect(formatIsoDay(addMonths(day("2026-01-15"), -1))).toBe("2025-12-01");
+    expect(formatIsoDay(addMonths(day("2026-12-15"), 1))).toBe("2027-01-01");
+    expect(formatIsoDay(addMonths(day("2026-12-15"), 13))).toBe("2028-01-01");
+  });
+
+  it("finds the last day of a month without a Date", () => {
+    expect(formatIsoDay(lastDayOfMonth(day("2024-02-10")))).toBe("2024-02-29");
+    expect(formatIsoDay(lastDayOfMonth(day("2025-02-10")))).toBe("2025-02-28");
+    expect(formatIsoDay(lastDayOfMonth(day("2026-08-10")))).toBe("2026-08-31");
+  });
+});
+
+describe("day identity and labels", () => {
+  it("compares calendar days and ignores the time", () => {
+    expect(isSameDay(day("2026-10-17"), day("2026-10-17"))).toBe(true);
+    expect(isSameDay(day("2026-10-17"), day("2026-10-18"))).toBe(false);
+  });
+
+  it("formats the month and day labels", () => {
+    expect(formatMonthLabel(day("2026-10-17"))).toBe("October 2026");
+    expect(formatDayLabel(day("2026-10-17"))).toBe("17 October 2026");
+  });
+
+  it("labels the week in the chosen order", () => {
+    expect(weekdayLabels(0)).toEqual([
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+    ]);
+    expect(weekdayLabels(1)).toEqual([
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun",
+    ]);
+  });
+});
+
+describe("parseIsoDay", () => {
+  it("round-trips a valid day", () => {
+    const parsed = parseIsoDay("2026-10-17");
+    expect(Option.map(parsed, formatIsoDay)).toEqual(Option.some("2026-10-17"));
+  });
+
+  it("rejects malformed and impossible days", () => {
+    expect(Option.isNone(parseIsoDay("17/10/2026"))).toBe(true);
+    expect(Option.isNone(parseIsoDay("2026-13-01"))).toBe(true);
+    expect(Option.isNone(parseIsoDay("2026-02-30"))).toBe(true);
+    expect(Option.isNone(parseIsoDay("2026-2-3"))).toBe(true);
+  });
+});

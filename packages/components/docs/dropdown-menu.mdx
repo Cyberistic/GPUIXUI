@@ -1,0 +1,148 @@
+---
+title: Dropdown menu
+description: A list of actions anchored to the control that opened it.
+---
+
+`DropdownMenu` shows a short list of actions next to its trigger. The surface is
+an anchored GPUix layer, so it flips and shifts to stay inside the window; the
+component owns the open state, the highlight, the dismissal rules and focus
+return.
+
+```tsx
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@gpuixui/components/dropdown-menu";
+
+<DropdownMenu>
+  <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+  <DropdownMenuContent label="File actions">
+    <DropdownMenuItem onSelect={rename}>Rename</DropdownMenuItem>
+    <DropdownMenuItem disabled>Duplicate</DropdownMenuItem>
+    <DropdownMenuSeparator />
+    <DropdownMenuItem tone="destructive" onSelect={remove}>
+      Delete
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `DropdownMenu` | open state, the dismiss layer, the positioning root |
+| `DropdownMenuTrigger` | a button that toggles the menu, `aria-expanded` included |
+| `DropdownMenuContent` | the floating `role="menu"` surface, rendered while open |
+| `DropdownMenuItem` | one action; `onSelect` runs, then the menu closes |
+| `DropdownMenuCheckboxItem` | an on/off row that stays open after toggling |
+| `DropdownMenuSeparator` | a hairline between groups |
+| `DropdownMenuLabel` | a small heading over a group |
+| `DropdownMenuGroup` | a labelled group of rows |
+
+`DropdownMenuContent` takes `side` (`top`/`right`/`bottom`/`left`, default
+`"bottom"`), `align` (`start`/`center`/`end`, default `"start"`), `sideOffset`
+(default `4`) and `collisionPadding` (default `8`, the margin kept from the
+window edge when the layer flips). `label` is the menu's accessible name.
+
+## Highlight is focus
+
+The highlighted row **is** the focused row. Every arrow move calls the renderer's
+`focusElement`, and every row that takes focus becomes the highlight, so a row
+can never look selected while Enter would activate a different one. A pointer
+hover does not move the highlight; clicked rows activate directly.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| `Enter` / `Space` on the trigger | opens or closes the menu |
+| `ArrowDown` / `ArrowUp` | moves to the next/previous enabled row, wrapping |
+| `Home` / `End` | first/last enabled row |
+| `Enter` / `Space` | runs the highlighted row and closes |
+| `Escape` | closes and returns focus to the trigger |
+| `Tab` | closes and lets focus move on — a menu is not modal |
+
+Disabled rows are skipped by every arrow key and by `Home`/`End`, and a click on
+one does nothing. There is no type-ahead in v1: a correct one needs a timed
+buffer, which the component would have to host on the Effect clock rather than a
+`setTimeout`. Recorded in `src/menu/logic.ts` as a `TODO`.
+
+## Dismissal
+
+Pressing outside, pressing the open trigger, `Escape` and choosing a row all
+close the menu. Menus are layers in the same dismiss stack as `Dialog` and
+`Popover`, so a menu opened inside a dialog closes first and leaves the dialog
+open.
+
+The trigger records that the menu was open at **mouse-down**. The press itself is
+an outside press that closes the menu, so the click that follows the same gesture
+must not re-open it — without that guard the menu flickers shut and open.
+
+## Checkbox rows and tones
+
+```tsx
+<DropdownMenuCheckboxItem
+  checked={showHidden}
+  onCheckedChange={setShowHidden}
+>
+  Show hidden files
+</DropdownMenuCheckboxItem>
+```
+
+A checkbox row does not close the menu — toggling several settings in one visit
+is the point. It shows a text `✓` when checked and carries `aria-selected`.
+
+`tone="destructive"` paints the row in `colors.destructive`. It is a visual
+signal, not a confirmation step: pair a destructive row with **Confirmation
+dialog** when the action cannot be undone.
+
+## Controlled and uncontrolled
+
+```tsx
+<DropdownMenu defaultOpen>…</DropdownMenu>;                        // remembers
+<DropdownMenu open={open} onOpenChange={setOpen}>…</DropdownMenu>;  // app remembers
+```
+
+## Theming
+
+The surface paints `colors.popover` / `colors.popoverForeground`, `radius.md`,
+`borderWidth.thin` in `colors.border`, the `md` elevation and `spacing.xs` padding,
+with a 180px minimum width. Rows are `controlHeight(theme, "sm")` tall, use the
+`label` type role, and highlight with `colors.hover` plus a 2px left bar in
+`colors.accent`.
+
+## Accessibility and limitations
+
+- `role="menu"` on the surface, `role="menuitem"` / `role="menuitemcheckbox"` on
+  rows, `aria-expanded` on the trigger.
+- **No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`**
+  in `@gpuix/native@0.10.0`: `HostProps` exposes only `aria-label`,
+  `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
+  `aria-level`. The checkbox row therefore uses `aria-selected`, and the link
+  between trigger and surface is positional.
+- No submenus in v1.
+- No type-ahead (see above).
+- A hover does not preview a highlight; the pointer activates on click.
+
+## Verification
+
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (9 tests):
+the `menu` role, arrow focus skipping a disabled row and wrapping, `Home`/`End`,
+Enter firing once and restoring focus, clicked and disabled rows, Escape/outside
+press/trigger re-press dismissal, checkbox toggling and its check mark, the
+destructive colour, and the surface in both themes.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Popover** — a floating panel rather than a list of actions.
+- **Context menu** — the same rows, positioned at the pointer.
+- **Command menu** — a searchable action list in a dialog.
+- **Confirmation dialog** — the modal guard for a destructive action.

@@ -1,0 +1,121 @@
+---
+title: Combobox
+description: A searchable single- or multi-select over a ranked option list.
+---
+
+`Combobox` combines a field-like trigger with a searchable popup. It wraps
+GPUix's headless combobox — focus, the active row and the keyboard stay the
+runtime's — and adds our option shape, ranking, row look and value semantics.
+
+```tsx
+import { Combobox } from "@gpuixui/components/combobox";
+
+<Combobox
+  label="Assign reviewer"
+  options={[
+    { value: "ada", label: "Ada Lovelace", description: "Engineering" },
+    { value: "grace", label: "Grace Hopper", description: "Compilers" },
+  ]}
+  onValueChange={(value) => setReviewer(typeof value === "string" ? value : null)}
+/>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| the trigger | a field-shaped button; the selected label(s) or `placeholder`, `aria-expanded`, `▾` |
+| the popup | a `FloatingLayer`: the search input, the ranked list, the empty state |
+| the option row | label, optional description, `✓` while selected, `aria-selected` |
+
+Single mode selects one value and closes. Multiple mode keeps the popup open,
+toggles the row, and reports the selected values in the order they were chosen.
+
+## Values, not labels
+
+`onValueChange` receives the option **value** (`"ada"`), never the display label
+(`"Ada Lovelace"`). The adapter maps values to labels only for display, which is
+why a rename never changes the stored data.
+
+The public shape is:
+
+```ts
+value?: string | ReadonlyArray<string>;                 // controlled
+onValueChange?: (value: string | null | ReadonlyArray<string>) => void;
+```
+
+`null` is "nothing selected" in single mode; `undefined` means uncontrolled.
+
+## Ranking
+
+The filter is our pure `combobox/logic.ts`, not GPUix's order-preserving
+predicate:
+
+| Rank | Rule |
+| ---- | ---- |
+| 0 | the label starts with the query |
+| 1 | a word inside the label starts with the query |
+| 2 | the label contains the query |
+| 3 | the description contains the query |
+
+Ties keep declaration order. Matching is case-insensitive and an empty query
+shows everything. Disabled options stay visible but cannot be selected by click,
+arrow or Enter.
+
+> **Adapter note.** GPUix's `filter` is a predicate applied to `items`, so it can
+> only remove rows, never reorder them. The adapter therefore passes an
+> already-ranked `items` array with `filter={null}` and controls `inputValue`.
+> This is plan 116 §3's documented fallback; a predicate could not express the
+> ranking. `combobox.test.tsx` asserts the order.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| click / Enter / Down on the trigger | opens the popup |
+| typing | filters; the first enabled match is highlighted |
+| `ArrowDown` / `ArrowUp` | moves the highlight, wrapping and skipping disabled rows |
+| `Enter` | selects the highlighted row |
+| `Escape` | closes and returns focus to the trigger |
+| outside press | closes without stealing focus back |
+
+The search input keeps focus; the highlighted row is visual. **No
+`aria-activedescendant`** exists in 0.10.0, so assistive technology does not get
+the input→row relationship; `aria-selected` on the rows is the supported signal.
+
+## Theming
+
+The trigger paints `colors.background`, a `borderWidth.thin` border in
+`colors.borderStrong`, `radius.md`, `controlHeight(theme, "md")` and
+`colors.mutedForeground` for the placeholder. The popup paints
+`colors.popover`, `radius.md`, the `md` elevation, a `maxHeight` of 280 with
+scrolling, and rows highlight with `colors.hover`. The selected check is
+`colors.primary`.
+
+## Limitations
+
+- No async option loading, no "create new option", no grouping headers in v1.
+- The popup is an anchored layer, not a portal; it flips to stay in the window.
+- The trigger is a `div` with button semantics (the `@gpuixui/primitives`
+  stand-in), not a native button element.
+
+## Verification
+
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (10 tests):
+open + input focus, filtering, ArrowDown + Enter selecting the **value**,
+the empty state, single replacement, multi add/remove with order, the disabled
+row, Escape restoring focus, prefix-before-substring ranking, and both themes.
+
+`src/combobox/logic.test.ts` covers the ranking table, `labelOf` and
+`toggledSelection`.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Search input** — the same field without options.
+- **Dropdown menu** — actions, not a value.
+- **List** — a flat selectable collection with no search.

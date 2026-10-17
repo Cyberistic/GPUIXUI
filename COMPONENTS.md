@@ -161,44 +161,28 @@ result.
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Cards | todo | ? | `div` + `<text>`. Variant merged here: Expandable card (adabraka `expandable_card`) — see also Collapsible sections. |
-| Badges | todo | ? | `div` + `<text>`. |
-| Avatars | todo | ? | `<img>` provides the image; the fallback/initials surface is ours. |
-| Lists / list items | todo | ? | `div` rows; `<virtual-list>` for long collections. |
-| Message scroller | todo | ? | Behaviour ported from **shadcn/ui's Message Scroller** (credited in `LICENSES/`): follows new content while pinned, leaves the reader alone when they scroll up, jump-to-latest with an unread count, streaming rows. `<virtual-list>` + scroll handles; the pin/stream state machine is ours. Plan `206`. |
-| Empty states | todo | ? | `div` + `<text>` + Icons. |
-| Alerts | todo | ? | `div` + `<text>` + Icons. |
-| Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |
-| Toasts / notifications | todo | ? | `AnimatePresence` + `createPortal` + `<anchored>` are published primitives; the toast system is ours. |
-| Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. |
-| Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
-| Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. |
-| Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. |
-| Context menus | todo | ? | As Dropdown menus, triggered by `onAuxClick` / right-click position. |
-| Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
-| Tabs | todo | ? | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. |
-| Accordions | todo | ? | `div` + `motion` (height). |
-| Collapsible sections | todo | ? | `div` + `motion` (height). Variant merged here too: Expandable card (adabraka `expandable_card`). |
-| Breadcrumbs | todo | ? | `div` + `<text>`. |
-| Pagination | todo | ? | Button groups + `<text>`. |
-| Search inputs | todo | ? | `<input>` exists; the search UI is ours. `useTextSearch`/`findRanges` search rendered text, not an input. |
-| Comboboxes | todo | yes | `Combobox` + parts published. API-shape work, not implementation. Variant merged here: Autocomplete (base-gpui `AutocompleteRoot`/`AutocompleteValue`) — the free-text variant; see also Search inputs. |
-| Date / time pickers | todo | ? | `div` + `<text>` + keyboard grid; no date host element. |
-| Fieldset | todo | ? | Form grouping (`FieldsetRoot`/`Legend` in base-gpui). `div` + `<text>`. |
-| Form | todo | ? | Validation orchestration and submit lifecycle (base-gpui `Form`). No host element; Effect-based validation lives in the package, not the renderer. |
-| Navigation Menu | todo | ? | 13-part nav whose items open content panels; distinct from Dropdown menus. `FloatingLayer` + `<anchored>`. |
-| Preview Card | todo | ? | Hover-triggered rich card with a positioner (base-gpui, 8 parts). `FloatingLayer` + `<anchored>`. |
-| Drawer | todo | ? | Edge-anchored panel with swipe-to-dismiss and nesting. `Dialog` is main-only in 0.10.0; `div` + `motion` (width/left/opacity) + `createPortal`. |
-| Stepper | todo | ? | Multi-step progress indicator (adabraka `StepItem`/`StepStatus`). `div` + `<text>`. |
-| Timeline | todo | ? | Event timeline with connector styles. `div` + `<text>`. |
-| Color picker | todo | ? | HSL/RGB/HEX + alpha + swatches. **Limitation (unverified for GPUix):** the saturation/value square needs radial or multi-stop gradients, which GPUix does not support (two-stop linear only — verified). Alternative: a discrete swatch grid or a pre-rendered bitmap. |
-| Tag / token input | todo | ? | `<input>` + chip `div`s; the token keyboard contract is ours. |
-| Mention input | todo | ? | `<input>` + an anchored suggestion list (`FloatingLayer`). |
-| Hotkey-recorder input | todo | ? | Captures `KeyEvent` (`key`, `isHeld`, modifiers) on a focused `div`; the accelerator model is ours. |
-| Countdown | todo | ? | `div` + `<text>`; the time source is the app's (Effect `Clock`), never a renderer timer. |
-| Carousel | todo | ? | `motion` animates width/left/opacity only — **no transform/scale** (verified). Scroll snap is unavailable; discrete stepping is the honest alternative. |
-| Inline edit | todo | ? | Swaps `<text>` for `<input>` in place; focus/commit/cancel contract ours. |
-| Keyboard shortcuts / keycap display | todo | ? | Keycap `div`s + a categorised shortcut table. No host element. |
+| Cards | done | yes | `variant` outline/elevated/plain; behaviour suite passes in the real renderer (5 tests, `test:behaviour`) |
+| Badges | done | yes | seven variants (neutral/primary/4 status tones/outline), two sizes sized by type role; 7 native behaviour tests. Not interactive by design; no icon or dismiss slot yet |
+| Avatars | done | yes | four diameters, deterministic unicode-safe initials fallback (8 logic tests), presence dot; 7 native behaviour tests. No image loading/error state in v1 — a missing file paints nothing and does not restore the initials |
+| Alerts | done | yes | four tones from the shared status palette, required `title`, optional icon slot and dismiss control; 10 native behaviour tests (real click, keyboard activation, alert role). Dismiss uses the local button stand-in; live-region announcement not verifiable here |
+| Lists / list items | done | yes | `selectionMode` none/single with a roving tab stop, wrap-around over disabled rows, real focus (`focusElement`), controlled + uncontrolled; 12 native behaviour tests. Single selection only — no multi-select, type-ahead or virtualisation |
+| Empty states | done | yes | title + optional description/action/icon, no surface of its own; 6 native behaviour tests including a real click on the action. Wrap width is a component constant (no measure token) |
+| Inline validation | done | partial | `Field`/`FieldLabel`/`FieldDescription`/`FieldError`/`FieldInput` with schema-message `validate`/`validateAll`; 5 native behaviour tests + validation logic suite, both themes. No `aria-describedby`/`aria-invalid` in 0.10.0; the caller owns the value and when validation runs |
+| Toasts / notifications | done | yes | Effect store (`SubscriptionRef` + `FiberMap`), bounded queue, monotonic ids, auto-dismiss tested with `TestClock`, stale-timer regression; 7 native behaviour tests. No `zIndex` (render the viewport last), no progress bar, no pause-on-hover |
+| Dialogs | done | partial | local overlay over an `anchored` veil at window coordinates (0.10.0 ships no Dialog parts and no portal); 12 native behaviour tests + 5 dismiss-stack logic tests. No `aria-modal`/`aria-labelledby` in 0.10.0 — named through the required `label` |
+| Confirmation dialogs | done | partial | Cancel holds initial focus (Enter cancels); confirm never closes the dialog itself, the caller does; `loading` disables both actions and suppresses Escape/backdrop; 5 native behaviour tests. Busy indicator is a `…` glyph until a Spinner exists |
+| Popovers | done | yes | anchored through GPUix's `FloatingLayer`; Escape restores focus, Tab and outside presses do not; share the dismiss stack with Dialog and a mouse-down re-open guard; 8 native behaviour tests, both themes |
+| Dropdown menus | done | partial | anchored `FloatingLayer` surface with a shared row/highlight core; arrow/Home/End wrap and skip disabled rows, Enter activates and restores focus, checkbox and destructive rows; 9 native behaviour tests, both themes. No submenus, no type-ahead, `aria-selected` instead of `aria-checked` in 0.10.0 |
+| Context menus | done | partial | pointer-positioned `anchored` surface over the shared rows; 6 native behaviour tests (right click opens, land within 12px of the pointer, select runs once, second right click moves it). 0.10.0 has no `onContextMenu` — `onAuxClick` + `isRightClick`; no keyboard path to open and no portal |
+| Command menus | done | partial | dialog-hosted searchable palette composing Dialog and `menu/logic.ts`; input keeps focus while the highlight moves; 8 native behaviour tests. Substring filter only (no fuzzy), `aria-activedescendant` unavailable, input is the host element until primitives lands |
+| Tabs | done | partial | roving tab stop on the selected trigger, arrow wrap skipping disabled tabs, Home/End, automatic and manual activation; 8 native behaviour tests, both themes. 0.10.0 has no `aria-orientation`/`aria-controls`, so the panel is named by its value |
+| Accordions | done | yes | single (with `collapsible`) and multiple modes over a tagged-union state; divider order, disabled sections, glyph indicator; 8 native behaviour tests + 15 transition tests. No arrow-key movement between headers, no height animation; no `transform` for a rotating chevron |
+| Collapsible sections | done | partial | trigger with `aria-expanded`, content unmounts while closed; 4 native behaviour tests. Mounts instantly: 0.10.0's motion needs a numeric height and an auto-height reveal needs a measured first paint |
+| Breadcrumbs | done | partial | declarative trail with `maxItems` collapsing the middle (first + … + tail), separators follow their item; 5 native behaviour tests + 7 collapse tests. No `aria-current` in 0.10.0, so the current page is text and colour |
+| Pagination | done | partial | stable-width page window with siblings/edges, disabled edges, ellipsis; 8 native behaviour tests + 9 window tests, both themes. Current page uses `aria-selected` because 0.10.0 has no `aria-current`; no page-size control |
+| Search inputs | done | yes | leading glyph, conditional clear control, Enter submit, Escape clears only when non-empty, controlled/uncontrolled; 6 native behaviour tests. No debounce (the consumer's job); the glyph is text until an icon set lands |
+| Comboboxes | done | yes | wraps GPUix's headless combobox with our ranked option shape; single and multiple selection by value, disabled rows, empty state, Escape focus restore; 10 native behaviour tests + ranking suite, both themes. No async options/create-new, no `aria-activedescendant` |
+| Date / time pickers | done | partial | month grid over Effect `DateTime` (no `Date`), `Popover` surface, arrow/Home/End/PageUp/PageDown, ISO-day value; 9 native behaviour tests + 13 calendar tests, both themes. Fixed English labels, no adjacent-month days, no time picker, no `aria-current` |
 
 ## Tier 3 — data presentation
 

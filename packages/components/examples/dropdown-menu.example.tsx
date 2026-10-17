@@ -1,0 +1,87 @@
+/**
+ * Dropdown menu example: a file row with a small actions menu.
+ *
+ * The menu is uncontrolled — it remembers whether it is open — while the
+ * "Show hidden" checkbox is app state, because the row behind the menu shows the
+ * effect. A menu action is an ordinary callback: the component does not own what
+ * "Delete" means.
+ */
+
+import { useState } from "react";
+import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../src/dropdown-menu.js";
+import { textStyle, useTheme } from "../src/internal/theme.js";
+
+/** One file row, with a destructive action and a persistent setting. */
+export const DropdownMenuExample = () => {
+  const theme = useTheme();
+  const [showHidden, setShowHidden] = useState(false);
+  const [lastAction, setLastAction] = useState("none");
+
+  return (
+    <Card style={{ maxWidth: 420 }}>
+      <CardHeader>
+        <CardTitle>notes.md</CardTitle>
+        <CardDescription>
+          Last action: {lastAction} · hidden files{" "}
+          {showHidden ? "shown" : "hidden"}
+        </CardDescription>
+      </CardHeader>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: theme.spacing.lg,
+          paddingTop: 0,
+          gap: theme.spacing.md,
+        }}
+      >
+        <text
+          style={{
+            ...textStyle(theme, "body"),
+            color: theme.colors.mutedForeground,
+          }}
+        >
+          Edited 2 minutes ago
+        </text>
+        <DropdownMenu>
+          <DropdownMenuTrigger size="sm">Actions</DropdownMenuTrigger>
+          <DropdownMenuContent label="File actions">
+            <DropdownMenuItem onSelect={() => setLastAction("Rename")}>
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled
+              onSelect={() => setLastAction("Duplicate")}
+            >
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={showHidden}
+              onCheckedChange={setShowHidden}
+            >
+              Show hidden files
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              tone="destructive"
+              onSelect={() => setLastAction("Delete")}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </Card>
+  );
+};

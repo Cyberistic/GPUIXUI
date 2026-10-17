@@ -1,0 +1,114 @@
+---
+title: Context menu
+description: The shared menu rows, positioned at the pointer.
+---
+
+`ContextMenu` is the right-click counterpart of **Dropdown menu**. It uses the
+same rows, highlight rules and keyboard handling; only the positioning differs —
+the surface is placed at the pointer in window coordinates rather than anchored
+to a control.
+
+```tsx
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@gpuixui/components/context-menu";
+
+<ContextMenu>
+  <ContextMenuTrigger>
+    <text>GPUIXUI</text>
+  </ContextMenuTrigger>
+  <ContextMenuContent label="Project actions">
+    <ContextMenuItem onSelect={open}>Open</ContextMenuItem>
+    <ContextMenuItem onSelect={copyPath}>Copy path</ContextMenuItem>
+    <ContextMenuSeparator />
+    <ContextMenuItem tone="destructive" onSelect={remove}>
+      Delete…
+    </ContextMenuItem>
+  </ContextMenuContent>
+</ContextMenu>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `ContextMenu` | open state, the pointer point, the dismiss layer |
+| `ContextMenuTrigger` | the area whose right click opens the menu |
+| `ContextMenuContent` | the surface at the pointer, rendered while open |
+| `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows |
+| `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure |
+
+## Right click
+
+`@gpuix/native@0.10.0` has no `onContextMenu`. A non-primary click arrives as
+`onAuxClick`, and the payload's `isRightClick` says whether it was the right
+button (`mutations.ts` maps `onAuxClick` → `"auxClick"`). The trigger stores
+`{ x, y }` from that event and opens.
+
+A second right click elsewhere **on the trigger** closes the old surface and
+opens a new one at the new point; a right click outside the trigger area closes
+the menu but cannot open another, because the trigger is what listens. That is a
+deliberate scope, not a portal.
+
+## Positioning
+
+`ContextMenuContent` renders an `anchored` element with the pointer as its
+`position`. `anchored position` is **window coordinates**, independent of the
+mount parent — measured in a nested container (plan 112 §1c) — so the point is
+passed through unchanged. `FloatingLayer` is anchor-relative and cannot take a
+pointer point, which is why this component uses `anchored` directly.
+
+## Keyboard and dismissal
+
+| Key | Result |
+| ---- | ------ |
+| any right click on the trigger | opens at the pointer |
+| `ArrowDown` / `ArrowUp` | next/previous enabled row, wrapping |
+| `Home` / `End` | first/last enabled row |
+| `Enter` / `Space` | runs the highlighted row and closes |
+| `Escape` | closes |
+| `Tab` | closes and moves on |
+
+The surface takes focus on open. The highlighted row is the focused row, exactly
+as in **Dropdown menu**. An outside press closes the menu without running
+anything.
+
+## Theming
+
+The surface and rows are the shared menu look: `colors.popover`, `radius.md`,
+`borderWidth.thin` in `colors.border`, the `md` elevation, `spacing.xs` padding;
+rows use `colors.hover` with a 2px `colors.accent` bar. The trigger is a card-like
+box in `colors.card` with a border and `spacing.md` padding; pass `style` to
+match the row it represents.
+
+## Accessibility and limitations
+
+- `role="menu"` on the surface, `menuitem`/`menuitemcheckbox` on rows; the
+  trigger is a plain region with no `aria-haspopup` (not available in 0.10.0).
+- There is no portal. The surface is a sibling of the trigger painted at window
+  coordinates, so it is correct visually but not clipped by a scroll container.
+- No submenus and no type-ahead in v1; the shared reasons are in `menu/logic.ts`.
+- There is no keyboard path to open a context menu: it is a pointer gesture. For
+  a keyboard-first action list use **Dropdown menu** or **Command menu**.
+
+## Verification
+
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (6 tests):
+a left click doing nothing, a right click opening a `menu` surface, the surface
+landing within 12px of the pointer, a selected action running once and closing,
+a second right click moving the surface, Escape closing, and a disabled trigger
+not opening.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Dropdown menu** — the same rows anchored to a button, with a keyboard path.
+- **Command menu** — a searchable action list for the keyboard.
+- **Popover** — a pointer-anchored panel of content rather than actions.

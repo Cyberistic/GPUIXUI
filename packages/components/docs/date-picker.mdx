@@ -1,0 +1,110 @@
+---
+title: Date picker
+description: One day, chosen from a month grid in a popover.
+---
+
+`DatePicker` is a field-shaped trigger plus a month grid in a **Popover**. GPUix
+has no calendar primitive and no native date input, so the grid is ours: pure
+`DateTime` arithmetic in `date-picker/calendar.ts`, no `Date`, no `Intl`.
+
+```tsx
+import { DatePicker } from "@gpuixui/components/date-picker";
+
+const [due, setDue] = useState<string | null>("2026-10-30");
+
+<DatePicker label="Due date" value={due} onValueChange={setDue} />;
+```
+
+## Value format
+
+The public value is an **ISO day** — `YYYY-MM-DD` — or `null` for "no date".
+Never a `DateTime` and never a locale-formatted string: a stored value must not
+depend on how it is displayed. `undefined` means uncontrolled.
+
+```tsx
+<DatePicker defaultValue="2026-10-30" />;                       // remembers
+<DatePicker value={due} onValueChange={setDue} />;               // app remembers
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| the trigger | field-shaped button; the selected day or `placeholder`, `aria-expanded`, `▾` |
+| the popover | the package's Popover: anchored layer, dismiss stack, Escape focus-return |
+| the header | previous/next month (`date-prev` / `date-next`) and the month label |
+| the weekday row | `Mon`…`Sun`, or `Sun`…`Sat` with `weekStartsOn={0}` |
+| the grid | six rows of seven cells; selected day filled with `colors.primary`; today outlined |
+
+The grid is always six rows, so the popover does not change height between a
+28-day February and a 31-day month. Days from the adjacent months are blank
+cells, not second-month buttons: a grid with two months is a different component
+with different selection rules.
+
+Browsing months changes the **view**, not the value. Only Enter, Space or a click
+selects.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| `ArrowLeft` / `ArrowRight` | one day back/forward, crossing month boundaries |
+| `ArrowUp` / `ArrowDown` | one week back/forward |
+| `Home` / `End` | the week's first/last day, using `weekStartsOn` |
+| `PageUp` / `PageDown` | previous/next month, clamped to the month's last day |
+| `Enter` / `Space` | selects the focused day, updates the trigger and closes |
+| `Escape` | closes and returns focus to the trigger |
+| `Tab` | leaves the popover — it is not a trap |
+
+One cell is the tab stop (the selected day, else the first of the viewed month);
+the arrow keys move real focus, so the highlight and the focus are the same cell.
+
+## Theming
+
+The trigger paints `colors.background`, a `borderWidth.thin` border in
+`colors.borderStrong` and `radius.md`. The surface paints `colors.popover` with
+`colors.border` and `radius.md`. The selected day is `colors.primary` on
+`colors.primaryForeground`; today keeps a `colors.primary` outline; hover uses
+`colors.hover`; the focus ring is `colors.ring`.
+
+## Accessibility and limitations
+
+- The grid is `role="grid"` with `role="row"` and `role="gridcell"`; a cell's
+  `aria-label` is the full day (`"17 October 2026"`) and the chosen cell carries
+  `aria-selected`.
+- **No `aria-current`** in `@gpuix/native@0.10.0`: today is marked by a border,
+  not by an attribute.
+- **Fixed English labels.** The repo has no i18n layer; month and weekday names
+  are strings in `date-picker/calendar.ts`. Wiring a locale means a real message
+  catalogue, not a prop that silently does nothing.
+- **No adjacent-month days** and no range selection in v1.
+- **No time picker.** GPUix has no native time input; a time control needs its own
+  decision (two number fields or a scroll list) and is not folded in here.
+- The calendar uses `DateTime` from Effect; there is no `Date` or `Intl` in
+  `date-picker/calendar.ts`. The only clock read is `DateTime.nowUnsafe` for the
+  default "today" — pass the `today` prop to make a test or a server boundary
+  deterministic.
+
+## Verification
+
+`src/date-picker/calendar.test.ts` (13 tests) covers leap February, a mid-week
+month start under both week starts, a month start on the week start, the 42-cell
+shape, uniqueness and month membership, year-crossing month arithmetic, the last
+day of a month without `Date`, day identity, labels, and ISO parsing (including
+`2026-02-30`).
+
+`src/behaviour/date-picker.test.tsx` (9 tests) covers open + day focus, selection
+as an ISO value, the controlled contract, arrow/Home/End focus, PageDown
+browsing without changing the value, Escape focus-return, the next-month control,
+both themes, and a disabled trigger.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Popover** — the surface this composes.
+- **Calendar** is not a separate export; the grid is internal to the picker.
+- **Field** — wrap the trigger when the date needs a label and a message slot.

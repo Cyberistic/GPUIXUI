@@ -1,0 +1,112 @@
+---
+title: Alert
+description: A persistent, in-flow message about the current context.
+---
+
+`Alert` reports something about the state the user is looking at: a warning about
+missing data, a failure with an action, a notice that stays until the condition
+changes. It is **in the flow** — it occupies its own place in the layout.
+
+Choose by lifetime, not by looks:
+
+| Surface | Lifetime | Where it lives |
+| ------- | -------- | -------------- |
+| `Alert` | until the state changes | in the layout, where the problem is |
+| Toast | a few seconds, or until dismissed | floating, over the corner |
+| Dialog | until the user answers | modal, blocking everything |
+
+## Usage
+
+```tsx
+import { Alert } from "@gpuixui/components/alert";
+
+<Alert tone="warning" title="3 tokens are missing">
+  The platform themes fall back to the default palette.
+</Alert>;
+
+// With a dismiss control:
+<Alert tone="info" title="Update available" onDismiss={() => setDismissed(true)}>
+  0.11.0 is ready. Installing restarts the app.
+</Alert>;
+```
+
+The body is a container, so a message can carry its own action:
+
+```tsx
+<Alert tone="danger" title="Upload failed">
+  <Button onClick={retry}>Try again</Button>
+</Alert>;
+```
+
+## Tones
+
+| `tone` | Surface | Heading |
+| ------ | ------- | ------- |
+| `info` (default) | soft `accent` tint | `accentForeground` |
+| `success` | soft `success` tint | tone text |
+| `warning` | soft `warning` tint | tone text |
+| `danger` | soft `destructive` tint | tone text |
+
+The tone paints the surface, the border and the heading; the **body stays in the
+page's foreground colour**, because body prose has to stay readable rather than
+match the tone. Badge, Alert and the toast viewport share one palette
+(`src/internal/theme.ts`), so a status cannot look different in two places.
+
+## API
+
+`Alert` takes the GPUix host props (`style`, `testId`, `role`, `aria-*`, pointer
+and key handlers) and **merges `style` last**.
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `tone` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` |
+| `title` | `string` (required) | — |
+| `icon` | `ReactNode` | — |
+| `onDismiss` | `() => void` | — (no dismiss control) |
+| `dismissLabel` | `string` | `"Dismiss"` |
+| `children` | `ReactNode` | — |
+
+## Accessibility
+
+- The root is `role="alert"` — a live region, announced when it appears. An alert
+  that appears out of nowhere mid-sentence should be used sparingly.
+- The dismiss control is a focusable `role="button"` with `dismissLabel` as its
+  accessible name, activated by Enter or Space as well as a click. Its `testId` is
+  `alert-dismiss`.
+- The `icon` slot is decorative: it is not announced, so the heading must say what
+  the state is.
+- Colour is never the only signal — every alert has a `title`.
+
+## Limitations
+
+- **The live-region announcement itself cannot be verified here.** The test
+  renderer exposes the accessibility tree (the suite asserts `role="alert"`), but
+  a real screen reader's announcement needs a real window.
+- The dismiss control is this package's local stand-in for
+  `@gpuixui/primitives`' `IconButton` (`TODO.md` → Interlocks); it is replaced when
+  that package lands.
+- No automatic timeout: an alert stays until the state changes or the user
+  dismisses it. That is deliberate — a message that vanishes on its own is a
+  toast.
+- The docs site cannot render this component live. The code above is the real
+  source.
+
+## Verification
+
+`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (10 tests): the
+title and body render in order, the root is an alert region, every tone paints
+its own surface and heading, the body keeps the foreground colour, the theme is
+read rather than a constant, there is no dismiss control without `onDismiss`, a
+real click on the control fires `onDismiss` exactly once, the control is reachable
+and fires from the keyboard, its accessible name is `dismissLabel`, an action in
+the body still receives its click, and a consumer `style` wins.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Badge** — the same palette, for a compact label.
+- **Card** — a surface an alert can sit inside.
+- **Toast** — the transient version of this message.

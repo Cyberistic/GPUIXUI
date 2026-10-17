@@ -1,0 +1,109 @@
+---
+title: Toast
+description: A bounded, auto-dismissing notification stack backed by an Effect store.
+---
+
+`ToastProvider` creates one Effect runtime and one toast store; `useToast()`
+pushes and dismisses; `ToastViewport` paints the stack. The queue is a
+`SubscriptionRef`, the auto-dismiss timers are a `FiberMap`, and React only sees
+the resulting array.
+
+```tsx
+import {
+  ToastProvider,
+  ToastViewport,
+  useToast,
+} from "@gpuixui/components/toast";
+
+<ToastProvider>
+  <App />
+  <ToastViewport />
+</ToastProvider>;
+
+const toast = useToast();
+toast.push({
+  title: "Changes published",
+  description: "The site rebuilds in about a minute.",
+  tone: "success",
+});
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `ToastProvider` | the `ManagedRuntime`, the store, the React subscription — the package's **only** `runtime.run*` boundary |
+| `useToast()` | `{ toasts, push, dismiss, dismissAll }`; throws outside the provider |
+| `ToastViewport` | the bottom-right stack; `role="status"` |
+
+Render the viewport **last** in the app root: GPUix has no `zIndex`, so overlays
+stack in paint order. The viewport is `pointerEvents: "none"` and each card turns
+pointer events back on, so a toast never blocks the page underneath.
+
+## Behaviour
+
+| Rule | Value |
+| ---- | ----- |
+| stack size | 3 by default (`max`); pushing a fourth drops the oldest |
+| auto-dismiss | 5 seconds by default (`defaultDuration`) |
+| custom duration | `duration: Duration.seconds(6)` |
+| zero or infinite duration | never auto-dismisses; the card stays until dismissed |
+| ids | monotonic (`"1"`, `"2"`, …), never reused |
+
+A dismissed toast's timer is cancelled with it, so a stale timer can never remove
+the next toast. That regression is guarded in `toast/store.test.ts` with
+`TestClock`; the store suite also proves the stack bound and the id order.
+
+Tones are `info` (default), `success`, `warning` and `danger`; each paints the
+3px left bar and the glyph. The glyph is text (`i`, `✓`, `!`, `✕`) until an icon
+set lands.
+
+## Controlled by whom
+
+The queue belongs to the provider, not to the calling component. Any component
+inside the provider can push; the viewport is the single place that renders.
+There is no per-toast React state to keep in sync.
+
+## Theming
+
+Cards paint `colors.popover` with `colors.popoverForeground`, a
+`borderWidth.thin` border in `colors.border`, `radius.md`, the `md` elevation and
+`spacing.lg` padding. The bar and glyph take the tone's colour (the same status
+palette Alert and Badge use). Width is 380px.
+
+## Accessibility and limitations
+
+- The viewport is `role="status"` with `aria-label="Notifications"`; each card's
+  dismiss control is a labelled button.
+- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.10.0`; a status
+  region is the supported announcement.
+- **No progress indicator** for the remaining time; the store knows the deadline
+  but the card does not animate it.
+- The stack has no pause-on-hover. A card that must not disappear should use
+  `duration: Duration.infinity` (or a zero duration) and a manual dismiss.
+- No portal: the viewport is an absolutely positioned element in its parent, so
+  put it at the app root.
+- Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React
+  StrictMode mount/unmount/remount does not dispose the runtime the remount
+  keeps using. The native test renderer does not reproduce StrictMode's double
+  effect invocation, so that rule is a pure suite rather than a component test.
+
+## Verification
+
+- `src/toast/store.test.ts` — queue, ids, `max`, dismiss, `dismissAll`,
+  `TestClock` auto-dismiss, the stale-timer regression, custom durations and
+  rejected input.
+- `src/behaviour/toast.test.tsx` — 7 tests in the real GPUix renderer: push,
+  stacking order, dismissing one card, `dismissAll`, the page staying clickable
+  through the viewport, both themes, and the queue still working after a dismiss.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Alert** — an inline, permanent message in the page.
+- **Badge** — status as a small read-only marker.
+- **Dialog** — feedback that must block the window.

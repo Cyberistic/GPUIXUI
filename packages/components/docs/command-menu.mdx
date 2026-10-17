@@ -1,0 +1,110 @@
+---
+title: Command menu
+description: A searchable action list in a dialog — the ⌘K palette.
+---
+
+`CommandMenu` puts a filterable list of actions in a modal surface. It composes
+the parts instead of reinventing them: **Dialog** owns the surface and Escape,
+the GPUix `<input>` owns typing, and `menu/logic.ts` owns which row is active.
+
+```tsx
+import { CommandMenu } from "@gpuixui/components/command-menu";
+
+<CommandMenu
+  open={open}
+  onOpenChange={setOpen}
+  actions={[
+    {
+      id: "save",
+      label: "Save",
+      group: "File",
+      shortcut: "⌘S",
+      perform: save,
+    },
+  ]}
+/>;
+```
+
+## Anatomy
+
+| Prop | Responsibility |
+| ---- | -------------- |
+| `open` / `onOpenChange` | controlled visibility; the app owns the shortcut that opens it |
+| `actions` | id, label, optional group/shortcut, disabled, `perform` |
+| `placeholder` | default `"Type a command…"` |
+| `emptyLabel` | default `"No matching commands"` |
+| `filter` | replaces the default matcher |
+
+Groups are rendered in the caller's order; a heading appears when `group`
+changes between consecutive matches. `shortcut` is **display only** — the
+component binds no keys.
+
+## Focus and the highlight
+
+The search input keeps focus the whole time. The active row is **highlighted,
+not focused**: focusing a row would take typing away from the input after the
+first arrow key. That is why this palette does not reuse the menu registry, only
+the pure `menu/logic.ts` arithmetic.
+
+| Key | Result |
+| ---- | ------ |
+| type | filters; the highlight resets to the first enabled match |
+| `ArrowDown` / `ArrowUp` | move the highlight, wrapping and skipping disabled rows |
+| `Home` / `End` | first/last enabled row |
+| `Enter` | runs the highlighted action and closes |
+| `Escape` | closes |
+| `Tab` | follows the dialog's trap |
+
+`Enter` arrives as the input's `submit` event, not a key-down — measured in
+0.10.0 — which is also why Space types a space instead of activating a row.
+
+## Filtering
+
+The default matcher is a case-insensitive **substring** on the label. There is
+no fuzzy scoring in v1: fuzzy ranking is a product decision with a scoring model
+to test, not something to smuggle into a substring check. Pass `filter` when a
+different rule is wanted.
+
+Disabled actions stay visible and cannot be run by click or `Enter`; the initial
+highlight lands on the first enabled match.
+
+## Controlled only
+
+`open` is required. A command palette is opened by an application shortcut
+(⌘K, Ctrl+P) rather than by a control inside the component, so ownership of the
+state belongs to the app. Render it once at the app root.
+
+## Theming
+
+The surface is the dialog's: `colors.popover`, `radius.xl`, the `lg` elevation.
+The input uses `colors.input` / `colors.inputForeground` with a
+`borderWidth.thin` border in `colors.border` and `radius.md`. Rows are the shared
+menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
+
+## Accessibility and limitations
+
+- The dialog is named `"Command menu"`; the input is `"Search commands"`; rows
+  are `role="option"` with `aria-selected` for the highlight.
+- **No `aria-activedescendant` or `aria-controls`** in 0.10.0: the relationship
+  between the input and the highlighted row is visual only for assistive
+  technology.
+- The `<input>` is the host element until `@gpuixui/primitives` lands; it is the
+  documented stand-in, not a styled wrapper.
+- No fuzzy matching and no recent-commands memory in v1.
+
+## Verification
+
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (8 tests):
+focus landing on the input, typing filtering the list while focus stays put,
+ArrowDown + Enter running the second match and closing, a clicked row, the empty
+label, a custom filter, a disabled action refusing to run, and Escape closing.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Dialog** — the modal surface this composes.
+- **Dropdown menu** — a small action list anchored to a control.
+- **Combobox** — filtering applied to a value rather than to actions.
