@@ -15,6 +15,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
+import { dockingScenario } from "../scenarios/docking.js";
 import { inputScenario } from "../scenarios/input.js";
 import { modalScenario } from "../scenarios/modal.js";
 import { panelScenario } from "../scenarios/panel.js";
@@ -289,6 +290,62 @@ const overlay: LiveScenario = {
     }),
 };
 
+const docking: LiveScenario = {
+  id: "live-docking",
+  title: "Live docking: a tab drag splits a pane in a real window",
+  capability: "docking",
+  view: dockingScenario.view,
+  ready: "dock-surface",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const before = yield* textOf(ctx, "dock-signature");
+      yield* ctx.expectContains(
+        "the tree starts with three tabs on the left",
+        before,
+        "left=explorer,search,notes@explorer",
+      );
+
+      const tab = yield* ctx.host.bounds("dock-tab-notes");
+      const tabBox = yield* ctx.expectSome(
+        "the Notes tab is painted",
+        Option.fromNullishOr(tab),
+      );
+      const pane = yield* ctx.host.bounds("dock-group-editor");
+      const paneBox = yield* ctx.expectSome(
+        "the editor pane is painted",
+        Option.fromNullishOr(pane),
+      );
+
+      // Drop on the editor's right edge: the pointer travels from the tab's
+      // centre to the edge band, the gesture `docking-layout` measured.
+      const deltaX =
+        paneBox.x + paneBox.width - 10 - (tabBox.x + tabBox.width / 2);
+      const deltaY =
+        paneBox.y + paneBox.height / 2 - (tabBox.y + tabBox.height / 2);
+      yield* ctx.host.drag("dock-tab-notes", deltaX, deltaY, 8);
+      yield* settle;
+
+      const after = yield* textOf(ctx, "dock-signature");
+      yield* ctx.expectContains(
+        "the dragged tab left its group",
+        after,
+        "left=explorer,search@explorer",
+      );
+      yield* ctx.expectContains(
+        "the edge drop created a group for it",
+        after,
+        "panel-1=notes@notes",
+      );
+      yield* ctx.expectContains(
+        "the drop split the target pane",
+        after,
+        "split-1=",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${docking.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -296,4 +353,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   scroll,
   panel,
   overlay,
+  docking,
 ];

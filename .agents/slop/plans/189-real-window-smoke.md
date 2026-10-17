@@ -49,6 +49,7 @@ the live suite covers the mechanisms those channels are not needed for:
 | `live-scroll` | `scroll` | the `scroll-container` scenario's view starts at offset `0`, a `-200` wheel moves it down, and `onScroll` reports the delta |
 | `live-panel` | `panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees |
 | `live-overlay` | `overlay` | the modal trigger opens a painted surface centred in the window, and Escape closes it (`open=false last=escape`) |
+| `live-docking` | `docking` | dragging the Notes tab onto the editor pane's right edge splits it: `panel-1=notes@notes` and `split-1=` appear in the live tree signature |
 
 Colour, style-report and accessibility assertions stay where their channels
 exist: the `TestRenderer` suite (`theme-*`, `a11y-tree`). The live run is
@@ -189,7 +190,7 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
 ## 8. Acceptance criteria
 
 - `nub run --filter playground smoke:live` exits `0` on this host, writes
-  `.artifacts/live-report.json` and five screenshots.
+  `.artifacts/live-report.json` and six screenshots.
 - The same command exits `2` (not `1`) when no display is available.
 - §9 records: the window size, each scenario's checks, the exit codes, and each
   mutation's failing label.
@@ -198,8 +199,8 @@ New scenarios: `apps/playground/src/live/scenarios.tsx` (the three in §2).
 
 ## 9. Measured facts (2026-10-17, this host, locally built 0.10.0 binding, ADR 0003)
 
-`nub run --filter playground smoke:live` — **5/5 scenarios**,
-`layout=input=overlay=scroll=panel=verified`, exit `0`, ~2.5 s, five
+`nub run --filter playground smoke:live` — **6/6 scenarios**,
+`layout=input=overlay=scroll=panel=docking=verified`, exit `0`, ~3.5 s, six
 real-window screenshots under `.artifacts/live/` and
 `.artifacts/live-report.json`.
 
@@ -256,10 +257,19 @@ Two-direction proofs (file restored after each run):
 | L4 | remove `overflowY: "scroll"` from `scroll-view` | exit `1`, *scroll-view reports an offset*: got `none` |
 | L5 | make the divider's `onMouseDown` forget the press | exit `1`, *the drag grew the pane by 80*: got `split=320` |
 | L6 | make the modal's Escape branch record `last=ignored` instead of closing | exit `1`, *Escape closes the focused surface*: got `open=true … last=ignored` |
+| L7 | make `zoneAt` always return the centre edge | exit `1`, *the edge drop created a group for it*: the signature showed `editor=main.ts,notes@notes` (a merge, no split) |
 
 L1 and L2 surface as errored scenarios rather than a failed label because the
 scenario waits for the result of the interaction; a mutation that mounted the
 *wrong* view would fail the title check instead.
+
+**A docking tab drag splits a pane in the window.** Pressing `dock-tab-notes`
+and travelling to the editor pane's right edge (a 48 px band) took the tree
+from `left=explorer,search,notes@explorer …` to
+`left=explorer,search@explorer … panel-1=notes@notes … split-1=h324`: the
+pruned group, the new group and the split all landed as the headless probe
+predicts. The drag must be **paced** (one frame per move, the rule above) — the
+drop indicator re-renders on every move and the press state has to commit.
 
 **A modal opens, centres and closes on Escape in the window.** Clicking
 `modal-trigger` painted `modal-content` (280 × 236) with its centre at
