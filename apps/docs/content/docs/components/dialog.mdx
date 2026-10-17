@@ -1,0 +1,103 @@
+---
+title: Dialogs
+description: A modal surface that interrupts for a task.
+---
+
+<ComponentState slug="dialog" />
+
+<NativePreview slug="dialog" />
+
+`Dialog` is the modal primitive: it dims and blocks the window, moves focus into
+its surface, keeps Tab inside it, and returns focus to whatever opened it. Compose
+it from a trigger, a content surface and the header/description/footer parts.
+
+## Usage
+
+```tsx
+import {
+  Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle, DialogTrigger,
+} from "@gpuixui/components/dialog";
+import { Button } from "@gpuixui/primitives";
+
+<Dialog>
+  <DialogTrigger>Delete workspace</DialogTrigger>
+  <DialogContent label="Delete workspace">
+    <DialogHeader>
+      <DialogTitle>Delete this workspace?</DialogTitle>
+      <DialogDescription>
+        The workspace and its 42 files are removed for everyone.
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <DialogClose>Cancel</DialogClose>
+      <Button variant="destructive">Delete workspace</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>;
+```
+
+## Variants
+
+`DialogContent` sizes are `sm` (360px), `md` (480px, default) and `lg` (640px).
+`showClose` (default `true`) adds the top-right close control.
+
+## Sizes
+
+The surface caps its height at the window minus two `spacing["3xl"]` steps and
+scrolls interior overflow, so a long body cannot push the actions off screen.
+
+## States
+
+Controlled (`open`/`onOpenChange`) or uncontrolled (`defaultOpen`). The
+controlled form is authoritative. `dismissible` (default `true`) controls both
+Escape and an outside press; set it to `false` for uninterruptible work. Open
+dialogs share one dismiss stack, so Escape closes the topmost overlay only.
+
+## Composition
+
+The dialog example is a complete delete-workspace workflow, not a floating box:
+
+<include lang="tsx" meta='title="packages/components/examples/dialog.example.tsx"'>
+  ../../../../../packages/components/examples/dialog.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/dialog.tsx" name="DialogProps" />
+
+## Keyboard and focus
+
+| Key | Effect |
+| --- | ------ |
+| `Tab` | next focusable inside the surface, wrapping |
+| `Shift+Tab` | previous focusable, wrapping |
+| `Escape` | close when dismissible; focus returns to the opener |
+| `Enter` / `Space` | activate the focused action |
+
+## Theming
+
+The surface paints `colors.popover`/`popoverForeground` with `radius.xl`, a thin
+`colors.border` and the `lg` elevation; the veil paints `colors.overlay`.
+
+## Accessibility and limitations
+
+- `role="dialog"` with the required `label` as its name. Focus enters on open and
+  returns to the opener on close.
+- **No `aria-modal` and no `aria-labelledby`**: 0.10.0 exposes only `aria-label`,
+  `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
+  `aria-level`. The title is a separate heading, not the dialog's label.
+- **No portal**: the veil is an `anchored` layer at window coordinates, so mount
+  the dialog at (or near) the tree root.
+- The close control is a `✕` text glyph until an icon package lands.
+- Not resizable, draggable or multi-window.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/dialog.tsx"'>
+  ../../../../../packages/components/src/dialog.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="dialog" />

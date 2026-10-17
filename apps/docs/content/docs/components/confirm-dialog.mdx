@@ -1,0 +1,93 @@
+---
+title: Confirmation dialogs
+description: A dialog that confirms a consequential action.
+---
+
+<ComponentState slug="confirm-dialog" />
+
+<NativePreview slug="confirm-dialog" />
+
+`ConfirmDialog` is the dialog the library reaches for when an action is
+irreversible. It encodes two safety decisions: Cancel holds initial focus, and
+Confirm does not close the dialog — the caller owns the async work.
+
+## Usage
+
+```tsx
+import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
+
+<ConfirmDialog
+  open={open}
+  onOpenChange={setOpen}
+  title="Archive this project?"
+  description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+  confirmLabel="Archive project"
+  tone="danger"
+  loading={saving}
+  onConfirm={archive}
+/>;
+```
+
+`children` renders between the description and the actions — a checkbox, a
+warning detail or a field.
+
+## Variants
+
+`tone` is `default` (primary confirm) or `danger` (destructive confirm). The
+title and description do not change: the wording, not the colour, carries the
+consequence.
+
+## Sizes
+
+The surface uses the Dialog sizing; there is no separate size prop.
+
+## States
+
+Controlled only: `open`, `onOpenChange`, `title`, `description` and `onConfirm`
+are required, because the component cannot know when async work finished.
+`loading` disables both actions, shows `…`, and ignores Escape and outside
+presses; the dialog stays open until the caller closes it.
+
+## Composition
+
+The confirm-dialog example is a real archive workflow with a caller-owned request:
+
+<include lang="tsx" meta='title="packages/components/examples/confirm-dialog.example.tsx"'>
+  ../../../../../packages/components/examples/confirm-dialog.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/confirm-dialog.tsx" name="ConfirmDialogProps" />
+
+## Keyboard and focus
+
+| Key | Effect |
+| --- | ------ |
+| `Enter` | activates the focused action — Cancel on open |
+| `Tab` / `Shift+Tab` | cycle the two actions; the dialog traps focus |
+| `Escape` | cancels, unless `loading` |
+
+## Theming
+
+`danger` uses `colors.destructive` on `colors.destructiveForeground`; the
+dialog surface uses the shared popover roles and `lg` elevation.
+
+## Accessibility and limitations
+
+- The dialog's accessible name is `title`; the description is the body text.
+- No `aria-modal`/`aria-labelledby` in 0.10.0, the same limitation as `Dialog`.
+- The busy indicator is a `…` glyph, not a spinner.
+- No built-in async runner: the caller owns the promise, the loading flag and the
+  close, so a failed save is never hidden by a self-closing dialog.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/confirm-dialog.tsx"'>
+  ../../../../../packages/components/src/confirm-dialog.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="confirm-dialog" />

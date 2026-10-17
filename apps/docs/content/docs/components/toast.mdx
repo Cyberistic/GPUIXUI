@@ -1,0 +1,100 @@
+---
+title: Toasts / notifications
+description: A transient message about an action's outcome.
+---
+
+<ComponentState slug="toast" />
+
+<NativePreview slug="toast" />
+
+`ToastProvider` creates one Effect runtime and one toast store; `useToast()`
+pushes and dismisses; `ToastViewport` paints the stack. The queue is a
+`SubscriptionRef`, the auto-dismiss timers are a `FiberMap`, and React only sees
+the resulting array.
+
+## Usage
+
+```tsx
+import {
+  ToastProvider, ToastViewport, useToast,
+} from "@gpuixui/components/toast";
+
+<ToastProvider>
+  <App />
+  <ToastViewport />
+</ToastProvider>;
+
+const toast = useToast();
+toast.push({
+  title: "Changes published",
+  description: "The site rebuilds in about a minute.",
+  tone: "success",
+});
+```
+
+## Variants
+
+`tone` is `info` (default), `success`, `warning` or `danger`; each paints a 3px
+left bar and a glyph (`i`, `✓`, `!`, `✕`) until an icon set lands.
+
+## Sizes
+
+The stack holds 3 cards by default (`max`); a fourth drops the oldest. Cards are
+380px wide with `spacing.lg` padding; there is no size prop.
+
+## States
+
+Auto-dismiss is 5 seconds by default, configurable per toast with
+`duration: Duration.seconds(6)`. A zero or infinite duration never dismisses.
+Ids are monotonic (`"1"`, `"2"`, …) and never reused; a dismissed toast cancels
+its timer so a stale one cannot remove its successor.
+
+## Composition
+
+The toast example mounts the provider, pushes from a real action and renders the
+viewport last:
+
+<include lang="tsx" meta='title="packages/components/examples/toast.example.tsx"'>
+  ../../../../../packages/components/examples/toast.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/toast/provider.tsx" name="ToastProviderProps" />
+
+<auto-type-table path="../../../../../packages/components/src/toast/viewport.tsx" name="ToastViewportProps" />
+
+## Keyboard and focus
+
+Each card's dismiss control is a labelled, focusable button. The viewport itself
+is `pointerEvents: "none"`, so it never blocks the page; each card turns pointer
+events back on.
+
+## Theming
+
+Cards paint `colors.popover`/`popoverForeground`, a thin `colors.border`,
+`radius.md`, the `md` elevation and `spacing.lg` padding. The bar and glyph take
+the tone's colour from the shared status palette.
+
+## Accessibility and limitations
+
+- The viewport is `role="status"` named "Notifications"; each dismiss control is
+  a labelled button.
+- **No `aria-live` and no `aria-atomic`** in 0.10.0 — a status region is the
+  supported announcement.
+- **No progress indicator** for remaining time; the card does not animate the
+  deadline.
+- No pause-on-hover. Use `duration: Duration.infinity` and a manual dismiss when a
+  toast must stay.
+- No portal: render the viewport last at the app root (GPUix has no `zIndex`).
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/toast/provider.tsx"'>
+  ../../../../../packages/components/src/toast/provider.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="toast" />

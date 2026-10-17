@@ -507,38 +507,85 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  planned(
+  delivered(
     "inline-validation",
     "Inline validation",
     "2",
     "Field-level error and hint messaging.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/field.tsx",
+      related: ["alert", "toast"],
+      limitations: [
+        "No aria-describedby, aria-invalid or aria-required in 0.10.0.",
+        "FieldInput is the stand-in for the primitive text input.",
+        "Not a form library: no submit, cross-field or async validation.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "toast",
     "Toasts / notifications",
     "2",
     "A transient message about an action's outcome.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/toast/provider.tsx",
+      related: ["alert", "dialog"],
+      limitations: [
+        "No aria-live or aria-atomic; the viewport is a status region.",
+        "No progress indicator and no pause-on-hover.",
+        "No portal: render the viewport last at the app root.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "dialog",
     "Dialogs",
     "2",
     "A modal surface that interrupts for a task.",
-    { related: ["confirm-dialog", "drawer"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/dialog.tsx",
+      related: ["confirm-dialog", "popover"],
+      limitations: [
+        "No aria-modal or aria-labelledby; the name is the required label.",
+        "No portal: mount the dialog at or near the tree root.",
+        "The close control is a text glyph until an icon package lands.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "confirm-dialog",
     "Confirmation dialogs",
     "2",
     "A dialog that confirms a consequential action.",
-    { related: ["dialog"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/confirm-dialog.tsx",
+      related: ["dialog", "alert"],
+      limitations: [
+        "No aria-modal or aria-labelledby (same as Dialog).",
+        "The busy indicator is a glyph, not a spinner.",
+        "Controlled only: the caller owns the async work and the close.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "popover",
     "Popovers",
     "2",
     "A non-modal floating surface anchored to a trigger.",
-    { related: ["preview-card"] },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/popover.tsx",
+      related: ["dialog", "dropdown-menu"],
+      limitations: [
+        "No aria-haspopup, aria-controls or aria-labelledby.",
+        "No arrow, custom anchor or backdrop.",
+        "An outside press does not restore focus to the trigger.",
+      ],
+    },
   ),
   planned(
     "dropdown-menu",

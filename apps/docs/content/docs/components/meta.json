@@ -27,6 +27,11 @@
     "avatar",
     "list",
     "empty-state",
-    "alert"
+    "alert",
+    "inline-validation",
+    "toast",
+    "dialog",
+    "confirm-dialog",
+    "popover"
   ]
 }

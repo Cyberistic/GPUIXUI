@@ -28,11 +28,11 @@ describe("search", () => {
   });
 
   it("finds a component with no page from any page's search", async () => {
-    const results = await search("dialog");
-    const dialogs = results.find((result) =>
-      contentOf(result).startsWith("Dialogs"),
+    const results = await search("drawer");
+    const drawer = results.find((result) =>
+      contentOf(result).startsWith("Drawer"),
     );
-    expect(dialogs?.url).toBe("/docs/components?q=Dialogs");
+    expect(drawer?.url).toBe("/docs/components?q=Drawer");
   });
 
   it("ranks real pages ahead of the registry appendix", async () => {
@@ -41,11 +41,11 @@ describe("search", () => {
   });
 
   it("appends planned components after the pages, pointing at the filtered index", async () => {
-    const results = await search("dialog", 20);
+    const results = await search("drawer", 20);
     const planned = results.find(
-      (result) => contentOf(result) === "Dialogs (planned)",
+      (result) => contentOf(result) === "Drawer (planned)",
     );
-    expect(planned?.url).toBe("/docs/components?q=Dialogs");
+    expect(planned?.url).toBe("/docs/components?q=Drawer");
     expect(results.at(-1)?.url).toContain("/docs/components?q=");
   });
 

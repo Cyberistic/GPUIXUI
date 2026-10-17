@@ -1,0 +1,91 @@
+---
+title: Popovers
+description: A non-modal floating surface anchored to a trigger.
+---
+
+<ComponentState slug="popover" />
+
+<NativePreview slug="popover" />
+
+`Popover` floats a surface next to its trigger without making the rest of the
+window modal. Positioning is GPUix's own `anchored` layer, so it flips and snaps
+to stay inside the window; the component owns the open state, the dismissal
+rules and the trigger's re-open guard.
+
+## Usage
+
+```tsx
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@gpuixui/components/popover";
+
+<Popover>
+  <PopoverTrigger>Columns</PopoverTrigger>
+  <PopoverContent side="bottom" align="end">
+    <ColumnToggles />
+  </PopoverContent>
+</Popover>;
+```
+
+## Variants
+
+`PopoverContent` takes `side` (`top`/`right`/`bottom`/`left`, default `bottom`),
+`align` (`start`/`center`/`end`, default `start`), `sideOffset` (6) and
+`collisionPadding` (8). There is no arrow and no custom anchor element.
+
+## Sizes
+
+The surface has a 200px minimum width; its height follows the content. Spacing,
+radius and elevation come from the theme.
+
+## States
+
+Controlled (`open`/`onOpenChange`) or uncontrolled (`defaultOpen`). Escape closes
+and returns focus to the trigger; Tab closes and moves on; a press outside closes
+without moving focus; a press inside does nothing; clicking the trigger while
+open closes it. It shares the dismiss stack with `Dialog`, so the topmost layer
+closes first.
+
+## Composition
+
+The popover example is a real column-picker anchored to a toolbar control:
+
+<include lang="tsx" meta='title="packages/components/examples/popover.example.tsx"'>
+  ../../../../../packages/components/examples/popover.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/popover.tsx" name="PopoverProps" />
+
+## Keyboard and focus
+
+Focus moves into the surface on open. The surface is a tab stop but not a trap:
+Tab leaves and closes it. The trigger is an ordinary button; Enter/Space toggle
+it.
+
+## Theming
+
+The surface paints `colors.popover`/`popoverForeground`, `radius.lg`, a thin
+`colors.border`, the `md` elevation and `spacing.lg` padding.
+
+## Accessibility and limitations
+
+- `aria-expanded` is set on the trigger.
+- **No `aria-haspopup`, `aria-controls` or `aria-labelledby`** in 0.10.0: the
+  link between trigger and surface is positional, not semantic.
+- No arrow, custom anchor or backdrop. Keep the content short; a blocking form
+  belongs in `Dialog`.
+- A press outside hands focus to whatever was pressed, so focus is not restored to
+  the trigger on that path. Escape is the keyboard path that restores it.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/popover.tsx"'>
+  ../../../../../packages/components/src/popover.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="popover" />
