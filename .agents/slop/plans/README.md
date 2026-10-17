@@ -131,7 +131,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 ### `playground` (block `100–199`)
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
-playground shell and the feasibility probes. `100–195` is used; `196+` continues
+playground shell and the feasibility probes. `100–196` is used; `197+` continues
 in the same block.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -187,6 +187,7 @@ in the same block.
 | [193](./193-live-context-menu.md) | The right click and a context menu in a real window | B→F | 100, 164, 187, 189, 190 | **landed**: `AsyncSmokeHost.rightClick` over `mouse.click(button: 2)` and `live-context-menu` — a right click opens at the pointer (1 px), a disabled row is inert, Copy closes, outside/Escape dismiss, a child click bubbles, and a scrolled-container right click keeps the placement with an item below the viewport still hittable; 31 checks, live `11 → 12`, exit `0`; sending button 0 fails `exit 1` (§7) |
 | [194](./194-in-window-float.md) | Detachable tabs as in-window floating panels | B→D | 100, 110, 120, 140, 162, 164, 172, 177, 184 | **landed**: `float-tab` — a tab released outside the dock opens an absolute panel at the release point; it paints above the dock as the app root's last child and takes the overlap click, its title drags by the pointer delta and a component clamp pins it, it owns native focus and returns it on Escape, a drag back re-docks and prunes it, and the `{dock, float}` snapshot restores the exact position. 46 checks, suite `56 → 57`, exit `0`; three two-direction proofs (clamp, paint order, release point). Adds the `float` capability; limits: no drag preview, and a close control nested in the drag surface does not fire (§8) |
 | [195](./195-live-float.md) | The in-window float in a real window | F | 100, 110, 140, 189, 190, 194 | **landed**: `live-float` — a paced drag tears the tab out and the panel lands within 1 px of the release point, the title delta is exact, its tab takes focus, Escape returns focus to the dock, and the close button drops a reopened tab. 28 checks, live `12 → 13`, exit `0`; the reverse (release inside the dock) fails `host waitFor float-window`, exit `1`. Caught a live-only race: the drag-ending click re-applied the pre-drag dock and resurrected the tab, fixed with a functional tab click (§7) |
+| [196](./196-preview-card.md) | An interactive hover card: hover intent and a grace close | B→C | 100, 110, 120, 140, 156, 159 | planned — `preview-card` measures whether the pointer can enter floating content, the leave/enter order, a timer-based grace close, interactivity, ancestor delivery and leave coordinates; new `preview` capability |
 
 Cross-cutting records:
 
