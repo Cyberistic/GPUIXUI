@@ -369,6 +369,16 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 name only, kept for the `primitives` package until it migrates. New code uses
 `getPlatformTheme`.
 
+Two **recipes** sit beside those variants: Windows XP (Luna) and Windows 7
+(Aero), in `platformRecipes`. A recipe is an edition of a platform, not a fifth
+platform — `platformNames` is unchanged — and `getPlatformRecipeTheme(recipe,
+mode, contrast?)` resolves it through the same path. `platformRecipeNames` and
+`isPlatformRecipeName` do for a stored recipe choice what the platform index and
+guard do for a platform. The files live in
+[`src/platform-styles/recipes/`](./src/platform-styles/recipes/) and are held to
+the contrast contract in both modes; their dark halves are interpretations,
+because neither Windows version shipped a dark mode.
+
 High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
 applies only the families and shape, because a platform accent must not drop the
 AAA floors. To ship your own look, copy a style file and apply it, or extend the

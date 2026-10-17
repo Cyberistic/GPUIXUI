@@ -152,6 +152,15 @@ system and the platform looks are variants of it, never four design systems. At
 high contrast only families and shape are applied: the AAA colour set wins over
 platform resemblance. The docs toggle and a native build call the same function.
 
+Two **recipes** ship beside those variants: Windows XP (Luna) and Windows 7
+(Aero), in `platformRecipes`. A recipe is an edition of a platform, not a fifth
+platform: `getPlatformRecipeTheme(recipe, mode, contrast?)` resolves it through
+the same path, and `platformNames` stays the four-variant axis. The recipes also
+show the honest limit of the role model: XP's filled blue selection bar is an
+application composition, because a `selected` row is a measured surface that
+secondary text, a status label, a disabled label and a control edge must
+survive. Aero's glass is solid layers, not blur.
+
 An application can name an **installed** family the same way, with
 `extendTheme(base, { typography: { sans: … } })`, so a brand face that every target
 machine has can travel in the theme. A face shipped **with** the application
@@ -418,6 +427,8 @@ The extension mechanism is deliberately small:
 - `getPlatformTheme(platform, mode, contrast?)` — resolve a shipped platform
   variant; the result is a normal theme, so a consumer can edit it with
   `extendTheme`.
+- `getPlatformRecipeTheme(recipe, mode, contrast?)` — resolve a shipped recipe
+  (Windows XP, Windows 7); `isPlatformRecipeName` narrows a stored choice.
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
 

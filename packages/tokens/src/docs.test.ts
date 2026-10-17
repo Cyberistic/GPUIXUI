@@ -44,6 +44,11 @@ import {
 import * as Tokens from "./index.js";
 import { motion } from "./motion.js";
 import {
+  isPlatformRecipeName,
+  platformRecipeNames,
+  platformRecipes,
+} from "./platform-recipes.js";
+import {
   platformNames,
   platformStyles,
   platformTypes,
@@ -287,6 +292,41 @@ describe("docs/tokens.md platform table", () => {
         `| \`${platform}\` (${platformTypes[platform].label}) | \`${systemUiFont}\` | \`${platformTypes[platform].mono}\` | ${variantRadius.sm} / ${variantRadius.md} / ${variantRadius.lg} / ${variantRadius.xl} | \`${density}\` | \`${light}\` | \`${dark}\` |`,
       );
     });
+  });
+});
+
+describe("docs/tokens.md platform recipes", () => {
+  it("lists every recipe in documented order", () => {
+    const positions = platformRecipeNames.map((recipe) =>
+      markdown.indexOf(`| \`${recipe}\` (`),
+    );
+    expect(positions).not.toContain(-1);
+    expect(positions).toEqual(positions.toSorted((a, b) => a - b));
+  });
+
+  it("states each recipe's real canvas, accent, selection, shape and density", () => {
+    platformRecipeNames.forEach((recipe) => {
+      const style = platformRecipes[recipe];
+      const colors = style.colors.light;
+      const shape = style.structure.radius ?? radius;
+      const density = style.structure.density ?? defaultDensity.name;
+      expect(markdown, recipe).toContain(
+        `| \`${recipe}\` (${style.types.label}) | \`${colors.background}\` | \`${colors.primary}\` | \`${colors.selected}\` | ${shape.sm} / ${shape.md} / ${shape.lg} / ${shape.xl} | \`${density}\` | \`${style.types.mono}\` |`,
+      );
+    });
+  });
+
+  it("keeps a recipe out of the platform axis and documents the resolver", () => {
+    platformRecipeNames.forEach((recipe) => {
+      expect(platformNames).not.toContain(recipe);
+      expect(isPlatformRecipeName(recipe)).toBe(true);
+    });
+    expect(markdown).toContain(
+      "A recipe is an **edition of a platform**, not a fifth platform",
+    );
+    expect(markdown).toContain(
+      "`getPlatformRecipeTheme(recipe, mode, contrast?)`",
+    );
   });
 });
 

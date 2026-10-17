@@ -1,5 +1,14 @@
 # Plan 433: Platform theme recipes — a reshaped Windows (XP / Aero) and a live Omarchy-following theme
 
+> **Status (2026-10-18).** Recipe A is done: plan `311` shipped Windows XP
+> (Luna) and Windows 7 (Aero) as editable `PlatformStyle` values in
+> `packages/tokens`, held to the contrast contract in both modes. Recipe B
+> remains **open**: its own STOP condition requires Omarchy's on-disk palette
+> contract to be verified on a real Linux host, and this swarm runs on macOS
+> x86_64; no mapper or watcher may be written from guesses. The docs page and
+> playground capture for Recipe A remain with the `docs-site` and `playground`
+> workstreams (see `TODO.md`).
+
 ## Why
 
 The platform style variants (macOS · Linux · Windows) are a **base, not a ceiling**. Two

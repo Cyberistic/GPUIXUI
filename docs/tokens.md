@@ -517,6 +517,68 @@ fixed.
 shipped variants use, so a copied file cannot take a path the library does not
 test.
 
+### Platform recipes
+
+Two recipes ship beside the platform variants: Windows XP (Luna) and Windows 7
+(Aero). A recipe is an **edition of a platform**, not a fifth platform: it is a
+plain `PlatformStyle`, so `platformNames` (and therefore the docs platform
+toggle) stays macOS · Linux · Windows · Default. `platformRecipes` indexes the
+two styles, `platformRecipeNames` orders them, `isPlatformRecipeName` narrows a
+stored or URL choice, and `getPlatformRecipeTheme(recipe, mode, contrast?)`
+resolves one through the same `applyPlatformStyle` path as
+`getPlatformTheme`.
+
+| Recipe | Canvas (light) | Accent (light) | Selected (light) | Radius `sm` / `md` / `lg` / `xl` | Density | Mono |
+| ------ | -------------- | -------------- | ---------------- | -------------------------------- | ------- | ---- |
+| `xp` (Windows XP) | `#ECE9D8` | `#0054E3` | `#C9DDFF` | 2 / 3 / 6 / 8 | `compact` | `Consolas` |
+| `aero` (Windows 7) | `#F0F4F9` | `#1565C0` | `#CCE4FA` | 3 / 5 / 8 / 10 | `comfortable` | `Consolas` |
+
+A recipe names only what it changes: status tones, disabled, overlay, scrollbar
+and every non-colour scale inherit the identity, and both recipes carry the
+Windows shadow geometry and motion. The file in
+[`src/platform-styles/recipes/`](../packages/tokens/src/platform-styles/recipes/)
+is the whole recipe — copy it, edit a value, and apply it with
+`applyPlatformStyle`, exactly like a shipped variant.
+
+```tsx
+import {
+  applyPlatformStyle,
+  getPlatformRecipeTheme,
+  getTheme,
+  platformRecipes,
+} from "@gpuixui/tokens";
+
+<ThemeProvider theme={getPlatformRecipeTheme("xp", "light")}>…</ThemeProvider>;
+
+// The copy-and-own path applies to a recipe too.
+const mine = applyPlatformStyle(getTheme("dark"), {
+  ...platformRecipes.aero,
+  colors: {
+    ...platformRecipes.aero.colors,
+    dark: { ...platformRecipes.aero.colors.dark, primary: "#1F6FB5" },
+  },
+});
+```
+
+**Selection is a tint, not a filled bar.** XP's shell painted a strong blue
+selection bar with white text. In this system a `selected` row is a *surface*:
+the contrast contract measures `selectedForeground`, secondary text, a status
+label, a disabled label, a control edge and the focus ring on it, and a strong
+blue fill cannot carry them. Both recipes therefore use a light selection tint
+and keep the drag wash in `selection`. The filled bar is an application
+composition over these roles, not a token — a genuine limit of the role model,
+documented rather than hidden.
+
+**Dark is an interpretation.** Neither Windows XP nor Windows 7 shipped a dark
+mode. Their dark themes keep the Windows dark surfaces and motion and carry the
+era's accent and shape, so they are honest extensions, not reconstructions; both
+are held to the contrast contract in each mode.
+
+**Aero's glass is an approximation.** GPUix 0.10.0 has no backdrop blur, inset
+shadow, radial/conic gradient or clip-path, so Aero's layers are solid tinted
+surfaces, and XP's bevel is a light/dark border pair rather than an inset
+shadow. The recipes stop where the runtime does.
+
 ### The deprecated `platformTheme` bridge
 
 `platformTheme(base, platform)` is the pre-063 helper: it changes the two font

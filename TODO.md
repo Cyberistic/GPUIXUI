@@ -181,10 +181,21 @@ test plan for the release that exposes it. No font is bundled.
 owner: `playground`) — it paints every `colorRoles` entry and every type role
 across dark/light/high-contrast dark and asserts the runtime's own
 `paintedStyle`, which is the native proof these rows cite
+`[x]` Ship Windows XP and Aero platform recipes as editable `PlatformStyle`
+values with a resolver and guard, held to the contrast contract in both modes
+(plan 311); Recipe B (Omarchy) remains blocked on host verification (plan 433)
 `[ ]` Cross-team: the Fumadocs platform toggle (macOS / Linux / Windows /
 Default) switches every preview through `getPlatformTheme`, keeps the choice in
 shareable page state and remembers it across navigation; document it under
 Theming as an illustrative browser approximation (owner: `docs-site`; plan 063)
+`[ ]` Cross-team: `docs-site` offers the Windows XP and Aero recipes beside the
+platform toggle through `getPlatformRecipeTheme` / `isPlatformRecipeName`,
+switchable and shareable in the page URL, and labels the honest limits — dark as
+an interpretation, Aero's glass as solid layers, XP's filled selection bar as an
+app composition (owner: `docs-site`; plans 311 and 433)
+`[ ]` Cross-team: `playground` paints the XP and Aero recipes natively in the
+theme gallery, one view per recipe, so the copy-and-own path is verified in the
+runtime and not only by the token suite (owner: `playground`; plan 311)
 `[ ]` Cross-team: a native visual per-platform comparison built on
 `getPlatformTheme` (owner: `playground`; plan 063)
 `[ ]` Cross-team: `playground` paints the selection wash through
