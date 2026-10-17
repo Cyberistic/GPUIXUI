@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 47/62
+`[x]` `[███████░░░]` 47/63
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -196,6 +196,14 @@ shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `[ ]` Cross-team: `components` uses `statusTone(...).text` for inline status
 text, icons and indicator dots and retires its local `tone()` foreground, which
 reads the solid `success`/`warning` fills as text (plan 057; owner: `components`)
+`[ ]` Cross-team: `components` uses `destructiveText` for the Field error text
+(`field.tsx:122`, `:154`) and the destructive Menu item label
+(`menu/item.tsx:76`). The solid `destructive` is a fill: it measures 4.04–4.28:1
+on the hover wash and 3.29–3.86:1 on the active wash across the shipped light
+sets, under the 4.5:1 secondary floor, while `destructiveText` clears every
+wash (≥5.28:1). The token contract checks `destructiveText` on
+`background`/`card`/`popover`; the two menu washes can join it once the role is
+adopted (plan 079 audit; owner: `components`)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
 directly and delete their structural copies of the theme and role list, their
 local focus-ring helpers (`primitives/src/core/style.ts`,
