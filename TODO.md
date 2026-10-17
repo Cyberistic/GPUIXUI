@@ -280,14 +280,16 @@ retired once both branches are one
 `[x]` **tokens workstream**: `packages/tokens` exports light and dark themes that
       are the primitives' `PrimitiveTheme` (plan 021 proves it in the offline and
       runtime suites)
-`[ ]` **playground workstream**: resolve the runtime blocker — either run the
-      published wasm renderer in headless Chrome
-      (`@gpuix/native@0.10.0/wasm`, COOP/COEP headers, `--enable-unsafe-swiftshader`),
-      or get a `darwin-x64` source build / a GUI session
-`[ ]` **playground workstream**: Tier 1 runtime tests in `packages/testing` —
-      render, hit-test, Tab order, Enter/Space activation, checkbox/switch toggle,
-      radio arrow navigation, scroll offset, a11y-tree dump. These are the tests
-      that move a `wip` component row to `done`
+`[x]` **playground workstream**: the runtime blocker is resolved — plan `140`
+      built the `darwin-x64` 0.10.0 binding from source (`gpui_macos/runtime_shaders`)
+      and the native suite runs on this host; ADR 0003 records the provenance.
+      The wasm path stays a docs-site question (D21), not native evidence
+`[x]` **playground workstream**: Tier 1 runtime coverage — render, hit-test, Tab
+      order, Enter/Space activation, checkbox/switch toggle, radio arrows, scroll
+      offset and the a11y dump are measured by `packages/primitives/runtime/`
+      (plan `041`, 119 tests) and by the playground's five `primitives-*`
+      scenarios (plans `168`–`169`). `packages/testing` stays the platform-free
+      half; the native adapter lives in `apps/playground/src/smoke/host.ts`
 `[ ]` **docs-site workstream**: Tier 1 component pages + the `docs/preview-strategy.md`
       decision (code examples plus a companion native playground, never a silent
       HTML/CSS reimplementation)
