@@ -33,18 +33,19 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[█░░░░░░░░░]` 1/7
+`[x]` `[█████████░]` 6/7
 
 `[x]` Write and index the tokens/theme plan set (plans 010–012)
-`[ ]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
+`[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
-`[ ]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
+`[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
 the `@gpuixui/tokens/react` provider
-`[ ]` Write `docs/tokens.md` (every token + extension API)
-`[ ]` Write `docs/design-system.md` (identity, roles, state, accessibility)
-`[ ]` Add the design-system rows to `COMPONENTS.md`
+`[x]` Write `docs/tokens.md` (every token + extension API)
+`[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
+`[x]` Add the design-system rows to `COMPONENTS.md`
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
-`playground`); Fumadocs Theming page from `docs/tokens.md` (owner: `docs-site`)
+`playground`); Fumadocs Theming page from `docs/tokens.md` (owner: `docs-site`);
+ignore the `references` symlink in `.gitignore` (owner: repo tooling)
 
 ## Phase C — Tier 1–2 components
 
