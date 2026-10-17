@@ -50,7 +50,7 @@ sequencing set; the docs-site workstream owns the `4xx` range.
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
-> (`010–014`, `020–040`, `100–130`, `410–412`) live on their own branches and are
+> (`010–014`, `020–040`, `100–130`, `410–413`) live on their own branches and are
 > merged into `main` as each workstream completes; this index is the union.
 
 ## How to use a plan
