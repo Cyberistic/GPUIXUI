@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (40/40 green); -> 2 on a host with no binding
+# -> 0 here (41/41 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -365,6 +365,24 @@ The honest gap: `getPaintedHighlights()` reports no colour, so the wash colour
 and `activeColor` are not asserted; a screenshot is visual evidence, never an
 assertion.
 
+## Drag edge auto-scroll (plan `172`)
+
+`drag-autoscroll` drives the mechanism a reorderable list or a movable tab strip
+needs: a real press, held moves, an edge hold and a release. What holds, and the
+trap it records:
+
+| Fact | Measured |
+| ---- | -------- |
+| runtime auto-scroll on a held drag | **none** — the plain list's source received the move, the pointer sat at the bottom edge for 600 ms, and the offset stayed `0` |
+| a component-owned loop | one `renderer.scrollTo(id, 0, y ± rowHeight)` per held move inside the 24 px edge band scrolls exactly one row (`0 → -24 → -48 → -72`) |
+| scrolling back | a held move at the top edge scrolls one row back (`-72 → -48`) |
+| capture during the scroll | the source still receives every held move and the `up`; scrolling does not lose the gesture |
+| the drop index | derived from the pointer and the live offset (`floor((viewY - offset) / 24)`); it follows the scroll and moves back with it |
+| the gesture-ending click | still fires on the source after 170 px of held scrolling — a reorder must swallow it |
+
+The honest contract: **a drag-and-drop or detachable-tab component owns its edge
+scrolling** on 0.10.0; the runtime does not do it.
+
 ## Workspace restore (plan `167`)
 
 `workspace-restore` saves a two-pane workspace — split width, both tab lists, the
@@ -384,10 +402,10 @@ focus restore.
 
 ## Evidence on this host
 
-The suite is **40/40 green** here (`exit 0`):
+The suite is **41/41 green** here (`exit 0`):
 
 ```
-40/40 scenarios passed · capabilities: layout=verified text=verified
+41/41 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -409,6 +427,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | a11y | the AccessKit dump maps every typed ARIA token to a role; names come only from `aria-label`; CheckBox/Switch have no checked state; the tree follows the painted virtual window |
 | content | `<svg>`/`<img>`/`<diff>` are retained **and** painted (bounds fire from `on_painted`); `<canvas>` is retained but renders nothing and drops its children; `setImagePixels` uploads a bitmap through the ref |
 | drag | capture owns every move and the up; hover is frozen during the drag; the gesture ends in a click on the source; a drop on a handler-less element still clicks; `onFileDrop` carries paths and coordinates |
+| drag autoscroll | the runtime does **not** scroll a held drag at an edge; component code scrolls with `renderer.scrollTo` on each held move, keeps the capture and the up, and derives the drop index from the pointer and the live offset |
 | selection | cross-element selection joins with newlines; `<code>`/`<diff>` copy is chrome-free; an anchor inside `userSelect: "none"` selects nothing; a click selects nothing |
 | menu | a right click is `onAuxClick` + `isRightClick` (no `button`, no `onClick`); `<anchored position>` is exact at the pointer, even inside a **scrolled** container (no offset, no clipping); `shift-f10` opens and Escape returns focus |
 | hierarchy | a flattened tree inside `<virtual-list>`: 16 px per depth, 8 ↔ 48 rows on expand/collapse, roving focus moves native focus, the focused row stays painted outside the window |
@@ -459,6 +478,7 @@ src/scenarios/context-menu.tsx right click, pointer placement, dismissal
 src/scenarios/virtual-tree.tsx a 328-node flattened tree inside <virtual-list>
 src/scenarios/scroll-into-view.tsx keyboard follow and the two scroll routes
 src/scenarios/search.tsx  painted highlights, find controls and the virtual match index
+src/scenarios/drag-autoscroll.tsx held edge scroll, capture and the drop index
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -494,9 +514,9 @@ narrower. Each deviation is deliberate and measured:
 - The seventeen core capabilities (including the token gallery, the modal
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
-  drag/file-drop probe, the app-level shortcut probe and the search-highlight
-  probe pass in real GPUix 0.10.0 on this host (40/40), with a written report
-  and screenshots.
+  drag/file-drop probe, the app-level shortcut probe, the search-highlight
+  probe and the drag-autoscroll probe pass in real GPUix 0.10.0 on this host
+  (41/41), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

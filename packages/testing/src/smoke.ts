@@ -277,6 +277,17 @@ export interface SmokeHost {
   readonly focused: () => string | null;
   readonly click: (testId: string) => void;
   readonly clickWindow: (x: number, y: number) => void;
+  /**
+   * Presses the primary button at `testId`'s centre.
+   *
+   * A whole gesture (`drag`) releases before the scenario can inspect anything
+   * mid-gesture; an edge hold needs the down, the held moves and the up apart.
+   */
+  readonly press: (testId: string) => void;
+  /** Moves the pointer to window coordinates with the primary button held. */
+  readonly movePointer: (x: number, y: number) => void;
+  /** Releases the primary button at window coordinates. */
+  readonly releasePointer: (x: number, y: number) => void;
   /** Right-clicks `testId`'s centre through GPUI's click pipeline (button 2). */
   readonly rightClick: (testId: string) => void;
   /** Moves the pointer onto `testId`, delivering native enter/leave. */

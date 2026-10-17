@@ -50,13 +50,13 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse` | verified |
 | content | `native-surfaces` | verified |
-| drag | `drag-targets` | verified |
+| drag | `drag-targets`, `drag-autoscroll` | verified |
 | selection | `text-selection` | verified |
 | menu | `context-menu-pointer` | verified |
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
 
-The suite is **40/40 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **41/41 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -122,6 +122,21 @@ released), the gesture still ends in a **click on the source** after 170 px of
 movement, and a file dropped on an element **without** `onFileDrop` produces no
 drop but still a **click**. A drag-and-drop component must hit-test the pointer
 itself and swallow the gesture-ending click.
+
+`drag-autoscroll` is the runtime verdict for the edge of that gesture — the part
+a movable tab strip or a reorderable list needs. **The runtime does not scroll a
+held drag at a container edge**: the source received the held move, the pointer
+sat 6 px from the bottom for 600 ms, and the offset stayed `0`. The component
+owns the loop, and that path is proven: one
+`renderer.scrollTo(id, 0, y ∓ rowHeight)` per held move inside a 24 px edge band
+scrolled `0 → -24 → -48 → -72`, a move at the top edge scrolled one row back,
+the source kept every move and the `up` through the scroll, and the drop index
+derived from the pointer and the live offset followed it. The gesture still
+ended in a click on the source, so a reorder must swallow it (measured again in
+this gesture). The same probe records the window limitation behind detachable
+tabs: 0.10.0 exposes one app window through `render`/`WindowOptions`; there is
+no `openWindow`, so a detached tab must be an in-window floating panel rather
+than a new OS window.
 
 `text-selection` is the runtime verdict for copy in the log viewer, code block
 and diff. It selects across `<text>` nodes (joined with newlines in document
@@ -482,7 +497,7 @@ in-package and an end-to-end native verdict.
 | Panel groups | todo | ? | Composition over split panes. |
 | Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. |
 | Tabbed panels | todo | ? | Tabs + panels. |
-| Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. |
+| Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. **`drag-autoscroll`:** the runtime does **not** scroll a held drag at an edge — the strip must own an edge loop (`renderer.scrollTo` per held move), which keeps the capture and the up, and derive the drop index from the pointer and the live offset. A new OS window is not available either: 0.10.0 exposes one app window (`render` + `WindowOptions`), no `openWindow`. |
 | Docking layouts | todo | ? | Composition over split panes + tabs. |
 | Nested panel arrangements | todo | ? | Composition. |
 | Workspace layouts | todo | ? | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. |
@@ -511,7 +526,7 @@ in-package and an end-to-end native verdict.
 | Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). Its text is selectable and copyable (`text-selection` covers the shared selection path). |
 | Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. Evidence: `native-surfaces` — a valid PNG data URL lays out at its box with no fallback, a missing `src` paints `img: no src`, an undecodable one paints `img: load failed`, and `setImagePixels` through the ref uploaded a bitmap without throwing. No pixel readback, so a corrupt bitmap with a valid MIME is indistinguishable from a decoded one. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
-| Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `drag-targets`: pointer capture keeps moves and the up on the source, **hover is frozen during the drag**, the drag ends in a click on the source, and a drop on an element without `onFileDrop` still fires a click. The component owns hit-testing, the drop indicator and the click suppression. |
+| Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `drag-targets`: pointer capture keeps moves and the up on the source, **hover is frozen during the drag**, the drag ends in a click on the source, and a drop on an element without `onFileDrop` still fires a click. `drag-autoscroll`: a held drag at a container edge does **not** auto-scroll; the component owns an edge loop (`renderer.scrollTo` on each held move, which keeps the capture), the derived drop index and the click suppression. |
 | Notification centre | todo | ? | Composition over toasts + panels. |
 | Multi-step forms | todo | ? | Variant merged here: Form (adabraka `form`) — partial coverage; validation orchestration is the Tier 2 Form row. |
 | Virtualized hierarchical data | todo | yes (probe) | Tree views + `<virtual-list>` — `virtualized-tree` measures the model: flatten, indent by depth, a changing row count, roving focus by index, and the focused row staying painted outside the window. Only the painted window reaches the accessibility tree, so a keyboard-focusable row outside it is invisible to assistive technology (`a11y-tree`). |

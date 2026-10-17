@@ -15,6 +15,7 @@ import type { PlaygroundScenario } from "../types.js";
 import { a11yScenario } from "./a11y.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
+import { dragAutoscrollScenario } from "./drag-autoscroll.js";
 import { contextMenuScenario } from "./context-menu.js";
 import { virtualizedTreeScenario } from "./virtual-tree.js";
 import { scrollIntoViewScenario } from "./scroll-into-view.js";
@@ -118,6 +119,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   a11yScenario,
   nativeSurfacesScenario,
   dragTargetsScenario,
+  dragAutoscrollScenario,
   contextMenuScenario,
   virtualizedTreeScenario,
   scrollIntoViewScenario,

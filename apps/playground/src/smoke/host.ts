@@ -141,6 +141,13 @@ export const createNativeHost = (renderer: TestRenderer): Smoke.SmokeHost => ({
       onSome: (point) => renderer.nativeSimulateClick(point.x, point.y),
     }),
   clickWindow: (x, y) => renderer.nativeSimulateClick(x, y),
+  press: (testId) =>
+    Option.match(center(renderer, testId), {
+      onNone: () => {},
+      onSome: (point) => renderer.nativeSimulateMouseDown(point.x, point.y),
+    }),
+  movePointer: (x, y) => renderer.nativeSimulateMouseMove(x, y, 0),
+  releasePointer: (x, y) => renderer.nativeSimulateMouseUp(x, y),
   rightClick: (testId) =>
     Option.match(center(renderer, testId), {
       onNone: () => {},

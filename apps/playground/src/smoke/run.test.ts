@@ -92,6 +92,9 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "search-highlights",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "drag-autoscroll",
+    );
   });
 
   it("flags duplicated ids", () => {
