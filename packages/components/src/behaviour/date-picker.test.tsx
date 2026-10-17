@@ -17,7 +17,12 @@ import * as Option from "effect/Option";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
-import { DatePicker } from "../date-picker.js";
+import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
+} from "../date-picker.js";
 
 const Picker = ({
   value,
@@ -27,6 +32,8 @@ const Picker = ({
   min,
   max,
   clearable,
+  triggerPlaceholder,
+  showCalendar = true,
 }: {
   readonly value?: string | null;
   readonly defaultValue?: string;
@@ -35,11 +42,12 @@ const Picker = ({
   readonly min?: string;
   readonly max?: string;
   readonly clearable?: boolean;
+  readonly triggerPlaceholder?: string;
+  readonly showCalendar?: boolean;
 }) => (
   <div style={{ width: 420, padding: 40 }}>
     <DatePicker
       today="2026-10-17"
-      label="Due date"
       value={value}
       defaultValue={defaultValue}
       onValueChange={onValueChange}
@@ -47,7 +55,17 @@ const Picker = ({
       min={min}
       max={max}
       clearable={clearable}
-    />
+    >
+      <DatePickerTrigger
+        label="Due date"
+        {...(triggerPlaceholder === undefined
+          ? {}
+          : { placeholder: triggerPlaceholder })}
+      />
+      <DatePickerContent>
+        {showCalendar ? <DatePickerCalendar /> : null}
+      </DatePickerContent>
+    </DatePicker>
   </div>
 );
 
@@ -282,5 +300,32 @@ describe("DatePicker", () => {
     open(notClearable);
     expect(notClearable.renderer.findByTestId("date-clear")).toBeUndefined();
     notClearable.unmount();
+  });
+
+  it("takes the trigger's placeholder and name from the part", () => {
+    const picker = renderComponent(
+      <Picker triggerPlaceholder="Choose a day" />,
+    );
+
+    expect(picker.renderer.getAllText()).toContain("Choose a day");
+    expect(
+      picker.renderer.findByTestId("date-picker-trigger")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("Due date");
+
+    picker.unmount();
+  });
+
+  it("opens an empty surface when the calendar part is not composed", () => {
+    const picker = renderComponent(<Picker showCalendar={false} />);
+
+    open(picker);
+
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+    expect(picker.renderer.findByTestId("date-month")).toBeUndefined();
+    expect(picker.renderer.findByTestId("date-day-2026-10-17")).toBeUndefined();
+
+    picker.unmount();
   });
 });

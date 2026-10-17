@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200-adopt-compound-part-api.md`, `119-tier2-date-picker.md`, `127-date-picker-bounds-and-clear.md`, `132-time-picker.md` |
-| Status | planned |
+| Status | done — 2026-10-17; DatePicker 16, TimePicker 10 native tests, both-direction proof measured |
 | Source | `docs/component-api.md` §9 row "Date / time pickers"; `TODO.md` → "Split the remaining landed deviations … into parts" |
 
 Self-contained. It migrates only the date and time pickers. Pagination,
@@ -186,5 +186,23 @@ segments: the segments-in-caller-order and completion tests fail. Restore.
 
 ## 8. Result
 
-To be filled by the executor: commit, measured counts, both-direction evidence,
-and the exact wording added to `docs/component-api.md` for the TimePicker shape.
+Landed 2026-10-17:
+
+- `date-picker.tsx` — four parts over a root context, composed over `Popover`.
+  The root keeps the value, bounds, open state and trigger registry; the calendar
+  keeps the view month, the focused day and the cell ids. The trigger's ref is
+  merged with the caller's and registered with the root, so select/clear still
+  return focus; Escape still returns through `PopoverContent`.
+- `time-picker.tsx` — four parts over a field root. The root keeps the value, the
+  text state and the clamping; `TimePickerSegment` takes `segment`, the separator
+  is a part, and `TimePickerClear` renders only with `clearable` and a value.
+  The contract's §8 note and §9 record that this is a field, not a popup.
+- Tests: DatePicker 16 (14 kept + trigger placeholder/name + empty surface without
+  the calendar), TimePicker 10 (8 kept + caller order + no clear part). Full
+  behaviour suite 291 green.
+- Both directions: `DatePickerTrigger` printing the placeholder unconditionally
+  fails open/select/controlled trigger tests; `TimePickerSegment` reading the
+  hours text for both segments fails the typed-value tests. Restored, green.
+- Examples compose the parts; docs pages updated; `COMPONENTS.md` says 16 and 10;
+  `docs/component-api.md` §8 lists the parts and §9 now records no deviations.
+- Gates: `nub run check-types` green, 222 unit tests, 291 behaviour tests.

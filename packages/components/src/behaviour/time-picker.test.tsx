@@ -15,7 +15,12 @@ import {
   renderComponent,
   type ComponentTestRoot,
 } from "../internal/test-root.js";
-import { TimePicker } from "../time-picker.js";
+import {
+  TimePicker,
+  TimePickerClear,
+  TimePickerSegment,
+  TimePickerSeparator,
+} from "../time-picker.js";
 
 const Time = ({
   value,
@@ -24,6 +29,8 @@ const Time = ({
   minuteStep,
   clearable,
   disabled,
+  minutesFirst = false,
+  showClear = true,
 }: {
   readonly value?: string | null;
   readonly defaultValue?: string;
@@ -31,6 +38,8 @@ const Time = ({
   readonly minuteStep?: number;
   readonly clearable?: boolean;
   readonly disabled?: boolean;
+  readonly minutesFirst?: boolean;
+  readonly showClear?: boolean;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <TimePicker
@@ -41,7 +50,22 @@ const Time = ({
       minuteStep={minuteStep}
       clearable={clearable}
       disabled={disabled}
-    />
+    >
+      {minutesFirst ? (
+        <>
+          <TimePickerSegment segment="minutes" />
+          <TimePickerSeparator />
+          <TimePickerSegment segment="hours" />
+        </>
+      ) : (
+        <>
+          <TimePickerSegment segment="hours" />
+          <TimePickerSeparator />
+          <TimePickerSegment segment="minutes" />
+        </>
+      )}
+      {showClear ? <TimePickerClear /> : null}
+    </TimePicker>
   </div>
 );
 
@@ -215,6 +239,37 @@ describe("TimePicker", () => {
     expect(onValueChange.mock.calls.at(-1)).toEqual(["23:00"]);
     // The consumer did not adopt the value, so the display went back to 09.
     expect(segmentValue(time, "hours")).toBe("09");
+
+    time.unmount();
+  });
+
+  it("lays the segments out where the caller put them", () => {
+    const onValueChange = vi.fn();
+    const time = renderComponent(
+      <Time minutesFirst onValueChange={onValueChange} />,
+    );
+
+    const minutes = time.renderer.findByTestId("time-minutes");
+    const hours = time.renderer.findByTestId("time-hours");
+    const minuteBounds = time.renderer.getElementBounds(minutes?.id ?? -1);
+    const hourBounds = time.renderer.getElementBounds(hours?.id ?? -1);
+
+    expect(minuteBounds?.x).toBeLessThan(hourBounds?.x ?? 0);
+
+    typeIn(time, "hours", "09");
+    typeIn(time, "minutes", "30");
+
+    expect(onValueChange.mock.calls.at(-1)).toEqual(["09:30"]);
+
+    time.unmount();
+  });
+
+  it("renders no clear control when the part is not composed", () => {
+    const time = renderComponent(
+      <Time defaultValue="09:30" clearable showClear={false} />,
+    );
+
+    expect(time.renderer.findByTestId("time-clear")).toBeUndefined();
 
     time.unmount();
   });

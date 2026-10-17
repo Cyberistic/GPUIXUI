@@ -9,7 +9,12 @@
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
-import { TimePicker } from "../src/time-picker.js";
+import {
+  TimePicker,
+  TimePickerClear,
+  TimePickerSegment,
+  TimePickerSeparator,
+} from "../src/time-picker.js";
 
 /** A standup time field with a quarter-hour arrow step. */
 export const TimePickerExample = () => {
@@ -52,7 +57,12 @@ export const TimePickerExample = () => {
             onValueChange={setStandup}
             minuteStep={15}
             clearable
-          />
+          >
+            <TimePickerSegment segment="hours" />
+            <TimePickerSeparator />
+            <TimePickerSegment segment="minutes" />
+            <TimePickerClear />
+          </TimePicker>
         </div>
         <text
           style={{

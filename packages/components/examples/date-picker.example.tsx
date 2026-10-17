@@ -8,7 +8,12 @@
 
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
-import { DatePicker } from "../src/date-picker.js";
+import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
+} from "../src/date-picker.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
 /** A due-date field with a booking window. */
@@ -47,14 +52,18 @@ export const DatePickerExample = () => {
             Due date
           </text>
           <DatePicker
-            label="Due date"
             value={due}
             onValueChange={setDue}
             today="2026-10-17"
             min="2026-10-17"
             max="2026-12-31"
             clearable
-          />
+          >
+            <DatePickerTrigger label="Due date" />
+            <DatePickerContent>
+              <DatePickerCalendar />
+            </DatePickerContent>
+          </DatePicker>
         </div>
         <text
           style={{

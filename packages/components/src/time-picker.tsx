@@ -14,13 +14,24 @@
  * disagree at the hour or midnight boundary. Emptying a segment clears the
  * whole value; blur pads both segments. Disabled is `readOnly` on both inputs
  * because 0.10.0 has no `aria-disabled`.
+ *
+ * The root is a field, not a trigger with a popup (the reason it is a field is
+ * above): `TimePickerSegment` places the two inputs, `TimePickerSeparator` the
+ * colon, and `TimePickerClear` the optional reset.
  */
 
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
 import * as Option from "effect/Option";
-import { useLayoutEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useControllableState } from "./internal/controllable.js";
 import {
   addMinutes,
@@ -40,6 +51,39 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
+/** The two segments a time is entered in. */
+export type TimeSegment = "hours" | "minutes";
+
+/** The rules a time-picker part follows; throws outside a {@link TimePicker}. */
+interface TimePickerContextValue {
+  readonly hoursText: string;
+  readonly minutesText: string;
+  readonly disabled: boolean;
+  readonly groupLabel: string;
+  readonly testId: string;
+  readonly clearable: boolean;
+  readonly hasValue: boolean;
+  readonly edit: (segment: TimeSegment, raw: string) => void;
+  readonly handleKeyDown: (segment: TimeSegment, event: EventPayload) => void;
+  readonly normalize: () => void;
+  readonly setFocused: (focused: boolean) => void;
+  readonly clear: () => void;
+  readonly registerHours: (instance: PublicInstance | null) => void;
+}
+
+const TimePickerContext = createContext<TimePickerContextValue | undefined>(
+  undefined,
+);
+
+/** The field a part belongs to. Throws when there is none. */
+const useTimePicker = (): TimePickerContextValue => {
+  const value = useContext(TimePickerContext);
+  if (value === undefined) {
+    throw new Error("TimePicker parts must be used inside TimePicker");
+  }
+  return value;
+};
+
 /** {@link TimePicker} props. */
 export interface TimePickerProps {
   /** The controlled `HH:mm` value, or `null` for none. `undefined` means uncontrolled. */
@@ -56,11 +100,12 @@ export interface TimePickerProps {
   readonly disabled?: boolean;
   /** Base id for the parts: `<testId>-hours`, `-minutes`, `-clear`. Default `"time-picker"`. */
   readonly testId?: string;
+  readonly children?: ReactNode;
 }
 
 const SEGMENT_WIDTH = 26;
 
-/** {@link TimePicker}. */
+/** The field: value, text state, clamping and the focus ring. */
 export const TimePicker = ({
   value,
   defaultValue,
@@ -70,6 +115,7 @@ export const TimePicker = ({
   clearable = false,
   disabled = false,
   testId = "time-picker",
+  children,
 }: TimePickerProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
@@ -119,7 +165,7 @@ export const TimePicker = ({
 
   const emit = (next: string | null): void => setSelected(next);
 
-  const edit = (segment: "hours" | "minutes", raw: string): void => {
+  const edit = (segment: TimeSegment, raw: string): void => {
     const digits = digitsOf(raw);
     if (digits === "") {
       setHoursText("");
@@ -148,16 +194,12 @@ export const TimePicker = ({
     emit(formatIsoTime(next));
   };
 
-  const onSegmentKeyDown = (
-    segment: "hours" | "minutes",
-  ): ((event: EventPayload) => void) => {
-    return (event) => {
-      Match.value(event.key).pipe(
-        Match.when("up", () => shift(segment === "hours" ? 60 : step)),
-        Match.when("down", () => shift(segment === "hours" ? -60 : -step)),
-        Match.orElse(() => undefined),
-      );
-    };
+  const handleKeyDown = (segment: TimeSegment, event: EventPayload): void => {
+    Match.value(event.key).pipe(
+      Match.when("up", () => shift(segment === "hours" ? 60 : step)),
+      Match.when("down", () => shift(segment === "hours" ? -60 : -step)),
+      Match.orElse(() => undefined),
+    );
   };
 
   const normalize = (): void => {
@@ -182,10 +224,76 @@ export const TimePicker = ({
     Option.flatMap(Option.fromNullishOr(selected), parseIsoTime),
   );
 
-  const inputProps = (
-    segment: "hours" | "minutes",
-    text: string,
-  ): InputProps => ({
+  return (
+    <TimePickerContext.Provider
+      value={{
+        hoursText,
+        minutesText,
+        disabled,
+        groupLabel,
+        testId,
+        clearable,
+        hasValue,
+        edit,
+        handleKeyDown,
+        normalize,
+        setFocused,
+        clear,
+        registerHours: (instance) => {
+          hoursInput.current = instance;
+        },
+      }}
+    >
+      <div
+        role="group"
+        aria-label={groupLabel}
+        testId={testId}
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing["2xs"],
+          height: controlHeight(theme, "md"),
+          paddingLeft: theme.spacing.sm,
+          paddingRight: theme.spacing.sm,
+          backgroundColor: theme.colors.input,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+          borderRadius: theme.radius.md,
+          opacity: disabled ? 0.5 : 1,
+          ...(focused && !disabled ? focusRing(theme) : {}),
+        }}
+      >
+        {children}
+      </div>
+    </TimePickerContext.Provider>
+  );
+};
+
+/** {@link TimePickerSegment} props. */
+export interface TimePickerSegmentProps {
+  /** Which half of the time this input edits. */
+  readonly segment: TimeSegment;
+}
+
+/** One labelled segment. Typing clamps, arrows step and blur pads. */
+export const TimePickerSegment = ({ segment }: TimePickerSegmentProps) => {
+  const theme = useTheme();
+  const {
+    hoursText,
+    minutesText,
+    disabled,
+    groupLabel,
+    testId,
+    edit,
+    handleKeyDown,
+    normalize,
+    setFocused,
+    registerHours,
+  } = useTimePicker();
+  const text = segment === "hours" ? hoursText : minutesText;
+
+  const props: InputProps = {
     testId: `${testId}-${segment}`,
     "aria-label": `${groupLabel} ${segment}`,
     value: text,
@@ -193,7 +301,7 @@ export const TimePicker = ({
     readOnly: disabled,
     tabIndex: disabled ? -1 : 0,
     onChange: (event) => edit(segment, event.value ?? ""),
-    onKeyDown: onSegmentKeyDown(segment),
+    onKeyDown: (event) => handleKeyDown(segment, event),
     onFocus: () => setFocused(true),
     onBlur: () => {
       normalize();
@@ -208,75 +316,82 @@ export const TimePicker = ({
       textAlign: "center",
       backgroundColor: undefined,
     },
-  });
+  };
+
+  return (
+    <input
+      {...props}
+      {...(segment === "hours" ? { ref: registerHours } : {})}
+    />
+  );
+};
+
+/** {@link TimePickerSeparator} props. */
+export interface TimePickerSeparatorProps {
+  readonly children?: ReactNode;
+}
+
+/** The colon between the two segments. Not focusable. */
+export const TimePickerSeparator = ({
+  children = ":",
+}: TimePickerSeparatorProps) => {
+  const theme = useTheme();
+
+  return (
+    <text
+      role="presentation"
+      style={{
+        ...textStyle(theme, "body"),
+        color: theme.colors.mutedForeground,
+        userSelect: "none",
+      }}
+    >
+      {children}
+    </text>
+  );
+};
+
+/** {@link TimePickerClear} props. */
+export interface TimePickerClearProps {
+  /** The accessible name. Default `"Clear time"`. */
+  readonly label?: string;
+}
+
+/** The reset control. It renders only while `clearable` and a value exist. */
+export const TimePickerClear = ({
+  label = "Clear time",
+}: TimePickerClearProps) => {
+  const theme = useTheme();
+  const { clearable, hasValue, disabled, testId, clear } = useTimePicker();
+  if (!clearable || !hasValue || disabled) return null;
 
   return (
     <div
-      role="group"
-      aria-label={groupLabel}
-      testId={testId}
+      role="button"
+      aria-label={label}
+      testId={`${testId}-clear`}
+      tabIndex={0}
+      onClick={clear}
+      onKeyDown={(event: EventPayload) => {
+        if (event.key === "enter" || event.key === "space") clear();
+      }}
       style={{
+        ...textStyle(theme, "caption"),
         display: "flex",
-        flexDirection: "row",
         alignItems: "center",
-        gap: theme.spacing["2xs"],
-        height: controlHeight(theme, "md"),
-        paddingLeft: theme.spacing.sm,
-        paddingRight: theme.spacing.sm,
-        backgroundColor: theme.colors.input,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.border,
-        borderRadius: theme.radius.md,
-        opacity: disabled ? 0.5 : 1,
-        ...(focused && !disabled ? focusRing(theme) : {}),
+        justifyContent: "center",
+        width: 18,
+        height: 18,
+        borderRadius: theme.radius.sm,
+        color: theme.colors.mutedForeground,
+        cursor: "pointer",
+        hover: {
+          backgroundColor: theme.colors.accent,
+          color: theme.colors.accentForeground,
+        },
       }}
     >
-      <input
-        {...inputProps("hours", hoursText)}
-        ref={(instance) => {
-          hoursInput.current = instance;
-        }}
-      />
-      <text
-        role="presentation"
-        style={{
-          ...textStyle(theme, "body"),
-          color: theme.colors.mutedForeground,
-          userSelect: "none",
-        }}
-      >
-        :
-      </text>
-      <input {...inputProps("minutes", minutesText)} />
-      {clearable && hasValue && !disabled ? (
-        <div
-          role="button"
-          aria-label="Clear time"
-          testId={`${testId}-clear`}
-          tabIndex={0}
-          onClick={clear}
-          onKeyDown={(event: EventPayload) => {
-            if (event.key === "enter" || event.key === "space") clear();
-          }}
-          style={{
-            ...textStyle(theme, "caption"),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 18,
-            height: 18,
-            borderRadius: theme.radius.sm,
-            color: theme.colors.mutedForeground,
-            cursor: "pointer",
-            hover: {
-              backgroundColor: theme.colors.accent,
-              color: theme.colors.accentForeground,
-            },
-          }}
-        >
-          <text>✕</text>
-        </div>
-      ) : null}
+      <text>✕</text>
     </div>
   );
 };

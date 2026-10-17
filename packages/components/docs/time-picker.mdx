@@ -8,16 +8,21 @@ optional clear control. The value is a time of day, not a timestamp: no date, no
 zone, no clock read.
 
 ```tsx
-import { TimePicker } from "@gpuixui/components/time-picker";
+import {
+  TimePicker,
+  TimePickerClear,
+  TimePickerSegment,
+  TimePickerSeparator,
+} from "@gpuixui/components/time-picker";
 
 const [standup, setStandup] = useState<string | null>("09:30");
 
-<TimePicker
-  label="Standup time"
-  value={standup}
-  onValueChange={setStandup}
-  minuteStep={15}
-/>;
+<TimePicker value={standup} onValueChange={setStandup} minuteStep={15}>
+  <TimePickerSegment segment="hours" />
+  <TimePickerSeparator />
+  <TimePickerSegment segment="minutes" />
+  <TimePickerClear />
+</TimePicker>;
 ```
 
 ## Value format
@@ -27,8 +32,11 @@ The public value is **`HH:mm`**, 24-hour, or `null` for "no time". Never a
 means uncontrolled.
 
 ```tsx
-<TimePicker defaultValue="09:30" />;                      // remembers
-<TimePicker value={time} onValueChange={setTime} />;      // app remembers
+<TimePicker defaultValue="09:30">
+  <TimePickerSegment segment="hours" />
+  <TimePickerSeparator />
+  <TimePickerSegment segment="minutes" />
+</TimePicker>;
 ```
 
 Two digits are canonical: `"9:30"`, `"24:00"` and `"12:60"` are malformed. A
@@ -39,11 +47,15 @@ date value renders the date placeholder.
 
 | Part | Responsibility |
 | ---- | -------------- |
-| the group | `role="group"` named by `label` (default `"Time"`), with the field chrome |
-| the hours segment | a real `<input>` labelled `<label> hours`, digits clamped to `00..23` |
-| the separator | a static, non-selectable `:` |
-| the minutes segment | a real `<input>` labelled `<label> minutes`, digits clamped to `00..59` |
-| the clear control | `aria-label="Clear time"`, only with `clearable` and only while a time is set |
+| `TimePicker` | the value, the text state, clamping, arrows and the field chrome |
+| `TimePickerSegment` | one real `<input>`; `segment="hours"` (`00..23`) or `"minutes"` (`00..59`) |
+| `TimePickerSeparator` | a static, non-selectable `:` |
+| `TimePickerClear` | the clear control; renders only with `clearable` and a value |
+
+The root owns the value and the group name (`label`, default `"Time"`); the parts
+own their own place, so a caller can reorder them or drop the clear control. This
+is a **field**, not a trigger with a popup: the GPUix runtime has no spinbutton
+value to announce, so a popup would be less honest than two inputs.
 
 Two inputs rather than one `role="spinbutton"` is deliberate: 0.10.0 exposes
 `aria-valuetext` but no `aria-valuenow`, so a custom spinbutton could not
@@ -82,7 +94,11 @@ integer in `1..59`. Typed minutes always accept `00..59`, so a schedule that
 wants quarter-hour increments still lets a consumer enter `09:07` deliberately.
 
 ```tsx
-<TimePicker label="Reminder" minuteStep={15} value={time} onValueChange={setTime} />;
+<TimePicker minuteStep={15} value={time} onValueChange={setTime}>
+  <TimePickerSegment segment="hours" />
+  <TimePickerSeparator />
+  <TimePickerSegment segment="minutes" />
+</TimePicker>;
 ```
 
 ## Controlled and uncontrolled
@@ -92,12 +108,12 @@ value while `onValueChange` still fires. `clearable` reports `null`; the caller
 owns that state and decides what "not set" means.
 
 ```tsx
-<TimePicker
-  label="Standup time"
-  clearable
-  value={standup}
-  onValueChange={setStandup}
-/>;
+<TimePicker clearable value={standup} onValueChange={setStandup}>
+  <TimePickerSegment segment="hours" />
+  <TimePickerSeparator />
+  <TimePickerSegment segment="minutes" />
+  <TimePickerClear />
+</TimePicker>;
 ```
 
 ## Theming
@@ -134,11 +150,12 @@ and a round-trip of all 1440 minutes, hour carry in both directions, midnight
 wrapping, day wrap, strict and clamping segment parsers, padding, step
 normalisation, the last-two-digits rule and segment composition.
 
-`src/behaviour/time-picker.test.tsx` (8 tests) covers typed hours reaching
+`src/behaviour/time-picker.test.tsx` (10 tests) covers typed hours reaching
 `onValueChange`, typed minutes completing the value, out-of-range clamping,
 arrow carry and midnight wrap, `minuteStep`, blur padding, the clear rules and
-the disabled state, and the controlled contract. The theme matrix adds the
-both-theme surface assertion.
+the disabled state, the controlled contract, the segments laid out where the
+caller put them, and no clear control when the part is not composed. The theme
+matrix adds the both-theme surface assertion.
 
 ```sh
 nub run --filter @gpuixui/components test

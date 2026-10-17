@@ -8,11 +8,21 @@ has no calendar primitive and no native date input, so the grid is ours: pure
 `DateTime` arithmetic in `date-picker/calendar.ts`, no `Date`, no `Intl`.
 
 ```tsx
-import { DatePicker } from "@gpuixui/components/date-picker";
+import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
+} from "@gpuixui/components/date-picker";
 
 const [due, setDue] = useState<string | null>("2026-10-30");
 
-<DatePicker label="Due date" value={due} onValueChange={setDue} />;
+<DatePicker value={due} onValueChange={setDue}>
+  <DatePickerTrigger label="Due date" />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
 ```
 
 ## Value format
@@ -22,25 +32,29 @@ Never a `DateTime` and never a locale-formatted string: a stored value must not
 depend on how it is displayed. `undefined` means uncontrolled.
 
 ```tsx
-<DatePicker defaultValue="2026-10-30" />;                       // remembers
-<DatePicker value={due} onValueChange={setDue} />;               // app remembers
+<DatePicker defaultValue="2026-10-30">
+  <DatePickerTrigger />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
 ```
 
 ## Anatomy
 
 | Part | Responsibility |
 | ---- | -------------- |
-| the trigger | field-shaped button; the selected day or `placeholder`, `aria-expanded`, `▾` |
-| the popover | the package's Popover: anchored layer, dismiss stack, Escape focus-return |
-| the header | previous/next month (`date-prev` / `date-next`) and the month label |
-| the weekday row | `Mon`…`Sun`, or `Sun`…`Sat` with `weekStartsOn={0}` |
-| the grid | six rows of seven cells; selected day filled with `colors.primary`; today outlined |
-| the clear row | `Clear`, only with `clearable` and only while a day is selected |
+| `DatePicker` | the value, the bounds, the open state and the trigger registry |
+| `DatePickerTrigger` | the field-shaped control: the selected day or `placeholder`, `aria-expanded`, `▾` |
+| `DatePickerContent` | the package's Popover surface: anchored layer, dismiss stack, Escape focus-return |
+| `DatePickerCalendar` | the month header, weekday row, day grid, key handling and the Clear row |
 
-The grid is always six rows, so the popover does not change height between a
-28-day February and a 31-day month. Days from the adjacent months are blank
-cells, not second-month buttons: a grid with two months is a different component
-with different selection rules.
+The root owns the value and the bounds because selection and clamping need them;
+the calendar owns only the view month and the focused day, which reset when the
+surface opens. The grid is always six rows, so the popover does not change height
+between a 28-day February and a 31-day month. Days from the adjacent months are
+blank cells, not second-month buttons: a grid with two months is a different
+component with different selection rules.
 
 Browsing months changes the **view**, not the value. Only Enter, Space or a click
 selects.
@@ -52,12 +66,16 @@ is ignored, exactly like a malformed `value`.
 
 ```tsx
 <DatePicker
-  label="Check-in"
   min="2026-10-17"
   max="2026-12-31"
   value={checkIn}
   onValueChange={setCheckIn}
-/>;
+>
+  <DatePickerTrigger label="Check-in" />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
 ```
 
 - Days outside the bounds are muted, leave the tab order and do not activate.
@@ -77,7 +95,12 @@ reports `null`, closes the popover and returns focus to the trigger, matching th
 selection path.
 
 ```tsx
-<DatePicker label="Due date" clearable value={due} onValueChange={setDue} />;
+<DatePicker clearable value={due} onValueChange={setDue}>
+  <DatePickerTrigger label="Due date" />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
 ```
 
 The action is opt-in so an existing field does not gain a row; the caller still
@@ -140,11 +163,13 @@ day of a month without `Date`, day identity, labels, ISO parsing (including
 `2026-02-30`), inclusive bounds, malformed bounds, clamping, month browse limits
 and `min` after `max`.
 
-`src/behaviour/date-picker.test.tsx` (14 tests) covers open + day focus, selection
+`src/behaviour/date-picker.test.tsx` (16 tests) covers open + day focus, selection
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 PageDown browsing without changing the value, Escape focus-return, the
 next-month control, both themes, a disabled trigger, an unavailable day, arrow
-clamping, the month-control bound, the clear action and its visibility rules.
+clamping, the month-control bound, the clear action and its visibility rules, the
+trigger's own placeholder/name, and an empty surface when the calendar part is
+not composed.
 
 ```sh
 nub run --filter @gpuixui/components test
@@ -154,6 +179,6 @@ nub run --filter @gpuixui/components test:behaviour
 ## Related
 
 - **Popover** — the surface this composes.
-- **Calendar** is not a separate export; the grid is internal to the picker.
+- **`DatePickerCalendar`** — the grid part; compose it inside `DatePickerContent`.
 - **Time picker** — the time-of-day half of a scheduling field.
 - **Field** — wrap the trigger when the date needs a label and a message slot.

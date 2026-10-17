@@ -12,8 +12,8 @@ capability, the contract says so instead of naming an API that would not work.
 
 ## Adoption status
 
-The contract is accepted; adoption is incremental, and §9 tracks the landed
-components that still deviate.
+The contract is accepted; adoption is incremental, and §9 records the migration
+history. No landed component currently deviates.
 
 | Rule | Status |
 | ---- | ------ |
@@ -192,8 +192,14 @@ parts.
 | Pagination | `Pagination`, `PaginationPrevious`, `PaginationList`, `PaginationItem`, `PaginationNext`, `PaginationEllipsis` | — | plan 113, 300 |
 | Search inputs | `SearchInput` | `AutocompleteRoot`/`AutocompleteValue` (shape only) | plan 116 |
 | Comboboxes | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty` | `ComboboxRoot` + 24 parts | plan 116, 302 |
-| Date pickers | `DatePicker` | — | plan 119 |
-| Time pickers | `TimePicker` | — | plan 132 |
+| Date pickers | `DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar` | — | plan 119, 303 |
+| Time pickers | `TimePicker`, `TimePickerSegment`, `TimePickerSeparator`, `TimePickerClear` | — | plan 132, 303 |
+
+`TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
+said "the same for `TimePicker`" predated the measured reason it is a field: the
+runtime has no `aria-valuenow`, so a popup spinbutton could not announce its
+value. The field root, its two segments, the separator and the clear control are
+the honest parts.
 
 **Planned Tier 2 additions** (not implemented; the parts are fixed here so the
 implementation cannot invent a shape):
@@ -220,14 +226,11 @@ implementation cannot invent a shape):
 
 ## 9. Landed deviations and migration
 
-These components are `done` but still expose a single component where the parts
-table names a compound. They are **follow-ups**, not rewrites in this plan
-(plan `201` §2.5's rule): a part may only be split out with its own behaviour
+**None remain.** Every `done` Tier 2 component exports the parts its §8 row
+names. Alert was the first migration (plan `158`); Pagination (`300`), CommandMenu
+(`301`), Combobox (`302`) and the date/time pickers (`303`) followed. The rule
+still holds for new work: a part may only be split out with its own behaviour
 test, docs row and inventory record.
-
-| Component | Deviation | Planned parts |
-| --------- | --------- | ------------- |
-| Date / time pickers | one component owns the trigger and the popup | `DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar`; the same for `TimePicker` |
 
 `Badge`, `Avatar`, `EmptyState` and `SearchInput` are one styled region and are
 compliant as single parts.
