@@ -30,6 +30,7 @@ All paths relative to `packages/tokens/`:
 ```
 package.json
 tsconfig.json
+tsconfig.build.json
 README.md
 src/index.ts
 src/color.ts
@@ -45,7 +46,7 @@ src/theme.test.ts
 src/styles.test.ts
 src/react.tsx
 src/react.test.tsx
-examples/brand-theme.ts
+src/brand-theme.example.ts
 ```
 
 Do not create `src/schema.ts` in this pass. Runtime validation of theme JSON is
@@ -112,6 +113,11 @@ React; only `./react` does.
   "include": ["src"]
 }
 ```
+
+`tsconfig.build.json` extends it and excludes `src/**/*.test.ts`,
+`src/**/*.test.tsx` and `src/**/*.example.ts`; `build` uses that config so tests
+and the example never ship. `check-types` uses `tsconfig.json`, so tests and the
+example are still type-checked.
 
 Add `"@gpuixui/config": "workspace:*"` to `devDependencies` — every package that
 extends the shared config declares it (see `packages/deploy/package.json`).
@@ -203,7 +209,7 @@ export const palette = {
 } as const;
 ```
 
-`ThemeColors` has exactly these 35 roles, all `string`, all documented with
+`ThemeColors` has exactly these 37 roles, all `string`, all documented with
 JSDoc saying what the role means (not what colour it is):
 
 | Role | Light | Dark | Meaning |
@@ -232,7 +238,7 @@ JSDoc saying what the role means (not what colour it is):
 | `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries (≥ 3:1) |
 | `input` | `neutral.0` | `neutral.900` | input field background |
 | `inputForeground` | `neutral.900` | `neutral.100` | text inside inputs |
-| `placeholder` | `#66707F` | `neutral.500` | placeholder text |
+| `placeholder` | `#66707F` | `#7C8595` | placeholder text |
 | `ring` | `iris.500` | `iris.300` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF3D` | text selection wash (24%) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
@@ -441,7 +447,7 @@ export function createTheme(config: ThemeConfig): Theme;
    compositional units; merging arrays is meaningless).
 6. `density`:
    - string → `densityPresets[value]`
-   - object → `{ ...base.density, ...value, name: value.name ?? base.density.name }`
+   - object → `{ ...base.density, ...value, name: base.density.name }`
    - absent → base density.
 7. `mode` is never overridable: `createTheme` sets it from `config.mode` and
    `extendTheme` keeps `base.mode`. A theme cannot claim to be dark and carry a
@@ -623,37 +629,27 @@ wrong context.
 
 ## 7. Example
 
-`examples/brand-theme.ts` (inside the package, excluded from `src`, not built):
+The example is `src/brand-theme.example.ts`. It sits inside `src` so the one
+tsconfig type-checks and builds it, and it is not re-exported from `index.ts`.
+The `.example.ts` suffix makes it greppable and keeps it out of the public API
+surface. `theme.test.ts` imports it and asserts the brand palette, radius and
+density, so the documented extension mechanism is executed rather than
+decorative.
 
 ```ts
-import { createTheme, darkTheme } from "../src/index.js";
+import { createTheme, darkTheme } from "./index.js";
 
 export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
-  colors: {
-    primary: "#7C5CFF",
-    ring: "#9B8CFF"
-  },
+  colors: { primary: "#7C5CFF", ring: "#9B8CFF" },
   radius: { md: 8 },
-  density: "compact"
+  density: "compact",
 });
 ```
 
-Add `examples/brand-theme.test.ts`? No — tests live in `src`. Instead add a
-`theme.test.ts` case importing `../examples/brand-theme.js` and asserting:
-`brandTheme.mode === "dark"`, `brandTheme.colors.primary === "#7C5CFF"`,
-`brandTheme.colors.background === darkTheme.colors.background`, radius md 8,
-density compact. This makes the example *executed*, not decorative. Ensure
-`tsconfig.json` includes `examples` for type-checking? It is outside `src` and
-`rootDir`; checking it would conflict with `rootDir`. Instead keep the example
-inside `src/examples/brand-theme.ts`? That pollutes the build.
-
-Decision: place the example at `src/brand-theme.example.ts` (not exported from
-`index.ts`, but built). It is a real, type-checked, tested example. Name it
-`.example.ts` so it is greppable. Update the file list accordingly and drop the
-`examples/` directory. This keeps one tsconfig and no build exclusions. The
-README points at it.
+No separate `examples/` directory: one tsconfig, no build exclusions, no
+untested snippet.
 
 ## 8. README
 
