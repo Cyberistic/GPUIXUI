@@ -18,6 +18,7 @@
  * `COMPONENTS.md`, and the reason there is no `preventDefault` field to fake.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 
 /** A key name as GPUix reports it in `EventPayload.key`, lower-cased. */
@@ -61,20 +62,30 @@ export type Orientation = keyof typeof ARROW_KEYS;
 /**
  * Move a selection with the arrow keys, wrapping at the ends.
  *
- * `None` means the key is not a navigation key, so a caller can tell "stay put"
- * from "unhandled" without comparing against a sentinel index.
+ * `isDisabled` lets a group of controls skip items that cannot be chosen: a
+ * radio group must never land on a disabled option, because the tab stop would
+ * move there with no way to select it.
+ *
+ * `None` means the key is not a navigation key, or there is nowhere enabled to
+ * move to, so a caller can tell "stay put" from "unhandled" without comparing
+ * against a sentinel index.
  */
 export const decideMove = (
   index: number,
   count: number,
   key: KeyName,
   orientation: Orientation,
+  isDisabled: (index: number) => boolean = () => false,
 ): Option.Option<number> => {
   if (count <= 0) return Option.none();
   const { forward, backward } = ARROW_KEYS[orientation];
   if (key !== forward && key !== backward) return Option.none();
   const step = key === forward ? 1 : -1;
-  return Option.some((index + step + count) % count);
+  const candidates = Arr.map(
+    Arr.range(1, count - 1),
+    (offset) => (((index + step * offset) % count) + count) % count,
+  );
+  return Arr.findFirst(candidates, (candidate) => !isDisabled(candidate));
 };
 
 /** Home and End land on the ends rather than moving by one. */

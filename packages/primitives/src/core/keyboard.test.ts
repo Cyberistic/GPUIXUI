@@ -78,6 +78,26 @@ describe("decideMove", () => {
   it("has nowhere to go in an empty group", () => {
     expect(decideMove(0, 0, "down", "vertical")).toEqual(Option.none());
   });
+
+  it("skips an item that cannot be chosen", () => {
+    const disabled = new Set([1]);
+    expect(
+      decideMove(0, 3, "down", "vertical", (index) => disabled.has(index)),
+    ).toEqual(Option.some(2));
+  });
+
+  it("wraps past a disabled item instead of landing on it", () => {
+    const disabled = new Set([2]);
+    expect(
+      decideMove(1, 3, "down", "vertical", (index) => disabled.has(index)),
+    ).toEqual(Option.some(0));
+  });
+
+  it("does not move when every other item is disabled", () => {
+    expect(
+      decideMove(0, 2, "down", "vertical", (index) => index !== 0),
+    ).toEqual(Option.none());
+  });
 });
 
 describe("decideAbsolute", () => {

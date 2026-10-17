@@ -253,6 +253,29 @@ it("wraps a RadioGroup's arrow navigation at the end", async () => {
   expect(announced(runtime, "Alpha")).toBe("checked");
 });
 
+it("skips a disabled option in a RadioGroup's arrow navigation", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        defaultValue="a"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta", disabled: true },
+          { value: "c", label: "Gamma" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.keyDown("rg", "down");
+  // A disabled option is not a destination: the arrow lands on the next
+  // enabled one, the way the platform behaves.
+  expect(announced(runtime, "Beta")).toBe("unchecked");
+  expect(announced(runtime, "Gamma")).toBe("checked");
+});
+
 it("moves a RadioGroup's single tab stop with its selection", async () => {
   const runtime = await openWindow();
   runtime.render(

@@ -100,17 +100,24 @@ export const renderRadioGroup = (
   } = props;
   const count = Arr.length(options);
   const move = (key: string): boolean =>
-    Option.match(decideMove(activeIndex, count, key, orientation), {
-      onNone: () => false,
-      onSome: (next) => {
-        handlers.onActivate(next);
-        const option = options[next];
-        if (option !== undefined && option.disabled !== true) {
-          handlers.onSelect(option.value);
-        }
-        return true;
+    Option.match(
+      decideMove(
+        activeIndex,
+        count,
+        key,
+        orientation,
+        (candidate) => options[candidate]?.disabled === true,
+      ),
+      {
+        onNone: () => false,
+        onSome: (next) => {
+          handlers.onActivate(next);
+          const option = options[next];
+          if (option !== undefined) handlers.onSelect(option.value);
+          return true;
+        },
       },
-    });
+    );
   const onKeyDown = (event: EventPayload): void => {
     const key = event.key ?? "";
     if (move(key)) return;

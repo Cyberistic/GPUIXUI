@@ -27,7 +27,7 @@ and the strongest honest alternative.
 | Text inputs | wip | yes | **Runtime (041):** runtime keystrokes reach `onChange` with the accumulated text; Enter reaches `onSubmit`; a controlled field reports each edit. The native `<input>` holds its text; `core/state.ts` decides controlled/uncontrolled. |
 | Text areas | wip | yes | **Runtime (041):** height follows `rows` and a newline is accepted. `minRows`/`maxRows` are the runtime's own height controls. |
 | Checkboxes | wip | partial | **Runtime (041):** click and Space-up toggle, and `aria-valuetext` flips `unchecked → checked`; indeterminate reads `mixed`. **No `aria-checked`.** |
-| Radio groups | wip | partial | **Runtime (041):** arrows move the selection and wrap; exactly one item is the tab stop; a click on the circle selects. Options are **data**, not compound children (D13). |
+| Radio groups | wip | partial | **Runtime (041):** arrows move the selection, wrap, and **skip disabled options** (044); exactly one item is the tab stop; a click on the circle selects. Options are **data**, not compound children (D13). |
 | Selects | wip | reuse | **Runtime (041):** opens, paints its options, commits a clicked option. A thin themed wrapper over `@gpuix/react/select`; open state and dismissal are GPUix's. |
 | Switches | wip | partial | **Runtime (041):** a click toggles and the role is reported. **No `aria-checked`**; Space/Enter toggle. The thumb moves by the track's `justifyContent` because the runtime has no `transform`. |
 | Progress | wip | partial | **Runtime (041):** `aria-valuetext` is `"42%"`, role is `ProgressIndicator`, the fill tracks the value and clamps outside 0–100. **No `aria-valuenow`.** |
