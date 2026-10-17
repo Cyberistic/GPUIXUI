@@ -20,6 +20,7 @@ export * from "./context-menu.js";
 export * from "./countdown.js";
 export * from "./date-picker.js";
 export * from "./dialog.js";
+export * from "./drawer.js";
 export * from "./dropdown-menu.js";
 export * from "./empty-state.js";
 export * from "./field.js";

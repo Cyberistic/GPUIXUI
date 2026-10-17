@@ -234,6 +234,7 @@ parts.
 | Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
 | Countdown | `Countdown` | — | plan 312 |
 | Inline edit | `InlineEdit` (render display/input swap; one part) | — | plan 313 |
+| Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 
@@ -253,7 +254,6 @@ implementation cannot invent a shape):
 | Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
 | Navigation menu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink` | plan 205 |
 | Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |
-| Drawer | `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | plan 205 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
 | Mention input | `MentionInput`, `MentionInputList`, `MentionInputItem` | plan 205 |
 | Hotkey recorder | `HotkeyRecorder` | plan 205 |

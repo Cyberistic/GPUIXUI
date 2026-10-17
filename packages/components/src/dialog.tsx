@@ -22,19 +22,20 @@
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Match } from "effect";
 import {
   createContext,
   useCallback,
   useContext,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
-import { useControllableState } from "./internal/controllable.js";
-import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { dismissTopLayer } from "./internal/dismiss-layer.js";
+import {
+  handleModalKeyDown,
+  useModalFocus,
+  useModalState,
+} from "./internal/modal.js";
 import {
   assertParts,
   type PartChildren,
@@ -42,7 +43,6 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
-import { isDismiss, isTab } from "./internal/key.js";
 import {
   elevationShadow,
   textStyle,
@@ -102,25 +102,12 @@ export const Dialog = ({
   dismissible = true,
   children,
 }: DialogProps) => {
-  const [open, setOpen] = useControllableState({
-    value: openProp,
-    defaultValue: defaultOpen,
-    onChange: onOpenChange,
+  const { open, setOpen } = useModalState({
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    dismissible,
   });
-
-  // The layer handler must see the latest props without being re-pushed: a
-  // re-push would move the dialog above an overlay that opened after it.
-  const dismiss = useRef<() => void>(() => undefined);
-  useLayoutEffect(() => {
-    dismiss.current = () => {
-      if (dismissible) setOpen(false);
-    };
-  });
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    return pushDismissLayer(() => dismiss.current());
-  }, [open]);
 
   const context = useMemo<DialogContextValue>(
     () => ({ open, setOpen }),
@@ -221,7 +208,7 @@ export const DialogContent = ({
 }: DialogContentProps) => {
   const theme = useTheme();
   const { open, setOpen } = useDialogContext();
-  const renderer = useGpuix().renderer;
+  const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(dialogContent, children);
   const [content, setContent] = useState<PublicInstance | undefined>(undefined);
@@ -232,56 +219,15 @@ export const DialogContent = ({
     contentRef,
     ref,
   );
-  const previousFocus = useRef<number | null>(null);
-  const initialFocusRef = useRef(initialFocus);
-  useLayoutEffect(() => {
-    initialFocusRef.current = initialFocus;
-  });
-
   const contentId = content?.id;
-
-  useLayoutEffect(() => {
-    if (contentId === undefined) return;
-    previousFocus.current = renderer?.getFocusedElementId?.() ?? null;
-    renderer?.focusElement?.(contentId);
-    const initial = initialFocusRef.current?.() ?? null;
-    if (initial !== null && initial !== contentId) {
-      renderer?.focusElement?.(initial);
-    }
-    return () => {
-      const previous = previousFocus.current;
-      // A destroyed opener must not be focused: `getElementBounds` is the
-      // renderer's own existence check, and it is null once the element is gone.
-      if (
-        previous === null ||
-        previous === contentId ||
-        renderer?.getElementBounds?.(previous) === null
-      ) {
-        return;
-      }
-      renderer?.focusElement?.(previous);
-    };
-  }, [contentId, renderer]);
+  useModalFocus(contentId, initialFocus);
 
   if (!open) return null;
 
   const close = () => setOpen(false);
 
   const handleKeyDown = (event: EventPayload): void => {
-    Match.value(event).pipe(
-      Match.when(isDismiss, (value) => {
-        dismissTopLayer(value);
-      }),
-      Match.when(isTab, (value) => {
-        if (value.modifiers?.shift === true) {
-          renderer?.focusPreviousWithin?.(contentId ?? -1);
-        } else {
-          renderer?.focusNextWithin?.(contentId ?? -1);
-        }
-      }),
-      Match.orElse(() => undefined),
-    );
-    onKeyDown?.(event);
+    handleModalKeyDown({ event, contentId, renderer, onKeyDown });
   };
 
   return (

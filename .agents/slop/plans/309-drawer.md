@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §5 (D8), `112` (dialog shell) |
-| Status | planned |
+| Status | done — 10 native tests; Dialog's 18 re-pass after the extraction |
 | Source | `docs/component-api.md` §8 (planned parts: `Drawer`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter`); `COMPONENTS.md` → Tier 2 → Drawer; plan `205` D8 |
 
 This plan is self-contained. It adds `Drawer` at the Tier 2 bar: code, native
@@ -140,3 +140,23 @@ Restore after each.
 - Example, docs page, inventory record, `COMPONENTS.md` row and the contract's
   §8 row agree.
 - All gates and the behaviour suite green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/internal/modal.ts` — `useModalState`, `useModalFocus` and
+  `handleModalKeyDown`, extracted from Dialog with no behaviour change; Dialog
+  and Confirmation dialog still pass their 18 tests. `handleModalKeyDown` takes
+  the renderer as an argument (it is called from an event handler, so it must not
+  call a hook).
+- `src/drawer.tsx` — eight parts. The veil is the window-sized `<anchored>` from
+  plan 112 §1c, laid out as a row or column so the surface sits on the requested
+  edge; `size` maps to width (left/right) or height (bottom), capped by the
+  window.
+- `src/behaviour/drawer.test.tsx` — 10 tests (one more than planned: the theme
+  check is its own test). Focus, the Tab trap, all three sides and sizes, and
+  the uninterruptible path are measured, not assumed.
+- **Both directions:** dropping the dismiss layer fails 7 tests (Escape, the
+  backdrop, focus return, the trap, the theme and the controlled case cascade);
+  flipping the edge alignment fails the sides test. Restored: 10 native green.
