@@ -12,8 +12,10 @@
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { initValueState, type ValueState } from "../core/state.js";
+import { controlFocusStyle } from "../core/style.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { fieldVariant } from "../core/variants.js";
 import {
@@ -47,6 +49,8 @@ const handlers: SelectHandlers = {
   registerItem: () => () => {},
   onHighlight: () => {},
 };
+
+const noFocus = { focused: false, onFocus: () => {}, onBlur: () => {} };
 
 const itemsOf = (element: Parameters<typeof elementProp>[0]) =>
   expectSome(
@@ -86,8 +90,49 @@ describe("Select", () => {
     const trigger = selectTriggerStyle(
       { variant: fieldVariant, size: "md", invalid: true },
       testTheme,
-    )({ open: false, disabled: false, placeholder: false });
+    )({ open: false, disabled: false, placeholder: false, focused: false });
     expect(trigger.borderColor).toBe(testTheme.colors.destructive);
+  });
+
+  it("rings the trigger while it holds focus or its list is open", () => {
+    // The bug guarded (plan 083): the trigger took native focus and painted no
+    // ring, so a keyboard user could not see which control they were on.
+    const spec = { variant: fieldVariant, size: "md" as const };
+    const paint = selectTriggerStyle(spec, testTheme);
+    const resting = {
+      open: false,
+      disabled: false,
+      placeholder: false,
+      focused: false,
+    };
+    const ring = controlFocusStyle(spec, testTheme);
+    expect(paint({ ...resting, focused: true }).boxShadow).toStrictEqual(
+      ring.boxShadow,
+    );
+    expect(paint({ ...resting, open: true }).boxShadow).toStrictEqual(
+      ring.boxShadow,
+    );
+    expect(paint(resting).boxShadow).toBeUndefined();
+    expect(
+      paint({ ...resting, disabled: true, focused: true }).boxShadow,
+    ).toBeUndefined();
+  });
+
+  it("names the trigger separately and wires its focus handlers", () => {
+    const element = renderSelect(
+      { options: [], label: "Fruit", testId: "sel" },
+      testTheme,
+      valueState(""),
+      false,
+      noFocus,
+      handlers,
+    );
+    const trigger = childAt(element, 0);
+    expect(expectSome(elementProp(trigger, "testId"))).toBe("sel-trigger");
+    expect(P.isFunction(expectSome(elementProp(trigger, "onFocus")))).toBe(
+      true,
+    );
+    expect(P.isFunction(expectSome(elementProp(trigger, "onBlur")))).toBe(true);
   });
 
   it("opens onto the popover surface at the measured trigger width", () => {
@@ -147,6 +192,7 @@ describe("Select", () => {
       testTheme,
       valueState(""),
       false,
+      noFocus,
       handlers,
     );
     expect(
@@ -165,6 +211,7 @@ describe("Select", () => {
       testTheme,
       valueState(""),
       false,
+      noFocus,
       handlers,
     );
     const trigger = childAt(closed, 0);
@@ -178,6 +225,7 @@ describe("Select", () => {
       testTheme,
       valueState("alpha"),
       true,
+      noFocus,
       handlers,
     );
     expect(expectSome(elementProp(childAt(open, 0), "aria-expanded"))).toBe(
@@ -200,6 +248,7 @@ describe("Select", () => {
       testTheme,
       valueState("beta"),
       true,
+      noFocus,
       handlers,
     );
     const list = childAt(element, 1);
@@ -234,6 +283,7 @@ describe("Select", () => {
       testTheme,
       valueState("eu"),
       true,
+      noFocus,
       handlers,
     );
     const trigger = childAt(element, 0);

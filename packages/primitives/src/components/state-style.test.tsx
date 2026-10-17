@@ -293,6 +293,8 @@ const arrayState = (value: ReadonlyArray<string>) =>
 
 const textState = (value: string) => initValueState(Option.some(value), "");
 
+const noFocus = { focused: false, onFocus: () => {}, onBlur: () => {} };
+
 const spanState = (value: readonly [number, number]) =>
   initValueState(Option.some(value), [0, 100] as const);
 
@@ -498,6 +500,7 @@ describe("group roots and overlays", () => {
       testTheme,
       textState(""),
       true,
+      noFocus,
       handlers,
     );
     expect(lastState(record.seen)).toStrictEqual({
@@ -800,6 +803,7 @@ describe("per-item style", () => {
     const paint = selectTriggerPartStyle(
       { variant: fieldVariant, size: "md" },
       testTheme,
+      false,
       record.style,
     );
     const style = paint({ open: true, disabled: false, placeholder: false });
@@ -807,6 +811,7 @@ describe("per-item style", () => {
       open: true,
       disabled: false,
       placeholder: false,
+      focused: false,
     });
     expect(style.backgroundColor).toBe(PAINT);
   });

@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
   type SelectItemState,
-  type SelectTriggerState,
+  type SelectTriggerState as GpuixSelectTriggerState,
 } from "@gpuix/react/select";
 import {
   isSelectGroup,
@@ -49,7 +49,12 @@ import {
   type SelectOption,
   type SelectOptionGroup,
 } from "../core/select.js";
-import { controlStyle, surfaceStyle, type ControlSpec } from "../core/style.js";
+import {
+  controlFocusStyle,
+  controlStyle,
+  surfaceStyle,
+  type ControlSpec,
+} from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
@@ -63,16 +68,19 @@ import {
   mergeStyle,
   resolvePartStyle,
   useControlState,
+  useFocus,
+  type FocusState,
   type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export type {
-  SelectEntry,
-  SelectOption,
-  SelectOptionGroup,
-  SelectTriggerState,
-};
+export type { SelectEntry, SelectOption, SelectOptionGroup };
+
+/** The public state a `Select` trigger's style callback receives. */
+export interface SelectTriggerState extends GpuixSelectTriggerState {
+  /** Whether the visible trigger itself holds native focus. */
+  readonly focused: boolean;
+}
 
 /** The public state a `Select` style callback receives. */
 export interface SelectState {
@@ -118,21 +126,34 @@ export const selectTriggerStyle =
     spec: ControlSpec,
     theme: PrimitiveTheme,
   ): ((state: SelectTriggerState) => StyleDesc) =>
-  (state) =>
-    mergeStyle(controlStyle({ ...spec, disabled: state.disabled }, theme), {
-      justifyContent: "space-between",
-    });
+  (state) => {
+    const resolved = { ...spec, disabled: state.disabled };
+    const active = state.disabled !== true && (state.focused || state.open);
+    return mergeStyle(
+      mergeStyle(
+        controlStyle(resolved, theme),
+        active ? controlFocusStyle(resolved, theme) : undefined,
+      ),
+      { justifyContent: "space-between" },
+    );
+  };
 
 /** The trigger's paint with a caller's contribution merged last. */
 export const selectTriggerPartStyle =
   (
     spec: ControlSpec,
     theme: PrimitiveTheme,
+    focused: boolean,
     style?: StateStyle<SelectTriggerState>,
-  ): ((state: SelectTriggerState) => StyleDesc) =>
-  (state) =>
-    resolvePartStyle(selectTriggerStyle(spec, theme)(state), style, state);
-
+  ): ((state: GpuixSelectTriggerState) => StyleDesc) =>
+  (state) => {
+    const resolved: SelectTriggerState = { ...state, focused };
+    return resolvePartStyle(
+      selectTriggerStyle(spec, theme)(resolved),
+      style,
+      resolved,
+    );
+  };
 /**
  * The list: the popover surface, one step of padding, at least as wide as the
  * trigger, and capped when the options do not fit the window.
@@ -317,6 +338,7 @@ export const renderSelect = (
   theme: PrimitiveTheme,
   state: ValueState<string>,
   open: boolean,
+  focus: FocusState,
   handlers: SelectHandlers,
   placement: SelectPlacement = { collisionPadding: FLOATING_MARGIN },
 ): ReactElement => {
@@ -385,7 +407,10 @@ export const renderSelect = (
         aria-expanded={open}
         aria-valuetext={selectedLabel ?? placeholder}
         disabled={disabled}
-        style={selectTriggerPartStyle(spec, theme, triggerStyle)}
+        testId={testId === undefined ? undefined : `${testId}-trigger`}
+        onFocus={focus.onFocus}
+        onBlur={focus.onBlur}
+        style={selectTriggerPartStyle(spec, theme, focus.focused, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -435,6 +460,7 @@ export const Select = (props: SelectProps): ReactElement => {
   const { renderer } = useGpuix();
   const viewport = useWindowSize();
   const [open, setOpen] = useState(false);
+  const focus = useFocus();
   const [triggerBox, setTriggerBox] = useState<TriggerBox | undefined>(
     undefined,
   );
@@ -502,6 +528,7 @@ export const Select = (props: SelectProps): ReactElement => {
     theme,
     state.value,
     open,
+    focus,
     {
       onOpenChange: setOpen,
       onValueChange: state.set,

@@ -68,7 +68,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 | `label` | `string` | none | accessible name for the select |
 | `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | merged last on the visible trigger; an object or a state callback |
-| `testId` | `string` | — | stable locator |
+| `testId` | `string` | — | names the select; the visible trigger becomes `${testId}-trigger` |
 
 ```ts
 interface SelectOption {
@@ -112,6 +112,12 @@ newly highlight is scrolled into view through the renderer, so a capped list
 moves with the keyboard instead of leaving the active option beyond the fold
 (plan `069`). Opening on a selected option scrolls that row into view too.
 
+The trigger is one tab stop. It paints the focus ring whenever it holds focus
+**or** its list is open: the open list owns native focus, so without the second
+half a keyboard user would see no active state at all between opening and
+committing (plan `083`). Escape and a committed option both return focus to the
+trigger.
+
 ## Accessibility
 
 GPUix's published `Select` sets **no ARIA role at all** — measured on 0.10.0, the
@@ -134,6 +140,10 @@ There is no `aria-haspopup` in `HostProps`, so the combobox role is the stronges
 honest claim. The value is announced through `aria-valuetext` — the runtime
 exposes no other value channel — and the visible text inside the trigger is not
 itself the accessible value.
+
+Focus is **visible**: the trigger paints `focusRing(theme)` while focused or
+open, the same ring every other field paints. The runtime has no `focusVisible`,
+so a mouse-opened trigger shows it too.
 
 ## Theming
 
@@ -192,7 +202,8 @@ property; returning `{}` keeps the default look. The state type is exported.
 ### Per-item style
 
 `triggerStyle` takes the runtime's own `StateStyle<SelectTriggerState>` — the
-state `SelectTrigger` already reports — merged last on the visible trigger:
+state `SelectTrigger` reports, plus the focus the wrapper tracks — merged last
+on the visible trigger:
 
 ```tsx
 <Select triggerStyle={(state) => ({ opacity: state.open ? 0.9 : 1 })} />
@@ -203,9 +214,12 @@ state `SelectTrigger` already reports — merged last on the visible trigger:
 | `open` | `boolean` | the list is open |
 | `disabled` | `boolean` | the trigger is disabled |
 | `placeholder` | `boolean` | the trigger is showing the placeholder |
+| `focused` | `boolean` | the trigger itself holds native focus |
 
-`SelectTriggerState` is re-exported by this package, so a consumer never imports
-from `@gpuix/react/select` for it.
+`SelectTriggerState` is exported by this package: GPUix's own three fields plus
+`focused`. The component always resolves all four, so a callback never sees a
+partial state. The caller's style merges **after** the focus ring, so an explicit
+`boxShadow` wins.
 
 ## Limitations
 
@@ -234,7 +248,9 @@ from `@gpuix/react/select` for it.
   select's open state, and the per-item states reaching the paint (plans 080,
   081).
 
-- `src/components/Select.test.tsx` — trigger chrome, list surface, item states,
+- `src/components/Select.test.tsx` — trigger chrome, **the focus ring on focus
+  or open and none when disabled**, the trigger's own name and focus handlers,
+  list surface, item states,
   the measured `minWidth` (present with a width, absent without), the decoded
   role/name/expanded/selected props the wrapper passes down, the list-height
   estimate checked against the styles it mirrors, the capped content style, the
@@ -269,7 +285,12 @@ from `@gpuix/react/select` for it.
   both headings and all three options, exposes a named `Group`, measures its
   heading row at the estimate's caption height, and paints the exact estimated
   height; Enter/Down/Enter commits the first grouped option (the heading is
-  skipped), and a click on an option in the second group commits it.
+  skipped), and a click on an option in the second group commits it. **Focus
+  (083):** Tab lands on `sel-trigger`, whose painted `boxShadow` equals
+  `focusRing(theme)`; Tab past it clears the ring; Enter opens the list with
+  focus inside it and the trigger keeps the ring; Escape and a committed option
+  both return focus to the ringed trigger; a disabled select is skipped by Tab
+  and paints no ring. Before the fix every focused trigger painted `undefined`.
 
 
 ```sh

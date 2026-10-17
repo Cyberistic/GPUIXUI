@@ -16,6 +16,7 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { focusRing } from "@gpuixui/tokens";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
@@ -260,13 +261,8 @@ const textElement = (runtime: Runtime, label: string) =>
 
 /** The element a `Select` renders as its trigger. */
 const triggerOf = (runtime: Runtime, testId: string) =>
-  Option.getOrElse(
-    Option.flatMap(runtime.element(testId), (element) =>
-      Option.flatMap(Option.fromNullishOr(element.children[0]), (id) =>
-        Option.fromNullishOr(runtime.renderer.getElement(id)),
-      ),
-    ),
-    () => expect.fail(`the Select ${testId} painted no trigger`),
+  Option.getOrElse(runtime.element(`${testId}-trigger`), () =>
+    expect.fail(`the Select ${testId} painted no trigger`),
   );
 
 it("opens a Select's list and paints its options", async () => {
@@ -342,6 +338,117 @@ const selectProps = {
     { value: "pear", label: "Pear" },
   ],
 } as const;
+
+/** The ring the runtime paints for `focusRing`, with its explicit `inset`. */
+const FOCUS_RING = { ...focusRing(testTheme).boxShadow, inset: false };
+
+/** The painted shadow of an element, as the runtime reports it. */
+const shadowOf = (runtime: Runtime, testId: string) =>
+  Option.flatMap(runtime.element(testId), (element) =>
+    Option.fromNullishOr(element.style.boxShadow),
+  );
+
+/** The element that holds native focus, or a failed test. */
+const focusedId = (runtime: Runtime): number =>
+  Option.getOrElse(
+    Option.fromNullishOr(runtime.renderer.getFocusedElementId()),
+    () => expect.fail("no element holds native focus"),
+  );
+
+it("rings the Select trigger when Tab reaches it", async () => {
+  // The bug guarded (plan 083): the trigger took native focus and painted no
+  // ring, so the select was the one focusable control with no focus indicator.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <Input testId="field" label="Name" />
+        <Select {...selectProps} />
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
+  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
+    FOCUS_RING,
+  );
+  runtime.focusNext();
+  expect(Option.isNone(shadowOf(runtime, "sel-trigger"))).toBe(true);
+});
+
+it("keeps the Select trigger ringed while its list is open", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select {...selectProps} />
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.keyDown("sel-trigger", "enter");
+  // The list owns native focus while it is open; the ring marks its trigger.
+  expect(Option.getOrUndefined(runtime.focused())).not.toBe("sel-trigger");
+  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
+    FOCUS_RING,
+  );
+});
+
+it("returns focus to a ringed Select trigger after Escape", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select {...selectProps} />
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.keyDown("sel-trigger", "enter");
+  runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "escape");
+  runtime.flush();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
+  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
+    FOCUS_RING,
+  );
+  expect(runtime.allText()).not.toContain("Pear");
+});
+
+it("returns focus to a ringed Select trigger after committing an option", async () => {
+  const runtime = await openWindow();
+  const field = recorder();
+  runtime.render(
+    <Surface>
+      <Select {...selectProps} onChange={field.onChange} />
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.keyDown("sel-trigger", "enter");
+  runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "down");
+  runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "down");
+  runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "enter");
+  runtime.flush();
+  expect(lastValue(field.values)).toBe("pear");
+  expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
+  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
+    FOCUS_RING,
+  );
+});
+
+it("skips a disabled Select in the tab order and paints no ring on it", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <Input testId="field" label="Name" />
+        <Select {...selectProps} disabled />
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("after");
+  expect(Option.isNone(shadowOf(runtime, "sel-trigger"))).toBe(true);
+});
 
 it("exposes a named combobox whose expanded state follows the list", async () => {
   const runtime = await openWindow();
@@ -534,20 +641,11 @@ it("commits a click on an option inside a group", async () => {
   );
 });
 
-/** The Select's trigger: the root's first child, which wears `testId`'s chrome. */
-const selectTriggerOf = (runtime: Runtime, testId: string) => {
-  const root = Option.getOrElse(runtime.element(testId), () =>
-    expect.fail(`the runtime painted no Select ${testId}`),
+/** The Select's trigger, named `${testId}-trigger` by the wrapper. */
+const selectTriggerOf = (runtime: Runtime, testId: string) =>
+  Option.getOrElse(runtime.element(`${testId}-trigger`), () =>
+    expect.fail(`the Select ${testId} painted no trigger`),
   );
-  return Option.getOrElse(
-    Arr.head(root.children).pipe(
-      Option.flatMap((id) =>
-        Option.fromNullishOr(runtime.renderer.getElement(id)),
-      ),
-    ),
-    () => expect.fail(`the Select ${testId} painted no trigger`),
-  );
-};
 
 /** The list element's id: the parent of a painted option's row. */
 const selectListId = (runtime: Runtime, option: string): number =>

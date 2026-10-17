@@ -215,7 +215,11 @@ Never copy these from `references/gpuix` into a 0.10.0 component.
 These are library laws, not suggestions:
 
 1. **Focus** is tracked state (there is no `focusVisible`); the ring is
-   `focusRing(theme)` — zero-blur, zero-offset `boxShadow` with a spread.
+   `focusRing(theme)` — zero-blur, zero-offset `boxShadow` with a spread. A
+   headless part does **not** paint one for you: GPUix's `SelectTrigger` sets
+   `tabIndex` and the key/click handlers but no focus state and no ring, so a
+   themed wrapper tracks focus itself and rings while its popover is open too
+   (plan `083`).
 2. **State for assistive technology** rides on `role`, `aria-valuetext`,
    `aria-selected`, `aria-expanded` and `aria-description`; there is no checked
    or numeric-value prop.

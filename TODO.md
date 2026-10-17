@@ -400,6 +400,14 @@ retired once both branches are one
       documented on `references/gpuix` `main`. 8 contract tests guard the rows
       (both directions proven) and `LICENSES/adabraka-ui.md` records the
       reference structure (plan 203)
+`[x]` `packages/primitives`: **`Select`'s trigger took focus and painted no
+      focus ring** — measured: Tab focused the trigger (element 4) while its
+      `boxShadow` stayed `undefined`, the only focusable control in the library
+      with no focus indicator, and the trigger had no `testId` so
+      `runtime.focused()` could not name it. It now tracks focus and paints
+      `focusRing(theme)` while focused or open, is named `${testId}-trigger`,
+      and `SelectTriggerState` carries `focused`. 2 offline + 5 runtime tests,
+      4 failing in the old direction (plan 083)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
