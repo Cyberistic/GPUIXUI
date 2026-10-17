@@ -48,9 +48,9 @@ starts a new session before the previous one closes (evidence:
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████████]` 12/14
+`[x]` `[████████████]` 13/15
 
-`[x]` Write and index the tokens/theme plan set (plans 010–018)
+`[x]` Write and index the tokens/theme plan set (plans 010–020)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
@@ -67,6 +67,8 @@ prebuilt `dist` (plan 016)
 `elevationShadow(theme, level)` (plan 018)
 `[x]` Write `docs/tokens.md` (every token + extension API)
 `[x]` Write `docs/design-system.md` (identity, roles, state, accessibility)
+`[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
+platform toggle (plan 020)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[ ]` Add motion tokens (durations/easings) once a component consumes them
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
@@ -80,6 +82,10 @@ local focus-ring helpers (`primitives/src/core/style.ts`,
 (`primitives/src/core/style.ts` `firstShadow`, `components/src/internal/theme.ts`
 `elevation`), now that `focusRing` and `elevationShadow` exist and the package
 resolves from source (owner: those workstreams; plans 016–018)
+`[ ]` Cross-team: `components` still carries a whole structural copy of the
+package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
+it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
+`components`)
 
 ## Phase C — Tier 1–2 components
 

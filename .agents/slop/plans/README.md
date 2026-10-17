@@ -31,8 +31,9 @@ licensing, docs site).
 | [017](./017-focus-ring-and-docs-truth.md) | Focus ring helper and the focus documentation truth pass | B | 011, 016 | done |
 | [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | in progress |
+| [020](./020-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
 
-Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
+Plans 010–020 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
 agent that owns its paths.
 

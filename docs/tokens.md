@@ -16,6 +16,7 @@ import {
   alpha,
   colorRoles,
   createTheme,
+  currentPlatform,
   darkTheme,
   elevationShadow,
   extendTheme,
@@ -25,9 +26,13 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   lightTheme,
+  platformTheme,
+  platformTypes,
   statusTone,
+  systemUiFont,
   textStyle,
   type FocusRing,
+  type PlatformName,
   type StatusTone,
   type Theme,
   type ThemeContrast,
@@ -233,10 +238,10 @@ getTheme("light"); // the default light theme, unchanged
 
 ## Typography
 
-Families: `sans` is `.SystemUIFont`; `mono` resolves once per platform at module
-load (`Menlo` on macOS, `Consolas` on Windows, `DejaVu Sans Mono` elsewhere).
-Weights are `400`, `500`, `600`, `700`. GPUix has no `letterSpacing` field, so
-the scale does not define tracking.
+Families come from the platform table: `sans` is `systemUiFont` (GPUI's
+`.SystemUIFont` sentinel) and `mono` is the current platform's family. Weights
+are `400`, `500`, `600`, `700`. GPUix has no `letterSpacing` field, so the scale
+does not define tracking.
 
 | Role | Size | Line height | Weight | Use |
 | ---- | ---- | ----------- | ------ | --- |
@@ -261,6 +266,47 @@ import { textStyle } from "@gpuixui/tokens";
   Save changes
 </text>;
 ```
+
+### Platform type
+
+`platformTypes` is the one place a family per platform is decided, and
+`platformTheme(base, platform)` turns it into a real theme — same colours, scales,
+mode and density; the families and the name change. The docs platform toggle and a
+native build use the same table, so a preview cannot show type the runtime cannot
+produce.
+
+| Platform | `sans` | `mono` |
+| -------- | ------ | ------ |
+| `darwin` (macOS) | `.SystemUIFont` | `Menlo` |
+| `linux` | `.SystemUIFont` | `DejaVu Sans Mono` |
+| `win32` (Windows) | `.SystemUIFont` | `Consolas` |
+| `default` | `.SystemUIFont` | `Menlo` |
+
+`currentPlatform` is one of those names — `default` when `process.platform` is
+not one the library knows, such as a browser — and `systemMonoFamily` is
+`platformTypes[currentPlatform].mono`, which is what the default typography uses.
+
+```tsx
+import { platformTheme, themes } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+<ThemeProvider theme={platformTheme(themes.dark, "win32")}>
+  <Code>npm run build</Code>
+</ThemeProvider>;
+```
+
+`sans` is the sentinel on every platform because GPUI resolves `.SystemUIFont` to
+the operating system's own UI font — GPUI documents the name as "the system UI
+font, which varies based on platform" and uses it as its default font — so a
+theme never names a face the machine may not have. The table still exists for the
+two things a component cannot infer: the platform's monospace family, and which
+platform a preview is showing.
+
+**Two runtime facts the table respects.** GPUix 0.10.0's `StyleDesc.fontFamily`
+is a **single** string, not a CSS stack, so an entry never contains a comma; and a
+family the machine does not have falls back silently, so the platform table only
+names families each platform installs. This table changes no colours, sizes or
+spacing: a platform style is a theme, not a second design system.
 
 ## Spacing
 
@@ -531,11 +577,23 @@ boundaries in the default themes; 4.5:1 for them in the high-contrast variants).
 It also fails if a soft status surface is indistinguishable from `background` or
 `card` (floor 1.05:1). Palette edits must keep it green.
 
+`packages/tokens/src/platforms.test.ts` covers the platform table: every platform
+has a label and both families, `sans` is the GPUI sentinel, no family is a comma
+stack, `systemMonoFamily` and the default typography follow `currentPlatform`, and
+`platformTheme` changes only the families and the name without mutating its base.
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
 - No `letterSpacing` in the runtime.
-- No OS appearance detection; the application selects the mode and contrast.
+- No OS appearance detection; the application selects the mode and contrast, and
+  also which platform style to render.
+- No per-platform control metrics: `platformTheme` changes families only, because
+  GPUix 0.10.0 gives no evidence for platform-specific control heights. Layer
+  `density` with `extendTheme` when a platform needs it.
+- `.SystemUIFont` is verified by GPUI's own documentation of the name, not yet
+  visually in the native runtime: the playground's platform gallery is blocked by
+  B1. See `COMPONENTS.md` and `TODO.md`.
 - No `outline*` and no `focusVisible` in the runtime (GPUix 0.10.0): the focus
   ring is a spread shadow, so it cannot tell a Tab from a click, and it follows
   `borderRadius` only because a shadow does.

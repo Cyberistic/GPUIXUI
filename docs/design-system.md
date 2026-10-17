@@ -105,8 +105,18 @@ Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.
 
-Sans is `.SystemUIFont`; mono resolves per platform once at module load. The
-type scale is shared by both themes and is not changed by density.
+Sans is GPUI's `.SystemUIFont` sentinel, which GPUI resolves to the operating
+system's own UI font, so the reading face follows the platform without the
+library naming a face the machine may not have. Mono comes from the platform
+table (`platformTypes`): `Menlo` on macOS, `DejaVu Sans Mono` on Linux,
+`Consolas` on Windows, `Menlo` for a platform the library does not know. The type
+scale is shared by both themes and is not changed by density.
+
+A platform style is a **real theme**, not a docs-only style sheet:
+`platformTheme(theme, platform)` derives one with `extendTheme`, keeping the
+colours, scales, mode and density of its base and changing only the two
+families, so the docs platform toggle previews exactly what a native build
+renders. A platform is a font decision here, never a second design system.
 
 **Limitation.** GPUix has no `letterSpacing`. Tight display tracking and
 all-caps label tracking are therefore impossible without per-glyph layout. The

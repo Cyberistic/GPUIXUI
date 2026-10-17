@@ -88,3 +88,24 @@ The fix still belongs to the harness (`scripts/swarm/run-*.sh`,
 must not start a session while one for the same worktree is live, and a start
 must reap sessions whose `directory` equals the worktree. `primitives` plan 022
 (`.agents/slop/plans/022-swarm-single-writer.md`) proposes the guard.
+
+## Workaround used by the 08:31 session (recorded so the next agent can repeat it)
+
+The 08:31 session (`ses_eb7a7c4d1…`) found `ses_eb7ccad84…` still live in the
+same tree, mid-edit on plan 019 (its `git checkout -- packages/tokens/src/elevation.ts`
+had already reverted an uncommitted elevation fix). Rather than write into a tree
+another session owned, it took a **private worktree from the committed tip**:
+
+```sh
+git -C ~/GPUIXUI worktree add workspaces/tokens-platform \
+  -b agent/tokens-platform agent/tokens-theme
+nub install
+```
+
+It then delivered plan 020 (`platforms.ts`, `platforms.test.ts`,
+`platforms.example.ts` plus the docs and inventory rows) on `agent/tokens-platform`
+with all gates green, leaving `agent/tokens-theme` untouched. This is a workaround,
+not the fix: the supervisor only manages its five named workstreams, so an extra
+worktree is invisible to it, but two agents of one workstream still have two
+branches to reconcile. The harness guard in `primitives` plan 022
+(`022-swarm-single-writer.md`) is the real fix.

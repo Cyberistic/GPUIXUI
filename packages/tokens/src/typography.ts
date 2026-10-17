@@ -1,3 +1,5 @@
+import { systemMonoFamily, systemUiFont } from "./platforms.js";
+
 /** Available font weights. GPUIX accepts numeric weights on `StyleDesc`. */
 export type FontWeight = 400 | 500 | 600 | 700;
 
@@ -42,17 +44,6 @@ export interface Typography {
 /** A typographic role name, excluding the font family fields. */
 export type TextRole = Exclude<keyof Typography, "sans" | "mono">;
 
-const monoByPlatform: Readonly<Record<string, string>> = {
-  darwin: "Menlo",
-  win32: "Consolas",
-  linux: "DejaVu Sans Mono",
-};
-
-const platform = typeof process === "undefined" ? "" : process.platform;
-
-/** The platform's monospace family, resolved once at module load. */
-export const systemMonoFamily = monoByPlatform[platform] ?? "Menlo";
-
 const text = (
   fontSize: number,
   lineHeight: number,
@@ -61,7 +52,7 @@ const text = (
 
 /** The default type scale. Density does not change type sizes. */
 export const typography: Typography = {
-  sans: ".SystemUIFont",
+  sans: systemUiFont,
   mono: systemMonoFamily,
   display: text(28, 36, 600),
   h1: text(24, 32, 600),

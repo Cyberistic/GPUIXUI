@@ -6,6 +6,7 @@ import {
   type ThemeColors,
 } from "./color.js";
 import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
+import { platformTypes, type PlatformName } from "./platforms.js";
 import {
   borderWidth,
   defaultDensity,
@@ -278,4 +279,24 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
 export function createTheme(config: ThemeConfig): Theme {
   const { mode, ...overrides } = config;
   return extendTheme(themes[mode], overrides);
+}
+
+/**
+ * A theme for one platform: the base theme's colours, scales, mode and density,
+ * with that platform's font families. `extendTheme` does the merge, so the base
+ * is never mutated and the mode is preserved.
+ *
+ * @example
+ * ```tsx
+ * import { platformTheme, themes } from "@gpuixui/tokens";
+ *
+ * <ThemeProvider theme={platformTheme(themes.dark, "win32")} />
+ * ```
+ */
+export function platformTheme(base: Theme, platform: PlatformName): Theme {
+  const { label, sans, mono } = platformTypes[platform];
+  return extendTheme(base, {
+    name: `${base.name} · ${label}`,
+    typography: { sans, mono },
+  });
 }
