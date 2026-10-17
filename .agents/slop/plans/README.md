@@ -75,6 +75,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [076](./076-contrast-surface-and-divider-pairs.md) | The soft surfaces and dividers the contrast contract never checked | F | 013, 014, 059, 063, 071–075 | done |
 | [077](./077-alpha-nan.md) | `alpha` must not emit a colour the runtime ignores | F | 014, 056–059 | done |
 | [078](./078-skeleton-surface-pairs.md) | The loading skeleton the contrast contract never checked | F | 014, 019, 063, 071–077 | done |
+| [079](./079-secondary-text-state-washes.md) | Secondary text on the state washes | F | 014, 057, 063, 071–078 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -235,7 +236,20 @@ cool graphite while changing the surface it sits on. The skeleton joins the
 real variants now carry their own dark neutral (1.266 / 1.234 / 1.284 on their
 cards), matching the identity's own 1.274. Light variants and high contrast are
 untouched: the identity value already clears every light canvas, and
-`applyPlatformStyle` applies no colours at AAA.
+`applyPlatformStyle` applies no colours at AAA. 079 closes the last painted
+surface the contract never measured, and the same class of platform defect one
+role over: secondary text (`mutedForeground`) is painted inside rows whose
+background changes with state — a selectable list row uses `accent` on hover,
+`active` on press and `selected` when selected, and a combobox option uses
+`hover`/`active` — but the pair list checked the role only on `muted`,
+`background`, `card` and `popover`. macOS dark measured **4.41:1 on `hover` and
+3.55:1 on `active`**, under the 4.5:1 the design system states, while every
+other shipped set passed. The four washes join the `secondary` class (66 → 70
+pairs), macOS dark lightens `mutedForeground` to `#AEAEB2` and darkens its
+pressed wash to `#404042` (5.13 / 4.68 / 5.28 / 5.29 on the four washes), and
+`state-text.test.ts` guards both the shipped sets and the exact regression. The
+quiet AAA example moves to `#5D5D5D` so it still fails at 7:1 and still passes
+the default floors, which is what makes its declared-level assertion meaningful.
 
 ### Reference adoption (block `200–299`)
 
