@@ -77,6 +77,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [078](./078-skeleton-surface-pairs.md) | The loading skeleton the contrast contract never checked | F | 014, 019, 063, 071–077 | done |
 | [079](./079-secondary-text-state-washes.md) | Secondary text on the state washes | F | 014, 057, 063, 071–078 | done |
 | [080](./080-control-edge-on-fills.md) | The control edge on the fills it paints | F | 014, 063, 071–079 | done |
+| [081](./081-selection-on-painted-surfaces.md) | The selection wash on the surfaces text is selected on | F | 063, 069, 071–080 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -267,6 +268,21 @@ dark `#8A8A8A` — rather than restyling the state fills, which would have pulle
 the focus ring or the accent hover wash with them. `control-edge.test.ts` guards
 the shipped sets, the exact regression and the public checker, and both
 documents derive the new surfaces from the implementation.
+081 closes the last painted surface the contrast contract never measured, and
+the same class of platform defect one role over: the `selection` wash. It was
+measured on `background` and `card`, but text is selected on a dialog's body
+(`popover`), in a field (`input`), on a quiet panel (`muted`), on a row under the
+pointer (`hover`/`active`), on the accent a selectable row uses, and inside a
+selected row. Measuring each surface with the role it actually paints found
+four sets under the body floor: high-contrast dark at 6.48:1 on `hover` and
+5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
+`active` — each dark variant carried its light accent as the wash base, so the
+wash *lightened* the surface white text already sits on. The three washes move
+to a darker tint of the same family (`#4C39B54D`, `#1C71D833`, `#0067C033`) with
+their alpha unchanged, `selectionPairs` becomes the public nine-surface list, and
+`selection-text.test.ts` guards it. The selected row stays a `secondary` pair —
+`selectedForeground` over the wash measures 4.80:1 at its lowest, which is the
+floor that role already has.
 
 ### Reference adoption (block `200–299`)
 
