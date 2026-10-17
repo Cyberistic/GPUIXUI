@@ -76,7 +76,7 @@ for the soft status tints, `078` for the skeleton and `079` for secondary text.
    is a public ramp and does not need a step for one role.
 4. **Existing pairs must not regress.** The same value is measured on
    `background`, `card` and `popover`, where a stronger edge only helps:
-   light 1.20–1.30, dark 1.33–1.64, macOS dark 1.53–1.87, AA dark 5.34–6.08. No
+   light 1.32–1.40, dark 1.33–1.64, macOS dark 1.53–1.87, AA dark 5.34–6.08. No
    other role moves, so no text or boundary pair changes.
 5. **One description.** The pairs stay in `contrastPairs`; the suites keep
    iterating them, and the documents are built from the implementation.
@@ -294,7 +294,7 @@ Stop and report with evidence if:
   - macOS dark: 1.244 / 1.244 / 1.134 / 1.284
   - high-contrast dark: 3.934 / 3.934 / 3.146 / 4.876
 - The same values on `background`/`card`/`popover` only strengthened: light
-  1.20–1.30, dark 1.33–1.64, macOS dark 1.53–1.87, AA dark 5.34–6.08.
+  1.32–1.40, dark 1.33–1.64, macOS dark 1.53–1.87, AA dark 5.34–6.08.
 - No text or boundary pair moved; nothing but the four dividers changed.
 - Two-direction proof (all restored to 1007 passed):
   - dark `border` back to `#2A303B` failed `dark: border on secondary/active`
