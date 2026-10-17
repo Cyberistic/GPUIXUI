@@ -209,6 +209,11 @@ retired once both branches are one
     - [x] Typed-by-position children — plan 304: `PartChildren` (elements/conditionals, never text) plus a family-scoped render check on 32 parents; part identity cannot be a compile error in React 19's JSX types, recorded in `docs/component-api.md` §1 (owner: components)
     - [x] Expose `style` as `StateStyle<PartState>` on the interactive parts — plan 305: 11 parts with exported state types; button-shaped triggers stay on the local stand-in until `@gpuixui/primitives` owns it (owner: components)
     - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
+  - Tier 2 gap rows (plan 205; each row gets its own plan before implementation)
+    - [x] Fieldset — plan 306: groups fields, propagates `disabled` to `FieldInput` (7 native tests; both-direction proof)
+    - [~] Stepper — plan 307: read-only multi-step indicator, statuses derived from `value`
+    - [ ] Form — plan 308 written; implementation pending (render-prop submit lifecycle)
+    - [ ] Drawer, Navigation Menu, Preview Card, Timeline, Countdown, Keyboard shortcuts / keycap display, Carousel, Inline edit, Tag/token input, Mention input, Hotkey-recorder input, Color picker — plans not yet written
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

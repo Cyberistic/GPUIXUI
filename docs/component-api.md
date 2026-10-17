@@ -228,6 +228,7 @@ parts.
 | Comboboxes | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty` | `ComboboxRoot` + 24 parts | plan 116, 302 |
 | Date pickers | `DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar` | — | plan 119, 303 |
 | Time pickers | `TimePicker`, `TimePickerSegment`, `TimePickerSeparator`, `TimePickerClear` | — | plan 132, 303 |
+| Fieldset | `Fieldset`, `FieldsetLegend` | `FieldsetRoot`/`Legend` | plan 306 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -243,7 +244,6 @@ implementation cannot invent a shape):
 | Message scroller | `MessageScrollerRoot`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | plan 206 |
 | Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
 | Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
-| Fieldset | `Fieldset`, `FieldsetLegend` | plan 205 |
 | Form | `Form` | plan 205 |
 | Navigation menu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink` | plan 205 |
 | Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |

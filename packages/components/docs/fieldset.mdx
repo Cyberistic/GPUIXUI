@@ -1,0 +1,124 @@
+---
+title: Fieldset
+description: A named group of fields, with a disabled state that reaches its controls.
+---
+
+`Fieldset` groups related fields under one visible heading. `Field` wraps a single
+control; a fieldset says which fields belong together — a billing address, a
+notification preference block, the advanced half of a settings form.
+
+It is **composition only**: it holds no value, validates nothing, and has no
+submit lifecycle. Disabling a fieldset disables the controls that honour it; it
+does not change what they contain.
+
+## Anatomy
+
+```
+┌ Fieldset ───────────────────────────────┐
+│ Billing address        ← FieldsetLegend │
+│                                         │
+│ Field (Street)                          │
+│ Field (City)                            │
+└─────────────────────────────────────────┘
+```
+
+`Fieldset` always renders its own legend. Put `Field`s — or any other controls —
+inside it; writing a `FieldsetLegend` yourself is the one composition mistake the
+component rejects at render.
+
+## Usage
+
+```tsx
+import { Field, FieldInput, Fieldset } from "@gpuixui/components";
+
+<Fieldset legend="Billing address" disabled={saving}>
+  <Field label="Street" description="Street and number">
+    <FieldInput value={street} onChange={(event) => setStreet(event.value ?? "")} />
+  </Field>
+  <Field label="City" description="Where the invoice is sent">
+    <FieldInput value={city} onChange={(event) => setCity(event.value ?? "")} />
+  </Field>
+</Fieldset>;
+```
+
+The runnable build is `examples/fieldset.example.tsx`, which the native
+playground mounts.
+
+## The disabled state
+
+`disabled` reaches the controls that opt into the fieldset context. Today that is
+`FieldInput`, which:
+
+- becomes `readOnly` and stops accepting edits;
+- leaves the tab order (`tabIndex: -1`);
+- paints `colors.disabled` and `colors.disabledForeground`;
+- shows `not-allowed` as its cursor.
+
+Only the legend dims with the group. Dimming the whole subtree would double-dim a
+control that already paints itself disabled, and would hide an action inside the
+group that has its own policy. A control that does not read the context keeps its
+own `disabled` prop — that is the honest scope of a group with no
+`fieldset`-level semantics.
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Fieldset` | `div` with `role="group"` | `legend: string` (required), `disabled?: boolean`, `children` |
+| `FieldsetLegend` | `text` | `disabled?: boolean` |
+
+`legend` is both the visible heading and the group's accessible name, so an
+unnamed group cannot be authored. `FieldsetLegend` is exported for completeness;
+the root renders it, and a second one inside `Fieldset` throws.
+
+## Theming
+
+The group uses `spacing.lg` between fields; the legend uses `textStyle("label")`
+in `foreground`, or `disabledForeground` when disabled. The disabled input uses
+`colors.disabled` and `colors.disabledForeground`. There are no literal colours or
+sizes, so a custom theme changes the group with no code change — see
+`docs/tokens.md`.
+
+## Accessibility
+
+- The group renders `role="group"` and `aria-label={legend}`. GPUix 0.10.0 has no
+  `aria-labelledby`, so the legend text is the name; it is not referenced by id.
+- `@gpuix/native@0.10.0` has no `aria-disabled`. A disabled group is conveyed by
+  its controls leaving the tab order and by the dimmed legend, not by a state
+  announced on the group.
+- A disabled `FieldInput` is `readOnly`, not a disabled input: assistive
+  technology reads an editable-looking field that refuses input.
+
+## Limitations
+
+- No `fieldset` element and no `aria-disabled` in 0.10.0.
+- Disabled propagation is opt-in. `FieldInput` honours it; other controls (a
+  `Combobox`, a `List`) keep their own `disabled` prop.
+- The docs site cannot render this component live — it is a GPUix host tree, not
+  DOM. The code above is the real source.
+
+## Verification
+
+`src/behaviour/fieldset.test.tsx` runs in the real GPUix renderer (7 tests): the
+group's name and a single legend, field order, an enabled group accepting typing,
+a disabled group's input becoming read-only and leaving the tab order, the
+disabled legend and input roles in both themes, a consumer `style` winning, and
+the default enabled path. `src/behaviour/field.test.tsx` adds the `FieldInput`
+disabled regression (6 tests).
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows x64,
+or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Field** — the label, control and message around one input.
+- **Form** — validation orchestration over a group of fields.
+- **Card** — a surface when the group needs a border or elevation.

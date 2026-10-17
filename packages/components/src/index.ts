@@ -22,6 +22,7 @@ export * from "./dialog.js";
 export * from "./dropdown-menu.js";
 export * from "./empty-state.js";
 export * from "./field.js";
+export * from "./fieldset.js";
 export * from "./list.js";
 export * from "./pagination.js";
 export * from "./popover.js";

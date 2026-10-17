@@ -18,6 +18,7 @@ import {
 } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import { createContext, useContext, useState } from "react";
+import { useFieldsetDisabled } from "./fieldset.js";
 import {
   assertParts,
   type PartChildren,
@@ -173,7 +174,10 @@ export const FieldError = ({ style, ...rest }: Props) => {
 export interface FieldInputProps extends Omit<InputProps, "style"> {
   /** Overrides the field's own error as the validity signal. */
   readonly invalid?: boolean;
-  /** Leaves the tab order and ignores edits; 0.10.0 has no `aria-disabled`. */
+  /**
+   * Leaves the tab order and ignores edits; 0.10.0 has no `aria-disabled`.
+   * Inferred from a disabled `Fieldset` as well as set directly.
+   */
   readonly disabled?: boolean;
   /** A style, or a function of the input's state. */
   readonly style?: StateStyle<FieldInputState>;
@@ -200,9 +204,15 @@ export const FieldInput = ({
 }: FieldInputProps) => {
   const theme = useTheme();
   const field = useContext(FieldContext);
+  const fieldsetDisabled = useFieldsetDisabled();
   const [focused, setFocused] = useState(false);
   const isInvalid = invalid ?? field?.error !== undefined;
-  const state: FieldInputState = { disabled, focused, invalid: isInvalid };
+  const isDisabled = disabled || fieldsetDisabled;
+  const state: FieldInputState = {
+    disabled: isDisabled,
+    focused,
+    invalid: isInvalid,
+  };
 
   const message = field?.error ?? field?.description;
   const description = Option.match(Option.fromNullishOr(message), {
@@ -213,7 +223,7 @@ export const FieldInput = ({
   return (
     <input
       {...rest}
-      {...(disabled ? { readOnly: true } : {})}
+      {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
       {...(field === undefined ? {} : { "aria-label": field.label })}
       {...(description === undefined
         ? {}
@@ -233,14 +243,20 @@ export const FieldInput = ({
           height: controlHeight(theme, "md"),
           paddingLeft: theme.spacing.md,
           paddingRight: theme.spacing.md,
-          backgroundColor: theme.colors.input,
-          color: theme.colors.inputForeground,
+          backgroundColor: isDisabled
+            ? theme.colors.disabled
+            : theme.colors.input,
+          color: isDisabled
+            ? theme.colors.disabledForeground
+            : theme.colors.inputForeground,
           borderWidth: theme.borderWidth.thin,
-          borderColor: isInvalid
-            ? theme.colors.destructive
-            : theme.colors.border,
+          borderColor:
+            isInvalid && !isDisabled
+              ? theme.colors.destructive
+              : theme.colors.border,
           borderRadius: theme.radius.md,
-          ...(focused && !isInvalid ? focusRing(theme) : {}),
+          ...(isDisabled ? { cursor: "not-allowed" } : {}),
+          ...(focused && !isInvalid && !isDisabled ? focusRing(theme) : {}),
         },
         resolveStyle(style, state),
       )}
