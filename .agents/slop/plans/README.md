@@ -53,6 +53,7 @@ workstream declares in its own section below.
 | [133](./133-command-menu-fuzzy.md) | Command menu fuzzy matching and in-group ranking | C/F | 114, 129, 117 | done — 12 logic + 4 native tests (CommandMenu 12, behaviour 263); both-direction proof |
 | [134](./134-list-activation.md) | List row activation on Enter and click | C/F | 111, 120, 125, 130, 117 | done — 6 native tests (List 36, behaviour 269); both-direction proof; double-click probe documented |
 | [135](./135-submenu-pointer-activation.md) | Submenu pointer activation and ContextMenu submenus | C/F | 112, 114, 131, 134 | done — shared `menu/sub.tsx`, 5 native tests (ContextMenu 17, DropdownMenu 33, behaviour 274); both-direction proof |
+| [136](./136-prop-forwarding-sweep.md) | SearchInput ref and TabsTrigger onBlur forwarding | C/F | 113, 116, 128, 134 | planned — 2 native tests; both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 
