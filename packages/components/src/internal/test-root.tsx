@@ -27,11 +27,32 @@ export interface ComponentTestRoot {
   readonly unmount: () => void;
 }
 
-/** Render `node` in the native GPUix test renderer under one theme. */
+/**
+ * Whether a root from this module is mounted. The native renderer paints one
+ * window at a time: a second `createTestRoot` takes the window over and the
+ * first root's tree reads as empty, which looks like a component that rendered
+ * nothing. Measured on this host, 2026-10-17 — a theme test that held two roots
+ * read `backgroundColor: undefined` for the first.
+ */
+let mounted = false;
+
+/**
+ * Render `node` in the native GPUix test renderer under one theme. Throws when a
+ * previous root is still mounted, so the one-window rule is enforced rather than
+ * misread as a missing component. A raw `throw` is deliberate: misusing a test
+ * harness is a programming error at the boundary, not a domain failure a caller
+ * could recover from (plan 110 §8.6 takes the same line for compound parts).
+ */
 export const renderComponent = (
   node: ReactNode,
   theme: TestTheme = "dark",
 ): ComponentTestRoot => {
+  if (mounted) {
+    throw new Error(
+      "renderComponent: a root is still mounted. The native renderer paints one window, so unmount() the previous root before rendering the next.",
+    );
+  }
+
   const root = createTestRoot({ width: 1280, height: 800 });
   const render = (next: ReactNode): void => {
     root.render(
@@ -40,5 +61,13 @@ export const renderComponent = (
   };
 
   render(node);
-  return { renderer: root.renderer, rerender: render, unmount: root.unmount };
+  mounted = true;
+  return {
+    renderer: root.renderer,
+    rerender: render,
+    unmount: () => {
+      mounted = false;
+      root.unmount();
+    },
+  };
 };

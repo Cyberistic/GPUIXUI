@@ -102,3 +102,17 @@ export const tone = (theme: Theme, value: Tone): ToneStyle =>
     ),
     Match.exhaustive,
   );
+
+/**
+ * One tone as a whole surface: soft fill, tone text and a tinted border. Badge
+ * and Alert share it so the two agree on what "warning" looks like.
+ */
+export const toneSurface = (theme: Theme, value: Tone): StyleDesc => {
+  const { bg, border, fg } = tone(theme, value);
+  return {
+    backgroundColor: bg,
+    color: fg,
+    borderWidth: theme.borderWidth.thin,
+    borderColor: border,
+  };
+};

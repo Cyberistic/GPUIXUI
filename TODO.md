@@ -79,7 +79,8 @@ the `@gpuixui/tokens/react` provider
   - [ ] Foundation parts: Card, Badge, Avatar, Alert, EmptyState, List
     - [x] `internal/collection.ts` (List single-selection core, shared with Tabs/menus)
     - [x] Card: `src/card.tsx`, behaviour suite, example, docs page, inventory record — **verified natively** (5/5, `nub run --filter @gpuixui/components test:behaviour`)
-    - [ ] Badge, Avatar, Alert, EmptyState, List
+    - [x] Badge: `src/badge.tsx` + `toneSurface` in the theme seam, behaviour suite (7/7), example, docs page, inventory record
+    - [ ] Avatar, Alert, EmptyState, List
   - [ ] Overlays: Dialog, Confirmation dialog, Popover
     - [ ] `internal/dismiss-layer.ts` + `internal/button-props.ts` (0.10.0 has neither)
     - [ ] Plans 112/113 reference `keyboardFocusDim` and `focusVisible`, which 0.10.0's `StyleDesc` does not have — correct the plans before writing the styles

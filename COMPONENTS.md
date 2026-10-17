@@ -50,6 +50,7 @@ and the strongest honest alternative.
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
 | Cards | done | yes | `variant` outline/elevated/plain; behaviour suite passes in the real renderer (5 tests, `test:behaviour`) |
+| Badges | done | yes | seven variants (neutral/primary/4 status tones/outline), two sizes sized by type role; 7 native behaviour tests. Not interactive by design; no icon or dismiss slot yet |
 | Badges | todo | ? | |
 | Avatars | todo | ? | |
 | Lists / list items | todo | ? | |
