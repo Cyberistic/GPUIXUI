@@ -28,6 +28,7 @@ import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
 import { logViewerScenario } from "./log-viewer.js";
 import { modalScenario } from "./modal.js";
+import { floatingScenario } from "./floating.js";
 import {
   themeColorRolesScenario,
   themeTypeAndShadowScenario,
@@ -41,6 +42,7 @@ export const CORE_CAPABILITIES = [
   "focus",
   "overlay",
   "modal",
+  "floating",
   "scroll",
   "panel",
   "virtual-list",
@@ -63,6 +65,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   focusScenario,
   overlayScenario,
   modalScenario,
+  floatingScenario,
   scrollScenario,
   panelScenario,
   virtualListScenario,

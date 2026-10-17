@@ -24,6 +24,7 @@ export const CAPABILITIES = [
   "focus",
   "overlay",
   "modal",
+  "floating",
   "scroll",
   "panel",
   "virtual-list",

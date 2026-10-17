@@ -35,6 +35,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | focus | `focus-traversal` | verified |
 | overlay | `overlay-dialog` | verified |
 | modal | `modal-focus-trap` | verified |
+| floating | `floating-placement` | verified |
 | scroll | `scroll-container` | verified |
 | panel | `panel-resize` | verified |
 | virtual-list | `virtual-list-window` | verified |
@@ -44,13 +45,16 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | workspace | `workspace-tab-drag` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow` | verified |
 
-The suite is **19/19 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **20/20 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
 `focusPreviousWithin` cycle within a container, which is the dialog's Tab trap
 (the trap wraps: `content → a → b → open-popover → close → content`);
-Escape in a nested layer closes only that layer; synthetic wheel scrolling
+Escape in a nested layer closes only that layer; **`<anchored align="center">`
+is off by half the panel size** (it ends the panel at the anchor's centre line)
+and `fit="snap"` clamps a layer inside the window **without flipping it**, so a
+bottom-side menu can cover its trigger; synthetic wheel scrolling
 **does** work
 (`deltaY` negative scrolls down, the opposite of the DOM); a `<virtual-list>`
 **retains** every row but **paints** a window (~9 of 5 000); an `<anchored>`
@@ -185,7 +189,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Selects | todo | yes | `Select` + parts published. API-shape work, not implementation. |
 | Switches | todo | ? | Distinct from Toggle (on/off state vs momentary pressed mode). |
 | Progress | todo | ? | `div` + width/opacity `motion`. |
-| Tooltips | todo | yes | `Tooltip` + parts published. API-shape work, not implementation. |
+| Tooltips | todo | yes | `Tooltip` + parts published. API-shape work, not implementation. Placement facts are the shared `floating` probe: `align="center"` is off by half the panel, `fit=snap` does not flip. |
 | Skeletons | todo | ? | `div` + opacity `motion` (GPUix animates opacity only — verified). |
 | Loading indicators | todo | ? | **No rotation** in `motion` (verified); use an indeterminate sweep (width/left) or a discrete step cycle. |
 | Slider | todo | ? | No slider host element or React export (verified). Track / thumb / indicator from `div`; pointer + keyboard behaviour ours. |
@@ -210,9 +214,9 @@ carries an evidenced limitation. The capability evidence lives in
 | Toasts / notifications | todo | ? | `AnimatePresence` + `createPortal` + `<anchored>` are published primitives; the toast system is ours. |
 | Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. Focus entry, the Tab trap and focus return are measured natively by `modal-focus-trap` (playground plan `155`). |
 | Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
-| Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. Focus in/out and “Escape closes only the popover” are measured natively (`modal-focus-trap`). |
-| Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). |
-| Context menus | todo | ? | As Dropdown menus, triggered by `onAuxClick` / right-click position. One Escape dismisses one layer (measured: `modal-focus-trap`). |
+| Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. Focus in/out and “Escape closes only the popover” are measured natively (`modal-focus-trap`). Placement (`floating-placement`): `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is short by half the panel size** and `fit="snap"` clamps without flipping, so a near-bottom popover must choose `side="top"` itself. |
+| Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). **Menus open with `align="center"` must compensate for the half-panel offset, and a near-bottom menu must pick `side="top"`** — `fit="snap"` does not flip (`floating-placement`). |
+| Context menus | todo | ? | As Dropdown menus, triggered by `onAuxClick` / right-click position. One Escape dismisses one layer (measured: `modal-focus-trap`). The panel is positioned at the pointer with an explicit `position`, so the `align="center"` defect does not apply; the window-edge snap still does (`floating-placement`). |
 | Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
 | Tabs | todo | ? | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. |
 | Accordions | todo | ? | `div` + `motion` (height). |

@@ -13,9 +13,9 @@ app, three jobs:
 
 The **registry is the single source of truth**: `src/scenarios/index.ts` is both
 the sidebar and the smoke list, so a scenario cannot exist in one and not the
-other. Each scenario is one capability, one view, one `steps` effect: the ten
-core capabilities (including the theme gallery and the modal contract), the
-Tier 3/4 probes
+other. Each scenario is one capability, one view, one `steps` effect: the eleven
+core capabilities (including the theme gallery, the modal contract and floating
+placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
 `tree-view`, `log-viewer`, `workspace-tab-drag`), the app-level shortcut probe
 (`window-key-shortcut`) and
@@ -57,7 +57,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (19/19 green); -> 2 on a host with no binding
+# -> 0 here (20/20 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -145,15 +145,27 @@ proves:
 The last row is why every overlay pushes onto one dismiss stack: the keystroke
 reaches only the focused layer, so a nested dialog closes outside-in.
 
+## Floating placement (plan `156`)
+
+`FloatingLayer` is the only positioning engine the library has, so
+`floating-placement` measures the native `<anchored side align gap fit>` it
+renders. Three facts, two of them defects to design around:
+
+| Fact | Result |
+| ---- | ------ |
+| `side` + `sideOffset` + `align="start"` | exact: bottom is `anchor.bottom + gap`, right is `anchor.right + gap`, top/left edges align |
+| `align="center"` | **not centred**: it ends the panel at the anchor's centre line, short by half the panel's own size on both axes (`anchored.rs` wraps the layer in a full-size zero box and also positions it from the anchor point). `start`/`end` are exact; a component must compensate with a known-size `alignOffset` or avoid `center` |
+| window edge | `fit="snap"` clamps the panel to `window − snapMargin`; it **does not flip**. A bottom-side menu near the bottom ends up over its trigger, so the component must choose `side="top"` itself |
+
 ## Evidence on this host
 
-The suite is **19/19 green** here (`exit 0`):
+The suite is **20/20 green** here (`exit 0`):
 
 ```
-19/19 scenarios passed · capabilities: layout=verified text=verified
-input=verified focus=verified overlay=verified modal=verified scroll=verified
-panel=verified virtual-list=verified table=verified tree=verified
-log=verified theme=verified workspace=verified
+20/20 scenarios passed · capabilities: layout=verified text=verified
+input=verified focus=verified overlay=verified modal=verified
+floating=verified scroll=verified panel=verified virtual-list=verified
+table=verified tree=verified log=verified theme=verified workspace=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -164,6 +176,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
+| floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | panel | pointer capture + inclusive clamp |
 | virtual-list | retains 5 000 rows but **paints ~9**; `getPaintedText` is the window |
@@ -195,6 +208,7 @@ src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
 src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
 src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
+src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -227,10 +241,10 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The ten core capabilities (including the token gallery and the modal
-  contract), the Tier 3/4 probes
+- The eleven core capabilities (including the token gallery, the modal contract
+  and floating placement), the Tier 3/4 probes
   and the app-level shortcut probe pass in real GPUix 0.10.0 on this host
-  (19/19), with a written report and screenshots.
+  (20/20), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
@@ -238,7 +252,9 @@ narrower. Each deviation is deliberate and measured:
   the Tab trap makes `modal-focus-trap` fail with
   `Tab moved focus [modal-content,modal-content,…]`, and removing the focus
   return fails with `expected "modal-trigger", got "none"` — both exit `1`
-  (plan `155` §8).
+  (plan `155` §8). Hard-coding `side="bottom"` in the floating layer fails
+  `side=right sits one gap right of the anchor: expected 326 ± 1, got 200`
+  (plan `156` §8).
 - The registry reveals a missing or duplicated capability (`scenarioProblems`,
   unit-tested).
 - The resize arithmetic clamps inclusively (`resize.test.ts`).
