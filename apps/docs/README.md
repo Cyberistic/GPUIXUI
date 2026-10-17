@@ -388,9 +388,9 @@ validation, Breadcrumb, Pagination, Search input, Accordion and Collapsible;
 Text, Separator, Spacer, Stack, Box, Button group and Label. Every one is a
 static rest state built only from the `--preview-*` values of the active theme,
 so the platform toggle re-renders all of them. The 13 pages without one are
-interactions (dialog, confirm dialog, popover, the three menus, toast, tooltip,
-combobox, date picker, scroll area), animations (skeleton, spinner) or the icon
-glyph set; they stay at tier V/X. `theme-surface.test.ts` also proves every
+interactions (dialog, confirm dialog, popover, the context and command menus,
+toast, tooltip, combobox, date picker, scroll area), animations (skeleton,
+spinner) or the icon glyph set; they stay at tier V/X. `theme-surface.test.ts` also proves every
 `--preview-*` name a preview reads is one the surface defines.
 
 An approximation is never a fallback. The only way to render one is
