@@ -222,7 +222,7 @@ retired once both branches are one
     - [x] Tag / token input — plan 314: 10 rule + 8 native tests; both-direction proof
     - [x] Carousel — plan 315: 8 native tests; both-direction proof
     - [x] Hotkey-recorder input — plan 316 (consumes plan 310): 8 capture + 8 native tests; both-direction proof
-    - [ ] Preview Card — plan 317
+    - [x] Preview Card — plan 317: 8 native tests; delay, pointer travel and Escape proven
     - [x] Color picker — plan 318 (discrete swatches: 0.10.0 has no gradients): 8 hex + 8 native tests; both-direction proof
     - [ ] Mention input — plan 319
     - [ ] Navigation Menu — plan 320

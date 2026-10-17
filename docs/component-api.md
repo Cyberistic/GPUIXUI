@@ -234,6 +234,7 @@ parts.
 | Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
 | Countdown | `Countdown` | — | plan 312 |
 | Inline edit | `InlineEdit` (render display/input swap; one part) | — | plan 313 |
+| Preview Card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | `PreviewCardRoot`/`Trigger`/`Popup` (shape only) | plan 317 |
 | Color picker | `ColorPicker` (swatches + HEX; one part) | — | plan 318 |
 | Hotkey-recorder input | `HotkeyRecorder` | — | plan 316 |
 | Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | — | plan 315 |
@@ -256,7 +257,6 @@ implementation cannot invent a shape):
 | Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
 | Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
 | Navigation menu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink` | plan 205 |
-| Preview card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | plan 205 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
 | Mention input | `MentionInput`, `MentionInputList`, `MentionInputItem` | plan 205 |
 | Countdown | `Countdown` | plan 205 |

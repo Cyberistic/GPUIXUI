@@ -34,6 +34,7 @@ import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
+import { previewCardMeta } from "./preview-card.js";
 import { searchInputMeta } from "./search-input.js";
 import { stepperMeta } from "./stepper.js";
 import { tabsMeta } from "./tabs.js";
@@ -89,6 +90,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   listMeta,
   paginationMeta,
   popoverMeta,
+  previewCardMeta,
   searchInputMeta,
   stepperMeta,
   tabsMeta,

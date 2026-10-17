@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §5 (D10), `112` (popover), `114` (shared row) |
-| Status | planned |
+| Status | done — 8 native tests; delay + pointer-travel + Escape proven |
 | Source | `docs/component-api.md` §8 (planned parts: `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent`); `COMPONENTS.md` → Tier 2 → Preview Card; plan `205` D10 |
 
 This plan is self-contained. It adds `PreviewCard` at the Tier 2 bar.
@@ -121,3 +121,21 @@ enter): test 3 fails. Skip `focus` → open: test 2 fails. Restore after each.
 - Eight native tests that can fail; timers proven to be the component's.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/preview-card.tsx` — three parts. One measured runtime fact shaped the
+  close policy: moving the pointer dispatches the **new** element's `mouseEnter`
+  before the **old** element's `mouseLeave` (probed directly), so a naive
+  "leave schedules close" policy closed the card as the pointer entered it. The
+  card tracks `trigger`/`content` pointer occupancy in refs and only schedules a
+  close when neither holds the pointer.
+- `src/behaviour/preview-card.test.tsx` — 8 tests with `openDelay={20}`,
+  `closeDelay={20}` and a real timer wait. A second measured fact: hovering the
+  card's **centre** can land on a child, which delivers the content's leave, so
+  the suite hovers the card's padding. The "elsewhere" target sits 200 px to the
+  right so the open card never covers it.
+- **Both directions:** removing the content's enter-cancel and the focus-open
+  branch fails 7 tests. Restored: 8 native green.
