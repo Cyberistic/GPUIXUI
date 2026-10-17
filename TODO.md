@@ -136,6 +136,7 @@ the `@gpuixui/tokens/react` provider
     - [x] Dropdown menu keyboard opening lands on the first/last row — plan 126
     - [x] Date picker `min`/`max` bounds and a clear action — plan 127
     - [x] Trigger parts merge the caller's ref with their internal one (found by plan 127)
+    - [x] Every part that owns a ref composes the caller's too — plan 128
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
