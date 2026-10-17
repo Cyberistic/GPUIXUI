@@ -3,7 +3,9 @@
  * surfaces a focused control sits on, but not the four soft status fills — and a
  * Toast's action button ("Retry", "Undo") is focused while it sits directly on
  * `warningSoft` or `destructiveSoft`. No shipped set failed the floor when the
- * pairs were added (identity light `warningSoft` at 3.37:1 is the tightest), so
+ * pairs were added (identity light `warningSoft` at 3.37:1 was the tightest
+ * then; plan 300 moved the four tints, so `destructiveSoft` at 3.18:1 is the
+ * tightest now), so
  * no colour moves; the pairs exist so an edited theme cannot make a focused
  * control lose its only focus indicator there.
  */
@@ -90,7 +92,7 @@ describe("the focus ring on a soft status surface", () => {
       left.ratio <= right.ratio ? left : right,
     );
 
-    expect(weakest.fill).toBe("warningSoft");
+    expect(weakest.fill).toBe("destructiveSoft");
     expect(weakest.ratio).toBeGreaterThanOrEqual(
       contrastFloors.default.boundary,
     );

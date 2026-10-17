@@ -35,9 +35,15 @@ const softSurfaceRoles = [
   "destructiveSoft",
 ] as const;
 
+/**
+ * The base surfaces a soft status panel can occupy. The quiet panel is the
+ * sidebar and settings group surface — a status badge or a small Alert sits
+ * there, and the platform light variants change `muted` while inheriting the
+ * identity's tints, so it is held to the same floor as the canvas.
+ */
 const softSurfacePairs: readonly ContrastPair[] = softSurfaceRoles.flatMap(
   (role) =>
-    (["background", "card", "popover"] as const).map(
+    (["background", "card", "popover", "muted"] as const).map(
       (background): ContrastPair => [role, background, "surface"],
     ),
 );

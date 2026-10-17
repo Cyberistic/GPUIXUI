@@ -234,7 +234,9 @@ export interface ThemeColors {
  * (plan 080). `mutedForeground` is neutral 700 rather than 600 so secondary text
  * keeps the secondary floor when it is selected on a pressed row (plan 087).
  * The soft status foregrounds are the family's darkest step so an alert's text
- * keeps the body floor through the selection wash (plan 091). The skeleton is
+ * keeps the body floor through the selection wash (plan 091). The soft tints are
+ * custom pastels that clear every shipped canvas, card, popover and quiet panel,
+ * so a badge in a sidebar stays perceivable (plan 300). The skeleton is
  * one ramp step darker than the pressed wash so a loading row never erases it
  * (plan 094). The filled-control hover and pressed steps are designed opaque
  * roles, so no state composites an alpha fill (plan 097).
@@ -269,16 +271,16 @@ export const lightColors = {
   warningForeground: palette.amber[950],
   info: palette.blue[600],
   infoForeground: palette.neutral[0],
-  infoSoft: palette.blue[100],
+  infoSoft: "#D6E3FF",
   infoSoftForeground: palette.blue[900],
   infoSoftBorder: "#A6BEF3",
-  successSoft: "#C2F4D6",
+  successSoft: "#B8EDCE",
   successSoftForeground: palette.green[900],
   successSoftBorder: "#8ED3AF",
-  warningSoft: "#FFE3A3",
+  warningSoft: "#FFDF9A",
   warningSoftForeground: palette.amber[950],
   warningSoftBorder: "#FCD47B",
-  destructiveSoft: palette.red[100],
+  destructiveSoft: "#FFD6D6",
   destructiveSoftForeground: palette.red[900],
   destructiveSoftBorder: "#F0ACAE",
   infoText: palette.blue[700],

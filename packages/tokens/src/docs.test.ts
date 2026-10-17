@@ -403,9 +403,10 @@ describe("docs/tokens.md quoted figures", () => {
   it("quotes the two selection regressions and the fixes", () => {
     const light = themes.light;
     const washedSuccess = contrastRatio(
-      // The pre-091 light success foreground.
+      // The pre-091 light success foreground on the fill it inherited then;
+      // plan 300 moved that fill, so the historical pair is written out.
       "#0E5135",
-      compositeOver(light.colors.selection, light.colors.successSoft),
+      compositeOver(light.colors.selection, "#C2F4D6"),
     );
     const washedDestructive = contrastRatio(
       // The pre-091 Windows dark wash over the fill it inherited then; plan 095
@@ -774,7 +775,7 @@ describe("docs/design-system.md", () => {
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, and essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
-      `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\`) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`, the \`secondary\`/\`hover\`/\`active\`/\`accent\` fills a bordered control paints and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,

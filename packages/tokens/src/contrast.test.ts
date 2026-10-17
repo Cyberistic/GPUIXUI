@@ -93,6 +93,13 @@
  * scrim composited to the canvas itself — a 1.000:1 modal backdrop on pure
  * black. The scrim is measured over the four base surfaces as
  * `overlayWashPairs`, and the AAA dark theme veils with light instead.
+ *
+ * Plan 300 closes plan 076's defect one surface over: the soft status tints were
+ * held to 1.05:1 on the canvas, card and popover but not on the quiet `muted`
+ * panel a sidebar paints, so the platform light variants — which change `muted`
+ * and inherit the tints — shipped a sidebar badge at 1.023:1 on Linux, 1.036:1 on
+ * macOS and 1.043:1 on Windows. `muted` joins the soft-surface pairs and the four
+ * light tints move one step deeper.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -315,7 +322,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(129);
+    expect(contrastPairs.length).toBe(133);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(selectionPairs.length).toBe(18);
     expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
