@@ -13,13 +13,14 @@ export const MAX_SEARCH_LIMIT = 50;
 
 /**
  * A planned component has no page, so its result must not pretend it does. It
- * points at the index, where the honest status and the filter live.
+ * opens the index with the filter applied (plan 421), where the honest status
+ * and the component's row are.
  */
 export const componentSearchUrl = (
-  component: Pick<ComponentMetaInput, "slug" | "status">,
+  component: Pick<ComponentMetaInput, "slug" | "status" | "title">,
 ): string =>
   component.status === "planned"
-    ? "/docs/components"
+    ? `/docs/components?q=${encodeURIComponent(component.title)}`
     : `/docs/components/${component.slug}`;
 
 /**

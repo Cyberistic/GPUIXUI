@@ -5,7 +5,9 @@ import { bySlug, components, groups } from "@/component-meta/registry";
 import {
   ComponentIndex,
   filterGroups,
+  filterQueryFromSearch,
   matchesComponent,
+  withFilterQuery,
 } from "./component-index";
 
 /**
@@ -103,5 +105,35 @@ describe("component filter", () => {
       ),
     ).toBe(true);
     expect(filterGroups("zzz")).toHaveLength(0);
+  });
+});
+
+describe("component filter URL", () => {
+  it("reads the filter a search result carried", () => {
+    const query = filterQueryFromSearch("?q=Dialogs");
+    expect(query).toBe("Dialogs");
+    expect(
+      Arr.every(filterGroups(query), (group) =>
+        group.items.every((item) => matchesComponent(item, query)),
+      ),
+    ).toBe(true);
+  });
+
+  it("treats an absent or blank query as no filter", () => {
+    expect(filterQueryFromSearch("")).toBe("");
+    expect(filterQueryFromSearch("?q=%20%20")).toBe("");
+  });
+
+  it("keeps unrelated parameters when the filter changes", () => {
+    expect(withFilterQuery("?platform=win32", "Dialog")).toBe(
+      "?platform=win32&q=Dialog",
+    );
+  });
+
+  it("removes the filter when it is cleared, keeping the platform", () => {
+    expect(withFilterQuery("?q=Dialog", "")).toBe("");
+    expect(withFilterQuery("?platform=win32&q=Dialog", "")).toBe(
+      "?platform=win32",
+    );
   });
 });

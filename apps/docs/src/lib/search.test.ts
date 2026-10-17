@@ -32,7 +32,7 @@ describe("search", () => {
     const dialogs = results.find((result) =>
       contentOf(result).startsWith("Dialogs"),
     );
-    expect(dialogs?.url).toBe("/docs/components");
+    expect(dialogs?.url).toBe("/docs/components?q=Dialogs");
   });
 
   it("keeps page results ahead of registry results", async () => {
@@ -58,16 +58,20 @@ describe("search", () => {
 });
 
 describe("componentSearchUrl", () => {
-  it("sends a planned component to the honest index", () => {
-    expect(componentSearchUrl({ slug: "dialog", status: "planned" })).toBe(
-      "/docs/components",
-    );
+  it("sends a planned component to the filtered index", () => {
+    expect(
+      componentSearchUrl({
+        slug: "dialog",
+        status: "planned",
+        title: "Dialogs",
+      }),
+    ).toBe("/docs/components?q=Dialogs");
   });
 
   it("sends a finished component to its own page", () => {
-    expect(componentSearchUrl({ slug: "button", status: "done" })).toBe(
-      "/docs/components/button",
-    );
+    expect(
+      componentSearchUrl({ slug: "button", status: "done", title: "Buttons" }),
+    ).toBe("/docs/components/button");
   });
 });
 

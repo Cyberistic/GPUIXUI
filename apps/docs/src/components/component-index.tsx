@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "fumadocs-core/link";
 import {
   components,
@@ -41,6 +41,20 @@ export const filterGroups = (query: string): ReadonlyArray<ComponentGroup> =>
     const items = group.items.filter((item) => matchesComponent(item, query));
     return items.length === 0 ? [] : [{ ...group, items }];
   });
+
+/** The filter a search result arrives with (`/docs/components?q=Dialogs`). */
+export const filterQueryFromSearch = (search: string): string =>
+  new URLSearchParams(search).get("q")?.trim() ?? "";
+
+/** Mirrors the filter into `?q=`, keeping unrelated parameters (e.g. platform). */
+export const withFilterQuery = (search: string, query: string): string => {
+  const params = new URLSearchParams(search);
+  const trimmed = query.trim();
+  if (trimmed === "") params.delete("q");
+  else params.set("q", trimmed);
+  const next = params.toString();
+  return next === "" ? "" : `?${next}`;
+};
 
 function Card({ component }: { component: ComponentMetaInput }) {
   return (
@@ -86,6 +100,22 @@ export function ComponentIndex() {
     0,
   );
 
+  // The search result already carried the filter in `?q=`; apply it after
+  // mount so the server render stays deterministic.
+  useEffect(() => {
+    setQuery(filterQueryFromSearch(window.location.search));
+  }, []);
+
+  const updateQuery = (next: string) => {
+    setQuery(next);
+    const search = withFilterQuery(window.location.search, next);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${search}${window.location.hash}`,
+    );
+  };
+
   return (
     <div className="not-prose flex flex-col gap-8">
       <div className="flex flex-col gap-2">
@@ -96,7 +126,7 @@ export function ComponentIndex() {
           id="component-filter"
           type="search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => updateQuery(event.target.value)}
           placeholder="Filter by name or summary…"
           autoComplete="off"
           aria-describedby="component-filter-count"
@@ -116,7 +146,7 @@ export function ComponentIndex() {
           <p className="text-sm">No component matches “{query.trim()}”.</p>
           <button
             type="button"
-            onClick={() => setQuery("")}
+            onClick={() => updateQuery("")}
             className="rounded-md border border-fd-border px-2 py-1 text-sm hover:bg-fd-accent"
           >
             Clear filter

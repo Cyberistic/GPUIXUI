@@ -172,6 +172,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Component-page contract enforced (`component-pages.test.ts`) — the template lists the required sections and every finished component's page must carry them plus the `ComponentState`/`NativePreview` blocks; the template had no `Composition` section (plan 411 §9b)
 `[ ]` Document the first real component page (needs the primitives/components workstream)
 `[x]` Docs platform toggle (macOS · Linux · Windows · Default) built on `platformTypes` + `platformTheme`; URL + storage state, live values on Theming (plan 420)
+`[x]` A planned component's search result opens the index filtered to it (plan 421)
 `[ ]` Docs truth pass against the implementation (Phase F) — needs the component pages
 
 ## Cross-team tasks raised by the docs-site workstream
