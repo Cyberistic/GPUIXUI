@@ -35,6 +35,7 @@ workstream declares in its own section below.
 | [115](./115-tier2-feedback.md) | Feedback: Toast system (Effect) and inline validation | C-5 | 110, 111, 112 | written |
 | [116](./116-tier2-choice-inputs.md) | Choice inputs: Search input, Combobox (+ deferred date picker design) | C-6 | 110, 111, 114 | written |
 | [117](./117-tier2-verification.md) | Tier 2 verification, inventory sync check and completion gate | C/F | 110–116 | written |
+| [118](./118-single-writer-components.md) | B3 in the components worktree: two live writers, one tree | cross-cutting | — | **blocker** |
 
 Interlocks this workstream depends on and does not own:
 
@@ -43,6 +44,10 @@ Interlocks this workstream depends on and does not own:
 - a decision on the GPUix version: 0.10.0 is the latest published release and is
   behind the reference clone, so it ships no `Dialog`, `Button` or
   `DismissableLayer` (evidence in `TODO.md` → Blockers).
+- **B3 — one writer per tree:** a second live session (`ses_eb7f0966…`) writes
+  this worktree alongside the supervisor's session, so component work is paused
+  until the fix in plan 022 §5 (root cause) and plan 118 (this worktree's
+  measurement) lands. Owner: `scripts/`.
 
 ### Tokens and theme workstream
 

@@ -156,15 +156,26 @@ until `packages/primitives` and a newer `@gpuix/react` land. Plans 110 §1/§7 a
 Related: the reference clone must not be treated as the API of the pinned
 dependency anywhere in this repo, and `package.json` pins must stay explicit.
 
-`[!]` **Two sessions have written this worktree at once** (observed 2026-10-17).
-The supervisor's duplicate tick started a second components session; both wrote
-at once, the theme seam was rewritten mid-commit, and the toast files were left
-untracked while the other session committed. **Resolved for now:** the theme seam
-(`internal/theme.ts` +
-`theme.test.ts`) and the toast domain (`toast/model.ts`, `toast/store.ts`) and
-`validation/logic.ts` all typecheck and pass on this commit. The residual risk is
-a lost write, not a broken tree, and the fix is the supervisor's: serialise
-writers per worktree (recorded under Interlocks).
+`[!]` **Two sessions write this worktree at once — B3, still live** (measured
+2026-10-17 08:47). Root cause and permanent fix: plan
+`022-swarm-single-writer.md` (primitives worktree). Measurement for this
+worktree: plan `118-single-writer-components.md`. Two live top-level sessions
+hold `workspaces/components` at the same time —
+`ses_eb7f09666ffeRRbJxPz0d344Cw` (07:12:12, a stale turn from an earlier tick)
+and `ses_eb7a7c3edffeSehcVqeqHJEsYa` (08:31:44, the current `run-components.sh`
+turn). `run-components.sh` starts a new `opencode run` session every iteration
+and does not own the turn, so a turn that outlives its CLI call keeps writing
+while the loop starts another on top of it; `agent_alive` only checks the runner
+pid, so the supervisor cannot see the duplicate. Between 08:40 and 08:47 the tree
+gained `card.tsx`, `behaviour/card.test.tsx`, `docs/card.mdx`,
+`examples/card.example.tsx` and the commits `7786193`, `f424b1e`, `ab000ab` —
+none authored by the supervisor's session. **Response:** this workstream stopped
+writing component code the moment the duplicate was confirmed, restoring the
+one-writer invariant; the one clean non-overlapping commit (`22f706c`, the
+status-tone palette) is preserved. No session was deleted — that is the
+coordinator's call and would discard the stale session's in-flight work (plan
+022 §4/§7). Resume `packages/components` only when the plan 118 §5 check prints
+`1` twice.
 
 ## Interlocks (cross-workstream dependencies)
 
@@ -173,7 +184,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Need | Owner | Status |
 | ---- | ----- | ------ |
 | `@gpuixui/tokens` roles in plan 110 §6 | tokens-theme | **resolved** — the workstream is merged into `agent/components`; `internal/theme.ts` is the seam over it |
-| Serialise writers per worktree: the supervisor's duplicate tick ran two components sessions in one tree and interleaved their commits | repo tooling | pending |
+| Serialise writers per worktree: a second live session writes `packages/components` alongside the supervisor's; root cause in plan `022` (primitives), this worktree's measurement in plan `118` | repo tooling (`scripts/`) | **pending — components work paused until fixed** |
 | Decide the GPUix version: stay on 0.10.0 and implement dismiss layers/focus locally, or ship a release that includes `Dialog`/`Button`/`DismissableLayer` (0.10.0 is the latest published) | owner / playground | pending |
 | Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) so the local `tone()` helper can be deleted | tokens-theme | pending |
 | `alpha(color, amount)` helper so the local `withAlpha()` can be deleted | tokens-theme | pending |
