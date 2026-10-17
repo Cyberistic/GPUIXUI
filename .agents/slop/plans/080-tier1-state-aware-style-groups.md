@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | primitives workstream (`packages/primitives`) |
 | Depends on | `079`, `030`, `040`, `041`, `047`, `072`, `075` |
-| Status | planned 2026-10-18 |
+| Status | **done** — landed 2026-10-18 (§8) |
 | Source | `docs/component-api.md` §3 (components worktree); contracts with plan `079` |
 
 Self-contained.

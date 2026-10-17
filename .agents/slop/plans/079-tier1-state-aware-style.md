@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | primitives workstream (`packages/primitives`) |
 | Depends on | `030`, `040`, `041`, `047`, `074`, `078` |
-| Status | planned 2026-10-18 |
+| Status | **done** — landed 2026-10-18 (§8) |
 | Source | `docs/component-api.md` §3 (components worktree, plan `200`/`305`); components `TODO.md` → "`packages/primitives` adopts the same contract for Tier 1 … (owner: primitives)" |
 
 Self-contained.
