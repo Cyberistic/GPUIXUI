@@ -7,7 +7,9 @@ reads semantic roles from here.
 
 - Core entry `@gpuixui/tokens` — pure data and pure functions, no runtime
   dependencies.
-- React entry `@gpuixui/tokens/react` — `ThemeProvider` and `useTheme`.
+- React entry `@gpuixui/tokens/react` — `ThemeProvider` and `useTheme`. It
+  carries no JSX, so it compiles under any consumer `jsxImportSource`; a GPUix
+  app needs no `@gpuix/react/jsx-runtime` shim.
 - Reference: [`docs/tokens.md`](../../docs/tokens.md) and
   [`docs/design-system.md`](../../docs/design-system.md).
 

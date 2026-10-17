@@ -656,6 +656,11 @@ export function App() {
 a subtree. Without a provider it returns `lightTheme`. GPUix exposes no OS
 appearance query, so the application owns the mode switch.
 
+The React entry builds its provider with `createElement` and contains no JSX.
+TypeScript compiles JSX with the consumer's `jsxImportSource`, so a GPUix app
+would otherwise need `@gpuix/react/jsx-runtime` to type-check this package — a
+module the tokens package must not depend on. No `paths` shim is required.
+
 ## Using tokens in components
 
 Rules:

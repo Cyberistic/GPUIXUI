@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 27/38
+`[x]` `[███████░░░]` 29/40
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–053)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -84,6 +84,9 @@ drift from the implementation (plan 058)
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input
 text, ghost text on `hover`/`active`, the composited `selection` wash (plan 059)
+`[x]` Make `@gpuixui/tokens/react` consumable under a GPUix `jsxImportSource`
+with no tsconfig shim — the entry uses `createElement` and carries no JSX; a
+consumer-config type check guards it (plan 061)
 `[x]` Correct the runtime's animated-property count (eight, not seven) and the
 reserved `overlay` JSDoc; evidence in the pinned `MotionStyle` (plan 060)
 `[x]` Ship status text roles (`infoText`/`successText`/`warningText`/
@@ -144,6 +147,9 @@ it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
 `[ ]` Cross-team: `docs-site` generates its type table from `textRoles` instead
 of its local role array, so an eleventh role cannot be silently omitted (owner:
 `docs-site`; plan 059)
+`[ ]` Cross-team: `playground` deletes the `@gpuix/react/jsx-runtime` `paths`
+mapping from `tsconfig.check.json` / `tsconfig.build.json`, now that the tokens
+React entry carries no JSX (owner: `playground`; plan 061)
 `[ ]` Cross-team: `playground` re-runs the theme gallery against the current
 53-role package — the last green run was the 47-role package, and the four
 `xText` roles plus `primaryHover`/`destructiveHover` are contrast-tested but not
