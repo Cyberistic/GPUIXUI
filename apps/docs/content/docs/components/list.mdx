@@ -1,0 +1,106 @@
+---
+title: Lists / list items
+description: A vertical collection of selectable rows.
+---
+
+<ComponentState slug="list" />
+
+<NativePreview slug="list" />
+
+`List` presents rows. With `selectionMode="single"` it becomes a listbox: arrow
+keys move a roving tab stop, a click selects, and the list behaves as one tab stop
+instead of one per row.
+
+## Usage
+
+```tsx
+import {
+  List, ListItem, ListItemDescription, ListItemTitle,
+} from "@gpuixui/components/list";
+
+<List selectionMode="single" defaultValue="readme">
+  <ListItem value="readme">
+    <ListItemTitle>README.md</ListItemTitle>
+    <ListItemDescription>~/GPUIXUI</ListItemDescription>
+  </ListItem>
+  <ListItem value="list">
+    <ListItemTitle>list.tsx</ListItemTitle>
+  </ListItem>
+</List>;
+```
+
+## Variants
+
+| `selectionMode` | Role | Tab stop |
+| --------------- | ---- | -------- |
+| `none` (default) | `list` / `listitem` | none — rows are not focusable |
+| `single` | `listbox` / `option` | exactly one row |
+
+`dense` reduces the row height; `leading` and `trailing` slots take an avatar or
+a badge. There is no multi-select mode.
+
+## Sizes
+
+A row is `density.rowHeight + spacing.md` (40px at the default density) and
+`density.rowHeight` when `dense` (32px). Selection paints
+`colors.selected`/`selectedForeground`; hover paints `colors.accent`; a disabled
+row is 50% opacity.
+
+## States
+
+Controlled (`value`) and uncontrolled (`defaultValue`) both work. A disabled row
+is skipped by arrows, `Home`/`End` and clicks, and can never be selected. In
+controlled mode the list reports the change and leaves `aria-selected` where the
+consumer put it.
+
+## Composition
+
+The list example is a real file list with leading avatars and trailing badges:
+
+<include lang="tsx" meta='title="packages/components/examples/list.example.tsx"'>
+  ../../../../../packages/components/examples/list.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/list.tsx" name="ListProps" />
+
+<auto-type-table path="../../../../../packages/components/src/list.tsx" name="ListItemProps" />
+
+## Keyboard and focus
+
+| Key | Effect |
+| --- | ------ |
+| `↓` / `↑` | focus the next / previous enabled row, wrapping |
+| `Ctrl+N` / `Ctrl+P` | the desktop equivalents |
+| `Home` / `End` | focus the first / last enabled row |
+| `Enter` / `Space` | select the focused row |
+
+A disabled row is skipped everywhere. The focused row's ring shows for a click
+too, because 0.10.0 has no `focusVisible`.
+
+## Theming
+
+Roles: `colors.selected`/`selectedForeground` for selection,
+`colors.accent` for hover, the muted foreground for descriptions, and
+`density.rowHeight` plus `spacing.md` for geometry. No literals.
+
+## Accessibility and limitations
+
+- Roles are `list`/`listitem` without selection and `listbox`/`option` with it.
+- `aria-selected` is set on every row in single mode.
+- Rows are one tab stop in single mode; Tab does not stop at every row.
+- Single selection only: no multi-select, type-ahead, reorder, group headers or
+  nested rows.
+- No virtualisation: every row mounts. Long collections belong in `virtual-list`.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/list.tsx"'>
+  ../../../../../packages/components/src/list.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="list" />

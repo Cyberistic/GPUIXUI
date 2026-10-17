@@ -52,22 +52,26 @@ const placeholderPages = pages.filter((page) =>
   placeholder.test(readPage(page)),
 );
 
-/** The value exports of a barrel file (`export { A, B as C } from "…"`). */
-const exportedNames = (file: string): ReadonlyArray<string> =>
-  [...readFileSync(file, "utf8").matchAll(/export\s+(?:type\s+)?\{([^}]+)\}/g)]
-    .flatMap((match) => (match[1] ?? "").split(","))
-    .map((name) => name.trim().replace(/^type\s+/, ""))
-    .map((name) => name.split(/\s+as\s+/).at(-1) ?? "")
-    .filter((name) => name.length > 0);
+/** Every named export a package's source declares, across its `.ts(x)` files. */
+const exportedNames = (directory: string, prefix = ""): ReadonlyArray<string> =>
+  readdirSync(join(directory, prefix), { withFileTypes: true }).flatMap(
+    (entry) => {
+      const path = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
+      if (entry.isDirectory()) return exportedNames(directory, path);
+      if (!/\.tsx?$/.test(entry.name)) return [];
+      const source = readFileSync(join(directory, path), "utf8");
+      return [
+        ...source.matchAll(
+          /export\s+(?:interface|type|const|function|class)\s+([A-Za-z0-9_]+)/g,
+        ),
+      ].flatMap((match) => match[1] ?? []);
+    },
+  );
 
 const packageExports: Readonly<Record<string, ReadonlyArray<string>>> = {
-  primitives: [
-    ...exportedNames(
-      join(repoRoot, "packages/primitives/src/components/index.ts"),
-    ),
-    ...exportedNames(join(repoRoot, "packages/primitives/src/core/index.ts")),
-  ],
-  icons: exportedNames(join(repoRoot, "packages/icons/src/index.ts")),
+  primitives: exportedNames(join(repoRoot, "packages/primitives/src")),
+  icons: exportedNames(join(repoRoot, "packages/icons/src")),
+  components: exportedNames(join(repoRoot, "packages/components/src")),
 };
 
 /** The names a page imports from a GPUixUI package in its usage snippet. */

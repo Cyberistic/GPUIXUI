@@ -21,6 +21,12 @@
     "progress",
     "tooltip",
     "skeleton",
-    "spinner"
+    "spinner",
+    "card",
+    "badge",
+    "avatar",
+    "list",
+    "empty-state",
+    "alert"
   ]
 }

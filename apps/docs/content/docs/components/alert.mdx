@@ -1,0 +1,96 @@
+---
+title: Alerts
+description: A persistent message for the current context.
+---
+
+<ComponentState slug="alert" />
+
+<NativePreview slug="alert" />
+
+`Alert` reports something about the state the user is looking at: a warning about
+missing data, a failure with an action, a notice that stays until the condition
+changes. It is in the flow — it occupies its own place in the layout.
+
+## Usage
+
+```tsx
+import { Alert } from "@gpuixui/components/alert";
+
+<Alert tone="warning" title="3 tokens are missing">
+  The platform themes fall back to the default palette.
+</Alert>;
+
+<Alert tone="info" title="Update available" onDismiss={() => setDismissed(true)}>
+  0.11.0 is ready. Installing restarts the app.
+</Alert>;
+```
+
+Choose by lifetime: an alert stays until the state changes, a toast floats for a
+few seconds, a dialog blocks until answered.
+
+## Variants
+
+| `tone` | Surface | Heading |
+| ------ | ------- | ------- |
+| `info` (default) | soft accent tint | `accentForeground` |
+| `success` | soft success tint | tone text |
+| `warning` | soft warning tint | tone text |
+| `danger` | soft destructive tint | tone text |
+
+The tone paints the surface, border and heading; body prose keeps the page's
+foreground colour so it stays readable. Badge, Alert and Toast share one palette.
+
+## Sizes
+
+No size prop. Spacing and type come from the theme; an optional `icon` sits above
+the text and a `dismissLabel` names the dismiss control (`"Dismiss"` by default).
+
+## States
+
+The alert itself is persistent. With `onDismiss` it grows a focusable dismiss
+button (Enter, Space or click); without it there is no dismiss affordance. There
+is no automatic timeout — that is a toast.
+
+## Composition
+
+The alert example shows a persistent warning with a dismiss action:
+
+<include lang="tsx" meta='title="packages/components/examples/alert.example.tsx"'>
+  ../../../../../packages/components/examples/alert.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/alert.tsx" name="AlertProps" />
+
+## Keyboard and focus
+
+The dismiss control is a real focusable button with `dismissLabel` as its name,
+activated by Enter or Space as well as a click. Nothing else is focusable.
+
+## Theming
+
+The four tones resolve from the shared status palette; the body stays
+`colors.foreground`. No literal colours. See `docs/tokens.md`.
+
+## Accessibility and limitations
+
+- The root is `role="alert"` — a live region announced when it appears; use it
+  sparingly for unexpected changes.
+- The dismiss control's `testId` is `alert-dismiss`; the icon slot is decorative.
+- Colour is never the only signal: every alert has a `title`.
+- The live-region announcement itself cannot be verified in the headless renderer;
+  the suite asserts the role only.
+- The dismiss control is the package's local icon-button stand-in until
+  `@gpuixui/primitives` exports one.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/alert.tsx"'>
+  ../../../../../packages/components/src/alert.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="alert" />

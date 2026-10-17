@@ -1,0 +1,97 @@
+---
+title: Badges
+description: A compact status or count label.
+---
+
+<ComponentState slug="badge" />
+
+<NativePreview slug="badge" />
+
+`Badge` labels something — a state, a count, a category. It is not a control: a
+badge is never clickable, focusable or a button. If it should do something when
+pressed, use a `Button` with the badge's styling.
+
+## Usage
+
+```tsx
+import { Badge } from "@gpuixui/components/badge";
+
+<Badge variant="success" size="sm">
+  Passed
+</Badge>;
+```
+
+A badge hugs its text, never wraps and hugs horizontally inside a column. Pass
+`style={{ alignSelf: "stretch" }}` to stretch it.
+
+## Variants
+
+| `variant` | Fill | Text |
+| --------- | ---- | ---- |
+| `neutral` (default) | `muted` | `mutedForeground` |
+| `primary` | `primary` | `primaryForeground` |
+| `success` | soft success tint | tone text |
+| `warning` | soft warning tint | tone text |
+| `danger` | soft destructive tint | tone text |
+| `info` | soft accent tint | tone text |
+| `outline` | none | `mutedForeground` |
+
+The status variants share one palette with `Alert` and the toast viewport, so a
+status cannot look different in two places.
+
+## Sizes
+
+| `size` | Type role | Height |
+| ------ | --------- | ------ |
+| `sm` | `caption` | 20px |
+| `md` (default) | `label` | 22px |
+
+Height is the type role's line height plus vertical padding — no height literal,
+so a theme change moves the badge with it.
+
+## States
+
+None. The status is the text, and the tint is decorative; there is no hover,
+focus, dismiss or count animation.
+
+## Composition
+
+The badge example places status pills in a real surface:
+
+<include lang="tsx" meta='title="packages/components/examples/badge.example.tsx"'>
+  ../../../../../packages/components/examples/badge.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/badge.tsx" name="BadgeProps" />
+
+## Keyboard and focus
+
+Not focusable and not reachable by keyboard; `tabIndex` is not set.
+
+## Theming
+
+Every colour is a semantic role and every size comes from `typography`,
+`spacing` and `radius`. No literal colour or height appears in the component.
+
+## Accessibility and limitations
+
+- A badge contributes no role of its own: a screen reader hears the text
+  ("Failed"), so the words must carry the meaning and colour cannot be the only
+  signal.
+- The status tints are decorative; a card whose only failure signal is a red pill
+  fails this rule.
+- No dismiss, icon slot or count animation. A badge that needs a close
+  affordance is a chip, which is not built yet.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/badge.tsx"'>
+  ../../../../../packages/components/src/badge.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="badge" />

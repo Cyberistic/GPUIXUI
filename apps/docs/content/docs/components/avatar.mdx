@@ -1,0 +1,92 @@
+---
+title: Avatars
+description: Represents a person or entity by image or initials.
+---
+
+<ComponentState slug="avatar" />
+
+<NativePreview slug="avatar" />
+
+`Avatar` identifies a person, team or service. Given `src` it shows the picture;
+without one it shows deterministic initials, so the layout never shifts and a
+missing picture never leaves a blank hole.
+
+## Usage
+
+```tsx
+import { Avatar } from "@gpuixui/components/avatar";
+
+<Avatar name="Ada Lovelace" src="/photos/ada.png" size="md" status="online" />;
+
+// No picture: the initials are derived from the name.
+<Avatar name="Jean-Luc Picard" />;
+```
+
+Initials follow code points, not code units: `Jean-Luc Picard` → `JP`,
+`J. Robert Oppenheimer` → `JO`, `李 小龙` → `李小`, `🎨 Artist` → `🎨A`, and an
+empty name renders `?` rather than a blank.
+
+## Variants
+
+`status` adds a presence dot: `online` (`success`), `away` (`warning`), `busy`
+(`destructive`) or `offline` (`mutedForeground`). There is no shape or badge
+variant; the disc is always a circle.
+
+## Sizes
+
+| `size` | Diameter | Initials |
+| ------ | -------- | -------- |
+| `xs` | 20px | 8px |
+| `sm` | 26px | 10px |
+| `md` (default) | 32px | 13px |
+| `lg` | 40px | 16px |
+
+The initials are 40% of the diameter, so the letter keeps its proportion.
+
+## States
+
+The presence dot is state; the avatar itself is not interactive, has no hover or
+focus state and takes no tab stop. An image loading failure is not reported to
+React, so the initials are not restored in v1.
+
+## Composition
+
+The avatar example puts faces, initials and presence into a members list:
+
+<include lang="tsx" meta='title="packages/components/examples/avatar.example.tsx"'>
+  ../../../../../packages/components/examples/avatar.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/avatar.tsx" name="AvatarProps" />
+
+## Keyboard and focus
+
+Not focusable and not interactive.
+
+## Theming
+
+The disc uses `colors.muted`, the initials `colors.foreground`, the dot the four
+status roles, and its rim `colors.card` at `borderWidth.strong`. No literals.
+
+## Accessibility and limitations
+
+- The root is one `role="img"` node named by `name`, so picture and fallback are
+  announced identically; the image also carries `alt={name}`.
+- The presence dot is purely visual and is not announced. A status that matters
+  should also be text.
+- No image loading or error state: a missing file paints nothing and does not
+  restore the initials.
+- The four diameters are component constants, not tokens (no avatar scale yet).
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/avatar.tsx"'>
+  ../../../../../packages/components/src/avatar.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="avatar" />

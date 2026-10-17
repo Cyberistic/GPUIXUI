@@ -411,25 +411,62 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
 ];
 
 const composition: ReadonlyArray<ComponentMetaInput> = [
-  planned(
+  delivered(
     "card",
     "Cards",
     "2",
     "Frames a discrete unit of content and actions.",
-    { related: ["collapsible"] },
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/card.tsx",
+      related: ["list", "empty-state"],
+      limitations: [
+        "The surface clips overflow, so a scroller belongs in CardContent.",
+        "No interactive or overlay behaviour: compose controls inside it.",
+        "The docs site cannot render it live; the example and source are real.",
+      ],
+    },
   ),
-  planned("badge", "Badges", "2", "A compact status or count label."),
-  planned(
+  delivered("badge", "Badges", "2", "A compact status or count label.", {
+    gpuix: "yes",
+    sourcePath: "packages/components/src/badge.tsx",
+    related: ["alert", "avatar"],
+    limitations: [
+      "No dismiss, icon slot or count animation.",
+      "Colour is decorative; the words must carry the status.",
+    ],
+  }),
+  delivered(
     "avatar",
     "Avatars",
     "2",
     "Represents a person or entity by image or initials.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/avatar.tsx",
+      related: ["badge", "list"],
+      limitations: [
+        "No image loading or error state; a missing file does not restore initials.",
+        "The presence dot is visual only and is not announced.",
+        "The four diameters are component constants, not tokens.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "list",
     "Lists / list items",
     "2",
     "A vertical collection of selectable rows.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/list.tsx",
+      related: ["card", "badge"],
+      limitations: [
+        "Single selection only: no multi-select, type-ahead or reorder.",
+        "No virtualisation: every row mounts.",
+        "The focus ring shows for a click too; 0.10.0 has no focusVisible.",
+      ],
+    },
   ),
   planned(
     "message-scroller",
@@ -438,17 +475,37 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     "Keeps a transcript on new content while the reader stays in control.",
     { related: ["list"] },
   ),
-  planned(
+  delivered(
     "empty-state",
     "Empty states",
     "2",
     "Explains an empty region and its next action.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/empty-state.tsx",
+      related: ["card", "list"],
+      limitations: [
+        "The 360px wrap width is a component constant, not a token.",
+        "No illustration slot; an icon renders in the muted foreground.",
+        "No role of its own; the title carries the meaning.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "alert",
     "Alerts",
     "2",
     "A persistent message for the current context.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/alert.tsx",
+      related: ["toast", "badge"],
+      limitations: [
+        "The live-region announcement cannot be verified headlessly.",
+        "The dismiss control is the local icon-button stand-in.",
+        "No automatic timeout; a message that vanishes is a toast.",
+      ],
+    },
   ),
   planned(
     "inline-validation",

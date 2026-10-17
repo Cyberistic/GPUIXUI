@@ -1,0 +1,81 @@
+---
+title: Empty states
+description: Explains an empty region and its next action.
+---
+
+<ComponentState slug="empty-state" />
+
+<NativePreview slug="empty-state" />
+
+`EmptyState` explains an absence and offers the way out: no projects yet, no
+matches for this filter, nothing selected. It is a panel, not a surface — it
+paints no background and no border, because the card, panel or table body around
+it already supplies one.
+
+## Usage
+
+```tsx
+import { EmptyState } from "@gpuixui/components/empty-state";
+
+<EmptyState
+  title="No projects yet"
+  description="A project holds your files, runs and settings."
+  action={<Button variant="primary">New project</Button>}
+/>;
+```
+
+## Variants
+
+No visual variant. `title` (required), `description`, `action` and `icon` are the
+four slots; everything is centred with the theme's large spacing.
+
+## Sizes
+
+No size prop. The description wraps at 360px (a component constant, because the
+token package has no measure scale) and the padding is `spacing["3xl"]`.
+
+## States
+
+None of its own. The distinction between "nothing ever existed" and "nothing
+matched the filter" lives in the copy and the action, not in a mode prop.
+
+## Composition
+
+The empty-state example is a card body with no rows and one real action:
+
+<include lang="tsx" meta='title="packages/components/examples/empty-state.example.tsx"'>
+  ../../../../../packages/components/examples/empty-state.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/empty-state.tsx" name="EmptyStateProps" />
+
+## Keyboard and focus
+
+Not focusable by itself. The action is a real control and keeps its own focus and
+keyboard behaviour; the panel does not trap or intercept anything.
+
+## Theming
+
+The title uses `colors.foreground`, the description and icon slot
+`colors.mutedForeground`, and spacing comes from `spacing.*`. No literals.
+
+## Accessibility and limitations
+
+- No role of its own: an empty state is ordinary content, and `role="status"`
+  would announce on every parent re-render. The title carries the meaning.
+- The icon is decorative and is not announced.
+- No illustration slot: an icon renders in the muted foreground colour.
+- The 360px wrap width is a component constant, not a token.
+- The docs site cannot render it live; the example and source are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/empty-state.tsx"'>
+  ../../../../../packages/components/src/empty-state.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="empty-state" />

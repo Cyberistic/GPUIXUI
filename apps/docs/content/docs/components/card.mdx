@@ -1,0 +1,93 @@
+---
+title: Cards
+description: Frames a discrete unit of content and actions.
+---
+
+<ComponentState slug="card" />
+
+<NativePreview slug="card" />
+
+`Card` groups related content on one surface. It is composition only: it has no
+state, does not focus, scroll, dismiss or trap anything, and never wraps an
+overlay. Anything interactive inside a card is a control you put there.
+
+## Usage
+
+```tsx
+import {
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
+} from "@gpuixui/components/card";
+
+<Card>
+  <CardHeader>
+    <CardTitle>Pro plan</CardTitle>
+    <CardDescription>Everything in Starter, plus seats and invoicing.</CardDescription>
+  </CardHeader>
+  <CardContent>{/* rows, a form, a chart */}</CardContent>
+  <CardFooter>{/* actions */}</CardFooter>
+</Card>;
+```
+
+Only `Card` is required. The parts are `CardHeader`, `CardTitle`,
+`CardDescription`, `CardContent` and `CardFooter`; drop the ones you do not need.
+
+## Variants
+
+| `variant` | Surface |
+| --------- | ------- |
+| `outline` (default) | 1px `border` and the `card` fill |
+| `elevated` | the `card` fill and the `md` elevation shadow |
+| `plain` | the `card` fill only, for a card inside another surface |
+
+## Sizes
+
+No size prop: spacing, radius and type come from the theme. A consumer `style`
+is merged last, so `style={{ maxWidth: 420 }}` constrains the surface without a
+fork.
+
+## States
+
+None. A card is never focusable, hoverable or disabled, and is not a landmark.
+`CardTitle` is the level-3 heading that names it.
+
+## Composition
+
+The card example is the full header/content/footer build:
+
+<include lang="tsx" meta='title="packages/components/examples/card.example.tsx"'>
+  ../../../../../packages/components/examples/card.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/card.tsx" name="CardProps" />
+
+## Keyboard and focus
+
+Not focusable. Tab order belongs to the controls inside the content.
+
+## Theming
+
+All colour, spacing, radius, elevation and type come from the theme
+(`colors.card`, `colors.border`, `spacing.*`, `radius.lg`, `elevation.md`,
+`textStyle("h3")` / `textStyle("body")`). There are no literal colours or sizes.
+
+## Accessibility and limitations
+
+- `CardTitle` renders a `text` node with `role="heading"` and `aria-level={3}`.
+- A card contributes no role of its own; its accessible name comes from its
+  heading, not a wrapper label.
+- The card does not clip a scrollable body: `overflow` is hidden on the surface,
+  so a scroller belongs in `CardContent` with its own height.
+- The docs site cannot render this component live — it is a GPUix host tree, not
+  DOM; the example and source below are real.
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/card.tsx"'>
+  ../../../../../packages/components/src/card.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="card" />
