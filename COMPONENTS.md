@@ -58,8 +58,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | search | `search-highlights` | verified |
 | terminal | `terminal-grid` | verified |
 | chart | `chart-svg` | verified |
+| toast | `toast-lifecycle` | verified |
 
-The suite is **50/50 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **51/51 green here** (exit `0`, `.artifacts/smoke-report.json`).
 One harness rule the shell probe added: every scenario mounts under a `Fragment`
 keyed by its id, because React otherwise reconciles consecutive views that share
 a component type and keeps their state — two `<App>` scenarios shared the
@@ -509,7 +510,7 @@ in-package and an end-to-end native verdict.
 | Empty states | todo | ? | `div` + `<text>` + Icons. |
 | Alerts | todo | ? | `div` + `<text>` + Icons. |
 | Inline validation | todo | ? | Variant merged here: Field (base-gpui `FieldRoot/Label/Description/Error/Validity/Item/Control`) — the field wrapper that carries validation state. |
-| Toasts / notifications | todo | ? | `AnimatePresence` + `createPortal` + `<anchored>` are published primitives; the toast system is ours. `motion-collapse` measured the exit contract: a leaving child stays mounted until the native exit target settles (`onExitComplete`), and `onMotionComplete` needs `dispatchNativeEvents`. |
+| Toasts / notifications | todo | partial (probe) | The toast system is ours. **`createPortal` is not exported by `@gpuix/react` 0.10.0** — the path is an absolutely positioned viewport that is the app root's **last child** (paint order is the only stacking model). **Measured (`toast-lifecycle`, plan `183`):** `position: "absolute"` + `right`/`bottom` is exact (24 px insets) and the bottom-anchored stack grows upward; the viewport's `pointerEvents: "none"` is load-bearing (a page control under its transparent strip takes the click; `auto` blocks it) while a **painted** card is hit without `pointerEvents: "auto"`; a card over a page control keeps the click (`behind=0`); `role="status"` + `aria-label` is an AccessKit `Status`, and the dismiss control is a `Button`; a toast does not steal focus and its dismiss is one Tab away; a per-toast JS timer is real time (the dispatcher clock does not move it) and its frozen exit needs a dispatched frame before the motion clock can advance it. Removal must be asserted with `bounds` — `getPaintedText()` can retain the removed card's text for that frame. There is **no live-region/announcement field** in the dump. `motion-collapse` measured the exit contract: a leaving child stays mounted until the native exit target settles (`onExitComplete`), and `onMotionComplete` needs `dispatchNativeEvents`. The shipped `ToastProvider`/`ToastViewport` is not on the integration branch yet; this row stays `todo` until it mounts here. |
 | Dialogs | todo | ? | `Dialog` is on `main` but **not in published 0.10.0** (verified). `createPortal` + `div` + `motion` + focus handles. Focus entry, the Tab trap and focus return are measured natively by `modal-focus-trap` (playground plan `155`). |
 | Confirmation dialogs | todo | ? | Dialog + a real form/confirmation workflow. |
 | Popovers | todo | ? | `FloatingLayer` + `<anchored>` give positioning/occlusion; the Popover API is ours. Focus in/out and “Escape closes only the popover” are measured natively (`modal-focus-trap`). Placement (`floating-placement`): `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is short by half the panel size** and `fit="snap"` clamps without flipping, so a near-bottom popover must choose `side="top"` itself. |

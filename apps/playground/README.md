@@ -21,11 +21,11 @@ placement), the Tier 3/4 probes
 command surface probe (`command-palette`), the tabbed-pane probe
 (`workspace-panes`), the app-level shortcut probe
 (`window-key-shortcut`), the chart probe (`chart-svg`), the markdown probe
-(`markdown-surface`), the shell probes (`shell-navigation`, `shell-selection`),
-which mount the real `App` — the first proves the sidebar scrolls (the registry
-is longer than the window, so an unreachable entry would be a scenario the app
-cannot open), the second proves selecting an entry, the keyboard contract and
-the palette switch.
+(`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the shell
+probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
+first proves the sidebar scrolls (the registry is longer than the window, so an
+unreachable entry would be a scenario the app cannot open), the second proves
+selecting an entry, the keyboard contract and the palette switch.
 
 ## Run it
 
@@ -61,7 +61,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (50/50 green); -> 2 on a host with no binding
+# -> 0 here (51/51 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -532,19 +532,43 @@ The recipe: markdown for a rendered document, `<markdown>`'s own text for copy,
 and `<text>`/element coordinates for anything a test must address — the internal
 blocks are not addressable elements.
 
+## Toast viewports (plan `183`)
+
+`toast-lifecycle` reproduces the mechanism the shipped `ToastViewport` depends
+on, without importing the components package (it is not on the integration
+branch). The viewport is a plain `div` with `position: "absolute"`, `right: 24`,
+`bottom: 24`, a transparent 120 px strip, `pointerEvents: "none"`, and one
+painted card per toast with `pointerEvents` left at its default; it is the app
+root's **last child**, because paint order is the only stacking model.
+
+| Fact | Measured |
+| ---- | -------- |
+| placement | each card's right and bottom edge is exactly 24 px from the root's edges; the bottom-anchored stack grows **upward** (adding a card lifts the older ones) |
+| pointer chain | a page control under the viewport's transparent strip receives the click (`under=1`) — flipping the viewport to `auto` blocks it. A **painted** card is hit-tested without `pointerEvents: "auto"`; removing the card's `auto` still passes |
+| stacking | the viewport painted last covers a page control at the same coordinates: dismissing the bottom card leaves `behind=0`, while a click outside the box still reaches the page |
+| queue | four pushes keep three, dropping the oldest; dismissing one reflows the rest with the same 8 px gap |
+| focus | a toast pushed from the focused field's `onSubmit` does not move focus; `focusNext` reaches a dismiss button; Escape leaves the stack alone. A click focuses a plain `div` even with `tabIndex={-1}` — do not use a click to prove "no focus steal" |
+| timers | a card's `setTimeout` is **real JS time** (the dispatcher clock does not move it): a 250 ms card dismisses while its 5 s sibling survives. With `pauseMotion` the exit stays frozen and the card is still laid out; `fastForwardMotion(0)` first, then `fastForwardMotion(exit + 1)` removes it |
+| removal evidence | use `bounds` (`null` after the exit). `getPaintedText()` can still report the removed card's title for that frame |
+| a11y | `role="status"` + `aria-label="Notifications"` is an AccessKit `Status`; the dismiss control is a `Button` labelled `Dismiss`. There is **no live-region/announcement field**, so the static region label is all the runtime exposes |
+
+Same caveat as every Tier 2 probe: this is the mechanism, not `@gpuixui/components`.
+Mount the real `ToastProvider`/`ToastViewport` once that package is on the
+integration branch.
+
 ## Evidence on this host
 
-The suite is **50/50 green** here (`exit 0`):
+The suite is **51/51 green** here (`exit 0`):
 
 ```
-50/50 scenarios passed · capabilities: layout=verified text=verified
+51/51 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified command=verified content=verified drag=verified
 selection=verified menu=verified components=verified search=verified
-terminal=verified chart=verified
+terminal=verified chart=verified toast=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -578,6 +602,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. **Selection:** clicking an entry mounts its view and paints the accent active state; Enter (down) and Space (up) switch entries; the light palette repaints the shell and keeps the selection. **Harness:** each scenario mounts under a keyed Fragment, or consecutive `<App>` scenarios share Shell state and the sidebar scroll offset |
+| toast | `position: "absolute"` + `right`/`bottom` is exact and bottom-anchored; the viewport's `pointerEvents: "none"` lets a control under its strip take the click (the cards do not need `auto`); paint order covers the app; `role="status"` is an AccessKit `Status`; a toast does not steal focus; a per-toast JS timer is real time and its frozen exit needs a dispatched frame first; removal is a `bounds` check, not painted text |
 | chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
 | markdown | `<markdown>` paints GFM blocks as addressable text; a crossing drag copies the document; a coordinate click on a link fires `onLinkClick`; children are retained but unpainted; one named `Article` node, with no per-heading nodes |
 
@@ -655,14 +680,14 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The seventeen core capabilities (including the token gallery, the modal
+- The eighteen core capabilities (including the token gallery, the modal
   contract, floating placement, the three published popups, the accessibility
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe, the drag-autoscroll probe, the command-palette probe, the tabbed-pane
-  probe, the terminal-grid probe, the chart probe, the markdown probe and the
-  shell probe pass in real GPUix 0.10.0 on this host (50/50), with a written
-  report and screenshots.
+  probe, the terminal-grid probe, the chart probe, the markdown probe, the
+  toast-viewport probe and the shell probe pass in real GPUix 0.10.0 on this
+  host (51/51), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
