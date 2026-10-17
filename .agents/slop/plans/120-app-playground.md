@@ -77,6 +77,37 @@ before implementing, and the app README repeats them for a consumer.
    (EF-21). `nub install --force` was needed once to materialise the package
    into `apps/playground/node_modules`; a plain `nub install` reported "up to
    date" against stale `.modules.yaml` metadata.
+8. **`nub run <script>` collapses every non-zero child exit to `1`.** Measured
+   on nub 0.9.6: a package script whose command is
+   `node -e "process.exit(2)"` prints `exit 2` and the `nub run` process still
+   returns `1`. So the suite's exit-code contract is observable only from the
+   built CLI:
+
+   ```sh
+   nub run --filter playground build && node apps/playground/dist/smoke/run.js; echo $?
+   # -> 2 on this host (no binding, no report written)
+   ```
+
+   §4.8, §7 and the README therefore must **not** assert the code through
+   `nub run --filter playground smoke`. (`nub run` still shows the CLI's own
+   `exit 2` line, so the evidence is visible; the *process* code is 1.)
+9. **`moduleResolution: "nodenext"` must not be used for this app.**
+   `@gpuix/react@0.10.0`'s `jsx-runtime.d.ts` imports `./dist/types/host`
+   *without an extension*. `nodenext` cannot resolve it and, because the base
+   config sets `skipLibCheck: true`, the failure is silent: every intrinsic
+   element's props degrade to `any`, so handler parameters become implicit
+   `any`, misspelled style keys compile, and a key that does not exist (for
+   example `focusVisible`) simply does nothing. The app inherits
+   `module: "ESNext"` and `moduleResolution: "bundler"` from
+   `@gpuixui/config/tsconfig.base.json`. Evidence: §3.1's `nodenext` produced 8
+   `tsc` errors, 6 of them the silent-props `any`; removing the two overrides
+   left only the 2 real ones.
+10. **`focusVisible` and `keyboardFocusDim` do not exist in 0.10.0** (`grep -r`
+    over `native/dist` and `react/dist` finds neither), so plan `110` §2.3's
+    focus row is wrong on that point: a focus ring must be painted from React
+    state on `onFocus`/`onBlur`, not declared in `style`. `role` and the
+    `aria-*` props *do* exist; `onLayout`, `onScrollChange` and `getElementsAt`
+    do not (item 2).
 
 ## 3. Design
 
