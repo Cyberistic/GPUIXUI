@@ -78,6 +78,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [079](./079-secondary-text-state-washes.md) | Secondary text on the state washes | F | 014, 057, 063, 071–078 | done |
 | [080](./080-control-edge-on-fills.md) | The control edge on the fills it paints | F | 014, 063, 071–079 | done |
 | [081](./081-selection-on-painted-surfaces.md) | The selection wash on the surfaces text is selected on | F | 063, 069, 071–080 | done |
+| [082](./082-primary-text-role.md) | The primary role as text | F | 014, 057, 063, 071–081 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -283,6 +284,19 @@ their alpha unchanged, `selectionPairs` becomes the public nine-surface list, an
 `selection-text.test.ts` guards it. The selected row stays a `secondary` pair —
 `selectedForeground` over the wash measures 4.80:1 at its lowest, which is the
 floor that role already has.
+082 closes the last role the contrast contract measured only as a fill.
+`primary` is painted as **text** by the primitives Link variant and the
+`primary` text tone, but every pair measured only `primaryForeground` on the
+fill, so a shipped platform accent could be unreadable as a link while the suite
+stayed green. The audit found macOS light at **4.21:1** on the canvas and
+**3.44:1** on the pressed wash, macOS dark at **3.82:1** on card/popover and
+**2.84:1** on `active`, Linux light at 3.51:1, Linux dark at 4.08:1 and Windows
+light at 4.30:1, plus high-contrast dark's `primary` at 6.94:1 under the AAA 7:1
+floor. A 54th role, `primaryText`, is the readable tonality — the same
+fill-versus-text split plan 057 shipped for status families — measured on the six
+surfaces a link actually sits on (`background`, `card`, `popover`, `muted`,
+`hover`, `active`), so the pair list moves 74 → 80 and every platform style
+carries its own readable step in its own accent family.
 
 ### Reference adoption (block `200–299`)
 
