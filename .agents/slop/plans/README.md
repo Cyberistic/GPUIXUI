@@ -82,6 +82,18 @@ workstream declares in its own section below.
 | [306](./306-fieldset.md) | Fieldset: a named group of fields, with disabled propagation to `FieldInput` | C | 200, 201, 115, 205 | done — 7 native tests + 1 Field regression; both-direction proof (behaviour 317) |
 | [307](./307-stepper.md) | Stepper: a read-only multi-step progress indicator | C | 200, 201, 205, 306 | done — 8 native tests; both-direction proof (behaviour 325) |
 | [308](./308-form.md) | Form: validation orchestration and the submit lifecycle | C | 200, 201, 115, 205, 306 | done — 7 native tests; both-direction proof (behaviour 332) |
+| [309](./309-drawer.md) | Drawer: an edge-anchored modal panel over the shared modal hooks | C | 200, 201, 205, 112 | planned |
+| [310](./310-keyboard-shortcuts.md) | Keyboard shortcuts and keycaps, plus the shared accelerator model | C | 200, 201, 205, 111 | planned |
+| [311](./311-timeline.md) | Timeline: an event rail with derived last-item context | C | 200, 201, 205 | planned |
+| [312](./312-countdown.md) | Countdown: a remaining-time display whose clock is the app's | C | 200, 201, 205 | planned |
+| [313](./313-inline-edit.md) | Inline edit: rename in place with a commit/cancel contract | C | 200, 201, 115 | planned |
+| [314](./314-tag-input.md) | Tag / token input over a pure add/remove rule set | C | 200, 201, 205 | planned |
+| [315](./315-carousel.md) | Carousel: discrete slide stepping (no transform in 0.10.0) | C | 200, 201, 205 | planned |
+| [316](./316-hotkey-recorder.md) | Hotkey recorder over the shared accelerator model | C | 200, 201, 310 | planned |
+| [317](./317-preview-card.md) | Preview card: hover/focus preview on the anchored layer | C | 200, 201, 112, 114 | planned |
+| [318](./318-color-picker.md) | Color picker: discrete swatches and HEX (no gradients in 0.10.0) | C | 200, 201, 205 | planned |
+| [319](./319-mention-input.md) | Mention input: ranked `@` suggestions over an anchored list | C | 200, 201, 116, 112 | planned |
+| [320](./320-navigation-menu.md) | Navigation menu: one open panel, roving triggers | C | 200, 201, 112, 114, 113 | planned |
 
 Interlocks this workstream depends on and does not own:
 

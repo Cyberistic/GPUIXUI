@@ -210,10 +210,22 @@ retired once both branches are one
     - [x] Expose `style` as `StateStyle<PartState>` on the interactive parts — plan 305: 11 parts with exported state types; button-shaped triggers stay on the local stand-in until `@gpuixui/primitives` owns it (owner: components)
     - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
   - Tier 2 gap rows (plan 205; each row gets its own plan before implementation)
+    - [x] Write and index plans 309–320 for the twelve remaining gap rows
     - [x] Fieldset — plan 306: groups fields, propagates `disabled` to `FieldInput` (7 native tests; both-direction proof)
     - [x] Stepper — plan 307: read-only multi-step indicator, statuses derived from `value` (8 native tests; both-direction proof)
     - [x] Form — plan 308: owned-value schema validation, one alert summary, decoded `onSubmit`, pending guard (7 native tests; both-direction proof)
-    - [ ] Drawer, Navigation Menu, Preview Card, Timeline, Countdown, Keyboard shortcuts / keycap display, Carousel, Inline edit, Tag/token input, Mention input, Hotkey-recorder input, Color picker — plans not yet written
+    - [ ] Drawer — plan 309
+    - [ ] Keyboard shortcuts / keycap display — plan 310 (owns the accelerator model)
+    - [ ] Timeline — plan 311
+    - [ ] Countdown — plan 312
+    - [ ] Inline edit — plan 313
+    - [ ] Tag / token input — plan 314
+    - [ ] Carousel — plan 315
+    - [ ] Hotkey-recorder input — plan 316 (consumes plan 310)
+    - [ ] Preview Card — plan 317
+    - [ ] Color picker — plan 318 (discrete swatches: 0.10.0 has no gradients)
+    - [ ] Mention input — plan 319
+    - [ ] Navigation Menu — plan 320
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
