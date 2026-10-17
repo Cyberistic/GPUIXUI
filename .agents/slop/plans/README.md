@@ -120,7 +120,7 @@ B1, so it is planned, not done.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [200](./200-adopt-compound-part-api.md) | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | `020`, `030`, `110–117` | **done** — components workstream |
-| `201` | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | planned |
+| [201](./201-adopt-runtime-state-model.md) | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | **components half done** — `core/runtime.ts` + test + doc §7 + ADR 0005; `packages/testing` helper pending |
 | `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | planned |
 | `203` | Adopt `adabraka-ui`'s GPUI limits map as `docs/gpuix-capabilities.md`, re-verified against GPUix 0.10.0 | A | `020`, `110` | planned |
 | `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |

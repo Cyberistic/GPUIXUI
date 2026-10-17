@@ -198,8 +198,9 @@ retired once both branches are one
     - [x] Inventory test counts and the drifted rows — plan 139
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D9 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
-    - [ ] 201 — the runtime / context / parts state model: `packages/components/src/core/runtime.ts`, its test, the `docs/component-api.md` “State model” section and ADR 0005 (plan 201; needs the `packages/testing` half from the playground owner)
-    - [ ] Split the landed deviations named in `docs/component-api.md` §8 into parts — Alert, CommandMenu, Pagination, Combobox and the date/time pickers, each with its own behaviour test, docs update and inventory row (owner: components)
+    - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D10 (plan 201; both-direction proof: deleting the select branch fails the fold test)
+    - [ ] 201 (shared helper) — `packages/testing/src/state.ts` + its test (`runCommands` over a runtime), so suites outside `packages/components` replay commands (owner: playground; this package's `runtime.run` is the same fold)
+    - [ ] Split the landed deviations named in `docs/component-api.md` §9 into parts — Alert, CommandMenu, Pagination, Combobox and the date/time pickers, each with its own behaviour test, docs update and inventory row (owner: components)
     - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
 `[x]` Verify every component in both themes
 
@@ -311,6 +312,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `alpha(color, amount)` helper | tokens-theme | **resolved** — landed on `main`; the local `withAlpha` is deleted (plan 157) |
 | An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | **resolved** — `infoSoft`/`infoSoftForeground` are the tone's roles (plan 157) |
 | `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
+| `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |

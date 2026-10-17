@@ -86,7 +86,35 @@ supported alternative (`aria-selected`, `aria-valuetext`, a required `label`).
 | `actions.rs` + `.key_context(..)` + `.on_action(..)` | `tabIndex` + `onKeyDown` + the primitives keyboard contract |
 | `base_gpui::init(cx)` | nothing — React/GPUix has no per-component init |
 
-## 7. Parts by component
+## 7. State model
+
+Every stateful component is three modules carved by **knowledge, not by widget**
+(ADR [`0005`](../.agents/adr/0005-component-state-model.md)):
+
+| Module | Responsibility |
+| ------ | -------------- |
+| `<component>/state.ts` | the pure runtime: commands in, part-shaped style-state out. Imports Effect's pure modules only — no React, no GPUix |
+| `<component>/context.tsx` | the thin injection vehicle: `read`/`update`/`select`; the **only** place `useControllableState` is called |
+| `<part>.tsx` | a thin renderable part: one event emits one command, then reads its style-state |
+
+- Commands are a tagged union (`{ _tag: "select", value }`), never a setter.
+- A query answers a part-shaped question ("am I active?"), never "what is the
+  selected index?". Parts never read each other's raw state.
+- `packages/components/src/core/runtime.ts` provides the shared shape —
+  `initial`, `reduce`, `query` and `run` — and is what a new component's
+  `state.ts` builds on. `run` folds commands from the initial state for tests and
+  event replay; plan `201`'s cross-package `runCommands` helper in
+  `packages/testing` is the same fold for suites outside this package.
+- Components with no state (`Badge`, `Separator`, `Text`) have no runtime; do not
+  invent one.
+- The controlled/uncontrolled rule lives only in the context; the runtime never
+  reads `value`/`defaultValue` and never calls a consumer callback. The context
+  calls the callback from the runtime's outcome.
+
+Landed components adopt this convention when they are next changed; plan `201`
+records that a rewrite is a follow-up, not a prerequisite.
+
+## 8. Parts by component
 
 The **Source** column is the authority for a component that is already built;
 the base-gpui guide is the shape reference, not a transcription target. `—`
@@ -176,11 +204,11 @@ implementation cannot invent a shape):
 | Inline edit | `InlineEdit` | plan 205 |
 | Keyboard shortcuts | `KeyboardShortcuts`, `Keycap` | plan 205 |
 
-## 8. Landed deviations and migration
+## 9. Landed deviations and migration
 
 These components are `done` but still expose a single component where the parts
 table names a compound. They are **follow-ups**, not rewrites in this plan
-(plan `201` §3's rule): a part may only be split out with its own behaviour
+(plan `201` §2.5's rule): a part may only be split out with its own behaviour
 test, docs row and inventory record.
 
 | Component | Deviation | Planned parts |
@@ -194,7 +222,7 @@ test, docs row and inventory record.
 `Badge`, `Avatar`, `EmptyState` and `SearchInput` are one styled region and are
 compliant as single parts.
 
-## 9. Provenance
+## 10. Provenance
 
 - `base-gpui` — MIT, `Copyright (c) 2026 Luke Tandjung`, commit `64b2233`;
   design reference only, no source copied
