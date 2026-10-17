@@ -411,8 +411,9 @@ const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
  * label an unavailable control, menu item or row paints on its fill, the plain
  * surfaces and the state washes. The default text role of a list or menu row is
  * measured on the washes the row paints, a selected `Select` option's label on
- * its `selected` fill, a status label or dot on the quiet `muted` panel, and a
- * text field's edge is measured on the `input` fill it sits on.
+ * its `selected` fill, a status label or dot on the quiet `muted` panel, typed
+ * text on the `input` fill and on the `background` canvas a transparent field
+ * paints, and a text field's edge is measured on the `input` fill it sits on.
  *
  * The filled families are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
@@ -432,6 +433,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["mutedForeground", "card", "secondary"],
   ["mutedForeground", "popover", "secondary"],
   ["inputForeground", "input", "body"],
+  ["inputForeground", "background", "body"],
   ...ringPairs,
   ...ringSoftPairs,
   ["secondaryForeground", "secondary", "secondary"],

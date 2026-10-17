@@ -221,7 +221,10 @@ turned it into a light one (plan 099). Default body text
 is checked on the canvas, card, the `muted` panel, `popover` and the
 `hover`/`active`/`accent`/`selected` washes, so an avatar's initials on the
 quiet panel, a date picker's month header on its floating surface and a selected
-row's title are held to the body floor. A menu row's `popoverForeground` on
+row's title are held to the body floor. Typed text (`inputForeground`) is
+checked on the `input` fill and on the `background` canvas a transparent field
+paints (plan 315), so a search box or inline edit cannot lose its text. A menu
+row's `popoverForeground` on
 `hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a
 selected row's inherited `selectedForeground` on the pointer washes are checked
 too, and a field's `border` edge is checked on its own `input` fill (plan 312).

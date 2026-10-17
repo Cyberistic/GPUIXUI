@@ -341,7 +341,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(246);
+    expect(contrastPairs.length).toBe(247);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(

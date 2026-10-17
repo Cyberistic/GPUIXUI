@@ -683,7 +683,7 @@ describe("docs/tokens.md contrast surfaces", () => {
 
   it("states where default body text is measured", () => {
     const sentence =
-      "Default body text is measured on `background`, `card`, the `muted` panel, `popover` and the `hover`/`active`/`accent`/`selected` washes; typed text is `inputForeground` on the `input` fill. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. The row washes are not either: a selectable list row paints `accent` on hover and `selected` when selected, and its title is `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides the `selectedForeground` the row inherits. Every pair clears the body floor with margin in every shipped set, so no value moves; the pairs exist so an edited theme cannot break them silently.";
+      "Default body text is measured on `background`, `card`, the `muted` panel, `popover` and the `hover`/`active`/`accent`/`selected` washes; typed text is `inputForeground` on the `input` fill and on the `background` canvas a transparent field paints. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. The row washes are not either: a selectable list row paints `accent` on hover and `selected` when selected, and its title is `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides the `selectedForeground` the row inherits. Every pair clears the body floor with margin in every shipped set, so no value moves; the pairs exist so an edited theme cannot break them silently.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -820,7 +820,7 @@ describe("docs/design-system.md", () => {
 
   it("states the floors the contrast checker enforces", () => {
     const rows = [
-      `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes; typed text on \`input\` and on the \`background\` canvas a transparent field paints | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, and on \`selected\` for a selected \`Select\` option) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| selected row label (\`selectedForeground\` on \`selected\` and, while hovered or pressed, on \`hover\`/\`active\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| secondary text (\`mutedForeground\` on plain surfaces and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,

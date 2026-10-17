@@ -111,6 +111,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [312](./312-row-text-on-washes.md) | The row's own text on the washes it paints | F | 059, 071–095, 300, 306–309 | done |
 | [313](./313-ledger-role-count.md) | The ledger's second role count | F | 015, 056–066, 303, 311 | done |
 | [314](./314-row-surface-text.md) | The selected menu row, the sidebar status label and the link on a row fill | F | 057, 071–095, 300, 306–313 | done |
+| [315](./315-canvas-input-text.md) | Typed text on the canvas field | F | 059, 071–095, 088, 306–314 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -710,6 +711,16 @@ row's own title. The seven pairs join `contrastPairs` (239 → 246); every shipp
 set already clears its declared floor (4.53:1 at the tightest), so no colour
 moves, and `row-surface-text.test.ts` states the four regressions that the
 public checker now reports.
+
+315 closes the last text role measured on only one of the fills it paints:
+`inputForeground` was checked on the `input` fill, but SearchInput, InlineEdit,
+ColorPicker, TagInput and MentionInput paint a transparent input on the
+`background` canvas, so a copied platform style that retinted the canvas could
+erase typed text while `themeContrastFailures` returned `[]`. The one pair is
+`body` (7:1 / 7:1), every shipped set clears it, and the contract moves 246 →
+247. The same audit records a cross-team `components` task: those transparent
+fields leave placeholder colour to the runtime default instead of painting the
+`placeholder` role.
 
 ### Reference adoption (block `200–299`)
 

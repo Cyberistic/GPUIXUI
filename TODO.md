@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 82/108
+`[x]` `[████████░░]` 83/109
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -130,6 +130,18 @@ roles; every numeric role phrase in the row is now held to `colorRoles.length`
 fills — so an edited theme cannot erase them while the checker returns `[]`;
 every shipped set passes (4.53:1 at the tightest) and the contract grows
 239 → 246 pairs (plan 314)
+`[x]` Hold typed text on the `background` canvas a transparent field paints —
+SearchInput, InlineEdit, ColorPicker, TagInput and MentionInput all paint an
+input there, but `inputForeground` was measured only on the `input` fill, so an
+edited theme could erase a search query while the checker returned `[]`; every
+shipped set passes, so no colour moves and the contract grows 246 → 247 pairs
+(plan 315)
+`[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
+fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
+MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
+they currently leave placeholder colour to the runtime default, so the
+`placeholder` token and its pair apply to the `input` fill alone (owner:
+`components`; plan 315)
 `[ ]` Cross-team: `primitives` paints an unchecked checkbox/switch border with
 `theme.colors.input`, a **background** role — `input` is `#FFFFFF` in every
 light set, so an unchecked box on a white card measures 1.000:1 and has no
