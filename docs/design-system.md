@@ -281,6 +281,7 @@ Colour is checked, not assumed. `packages/tokens/src/color.test.ts` enforces:
 | ---------- | ------- | ------------- |
 | body text on `background`/`card`/`muted`/`popover`/`input` and the `hover`/`active` washes | 7:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
+| filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover` and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted` and the `hover`/`active` washes | 4.5:1 | 7:1 |

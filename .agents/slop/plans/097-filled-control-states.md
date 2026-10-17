@@ -367,7 +367,8 @@ Stop and report, do not improvise, if:
     the platform-ownership assertion).
 - `docs/tokens.md` (count, both tables, the state paragraph and the Verification
   prose), `docs/design-system.md` (role count, state table, filled-state
-  paragraph), `packages/tokens/README.md`, `COMPONENTS.md` (design tokens,
+  paragraph and an explicit floor row for the three families at rest, hover and
+  press), `packages/tokens/README.md`, `COMPONENTS.md` (design tokens,
   high-contrast, contrast-check and the renamed *Filled control states* row) and
   `TODO.md` are updated; the plan index marks this plan done.
 - One cross-team row is queued: `primitives`/`components` should read the six
