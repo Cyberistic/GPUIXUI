@@ -30,6 +30,7 @@ import { overlayScenario } from "./overlay.js";
 import { comboboxScenario, selectScenario, tooltipScenario } from "./popups.js";
 import { scrollScenario } from "./scroll.js";
 import { tabOverflowScenario } from "./tab-overflow.js";
+import { tabFocusScenario } from "./tab-focus.js";
 import { panelScenario } from "./panel.js";
 import { motionScenario } from "./motion.js";
 import { virtualListScenario } from "./virtual-list.js";
@@ -107,6 +108,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tooltipScenario,
   scrollScenario,
   tabOverflowScenario,
+  tabFocusScenario,
   panelScenario,
   motionScenario,
   virtualListScenario,

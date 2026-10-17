@@ -98,6 +98,9 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "tab-strip-overflow",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "tab-strip-focus",
+    );
   });
 
   it("flags duplicated ids", () => {

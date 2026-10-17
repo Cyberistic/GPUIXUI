@@ -58,7 +58,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (42/42 green); -> 2 on a host with no binding
+# -> 0 here (43/43 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -402,10 +402,10 @@ focus restore.
 
 ## Evidence on this host
 
-The suite is **42/42 green** here (`exit 0`):
+The suite is **43/43 green** here (`exit 0`):
 
 ```
-42/42 scenarios passed · capabilities: layout=verified text=verified
+43/43 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -419,7 +419,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | Capability | Measured on 0.10.0 here |
 | ---------- | ----------------------- |
 | layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
-| focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do |
+| focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do. **Overflow:** a clipped tab is still a tab stop and focus does not reveal it (`tab-strip-focus`) |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
@@ -481,6 +481,7 @@ src/scenarios/scroll-into-view.tsx keyboard follow and the two scroll routes
 src/scenarios/search.tsx  painted highlights, find controls and the virtual match index
 src/scenarios/drag-autoscroll.tsx held edge scroll, capture and the drop index
 src/scenarios/tab-overflow.tsx horizontal pan, tab-strip overflow and reveal
+src/scenarios/tab-focus.tsx     clipped tab stops and the roving strip
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/host.ts        createNativeHost(renderer): the SmokeHost adapter
@@ -518,7 +519,7 @@ narrower. Each deviation is deliberate and measured:
   tree, the content surfaces and text selection), the Tier 3/4 probes, the
   drag/file-drop probe, the app-level shortcut probe, the search-highlight
   probe and the drag-autoscroll probe pass in real GPUix 0.10.0 on this host
-  (42/42), with a written report and screenshots.
+  (43/43), with a written report and screenshots.
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

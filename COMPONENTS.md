@@ -32,7 +32,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | layout | `layout-flex`, `shell-navigation` | verified |
 | text | `text-native` | verified |
 | input | `input-edit` | verified |
-| focus | `focus-traversal`, `roving-focus` | verified |
+| focus | `focus-traversal`, `roving-focus`, `tab-strip-focus` | verified |
 | overlay | `overlay-dialog` | verified |
 | modal | `modal-focus-trap` | verified |
 | floating | `floating-placement` | verified |
@@ -56,7 +56,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights` | verified |
 
-The suite is **42/42 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **43/43 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -445,7 +445,7 @@ in-package and an end-to-end native verdict.
 | Dropdown menus | todo | ? | `FloatingLayer` + `<anchored>`; menu semantics, roving focus and type-ahead are ours. Programmatic focus and outside-in dismissal are measured natively (`modal-focus-trap`). **Menus open with `align="center"` must compensate for the half-panel offset, and a near-bottom menu must pick `side="top"`** — `fit="snap"` does not flip (`floating-placement`). |
 | Context menus | todo | ? | As Dropdown menus, triggered by a right click. **Measured (`context-menu-pointer`)**: a right click is `onAuxClick` + `isRightClick` — `auxClick` carries **no `button`** and `onClick` never fires for button 2, so guard on `isRightClick`; a child's right click bubbles to the trigger; `<anchored position={pointer}>` is exact, including inside a **scrolled** container (no offset, no clipping — an item below the viewport still paints and activates); outside press and Escape dismiss; `shift-f10` opens and Escape returns focus. One Escape dismisses one layer (`modal-focus-trap`). |
 | Command menus | todo | ? | `<input>` + `FloatingLayer` + `<virtual-list>`. |
-| Tabs | todo | partial (probe) | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. **Overflow (`tab-strip-overflow`, plan `173`):** `overflowX: "scroll"` pans, `deltaX` is the axis a trackpad sends (a vertical wheel leaves a horizontal-only strip at the same `x`), and a child outside the viewport **keeps painted bounds**, so hit-test against the viewport rather than trusting the node's existence. `scrollIntoView` reveals the active tab and saturates at the end, but a near-end reveal stops at `x = -5` rather than `0` — a strip clamps the last pixel. Selection + native focus + reveal on arrows/Home/End are measured natively. |
+| Tabs | todo | partial (probe) | Roving focus + `div` + `motion` indicator. Variant merged here: Segmented control (adabraka `segmented_nav`) — also see Button groups. **Overflow (`tab-strip-overflow`, plan `173`):** `overflowX: "scroll"` pans, `deltaX` is the axis a trackpad sends (a vertical wheel leaves a horizontal-only strip at the same `x`), and a child outside the viewport **keeps painted bounds**, so hit-test against the viewport rather than trusting the node's existence. `scrollIntoView` reveals the active tab and saturates at the end, but a near-end reveal stops at `x = -5` rather than `0` — a strip clamps the last pixel. **Keyboard (`tab-strip-focus`, plan `174`):** a clipped tab **is** a native tab stop, and focus does **not** reveal it in a plain scroller (`x` stayed `0`), so the roving tabindex model is required — only the active tab may be a stop, and the strip reveals on every focus it moves. One `focusNext` then leaves the strip; End/Home move selection, native focus and reveal together. |
 | Accordions | todo | ? | `div` + `motion` (height). |
 | Collapsible sections | todo | ? | `div` + `motion` (height). Variant merged here too: Expandable card (adabraka `expandable_card`). |
 | Breadcrumbs | todo | ? | `div` + `<text>`. |
@@ -496,7 +496,7 @@ in-package and an end-to-end native verdict.
 | Resizable split panes | todo | ? | Pointer events + `motion`; `col-resize`/`row-resize` cursors are provided (verified). |
 | Panel groups | todo | ? | Composition over split panes. |
 | Collapsible sidebars | todo | ? | `motion` width (outer clipping container, not inner reflow) — measured by `motion-collapse` on 0.10.0: exact intermediate widths under the paused clock, inner pane keeps its width. |
-| Tabbed panels | todo | partial (probe) | Tabs + panels. The strip's overflow contract is measured by `tab-strip-overflow`: horizontal pan, clipped children keeping bounds, and a component-owned reveal (clamp the near end — the renderer stops at `x = -5`, not `0`). |
+| Tabbed panels | todo | partial (probe) | Tabs + panels. The strip's overflow contract is measured by `tab-strip-overflow` (horizontal pan, clipped children keeping bounds, component-owned reveal; clamp the near end — the renderer stops at `x = -5`, not `0`) and its keyboard contract by `tab-strip-focus` (a clipped tab is a tab stop that focus does not reveal; a roving strip is one stop and reveals on End/Home). |
 | Detachable / movable tabs | todo | ? | Needs a portal/drag model; no drag host feature. `drag-targets` measured the missing piece: hover is frozen during a captured drag, so the pane under the pointer cannot highlight itself (hit-test from pointer coordinates as `workspace-tab-drag` does); the gesture also ends in a click on the source tab. **`drag-autoscroll`:** the runtime does **not** scroll a held drag at an edge — the strip must own an edge loop (`renderer.scrollTo` per held move), which keeps the capture and the up, and derive the drop index from the pointer and the live offset. A new OS window is not available either: 0.10.0 exposes one app window (`render` + `WindowOptions`), no `openWindow`. |
 | Docking layouts | todo | partial (probe) | Composition over split panes + tabs. The overflowed strip contract is measured (`tab-strip-overflow`, plan `173`): x-axis wheel, exact `scrollTo`, `scrollIntoView` reveal, and clipped nodes that keep bounds. |
 | Nested panel arrangements | todo | ? | Composition. |
