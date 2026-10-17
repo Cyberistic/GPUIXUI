@@ -63,17 +63,25 @@ default and the suite would exit `2`.
 It is built from source instead: the blocking `xcrun metal` step is **optional**
 — `gpui_macos`'s `runtime_shaders` feature compiles the identical shader source
 through the OS Metal compiler at runtime, so the pinned Rust toolchain plus
-Command Line Tools suffice. The recipe, commands, STOP conditions and the
-measured per-capability facts are in
+Command Line Tools suffice. One script does the whole thing (idempotent):
+
+```sh
+sh apps/playground/scripts/build-native-binding.sh
+```
+
+It installs Rust 1.97.1 and the pinned zed tree under
+`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), builds the
+cdylib with `runtime_shaders`, and drops it at
+`node_modules/@gpuix/native/gpuix-native.darwin-x64.node`. The recipe, commands,
+STOP conditions and the measured per-capability facts are in
 `.agents/slop/plans/140-gpuix-native-darwin-x64-build.md`; the decision is
 `.agents/adr/0003-darwin-x64-source-build.md`.
 
 The artifact is a build product (gitignored). A fresh checkout has no binding
-and reports exit `2` until the build in plan `140` §5 is repeated. Its
-provenance: same version, same source revision, same Rust code as the published
-package; only the shader-compilation feature differs. Confirming with the
-**published** binary on an Apple Silicon CI runner is the gold standard, tracked
-in `TODO.md`.
+and reports exit `2` until the script is run. Its provenance: same version, same
+source revision, same Rust code as the published package; only the
+shader-compilation feature differs. Confirming with the **published** binary on
+an Apple Silicon CI runner is the gold standard, tracked in `TODO.md`.
 
 ## Evidence on this host
 

@@ -195,6 +195,11 @@ this section)
 
 ## 5. Steps
 
+Steps 2–6 are automated by `apps/playground/scripts/build-native-binding.sh`
+(idempotent; it stages everything under `.agents/slop/scratch/gpuix-build/` and
+installs the artifact). Run it for a normal rebuild; the steps below are the
+record of exactly what it does.
+
 Each step states its exact command and expected result.
 
 1. **Plan only.** Write this file and index it; commit
