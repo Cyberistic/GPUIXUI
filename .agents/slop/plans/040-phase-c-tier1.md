@@ -44,7 +44,8 @@ a floating rectangle".
 
 1. typed public props; sensible defaults; no boolean-prop proliferation (variant
    is a union, not `isPrimary`/`isGhost`);
-2. every visual decision goes through `resolveStyleSpec` — no inline colour,
+2. every visual decision goes through the `core/` resolver for its family
+   (`core/style.ts`, `core/selection.ts`, `core/loading.ts`) — no inline colour,
    no inline spacing literal;
 3. hover/active/focus-visible declared in `style.hover`/`style.active`/
    `style.focusVisible`, never scripted with `onMouseEnter` + `useState`;

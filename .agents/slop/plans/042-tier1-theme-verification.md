@@ -115,8 +115,9 @@ assertions fail, restore, watch them pass. Record in §8.
 ```sh
 nub run --filter @gpuixui/primitives test:runtime
 # Test Files  6 passed (6)
-#      Tests  51 passed (51)
+#      Tests  54 passed (54)
 #   Duration  12.08s
+# (51 when this plan landed; three a11y-role assertions were added afterwards.)
 ```
 
 `runtime/theme.runtime.test.tsx`, 5 tests:

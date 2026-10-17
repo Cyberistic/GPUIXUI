@@ -193,10 +193,32 @@ locally-built `@gpuix/native@0.10.0` binding (plan 140 §4 provenance).
 
 ```sh
 nub run --filter @gpuixui/primitives test:runtime
-# Test Files  5 passed (5)
-#      Tests  46 passed (46)
-#   Duration  9.38s
+# Test Files  6 passed (6)
+#      Tests  54 passed (54)
 ```
+
+(46 when this plan landed; 042 added 5 theme tests and 043 added one `testId`
+test, and the a11y-role assertions below added two more.)
+
+### Accessibility roles the tree actually reports
+
+Measured from `getA11yTree()`; these are the names a test can match on, and the
+proof that each `role` we write maps to a real AccessKit role rather than being
+ignored:
+
+| Our element | AccessKit role | Also carries |
+| ----------- | -------------- | ------------ |
+| `Button` | `Button` | label, `description: "Loading"` while busy |
+| `Input` / `TextArea` | `TextInput` | label, `on_action: ["Focus"]` |
+| `Label` | `Label` | the visible name as its `value` |
+| `Checkbox` | `CheckBox` | label, `value: checked / unchecked / mixed` |
+| `Switch` | `Switch` | label, `value: checked / unchecked` |
+| `RadioGroup` | `RadioGroup` | the group's label |
+| a radio option | `RadioButton` | option label, `value: checked / unchecked` |
+| `Progress` | `ProgressIndicator` | `value: "42%"` / `"loading"` |
+| `Spinner` | `Status` | its label |
+| `Icon` with a label | `Image` | label |
+| `Skeleton` | — | correctly absent (decorative) |
 
 | Suite | Tests | What the frame showed |
 | ----- | ----- | --------------------- |

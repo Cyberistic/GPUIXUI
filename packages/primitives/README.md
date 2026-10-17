@@ -61,8 +61,9 @@ subpaths; the package root needs a native binding.
 **Feedback** `Progress` `Spinner` `Skeleton` `Tooltip`
 **Theming** `ThemeProvider`
 
-Every component is themed by `resolveStyleSpec`-style resolvers in `core/style.ts`
-and `core/selection.ts`; none paints a literal and none scripts hover or press
+Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
+`surfaceStyle`, `textStyle`, `ruleStyle`, `progress*Style`) or `core/selection.ts`;
+none paints a literal and none scripts hover or press
 (GPUIx applies `style.hover`/`style.active` natively).
 
 ### What GPUix does not provide, and what this package does instead
@@ -96,7 +97,7 @@ type checker and by the native runtime, not by these suites.
 six suites in `runtime/` mount the components in the GPUix 0.10.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
-offset, PNG captures. Measured 2026-10-17: **6 files, 51 tests, all passing** — including a theme
+offset, PNG captures. Measured 2026-10-17: **6 files, 54 tests, all passing** — including a theme
 switch on a mounted tree and a check that no painted colour is outside the
 active palette.
 `runtime/` is deliberately outside `nub run test`, so the default gate still

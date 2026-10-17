@@ -206,8 +206,8 @@ it("moves a Spinner's lit dot instead of rotating it", async () => {
   const indexes = await sample(runtime, litIndex, 5);
   expect(new Set(indexes).size).toBeGreaterThan(1);
   expect(
-    Option.getOrElse(a11yNode(runtime.a11y(), { label: "Working" }), () =>
-      expect.fail("the Spinner announced no label"),
-    ).aria?.role,
-  ).toBe("Status");
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "Status", label: "Working" }),
+    ),
+  ).toBe(true);
 });

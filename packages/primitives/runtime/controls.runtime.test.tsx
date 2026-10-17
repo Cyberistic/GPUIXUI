@@ -23,6 +23,7 @@ import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import {
+  a11yNode,
   a11yNodes,
   a11yValueOf,
   type Bounds,
@@ -161,6 +162,13 @@ it("toggles a Checkbox on a click, and announces the state", async () => {
     </Surface>,
   );
   expect(announced(runtime, "Enable")).toBe("unchecked");
+  // The runtime maps our `role="checkbox"` to AccessKit's CheckBox, so the
+  // value text is not standing in for a role it lacks.
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "CheckBox", label: "Enable" }),
+    ),
+  ).toBe(true);
   runtime.click("cb");
   expect(announced(runtime, "Enable")).toBe("checked");
   runtime.click("cb");
@@ -251,6 +259,33 @@ it("wraps a RadioGroup's arrow navigation at the end", async () => {
   expect(announced(runtime, "Beta")).toBe("checked");
   runtime.keyDown("rg", "down");
   expect(announced(runtime, "Alpha")).toBe("checked");
+});
+
+it("exposes a named RadioGroup of named RadioButtons", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Plan"
+        defaultValue="a"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  const dump = runtime.a11y();
+  expect(
+    Option.isSome(a11yNode(dump, { role: "RadioGroup", label: "Plan" })),
+  ).toBe(true);
+  expect(
+    Option.isSome(a11yNode(dump, { role: "RadioButton", label: "Alpha" })),
+  ).toBe(true);
+  expect(
+    Option.isSome(a11yNode(dump, { role: "RadioButton", label: "Beta" })),
+  ).toBe(true);
 });
 
 it("skips a disabled option in a RadioGroup's arrow navigation", async () => {
