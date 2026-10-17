@@ -62,10 +62,10 @@ no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
 
 ## Adding a component page
 
-The first real page is `content/docs/components/button.mdx` (plan 422). It shows
-the whole chain: a `wip` registry record, generated status and preview blocks, a
-real `ButtonProps` API table, the real component source and the runtime-mounted
-form example. Copy its shape.
+The first real page is `content/docs/components/button.mdx` (plan 422); all 20
+Tier 1 pages followed it (plan 423). Each shows the whole chain: a `wip` registry
+record, generated status and preview blocks, a real API table, the real component
+source and a runtime-mounted example. Copy their shape.
 
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
    `COMPONENTS.md` row exactly** — `registry.test.ts` proves the two agree.

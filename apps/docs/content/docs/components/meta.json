@@ -17,6 +17,10 @@
     "checkbox",
     "radio-group",
     "select",
-    "switch"
+    "switch",
+    "progress",
+    "tooltip",
+    "skeleton",
+    "spinner"
   ]
 }

@@ -1,0 +1,90 @@
+---
+title: Skeletons
+description: Placeholder shape for loading content.
+---
+
+<ComponentState slug="skeleton" />
+
+<NativePreview slug="skeleton" />
+
+`Skeleton` paints a block in the skeleton role and pulses its opacity between two
+states. It is not a spinner and not a progress bar: it stands in for the shape of
+content while that content loads.
+
+## Usage
+
+```tsx
+import { Skeleton, Stack } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="sm">
+  <Skeleton height={36} width="45%" />
+  <Skeleton height={14} width="70%" />
+  <Skeleton height={12} />
+</Stack>;
+```
+
+An avatar placeholder:
+
+```tsx
+<Skeleton width={32} height={32} circle />;
+```
+
+## Variants
+
+`circle` turns the block into a full-radius avatar or icon placeholder. `radius`
+is otherwise `sm` (default), `md`, `lg`, `xl` or `none`.
+
+## Sizes
+
+`width` defaults to `100%`; `height` defaults to the body line height. Both take a
+number or a string. There is no size scale beyond the block you compose.
+
+## States
+
+One pulsing state: opacity alternates `1` / `0.6` every 700 ms. There is no
+reduced-motion switch, no hover or focus state, and the block is never
+interactive.
+
+## Composition
+
+The feedback example uses skeleton rows for a metric card that is still loading:
+
+<include lang="tsx" meta='title="packages/primitives/examples/feedback.example.tsx"'>
+  ../../../../../packages/primitives/examples/feedback.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Skeleton.tsx" name="SkeletonProps" />
+
+## Keyboard and focus
+
+Not focusable. A skeleton is decoration; the loading state must be announced by
+something else.
+
+## Theming
+
+`skeletonStyle` paints `colors.skeleton`; height defaults to
+`typography.body.lineHeight`. The pulse alternates opacity `1` / `0.6` every
+700 ms.
+
+## Accessibility and limitations
+
+- The block has **no role** and no text, which is the honest arrangement — a
+  placeholder must not be read out as content. Announce the wait with a `Spinner`
+  label ("Loading projects") or a `Progress` label, or with visible text beside
+  the skeleton.
+- **No shimmer sweep**: the runtime's `motion` animates opacity, width, height,
+  insets and radius — not a moving gradient — so a shimmer would be a fake.
+- No automatic count or list-shape generation; compose the blocks you need.
+- No reduced-motion switch: the pulse is a plain interval.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Skeleton.tsx"'>
+  ../../../../../packages/primitives/src/components/Skeleton.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="skeleton" />

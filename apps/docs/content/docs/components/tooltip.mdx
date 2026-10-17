@@ -1,0 +1,89 @@
+---
+title: Tooltips
+description: Labels a control on hover or focus.
+---
+
+<ComponentState slug="tooltip" />
+
+<NativePreview slug="tooltip" />
+
+`Tooltip` reuses `@gpuix/react/tooltip` for the anchored layer, the open delay
+and dismissal, and themes the tip to the popover surface and caption type. It is
+a wrapper, not a reimplementation.
+
+## Usage
+
+```tsx
+import { Icon, Tooltip } from "@gpuixui/primitives";
+
+<Tooltip content="Booked revenue, net of refunds." side="bottom">
+  <div tabIndex={0} style={{ display: "flex", padding: 2 }}>
+    <Icon name="info" color={colour} size="sm" />
+  </div>
+</Tooltip>;
+```
+
+The child must be a single **focusable host element**. `Tooltip` clones its child
+with the hover and focus handlers, so a component that does not forward those
+props (including this package's `Box`) will not open the tip.
+
+## Variants
+
+There is one tip surface. `side` chooses the preferred placement (`top` default);
+`align` sets alignment against the trigger and `delay` sets the hover delay in
+milliseconds.
+
+## Sizes
+
+The tip uses the `caption` type and one spacing step of inset; there is no size
+prop. Keep the content short and unwrapped.
+
+## States
+
+Open and closed only, owned by GPUix: hover opens after the delay, keyboard focus
+opens it, Escape or a click dismisses it. There is no focus-visible distinction,
+so a mouse-opened and a keyboard-opened tip look identical.
+
+## Composition
+
+The feedback example opens a tooltip on an icon-only control on hover:
+
+<include lang="tsx" meta='title="packages/primitives/examples/feedback.example.tsx"'>
+  ../../../../../packages/primitives/examples/feedback.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Tooltip.tsx" name="TooltipProps" />
+
+## Keyboard and focus
+
+Owned by GPUix: the tip opens when its trigger takes keyboard focus, and Escape
+or a click dismisses it.
+
+## Theming
+
+`tooltipStyle` uses the `popover` surface, `radius.sm`, `elevation.overlay`, the
+`caption` type and one spacing step of inset; content is `whiteSpace: nowrap`.
+
+## Accessibility and limitations
+
+- The tip is painted text, not an associated description: GPUix 0.10.0 has no
+  `aria-describedby`. A button whose only name is inside a tooltip is unnamed to
+  assistive technology, so give the control its own `label`.
+- A tooltip is supplementary: the same information must be reachable without
+  hovering (visible text, or the control's name).
+- The trigger must be a focusable host element that forwards hover and focus.
+- No wrapping or rich content: a paragraph is a popover, not a tooltip.
+- No arrow/caret and no touch-long-press behaviour.
+- Open and close timing are GPUix's; this wrapper only sets the delay.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Tooltip.tsx"'>
+  ../../../../../packages/primitives/src/components/Tooltip.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="tooltip" />

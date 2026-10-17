@@ -152,7 +152,7 @@ retired once both branches are one
 `[x]` `examples/basic-app`: compose the Tier 1 set into one settings-form workflow
       (typed + `check-types` green; the app itself is **never run** — it needs a
       desktop session, while the primitives it composes are runtime-verified)
-`[~]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream) — Buttons landed with plan 422; the other 18 Tier 1 pages are next
+`[x]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream) — all 20 pages landed with plans 422 and 423
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -188,10 +188,10 @@ retired once both branches are one
       render, hit-test, Tab order, Enter/Space activation, checkbox/switch toggle,
       radio arrow navigation, scroll offset, a11y-tree dump. These are the tests
       that move a `wip` component row to `done`
-`[~]` **docs-site workstream**: Tier 1 component pages + the `docs/preview-strategy.md`
+`[x]` **docs-site workstream**: Tier 1 component pages + the `docs/preview-strategy.md`
       decision (code examples plus a companion native playground, never a silent
-      HTML/CSS reimplementation) — the strategy is implemented (plan 412) and the
-      first page (Buttons) lands with plan 422; the remaining pages are next
+      HTML/CSS reimplementation) — the strategy is implemented (plan 412) and all
+      20 Tier 1 pages landed with plans 422 and 423
 `[ ]` **licensing**: record the GPUix (Apache-2.0) and Lucide (ISC) provenance and
       any icon/blend decision in `LICENSES/`
 
@@ -246,7 +246,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–422)
 
-`[x]` `[█████████░]` 19/20
+`[x]` `[█████████░]` 20/21
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -265,6 +265,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Component package names checked against the repository — the `Icons` row claimed `@gpuixui/primitives`; it is `@gpuixui/icons` (plan 411 §9a)
 `[x]` Component-page contract enforced (`component-pages.test.ts`) — the template lists the required sections and every finished component's page must carry them plus the `ComponentState`/`NativePreview` blocks; the template had no `Composition` section (plan 411 §9b)
 `[x]` Document the first real component page — Buttons: registry → page → real source → generated API table → honest preview tier X (plan 422)
+`[x]` Document every Tier 1 component (plan 423) — 20 pages with real source includes and generated props tables; sidebar, sitemap, search and index agree
 `[x]` Docs platform toggle (macOS · Linux · Windows · Default) built on `platformTypes` + `platformTheme`; URL + storage state, live values on Theming (plan 420)
 `[x]` A planned component's search result opens the index filtered to it (plan 421)
 `[ ]` Docs truth pass against the implementation (Phase F) — needs the component pages

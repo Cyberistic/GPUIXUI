@@ -1,0 +1,81 @@
+---
+title: Loading indicators
+description: Shows an indeterminate busy state.
+---
+
+<ComponentState slug="spinner" />
+
+<NativePreview slug="spinner" />
+
+`Spinner` is the activity indicator for work with no known proportion. GPUix
+0.10.0's `motion` cannot rotate, so there is no spinning arc: three dots advance
+a lit position every 120 ms and the trail fades. A `Progress` with no `value` is
+the other honest option.
+
+## Usage
+
+```tsx
+import { Spinner, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="row" align="center" gap="sm">
+  <Spinner label="Refreshing revenue" />
+  <Text role="caption" tone="muted">Refreshing…</Text>
+</Stack>;
+```
+
+## Variants
+
+`accent` is `primary` (default), `destructive` or `muted`; it is the lit dot's
+colour role. The other dots fade, so there is no separate trail prop.
+
+## Sizes
+
+`size` is a number of pixels, defaulting to `theme.iconSize.md`. It accepts a
+number because a spinner inside a `Button` often needs to match the button's own
+icon size rather than a named icon step.
+
+## States
+
+One animated state: the lit index advances every 120 ms. There is no determinate
+mode (use `Progress`), no hover or focus state, and no pause.
+
+## Composition
+
+The feedback example puts a spinner in a slow-loading card beside skeleton rows:
+
+<include lang="tsx" meta='title="packages/primitives/examples/feedback.example.tsx"'>
+  ../../../../../packages/primitives/examples/feedback.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Spinner.tsx" name="SpinnerProps" />
+
+## Keyboard and focus
+
+Not focusable. Activity is status, not an action.
+
+## Theming
+
+`spinnerDots` decides the lit index and each dot's opacity; `spinnerDotStyle`
+resolves size and colour from the accent role. The gap is `spacing["2xs"]`.
+
+## Accessibility and limitations
+
+- Role: `Status`, with `label` as its name. Announce **what** is happening: the
+  default "Loading" is a poor name when three spinners share a screen.
+- The dots themselves are decorative and carry no text.
+- **Cannot rotate**: the runtime has no rotation in `motion`.
+- No smooth animation: the lit dot jumps by design.
+- No size scale: pass pixels or an icon size's number.
+- No inline placement inside a text run; put it in a `Stack`.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Spinner.tsx"'>
+  ../../../../../packages/primitives/src/components/Spinner.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="spinner" />

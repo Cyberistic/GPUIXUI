@@ -1,0 +1,85 @@
+---
+title: Progress
+description: Shows determinate or indeterminate progress.
+---
+
+<ComponentState slug="progress" />
+
+<NativePreview slug="progress" />
+
+`Progress` paints a track and a fill. With `value` it is determinate (0–100,
+clamped); without it, it is indeterminate and a segment advances through eight
+positions on a 120 ms interval. It cannot rotate, and does not try to.
+
+## Usage
+
+```tsx
+import { Progress, Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" gap="xs">
+  <Text role="caption" tone="muted">Uploading · 42%</Text>
+  <Progress value={42} label="Uploading" />
+</Stack>;
+
+<Progress label="Saving" />; // indeterminate
+```
+
+## Variants
+
+`tone` is `primary` (default), `success`, `destructive` or `muted`; it selects
+the fill's colour role. The track is always `colors.muted`.
+
+## Sizes
+
+`size` is `md` (default) or `sm`; the track height is a spacing step
+(`spacing.sm` / `spacing.xs`) and both ends are `radius.full`.
+
+## States
+
+Determinate when `value` is set, indeterminate when it is omitted. Values outside
+0–100 are clamped, so a bar never paints outside its track; `NaN` is treated as
+empty, never as complete. Progress is status, not a control: it has no focus,
+hover or press state.
+
+## Composition
+
+The feedback example shows a slow-loading metric card beside a skeleton and a
+spinner:
+
+<include lang="tsx" meta='title="packages/primitives/examples/feedback.example.tsx"'>
+  ../../../../../packages/primitives/examples/feedback.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/primitives/src/components/Progress.tsx" name="ProgressProps" />
+
+## Keyboard and focus
+
+Not focusable. There is no slider behaviour and no keyboard interaction.
+
+## Theming
+
+`progressTrackStyle` paints `colors.muted`; `progressFillStyle` paints the tone's
+role. Height is a spacing step and both ends are `radius.full`, so a density or
+radius change moves the whole family.
+
+## Accessibility and limitations
+
+- Role: `progressbar` (`ProgressIndicator` in AccessKit).
+- The value is announced through **`aria-valuetext`** — `"42%"` or
+  `"loading"` — because GPUix 0.10.0 has no `aria-valuenow`.
+- The name comes from `label`. Without one it is an unnamed progress bar; give it
+  the task's name ("Uploading", "Saving").
+- The indeterminate segment is a discrete step, not a smooth sweep.
+- No buffer/secondary value, stacked segments or label inside the track.
+
+## Source
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Progress.tsx"'>
+  ../../../../../packages/primitives/src/components/Progress.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="progress" />

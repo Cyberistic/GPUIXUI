@@ -316,26 +316,64 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       "No loading or pending state; disable it while a request is in flight.",
     ],
   }),
-  planned(
+  delivered(
     "progress",
     "Progress",
     "1",
-    "Shows completion of a determinate task.",
+    "Shows determinate or indeterminate progress.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/primitives/src/components/Progress.tsx",
+      related: ["spinner", "skeleton"],
+      limitations: [
+        "No aria-valuenow: the value is announced through aria-valuetext.",
+        "The indeterminate segment is a discrete step, not a smooth sweep.",
+        "No buffer value, stacked segments or label inside the track.",
+      ],
+    },
   ),
-  planned("tooltip", "Tooltips", "1", "Labels a control on hover or focus.", {
+  delivered("tooltip", "Tooltips", "1", "Labels a control on hover or focus.", {
     gpuix: "yes",
+    sourcePath: "packages/primitives/src/components/Tooltip.tsx",
+    dependencies: ["@gpuix/react/tooltip"],
+    related: ["button", "select"],
+    limitations: [
+      "No aria-describedby: the tip is not an associated description.",
+      "The trigger must be a focusable host element that forwards hover and focus.",
+      "No wrapping, rich content, arrow or touch-long-press behaviour.",
+    ],
   }),
-  planned(
+  delivered(
     "skeleton",
     "Skeletons",
     "1",
     "Placeholder shape for loading content.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/primitives/src/components/Skeleton.tsx",
+      related: ["spinner", "progress"],
+      limitations: [
+        "No shimmer sweep: the runtime has no moving-gradient motion.",
+        "No automatic count or list-shape generation.",
+        "No reduced-motion switch; the pulse is a plain interval.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "spinner",
     "Loading indicators",
     "1",
     "Shows an indeterminate busy state.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/primitives/src/components/Spinner.tsx",
+      related: ["progress", "skeleton"],
+      limitations: [
+        "Cannot rotate: the runtime's motion has no rotation.",
+        "The lit dot jumps by design; there is no smooth animation.",
+        "No inline placement inside a text run; put it in a Stack.",
+      ],
+    },
   ),
   planned(
     "slider",

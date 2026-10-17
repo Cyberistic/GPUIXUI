@@ -6,7 +6,7 @@
 - **Depends on:** plan `411` (template), `412` (preview tiers), `414` (source
   include), `415` (API tables), `422` (the proven page shape), and the primitives
   workstream's plan `047` (the components, their in-package pages and examples)
-- **Status:** planned
+- **Status:** implemented — 20 Tier 1 pages, all gates green; evidence in §8.1
 
 Plan 422 proved the chain on Buttons. This plan finishes the Tier 1 handoff:
 the primitives workstream has code, tests, runtime verification, an in-package
@@ -166,9 +166,42 @@ Record both directions in §8.
       index are current.
 - [ ] Two-direction proofs for the contract and the type table recorded here.
 
-### §8.1 Evidence (filled by the executor)
+### §8.1 Evidence (measured 2026-10-17)
 
-- Batches and commits:
-- Gates:
-- Two-direction proof:
-- Browser check:
+- **Batches (one commit each):**
+  - layout — Box, Stack/Grid, Separator, Spacer, ScrollArea;
+  - typography — Text, Icons;
+  - form — Label, Input, TextArea, Select, ButtonGroup;
+  - selection — Checkbox, RadioGroup, Switch;
+  - feedback — Progress, Tooltip, Skeleton, Spinner.
+- **Gates:**
+  - `nub run --filter docs test` → **19 files, 102 tests passed** (the page and
+    reference guards cover all 20 pages; the contract test did not need a new
+    file).
+  - `nub run --filter docs check-types` → pass; every `auto-type-table` resolves
+    a real exported type (Stack's page generates two tables: `StackProps` and
+    `GridProps`).
+  - `nub run --filter docs build` → exit 0.
+  - `nub run check` → test-quality, lint, format and all workspace type-checks
+    pass.
+  - `nub run lint` → pass.
+  - `nub run test` → tokens 10 files/196 tests, icons 3/18, primitives 16/156,
+    docs 19/102 — all pass.
+- **Two-direction proof:**
+  1. renamed `## Theming` to `## Colours` on `progress.mdx` →
+     `component-pages.test.ts` failed with
+     `progress: missing section "Theming"` (1 failed, 101 passed); restored →
+     102 passed.
+  2. changed `name="CheckboxProps"` to `name="CheckboxPropd"` on
+     `checkbox.mdx` → `content-references.test.ts` failed with
+     `components/checkbox.mdx: CheckboxPropd generated no props` (1 failed,
+     101 passed); restored → 102 passed.
+- **Browser check** (`nub run --filter docs dev`, all 20 URLs): every
+  `/docs/components/<slug>` returned **200**, each page contained one generated
+  props table (Stack two), each contained its real source path, `/sitemap.xml`
+  listed **20** component URLs, and the component index linked exactly those
+  **20** slugs.
+- **Registry:** every Tier 1 record is `wip` with a real `sourcePath`; `done` was
+  deliberately not claimed because the published-binary run is still pending.
+  The inventory's seven unimplemented rows (Slider, Range slider, Meter, Number
+  Field, OTP Field, Toggle, Rating) remain `todo` and `planned`.
