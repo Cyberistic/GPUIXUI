@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████████]` 13/15
+`[x]` `[███████░░░]` 14/20
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019 and 051)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -73,12 +73,16 @@ prebuilt `dist` (plan 016)
 platform toggle (plan 051)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[ ]` Add motion tokens (durations/easings) once a component consumes them
+`[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
+runtime, and record the licence review for any bundled family — plan 052, native
+proof blocked by B1 (rescued from the abandoned `agent/fonts` branch)
 `[ ]` Cross-team: native theme gallery in `apps/playground` (owner:
 `playground`; blocked by B1); Fumadocs Theming page from `docs/tokens.md` and the
 docs platform toggle (macOS / Linux / Windows / Default) built on
-`platformTypes` + `platformTheme` (owner: `docs-site`); add `tokens` to
-`packages/README.md` and ignore the `references` symlink in `.gitignore`
-(owner: repo tooling)
+`platformTypes` + `platformTheme` (owner: `docs-site`); ignore the `references`
+**symlink** — a `references/` rule does not match a symlink, so every worktree
+shows it as untracked (owner: repo tooling; `packages/README.md` already lists
+`tokens`)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
 directly and delete their structural copies of the theme and role list, their
 local focus-ring helpers (`primitives/src/core/style.ts`,
@@ -90,6 +94,15 @@ resolves from source (owner: those workstreams; plans 016–018)
 package (`packages/components/packages/tokens/src`, plus a built `dist/`) — delete
 it and import `@gpuixui/tokens` directly once the package is on `main` (owner:
 `components`)
+`[x]` Promote the workstream to `main`: plans 010–019 and 051, `packages/tokens`
+and the union plan index are on `main` (commit `458fe10`); `main` now compiles
+`@gpuixui/tokens` from source, so `primitives`, `components` and `docs-site` can
+merge it and drop their structural copies
+`[ ]` Merge `main` into `agent/tokens-theme` once plan 019 (motion tokens) lands
+there, then promote that commit — `agent/tokens-platform` is a second branch for
+this workstream, created because two live sessions shared one worktree (see
+`.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`), and should be
+retired once both branches are one
 
 ## Phase C — Tier 1–2 components
 

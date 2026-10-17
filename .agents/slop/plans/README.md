@@ -47,12 +47,16 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [018](./018-elevation-truth.md) | Elevation truth: one shadow, no unsupported fields | B | 011, 016 | done |
 | [019](./019-motion-tokens.md) | Motion tokens (durations and easings) | B | 011, 016 | in progress |
 | [051](./051-platform-type-styles.md) | Platform type styles: one real theme per platform | B | 011, 016 | done |
+| [052](./052-register-font.md) | `registerFont`: the library's and a consumer's typefaces in the runtime | B | 011, 051 | planned — native proof blocked by B1 |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
 agent that owns its paths. The block was full at 019 (`010–019` in the table
 above) and 020–049 belongs to primitives, icons and Phase C, so 051 takes the
 first free block — as the tokens workstream's docs-layering plan (050) does.
+052 is rescued from the abandoned `agent/fonts` branch (`6fc7641`), with its
+step 1 answered from the pinned runtime's source; its native proof is blocked by
+B1, so it is planned, not done.
 
 ### Reference adoption (block `200–299`)
 
