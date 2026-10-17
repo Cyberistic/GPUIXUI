@@ -51,6 +51,9 @@ import { Switch } from "@gpuixui/primitives";
   there is no `aria-checked` in 0.10.0.
 - `disabled` removes the tab stop; no `aria-disabled`.
 - The name comes from `label`; there is no `aria-labelledby`.
+- A visible `Label` beside the switch is painted text: it is **not clickable
+  and not associated** with the control. The switch is still named through
+  `label`, but the pair is two accessibility nodes, not one row.
 
 ## Theming
 
@@ -85,8 +88,9 @@ exported.
 
 ## Limitations
 
-- No `aria-checked` and no on/off text inside the control; pair it with a visible
-  `Label` or text row.
+- No `aria-checked` and no on/off text inside the control; a visible `Label`
+  beside it is cosmetic (not clickable, not associated) — the switch names
+  itself through `label`.
 - No slide animation: the thumb jumps between the two `justifyContent` values.
 - No loading or pending state; disable it while a request is in flight.
 

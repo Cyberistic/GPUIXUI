@@ -65,8 +65,11 @@ clearing.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
 - `disabled` removes the tab stop; there is no `aria-disabled`.
-- The visible name is a separate `Label`; the `label` prop is the accessible
-  name, and there is no `aria-labelledby`.
+- The visible name is a separate `Label`: the text is painted and the box
+  carries its own `label`, but the `Label` is **not clickable and not
+  associated** — GPUix has no `aria-labelledby` and a sibling `<text>` is not
+  part of the interactive element. Use `CheckboxGroup` when a clickable labelled
+  row is needed.
 
 ## Theming
 
@@ -102,9 +105,10 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
 ## Limitations
 
 - No `aria-checked` (above).
-- No label-inside-the-control composition: pair it with a `Label` or use the
-  `label` prop for the accessible name only. `CheckboxGroup` owns the labelled
-  row when several checkboxes share one value.
+- No label-inside-the-control composition for a standalone box: a `Label` beside
+  it is cosmetic (not clickable, not associated). `Checkbox` still names itself
+  through `label`; for one clickable labelled row use `CheckboxGroup` (or a
+  Tier 2 field row for other controls).
 - No partial-state animation and no custom mark.
 
 ## Verification

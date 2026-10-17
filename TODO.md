@@ -433,6 +433,12 @@ retired once both branches are one
       `label`, the tint and `iconSize` resolved from the button, and the spinner
       in place of the icon while busy. 6 offline + 5 runtime tests, both
       directions proven (plan 086)
+`[x]` `packages/primitives`: **the "`Label` beside it" advice was false** — the
+      `Checkbox`/`Switch` docstrings and both docs pages recommended pairing a
+      standalone control with a visible `Label`, which is painted text: not
+      clickable and not associated (no `aria-labelledby`). The docs now say so
+      and point at `CheckboxGroup` for a clickable labelled row; a runtime test
+      measures that a label click does not toggle the box (plan 087)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
@@ -456,6 +462,17 @@ retired once both branches are one
       `Button.onClick` is now the full activation callback (plan `085`), so the
       trigger wiring in `internal/button.tsx` keeps working when the stand-in is
       deleted.
+
+`[ ]` **primitives + components — the change-callback name.** The accepted
+      contract (`docs/component-api.md` §2) says `onValueChange` is the only
+      change callback, but Tier 1's value controls use `onChange` (`Checkbox`,
+      `Switch`, `RadioGroup`, `CheckboxGroup`, `ToggleGroup`, `Select`,
+      `Slider`, `RangeSlider`, `Rating`), while the text fields keep `onChange`
+      because plan `110` §7's own table names it. Decide once, before a Tier 2
+      example teaches consumers two names: either rename the value controls (a
+      mechanical change with no behaviour), or amend §2 to name the text-field
+      exception. Do not rename `Input`/`TextArea`/`NumberField`/`OTPField`
+      without updating that table.
 
 `[ ]` **components workstream**: plan `201` §2.3 tells the thin context to call
       `useControllableState` from `@gpuix/react/floating`, but that function is

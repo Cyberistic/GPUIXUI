@@ -22,6 +22,7 @@ import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { IconButton } from "../src/components/IconButton.js";
+import { Label } from "../src/components/Label.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
@@ -482,6 +483,33 @@ it("toggles a Checkbox on a click, and announces the state", async () => {
   expect(announced(runtime, "Enable")).toBe("checked");
   runtime.click("cb");
   expect(announced(runtime, "Enable")).toBe("unchecked");
+});
+
+it("does not toggle a standalone Checkbox from a Label beside it", async () => {
+  // Plan 087's docs claim, measured: the runtime has no `htmlFor` or
+  // `aria-labelledby` and a sibling `<text>` is not part of the control, so the
+  // visible name is cosmetic. If this ever toggles, the docs and the
+  // `CheckboxGroup` row guidance are wrong.
+  const runtime = await openWindow();
+  let toggles = 0;
+  runtime.render(
+    <Surface>
+      <Stack direction="row" align="center" gap="sm">
+        <Checkbox
+          testId="cb"
+          label="Email"
+          onChange={() => {
+            toggles += 1;
+          }}
+        />
+        <Label testId="label">Email</Label>
+      </Stack>
+    </Surface>,
+  );
+  runtime.click("label");
+  expect(toggles).toBe(0);
+  runtime.click("cb");
+  expect(toggles).toBe(1);
 });
 
 it("toggles a Checkbox on Space, and not on the key down alone", async () => {

@@ -52,7 +52,11 @@ export interface CheckboxProps {
   readonly size?: ControlSize;
   /** Defaults to `primary`. */
   readonly accent?: SelectionAccent;
-  /** Accessible name. The visible name goes in a `Label` beside it. */
+  /**
+   * Accessible name. A visible `Label` beside the box is painted text — not a
+   * hit area and not associated (no `aria-labelledby`); `CheckboxGroup` renders
+   * a labelled row.
+   */
   readonly label?: string;
   /** An object, or a callback over this checkbox's public state. */
   readonly style?: StateStyle<CheckboxState>;
