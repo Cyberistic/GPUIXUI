@@ -330,3 +330,9 @@ tests by name (no skips).
 5. **`Field` passes `aria-description`** built from `error ?? description` plus
    `"Required"`; the plan's earlier "required only" shape would have dropped the
    field's own description.
+6. **Runtime disposal is deferred one microtask** (`toast/lifecycle.ts`). A React
+   StrictMode mount/unmount/remount keeps the component's `useState` runtime, so
+   disposing in the first cleanup would hand the remount a dead runtime. The
+   native test renderer does not reproduce StrictMode's double effect invocation,
+   so this rule has its own pure suite (3 tests) rather than a component test
+   that could not fail here.

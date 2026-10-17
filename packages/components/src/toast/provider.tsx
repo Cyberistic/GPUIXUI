@@ -27,6 +27,7 @@ import {
   type ToastDraft,
   type ToastStoreOptions,
 } from "./store.js";
+import { createRuntimeLifecycle } from "./lifecycle.js";
 
 /** What a component inside the provider can do with toasts. */
 export interface ToastApi {
@@ -68,13 +69,16 @@ export const ToastProvider = ({
     ManagedRuntime.make(storeLayer({ max, defaultDuration })),
   );
   const [toasts, setToasts] = useState<ReadonlyArray<Toast>>([]);
-
-  useEffect(
-    () => () => {
+  const [lifecycle] = useState(() =>
+    createRuntimeLifecycle(() => {
       void runtime.dispose();
-    },
-    [runtime],
+    }),
   );
+
+  useEffect(() => {
+    lifecycle.mount();
+    return () => lifecycle.unmount();
+  }, [lifecycle]);
 
   useEffect(() => {
     const fiber = runtime.runFork(

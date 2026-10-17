@@ -83,6 +83,10 @@ palette Alert and Badge use). Width is 380px.
   `duration: Duration.infinity` (or a zero duration) and a manual dismiss.
 - No portal: the viewport is an absolutely positioned element in its parent, so
   put it at the app root.
+- Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React
+  StrictMode mount/unmount/remount does not dispose the runtime the remount
+  keeps using. The native test renderer does not reproduce StrictMode's double
+  effect invocation, so that rule is a pure suite rather than a component test.
 
 ## Verification
 
