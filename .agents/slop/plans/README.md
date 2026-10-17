@@ -102,6 +102,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [303](./303-inventory-truth-guard.md) | The inventory row that still called `overlay` exempt | F | 056, 062, 099 | done |
 | [304](./304-create-theme-contrast-selection.md) | `createTheme` starts from the contrast variant it names | F | 013, 071, 073, 301 | done |
 | [305](./305-theme-axis-indexes.md) | The last two unions without an ordered index | F | 067, 068, 096, 304 | done |
+| [306](./306-inactive-control-state.md) | The inactive control: a readable label and an edge that holds its shape | F | 014, 056–062, 071, 073, 076, 084, 086–088, 094, 095, 097 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -568,6 +569,29 @@ scan them, so a new member is one edit at the union owner. Every suite iterates
 the indexes, `guards.test.ts` holds the indexes to the shipped records and
 proves every mode has both variants, and `themeFromStoredChoice` executes the
 persisted mode/contrast path the docs describe.
+
+306 closes the last state the contract exempted wholesale: `disabled` and
+`disabledForeground` were "inactive, so WCAG exempts them", which left a
+**shipped** composition unmeasured — a disabled `Select` item paints
+`disabledForeground` straight onto the menu's `popover` with no fill behind it
+(`packages/primitives/src/components/Select.tsx:98`), measuring **1.99:1** on
+Linux dark and 2.09:1 on the identity while the designed pair itself was
+2.09:1. Meanwhile every disabled control in both consumer packages is an
+`opacity: 0.5` composite, so the same label measures 2.25:1 on the light canvas
+and 3.05:1 on the dark one and takes its colour from whatever is behind it —
+plan 097's alpha-composite defect, one state over. The fill cannot carry the
+shape either: identity light `disabled` *is* `muted` and `hover` (1.000:1) and
+identity dark's *is* `popover`, `muted` and `hover`, because no neutral can clear
+both a white card and a quiet panel at 1.05:1. So the state gets a floor and an
+edge: `inactive` is a new pair class at 3:1 (4.5:1 at AAA) on nine surfaces — the
+`disabled` fill, the four plain surfaces and the four row washes — the inactive
+label moves in three sets (`#6E7787` light, `#A1A9B7` dark, `#A9A9A9` AAA dark;
+AAA light already cleared), and `border` on `disabled` plus the previously
+unmeasured `border` on `muted` join the divider class, so a disabled control's
+outline survives on any panel. The `disabled` fill stays exempt with the
+corrected reason, `disabledForeground` does not, and the consumer migration off
+`opacity: 0.5` is recorded cross-team rather than edited in another workstream's
+tree.
 
 ### Reference adoption (block `200–299`)
 
