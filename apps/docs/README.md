@@ -20,6 +20,16 @@ nub run --filter docs test          # registry, IA, search, theme and preview te
 nub run check                       # repo gate: test quality, lint, format, types
 ```
 
+## Search
+
+`/api/search` merges the MDX page index with the component registry
+(`src/lib/search.ts`). A component name is scored by its **title** — equal,
+prefix, word prefix, then substring — so `button` reaches
+`/docs/components/button` even when prose matches first; every other query keeps
+the page index's order and appends registry hits in the tail (plan 419). A blank
+query returns `[]`, and one page is listed once. `src/lib/search.test.ts` guards
+all four rules (plan 431).
+
 ## Layout
 
 ```

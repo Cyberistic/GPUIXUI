@@ -416,9 +416,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–430)
+## Docs site workstream (plans 410–431)
 
-`[x]` `[██████████]` 27/28
+`[x]` `[██████████]` 28/29
 
 `[x]` Write and index the docs-site plans (410, 411, 412, 413, 414, 415, 416)
 `[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
@@ -447,6 +447,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` Every component page states its dependencies (plan 428) — the list is derived from each record's real entry file, rendered by `<ComponentDependencies>`, and re-derived by `dependencies.test.ts`; all 42 pages carry the section
 `[x]` The inventory owns component status (plan 429) — the registry mirrors each `COMPONENTS.md` row (22 Tier 2 rows move to `done`), `registry.test.ts` parses the inventory and fails on drift, and the landing page counts **Documented** instead of reporting "Implemented 0"
 `[x]` Theming renders every token group from the package (plan 430) — `<TokenScales />` generates spacing, radius, border width, icon size, density and elevation; its test fails on a dropped group, a dropped row or a retyped value, and proves both directions
+`[x]` Search relevance (plan 431) — a component title match outranks prose (`button` → its page), a blank query returns `[]`, and a page is listed once; each rule proven to fail when removed
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed
