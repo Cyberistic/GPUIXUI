@@ -45,6 +45,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
 | `src/form.tsx` | Form: owned-value schema validation, one alert summary, decoded `onSubmit` |
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
+| `src/carousel.tsx` | Carousel: discrete slide stepping with mounted, hidden slides |
 | `src/tag-input.tsx`, `src/tag-input/logic.ts` | TagInput: tokens with a pure add/remove rule set and removable chips |
 | `src/inline-edit.tsx` | InlineEdit: display/input swap with one commit contract |
 | `src/countdown.tsx`, `src/countdown/logic.ts` | Countdown: clock text for a remaining duration; the app owns the tick |

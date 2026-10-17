@@ -234,6 +234,7 @@ parts.
 | Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
 | Countdown | `Countdown` | — | plan 312 |
 | Inline edit | `InlineEdit` (render display/input swap; one part) | — | plan 313 |
+| Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | — | plan 315 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
@@ -258,7 +259,6 @@ implementation cannot invent a shape):
 | Mention input | `MentionInput`, `MentionInputList`, `MentionInputItem` | plan 205 |
 | Hotkey recorder | `HotkeyRecorder` | plan 205 |
 | Countdown | `Countdown` | plan 205 |
-| Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | plan 205 |
 | Inline edit | `InlineEdit` | plan 205 |
 
 ## 9. Landed deviations and migration

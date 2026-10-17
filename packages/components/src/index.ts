@@ -11,6 +11,7 @@ export * from "./accordion.js";
 export * from "./avatar.js";
 export * from "./badge.js";
 export * from "./breadcrumb.js";
+export * from "./carousel.js";
 export * from "./card.js";
 export * from "./collapsible.js";
 export * from "./combobox.js";

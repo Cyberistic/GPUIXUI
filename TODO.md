@@ -220,7 +220,7 @@ retired once both branches are one
     - [x] Countdown — plan 312: 9 formatting tests + 5 native tests
     - [x] Inline edit — plan 313: 8 native tests; both-direction proof
     - [x] Tag / token input — plan 314: 10 rule + 8 native tests; both-direction proof
-    - [ ] Carousel — plan 315
+    - [x] Carousel — plan 315: 8 native tests; both-direction proof
     - [ ] Hotkey-recorder input — plan 316 (consumes plan 310)
     - [ ] Preview Card — plan 317
     - [ ] Color picker — plan 318 (discrete swatches: 0.10.0 has no gradients)

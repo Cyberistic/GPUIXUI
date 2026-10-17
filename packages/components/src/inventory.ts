@@ -11,6 +11,7 @@ import { alertMeta } from "./alert.js";
 import { avatarMeta } from "./avatar.js";
 import { badgeMeta } from "./badge.js";
 import { breadcrumbMeta } from "./breadcrumb.js";
+import { carouselMeta } from "./carousel.js";
 import { cardMeta } from "./card.js";
 import { collapsibleMeta } from "./collapsible.js";
 import { comboboxMeta } from "./combobox.js";
@@ -63,6 +64,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   avatarMeta,
   badgeMeta,
   breadcrumbMeta,
+  carouselMeta,
   cardMeta,
   collapsibleMeta,
   comboboxMeta,

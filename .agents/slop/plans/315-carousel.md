@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §4 (C1) |
-| Status | planned |
+| Status | done — 8 native tests; both-direction proof |
 | Source | `docs/component-api.md` §8 (planned parts: `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl`); `COMPONENTS.md` → Tier 2 → Carousel; plan `205` C1 |
 
 This plan is self-contained. It adds `Carousel` at the Tier 2 bar.
@@ -121,3 +121,19 @@ test 4 fails. Restore after each.
 - Eight native tests, both themes, no literal colours.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/carousel.tsx` — the root owns the index; the track reports its direct
+  children count and numbers them, so the controls and the keyboard share one
+  clamp and one loop rule. Sliding is not attempted: the runtime has no transform.
+- `src/behaviour/carousel.test.tsx` — 8 tests. Two measured facts: `getAllText`
+  includes controls' glyphs (the order assertion includes `‹`/`›`), and a
+  component wrapper around the slides is **one** track child — the suite and the
+  docs declare slides directly.
+- Example, docs page, inventory record, `COMPONENTS.md` row and the contract
+  updated.
+- **Both directions:** removing the edge clamp/loop branch fails 5 tests
+  (loop, keyboard, controlled and others cascade). Restored: 8 native green.
