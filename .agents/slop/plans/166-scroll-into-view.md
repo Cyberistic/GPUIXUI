@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ------- |
-| Status | planned (measured facts land in §8) |
+| Status | landed (measured facts in §8) |
 | Phase | B (feasibility) → feeds Tier 3 data grid, Tier 4 file tree / command palette, every keyboard-navigated list |
 | Owner | playground workstream (`apps/playground`, `packages/testing`) |
 | Depends on | `152` (virtual window), `158` (roving focus), `165` (roving index in a virtualized tree) |
@@ -26,6 +26,10 @@ disappears.
 This probe answers: which route actually moves a virtualized list, does the
 scroll offset move, does the target row paint, and does native focus survive?
 
+It also settled a fact the design depends on: **focusing a row already scrolls
+it into view** inside `<virtual-list>`, so a keyboard move needs no explicit
+scroll call; the explicit routes matter for jumps that do not move focus.
+
 ## 2. Scenario `scroll-into-view` (capability `scroll`)
 
 New view `apps/playground/src/scenarios/scroll-into-view.tsx`: one
@@ -35,8 +39,8 @@ contract on each row:
 
 | Key | Result |
 | ---- | ------ |
-| Down / Up | active row moves by one, `focusElement` the new row, `scrollIntoView` it |
-| Home / End | active row becomes 0 / 199, focus + `scrollIntoView` |
+| Down / Up | active row moves by one, `focusElement` the new row (focus reveals it) |
+| Home / End | active row becomes 0 / 199, focus it |
 
 Readout: `active=<index>`. Rows are `role="option"`, `aria-selected`,
 `tabIndex={active ? 0 : -1}`, label text `row <n>`, `testId` `siv-row-<n>`.
@@ -52,17 +56,18 @@ Readout: `active=<index>`. Rows are `role="option"`, `aria-selected`,
 1. At rest: `row 0` is painted, `row 199` is not, and `siv-offset` (read via
    `scrollOffset`) is 0.
 2. `End` on the focused row 0 → `active=199`, `focused()` is `siv-row-199`, the
-   offset is deeply negative, and **`row 199` is painted**. If it is not, §8
-   records that `scrollIntoView` does not reach a virtual row and
-   `scrollToItem` is the only honest route.
+   offset is deeply negative, and **`row 199` is painted without any explicit
+   scroll call** — if it is not, §8 records that focus does not reveal a virtual
+   row and the handler must add `scrollIntoView`.
 3. `Home` → `active=0`, focus `siv-row-0`, offset `≈ 0`, `row 0` painted.
-4. **List route:** `scrollToItem("siv-list", 120)` → `row 120` is painted and
-   the offset moved; the active row is unchanged (`active=0`), proving the
-   index route is independent of the row element.
-5. **Back to a row:** `scrollIntoView("siv-row-10")` from the far window →
-   `row 10` painted again.
-6. **Keyboard follow:** from row 10, three `Down` presses → `active=13`, focus
-   `siv-row-13`, and `row 13` is painted (the handler scrolled it into view).
+4. **List route:** `scrollToItem("siv-list", 120)` → `row 120` is painted, the
+   logical anchor (`getListScrollTop`) is `[120, 0, 280]`, and the active row is
+   unchanged (`active=0`), proving the index route is independent of the row
+   element and of focus.
+5. **Element route without focus:** `scrollIntoView("siv-row-10")` while focus
+   stays on row 0 → `row 10` is painted and the anchor returns to `[10, 0, 280]`.
+6. **Keyboard follow:** from row 10 (clicked), three `Down` presses →
+   `active=13`, focus `siv-row-13`, and `row 13` is painted.
 7. **The end again by element:** `scrollIntoView("siv-row-199")` → `row 199`
    painted.
 8. **Focus survives scrolling:** after step 7 the focused id is still
@@ -116,10 +121,13 @@ Readout: `active=<index>`. Rows are `role="option"`, `aria-selected`,
   does not return, if `scrollToItem` does not paint the indexed row, or if a
   scroll drops focus.
 - Two-direction proof, recorded in §8:
-  1. remove `scrollIntoView` from the `End` branch → the `row 199` painted check
-     fails with focus still on `siv-row-199`. Restore.
-  2. call `scrollToItem("siv-list", 0)` instead of `120` → the `row 120`
-     painted check fails. Restore.
+  1. make the host's `scrollIntoView` a no-op → the explicit
+     `scrollIntoView painted the target row` check fails. Restore.
+  2. call `scrollToItem("siv-list", 0)` instead of `120` → the painted-row and
+     anchor checks fail. Restore.
+  3. removing an explicit scroll call from the keyboard handler is **not** a
+     failing direction: focus alone reveals the row (measured, §8). That is a
+     fact about the runtime, not a weak test.
 - `scenarioProblems` (unit, exists) stays green: `scroll` is already required.
 
 ## 7. Acceptance criteria
@@ -131,5 +139,42 @@ Readout: `active=<index>`. Rows are `role="option"`, `aria-selected`,
 
 ## 8. Measured facts
 
-_(Filled in by the run; every number below must come from the report's checks
-and the artifact, never from expectation.)_
+**Suite: 32/32 green on this host, exit `0`**, `scroll=verified` (now two
+scenarios), with the 31 prior scenarios unchanged. `scroll-into-view` records
+**34 checks**.
+
+| Route | Measured |
+| ----- | -------- |
+| `focusElement(row 199)` (no scroll call) | **reveals the row**: painted, logical anchor `[191, 8, 280]`, raw offset `-1320` |
+| `Home` → `focusElement(row 0)` | anchor `[0, 0, 280]`, raw offset `0` |
+| `scrollToItem(list, 120)` | anchor `[120, 0, 280]` **exactly**, row 120 painted, selection untouched (`active=0`), focus untouched |
+| `scrollIntoView(row 10)` without moving focus | anchor `[10, 0, 280]` **exactly**, row 10 painted, raw offset `-320` |
+| focus after a later scroll | unchanged (`siv-row-13`) — a scroll is not a focus change |
+| the focused row after scrolling away | stays painted (a straggler, same as `roving-focus`) |
+
+The trap this probe records: **`getScrollOffset` is not the logical offset of a
+`<virtual-list>`.** It saturated at `-1320` for a 200-row list at its end
+(`row 199` painted) and read `-1312` at row 120. `getListScrollTop` is the exact
+anchor — `[itemIndex, offsetInItemPx, viewportHeightPx]` — and is what a
+component must read to remember or restore a position. `scroll-into-view`
+asserts both the exact anchor and the saturation, so an upstream fix fails the
+check by name.
+
+The honest consequence for components:
+
+- a keyboard move needs **`focusElement` only**; do not call `scrollIntoView`
+  as well (it is harmless but redundant);
+- a jump that does not move focus uses `scrollToItem(listId, index)` (exact) or
+  `scrollIntoView(elementId)` (also exact for a retained virtual row);
+- persistence reads `getListScrollTop`, never `getScrollOffset`.
+
+**Two-direction proofs** (both run, outputs quoted):
+
+1. making the host's `scrollIntoView` a no-op: **exit `1`**,
+   `scrollIntoView painted the target row: expected true, got false`. Restored.
+2. `scrollToItem("siv-list", 0)` instead of `120`: **exit `1`**,
+   `scrollToItem scrolled the list: expected true, got false`. Restored.
+
+**Not measured:** restoring a saved anchor after a remount, and
+`scrollToItem`'s `offsetInItem` (only the default 0 was exercised).
+

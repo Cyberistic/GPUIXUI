@@ -39,7 +39,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | select | `select-choose` | verified |
 | combobox | `combobox-filter` | verified |
 | tooltip | `tooltip-open` | verified |
-| scroll | `scroll-container` | verified |
+| scroll | `scroll-container`, `scroll-into-view` | verified |
 | panel | `panel-resize` | verified |
 | virtual-list | `virtual-list-window` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table` | verified |
@@ -54,7 +54,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | selection | `text-selection` | verified |
 | menu | `context-menu-pointer` | verified |
 
-The suite is **31/31 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **32/32 green here** (exit `0`, `.artifacts/smoke-report.json`).
 What it settled, and what changed the plans: focus/blur events **do** work on
 0.10.0 (they never did on 0.5.1); component code **can** move native focus
 through `useGpuix().renderer.focusElement`, and `focusNextWithin` /
@@ -140,6 +140,16 @@ component design turns on — it stays exact and **unclipped** inside an
 160 px viewport still paints and activates), so a context menu needs no portal.
 `shift-f10` is delivered as `key: "f10"` with `modifiers.shift`, the surface
 auto-focuses, and Escape returns focus through `renderer.focusElement`.
+
+`scroll-into-view` is the runtime verdict for keeping a keyboard selection
+visible. **Focusing a row already reveals it** inside `<virtual-list>`, so a
+roving move needs no scroll call. The explicit routes are exact when a jump does
+not move focus: `scrollToItem(list, 120)` anchors `[120, 0, 280]` and
+`scrollIntoView(row 10)` anchors `[10, 0, 280]`. The trap: **`getScrollOffset`
+saturates** on a virtual list (`-1320` at the end of a 200-row list) — read
+`getListScrollTop` for the exact `[itemIndex, offsetInItemPx, viewportHeightPx]`
+anchor. A scroll never moves focus and the focused row stays painted after the
+window leaves it.
 
 `virtualized-tree` is the runtime verdict for a file tree: it flattens 8
 directories × 40 files into one `<virtual-list>` and drives the tree contract
@@ -386,7 +396,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Resizable columns | todo | ? | Pointer events + grid tracks. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
-| Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
+| Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. API-shape work, not implementation. |
 | Virtualized tables | todo | yes (probe) | `virtualized-table`: fixed-height flex rows with fixed-width cells paint inside `<virtual-list>` (~9 of 500), a painted row is hittable and selects, and selection survives scrolling out and back. `onVisibleRange` **lags the painted window by one gesture** — use the painted rows, not the event, as the current window. The AccessKit tree also follows the painted window, so off-window rows are not exposed to assistive technology (`a11y-tree`). |
 | Tree views | todo | yes (probe) | `tree-view`: `paddingLeft` indents labels exactly (16px per depth); expand/collapse paints and unpaints the subtree; a clicked row takes native focus and receives arrow keys. `virtualized-tree` adds the virtualized form: 16 px per depth inside `<virtual-list>`, a count change from 8 to 48 rows repaints correctly, and Down/Up move native focus by roving index even for a row outside the window. |
 | Expandable rows | todo | ? | `motion` height. |
