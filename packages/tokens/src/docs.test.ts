@@ -346,7 +346,7 @@ describe("docs/tokens.md quoted figures", () => {
       "The wash is translucent (" +
       `${washPercent(light.colors.selection)}% in the default themes, ` +
       `${washPercent(high.light.colors.selection)}% at high contrast), ` +
-      "so selected text keeps the foreground's contrast.";
+      "so selected text keeps the foreground's contrast on the `background` and `card` surfaces the check measures.";
     expect(markdownProse).toContain(sentence);
   });
 

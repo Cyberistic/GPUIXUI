@@ -163,7 +163,8 @@ export interface SelectionStyle {
  * GPUix's `selectionColor` and `userSelect` inherit, so an application sets the
  * wash once on its root; a chrome subtree that must not be selectable sets
  * `userSelect: "none"` itself. The wash is translucent, so selected text keeps
- * the theme's foreground contrast.
+ * the theme's foreground contrast on the canvas and card the contrast contract
+ * measures.
  *
  * @example
  * ```tsx

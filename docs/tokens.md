@@ -692,7 +692,8 @@ Both selection properties inherit down the tree, so an application sets the wash
 once on its root; chrome that must not be selectable — a toolbar, a tab strip,
 window controls — sets `userSelect: "none"` on its own subtree. The wash is
 translucent (24% in the default themes, 30% at high contrast), so selected text
-keeps the foreground's contrast.
+keeps the foreground's contrast on the `background` and `card` surfaces the check
+measures.
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";

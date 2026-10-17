@@ -254,6 +254,11 @@ the contrast floors — macOS dark measured 4.41:1 and 3.55:1 (plan 079)
 `[x]` Hold the control edge to the perceivability floor on the fills it paints —
 the identity pressed wash and the dark secondary/accent fills were the same
 value as `border`, so an outlined control lost its edge while pressed (plan 080)
+`[ ]` Decide the selection wash over the fills a row paints — `selectedForeground`
+over `selection` on `selected` measures 5.33:1 in identity dark and 4.80:1 in
+macOS light, and AA dark's `foreground` over `selection` on `active` is 5.49:1,
+under the 7:1 body floor the canvas and card pairs meet; fix the wash or the role
+and add the surface pairs (plan 081)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
