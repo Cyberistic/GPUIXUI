@@ -1,0 +1,18 @@
+---
+title: API reference
+description: Props, types and defaults for every component.
+---
+
+Each component page carries its own API table, generated from the component's
+real TypeScript types with `fumadocs-typescript`. The table is not written by
+hand, so it cannot drift from the implementation; tsdoc annotations on the
+component control what appears, and `@internal` hides a prop.
+
+Start from the [component index](/docs/components) and open a component to see
+its API table.
+
+<Callout>
+The tables appear as components publish their props types with tsdoc. Until a
+component does, its page says the prop table is unavailable rather than
+guessing the props.
+</Callout>

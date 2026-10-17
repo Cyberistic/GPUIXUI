@@ -1,0 +1,32 @@
+---
+title: Architecture
+description: How the packages fit together, and how this site stays honest about previews.
+---
+
+GPUIXUI is a TypeScript-first monorepo. Dependencies point one way:
+
+```
+tokens → primitives → components → data-grid · docking · editor
+```
+
+- `@gpuixui/tokens` — colour, spacing, typography, radii and density roles.
+- `@gpuixui/primitives` — foundational parts (layout, text, buttons, inputs).
+- `@gpuixui/components` — composition and feedback components.
+- `@gpuixui/data-grid`, `@gpuixui/docking`, `@gpuixui/editor` — specialised
+  packages built on the components.
+
+The native runtime never depends on this documentation site. The full document
+lives at `docs/architecture.md` in the repository.
+
+## Preview strategy
+
+The library renders through GPUix; this site is a browser app. Rather than fake
+a native surface, every preview is one of:
+
+1. a **real native run** in the playground, named per component;
+2. a **real screenshot** captured from the GPUix runtime;
+3. a **browser approximation**, always labelled "not GPUix";
+4. **source and a limitation notice** when the runtime cannot do something.
+
+The decision, its evidence and the exact label text are recorded in
+`docs/preview-strategy.md` in the repository.

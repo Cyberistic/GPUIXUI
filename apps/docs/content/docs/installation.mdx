@@ -1,0 +1,48 @@
+---
+title: Installation
+description: Add GPUIXUI to a GPUix application.
+---
+
+GPUIXUI is consumed inside a [GPUix](https://github.com/remorses/gpuix)
+application. GPUix renders with GPUI; install and pin it exactly as its own
+documentation describes before adding the component packages.
+
+## Packages are not published yet
+
+The workspace is under construction and the packages are **not on a registry
+yet**. The install commands below are the intended shape; until the first
+release they will not resolve. The packages are built from this repository:
+
+```sh
+nub install
+nub run dev:playground
+```
+
+## The intended install
+
+```sh
+# the native runtime and its React adapter, pinned together
+nub add --exact @gpuix/react @gpuix/native react
+
+# the library
+nub add @gpuixui/primitives @gpuixui/components
+```
+
+Pin `@gpuix/react` and `@gpuix/native` to the **same exact version**. GPUix is
+pre-1.0, so a release can break either package and the adapter's version range
+can install a newer native binary.
+
+## TypeScript
+
+GPUix requires its JSX types. Without `jsxImportSource`, TypeScript uses DOM
+types and the native host elements fail to type-check:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@gpuix/react",
+    "strict": true
+  }
+}
+```

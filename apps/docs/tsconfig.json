@@ -1,0 +1,22 @@
+{
+  "extends": "@gpuixui/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "collections/*": ["./.source/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "content/**/*.mdx",
+    ".source/**/*.ts",
+    "*.ts"
+  ],
+  "exclude": ["node_modules", "dist", ".output", "public"]
+}

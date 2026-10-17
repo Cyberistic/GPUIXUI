@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/*
+ * GPUIXUI identity.
+ *
+ * The docs site carries the library's own palette rather than Fumadocs' stock
+ * neutrals: a violet primary over cool slate neutrals, in both themes. Every
+ * role is overridden in one place, so the site cannot drift into scattered
+ * literals. Fumadocs reads these `--color-fd-*` variables for its utility
+ * classes, so overriding them here restyles the whole site.
+ *
+ * Provisional: once the tokens/theming workstream lands `docs/design-system.md`
+ * and the package's own role values, these are reconciled to match the library
+ * exactly (see TODO.md).
+ */
+:root {
+  --color-fd-background: hsl(240 20% 99%);
+  --color-fd-foreground: hsl(240 20% 8%);
+  --color-fd-muted: hsl(240 16% 96%);
+  --color-fd-muted-foreground: hsl(240 8% 42%);
+  --color-fd-popover: hsl(0 0% 100%);
+  --color-fd-popover-foreground: hsl(240 20% 8%);
+  --color-fd-card: hsl(240 20% 97%);
+  --color-fd-card-foreground: hsl(240 20% 8%);
+  --color-fd-border: hsla(240 20% 62% / 35%);
+  --color-fd-primary: hsl(262 74% 48%);
+  --color-fd-primary-foreground: hsl(0 0% 100%);
+  --color-fd-secondary: hsl(240 16% 94%);
+  --color-fd-secondary-foreground: hsl(240 20% 12%);
+  --color-fd-accent: hsla(262 60% 60% / 18%);
+  --color-fd-accent-foreground: hsl(262 40% 22%);
+  --color-fd-ring: hsl(262 60% 55%);
+  --color-fd-overlay: hsla(240 40% 10% / 35%);
+  --fd-layout-width: 1400px;
+}
+
+.dark {
+  --color-fd-background: hsl(240 24% 6%);
+  --color-fd-foreground: hsl(240 16% 93%);
+  --color-fd-muted: hsl(240 14% 12%);
+  --color-fd-muted-foreground: hsla(240 12% 72% / 85%);
+  --color-fd-popover: hsl(240 22% 9%);
+  --color-fd-popover-foreground: hsl(240 16% 92%);
+  --color-fd-card: hsl(240 20% 8%);
+  --color-fd-card-foreground: hsl(240 16% 95%);
+  --color-fd-border: hsla(240 20% 70% / 18%);
+  --color-fd-primary: hsl(262 84% 68%);
+  --color-fd-primary-foreground: hsl(262 60% 12%);
+  --color-fd-secondary: hsl(240 14% 14%);
+  --color-fd-secondary-foreground: hsl(240 16% 92%);
+  --color-fd-accent: hsla(262 60% 60% / 28%);
+  --color-fd-accent-foreground: hsl(240 16% 92%);
+  --color-fd-ring: hsl(262 70% 65%);
+  --color-fd-overlay: hsla(240 60% 2% / 55%);
+}

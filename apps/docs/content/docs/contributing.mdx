@@ -1,0 +1,35 @@
+---
+title: Contributing
+description: How to work on GPUIXUI, and the gates a change must pass.
+---
+
+GPUIXUI is a TypeScript-first monorepo. Every command runs through **nub** on
+Node 24.18.0.
+
+## Worktrees
+
+Each workstream works in its own `git worktree` under `workspaces/` on branch
+`agent/<workstream>`. One writer per tree. The shared checkout's `main` is the
+integration branch.
+
+## Gates
+
+A change is not done until these pass:
+
+```sh
+nub run check   # test-quality gate, lint, format, type-check
+nub run lint
+nub run test
+```
+
+## Tests
+
+A test must be able to fail. `nub run check` rejects a test that asserts nothing,
+compares a value with itself, or asserts back what the test itself stubbed. A
+regression fix lands with a test that fails without it and passes with it.
+
+## Components
+
+Every component needs code, a test appropriate to its behaviour, a working
+example, a docs page and an inventory record in `COMPONENTS.md`. An interaction
+is not complete until it is verified in the real GPUix runtime.

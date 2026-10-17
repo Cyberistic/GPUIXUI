@@ -1,0 +1,28 @@
+---
+title: Theming
+description: Semantic roles, light and dark themes, and the extension mechanism.
+---
+
+GPUIXUI themes are semantic. Components read roles such as background,
+foreground, border, muted, accent, primary, destructive and focus — never
+literal colours — so an application can rebrand the library without touching
+component source.
+
+Both a **light** and a **dark** theme expose the same roles. Density, radii and
+typography are part of the same token set.
+
+The authoritative documents are written beside the code and are the source of
+truth for this page:
+
+- `docs/design-system.md` — the identity and the semantic roles.
+- `docs/tokens.md` — every public token and the extension mechanism.
+
+<Callout>
+Those documents are produced by the tokens/theming workstream. This page will
+render the live token tables (generated from the package, not retyped) once
+they land, so the site cannot drift from the implementation.
+</Callout>
+
+The docs site itself uses the same semantic roles for its own light/dark
+themes, so the documentation's identity and the library's identity stay
+consistent.

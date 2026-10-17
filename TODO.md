@@ -72,24 +72,25 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ## Docs site workstream (plans 410–412)
 
-`[ ]` `[░░░░░░░░░░]` 0/8
+`[x]` `[███████░░░]` 7/8
 
 `[x]` Write and index the docs-site plans (410, 411, 412)
-`[ ]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work)
-`[ ]` Docs identity: light/dark themes from the tokens theme
-`[ ]` Working search (server route + UI)
-`[ ]` Information architecture pages (`content/docs/**`) + landing page
-`[ ]` Component metadata contract, registry test, generated index (plan 411)
-`[ ]` Preview components + `docs/preview-strategy.md` (plan 412)
+`[x]` Scaffold `apps/docs` (Fumadocs + TanStack Start, build + dev work) — build, dev, type-check and tests verified
+`[x]` Docs identity: light/dark themes from the tokens theme — provisional HSL roles in `app.css`, reconciled with the tokens workstream later
+`[x]` Working search (server route + UI) — `/api/search?query=button` returns real results
+`[x]` Information architecture pages (`content/docs/**`) + landing page — guarded by `src/content.test.ts`
+`[x]` Component metadata contract, registry test, generated index (plan 411)
+`[x]` Preview components + `docs/preview-strategy.md` (plan 412)
 `[ ]` Document the first real component page (needs the primitives/components workstream)
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[ ]` `[░░░░░░░░░░]` 0/7
+`[ ]` `[░░░░░░░░░░]` 0/8
 
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
 `[-]` Repo tooling: oxfmt now ignores `**/.source/**` and `**/routeTree.gen.ts` (edited in this workstream)
 `[ ]` Repo tooling: `.gitignore`'s `references/` does not match the worktree's `references` symlink, so it shows as untracked and can be committed by accident; ignore the symlink too
+`[ ]` Owner: decide whether the root `nub.lock` (produced by `nub install`) is committed for reproducible installs or ignored; it is currently untracked
 `[ ]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables
 `[ ]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables
 `[ ]` Playground: add a per-component screen + a real native screenshot capture script (plan 412 §5)

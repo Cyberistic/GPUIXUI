@@ -1,0 +1,15 @@
+---
+title: Typography
+description: How GPUIXUI scales and renders text.
+---
+
+Text in GPUIXUI is a named role, not a font size at the call site. A role
+carries size, weight, line height and letter spacing together, so a heading
+cannot drift from the typographic scale.
+
+GPUIXUI does not ship fonts; an application registers its own (GPUix supports
+TrueType and OpenType — convert WOFF/WOFF2 first).
+
+The scale itself is defined in `docs/design-system.md` and `docs/tokens.md` by
+the tokens/theming workstream. Once those land, this page renders the live
+scale, generated from the package rather than retyped here.

@@ -1,0 +1,46 @@
+---
+title: Getting started
+description: Render a GPUix window and place the first GPUIXUI component.
+---
+
+A GPUix application is a React tree rendered into a native window. The entry
+file ends with `render()`, which creates the window, mounts React and starts the
+frame loop.
+
+```tsx title="app.tsx"
+import { render } from "@gpuix/react";
+
+function App() {
+  return (
+    <div style={{ padding: 24 }}>
+      <text>Hello from GPUix</text>
+    </div>
+  );
+}
+
+render(<App />, { title: "My app" });
+```
+
+```sh
+nub app.tsx
+```
+
+## Try it in the playground
+
+The library lives in a native playground in this repository. That is the only
+place where components run for real:
+
+```sh
+nub run dev:playground
+```
+
+Each component page names the playground screen that demonstrates it. When a
+component is not yet in the playground, its page says so instead of showing a
+browser imitation.
+
+## Native previews
+
+This site does not render GPUix in the browser. A page either shows a real
+capture from the runtime, links to the playground, labels a browser
+approximation explicitly, or states that the component is unverified. The rules
+are in [the preview strategy](/docs/architecture).

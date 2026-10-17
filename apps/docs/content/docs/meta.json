@@ -1,0 +1,20 @@
+{
+  "title": "GPUIXUI",
+  "pages": [
+    "index",
+    "installation",
+    "getting-started",
+    "architecture",
+    "theming",
+    "typography",
+    "components",
+    "layouts",
+    "workspace",
+    "data-display",
+    "patterns",
+    "examples",
+    "api-reference",
+    "contributing",
+    "license"
+  ]
+}
