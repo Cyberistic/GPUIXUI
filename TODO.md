@@ -130,6 +130,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
+| Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | pending |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source | licensing | pending |
 
 ## Phase D — data and workspace components
