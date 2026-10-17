@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `200`, `201`, `205` §4 (C3) |
-| Status | planned |
+| Status | done — 9 logic + 5 native tests |
 | Source | `docs/component-api.md` §8 (planned parts: `Countdown`); `COMPONENTS.md` → Tier 2 → Countdown; plan `205` C3 |
 
 This plan is self-contained. It adds `Countdown` at the Tier 2 bar.
@@ -124,3 +124,17 @@ fail. Round instead of floor: unit test 8 fails. Restore after each.
   the component.
 - Example, docs page, inventory row, `COMPONENTS.md` row and the contract agree.
 - All gates green.
+
+## 8. Result
+
+Landed 2026-10-18:
+
+- `src/countdown/logic.ts` — `breakdown` and `formatCountdown`. One plan detail
+  was corrected while implementing: without `showDays`, hours must be **total**
+  hours (25h → `25:00:00`), not the remainder after a day; the tests pin both.
+- `src/countdown.tsx` — the display, with `CountdownState { remainingMs, expired }`
+  and `mutedForeground` once expired.
+- The example ticks with an Effect fiber at the application boundary, which is
+  the pattern the docs recommend; the component itself still owns no timer.
+- **Both directions:** removing the negative clamp fails the clamp tests; using
+  `Math.round` fails the floor test. Restored: 9 unit + 5 native green.

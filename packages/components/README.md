@@ -44,6 +44,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
 | `src/form.tsx` | Form: owned-value schema validation, one alert summary, decoded `onSubmit` |
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
+| `src/countdown.tsx`, `src/countdown/logic.ts` | Countdown: clock text for a remaining duration; the app owns the tick |
 | `src/timeline.tsx` | Timeline: an event rail whose last item ends the connector |
 | `src/keyboard-shortcuts.tsx`, `src/shortcut/accelerator.ts` | KeyboardShortcuts over the shared accelerator model: platform-correct keycaps, named groups |
 | `src/search-input.tsx` | SearchInput: a clear control, Enter submit, Escape clear |

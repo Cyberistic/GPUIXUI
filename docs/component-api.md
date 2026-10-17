@@ -232,6 +232,7 @@ parts.
 | Stepper | `Stepper`, `StepperStep` | — | plan 307 |
 | Form | `Form` (render prop; one part) | `Form` | plan 308 |
 | Timeline | `Timeline`, `TimelineItem` | — | plan 311 |
+| Countdown | `Countdown` | — | plan 312 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that

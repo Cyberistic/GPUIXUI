@@ -217,7 +217,7 @@ retired once both branches are one
     - [ ] Drawer — plan 309
     - [x] Keyboard shortcuts / keycap display — plan 310 (owns the accelerator model): 10 accelerator tests + 6 native tests; both-direction proof
     - [x] Timeline — plan 311: 6 native tests; both-direction proof
-    - [ ] Countdown — plan 312
+    - [x] Countdown — plan 312: 9 formatting tests + 5 native tests
     - [ ] Inline edit — plan 313
     - [ ] Tag / token input — plan 314
     - [ ] Carousel — plan 315
