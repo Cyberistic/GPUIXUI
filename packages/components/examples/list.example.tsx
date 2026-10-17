@@ -83,6 +83,7 @@ const reviewers: ReadonlyArray<{
 export const ListExample = () => {
   const theme = useTheme();
   const [selected, setSelected] = useState("readme");
+  const [opened, setOpened] = useState<string | null>(null);
   const [assigned, setAssigned] = useState<ReadonlyArray<string>>([
     "ada",
     "grace",
@@ -100,13 +101,17 @@ export const ListExample = () => {
       <Card>
         <CardHeader>
           <CardTitle>Recent files</CardTitle>
-          <CardDescription>Selected: {selected}</CardDescription>
+          <CardDescription>
+            Selected: {selected}
+            {opened === null ? "" : ` · Opened: ${opened}`}
+          </CardDescription>
         </CardHeader>
         <List
           testId="recent-files"
           selectionMode="single"
           value={selected}
           onValueChange={setSelected}
+          onActivate={(value) => setOpened(value)}
           style={{ padding: theme.spacing.md, paddingTop: 0 }}
         >
           {Arr.map(files, (file) => (

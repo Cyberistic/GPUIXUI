@@ -40,6 +40,7 @@ import { useMergedRef } from "./internal/ref.js";
 import {
   isActivation,
   isDown,
+  isEnter,
   isFirst,
   isLast,
   isSelectAll,
@@ -207,22 +208,36 @@ interface ListBaseProps extends Props {
   readonly dense?: boolean;
 }
 
+/** The modes that can run a row action. */
+interface Activatable {
+  /**
+   * Run the row's action: `Enter` on the active row, a double click in single
+   * mode, or a click with no selection mode. Disabled rows never activate. A
+   * multiple-selection list has no activation.
+   */
+  readonly onActivate?: (value: string) => void;
+}
+
 /** {@link List} props: the value shape follows the selection mode. */
 export type ListProps =
-  | (ListBaseProps & {
-      readonly selectionMode?: "none";
-      readonly value?: never;
-      readonly defaultValue?: never;
-      readonly onValueChange?: never;
-    })
-  | (ListBaseProps & {
-      readonly selectionMode: "single";
-      readonly value?: string;
-      readonly defaultValue?: string;
-      readonly onValueChange?: (value: string) => void;
-    })
+  | (ListBaseProps &
+      Activatable & {
+        readonly selectionMode?: "none";
+        readonly value?: never;
+        readonly defaultValue?: never;
+        readonly onValueChange?: never;
+      })
+  | (ListBaseProps &
+      Activatable & {
+        readonly selectionMode: "single";
+        readonly value?: string;
+        readonly defaultValue?: string;
+        readonly onValueChange?: (value: string) => void;
+      })
   | (ListBaseProps & {
       readonly selectionMode: "multiple";
+      /** A multiple list toggles rows; it has no activation action. */
+      readonly onActivate?: never;
       readonly value?: ReadonlyArray<string>;
       readonly defaultValue?: ReadonlyArray<string>;
       readonly onValueChange?: (values: ReadonlyArray<string>) => void;
@@ -234,7 +249,8 @@ export type ListProps =
  * selects the row it lands on. `selectionMode="multiple"` keeps that keyboard
  * model and adds the desktop modifiers: a plain click selects one row, Cmd/Ctrl
  * toggles, Shift extends the range from the anchor, and Shift+Arrow extends from
- * the keyboard. A disabled row is skipped by every path.
+ * the keyboard. A disabled row is skipped by every path. A single or
+ * `selectionMode="none"` list may also pass `onActivate` to run a row action.
  */
 export const List = (props: ListProps) => {
   const theme = useTheme();
@@ -246,6 +262,7 @@ export const List = (props: ListProps) => {
     value: _value,
     defaultValue: _defaultValue,
     onValueChange: _onValueChange,
+    onActivate,
     dense = false,
     onKeyDown,
     style,
@@ -388,7 +405,10 @@ export const List = (props: ListProps) => {
           onNone: () => undefined,
           onSome: (row) => {
             focusRow(row);
-            if (!selectable) return;
+            if (!selectable) {
+              onActivate?.(row.value);
+              return;
+            }
             const extend = multiple && event.modifiers?.shift === true;
             const additive =
               multiple &&
@@ -405,6 +425,7 @@ export const List = (props: ListProps) => {
             }
             setAnchor(Option.some(row.value));
             commit(additive ? toggle(selected, row.value) : Arr.of(row.value));
+            if (!multiple) onActivate?.(row.value);
           },
         }),
       );
@@ -415,6 +436,7 @@ export const List = (props: ListProps) => {
       enabledRow,
       focusRow,
       multiple,
+      onActivate,
       rows,
       selectable,
       selected,
@@ -430,6 +452,17 @@ export const List = (props: ListProps) => {
       }),
     );
   }, [active, select]);
+
+  /** Run the active row's action; a disabled or missing row does nothing. */
+  const activateActive = useCallback(() => {
+    pipe(
+      Option.flatMap(active, enabledRow),
+      Option.match({
+        onNone: () => undefined,
+        onSome: (row) => onActivate?.(row.value),
+      }),
+    );
+  }, [active, enabledRow, onActivate]);
 
   /** Cmd/Ctrl+A: select every enabled row and anchor at the first of them. */
   const selectEveryRow = useCallback(() => {
@@ -462,6 +495,10 @@ export const List = (props: ListProps) => {
         onSome: typeahead,
         onNone: () =>
           Match.value(event).pipe(
+            Match.when(isEnter, () => {
+              if (selectable) selectActive();
+              activateActive();
+            }),
             Match.when(isActivation, selectActive),
             Match.when(isSelectAll, selectEveryRow),
             Match.when(isDown, () => moveBy(1, extend)),
@@ -709,6 +746,7 @@ export const listMeta = {
   limitations: [
     "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
     "type-ahead matches an explicit ListItem textValue, not rendered children",
+    "activation is a callback on single/none lists: no href or link role, and a multiple list has no activation",
     "no drag reorder or virtualisation",
   ],
   docs: "docs/list.mdx",

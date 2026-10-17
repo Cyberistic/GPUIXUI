@@ -12,6 +12,11 @@
  * Cmd/Ctrl+A doing nothing in multiple mode (or reporting a change in single
  * mode).
  *
+ * Activation: Enter that selected but ran nothing; Space that ran the action it
+ * should only select with; a click that did not run the row it selected; a plain
+ * list click that ran nothing; a disabled row that activated anyway; and an
+ * arrow move that activated the old row instead of the reached one.
+ *
  * A caller `ref` on a row was also discarded in favour of the internal one.
  *
  * Type-ahead: typing a prefix moved nothing, a repeated letter did not advance,
@@ -679,6 +684,172 @@ describe("List", () => {
     list.renderer.simulateKeystrokes("e");
 
     expect(focusedTestId(list)).toEqual(Option.some("row-alpha"));
+
+    list.unmount();
+  });
+
+  it("activates the focused row on Enter without a redundant selection", () => {
+    const onValueChange = vi.fn();
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List
+        testId="list"
+        selectionMode="single"
+        defaultValue="a"
+        onValueChange={onValueChange}
+        onActivate={onActivate}
+      >
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c" textValue="Gamma">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("enter");
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onActivate).toHaveBeenCalledWith("a");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    list.unmount();
+  });
+
+  it("selects with Space but never activates", () => {
+    const onValueChange = vi.fn();
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List
+        testId="list"
+        selectionMode="single"
+        defaultValue="a"
+        onValueChange={onValueChange}
+        onActivate={onActivate}
+      >
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c" textValue="Gamma">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("down");
+    list.renderer.simulateKeystrokes("space");
+
+    expect(onValueChange).toHaveBeenLastCalledWith("c");
+    expect(onActivate).not.toHaveBeenCalled();
+
+    list.unmount();
+  });
+
+  it("selects and activates the row a click lands on", () => {
+    const onValueChange = vi.fn();
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List
+        testId="list"
+        selectionMode="single"
+        defaultValue="a"
+        onValueChange={onValueChange}
+        onActivate={onActivate}
+      >
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c" textValue="Gamma">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    clickCentreOf(list, "row-c");
+
+    expect(onValueChange).toHaveBeenLastCalledWith("c");
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onActivate).toHaveBeenCalledWith("c");
+
+    list.unmount();
+  });
+
+  it("activates a row on click when there is no selection mode", () => {
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List testId="list" onActivate={onActivate}>
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    clickCentreOf(list, "row-c");
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onActivate).toHaveBeenCalledWith("c");
+
+    list.unmount();
+  });
+
+  it("never activates a disabled row by click or Enter", () => {
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" onActivate={onActivate}>
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" textValue="Beta" disabled>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    clickCentreOf(list, "row-b");
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.renderer.simulateKeystrokes("enter");
+
+    expect(onActivate).not.toHaveBeenCalled();
+
+    list.unmount();
+  });
+
+  it("activates the row the arrow keys reached", () => {
+    const onValueChange = vi.fn();
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List
+        testId="list"
+        selectionMode="single"
+        defaultValue="a"
+        onValueChange={onValueChange}
+        onActivate={onActivate}
+      >
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" textValue="Beta" disabled>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c" textValue="Gamma">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("down");
+    list.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange).toHaveBeenLastCalledWith("c");
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onActivate).toHaveBeenCalledWith("c");
 
     list.unmount();
   });

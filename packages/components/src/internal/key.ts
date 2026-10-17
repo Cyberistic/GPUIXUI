@@ -15,6 +15,9 @@ import * as Option from "effect/Option";
 export const isActivation = (event: EventPayload): boolean =>
   event.key === "enter" || event.key === "space";
 
+/** Enter alone: a row action. Space stays a selection key. */
+export const isEnter = (event: EventPayload): boolean => event.key === "enter";
+
 /** Arrow Down, or Ctrl+N for a menu that follows the desktop convention. */
 export const isDown = (event: EventPayload): boolean =>
   event.key === "down" || (event.key === "n" && event.modifiers?.ctrl === true);

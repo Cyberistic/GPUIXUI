@@ -7,7 +7,9 @@ description: A vertical collection of rows, optionally single- or multi-selectab
 keys move a roving tab stop, a click selects, and the list behaves as a single tab
 stop instead of one per row. `selectionMode="multiple"` keeps that keyboard model
 and adds the desktop selection modifiers. In both modes, typing the first letters
-of a row jumps to it.
+of a row jumps to it. A single or unselectable list can also pass `onActivate` to
+run a row action — open a file, load a record — without treating every selection
+change as an action.
 
 ```tsx
 import {
@@ -45,7 +47,8 @@ import {
 | `Ctrl+N` / `Ctrl+P` | the desktop equivalents of `↓` / `↑` |
 | `Home` | focus the first enabled row |
 | `End` | focus the last enabled row |
-| `Enter` / `Space` | select the focused row |
+| `Enter` | select the focused row, then run `onActivate` when the list has one |
+| `Space` | select the focused row only; it never runs the row action |
 | Letter keys | jump to the next enabled row whose `textValue` starts with the typed prefix |
 
 A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it can
@@ -92,6 +95,44 @@ Typing `r` from “Design notes” wraps back to “README.md”.
 The typed prefix lives for 500ms. The window is a lazy comparison against
 Effect's monotonic clock, not a timer: nothing runs while the list is idle, and a
 prefix that matches nothing is cleared so the next letter starts a fresh search.
+
+## Activation
+
+Selection is state; activation is an action. Pass `onActivate` when a row must
+**do** something — open a file, load a record, navigate:
+
+```tsx
+<List
+  selectionMode="single"
+  value={file}
+  onValueChange={setFile}
+  onActivate={(id) => openFile(id)}
+>
+  <ListItem value="readme" textValue="README.md">
+    <ListItemTitle>README.md</ListItemTitle>
+  </ListItem>
+</List>;
+```
+
+| Gesture | Result |
+| ------- | ------ |
+| `Enter` (single) | selects the focused row, then calls `onActivate` with its value |
+| `Space` (single) | selects only; it never activates |
+| click (single) | selects, then calls `onActivate` |
+| click (`selectionMode="none"`) | calls `onActivate` immediately; there is no selection to make |
+| click or `Enter` on a disabled row | nothing |
+| any gesture on a `multiple` list | no activation; that variant does not accept the prop |
+
+Passing `onActivate` is opt-in for the row-action contract: a picker that only
+needs a choice should omit it, because a click will select without running
+anything. A multiple-selection list is a set of toggles, so activation would run
+by accident during range selection; the prop is rejected at the type level rather
+than ignored at runtime.
+
+There is no separate double-click action; the runtime's host events carry no
+reliable double-click signal, so a click would have to mean both select and
+activate. Use `Enter`/click activation, or render an explicit action control in
+the row's `trailing` slot when the interaction must be mouse-only.
 
 ## Selection
 
@@ -143,6 +184,7 @@ clears by toggling its last selected row.
 | `selectionMode` | `"none" \| "single" \| "multiple"` | `"none"` |
 | `value` / `defaultValue` | `string` (single) · `ReadonlyArray<string>` (multiple) | — / `""` · `[]` |
 | `onValueChange` | `(value: string) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
+| `onActivate` | `(value: string) => void` — single and `none` only; absent from the multiple variant | — |
 | `dense` | `boolean` | `false` |
 
 The value type follows the mode: a `single` list cannot be given an array and a
@@ -188,6 +230,13 @@ a disabled row is drawn at 50% opacity.
 ## Limitations
 
 - No drag reorder, no group headers, no nested rows.
+- Activation is a callback, not a link: there is no `href`, no navigation
+  service and no role change, so an activatable row is not announced as a link.
+- Keyboard activation needs a selection mode. With `selectionMode="none"` the
+  rows are not focusable, so only a click can activate; use `single` when the
+  list must work from the keyboard.
+- A multiple list has no activation at all (the prop is rejected by the type),
+  because a double gesture would run an action while building a range.
 - Type-ahead searches `textValue`, not the rendered `ListItemTitle`: the row is a
   composition, so the list cannot read its text. An omitted `textValue` makes the
   row unsearchable rather than guessing.
@@ -198,7 +247,7 @@ a disabled row is drawn at 50% opacity.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (29 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (36 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching, and
 `src/list/selection.test.ts` for the multiple-selection rules: the modes and
@@ -206,7 +255,9 @@ their roles, the absence and uniqueness of the tab stop, selection by click and 
 key, a disabled row rejecting both, real focus moving with wrap-around past a
 disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
 height, the controlled list not moving its own selection, type-ahead jumping and
-cycling while skipping disabled and unlabelled rows, and — in multiple mode —
+cycling while skipping disabled and unlabelled rows, activation by `Enter` and by
+click (and not by `Space`, a disabled row or a plain list without the prop), the
+arrow key reaching the row that activates, and — in multiple mode —
 plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
 selecting every enabled row, and a disabled row never entering a selection.
 
