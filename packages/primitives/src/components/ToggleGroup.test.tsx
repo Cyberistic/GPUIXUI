@@ -126,6 +126,26 @@ describe("ToggleGroup", () => {
     expect(propOf(group, 2, "tabIndex")).toBe(-1);
   });
 
+  it("continues an arrow from the focused item, not the deferred value", () => {
+    // The bug guarded (plan 359): a controlled parent that does not apply the
+    // reported value leaves the ring ahead of the value-derived tab stop, so
+    // starting the next move there repeated the first move and trapped the
+    // keyboard. Both modes read the one cursor rule.
+    const onPress = vi.fn();
+    const handlersWithFocus = handlers(onPress);
+    const group = renderToggleGroup(
+      single,
+      testTheme,
+      selected(["left"]),
+      0,
+      { ...unfocused, focusedIndex: Option.some(1) },
+      handlersWithFocus,
+    );
+    expectSome(hostHandler(group, "onKeyDown"))(keyEvent("right"));
+    expect(onPress).toHaveBeenCalledWith("right");
+    expect(handlersWithFocus.onFocusMove).toHaveBeenCalledWith(2);
+  });
+
   it("keeps one tab stop in multiple mode, on the roving index", () => {
     const group = renderToggleGroup(
       multiple,

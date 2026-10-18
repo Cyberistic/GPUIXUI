@@ -6,6 +6,7 @@ import {
   decideMove,
   decidePage,
   decideToggle,
+  moveFrom,
 } from "./keyboard.js";
 
 /**
@@ -97,6 +98,22 @@ describe("decideMove", () => {
     expect(
       decideMove(0, 2, "down", "vertical", (index) => index !== 0),
     ).toEqual(Option.none());
+  });
+});
+
+describe("moveFrom", () => {
+  /**
+   * The bug guarded (plan 359): a roving composite used its value-derived tab
+   * stop as the base for a relative move, so a controlled parent that deferred
+   * the reported change left the ring one item ahead of the base and the second
+   * arrow repeated the first. The focused item is the cursor.
+   */
+  it("starts from the focused item when one holds focus", () => {
+    expect(moveFrom(0, Option.some(2))).toBe(2);
+  });
+
+  it("falls back to the tab stop when focus is outside the composite", () => {
+    expect(moveFrom(2, Option.none())).toBe(2);
   });
 });
 

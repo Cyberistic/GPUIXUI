@@ -72,6 +72,11 @@ then reports the focused option, so the keyboard and the focus ring always name
 the same radio (plan `353`). Space acts on key **up**, Enter on key **down**, and
 a held key does nothing — the shared contract in `core/keyboard.ts`.
 
+An arrow also **continues from the focused option**, not from the value: the ring
+is the keyboard's cursor, so a deferring parent cannot trap the keyboard by
+moving focus once and repeating the same move on every later key (plan `359`).
+The tab stop stays value-derived, so Tab still enters on what is selected.
+
 ## Accessibility
 
 - Roles: `RadioGroup` and `RadioButton` in AccessKit.
@@ -178,6 +183,10 @@ the option row:
   without it paints the input role (plan 061); `Space` up and `Enter` activate
   the option that holds focus, not the value's stale tab stop, and an activation
   key with no focused option still selects the tab stop (plan 353).
+- `runtime/roving-arrows.runtime.test.tsx` — a controlled parent that **never
+  applies** a reported value: three arrows move the ring on to Beta, Gamma and
+  back to Alpha and report each change; a disabled option is still skipped; the
+  wrap back to the value the parent holds reports nothing (plan `359`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

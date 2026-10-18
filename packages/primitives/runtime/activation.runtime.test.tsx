@@ -9,10 +9,10 @@
  *
  * `core/keyboard.ts` owns the rule: **Enter on key down, Space on key up**, a
  * held key never activates, and the pointer activates once. This table drives
- * all of it against the eight controls that share the rule, in a fresh window
- * per case, with the target genuinely focused first. It asserts the reported
- * **value** as well as the count, so a group that activates the stale tab stop
- * fails even though it reported exactly once.
+ * all of it against the nine controls that share the rule (the rating joined in
+ * plan `359`), in a fresh window per case, with the target genuinely focused
+ * first. It asserts the reported **value** as well as the count, so a group that
+ * activates the stale tab stop fails even though it reported exactly once.
  */
 
 import type { ReactElement } from "react";
@@ -25,6 +25,7 @@ import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { IconButton } from "../src/components/IconButton.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
+import { Rating } from "../src/components/Rating.js";
 import { Switch } from "../src/components/Switch.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
@@ -139,6 +140,18 @@ const CASES: ReadonlyArray<ActivationCase> = [
         type="single"
         options={options}
         onValueChange={(values) => report(String(values))}
+      />
+    ),
+  },
+  {
+    name: "Rating",
+    focusId: "x-star-3",
+    reported: "3",
+    node: (report) => (
+      <Rating
+        testId="x"
+        label="Quality"
+        onValueChange={(value) => report(String(value))}
       />
     ),
   },

@@ -239,6 +239,42 @@ describe("RadioGroup", () => {
     expect(handlers.onFocusMove).toHaveBeenCalledWith(1);
   });
 
+  it("continues an arrow from the focused option, not the deferred value", () => {
+    // The bug guarded (plan 359): a controlled parent that does not apply the
+    // reported value leaves the ring one option ahead of the tab stop; starting
+    // the next move from the tab stop repeated the first move and trapped the
+    // keyboard. The focused option is the cursor.
+    const onSelect = vi.fn();
+    const handlers = radioHandlers(onSelect);
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      { ...unfocused, focusedIndex: Option.some(1) },
+      handlers,
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
+    expect(onSelect).toHaveBeenCalledWith("gamma");
+    expect(handlers.onFocusMove).toHaveBeenCalledWith(2);
+  });
+
+  it("activates the focused option, not the deferred value", () => {
+    // Plan 353's rule, kept in one place with the cursor (plan 359): Space up
+    // never re-selects the option the value still names.
+    const onSelect = vi.fn();
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      { ...unfocused, focusedIndex: Option.some(1) },
+      radioHandlers(onSelect),
+    );
+    expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
+    expect(onSelect).toHaveBeenCalledWith("beta");
+  });
+
   it("jumps focus to the option Home lands on", () => {
     const handlers = radioHandlers(vi.fn());
     const element = renderRadioGroup(

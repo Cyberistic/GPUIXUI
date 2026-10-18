@@ -3,9 +3,9 @@ title: Rating
 description: A whole number of stars, or none.
 ---
 
-`Rating` is a radio group shaped input: one tab stop, arrows move the selection
-and native focus with it. It differs from `RadioGroup` in two ways a rating
-needs — the arrows **clamp** at the ends instead of wrapping, and `Delete`
+`Rating` is a radio group shaped input: one tab stop, arrows move a cursor (the
+ring) and commit the star it lands on. It differs from `RadioGroup` in two ways a
+rating needs — the arrows **clamp** at the ends instead of wrapping, and `Delete`
 clears it back to zero. It is not a slider: the value is a small whole number,
 not a position.
 
@@ -53,14 +53,21 @@ a number reads as unrated.
 
 | Key | Effect |
 | --- | ------ |
-| `ArrowRight` / `ArrowUp` | + one star, clamped at `max` |
-| `ArrowLeft` / `ArrowDown` | − one star, clamped at `0` |
+| `ArrowRight` / `ArrowUp` | + one star from the focused star, clamped at `max` |
+| `ArrowLeft` / `ArrowDown` | − one star from the focused star, clamped at `0` |
 | `Home` / `End` | one star / `max` |
+| `Enter` / `Space` | select the star the ring is on (key down / key up) |
 | `Delete` / `Backspace` | clear to `0` |
 
 The group holds **one tab stop** — on the current rating, or on the first star
-when unrated — and an arrow moves the selection and native focus together, so
+when unrated — and an arrow moves the ring and commits the star it lands on, so
 the ring is always on the star the value came from.
+
+The **ring is the keyboard's cursor**: a controlled parent that defers or rejects
+a reported value leaves the ring ahead of the paint, so an arrow continues from
+the ring rather than repeating the first move (plan `359`). Because the unrated
+tab stop (star 1) is not itself selected, `Enter`/`Space` is how a keyboard user
+chooses one star; the arrows then move on to 2.
 
 Clearing moves native focus to the first star — the group's tab stop when it is
 unrated — so the ring and the keyboard are always on the same star (plan `334`).
@@ -167,7 +174,9 @@ each star:
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
   single tab stop, filled vs outline icons, the invalid tint rule, keys, click,
   disabled/readOnly, ring, and the hover preview's paint, committed announcement,
-  `starStyle` fill and inert-control handlers.
+  `starStyle` fill and inert-control handlers; an arrow continues from the
+  focused star rather than the deferred value, and `Enter` down / `Space` up
+  commit the star the ring is on (plan `359`).
 - `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
   arrow moves the checked star and native focus; Right at five stays at five;
   Delete clears; filled stars paint `colors.primary`; Tab enters on the rating
@@ -179,6 +188,11 @@ each star:
   Delete through the focused star leaves native focus **and** the ring on
   star 1, the tab stop (plan `334`).
   Measured 2026-10-17 (plan 054 §9, plan 070 §6) and 2026-10-18 (plans 094, 334).
+- `runtime/roving-arrows.runtime.test.tsx` — a controlled parent that never
+  applies a reported value: three arrows move the ring 2 → 3 → 4 → 3 and report
+  each star; an unrated rating commits star 1 with `Space` and then moves on
+  (plan `359`). `runtime/activation.runtime.test.tsx` drives the rating through
+  the same nine activation sequences as every button-shaped control.
 
 ```sh
 nub run --filter @gpuixui/primitives test

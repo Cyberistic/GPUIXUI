@@ -92,6 +92,11 @@ A disabled option is skipped by every movement and never receives focus; a
 disabled group has no tab stop at all. Clicking an item selects or toggles it,
 except the active item in `single` mode, which is a no-op.
 
+An arrow **continues from the focused item**, not from the value-derived tab stop,
+in both modes. A controlled parent can defer or reject the value an arrow reports;
+the ring is the keyboard's cursor, so the next arrow moves on from the ring
+instead of repeating the first move (plan `359`).
+
 ## Accessibility
 
 - The group is a named `group` (AccessKit `Group`); each item is a named
@@ -192,6 +197,10 @@ the item — after its own paint and focus ring:
   **and** selection in `single` but only focus in `multiple`; a disabled item is
   skipped (wrapping past the ends); `focusNext` enters on the selected item and
   leaves the group on the next Tab; a disabled group is skipped and inert.
+- `runtime/roving-arrows.runtime.test.tsx` — with a controlled parent that never
+  applies the reported value, three arrows in `single` move the ring on to
+  Centre, Right and back, and `multiple` keeps moving focus without reporting a
+  press (plan `359`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

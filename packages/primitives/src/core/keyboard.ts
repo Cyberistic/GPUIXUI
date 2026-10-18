@@ -112,6 +112,20 @@ export const decideAbsolute = (
   return Option.none();
 };
 
+/**
+ * The index a keyboard move starts from.
+ *
+ * A roving composite has two positions: the committed value and the keyboard's
+ * cursor (the ring). They agree while the parent applies every reported change,
+ * and diverge when a controlled parent defers or rejects one (plan 353). The
+ * focused item is where the keyboard is, so a relative move starts there; the
+ * value-derived tab stop is the fallback when focus is outside the composite.
+ */
+export const moveFrom = (
+  tabStop: number,
+  focusedIndex: Option.Option<number>,
+): number => Option.getOrElse(focusedIndex, () => tabStop);
+
 /** PageUp and PageDown move by a viewport's worth, clamped to the ends. */
 export const decidePage = (
   index: number,

@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 102/102
+`[x]` `[██████████]` 103/103
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -823,6 +823,20 @@ retired once both branches are one
       unfilled invalid surface while a chosen one keeps its accent (the
       `controlStyle` rule from plan 091 applied to selection), with core,
       element-tree and runtime guards, both directions proven (plan `356`).
+
+`[x]` `packages/primitives`: **a deferring controlled parent trapped the arrow
+      keys in every roving selection composite** — measured (2026-10-18): with
+      `value="a"` and an `onValueChange` that does not apply it, `Down, Down`
+      left focus on Beta in `RadioGroup` and repeated the first move, and
+      `ToggleGroup` (`single`) and `Rating` did the same (`Right, Right` stayed on
+      Centre / star 3). Movement started from the value-derived tab stop while
+      the ring had already moved; plan `353` had fixed *activation* against
+      exactly this divergence and left movement behind. One `moveFrom(tabStop,
+      focusedIndex)` rule now drives movement and activation in all three, and
+      `Rating` gains the shared Enter-down/Space-up contract so star 1 stays
+      reachable from an unrated tab stop. A new runtime matrix (deferring parent,
+      keys delivered to the element the component focused) fails by case name in
+      four directions; offline 593 → 601, runtime 537 → 552 (plan `359`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts

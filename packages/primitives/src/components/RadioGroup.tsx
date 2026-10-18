@@ -26,6 +26,7 @@ import {
   decideAbsolute,
   decideActivation,
   decideMove,
+  moveFrom,
 } from "../core/keyboard.js";
 import {
   initialActiveIndex,
@@ -162,7 +163,7 @@ export const renderRadioGroup = (
     return true;
   };
   const move = (key: string): boolean =>
-    Option.match(decideMove(activeIndex, count, key, orientation, isDisabled), {
+    Option.match(decideMove(cursorIndex, count, key, orientation, isDisabled), {
       onNone: () => false,
       onSome: navigate,
     });
@@ -172,22 +173,18 @@ export const renderRadioGroup = (
       onSome: navigate,
     });
   /**
-   * The option an activation key selects.
+   * Where the keyboard is: the focused option, else the value-derived tab stop.
    *
-   * The focused option, not the value-derived tab stop: a controlled parent may
-   * defer or reject an arrow's move, leaving focus on one option and the value
-   * on another (measured, plan 353). `focusedIndex` is the same state the ring
-   * paints from, so the keyboard and the ring always name one option. With no
-   * option focused — a key delivered to the group itself — the tab stop is the
-   * honest fallback.
+   * A controlled parent may defer or reject an arrow's move, leaving focus on
+   * one option and the value on another (measured, plan 353). Movement and
+   * activation both start from this one cursor, so a second arrow continues
+   * from the ring instead of repeating the first move, and the keyboard and the
+   * ring can never name different options (plan `359`).
    */
-  const activationIndex = Option.getOrElse(
-    focus.focusedIndex,
-    () => activeIndex,
-  );
+  const cursorIndex = moveFrom(activeIndex, focus.focusedIndex);
   const activate = (phase: "down" | "up", event: EventPayload): void => {
     if (decideActivation(event.key ?? "", phase, event.isHeld === true))
-      select(activationIndex);
+      select(cursorIndex);
   };
   const onKeyDown = (event: EventPayload): void => {
     const key = event.key ?? "";

@@ -1,10 +1,11 @@
 /**
  * `Rating` — a whole number of stars, or none.
  *
- * A rating is shaped like a radio group: one tab stop, arrows move the
- * selection and native focus with it. It is **not** a radio group in one
- * respect: the arrows clamp at the ends instead of wrapping, and Delete clears
- * it back to zero (`core/rating.ts` owns both rules).
+ * A rating is shaped like a radio group: one tab stop, arrows move the cursor
+ * (the ring) and commit the star it lands on, and Enter/Space commit the star
+ * the ring is already on. It is **not** a radio group in one respect: the arrows
+ * clamp at the ends instead of wrapping, and Delete clears it back to zero
+ * (`core/rating.ts` owns both rules).
  *
  * The paint uses two icons of the same geometry — an outline star and a filled
  * one — tinted with the brand and muted roles, because GPUix's `<svg>` is
@@ -23,6 +24,7 @@ import {
   previewRating,
   ratingTabStop,
 } from "../core/rating.js";
+import { decideActivation, moveFrom } from "../core/keyboard.js";
 import { ratingStarColor, ratingStarStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -121,6 +123,15 @@ export const renderRating = (
   const value = clampRating(state.current, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
+  /**
+   * Where the keyboard is: the focused star, else the committed value.
+   *
+   * A controlled parent that defers or rejects the value leaves the ring ahead
+   * of the paint, so an arrow must continue from the ring (plan `359`). The
+   * unrated tab stop is star 1, which is *not* selected: the arrows move the
+   * ring, and Enter/Space commits the star it is on.
+   */
+  const cursor = moveFrom(value, focus.focusedIndex);
   // A preview is an input affordance: an inert rating never paints one, and a
   // pending preview is ignored the moment the control becomes inert.
   const painted = interactive
@@ -191,10 +202,18 @@ export const renderRating = (
       onMouseLeave={interactive ? hover.onLeave : undefined}
       onKeyDown={(event) => {
         if (!interactive) return;
-        Option.match(decideRating(value, max, event.key ?? ""), {
+        const key = event.key ?? "";
+        Option.match(decideRating(cursor, max, key), {
           onNone: () => {},
           onSome: handlers.onMove,
         });
+        if (decideActivation(key, "down", event.isHeld === true))
+          handlers.onSelect(cursor);
+      }}
+      onKeyUp={(event) => {
+        if (!interactive) return;
+        if (decideActivation(event.key ?? "", "up", event.isHeld === true))
+          handlers.onSelect(cursor);
       }}
       style={resolvePartStyle(
         {

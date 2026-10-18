@@ -28,6 +28,7 @@ import {
   decideAbsolute,
   decideActivation,
   decideMove,
+  moveFrom,
 } from "../core/keyboard.js";
 import { initialActiveIndex } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
@@ -141,6 +142,14 @@ export const renderToggleGroup = (
   const count = Arr.length(options);
   const isDisabled = (index: number): boolean =>
     props.disabled === true || options[index]?.disabled === true;
+  /**
+   * Where the keyboard is: the focused item, else the tab stop.
+   *
+   * `activeIndex` follows the value (single) or the last focused item
+   * (multiple); a controlled parent that defers a change leaves it behind the
+   * ring, so a relative move must start from the ring (plan `359`).
+   */
+  const cursorIndex = moveFrom(activeIndex, focus.focusedIndex);
   const move = (index: number): void => {
     const option = Arr.get(options, index);
     if (Option.isNone(option)) return;
@@ -157,7 +166,7 @@ export const renderToggleGroup = (
         const key = event.key ?? "";
         Option.match(
           Option.firstSomeOf([
-            decideMove(activeIndex, count, key, orientation, isDisabled),
+            decideMove(cursorIndex, count, key, orientation, isDisabled),
             decideAbsolute(count, key, isDisabled),
           ]),
           { onNone: () => {}, onSome: move },

@@ -20,7 +20,7 @@ import {
   type RatingProps,
 } from "./Rating.js";
 import type { RatingFocus } from "./Rating.js";
-import { keyEvent } from "./testing/event.js";
+import { keyEvent, keyUpEvent } from "./testing/event.js";
 import {
   elementChildren,
   elementProp,
@@ -169,6 +169,46 @@ describe("Rating", () => {
     expect(onMove).toHaveBeenLastCalledWith(0);
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("a"));
     expect(onMove).toHaveBeenCalledTimes(3);
+  });
+
+  it("continues an arrow from the focused star, not the deferred value", () => {
+    // The bug guarded (plan 359): a controlled parent that does not apply the
+    // reported value leaves the ring one star ahead of the paint; starting the
+    // next move from the value repeated the first move and trapped the keyboard.
+    const onMove = vi.fn();
+    const element = render({}, 2, 3, { onMove });
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("right"));
+    expect(onMove).toHaveBeenCalledWith(4);
+  });
+
+  it("commits the star the ring is on with Enter down and Space up", () => {
+    // Plan 359: with the ring as the cursor, the unrated tab stop (star 1) is
+    // not selected by an arrow, so the radio-group activation pair is the way
+    // to choose it.
+    const onSelect = vi.fn();
+    const element = render({}, 2, 3, { onSelect });
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
+    expect(onSelect).toHaveBeenLastCalledWith(3);
+    expectSome(hostHandler(element, "onKeyUp"))(keyUpEvent("space"));
+    expect(onSelect).toHaveBeenLastCalledWith(3);
+    expect(onSelect).toHaveBeenCalledTimes(2);
+  });
+
+  it("refuses a held activation key and both keys when inert", () => {
+    const onSelect = vi.fn();
+    const element = render({}, 2, 3, { onSelect });
+    expectSome(hostHandler(element, "onKeyDown"))(
+      keyEvent("enter", { isHeld: true }),
+    );
+    expectSome(hostHandler(element, "onKeyUp"))(
+      keyUpEvent("space", { isHeld: true }),
+    );
+    Arr.forEach([{ disabled: true }, { readOnly: true }] as const, (props) => {
+      const inert = render(props, 2, 3, { onSelect });
+      expectSome(hostHandler(inert, "onKeyDown"))(keyEvent("enter"));
+      expectSome(hostHandler(inert, "onKeyUp"))(keyUpEvent("space"));
+    });
+    expect(onSelect).toHaveBeenCalledTimes(0);
   });
 
   it("selects a star when it is clicked", () => {
