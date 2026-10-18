@@ -109,3 +109,23 @@ not the fix: the supervisor only manages its five named workstreams, so an extra
 worktree is invisible to it, but two agents of one workstream still have two
 branches to reconcile. The harness guard in `primitives` plan 022
 (`022-swarm-single-writer.md`) is the real fix.
+
+## Recurrence: 2026-10-18 04:20–04:31 (plan 334)
+
+Still unresolved, and this time the race landed mid-commit:
+
+| Time | Observation |
+| ---- | ----------- |
+| 04:23 | an untracked `packages/tokens/src/zz-probe.test.ts` appeared in the tree and failed the suite; it was gone 30 seconds later |
+| 04:23–04:27 | this session wrote plan 334, `secondaryWashPairs`, its test and the docs, then `git add`ed them |
+| 04:27 | `git commit` reported “nothing added to commit”: a peer had committed the staged tree as `7b89d4c fix(tokens): guard the secondary label on the washes it paints` |
+| 04:28 | the peer appended a fifth case to the test and rewrote the plan's outcome while this session read it; one test run caught the mid-write state (`3 failed`) and the next passed |
+| 04:30 | `17e3943 test(tokens): pin the secondary-wash figures the catalogue quotes` committed the peer's completion of the same plan |
+
+No work was lost: both sessions converged on the same plan number and the same
+change, and every committed state was green (`56 files / 3671 tests`,
+`nub run check`, `nub run test`). The tree is clean and `agent/tokens-theme` is
+in sync with `origin` at `17e3943`. But the outcome was luck, not isolation —
+the peer's commit swept this session's staged edits, and a commit could as
+easily have captured a half-written file. The harness guard in `primitives`
+plan 022 is still the required fix.
