@@ -469,9 +469,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–460)
+## Docs site workstream (plans 410–461)
 
-`[~]` `[██████████]` 59/61
+`[~]` `[██████████]` 60/61
+
+`[x]` **Document the 17 Tier 2 components merged from `master` (plan 461)** —
+time picker, message scroller, fieldset, form, navigation menu, preview card,
+drawer, stepper, timeline, colour picker, tag input, mention input, hotkey
+recorder, countdown, carousel, inline edit and keycap: records, pages, real
+examples, generated props, sources, the date/time row split and 13 tier-A
+previews (the four interaction-only pages carry a measured tier-V reason).
 
 `[x]` The registry mirrors the inventory's GPUix-support column (plan 443) — `ours`/`reuse` are real values, the nine flattened records are corrected, a test reads `COMPONENTS.md`, and `done` is backed by its native suite rather than by GPUix writing the primitive
 `[x]` Preview surfaces follow the docs' dark mode (plan 444) — a dark page painted light previews because the surface took `next-themes`' pre-hydration `undefined` and never re-rendered; one tested `previewMode` + `useSyncExternalStore` snapshot fixes it, verified in headless Chrome in both modes

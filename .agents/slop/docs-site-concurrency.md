@@ -103,3 +103,21 @@ truth pass. Gates green on this tree: `nub run check`, `nub run lint`,
 `nub run test` (9 files, 42 tests), `nub run --filter docs build`, and a
 dev-server check that `/docs/installation` serves
 `<title>Installation — GPUIXUI</title>`.
+
+## 2026-10-18 02:52 — the loop started a second docs-site writer again
+
+A live `swarm:docs-site` loop turn (PID 91461, child of `run-docs-site.sh`
+PID 27283, started 17:52) was writing the same plan-461 files as this
+interactive session: `apps/docs/src/component-meta/entries.ts`,
+`content/docs/components/*.mdx`, `COMPONENTS.md`, `PLAN.md`, `TODO.md`. The
+interactive session had already committed the dependency re-derivation
+(`44a8d24`) and was about to write the same records.
+
+Per `AGENTS.md` §6 the interactive session stopped the loop (both PIDs,
+`SIGTERM`) and took the tree, leaving the loop's uncommitted work in place
+rather than reverting it. The loop's plan (`461-tier2-expansion-pages.md`) and
+its four pages were adopted and finished by the interactive session; this
+session's duplicate plan was deleted.
+
+The supervisor guard above is still the permanent fix: a live `session_v2` row
+for a worktree must block a new loop turn. `TODO.md` still carries that ask.
