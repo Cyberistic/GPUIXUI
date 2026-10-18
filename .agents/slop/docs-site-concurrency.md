@@ -183,3 +183,61 @@ must fail to acquire, plus a supervisor that refuses to start a workstream whose
 lock is held. Until that exists, expect duplicate writers; the work still
 converges, but only because every turn commits and re-reads `git log` before
 writing.
+
+---
+
+# Third observation — 2026-10-18, the plan index itself drifts
+
+Observed 04:22–05:08. Same worktree, now with **three or more** live writers, and
+the first collision that damaged the *index* rather than a source file.
+
+## What happened
+
+1. A writer finished the 463/464 truth pass and pushed `c96ab8e` (04:45). The
+   tree was clean and `origin/agent/docs-site` matched `HEAD`.
+2. Within twenty minutes, edits from three different units appeared at once,
+   none of them this session's:
+   - `apps/docs/src/component-pages.test.ts`, `apps/docs/README.md`,
+     `.agents/slop/plans/466-page-content-blocks.md` (a new page-content guard);
+   - `apps/docs/src/lib/search.test.ts`,
+     `.agents/slop/plans/466-search-suite-cold-budget.md` (a timeout budget);
+   - `apps/docs/package.json` (`@fumadocs-editor/*`), `nub.lock`,
+     `apps/docs/studio.config.ts`, `apps/docs/src/editor-roundtrip.test.ts`,
+     `.agents/slop/plans/467-fumadocs-editor-authoring.md`.
+3. The plan number `466` is now **used twice**, and the index row written for
+   one of them is `468-search-suite-cold-budget.md` while the file is
+   `466-search-suite-cold-budget.md` — a link that does not resolve.
+4. The docs-site section heading in `TODO.md` moved from `plans 410–462` to
+   `410–466` and back as the turns rewrote it.
+
+## What this session did
+
+- Completed one unit under the collision: plan `465-record-limitation-truth.md`
+  plus `component-meta/entries.ts` and `component-truth.test.ts`. The guard
+  failed first with nine rows across seven stale strings, then
+  `42 files / 261 tests` passed; the `list` re-break failed again as expected.
+- Committed **only those three paths** (`9c22454`) and pushed, so the unit
+  cannot be captured by another turn's `git add`.
+- Did **not** edit `.agents/slop/plans/README.md` or `TODO.md`: both were being
+  rewritten by other sessions at that moment, and an edit there would have
+  clobbered a live change. The 465 index row and TODO tick are therefore
+  **owed**; the row must be added when the tree has one writer, and the
+  duplicate `466` renumbered then.
+
+## Why the earlier mitigations did not hold
+
+Every turn still commits and re-reads `git log`, so *work* converges. What does
+not converge is *numbering and the index*, because they are shared mutable
+documents and the allocation of a plan number is not atomic. A per-worktree lock
+(plan `022` §5) prevents both; a "re-read before writing" discipline cannot make
+two independent readers agree on the next free number.
+
+## Recommended supervisor check
+
+Refuse to start the docs-site workstream while any of these hold:
+
+- a per-worktree lease exists (plan `022` §5);
+- `.git/index.lock` is present;
+- more than one session for the worktree reports non-idle.
+
+Recorded for the owner of `scripts/`; not edited from this workstream.
