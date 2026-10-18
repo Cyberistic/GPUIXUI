@@ -16,6 +16,7 @@ export const SHOWCASE_SLUGS = [
   "select",
   "progress",
   "text-input",
+  "text",
 ] as const;
 
 /** The composition's parts, as links to their real pages. */
