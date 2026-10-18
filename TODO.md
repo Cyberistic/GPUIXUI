@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 158/213
+`[x]` `[███████░░░]` 159/216
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1194,6 +1194,31 @@ caption looked like body copy; `themeTextTierFailures` is the fifth check,
 `textTiers` is the ordered list, its surfaces derive from `contrastPairs`, every
 shipped set and composed style clears the 1.05:1 step (1.274 / 1.349 / 1.440 at
 the tightest) so no colour, pair or metric moves (plan 392)
+`[x]` Hold the loading pulse's dim frame — `Skeleton` paints the role at
+`skeletonPulseOpacity` (0.6) for half of every cycle and the contract measured
+only the opaque value, so identity dark's `#3D4552` on `selected` measured
+1.058:1 opaque and **1.008:1** at 60% while `themeContrastFailures` returned
+`[]`; `skeletonPulsePairs` composites the frame on the same eight surfaces,
+`ContrastFailure` carries the fraction as `opacity`, and the dark skeleton moves
+a half-step to `#434C5A` (1.074:1 dim, 1.179:1 opaque) so no other value moves
+(plan 393)
+`[ ]` Hold the fills an action paints inside a soft status panel —
+`hover`/`active`/`secondary` on the four `xSoft` fills: 80 shipped pairs are
+under 1.05:1, the worst `active` on Windows light `destructiveSoft` at
+**1.004:1** and Windows light `active` on `successSoft` at 1.008:1, so an
+Alert's ghost dismiss control has no press state and the documented "Try again"
+action has no fill in the AAA dark destructive panel; no pair exists and
+`themeContrastFailures` returns `[]` (owner: `tokens`; plan 394 candidate)
+`[ ]` Cross-team: `primitives` paints a clipped ButtonGroup's focus ring as an
+inset border in `ring` on the button's own fill (`core/style.ts`
+`clippedFocusRingStyle`, `Button.tsx`, `ButtonGroup.tsx`), and `ring` equals
+`primary` in seven shipped sets — identity dark, both AAA sets, macOS light,
+Linux light and dark, Windows light and dark — so a focused primary button in an
+attached group has **1.000:1** and no focus indicator; paint it with the
+family's foreground (the DatePicker today-ring precedent) or keep the outer
+shadow, then the tokens contract can hold `ring` on the filled families at the
+boundary floor (owner: `primitives`; found while auditing the contrast contract
+for plan 393)
 
 ## Phase C — Tier 1–2 components
 

@@ -586,7 +586,8 @@ describe("themeContrastFailures", () => {
       },
     });
     const failures = themeContrastFailures(invisible).filter(
-      ({ foreground }) => foreground === "skeleton",
+      ({ foreground, opacity }) =>
+        foreground === "skeleton" && opacity === undefined,
     );
 
     expect(
@@ -609,6 +610,15 @@ describe("themeContrastFailures", () => {
     expect(
       failures.find(({ background }) => background === "muted")?.ratio,
     ).toBeLessThan(1.05);
+    // The pulse's dim frame is reported on the same surfaces, with the fraction.
+    expect(
+      themeContrastFailures(invisible)
+        .filter(
+          ({ foreground, opacity }) =>
+            foreground === "skeleton" && opacity !== undefined,
+        )
+        .map(({ background }) => background),
+    ).toEqual(["background", "card", "popover", "muted"]);
   });
 
   it("reports an invisible divider at the level it declares", () => {

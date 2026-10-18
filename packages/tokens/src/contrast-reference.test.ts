@@ -8,7 +8,7 @@
  * `@example` fences and `docs.test.ts` the Markdown pages, so nothing read this
  * prose while it shipped to the API reference.
  *
- * Each case fails on the pre-fix paragraph: it names only one of the nine lists,
+ * Each case fails on the pre-fix paragraph: it names only one of the ten lists,
  * lists no family index and repeats a count. `node:fs` is deliberate, as in the
  * other tree-local documentation guards.
  */
@@ -40,6 +40,7 @@ const appliedLists = [
   "selectionSoftWashPairs",
   "selectionFillPairs",
   "selectionFillWashPairs",
+  "skeletonPulsePairs",
   "overlayWashPairs",
 ] as const;
 

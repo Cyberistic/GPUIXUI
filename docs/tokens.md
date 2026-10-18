@@ -77,7 +77,7 @@ missing here is not public.
 | `BorderWidth` | Divider and focus-ring thickness. |
 | `BoxShadow` | The runtime's five-field shadow; `elevationShadow` returns one. |
 | `ColorFailure` | A colour role whose value is not a hex colour the token helpers parse. |
-| `ContrastFailure` | One documented pair a theme misses, with its floor and ratio. |
+| `ContrastFailure` | One documented pair a theme misses, with its floor and ratio, plus the wash or the opacity when the pair is composited. |
 | `ContrastPair` | A `[foreground, background, pairClass]` contract row. |
 | `ContrastPairClass` | The floor class a pair is held to. |
 | `ControlSize` | `"sm"`, `"md"` or `"lg"`, derived from `controlSizes`. |
@@ -243,7 +243,7 @@ A runnable example lives in
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#6E7787` | `#A1A9B7` | disabled text, held to the `inactive` floor |
-| `skeleton` | `#CBD1DB` | `#3D4552` | loading placeholder |
+| `skeleton` | `#CBD1DB` | `#434C5A` | loading placeholder |
 | `track` | `#DBDFE5` | `#323945` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#191D25` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
@@ -1952,7 +1952,16 @@ placeholder row has no designed edge to keep its shape if the fill matches. The
 audit found the placeholder was the `active` fill in the identity and
 high-contrast themes, so a pressed loading row erased the placeholder (1.000:1);
 the light and dark skeleton moved one ramp step away, and each dark platform
-style carries its own.
+style carries its own. A skeleton also pulses: the primitive paints the role at
+`skeletonPulseOpacity` (0.6) for half of every cycle, so the role is painted
+through an alpha on the same eight surfaces. `skeletonPulsePairs` composites
+that dim frame and `themeContrastFailures` reports it with the fraction as
+`opacity`, because an opaque pair cannot see a fade. The audit found identity
+dark at **1.008:1** on `selected` — its opaque pair was only 1.058:1, so the
+fade crossed the floor — and the dark skeleton moved a half-step to `#434C5A`,
+where the dim frame measures **1.074:1** and the opaque pair 1.179:1. The other
+seven surfaces are wider, and every other shipped set already cleared 1.05:1 at
+0.6 (the next tightest is 1.072:1), so no other value moves.
 Brand-toned text is checked on the eight surfaces a link paints —
 `background`, `card`, `popover`, `muted`, the `hover`/`active` washes and the
 `accent`/`selected` fills a selectable row paints — and on the four soft status

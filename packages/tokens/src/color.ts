@@ -354,7 +354,9 @@ export const lightColors = {
  * highlight stays visible (plan 091). The boundary is a half-step lighter than
  * plan 084 left it, so a checkbox or field inside an Alert or Toast keeps its
  * edge on all four soft status fills (plan 092). The skeleton is one ramp step
- * lighter than the pressed wash so a loading row never erases it (plan 094).
+ * lighter than the pressed wash so a loading row never erases it (plan 094), and
+ * a half-step further because its pulse paints the role at 60% for half of every
+ * cycle (plan 393).
  * The filled-control hover and pressed steps lighten away from the canvas
  * (plan 097). `disabledForeground` is neutral 400 — one step dimmer than the
  * neutral-300 `mutedForeground` — because the lightest dark platform wash needs
@@ -429,7 +431,7 @@ export const darkColors = {
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],
   disabledForeground: palette.neutral[400],
-  skeleton: palette.neutral[700],
+  skeleton: "#434C5A",
   track: "#323945",
   scrollbar: palette.neutral[700],
   shadow: "#000000",

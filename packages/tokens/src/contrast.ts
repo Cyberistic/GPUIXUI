@@ -8,7 +8,8 @@
  * the documented contract and the tests that enforce it cannot drift.
  */
 
-import { colorRoles, isHexColor, type ThemeColors } from "./color.js";
+import { alpha, colorRoles, isHexColor, type ThemeColors } from "./color.js";
+import { skeletonPulseOpacity } from "./motion.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
@@ -95,6 +96,16 @@ const surfacePairs: readonly ContrastPair[] = [
     (background): ContrastPair => ["skeleton", background, "surface"],
   ),
 ];
+
+/**
+ * The dim frame of a loading pulse. A `Skeleton` alternates the role with
+ * `skeletonPulseOpacity` of it, so half of every cycle is the role composited
+ * over the surface behind it. Measured as a composite, like the selection wash
+ * and the modal scrim: an opaque pair cannot see a fade.
+ */
+export const skeletonPulsePairs: readonly ContrastPair[] = skeletonSurfaces.map(
+  (background): ContrastPair => ["skeleton", background, "surface"],
+);
 
 /**
  * The surfaces a value indicator's unfilled groove sits on. A progress bar,
@@ -1089,6 +1100,8 @@ export interface ContrastFailure {
   readonly floor: number;
   /** The measured ratio; `NaN` when a role is not an opaque `#RRGGBB`. */
   readonly ratio: number;
+  /** The fraction a role was composited at, when the paint was a fade. */
+  readonly opacity?: number;
 }
 
 /**
@@ -1302,6 +1315,41 @@ const washVisibilityFailures = (
   });
 
 /**
+ * A role painted at a fraction of its own value — the dim frame of a pulse. The
+ * pair names the role the color was derived from and the fraction, so the
+ * failure is distinguishable from the opaque pair it shares a role and surface
+ * with.
+ */
+const fadedVisibilityFailures = (
+  pairs: readonly ContrastPair[],
+  role: keyof ThemeColors,
+  opacity: number,
+  theme: Theme,
+  floors: Readonly<Record<ContrastPairClass, number>>,
+): ReadonlyArray<ContrastFailure> =>
+  pairs.flatMap(([, background, pairClass]) => {
+    const painted = compositeOver(
+      alpha(theme.colors[role], opacity),
+      theme.colors[background],
+    );
+    const ratio = contrastRatio(painted, theme.colors[background]);
+    const floor = floors[pairClass];
+    return ratio >= floor
+      ? []
+      : [
+          {
+            foreground: role,
+            background,
+            wash: role,
+            opacity,
+            pairClass,
+            floor,
+            ratio,
+          },
+        ];
+  });
+
+/**
  * Every documented pair a theme misses.
  *
  * The check is the union of the published pair lists, so it is total over the
@@ -1318,11 +1366,15 @@ const washVisibilityFailures = (
  * - `selectionFillPairs` and `selectionFillWashPairs` — the inverse
  *   `selectionOnFill` veil on every filled family; the list derives from
  *   `filledControlFamilies`, so `accent` is included.
+ * - `skeletonPulsePairs` — the loading pulse's dim frame, the `skeleton` role
+ *   composited at `skeletonPulseOpacity` over every surface a placeholder sits
+ *   on; a failure names the role and the fraction.
  * - `overlayWashPairs` — the modal scrim composited over every surface a window
  *   shows.
  *
  * A missed pair is returned with both roles, the class whose floor it missed,
- * the floor and the measured ratio; a pair through a wash also names the wash.
+ * the floor and the measured ratio; a pair through a wash also names the wash,
+ * and a pair through a fade names the fraction.
  * The level defaults to the one the theme declares, so a high-contrast theme is
  * checked against its own floors. An empty array is the library's guarantee,
  * and a role whose value the token maths cannot parse is reported as `NaN` by
@@ -1381,6 +1433,13 @@ export function themeContrastFailures(
     ...washVisibilityFailures(
       selectionFillWashPairs,
       "selectionOnFill",
+      theme,
+      floors,
+    ),
+    ...fadedVisibilityFailures(
+      skeletonPulsePairs,
+      "skeleton",
+      skeletonPulseOpacity,
       theme,
       floors,
     ),

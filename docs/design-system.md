@@ -305,7 +305,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | ----- | ---------------- |
 | hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on `background`, `card`, `popover` and the quiet `muted` panel it paints on; a ghost or outline control paints no fill at rest, so its ladder is `surface` → `hover` → `active`; filled actions step to their family's `xHover` — opaque, contrast-checked, one 1.05:1 step from the resting fill — instead of compositing an alpha fill |
 | pressed | `active` wash on ghost and subtle surfaces, held to the same floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step from the `hover` that precedes it (`washStepPairs`); filled actions step to `xActive`, one 1.05:1 step past their hover |
-| loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on `background`, `card`, `popover`, the `muted` panel and the four row washes it fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
+| loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on `background`, `card`, `popover`, the `muted` panel and the four row washes it fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the primitive paints the role at `skeletonPulseOpacity` (0.6) for half of every cycle, so `skeletonPulsePairs` holds that dim frame to the same floor on the same surfaces and reports it with the fraction as `opacity`; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground`: the fill is held to the perceivability floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step past the `accent` wash a selectable row hovers with (`selectionStepPairs`); the label is held on `selected`, the `hover`/`active` pointer washes and the `accent` wash; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
 | link | `primaryText` on `background`, `card`, `popover`, the `muted` panel, the `hover`/`active` washes a link paints, the `accent`/`selected` fills a selectable row paints under it and the four soft status fills a link in a status panel sits on; `primary` is a fill and is never the colour of text |
 | disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text, on the `disabled` fill, `background`, `card`, `popover`, the `muted` panel, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
@@ -456,7 +456,7 @@ Colour is checked, not assumed. The token suite enforces:
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
-| loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes | 1.05:1 | 1.05:1 |
+| loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes, and its dim pulse frame at `skeletonPulseOpacity` on the same eight surfaces (`skeletonPulsePairs`) | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive` and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
 
@@ -503,6 +503,13 @@ from `contrastPairs`, so the comparison follows the pair lists. A theme that
 raises `disabledForeground` to body strength passes every floor and still makes
 an unavailable control look enabled; this is the check that reports it, and every
 shipped set clears it — 1.274:1, 1.349:1 and 1.440:1 at the tightest.
+
+A role painted through an alpha needs the composited pair, not only the opaque
+one. The loading skeleton's dim frame is `skeleton` at `skeletonPulseOpacity`
+(0.6), and identity dark measured **1.008:1** on `selected` — the placeholder
+vanished for half of every pulse — until plan `393` moved the dark skeleton a
+half-step; `skeletonPulsePairs` holds the frame on the same eight surfaces and
+reports the fraction as `opacity`.
 
 A fill is not automatically a surface. A solid role painted as a bar, a glyph or
 a dot — a progress segment, a slider fill, a slider thumb's ring, a rating star,

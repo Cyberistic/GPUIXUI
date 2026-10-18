@@ -84,6 +84,7 @@ import {
   stateFillRoles,
   stateFillSurfacePairs,
   stateFillSurfaces,
+  skeletonPulsePairs,
   textTiers,
   toastTonePairs,
   trackMarkPairs,
@@ -97,7 +98,7 @@ import {
 } from "./elevation.js";
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
-import { motion } from "./motion.js";
+import { motion, skeletonPulseOpacity } from "./motion.js";
 import {
   getPlatformRecipeTheme,
   isPlatformRecipeName,
@@ -1634,6 +1635,33 @@ describe("docs/tokens.md contrast surfaces", () => {
     ]);
   });
 
+  it("states the loading pulse's dim frame from the package", () => {
+    ["skeletonPulseOpacity", "skeletonPulsePairs"].forEach((name) => {
+      expect(markdown, name).toContain(name);
+    });
+
+    const dim = (color: string, surface: string): number =>
+      contrastRatio(
+        compositeOver(alpha(color, skeletonPulseOpacity), surface),
+        surface,
+      );
+    const preFix = "#3D4552";
+    const figures = [
+      contrastRatio(preFix, darkColors.selected),
+      dim(preFix, darkColors.selected),
+      contrastRatio(darkColors.skeleton, darkColors.selected),
+      dim(darkColors.skeleton, darkColors.selected),
+    ];
+    figures.forEach((figure) => {
+      expect(markdownProse, figure.toFixed(3)).toContain(
+        `${figure.toFixed(3)}:1`,
+      );
+    });
+    expect(skeletonPulsePairs).toHaveLength(
+      contrastPairs.filter(([foreground]) => foreground === "skeleton").length,
+    );
+  });
+
   it("names the skeleton and the owned tint a real platform style carries", () => {
     const real = platformNames.filter((platform) => platform !== "default");
     real.forEach((platform) => {
@@ -1802,7 +1830,7 @@ describe("docs/design-system.md", () => {
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
-      `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes, and its dim pulse frame at \`skeletonPulseOpacity\` on the same eight surfaces (\`skeletonPulsePairs\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`selected\` fill an outline action sits on in a selected row, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {

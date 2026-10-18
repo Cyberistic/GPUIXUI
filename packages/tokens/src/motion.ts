@@ -66,6 +66,17 @@ export const motion: Motion = {
   },
 };
 
+/**
+ * The opacity the dim frame of a pulse paints at — a skeleton's second step.
+ *
+ * `Skeleton` alternates between the role and this fraction of it, so the role is
+ * painted through an alpha for half of every cycle. The contrast contract
+ * composites it at this value (`skeletonPulsePairs`), and the primitive reads
+ * the same constant, so the number has one owner. It is a runtime constant, not
+ * a theme token: every theme pulses the same way.
+ */
+export const skeletonPulseOpacity = 0.6;
+
 /** A duration level. `ease` is not a duration. */
 export type MotionLevel = Exclude<keyof Motion, "ease">;
 

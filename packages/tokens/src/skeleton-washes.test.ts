@@ -11,6 +11,12 @@
  * hover (`list.tsx`), so a placeholder row in a selectable list can sit on it.
  * The skeleton has no designed edge to fall back on, so an edited theme could
  * erase it while the checker returned `[]`.
+ *
+ * Plan 393 moves the identity dark skeleton a half-step further: the primitive
+ * paints it at `skeletonPulseOpacity` (0.6) for half of every cycle, and the
+ * opaque pair on `selected` was only 1.058:1, so the dim frame was 1.008:1.
+ * `skeleton-pulse.test.ts` holds the composited frame; this suite keeps the
+ * opaque pairs.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -70,7 +76,9 @@ describe("the loading skeleton on a row surface", () => {
     const dark = getTheme("dark").colors;
 
     expect(light.skeleton).toBe(palette.neutral[300]);
-    expect(dark.skeleton).toBe(palette.neutral[700]);
+    // A half-step above neutral 700: the pulse's 60% frame has to stay visible
+    // on the selected fill (plan 393).
+    expect(dark.skeleton).toBe("#434C5A");
     expect(contrastRatio(palette.neutral[200], light.active)).toBeLessThan(
       contrastFloors.default.surface,
     );
@@ -111,7 +119,8 @@ describe("the loading skeleton on a row surface", () => {
     );
 
     const pressed = failures.filter(
-      ({ background }) => background === "active",
+      ({ background, opacity }) =>
+        background === "active" && opacity === undefined,
     );
     expect(
       pressed.map(({ background, pairClass, floor }) => ({
