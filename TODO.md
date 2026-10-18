@@ -139,6 +139,31 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `ListItem` + `aria-selected`. Suite `87 → 88` (`2920 → 2990`), live
       `38 → 39` (`715 → 726`), exit `0`, `wizard=verified`; 24 model unit tests
       (207 → 231); six mutation + one reverse proof (plan `386` §9.3).
+`[x]` Probe **editable grid cells and a row menu** per plan `387`:
+      `grid-cell-editing` (57 checks) and `live-grid-cell-editing` (36): a
+      second press on a cell mounts and focuses a native editor inside a
+      `<virtual-list>`; typing is a draft and Enter commits. **The editor's keys
+      bubble to the grid container**, so navigation needs an `editing` guard
+      (without it a Down moves the selection). A focused editing row **stays
+      painted** after the list scrolls past it, so the probe commits on leave
+      (`commits 2 → last=leave`) rather than letting the user type into an
+      invisible field. A row-anchored menu paints unclipped at the action's
+      bottom-left (±1 px), takes focus, returns it on Escape and closes on any
+      anchor change because its window point cannot follow a scrolled row. A
+      sort commits the draft and keeps it with the row id. Suite `88 → 89`
+      (`2990 → 3047`), live `39 → 40` (`726 → 762`), exit `0`,
+      `cell-editing=verified`; six mutation + one reverse proof (plan `387`
+      §9.3); 33 model unit tests (231 → 264).
+`[x]` Correct the unearned **File / folder selection = verified** verdict in
+      `COMPONENTS.md`: no scenario in `apps/` or `packages/` calls
+      `promptForPaths`, the picker is a blocking OS dialog with no automation
+      verb, and `TestRenderer.promptForPaths` forwards to GPUI's
+      `cx.prompt_for_paths`, which waits on the platform panel. The row now
+      reads docs-only, with the reason inline.
+`[ ]` Playground: prove or bound the platform path picker
+      (`promptForPaths`) — a manual macOS run (cancel and one selection) with
+      the outcome recorded, or keep it docs-only with the automation gap
+      recorded. It cannot run unattended.
 `[ ]` **packages/components** (no owner yet): implement a notification centre
       from the contract plan `381` measured — a bell with a derived unread badge
       and an accessible label, a non-modal `align="end"` panel, grouped

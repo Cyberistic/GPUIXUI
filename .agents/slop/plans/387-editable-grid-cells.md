@@ -1,6 +1,6 @@
 # 387 — Tier 3 feasibility: editable cells and row menus inside a virtualized grid
 
-**Status:** planned 2026-10-18 · **Phase:** D · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `152`, `158`, `164`, `166`, `188`,
@@ -403,7 +403,7 @@ reverse proof in §9.3 (temporary edit → `--only grid-cell-editing` → revert
 | # | Mutation | Must fail with |
 | - | -------- | -------------- |
 | M1 | the grid's `onKeyDown` drops the `editing` guard | "an editing cell keeps grid selection still" (`sel=1`) |
-| M2 | `commit` writes to the row at the edited **index** instead of its id | "a committed edit follows its row id" (the wrong row paints `item-01z`) |
+| M2 | `activate` opens the editor on the first press | "a first press selects the row" (`last=edit`) |
 | M3 | `endEditingOutside` always returns its input | "leaving the window ends the edit" (`editing=0`, `commits` unchanged) |
 | M4 | `openMenu` positions from the row instead of the action | "the panel opens below its action" (the y offset is off by the row height) |
 | M5 | a scroll does not close an open panel | "a scroll closes the row menu" (`panel` still set) |
@@ -457,41 +457,97 @@ and the committed text missing.
 
 ## 9. Measured results
 
-<!-- Executor: fill after the run. -->
-
 Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
 binding (ADR 0003).
 
 | Scenario | Checks | Result |
 | -------- | ------ | ------ |
-| `grid-cell-editing` (headless) | — | — |
-| `live-grid-cell-editing` | — | — |
+| `grid-cell-editing` (headless) | 57 | pass — suite `88 → 89`, `2990 → 3047`, exit `0`, `cell-editing=verified` |
+| `live-grid-cell-editing` | 36 | pass — live `39 → 40`, `726 → 762`, exit `0`, one screenshot |
 
-Unit tests: `grid-editor-model.test.ts` adds —; the playground suite is
-231 → —.
+Unit tests: `grid-editor-model.test.ts` adds 33; the playground suite is
+231 → **264** tests in 22 files.
 
 ### 9.1 Facts that changed the plan
 
-<!-- Filled from the run. -->
+- **`autoFocus` focuses the conditionally mounted editor inside a virtual row**,
+  headless and live. The planned `useLayoutEffect` + `focusElement` fallback was
+  not needed.
+- **A second press starts the edit.** The first press only selects (`last=select`);
+  0.10.0 delivers no double click, so the probe's affordance is "press the
+  selected row again", and the model exposes it as `activate`.
+- **Editor keystrokes bubble to the grid container**: the `keys` counter grows
+  while the caret stays in the editor. The guard must be a state check
+  (`editing`), not an event stop.
+- **The still-editing row stays painted after the window moves past it.** With
+  the leave rule disabled (M3), the first failing check was *"the edited row left
+  the window"* — `ge-row-0` still had bounds because it held focus, matching
+  plan `158`. The editor also kept focus and keys; committing on leave is what
+  makes "left the window" observable at all.
+- **A programmatic `scrollToItem` fires no range event live.** The headless list
+  reported the new anchor, so the headless steps can scroll the host directly;
+  the live twin has to click the app-owned `jump`, which mirrors the anchor and
+  applies the leave/close rules (plan `338`'s rule, re-measured).
+- **The anchored menu is not clipped by the list.** It painted at the action's
+  bottom-left within 1 px from a child of the virtual row and took focus; the
+  planned sibling-of-the-list fallback was not needed.
+- **The menu's captured point does not follow a scroll.** The panel is a child
+  of the row but its `position` is a window point, so a scroll leaves it at the
+  stale place. Closing on any anchor change is the measured contract; M5 proves
+  the check.
+- **A commit writes by row id, not by index.** After the descending sort the
+  edited row's text follows its id (`ge-value-1` reads `item-01z`) even though
+  its index changed; the model's `finish` writes by id.
+- The input's painted text is the **draft**, so "the committed value is
+  unchanged" is asserted through a preview outside the list, not the row (the
+  row's value text unmounts while editing).
 
 ### 9.2 The measured contract
 
-<!-- Filled from the run. -->
+| Fact | Value |
+| ---- | ----- |
+| baseline | `editing=none draft=- commits=0 rows=60 sel=none panel=none keys=0 last=start anchor=0 sort=asc` |
+| first press / second press | `sel=0 last=select`, then `editing=0 draft=item-00 last=edit`; focus `ge-editor-0`; the editor is `TextInput` with the committed value |
+| typing | `draft=beta commits=0`; the preview stays `item-00`; the editor paints `beta` |
+| guard | keys counted at the grid container; `sel` stays `0`; focus stays `ge-editor-0` |
+| Enter | `editing=none commits=1 last=commit`; the row and preview read `beta` |
+| grid keys | with no editor, `down`/`up` move `sel` (`1 → 2 → 1`) |
+| leave | `scrollToItem(40)`: anchor `40`, row 0 unpainted, `editing=none commits=2 last=leave`; scrolling back paints `betax` |
+| menu | `panel=2`; box at the action's left edge and bottom within 1 px; focus `ge-menu-panel`; `Group:Row actions` |
+| dismissal | Escape → `panel=none last=escape`, unpainted, focus `ge-menu-2`; outside press → `last=outside`, unpainted, no focus return |
+| menu actions | Rename → `editing=2 panel=none last=rename`, focus `ge-editor-2`; Escape → `last=cancel`; Delete → `rows=59 last=delete`, row 3 unpainted, row 2 painted |
+| scroll with a menu | `panel=none last=scroll`, unpainted |
+| sort | `editing=none commits=3 last=sort`, `sort=desc`, row 59 paints first, and `ge-value-1` reads `item-01z` after a jump |
+| live | the typed draft, Enter commit, jump-leave commit, menu placement/focus/Escape, rename focus and Escape cancel all hold |
 
 ### 9.3 Mutation proofs
 
+Each mutation was applied, built, run with `--only grid-cell-editing`, and
+reverted:
+
 | # | Mutation | Measured failure |
 | - | -------- | ---------------- |
-| M1 | — | — |
-| M2 | — | — |
-| M3 | — | — |
-| M4 | — | — |
-| M5 | — | — |
-| M6 | — | — |
+| M1 | the grid's `onKeyDown` drops the `editing` guard | `an editing cell keeps grid selection still` — `sel=1` |
+| M2 | `activate` opens the editor on the first press | `a first press selects the row` — `last=edit` |
+| M3 | `endEditingOutside` always returns its input | `the edited row left the window` — the focused row kept painted bounds |
+| M4 | `openMenu` positions at the action's top instead of its bottom | `the menu opens below its action` — 24 px short |
+| M5 | `closePanel` ignores the `scroll` reason | `a scroll closes the row menu` — `panel=4` |
+| M6 | `deleteRow` removes row 59 instead of `id` | `the deleted row unpaints` — row 3 still painted |
+| R | `sorting` closes the menu and flips the order without committing | `a sort ends the edit and commits it` — `editing=1 commits=2` |
 
 ### 9.4 Limits recorded
 
-<!-- Filled from the run. -->
+- No double click (0.10.0 has none), no multi-cell range selection, no
+  per-cell validation, no undo and no persisted edit.
+- The probe edits the **name** cell only; a numeric cell would need its own
+  parse/clamp rules, which the shipped `NumberField` already covers.
+- A right-click context menu and column virtualization stay with plans `164`
+  and `185`; this probe uses a left-click row action.
+- The live twin cannot read the a11y dump or styles, so the `Group`/`TextInput`
+  and painted-draft checks are headless-only.
+- The list's overdraw is not used as the visible window: `visibleIds` counts the
+  exact viewport, because "is the editing row visible" is a different question
+  from "is it close to the window".
 
 ## 10. Acceptance
 

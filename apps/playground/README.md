@@ -33,7 +33,7 @@ collapsible-height probe (`collapsible-height`), the nested-layer probe
 toolbar probe (`data-toolbar`), the data-grid column probes
 (`data-grid-columns`, `column-config`), the notification-centre probe
 (`notification-centre`), the crop-area probe (`crop-area`), the multi-step-form
-probe (`wizard-flow`), the shell
+probe (`wizard-flow`), the editable-grid probe (`grid-cell-editing`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -77,7 +77,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (84/84 green); -> 2 on a host with no binding
+# -> 0 here (89/89 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -783,6 +783,38 @@ state (caret, undo); hide mode keeps the subtree but native focus on a hidden
 editor was not measured. No async validation, server submit or persisted
 progress. The live twin cannot read the a11y dump or styles, so the chip and
 hidden-subtree assertions are headless-only.
+
+## Editable grid cells and row menus (plan `387`)
+
+`grid-cell-editing` puts the two things a data grid needs beyond sorting and
+panning inside one `<virtual-list>`: a native `<input>` in a row, and a row
+action menu. 57 checks; live twin `live-grid-cell-editing` (36 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| starting an edit | a first press selects the row (`last=select`); a **second** press mounts the editor and it takes native focus (`ge-editor-0`). 0.10.0 has no double click, so the second press is the probe's edit affordance |
+| the draft | typing changes only the draft: `commits=0`, the committed value (a preview outside the list) stays `item-00`, and the editor paints its own text |
+| committing | Enter arrives as the input's `onSubmit`: `editing=none commits=1 last=commit`, the row and the preview repaint `beta` |
+| key routing | the editor's keystrokes **do** bubble to the grid container's `onKeyDown` (`keys` grows); without an `editing` guard a `down` moves the grid selection, with the guard the selection stays and the caret key keeps focus |
+| grid navigation | with no editor open, a cell press selects and `down`/`up` move the selection in the rendered order |
+| leaving the window | a focused editing row **stays painted** after the list scrolls past it (the plan-158 rule), and the editor keeps focus and keys — so the grid commits on leave: `editing=none commits=2 last=leave`, and the value survives the scroll back |
+| the row menu | an `<anchored position>` child of the virtual row paints at the action's left edge and below it within 1 px, is unclipped by the list, takes native focus and is `Group:Row actions` |
+| dismissing | Escape closes it (`panel=none last=escape`) and returns focus to the row action; an outside press closes it (`last=outside`) and does not return focus |
+| menu actions | Rename closes the menu and opens that row's editor with focus (`last=rename`); Delete removes exactly that row (`rows=60 → 59`), unpaints it and leaves its neighbour; Escape in the editor cancels |
+| scrolling | the captured point is a **window** point, so a scroll leaves an open menu pointing at the row's old place; the probe closes any menu on an anchor change (`last=scroll`) |
+| a row-set change | a sort commits the open draft, ends the edit (`last=sort`), flips the order and keeps the committed text with its **row id** after the reorder |
+| live | the same path holds in a real window; the app-owned jump (not the host's `scrollToItem`) is what applies the leave rule, because a programmatic scroll fires no range event live (plan `338`'s rule) |
+
+**Load-bearing lessons.** A grid cannot let its navigation handler see the
+editor's keys unguarded — the keys bubble, and the guard is a state check, not
+an event stop. And an edit must end when its row leaves the viewport: the
+focused row stays painted and keeps accepting keys, so otherwise the user types
+into a field they cannot see. The row menu's window point is the other trap: an
+anchored child does not follow a scrolling virtual row.
+
+**Limits:** no double click, no multi-cell range, no validation, no undo and no
+persisted edit; a right-click context menu and column virtualization stay with
+plans `164` and `185`.
 
 ## Application chrome (plan `350`)
 
