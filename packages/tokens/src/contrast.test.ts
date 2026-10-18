@@ -167,6 +167,7 @@ import {
   contrastPairs,
   contrastRatio,
   controlBoundarySoftPairs,
+  dialogSurfacePairs,
   elevationSurfaces,
   extendTheme,
   getTheme,
@@ -263,6 +264,7 @@ const publishedPairLists: ReadonlyArray<
   ["selectionFillPairs", selectionFillPairs],
   ["selectionFillWashPairs", selectionFillWashPairs],
   ["overlayWashPairs", overlayWashPairs],
+  ["dialogSurfacePairs", dialogSurfacePairs],
 ];
 
 describe("published pair lists", () => {

@@ -280,8 +280,8 @@ light wash, its own edge and elevation instead of a darker backdrop. Its
 elevation is light too: `highContrastDarkElevation` applies 10%, 14% and 18% of
 the `#FFFFFF` tint, because a black tint measured **1.000:1** at every level on
 that canvas while the AAA modal claims elevation. `elevationSurfaces` is the
-four surfaces a raised element floats over, and every defined level is measured
-composited over them, so the tightest shipped pair is **1.061:1** (identity
+four surfaces a raised card, menu or popover floats over, and every defined level
+is measured composited over them, so the tightest shipped pair is **1.061:1** (identity
 dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**. At high
 contrast a platform style contributes a level's geometry and the AAA set keeps
 the opacity its tint was designed with; a dark-mode platform's 40–80% over the
@@ -292,6 +292,24 @@ geometry and alpha as `sm`, `md` and `lg`, because `elevationShadow` will
 paint it.
 Dark shadows are darker and more opaque because contrast between surfaces is
 lower.
+
+A raised element normally floats over the page, which `elevationSurfaces` names.
+A modal is the exception: its face and its shadow sit on the scrim, so the face
+is measured through it — `dialogSurfacePairs` composites `overlay` over the six
+page layout surfaces (`background`, `card`, `muted`, `input`, `selected`,
+`popover`) and holds `popover` to the 1.05:1 perceivability floor, because a
+theme whose scrim meets its own floating surface ships a dialog with no face and
+only a 1px edge. The tightest shipped pair is **1.210:1** (`selected`), so no
+colour moves. The shadow is not a modal separation in the default dark sets and
+cannot be made one: on the identity dark scrim (`#060709`) the `lg` tint
+paints **1.035:1**, and pure black over the same scrim reaches only
+**1.042:1**, under the floor. Over a bright action patch the face can also meet
+the scrim (**1.021:1** on macOS dark's `primary`); the dialog's edge carries
+that patch (**1.495:1**) and the scrim's own perceivability there is measured.
+No single `popover` value leaves the band the scrim compresses the page into:
+lightening the face fails the soft status fills it sits beside, and raising the
+scrim to 70% clears `primary` (**1.077:1**) but collapses `destructive` to
+**1.019:1**.
 
 Motion is a scale beside elevation, not a component detail: `step` (a spinner's
 frame) and `pulse` (a skeleton's half cycle) drive interval indicators, and
@@ -499,12 +517,13 @@ Colour is checked, not assumed. The token suite enforces:
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes, and its dim pulse frame at `skeletonPulseOpacity` on the same eight surfaces (`skeletonPulsePairs`) | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
+| dialog face (`popover` over the composited `overlay` on the six page layout surfaces — `background`/`card`/`muted`/`input`/`selected`/`popover`, `dialogSurfacePairs`) | 1.05:1 | 1.05:1 |
 | elevation shadow (each defined level of `sm`/`md`/`lg` — the reserved `overlay` is empty — painted on `background`/`card`/`muted`/`popover`, the surfaces `elevationSurfaces` names) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite. The elevation shadow is
 measured composited, like the scrim: each defined level's painted shadow over the
-four surfaces a raised element floats over, because a shadow that paints its own
+four surfaces a raised card, menu or popover floats over, because a shadow that paints its own
 surface is not a raised surface. The AAA dark set measured **1.000:1** at every
 level until plan `505` gave it a light tint. The modal scrim is
 measured composited rather than as a value: `overlay` over the fifteen surfaces
@@ -524,6 +543,16 @@ Alert in a sidebar is a real composition, and the platform light variants change
 `muted` while inheriting the identity's pastel tints — macOS, Linux and Windows
 light measured 1.036:1, 1.023:1 and 1.043:1 until plan `300` moved the four light
 tints one small step deeper.
+The dialog's own face is measured on that scrim: `dialogSurfacePairs` composites
+`overlay` over the six page layout surfaces and holds `popover` to 1.05:1, because
+a theme whose scrim meets its own floating surface leaves a dialog with only a
+1px edge (tightest shipped 1.210:1 on `selected`). The shadow is not a
+separation there and cannot be: on the identity dark scrim the `lg` tint paints
+1.035:1 and pure black reaches only 1.042:1. Over a bright action patch the face
+meets the scrim (macOS dark 1.021:1 on `primary`), where the dialog's `border`
+edge carries the silhouette at 1.495:1; no `popover` value leaves that band —
+lightening the face fails the soft status fills on `popover`, and raising the
+scrim to 70% clears `primary` (1.077:1) but collapses `destructive` to 1.019:1.
 The inactive state is measured too, and it is the one floor that is **not** a
 WCAG requirement: 1.4.3 exempts inactive components, but an unavailable control
 is still read — a reader has to find out what they cannot do — so the library

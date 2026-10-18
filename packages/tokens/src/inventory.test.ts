@@ -22,6 +22,7 @@ import { colorRoles } from "./color.js";
 import {
   contrastFloors,
   contrastPairs,
+  dialogSurfacePairs,
   overlayWashPairs,
   selectionPairs,
   selectionSoftPairs,
@@ -98,6 +99,7 @@ describe("COMPONENTS.md design-system rows", () => {
       `${selectionWashPairs.length} wash pairs`,
       `${selectionSoftWashPairs.length} soft wash pairs`,
       `${overlayWashPairs.length} scrim pairs`,
+      `${dialogSurfacePairs.length} dialog-face pairs`,
     ].forEach((phrase) => {
       expect(contrast, phrase).toContain(phrase);
     });

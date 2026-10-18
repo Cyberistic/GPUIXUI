@@ -99,6 +99,7 @@ import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
+  dialogSurfacePairs,
   elevationSurfaces,
   inactivePairs,
   inactiveSurfaces,
@@ -530,6 +531,64 @@ describe("docs/design-system.md current figures", () => {
     expect(designSystem).toContain(
       `does not clear 7:1 through the AAA light wash (${muted}:1 on the \`muted\` panel and ${active}:1 on \`active\`)`,
     );
+  });
+
+  it("quotes the dialog face's tightest pair and the shadow cap", () => {
+    const tightest = shippedThemes
+      .flatMap(({ theme }) =>
+        dialogSurfacePairs.map(([, surface]) => ({
+          name: theme.name,
+          surface,
+          ratio: contrastRatio(
+            theme.colors.popover,
+            compositeOver(theme.colors.overlay, theme.colors[surface]),
+          ),
+        })),
+      )
+      .reduce((worst, current) =>
+        current.ratio < worst.ratio ? current : worst,
+      );
+
+    const dark = getTheme("dark");
+    const scrim = compositeOver(dark.colors.overlay, dark.colors.background);
+    const shadow = elevationShadow(dark, "lg");
+    const painted =
+      shadow === undefined
+        ? Number.NaN
+        : contrastRatio(compositeOver(shadow.color, scrim), scrim);
+    const cap = contrastRatio("#000000", scrim);
+
+    expect([tightest.name, tightest.surface]).toEqual(["Dark", "selected"]);
+    expect(scrim).toBe("#060709");
+    expect(
+      [tightest.ratio, painted, cap].map((ratio) => ratio.toFixed(3)),
+    ).toEqual(["1.210", "1.035", "1.042"]);
+    [tightest.ratio, painted, cap].forEach((ratio) =>
+      expect(designSystem).toContain(`${ratio.toFixed(3)}:1`),
+    );
+  });
+
+  it("quotes the content patch and the scrim trade", () => {
+    const macosDark = getPlatformTheme("darwin", "dark");
+    const patch = compositeOver(
+      macosDark.colors.overlay,
+      macosDark.colors.primary,
+    );
+    const raised = extendTheme(macosDark, { colors: { overlay: "#000000B3" } });
+    const face = (surface: "primary" | "destructive"): number =>
+      contrastRatio(
+        raised.colors.popover,
+        compositeOver(raised.colors.overlay, raised.colors[surface]),
+      );
+    const figures = [
+      contrastRatio(macosDark.colors.popover, patch),
+      contrastRatio(macosDark.colors.border, patch),
+      face("primary"),
+      face("destructive"),
+    ].map((ratio) => ratio.toFixed(3));
+
+    expect(figures).toEqual(["1.021", "1.495", "1.077", "1.019"]);
+    figures.forEach((figure) => expect(designSystem).toContain(`${figure}:1`));
   });
 });
 
@@ -2257,6 +2316,26 @@ describe("docs/design-system.md", () => {
     expect(row).toContain(
       `| ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
     );
+  });
+
+  it("names every layout surface in the dialog face's floor row", () => {
+    const row = tableRow("dialog face (");
+    expect(row).toContain("`dialogSurfacePairs`");
+    dialogSurfacePairs.forEach(([, surface]) => {
+      expect(row, surface).toContain(`\`${surface}\``);
+    });
+    expect(row).toContain(
+      `| ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+    );
+  });
+
+  it("names the dialog face on the scrim in the explanation", () => {
+    const explanation = designSystem.slice(
+      designSystem.indexOf("The dialog's own face is measured on that scrim"),
+      designSystem.indexOf("The inactive state is measured too"),
+    );
+    expect(explanation.length).toBeGreaterThan(0);
+    expect(explanation).toContain("`dialogSurfacePairs`");
   });
 
   it("names every surface in the modal scrim explanation", () => {

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 172/228
+`[x]` `[███████░░░]` 173/228
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1353,6 +1353,20 @@ wash moves to 14%, the Windows/XP/Aero wash to 33% (its soft `destructiveSoft`
 highlight still clears 1.071:1) and Linux dark's selected fill one step to
 `#27476A`, so the titles measure 7.144 / 7.389 / 7.164:1 with every wash
 perceivable and no light or high-contrast value moving (plan 506)
+`[x]` Hold the dialog's face on the scrim — `overlayWashPairs` measured the
+scrim against everything it covers, but nothing measured the element on it: a
+dialog, drawer or command palette paints `popover` over the scrim, so a theme
+whose `overlay` composites to its own `popover` shipped a dialog with no face and
+only a 1px edge while every check returned `[]`. The shadow cannot be that
+separation in the default dark sets — the identity dark `lg` tint paints
+**1.035:1** over the `#060709` scrim and pure black reaches only **1.042:1** —
+and the content fills are inside the band the scrim compresses the page into
+(macOS dark's face meets a scrimmed `primary` at **1.021:1**, where its `border`
+carries the silhouette at 1.495:1; raising the scrim to 70% clears `primary` at
+1.077:1 but collapses `destructive` to 1.019:1). `dialogSurfacePairs` measures
+`popover` over the composited `overlay` on the six page layout surfaces, every
+shipped set already clears 1.05:1 (1.210:1 at the tightest) and no colour moves
+(plan 507)
 
 ## Phase C — Tier 1–2 components
 

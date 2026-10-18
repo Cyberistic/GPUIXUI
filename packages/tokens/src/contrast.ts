@@ -1388,15 +1388,52 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The page layout a modal covers: the canvas, a card, the quiet panel, the
+ * field fill a form paints, the persistent `selected` fill a table or list keeps
+ * and the floating surface a nested dialog opens on. The scrim's perceivability
+ * and a dialog's face are both measured on this list.
+ */
+const layoutSurfaces = [
+  "background",
+  "card",
+  "muted",
+  "input",
+  "selected",
+  "popover",
+] as const;
+
+/**
+ * The content fills a window shows behind the scrim. The scrim's own
+ * perceivability is measured on them (`overlayWashPairs`), but a dialog's face
+ * is not: the four soft status fills sit in one narrow luminance band, so a face
+ * can and does meet the scrim over a bright action patch — macOS dark measures
+ * 1.0213:1 on `primary` — where the dialog's `border` edge carries the
+ * silhouette. No single `popover` value can leave that band: lightening the
+ * face breaks the soft fills it sits beside, and raising the scrim trades the
+ * `primary` patch for the `destructive` one (plan 507).
+ */
+const contentFillSurfaces = [
+  "primary",
+  "secondary",
+  "accent",
+  "destructive",
+  "softAction",
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
+] as const;
+
+/**
  * The surfaces a modal scrim covers. A dialog's scrim is painted across the
- * window, so everything the window shows is behind it: the base layout — the
- * canvas, a card, the quiet panel, the field fill a form paints and the
- * persistent `selected` fill a table or list keeps — the floating surface a
- * menu opens on, the resting fills of the actions on the page (`primary`,
- * `secondary`, `accent`, `destructive` and the soft status panel's `softAction`)
- * and the four soft status panels an Alert or Badge paints. A scrim that
- * composites to its own surface is an invisible modal backdrop, so each is held
- * to the `surface` floor.
+ * window, so everything the window shows is behind it: the page layout — the
+ * canvas, a card, the quiet panel, the field fill a form paints, the persistent
+ * `selected` fill a table or list keeps and the floating surface a menu opens
+ * on — the resting fills of the actions on the page (`primary`, `secondary`,
+ * `accent`, `destructive` and the soft status panel's `softAction`) and the four
+ * soft status panels an Alert or Badge paints. A scrim that composites to its
+ * own surface is an invisible modal backdrop, so each is held to the `surface`
+ * floor.
  *
  * The transient pointer states stay out: `hover`, `active` and the filled
  * families' `xHover`/`xActive` steps are gone by the time the pointer reaches
@@ -1410,29 +1447,39 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * still dims the layout the reader is looking at.
  */
 export const overlaySurfaces = [
-  "background",
-  "card",
-  "muted",
-  "input",
-  "selected",
-  "popover",
-  "primary",
-  "secondary",
-  "accent",
-  "destructive",
-  "softAction",
-  "infoSoft",
-  "successSoft",
-  "warningSoft",
-  "destructiveSoft",
+  ...layoutSurfaces,
+  ...contentFillSurfaces,
 ] as const;
 
 /**
- * The surfaces a raised element's shadow is painted over. A card (`sm`), a menu
- * or popover (`md`) and a dialog (`lg`) float above the canvas, another card,
- * the quiet panel or a floating surface, so every one is measured. The
- * pointer-state washes are excluded for the same reason the scrim excludes
- * them, and the reserved empty `overlay` paints no shadow.
+ * The dialog's face on the scrim. A dialog, drawer or command palette paints
+ * `popover` over the modal scrim, so the surface a reader sees is the `overlay`
+ * wash composited over the page layout — not `popover` on a page surface, which
+ * is a different composition. `overlayWashPairs` measures the scrim itself; this
+ * list measures what sits on it, because a theme whose scrim composites to its
+ * own floating surface ships a dialog with no face and only a 1px edge (plan
+ * 507).
+ *
+ * The layout list is {@link layoutSurfaces}, the six page surfaces
+ * {@link overlaySurfaces} begins with. The content fills are deliberately
+ * absent: a face meets the scrim over a bright action patch, and no `popover`
+ * value clears the whole band the scrim compresses the page into, so the edge
+ * carries that patch and the scrim's own perceivability there stays measured.
+ */
+export const dialogSurfacePairs: readonly ContrastPair[] = layoutSurfaces.map(
+  (background): ContrastPair => ["popover", background, "surface"],
+);
+
+/**
+ * The surfaces a raised element's shadow is painted over. A card (`sm`) and a
+ * menu or popover (`md`) float above the canvas, another card, the quiet panel or
+ * a floating surface, so every one is measured. A dialog is the exception: its
+ * `lg` shadow lands on the modal scrim, which cannot separate it in the default
+ * dark sets (pure black over the identity dark scrim reaches only 1.0421:1), so
+ * the dialog's face is measured through the scrim instead
+ * (`dialogSurfacePairs`). The pointer-state washes are excluded for the same
+ * reason the scrim excludes them, and the reserved empty `overlay` paints no
+ * shadow.
  */
 export const elevationSurfaces = [
   "background",
@@ -1588,6 +1635,9 @@ const elevationFailures = (
  *   on; a failure names the role and the fraction.
  * - `overlayWashPairs` — the modal scrim composited over every surface a window
  *   shows.
+ * - `dialogSurfacePairs` — the dialog's face, `popover` composited over the
+ *   `overlay` scrim the page layout is veiled with, because a theme whose scrim
+ *   meets its own floating surface ships a dialog with no face.
  * - `elevationLevels` above `elevationSurfaces` — each defined level's painted
  *   shadow, composited at its own alpha over the surfaces a raised element can
  *   sit on. A level that composites to the surface beneath it has no shadow;
@@ -1667,6 +1717,7 @@ export function themeContrastFailures(
       floors,
     ),
     ...washVisibilityFailures(overlayWashPairs, "overlay", theme, floors),
+    ...textOverWashFailures(dialogSurfacePairs, "overlay", theme, floors),
     ...elevationFailures(theme, floors),
   ];
 }

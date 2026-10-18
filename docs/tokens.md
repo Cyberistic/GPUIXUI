@@ -250,7 +250,7 @@ A runnable example lives in
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF24` | text selection wash (24% light, 14% dark; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
-| `overlay` | `#00000073` | `#000000A6` | modal scrim |
+| `overlay` | `#00000073` | `#000000A6` | modal scrim; the face a dialog paints on it is measured through the wash |
 | `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
 | `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
@@ -527,7 +527,7 @@ carries, so it cannot claim another.
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
-| `overlay` | `#000000A6` | `#FFFFFF26` | modal scrim |
+| `overlay` | `#000000A6` | `#FFFFFF26` | modal scrim; the face a dialog paints on it is measured through the wash |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
 | `selected` | `#D8DBFF` | `#33257A` | selected row or item, one step past the `accent` hover wash |
@@ -1517,6 +1517,10 @@ dividers — including on the `secondary`, `hover`, `active` and `accent` fills 
 bordered control paints, the `secondaryHover`/`secondaryActive` and
 `accentHover`/`accentActive` steps it presses through, and on the `input` fill a
 field sits on.
+The modal scrim is measured over the surfaces it covers (`overlayWashPairs`), and
+the dialog's face on it — `popover` over the composited `overlay` on the six page
+layout surfaces (`dialogSurfacePairs`), because a theme whose scrim meets its own
+floating surface leaves a dialog with only its edge.
 The default is the
 level the theme declares, so a high-contrast theme is checked against 7:1 without
 a second argument; naming a level asks a stricter question of a theme that does
@@ -1587,11 +1591,31 @@ selected row while the checker returned `[]`, because the four base surfaces all
 passed. The tightest shipped pair is **1.075:1** (high-contrast dark, `overlay`
 on `primary`), so no colour moves.
 
+The element the scrim carries is measured too: a dialog, drawer or command
+palette paints `popover` over it, so `dialogSurfacePairs` composites `overlay`
+over the six page layout surfaces — `background`, `card`, `muted`, `input`,
+`selected` and `popover`, the layout prefix of `overlaySurfaces` — and holds the
+face to the same `surface` floor, reported with `wash: "overlay"`. A theme whose
+scrim meets its own floating surface leaves the dialog with only its 1px edge;
+the tightest shipped pair is **1.210:1** (`selected`), so no colour moves. The
+content fills are not face pairs: the scrim compresses them into one narrow
+luminance band, and macOS dark's face meets the scrim over a `primary` action at
+**1.021:1**, where the dialog's `border` carries the silhouette (**1.495:1**).
+No `popover` value leaves that band — lightening the face fails the soft status
+fills it sits beside, and raising the scrim to 70% clears `primary` at 1.077:1
+but collapses `destructive` to **1.019:1** — so the edge is the honest carrier
+there and the scrim's own perceivability stays measured. The shadow cannot take
+its place in the default dark sets: on the identity dark scrim the `lg` tint
+paints **1.035:1** and pure black reaches only **1.042:1**, under the floor.
+`dialog-scrim.test.ts` pins both figures.
+
 The elevation is measured as the painted shadow it is: `themeContrastFailures`
 walks every defined level of `elevationLevels`, composites
 `elevationShadow(theme, level).color` over each surface in `elevationSurfaces` —
 `background`, `card`, `muted` and `popover`, the surfaces a raised card, menu or
-dialog floats over — and holds the result to the same 1.05:1 `surface` floor.
+popover floats over — and holds the result to the same 1.05:1 `surface` floor.
+A dialog is the exception: its shadow lands on the scrim, which the face
+paragraph above measures instead.
 The reserved empty `overlay` paints nothing and is skipped; a defined one is
 measured like any other. A failure names `wash: "shadow"`, the level's `opacity`
 and its `level`. The audit found the AAA dark set's black tint measured
@@ -2404,6 +2428,12 @@ level's alpha depends on the level, so the walk reads `elevationLevels` and
 composites each one over `elevationSurfaces` instead of publishing a
 `[role, background, class]` row. `contrastPairs` stays **394**, and every
 shipped set passes the walk.
+Plan `507` measures the element the scrim carries: `dialogSurfacePairs`
+composites `overlay` over the six page layout surfaces and holds `popover` to the
+`surface` floor, so a theme whose scrim meets its own floating surface is
+reported instead of shipping a dialog with only its edge. The walk adds six pairs
+to the checker and none to `contrastPairs`, which stays **394**; every shipped
+set passes (1.210:1 at the tightest, the identity dark `selected` row).
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract

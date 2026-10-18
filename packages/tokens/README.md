@@ -328,10 +328,18 @@ themeTypefaceFailures(brandTheme); // [] when both families are one name
 ```
 
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
-the parts, and the selection wash is measured as it paints on every surface a
-glyph is selected on: the neutral surfaces with `foreground`, `popover` and
-`input` with their own text roles, and `selected` with `selectedForeground` at
-the secondary floor. Secondary text is measured through the same wash on all
+the parts. The modal scrim and the dialog on it are measured as a pair:
+`overlayWashPairs` holds the painted scrim to 1.05:1 over the fifteen surfaces a
+window shows, and `dialogSurfacePairs` holds the dialog's own face — `popover`
+composited over the `overlay` scrim on the six page layout surfaces
+(`background`, `card`, `muted`, `input`, `selected`, `popover`) — to the same
+floor, because a theme whose scrim meets its own floating surface leaves a dialog
+with only its 1px edge (tightest shipped 1.210:1). The shadow cannot take that
+role in the default dark sets: on the identity dark scrim the `lg` tint paints
+1.035:1 and pure black reaches only 1.042:1. The selection wash is measured as
+it paints on every surface a glyph is selected on: the neutral surfaces with
+`foreground`, `popover` and `input` with their own text roles, and `selected`
+with `selectedForeground` at the secondary floor. Secondary text is measured through the same wash on all
 nine surfaces (`mutedForeground`), because a row description, a card caption or
 a timestamp is selected with the body copy: seven shipped sets were under
 4.5:1 there — identity light 4.06:1 and identity dark 3.49:1 on a pressed row —
