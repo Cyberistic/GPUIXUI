@@ -824,7 +824,7 @@ every density.
 | ----- | ------ | --- |
 | `dimensions.overlayMinWidth` | 180 | narrowest menu surface |
 | `dimensions.overlayWidth` | 220 | default popover, combobox and calendar width |
-| `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls |
+| `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
 | `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action |
 | `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
@@ -1400,9 +1400,10 @@ not a circle; every named ladder —
 `spacing`, `radius`, `iconSize`, `avatarSize`, `controlHeight`, `controlPaddingX`
 and the motion timings — must not step backwards, and a timing must also be
 finite; an icon and a field adornment must fit the smallest control; a chip must
-fit in a field; a cubic-bezier easing must be four finite control points with
-both x values inside `0…1`, because the runtime drops a transition it cannot
-interpolate; and an elevation level
+fit in a field; an overlay's `overlayMaxHeight` must fit one `density.rowHeight`,
+because a list viewport shorter than a row clips every option; a cubic-bezier
+easing must be four finite control points with both x values inside `0…1`,
+because the runtime drops a transition it cannot interpolate; and an elevation level
 must hold a shadow whose alpha is a fraction, because `alpha()` falls back to the
 opaque tint on a value it cannot parse, and whose two offsets, blur and spread
 are finite — a negative offset or spread is a direction, a `NaN` is a shadow the

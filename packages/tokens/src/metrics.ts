@@ -192,8 +192,9 @@ const ladder = (
  *   label line plus its two borders, and a row fits one body line and the
  *   default `md` control it holds.
  * - **dimensions**: every surface metric is positive, each documented range has
- *   a minimum below its default, an adornment fits the smallest control and a
- *   chip fits in a field.
+ *   a minimum below its default, an adornment fits the smallest control, a chip
+ *   fits in a field, and the overlay scroll height fits one row — a list
+ *   viewport shorter than a row clips every option.
  * - **iconSize**, **avatarSize**: named ladders, and the default icon fits the
  *   smallest control.
  * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
@@ -331,6 +332,14 @@ export function themeMetricFailures(
     ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
     ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),
     ...positive("dimensions", "overlayMaxHeight", dimensions.overlayMaxHeight),
+    // The overlay scrolls a list of rows, so its maximum height must fit one
+    // complete row; a viewport shorter than a row clips every option.
+    ...atLeast(
+      "dimensions",
+      "overlayMaxHeight",
+      dimensions.overlayMaxHeight,
+      density.rowHeight,
+    ),
     ...positive("dimensions", "fieldMinWidth", dimensions.fieldMinWidth),
     ...positive(
       "dimensions",

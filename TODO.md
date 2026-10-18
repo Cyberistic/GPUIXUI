@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 132/182
+`[x]` `[███████░░░]` 133/183
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -945,6 +945,11 @@ returned `[]` while the runtime's `validate_seconds`/`validate_ease` reject the
 whole transition; every timing now takes `finite` and each bezier tuple is held
 to four finite control points with both x values inside `0…1` (y may overshoot),
 with no shipped value moving (plan 364)
+`[x]` Hold the overlay scroll height to one row — `dimensions.overlayMaxHeight`
+was only checked for being positive, so `20` against a `32` row returned `[]`
+while every menu and combobox list scrolled in a viewport shorter than one
+option; the bound is the active `density.rowHeight`, so a compact theme lowers it
+and every shipped 320 still passes (plan 365)
 
 ## Phase C — Tier 1–2 components
 
