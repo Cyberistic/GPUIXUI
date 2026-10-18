@@ -115,9 +115,12 @@ Cases (mirror the structure of `neutral-press-edge.test.ts`, including its
    `getTheme("dark", "high")` against its `hover`; assert `floor` is
    `contrastFloors.high.secondary` and the failure is reported without a second
    argument (the theme declares `high`).
-
-No exact shipped ratio assertions are needed beyond the floor, because no value
-moves; the docs quote the tightest figures.
+5. **The figures the catalogue quotes are pinned.** Reduce the same `themes`
+   list to the tightest ratio per wash and assert `10.42` (`darwin` dark
+   default, `hover`) and `9.44` (`linux` dark default, `active`), so a palette
+   edit cannot leave the prose quoting a number the themes no longer produce
+   while the floor still passes — the guard plan 075 established for quoted
+   figures.
 
 ### 3.4 `packages/tokens/src/docs.test.ts`
 
@@ -261,11 +264,12 @@ running it.
 - Both quoted figures were re-derived over the **24** distinct shipped colour
   sets before they were written into the documents: the tightest
   `secondaryForeground` on `hover` is **10.42:1** (`darwin` dark default) and on
-  `active` **9.44:1** (`linux` dark default), matching the plan's baseline.
+  `active` **9.44:1** (`linux` dark default), matching the plan's baseline, and
+  now pinned by a case so the prose cannot drift from the themes.
 - Two-direction proof, run and restored: with `...secondaryWashPairs` removed the
-  new file failed **7** cases — the pair list was missing both washes, and
-  `themeContrastFailures` returned `[]` for the erased label in the light and AAA
-  regressions; with the spread restored the file is green.
+  new file reported **3 failed | 1 passed (4)** — the pair list was missing both
+  washes, and `themeContrastFailures` returned `[]` for the erased label in the
+  light and AAA regressions; with the spread restored all **4** cases pass.
 - Green, run not assumed: **56 test files, 3670 tests** (3646 before the four new
   cases), `nub run check`, `nub run lint` and `nub run test`.
 - No token value, role, floor or platform style changes; the designed
