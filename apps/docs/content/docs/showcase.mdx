@@ -1,0 +1,35 @@
+---
+title: Showcase
+description: The library composed into one screen, running on GPUix.
+---
+
+One screen, built only from the public packages: an identity header, a project
+card, its form controls and a progress state. It runs on **GPUix's published
+WebAssembly renderer** — the real component code, tokens and layout — with the
+honest label the rest of the site uses. It is not the native desktop binary;
+the playground runs that, and each component page keeps its native evidence.
+
+## The screen
+
+<LiveSurface scene="showcase" title="Showcase" />
+
+The composition is a `ShowcaseScene` in the live-preview project, mounted with
+the same two providers as every other scene. The platform toggle and light/dark
+mode reach it, so switching Windows or choosing dark repaints it with the active
+theme. The scene is deliberately one realistic screen rather than a sampler:
+the card, fields and actions are what an application builds.
+
+## What this screen composes
+
+<ShowcaseComponents />
+
+Each part links to its own page, where the real source, generated props and the
+native suite that drives it are recorded. The components here are not
+approximations: the surface above mounts the package code on GPUix.
+
+## Where to go next
+
+- [Components](/docs/components) — the searchable inventory and its honest status.
+- [Theming](/docs/theming) — the tokens this screen reads, and the platform toggle.
+- [Architecture](/docs/architecture) — how the packages and preview tiers fit together.
+- [Getting started](/docs/getting-started) — render the same components in a desktop window.

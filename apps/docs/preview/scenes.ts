@@ -49,6 +49,7 @@ export const LIVE_SCENES = [
   "time-picker",
   "carousel",
   "message-scroller",
+  "showcase",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -105,6 +106,17 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "time-picker": "Reminder at 10:30",
   carousel: "Release notes slide 2 of 2",
   "message-scroller": "Jump to latest",
+  showcase: "Three people can edit this workspace.",
+};
+
+/**
+ * The docs page that embeds a scene, when it is not the component page that
+ * shares its slug (plan 560). The showcase is a composition, not a component
+ * record, so its smoke page is named here; every other scene is driven on
+ * `/docs/components/<scene>`.
+ */
+export const SCENE_PAGE: Readonly<Partial<Record<LiveScene, string>>> = {
+  showcase: "/docs/showcase",
 };
 
 /**

@@ -133,7 +133,8 @@ renderer (the browser's GPU backend) and exports one document per scene:
   with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
   and `scene-contract.test.ts` fails when a scene's expected text no longer
   occurs in its view. Live scenes ship for every record that declares a
-  `liveScene` (42 today); `docs/preview-strategy.md` owns the tier table and
+  `liveScene` (42 today), plus the Showcase page's composed screen (plan 560);
+  `docs/preview-strategy.md` owns the tier table and
   names them all. 20 of those document state only a gesture produces — an open
   overlay, an opened list, a checked control, a value a key reaches or text a
   reader types — so
@@ -468,6 +469,17 @@ from its own `PREVIEW_TIERS`; no colour or number is typed twice (plan 440). It
 shows **no component image**: the only committed captures are theme-gallery
 developer frames, and a browser-drawn component would be a placeholder presented
 as native.
+
+## Showcase
+
+`/docs/showcase` mounts the `showcase` live scene (plan 560): a composed project
+panel — identity header, a Card with its footer actions, two labelled fields, a
+checked box and a progress bar — built from the real packages. It is a tier-L
+surface, so the label still says WebAssembly and not the desktop window. The
+scene is not a component record; `preview/scenes.ts` maps it to its page with
+`SCENE_PAGE`, and `src/showcase-page.test.tsx` proves the page, its sidebar
+entry, the delivered records it names and the landing-page link. The page's
+component list is generated from `SHOWCASE_SLUGS`, so no title is typed twice.
 
 ## Theme
 

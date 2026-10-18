@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–517)
+## Docs site workstream (plans 410–499, plus 500–560)
 
-`[x]` `[██████████]` 120/120
+`[x]` `[██████████]` 121/121
+
+`[x]` **The site has a real showcase (plan 560)** — `/docs/showcase` runs one
+      composed project panel on GPUix's wasm renderer: an identity header, a
+      project card with footer actions, two labelled fields, a checked box and
+      progress. The scene is the 43rd live scene and has no component record, so
+      `SCENE_PAGE` maps it to its page; `smoke:preview` drives both and the
+      landing page links it. `showcase-page.test.tsx` proves the page, sidebar,
+      delivered component links and landing entry; five two-direction proofs and
+      the measured scene (`640x520`, 16 text nodes) are in plan 560 §7.
 
 `[x]` **The mode and platform controls stay reachable at every width (plan 519)** —
       the landing page's Fumadocs switch is inside `max-lg:hidden` (measured 0×0

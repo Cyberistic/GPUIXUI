@@ -17,6 +17,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@gpuixui/components/accordion";
+import { Avatar } from "@gpuixui/components/avatar";
+import { Badge } from "@gpuixui/components/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
 import {
   Dialog,
   DialogClose,
@@ -98,8 +108,10 @@ import {
   Button,
   Checkbox,
   Input,
+  labelledBy,
   NumberField,
   OTPField,
+  Progress,
   RadioGroup,
   RangeSlider,
   Rating,
@@ -1216,6 +1228,88 @@ const CarouselScene = (): ReactElement => {
   );
 };
 
+const PROJECT_NAME = "Project name";
+const REGION_LABEL = "Region";
+
+const REGIONS = [
+  { value: "eu-west", label: "Europe — West" },
+  { value: "us-east", label: "United States — East" },
+] as const;
+
+const ShowcaseScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Stack direction="row" gap="sm" style={{ alignItems: "center" }}>
+      <Avatar name="Ada Lovelace" status="online" size="sm" />
+      <Stack direction="column" gap="2xs" style={{ flexGrow: 1 }}>
+        <Text role="label">Atlas workspace</Text>
+        <Text role="caption" tone="muted">
+          Team plan · 12 seats
+        </Text>
+      </Stack>
+      <Badge variant="success">Live on GPUix</Badge>
+    </Stack>
+    <Stack direction="row" gap="lg" style={{ alignItems: "flex-start" }}>
+      <Card variant="outline" style={{ width: 300 }}>
+        <CardHeader>
+          <CardTitle>Project access</CardTitle>
+          <CardDescription>
+            Three people can edit this workspace.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Stack direction="column" gap="xs">
+            <Text role="body">Ada Lovelace · Owner</Text>
+            <Text role="body" tone="muted">
+              Grace Hopper · Editor
+            </Text>
+          </Stack>
+        </CardContent>
+        <CardFooter>
+          <Button size="sm" variant="outline">
+            Manage
+          </Button>
+          <Button size="sm" variant="primary">
+            Invite
+          </Button>
+        </CardFooter>
+      </Card>
+      <Card variant="outline" style={{ width: 280 }}>
+        <CardHeader>
+          <CardTitle>Project settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Stack direction="column" gap="sm">
+            <Text role="label">{PROJECT_NAME}</Text>
+            <Input
+              {...labelledBy(PROJECT_NAME)}
+              defaultValue="Atlas"
+              fullWidth
+            />
+            <Text role="label">{REGION_LABEL}</Text>
+            <Select
+              {...labelledBy(REGION_LABEL)}
+              defaultValue="eu-west"
+              options={REGIONS}
+              fullWidth
+            />
+            <Stack direction="row" gap="sm" style={{ alignItems: "center" }}>
+              <Checkbox
+                defaultChecked
+                label="Email me when a deploy finishes"
+              />
+              <Text role="body">Email me when a deploy finishes</Text>
+            </Stack>
+            <Text role="caption" tone="muted">
+              Migration · 64%
+            </Text>
+            <Progress value={64} label="Migration" />
+          </Stack>
+        </CardContent>
+      </Card>
+    </Stack>
+  </Stack>
+);
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -1260,6 +1354,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "time-picker": TimePickerScene,
     carousel: CarouselScene,
     "message-scroller": MessageScrollerScene,
+    showcase: ShowcaseScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

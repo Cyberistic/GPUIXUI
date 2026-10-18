@@ -151,6 +151,12 @@ export function Landing() {
           >
             Browse components
           </Link>
+          <Link
+            href="/docs/showcase"
+            className="rounded-lg border border-fd-border px-4 py-2 text-sm font-medium"
+          >
+            See the showcase
+          </Link>
         </div>
       </header>
 

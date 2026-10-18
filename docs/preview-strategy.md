@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawer, Navigation Menu, Mention input, Preview Card, Toasts / notifications, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey-recorder input, Selects, Checkboxes, Switches, Radio groups, Slider, Range slider, Search inputs, Text inputs, Text areas, Accordions, Number Field, OTP Field, Rating, Tag / token input, Toggle, Lists / list items, Collapsible sections, Pagination, Time pickers, Carousel, Message scroller); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawer, Navigation Menu, Mention input, Preview Card, Toasts / notifications, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey-recorder input, Selects, Checkboxes, Switches, Radio groups, Slider, Range slider, Search inputs, Text inputs, Text areas, Accordions, Number Field, OTP Field, Rating, Tag / token input, Toggle, Lists / list items, Collapsible sections, Pagination, Time pickers, Carousel, Message scroller); click-to-load, because the renderer is about 20 MB. The Showcase page runs one composed scene of its own, which has no component record. |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -203,8 +203,9 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **42 scenes ship today**, one per record that declares a
-  `liveScene`; the tier table above names them. They are chosen because a still
+  blank frame. **43 scenes ship today**: 42 are one per record that declares a
+  `liveScene`, and one is the Showcase page's composed screen; the tier table
+  above names the component scenes. They are chosen because a still
   cannot prove the point: an open overlay and its focus entry, a grouped palette,
   real SVG markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a
   transient message, an opened list, a checked control, a value a key reaches,

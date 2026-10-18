@@ -17,6 +17,7 @@ import { PlatformPreviews } from "./preview/platform-previews";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
 import { ThemeCaptures } from "./preview/theme-captures";
 import { RelatedComponents } from "./related-components";
+import { ShowcaseComponents } from "./showcase";
 import { RoadmapTable } from "./roadmap-table";
 import { PlatformValues } from "./platform-values";
 import { TokenColors } from "./token-colors";
@@ -35,6 +36,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ComponentState,
     ComponentDependencies,
     RelatedComponents,
+    ShowcaseComponents,
     RoadmapTable,
     CapabilityMatrix,
     NativePreview,

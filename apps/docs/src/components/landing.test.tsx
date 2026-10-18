@@ -74,6 +74,7 @@ describe("landing page", () => {
       [
         "/docs",
         "/docs/components",
+        "/docs/showcase",
         "/docs/installation",
         "/docs/getting-started",
         "/docs/theming",

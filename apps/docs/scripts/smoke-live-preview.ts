@@ -27,6 +27,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import {
   LIVE_SCENES,
   SCENE_GESTURE,
+  SCENE_PAGE,
   SCENE_TEXT,
   type SceneStep,
 } from "../preview/scenes.ts";
@@ -408,31 +409,30 @@ const main = async (): Promise<number> => {
     // mode the gate checks.
     await session.setColorScheme("dark");
     for (const scene of LIVE_SCENES) {
-      const slug = scene;
-      const componentPage = await openPageSurface(
-        session,
-        `${baseUrl}/docs/components/${slug}`,
-      );
+      // A composition scene names its own page (plan 560); every component
+      // scene is driven on the page whose slug matches its key.
+      const page = SCENE_PAGE[scene] ?? `/docs/components/${scene}`;
+      const componentPage = await openPageSurface(session, `${baseUrl}${page}`);
       if (componentPage.state !== "ready") {
         console.error(
-          `FAIL live surface: /docs/components/${slug} reported ${componentPage.state}${componentPage.reason === undefined ? "" : ` (${componentPage.reason})`}`,
+          `FAIL live surface: ${page} reported ${componentPage.state}${componentPage.reason === undefined ? "" : ` (${componentPage.reason})`}`,
         );
         return 1;
       }
       if (!(componentPage.src ?? "").includes(`scene=${scene}`)) {
         console.error(
-          `FAIL live surface: /docs/components/${slug} lost its scene (${componentPage.src ?? ""})`,
+          `FAIL live surface: ${page} lost its scene (${componentPage.src ?? ""})`,
         );
         return 1;
       }
       if (!(componentPage.src ?? "").includes("mode=dark")) {
         console.error(
-          `FAIL live surface: /docs/components/${slug} reported ${componentPage.src ?? ""}, expected mode=dark`,
+          `FAIL live surface: ${page} reported ${componentPage.src ?? ""}, expected mode=dark`,
         );
         return 1;
       }
       console.log(
-        `smoke: /docs/components/${slug} loaded the live iframe — ${componentPage.src} (${componentPage.canvas?.[0] ?? 0}x${componentPage.canvas?.[1] ?? 0})`,
+        `smoke: ${page} loaded the live iframe — ${componentPage.src} (${componentPage.canvas?.[0] ?? 0}x${componentPage.canvas?.[1] ?? 0})`,
       );
     }
 
