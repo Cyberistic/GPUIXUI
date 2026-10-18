@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 100/133
+`[x]` `[████████░░]` 101/134
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -229,6 +229,11 @@ was measured only at the 1.05:1 interactive-fill floor, so a theme could collaps
 the checker returned `[]`; `mark` is a 3:1 (4.5:1 at AAA) pair class with
 fourteen pairs (276 → 290), every shipped set already passes, and
 `mark-contrast.test.ts` states the erased-mark regressions (plan 332)
+`[x]` Make the tokens suite's own gate honest — Vitest's 5 s default timed out
+the real TypeScript compile in `react-consumer.test.ts` and a pure 290-pair
+palette audit under the 55-file parallel run, so
+`nub run --filter @gpuixui/tokens test` failed three times with no code change;
+the package now carries a 20 s budget (plan 333)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the

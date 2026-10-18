@@ -129,6 +129,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [330](./330-authored-accent-family.md) | The authored platform example's unfinished accent family | F | 063, 310, 327 | done |
 | [331](./331-authored-selection-wash.md) | The authored example's selection wash stays on the identity iris | F | 069, 330 | done |
 | [332](./332-mark-contrast.md) | The fill as a mark: a graphic needs more than 1.05:1 | F | 057, 082, 097, 309, 314 | done |
+| [333](./333-tokens-suite-timeout-budget.md) | The tokens suite must not fail its own gate | F | 061, 311, 332 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -902,6 +903,18 @@ on-colour and edge pairs plus the two fills as surfaces move the contract
 264 → 276. `accent-states.test.ts` states the regression, and the primitives
 migration off the alpha composite is recorded cross-team rather than edited in
 another workstream's tree.
+
+333 fixes the gate rather than a token: `nub run --filter @gpuixui/tokens test`
+failed three times in a row on 2026-10-18 with Vitest's **5 s default** — twice
+on the compiler probe (`react-consumer.test.ts`) and once on a pure palette
+audit (`platform-recipes.test.ts`) — while both pass comfortably alone (2.3 s and
+0.8 s). The suite is 55 isolated files on a 12-core box, so a worker can be
+descheduled past a unit-test budget with no code change, and a randomly red gate
+makes a real regression indistinguishable from scheduling noise. The package now
+carries a `vitest.config.ts` with an explicit 20 s budget: headroom for a loaded
+worker, still short enough to fail a hung subprocess. No test, token, theme,
+platform style, recipe or document value changes; the proof is three consecutive
+green full-suite runs after the two failing runs before it.
 
 ### Reference adoption (block `200–299`)
 
