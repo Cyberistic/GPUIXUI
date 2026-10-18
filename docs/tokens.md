@@ -2105,10 +2105,10 @@ const flattened = extendTheme(identity, {
 themeTextTierFailures(flattened); // a failure per surface the tiers share
 ```
 
-The surfaces are derived from `contrastPairs`, not retyped: twelve shared surfaces
-for secondary text below body copy, one `card` for `cardForeground`, four for
-`popoverForeground` (`popover` and the three row washes it shares), the nine
-surfaces typed text is documented on for `inputForeground` (`muted`,
+The surfaces are derived from `contrastPairs`, not retyped: twelve shared
+surfaces for secondary text below body copy, one `card` for `cardForeground`,
+four for `popoverForeground` (`popover` and the three row washes it shares), the
+nine surfaces typed text is documented on for `inputForeground` (`muted`,
 `background`, `card`, `popover`, `input` and the four row washes), twelve for the
 inactive label below secondary text (every surface `inactivePairs` measures
 except the `disabled` fill, which carries no secondary text), nine for a hint and
@@ -2122,8 +2122,8 @@ light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
 high-contrast light on `muted`), **1.168:1** (`disabledForeground` vs
 `mutedForeground`, high-contrast dark on `active`), **1.157:1**
 (`placeholder` vs `mutedForeground`, high-contrast dark on every surface the two
-share) and **1.542:1** (`disabledForeground` vs `softActionForeground`, high-contrast
-dark on `successSoft`). Every shipped set
+share) and **1.542:1** (`disabledForeground` vs `softActionForeground`,
+high-contrast dark on `successSoft`). Every shipped set
 still clears the step; the check exists for the theme a consumer edits. A theme
 that sets `disabledForeground` to
 `foreground` still passes every floor, and is reported only here.
