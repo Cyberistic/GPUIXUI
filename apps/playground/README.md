@@ -1291,6 +1291,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
 | `live-restore` | the shipped `workspace-restore` probe in a window: a paced divider drag paints 320 → 400, a tab activation makes `active=two`, `scrollToItem(120, 16)` anchors the list, and save → reset → restore re-applies the split, the tab and the anchor exactly (`[120,16]`, row 120 painted, row 0 absent). Native focus is **not** restored, and a click on row 121 focuses the restored list |
 | `live-table-sort` | the shipped `table-select-sort` view: a real wheel moves the body (`y ≈ -200`), `table-sort` makes `table-first` read `Item 199` (the reordered row the automation tree points at), a click selects `r199`, and the selection survives a re-sort back to `Item 000` |
+| `live-grid` | the pinned, windowed grid in a window: a real wheel moves the body ten rows with the frozen column aligned, a `deltaX` wheel over the body is swallowed, the component pan reaches `-360` and the last viewport at `-1700` with header/body alignment, an off-window column has no painted bounds, and six Rights plus three Downs pan and align the reveal — 53 checks (plan `556`). Every child of a live scroller reports a moved box whatever its `position`, so `sticky` stays a headless claim; a scroller's own box moves with its scroll and must be cached first |
 | `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and `Down`/`Enter` move and select while skipping the disabled row — 18 checks. A live key must follow the click's React commit (`settle`), or it moves from the previous active row |
 | `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 15 checks. Whether a click runs React's `onFocus` is window-state dependent (plan `390`), so the old click-then-arrow limit is no longer asserted; the Tabs fix remains a robustness task |
 | `live-tier2-choice` | Popover opens below its trigger and Escape restores focus, a live editor types/submits/clears, a Combobox ranks and selects, the DatePicker month grid picks a day and clears, and both TimePicker segments compose one value — 13 checks |
@@ -1834,9 +1835,9 @@ narrower. Each deviation is deliberate and measured:
   The **real-window** suite (`smoke:live`) ran in full at **53/53** on
   2026-10-19 (1133 checks, exit `0`, the merge gate) — the plan `532` terminal
   twin, the plan `534` variable-row twin and the plan `535`/`536` pointer twins
-  are all included. The registry is now **56**: the plan `554` select, combobox
-  and tooltip twins join them, with a focused `3/3` run and no full-suite total
-  claimed after the addition. The full suite is a **merge/release gate** —
+  are all included. The registry is now **57**: the plan `554` select, combobox
+  and tooltip twins and the plan `556` `live-grid` twin join them, each with a
+  focused run and no full-suite total claimed after the addition. The full suite is a **merge/release gate** —
   layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table

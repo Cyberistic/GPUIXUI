@@ -58,7 +58,21 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 93/96 plans-and-harness
+`[x]` `[██████████]` 94/96 plans-and-harness
+
+`[x]` Prove the **pinned, windowed data grid in a real window** per plan `556`:
+      `live-grid` reuses the `grid-wide-table` view in the real 1100×720 window —
+      a real wheel moves the body ten rows with the frozen column aligned within
+      1 px, a `deltaX` wheel over the body is swallowed, the component pan
+      reaches `-360` and the last viewport at `-1700` with header/body
+      alignment, an off-window column has no painted bounds, six Rights pan and
+      align the reveal, and three Downs keep the frozen row aligned. **53
+      checks**, 1/1 exit `0`, four consecutive runs; live registry `56 → 57`,
+      headless stays `101`, control `grid-wide-table` still green. Two measured
+      harness facts: a scroller's own box moves with its scroll (cache it before
+      panning), and every child of a live scroller reports a moved box whatever
+      its `position`, so the `sticky` claim itself stays headless. Three
+      mutation proofs (plan `556` §9). Focused id: `live-grid`.
 
 `[x]` Prove the **published Select, Combobox and Tooltip in a real window** per
       plan `554`: the three popups the library reuses instead of implementing

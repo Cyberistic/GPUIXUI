@@ -56,6 +56,7 @@ import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
 import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
+import { gridScenario } from "../scenarios/grid.js";
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { mediaScenario } from "../scenarios/media.js";
@@ -4454,6 +4455,245 @@ const dataGridColumns: LiveScenario = {
     }),
 };
 
+/** The grid body's scroll offset on one axis, or a failure naming the miss. */
+const gridOffset = (ctx: LiveContext, axis: "x" | "y") =>
+  Effect.gen(function* () {
+    const offset = yield* ctx.expectSome(
+      "the grid body reports an offset",
+      Option.fromNullishOr(yield* ctx.host.scrollOffset("grid-body")),
+    );
+    return axis === "x" ? offset.x : offset.y;
+  });
+
+/** A `testId` is painted, or absent from the window's tree. */
+const expectPainted = (ctx: LiveContext, testId: string, painted: boolean) =>
+  Effect.gen(function* () {
+    const bounds = yield* ctx.host.bounds(testId);
+    yield* ctx.expectEqual(
+      `${testId} is ${painted ? "painted" : "not painted"}`,
+      Option.isSome(Option.fromNullishOr(bounds)),
+      painted,
+    );
+  });
+
+const grid: LiveScenario = {
+  id: "live-grid",
+  title: "Live grid: a pinned header, one scroll source and column windowing",
+  capability: "grid",
+  view: gridScenario.view,
+  ready: "grid-root",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The pinned column and the body share the root's layout.
+      const root = yield* boxOf(ctx, "grid-root");
+      const pinned = yield* boxOf(ctx, "grid-pinned-header");
+      const header = yield* boxOf(ctx, "grid-header");
+      yield* ctx.expectNear(
+        "the pinned header's content starts at the root",
+        pinned.x,
+        root.x + 6,
+        1,
+      );
+      yield* ctx.expectNear(
+        // The box origin is the content origin but its width keeps the padding
+        // (plan 529 §6.5), so the pinned column's 6 px inset is added once.
+        "the body starts after the pinned column",
+        header.x,
+        pinned.x + pinned.width - 6,
+        1,
+      );
+      // Cache the body's box now: a scroller's reported box moves with its own
+      // scroll (plan 529 §6.5), so it is not a frame once the pan starts.
+      const bodyBox = yield* boxOf(ctx, "grid-body");
+      yield* ctx.expectNear(
+        "the body shares its column with the header",
+        bodyBox.x,
+        header.x,
+        1,
+      );
+
+      // 2. The header sits in the scroller's flow and moves with it. A real
+      // window reports a moved box for every child of a scroller, so the
+      // position property itself stays a headless claim (plan 556 §9).
+      const stickyBefore = yield* boxOf(ctx, "sticky-header");
+      yield* ctx.host.wheel("sticky-scroller", 0, -80);
+      yield* settle;
+      const stickyAfter = yield* boxOf(ctx, "sticky-header");
+      yield* ctx.expectNear(
+        `the live header scrolls with its container (dy=${stickyAfter.y - stickyBefore.y})`,
+        stickyAfter.y,
+        stickyBefore.y - 80,
+        4,
+      );
+
+      // 3. One real wheel moves the body and the frozen column together.
+      yield* ctx.host.wheel("grid-body", 0, -280);
+      yield* settle;
+      const scrolled = yield* gridOffset(ctx, "y");
+      yield* ctx.expectNear(
+        `a live wheel scrolled ten rows (y=${scrolled})`,
+        scrolled,
+        -280,
+        8,
+      );
+      const pinnedRow = yield* boxOf(ctx, "grid-pinned-row-11");
+      const bodyRow = yield* boxOf(ctx, "grid-row-11");
+      yield* ctx.expectNear(
+        "the live pinned row aligns with the body row",
+        pinnedRow.y,
+        bodyRow.y,
+        1,
+      );
+      yield* expectPainted(ctx, "grid-row-0", false);
+      const pinnedAfter = yield* boxOf(ctx, "grid-pinned-header");
+      yield* ctx.expectNear(
+        "the live pinned header does not scroll",
+        pinnedAfter.y,
+        pinned.y,
+        1,
+      );
+
+      // 4. A horizontal wheel over the body is swallowed (plan 338).
+      yield* ctx.host.wheel("grid-body", -360, 0);
+      yield* settle;
+      yield* ctx.expectNear(
+        "a live deltaX wheel over the body does not pan",
+        yield* gridOffset(ctx, "x"),
+        0,
+        1,
+      );
+
+      // 5. The component-owned pan moves the header and the windowed body.
+      yield* ctx.host.click("grid-pan-four");
+      yield* settle;
+      yield* waitForText(ctx, "grid-pan", "x=-360");
+      yield* ctx.expectNear(
+        "the live pan reaches four columns",
+        yield* gridOffset(ctx, "x"),
+        -360,
+        8,
+      );
+      const head = yield* boxOf(ctx, "grid-head-5");
+      const cell = yield* boxOf(ctx, "grid-cell-11-5");
+      yield* ctx.expectNear(
+        "the live header cell aligns with its body cell",
+        head.x,
+        cell.x,
+        1,
+      );
+      yield* expectPainted(ctx, "grid-cell-11-0", false);
+      yield* expectPainted(ctx, "grid-cell-11-20", false);
+
+      // 6. The far end is the last viewport, and the column window follows.
+      yield* ctx.host.click("grid-end");
+      yield* settle;
+      yield* waitForText(ctx, "grid-pan", "x=-1700");
+      const lastHead = yield* boxOf(ctx, "grid-head-20");
+      const lastCell = yield* boxOf(ctx, "grid-cell-11-20");
+      yield* ctx.expectNear(
+        "the live last header cell aligns",
+        lastHead.x,
+        lastCell.x,
+        1,
+      );
+      yield* expectPainted(ctx, "grid-cell-11-0", false);
+
+      // 7. The vertical jump keeps the frozen column on the same row.
+      yield* ctx.host.click("grid-pan-bottom");
+      yield* settle;
+      yield* waitForText(ctx, "grid-pan", "y=-820");
+      const lastPinned = yield* boxOf(ctx, "grid-pinned-row-39");
+      const lastRow = yield* boxOf(ctx, "grid-cell-39-20");
+      yield* ctx.expectNear(
+        "the live last pinned row follows the bottom",
+        lastPinned.y,
+        lastRow.y,
+        1,
+      );
+      yield* expectPainted(ctx, "grid-row-0", false);
+
+      // 8. Home restores the first window.
+      yield* ctx.host.click("grid-home");
+      yield* settle;
+      yield* waitForText(ctx, "grid-pan", "x=0 y=0");
+      yield* expectPainted(ctx, "grid-cell-0-0", true);
+      yield* expectPainted(ctx, "grid-cell-0-20", false);
+
+      // 9. A real click selects and focuses a cell.
+      yield* ctx.host.click("grid-cell-0-1");
+      yield* settle;
+      yield* waitForText(ctx, "grid-selection", "sel=0,1");
+      yield* waitForFocus(ctx, "grid-cell-0-1");
+      yield* ctx.expectEqual(
+        "a live click focuses the cell",
+        yield* focusedOf(ctx),
+        "grid-cell-0-1",
+      );
+
+      // 10. Six Rights reveal column seven by panning the body.
+      yield* walkFocus(ctx, "right", 6);
+      yield* waitForText(ctx, "grid-selection", "sel=0,7");
+      yield* ctx.expectEqual(
+        "six live Rights reach column seven",
+        yield* textOf(ctx, "grid-selection"),
+        "sel=0,7",
+      );
+      // The focus effect lands a commit after the last key; the bounded wait is
+      // the live suite's rule (plan 382), not a tolerance on the result.
+      yield* waitForFocus(ctx, "grid-cell-0-7");
+      yield* ctx.expectEqual(
+        "live focus follows the reveal",
+        yield* focusedOf(ctx),
+        "grid-cell-0-7",
+      );
+      const revealX = yield* gridOffset(ctx, "x");
+      yield* ctx.expectEqual(
+        `the live reveal panned the body (x=${revealX})`,
+        revealX < 0,
+        true,
+      );
+      const revealed = yield* boxOf(ctx, "grid-cell-0-7");
+      yield* ctx.expectEqual(
+        "the revealed live cell is inside the viewport",
+        revealed.x >= bodyBox.x - 1 &&
+          revealed.x + revealed.width <= bodyBox.x + bodyBox.width + 8,
+        true,
+      );
+      const revealedHead = yield* boxOf(ctx, "grid-head-7");
+      yield* ctx.expectNear(
+        "the revealed live header aligns",
+        revealedHead.x,
+        revealed.x,
+        1,
+      );
+
+      // 11. Downs move the selection with the frozen column.
+      yield* walkFocus(ctx, "down", 3);
+      yield* waitForText(ctx, "grid-selection", "sel=3,7");
+      yield* ctx.expectEqual(
+        "three live Downs reach row three",
+        yield* textOf(ctx, "grid-selection"),
+        "sel=3,7",
+      );
+      yield* waitForFocus(ctx, "grid-cell-3-7");
+      yield* ctx.expectEqual(
+        "live focus follows the selection down",
+        yield* focusedOf(ctx),
+        "grid-cell-3-7",
+      );
+      const downCell = yield* boxOf(ctx, "grid-cell-3-7");
+      const downPinned = yield* boxOf(ctx, "grid-pinned-row-3");
+      yield* ctx.expectNear(
+        "the live pinned row follows the keyboard move",
+        downPinned.y,
+        downCell.y,
+        1,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${gridScenario.id}.png`);
+    }),
+};
+
 const columnConfig: LiveScenario = {
   id: "live-column-config",
   title: "Live data grid: hide, show and reorder columns in a window",
@@ -6908,6 +7148,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   replace,
   inspector,
   dataGridColumns,
+  grid,
   columnConfig,
   cropArea,
   appChrome,

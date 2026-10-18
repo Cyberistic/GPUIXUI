@@ -12,7 +12,10 @@
  * windowed in component code (`grid-window.ts`). The probe is therefore the
  * measured contract a `packages/data-grid` implements, not a mock.
  *
- * Measured facts: plan `185` §8.
+ * Measured facts: plan `185` §8. The live twin (`live-grid`, plan `556`) repeats
+ * the wheel, pan, windowing and keyboard-reveal path in a real window. Colour
+ * and the accessibility dump stay here: the live tree has no `style` and the
+ * live renderer has no a11y method (plan `197`).
  */
 import { useEffect, useRef, useState } from "react";
 import { Effect } from "effect";

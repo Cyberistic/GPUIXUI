@@ -70,7 +70,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | chart | `chart-svg` | verified |
 | toast | `toast-lifecycle` | verified |
 | notification | `notification-centre`, `live-notification-centre` | verified |
-| grid | `grid-wide-table` | verified |
+| grid | `grid-wide-table`, `live-grid` | verified |
 | data-grid | `data-grid-virtual`, `data-grid-columns` | verified |
 | columns | `data-grid-columns`, `live-data-grid-columns` | verified |
 | column-config | `column-config`, `live-column-config` | verified |
@@ -95,11 +95,13 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | frames | `frame-stats`, `live-frames` | verified |
 
 The suite is **101/101 green here** (exit `0`, `.artifacts/smoke-report.json`,
-**3536 checks**) and the live suite **53/53** (`live-report.json`,
-**1133 checks**, exit `0`) on the release-tag binding; the merge gate on
-2026-10-19 ran the whole registry, so the plan `532` terminal twin, the plan
-`534` variable-row twin and the plan `535`/`536` pointer twins are all in that
-total. Both `host` lines carry the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
+**3536 checks**). The live suite last ran in full at **53/53**
+(`live-report.json`, **1133 checks**, exit `0`) in the 2026-10-19 merge gate,
+which included the plan `532` terminal twin, the plan `534` variable-row twin
+and the plan `535`/`536` pointer twins. Focused additions since then — plan
+`554`'s select/combobox/tooltip and plan `556`'s grid — bring the live registry
+to **57**; no full-suite total is claimed for them. Both `host` lines carry the
+pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
 and a borderless size — is what every geometry check now asserts.
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**
@@ -149,12 +151,13 @@ wheel is always `precise: true`, `touchPhase: "moved"`, so `precise` cannot tell
 a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`). The last full run —
-the plan `529` re-baseline on the release-tag binding — was **50/50 green**
-(1014 checks), and the registry lists **50**; the **full live suite is a
-merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`). The last full run was
+**53/53 green** (1133 checks) on the release-tag binding; focused additions
+bring the registry to **57** (`live-select`/`live-combobox`/`live-tooltip` and
+`live-grid`), and the **full live suite is a merge/release gate** rather than a
+per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
-`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `reorder` and `tree-reorder` are confirmed there too
+`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `reorder` and `tree-reorder` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -943,7 +946,7 @@ question; the `InlineEdit` blur commit needs re-verification (cross-team row).
 
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
-| Tables | todo | yes (probe) | No `<table>` element; grid + `div` rows. Keyboard row navigation builds on the `roving-focus` contract. **Pinned chrome (`grid-wide-table`, plan `185`):** `position: "sticky"` is **ignored** by 0.10.0 (a sticky header scrolls with its content; `style.rs` maps only absolute/fixed/relative), so a header and a frozen column must be derived from the body's one scroll offset (`renderer.getScrollOffset`) and re-rendered from it — measured alignment within 1 px on both axes under a wheel pan. `role="gridcell"` maps to AccessKit `GridCell`, and `aria-selected` reaches the dump. **Editable cells (`grid-cell-editing`, plan `387`):** a press selects the row and a second press mounts a real `<input>` (a real double click is not observable: `clickCount` is always `1`, plan `533`) that takes native focus inside a virtual row; typing is a draft and Enter commits through the editor's own `onSubmit`. **Editor keystrokes bubble to the grid container's `onKeyDown`** (counted), so a grid's arrow navigation must be guarded by an `editing` state — with the guard the selection stays put and the caret keeps focus. An editing row that leaves the window **stays painted** (the plan-158 focused-row rule), so the runtime does not end the edit for you; a grid must end it on leave, and the probe commits there (`last=leave`) rather than leaving an edit attached to a row the reader cannot see. A row-set sort commits the open draft and keeps it with the **row id**, not the index. |
+| Tables | todo | yes (probe) | No `<table>` element; grid + `div` rows. Keyboard row navigation builds on the `roving-focus` contract. **Pinned chrome (`grid-wide-table`, plan `185`):** `position: "sticky"` is **ignored** by 0.10.0 (a sticky header scrolls with its content; `style.rs` maps only absolute/fixed/relative), so a header and a frozen column must be derived from the body's one scroll offset (`renderer.getScrollOffset`) and re-rendered from it — measured alignment within 1 px on both axes under a wheel pan. `role="gridcell"` maps to AccessKit `GridCell`, and `aria-selected` reaches the dump. **Editable cells (`grid-cell-editing`, plan `387`):** a press selects the row and a second press mounts a real `<input>` (a real double click is not observable: `clickCount` is always `1`, plan `533`) that takes native focus inside a virtual row; typing is a draft and Enter commits through the editor's own `onSubmit`. **Editor keystrokes bubble to the grid container's `onKeyDown`** (counted), so a grid's arrow navigation must be guarded by an `editing` state — with the guard the selection stays put and the caret keeps focus. An editing row that leaves the window **stays painted** (the plan-158 focused-row rule), so the runtime does not end the edit for you; a grid must end it on leave, and the probe commits there (`last=leave`) rather than leaving an edit attached to a row the reader cannot see. A row-set sort commits the open draft and keeps it with the **row id**, not the index. **Live (`live-grid`, plan `556`):** the contract transfers to a real window — a wheel moves the body ten rows with the frozen column aligned, a `deltaX` wheel over the body is swallowed, the component pan moves header and body together at `-360`/`-1700`, an off-window column has no painted bounds, and six Rights plus three Downs pan and align the reveal. Two harness limits: a scroller's own box **moves with its scroll** (cache it first), and every child of a scroller reports a moved box **whatever its `position`**, so the `position: "sticky"` claim itself stays headless. |
 | Sortable tables | todo | yes (probe) | Grid + keyboard headers. **Live (`live-table-sort`, plan `340`):** a real click on `table-sort` reorders the row the automation tree points at (`table-first` becomes `Item 199`), a click selects `r199`, and the selection survives a re-sort. **Playground (`data-grid-virtual`, plan `338`):** sorting a virtualized grid from anchor 45 must reset the list to row 0 (`scrollToItem`) — without the reset the anchor stays 45 and the frozen column shows unrelated rows; ascending then paints `Item 000`, descending `Item 059`. |
 | Row selection | todo | yes (probe) | `aria-selected` is supported (verified). **Live (`live-table-sort`):** a real row click selects by row id and the selection survives a re-sort. **Playground (`data-grid-virtual`):** clicking a cell in a horizontally panned virtual row selects its row, moves native focus to the cell and does not move the pan. |
 | Column configuration | todo | partial (probe) | **The hide/show/reorder contract is measured (`column-config`, plan `384`).** State is `{ order, hidden }` over the plan-349 `Widths`: hiding a column unpaints its header and every body cell and closes the gap, the visible width drives the scroller's maximum (a panned offset clamps at once, `-200 → -50`), showing restores the order slot and the width (a widened 240 px column keeps 240), reordering moves the absolute header offset and every flex body cell together within 1 px, and the list anchor plus the selection survive a hide, a reorder and a show. The settings surface is an `<anchored>` panel opened from app chrome (`Group:Columns`, trigger `Button`); it stays usable while the grid repaints, Escape returns focus and an outside press dismisses. **Windowing is still the grid's** (`grid-wide-table` windows columns; `data-grid-virtual` puts all columns in one wide `<virtual-list>`); a configuration UI, drag reordering and persisted settings belong to the data-grid package. |
