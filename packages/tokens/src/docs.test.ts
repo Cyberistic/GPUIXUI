@@ -84,6 +84,15 @@
  * `surface` to the interactive-fill row, so nothing read it. The row and the
  * explanation are now held to `overlaySurfaces`, and the row's floor cells to
  * `contrastFloors`, so the next surface cannot leave either behind.
+ *
+ * Plan 535 guards the platform table's subject: its rows were built from a
+ * `PlatformStyle`'s **override record**, but `structure.radius` is partial
+ * (plan 389) and `structure.density` may be `{ preset, … }` (plan 534), so a
+ * style the type contract allows printed `undefined` radius cells and
+ * `[object Object]` for its density — and this guard compared its own wrong
+ * string with the document. The row now derives from the resolved theme through
+ * `platform-table.ts`, and the page states that a row describes the resolved
+ * theme.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -151,6 +160,7 @@ import {
   systemUiFont,
   type PlatformName,
 } from "./platforms.js";
+import { platformTableCells } from "./platform-table.js";
 import {
   avatarSize,
   borderWidth,
@@ -888,15 +898,17 @@ describe("docs/tokens.md platform table", () => {
 
   it("states each variant's real type, shape, density and accent", () => {
     platformNames.forEach((platform) => {
-      const style = platformStyles[platform];
-      const variantRadius = style.structure.radius ?? radius;
-      const density = style.structure.density ?? defaultDensity.name;
-      const light = style.colors.light.primary ?? themes.light.colors.primary;
-      const dark = style.colors.dark.primary ?? themes.dark.colors.primary;
+      const cells = platformTableCells(platformStyles[platform]);
       expect(markdown, platform).toContain(
-        `| \`${platform}\` (${platformTypes[platform].label}) | \`${systemUiFont}\` | \`${platformTypes[platform].mono}\` | ${variantRadius.sm} / ${variantRadius.md} / ${variantRadius.lg} / ${variantRadius.xl} | \`${density}\` | \`${light}\` | \`${dark}\` |`,
+        `| \`${platform}\` (${platformTypes[platform].label}) | \`${systemUiFont}\` | \`${platformTypes[platform].mono}\` | ${cells.radius.sm} / ${cells.radius.md} / ${cells.radius.lg} / ${cells.radius.xl} | \`${cells.density}\` | \`${cells.light}\` | \`${cells.dark}\` |`,
       );
     });
+  });
+
+  it("states that a row prints the resolved theme", () => {
+    expect(markdownProse).toContain(
+      "A row states the **resolved** theme: a style that names one radius inherits the rest, and a density override prints the preset it starts from.",
+    );
   });
 });
 
@@ -912,11 +924,9 @@ describe("docs/tokens.md platform recipes", () => {
   it("states each recipe's real canvas, accent, selection, shape and density", () => {
     platformRecipeNames.forEach((recipe) => {
       const style = platformRecipes[recipe];
-      const colors = style.colors.light;
-      const shape = style.structure.radius ?? radius;
-      const density = style.structure.density ?? defaultDensity.name;
+      const cells = platformTableCells(style);
       expect(markdown, recipe).toContain(
-        `| \`${recipe}\` (${style.types.label}) | \`${colors.background}\` | \`${colors.primary}\` | \`${colors.selected}\` | ${shape.sm} / ${shape.md} / ${shape.lg} / ${shape.xl} | \`${density}\` | \`${style.types.mono}\` |`,
+        `| \`${recipe}\` (${style.types.label}) | \`${cells.background}\` | \`${cells.light}\` | \`${cells.selected}\` | ${cells.radius.sm} / ${cells.radius.md} / ${cells.radius.lg} / ${cells.radius.xl} | \`${cells.density}\` | \`${style.types.mono}\` |`,
       );
     });
   });

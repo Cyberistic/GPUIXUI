@@ -27,10 +27,9 @@ import {
   platformTypes,
   type PlatformName,
 } from "./platforms.js";
-import { defaultDensity, radius } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
+import { platformTableCells } from "./platform-table.js";
 import { statusTones } from "./styles.js";
-import { themes } from "./theme.js";
 import { themeChecks } from "./theme-check.js";
 import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
 import { typefaceRules } from "./typeface.js";
@@ -246,11 +245,8 @@ describe("packages/tokens/README.md", () => {
 
 const platformRow = (platform: PlatformName): string => {
   const style = platformStyles[platform];
-  const variantRadius = style.structure.radius ?? radius;
-  const density = style.structure.density ?? defaultDensity.name;
-  const light = style.colors.light.primary ?? themes.light.colors.primary;
-  const dark = style.colors.dark.primary ?? themes.dark.colors.primary;
-  return `| ${platformTypes[platform].label} (\`${platform}\`) | \`${style.types.mono}\` | ${variantRadius.sm} / ${variantRadius.md} / ${variantRadius.lg} / ${variantRadius.xl} | \`${density}\` | \`${light}\` | \`${dark}\` |`;
+  const cells = platformTableCells(style);
+  return `| ${platformTypes[platform].label} (\`${platform}\`) | \`${style.types.mono}\` | ${cells.radius.sm} / ${cells.radius.md} / ${cells.radius.lg} / ${cells.radius.xl} | \`${cells.density}\` | \`${cells.light}\` | \`${cells.dark}\` |`;
 };
 
 describe("packages/tokens/README.md platform table", () => {
@@ -266,6 +262,12 @@ describe("packages/tokens/README.md platform table", () => {
     );
     expect(positions).not.toContain(-1);
     expect(positions).toEqual(positions.toSorted((a, b) => a - b));
+  });
+
+  it("states that a row prints the resolved theme", () => {
+    expect(readme).toContain(
+      "A row states the **resolved** theme: a style that names one radius inherits the rest, and a density override prints the preset it starts from.",
+    );
   });
 
   it("states that a style names the dark tint it owns", () => {

@@ -5,7 +5,7 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * macOS: Apple's blue accent (`#0071E3` light, `#0A84FF` dark), grouped-canvas
  * greys, compact controls and softly blurred shadows. The dark focus ring steps
  * up to `#409CFF` — the accent at its hovered weight — because `#0A84FF` is
- * 2.50:1 on the pressed-row wash, under the 3:1 boundary floor. The dark
+ * 2.836:1 on the pressed-row wash, under the 3:1 boundary floor. The dark
  * secondary grey and pressed wash are set so row descriptions clear 4.5:1 on
  * both pointer washes (plan 079) and through the selection wash (plan 087).
  * `sans` stays GPUI's system sentinel; `mono` is

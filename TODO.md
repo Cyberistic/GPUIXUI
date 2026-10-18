@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 196/258
+`[x]` `[███████░░░]` 197/259
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1613,6 +1613,14 @@ for `ChatMessages`' 160px viewport minimum
 `[ ]` Cross-team: `components` reads `theme.dimensions.carouselIndicatorSize`
 and `carouselIndicatorActiveWidth` for the carousel's 8px/18px marks
 (`packages/components/src/carousel.tsx:399-400`) (owner: `components`; plan 530)
+`[x]` Hold the platform story to the values it ships — the catalogue and README
+platform/recipe rows were built from a style's override record, so a partial
+radius printed `undefined` and a `{ preset, … }` density printed
+`[object Object]` while the guard accepted the false row, and macOS'
+focus-ring rationale quoted 2.50:1 for a wash that measures 2.836:1; the rows
+now derive from `applyPlatformStyle`, both documents state that, and
+`platform-claims.test.ts` derives every current ratio the three platform files
+quote (plan 535)
 
 ## Phase C — Tier 1–2 components
 

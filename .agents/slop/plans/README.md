@@ -229,6 +229,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [532](./532-non-finite-diagnostics.md) | One diagnostic per non-finite metric | F | 358, 360, 364, 393, 531 | done |
 | [533](./533-typeface-exact-family.md) | The typeface form: padded and CSS-generic family names | F | 051, 385, 396, 518, 532 | done |
 | [534](./534-platform-density-metrics.md) | A platform style owns the metrics inside its density preset | F | 011, 089, 353, 380, 389, 529 | done |
+| [535](./535-platform-table-and-figures.md) | The platform table and files tell the truth about the values they ship | F | 389, 506, 526, 528, 534 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

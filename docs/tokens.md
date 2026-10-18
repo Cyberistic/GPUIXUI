@@ -616,6 +616,9 @@ built-in identity.
 | `win32` (Windows) | `.SystemUIFont` | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
 | `default` (Default) | `.SystemUIFont` | `Menlo` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |
 
+A row states the **resolved** theme: a style that names one radius inherits the
+rest, and a density override prints the preset it starts from.
+
 The Default variant has no overrides — `getPlatformTheme("default", mode)`
 returns the identity unchanged. Each real variant changes its type family,
 radii, density, motion, surfaces (including the loading skeleton), accent and

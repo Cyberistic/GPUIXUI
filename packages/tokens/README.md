@@ -735,6 +735,9 @@ The variants in `platformNames` are full token themes, not docs-only CSS:
 | Windows (`win32`) | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
 | Default (`default`) | `Menlo` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |
 
+A row states the **resolved** theme: a style that names one radius inherits the
+rest, and a density override prints the preset it starts from.
+
 `sans` is GPUI's `.SystemUIFont` sentinel on every platform — GPUI resolves it to
 the operating system's own UI font. The Default variant has no overrides and
 returns the identity unchanged. Each real variant also carries its own dark
