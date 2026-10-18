@@ -77,6 +77,25 @@ export const missingPartSources = (
   );
 
 /**
+ * Parts whose props type the package exports but the record does not list
+ * (plan 479). A compound component's part is a component in its own right: if
+ * `TabsListProps` exists, a reader must be able to find it. `hasType` is the
+ * caller's real export index, so this stays pure and the fixture can fail.
+ */
+export const missingPartApi = (
+  record: Pick<ComponentMetaInput, "slug" | "parts" | "api">,
+  hasType: (name: string) => boolean,
+): readonly string[] =>
+  record.parts.flatMap((part) => {
+    const props = `${part.name}Props`;
+    return hasType(props) && !record.api.includes(props)
+      ? [
+          `${record.slug}: ${part.name} exports ${props} but the record does not document it`,
+        ]
+      : [];
+  });
+
+/**
  * Props types the page generates but the record does not declare, and the
  * reverse (plan 441). The registry is the index at `/docs/api-reference`; the
  * page owns the generated table. The two are a set: page order is not a

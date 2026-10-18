@@ -76,6 +76,22 @@ interface Candidate {
 }
 
 /**
+ * Generated prop tables are indexed by `fumadocs-typescript` as synthetic
+ * headings and rows (`#type-table-…`), one per prop. They are not authored
+ * prose, and their shared prop names (`aria-label`, `style`, `children`) match
+ * almost any accessibility query, so a page with three tables could bury the
+ * paragraph that answers the question (plan 479). The registry index still
+ * makes every props **type** name findable (plan 442).
+ */
+const TYPE_TABLE_FRAGMENT = "#type-table-";
+
+/** Drops generated type-table rows from the page index's results. */
+export const withoutTypeTableRows = (
+  results: ReadonlyArray<SortedResult>,
+): ReadonlyArray<SortedResult> =>
+  results.filter((result) => !result.url.includes(TYPE_TABLE_FRAGMENT));
+
+/**
  * Merges the two indexes into one ranked list (plan 431). A component title
  * match moves ahead of prose; everything else keeps plan 419's order — page
  * results first, registry hits in the tail. Ties break on the shorter title
@@ -135,7 +151,11 @@ export const search = async (
     pageSearch.search(query, { limit: MAX_SEARCH_LIMIT }),
     registrySearch.search(query, { limit: MAX_SEARCH_LIMIT }),
   ]);
-  return mergeResults(pageResults, registryResults, query).slice(0, limit);
+  return mergeResults(
+    withoutTypeTableRows(pageResults),
+    registryResults,
+    query,
+  ).slice(0, limit);
 };
 
 /** Parses the route's `limit`; anything unparseable or out of range falls back. */

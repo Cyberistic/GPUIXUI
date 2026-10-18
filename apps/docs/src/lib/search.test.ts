@@ -9,6 +9,7 @@ import {
   mergeResults,
   parseSearchLimit,
   search,
+  withoutTypeTableRows,
 } from "./search";
 
 /**
@@ -164,6 +165,18 @@ describe("mergeResults", () => {
       "toast",
     );
     expect(merged).toHaveLength(1);
+  });
+});
+
+describe("withoutTypeTableRows", () => {
+  it("drops generated prop rows and keeps authored prose", () => {
+    const prose = pageResult("/docs/components/checkbox");
+    const row = textResult(
+      "row",
+      "/docs/components/checkbox#type-table-Checkbox.tsx-CheckboxProps-checked",
+    );
+
+    expect(withoutTypeTableRows([row, prose])).toEqual([prose]);
   });
 });
 

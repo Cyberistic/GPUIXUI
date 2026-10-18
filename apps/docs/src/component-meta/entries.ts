@@ -701,7 +701,18 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/card.tsx",
-      api: ["CardProps"],
+      api: ["CardProps", "CardHeaderProps"],
+      parts: [
+        { name: "Card", sourcePath: "packages/components/src/card.tsx" },
+        { name: "CardHeader", sourcePath: "packages/components/src/card.tsx" },
+        { name: "CardTitle", sourcePath: "packages/components/src/card.tsx" },
+        {
+          name: "CardDescription",
+          sourcePath: "packages/components/src/card.tsx",
+        },
+        { name: "CardContent", sourcePath: "packages/components/src/card.tsx" },
+        { name: "CardFooter", sourcePath: "packages/components/src/card.tsx" },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/card.test.tsx",
@@ -761,6 +772,18 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "yes",
       sourcePath: "packages/components/src/list.tsx",
       api: ["ListProps", "ListItemProps"],
+      parts: [
+        { name: "List", sourcePath: "packages/components/src/list.tsx" },
+        { name: "ListItem", sourcePath: "packages/components/src/list.tsx" },
+        {
+          name: "ListItemTitle",
+          sourcePath: "packages/components/src/list.tsx",
+        },
+        {
+          name: "ListItemDescription",
+          sourcePath: "packages/components/src/list.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/list.test.tsx",
@@ -811,7 +834,31 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/alert.tsx",
-      api: ["AlertProps"],
+      api: [
+        "AlertProps",
+        "AlertIconProps",
+        "AlertContentProps",
+        "AlertTitleProps",
+        "AlertDescriptionProps",
+        "AlertDismissProps",
+      ],
+      parts: [
+        { name: "Alert", sourcePath: "packages/components/src/alert.tsx" },
+        { name: "AlertIcon", sourcePath: "packages/components/src/alert.tsx" },
+        {
+          name: "AlertContent",
+          sourcePath: "packages/components/src/alert.tsx",
+        },
+        { name: "AlertTitle", sourcePath: "packages/components/src/alert.tsx" },
+        {
+          name: "AlertDescription",
+          sourcePath: "packages/components/src/alert.tsx",
+        },
+        {
+          name: "AlertDismiss",
+          sourcePath: "packages/components/src/alert.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/alert.test.tsx",
@@ -834,7 +881,17 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/field.tsx",
-      api: ["FieldProps"],
+      api: ["FieldProps", "FieldLabelProps", "FieldInputProps"],
+      parts: [
+        { name: "Field", sourcePath: "packages/components/src/field.tsx" },
+        { name: "FieldLabel", sourcePath: "packages/components/src/field.tsx" },
+        {
+          name: "FieldDescription",
+          sourcePath: "packages/components/src/field.tsx",
+        },
+        { name: "FieldError", sourcePath: "packages/components/src/field.tsx" },
+        { name: "FieldInput", sourcePath: "packages/components/src/field.tsx" },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/field.test.tsx",
@@ -900,7 +957,38 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dialog.tsx",
-      api: ["DialogProps"],
+      api: ["DialogProps", "DialogContentProps", "DialogHeaderProps"],
+      parts: [
+        { name: "Dialog", sourcePath: "packages/components/src/dialog.tsx" },
+        {
+          name: "DialogTrigger",
+          sourcePath: "packages/components/src/dialog.tsx",
+        },
+        {
+          name: "DialogClose",
+          sourcePath: "packages/components/src/dialog.tsx",
+        },
+        {
+          name: "DialogContent",
+          sourcePath: "packages/components/src/dialog.tsx",
+        },
+        {
+          name: "DialogHeader",
+          sourcePath: "packages/components/src/dialog.tsx",
+        },
+        {
+          name: "DialogTitle",
+          sourcePath: "packages/components/src/dialog.tsx",
+        },
+        {
+          name: "DialogDescription",
+          sourcePath: "packages/components/src/dialog.tsx",
+        },
+        {
+          name: "DialogFooter",
+          sourcePath: "packages/components/src/dialog.tsx",
+        },
+      ],
       liveScene: "dialog",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -948,7 +1036,18 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/popover.tsx",
-      api: ["PopoverProps"],
+      api: ["PopoverProps", "PopoverContentProps"],
+      parts: [
+        { name: "Popover", sourcePath: "packages/components/src/popover.tsx" },
+        {
+          name: "PopoverTrigger",
+          sourcePath: "packages/components/src/popover.tsx",
+        },
+        {
+          name: "PopoverContent",
+          sourcePath: "packages/components/src/popover.tsx",
+        },
+      ],
       liveScene: "popover",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -972,7 +1071,62 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/dropdown-menu.tsx",
-      api: ["DropdownMenuProps"],
+      api: [
+        "DropdownMenuProps",
+        "DropdownMenuContentProps",
+        "DropdownMenuItemProps",
+        "DropdownMenuCheckboxItemProps",
+        "MenuGroupProps",
+        "DropdownMenuSubProps",
+        "DropdownMenuSubTriggerProps",
+        "DropdownMenuSubContentProps",
+      ],
+      parts: [
+        {
+          name: "DropdownMenu",
+          sourcePath: "packages/components/src/dropdown-menu.tsx",
+        },
+        {
+          name: "DropdownMenuTrigger",
+          sourcePath: "packages/components/src/dropdown-menu.tsx",
+        },
+        {
+          name: "DropdownMenuContent",
+          sourcePath: "packages/components/src/dropdown-menu.tsx",
+        },
+        {
+          name: "DropdownMenuItem",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "DropdownMenuCheckboxItem",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "DropdownMenuGroup",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "DropdownMenuLabel",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "DropdownMenuSeparator",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "DropdownMenuSub",
+          sourcePath: "packages/components/src/menu/sub.tsx",
+        },
+        {
+          name: "DropdownMenuSubTrigger",
+          sourcePath: "packages/components/src/menu/sub.tsx",
+        },
+        {
+          name: "DropdownMenuSubContent",
+          sourcePath: "packages/components/src/menu/sub.tsx",
+        },
+      ],
       liveScene: "dropdown-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -996,7 +1150,63 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/context-menu.tsx",
-      api: ["ContextMenuProps"],
+      api: [
+        "ContextMenuProps",
+        "ContextMenuTriggerProps",
+        "ContextMenuContentProps",
+        "ContextMenuItemProps",
+        "ContextMenuCheckboxItemProps",
+        "MenuGroupProps",
+        "ContextMenuSubProps",
+        "ContextMenuSubTriggerProps",
+        "ContextMenuSubContentProps",
+      ],
+      parts: [
+        {
+          name: "ContextMenu",
+          sourcePath: "packages/components/src/context-menu.tsx",
+        },
+        {
+          name: "ContextMenuTrigger",
+          sourcePath: "packages/components/src/context-menu.tsx",
+        },
+        {
+          name: "ContextMenuContent",
+          sourcePath: "packages/components/src/context-menu.tsx",
+        },
+        {
+          name: "ContextMenuItem",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "ContextMenuCheckboxItem",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "ContextMenuGroup",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "ContextMenuLabel",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "ContextMenuSeparator",
+          sourcePath: "packages/components/src/menu/item.tsx",
+        },
+        {
+          name: "ContextMenuSub",
+          sourcePath: "packages/components/src/menu/sub.tsx",
+        },
+        {
+          name: "ContextMenuSubTrigger",
+          sourcePath: "packages/components/src/menu/sub.tsx",
+        },
+        {
+          name: "ContextMenuSubContent",
+          sourcePath: "packages/components/src/menu/sub.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/context-menu.test.tsx",
@@ -1019,7 +1229,35 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/command-menu.tsx",
-      api: ["CommandMenuProps"],
+      api: [
+        "CommandMenuProps",
+        "CommandMenuInputProps",
+        "CommandMenuListProps",
+        "CommandMenuItemProps",
+        "CommandMenuEmptyProps",
+      ],
+      parts: [
+        {
+          name: "CommandMenu",
+          sourcePath: "packages/components/src/command-menu.tsx",
+        },
+        {
+          name: "CommandMenuInput",
+          sourcePath: "packages/components/src/command-menu.tsx",
+        },
+        {
+          name: "CommandMenuList",
+          sourcePath: "packages/components/src/command-menu.tsx",
+        },
+        {
+          name: "CommandMenuItem",
+          sourcePath: "packages/components/src/command-menu.tsx",
+        },
+        {
+          name: "CommandMenuEmpty",
+          sourcePath: "packages/components/src/command-menu.tsx",
+        },
+      ],
       liveScene: "command-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1043,7 +1281,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("tabs", "Tabs", "2", "Switches between sibling views in place.", {
     gpuix: "partial",
     sourcePath: "packages/components/src/tabs.tsx",
-    api: ["TabsProps"],
+    api: ["TabsProps", "TabsListProps", "TabsTriggerProps", "TabsContentProps"],
     pattern: "stateful",
     parts: [
       { name: "Tabs", sourcePath: "packages/components/src/tabs.tsx" },
@@ -1075,7 +1313,25 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/accordion.tsx",
-      api: ["AccordionProps"],
+      api: ["AccordionProps", "AccordionItemProps", "AccordionTriggerProps"],
+      parts: [
+        {
+          name: "Accordion",
+          sourcePath: "packages/components/src/accordion.tsx",
+        },
+        {
+          name: "AccordionItem",
+          sourcePath: "packages/components/src/accordion.tsx",
+        },
+        {
+          name: "AccordionTrigger",
+          sourcePath: "packages/components/src/accordion.tsx",
+        },
+        {
+          name: "AccordionContent",
+          sourcePath: "packages/components/src/accordion.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/accordion.test.tsx",
@@ -1102,7 +1358,21 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/collapsible.tsx",
-      api: ["CollapsibleProps"],
+      api: ["CollapsibleProps", "CollapsibleTriggerProps"],
+      parts: [
+        {
+          name: "Collapsible",
+          sourcePath: "packages/components/src/collapsible.tsx",
+        },
+        {
+          name: "CollapsibleTrigger",
+          sourcePath: "packages/components/src/collapsible.tsx",
+        },
+        {
+          name: "CollapsibleContent",
+          sourcePath: "packages/components/src/collapsible.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/collapsible.test.tsx",
@@ -1125,7 +1395,38 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/breadcrumb.tsx",
-      api: ["BreadcrumbProps"],
+      api: [
+        "BreadcrumbProps",
+        "BreadcrumbListProps",
+        "BreadcrumbItemProps",
+        "BreadcrumbLinkProps",
+      ],
+      parts: [
+        {
+          name: "Breadcrumb",
+          sourcePath: "packages/components/src/breadcrumb.tsx",
+        },
+        {
+          name: "BreadcrumbList",
+          sourcePath: "packages/components/src/breadcrumb.tsx",
+        },
+        {
+          name: "BreadcrumbItem",
+          sourcePath: "packages/components/src/breadcrumb.tsx",
+        },
+        {
+          name: "BreadcrumbLink",
+          sourcePath: "packages/components/src/breadcrumb.tsx",
+        },
+        {
+          name: "BreadcrumbPage",
+          sourcePath: "packages/components/src/breadcrumb.tsx",
+        },
+        {
+          name: "BreadcrumbSeparator",
+          sourcePath: "packages/components/src/breadcrumb.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/breadcrumb.test.tsx",
@@ -1148,7 +1449,40 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/pagination.tsx",
-      api: ["PaginationProps"],
+      api: [
+        "PaginationProps",
+        "PaginationPreviousProps",
+        "PaginationListProps",
+        "PaginationItemProps",
+        "PaginationNextProps",
+        "PaginationEllipsisProps",
+      ],
+      parts: [
+        {
+          name: "Pagination",
+          sourcePath: "packages/components/src/pagination.tsx",
+        },
+        {
+          name: "PaginationPrevious",
+          sourcePath: "packages/components/src/pagination.tsx",
+        },
+        {
+          name: "PaginationList",
+          sourcePath: "packages/components/src/pagination.tsx",
+        },
+        {
+          name: "PaginationItem",
+          sourcePath: "packages/components/src/pagination.tsx",
+        },
+        {
+          name: "PaginationNext",
+          sourcePath: "packages/components/src/pagination.tsx",
+        },
+        {
+          name: "PaginationEllipsis",
+          sourcePath: "packages/components/src/pagination.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/pagination.test.tsx",
@@ -1194,7 +1528,45 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/combobox.tsx",
-      api: ["ComboboxProps"],
+      api: [
+        "ComboboxProps",
+        "ComboboxTriggerProps",
+        "ComboboxContentProps",
+        "ComboboxInputProps",
+        "ComboboxListProps",
+        "ComboboxItemProps",
+        "ComboboxEmptyProps",
+      ],
+      parts: [
+        {
+          name: "Combobox",
+          sourcePath: "packages/components/src/combobox.tsx",
+        },
+        {
+          name: "ComboboxTrigger",
+          sourcePath: "packages/components/src/combobox.tsx",
+        },
+        {
+          name: "ComboboxContent",
+          sourcePath: "packages/components/src/combobox.tsx",
+        },
+        {
+          name: "ComboboxInput",
+          sourcePath: "packages/components/src/combobox.tsx",
+        },
+        {
+          name: "ComboboxList",
+          sourcePath: "packages/components/src/combobox.tsx",
+        },
+        {
+          name: "ComboboxItem",
+          sourcePath: "packages/components/src/combobox.tsx",
+        },
+        {
+          name: "ComboboxEmpty",
+          sourcePath: "packages/components/src/combobox.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/combobox.test.tsx",
@@ -1217,7 +1589,30 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/date-picker.tsx",
-      api: ["DatePickerProps"],
+      api: [
+        "DatePickerProps",
+        "DatePickerTriggerProps",
+        "DatePickerContentProps",
+        "DatePickerCalendarProps",
+      ],
+      parts: [
+        {
+          name: "DatePicker",
+          sourcePath: "packages/components/src/date-picker.tsx",
+        },
+        {
+          name: "DatePickerTrigger",
+          sourcePath: "packages/components/src/date-picker.tsx",
+        },
+        {
+          name: "DatePickerContent",
+          sourcePath: "packages/components/src/date-picker.tsx",
+        },
+        {
+          name: "DatePickerCalendar",
+          sourcePath: "packages/components/src/date-picker.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/date-picker.test.tsx",
@@ -1248,7 +1643,30 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/time-picker.tsx",
-      api: ["TimePickerProps", "TimePickerSegmentProps"],
+      api: [
+        "TimePickerProps",
+        "TimePickerSegmentProps",
+        "TimePickerSeparatorProps",
+        "TimePickerClearProps",
+      ],
+      parts: [
+        {
+          name: "TimePicker",
+          sourcePath: "packages/components/src/time-picker.tsx",
+        },
+        {
+          name: "TimePickerSegment",
+          sourcePath: "packages/components/src/time-picker.tsx",
+        },
+        {
+          name: "TimePickerSeparator",
+          sourcePath: "packages/components/src/time-picker.tsx",
+        },
+        {
+          name: "TimePickerClear",
+          sourcePath: "packages/components/src/time-picker.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/time-picker.test.tsx",
@@ -1272,7 +1690,30 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/message-scroller.tsx",
-      api: ["MessageScrollerProps", "MessageScrollerViewportProps"],
+      api: [
+        "MessageScrollerProps",
+        "MessageScrollerViewportProps",
+        "MessageScrollerItemProps",
+        "MessageScrollerJumpToLatestProps",
+      ],
+      parts: [
+        {
+          name: "MessageScroller",
+          sourcePath: "packages/components/src/message-scroller.tsx",
+        },
+        {
+          name: "MessageScrollerViewport",
+          sourcePath: "packages/components/src/message-scroller.tsx",
+        },
+        {
+          name: "MessageScrollerItem",
+          sourcePath: "packages/components/src/message-scroller.tsx",
+        },
+        {
+          name: "MessageScrollerJumpToLatest",
+          sourcePath: "packages/components/src/message-scroller.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/message-scroller.test.tsx",
@@ -1296,7 +1737,17 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/fieldset.tsx",
-      api: ["FieldsetProps"],
+      api: ["FieldsetProps", "FieldsetLegendProps"],
+      parts: [
+        {
+          name: "Fieldset",
+          sourcePath: "packages/components/src/fieldset.tsx",
+        },
+        {
+          name: "FieldsetLegend",
+          sourcePath: "packages/components/src/fieldset.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/fieldset.test.tsx",
@@ -1348,7 +1799,39 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/navigation-menu.tsx",
-      api: ["NavigationMenuProps", "NavigationMenuLinkProps"],
+      api: [
+        "NavigationMenuProps",
+        "NavigationMenuListProps",
+        "NavigationMenuItemProps",
+        "NavigationMenuContentProps",
+        "NavigationMenuLinkProps",
+      ],
+      parts: [
+        {
+          name: "NavigationMenu",
+          sourcePath: "packages/components/src/navigation-menu.tsx",
+        },
+        {
+          name: "NavigationMenuList",
+          sourcePath: "packages/components/src/navigation-menu.tsx",
+        },
+        {
+          name: "NavigationMenuItem",
+          sourcePath: "packages/components/src/navigation-menu.tsx",
+        },
+        {
+          name: "NavigationMenuTrigger",
+          sourcePath: "packages/components/src/navigation-menu.tsx",
+        },
+        {
+          name: "NavigationMenuContent",
+          sourcePath: "packages/components/src/navigation-menu.tsx",
+        },
+        {
+          name: "NavigationMenuLink",
+          sourcePath: "packages/components/src/navigation-menu.tsx",
+        },
+      ],
       liveScene: "navigation-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1372,6 +1855,20 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/preview-card.tsx",
       api: ["PreviewCardProps", "PreviewCardContentProps"],
+      parts: [
+        {
+          name: "PreviewCard",
+          sourcePath: "packages/components/src/preview-card.tsx",
+        },
+        {
+          name: "PreviewCardTrigger",
+          sourcePath: "packages/components/src/preview-card.tsx",
+        },
+        {
+          name: "PreviewCardContent",
+          sourcePath: "packages/components/src/preview-card.tsx",
+        },
+      ],
       liveScene: "preview-card",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1396,6 +1893,37 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/drawer.tsx",
       api: ["DrawerProps", "DrawerContentProps"],
+      parts: [
+        { name: "Drawer", sourcePath: "packages/components/src/drawer.tsx" },
+        {
+          name: "DrawerTrigger",
+          sourcePath: "packages/components/src/drawer.tsx",
+        },
+        {
+          name: "DrawerClose",
+          sourcePath: "packages/components/src/drawer.tsx",
+        },
+        {
+          name: "DrawerContent",
+          sourcePath: "packages/components/src/drawer.tsx",
+        },
+        {
+          name: "DrawerHeader",
+          sourcePath: "packages/components/src/drawer.tsx",
+        },
+        {
+          name: "DrawerTitle",
+          sourcePath: "packages/components/src/drawer.tsx",
+        },
+        {
+          name: "DrawerDescription",
+          sourcePath: "packages/components/src/drawer.tsx",
+        },
+        {
+          name: "DrawerFooter",
+          sourcePath: "packages/components/src/drawer.tsx",
+        },
+      ],
       liveScene: "drawer",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1415,6 +1943,13 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "partial",
     sourcePath: "packages/components/src/stepper.tsx",
     api: ["StepperProps", "StepperStepProps"],
+    parts: [
+      { name: "Stepper", sourcePath: "packages/components/src/stepper.tsx" },
+      {
+        name: "StepperStep",
+        sourcePath: "packages/components/src/stepper.tsx",
+      },
+    ],
     runtime: nativeSuite(
       "@gpuixui/components",
       "src/behaviour/stepper.test.tsx",
@@ -1436,6 +1971,16 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/timeline.tsx",
       api: ["TimelineProps", "TimelineItemProps"],
+      parts: [
+        {
+          name: "Timeline",
+          sourcePath: "packages/components/src/timeline.tsx",
+        },
+        {
+          name: "TimelineItem",
+          sourcePath: "packages/components/src/timeline.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/timeline.test.tsx",
@@ -1480,7 +2025,21 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/tag-input.tsx",
-      api: ["TagInputProps", "TagInputChipProps"],
+      api: ["TagInputProps", "TagInputFieldProps", "TagInputChipProps"],
+      parts: [
+        {
+          name: "TagInput",
+          sourcePath: "packages/components/src/tag-input.tsx",
+        },
+        {
+          name: "TagInputField",
+          sourcePath: "packages/components/src/tag-input.tsx",
+        },
+        {
+          name: "TagInputChip",
+          sourcePath: "packages/components/src/tag-input.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/tag-input.test.tsx",
@@ -1508,7 +2067,25 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/mention-input.tsx",
-      api: ["MentionInputProps", "MentionInputItemProps"],
+      api: [
+        "MentionInputProps",
+        "MentionInputListProps",
+        "MentionInputItemProps",
+      ],
+      parts: [
+        {
+          name: "MentionInput",
+          sourcePath: "packages/components/src/mention-input.tsx",
+        },
+        {
+          name: "MentionInputList",
+          sourcePath: "packages/components/src/mention-input.tsx",
+        },
+        {
+          name: "MentionInputItem",
+          sourcePath: "packages/components/src/mention-input.tsx",
+        },
+      ],
       liveScene: "mention-input",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1572,7 +2149,27 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
   delivered("carousel", "Carousel", "2", "Steps through a set of views.", {
     gpuix: "partial",
     sourcePath: "packages/components/src/carousel.tsx",
-    api: ["CarouselProps", "CarouselSlideProps"],
+    api: [
+      "CarouselProps",
+      "CarouselTrackProps",
+      "CarouselSlideProps",
+      "CarouselControlProps",
+    ],
+    parts: [
+      { name: "Carousel", sourcePath: "packages/components/src/carousel.tsx" },
+      {
+        name: "CarouselTrack",
+        sourcePath: "packages/components/src/carousel.tsx",
+      },
+      {
+        name: "CarouselSlide",
+        sourcePath: "packages/components/src/carousel.tsx",
+      },
+      {
+        name: "CarouselControl",
+        sourcePath: "packages/components/src/carousel.tsx",
+      },
+    ],
     runtime: nativeSuite(
       "@gpuixui/components",
       "src/behaviour/carousel.test.tsx",
@@ -1616,7 +2213,30 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "yes",
       sourcePath: "packages/components/src/keyboard-shortcuts.tsx",
-      api: ["KeyboardShortcutsProps", "KeycapProps"],
+      api: [
+        "KeyboardShortcutsProps",
+        "KeyboardShortcutsGroupProps",
+        "KeyboardShortcutProps",
+        "KeycapProps",
+      ],
+      parts: [
+        {
+          name: "KeyboardShortcuts",
+          sourcePath: "packages/components/src/keyboard-shortcuts.tsx",
+        },
+        {
+          name: "KeyboardShortcutsGroup",
+          sourcePath: "packages/components/src/keyboard-shortcuts.tsx",
+        },
+        {
+          name: "KeyboardShortcut",
+          sourcePath: "packages/components/src/keyboard-shortcuts.tsx",
+        },
+        {
+          name: "Keycap",
+          sourcePath: "packages/components/src/keyboard-shortcuts.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/keyboard-shortcuts.test.tsx",

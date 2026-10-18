@@ -471,7 +471,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–473)
 
-`[~]` `[██████████]` 76/77
+`[x]` `[██████████]` 77/78
 
 `[x]` **Preview card gets a live scene (plan 478)** — `defaultOpen` mounts the real anchored card, so an interaction-only page now shows the component on GPUix's wasm renderer instead of only a static approximation; the hover policy stays with the native suite
 
@@ -568,6 +568,11 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 `[x]` Tier-A previews for the nine remaining static Tier 1 controls (plan 451) — text area, radio group, select, range slider, meter, number field, OTP field, toggle and rating; 21 previews in total, and `theme-surface.test.ts` fails when a preview reads a `--preview-*` name the surface does not define (29 shipped kebab-case names fixed)
 `[x]` Tier-A previews for the eight static Tier 2 compositions (plan 452) — list, empty state, inline validation, breadcrumb, pagination, search input, accordion and collapsible; 29 previews in total, all under the literal and variable-name guards
 `[x]` Tier-A previews for the seven static layout/typography pages (plan 453) — text, separator, spacer, stack, box, button group and label; 36 previews in total, and every component page whose rest state is static now carries one (13 interaction/animation/icon pages stay at tier V/X)
+`[x]` **Compound parts and their API tables (plan 479)** — 29 compound records
+      declare their real parts, every exported `<Part>Props` gets a generated
+      table, the menu pages include their row and submenu sources, and the
+      generated prop rows no longer bury prose in search
+
 `[~]` Plan 427 Parts A–C — the compound/workspace metadata (`parts`,
       `pattern`, `persistence`), the conditional page template, the
       part-source and `kind: "interaction"` preview guards are landed

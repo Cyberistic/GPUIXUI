@@ -5,7 +5,11 @@ import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { LIVE_SCENES } from "../../preview/scenes";
 import { exportedNames } from "../lib/source-exports";
-import { registryViolations, statusViolations } from "./contract";
+import {
+  missingPartApi,
+  registryViolations,
+  statusViolations,
+} from "./contract";
 import { components, tierGroupTitle } from "./registry";
 import { decodeComponentMeta } from "./schema";
 
@@ -278,10 +282,10 @@ describe("component registry", () => {
 });
 
 /**
- * The compound/workspace rules (plan 427 §3). No such record exists yet, so the
- * fixtures below are the only way these contracts can fail before the first
- * data-grid or docking page — and they use real package files, not invented
- * paths.
+ * The compound/workspace rules (plan 427 §3, plan 479). The fixtures below keep
+ * the rules able to fail; the delivered records in `entries.ts` are the real
+ * data, and `registryViolations` checks every declared part against its
+ * package's real exports.
  */
 describe("compound record contract", () => {
   const base: (typeof components)[number] = {
@@ -332,7 +336,65 @@ describe("compound record contract", () => {
           entry.persistence !== null,
       )
       .map((entry) => entry.slug);
-    expect(compound.toSorted()).toEqual(["tabs", "toast"]);
+    expect(compound.toSorted()).toEqual([
+      "accordion",
+      "alert",
+      "breadcrumb",
+      "card",
+      "carousel",
+      "collapsible",
+      "combobox",
+      "command-menu",
+      "context-menu",
+      "date-picker",
+      "dialog",
+      "drawer",
+      "dropdown-menu",
+      "fieldset",
+      "inline-validation",
+      "keycap",
+      "list",
+      "mention-input",
+      "message-scroller",
+      "navigation-menu",
+      "pagination",
+      "popover",
+      "preview-card",
+      "stepper",
+      "tabs",
+      "tag-input",
+      "time-picker",
+      "timeline",
+      "toast",
+    ]);
+  });
+
+  it("documents a props type for every part that exports one", () => {
+    expect(
+      components.flatMap((entry) =>
+        missingPartApi(entry, (name) => isExported(entry.packageName, name)),
+      ),
+    ).toEqual([]);
+  });
+
+  it("fails a part whose props type is missing from the record", () => {
+    expect(
+      missingPartApi(
+        {
+          slug: "tabs",
+          parts: [
+            {
+              name: "TabsList",
+              sourcePath: "packages/components/src/tabs.tsx",
+            },
+          ],
+          api: ["TabsProps"],
+        },
+        (name) => name === "TabsListProps",
+      ),
+    ).toEqual([
+      "tabs: TabsList exports TabsListProps but the record does not document it",
+    ]);
   });
 
   it("holds every real record to the compound contract", () => {

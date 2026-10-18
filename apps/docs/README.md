@@ -143,6 +143,12 @@ props types a component documents are indexed too, so `ButtonProps` and
 and one page is listed once. `src/lib/search.test.ts` guards all four rules
 (plan 431).
 
+Generated prop-table rows (`#type-table-…`) are **not** returned as results
+(plan 479): every table repeats `aria-label`, `style` and `children`, so those
+synthetic headings buried the authored prose that answers an accessibility
+query. The registry still indexes every props **type** name, and
+`withoutTypeTableRows` has its own test.
+
 The component index's own filter searches the same record fields it can prove —
 title, summary, documented props types and limitations — so `aria-checked`
 finds Checkbox and Switch without leaving the index (plan 454). The built-site
@@ -233,14 +239,19 @@ runtime-mounted example. Copy their shape.
    must carry its native `runtime` suite, and partial support also needs a
    documented limitation. The `planned`/`delivered` helpers default `parts` to `[]`, `pattern` to
    `"static"` and `persistence` to `null`; a compound or workspace record
-   overrides them (plan 427). The shipped worked examples are **Tabs**
-   (`stateful`, four parts in one file) and **Toasts / notifications**
-   (`stateful`, provider and viewport in separate files) — copy their record and
-   page when a compound component lands. A `delivered` record also names
+   overrides them (plan 427). **Every compound record declares its real exported
+   parts** (plan 479) — `ContextMenu`, `ContextMenuTrigger`, `ContextMenuItem`,
+   … — so `missingPartSources` checks real data and every part's file reaches
+   `## Source`. The first worked examples are **Tabs** (`stateful`, four parts in
+   one file) and **Toasts / notifications** (`stateful`, provider and viewport in
+   separate files); the other 27 compound records add `parts` without changing
+   `pattern`. A `delivered` record also names
    its props types in `api` — `api: ["ButtonProps"]` — because
    `/docs/api-reference` is generated from the registry, and
    `content-references.test.ts` fails when that set and the page's prop tables
-   disagree (plan 441).
+   disagree (plan 441). When a part exports its own `<Part>Props`, list that type
+   too: `registry.test.ts`'s `missingPartApi` fails when a real part props type
+   is undocumented.
 2. Add `content/docs/components/<slug>.mdx` using the template below, and add
    the slug to `content/docs/components/meta.json`. `registry.test.ts` asserts
    that sidebar equals `index` plus every non-planned slug, so a forgotten
@@ -356,6 +367,13 @@ Prop tables use `fumadocs-typescript`'s remark plugin: write
 `<auto-type-table path="./relative/path.ts" name="ButtonProps" />` in the MDX
 and annotate the real props type with tsdoc (`@internal` hides a prop). The
 table is generated at build time from the component source, so it cannot drift.
+
+A compound page generates **one table per part that has its own props type**: the
+root table first, then `### <Part>` and its table, in the order the record
+declares its parts (plan 479). A part with no distinct props type (it takes
+`Props`) gets no heading and no table; nothing is invented. A part exported from
+another file (`ContextMenuItem` from `menu/item.tsx`) names that file in the
+table's `path`.
 
 ## Copyable source
 
