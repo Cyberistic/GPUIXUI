@@ -182,9 +182,14 @@ describe("layout containers", () => {
   });
 
   it("spacer either takes a fixed step or fills what is left", () => {
-    expect(
-      numberIn(renderSpacer({ size: "lg" }, testTheme), "width"),
-    ).toStrictEqual(Option.some(testTheme.spacing.lg));
+    // The bug guarded (plan 382): the fixed form set width *and* height, so a
+    // horizontal gap also set its row's height. It is the main-axis size now.
+    const fixed = renderSpacer({ size: "lg" }, testTheme);
+    expect(numberIn(fixed, "flexBasis")).toStrictEqual(
+      Option.some(testTheme.spacing.lg),
+    );
+    expect(numberIn(fixed, "width")).toStrictEqual(Option.none());
+    expect(numberIn(fixed, "height")).toStrictEqual(Option.none());
     expect(numberIn(renderSpacer({}, testTheme), "flexGrow")).toStrictEqual(
       Option.some(1),
     );

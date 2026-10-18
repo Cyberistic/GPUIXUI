@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 126/126
+`[x]` `[██████████]` 127/127
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1141,6 +1141,14 @@ retired once both branches are one
       caller's style are unchanged, and a rule laid along its stack's axis stays
       zero (documented). 1 element + 12 runtime cases, three mutations fail by
       name (plan `381`).
+`[x]` `packages/primitives`: **a fixed `Spacer` inflated its row's height** — the
+      fixed form set `width` *and* `height`, so a spacer used as horizontal
+      breathing room also set its row's height: measured, `<Spacer size="4xl" />`
+      (48) in a caption row (16) painted the row **48** high. It is now
+      `flex: 0 0 <step>` (`flexBasis`), the main-axis size in a row or a column;
+      measured after, the sibling moves 48 px, the row stays 16, a column gap is
+      still 48, and a caller's `flexBasis` wins. The flexible form is unchanged;
+      1 element + 4 runtime cases, both directions proven (plan `382`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

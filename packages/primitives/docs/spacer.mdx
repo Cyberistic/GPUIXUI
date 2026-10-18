@@ -23,13 +23,19 @@ import { Spacer, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `size` | spacing step | none (flexible) | a fixed square gap on both axes |
+| `size` | spacing step | none (flexible) | a fixed gap on the parent's **main** axis |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
-A fixed spacer sets **both** width and height to the step, so it works in a row
-or a column without a direction prop. A flexible spacer grows on the parent's
-main axis.
+A fixed spacer is `flex: 0 0 <step>`: the size lands on the parent's **main**
+axis, so it works in a row or a column without a direction prop and does not
+invent size on the other axis. That matters — the old form set `width` *and*
+`height`, so a 48 px horizontal gap made a 16 px caption row 48 px tall
+(measured, plan `382`). A flexible spacer grows along the same axis.
+
+Override the fixed size with `style={{ flexBasis: 40 }}`. A `width` still merges
+into the style, but a flex item's main size comes from `flexBasis`, so it will
+not move anything.
 
 ## Keyboard
 
@@ -42,20 +48,26 @@ which is correct: it must not be the only thing separating two concepts.
 
 ## Theming
 
-The fixed size is `theme.spacing[size]`. There is no pixel `size`, so a one-off
-gap cannot enter the layout.
+The fixed size is `theme.spacing[size]`, applied as `flexBasis`. There is no
+pixel `size`, so a one-off gap cannot enter the layout.
 
 ## Limitations
 
 - A flexible spacer needs a parent with a definite main-axis size; inside an
   unbounded column it simply has nothing to grow into.
+- A fixed spacer is a flex item: outside a flex container (a `Grid` cell, for
+  example) it has no size of its own.
 - It is not a margin: it occupies a flex item slot, so a parent using
   `justify` may distribute around it differently than expected.
 - No negative space or overlapping.
 
 ## Verification
 
-- `src/core/layout.test.ts` — the flexible and fixed forms.
+- `src/components/presentational.test.tsx` — the fixed form is `flexBasis` with
+  no `width`/`height`; the flexible form is `flexGrow: 1, flexBasis: 0`.
+- `runtime/spacer.runtime.test.tsx` — a row gap of `4xl` moves the sibling 48 px
+  and leaves the row at the caption line's height; a column gap still works; a
+  caller's `flexBasis` wins; the flexible form reaches the far edge (plan `382`).
 - `runtime/layout.runtime.test.tsx` — a filler pushes its sibling to the far
   edge in a real frame.
 

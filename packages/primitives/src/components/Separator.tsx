@@ -71,7 +71,15 @@ export interface SpacerProps {
   readonly testId?: string;
 }
 
-/** The element tree `Spacer` renders: a filler that pushes its siblings apart. */
+/**
+ * The element tree `Spacer` renders: a filler that pushes its siblings apart.
+ *
+ * A fixed gap is the parent's **main-axis** size (`flexBasis`), not a square: a
+ * flex item's cross size joins the line's cross size, so the old
+ * `width` + `height` pair made a caption row 48 px tall for a 48 px horizontal
+ * gap (measured, plan `382`). A caller overrides the main size with
+ * `style={{ flexBasis }}` — a `width` cannot win over a non-auto `flexBasis`.
+ */
 export const renderSpacer = (
   { size, style, testId }: SpacerProps,
   theme: PrimitiveTheme,
@@ -82,8 +90,7 @@ export const renderSpacer = (
       : {
           flexShrink: 0,
           flexGrow: 0,
-          width: theme.spacing[size],
-          height: theme.spacing[size],
+          flexBasis: theme.spacing[size],
         };
   return <div testId={testId} style={mergeStyle(fixed, style)} />;
 };
