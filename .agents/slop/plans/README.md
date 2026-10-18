@@ -181,6 +181,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [384](./384-content-box-fit.md) | A size that must fit must fit the content box | F | 353, 358, 360, 365, 372 | done |
 | [385](./385-typeface-contract.md) | The typeface half of an editable theme | F | 011, 051, 070, 324, 358, 371, 383 | done |
 | [386](./386-body-line-fit.md) | The smallest field must fit a body line | F | 011, 353, 358, 360, 367, 384 | done |
+| [387](./387-shipped-theme-enumeration.md) | The shipped-theme enumeration the package owns | F | 063, 305, 311, 380, 383 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1670,6 +1671,25 @@ the identity is 28, both above 20 + 2. The catalogue, design system, README and
 ledger now say both lines, and `body-line-fit.test.ts` proves the rule can fail,
 the content-box subtraction, the label/body maximum and the other checks'
 blindness to it.
+
+387 closes the composition gap plan 380 left on the other half of the axis
+story. 380 gave the persisted choices one resolver, but the package still owned
+each theme axis (`themeModes`, `themeContrasts`, `platformNames`,
+`platformRecipeNames`) and each resolver without owning their **enumeration**, so
+every surface that said "every shipped set" built its own list — and they
+disagreed: `contrast.test.ts` enumerated 4 (identity only), `theme-check.test.ts`
+20 (recipes at the default contrast only), `color-format.test.ts` 24, and
+`metrics.test.ts` iterated `platformNames` unfiltered, repeating the identity
+four times at one contrast, while the README quoted a sixth number ("all 20").
+`shippedThemes` derives from the axis owners and calls the three public
+resolvers, so the 24 sets — 4 identity, 12 styled platform variants and 8
+recipes, each at its mode and contrast — and their provenance are one edit at
+the owner; `platformVariants` is the styled subset, because `default` is the
+identity rather than a fourth look. The three suites that claim the full set now
+enumerate it, `shipped-themes.example.ts` is the copyable loop, `docs.test.ts`
+holds the page's derived count, `readme.test.ts` holds the front door's, and the
+reference, design system, README and ledger name the enumeration. No colour,
+role, pair, floor, metric, platform style, recipe or theme value moves.
 
 ### Reference adoption (block `200–299`)
 
