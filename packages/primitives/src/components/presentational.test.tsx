@@ -8,6 +8,7 @@
  */
 
 import type { ReactElement } from "react";
+import type { LinearGradientBackground } from "@gpuix/react";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -63,6 +64,30 @@ describe("layout containers", () => {
       testTheme.colors.muted,
     );
     expect(styleProp(bare, "backgroundColor")).toStrictEqual(Option.none());
+  });
+
+  it("keeps a two-stop gradient the caller passes through style", () => {
+    // The bug guarded (plan 342): the docs claimed the runtime is solid-only,
+    // but `background` takes a two-stop gradient and `style` is merged last.
+    const background: LinearGradientBackground = {
+      type: "linear-gradient",
+      angle: 90,
+      stops: [
+        { color: testTheme.colors.primary, position: 0 },
+        { color: testTheme.colors.accent, position: 1 },
+      ],
+    };
+    const element = renderBox(
+      { tone: "card", style: { background } },
+      testTheme,
+    );
+    expect(styleProp(element, "background")).toStrictEqual(
+      Option.some(background),
+    );
+    // The tonal fill is a separate field and still resolves underneath.
+    expect(expectSome(stringIn(element, "backgroundColor"))).toBe(
+      testTheme.colors.card,
+    );
   });
 
   it("lay their children out in one direction, on the theme's spacing", () => {

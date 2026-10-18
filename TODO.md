@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 89/89
+`[x]` `[██████████]` 90/90
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -713,8 +713,17 @@ retired once both branches are one
       `TriggerHandlers`, forward the passive mouse handlers, compose
       focus/blur/keys with their own ring and activation rule, and forward the
       description — joined after `Loading` while busy. `Box` and the
-      data-driven groups stay documented non-triggers. 6 runtime + 9 element
+      data-driven groups stay documented non-triggers. 6 runtime + 6 element
       cases, both directions proven (plan `341`)
+
+`[x]` `packages/primitives`: **`Box` denied the runtime's two-stop gradient** —
+      `docs/box.mdx` said `StyleDesc` "supports solid roles only", but 0.10.0
+      accepts `background: LinearGradientBackground` (two stops) and the
+      renderer reports the authored object back. The page now documents the real
+      capability with a themed example and states the limits that are real (no
+      background image, `borderStyle`, multi-stop/radial); an element case, a
+      runtime paint case and a cross-doc guard in `capabilities.test.ts` fail if
+      the false claim returns (plan `342`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

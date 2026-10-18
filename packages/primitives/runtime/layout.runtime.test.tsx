@@ -538,3 +538,43 @@ it("moves a control's height with density and keeps its colour", async () => {
   // Density moves numbers, never colour.
   expect(tight.background).toBe(comfortable.background);
 });
+
+it("paints a two-stop gradient passed through a Box's style", async () => {
+  // The bug guarded (plan 342): box.mdx said `StyleDesc` "supports solid roles
+  // only", but 0.10.0 accepts a two-stop `background` gradient. The renderer
+  // reports the authored object back, so a component that dropped `background`
+  // from the caller's style would fail here.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="none"
+        padding="lg"
+        testId="gradient"
+        style={{
+          background: {
+            type: "linear-gradient",
+            angle: 90,
+            stops: [
+              { color: testTheme.colors.primary, position: 0 },
+              { color: testTheme.colors.accent, position: 1 },
+            ],
+          },
+        }}
+      />
+    </Surface>,
+  );
+  const background = Option.getOrUndefined(
+    Option.flatMap(runtime.element("gradient"), (element) =>
+      Option.fromNullishOr(element.style.background),
+    ),
+  );
+  expect(background).toMatchObject({
+    type: "linear-gradient",
+    angle: 90,
+    stops: [
+      { color: testTheme.colors.primary, position: 0 },
+      { color: testTheme.colors.accent, position: 1 },
+    ],
+  });
+});

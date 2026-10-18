@@ -32,6 +32,43 @@ import { Box, Text } from "@gpuixui/primitives";
 | `selected` | `selected` | a selected row or tile |
 | `skeleton` | `skeleton` | a placeholder block |
 
+## Backgrounds
+
+`tone` paints one semantic role. For anything else, `style` is the override
+surface, and the runtime's `StyleDesc` accepts a **two-stop linear gradient** as
+`background`:
+
+```tsx
+import { Box, useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+<Box
+  tone="none"
+  padding="lg"
+  radius="md"
+  style={{
+    background: {
+      type: "linear-gradient",
+      angle: 90,
+      stops: [
+        { color: theme.colors.primary, position: 0 },
+        { color: theme.colors.accent, position: 1 },
+      ],
+    },
+  }}
+/>;
+```
+
+The gradient replaces the tonal fill; `background` and `backgroundColor` are two
+separate fields, so `tone` still decides the solid paint when no `background` is
+given. Both stops are theme roles here — a literal colour in a component or a
+page example is the scattered-value rule this package avoids.
+
+Real limits: no background **image**, no `borderStyle`, and no multi-stop,
+radial, conic or repeating gradient (the runtime's `background` takes exactly
+two stops). See `docs/gpuix-capabilities.md` §3.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -72,8 +109,11 @@ elevation from the theme's shadow list, of which GPUix paints the first entry.
 
 - No `role`, `tabIndex` or event props: the public API is a container, not a
   host-element re-export. Compose a host element when you need semantics.
-- No gradient, background image or border-style control: the runtime's
-  `StyleDesc` supports solid roles only.
+- No dedicated `background` prop; `style.background` takes a two-stop linear
+  gradient (see Backgrounds). There is no background **image**, no
+  `borderStyle`, and no multi-stop, radial, conic or repeating gradient: the
+  runtime's `background` is `string | LinearGradientBackground` with exactly two
+  stops.
 - One shadow per element — the runtime paints a single `boxShadow`.
 
 ## Verification

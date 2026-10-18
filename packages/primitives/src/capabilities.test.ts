@@ -161,4 +161,16 @@ describe("GPUix capability reference", () => {
     const unpublished = Arr.join(section(doc, "### Not published"), "\n");
     expect(unpublished).toContain("createPortal");
   });
+
+  it("does not contradict the gradient verdict in the Box page", async () => {
+    // The bug guarded (plan 342): box.mdx said `StyleDesc` "supports solid
+    // roles only" while this table says a two-stop gradient is supported.
+    const doc = await Effect.runPromise(readCapabilities());
+    const box = await Effect.runPromise(
+      root("packages", "primitives", "docs", "box.mdx"),
+    );
+    expect(verdictFor(doc, "Two-stop linear gradient")).toBe("supported");
+    expect(Str.includes("supports solid roles only")(box)).toBe(false);
+    expect(Str.includes("linear-gradient")(box)).toBe(true);
+  });
 });
