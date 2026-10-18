@@ -6,8 +6,8 @@
  * On the shipped macOS dark set that fill measures **2.748:1** on `selected` and
  * **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a selected
  * inline edit vanished while every theme check returned `[]`. The caret is the
- * accent's readable ink (`primaryText`) and `caretPairs` holds it on the nine
- * surfaces a field sits on.
+ * accent's readable ink (`primaryText`): the eight text surfaces already hold it
+ * at the secondary floor, and `caretPairs` adds the field's own `input` fill.
  *
  * The plan-511 regression the role already fixed stays: the runtime's built-in
  * dark caret (`#7C86FF`) measures 3.129:1 on the AAA light `input` and 2.795:1
