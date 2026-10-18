@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 121/121
+`[x]` `[██████████]` 122/122
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -859,6 +859,16 @@ retired once both branches are one
       shape, states the hug-vs-fill trade and the real limits. 2 core + 1
       element + 3 runtime cases, both mutations fail by name (offline
       660 → 665, runtime 613 → 616; plan `376`).
+`[x]` `packages/primitives`: **`Text` could not underline or strike** — 0.10.0
+      paints `textDecoration` (`underline`, `line-through`), but the text
+      primitive exposed no prop, so a struck former price needed a hand-written
+      `style`, and `docs/text.mdx` never mentioned the gap. `decoration` now
+      resolves through `textStyle` (paint only), the page shows the struck-price
+      and inline-emphasis shapes and records that italic is unexpressible (no
+      `fontStyle`), and a capture suite proves underline matches a manual frame,
+      both decorations differ from plain, and they differ from each other. 2
+      core + 1 element + 1 runtime file (2 cases), both mutations fail by name
+      (offline 665 → 667, runtime 616 → 618, 33 files; plan `377`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **a slider answered a hover with nothing** — measured
       across the whole Tier 1 set: every pointer-interactive element declares

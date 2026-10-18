@@ -23,6 +23,18 @@ import { Text, Stack } from "@gpuixui/primitives";
 </Stack>;
 ```
 
+Inline decoration is one prop — a former price, or an inline emphasis that is
+still plain text (`Text` is not a link; a real one is Tier 2):
+
+```tsx
+<Stack direction="row" gap="2xs" align="baseline">
+  <Text role="caption" tone="muted" decoration="line-through">$49</Text>
+  <Text role="bodyStrong">$39</Text>
+</Stack>;
+
+<Text tone="primary" decoration="underline">View changelog</Text>;
+```
+
 ## Roles
 
 | `role` | Family | Typical use |
@@ -56,6 +68,7 @@ a font size.
 | `role` | `TextRole` | `"body"` | size, leading, weight and family |
 | `tone` | `TextTone` | `"default"` | colour role |
 | `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment; `"end"` is sent to the runtime as its `right` (plan `365`) |
+| `decoration` | `"underline" \| "line-through"` | none | the runtime's `textDecoration`; paint only, never a semantic emphasis (plan `377`) |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | hard-clip after N lines (a value below 1 is ignored) |
 | `selectable` | `boolean` | `false` | `userSelect: "text"`; off for chrome, on for content |
@@ -89,7 +102,9 @@ plan `059`):
 `display` is deliberately not a heading: it is a visual scale, and the page's
 outline level is the app's decision — use `h1` for the page title. A screen
 reader therefore hears a real document outline when the roles are used honestly,
-and a flat list of labels otherwise.
+and a flat list of labels otherwise. A `decoration` is paint only: it is not
+announced, so a struck-out value still needs words ("was", "no longer
+available") when the removal is information the reader needs.
 
 ## Theming
 
@@ -119,6 +134,11 @@ hard-coded pixel value.
   container the runtime maps to a paragraph.
 - No rich text: one run, one role. Composition is several `Text` nodes in a
   `Stack`.
+- **No italic.** `StyleDesc` has no `fontStyle`; the runtime offers family and
+  weight only, so emphasis is a different face or a heavier role, not a slant.
+- `decoration` is one value per run: no decoration colour, thickness, style or
+  offset, and no way to decorate part of a string. Split the run into adjacent
+  `Text` nodes when only a word is struck (they merge onto one line).
 - No responsive type scale or fluid sizing.
 - `truncate` needs a bounded width to truncate against.
 - `clamp` needs a bounded width to know how many lines the text would take;
@@ -130,10 +150,13 @@ hard-coded pixel value.
 - `src/core/style.test.ts` — the clamp payload (`maxHeight`, `overflow`, no
   `lineClamp`) and the values it refuses.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
-  selectable.
+  selectable; decoration resolves, and a caller's `style` wins (plan `377`).
 - `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,
   both directions of the shared-layout regression, and the full string in the
   accessibility tree (plan `082`).
+- `runtime/text-decoration.runtime.test.tsx` — a capture proves underline is
+  byte-identical to a manual `textDecoration` frame and different from plain,
+  and that line-through differs from both (plan `377`).
 - `runtime/text-align.runtime.test.tsx` — `align="end"` is byte-identical to a
   manual `textAlign: "right"` frame and different from `align="start"` (plan
   `365`).
