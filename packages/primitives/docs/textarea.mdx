@@ -54,7 +54,9 @@ mean.
 
 ## Accessibility
 
-- The native element is announced as a multi-line text input.
+- The native element is announced as `MultilineTextInput` (measured: the
+  accessibility dump prints `MultilineTextInput:"Notes"`), not the single-line
+  `TextInput` that `Input` reports.
 - The name comes from `label`; there is no `aria-labelledby`.
 - `invalid` is visual; put the message beside the field in words.
 - As with `Input`, there is no `aria-describedby`.

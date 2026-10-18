@@ -5,7 +5,7 @@
 | Phase | F (hardening) |
 | Owner | primitives workstream |
 | Depends on | `041`, `047`, `057`, `058`, `071`, `073`, `084`, `089`, `090` |
-| Status | **planned** |
+| Status | **done** (2026-10-18) |
 
 Self-contained: §1 the gap, §2 the rule, §3 the files, §4 commands and expected
 results, §5 the test plan and the two-direction proof, §6 STOP conditions, §7
@@ -184,15 +184,65 @@ Stop and report (do not improvise) if:
 
 ## 7. Outcome
 
-(Fill after the run: measured roles, any component fix, failing directions, and
-the final counts.)
+### Measured
+
+`runtime/name.runtime.test.tsx` is **30 tests**: 28 role/name cases, the
+composed-scene closure and the presentational case.
+
+One expectation was wrong and the runtime corrected it: a `TextArea` is
+**`MultilineTextInput`**, not `TextInput`. The failure printed
+
+```text
+expected TextInput named "Notes" in [MultilineTextInput:"Notes", Window:"GPUIX Test"]
+```
+
+so the table, `docs/textarea.mdx` and the Text areas inventory row now name
+`MultilineTextInput`. Every other role matched the table. `Slider` had never had
+a runtime role/name assertion; it now passes as `Slider:"Volume"` and
+`Slider:"Band minimum"`.
+
+### Failing directions
+
+With `aria-label={props.label}` deleted from `Switch`:
+
+```text
+× Switch exposes its documented role and name
+  AssertionError: expected Switch named "Wifi" in [Switch:"", Window:"GPUIX Test"]
+× leaves no interactive node in a composed scene unnamed
+  AssertionError: unnamed interactive nodes: ... Switch:"", ...
+  expected [ 'Switch' ] to strictly equal []
+```
+
+With `role="slider"` deleted from `Slider`'s track:
+
+```text
+× Slider exposes its documented role and name
+  AssertionError: expected Slider named "Volume" in [Window:"GPUIX Test"]
+```
+
+The second direction also shows why the table is needed: with no role there is
+no interactive node for the closure to inspect, so only the per-control case
+reports it.
+
+Both mutations were restored with `git checkout --`, and the matrix passed
+again.
+
+### After
+
+- The name matrix is the third cross-control invariant beside the focus-ring and
+  tab-order matrices.
+- No component source changed: every control already carried its name and role.
+  The one correction was the measured `TextArea` role in the table and docs.
+- Offline: **38 files / 433 tests passed** (unchanged; the matrix is runtime-only).
+- Runtime: **21 files / 295 tests passed** (265 before; +30).
+- `nub run check` passes (`check:tests`, lint, format, types).
 
 ## 8. Acceptance
 
-- [ ] The name matrix covers every Tier 1 control that carries a name.
-- [ ] The closure case proves no interactive node is unnamed.
-- [ ] Presentational primitives expose no interactive node.
-- [ ] Both mutation directions fail as described, and the restored tree passes.
-- [ ] `README.md`, `COMPONENTS.md` and `TODO.md` record the matrix; this plan is
+- [x] The name matrix covers every Tier 1 control that carries a name.
+- [x] The closure case proves no interactive node is unnamed.
+- [x] Presentational primitives expose no interactive node.
+- [x] Both mutation directions fail as described, and the restored tree passes.
+- [x] `README.md`, `COMPONENTS.md` and `TODO.md` record the matrix; this plan is
       indexed.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.

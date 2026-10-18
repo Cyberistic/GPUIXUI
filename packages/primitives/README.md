@@ -196,7 +196,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **20 files, 265 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **21 files, 295 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -229,8 +229,11 @@ tinted icon and a spinner instead of the icon while busy (plan 086), and a
 is what the docs now say (plan 087), a tab-order matrix that proves a
 disabled control is not a stop while an enabled one is (plan 089), a failed
 validation that recolours a field's border and keeps its surface on hover and
-press (plan 091), and an examples suite that really mounts every registered
-example because a parity test fails when the list drifts (plan 092).
+press (plan 091), an examples suite that really mounts every registered
+example because a parity test fails when the list drifts (plan 092), and an
+accessible-name matrix that proves the role and exact name of 28 name-bearing
+Tier 1 nodes, that no interactive node in a composed scene is unnamed, and that
+the presentational primitives invent no role (plan 093).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

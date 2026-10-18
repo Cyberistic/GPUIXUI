@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 65/66
+`[~]` `[██████████]` 66/67
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -474,6 +474,14 @@ retired once both branches are one
       the mount and the dark-palette pass, and a new example needed no record.
       `SCREENS` now has all 12 and a registry-parity test fails on a missing or
       stale record; both directions measured (plan 092)
+`[x]` `packages/primitives`: **no control's accessible name was guarded across
+      controls** — three shipped defects were one class (a control that painted
+      and took focus but reached assistive technology with no role or no name),
+      and `Slider`'s role plus `TextArea`/`NumberField`/`Switch` names had no
+      assertion at all. `runtime/name.runtime.test.tsx` now proves 28 role/name
+      pairs, a composed scene proves no interactive node is unnamed, and the
+      presentational primitives prove they invent no role; measured `TextArea`
+      is `MultilineTextInput`. Both directions measured (plan 093)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

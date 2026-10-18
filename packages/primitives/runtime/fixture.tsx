@@ -49,9 +49,10 @@ export const Surface = ({
   </ThemeProvider>
 );
 
-/** A fresh 1280x800 window for one test — the test boundary (`Effect.runPromise`). */
-export const openWindow = (): Promise<Runtime> =>
-  Effect.runPromise(createRuntime(WINDOW));
+/** A fresh window for one test — the test boundary (`Effect.runPromise`). */
+export const openWindow = (
+  size: { readonly width?: number; readonly height?: number } = {},
+): Promise<Runtime> => Effect.runPromise(createRuntime({ ...WINDOW, ...size }));
 
 /** A real timer, for the one thing GPUI's clock cannot advance: a JS interval. */
 export const sleep = (milliseconds: number): Promise<void> =>
