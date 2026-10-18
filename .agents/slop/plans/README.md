@@ -186,6 +186,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [389](./389-platform-style-numeric-groups.md) | A platform style carries every numeric scale | B | 051, 063, 311, 321, 353, 358 | done |
 | [390](./390-elevation-ladder.md) | The elevation ladder | F | 085, 358, 368, 369 | done |
 | [391](./391-contrast-reference.md) | The contrast reference names its lists | F | 071, 086, 307, 344, 375, 382 | done |
+| [392](./392-text-hierarchy.md) | The text tiers must stay a hierarchy | F | 306, 309, 317, 351, 383, 387, 388, 391 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1757,6 +1758,21 @@ this prose. The paragraph now names the nine lists the function applies — the
 states no count. `contrast-reference.test.ts` reads the source, slices the block
 and fails if a list loses its name, a family literal returns or a count is
 restated. No role, pair, floor, metric or function body changes.
+
+392 closes a hierarchy the documents state and the checks never enforced. The
+design system calls `mutedForeground` secondary text, `disabledForeground` a
+"readable dim … well below secondary text" and `placeholder` a hint dimmer than
+a caption; the public contract enforces only minimums, so raising a tier to body
+strength returned `[]` from `themeFailures` while a disabled control looked
+enabled. The rule survived as two shipped-theme assertions on one surface each.
+`themeTextTierFailures` is the fifth check: `textTiers` is the ordered
+`[dimmer, brighter]` list, the comparison runs on the surfaces where both roles
+already have a documented pair (derived from `contrastPairs` — 12 + 12 + 5), and
+each tier must sit one `contrastFloors[level].step` below the one above it.
+Every shipped set and every base × style composition clears it (1.274 / 1.349 /
+1.440 at the tightest), so no colour, pair, floor or metric moves. The one total
+call now composes five checks in colour → typeface → contrast → hierarchy →
+metric order.
 
 ### Reference adoption (block `200–299`)
 
