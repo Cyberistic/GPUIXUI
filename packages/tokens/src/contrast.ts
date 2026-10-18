@@ -992,6 +992,21 @@ export const selectionPairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The status labels a reader selects with the copy around them. `xText` is the
+ * role for a label, icon or dot on the plain surfaces and the four row washes
+ * (plan 083), and a selectable row's label is dragged over like any other text,
+ * so the four tones are held through the composited wash exactly like body and
+ * secondary text. The status tone's own `xSoftForeground` is measured by
+ * {@link selectionSoftPairs}; a status panel's caption by the same list.
+ */
+export const selectionStatusPairs: readonly ContrastPair[] =
+  statusTones.flatMap((tone) =>
+    selectionSurfaces.map(
+      (surface): ContrastPair => [`${tone}Text`, surface, "secondary"],
+    ),
+  );
+
+/**
  * The surfaces a selection wash must stay visible on. Each entry pairs the
  * translucent `selection` role with the surface it paints on; the check
  * composites the two, so a theme whose highlight has become imperceptible fails
@@ -1115,6 +1130,7 @@ const washVisibilityFailures = (
  * Every documented pair a theme misses — text, status, secondary text and status
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
+ * four status roles through that wash (`selectionStatusPairs`, plan 366), the
  * inverse `selectionOnFill` veil for content painted on a filled action, the
  * secondary text and the wash's own perceivability on those surfaces, the
  * loading skeleton measured on every surface and row wash it fills, the designed edge around
@@ -1191,6 +1207,7 @@ export function themeContrastFailures(
   return [
     ...pairFailures,
     ...textOverWashFailures(selectionPairs, "selection", theme, floors),
+    ...textOverWashFailures(selectionStatusPairs, "selection", theme, floors),
     ...washVisibilityFailures(selectionWashPairs, "selection", theme, floors),
     ...textOverWashFailures(selectionSoftPairs, "selection", theme, floors),
     ...washVisibilityFailures(

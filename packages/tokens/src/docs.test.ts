@@ -748,7 +748,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
       ["popoverForeground", "selected", "Linux dark", 7.95],
       ["selectedForeground", "active", "macOS light", 5.21],
       ["selectedForeground", "accent", "macOS light", 5.81],
-      ["successText", "muted", "Aero light", 5.92],
+      ["successText", "muted", "Aero light", 7.68],
       ["mutedForeground", "destructiveSoft", "Aero light", 6.61],
       ["primaryText", "destructiveSoft", "Windows light", 5.26],
     ] as const;
@@ -765,6 +765,73 @@ describe("docs/tokens.md quoted tightest figures", () => {
       );
     });
   });
+  it("quotes the status label the selection wash can erase", () => {
+    const shipped: ReadonlyArray<readonly [string, Theme]> = [
+      ...themeModes.flatMap((mode) =>
+        (["default", "high"] as const).map(
+          (contrast): readonly [string, Theme] => [
+            `identity ${mode} ${contrast}`,
+            getTheme(mode, contrast),
+          ],
+        ),
+      ),
+      ...platformNames
+        .filter((platform) => platform !== "default")
+        .flatMap((platform) =>
+          themeModes.map((mode): readonly [string, Theme] => [
+            `${platformLabels[platform]} ${mode}`,
+            getPlatformTheme(platform, mode),
+          ]),
+        ),
+      ...platformRecipeNames.map((recipe): readonly [string, Theme] => [
+        `${recipeLabels[recipe]} light`,
+        getPlatformRecipeTheme(recipe, "light"),
+      ]),
+    ];
+    const tightest = (
+      contrast: "default" | "high",
+    ): readonly [string, number] => {
+      let worst: readonly [string, number] = ["", Number.POSITIVE_INFINITY];
+      shipped
+        .filter(([, theme]) => theme.contrast === contrast)
+        .forEach(([label, theme]) => {
+          statusTones.forEach((tone) => {
+            selectionSurfaces.forEach((surface) => {
+              const ratio = contrastRatio(
+                theme.colors[`${tone}Text`],
+                compositeOver(theme.colors.selection, theme.colors[surface]),
+              );
+              if (ratio < worst[1]) {
+                worst = [
+                  `${label.replace(" default", "")} ${tone}Text on ${surface}`,
+                  ratio,
+                ];
+              }
+            });
+          });
+        });
+      return worst;
+    };
+
+    const [defaultLabel, defaultRatio] = tightest("default");
+    expect([defaultLabel, Number(defaultRatio.toFixed(3))]).toEqual([
+      "XP light infoText on active",
+      4.661,
+    ]);
+    const [highLabel, highRatio] = tightest("high");
+    expect([highLabel, Number(highRatio.toFixed(3))]).toEqual([
+      "identity light high warningText on active",
+      7.37,
+    ]);
+
+    expect(markdownProse).toContain(
+      "**4.661:1** (XP light `infoText` on `active`)",
+    );
+    expect(markdownProse).toContain(
+      "**7.370:1** at AAA (identity light high `warningText` on `active`)",
+    );
+  });
+
   it("quotes the weakest field edge the shipped themes produce", () => {
     const [label, ratio] = tightest("border", "input");
 
@@ -1328,6 +1395,7 @@ describe("docs/design-system.md", () => {
       `| text selection on a soft status fill (\`xSoftForeground\`, \`foreground\` and \`mutedForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 / ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.body}:1 / ${contrastFloors.high.secondary}:1 |`,
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection of a status label (\`xText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| text selection on a filled action (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` over the composited \`selectionOnFill\` veil) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection veil on a filled action (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

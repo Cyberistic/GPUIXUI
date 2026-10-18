@@ -209,9 +209,9 @@ A runnable example lives in
 | `destructiveSoftForeground` | `#5C1619` | `#FFF1F1` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
 | `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `successText` | `#116A43` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `successText` | `#0E5739` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `destructiveText` | `#A5262B` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `destructiveText` | `#8F2126` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -424,10 +424,10 @@ carries, so it cannot claim another.
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#A5262B` | `#FF6B6B` | edge around `destructiveSoft` |
-| `infoText` | `#152F6B` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `successText` | `#0A3A26` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `warningText` | `#4B3100` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `destructiveText` | `#5C1619` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `infoText` | `#102352` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `successText` | `#082C1D` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `warningText` | `#3A2500` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `destructiveText` | `#4E1215` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `border` | `#575E6B` | `#A0A0A0` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
@@ -1067,9 +1067,18 @@ roles a status panel carries — the tone's `xSoftForeground`, the body
 own perceivability, so a selected Alert, Badge or Toast keeps its body and
 secondary floors and still shows the highlight. Every shipped set passes: the
 identity dark body on `infoSoft` is **7.26:1** at the tightest and Aero light's
-caption on `destructiveSoft` **4.78:1**, so no colour moves. An accent-toned
-link is the one deliberate omission: no wash that stays perceivable keeps
-`primaryText` at 7:1 at AAA, and macOS light measures 4.32:1 through it on
+caption on `destructiveSoft` **4.78:1**, so no colour moves. Status text is held
+through the same wash on the same nine surfaces (`selectionStatusPairs`), because
+`xText` is the role plan 083 gave a status label, icon or dot in a row and a
+selectable row's label is dragged over with the copy around it. The audit found
+XP light `successText` at 3.671:1 on `active`, Aero light at 3.721:1 on
+`selected`, and every high-contrast light tone at 6.12–6.72:1 under the 7:1
+floor while the dark sets already passed; the six light status roles move one
+half-step between the ramp steps they used, so the tightest shipped pair is
+**4.661:1** (XP light `infoText` on `active`) and the AAA tightest **7.370:1**
+(identity light high `warningText` on `active`). An accent-toned
+link is the one deliberate omission: the shipped `primaryText` does not clear
+7:1 at AAA, and macOS light measures 4.32:1 through the wash on
 `infoSoft`, under the default secondary floor. The audit found two gaps:
 identity light `successSoftForeground`
 measured 5.83:1 through the wash, under the 7:1 body floor, and Windows dark's
@@ -1283,7 +1292,8 @@ functional control boundary on the `muted` panel, those washes and the four soft
 status fills (`controlBoundarySoftPairs`), a status panel's caption and link —
 `mutedForeground` and `primaryText` on the four soft status fills
 (`softPanelTextPairs`), the selection
-wash — body and secondary text through it, and the wash's own perceivability —
+wash — body, secondary and status text through it, and the wash's own
+perceivability —
 the soft status surfaces, the designed edge on its own fill and on the eight
 surfaces a chip sits on (`softBorderSurfacePairs`), the plain divider on those
 fills, and the decorative
@@ -1302,7 +1312,10 @@ it paints, with both text roles each surface carries: the body role over
 `selectedForeground` over `selected`; and `mutedForeground` on all nine surfaces
 at the secondary floor — reported with `wash: "selection"`. `selectionPairs` is
 the text list; it names both of a card's text roles, the default `foreground` and
-`cardForeground`. An Alert, Badge or Toast is measured the same way:
+`cardForeground`. The four status labels join it through `selectionStatusPairs`,
+because `xText` is the role a status label, icon or dot paints on the four washes
+a row uses, and a selectable row's label is dragged over with the copy around
+it. An Alert, Badge or Toast is measured the same way:
 `selectionSoftPairs` holds the tone's foreground, the body and the caption
 through the wash and `selectionSoftWashPairs` the highlight's own perceivability
 on the four soft fills. The wash itself is compared with each surface it paints
@@ -1757,11 +1770,20 @@ the card's own `cardForeground` to `selectionPairs` (18 → 19) beside the defau
 `foreground`, because the two are apart in both Windows recipes and only the
 default role was measured through the wash; Windows dark is the tightest at
 **9.07:1**, so no colour moves and the plain `contrastPairs` count stays **338**.
+Plan `366` adds the four status text roles through the selection wash on the
+nine surfaces — `selectionStatusPairs`, 36 pairs — because `xText` is the role a
+status label in a selectable row paints and the label is dragged over with the
+copy around it; XP light `successText` measured 3.671:1 on `active` and every
+high-contrast light tone 6.12–6.72:1 under 7:1, so the six light status roles
+move one half-step between the ramp steps they used. The tightest pair is
+**4.661:1** (XP light `infoText` on `active`) and **7.370:1** at AAA (identity
+light high `warningText` on `active`); the plain `contrastPairs` count stays
+**338**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
 four row washes plan `083` covered, so a warning dot in a settings sidebar has a
-pair. The tightest shipped value is `successText` on `muted` at **5.92:1**
+pair. The tightest shipped value is `successText` on `muted` at **7.68:1**
 (Aero light), above the 4.5:1 secondary floor.
 
 The filled-control states are designed roles, not alpha composites. Before plan

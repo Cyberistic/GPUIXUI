@@ -136,9 +136,16 @@ describe("the selection wash on painted surfaces", () => {
       // white text.
       colors: { selection: "#C7CBFF4D" },
     });
+    const statusTextRoles = new Set([
+      "infoText",
+      "successText",
+      "warningText",
+      "destructiveText",
+    ]);
     const failures = themeContrastFailures(regressed).filter(
-      ({ wash, background }) =>
+      ({ wash, background, foreground }) =>
         wash === "selection" &&
+        !statusTextRoles.has(foreground) &&
         selectionSurfaces.some((surface) => surface === background),
     );
 

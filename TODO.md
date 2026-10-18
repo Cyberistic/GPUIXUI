@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 133/183
+`[x]` `[███████░░░]` 134/184
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -950,6 +950,15 @@ was only checked for being positive, so `20` against a `32` row returned `[]`
 while every menu and combobox list scrolled in a viewport shorter than one
 option; the bound is the active `density.rowHeight`, so a compact theme lowers it
 and every shipped 320 still passes (plan 365)
+`[x]` Hold the status label through a text selection — `xText` is the role for a
+status label, icon or dot on the four washes a row paints (plan 083), but no
+pair measured it through the composited `selection` wash, so XP light
+`successText` measured **3.671:1** on `active`, Aero light 3.721:1 on `selected`
+and every high-contrast light tone 6.12–6.72:1 under 7:1 while
+`themeContrastFailures` returned `[]`; `selectionStatusPairs` adds the four tones
+on the nine surfaces (36 pairs), the six light status roles move one designed
+half-step, every shipped set passes (4.661:1 XP light `infoText` on `active`,
+7.370:1 at AAA) and the plain 338 pairs do not move (plan 366)
 
 ## Phase C — Tier 1–2 components
 

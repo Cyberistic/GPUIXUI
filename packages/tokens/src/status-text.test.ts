@@ -84,7 +84,9 @@ describe("status text on the state washes", () => {
   });
 
   it("holds the high-contrast warning tonality to AAA on every wash", () => {
-    expect(highContrastLightTheme.colors.warningText).toBe("#4B3100");
+    // Plan 366 moved the role one half-step darker so a selected label keeps
+    // its floor through the selection wash too.
+    expect(highContrastLightTheme.colors.warningText).toBe("#3A2500");
 
     washes.forEach((wash) => {
       expect(
@@ -101,7 +103,9 @@ describe("status text on the state washes", () => {
     const regressed = extendTheme(getPlatformTheme("darwin", "light"), {
       colors: { warningText: "#8E5B00" },
     });
-    const failures = themeContrastFailures(regressed);
+    const failures = themeContrastFailures(regressed).filter(
+      ({ wash }) => wash === undefined,
+    );
 
     expect(failures).toHaveLength(1);
     expect(failures[0]?.foreground).toBe("warningText");

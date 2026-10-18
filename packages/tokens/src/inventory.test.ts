@@ -26,6 +26,7 @@ import {
   selectionPairs,
   selectionSoftPairs,
   selectionSoftWashPairs,
+  selectionStatusPairs,
   selectionWashPairs,
 } from "./contrast.js";
 import { motion } from "./motion.js";
@@ -91,6 +92,7 @@ describe("COMPONENTS.md design-system rows", () => {
     [
       `${contrastPairs.length} contrast pairs`,
       `${selectionPairs.length} selection pairs`,
+      `${selectionStatusPairs.length} status-selection text pairs`,
       `${selectionSoftPairs.length} soft-selection text pairs`,
       `${selectionWashPairs.length} wash pairs`,
       `${selectionSoftWashPairs.length} soft wash pairs`,

@@ -261,7 +261,9 @@ export interface ThemeColors {
  * fill stays near the panel and the control's `border` edge carries its shape
  * (plan 306). The quiet panel is neutral 25 — a step toward the card rather than
  * the canvas — so a `hover`, `secondary`, `accent` or `selected` fill painted on
- * a sidebar stays perceivable (plan 309).
+ * a sidebar stays perceivable (plan 309). The status text roles sit a half-step
+ * between their ramp steps, so a label keeps the secondary floor when it is
+ * selected with the row around it (plan 366).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -308,9 +310,9 @@ export const lightColors = {
   destructiveSoftForeground: palette.red[900],
   destructiveSoftBorder: "#F0ACAE",
   infoText: palette.blue[700],
-  successText: palette.green[700],
+  successText: "#0E5739",
   warningText: palette.amber[800],
-  destructiveText: palette.red[700],
+  destructiveText: "#8F2126",
   border: "#D6DAE1",
   borderStrong: palette.neutral[500],
   input: palette.neutral[0],
@@ -426,7 +428,9 @@ export const darkColors = {
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
  * skeleton is a perceivable step off the pressed wash (plan 094). The divider is
  * darker than the neutral press step, so an outlined control keeps its 3:1 edge
- * while pressed (plan 318).
+ * while pressed (plan 318). The status text roles sit a half-step between their
+ * ramp steps, so a label keeps the 7:1 floor when it is selected with the row
+ * around it (plan 366).
  */
 export const highContrastLightColors = {
   background: "#FFFFFF",
@@ -472,10 +476,10 @@ export const highContrastLightColors = {
   destructiveSoft: palette.red[200],
   destructiveSoftForeground: palette.red[950],
   destructiveSoftBorder: palette.red[700],
-  infoText: palette.blue[900],
-  successText: palette.green[900],
-  warningText: palette.amber[900],
-  destructiveText: palette.red[900],
+  infoText: "#102352",
+  successText: "#082C1D",
+  warningText: "#3A2500",
+  destructiveText: "#4E1215",
   border: "#575E6B",
   borderStrong: "#4A4F58",
   input: "#FFFFFF",

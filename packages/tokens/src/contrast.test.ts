@@ -180,6 +180,7 @@ import {
   selectionPairs,
   selectionSoftPairs,
   selectionSoftWashPairs,
+  selectionStatusPairs,
   selectionSurfaces,
   selectionWashPairs,
   softBorderSurfacePairs,
@@ -248,6 +249,7 @@ const publishedPairLists: ReadonlyArray<
   ["trackSurfacePairs", trackSurfacePairs],
   ["trackMarkPairs", trackMarkPairs],
   ["selectionPairs", selectionPairs],
+  ["selectionStatusPairs", selectionStatusPairs],
   ["selectionWashPairs", selectionWashPairs],
   ["selectionSoftPairs", selectionSoftPairs],
   ["selectionSoftWashPairs", selectionSoftWashPairs],
@@ -444,6 +446,10 @@ describe("themeContrastFailures", () => {
       ["selectedForeground", "selected"],
       ["cardForeground", "card"],
       ...selectionSurfaces.map((surface) => ["mutedForeground", surface]),
+      ...selectionStatusPairs.map(([foreground, background]) => [
+        foreground,
+        background,
+      ]),
       ...selectionSoftPairs.map(([foreground, background]) => [
         foreground,
         background,
@@ -528,6 +534,7 @@ describe("themeContrastFailures", () => {
       "destructiveSoft",
     ]);
     expect(selectionPairs.length).toBe(19);
+    expect(selectionStatusPairs).toHaveLength(36);
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(12);
     expect(selectionSoftWashPairs.length).toBe(4);
@@ -733,6 +740,7 @@ describe("contract completeness", () => {
     [
       ...contrastPairs,
       ...selectionPairs,
+      ...selectionStatusPairs,
       ...selectionWashPairs,
       ...selectionSoftPairs,
       ...selectionSoftWashPairs,

@@ -215,7 +215,12 @@ the secondary floor. Secondary text is measured through the same wash on all
 nine surfaces (`mutedForeground`), because a row description, a card caption or
 a timestamp is selected with the body copy: seven shipped sets were under
 4.5:1 there — identity light 4.06:1 and identity dark 3.49:1 on a pressed row —
-until plan 087 moved their secondary grey. `selectionWashPairs` also holds the
+until plan 087 moved their secondary grey. Status labels are measured through
+the same wash on the same nine surfaces (`selectionStatusPairs`), because
+`xText` is the role for a status label in a selectable row: XP light
+`successText` measured 3.671:1 on `active` until plan 366 moved the six light
+status roles one half-step, and the AAA tightest is 7.370:1 (identity light high
+`warningText` on `active`). `selectionWashPairs` also holds the
 wash itself to 1.05:1 against each surface, so a highlight cannot be made
 invisible to satisfy a text floor. A card's own `cardForeground` is measured
 beside the default `foreground`, because both Windows recipes ship the two apart
@@ -232,7 +237,7 @@ Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091). The panel's
 description and caption are measured through the same wash — `foreground` at the
 body floor and `mutedForeground` at the secondary floor on each soft fill,
 because an Alert's body and a Toast's caption are selected with it (plan 362);
-accent-toned text stays the documented omission. The focus ring is
+accent-toned links stay the documented omission. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught, and on the four soft
 status fills, because a toast's action button is focused while it sits on its own

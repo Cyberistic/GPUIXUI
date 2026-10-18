@@ -113,6 +113,12 @@ describe("packages/tokens/README.md", () => {
       "Secondary text is measured through the same wash on all nine surfaces (`mutedForeground`)",
     );
     expect(readme).toContain(
+      "Status labels are measured through the same wash on the same nine surfaces (`selectionStatusPairs`)",
+    );
+    expect(readme).toContain(
+      "XP light `successText` measured 3.671:1 on `active` until plan 366 moved the six light status roles one half-step",
+    );
+    expect(readme).toContain(
       `\`selectionWashPairs\` also holds the wash itself to ${contrastFloors.default.surface}:1 against each surface`,
     );
   });
