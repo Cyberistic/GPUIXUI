@@ -189,9 +189,9 @@ workstreams, this workstream took `381` (the notification centre), `382` (the li
 reveal wait) and `384` (column configuration — `383` was claimed by the components
 and tokens workstreams first), then `385` (the crop area), `386` (the
 multi-step form), `387` (editable grid cells), `388` (the file-upload
-queue) and `389` (the command palette in a real window), plus `390`, the
-correction for the window-state-dependent live focus observation; the next
-playground plan takes `391`.
+queue), `389` (the command palette in a real window), `390` (the
+window-state-dependent live focus correction) and `391` (the reorderable list);
+the next playground plan takes `392`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -287,6 +287,7 @@ playground plan takes `391`.
 | [388](./388-file-upload.md) | Tier 5 feasibility: a file-upload queue — drop paths, progress, cancel/retry and the picker bound | D/E | 100, 110, 120, 140, 162, 188, 330, 337, 387 | **landed** — `file-upload` (41 checks, headless; the live protocol has no drop verb): a drop reaches the **nearest** handler once (a handler-less child lets the zone run; a nested handler takes it alone), a handled drop delivers **no** trailing click (so the planned click guard was deleted — it swallowed the first real click), paths carry no sizes (`size=unknown` until the app stats), a 20/40/100% fill measures 48/96/240 px of a 240 px track, cancel freezes the fill and retry resets it, a failed row paints the destructive border, and the OS picker is a documented app boundary (`promptForPaths` is blocking and not automatable). Suite `89 → 90` (`3047 → 3088`), exit `0`, `upload=verified`; five mutation proofs (§10.1); 19 model unit tests (264 → 283) |
 | [389](./389-live-command-palette.md) | The command palette in a real window: the window chord, one focus owner, filtering, commit and dismissal | F | 176, 189, 190, 345, 350 | **landed** — `live-command-palette` (80 checks): `cmd-k` opens it with **nothing focused**, the veil is the full window, typing filters and the window handler still sees the keys, arrows move the row while focus stays in the input, Enter commits through `onSubmit`, and Escape, the veil press and a row click dismiss with their reason. Live `40 → 41` (`762 → 839` checks), exit `0`, `command=verified`; four mutation proofs (§6). Measured: the live `text` verb **errors** for an unmounted element while `bounds` is `null` |
 | [390](./390-live-focus-variance.md) | Live focus delivery is window-state dependent — correct the two live checks | F | 190, 344, 345, 347, 389 | **landed** — the old `onFocus=0` and "arrow restarts at the first tab" checks read one way at 15:03/15:10 and the other from 15:25 on the same clean `HEAD` (four runs). The suite now asserts that a click focuses the child (22 checks) and no longer asserts the arrow result (15 checks); live `41/41` (`839`), exit `0`. Tabs/InlineEdit cross-team rows are **re-verify** |
+| [391](./391-list-reorder.md) | Tier 5 feasibility: a reorderable list — the drop rule, keyboard move and cancel | D/E | 100, 110, 120, 140, 152, 158, 162, 172, 182, 189, 190, 197, 335 | **planned** — `list-reorder` (capability `reorder`) and `live-reorder` over a pure `insertionAt`/`dropIndex`/`moveItem` model: a pointer drop at boundary 3 from index 0 must land at index 2, the rows paint at their new `index * rowHeight`, the gesture-ending click is suppressed by distance, Escape cancels, keyboard lift/arrow/drop keeps native focus, and a virtualized list's keyed reorder is measured (remount fallback recorded). Five mutation proofs. |
 
 Cross-cutting records:
 

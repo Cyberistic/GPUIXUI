@@ -62,6 +62,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`390` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `391`
 
+`[~]` Probe a **reorderable list** per plan `391` — the unmeasured half of the
+      Drag and drop row: a pointer drop at boundary 3 from index 0 must land at
+      index 2, the rows paint at their new `index * rowHeight`, the
+      gesture-ending click is suppressed by distance, Escape cancels, keyboard
+      lift/arrow/drop keeps native focus, and a virtualized list's keyed reorder
+      is measured (with a remount fallback recorded). Capability `reorder`; headless
+      `list-reorder` + `live-reorder`.
+
 `[x]` Probe a **notification centre** per plan `381`: `notification-centre`
       (80 checks) and `live-notification-centre` (27): a 36 × 36 bell with a
       derived badge (`Button:Notifications, 3 unread`) opens a 320 × 360
