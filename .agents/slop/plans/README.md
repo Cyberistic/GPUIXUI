@@ -200,6 +200,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [502](./502-interaction-direction.md) | The interaction ladder's direction in the total check | F | 097, 327, 342, 357, 381, 383, 387, 388, 394, 398 | done |
 | [503](./503-track-row-washes.md) | The value indicator's groove on the row washes and status panels | F | 347, 094, 322, 300, 309, 366, 381, 388 | done |
 | [504](./504-solid-status-chip-selection.md) | The solid status chip and the panel action on the inverse selection veil | F | 344, 382, 394, 399 | done |
+| [505](./505-elevation-tint-aaa-dark.md) | The elevation tint on the AAA dark canvas | F | 085, 099, 345, 371, 390, 393 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2010,6 +2011,25 @@ perceivable. Every other value holds: the tightest veil is **1.060:1**
 `accent`), and the solid-chip example now applies the fill selector. The
 eleven-composition regression list, the public-checker cases and the docs guards
 live in `selection-on-fill.test.ts`, `docs.test.ts` and `status-solid.test.ts`.
+
+Plan `505` closes the last unmeasured painted value. Plan `099` established that
+the AAA dark scrim must veil with light — a dark wash cannot darken a pure black
+canvas — but the elevation kept a black tint on that canvas and measured
+**1.000:1** at every level, while §7 of the design system claimed the AAA modal
+was separated by "a light wash, its own edge and elevation". Nothing caught it
+because `shadow` was the one role still in the contract's exemption list; plan
+`371` holds only its hex form, and a copied palette could therefore erase every
+shadow while all six checks returned `[]`. The set now paints with light
+(`shadow: #FFFFFF`) and carries its own alphas
+(`highContrastDarkElevation`, 10/14/18%), like the scrim. The second half is the
+platform path: plan `345` applies a platform's level at high contrast, and a
+dark platform's 0.4–0.8 opacity over a light tint would paint a near-white halo,
+so at high contrast a style now lends the level's **geometry** while the base's
+**alpha** stays with its tint. `elevationSurfaces` publishes the four surfaces a
+raised element floats over, and `themeContrastFailures` composites every defined
+level at its own alpha over them, reporting the level and the fraction. Every
+shipped set passes; the tightest is 1.061:1 (identity dark, `sm` on
+`background`) and AAA dark moves from 1.000:1 to 1.207:1.
 
 ## How to use a plan
 
