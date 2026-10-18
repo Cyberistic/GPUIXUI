@@ -19,6 +19,7 @@
     "smoke:keyboard": "nub scripts/smoke-keyboard.ts",
     "smoke:platform": "nub scripts/smoke-platform.ts",
     "smoke:search": "nub scripts/smoke-search.ts",
+    "smoke:theme": "nub scripts/smoke-theme.ts",
     "smoke:responsive": "nub scripts/smoke-responsive.ts",
     "studio": "fumadocs-studio"
   },

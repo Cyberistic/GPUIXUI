@@ -39,6 +39,7 @@ nub run --filter docs smoke:browser # hydrate the production output in headless 
 nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
 nub run --filter docs smoke:keyboard # skip link, focus ring and Enter in a real browser
 nub run --filter docs smoke:platform # the toggle: click, URL, storage, arrows
+nub run --filter docs smoke:theme   # the theme switch: class, storage, previews
 nub run --filter docs smoke:responsive # 390 px: no sideways scroll and no clipped column
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run --filter docs api:values    # regenerate the generated Values API index
@@ -274,6 +275,28 @@ nub apps/docs/scripts/smoke-platform.ts --base-url http://127.0.0.1:4173 --no-bu
 
 Exit `1` names the step that broke, exit `2` means Chrome or the server was
 missing — never a pass.
+
+## Theme toggle smoke
+
+The other browser smokes force the colour scheme through CDP, so they prove both
+modes *render*; none of them presses the switch a reader presses. `smoke:theme`
+does: starting from a fresh profile in forced **light**, it clicks
+`[data-theme-toggle]` and asserts the document class, `color-scheme`, the page
+background, the stored `localStorage["theme"]` and every preview surface turn
+dark together; a client navigation and a parameter-free reload keep the mode
+(the scheme is still forced light, so storage is the only explanation); a second
+press returns to light.
+
+```sh
+nub run --filter docs smoke:theme
+# or against a running server:
+nub apps/docs/scripts/smoke-theme.ts --base-url http://127.0.0.1:4173 --no-build
+```
+
+Both backgrounds come from `@gpuixui/tokens`, converted to the `rgb()` form
+`getComputedStyle` reports, so the script carries no colour literal. Exit `1`
+names the step, field and observed value; exit `2` means Chrome or the server
+was missing — never a pass.
 
 ## Responsive layout
 
