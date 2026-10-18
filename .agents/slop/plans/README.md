@@ -211,6 +211,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [513](./513-selection-veil-pointer-states.md) | The inverse veil's pointer-state gap and its stale rationale | F | 344, 382, 504, 506, 510, 387 | done |
 | [514](./514-disabled-panel-action.md) | The disabled action inside a status panel | F | 306, 307, 392, 394, 397, 500, 502, 512, 513 | done |
 | [516](./516-ring-on-value-groove.md) | The focus ring on the value groove | F | 086, 093, 332, 342, 347, 354, 384, 503 | done |
+| [517](./517-keycap-surface-metric.md) | The keycap surface a theme cannot own or check | F | 011, 353, 358, 360, 367, 384, 386 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2194,6 +2195,22 @@ contrast). `iris[700]` rather than `iris[600]` keeps the ring distinct from
 the primary fill and a ring equal to it is invisible there. The invalid slider
 keeps the accent ring, so the groove is deliberately not an `invalidRingPairs`
 surface. No other role, floor, type, metric or platform value moves.
+
+Plan `517` closes the one text-bearing surface plan 353's component-dimension
+audit never reached. `Keycap` (in `keyboard-shortcuts.tsx`) paints the caption
+role on `muted` with a `border` edge and `radius.sm`, but its box is the literals
+`minWidth: 20, height: 20`, so a brand can theme the keycap's fill, edge and
+radius and not its size. The gap was measurable: raising the caption leading to
+22px leaves the keycap's 18px content box (20px less its two borders) unable to
+hold the line, `themeMetricFailures` returns `[]`, and every shortcut label
+clips. `dimensions.keycapSize` is the fixed surface (20px, so no pixel moves),
+inherited by every shipped theme, platform variant and recipe, and the metric
+contract holds it to one `caption` line plus its two borders — the same
+content-box rule plans 384 and 386 apply to a glyph and a body line. The other
+literals the newer components added are deliberately not tokens: a carousel
+dot's diameter, a timeline dot's diameter and the toast's 3px tone bar are mark
+and chrome geometry, not surfaces a theme owns. The `components` migration to
+read the token is a cross-team row.
 
 ## How to use a plan
 
