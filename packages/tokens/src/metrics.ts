@@ -162,6 +162,23 @@ const easing = (
       ];
 
 /**
+ * A font weight is a number in the CSS weight range. The runtime selects the
+ * nearest weight the family provides, so a weight outside `1…1000` names no
+ * weight at all; a non-finite value cannot be compared and is reported as
+ * `finite` alone.
+ */
+const weighable = (
+  member: string,
+  actual: number,
+): ReadonlyArray<MetricFailure> =>
+  Number.isFinite(actual)
+    ? [
+        ...atLeast("typography", member, actual, 1),
+        ...atMost("typography", member, actual, 1000),
+      ]
+    : [failure("typography", member, "finite", actual, 0)];
+
+/**
  * A ladder of named steps. Every step must be a non-negative number and, from
  * the second on, step past the one before it — or reach it, for a
  * `non-decreasing` ladder, because several shipped styles share a step (Linux
@@ -212,8 +229,9 @@ const ascendingSizes = (
 /**
  * Every numeric rule a theme misses.
  *
- * - **typography**: a role needs a size and leading, and a line box shorter
- *   than its type clips the glyphs. The two documented size ladders — prose
+ * - **typography**: a role needs a size, leading and weight, and a line box
+ *   shorter than its type clips the glyphs; a weight is a CSS number in `1…1000`
+ *   the renderer can select. The two documented size ladders — prose
  *   {@link proseLadder} and code {@link codeLadder} — may not be inverted, and
  *   `bodyStrong` is the weight variant of `body`: it may not shrink below it and
  *   must stay heavier, or emphasis is indistinguishable from body text.
@@ -318,6 +336,9 @@ export function themeMetricFailures(
         ["bodyStrong.fontWeight", typography.bodyStrong.fontWeight],
       ],
       "increasing",
+    ),
+    ...textRoles.flatMap((role) =>
+      weighable(`${role}.fontWeight`, typography[role].fontWeight),
     ),
     ...finiteMembers("borderWidth", [
       ["thin", borderWidth.thin],

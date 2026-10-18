@@ -137,6 +137,10 @@ weight-variant rule: `body` → `bodyStrong` may not shrink and must gain weight
 so a copied theme cannot flatten emphasis or render a lower role larger than the
 one above it.
 
+The four weights are a scale choice, not a type restriction: `FontWeight` is a
+number in the CSS range `1…1000`, and `themeMetricFailures` holds a copied
+theme's weights to that range, so a variable family can name its own step.
+
 Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.

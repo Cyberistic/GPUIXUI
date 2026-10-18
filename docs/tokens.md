@@ -86,7 +86,7 @@ missing here is not public.
 | `FilledControlFamily` | A filled control family from `filledControlFamilies`. |
 | `FilledControlStyle` | The resting, hover and pressed fills and the one foreground. |
 | `FocusRing` | `{ boxShadow }` for the focus ring. |
-| `FontWeight` | `400`, `500`, `600` or `700`. |
+| `FontWeight` | A numeric CSS weight, `1…1000`; the shipped scale uses `400`, `500`, `600` and `700`. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
 | `MetricFailure` | One metric a theme misses, with its group, rule and values. |
 | `MetricGroup` | A group of theme metrics from `metricGroups`. |
@@ -451,9 +451,11 @@ carries, so it cannot claim another.
 ## Typography
 
 Families come from the platform table: `sans` is `systemUiFont` (GPUI's
-`.SystemUIFont` sentinel) and `mono` is the current platform's family. Weights
-are `400`, `500`, `600`, `700`. GPUix has no `letterSpacing` field, so the scale
-does not define tracking.
+`.SystemUIFont` sentinel) and `mono` is the current platform's family. The
+shipped weights are `400`, `500`, `600` and `700`; `FontWeight` is a number in
+the CSS range `1…1000`, so a brand may name an intermediate weight its installed
+family provides. GPUix has no `letterSpacing` field, so the scale does not
+define tracking.
 
 | Role | Size | Line height | Weight | Use |
 | ---- | ---- | ----------- | ------ | --- |
@@ -1429,11 +1431,13 @@ drops a transition it cannot interpolate; and an elevation level must hold a
 shadow whose alpha is a fraction, because `alpha()` falls back to the opaque
 tint on a value it cannot parse, and whose two offsets, blur and spread are
 finite — a negative offset or spread is a direction, a `NaN` is a shadow the
-renderer cannot paint. Every other numeric metric — a type size or leading, a
-border width, a density or dimension metric, an icon, avatar, radius or spacing
-step, and every motion timing — must be a **finite** number too, because the
-renderer casts each to a 32-bit float and an infinity becomes invalid layout it
-paints as nothing, with no error. `radius` and the motion timings are
+renderer cannot paint. Every other numeric metric — a type size, leading or
+weight, a border width, a density or dimension metric, an icon, avatar, radius or
+spacing step, and every motion timing — must be a **finite** number too, because
+the renderer casts each to a 32-bit float and an infinity becomes invalid layout
+it paints as nothing, with no error. A weight is also held to `1…1000`: a zero,
+a negative or a `NaN` selects no weight, so the text system has nothing to
+paint. `radius` and the motion timings are
 deliberately non-decreasing rather than strict: Linux and Windows ship
 `radius.lg === radius.xl`, and Windows ships `motion.fast === motion.step`. An
 empty elevation level is exempt — `elevation.overlay` ships reserved and empty —

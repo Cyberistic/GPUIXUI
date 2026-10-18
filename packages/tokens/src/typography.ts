@@ -1,7 +1,12 @@
 import { systemMonoFamily, systemUiFont } from "./platforms.js";
 
-/** Available font weights. GPUIX accepts numeric weights on `StyleDesc`. */
-export type FontWeight = 400 | 500 | 600 | 700;
+/**
+ * A CSS numeric font weight, `1…1000`. The shipped scale uses four — `400`
+ * regular, `500` medium, `600` semibold and `700` bold — but a brand may name
+ * any weight its installed family provides, including a variable font's
+ * intermediate step. GPUix receives the number on `StyleDesc.fontWeight`.
+ */
+export type FontWeight = number;
 
 /** A single typographic role: size, leading and weight. */
 export interface TextStyle {

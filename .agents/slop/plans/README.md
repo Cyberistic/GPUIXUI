@@ -166,6 +166,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [367](./367-type-scale-contract.md) | The type scale must stay a scale | F | 058, 059, 358, 360 | done |
 | [368](./368-finite-metrics.md) | Every numeric metric must be paint | F | 358, 360, 364, 367 | done |
 | [369](./369-defined-overlay-elevation.md) | A defined elevation level is a level, `overlay` included | F | 085, 358, 360, 368 | done |
+| [370](./370-font-weight-metric.md) | A type weight is a paintable number | F | 058, 358, 364, 367, 368 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1408,6 +1409,22 @@ designed levels still require an entry, an empty `overlay` is the reserved case
 and stays exempt, and a defined entry takes the same `finite`, `non-negative`
 and `within` rules as the rest. Every shipped set ships an empty overlay, so no
 value moves and the "every numeric metric" sentence becomes true as written.
+
+370 closes the last numeric member the word "every" still did not cover, and the
+public type that made it unreachable. `FontWeight` was the four shipped literals
+(`400 | 500 | 600 | 700`), while the pinned `@gpuix/native@0.10.0` `StyleDesc`
+accepts `fontWeight?: string | number` and GPUI takes an `f32`: a brand that
+installs a variable family could not name its `450` body or an `800` display
+weight through `extendTheme` without a cast. The checker did not read the member
+either — a probe on the shipped light theme returned `[]` for `NaN`, `0`, `-1`
+and `1001` on eight roles, while `textStyle` handed each value straight to the
+renderer; `body` and `bodyStrong` were caught only incidentally when the
+weight-variant ladder saw a negative or a `NaN`. The literal union also made the
+defect untestable without an `as`, so the two halves are one fix: `FontWeight`
+is a numeric CSS weight in `1…1000`, and every role takes a `weighable` rule
+(finite, at-least 1, at-most 1000), reported once for a non-finite value instead
+of three times. The shipped four weights are a scale choice, not a type
+boundary, so no shipped value, pair, floor, platform style or recipe moves.
 
 ### Reference adoption (block `200–299`)
 

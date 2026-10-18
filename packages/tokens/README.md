@@ -386,12 +386,13 @@ That case is why the check exists: `focusRing` spreads by `borderWidth.strong`,
 and that shadow is the only focus indicator GPUix 0.10.0 can draw, so a zero
 ring removed focus while `themeContrastFailures` still returned `[]`. The same
 edit path can clip a type role by shortening its leading, invert one of the two
-type ladders (`proseLadder` / `codeLadder`) or flatten `bodyStrong` onto
-`body`'s weight, shrink the smallest control below one label line, invert a size
-ladder, scroll an overlay in less than one row, ship a non-finite spacing step,
-radius, type size or dimension the renderer casts to a 32-bit float, ship a
-non-finite motion timing or a cubic-bezier easing the runtime cannot
-interpolate, leave the largest avatar a rounded square, or hand
+type ladders (`proseLadder` / `codeLadder`), flatten `bodyStrong` onto `body`'s
+weight, name a font weight outside the `1…1000` range the text system can
+select or a non-finite one, shrink the smallest control below one label line,
+invert a size ladder, scroll an overlay in less than one row, ship a non-finite
+spacing step, radius, type size or dimension the renderer casts to a 32-bit
+float, ship a non-finite motion timing or a cubic-bezier easing the runtime
+cannot interpolate, leave the largest avatar a rounded square, or hand
 `elevationShadow` an alpha the colour helper cannot parse. The ladders are non-decreasing rather than
 strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ships
 `motion.fast === motion.step`; an empty elevation level is exempt (the shipped

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 137/187
+`[x]` `[███████░░░]` 138/188
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -984,6 +984,14 @@ level's array and `elevationShadow` paints it, so a defined overlay entry with
 renderer received an unpaintable shadow with an opaque tint; the loop now walks
 all four levels, an empty level stays exempt, and every shipped set ships an
 empty overlay so no value moves (plan 369)
+`[x]` Make a type weight a governed number — `FontWeight` was the four shipped
+literals, so a brand could not name the `450` or `800` its installed family
+provides, and `themeMetricFailures` never read the member: `NaN`, `0`, `-1` and
+`1001` returned `[]` on eight roles while `textStyle` handed each to the
+renderer, so the contract's "every numeric member is finite" sentence was false;
+the type is now a CSS number in `1…1000`, every role's weight takes a
+`weighable` rule (finite, at-least 1, at-most 1000), and the four shipped
+weights are unchanged (plan 370)
 
 ## Phase C — Tier 1–2 components
 
