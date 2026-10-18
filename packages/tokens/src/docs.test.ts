@@ -33,7 +33,7 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { alpha, colorRoles, palette } from "./color.js";
+import { alpha, colorRoles, palette, type ThemeColors } from "./color.js";
 import {
   compositeOver,
   contrastFloors,
@@ -55,15 +55,18 @@ import {
 import * as Tokens from "./index.js";
 import { motion } from "./motion.js";
 import {
+  getPlatformRecipeTheme,
   isPlatformRecipeName,
   platformRecipeNames,
   platformRecipes,
+  type PlatformRecipeName,
 } from "./platform-recipes.js";
 import {
   platformNames,
   platformStyles,
   platformTypes,
   systemUiFont,
+  type PlatformName,
 } from "./platforms.js";
 import {
   avatarSize,
@@ -75,7 +78,14 @@ import {
   spacing,
 } from "./scale.js";
 import { statusTones } from "./styles.js";
-import { getPlatformTheme, highContrastThemes, themes } from "./theme.js";
+import {
+  getPlatformTheme,
+  getTheme,
+  highContrastThemes,
+  themeModes,
+  themes,
+  type Theme,
+} from "./theme.js";
 import { textRoles, typography } from "./typography.js";
 
 interface DocumentedRole {
@@ -633,6 +643,100 @@ describe("docs/tokens.md quoted figures", () => {
     const sentence = `The solid roles are fills: light \`warning\` is ${contrastRatio(light.warning, light.background).toFixed(2)}:1 against the canvas, so it is never the colour of text or a dot.`;
 
     expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+});
+
+describe("docs/tokens.md quoted tightest figures", () => {
+  const platformLabels: Readonly<Record<PlatformName, string>> = {
+    darwin: "macOS",
+    linux: "Linux",
+    win32: "Windows",
+    default: "Default",
+  };
+
+  const recipeLabels: Readonly<Record<PlatformRecipeName, string>> = {
+    xp: "XP",
+    aero: "Aero",
+  };
+
+  const quotedSets: ReadonlyArray<readonly [string, Theme]> = [
+    ...themeModes.map((mode): readonly [string, Theme] => [
+      `identity ${mode}`,
+      getTheme(mode),
+    ]),
+    ...themeModes.flatMap((mode) =>
+      platformNames
+        .filter((platform) => platform !== "default")
+        .map((platform): readonly [string, Theme] => [
+          `${platformLabels[platform]} ${mode}`,
+          getPlatformTheme(platform, mode),
+        ]),
+    ),
+    ...platformRecipeNames.map((recipe): readonly [string, Theme] => [
+      `${recipeLabels[recipe]} light`,
+      getPlatformRecipeTheme(recipe, "light"),
+    ]),
+  ];
+
+  const tightest = (
+    foreground: keyof ThemeColors,
+    background: keyof ThemeColors,
+  ): readonly [string, number] =>
+    quotedSets
+      .map(
+        ([label, theme]) =>
+          [
+            label,
+            contrastRatio(theme.colors[foreground], theme.colors[background]),
+          ] as const,
+      )
+      .reduce((worst, current) => (current[1] < worst[1] ? current : worst));
+
+  it("quotes the row-text and status ratios the shipped themes produce", () => {
+    const quoted = [
+      ["primaryText", "selected", "Linux dark", 4.53],
+      ["foreground", "selected", "Linux dark", 7.47],
+      ["popoverForeground", "selected", "Linux dark", 7.95],
+      ["selectedForeground", "active", "macOS light", 5.21],
+      ["selectedForeground", "accent", "macOS light", 5.81],
+      ["successText", "muted", "Aero light", 5.92],
+    ] as const;
+
+    quoted.forEach(([foreground, background, label, value]) => {
+      const [actualLabel, ratio] = tightest(foreground, background);
+
+      expect(
+        [actualLabel, Number(ratio.toFixed(2))],
+        `${foreground}/${background}`,
+      ).toEqual([label, value]);
+      expect(markdownProse).toContain(
+        `\`${foreground}\` on \`${background}\` at **${value}:1** (${label})`,
+      );
+    });
+  });
+  it("quotes the weakest field edge the shipped themes produce", () => {
+    const [label, ratio] = tightest("border", "input");
+
+    expect([label, Number(ratio.toFixed(2))]).toEqual(["Linux dark", 1.25]);
+    expect(markdownProse).toContain(
+      `the weakest shipped set is ${label} at **1.25:1**`,
+    );
+  });
+
+  it("quotes the AAA scrim's strength, value and ratio", () => {
+    const scrimTheme = highContrastThemes.dark;
+    const scrim = scrimTheme.colors.overlay;
+    const painted = compositeOver(scrim, scrimTheme.colors.background);
+    const ratio = Number(
+      contrastRatio(painted, scrimTheme.colors.background).toFixed(3),
+    );
+    const percent = Math.round(
+      (Number.parseInt(scrim.slice(7), 16) / 255) * 100,
+    );
+
+    expect([scrim, percent, ratio]).toEqual(["#FFFFFF26", 15, 1.388]);
+    expect(markdownProse).toContain(`\`${scrim}\`, ${ratio}:1`);
+    expect(markdownProse).toContain(`${percent}% white wash`);
   });
 });
 

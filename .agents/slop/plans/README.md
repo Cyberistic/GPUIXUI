@@ -132,6 +132,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [333](./333-tokens-suite-timeout-budget.md) | The tokens suite must not fail its own gate | F | 061, 311, 332 | done |
 | [334](./334-secondary-wash-text.md) | The secondary control's label on the washes it paints | F | 097, 309, 318, 332 | done |
 | [335](./335-selected-row-edge.md) | The control edge on the selected row fill | F | 080, 097, 309, 312, 316, 318, 327, 334 | done |
+| [336](./336-quoted-figure-guards.md) | The catalogue's last unpinned tightest figures | F | 071, 075, 326, 335 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -941,6 +942,15 @@ gap filtered `contrastPairs` through a hand-typed six-name list, which is why
 plan 327's `accentHover`/`accentActive` pairs never reached the verification
 paragraph; the guard now derives the fills from the contract, so a new edge pair
 cannot ship unmentioned.
+
+336 pins the last current figures the catalogue quotes without a test. The
+pair list already holds every one of them to its floor, but the *figure* — which
+set is tightest and what it measures — was computed once by hand: the four
+row-text values, `successText` on `muted`, the field edge and the AAA scrim with
+its 15% wash. `docs.test.ts` now derives each figure, its theme label and the
+scrim's percentage from the shipped themes, so a palette edit cannot leave the
+page quoting a ratio the package no longer produces. No token, pair, floor or
+document value changes.
 
 ### Reference adoption (block `200–299`)
 

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 103/136
+`[x]` `[████████░░]` 104/137
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -247,6 +247,12 @@ on that fill, which the contract measured only on `hover`/`active`/`accent`;
 every shipped set passes (1.113:1 at the tightest), so no colour moves, the
 contract grows 292 → 293, and the hand-typed six-fill filter that hid plan 327's
 accent steps is now derived from the contract (plan 335)
+`[x]` Pin the catalogue's last unpinned tightest figures — the eight current
+ratios it quotes (the four row-text values, `successText` on `muted`, the field
+edge, the AAA scrim and its wash strength) were computed once by hand and no
+test held them, so a palette edit could leave the page quoting a number the
+package no longer produces while every pair still passed; `docs.test.ts` now
+derives each figure, its theme label and the scrim's percentage (plan 336)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the
