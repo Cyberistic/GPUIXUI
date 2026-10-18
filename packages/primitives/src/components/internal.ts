@@ -151,6 +151,28 @@ export const usableLabel = (label: string | undefined): Option.Option<string> =>
   );
 
 /**
+ * A caller's label as an `aria-label` value: trimmed, or absent when blank.
+ *
+ * The prop shape every named surface forwards, so a computed empty or padded
+ * label cannot create an empty name (plan `026`).
+ */
+export const ariaName = (label: string | undefined): string | undefined =>
+  Option.getOrUndefined(usableLabel(label));
+
+/**
+ * A name whose documentation promises a default when the caller's label is
+ * blank, such as `Spinner`'s "Loading" and an OTP cell's "Code" (plan `026`).
+ */
+export const ariaNameOr = (
+  label: string | undefined,
+  fallback: string,
+): string =>
+  pipe(
+    usableLabel(label),
+    Option.getOrElse(() => fallback),
+  );
+
+/**
  * A control's name: an explicit label that says something, else its text
  * children.
  *

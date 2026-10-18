@@ -30,6 +30,7 @@ import { ratingStarColor, ratingStarStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  ariaName,
   resolvePartStyle,
   useControlState,
   type StateStyle,
@@ -198,7 +199,7 @@ export const renderRating = (
   return (
     <div
       role="radiogroup"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       testId={props.testId}
       onMouseLeave={interactive ? hover.onLeave : undefined}
       onKeyDown={(event) => {

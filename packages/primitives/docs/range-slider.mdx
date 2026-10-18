@@ -49,7 +49,7 @@ maximum — reports nothing, the same no-op rule `Slider` follows.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
-| `label` | `string` | none | group name; thumbs become `"<label> minimum"` / `"<label> maximum"` |
+| `label` | `string` | none | group name, trimmed; thumbs become `"<label> minimum"` / `"<label> maximum"`, and a blank label leaves the group and both thumbs unnamed |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
 | `style` | `StateStyle<RangeSliderState>` | — | merged last, on the track; an object or a state callback |
 | `thumbStyle` | `StateStyle<RangeSliderThumbState>` | — | merged last on each thumb; an object or a state callback |

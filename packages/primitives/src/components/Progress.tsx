@@ -26,7 +26,7 @@ import {
   type ProgressTone,
 } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useStep } from "./internal.js";
+import { ariaName, mergeStyle, useStep } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface ProgressProps {
@@ -69,7 +69,7 @@ export const renderProgress = (
   return (
     <div
       role="progressbar"
-      aria-label={label}
+      aria-label={ariaName(label)}
       aria-valuetext={determinate ? `${percent}%` : "loading"}
       testId={testId}
       style={track}

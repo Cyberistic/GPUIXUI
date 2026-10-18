@@ -18,7 +18,7 @@ import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { GroupShapeContext, type GroupShape } from "./group-shape.js";
-import { mergeStyle } from "./internal.js";
+import { ariaName, mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The button groups' two layouts: joined into one control, or spaced apart. */
@@ -76,7 +76,7 @@ export const renderButtonGroup = (
   return (
     <div
       role="group"
-      aria-label={label}
+      aria-label={ariaName(label)}
       testId={testId}
       style={mergeStyle(base, style)}
     >

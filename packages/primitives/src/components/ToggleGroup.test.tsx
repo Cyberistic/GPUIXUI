@@ -122,6 +122,27 @@ describe("ToggleGroup", () => {
     ).toStrictEqual(["Align left", "Align centre", "Align right"]);
   });
 
+  it("publishes a blank group or item label as absent", () => {
+    // Plan 026: the group and each data option carry a name.
+    const blankOptions: ToggleGroupSingleProps = {
+      type: "single",
+      label: "   ",
+      options: [{ value: "left", label: "   " }],
+      defaultValue: "left",
+    };
+    const group = renderToggleGroup(
+      blankOptions,
+      testTheme,
+      selected(["left"]),
+      0,
+      unfocused,
+      handlers(),
+    );
+    expect(hostProp(group, "aria-label")).toStrictEqual(Option.none());
+    const item = expectSome(Option.fromNullishOr(elementChildren(group)[0]));
+    expect(hostProp(item, "aria-label")).toStrictEqual(Option.none());
+  });
+
   it("announces the pressed set through value text, never aria-pressed", () => {
     const group = renderToggleGroup(
       single,

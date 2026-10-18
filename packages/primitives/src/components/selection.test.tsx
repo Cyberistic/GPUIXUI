@@ -95,6 +95,26 @@ describe("Checkbox", () => {
     expect(hostProp(element, "aria-checked")).toStrictEqual(Option.none());
   });
 
+  it("publishes a blank label as absent and trims a real one", () => {
+    // Plan 026: a computed empty label must not become an empty name.
+    const blank = renderCheckbox(
+      { label: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+    const padded = renderCheckbox(
+      { label: "  Accept terms  " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Accept terms");
+  });
+
   it("reports the indeterminate state as mixed", () => {
     const element = renderCheckbox(
       { indeterminate: true },
@@ -167,6 +187,27 @@ describe("Switch", () => {
     expect(onValueChange).toHaveBeenCalledWith(true);
   });
 
+  it("publishes a blank label as absent and trims a real one", () => {
+    // Plan 026: the switch has no text child to fall back to, so a blank label
+    // must publish no name rather than whitespace.
+    const blank = renderSwitch(
+      { label: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+    const padded = renderSwitch(
+      { label: "  Wifi  " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Wifi");
+  });
+
   it("rests its thumb at the end it reports, and animates only that position", () => {
     // The bug guarded (plan 329): the thumb was laid out with `justifyContent`,
     // so it jumped and there was no transition to assert on. A `motion.div` is
@@ -220,6 +261,21 @@ describe("RadioGroup", () => {
     expect(expectSome(hostProp(element, "role"))).toBe("radiogroup");
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
     expect(onSelect).toHaveBeenCalledWith("beta");
+  });
+
+  it("publishes a blank group or option label as absent", () => {
+    // Plan 026: both the group's and the option's label are names.
+    const element = renderRadioGroup(
+      { label: "   ", options: [{ value: "alpha", label: "   " }] },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(hostProp(element, "aria-label")).toStrictEqual(Option.none());
+    const option = expectSome(Arr.head(elementChildren(element)));
+    expect(hostProp(option, "aria-label")).toStrictEqual(Option.none());
   });
 
   it("moves focus to the option an arrow lands on", () => {
@@ -461,6 +517,18 @@ describe("CheckboxGroup", () => {
       "unchecked",
     );
     expect(hostProp(row(element, 0), "aria-checked")).toStrictEqual(
+      Option.none(),
+    );
+  });
+
+  it("publishes a blank group or row label as absent", () => {
+    // Plan 026: the group name and each row's data label follow one rule.
+    const element = render({
+      label: "   ",
+      options: [{ value: "email", label: "   " }],
+    });
+    expect(hostProp(element, "aria-label")).toStrictEqual(Option.none());
+    expect(hostProp(row(element, 0), "aria-label")).toStrictEqual(
       Option.none(),
     );
   });

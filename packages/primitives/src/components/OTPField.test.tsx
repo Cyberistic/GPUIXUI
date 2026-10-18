@@ -83,6 +83,16 @@ describe("OTPField", () => {
       "Verification code digit 4",
     );
     expect(otpCellLabel(undefined, 0)).toBe("Code digit 1");
+    // Plan 026: a blank computed label keeps the documented "Code" fallback.
+    expect(otpCellLabel("   ", 0)).toBe("Code digit 1");
+    expect(otpCellLabel("  Verification code  ", 0)).toBe(
+      "Verification code digit 1",
+    );
+    const blank = render({ length: 4, label: "   " }, "12");
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(cell(blank, 0), "aria-label"))).toBe(
+      "Code digit 1",
+    );
   });
 
   it("reports the index and the raw edit of the cell that changed", () => {

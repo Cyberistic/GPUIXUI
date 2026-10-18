@@ -31,6 +31,21 @@ describe("Meter", () => {
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Disk usage");
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("62");
     expect(hostProp(element, "aria-valuenow")).toStrictEqual(Option.none());
+    // A blank label is absent and a padded one is trimmed (plan 026).
+    expect(
+      hostProp(
+        renderMeter({ value: 1, label: "   " }, testTheme),
+        "aria-label",
+      ),
+    ).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        hostProp(
+          renderMeter({ value: 1, label: "  Disk usage  " }, testTheme),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Disk usage");
   });
 
   it("fills by the value's place in the range, not by the raw value", () => {

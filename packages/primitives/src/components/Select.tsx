@@ -90,6 +90,7 @@ import {
   type VerticalSide,
 } from "../core/floating.js";
 import {
+  ariaName,
   composeHandler,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -515,7 +516,7 @@ export const renderSelect = (
       ref={handlers.registerItem(choice.value)}
       value={choice.value}
       role="option"
-      aria-label={choice.label}
+      aria-label={ariaName(choice.label)}
       aria-selected={choice.value === selected}
       disabled={choice.disabled}
       testId={selectOptionTestId(testId, choice.value)}
@@ -557,7 +558,7 @@ export const renderSelect = (
         {...passiveTriggerHandlers(slot)}
         ref={handlers.registerTrigger}
         role="combobox"
-        aria-label={label}
+        aria-label={ariaName(label)}
         aria-description={description}
         aria-expanded={open}
         aria-valuetext={selectedLabel ?? placeholder}
@@ -582,7 +583,7 @@ export const renderSelect = (
       <SelectContent
         ref={handlers.registerContent}
         role="listbox"
-        aria-label={label}
+        aria-label={ariaName(label)}
         testId={testId === undefined ? undefined : `${testId}-content`}
         side={placement.side}
         collisionPadding={placement.collisionPadding}
@@ -605,7 +606,7 @@ export const renderSelect = (
                   <SelectGroup
                     key={`${index}-${entry.label}`}
                     role="group"
-                    aria-label={entry.label}
+                    aria-label={ariaName(entry.label)}
                     style={selectGroupStyle(theme)}
                   >
                     <SelectLabel style={selectHeadingStyle(theme)}>

@@ -133,6 +133,27 @@ describe("Input", () => {
     );
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Email");
     expect(hostProp(element, "aria-labelledby")).toStrictEqual(Option.none());
+    // Plan 026: a blank computed label is absent; a padded one is trimmed.
+    expect(
+      hostProp(
+        renderInput({ label: "   " }, testTheme, controlled(""), idle, vi.fn()),
+        "aria-label",
+      ),
+    ).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        hostProp(
+          renderInput(
+            { label: "  Email  " },
+            testTheme,
+            controlled(""),
+            idle,
+            vi.fn(),
+          ),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Email");
   });
 
   it("makes a disabled field read-only, untabbable and de-emphasised", () => {
@@ -198,6 +219,26 @@ describe("TextArea", () => {
     );
     const area = renderTextArea({}, testTheme, draft(""), idle, vi.fn());
     expect(hostProp(area, "onSubmit")).toStrictEqual(Option.none());
+  });
+
+  it("shares the field's blank-label rule", () => {
+    // Plan 026: the same `fieldHostProps` maps Input and TextArea names.
+    const blank = renderTextArea(
+      { label: "   " },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+    const padded = renderTextArea(
+      { label: "  Notes  " },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Notes");
   });
 
   it("keeps a disabled TextArea read-only and untabbable", () => {

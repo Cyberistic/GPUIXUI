@@ -41,6 +41,7 @@ import type { ValueState } from "../core/state.js";
 import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  ariaName,
   resolvePartStyle,
   useControlState,
   type StateStyle,
@@ -195,7 +196,7 @@ export const renderRadioGroup = (
   return (
     <div
       role="radiogroup"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       testId={props.testId}
       onKeyDown={onKeyDown}
       onKeyUp={(event) => activate("up", event)}
@@ -233,7 +234,7 @@ export const renderRadioGroup = (
             key={option.value}
             ref={handlers.registerItem(index)}
             role="radio"
-            aria-label={option.label}
+            aria-label={ariaName(option.label)}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
             testId={

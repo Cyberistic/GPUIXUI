@@ -42,7 +42,7 @@ Omit `value` to let the slider own its state (`defaultValue` sets the start).
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb `iconSize`, track `density.controlHeight` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no pointer or keys |
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
-| `label` | `string` | none | accessible name |
+| `label` | `string` | none | accessible name, trimmed; a blank label is absent |
 | `formatValue` | `(value: number) => string` | `String` | the announced text |
 | `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<SliderState>` | — | merged last, on the track; an object or a state callback |

@@ -21,7 +21,7 @@ import {
 } from "../core/style.js";
 import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle } from "./internal.js";
+import { ariaName, mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface MeterProps {
@@ -61,7 +61,7 @@ export const renderMeter = (
   return (
     <div
       role="meter"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       aria-valuetext={props.formatValue?.(value) ?? String(value)}
       testId={props.testId}
       style={mergeStyle(progressTrackStyle(spec, theme), props.style)}

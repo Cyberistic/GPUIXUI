@@ -44,6 +44,7 @@ import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { selectionValueText } from "./Checkbox.js";
 import {
+  ariaName,
   resolvePartStyle,
   useControlState,
   type StateStyle,
@@ -193,7 +194,7 @@ const renderRow = (
     <div
       key={key}
       role="checkbox"
-      aria-label={label}
+      aria-label={ariaName(label)}
       aria-valuetext={selectionValueText(state)}
       tabIndex={disabled ? undefined : 0}
       testId={testId}
@@ -321,7 +322,7 @@ export const renderCheckboxGroup = (
   return (
     <div
       role="group"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       testId={props.testId}
       style={resolvePartStyle(
         {

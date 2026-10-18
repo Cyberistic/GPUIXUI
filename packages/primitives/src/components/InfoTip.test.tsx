@@ -42,6 +42,28 @@ describe("InfoTip", () => {
     expect(expectSome(hostProp(trigger, "tabIndex"))).toBe(0);
   });
 
+  it("publishes a blank label as absent and trims a real one", () => {
+    // Plan 026: a blank computed label must not publish an unnamed image.
+    const blank = renderInfoTip(
+      { content: "Net of refunds.", label: "   " },
+      testTheme,
+    );
+    const blankTrigger = expectSome(
+      Option.fromNullishOr(elementChildren(blank)[0]),
+    );
+    expect(hostProp(blankTrigger, "aria-label")).toStrictEqual(Option.none());
+    const padded = renderInfoTip(
+      { content: "Net of refunds.", label: "  Revenue definition  " },
+      testTheme,
+    );
+    const paddedTrigger = expectSome(
+      Option.fromNullishOr(elementChildren(padded)[0]),
+    );
+    expect(expectSome(hostProp(paddedTrigger, "aria-label"))).toBe(
+      "Revenue definition",
+    );
+  });
+
   it("keeps the icon decorative so the trigger is one node", () => {
     const icon = expectSome(
       Option.fromNullishOr(elementChildren(triggerOf())[0]),

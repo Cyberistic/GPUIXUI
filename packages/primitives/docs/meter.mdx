@@ -27,7 +27,7 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 | `min` / `max` | `number` | `0` / `100` | the range the fill is a fraction of |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm` |
-| `label` | `string` | none | accessible name |
+| `label` | `string` | none | accessible name, trimmed; a blank label leaves the meter unnamed |
 | `formatValue` | `(value: number) => string` | `String` | the announced measurement |
 | `style` | `StyleDesc` | — | merged last, on the track |
 | `testId` | `string` | — | stable locator |

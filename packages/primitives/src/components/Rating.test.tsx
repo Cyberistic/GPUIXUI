@@ -87,6 +87,16 @@ describe("Rating", () => {
     ]);
   });
 
+  it("publishes a blank group label as absent and trims a real one", () => {
+    // Plan 026: the positional star names stay; the group name is the input.
+    expect(hostProp(render({ label: "   " }, 0), "aria-label")).toStrictEqual(
+      Option.none(),
+    );
+    expect(
+      expectSome(hostProp(render({ label: "  Quality  " }, 0), "aria-label")),
+    ).toBe("Quality");
+  });
+
   it("renders one named star for a non-finite count", () => {
     // The bug guarded (plan 366): `Infinity` reached `Arr.range` and threw
     // `RangeError: Invalid array length`; `NaN` reached the star's name.

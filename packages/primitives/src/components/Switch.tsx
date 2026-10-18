@@ -21,6 +21,7 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  ariaName,
   composeHandler,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -106,7 +107,7 @@ export const renderSwitch = (
     <div
       {...passiveTriggerHandlers(props)}
       role="switch"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       aria-description={props["aria-description"]}
       aria-valuetext={state.current ? "checked" : "unchecked"}
       tabIndex={props.disabled === true ? undefined : 0}

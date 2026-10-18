@@ -51,6 +51,7 @@ import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { FieldState } from "./Input.js";
 import {
+  ariaName,
   composeHandler,
   mergeStyle,
   passiveTriggerHandlers,
@@ -203,7 +204,7 @@ export const renderNumberField = (
         autoFocus={disabled ? undefined : props.autoFocus}
         tabIndex={disabled ? -1 : undefined}
         theme={nativeTextTheme(theme)}
-        aria-label={props.label}
+        aria-label={ariaName(props.label)}
         aria-description={props["aria-description"]}
         style={numberInputStyle()}
         onChange={(event: EventPayload) => {

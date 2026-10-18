@@ -29,6 +29,7 @@ import type {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
+import { pipe } from "effect";
 import {
   clampValue,
   decideValueKey,
@@ -52,10 +53,12 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  ariaName,
   composeHandler,
   resolvePartStyle,
   useControlState,
   useFocus,
+  usableLabel,
   type FocusState,
   type StateStyle,
   type TriggerHandlers,
@@ -184,7 +187,7 @@ export const renderSlider = (
     <div
       ref={handlers.registerTrack}
       role="slider"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       aria-description={props["aria-description"]}
       aria-valuetext={sliderValueText(value, props.formatValue)}
       tabIndex={props.disabled === true ? undefined : 0}
@@ -284,10 +287,13 @@ export const renderRangeSlider = (
     invalid: props.invalid,
     disabled: props.disabled,
   };
-  const labels =
-    props.label === undefined
-      ? ([undefined, undefined] as const)
-      : ([`${props.label} minimum`, `${props.label} maximum`] as const);
+  const labels = pipe(
+    usableLabel(props.label),
+    Option.match({
+      onNone: () => [undefined, undefined] as const,
+      onSome: (label) => [`${label} minimum`, `${label} maximum`] as const,
+    }),
+  );
   const thumb = (index: 0 | 1): ReactElement => {
     const value = index === 0 ? span.start : span.end;
     const end = index === 0 ? "start" : "end";
@@ -336,7 +342,7 @@ export const renderRangeSlider = (
     <div
       ref={handlers.registerTrack}
       role="group"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       testId={props.testId}
       onMouseDown={handlers.onPointerDown}
       onMouseMove={handlers.onPointerMove}

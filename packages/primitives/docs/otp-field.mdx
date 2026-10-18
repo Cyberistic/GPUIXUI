@@ -46,7 +46,7 @@ leaving a hole.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: every cell is the field's square (`h-9`, 36 × 36) |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
-| `label` | `string` | none | group name; each cell is named `<label> digit N` |
+| `label` | `string` | none | group name; each cell is named `<label> digit N` (`"Code digit N"` when blank) |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on mount; its ring paints from mount |
 | `style` | `StateStyle<OTPFieldState>` | — | merged last on the group; an object or a state callback |
 | `cellStyle` | `StateStyle<OTPCellState>` | — | merged last on each cell; an object or a state callback |

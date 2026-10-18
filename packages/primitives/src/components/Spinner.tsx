@@ -17,7 +17,7 @@ import {
   type SpinnerAccent,
 } from "../core/loading.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useStep } from "./internal.js";
+import { ariaNameOr, mergeStyle, useStep } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SpinnerProps {
@@ -41,7 +41,7 @@ export const renderSpinner = (
   return (
     <div
       role="status"
-      aria-label={label}
+      aria-label={ariaNameOr(label, "Loading")}
       testId={testId}
       style={mergeStyle(
         {

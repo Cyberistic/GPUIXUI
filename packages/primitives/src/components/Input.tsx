@@ -14,6 +14,7 @@ import { fieldRecipeStyle } from "../core/recipes.js";
 import { nativeTextTheme } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  ariaName,
   composeHandler,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -125,7 +126,7 @@ export const fieldHostProps = (
   tabIndex: props.disabled === true ? -1 : undefined,
   theme: nativeTextTheme(theme),
   testId: props.testId,
-  "aria-label": props.label,
+  "aria-label": ariaName(props.label),
   "aria-description": props["aria-description"],
   onChange: (event: EventPayload) => {
     if (props.disabled !== true) onValueChange(event.value ?? "");

@@ -19,7 +19,7 @@ import type { FloatingSide } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
 import { focusRing } from "@gpuixui/tokens";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useFocus, type FocusState } from "./internal.js";
+import { ariaName, mergeStyle, useFocus, type FocusState } from "./internal.js";
 import { Tooltip } from "./Tooltip.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -55,7 +55,7 @@ export const renderInfoTip = (
   <Tooltip content={content} side={side} testId={tipTestId}>
     <div
       role="img"
-      aria-label={label}
+      aria-label={ariaName(label)}
       tabIndex={0}
       testId={testId}
       onFocus={focus.onFocus}

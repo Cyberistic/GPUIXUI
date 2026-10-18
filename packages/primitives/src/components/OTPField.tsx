@@ -45,6 +45,8 @@ import { nativeTextTheme, otpGroupStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  ariaName,
+  ariaNameOr,
   resolvePartStyle,
   useControlState,
   type StateStyle,
@@ -124,7 +126,7 @@ export interface OTPFieldHandlers {
 export const otpCellLabel = (
   label: string | undefined,
   index: number,
-): string => `${label ?? "Code"} digit ${index + 1}`;
+): string => `${ariaNameOr(label, "Code")} digit ${index + 1}`;
 
 /** The element tree `OTPField` renders: one cell per character. */
 export const renderOtpField = (
@@ -151,7 +153,7 @@ export const renderOtpField = (
   return (
     <div
       role="group"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       testId={props.testId}
       style={resolvePartStyle(otpGroupStyle(theme), props.style, {
         disabled,

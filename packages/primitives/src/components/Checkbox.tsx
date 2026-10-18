@@ -21,6 +21,7 @@ import {
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import {
+  ariaName,
   composeHandler,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -129,7 +130,7 @@ export const renderCheckbox = (
     <div
       {...passiveTriggerHandlers(props)}
       role="checkbox"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       aria-description={props["aria-description"]}
       aria-valuetext={selectionValueText(current)}
       tabIndex={props.disabled === true ? undefined : 0}

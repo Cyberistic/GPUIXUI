@@ -388,8 +388,7 @@ describe("Select", () => {
     ).toStrictEqual(["Alpha", "Beta"]);
     expect(
       entries.map((item) => expectSome(elementProp(item, "aria-selected"))),
-    ).toStrictEqual([false, true]);
-    // An option is addressable like the trigger and its indicator (plan 390),
+    ).toStrictEqual([false, true]); // An option is addressable like the trigger and its indicator (plan 390),
     // so a suite never has to find the painted label and walk to its parent.
     expect(
       entries.map((item) => expectSome(elementProp(item, "testId"))),
@@ -407,6 +406,26 @@ describe("Select", () => {
     );
     const option = childAt(childAt(element, 1), 0);
     expect(Option.isNone(elementProp(option, "testId"))).toBe(true);
+  });
+
+  it("publishes a blank label as absent on the trigger, list and options", () => {
+    // Plan 026: a computed empty label must not name three surfaces with it.
+    const element = renderSelect(
+      { options: [{ value: "alpha", label: "   " }], label: "   " },
+      testTheme,
+      valueState(""),
+      true,
+      noFocus,
+      handlers,
+    );
+    expect(elementProp(childAt(element, 0), "aria-label")).toStrictEqual(
+      Option.none(),
+    );
+    const list = childAt(element, 1);
+    expect(elementProp(list, "aria-label")).toStrictEqual(Option.none());
+    expect(elementProp(childAt(list, 0), "aria-label")).toStrictEqual(
+      Option.none(),
+    );
   });
 
   it("renders nothing for an empty group, while the other entries keep their rows", () => {

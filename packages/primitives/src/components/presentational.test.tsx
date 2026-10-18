@@ -269,6 +269,21 @@ describe("layout containers", () => {
         "aria-label",
       ),
     ).toStrictEqual(Option.none());
+    // A computed blank or padded label is not the name it looks like (plan 026).
+    expect(
+      hostProp(
+        renderButtonGroup({ mode: "attached", label: "   " }, testTheme),
+        "aria-label",
+      ),
+    ).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        hostProp(
+          renderButtonGroup({ label: "  Text alignment  " }, testTheme),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Text alignment");
   });
 });
 
@@ -431,5 +446,11 @@ describe("loading", () => {
     const element = renderSpinner({ label: "Saving" }, testTheme, 0);
     expect(expectSome(hostProp(element, "role"))).toBe("status");
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Saving");
+    // The documented default survives a blank computed label (plan 026).
+    expect(
+      expectSome(
+        hostProp(renderSpinner({ label: "   " }, testTheme, 0), "aria-label"),
+      ),
+    ).toBe("Loading");
   });
 });

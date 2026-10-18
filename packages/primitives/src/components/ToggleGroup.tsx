@@ -47,6 +47,7 @@ import {
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import {
+  ariaName,
   mergeStyle,
   resolvePartStyle,
   useControlState,
@@ -161,7 +162,7 @@ export const renderToggleGroup = (
   return (
     <div
       role="group"
-      aria-label={props.label}
+      aria-label={ariaName(props.label)}
       testId={props.testId}
       onKeyDown={(event) => {
         if (props.disabled === true) return;
@@ -216,7 +217,7 @@ export const renderToggleGroup = (
             key={option.value}
             ref={handlers.registerItem(index)}
             role="button"
-            aria-label={option.label}
+            aria-label={ariaName(option.label)}
             aria-valuetext={pressedValueText(pressed)}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
             testId={

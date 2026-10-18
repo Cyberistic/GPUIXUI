@@ -89,6 +89,18 @@ describe("NumberField", () => {
     expect(
       expectSome(hostProp(partsOf(render({}, 1, "1.")).input, "value")),
     ).toBe("1.");
+    // Plan 026: a blank label is absent, a padded one is trimmed.
+    expect(
+      hostProp(partsOf(render({ label: "   " }, 1, "1")).input, "aria-label"),
+    ).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        hostProp(
+          partsOf(render({ label: "  Quantity  " }, 1, "1")).input,
+          "aria-label",
+        ),
+      ),
+    ).toBe("Quantity");
   });
 
   it("routes only the keys the runtime delivers", () => {

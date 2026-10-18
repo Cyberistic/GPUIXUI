@@ -101,6 +101,33 @@ describe("Slider", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42");
     expect(expectSome(hostProp(element, "tabIndex"))).toBe(0);
     expect(hostProp(element, "aria-valuenow")).toStrictEqual(Option.none());
+    // Plan 026: a blank label is absent, a padded one is trimmed.
+    expect(
+      hostProp(
+        renderSlider(
+          { value: 42, label: "   " },
+          testTheme,
+          valueOf(42),
+          idle,
+          sliderHandlers(vi.fn()),
+        ),
+        "aria-label",
+      ),
+    ).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        hostProp(
+          renderSlider(
+            { value: 42, label: "  Volume  " },
+            testTheme,
+            valueOf(42),
+            idle,
+            sliderHandlers(vi.fn()),
+          ),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Volume");
   });
 
   it("announces a formatted value, e.g. a percentage", () => {
@@ -226,6 +253,26 @@ describe("RangeSlider", () => {
         expectSome(hostProp(thumb ?? expect.fail("no thumb"), "tabIndex")),
       ),
     ).toStrictEqual([0, 0]);
+  });
+
+  it("leaves the group and its thumbs unnamed when the label is blank", () => {
+    // Plan 026: the old composition produced `"   minimum"` from a blank
+    // label; a blank name is absent, not whitespace with a suffix.
+    const element = renderRangeSlider(
+      { label: "   " },
+      testTheme,
+      spanOf(20, 60),
+      { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
+      rangeHandlers(vi.fn()),
+    );
+    expect(hostProp(element, "aria-label")).toStrictEqual(Option.none());
+    const [, start, , end] = partsOf(element);
+    expect(
+      hostProp(start ?? expect.fail("no thumb"), "aria-label"),
+    ).toStrictEqual(Option.none());
+    expect(
+      hostProp(end ?? expect.fail("no thumb"), "aria-label"),
+    ).toStrictEqual(Option.none());
   });
 
   it("moves the end the arrow belongs to, and never past the other end", () => {

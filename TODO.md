@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[███████████]` 137/137
+`[x]` `[███████████]` 138/138
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1363,6 +1363,17 @@ retired once both branches are one
       cases plus the scoped runtime suite prove an `Image` node disappears for
       both blank forms and ` Done ` announces `Done` (plan `399`; offline icons
       23 → 27, primitives 705, scoped live 5/5).
+`[x]` `packages/primitives`: **a blank label was still a name on every surface
+      plans `396`/`399` did not reach** — `Spinner`'s documented `"Loading"`
+      default was erased by `label="   "`, an OTP cell became `" digit 1"`, a
+      range thumb became `"   minimum"`, and the other fourteen named surfaces
+      published the raw empty or padded string. One `ariaName` rule (trim, or
+      absent) now serves all of them, with `Spinner`/OTP keeping their documented
+      fallbacks; 18 offline cases fail in the old direction, six scoped runtime
+      cases prove the a11y tree (the old direction reported `Status:""`, no
+      `Code digit 1`, and `['minimum','maximum']` thumbs), and the pages for
+      Spinner/OTP/Slider/Range slider/Progress/Meter state the resolved
+      behaviour (plan `026`; offline 705 → 720).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

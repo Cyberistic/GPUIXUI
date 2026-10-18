@@ -65,4 +65,16 @@ describe("Progress", () => {
       testTheme.colors.success,
     );
   });
+
+  it("treats a blank label as absent and trims a real one", () => {
+    // Plan 026: the label is a name only when it says something.
+    const blank = renderProgress({ value: 42, label: "   " }, testTheme, 0);
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+    const padded = renderProgress(
+      { value: 42, label: "  Uploading  " },
+      testTheme,
+      0,
+    );
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Uploading");
+  });
 });
