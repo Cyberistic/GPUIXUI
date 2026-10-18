@@ -190,6 +190,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [393](./393-loading-pulse.md) | The loading pulse must stay visible | F | 019, 094, 309, 322, 358, 391, 392 | done |
 | [394](./394-soft-status-panel-action.md) | The action inside a soft status panel | F | 014, 090, 092, 093, 097, 300, 309, 338, 356, 371, 383, 387, 393 | done |
 | [395](./395-scrim-over-panel-action.md) | The scrim over the panel action | F | 099, 359, 375, 394 | done |
+| [396](./396-type-index-claims.md) | The type index's counts, its weight claim and the colour-format count | F | 324, 370, 394, 395 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1832,6 +1833,17 @@ panels, so an `overlay` that composited to the Alert's "Try again" button left i
 undimmed while the checker returned `[]`. The fill joins `overlaySurfaces`
 (14 → 15 scrim pairs); every shipped set already clears 1.05:1 (1.5519:1 at the
 tightest, AAA dark), so no colour moves.
+
+Plan `396` closes the documentation drift plan `394` left behind. The palette
+moved 66 → 70 roles and the two sentences `color.test.ts` already read were
+updated, but the `ThemeColors` row of the type index and the colour-format
+paragraph still said 66, and the `FontWeight` row claimed a shipped `700` no
+`typography` role uses (the scale's strongest weight is 600). `docs.test.ts`
+never parsed the type table, so the page disagreed with the package while every
+suite stayed green. The two counts and the weight sentence are corrected, and a
+new case derives every count and ordered range in the type table from
+`colorRoles`, `textRoles`, `motion`, `typography`, `avatarSize` and `iconSize`,
+so a future value edit has to take the document with it.
 
 ## How to use a plan
 
