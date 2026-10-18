@@ -69,3 +69,14 @@ export const crampedField = extendTheme(getTheme("light"), {
   typography: { body: { fontSize: 14, lineHeight: 30 } },
 });
 export const crampedFieldFailures = themeMetricFailures(crampedField);
+
+/**
+ * A caption leading taller than the keycap that paints it: `Keycap` shows the
+ * caption role inside `dimensions.keycapSize`, so a 22px line cannot fit the
+ * 18px content box of the shipped 20px surface. The colour check is empty; the
+ * numeric one names the keycap.
+ */
+export const clippedKeycap = extendTheme(getTheme("light"), {
+  typography: { caption: { fontSize: 12, lineHeight: 22 } },
+});
+export const clippedKeycapFailures = themeMetricFailures(clippedKeycap);

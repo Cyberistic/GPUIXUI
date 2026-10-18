@@ -142,6 +142,11 @@ Cases (all must be able to fail):
    shipped platform style still resolves to 20 (they name no dimension).
 6. **The value is finite.** `keycapSize: Infinity` is reported as `finite`.
 
+Also add `clippedKeycap` / `clippedKeycapFailures` to
+`packages/tokens/src/metrics.example.ts` — the executed, copyable form of the
+probe — and assert it in case 2, so an example cannot drift the way plan 350's
+`primary-text.example.ts` did.
+
 ### 3.4 `packages/tokens/src/dimensions.test.ts`
 
 No new case is needed. The existing "ships a positive whole-pixel metric for

@@ -12,6 +12,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { themeContrastFailures } from "./contrast.js";
+import { clippedKeycapFailures } from "./metrics.example.js";
 import { themeMetricFailures } from "./metrics.js";
 import { dimensions } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
@@ -37,8 +38,7 @@ describe("the keycap surface", () => {
     const theme = extendTheme(lightTheme, {
       typography: { caption: { fontSize: 12, lineHeight: 22 } },
     });
-    expect(themeContrastFailures(theme)).toEqual([]);
-    expect(themeMetricFailures(theme)).toEqual([
+    const expected = [
       {
         group: "dimensions",
         member: "keycapSize",
@@ -46,7 +46,11 @@ describe("the keycap surface", () => {
         actual: 20,
         bound: 24,
       },
-    ]);
+    ];
+    expect(themeContrastFailures(theme)).toEqual([]);
+    expect(themeMetricFailures(theme)).toEqual(expected);
+    // The executed example is the copyable form of this probe.
+    expect(clippedKeycapFailures).toEqual(expected);
   });
 
   it("holds the keycap to its content box, not its outer height", () => {
