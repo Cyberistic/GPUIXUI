@@ -48,13 +48,17 @@ export const FormExample = () => {
     >
       {(form) => (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <Field label="Email" description="We never share it">
+          <Field
+            label="Email"
+            description="We never share it"
+            error={form.errorFor("email")}
+          >
             <FieldInput
               value={email}
               onChange={(event) => setEmail(event.value ?? "")}
             />
           </Field>
-          <Field label="Name">
+          <Field label="Name" error={form.errorFor("name")}>
             <FieldInput
               value={name}
               onChange={(event) => setName(event.value ?? "")}

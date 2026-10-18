@@ -3,9 +3,10 @@
  *
  * The runtime has no form element and no DOM to read values from, so the form is
  * **owned-value**: the caller passes the value it already holds and receives the
- * decoded value only when the schema accepts it. `Field` still paints one
- * message; this component decides when validation runs and what a failed submit
- * shows.
+ * decoded value only when the schema accepts it. A failed submit reports every
+ * message both as a summary and as a message located at its field path, so
+ * `Field` can paint the one that belongs to it. This component decides when
+ * validation runs; the caller still owns the value.
  *
  * The submit handler is the runtime boundary: `validation/logic.ts` and the
  * decoder are pure, non-failing effects with no requirements, so they run with
@@ -21,20 +22,34 @@ import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { useCallback, useState, type ReactNode } from "react";
 import { textStyle, useTheme } from "./internal/theme.js";
-import { validateAll } from "./validation/logic.js";
+import {
+  fieldMessageAt,
+  validateFields,
+  type FieldMessage,
+} from "./validation/logic.js";
 
 /** What the render prop receives. */
 export interface FormState {
   /** Every message from the last failed submit, in schema order. */
   readonly errors: ReadonlyArray<string>;
+  /** The same failures, each with the schema path that produced it. */
+  readonly fieldErrors: ReadonlyArray<FieldMessage>;
   /** Mirrors the `pending` prop; a pending form ignores `submit`. */
   readonly pending: boolean;
   /** Validate `value` and call `onSubmit` only when it decodes. */
   readonly submit: () => void;
+  /**
+   * The message for a field path, or `undefined`. A single key is a top-level
+   * field; pass an array for a nested path.
+   */
+  readonly errorFor: (
+    path: PropertyKey | ReadonlyArray<PropertyKey>,
+  ) => string | undefined;
 }
 
 /** {@link Form} props. */
@@ -66,20 +81,29 @@ export const Form = <T,>({
   ...rest
 }: FormProps<T>) => {
   const theme = useTheme();
-  const [errors, setErrors] = useState<ReadonlyArray<string>>([]);
+  const [fieldErrors, setFieldErrors] = useState<ReadonlyArray<FieldMessage>>(
+    [],
+  );
+  const errors = Arr.dedupe(Arr.map(fieldErrors, (field) => field.message));
 
   const submit = useCallback((): void => {
     if (pending) return;
 
     const decoded = Schema.decodeUnknownResult(schema)(value);
     if (Result.isFailure(decoded)) {
-      setErrors(Effect.runSync(validateAll(schema)(value)));
+      setFieldErrors(Effect.runSync(validateFields(schema)(value)));
       return;
     }
 
-    setErrors([]);
+    setFieldErrors([]);
     onSubmit(decoded.success);
   }, [onSubmit, pending, schema, value]);
+
+  const errorFor = useCallback(
+    (path: PropertyKey | ReadonlyArray<PropertyKey>): string | undefined =>
+      Option.getOrUndefined(fieldMessageAt(fieldErrors, path)),
+    [fieldErrors],
+  );
 
   return (
     <div
@@ -119,7 +143,7 @@ export const Form = <T,>({
           </div>
         ),
       })}
-      {children({ errors, pending, submit })}
+      {children({ errors, fieldErrors, errorFor, pending, submit })}
     </div>
   );
 };
@@ -133,7 +157,8 @@ export const formMeta = {
   limitations: [
     "owned-value: the caller passes the value and receives the decoded one; there is no runtime form element",
     "a render-prop child is the only way to reach submit, because the contract fixes Form as one part",
-    "no automatic re-validation on edit and no field-to-message mapping: validateAll returns messages, not paths",
+    "messages carry the schema's key path, not a display label; the caller still chooses when to validate and how each field renders it",
+    "no automatic re-validation on edit: errors persist until the next submit",
   ],
   docs: "docs/form.mdx",
   example: "examples/form.example.tsx",

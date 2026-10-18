@@ -43,7 +43,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/pagination.tsx` | Pagination: a stable-width page window with disabled edges |
 | `src/field.tsx` | Field: label, control, one message slot; the inline-validation surface |
 | `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
-| `src/form.tsx` | Form: owned-value schema validation, one alert summary, decoded `onSubmit` |
+| `src/form.tsx` | Form: owned-value schema validation, one alert summary, messages located by field path (`fieldErrors`/`errorFor`), decoded `onSubmit` |
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
 | `src/navigation-menu.tsx` | NavigationMenu: one open anchored panel, roving triggers, hover travel over the shared `internal/hover.ts` policy |
 | `src/mention-input.tsx`, `src/mention/logic.ts` | MentionInput: ranked `@` suggestions over the anchored layer |

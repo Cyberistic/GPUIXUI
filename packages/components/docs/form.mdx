@@ -5,7 +5,8 @@ description: Schema validation and a submit lifecycle around a group of fields.
 
 `Form` joins two things the package already ships: the schema-to-message
 validation in `validation/logic.ts`, and the `Field` parts around each control. A
-submit runs the schema; a failure shows every message; a success calls
+submit runs the schema; a failure shows every message in one summary **and**
+locates each message at the field path that produced it; a success calls
 `onSubmit` with the **decoded** value.
 
 It is **owned-value**: the runtime has no form element and no DOM to read values
@@ -32,10 +33,14 @@ const Signup = Schema.Struct({
 >
   {(form) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Field label="Email" description="We never share it">
+      <Field
+        label="Email"
+        description="We never share it"
+        error={form.errorFor("email")}
+      >
         <FieldInput value={email} onChange={(event) => setEmail(event.value ?? "")} />
       </Field>
-      <Field label="Name">
+      <Field label="Name" error={form.errorFor("name")}>
         <FieldInput value={name} onChange={(event) => setName(event.value ?? "")} />
       </Field>
       <Button onClick={form.submit} disabled={form.pending}>
@@ -62,20 +67,37 @@ you need to render it — is the render prop:
 ```ts
 interface FormState {
   readonly errors: ReadonlyArray<string>;
+  readonly fieldErrors: ReadonlyArray<FieldMessage>;
   readonly pending: boolean;
   readonly submit: () => void;
+  readonly errorFor: (
+    path: PropertyKey | ReadonlyArray<PropertyKey>,
+  ) => string | undefined;
+}
+
+interface FieldMessage {
+  readonly path: ReadonlyArray<PropertyKey>;
+  readonly message: string;
 }
 ```
 
 `Form` renders the error summary itself, so the render prop does not have to. The
-summary is an `role="alert"` row with one `<text>` per message, in schema order.
+summary is a `role="alert"` row with one `<text>` per message, in schema order.
+`fieldErrors` is the same validation pass with the path kept; `errorFor` is the
+ergonomic lookup over it. Pass a single key for a top-level field
+(`form.errorFor("email")`) or an array for a nested one
+(`form.errorFor(["user", "email"])`). A field the schema accepted returns
+`undefined`, so `error={form.errorFor("email")}` hides the message for free.
+`validateFields` is exported from `@gpuixui/components/validation/logic` for a
+caller that validates outside a `Form`.
 
 ## Submit lifecycle
 
 1. `submit()` is a no-op while `pending` is true.
 2. The value is decoded with your `schema` (`Schema.decodeUnknownResult`).
-3. On failure, the messages from `validateAll` are shown and `onSubmit` is not
-   called. The messages are the schema's own text, never a package invention.
+3. On failure, the messages from `validateFields` are shown (as a summary and
+   with their paths) and `onSubmit` is not called. The messages are the schema's
+   own text, never a package invention.
 4. On success, the errors clear and `onSubmit` receives the decoded value — a
    class instance if `schema` is a `Schema.Class`, not the raw object.
 
@@ -95,10 +117,17 @@ Every part takes the GPUix host props and merges `style` last.
 - The schema decides; `Form` only runs it. `validation/logic.ts` maps its issues
   to messages with `SchemaIssue.makeFormatterDefault`, so a `message` annotation
   reaches the user verbatim.
-- One submit reports every failing field (`validateAll` uses `errors: "all"`), in
-  schema order, with duplicate messages removed.
-- There is no validate-on-blur or validate-on-keystroke. `Field` still paints a
-  per-field message you pass; that is the caller's separate decision.
+- One submit reports every failing field (`validateFields` uses
+  `errors: "all"`), in schema order. A path is the schema's own key sequence,
+  root-first; a failure on the value itself has path `[]`.
+- Two failures that share a message on **different** fields stay two entries,
+  because each belongs under its own control. The summary deduplicates by
+  message, so `errors` is the shorter list.
+- `errorFor` is the same data, looked up by path. `Field` paints the message it
+  is given, so inline validation never re-runs the schema or invents a second
+  message.
+- There is no validate-on-blur or validate-on-keystroke; the caller decides when
+  to call `submit`.
 - Errors persist until the next submit. Clearing them on an edit would need an
   identity comparison that an inline `value` object cannot support.
 
@@ -120,19 +149,23 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 ## Limitations
 
 - Owned-value: the caller passes the value; there is no field registration.
-- `validateAll` returns messages, not paths, so Form cannot attach a message to a
-  particular `Field`. Per-field messages stay the `Field` API.
-- No automatic re-validation on edit.
+- A message carries the schema's key path, not a display label. Renaming a field
+  in the UI does not change the path; pass the schema's keys to `errorFor`.
+- No automatic re-validation on edit: errors persist until the next submit.
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
 
 ## Verification
 
-`src/behaviour/form.test.tsx` runs in the real GPUix renderer (7 tests): idle
+`src/behaviour/form.test.tsx` runs in the real GPUix renderer (9 tests): idle
 state, a valid submit delivering the decoded instance, an invalid submit showing
 every message and never submitting, one alert with separate message nodes,
 `pending` blocking a submit, a consumer `style` winning while the summary paints
-destructively in both themes, and the named form landmark.
+destructively in both themes, the named form landmark, each message located at
+its field path (with an accepted field returning `undefined`), and an inline
+`Field` painting the located message plus the destructive input border.
+`src/validation/logic.test.ts` has 4 cases for `validateFields`/`errorFor`'s
+lookup, including nested and root paths.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

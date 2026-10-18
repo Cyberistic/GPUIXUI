@@ -4,12 +4,16 @@
  * The bugs these guard: a submit that calls the consumer with an invalid value;
  * messages that are not shown, or shown one blob instead of one per issue; a
  * pending form that submits again; a raw value reaching `onSubmit` instead of the
- * decoded one; and a summary that ignores the destructive role.
+ * decoded one; a summary that ignores the destructive role; and a form that knows
+ * every message but not which field produced it, so inline validation has to be
+ * wired by hand and can drift from the summary.
  */
 
 import { describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
+import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
+import { Field, FieldInput } from "../field.js";
 import { Form } from "../form.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
@@ -77,6 +81,50 @@ const styledMessage = (root: ComponentTestRoot, message: string) => {
   return root.renderer.getElement(leaf.parentId);
 };
 
+/** A form whose render prop prints the located errors and wires one Field. */
+const LocatedHarness = ({
+  value,
+  onSubmit,
+}: {
+  readonly value: unknown;
+  readonly onSubmit: (value: Signup) => void;
+}) => (
+  <Form schema={Signup} value={value} onSubmit={onSubmit}>
+    {(state) => (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <Field
+          label="Email"
+          error={state.errorFor("email")}
+          testId="email-field"
+        >
+          <FieldInput testId="email" value="" onChange={() => undefined} />
+        </Field>
+        <Field label="Name" error={state.errorFor("name")} testId="name-field">
+          <FieldInput testId="name" value="" onChange={() => undefined} />
+        </Field>
+        <text testId="paths">
+          {Arr.join(
+            Arr.map(state.fieldErrors, (field) => field.path.join(".")),
+            ",",
+          )}
+        </text>
+        <text testId="email-error">
+          {`email:${state.errorFor("email") ?? "none"}`}
+        </text>
+        <text testId="name-error">
+          {`name:${state.errorFor(["name"]) ?? "none"}`}
+        </text>
+        <text testId="missing">
+          {`missing:${state.errorFor("missing") ?? "none"}`}
+        </text>
+        <Button testId="submit" onClick={state.submit}>
+          Create account
+        </Button>
+      </div>
+    )}
+  </Form>
+);
+
 const valid = { email: "ada@example.com", name: "Ada" };
 const invalid = { email: "nope", name: "" };
 
@@ -138,6 +186,36 @@ describe("Form", () => {
       .getAllText()
       .filter((text) => expectedMessages.includes(text));
     expect(messages).toEqual(expectedMessages);
+
+    form.unmount();
+  });
+
+  it("locates each message at the field that produced it", () => {
+    const form = renderComponent(
+      <LocatedHarness value={invalid} onSubmit={() => undefined} />,
+    );
+
+    clickCentreOf(form, "submit");
+
+    const texts = form.renderer.getAllText();
+    expect(texts).toContain("email,name");
+    expect(texts).toContain(`email:${addressMessage}`);
+    expect(texts).toContain(`name:${expectedMessages[1]}`);
+    expect(texts).toContain("missing:none");
+
+    form.unmount();
+  });
+
+  it("an inline Field paints the located message and the invalid control", () => {
+    const form = renderComponent(
+      <LocatedHarness value={invalid} onSubmit={() => undefined} />,
+    );
+
+    clickCentreOf(form, "submit");
+
+    expect(form.renderer.findByTestId("email")?.style.borderColor).toBe(
+      darkTheme.colors.destructive,
+    );
 
     form.unmount();
   });

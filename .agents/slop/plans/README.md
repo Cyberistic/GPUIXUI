@@ -131,6 +131,7 @@ workstream declares in its own section below.
 | [381](./381-tag-chip-remove-name.md) | The tag chip's removal control is nameable (`<chip testId>-remove`) | F | 314, 330, 333, 335 | done — the playground could only press it by coordinates and our suite found it by child index; 1 native test (Tag / token input 10, behaviour 555), both-direction proof |
 | [382](./382-submenu-placement.md) | Submenu placement: open left when the right side has no room | F | 112, 114, 131, 323, 376 | done — measured once per open: right when it fits, otherwise left of the row; 7 rule + 2 native tests (Dropdown menu 36, Context menu 18, behaviour 557), both-direction proof (reverting `sub.tsx` fails both native cases) |
 | [383](./383-component-page-api.md) | Every component page documents its public API | F | 110, 117, 200, 337 | done — 15 pages gained an `## API` section and four incomplete ones gained their missing parts; the new inventory case failed on all 19 and passes after; `TabsList` removed from `tabs.mdx` fails exactly one line (unit 370) |
+| [384](./384-form-field-errors.md) | Form field-level errors: locate a message by its schema path | C/F | 110, 115, 200, 201, 308, 383 | done — `validateFields` keeps `SchemaIssue.Pointer` paths (nested and root cases) and `Form` exposes `fieldErrors`/`errorFor`; 4 logic + 2 native tests (unit 374, behaviour 559), both-direction proof; example, docs and inventory synced |
 
 Interlocks this workstream depends on and does not own:
 

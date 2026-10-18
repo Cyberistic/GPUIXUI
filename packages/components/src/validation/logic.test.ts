@@ -4,7 +4,8 @@
  * The bugs these guard: a message invented by this package instead of taken
  * from the schema's own `message` annotation; `validateAll` reporting one
  * composite blob instead of a message per failing field; the messages arriving
- * in an arbitrary order; and a message repeated once per failing field.
+ * in an arbitrary order; a message repeated once per failing field; and a
+ * message with no path, which cannot be attached to the field that produced it.
  */
 
 import { describe, expect, it } from "@effect/vitest";
@@ -12,7 +13,12 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { validate, validateAll } from "./logic.js";
+import {
+  fieldMessageAt,
+  validate,
+  validateAll,
+  validateFields,
+} from "./logic.js";
 
 const addressMessage = "Enter an address with an @";
 
@@ -34,6 +40,10 @@ class TwiceSame extends Schema.Class<TwiceSame>("TwiceSame")({
   email: Address,
   backup: Address,
 }) {}
+
+class Contact extends Schema.Class<Contact>("Contact")({ email: Address }) {}
+
+class Profile extends Schema.Class<Profile>("Profile")({ user: Contact }) {}
 
 describe("validate", () => {
   it.effect("returns the schema's own message", () =>
@@ -85,6 +95,72 @@ describe("validateAll", () => {
       });
 
       expect(messages).toEqual([]);
+    }),
+  );
+});
+
+describe("validateFields", () => {
+  it.effect("locates each message at its field path, in field order", () =>
+    Effect.gen(function* () {
+      const fields = yield* validateFields(Signup)({
+        email: "nope",
+        name: "",
+      });
+
+      expect(Arr.map(fields, (field) => field.path)).toEqual([
+        ["email"],
+        ["name"],
+      ]);
+      expect(fields[0]?.message).toBe(addressMessage);
+    }),
+  );
+
+  it.effect("accumulates a nested path and keeps a root failure at []", () =>
+    Effect.gen(function* () {
+      const nested = yield* validateFields(Profile)({
+        user: { email: "nope" },
+      });
+      expect(Arr.map(nested, (field) => field.path)).toEqual([
+        ["user", "email"],
+      ]);
+
+      const root = yield* validateFields(Address)("nope");
+      expect(Arr.map(root, (field) => field.path)).toEqual([[]]);
+    }),
+  );
+
+  it.effect("keeps one entry per path for a message two fields share", () =>
+    Effect.gen(function* () {
+      const fields = yield* validateFields(TwiceSame)({
+        email: "nope",
+        backup: "also-nope",
+      });
+
+      expect(Arr.map(fields, (field) => field.message)).toEqual([
+        addressMessage,
+        addressMessage,
+      ]);
+      expect(Arr.map(fields, (field) => field.path)).toEqual([
+        ["email"],
+        ["backup"],
+      ]);
+    }),
+  );
+
+  it.effect("finds a message by a key or a path", () =>
+    Effect.gen(function* () {
+      const fields = yield* validateFields(TwiceSame)({
+        email: "nope",
+        backup: "also-nope",
+      });
+
+      expect(fieldMessageAt(fields, "backup")).toEqual(
+        Option.some(addressMessage),
+      );
+      expect(fieldMessageAt(fields, ["backup"])).toEqual(
+        Option.some(addressMessage),
+      );
+      expect(fieldMessageAt(fields, "missing")).toEqual(Option.none());
     }),
   );
 });
