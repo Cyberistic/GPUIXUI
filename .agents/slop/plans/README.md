@@ -244,6 +244,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [547](./547-interactive-fill-family-index.md) | The interactive-fill index retypes the families it says it derives | F | 097, 309, 327, 342, 502, 546 | done |
 | [548](./548-soft-status-tone-index.md) | The soft-status lists retype the tone index | F | 014, 057, 090, 091, 300, 307, 347, 394, 503, 508, 546, 547 | done |
 | [549](./549-status-text-tone-index.md) | The status-text pairs retype the tone index | F | 014, 057, 083, 314, 546–548 | done |
+| [550](./550-border-width-ladder.md) | The strong border may not be thinner than the thin one | F | 017, 358, 360, 372, 523, 533 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
