@@ -193,6 +193,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [396](./396-type-index-claims.md) | The type index's counts, its weight claim and the colour-format count | F | 324, 370, 394, 395 | done |
 | [397](./397-status-panel-action-scope.md) | The panel action's scope: a tinted panel, not a floating card | F | 348, 362, 392, 394, 395, 396 | done |
 | [398](./398-theme-check-index.md) | The check count and the composition suites' subset | F | 071, 358–364, 371, 383, 385, 392, 396 | done |
+| [399](./399-solid-status-fill.md) | The solid status fill and its one call | F | 014, 057, 071, 083, 090, 300, 308, 309, 314, 332, 347, 371, 383, 387, 388, 394, 398 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1879,6 +1880,25 @@ the guarantee. A `docs.test.ts` case fails on “all three checks” / “all fo
 checks”, and a `theme-check.test.ts` case fails if the composition emits a kind
 outside the index or in a different order. No colour, pair, floor or metric
 moves.
+
+Plan `399` closes the last half of the status family's contract. The documents
+publish three tonalities per status — a solid fill with one readable foreground,
+the soft surface and edge, and `xText` for plain surfaces — and `markPairs`
+already treats the solid roles as *glyphs* (`success`, `destructive`, `primary`;
+not `warning`, whose light fill is 1.78:1 on the canvas). But the solid role as
+a **fill** was measured only against its own foreground: `stateFillSurfacePairs`
+covers the interactive fills, and a status chip is not interactive. A copied
+platform style that set a status fill near its panel erased a solid Badge while
+`themeFailures` returned `[]`, and `statusTone` resolved every tonality except
+the solid pair, so a consumer retyped `theme.colors[tone]` /
+`theme.colors[`${tone}Foreground`]` by hand. `statusFillPairs` holds each of the
+four solid fills to 1.05:1 on the eight surfaces a chip sits on (`chipSurfaces`,
+the list plan 308 already owns for the soft edge), `statusTone(...).solid`
+resolves the pair in one call, and the contract moves 360 → 388. Every shipped
+set already clears the floor — the tightest is **1.262:1** (XP light `warning`
+on `selected`) — so no colour moves. The documents now state the distinction the
+mark series assumed: a solid fill is a fill on the eight chip surfaces, a dot or
+label is `xText`.
 
 ## How to use a plan
 
