@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[███████████]` 134/134
+`[x]` `[███████████]` 137/137
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
