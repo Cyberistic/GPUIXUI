@@ -1267,9 +1267,12 @@ const selectionForegrounds: Readonly<
  * Every text pair a selected glyph paints: the role each surface uses for its
  * own text on the left, and secondary text on the right. A card carries two —
  * the default `foreground` a `CardTitle` paints and its own `cardForeground`,
- * which a context menu trigger sets on its `card` fill — and both are measured.
- * A row description or a message timestamp is selected with the body copy
- * around it, so it carries the secondary floor through the same wash.
+ * which a context menu trigger sets on its `card` fill — and so does a selected
+ * row: its title is `foreground` (`ListItemTitle` overrides the inherited
+ * colour, plan 312) and the label beside it keeps `selectedForeground` at the
+ * secondary floor. A row description or a message timestamp is selected with
+ * the body copy around it, so it carries the secondary floor through the same
+ * wash.
  */
 export const selectionPairs: readonly ContrastPair[] = [
   ...selectionSurfaces.map(
@@ -1280,6 +1283,9 @@ export const selectionPairs: readonly ContrastPair[] = [
     ],
   ),
   ["cardForeground", "card", "body"],
+  // A selected row's title is the brighter of its two roles; only the inherited
+  // label was measured through the wash before plan 506.
+  ["foreground", "selected", "body"],
   ...selectionSurfaces.map(
     (surface): ContrastPair => ["mutedForeground", surface, "secondary"],
   ),

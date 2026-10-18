@@ -444,6 +444,7 @@ describe("themeContrastFailures", () => {
       ["inputForeground", "input"],
       ["selectedForeground", "selected"],
       ["cardForeground", "card"],
+      ["foreground", "selected"],
       ...selectionSurfaces.map((surface) => ["mutedForeground", surface]),
       ...selectionStatusPairs.map(([foreground, background]) => [
         foreground,
@@ -563,7 +564,9 @@ describe("themeContrastFailures", () => {
       "warningSoft",
       "destructiveSoft",
     ]);
-    expect(selectionPairs.length).toBe(19);
+    // Nine surfaces with their own body role, a card's second role, a selected
+    // row's title, and the same nine at secondary strength.
+    expect(selectionPairs.length).toBe(20);
     expect(selectionStatusPairs).toHaveLength(36);
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(12);

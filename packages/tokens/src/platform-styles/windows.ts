@@ -10,11 +10,13 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * step darker so secondary text keeps its floor through the selection wash on
  * the pressed row (plan 087). The accent's readable text step is
  * `#005BA1` light and `#76D0FF` dark; the fill's `#0067C0` is 4.30:1 on the
- * pressed wash (plan 082). The dark wash is 40% rather than 20% because a 20%
+ * pressed wash (plan 082). The dark wash is 33% rather than 20% because a 20%
  * tint is invisible on the dark-red soft destructive fill — the selection
- * highlight must stay perceivable on a status surface too (plan 091). Elevation
- * levels apply their own alpha to the `shadow` tint, so a copied style retints
- * all three by editing one role (plan 085).
+ * highlight must stay perceivable on a status surface too (plan 091) — and it
+ * stops at 33% rather than the 40% plan 091 chose, because a selected row's
+ * title (`foreground`) keeps the 7:1 body floor through it at that strength
+ * (plan 506). Elevation levels apply their own alpha to the `shadow` tint, so a
+ * copied style retints all three by editing one role (plan 085).
  * The dark skeleton is one step off the pressed wash, so a loading row keeps its
  * placeholder visible (plan 094). The filled-control hover and pressed steps are
  * designed opaque roles in Fluent's blue and grey families, not alpha composites
@@ -98,7 +100,7 @@ export const windowsPlatformStyle = {
       accentHover: "#113A5D",
       accentActive: "#174572",
       ring: "#4CC2FF",
-      selection: "#0067C066",
+      selection: "#0067C055",
       selected: "#094771",
       selectedForeground: "#CFE9FF",
       placeholder: "#A6A6A6",

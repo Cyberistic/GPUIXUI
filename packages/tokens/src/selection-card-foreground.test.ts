@@ -76,7 +76,7 @@ const selectedCard = (theme: Theme): number =>
 
 describe("the card's own foreground through a text selection", () => {
   it("measures both roles a card carries", () => {
-    expect(selectionPairs).toHaveLength(19);
+    expect(selectionPairs).toHaveLength(20);
     expect(selectionPairs).toContainEqual(["foreground", "card", "body"]);
     expect(selectionPairs).toContainEqual(["cardForeground", "card", "body"]);
   });
@@ -100,7 +100,7 @@ describe("the card's own foreground through a text selection", () => {
 
     expect([label, Number(selectedCard(theme).toFixed(2))]).toEqual([
       "Windows dark",
-      9.07,
+      9.65,
     ]);
   });
 

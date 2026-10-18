@@ -44,7 +44,7 @@ const measureSelected = (
 
 describe("selected secondary text", () => {
   it("holds every text pair through the wash, secondary included", () => {
-    expect(selectionPairs).toHaveLength(19);
+    expect(selectionPairs).toHaveLength(20);
     expect(
       selectionPairs.filter(([foreground]) => foreground === "mutedForeground"),
     ).toHaveLength(selectionSurfaces.length);
@@ -105,10 +105,10 @@ describe("selected secondary text", () => {
         foreground === "mutedForeground" && wash === "selection",
     );
 
-    expect(failures).toHaveLength(10);
+    expect(failures).toHaveLength(8);
     expect(
       failures.find(({ background }) => background === "active")?.ratio,
-    ).toBeCloseTo(3.79, 2);
+    ).toBeCloseTo(4.25, 2);
   });
 });
 

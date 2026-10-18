@@ -916,8 +916,9 @@ describe("docs/tokens.md quoted figures", () => {
       "so selected text keeps the body contrast on every surface a glyph can be " +
       "selected on: `background`, `card`, `muted`, `hover`, `active` and `accent` " +
       "with `foreground`; `popover` with `popoverForeground`; `input` with " +
-      "`inputForeground`; and `selected` with `selectedForeground` at the " +
-      "secondary floor; a soft status surface carries its own tone with " +
+      "`inputForeground`; and `selected` with both of the roles a selected row " +
+      "paints — its title `foreground` at the body floor and its inherited label " +
+      "`selectedForeground` at the secondary floor; a soft status surface carries its own tone with " +
       "`xSoftForeground`, its description with `foreground` and its caption " +
       "with `mutedForeground`.";
     expect(markdownProse).toContain(sentence);
@@ -930,7 +931,7 @@ describe("docs/tokens.md quoted figures", () => {
 
     [
       "`selectionSurfaces` is the list of plain surfaces",
-      "`selectionPairs` holds their body and secondary text pairs",
+      "`selectionPairs` holds each surface's body and secondary text pairs",
       "`selectionWashPairs` holds the wash itself",
       "`selectionSoftPairs` measures all three text roles a status panel carries",
       "`selectionSoftWashPairs` the wash's own perceivability",
@@ -1093,9 +1094,9 @@ describe("docs/tokens.md quoted tightest figures", () => {
 
   it("quotes the row-text and status ratios the shipped themes produce", () => {
     const quoted = [
-      ["primaryText", "selected", "Linux dark", 4.53],
-      ["foreground", "selected", "Linux dark", 7.47],
-      ["popoverForeground", "selected", "Linux dark", 7.95],
+      ["primaryText", "selected", "macOS dark", 4.58],
+      ["foreground", "selected", "Linux dark", 8.44],
+      ["popoverForeground", "selected", "Linux dark", 8.98],
       ["selectedForeground", "active", "macOS light", 6.22],
       ["selectedForeground", "accent", "macOS light", 6.93],
       ["successText", "muted", "Aero light", 7.68],
@@ -2080,9 +2081,9 @@ describe("docs/design-system.md", () => {
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| a Toast's tone glyph and bar (\`infoSoftForeground\`/\`successSoftForeground\`/\`warningSoftForeground\`/\`destructiveSoftForeground\` on \`popover\`, the shipped composition until \`components\` paints \`xText\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`, and a card's own \`cardForeground\` on \`card\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`, a card's own \`cardForeground\` on \`card\` and a selected row's title \`foreground\` on \`selected\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection on a soft status fill (\`xSoftForeground\`, \`foreground\` and \`mutedForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 / ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.body}:1 / ${contrastFloors.high.secondary}:1 |`,
-      `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection of a selected row's inherited label (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a status label (\`xText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

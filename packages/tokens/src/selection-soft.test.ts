@@ -66,7 +66,7 @@ describe("selection inside a soft status surface", () => {
     expect(
       contrastRatio(compositeOver(windows.colors.selection, fill), fill),
     ).toBeGreaterThanOrEqual(1.05);
-    expect(windows.colors.selection).toBe("#0067C066");
+    expect(windows.colors.selection).toBe("#0067C055");
   });
 
   it("keeps Linux dark's body text on the washes it paints", () => {

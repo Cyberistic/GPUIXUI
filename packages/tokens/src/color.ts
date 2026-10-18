@@ -374,10 +374,13 @@ export const lightColors = {
  * (plan 080). `mutedForeground` is neutral 300 rather than 400 so secondary text
  * keeps the secondary floor when it is selected on a pressed row (plan 087).
  * The soft status foregrounds are the family's lightest step and the selection
- * wash is 20%, so an alert's text keeps the body floor through it while the
- * highlight stays visible (plan 091). The boundary is a half-step lighter than
- * plan 084 left it, so a checkbox or field inside a tone-tinted Alert keeps its
- * edge on all four soft status fills (plan 092). The skeleton is one ramp step
+ * wash is 14%, so an alert's text keeps the body floor through it while the
+ * highlight stays visible (plan 091). The wash is a step weaker than plan 091
+ * left it because a selected row's title (`foreground`) is measured through it
+ * too, and at 20% measured 6.480:1 against the selected fill (plan 506). The
+ * boundary is a half-step lighter than plan 084 left it, so a checkbox or field
+ * inside a tone-tinted Alert keeps its edge on all four soft status fills
+ * (plan 092). The skeleton is one ramp step
  * lighter than the pressed wash so a loading row never erases it (plan 094), and
  * a half-step further because its pulse paints the role at 60% for half of every
  * cycle (plan 393).
@@ -456,7 +459,7 @@ export const darkColors = {
   inputForeground: palette.neutral[100],
   placeholder: "#858F9F",
   ring: palette.iris[300],
-  selection: "#A7A9FF33",
+  selection: "#A7A9FF24",
   selectionOnFill: "#FFFFFF26",
   overlay: "#000000A6",
   hover: "#262C36",

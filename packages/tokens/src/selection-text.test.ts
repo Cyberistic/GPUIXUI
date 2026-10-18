@@ -64,6 +64,7 @@ describe("the selection wash on painted surfaces", () => {
     expect(selectionPairs.map(([, background]) => background)).toEqual([
       ...surfaces,
       "card",
+      "selected",
       ...surfaces,
     ]);
     expect(selectionPairs.map(([foreground]) => foreground)).toEqual([
@@ -77,6 +78,7 @@ describe("the selection wash on painted surfaces", () => {
       "inputForeground",
       "selectedForeground",
       "cardForeground",
+      "foreground",
       "mutedForeground",
       "mutedForeground",
       "mutedForeground",
@@ -144,6 +146,7 @@ describe("the selection wash on painted surfaces", () => {
       "hover",
       "active",
       "selected",
+      "selected",
       "muted",
       "hover",
       "active",
@@ -161,6 +164,7 @@ describe("the selection wash on painted surfaces", () => {
       { foreground: "foreground", pairClass: "body", floor: 7 },
       { foreground: "foreground", pairClass: "body", floor: 7 },
       { foreground: "selectedForeground", pairClass: "secondary", floor: 7 },
+      { foreground: "foreground", pairClass: "body", floor: 7 },
       { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
       { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },
       { foreground: "mutedForeground", pairClass: "secondary", floor: 7 },

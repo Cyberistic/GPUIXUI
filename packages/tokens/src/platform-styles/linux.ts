@@ -23,7 +23,11 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * and the pressed neutral step sits one designed step below the divider so an
  * outlined control keeps its edge while pressed (plan 318). The dark accent
  * foreground is a step lighter, so selecting the label on the accent fill keeps
- * its floor through the inverse veil (plan 382).
+ * its floor through the inverse veil (plan 382). The dark selected row is one
+ * designed step darker than plan 381 left it, so the row's title (`foreground`)
+ * keeps the 7:1 body floor through the selection wash while the row stays a
+ * 1.216:1 step past its accent wash; the wash itself cannot soften further — at
+ * the alpha the title needs it measures 1.052:1 on the fill (plan 506).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -95,7 +99,7 @@ export const linuxPlatformStyle = {
       accentActive: "#264C77",
       ring: "#78AEED",
       selection: "#1C71D833",
-      selected: "#2B4F76",
+      selected: "#27476A",
       selectedForeground: "#D6E7FA",
       placeholder: "#A8A7A3",
       destructiveSoft: palette.red[950],
