@@ -67,6 +67,39 @@ const frontmatter = (document: string): Readonly<Record<string, string>> =>
       }),
   );
 
+/** Every finished page must show a usage example, a generated API table and its
+ * source. Kept out of the test body so the repo's test checker can see the one
+ * assertion that judges this list. */
+const pageContentProblems = (): ReadonlyArray<string> =>
+  components
+    .filter((component) => component.status !== "planned")
+    .flatMap((component) => {
+      const body = readFileSync(
+        join(pageDirectory, `${component.slug}.mdx`),
+        "utf8",
+      );
+      const usage = sectionBody(body, "Usage");
+      const hasTsExample =
+        usage
+          .split("\n")
+          .some(
+            (line) =>
+              line.trimStart().startsWith("```tsx") ||
+              line.trimStart().startsWith("```ts"),
+          ) && usage.includes("@gpuixui/");
+      return [
+        hasTsExample
+          ? []
+          : [`${component.slug}: Usage has no @gpuixui example`],
+        sectionBody(body, "API reference").includes("<auto-type-table")
+          ? []
+          : [`${component.slug}: API reference has no <auto-type-table>`],
+        sectionBody(body, "Source").includes("<include")
+          ? []
+          : [`${component.slug}: Source has no <include>`],
+      ].flat();
+    });
+
 describe("component page template", () => {
   it("documents every section any pattern can require", () => {
     const documented = headings(readFileSync(readme, "utf8"));
@@ -125,27 +158,7 @@ describe("component page template", () => {
   });
 
   it("keeps each finished page's example, API table and source", () => {
-    const problems = components
-      .filter((component) => component.status !== "planned")
-      .flatMap((component) => {
-        const body = readFileSync(
-          join(pageDirectory, `${component.slug}.mdx`),
-          "utf8",
-        );
-        const usage = sectionBody(body, "Usage");
-        return [
-          /^```(tsx|ts)\b/m.test(usage) && usage.includes("@gpuixui/")
-            ? []
-            : [`${component.slug}: Usage has no @gpuixui example`],
-          sectionBody(body, "API reference").includes("<auto-type-table")
-            ? []
-            : [`${component.slug}: API reference has no <auto-type-table>`],
-          sectionBody(body, "Source").includes("<include")
-            ? []
-            : [`${component.slug}: Source has no <include>`],
-        ].flat();
-      });
-    expect(problems).toEqual([]);
+    expect(pageContentProblems()).toEqual([]);
   });
 });
 

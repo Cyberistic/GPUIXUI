@@ -469,9 +469,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–466)
+## Docs site workstream (plans 410–469)
 
-`[~]` `[██████████]` 65/66
+`[~]` `[██████████]` 66/67
 
 `[x]` **The page template checks content, not only headings (plan 466)** — every delivered page must keep a `tsx`/`ts` example importing `@gpuixui/` under Usage, an `<auto-type-table>` under API reference and an `<include>` under Source; each rule fails on a real page when its block is removed
 `[x]` **Tier 2 page truth (plan 463)** — eight pages stop denying features the components ship: accordion header keys, list multi-select and type-ahead, dropdown/context submenus and 500 ms type-ahead, command-menu subsequence ranking, toast pause and one action, the real reason the dialog/search glyph is text; `preview-server.ts` waits 90 s so a 45 s cold start is not reported unverified
@@ -479,6 +479,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 `[x]` **The record's limitations stop denying shipped features (plan 465)** — the `shippedFeatures` table now also reads each record's limitations, so the status block above a page cannot contradict the prose below it; seven stale strings corrected (list, toast, dropdown, two context, command, accordion)
 `[x]` **The compound contract meets real components (plan 462)** — Tabs and Toasts are `pattern: "stateful"` with real parts, both pages carry `## State and ownership`, and the Toast page includes the viewport source it tells the reader to render; the three guards that were fixtures-only now run on shipped records, with two-direction proofs
 `[x]` **The search suite survives a cold, loaded host (plan 468)** — its first query builds the index for every page; 30 s failed 2 tests when 41 other files ran in parallel and 120 s passes 42 files / 260 tests, with no assertion changed
+`[x]` **The page-template guard stops tripping the test-quality checker (plan 469)** — a regex containing backticks after a space truncated the checker's block parse, so a test that asserts was reported as unable to fail; the fence check is now a line test, with the same two-direction proof
 `[x]` **Document the 17 Tier 2 components merged from `master` (plan 461)** —
 time picker, message scroller, fieldset, form, navigation menu, preview card,
 drawer, stepper, timeline, colour picker, tag input, mention input, hotkey
@@ -559,12 +560,13 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[~]` `[██░░░░░░░░]` 5/27
+`[~]` `[██░░░░░░░░]` 6/28
 
 `[ ]` **Components**: expose the two props the remaining live scenes need — `ContextMenu.point` (its surface paints at an internal `{ x: 0, y: 0 }` set only by the trigger's aux click) and `DatePicker.defaultOpen` (it owns its open state). Plans 457 and the preview strategy record why both stay at their native tier until then
 `[ ]` **Components/primitives**: expose the open state the wrappers hide, so a live scene can prove it — `Select` and `Tooltip` (primitives) and `Combobox` (components) have no `open`/`defaultOpen`, while GPUix's primitives do; a headless check cannot prove a hover- or click-opened surface. Plan 458 records the three asks; no scene is faked meanwhile
 `[ ]` **Components/primitives**: a consumer composing both packages must nest two theme providers — primitives own `ThemeProvider`, components read `@gpuixui/tokens/react` and fall back to the light theme without it. The live scenes painted light-on-dark until `apps/docs` mounted both (plan 457 §9). Unify the context or document the nesting in both package READMEs
 
+`[ ]` **Repo tooling (`scripts/check-tests.ts`)**: a regex literal whose `/` follows a space is read as division, and backticks inside it then open a phantom template literal, so a real `it(...)` block can be truncated to `"("` and reported as assertionless. The docs guard worked around it without the `check-tests-ok` escape (plan 469); the parser should accept a regex after whitespace when the previous non-space token cannot end a value. Owner: whoever owns `scripts/`
 `[ ]` **Deploy: confirm the production host serves `/gpuix-preview/`** — the live surface adds a 19.1 MB wasm asset to `apps/docs/public/` (under Workers' 25 MiB per-asset limit). Run `smoke:preview --base-url <deploy>` once the deploy path is verified; owner: packages/deploy, with `docs-site` verifying.
 `[ ]` Owner: hoist the `apps/docs` stack (fumadocs, tanstack, tailwind, vite) into the root catalog
 `[ ]` **Repo docs**: `docs/architecture.md` is listed as a deliverable in `docs/README.md`, but the site no longer promises it (plan 459 rewrote the Architecture page). Write the maintainer document there, or drop the row from `docs/README.md`; owner: this workstream owns `apps/docs`, not `docs/README.md`
