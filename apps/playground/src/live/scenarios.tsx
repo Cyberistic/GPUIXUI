@@ -49,6 +49,7 @@ import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
+import { mediaScenario } from "../scenarios/media.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
 import { commandPaletteScenario } from "../scenarios/command-palette.js";
@@ -5425,6 +5426,105 @@ const treeReorder: LiveScenario = {
     }),
 };
 
+/**
+ * The waveform seek in a real window (plan `520`).
+ *
+ * The headless probe measures what only a renderer report can: the a11y value,
+ * the retained-node cost and both paint-order routes. This twin proves the
+ * pointer path transfers — a real click at a stage coordinate seeks, a paced
+ * drag scrubs, and the plane takes native focus for the keys.
+ */
+const media: LiveScenario = {
+  id: "live-media",
+  title: "Live media surface: a click seeks, a drag scrubs and keys step",
+  capability: "media",
+  view: mediaScenario.view,
+  ready: "media-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const stage = yield* boxOf(ctx, "media-wave");
+      yield* ctx.expectNear(
+        "the live waveform is 480 wide",
+        stage.width,
+        480,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live waveform is 96 tall",
+        stage.height,
+        96,
+        1,
+      );
+
+      // 1. A real click at 120 px into the stage seeks to 30 s.
+      yield* ctx.host.clickWindow(stage.x + 120, stage.y + 48);
+      yield* settle;
+      yield* waitForText(ctx, "media-readout", "pos=30");
+      yield* ctx.expectEqual(
+        "the live click seeks to 30 s",
+        yield* textOf(ctx, "media-readout"),
+        "pos=30 duration=120 plane=over route=bars",
+      );
+      const playhead = yield* boxOf(ctx, "media-playhead");
+      yield* ctx.expectNear(
+        "the live playhead sits at the click x",
+        playhead.x - stage.x,
+        120,
+        1,
+      );
+
+      // 2. A paced drag from the centre (60 s) by 60 px reaches 75 s.
+      yield* ctx.host.drag("media-seek", 60, 0);
+      yield* settle;
+      yield* waitForText(ctx, "media-readout", "pos=75");
+      yield* ctx.expectEqual(
+        "the live drag scrubs to 75 s",
+        yield* textOf(ctx, "media-readout"),
+        "pos=75 duration=120 plane=over route=bars",
+      );
+
+      // 3. The plane owns native focus, so the keys step the same scale.
+      yield* ctx.host.click("media-seek");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live click focuses the seek plane",
+        yield* focusedOf(ctx),
+        "media-seek",
+      );
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "media-readout", "pos=61");
+      yield* ctx.host.key("home");
+      yield* settle;
+      yield* waitForText(ctx, "media-readout", "pos=0");
+
+      // 4. The transport buttons and the image route work live too.
+      yield* ctx.host.click("media-forward");
+      yield* settle;
+      yield* waitForText(ctx, "media-readout", "pos=5");
+      yield* ctx.host.click("media-route");
+      yield* ctx.host.waitFor("media-envelope-image");
+      yield* settle;
+      const image = yield* boxOf(ctx, "media-envelope-image");
+      yield* ctx.expectNear(
+        "the live envelope image is 480 wide",
+        image.width,
+        480,
+        1,
+      );
+      yield* ctx.host.clickWindow(stage.x + 120, stage.y + 48);
+      yield* settle;
+      yield* waitForText(ctx, "media-readout", "pos=30");
+      yield* ctx.expectEqual(
+        "the live image route still seeks",
+        yield* textOf(ctx, "media-readout"),
+        "pos=30 duration=120 plane=over route=image",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${media.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -5471,4 +5571,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   gridCellEditing,
   reorder,
   treeReorder,
+  media,
 ];

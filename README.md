@@ -72,7 +72,7 @@ nub run check        # tests-can-fail gate, lint, format, type-check
 nub run test
 nub run dev:docs
 nub run dev:playground
-nub run --filter playground smoke        # offscreen native suite (69 scenarios)
+nub run --filter playground smoke        # offscreen native suite (95 scenarios)
 nub run --filter playground smoke:live   # the same core facts in a real window
 ```
 

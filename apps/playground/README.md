@@ -1442,12 +1442,42 @@ last=accel:save-as`); handling the chord in the bar as well as the window fails
 Not available: a real macOS menu bar or tray — `NativeRenderer` exposes only
 window controls and no menu API, so this is honestly an in-window bar.
 
+## Media surfaces (plan `520`)
+
+`media-surface` closes the last inventory row with no runtime evidence, and the
+answer is deliberately split: **0.10.0 cannot play media**, so the player is an
+app boundary, while the waveform and the seek are ordinary primitives that work.
+62 checks plus 14 live and 15 pure model tests.
+
+| Fact | Measured |
+| ---- | -------- |
+| no media element | the closed `ElementType` union and the JSX intrinsics map both have exactly twelve tags, none of them `video`/`audio`/`media`; `NativeRenderer` exposes no transport or audio-device call, and `<canvas>` renders `gpui::Empty` |
+| the envelope | 64 bars, `left = i × 7.5`, `width 6`, heights `12…59`, every bottom edge on the stage's at `96` |
+| the image route | one `<img>` of an SVG data URL, `480 × 96`, no fallback, no per-bar node |
+| the cost | the bar route retains **63 more host nodes** than the image route (`64` bars vs `1` image); switching back restores the exact count |
+| the seek | 4 px/s (`480 px ↔ 120 s`); a press 120 px in seeks to `30 s`, a held `+60 px` drag to `45 s`, and both ends clamp |
+| the hit target | a press **on the envelope does not scrub** (`pos=0`, empty log) because moves go to the pressed element; a plane **over** the envelope and a plane **under** it with `pointerEvents: "none"` on the painted layer both scrub |
+| keyboard | the plane takes native focus; Right `+1 s`, Shift+Right `+5 s`, Home/End the ends, all clamped |
+| accessibility | one AccessKit `Slider` named `Playback position` with `value = "36s of 120s"` (`aria-valuetext`, not `aria-valuenow`) |
+
+Five mutation proofs: dropping the seek clamp fails `expected "120", got "530"`;
+forcing the envelope to always block fails `expected "45", got "0"`; adding one
+route-specific host node fails the cost check at `expected 63, got 64`; dropping
+`aria-valuetext` fails `expected "36s of 120s", got "none"`; and a no-op
+`onMouseMove` fails the live drag at `pos=60` instead of `75`. `live-media`
+confirms the click, the paced drag, focus and the image route in a real window.
+
+Not available: decoding, audio output, a media clock, per-bar hit targets in the
+image route, and colour/pixel readback (screenshot evidence only). A player must
+own its decoder and clock in the app; the component renders the state it is
+given.
+
 ## Evidence on this host
 
-The suite is **94/94 green** here (`exit 0`, 3307 checks):
+The suite is **95/95 green** here (`exit 0`, 3369 checks):
 
 ```
-94/94 scenarios passed · capabilities: layout=verified text=verified
+95/95 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1463,7 +1493,7 @@ scale=verified tier2=verified replace=verified states=verified
 truncation=verified grid-layout=verified typography=verified
 inspector=verified editor=verified data-toolbar=verified query=verified
 notification=verified crop=verified wizard=verified cell-editing=verified
-upload=verified qr=verified
+upload=verified qr=verified media=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1653,7 +1683,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 44/44 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 45/45 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
@@ -1664,7 +1694,8 @@ narrower. Each deviation is deliberate and measured:
   lift/arrow/drop and cancel), the **hierarchical reorder** (a paced drag into
   a collapsed folder, a refused cycle and keyboard nesting), the
   **application menu bar** (hover/arrow switching, roving rows, focus return and
-  a live accelerator) and the **command palette** (plan `389`: `cmd-k` with nothing focused, a window-sized
+  a live accelerator), the **waveform seek** (a click at a stage coordinate, a
+  paced drag and the keys — plan `520`) and the **command palette** (plan `389`: `cmd-k` with nothing focused, a window-sized
   veil, filter + window keys, arrows that keep focus, `onSubmit` commit and
   three dismissals) —
   including the modal's

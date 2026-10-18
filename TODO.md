@@ -69,7 +69,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       iterating and `--all` only at the end. `nub run check` and `nub run test`
       pass.
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`519` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `520`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `521`
+
+`[x]` Probe the **media surface** per plan `520` — the last inventory row with
+      no runtime evidence: `media-surface` (62 checks) and `live-media` (14)
+      over a pure `media-model.ts` (15 tests). 0.10.0 has **no media element,
+      transport or audio device** (twelve closed element tags, none media), so
+      playback is an app boundary. Measured: a 64-bar envelope at a 7.5 px slot,
+      a 4 px/s clamped seek, native focus with 1 s/5 s key steps,
+      `role="slider"` + `aria-valuetext`, and the `<img>` route's cost (delta
+      **63** vs 64 bars). Key rule: **a press on the envelope never scrubs** —
+      moves go to the pressed element, so the plane is topmost or the painted
+      layer is `pointerEvents: "none"`. Suite `94 → 95` (`3307 → 3369`), live
+      `44 → 45` (`910 → 924`), `media=verified`; five mutation proofs (§8.5)
 
 `[x]` Probe the **in-window application menu bar** per plan `519`: `menu-bar`
       (56 checks) and `live-menu-bar` (29) over a pure 19-test model. Hover and
