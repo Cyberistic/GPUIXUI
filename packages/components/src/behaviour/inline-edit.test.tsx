@@ -4,7 +4,8 @@
  * The bugs these guard: a swap that leaves focus outside the input; Enter that
  * commits twice (keyDown and submit); Escape that commits the draft; an
  * unchanged draft that still calls `onCommit`; a disabled control that opens;
- * and a controlled edit state the component overrides.
+ * a controlled edit state the component overrides; and Space starting the edit
+ * on key down instead of on release.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -89,6 +90,22 @@ describe("InlineEdit", () => {
     edit.renderer.simulateKeystrokes("enter");
 
     expect(edit.renderer.findByType("input")).toHaveLength(1);
+
+    edit.unmount();
+  });
+
+  it("starts editing on Space release, not on press", () => {
+    const edit = renderComponent(<Harness initial="Docs" />);
+    const display = edit.renderer.findByTestId("name");
+    expect(display).toBeDefined();
+    if (display === undefined) return;
+
+    edit.renderer.nativeSimulateKeyDown(display.id, "space");
+    expect(edit.renderer.findByType("input")).toHaveLength(0);
+
+    edit.renderer.nativeSimulateKeyUp(display.id, "space");
+    expect(edit.renderer.findByType("input")).toHaveLength(1);
+    expect(focusedTestId(edit)).toEqual(Option.some("name"));
 
     edit.unmount();
   });

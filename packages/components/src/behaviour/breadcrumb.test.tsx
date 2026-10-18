@@ -3,7 +3,8 @@
  *
  * The bugs these guard: a trail that dropped the current page when collapsed; a
  * separator left behind after its item was hidden; a current page that stayed in
- * the tab order; and a link that only answered the mouse.
+ * the tab order; a link that only answered the mouse; and Space activating a
+ * link on key down instead of on release.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -104,6 +105,22 @@ describe("Breadcrumb", () => {
 
     trail.renderer.simulateKeystrokes("enter");
 
+    expect(onSelect).toHaveBeenCalledTimes(1);
+
+    trail.unmount();
+  });
+
+  it("activates Space on release, not on press", () => {
+    const onSelect = vi.fn();
+    const trail = renderComponent(<Trail onSelect={onSelect} />);
+    const link = trail.renderer.findByTestId("projects");
+    expect(link).toBeDefined();
+    if (link === undefined) return;
+
+    trail.renderer.nativeSimulateKeyDown(link.id, "space");
+    expect(onSelect).not.toHaveBeenCalled();
+
+    trail.renderer.nativeSimulateKeyUp(link.id, "space");
     expect(onSelect).toHaveBeenCalledTimes(1);
 
     trail.unmount();

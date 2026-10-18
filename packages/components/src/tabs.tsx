@@ -1,11 +1,11 @@
 /**
  * Tabs: a roving-focus tab list and the panels it switches.
  *
- * The list owns the keys — a key event fired on a focused trigger bubbles to the
- * list, the same measured behaviour that lets `List` own its rows — and the
- * trigger owns its own focus. Index arithmetic is `internal/collection.ts`, so
- * disabled tabs are skipped and wrap-around agrees with every other collection
- * in the package.
+ * The list owns the roving keys — a key event fired on a focused trigger bubbles
+ * to the list, the same measured behaviour that lets `List` own its rows — and
+ * each trigger owns its own focus and activation. Index arithmetic is
+ * `internal/collection.ts`, so disabled tabs are skipped and wrap-around agrees
+ * with every other collection in the package.
  *
  * Measured limitation: `@gpuix/native@0.10.0` has no `aria-orientation`,
  * `aria-controls` or `aria-labelledby` (`HostProps`), so the panel is named by
@@ -30,6 +30,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { activationHandlers } from "./internal/activate.js";
 import {
   firstEnabled,
   lastEnabled,
@@ -38,7 +39,6 @@ import {
 } from "./internal/collection.js";
 import { useControllableState } from "./internal/controllable.js";
 import {
-  isActivation,
   isDown,
   isFirst,
   isLast,
@@ -85,7 +85,6 @@ interface TabsContextValue {
   readonly focusRow: (row: TabRow, select: boolean) => void;
   readonly moveBy: (delta: 1 | -1) => void;
   readonly jumpTo: (edge: "first" | "last") => void;
-  readonly selectActive: () => void;
 }
 
 const TabsContext = createContext<TabsContextValue | undefined>(undefined);
@@ -239,16 +238,6 @@ export const Tabs = ({
     [rows, setSelected],
   );
 
-  const selectActive = useCallback((): void => {
-    pipe(
-      active,
-      Option.match({
-        onNone: () => undefined,
-        onSome: select,
-      }),
-    );
-  }, [active, select]);
-
   /**
    * One tab stop: the selected tab when it accepts input, otherwise the first
    * enabled tab. A disabled selected tab must not eat the list's only stop.
@@ -277,7 +266,6 @@ export const Tabs = ({
       focusRow,
       moveBy,
       jumpTo,
-      selectActive,
     }),
     [
       activation,
@@ -290,7 +278,6 @@ export const Tabs = ({
       register,
       rows,
       select,
-      selectActive,
       selected,
       tabbable,
     ],
@@ -333,7 +320,7 @@ export const TabsList = ({
   ...rest
 }: TabsListProps) => {
   const theme = useTheme();
-  const { orientation, moveBy, jumpTo, selectActive } = useTabsContext();
+  const { orientation, moveBy, jumpTo } = useTabsContext();
   assertParts(tabsList, children);
 
   const direction = (event: EventPayload): Option.Option<1 | -1> =>
@@ -353,7 +340,6 @@ export const TabsList = ({
     Match.value(event).pipe(
       Match.when(isFirst, () => jumpTo("first")),
       Match.when(isLast, () => jumpTo("last")),
-      Match.when(isActivation, selectActive),
       Match.orElse((value) =>
         pipe(
           direction(value),
@@ -417,6 +403,8 @@ export const TabsTrigger = ({
   value,
   disabled = false,
   onClick,
+  onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   style,
@@ -482,6 +470,11 @@ export const TabsTrigger = ({
               select(value);
             }
       }
+      {...activationHandlers(() => select(value), {
+        disabled,
+        onKeyDown,
+        onKeyUp,
+      })}
       style={mergeStyles(
         {
           ...textStyle(theme, "label"),

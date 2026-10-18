@@ -7,8 +7,9 @@
  * `aria-expanded` disagreed with the visible body; a controlled accordion
  * changed its own open set when the consumer said no; and arrow movement either
  * landed on a disabled header or opened the section it moved to. A caller `ref`
- * on a header was discarded in favour of the internal one, and a held Enter
- * toggled the section twice.
+ * on a header was discarded in favour of the internal one, a held Enter
+ * toggled the section twice, and Space toggled on key down instead of on
+ * release.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -179,6 +180,21 @@ describe("Accordion", () => {
     if (second === undefined) return;
     faq.renderer.nativeSimulateKeyDown(second.id, "enter", true);
 
+    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+
+    faq.unmount();
+  });
+
+  it("toggles Space on release, not on press", () => {
+    const faq = renderComponent(<Faq />);
+    const trigger = faq.renderer.findByTestId("trigger-two");
+    expect(trigger).toBeDefined();
+    if (trigger === undefined) return;
+
+    faq.renderer.nativeSimulateKeyDown(trigger.id, "space");
+    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+
+    faq.renderer.nativeSimulateKeyUp(trigger.id, "space");
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
 
     faq.unmount();

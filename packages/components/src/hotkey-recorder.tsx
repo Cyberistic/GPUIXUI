@@ -21,7 +21,9 @@ import { Icon } from "@gpuixui/icons";
 import * as Option from "effect/Option";
 import { useRef, useState } from "react";
 import { acceleratorOf } from "./hotkey/logic.js";
-import { isActivation, isDismiss } from "./internal/key.js";
+import { activationHandlers } from "./internal/activate.js";
+import { claimEvent, isEventClaimed } from "./internal/event-claim.js";
+import { isDismiss, isEnter, isSpaceRelease } from "./internal/key.js";
 import { Keycap } from "./keyboard-shortcuts.js";
 import { formatAccelerator } from "./shortcut/accelerator.js";
 import {
@@ -67,6 +69,7 @@ export const HotkeyRecorder = ({
   testId,
   onClick,
   onKeyDown,
+  onKeyUp,
   onBlur,
   ...rest
 }: HotkeyRecorderProps) => {
@@ -75,6 +78,9 @@ export const HotkeyRecorder = ({
   const [focused, setFocused] = useState(false);
   // A press on the clear control must not also start recording on the root.
   const skipStart = useRef(false);
+  // A key captured while recording must not start a new recording on release:
+  // Space is a valid chord, so its own key-up would otherwise reopen the field.
+  const consumed = useRef(false);
 
   const start = (): void => {
     if (disabled) return;
@@ -104,8 +110,11 @@ export const HotkeyRecorder = ({
       }}
       onKeyDown={(event: EventPayload) => {
         onKeyDown?.(event);
-        if (disabled) return;
+        if (disabled || isEventClaimed(event)) return;
         if (recording) {
+          // This key is the capture (or the cancel): its key-up must not start
+          // a second recording.
+          consumed.current = true;
           if (isDismiss(event)) {
             setRecording(false);
             return;
@@ -119,7 +128,17 @@ export const HotkeyRecorder = ({
           });
           return;
         }
-        if (isActivation(event)) start();
+        consumed.current = false;
+        if (isEnter(event)) start();
+      }}
+      onKeyUp={(event: EventPayload) => {
+        onKeyUp?.(event);
+        if (disabled || isEventClaimed(event)) return;
+        if (consumed.current) {
+          consumed.current = false;
+          return;
+        }
+        if (!recording && isSpaceRelease(event)) start();
       }}
       onFocus={(event) => {
         setFocused(true);
@@ -189,9 +208,10 @@ export const HotkeyRecorder = ({
           testId={testId === undefined ? undefined : `${testId}-clear`}
           tabIndex={0}
           onClick={clear}
-          onKeyDown={(event: EventPayload) => {
-            if (isActivation(event)) clear();
-          }}
+          {...activationHandlers((event) => {
+            claimEvent(event);
+            clear();
+          })}
           style={{
             ...textStyle(theme, "caption"),
             display: "flex",

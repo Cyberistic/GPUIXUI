@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a closed section that left its content mounted (and so
  * kept running); `aria-expanded` that disagreed with the visible body; a trigger
- * that only answered the mouse, not Enter/Space; and a controlled section that
- * opened itself when the consumer kept `open={false}`.
+ * that only answered the mouse, not Enter/Space; a controlled section that
+ * opened itself when the consumer kept `open={false}`; and Space toggling on
+ * key down instead of on release.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -73,8 +74,27 @@ describe("Collapsible", () => {
     section.renderer.simulateKeystrokes("enter");
     expect(section.renderer.findByTestId("content")).toBeDefined();
 
-    section.renderer.simulateKeystrokes("space");
+    const trigger = section.renderer.findByTestId("trigger");
+    expect(trigger).toBeDefined();
+    if (trigger === undefined) return;
+    section.renderer.nativeSimulateKeyDown(trigger.id, "space");
+    section.renderer.nativeSimulateKeyUp(trigger.id, "space");
     expect(section.renderer.findByTestId("content")).toBeUndefined();
+
+    section.unmount();
+  });
+
+  it("toggles Space on release, not on press", () => {
+    const section = renderComponent(<Advanced />);
+    const trigger = section.renderer.findByTestId("trigger");
+    expect(trigger).toBeDefined();
+    if (trigger === undefined) return;
+
+    section.renderer.nativeSimulateKeyDown(trigger.id, "space");
+    expect(section.renderer.findByTestId("content")).toBeUndefined();
+
+    section.renderer.nativeSimulateKeyUp(trigger.id, "space");
+    expect(section.renderer.findByTestId("content")).toBeDefined();
 
     section.unmount();
   });

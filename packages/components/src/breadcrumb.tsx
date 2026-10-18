@@ -8,7 +8,7 @@
  * the item that follows them, so hiding an item hides its separator too.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import {
@@ -21,7 +21,7 @@ import {
   type ReactNode,
 } from "react";
 import { collapse, type Crumb } from "./breadcrumb/logic.js";
-import { isActivation } from "./internal/key.js";
+import { activationHandlers } from "./internal/activate.js";
 import {
   assertParts,
   type PartChildren,
@@ -226,6 +226,7 @@ export const BreadcrumbLink = ({
   current = false,
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   style,
@@ -247,10 +248,7 @@ export const BreadcrumbLink = ({
         onClick?.(event);
         onSelect?.();
       }}
-      onKeyDown={(event: EventPayload) => {
-        if (isActivation(event)) onSelect?.();
-        onKeyDown?.(event);
-      }}
+      {...activationHandlers(() => onSelect?.(), { onKeyDown, onKeyUp })}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

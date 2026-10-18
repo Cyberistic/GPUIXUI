@@ -9,6 +9,7 @@
  * caller `ref` on a trigger was discarded in favour of the internal one, and so
  * was a caller `onBlur`. A vertical tab set could move along the wrong axis,
  * stay laid out horizontally, react to Left/Right, or bypass manual activation.
+ * Space selected on key down instead of on release.
  */
 
 import * as Option from "effect/Option";
@@ -165,6 +166,24 @@ describe("Tabs", () => {
 
     tabs.renderer.simulateKeystrokes("enter");
 
+    expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
+
+    tabs.unmount();
+  });
+
+  it("selects Space on release, not on press", () => {
+    const tabs = renderComponent(<Settings activation="manual" />);
+    focusTab(tabs, "tab-profile");
+
+    tabs.renderer.simulateKeystrokes("right");
+    const target = tabs.renderer.findByTestId("tab-danger");
+    expect(target).toBeDefined();
+    if (target === undefined) return;
+
+    tabs.renderer.nativeSimulateKeyDown(target.id, "space");
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeDefined();
+
+    tabs.renderer.nativeSimulateKeyUp(target.id, "space");
     expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
 
     tabs.unmount();

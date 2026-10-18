@@ -35,6 +35,7 @@ import {
   toggle,
   type AccordionState,
 } from "./accordion/logic.js";
+import { activationHandlers } from "./internal/activate.js";
 import {
   firstEnabled,
   lastEnabled,
@@ -42,7 +43,7 @@ import {
   upsertValue,
   type ValueItem,
 } from "./internal/collection.js";
-import { isActivation, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import { isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -381,6 +382,7 @@ export interface AccordionTriggerState {
 export const AccordionTrigger = ({
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   style,
@@ -416,10 +418,9 @@ export const AccordionTrigger = ({
     if (!disabled) toggle(value);
   };
 
-  const handleKeyDown = (event: EventPayload): void => {
+  const navigate = (event: EventPayload): void => {
     if (disabled) return;
     Match.value(event).pipe(
-      Match.when(isActivation, flip),
       Match.when(isDown, () => moveFrom(value, 1)),
       Match.when(isUp, () => moveFrom(value, -1)),
       Match.when(isFirst, () => jumpTo("first")),
@@ -427,6 +428,15 @@ export const AccordionTrigger = ({
       Match.orElse(() => undefined),
     );
   };
+
+  const keyHandlers = activationHandlers(flip, {
+    disabled,
+    onKeyDown: (event) => {
+      navigate(event);
+      onKeyDown?.(event);
+    },
+    onKeyUp,
+  });
 
   return (
     <div
@@ -443,10 +453,7 @@ export const AccordionTrigger = ({
               flip();
             }
       }
-      onKeyDown={(event: EventPayload) => {
-        handleKeyDown(event);
-        onKeyDown?.(event);
-      }}
+      {...keyHandlers}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

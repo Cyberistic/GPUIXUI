@@ -3,7 +3,9 @@
  *
  * The bugs these guard: a captured chord with the wrong modifiers, Escape that
  * commits, a clear control that also starts recording, blur that leaves the
- * recorder listening, and a disabled recorder that can be activated.
+ * recorder listening, a disabled recorder that can be activated, Space starting
+ * a recording on key down instead of on release, a captured Space reopening the
+ * recorder on its key-up, and a keyboard-cleared value starting one instead.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -99,6 +101,59 @@ describe("HotkeyRecorder", () => {
 
     clickCentreOf(recorder, "recorder-clear");
 
+    expect(onChange).toHaveBeenCalledWith(null);
+    expect(recorder.renderer.getAllText()).toContain("Click to record");
+    expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    recorder.unmount();
+  });
+
+  it("starts recording on Space release, not on press", () => {
+    const recorder = renderComponent(<Harness />);
+    const root = recorder.renderer.findByTestId("recorder");
+    expect(root).toBeDefined();
+    if (root === undefined) return;
+
+    recorder.renderer.nativeSimulateKeyDown(root.id, "space");
+    expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    recorder.renderer.nativeSimulateKeyUp(root.id, "space");
+    expect(recorder.renderer.getAllText()).toContain("Press keys…");
+
+    recorder.unmount();
+  });
+
+  it("captures Space as a chord without reopening the recorder", () => {
+    const onChange = vi.fn();
+    const recorder = renderComponent(<Harness onChange={onChange} />);
+
+    clickCentreOf(recorder, "recorder");
+    const root = recorder.renderer.findByTestId("recorder");
+    expect(root).toBeDefined();
+    if (root === undefined) return;
+
+    recorder.renderer.nativeSimulateKeyDown(root.id, "space");
+    recorder.renderer.nativeSimulateKeyUp(root.id, "space");
+
+    expect(onChange).toHaveBeenCalledWith("space");
+    expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    recorder.unmount();
+  });
+
+  it("clears from the keyboard without starting a recording", () => {
+    const onChange = vi.fn();
+    const recorder = renderComponent(
+      <Harness initial="ctrl+k" onChange={onChange} />,
+    );
+    const clear = recorder.renderer.findByTestId("recorder-clear");
+    expect(clear).toBeDefined();
+    if (clear === undefined) return;
+
+    recorder.renderer.nativeSimulateKeyDown(clear.id, "space");
+    expect(onChange).not.toHaveBeenCalled();
+
+    recorder.renderer.nativeSimulateKeyUp(clear.id, "space");
     expect(onChange).toHaveBeenCalledWith(null);
     expect(recorder.renderer.getAllText()).toContain("Click to record");
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");

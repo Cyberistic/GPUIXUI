@@ -18,8 +18,9 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation, isDismiss, isEnter } from "./internal/key.js";
+import { isDismiss, isEnter } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
@@ -68,6 +69,7 @@ export const InlineEdit = ({
   onChange,
   onSubmit,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   ref,
@@ -154,10 +156,7 @@ export const InlineEdit = ({
           onClick?.(event);
           start();
         }}
-        onKeyDown={(event: EventPayload) => {
-          onKeyDown?.(event);
-          if (isActivation(event)) start();
-        }}
+        {...activationHandlers(start, { disabled, onKeyDown, onKeyUp })}
         onFocus={(event) => {
           setFocused(true);
           onFocus?.(event);
@@ -210,6 +209,7 @@ export const InlineEdit = ({
         setDraft(event.value ?? "");
       }}
       onKeyDown={handleInputKeyDown}
+      onKeyUp={onKeyUp}
       onSubmit={(event) => {
         onSubmit?.(event);
         commit();

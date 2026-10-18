@@ -22,7 +22,8 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import { createContext, useContext, useState } from "react";
-import { isActivation, isEnter } from "./internal/key.js";
+import { activationHandlers } from "./internal/activate.js";
+import { isEnter } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -269,9 +270,7 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
           aria-label={`Remove ${value}`}
           tabIndex={0}
           onClick={() => remove(value)}
-          onKeyDown={(event: EventPayload) => {
-            if (isActivation(event)) remove(value);
-          }}
+          {...activationHandlers(() => remove(value))}
           style={{
             ...textStyle(theme, "caption"),
             display: "flex",

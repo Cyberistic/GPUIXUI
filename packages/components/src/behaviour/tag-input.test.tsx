@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a comma that leaves a stray draft, a duplicate token, a
  * cap that truncates existing tokens, Backspace that removes when a draft is
- * present, a disabled chip that still removes, and a draft that stops the field
- * from keeping focus.
+ * present, a disabled chip that still removes, a draft that stops the field
+ * from keeping focus, and a chip control that removes on Space key down instead
+ * of on release.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -133,6 +134,25 @@ describe("TagInput", () => {
 
     expect(onValueChange).toHaveBeenLastCalledWith(["docs"]);
     expect(tags.renderer.findByTestId("chip-design")).toBeUndefined();
+
+    tags.unmount();
+  });
+
+  it("removes a chip on Space release, not on press", () => {
+    const onValueChange = vi.fn();
+    const tags = renderComponent(
+      <Harness initial={["design", "docs"]} onValueChange={onValueChange} />,
+    );
+    const control = removeControlOf(tags, "chip-design");
+    expect(control).toBeDefined();
+    if (control === undefined) return;
+
+    tags.renderer.nativeSimulateKeyDown(control.id, "space");
+    expect(tags.renderer.findByTestId("chip-design")).toBeDefined();
+
+    tags.renderer.nativeSimulateKeyUp(control.id, "space");
+    expect(tags.renderer.findByTestId("chip-design")).toBeUndefined();
+    expect(onValueChange).toHaveBeenLastCalledWith(["docs"]);
 
     tags.unmount();
   });
