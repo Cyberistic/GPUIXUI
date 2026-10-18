@@ -200,6 +200,7 @@ All six §4 commands matched:
 | `--only layout-flex,nope` | `native smoke: unknown scenario id: nope` + all 101 known ids, exit `2`, ~2 s |
 | `--bogus` | `native smoke: unknown argument: --bogus` + usage, exit `2`, ~2 s |
 | full suite | **101/101, 3536 checks**, exit `0`, 106 s |
+| live `--only live-input` | `1/1 scenarios passed · capabilities: input=verified`, exit `0` — the refactored live CLI still opens a window and runs (no live file was otherwise changed) |
 | `nub run check` / `lint` / `test` | exit `0`; playground 32 files / **408 tests** (was 397 — 11 new CLI tests), components 308, primitives 282, icons 19 |
 
 Four mutation proofs, each observed and reverted (`nub exec vitest run
