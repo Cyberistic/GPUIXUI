@@ -471,8 +471,11 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–473)
 
-`[x]` `[██████████]` 78/79
+`[x]` `[██████████]` 79/80
 
+`[x]` **A part name finds its component (plan 481)** — `DialogTitle` and every
+      other declared part is searchable from ⌘K and the index filter, and a
+      built-site query guards the production index
 `[x]` **State ownership on the interactive compound pages (plan 480)** — 19
       records became `stateful` (21 total), each page names what it owns and what
       the consumer owns, and two claims were corrected against the source

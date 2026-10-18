@@ -240,6 +240,7 @@ tables and the inventory reconciliation.
 | [`478-preview-card-live-scene.md`](./478-preview-card-live-scene.md) | Preview card gets a live scene through its `defaultOpen`; the hover policy stays with the native suite | F | 455–458, 461, 475, 476 | implemented — one scene, fifteen total; removing `defaultOpen` leaves only the trigger (§7) |
 | [`479-compound-parts-api.md`](./479-compound-parts-api.md) | Compound parts are real: 29 records declare their exported parts, every part props type gets a generated table, and the guards read real data | F | 411, 414, 415, 427, 441, 462 | implemented — §3 is the exact record data; §10 records the five two-direction proofs and the search regression the tables exposed |
 | [`480-state-ownership.md`](./480-state-ownership.md) | State ownership on the interactive compound pages: 19 records become `stateful` and each page names what it owns and what the consumer owns | F | 411, 427, 462, 479 | implemented — 21 stateful records total; two source-corrected claims and two two-direction proofs in §8 |
+| [`481-part-name-search.md`](./481-part-name-search.md) | A part name (`DialogTitle`, `DropdownMenuSubTrigger`) finds its component in ⌘K and the index filter, and the built smoke queries one | F | 419, 431, 442, 454, 479 | implemented — three tests and a production query, both directions proven in §7 |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

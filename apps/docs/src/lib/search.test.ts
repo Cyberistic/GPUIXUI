@@ -104,6 +104,15 @@ describe("search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/components/toast");
   });
 
+  it("finds a component by one of its part names", async () => {
+    const results = await search("DialogTitle", 5);
+    expect(results[0]?.url).toBe("/docs/components/dialog");
+  });
+
+  it("does not invent a part that no record declares", async () => {
+    expect(await search("DialogTitleProbe")).toEqual([]);
+  });
+
   it("caps the merged response at the limit", async () => {
     const results = await search("select", 3);
     expect(results).toHaveLength(3);

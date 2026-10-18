@@ -15,11 +15,11 @@ const card =
 /**
  * Whether a component matches a filter query. Case-insensitive and whitespace
  * trimmed; an empty query matches everything because every string contains "".
- * The record's documented props types and limitations are searched too: a
- * reader who knows `ButtonProps`, or the `aria-checked` gap that decides their
- * adoption, finds the component without leaving the index (plan 454).
- * Exported for the test: server-rendered markup can only prove the initial
- * state.
+ * The record's documented props types, exported part names and limitations are
+ * searched too: a reader who knows `ButtonProps`, `TabsList`, or the
+ * `aria-checked` gap that decides their adoption finds the component without
+ * leaving the index (plans 454 and 481). Exported for the test: server-rendered
+ * markup can only prove the initial state.
  */
 export const matchesComponent = (
   component: ComponentMetaInput,
@@ -30,6 +30,7 @@ export const matchesComponent = (
     component.title,
     component.summary,
     ...component.api,
+    ...component.parts.map((part) => part.name),
     ...component.limitations,
   ].some((field) => field.toLowerCase().includes(needle));
 };

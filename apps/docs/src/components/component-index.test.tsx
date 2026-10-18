@@ -101,6 +101,12 @@ describe("component filter", () => {
     expect(matchesComponent(button, "buttonprops")).toBe(true);
   });
 
+  it("matches an exported part name on a compound record only", () => {
+    expect(matchesComponent(record("dialog"), "DialogTitle")).toBe(true);
+    expect(matchesComponent(record("dialog"), "dialogtitle")).toBe(true);
+    expect(matchesComponent(button, "DialogTitle")).toBe(false);
+  });
+
   it("matches a documented limitation and returns the records that name it", () => {
     expect(matchesComponent(record("checkbox"), "aria-checked")).toBe(true);
     const slugs = Arr.flatMap(filterGroups("aria-checked"), (group) =>

@@ -139,7 +139,8 @@ prefix, word prefix, then substring — so `button` reaches
 `/docs/components/button` even when prose matches first; every other query keeps
 the page index's order and appends registry hits in the tail (plan 419). The
 props types a component documents are indexed too, so `ButtonProps` and
-`ToastViewportProps` reach their pages (plan 442). A blank query returns `[]`,
+`ToastViewportProps` reach their pages (plan 442), and so is every exported part
+name, so `DialogTitle` reaches Dialogs (plan 481). A blank query returns `[]`,
 and one page is listed once. `src/lib/search.test.ts` guards all four rules
 (plan 431).
 
@@ -150,10 +151,11 @@ query. The registry still indexes every props **type** name, and
 `withoutTypeTableRows` has its own test.
 
 The component index's own filter searches the same record fields it can prove —
-title, summary, documented props types and limitations — so `aria-checked`
-finds Checkbox and Switch without leaving the index (plan 454). The built-site
-smoke check queries both a component name and a limitation, so a production
-index that stopped seeing the component pages fails the release gate.
+title, summary, documented props types, exported part names and limitations — so
+`aria-checked` finds Checkbox and Switch without leaving the index (plans 454
+and 481). The built-site smoke check queries a component name, a limitation and
+a part name, so a production index that stopped seeing those fields fails the
+release gate.
 
 ## Capabilities
 
