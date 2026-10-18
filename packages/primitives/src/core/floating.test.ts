@@ -12,6 +12,7 @@ import {
   availableOn,
   decideVerticalSide,
   type PlacementRequest,
+  resolveHorizontalAlign,
 } from "./floating.js";
 
 const room = (overrides: Partial<PlacementRequest> = {}): PlacementRequest => ({
@@ -82,5 +83,46 @@ describe("decideVerticalSide", () => {
     // below = 800 - 8 - 432 = 360; above = 400 - 8 = 392.
     expect(availableOn(room(), "bottom")).toBe(360);
     expect(availableOn(room(), "top")).toBe(392);
+  });
+});
+
+describe("resolveHorizontalAlign", () => {
+  it("leaves start and end alone", () => {
+    expect(
+      resolveHorizontalAlign({
+        align: "start",
+        triggerWidth: 400,
+        layerWidth: 42,
+      }),
+    ).toStrictEqual({ align: "start", offset: 0 });
+    expect(
+      resolveHorizontalAlign({
+        align: "end",
+        triggerWidth: 400,
+        layerWidth: 42,
+      }),
+    ).toStrictEqual({ align: "end", offset: 0 });
+  });
+
+  it("turns center into start plus half the difference", () => {
+    // The bug guarded (plan 095): the runtime's centre puts a 42-wide tip's end
+    // on a 400-wide trigger's centre line, 179 px left of true centre.
+    expect(
+      resolveHorizontalAlign({
+        align: "center",
+        triggerWidth: 400,
+        layerWidth: 42,
+      }),
+    ).toStrictEqual({ align: "start", offset: 179 });
+  });
+
+  it("shifts left when the layer is wider than its trigger", () => {
+    expect(
+      resolveHorizontalAlign({
+        align: "center",
+        triggerWidth: 100,
+        layerWidth: 140,
+      }),
+    ).toStrictEqual({ align: "start", offset: -20 });
   });
 });

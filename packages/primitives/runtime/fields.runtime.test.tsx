@@ -1281,6 +1281,39 @@ it("opens below the trigger inside a row container", async () => {
   expect(tip.y).toBe(target.y + target.height);
 });
 
+it("centres a Tooltip on its trigger, not half a panel off", async () => {
+  // The bug guarded (plan 095): the runtime's `align="center"` puts the tip's
+  // end on the trigger's centre line, so a 42-wide tip under a 400-wide trigger
+  // opened 179 px left of centre. The wrapper maps it to `start` plus a
+  // measured offset.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 400 }}>
+        <Spacer />
+        <Tooltip content="A hint" side="bottom" align="center" testId="tip">
+          <div
+            testId="target"
+            tabIndex={0}
+            style={{ display: "flex", width: 400 }}
+          >
+            <Text>Hover me</Text>
+          </div>
+        </Tooltip>
+        <Spacer />
+      </Stack>
+    </Surface>,
+  );
+  runtime.hover("target");
+  // The offset arrives from the second frame: root on mount, tip on open.
+  runtime.flush();
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(
+    Math.abs(tip.x + tip.width / 2 - (target.x + target.width / 2)),
+  ).toBeLessThanOrEqual(1);
+});
+
 it("keeps the Tooltip's content inside the frame it is anchored to", async () => {
   const runtime = await openWindow();
   runtime.render(

@@ -20,7 +20,7 @@
  */
 
 import {
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactElement,
@@ -37,7 +37,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
-import { decideVerticalSide, FLOATING_MARGIN } from "../core/floating.js";
+import {
+  decideVerticalSide,
+  FLOATING_MARGIN,
+  resolveHorizontalAlign,
+} from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -104,6 +108,16 @@ export interface TooltipHandlers {
   readonly ref?: Ref<PublicInstance>;
   /** When the tip opens, so the side is decided from a fresh measurement. */
   readonly onOpenChange?: (open: boolean) => void;
+  /** The tip itself, so the wrapper can measure its width for `center`. */
+  readonly contentRef?: Ref<PublicInstance>;
+  /**
+   * The alignment the wrapper resolved from its measurements. Absent in the
+   * element tree, where the caller's `align` is passed through unchanged.
+   */
+  readonly placement?: {
+    readonly align: FloatingAlign;
+    readonly offset: number;
+  };
 }
 
 /**
@@ -121,6 +135,7 @@ export const renderTooltip = (
   handlers: TooltipHandlers = {},
 ): ReactElement => {
   const description = P.isString(content) ? content : undefined;
+  const placed = handlers.placement ?? { align, offset: 0 };
   return (
     <GpuixTooltip
       delayDuration={delay}
@@ -132,10 +147,12 @@ export const renderTooltip = (
         {children}
       </TooltipTrigger>
       <TooltipContent
+        ref={handlers.contentRef}
         role="tooltip"
         aria-label={description}
         side={side}
-        align={align}
+        align={placed.align}
+        alignOffset={placed.offset}
         collisionPadding={FLOATING_MARGIN}
         style={tooltipStyle(theme)}
         testId={testId}
@@ -146,10 +163,12 @@ export const renderTooltip = (
   );
 };
 
-/** The trigger's measured vertical extent. */
+/** The trigger's measured extent, and the tip's width once it is painted. */
 interface TooltipBox {
   readonly top: number;
   readonly bottom: number;
+  readonly width: number;
+  readonly tipWidth?: number;
 }
 
 /** A short label shown when its trigger is hovered or focused. */
@@ -157,31 +176,68 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
   const root = useRef<PublicInstance | null>(null);
+  const tip = useRef<PublicInstance | null>(null);
   const [open, setOpen] = useState(false);
   const [box, setBox] = useState<TooltipBox | undefined>(undefined);
-  useEffect(() => {
-    const id = root.current?.id;
-    if (id === undefined) return;
-    const bounds = renderer?.getElementBounds?.(id);
-    if (bounds === null || bounds === undefined || bounds.height <= 0) return;
-    setBox({ top: bounds.y, bottom: bounds.y + bounds.height });
+  useLayoutEffect(() => {
+    const rootId = root.current?.id;
+    if (rootId === undefined) return;
+    const bounds = renderer?.getElementBounds?.(rootId);
+    if (
+      bounds === null ||
+      bounds === undefined ||
+      bounds.width <= 0 ||
+      bounds.height <= 0
+    )
+      return;
+    const tipId = open ? tip.current?.id : undefined;
+    const tipBounds =
+      tipId === undefined ? undefined : renderer?.getElementBounds?.(tipId);
+    setBox({
+      top: bounds.y,
+      bottom: bounds.y + bounds.height,
+      width: bounds.width,
+      tipWidth:
+        tipBounds === null || tipBounds === undefined || tipBounds.width <= 0
+          ? undefined
+          : tipBounds.width,
+    });
   }, [renderer, open]);
-  const side =
-    props.side ??
-    Option.getOrUndefined(
-      Option.map(Option.fromNullishOr(box), (measured) =>
-        decideVerticalSide({
-          triggerTop: measured.top,
-          triggerBottom: measured.bottom,
-          layerHeight: tooltipHeight(theme),
-          viewportHeight: readWindowSize(renderer).height,
-          margin: FLOATING_MARGIN,
-          preferred: "top",
-        }),
-      ),
-    );
+  const side = Option.match(Option.fromNullishOr(box), {
+    onNone: () => props.side ?? "top",
+    onSome: (measured) =>
+      props.side ??
+      decideVerticalSide({
+        triggerTop: measured.top,
+        triggerBottom: measured.bottom,
+        layerHeight: tooltipHeight(theme),
+        viewportHeight: readWindowSize(renderer).height,
+        margin: FLOATING_MARGIN,
+        preferred: "top",
+      }),
+  });
+  const requested = props.align ?? "start";
+  // The runtime's own `center` is never passed through: until the tip is
+  // measurable it paints from the exact `start`, then shifts to true centre.
+  const unmeasured = {
+    align: requested === "center" ? ("start" as const) : requested,
+    offset: 0,
+  };
+  const placement = Option.match(Option.fromNullishOr(box), {
+    onNone: () => unmeasured,
+    onSome: (measured) =>
+      measured.tipWidth === undefined
+        ? unmeasured
+        : resolveHorizontalAlign({
+            align: requested,
+            triggerWidth: measured.width,
+            layerWidth: measured.tipWidth,
+          }),
+  });
   return renderTooltip({ ...props, side }, theme, {
     ref: root,
+    contentRef: tip,
+    placement,
     onOpenChange: setOpen,
   });
 };

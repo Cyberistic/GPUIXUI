@@ -41,10 +41,14 @@ trigger, in a column **and** a row parent.
 | ------- | ------ |
 | `start` (default) | the panel's start edge meets the trigger's start edge — exact |
 | `end` | the panel's end edge meets the trigger's end edge — exact |
-| `center` | **off by half the panel**: the runtime places the panel's *end* on the trigger's centre line (plan 060 §0, plan 156 §8), so a 42px tip is 42px left of centre |
+| `center` | the panel's centre meets the trigger's centre within 1 px |
 
-`center` is not the default for that reason; pass it only where the offset is
-acceptable.
+The runtime's own `center` is not usable: it puts the panel's **end** on the
+trigger's centre line, half a panel off (plans `060` §0, `156` §8). The wrapper
+never passes it through — it maps `center` to `start` plus
+`(triggerWidth − tipWidth) / 2`, measured from the trigger and the open tip. The
+correction is applied in a layout effect, before the frame is painted, so a
+centre tip does not visibly jump (plan `095`).
 
 `side` decides which side of the trigger the tip opens on. It prefers **above**,
 and flips **below** when the tip does not fit above — the runtime's layer is
@@ -61,7 +65,7 @@ border); an explicit `side` skips that decision.
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
 | `side` | `FloatingSide` | auto — above, flipped below when it does not fit | preferred placement |
-| `align` | `FloatingAlign` | `"start"` | alignment against the trigger (`center` is half a panel off — see Placement) |
+| `align` | `FloatingAlign` | `"start"` | alignment against the trigger; `center` is measured exact — see Placement |
 | `delay` | `number` | provider default | hover delay in milliseconds |
 | `testId` | `string` | — | locator on the **tip** |
 
@@ -96,8 +100,10 @@ dismisses it. A click dismisses it.
 ## Limitations
 
 - The trigger must be a focusable host element (above).
-- **`align="center"` is off by half the panel** — a runtime defect, measured in
-  plan 060 §0. Use `start`/`end`, or accept the offset.
+- **A `center` tip measures once.** The runtime has no layout callback, so the
+  tip's width is known only after its first layout; the offset is applied in a
+  layout effect before paint, so there is no visible jump. A tip that changes
+  width while open (it cannot, with `whiteSpace: nowrap`) would not re-centre.
 - **The flip sees one line.** The side is chosen from an estimated height
   (padding + one caption line + border), which is exact for the tip this wrapper
   paints and for `whiteSpace: nowrap`; a multi-line tip is a popover. A `side`
@@ -119,8 +125,9 @@ dismisses it. A click dismisses it.
   `top` and its fallback below.
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
-  popover role, and paints the tip against the trigger in a column (`start`,
-  `end`) and in a row (`bottom`). Removing the root hug fails the `end` and row
+  popover role, paints the tip against the trigger in a column (`start`, `end`)
+  and in a row (`bottom`), and **centres it within 1 px** of a 400 px trigger
+  (plan `095`; the failing direction was 176.5 px left). Removing the root hug fails the `end` and row
   tests; making `center` the default fails the first (plan 060 §6).
   **Placement (067):** at the top edge the tip opens below its trigger
   (`8 >= 30` fails without the decision), a tip with room above stays above, and

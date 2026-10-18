@@ -79,3 +79,39 @@ export const availableOn = (
   side === "top"
     ? request.triggerTop - request.margin
     : request.viewportHeight - request.margin - request.triggerBottom;
+
+/** The horizontal alignment values the runtime accepts. */
+export type HorizontalAlign = "start" | "center" | "end";
+
+/** The widths a true centre is derived from. */
+export interface AlignRequest {
+  readonly align: HorizontalAlign;
+  /** The anchor's painted width. */
+  readonly triggerWidth: number;
+  /** The layer's painted width. */
+  readonly layerWidth: number;
+}
+
+/** The runtime's `align` plus the offset that makes it the requested one. */
+export interface ResolvedAlign {
+  readonly align: "start" | "end";
+  readonly offset: number;
+}
+
+/**
+ * Turn the requested horizontal alignment into one the runtime places exactly.
+ *
+ * The runtime's `center` is not usable: it puts the layer's **end** on the
+ * anchor's centre line, half a layer off (measured, plans `060` §0 and `323`).
+ * Mapping `center` to `start` plus `(triggerWidth - layerWidth) / 2` is the
+ * exact placement; `start` and `end` need no offset. The caller guards a
+ * non-positive measurement, so the arithmetic here is total.
+ */
+export const resolveHorizontalAlign = ({
+  align,
+  triggerWidth,
+  layerWidth,
+}: AlignRequest): ResolvedAlign =>
+  align === "center"
+    ? { align: "start", offset: (triggerWidth - layerWidth) / 2 }
+    : { align, offset: 0 };

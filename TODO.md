@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 67/68
+`[~]` `[██████████]` 68/69
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -491,6 +491,20 @@ retired once both branches are one
       `disabled`/`readOnly` never preview, an invalid preview keeps the brand
       role, and `starStyle.filled` follows the paint. 3 core + 3 element-tree +
       5 runtime tests, both directions measured (plan 094)
+`[x]` `packages/primitives`: **`Tooltip` still accepted the runtime's broken
+      `align="center"`** — plan 060 measured the tip's end landing on the
+      trigger's centre line, then defaulted to `start` but left `center` exposed,
+      so the obvious value was half a panel off. One pure rule maps `center` to
+      `start` plus `(triggerWidth − tipWidth)/2`; `Tooltip` measures the open tip
+      in a layout effect and never passes the runtime's own centre through. A
+      runtime case on a 400 px trigger centres within 1 px (the old direction was
+      176.5 px left). 3 core + 1 element-tree + 1 runtime tests (plan 095)
+`[ ]` **components workstream**: `internal/placement.ts` and
+      `packages/primitives/src/core/floating.ts` now both know how to correct a
+      centre alignment. The primitives rule is horizontal (its layers are all
+      top/bottom); the components one also handles left/right. Hoist the full
+      rule into primitives and import it there when the two next change, so the
+      library has one answer again (plans 323, 095). Owner: components.
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

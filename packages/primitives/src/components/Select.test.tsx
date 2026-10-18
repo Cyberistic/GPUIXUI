@@ -354,6 +354,33 @@ describe("Tooltip", () => {
     expect(expectSome(elementProp(contentOf("end"), "align"))).toBe("end");
   });
 
+  it("passes the wrapper's resolved alignment and offset to the tip", () => {
+    // The wrapper measures the trigger and the open tip and maps `center` to
+    // `start` plus half the difference (plan 095); the element tree just checks
+    // the resolved values reach the host.
+    const tipOf = (placement?: {
+      readonly align: "start" | "end";
+      readonly offset: number;
+    }) =>
+      expectSome(
+        Arr.get(
+          elementChildren(
+            renderTooltip({ content: "A hint", children: null }, testTheme, {
+              placement,
+            }),
+          ),
+          1,
+        ),
+      );
+    const centred = tipOf({ align: "start", offset: 179 });
+    expect(expectSome(elementProp(centred, "align"))).toBe("start");
+    expect(expectSome(elementProp(centred, "alignOffset"))).toBe(179);
+    // Unmeasured: the caller's value with no offset, so the first frame does not
+    // jump away from the documented default.
+    const unmeasured = tipOf();
+    expect(expectSome(elementProp(unmeasured, "alignOffset"))).toBe(0);
+  });
+
   it("estimates the painted tip height from the style it mirrors", () => {
     // The side is chosen before the tip exists, so the estimate must stay in
     // step with the paint (plan 067).
