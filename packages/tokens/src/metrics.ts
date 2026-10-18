@@ -308,8 +308,9 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   row clips every option, and a keycap's content box holds one caption line
  *   plus its two borders, because `Keycap` paints caption text inside it.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
- *   paints no icon or identity mark — and the default icon fits the smallest
- *   control.
+ *   paints no icon or identity mark; the default icon fits the smallest control,
+ *   and an inline icon fits the line box it shares with text (`xs` a `caption`
+ *   line, `sm` a `label` line), because a taller glyph raises that line.
  * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
  *   the largest radius, half the largest control and half the largest avatar —
  *   a 40px avatar at a smaller radius is a rounded square.
@@ -490,6 +491,12 @@ export function themeMetricFailures(
       "non-decreasing",
       "positive",
     ),
+    // An inline icon is painted inside the line box of the text it sits with
+    // (`scale.ts`: `xs` is inline with a caption, `sm` with a label). A glyph
+    // taller than the line raises the row it is centred in, so the two inline
+    // sizes are bounded by the theme's own leading — not by a house literal.
+    ...atMost("iconSize", "xs", iconSize.xs, typography.caption.lineHeight),
+    ...atMost("iconSize", "sm", iconSize.sm, typography.label.lineHeight),
     ...finiteMembers(
       "avatarSize",
       (["xs", "sm", "md", "lg"] as const).map(

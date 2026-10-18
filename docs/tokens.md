@@ -1797,7 +1797,11 @@ square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
 `avatarSize`, `controlHeight`, `controlPaddingX`, the motion timings and the
 elevation feather — must not step backwards, and `iconSize` and `avatarSize`
 must also stay above zero, because a named size that paints a 0×0 icon or avatar
-is not a size; a timing
+is not a size; the two inline icon sizes are bounded by the line box they share
+with text — `iconSize.xs` by `typography.caption.lineHeight` and `iconSize.sm`
+by `typography.label.lineHeight`, the partners `scale.ts` names — because a
+glyph taller than its line raises the row the icon is centred in, while the
+colour, typeface and contrast checks stay empty; a timing
 must also be finite; a chip must fit inside the field's content box — the
 minimum width less the field's two borders and its `controlPaddingX.md` padding —
 because a chip equal to the outer width has no room for the chrome painted

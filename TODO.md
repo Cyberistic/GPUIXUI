@@ -1475,6 +1475,13 @@ AAA dark **3.304:1** there, under the inactive floor, while every check returned
 `[]`. `selectionFillInactivePairs` publishes the composition, the two dark
 `disabledForeground` values move one designed step (`#B0B8C6`, `#D0D0D0`), and
 every shipped set passes (plan 520)
+`[x]` Hold an inline icon to its line box — `iconSize` was a positive,
+non-decreasing ladder, but `scale.ts` describes `xs` as inline with a caption and
+`sm` with a label and the design system says inline icons "do not raise the line
+box"; a theme with `iconSize.xs` 17, or with a tighter `caption.lineHeight`,
+returned `[]` from every check while a caption line grew to hold the glyph. Two
+`at-most` rules bound the inline sizes by the theme's own leading; every shipped
+set passes and no value moves (plan 521)
 
 ## Phase C — Tier 1–2 components
 
