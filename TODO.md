@@ -132,7 +132,12 @@ prebuilt `dist` (plan 016)
 `[x]` Add platform type styles and `platformTheme(theme, platform)` for the docs
 platform toggle (plan 051)
 `[x]` Add the design-system rows to `COMPONENTS.md`
-`[ ]` Add motion tokens (durations/easings) once a component consumes them
+`[ ]` Add motion tokens (durations/easings) — **now consumed, so actionable**:
+      `Switch`'s thumb slide is `SWITCH_THUMB_SLIDE_MS = 200` plus `ease: "easeOut"`
+      in `packages/primitives/src/components/Switch.tsx` (plan `329`), the only
+      motion values in the library and therefore the acceptance case. The token
+      shape must cover a duration and an easing name the runtime's `motion`
+      accepts (owner: tokens-theme; the primitives path only consumes it)
 `[ ]` Ship `registerFonts` so a consumer's (or the library's) typeface reaches the
 runtime, and record the licence review for any bundled family — plan 052, native
 proof blocked by B1 (rescued from the abandoned `agent/fonts` branch)
