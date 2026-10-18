@@ -132,6 +132,10 @@ button reports nothing, while hover still opens its tip.
 - `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.
+- The label is **chrome, not content**: the control declares `userSelect: "none"`,
+  so a drag across a button cannot select its text (measured before plan `386`:
+  the drag selected `"Save changes"`). A caller who wants it selectable passes
+  `style={{ userSelect: "text" }}` — the caller's style still merges last.
 - Focus is the recipe's `focus-visible:ring-[3px] ring-ring/50` — a zero-offset
   shadow spread 3 px in the ring role at half alpha — because the runtime has no
   `focusVisible`. A mouse click therefore shows the same ring as Tab. Inside an

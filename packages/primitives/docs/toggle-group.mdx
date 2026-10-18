@@ -109,6 +109,9 @@ instead of repeating the first move (plan `359`).
   what the set is for.
 - There is no `aria-labelledby`, so a visible heading cannot name the group by
   reference: put its words in `label`.
+- Each item's label is **chrome, not content**: `userSelect: "none"`, so a drag
+  across an item cannot select its text (measured before plan `386`: the drag
+  selected `"Align left"`). A caller's `itemStyle` still merges last.
 
 ## Theming
 

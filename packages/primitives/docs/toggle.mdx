@@ -79,6 +79,10 @@ boundary. The tip's string becomes the toggle's `aria-description`.
   and trimmed. GPUix does not derive a button's name from painted text, so
   `Toggle` writes `aria-label` itself (measured: plan `058`). Content that is
   not all text yields no name — give it a `label`; the icon is decorative.
+- The label is **chrome, not content**: `userSelect: "none"` on the control, so
+  a drag across a toggle cannot select its text (measured before plan `386`:
+  the drag selected `"Grid view"`). A caller's `style` still merges last and can
+  opt back in.
 
 ## Theming
 

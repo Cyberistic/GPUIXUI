@@ -198,6 +198,13 @@ Focus is **visible**: the trigger paints the field recipe's 3 px ring while
 focused or open, the same ring `Input` paints. The runtime has no `focusVisible`,
 so a mouse-opened trigger shows it too.
 
+The trigger is **chrome, not content**: it declares `userSelect: "none"` and a
+pointer cursor, because the field recipe's text cursor and selectable text
+belong to a native `<input>` (measured before plan `386`: the trigger painted
+`cursor: "text"` and a drag selected its value). The open list opts out the same
+way — options and group headings are chrome — so dragging across a list cannot
+start a text selection. A caller's `triggerStyle` still merges last.
+
 **Slot trigger:** the trigger forwards a `Tooltip`'s handlers and
 `aria-description`, so a tip opens on hover and on keyboard focus. GPUix's
 `SelectTrigger` composes the injected key handler with its own open/move rule,

@@ -1175,6 +1175,17 @@ retired once both branches are one
       both mutations (always `"text"`, always `"none"`) fail by case name, and
       the page now states the measured contract and the pointer-only limit
       (plan `385`).
+`[x]` `packages/primitives`: **a control's chrome was selectable** — the runtime
+      root starts selectable and `Text` opts out, but `Button`, `Toggle`,
+      `ToggleGroup` and both `Select` surfaces paint a raw label and declared
+      nothing, so a real drag selected `"Save changes"`, `"Grid view"`,
+      `"Align left"`, a select trigger's value and an option's label; the select
+      trigger also inherited the field recipe's `cursor: "text"`. Chrome now
+      declares `userSelect: "none"` at its own root (`buttonRecipeStyle`,
+      `controlStyle`, the trigger, the option, the group heading), the trigger
+      takes a pointer cursor (`not-allowed` disabled), and a caller's style can
+      still opt back in. 3 offline + 5 runtime cases, five mutations fail by
+      name (plan `386`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
