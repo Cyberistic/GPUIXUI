@@ -48,10 +48,16 @@ child.
 ```sh
 nub run dev:playground              # from the repo root: opens the playground window
 nub run --filter playground smoke   # the native smoke suite, headless
+nub apps/playground/dist/smoke/run.js --only layout-flex   # one headless scenario
+nub apps/playground/dist/smoke/run.js --list               # headless ids, no binding
 nub run --filter playground smoke:live  # the full live suite (explicit --all)
 nub apps/playground/dist/live/run.js --only live-tier2-toast  # one window, one scenario
 nub apps/playground/dist/live/run.js --list                    # ids, no window
 ```
+
+`--only` accepts `a,b` and repeats in both runners. An unknown flag or an
+unknown id prints the usage (and, for an id, every valid one) and exits `2`
+**before the binding is imported** — a typo never runs the wrong set.
 
 `dev` and `smoke` both **preflight first**: they import the native binding only
 after asking whether it loads, so a host without one gets a one-line remedy and
@@ -72,7 +78,7 @@ copies make every hook throw. `@gpuix/react@0.10.0` accepts `^19.0.0`.
 | ---- | ------- |
 | `0`  | every scenario ran and passed |
 | `1`  | at least one scenario failed — a real regression |
-| `2`  | the runtime is unsupported here, or nothing ran — **no evidence** |
+| `2`  | the runtime is unsupported here, **or a usage error / nothing ran** — no evidence |
 
 Both scripts run the built CLI from the **repo root**, so artifacts always land
 in `apps/playground/.artifacts` regardless of which entrypoint you use.
@@ -83,7 +89,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (89/89 green); -> 2 on a host with no binding
+# -> 0 here (101/101 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -91,7 +97,8 @@ Artifacts (gitignored, under `.artifacts/`):
 - `.artifacts/smoke-report.json` — the schema-encoded report (`Report.reportJson`);
 - `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
 
-Flags: `--json`, `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`.
+Flags: `--json`, `--only <id[,id]>` (repeatable), `--list`, `--screenshots`,
+`--artifacts <dir>`.
 
 Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
 is no evidence, and a stale report must never be mistaken for a fresh one.
@@ -1190,7 +1197,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 91-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 101-scenario headless suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a

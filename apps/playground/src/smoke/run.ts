@@ -29,11 +29,17 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
 import { createElement, Fragment, type ReactNode } from "react";
 import { hostLabel, provenanceIssue } from "../binding.js";
+import {
+  formatMissing,
+  idsOf,
+  parseIds,
+  selectScenarios,
+} from "../scenario-selection.js";
 import type { PlaygroundScenario } from "../types.js";
 import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
 import { palettes } from "../palettes.js";
-import { scenarios, selectScenarios } from "../scenarios/index.js";
+import { scenarios } from "../scenarios/index.js";
 
 /** The process exit code: 0 passed, 1 failed, 2 unverified. */
 export const EXIT = { passed: 0, failed: 1, unverified: 2 } as const;
@@ -42,11 +48,26 @@ export type ExitCode = (typeof EXIT)[keyof typeof EXIT];
 
 const DEFAULT_ARTIFACTS = "apps/playground/.artifacts";
 
+/** The usage text. Every argument is here; nothing is accepted silently. */
+export const usage: string = Arr.join(
+  [
+    "usage:",
+    "  --only <id[,id]>  run only these scenarios (repeatable; default: all)",
+    "  --list            print the scenario ids and exit",
+    "  --screenshots     capture one screenshot per scenario",
+    "  --artifacts <dir> where the report and screenshots land",
+    "  --json            print the JSON report as well",
+    "exit 2: no native evidence (unsupported host, or nothing ran)",
+  ],
+  "\n",
+);
+
 /** Parsed command line. */
 export interface CliFlags {
   readonly json: boolean;
   readonly screenshots: boolean;
-  readonly only: Option.Option<string>;
+  readonly only: ReadonlyArray<string>;
+  readonly list: boolean;
   readonly artifacts: string;
 }
 
@@ -59,8 +80,9 @@ export interface ParsedArgs {
 /**
  * Parses the CLI's argv (without `node` and the script path).
  *
- * Unknown flags are collected, never silently ignored: the CLI prints them so a
- * typo like `--onlyy` cannot quietly run everything (or nothing).
+ * Unknown flags are collected, never silently ignored: a typo like `--onlyy`
+ * must not quietly run the whole suite. `--only` accepts `a,b` and repeats,
+ * exactly like the live CLI.
  */
 export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   const step = (
@@ -76,6 +98,9 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
           Match.when("--json", () =>
             step(tail, { ...flags, json: true }, unknown),
           ),
+          Match.when("--list", () =>
+            step(tail, { ...flags, list: true }, unknown),
+          ),
           Match.when("--screenshots", () =>
             step(tail, { ...flags, screenshots: true }, unknown),
           ),
@@ -85,12 +110,23 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
                 flags,
                 unknown: Arr.append(unknown, "--only needs a scenario id"),
               }),
-              onSome: (id) =>
-                step(
-                  Arr.drop(tail, 1),
-                  { ...flags, only: Option.some(id) },
-                  unknown,
-                ),
+              onSome: (value) => {
+                const selected = parseIds(value);
+                return Arr.match(selected, {
+                  onEmpty: () =>
+                    step(
+                      Arr.drop(tail, 1),
+                      flags,
+                      Arr.append(unknown, "--only needs a scenario id"),
+                    ),
+                  onNonEmpty: (ids) =>
+                    step(
+                      Arr.drop(tail, 1),
+                      { ...flags, only: Arr.appendAll(flags.only, ids) },
+                      unknown,
+                    ),
+                });
+              },
             }),
           ),
           Match.when("--artifacts", () =>
@@ -113,12 +149,59 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     {
       json: false,
       screenshots: false,
-      only: Option.none(),
+      only: [],
+      list: false,
       artifacts: DEFAULT_ARTIFACTS,
     },
     [],
   );
 };
+
+/** A usage error: the message to print and the exit code it implies. */
+export interface UsageProblem {
+  readonly message: string;
+  readonly exit: ExitCode;
+}
+
+/**
+ * `Some(problem)` when argv asks for something the registry cannot run.
+ *
+ * Checked before the preflight so a typo never imports the binding and never
+ * produces a partial report. A usage error is exit `2`: nothing ran, so there
+ * is no evidence.
+ */
+export const usageProblem = (
+  parsed: ParsedArgs,
+  known: ReadonlyArray<string>,
+): Option.Option<UsageProblem> =>
+  Arr.match(parsed.unknown, {
+    onNonEmpty: (unknown) =>
+      Option.some({
+        message: Arr.join(
+          [
+            ...Arr.map(
+              unknown,
+              (token) => `native smoke: unknown argument: ${token}`,
+            ),
+            usage,
+          ],
+          "\n",
+        ),
+        exit: EXIT.unverified,
+      }),
+    onEmpty: () =>
+      Arr.match(
+        Arr.filter(parsed.flags.only, (id) => !Arr.contains(known, id)),
+        {
+          onEmpty: () => Option.none(),
+          onNonEmpty: (missing) =>
+            Option.some({
+              message: formatMissing("native smoke", missing, known),
+              exit: EXIT.unverified,
+            }),
+        },
+      ),
+  });
 
 /** The preflight message for a host with no GPUix binding. Actionable, not a stack trace. */
 export const formatUnsupported = (
@@ -137,7 +220,8 @@ export const formatUnsupported = (
 export interface RunDeps {
   readonly detect: Effect.Effect<Runtime.RuntimeStatus>;
   /** Only evaluated when the host is supported, so the binding never loads here. */
-  readonly runSuite: Effect.Effect<ExitCode>;
+  readonly runSuite: () => Effect.Effect<ExitCode>;
+  readonly error: (line: string) => Effect.Effect<void>;
 }
 
 /**
@@ -151,13 +235,52 @@ export const runScenarioCli = (deps: RunDeps): Effect.Effect<ExitCode> =>
   Effect.gen(function* () {
     const runtime = yield* deps.detect;
     if (Runtime.RuntimeStatus.guards.RuntimeUnsupported(runtime)) {
-      yield* Console.error(formatUnsupported(runtime));
-      yield* Console.error(
+      yield* deps.error(formatUnsupported(runtime));
+      yield* deps.error(
         "exit 2: the smoke suite produced no native evidence (ADR 0001/0002)",
       );
       return EXIT.unverified;
     }
-    return yield* deps.runSuite;
+    return yield* deps.runSuite();
+  });
+
+/** Everything `runMain` touches, injected so the argument guard needs no binding. */
+export interface CliDeps {
+  readonly detect: Effect.Effect<Runtime.RuntimeStatus>;
+  readonly runSuite: (flags: CliFlags) => Effect.Effect<ExitCode>;
+  readonly log: (line: string) => Effect.Effect<void>;
+  readonly error: (line: string) => Effect.Effect<void>;
+}
+
+/**
+ * The whole command line: usage → `--list` → preflight → suite.
+ *
+ * `--list` and a usage error return before the binding is imported, so both are
+ * instant and neither can produce a partial report. A bare command still runs
+ * the full headless suite (the documented `smoke` script); unlike live, the
+ * headless runner does not need an explicit `--all`.
+ */
+export const runMain = (
+  argv: ReadonlyArray<string>,
+  deps: CliDeps,
+): Effect.Effect<ExitCode> =>
+  Effect.gen(function* () {
+    const parsed = parseArgs(argv);
+    const known = idsOf(scenarios);
+    const problem = usageProblem(parsed, known);
+    if (Option.isSome(problem)) {
+      yield* deps.error(problem.value.message);
+      return problem.value.exit;
+    }
+    if (parsed.flags.list) {
+      yield* deps.log(Arr.join(known, "\n"));
+      return EXIT.passed;
+    }
+    return yield* runScenarioCli({
+      detect: deps.detect,
+      runSuite: () => deps.runSuite(parsed.flags),
+      error: deps.error,
+    });
   });
 
 /** A failure to load the native testing module after a green preflight. */
@@ -229,7 +352,6 @@ const mount =
 /** The real suite: load the binding, drive every scenario, write the report. */
 export const program = (
   flags: CliFlags,
-  unknown: ReadonlyArray<string>,
 ): Effect.Effect<
   ExitCode,
   PlatformError.PlatformError,
@@ -238,15 +360,6 @@ export const program = (
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-
-    yield* Effect.forEach(
-      unknown,
-      (flag) => Console.error(`ignoring unknown flag: ${flag}`),
-      {
-        concurrency: 1,
-        discard: true,
-      },
-    );
 
     const issue = yield* provenanceIssue(process.platform, process.arch);
     if (Option.isSome(issue)) {
@@ -298,7 +411,7 @@ export const program = (
         }),
     });
     const host = Native.createHost(root.renderer);
-    const selected = selectScenarios(scenarios, flags.only);
+    const selected = selectScenarios(scenarios, flags.only).selected;
     const startedAt = yield* Clock.currentTimeMillis;
 
     const report = yield* Smoke.runScenarios(
@@ -322,21 +435,22 @@ export const program = (
   });
 
 /** Wires the real preflight and suite. Runtime execution stays here. */
-export const main = (): Effect.Effect<ExitCode> => {
-  const parsed = parseArgs(process.argv.slice(2));
-  return runScenarioCli({
+export const main = (): Effect.Effect<ExitCode> =>
+  runMain(process.argv.slice(2), {
     detect: Runtime.detectRuntime({
       platform: process.platform,
       arch: process.arch,
       load: () => import("@gpuix/react/testing"),
     }),
-    runSuite: program(parsed.flags, parsed.unknown).pipe(
-      Effect.provide(NodeFileSystem.layer),
-      Effect.provide(NodePath.layer),
-      Effect.orDie,
-    ),
+    runSuite: (flags) =>
+      program(flags).pipe(
+        Effect.provide(NodeFileSystem.layer),
+        Effect.provide(NodePath.layer),
+        Effect.orDie,
+      ),
+    log: Console.log,
+    error: Console.error,
   });
-};
 
 // Run only when executed directly (`node dist/smoke/run.js`), never on import,
 // so the pure tests can import this module without launching a suite.

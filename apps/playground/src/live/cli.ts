@@ -5,13 +5,23 @@
  * for one component cost a full window run. Selection is pure and lives here so
  * the runner's contract is testable without opening a window: no `--only` and
  * no `--all` is a usage error, never a silent full run.
+ *
+ * The generic rules (id parsing, registry-order selection, the missing-id
+ * message) are shared with the headless CLI in `../scenario-selection.js`;
+ * plan `531` hoisted them so the two runners cannot drift.
  */
-
-import { Match, pipe } from "effect";
+import { Match } from "effect";
 import * as Arr from "effect/Array";
-import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import * as Str from "effect/String";
+import {
+  formatMissing as formatMissingFor,
+  idsOf,
+  parseIds,
+  selectScenarios,
+  type Selection,
+} from "../scenario-selection.js";
+
+export { idsOf };
 
 /** The parsed live flags. */
 export interface LiveFlags {
@@ -32,12 +42,7 @@ export interface ParsedLiveArgs {
 }
 
 /** What a scenario selection produced. */
-export interface LiveSelection<A> {
-  /** The requested scenarios, in registry order. */
-  readonly selected: ReadonlyArray<A>;
-  /** Requested ids the registry does not know. */
-  readonly missing: ReadonlyArray<string>;
-}
+export type LiveSelection<A> = Selection<A>;
 
 const EMPTY: LiveFlags = {
   only: [],
@@ -45,10 +50,6 @@ const EMPTY: LiveFlags = {
   list: false,
   json: false,
 };
-
-/** Splits `a,b` into ids, dropping blanks; `--only` also accepts repeats. */
-const ids = (value: string): ReadonlyArray<string> =>
-  pipe(value, Str.split(","), Arr.map(Str.trim), Arr.filter(Str.isNonEmpty));
 
 /**
  * Parses the live runner's argv (without `node` and the script path).
@@ -87,7 +88,10 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedLiveArgs => {
               onSome: (value) =>
                 step(
                   Arr.drop(tail, 1),
-                  { ...flags, only: Arr.appendAll(flags.only, ids(value)) },
+                  {
+                    ...flags,
+                    only: Arr.appendAll(flags.only, parseIds(value)),
+                  },
                   unknown,
                 ),
             }),
@@ -100,11 +104,6 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedLiveArgs => {
   return step(argv, EMPTY, []);
 };
 
-/** The ids the registry exposes, in run order. */
-export const idsOf = <A extends { readonly id: string }>(
-  list: ReadonlyArray<A>,
-): ReadonlyArray<string> => Arr.map(list, (scenario) => scenario.id);
-
 /**
  * Selects the requested scenarios, preserving registry order and dropping
  * duplicates. An absent selection is the full list; the runner decides whether
@@ -113,15 +112,13 @@ export const idsOf = <A extends { readonly id: string }>(
 export const selectLive = <A extends { readonly id: string }>(
   list: ReadonlyArray<A>,
   only: ReadonlyArray<string>,
-): LiveSelection<A> => {
-  if (Arr.length(only) === 0) return { selected: list, missing: [] };
-  const wanted = HashSet.fromIterable(only);
-  const known = HashSet.fromIterable(idsOf(list));
-  return {
-    selected: Arr.filter(list, (scenario) => HashSet.has(wanted, scenario.id)),
-    missing: Arr.filter(only, (id) => !HashSet.has(known, id)),
-  };
-};
+): LiveSelection<A> => selectScenarios(list, only);
+
+/** A bad id names the id and every valid one, so a typo is self-correcting. */
+export const formatMissing = (
+  missing: ReadonlyArray<string>,
+  known: ReadonlyArray<string>,
+): string => formatMissingFor("live smoke", missing, known);
 
 /** The usage text, including the two ways to choose scenarios. */
 export const usage: string = Arr.join(
@@ -135,17 +132,3 @@ export const usage: string = Arr.join(
   ],
   "\n",
 );
-
-/** A bad id names the id and every valid one, so a typo is self-correcting. */
-export const formatMissing = (
-  missing: ReadonlyArray<string>,
-  known: ReadonlyArray<string>,
-): string =>
-  Arr.join(
-    [
-      `live smoke: unknown scenario id: ${Arr.join(missing, ", ")}`,
-      `  known ids: ${Arr.join(known, ", ")}`,
-      "exit 2: the live suite produced no evidence",
-    ],
-    "\n",
-  );

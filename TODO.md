@@ -58,7 +58,16 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[██████████]` 86/92 plans-and-harness
+`[~]` `[██████████]` 87/92 plans-and-harness
+
+`[x]` Guard the **headless smoke CLI's arguments** per plan `531`: `--list`
+      prints the 101 ids and exits `0` without loading the binding; `--only`
+      accepts `a,b` and repeats; an unknown token or id prints the usage (and
+      every known id) and exits `2` in ~2 s instead of running the suite. The
+      selection rules moved to `src/scenario-selection.ts`, shared with the live
+      CLI (M4 proves both read one rule). 11 new CLI tests, four mutation proofs
+      (§6). Full suite **101/101 (3536 checks)**, playground **408** tests,
+      `check`/`lint`/`test` green.
 
 `[x]` **Re-baseline the headless native evidence against the published 0.10.0
       source** per plan `529`: the binding had been built from
