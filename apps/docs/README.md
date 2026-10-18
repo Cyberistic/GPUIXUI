@@ -41,6 +41,11 @@ page when a parse throws. This site's own MDX components (`<ComponentState>`,
 `<NativePreview>`, `<include>`, `<TokenScales>`, …) have no editor spec yet, so
 Studio preserves them verbatim and they are edited in the source pane.
 
+The contributor-facing copy of the component-page template is
+`/docs/component-pages` (plan 487); its section list is generated from
+`src/component-meta/contract.ts`, while the `## ` headings below stay the file
+`component-pages.test.ts` reads.
+
 The editor packages are exact-pinned devDependencies: the ecosystem is pre-v1, so
 a minor bump may change the serialization contract the guard proves. Re-run the
 suite before bumping.

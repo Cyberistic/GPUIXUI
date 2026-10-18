@@ -10,6 +10,7 @@ import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { ComponentPreview } from "./preview/component-preview";
 import { LiveSurface } from "./preview/live-surface";
 import { NativePreview } from "./preview/native-preview";
+import { PageTemplateSections } from "./page-template";
 import { PartIndex } from "./part-index";
 import { PlatformPreviews } from "./preview/platform-previews";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
@@ -27,6 +28,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ComponentIndex,
     ApiIndex,
     PartIndex,
+    PageTemplateSections,
     ComponentState,
     ComponentDependencies,
     RelatedComponents,

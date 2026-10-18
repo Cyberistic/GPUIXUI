@@ -471,7 +471,12 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–486)
 
-`[x]` `[██████████]` 84/84
+`[x]` `[██████████]` 85/85
+
+`[x]` **The component-page template is published (plan 487)** — `/docs/component-pages`
+      generates its section list from `sectionsFor(pattern)`, names the record
+      fields, the MDX blocks, the preview tiers and the guards, and a suite fails
+      when the page loses the generated table, a field name or a guard row
 
 `[x]` **The five remaining preview gaps become gesture-driven live scenes
       (plan 486)** — Tooltip (hover), Context menu (right-click), Date picker

@@ -1,0 +1,123 @@
+---
+title: Component pages
+description: The record, sections and guards behind every component page.
+---
+
+A component page is not written from memory. It is one half of a record that also
+feeds the component index, the sidebar, search and the API reference; the guards
+below fail a page that loses a section, a source or a props table. This page is
+the template to follow and the reason each piece exists.
+
+## Two files
+
+| Path | What it owns |
+| ---- | ------------ |
+| `apps/docs/content/docs/components/<slug>.mdx` | the page: prose, previews, sections |
+| `apps/docs/src/component-meta/entries.ts` | the record: status, source, props types, runtime suite, limitations |
+
+The page's frontmatter `title` and `description` must equal the record's `title`
+and `summary`; `src/component-pages.test.ts` compares the pair for every
+delivered component, so a rename is a two-file change.
+
+## The record
+
+Use `delivered(slug, title, tier, summary, options)` once the component exists.
+`planned(...)` records have no page: they are shown in the index with their
+status and wait for code.
+
+| Field | What it must say | Guard |
+| ----- | ---------------- | ----- |
+| `sourcePath` | the repo-relative component file the page includes | `src/content-references.test.ts` resolves it |
+| `api` | every exported props type the page generates | `src/content-references.test.ts` compares the set in both directions |
+| `runtime` | the native suite: its command and its test file | `src/component-meta/native-coverage.test.ts` resolves both |
+| `status` | the `COMPONENTS.md` row's status, not a guess | `src/component-meta/registry.test.ts` fails on drift |
+| `limitations` | what the suite does not prove; required when a `done` row is partial | `src/component-meta/registry.test.ts` |
+| `dependencies` | the package and workspace imports the entry file really has | `src/component-meta/dependencies.test.ts` re-derives them |
+
+A compound component also declares `parts` (name and source path) and
+`pattern: "stateful"`; a workspace component declares `pattern: "workspace"`,
+its `persistence` and a `playgroundScreen`. Those rules live in
+`src/component-meta/contract.ts` and are enforced before a page is written.
+
+## The sections
+
+The section list is a function of the record's `pattern`. It is generated from
+`src/component-meta/contract.ts`, so this table and the guard cannot disagree.
+
+<PageTemplateSections />
+
+A page missing a section fails `component-pages.test.ts` with the component and
+the section name. The list is ordered: composition comes before the API
+reference, and the API reference before keyboard notes.
+
+Every page also starts with the status block and the native preview; a tier-A
+approximation, where the record declares one, follows them:
+
+```mdx
+<ComponentState slug="button" />
+
+<NativePreview slug="button" />
+
+<ComponentPreview slug="button" />
+```
+
+## The blocks
+
+| Block | What it does | Rule |
+| ----- | ------------ | ---- |
+| `<ComponentState slug>` | the status, GPUix-support line and limitations | mirrors `COMPONENTS.md`; never hand-written |
+| `<NativePreview slug>` | the strongest honest native evidence tier | never falls back to a browser approximation |
+| `<ComponentPreview slug>` | the labelled tier-A approximation | optional; only rendered through the approximation banner |
+| `auto-type-table` (MDX tag) | the generated props table | one per type in `api`; the name must be a real export |
+| `include` (MDX tag) | the real source file, read at build time | never a pasted copy; one per declared part |
+| `<ComponentDependencies slug>` | the dependency list, derived from the entry file | nothing hand-maintained |
+| `<RelatedComponents slug>` | cross-links declared in the record | a link to a planned component is a real page, never a 404 |
+
+Two traps are worth naming: a self-closing `include` tag is silently skipped by
+Fumadocs, so the page renders without source and no build error; and an
+`auto-type-table` whose `name` is a typo renders an empty table. Both are caught
+by `src/content-references.test.ts`.
+
+## The preview
+
+`<NativePreview>` reads the record and the capture sidecars and picks one tier:
+a live GPUix scene, a real capture, the playground screen, or the native suite
+coverage. The labels are mandated by `docs/preview-strategy.md`, and a page never
+chooses a tier by hand.
+
+- A browser approximation is allowed only through `<ComponentPreview>`, and it
+  is always labelled "Illustrative approximation — not GPUix".
+- A live scene appears only when the record declares `liveScene`; the scene must
+  exist in `preview/scenes.ts`.
+- A component with no suite is not given a tier V badge; `<NativePreview>`
+  reports it as unverified instead.
+
+## The guards
+
+| Check | What it proves |
+| ----- | -------------- |
+| `src/component-pages.test.ts` | every section, the usage example, the API table and the source include |
+| `src/component-truth.test.ts` | every repository path a page names exists; no placeholder prose |
+| `src/content-references.test.ts` | every include and props table resolves; the record and page agree on `api` |
+| `src/component-meta/registry.test.ts` | status, parts and limitations agree with the package and `COMPONENTS.md` |
+| `src/component-meta/dependencies.test.ts` | the dependency list equals the entry file's imports |
+| `src/component-meta/native-coverage.test.ts` | the runtime suite file exists and imports the component |
+| `src/api-reference-page.test.ts` | every declared props type reaches the API reference index |
+| `src/lib/page-meta.test.ts` | the page's title, description and canonical URL |
+| `src/components/preview/component-preview.test.tsx` | every `<ComponentPreview slug>` on a page maps to a real preview |
+| `src/components/preview/scene-contract.test.ts` | every live-scene page names a scene that ships |
+
+## Checklist
+
+1. Add the `delivered(...)` record with its source, props types, runtime suite
+   and limitations.
+2. Create `content/docs/components/<slug>.mdx` with the frontmatter matching the
+   record.
+3. Add the status block, the previews and the sections in the order above.
+4. Include the real source and generate every declared props type.
+5. Add the page to `content/docs/components/meta.json` and its tier separator if
+   it opens a new group.
+6. Run `nub run --filter docs test`, then `nub run check` and `nub run lint`.
+
+A page that cannot pass these guards is not finished, and its inventory row is
+not `done`.
