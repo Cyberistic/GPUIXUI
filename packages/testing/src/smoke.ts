@@ -71,6 +71,7 @@ export const CAPABILITIES = [
   "query",
   "notification",
   "crop",
+  "wizard",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);

@@ -54,6 +54,7 @@ import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { queryBuilderScenario } from "../scenarios/query-builder.js";
 import { notificationCentreScenario } from "../scenarios/notification-centre.js";
+import { wizardScenario } from "../scenarios/wizard.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -4442,6 +4443,103 @@ const notificationCentre: LiveScenario = {
     }),
 };
 
+const wizard: LiveScenario = {
+  id: "live-wizard",
+  title: "Live multi-step form: focus, validation, review and submit",
+  capability: "wizard",
+  view: wizardScenario.view,
+  ready: "wizard-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectContains(
+        "the live wizard starts on the account step",
+        yield* textOf(ctx, "wizard-readout"),
+        "step=1 mode=unmount",
+      );
+
+      // 1. A rejected Next paints the messages and focuses the first field.
+      yield* ctx.host.click("wizard-next");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-readout", "errors=name,email");
+      yield* waitForFocus(ctx, "wizard-name");
+      yield* ctx.expectEqual(
+        "a rejected live step focuses its first field",
+        yield* focusedOf(ctx),
+        "wizard-name",
+      );
+
+      // 2. Type a valid account; the subtree swap focuses the next step.
+      yield* ctx.host.click("wizard-name");
+      yield* ctx.host.key("a d a");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-readout", "errors=email");
+      yield* ctx.host.click("wizard-email");
+      yield* ctx.host.key("a d a @ x");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-readout", "errors=0");
+      yield* ctx.host.click("wizard-next");
+      yield* ctx.host.waitFor("wizard-slug");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-readout", "step=2");
+      yield* waitForFocus(ctx, "wizard-slug");
+      yield* ctx.expectEqual(
+        "a valid live Next focuses the next step",
+        yield* focusedOf(ctx),
+        "wizard-slug",
+      );
+
+      // 3. Enter validates the step and focuses the first failure.
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-readout", "errors=slug");
+      yield* ctx.host.key("m y - w");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-readout", "errors=team");
+      yield* waitForFocus(ctx, "wizard-team");
+      yield* ctx.host.key("c o r e");
+      yield* settle;
+      yield* ctx.host.click("wizard-next");
+      yield* ctx.host.waitFor("wizard-review");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-readout", "step=3");
+
+      // 4. Review and submit.
+      yield* ctx.expectContains(
+        "the live review paints the draft",
+        yield* textOf(ctx, "wizard-review"),
+        "ada <ada@x> my-w / core",
+      );
+      yield* ctx.host.click("wizard-submit");
+      yield* settle;
+      yield* waitForText(ctx, "wizard-done", "Created ada");
+      yield* ctx.expectContains(
+        "the live submit reports once",
+        yield* textOf(ctx, "wizard-readout"),
+        "submits=1",
+      );
+
+      // 5. Back restores the workspace draft.
+      yield* ctx.host.click("wizard-back");
+      yield* ctx.host.waitFor("wizard-slug");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live slug survives a Back",
+        yield* textOf(ctx, "wizard-readout"),
+        "slug=my-w",
+      );
+      yield* waitForFocus(ctx, "wizard-slug");
+      yield* ctx.expectEqual(
+        "the live Back focuses the step",
+        yield* focusedOf(ctx),
+        "wizard-slug",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${wizard.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -4482,4 +4580,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   dataToolbar,
   queryBuilder,
   notificationCentre,
+  wizard,
 ];
