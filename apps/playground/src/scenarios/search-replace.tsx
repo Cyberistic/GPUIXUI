@@ -23,7 +23,12 @@ import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Pressable, Readout } from "../ui.js";
-import { matchText, nextCursor, replaceRange, replaceRanges } from "./replace-state.js";
+import {
+  matchText,
+  nextCursor,
+  replaceRange,
+  replaceRanges,
+} from "./replace-state.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const QUERY = "error";
@@ -70,9 +75,7 @@ const matched = (
   Arr.map(washes, (match) => matchText(match.text, [match.start, match.end]));
 
 /** The find cursor's matched substring, or `"none"`. */
-const activeMatch = (
-  washes: ReadonlyArray<Smoke.HighlightMatch>,
-): string =>
+const activeMatch = (washes: ReadonlyArray<Smoke.HighlightMatch>): string =>
   Option.getOrElse(
     Option.map(
       Arr.findFirst(washes, (match) => match.active),
@@ -106,7 +109,11 @@ const ReplaceSurface = ({ onReset }: { readonly onReset: () => void }) => {
     Option.match(range, {
       onNone: () => {},
       onSome: (hit) => {
-        const next = replaceRange(document, hit, make(matchText(document, hit)));
+        const next = replaceRange(
+          document,
+          hit,
+          make(matchText(document, hit)),
+        );
         const remaining = Arr.length(findRanges({ text: next, query }));
         Option.match(nextCursor(remaining, search.active), {
           onNone: () => {},
@@ -185,7 +192,10 @@ const ReplaceSurface = ({ onReset }: { readonly onReset: () => void }) => {
         <Pressable testId="sr-next" onClick={search.next}>
           Next
         </Pressable>
-        <Pressable testId="sr-replace-one" onClick={() => replaceOne(() => replacement)}>
+        <Pressable
+          testId="sr-replace-one"
+          onClick={() => replaceOne(() => replacement)}
+        >
           Replace
         </Pressable>
         <Pressable testId="sr-replace-all" onClick={replaceAll}>
@@ -194,10 +204,16 @@ const ReplaceSurface = ({ onReset }: { readonly onReset: () => void }) => {
         <Pressable testId="sr-replace-all-short" onClick={replaceAllShort}>
           Replace all short
         </Pressable>
-        <Pressable testId="sr-uppercase" onClick={() => replaceOne(Str.toUpperCase)}>
+        <Pressable
+          testId="sr-uppercase"
+          onClick={() => replaceOne(Str.toUpperCase)}
+        >
           Upper
         </Pressable>
-        <Pressable testId="sr-longer" onClick={() => replaceOne(() => "errors")}>
+        <Pressable
+          testId="sr-longer"
+          onClick={() => replaceOne(() => "errors")}
+        >
           Longer
         </Pressable>
         <Pressable testId="sr-shorter" onClick={() => replaceOne(() => "err")}>
@@ -226,10 +242,24 @@ const ReplaceSurface = ({ onReset }: { readonly onReset: () => void }) => {
       <div
         testId="sr-editor-box"
         highlight={{ query }}
-        style={{ display: "flex", flexDirection: "column", gap: theme.spacing.sm }}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.sm,
+        }}
       >
-        <textarea testId="sr-editor" value={EDITOR_TEXT} readOnly style={surface} />
-        <input testId="sr-editor-input" value={INPUT_TEXT} readOnly style={surface} />
+        <textarea
+          testId="sr-editor"
+          value={EDITOR_TEXT}
+          readOnly
+          style={surface}
+        />
+        <input
+          testId="sr-editor-input"
+          value={INPUT_TEXT}
+          readOnly
+          style={surface}
+        />
         <text testId="sr-editor-control" style={lineStyle}>
           error in a text run
         </text>
@@ -275,8 +305,10 @@ const docBox = (ctx: Smoke.SmokeContext) =>
 /** The washes inside the document, read after `advance` has settled the paint. */
 const docWashes = (
   ctx: Smoke.SmokeContext,
-): Effect.Effect<ReadonlyArray<Smoke.HighlightMatch>, Smoke.SmokeAssertionError> =>
-  Effect.map(docBox(ctx), (box) => inside(box, ctx.host.highlights()));
+): Effect.Effect<
+  ReadonlyArray<Smoke.HighlightMatch>,
+  Smoke.SmokeAssertionError
+> => Effect.map(docBox(ctx), (box) => inside(box, ctx.host.highlights()));
 
 /** Advances the dispatcher so a new `onHighlight` count reaches React. */
 const settle = (ctx: Smoke.SmokeContext): void => ctx.host.advance(0);
@@ -341,19 +373,29 @@ export const searchReplaceScenario: PlaygroundScenario = {
       const washes = ctx.host.highlights();
       yield* ctx.expectEqual(
         "a match is not washed inside a textarea",
-        Arr.length(Arr.filter(washes, (match) => Str.includes("in the editor")(match.text))),
+        Arr.length(
+          Arr.filter(washes, (match) =>
+            Str.includes("in the editor")(match.text),
+          ),
+        ),
         0,
       );
       yield* ctx.expectEqual(
         "a match is not washed inside an input",
-        Arr.length(Arr.filter(washes, (match) => Str.includes("in an input")(match.text))),
+        Arr.length(
+          Arr.filter(washes, (match) =>
+            Str.includes("in an input")(match.text),
+          ),
+        ),
         0,
       );
       // The contrast that makes the two negatives specific: the same declaration
       // does wash a `<text>` sibling, so the query is alive in that subtree.
       yield* ctx.expectEqual(
         "the same query washes a neighbouring text run",
-        Arr.length(Arr.filter(washes, (match) => match.text === "error in a text run")),
+        Arr.length(
+          Arr.filter(washes, (match) => match.text === "error in a text run"),
+        ),
         1,
       );
       const bar = yield* ctx.expectSome(
@@ -482,10 +524,7 @@ export const searchReplaceScenario: PlaygroundScenario = {
       const uppercased = yield* docWashes(ctx);
       yield* ctx.expectEqual(
         "the count-preserving wash follows the rewritten run",
-        Arr.join(
-          matched(inLine(uppercased, "ERROR error here")),
-          ",",
-        ),
+        Arr.join(matched(inLine(uppercased, "ERROR error here")), ","),
         "ERROR,error",
       );
 
@@ -555,9 +594,11 @@ export const searchReplaceScenario: PlaygroundScenario = {
       // A rendered code block replaces by prop, and its washes follow.
       ctx.host.click("sr-reset");
       settle(ctx);
-      const codeBefore = Arr.filter(ctx.host.highlights(), (match) =>
-        Str.startsWith("const error")(match.text) ||
-        Str.startsWith("console.log")(match.text),
+      const codeBefore = Arr.filter(
+        ctx.host.highlights(),
+        (match) =>
+          Str.startsWith("const error")(match.text) ||
+          Str.startsWith("console.log")(match.text),
       );
       yield* ctx.expectEqual(
         "the code block paints its two matches",
@@ -574,9 +615,11 @@ export const searchReplaceScenario: PlaygroundScenario = {
       yield* ctx.expectEqual(
         "replacing the source removes its washes",
         Arr.length(
-          Arr.filter(ctx.host.highlights(), (match) =>
-            Str.includes("const error")(match.text) ||
-            Str.includes("console.log(error)")(match.text),
+          Arr.filter(
+            ctx.host.highlights(),
+            (match) =>
+              Str.includes("const error")(match.text) ||
+              Str.includes("console.log(error)")(match.text),
           ),
         ),
         0,

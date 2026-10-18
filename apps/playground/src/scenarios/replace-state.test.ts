@@ -21,9 +21,9 @@ import {
 
 describe("replaceRange", () => {
   it("replaces exactly the matched run", () => {
-    expect(
-      replaceRange("an error follows", [3, 8], "fixed"),
-    ).toBe("an fixed follows");
+    expect(replaceRange("an error follows", [3, 8], "fixed")).toBe(
+      "an fixed follows",
+    );
   });
 
   it("leaves a zero-length range's text alone", () => {

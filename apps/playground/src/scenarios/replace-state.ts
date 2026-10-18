@@ -27,8 +27,7 @@ export const replaceRange = (
   text: string,
   range: ReplaceRange,
   replacement: string,
-): string =>
-  `${text.slice(0, range[0])}${replacement}${text.slice(range[1])}`;
+): string => `${text.slice(0, range[0])}${replacement}${text.slice(range[1])}`;
 
 /**
  * `text` with every range replaced.
