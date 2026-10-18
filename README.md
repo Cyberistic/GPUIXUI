@@ -25,7 +25,9 @@ Components, Contributing), a reusable component page with Preview/Code tabs, a
 page" table of contents and the previous/next pager. Button, Dialog, Popover and
 Tabs are the pattern pages; their previews are labelled browser renderings of
 the native components, and the Code tab plus **Component source** show the real
-implementation.
+implementation. The remaining shadcn surfaces — **Blocks** (`/docs/blocks`) and
+the **Theme Editor** (`/docs/themes`) — landed too: recipe pages composed from
+the library and a live token editor backed by `@gpuixui/tokens`.
 
 ## Layout
 
