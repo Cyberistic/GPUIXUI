@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 144/196
+`[x]` `[███████░░░]` 145/197
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1048,6 +1048,12 @@ a level "exactly one shadow" while `Elevation` is a list and `elevationShadows`
 resolves it; §7 now names all fourteen surfaces and the pointer-state exclusion,
 `docs.test.ts` holds each member to `overlaySurfaces` and the level description to
 the two helpers, and no token, colour, pair or floor moves (plan 376)
+`[x]` Pin the design-system's current figures — the §9 scrim paragraph quoted
+1.075:1 (high-contrast dark, `overlay` on `primary`) and the AAA wash-link cost
+(6.75:1 on `muted`, 5.48:1 on `active`) with no test, so a palette edit could
+leave the page quoting a ratio the package no longer produces while every pair
+passed; both are now derived from the 24 shipped sets and no value moves
+(plan 377)
 
 ## Phase C — Tier 1–2 components
 

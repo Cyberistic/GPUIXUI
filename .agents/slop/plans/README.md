@@ -173,6 +173,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [374](./374-platform-style-over-platform.md) | A platform style applied over another platform's theme | F | 063, 071, 073, 091, 301, 311, 328, 373 | done |
 | [375](./375-scrim-over-filled-actions.md) | The modal scrim over the filled actions and status panels a window shows | F | 071, 099, 309, 311, 359 | done |
 | [376](./376-design-system-elevation-truth.md) | The design-system's elevation paragraph | F | 315, 326, 337, 345, 352, 359, 375 | done |
+| [377](./377-design-system-figures.md) | The design-system's current scrim and wash-link figures | F | 062, 075, 087, 336, 375, 376 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1529,6 +1530,20 @@ describes the level as the list the helpers read. `docs.test.ts` slices the
 paragraph and holds every member of `overlaySurfaces`, the derived count word
 and the two helper names to it, so the next surface added to the scrim contract
 cannot ship with a stale rationale. No token value, colour, pair or floor moves.
+
+377 pins the two figures the same page derives from the palette but no test
+read. The §9 scrim explanation states "The tightest of the fourteen pairs is
+**1.075:1** (high-contrast dark, `overlay` on `primary`)", the minimum over the
+fourteen `overlaySurfaces` and all 24 shipped colour sets; the "Not covered,
+deliberately" list states that accent-toned text cannot clear 7:1 through the
+AAA light wash, quoting `primaryText` at **6.75:1** on `muted` and **5.48:1** on
+`active`. Both are correct today (the probe measured 1.0745, 6.748 and 5.48),
+but a palette edit could move either without failing a pair: a slightly stronger
+AAA dark scrim still clears 1.05:1, and a moved iris step changes the wash
+figure while the plain `primaryText` pairs still pass. `docs.test.ts` now builds
+a labelled 24-set list, reduces the scrim ratios, derives the two wash ratios
+from `getTheme("light", "high")` and asserts the page's own sentences, so the
+page cannot quote a number the package no longer produces. No value moves.
 
 ### Reference adoption (block `200–299`)
 
