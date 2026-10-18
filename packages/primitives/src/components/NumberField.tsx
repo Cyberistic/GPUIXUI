@@ -17,8 +17,10 @@
  *
  * **The bound is the field's, not the edit's.** A supplied `value` goes through
  * the same `clampNumeric` as typed text, so a record loaded with `150` under
- * `max={100}` paints `100` and steps from it (plan `362`). A **disabled** field
- * is inert on every path, including the blur commit, and a caller's `onKeyUp`
+ * `max={100}` paints `100` and steps from it (plan `362`). The two spin buttons
+ * read the same normalised range as the keys, so a swapped pair leaves the
+ * stepper live at the end that can move (plan `378`). A **disabled** field is
+ * inert on every path, including the blur commit, and a caller's `onKeyUp`
  * reaches the input like every sibling's.
  */
 
@@ -162,8 +164,10 @@ export const renderNumberField = (
       invalid: props.invalid === true,
     },
   );
-  const atMin = props.min !== undefined && current <= props.min;
-  const atMax = props.max !== undefined && current >= props.max;
+  // The spin buttons belong to the range the field acts on, so they read the
+  // normalised bounds — the same rule the keys follow (plan `378`).
+  const atMin = range.min !== undefined && current <= range.min;
+  const atMax = range.max !== undefined && current >= range.max;
   const stepButton = (
     direction: 1 | -1,
     name: "chevron-up" | "chevron-down",

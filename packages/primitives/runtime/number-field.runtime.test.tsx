@@ -295,6 +295,53 @@ it("steps from a hit-tested click on the spin column and refocuses the input", a
   expect(focused.type).toBe("input");
 });
 
+it("steps the swapped range from a hit-tested spin click", async () => {
+  // The bug guarded (plan 378): an inverted pair normalises to a real range and
+  // the arrow keys step it (plan 371), but both spin buttons compared the raw
+  // props and blocked every press.
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Inverted"
+      min={100}
+      max={0}
+      defaultValue={50}
+      onValueChange={field.onValueChange}
+    />,
+  );
+  const box = boundsOf(runtime, "nf");
+  runtime.clickAt(box.x + box.width - 8, box.y + box.height * 0.25);
+  expect(lastValue(field.values)).toBe(51);
+  // The same field now holds 51, so the down stepper lands on 50 — the point is
+  // that the button is live at all, not the arithmetic.
+  runtime.clickAt(box.x + box.width - 8, box.y + box.height * 0.75);
+  expect(lastValue(field.values)).toBe(50);
+
+  const atMin = recorder();
+  const second = await mount(
+    <NumberField
+      testId="nf"
+      label="Inverted minimum"
+      min={100}
+      max={0}
+      defaultValue={0}
+      onValueChange={atMin.onValueChange}
+    />,
+  );
+  const atMinBox = boundsOf(second, "nf");
+  second.clickAt(
+    atMinBox.x + atMinBox.width - 8,
+    atMinBox.y + atMinBox.height * 0.75,
+  );
+  expect(atMin.values).toStrictEqual([]);
+  second.clickAt(
+    atMinBox.x + atMinBox.width - 8,
+    atMinBox.y + atMinBox.height * 0.25,
+  );
+  expect(lastValue(atMin.values)).toBe(1);
+});
+
 it("paints the ring on the field's chrome when the input has focus", async () => {
   const runtime = await mount(<NumberField testId="nf" label="Quantity" />);
   const input = inputOf(runtime, "nf");

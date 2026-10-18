@@ -183,6 +183,42 @@ describe("NumberField", () => {
     expect(onValue).toHaveBeenCalledTimes(2);
   });
 
+  it("steps its spin buttons inside a swapped range", () => {
+    // The bug guarded (plan 378): the steppers derived their blocked state from
+    // the raw `min`/`max`, so an inverted pair (`min={100} max={0}`) blocked
+    // both buttons even though the normalised range — and the arrow keys —
+    // could move. Both halves are asserted: the press reports, and the paint
+    // says which button is live.
+    const onValue = vi.fn();
+    const middle = partsOf(
+      render({ min: 100, max: 0 }, 50, "50", idle, { onValue }),
+    );
+    expectSome(hostHandler(middle.up, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledWith(51);
+    expectSome(hostHandler(middle.down, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledWith(49);
+
+    const atMin = partsOf(
+      render({ min: 100, max: 0 }, 0, "0", idle, { onValue }),
+    );
+    expect(expectSome(hostStyleRecord(atMin.up))["cursor"]).toBe("pointer");
+    expect(expectSome(hostStyleRecord(atMin.down))["cursor"]).toBe(
+      "not-allowed",
+    );
+    expectSome(hostHandler(atMin.up, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledWith(1);
+    expectSome(hostHandler(atMin.down, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledTimes(3);
+
+    const atMax = partsOf(
+      render({ min: 100, max: 0 }, 100, "100", idle, { onValue }),
+    );
+    expect(expectSome(hostStyleRecord(atMax.up))["cursor"]).toBe("not-allowed");
+    expect(expectSome(hostStyleRecord(atMax.down))["cursor"]).toBe("pointer");
+    expectSome(hostHandler(atMax.down, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledWith(99);
+  });
+
   it("steps from the bound when the supplied value is outside it", () => {
     // Plan 362: the value came from the parent, so the field painted it raw and
     // stepped from it — the first ArrowDown reported the bound again and the
