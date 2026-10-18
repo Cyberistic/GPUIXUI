@@ -138,6 +138,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [339](./339-field-adornment-text.md) | The field's adornment text and the check the accent cannot carry | F | 059, 071–095, 300, 306–319, 335 | done |
 | [340](./340-invalid-control-ring.md) | The invalid control's focus ring | F | 017, 071–095, 300, 325, 339 | done |
 | [341](./341-combobox-check-mark.md) | The combobox check on a highlighted option | F | 071–095, 300, 306–332, 339–340 | done |
+| [342](./342-filled-state-steps.md) | The filled family's step in the public contract | F | 071, 097, 306, 327, 338, 341 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1024,6 +1025,19 @@ behind the row while it is highlighted, but `markPairs` measured `primary` only
 on the plain surfaces and the slider thumb. The pair is a guard (3.111:1 on
 macOS dark at the tightest), so no colour moves; the menu checkbox's `accent`
 glyph — the wrong role — stays the cross-team finding recorded by plan 339.
+
+342 publishes the last rule the library enforced only on its own themes: each
+filled family's `xHover` must be one perceivable step (1.05:1) from its `x`, and
+its `xActive` from its `xHover`, but that floor lived in `filled-states.test.ts`,
+which iterates the shipped themes. A consumer theme whose `primaryHover` equalled
+`primary` therefore returned `[]` from `themeContrastFailures` while its primary
+button had no hover — `stateFillSurfacePairs` measures each fill against the
+surfaces behind it, and a fill equal to the fill before it still clears every
+surface pair. `stateStepPairs` (eight pairs) joins the contract under a new
+`step` class at 1.05:1 on both levels, because a state step is not a surface
+against a panel and the existing `surface` filters key on fill roles. No colour
+moves: every shipped identity, platform and recipe theme already clears the
+floor (306 → 314 pairs).
 
 ### Reference adoption (block `200–299`)
 

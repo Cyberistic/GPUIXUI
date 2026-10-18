@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 109/142
+`[x]` `[████████░░]` 110/145
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -284,6 +284,31 @@ a selected option with a `primary` check and `rowStyle` paints `hover` behind it
 while highlighted, but `markPairs` measured `primary` only on the plain surfaces
 and the slider thumb; every shipped set passes (3.111:1 at the tightest), so no
 colour moves and the contract grows 305 → 306 (plan 341)
+`[x]` Publish the filled families' step floor in the public contrast contract —
+a collapsed hover or press was invisible to `themeContrastFailures` because the
+1.05:1 step lived only in `filled-states.test.ts`, which runs on shipped themes;
+`stateStepPairs` adds eight `step` pairs (306 → 314), every shipped set already
+clears them, so no colour moves (plan 342)
+`[ ]` Cross-team: `primitives` gives a pressed selection control a perceivable
+state — `selectionBoxStyle` and `switchTrackStyle` paint
+`active: { borderColor: ring }` on a filled box whose fill is `primary` or
+`destructive`, and `ring` measures **1.000:1** on `primary` in the identity dark,
+Linux dark, Windows dark, the XP and Aero dark recipes and both AAA dark sets,
+1.000:1 on `primary` in the macOS, Linux and Windows light variants, and
+1.02–1.42:1 on `destructive` — so a pressed checked checkbox or switch shows no
+change on its only state signal; both also hover and press at
+`alpha(fill, 0.9/0.8)`, the plan-097 defect one component over.
+`filledControl(theme, family)` returns the designed trio and its one foreground,
+so the press becomes a measured fill step while the ring stays the focus
+indicator (plan 342 audit; owner: `primitives`)
+`[ ]` Cross-team: `components` moves the menu row's highlight bar off `accent` —
+`menu/item.tsx:91` paints a 2px left border in `accent` on the highlighted row,
+and `accent` measures 1.118–1.392:1 on the menu's `popover` and 1.000–1.113:1 on
+the `hover` fill the row also paints, under the 3:1 mark floor, so the bar that
+exists to show the highlight cannot be seen. Paint `borderStrong` (the functional
+boundary, already measured on `popover`/`hover`/`active`) or
+`popoverForeground`, the row's own text role (plan 342 audit; owner:
+`components`)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the
