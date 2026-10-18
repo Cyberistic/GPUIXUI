@@ -81,12 +81,15 @@ export interface PlatformStyleStructure {
  * A platform's visual variant of the identity. The shape is plain data, so a
  * consumer can copy a style file and change a value, then apply it with
  * `applyPlatformStyle`. The families travel with the style because a copied
- * variant must be able to name its own platform's mono face.
+ * variant must be able to name its own platform's mono face; `structure` carries
+ * the rest of the shape — radii, density, motion and the numeric scales (type
+ * roles, spacing, borders, icon/avatar sizes and component dimensions), so a
+ * copied file owns the whole look, not only its palette.
  */
 export interface PlatformStyle {
   /** Families and the human-readable label. */
   readonly types: PlatformType;
-  /** Radii, density and motion shared by both modes. */
+  /** Radii, density, motion and the numeric scales shared by both modes. */
   readonly structure: PlatformStyleStructure;
   /** Surface and accent roles per mode. Omitted roles inherit the identity. */
   readonly colors: Readonly<Record<ThemeMode, Partial<ThemeColors>>>;
