@@ -10,13 +10,19 @@
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
 import {
+  elevationLevels,
   elevationShadow,
   elevationShadows,
-  type ElevationLevel,
 } from "./elevation.js";
-import { extendTheme, getPlatformTheme, themes, type Theme } from "./theme.js";
+import {
+  extendTheme,
+  getPlatformTheme,
+  getTheme,
+  themes,
+  type Theme,
+} from "./theme.js";
 
-const levels: readonly ElevationLevel[] = ["sm", "md", "lg"];
+const levels = elevationLevels.slice(0, 3);
 
 const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
   ({ theme }) => [theme.name, theme] as const,
@@ -55,6 +61,11 @@ const painted: ReadonlyArray<readonly [string, Theme, readonly string[]]> = [
     "win32 dark",
     getPlatformTheme("win32", "dark"),
     ["#00000066", "#000000A6", "#000000CC"],
+  ],
+  [
+    "high-contrast dark",
+    getTheme("dark", "high"),
+    ["#FFFFFF1A", "#FFFFFF24", "#FFFFFF2E"],
   ],
 ];
 

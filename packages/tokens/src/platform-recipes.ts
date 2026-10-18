@@ -54,9 +54,9 @@ export const platformRecipes: Readonly<
  * Resolve a recipe for a mode and contrast level. It composes the same
  * `applyPlatformStyle` path as `getPlatformTheme`, so a recipe cannot take a
  * route a shipped variant does not test. At `"high"` the families, shape and
- * elevation levels apply while the AAA colour set and its `shadow` tint stay,
- * for the reason the platform variants give: a recipe accent must not drop the
- * AAA floors.
+ * elevation geometry apply while the AAA colour set, its `shadow` tint and the
+ * opacity designed against that tint stay, for the reason the platform variants
+ * give: a recipe accent must not drop the AAA floors.
  *
  * @example
  * ```tsx

@@ -28,7 +28,7 @@ export const resolveDensePlatformTheme = (
 
 /**
  * Resolve a high-contrast platform preview: the AAA palette stays, while the
- * platform's radii, density, motion and elevation levels still apply. A docs
+ * platform's radii, density, motion and elevation geometry still apply. A docs
  * contrast switch and a native accessibility preview both call this.
  */
 export const resolveHighContrastPlatformTheme = (

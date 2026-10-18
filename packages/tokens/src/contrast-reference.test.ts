@@ -45,6 +45,7 @@ const appliedLists = [
   "selectionFillWashPairs",
   "skeletonPulsePairs",
   "overlayWashPairs",
+  "elevationSurfaces",
 ] as const;
 
 describe("the themeContrastFailures reference", () => {

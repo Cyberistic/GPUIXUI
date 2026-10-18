@@ -9,11 +9,12 @@
  *
  * The consequence was measurable: a copied theme with `shadow: "black"` painted
  * an opaque shadow at every level — the 0.08, 0.12 and 0.16 alphas all gone —
- * while `themeContrastFailures` and `themeMetricFailures` both returned `[]`.
- * `docs/design-system.md` claimed "tests restrict roles to hex" and nothing held
- * the exempt role. `isHexColor` publishes the predicate and
- * `themeColorFailures` names every role outside the form the token maths can
- * read.
+ * while `themeMetricFailures` returned `[]`. `docs/design-system.md` claimed
+ * "tests restrict roles to hex" and nothing held the exempt role. `isHexColor`
+ * publishes the predicate and `themeColorFailures` names every role outside the
+ * form the token maths can read. Plan 505 made `shadow` a measured role, so the
+ * contrast check now reports an unparseable tint as `NaN` as well; the colour
+ * check remains the one that names the form.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -75,8 +76,12 @@ describe("themeColorFailures", () => {
     expect(themeColorFailures(tinted)).toEqual([
       { role: "shadow", value: "black" },
     ]);
-    // The two checks that existed before plan 371 cannot see it.
-    expect(themeContrastFailures(tinted)).toEqual([]);
+    // Plan 505 made `shadow` a measured role, so the contrast check reports the
+    // tint as `NaN`; the colour check is still the one that names the form.
+    expect(themeContrastFailures(tinted).length).toBeGreaterThan(0);
+    expect(
+      themeContrastFailures(tinted).every(({ ratio }) => Number.isNaN(ratio)),
+    ).toBe(true);
     expect(themeMetricFailures(tinted)).toEqual([]);
     // The level's 0.16 alpha is gone, not applied to the named tint.
     expect(elevationShadow(tinted, "lg")?.color).toBe("black");

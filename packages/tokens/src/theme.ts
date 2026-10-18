@@ -5,7 +5,13 @@ import {
   lightColors,
   type ThemeColors,
 } from "./color.js";
-import { darkElevation, lightElevation, type Elevation } from "./elevation.js";
+import {
+  darkElevation,
+  highContrastDarkElevation,
+  lightElevation,
+  type Elevation,
+  type ElevationShape,
+} from "./elevation.js";
 import { motion, type Motion, type MotionEasings } from "./motion.js";
 import {
   platformStyles,
@@ -334,7 +340,7 @@ export const highContrastDarkTheme: Theme = {
   radius,
   density: defaultDensity,
   dimensions,
-  elevation: darkElevation,
+  elevation: highContrastDarkElevation,
   motion,
   borderWidth,
   iconSize,
@@ -454,12 +460,54 @@ const appliedPalette = (base: Theme): ThemeColors =>
     ? base.colors
     : getTheme(base.mode, "default").colors;
 
+/**
+ * A style level's geometry with the base theme's opacity. An alpha is designed
+ * against a tint — the AAA dark set paints with light, so a dark-mode platform's
+ * 0.4–0.8 would paint a near-white halo — so at high contrast a platform lends
+ * its depth and the base's opacity stays with its tint.
+ */
+const withBaseAlpha = (
+  base: ReadonlyArray<ElevationShape>,
+  style: ReadonlyArray<ElevationShape>,
+): ElevationShape[] => {
+  const [painted] = base;
+  return painted === undefined
+    ? [...style]
+    : style.map((shape) => ({ ...shape, alpha: painted.alpha }));
+};
+
+/**
+ * Every level a style defines, its geometry kept and its alpha taken from the
+ * base theme. `mergeDefined` drops an omitted level, so a style that names no
+ * elevation still inherits the base's.
+ */
+const platformElevation = (
+  base: Elevation,
+  style: Partial<Elevation>,
+): Partial<Elevation> => ({
+  sm: style.sm === undefined ? undefined : withBaseAlpha(base.sm, style.sm),
+  md: style.md === undefined ? undefined : withBaseAlpha(base.md, style.md),
+  lg: style.lg === undefined ? undefined : withBaseAlpha(base.lg, style.lg),
+  overlay:
+    style.overlay === undefined
+      ? undefined
+      : withBaseAlpha(base.overlay, style.overlay),
+});
+
 const platformOverrides = (
   base: Theme,
   style: PlatformStyle,
   contrast: ThemeContrast,
 ): ThemeOverrides => {
   const { label, sans, mono } = style.types;
+  // A level carries no colour: its alpha is designed against the base's
+  // `shadow` tint, so a platform lends the geometry at high contrast and the
+  // AAA set keeps the opacity that tint was designed with (plan 505). At
+  // default contrast the style's own tint, geometry and alpha all apply.
+  const elevation =
+    contrast === "high"
+      ? platformElevation(base.elevation, style.elevation[base.mode])
+      : style.elevation[base.mode];
   const structural: ThemeOverrides = {
     name: `${base.name} · ${label}`,
     typography: { sans, mono, ...style.structure.typography },
@@ -471,13 +519,9 @@ const platformOverrides = (
     iconSize: style.structure.iconSize,
     avatarSize: style.structure.avatarSize,
     dimensions: style.structure.dimensions,
-    // A level is geometry plus an alpha over the base's `shadow` tint (plan
-    // 085), so it carries no colour: the platform's depth applies at every
-    // contrast level while an AAA base keeps its own tint.
-    elevation: style.elevation[base.mode],
   };
   if (contrast === "high") {
-    return structural;
+    return { ...structural, elevation };
   }
   const colors = style.colors[base.mode];
   const appliesColors = Object.values(colors).some(
@@ -485,6 +529,7 @@ const platformOverrides = (
   );
   return {
     ...structural,
+    elevation,
     colors: appliesColors ? { ...appliedPalette(base), ...colors } : colors,
     // The declaration follows the palette: a defined platform colour is an
     // override designed at the default floors, while an undefined one inherits
@@ -499,8 +544,9 @@ const platformOverrides = (
  * The contrast level defaults to the one the base declares, so applying a
  * copied style to a high-contrast theme keeps the AAA palette. At `"high"` the
  * families and shape are applied — radii, density, motion and the platform's
- * elevation levels — while the base keeps its colour set, the `shadow` tint
- * included, because a platform accent must not drop those floors. The result
+ * elevation geometry — while the base keeps its colour set and the opacity its
+ * `shadow` tint was designed with, because a platform accent must not drop those
+ * floors. The result
  * declares the level of the palette it carries:
  * naming `"default"` on an AAA base applies the platform colours and returns a
  * `default` theme, while a style with no colour overrides keeps the base's

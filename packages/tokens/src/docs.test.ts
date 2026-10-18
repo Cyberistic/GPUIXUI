@@ -99,6 +99,7 @@ import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
+  elevationSurfaces,
   inactivePairs,
   inactiveSurfaces,
   markPairs,
@@ -121,9 +122,9 @@ import {
   type ContrastPairClass,
 } from "./contrast.js";
 import {
+  elevationLevels,
   elevationShadow,
   type BoxShadow,
-  type ElevationLevel,
 } from "./elevation.js";
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
@@ -419,6 +420,18 @@ describe("docs/design-system.md elevation paragraph", () => {
     expect(elevation).toContain("at most one entry");
     expect(elevation).not.toContain("exactly one shadow");
   });
+
+  it("states the AAA dark elevation and the platform rule", () => {
+    const elevation = paragraph(
+      "On the high-contrast dark theme's pure black canvas",
+      "Motion is a scale beside elevation",
+    );
+    expect(elevation).toContain("`highContrastDarkElevation`");
+    expect(elevation).toContain("`elevationSurfaces`");
+    expect(elevation).toContain("**1.000:1**");
+    expect(elevation).toContain("**1.207:1**");
+    expect(elevation).toContain("geometry");
+  });
 });
 
 /**
@@ -513,13 +526,6 @@ describe("docs/design-system.md current figures", () => {
   });
 });
 
-const elevationLevels: readonly ElevationLevel[] = [
-  "sm",
-  "md",
-  "lg",
-  "overlay",
-];
-
 const documentedShadow = (shadow: BoxShadow | undefined): string =>
   shadow === undefined
     ? "`[]`"
@@ -584,6 +590,57 @@ describe("docs/tokens.md numeric tables", () => {
   it("names the tint role elevation is composed from", () => {
     expect(markdown).toContain("`colors.shadow`");
     expect(markdown).toContain("`elevationShadows`");
+  });
+
+  it("quotes the tightest elevation pair and the AAA dark figure", () => {
+    const ratios = shippedThemes.flatMap(({ theme }) =>
+      elevationLevels
+        .filter((level) => level !== "overlay")
+        .flatMap((level) => {
+          const shadow = elevationShadow(theme, level);
+          if (shadow === undefined) {
+            return [];
+          }
+          return elevationSurfaces.map(
+            (surface) =>
+              [
+                theme.name,
+                level,
+                surface,
+                contrastRatio(
+                  compositeOver(shadow.color, theme.colors[surface]),
+                  theme.colors[surface],
+                ),
+              ] as const,
+          );
+        }),
+    );
+    const tightest = (
+      sets: ReadonlyArray<(typeof ratios)[number]>,
+    ): (typeof ratios)[number] => {
+      const [first, ...rest] = sets;
+      if (first === undefined) {
+        throw new Error("the elevation contract must measure something");
+      }
+      return rest.reduce(
+        (min, entry) => (entry[3] < min[3] ? entry : min),
+        first,
+      );
+    };
+
+    const shipped = tightest(ratios);
+    expect([shipped[0], shipped[1], shipped[2], shipped[3].toFixed(3)]).toEqual(
+      ["Dark", "sm", "background", "1.061"],
+    );
+    expect(markdownProse).toContain(
+      `**${shipped[3].toFixed(3)}:1** (identity dark, \`${shipped[1]}\` on \`${shipped[2]}\`)`,
+    );
+
+    const aaaDark = tightest(
+      ratios.filter((entry) => entry[0] === "High contrast dark"),
+    );
+    expect(aaaDark[3].toFixed(3)).toBe("1.207");
+    expect(markdownProse).toContain(`**${aaaDark[3].toFixed(3)}:1**`);
   });
 
   it("governs a defined elevation level, overlay included", () => {
@@ -1989,9 +2046,9 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(families), families).toBe(true);
   });
 
-  it("states that a high-contrast platform keeps its elevation levels", () => {
+  it("states that a high-contrast platform keeps its elevation geometry", () => {
     const sentence =
-      "At high contrast the families and shape apply — each platform's radii, density, motion and elevation levels — while the AAA colour set, the `shadow` tint included, wins over platform resemblance.";
+      "At high contrast the families and shape apply — each platform's radii, density, motion and elevation geometry — while the AAA colour set, the `shadow` tint included, and the opacity that tint was designed with win over platform resemblance.";
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 
@@ -2030,6 +2087,7 @@ describe("docs/design-system.md", () => {
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes, and its dim pulse frame at \`skeletonPulseOpacity\` on the same eight surfaces (\`skeletonPulsePairs\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`selected\` fill an outline action sits on in a selected row, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| elevation shadow (each defined level of \`sm\`/\`md\`/\`lg\` — the reserved \`overlay\` is empty — painted on \`background\`/\`card\`/\`muted\`/\`popover\`, the surfaces \`elevationSurfaces\` names) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
@@ -2172,6 +2230,17 @@ describe("docs/design-system.md", () => {
     const row = tableRow("modal scrim (");
     expect(row).toContain("`overlay`");
     overlaySurfaces.forEach((surface) => {
+      expect(row, surface).toContain(`\`${surface}\``);
+    });
+    expect(row).toContain(
+      `| ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+    );
+  });
+
+  it("names every surface in the elevation shadow's floor row", () => {
+    const row = tableRow("elevation shadow (");
+    expect(row).toContain("`elevationSurfaces`");
+    elevationSurfaces.forEach((surface) => {
       expect(row, surface).toContain(`\`${surface}\``);
     });
     expect(row).toContain(

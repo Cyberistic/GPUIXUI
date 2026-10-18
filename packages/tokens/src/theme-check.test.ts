@@ -3,11 +3,13 @@
  * guarantee but shipped separate checks — colour format, contrast and numeric
  * metrics — and each is total only over its own domain. The reference
  * introduces `themeContrastFailures` first, so a copied theme whose only defect
- * is a `shadow: "black"` tint or a zero focus-ring spread returned `[]` from the
- * check a consumer is most likely to run alone; the docs-site interlock row is
- * the first real consumer of that mistake. `themeFailures` composes them into
- * one tagged list, and this suite proves the composition neither drops a class
- * nor hides a partial check.
+ * is an unpairable role (`scrollbar: "rebeccapurple"`) or a zero focus-ring
+ * spread returned `[]` from the check a consumer is most likely to run alone;
+ * the docs-site interlock row is the first real consumer of that mistake.
+ * `themeFailures` composes them into one tagged list, and this suite proves the
+ * composition neither drops a class nor hides a partial check. Plan 505 made
+ * `shadow` a measured role, so an unparseable tint is now a contrast defect as
+ * well as a colour one; the format-only case uses the remaining exempt role.
  *
  * Plan 385 adds the fourth class: a family name the runtime cannot resolve as
  * written, which no older check could see.
@@ -189,11 +191,25 @@ describe("one total theme check", () => {
 
   it("catches a format-only defect the contrast check alone passes", () => {
     const tinted = extendTheme(getTheme("light"), {
-      colors: { shadow: "black" },
+      colors: { scrollbar: "rebeccapurple" },
     });
 
     expect(themeContrastFailures(tinted)).toEqual([]);
     expect(kinds(themeFailures(tinted))).toEqual(["color"]);
+  });
+
+  it("reports an unparseable elevation tint through the contrast check too", () => {
+    const tinted = extendTheme(getTheme("light"), {
+      colors: { shadow: "black" },
+    });
+    const failures = themeContrastFailures(tinted);
+
+    expect(failures.length).toBeGreaterThan(0);
+    expect(failures.every(({ ratio }) => Number.isNaN(ratio))).toBe(true);
+    expect([...new Set(kinds(themeFailures(tinted)))]).toEqual([
+      "color",
+      "contrast",
+    ]);
   });
 
   it("catches a contrast-only defect with its pair intact", () => {

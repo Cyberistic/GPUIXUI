@@ -9,6 +9,11 @@
  */
 
 import { alpha, colorRoles, isHexColor, type ThemeColors } from "./color.js";
+import {
+  elevationLevels,
+  elevationShadow,
+  type ElevationLevel,
+} from "./elevation.js";
 import { skeletonPulseOpacity } from "./motion.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
@@ -1223,6 +1228,8 @@ export interface ContrastFailure {
   readonly ratio: number;
   /** The fraction a role was composited at, when the paint was a fade. */
   readonly opacity?: number;
+  /** The elevation level a shadow pair was painted at, when the pair is a shadow. */
+  readonly level?: ElevationLevel;
 }
 
 /**
@@ -1415,6 +1422,20 @@ export const overlaySurfaces = [
 ] as const;
 
 /**
+ * The surfaces a raised element's shadow is painted over. A card (`sm`), a menu
+ * or popover (`md`) and a dialog (`lg`) float above the canvas, another card,
+ * the quiet panel or a floating surface, so every one is measured. The
+ * pointer-state washes are excluded for the same reason the scrim excludes
+ * them, and the reserved empty `overlay` paints no shadow.
+ */
+export const elevationSurfaces = [
+  "background",
+  "card",
+  "muted",
+  "popover",
+] as const;
+
+/**
  * The scrim composited over the surfaces it covers. The pointer washes
  * (`hover`, `active`) and the filled families' `xHover`/`xActive` steps are
  * deliberately absent: the pointer leaves the row to reach the dialog, so a
@@ -1497,6 +1518,43 @@ const fadedVisibilityFailures = (
   });
 
 /**
+ * An elevation level's painted shadow, composited over each surface it can sit
+ * on. A level is geometry plus an alpha over the `shadow` tint, so the ratio is
+ * the one the runtime paints; a level that composites to its own surface is an
+ * invisible shadow. The reserved empty `overlay` paints nothing and is skipped.
+ */
+const elevationFailures = (
+  theme: Theme,
+  floors: Readonly<Record<ContrastPairClass, number>>,
+): ReadonlyArray<ContrastFailure> =>
+  elevationLevels.flatMap((level) => {
+    const [shape] = theme.elevation[level];
+    const shadow = elevationShadow(theme, level);
+    if (shape === undefined || shadow === undefined) {
+      return [];
+    }
+    return elevationSurfaces.flatMap((background) => {
+      const painted = compositeOver(shadow.color, theme.colors[background]);
+      const ratio = contrastRatio(painted, theme.colors[background]);
+      const floor = floors.surface;
+      return ratio >= floor
+        ? []
+        : [
+            {
+              foreground: "shadow",
+              background,
+              wash: "shadow",
+              opacity: shape.alpha,
+              level,
+              pairClass: "surface",
+              floor,
+              ratio,
+            },
+          ];
+    });
+  });
+
+/**
  * Every documented pair a theme misses.
  *
  * The check is the union of the published pair lists, so it is total over the
@@ -1524,10 +1582,16 @@ const fadedVisibilityFailures = (
  *   on; a failure names the role and the fraction.
  * - `overlayWashPairs` — the modal scrim composited over every surface a window
  *   shows.
+ * - `elevationLevels` above `elevationSurfaces` — each defined level's painted
+ *   shadow, composited at its own alpha over the surfaces a raised element can
+ *   sit on. A level that composites to the surface beneath it has no shadow;
+ *   the reserved empty `overlay` is skipped, and a failure names the level and
+ *   the fraction.
  *
  * A missed pair is returned with both roles, the class whose floor it missed,
  * the floor and the measured ratio; a pair through a wash also names the wash,
- * and a pair through a fade names the fraction.
+ * and a pair through a fade names the fraction, and an elevation pair names its
+ * level.
  * The level defaults to the one the theme declares, so a high-contrast theme is
  * checked against its own floors. An empty array is the library's guarantee,
  * and a role whose value the token maths cannot parse is reported as `NaN` by
@@ -1597,5 +1661,6 @@ export function themeContrastFailures(
       floors,
     ),
     ...washVisibilityFailures(overlayWashPairs, "overlay", theme, floors),
+    ...elevationFailures(theme, floors),
   ];
 }

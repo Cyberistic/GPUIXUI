@@ -11,7 +11,11 @@ import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
 import { alpha } from "./color.js";
 import { themeContrastFailures } from "./contrast.js";
-import { elevationShadow, type ElevationShape } from "./elevation.js";
+import {
+  elevationLevels,
+  elevationShadow,
+  type ElevationShape,
+} from "./elevation.js";
 import {
   getPlatformRecipeTheme,
   platformRecipes,
@@ -40,6 +44,12 @@ const firstLevel = (levels: ReadonlyArray<ElevationShape>): ElevationShape => {
   return level;
 };
 
+/** A level with its opacity zeroed, so two geometries compare as shapes. */
+const geometry = (
+  levels: ReadonlyArray<ElevationShape>,
+): ReadonlyArray<ElevationShape> =>
+  levels.map((shape) => ({ ...shape, alpha: 0 }));
+
 const levelKey = (level: ElevationShape): string =>
   `${level.offsetX},${level.offsetY},${level.blurRadius},${level.spreadRadius},${level.alpha}`;
 
@@ -54,29 +64,47 @@ const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
 );
 
 describe("high-contrast platform elevation", () => {
-  it("gives every high-contrast variant its platform's elevation", () => {
+  it("gives every high-contrast variant its platform's geometry", () => {
     realVariants.forEach((platform) => {
       modes.forEach((mode) => {
-        expect(
-          getPlatformTheme(platform, mode, "high").elevation,
-          `${platform} ${mode}`,
-        ).toEqual({
-          ...getTheme(mode, "high").elevation,
-          ...platformStyles[platform].elevation[mode],
+        const themed = getPlatformTheme(platform, mode, "high");
+        const base = getTheme(mode, "high");
+        elevationLevels.forEach((level) => {
+          const styleLevels = platformStyles[platform].elevation[mode][level];
+          if (styleLevels === undefined) {
+            return;
+          }
+          expect(
+            geometry(themed.elevation[level]),
+            `${platform} ${mode} ${level}`,
+          ).toEqual(geometry(styleLevels));
+          expect(
+            themed.elevation[level][0]?.alpha,
+            `${platform} ${mode} ${level} alpha`,
+          ).toBe(base.elevation[level][0]?.alpha);
         });
       });
     });
   });
 
-  it("gives every high-contrast recipe its platform's elevation", () => {
+  it("gives every high-contrast recipe its platform's geometry", () => {
     platformRecipeNames.forEach((recipe) => {
       modes.forEach((mode) => {
-        expect(
-          getPlatformRecipeTheme(recipe, mode, "high").elevation,
-          `${recipe} ${mode}`,
-        ).toEqual({
-          ...getTheme(mode, "high").elevation,
-          ...platformRecipes[recipe].elevation[mode],
+        const themed = getPlatformRecipeTheme(recipe, mode, "high");
+        const base = getTheme(mode, "high");
+        elevationLevels.forEach((level) => {
+          const styleLevels = platformRecipes[recipe].elevation[mode][level];
+          if (styleLevels === undefined) {
+            return;
+          }
+          expect(
+            geometry(themed.elevation[level]),
+            `${recipe} ${mode} ${level}`,
+          ).toEqual(geometry(styleLevels));
+          expect(
+            themed.elevation[level][0]?.alpha,
+            `${recipe} ${mode} ${level} alpha`,
+          ).toBe(base.elevation[level][0]?.alpha);
         });
       });
     });
@@ -93,7 +121,7 @@ describe("high-contrast platform elevation", () => {
     expect(same).toEqual([]);
   });
 
-  it("keeps the AAA shadow tint while taking the platform geometry", () => {
+  it("keeps the AAA shadow tint and its opacity while taking the platform geometry", () => {
     const shape = firstLevel(platformStyles.linux.elevation.light.md ?? []);
     const identity = firstLevel(highContrastLightTheme.elevation.md);
     const high = getPlatformTheme("linux", "light", "high");
@@ -103,15 +131,30 @@ describe("high-contrast platform elevation", () => {
       offsetY: shape.offsetY,
       blurRadius: shape.blurRadius,
       spreadRadius: shape.spreadRadius,
-      color: alpha(highContrastLightTheme.colors.shadow, shape.alpha),
+      color: alpha(highContrastLightTheme.colors.shadow, identity.alpha),
     });
     expect(shape.offsetY).not.toBe(identity.offsetY);
+    expect(shape.alpha).not.toBe(identity.alpha);
     // The AAA light tint is black; the identity light tint is graphite. Using
     // the platform's tint instead of the base's would produce the identity
     // colour here.
     expect(elevationShadow(high, "md")?.color).not.toBe(
-      alpha(lightTheme.colors.shadow, shape.alpha),
+      alpha(lightTheme.colors.shadow, identity.alpha),
     );
+  });
+
+  it("keeps the AAA dark light tint and its own opacity through a platform", () => {
+    const base = getTheme("dark", "high");
+    expect(base.colors.shadow).toBe("#FFFFFF");
+
+    realVariants.forEach((platform) => {
+      const themed = getPlatformTheme(platform, "dark", "high");
+      expect(themed.colors.shadow, platform).toBe("#FFFFFF");
+      expect(elevationShadow(themed, "lg")?.color, platform).toBe("#FFFFFF2E");
+      expect(themed.elevation.lg[0]?.alpha, platform).toBe(
+        base.elevation.lg[0]?.alpha,
+      );
+    });
   });
 
   it("keeps the high-contrast colour set and the contrast contract", () => {

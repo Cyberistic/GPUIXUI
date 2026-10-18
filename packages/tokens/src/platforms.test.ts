@@ -364,8 +364,22 @@ describe("high contrast platform variants", () => {
     expect(themed.radius.lg).toBe(platformStyles.win32.structure.radius?.lg);
     expect(themed.density.name).toBe("comfortable");
     // A level is geometry plus an alpha over the base's `shadow` tint, so the
-    // platform's depth applies without touching the AAA palette (plan 345).
-    expect(themed.elevation.md).toEqual(platformStyles.win32.elevation.dark.md);
+    // platform's geometry applies while the AAA set keeps the opacity its light
+    // tint was designed with (plans 345 and 505).
+    const [styleMd] = platformStyles.win32.elevation.dark.md ?? [];
+    const [themedMd] = themed.elevation.md;
+    expect({
+      offsetX: themedMd?.offsetX,
+      offsetY: themedMd?.offsetY,
+      blurRadius: themedMd?.blurRadius,
+      spreadRadius: themedMd?.spreadRadius,
+    }).toEqual({
+      offsetX: styleMd?.offsetX,
+      offsetY: styleMd?.offsetY,
+      blurRadius: styleMd?.blurRadius,
+      spreadRadius: styleMd?.spreadRadius,
+    });
+    expect(themedMd?.alpha).toBe(highContrastDarkTheme.elevation.md[0]?.alpha);
   });
 });
 

@@ -13,7 +13,9 @@
 import { describe, expect, it } from "vitest";
 import {
   darkElevation,
+  elevationLevels,
   elevationShadow,
+  highContrastDarkElevation,
   lightElevation,
   type ElevationShape,
 } from "./elevation.js";
@@ -42,7 +44,7 @@ const shapeFields = [
   "spreadRadius",
 ];
 
-const levels = ["sm", "md", "lg", "overlay"] as const;
+const levels = elevationLevels;
 
 const color = /^#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?$/;
 
@@ -56,9 +58,16 @@ const shipped = [
 const shapes = [
   ["light", lightElevation],
   ["dark", darkElevation],
+  ["high-contrast dark", highContrastDarkElevation],
 ] as const;
 
 describe("elevation levels", () => {
+  it("names every level the interface carries, in order", () => {
+    expect([...elevationLevels].toSorted()).toEqual(
+      Object.keys(lightElevation).toSorted(),
+    );
+  });
+
   it("never carries more than the one shadow the runtime paints", () => {
     shipped.forEach(([label, theme]) => {
       levels.forEach((level) => {
@@ -136,8 +145,11 @@ describe("elevationShadow", () => {
   });
 
   it("follows a high-contrast theme's tint", () => {
-    expect(elevationShadow(highContrastDarkTheme, "lg")?.color).toMatch(
-      /^#000000CC$/,
+    expect(elevationShadow(highContrastDarkTheme, "lg")?.color).toBe(
+      "#FFFFFF2E",
+    );
+    expect(elevationShadow(highContrastLightTheme, "lg")?.color).toBe(
+      "#00000029",
     );
   });
 });

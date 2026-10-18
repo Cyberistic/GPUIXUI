@@ -109,6 +109,12 @@ describe("COMPONENTS.md design-system rows", () => {
     );
   });
 
+  it("states the elevation walk the checker adds", () => {
+    expect(row("Theme contrast check")).toContain("`elevationSurfaces`");
+    expect(row("Theme contrast check")).toContain("`elevationLevels`");
+    expect(row("High-contrast theme")).toContain("`highContrastDarkElevation`");
+  });
+
   it("names the pressed field edge the ring role paints", () => {
     expect(row("Focus state")).toContain(
       "pressed field border on the `input` fill",

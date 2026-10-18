@@ -54,8 +54,11 @@ export interface Elevation {
   readonly overlay: ElevationShape[];
 }
 
+/** The elevation levels in documentation order, the reserved `overlay` included. */
+export const elevationLevels = ["sm", "md", "lg", "overlay"] as const;
+
 /** A level a surface can be raised to. */
-export type ElevationLevel = keyof Elevation;
+export type ElevationLevel = (typeof elevationLevels)[number];
 
 const paint = (theme: Theme, shape: ElevationShape): BoxShadow => {
   const { alpha: opacity, ...geometry } = shape;
@@ -117,6 +120,26 @@ export const darkElevation: Elevation = {
   ],
   lg: [
     { offsetX: 0, offsetY: 24, blurRadius: 56, spreadRadius: -12, alpha: 0.8 },
+  ],
+  overlay: [],
+};
+
+/**
+ * High-contrast dark elevation. The canvas is pure black, so a dark tint cannot
+ * darken it: the identity dark set measured **1.000:1** on the canvas at every
+ * level and 1.030:1 at the tightest on the card. This set paints with the light
+ * tint instead — the same choice the AAA scrim makes (plan 099) — and its
+ * alphas are its own, because a light tint is as potent on black as a dark tint
+ * is on white. The geometry is the identity dark set's, so the feather ladder
+ * still holds.
+ */
+export const highContrastDarkElevation: Elevation = {
+  sm: [{ offsetX: 0, offsetY: 1, blurRadius: 2, spreadRadius: 0, alpha: 0.1 }],
+  md: [
+    { offsetX: 0, offsetY: 8, blurRadius: 24, spreadRadius: -4, alpha: 0.14 },
+  ],
+  lg: [
+    { offsetX: 0, offsetY: 24, blurRadius: 56, spreadRadius: -12, alpha: 0.18 },
   ],
   overlay: [],
 };

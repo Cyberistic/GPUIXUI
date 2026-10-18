@@ -571,6 +571,9 @@ export const highContrastLightColors = {
  * action moves one step darker than the identity dark fill, because the white
  * label has to keep the AAA 7:1 floor through the inverse selection veil on that
  * fill (plan 504) while the raised action still clears 1.05:1 on every soft tint.
+ * The elevation tint is light: a dark shadow cannot exist on the pure black
+ * canvas, so the set paints `#FFFFFF` with its own alphas
+ * (`highContrastDarkElevation`, plan 505), as the scrim already does.
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -645,7 +648,10 @@ export const highContrastDarkColors = {
   skeleton: "#565656",
   track: "#414141",
   scrollbar: "#8A8A8A",
-  shadow: "#000000",
+  // On the pure black canvas a dark tint cannot darken, so the elevation paints
+  // with light and its own alphas (`highContrastDarkElevation`), like the scrim
+  // plan 099 gave this set.
+  shadow: "#FFFFFF",
 } satisfies ThemeColors;
 
 const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;

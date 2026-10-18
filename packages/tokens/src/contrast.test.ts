@@ -167,6 +167,7 @@ import {
   contrastPairs,
   contrastRatio,
   controlBoundarySoftPairs,
+  elevationSurfaces,
   extendTheme,
   getTheme,
   inactivePairs,
@@ -770,20 +771,87 @@ describe("themeContrastFailures", () => {
   });
 });
 
+describe("the elevation shadow", () => {
+  it("names the surfaces a raised element floats over", () => {
+    expect(elevationSurfaces).toEqual([
+      "background",
+      "card",
+      "muted",
+      "popover",
+    ]);
+  });
+
+  it("reports a black tint on the AAA dark canvas", () => {
+    const regressed = extendTheme(getTheme("dark", "high"), {
+      colors: { shadow: "#000000" },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ foreground }) => foreground === "shadow",
+    );
+
+    expect(
+      failures
+        .filter(({ background }) => background === "background")
+        .map(({ level, opacity, ratio }) => [level, opacity, ratio]),
+    ).toEqual([
+      ["sm", 0.1, 1],
+      ["md", 0.14, 1],
+      ["lg", 0.18, 1],
+    ]);
+    expect(failures).toContainEqual({
+      foreground: "shadow",
+      background: "card",
+      wash: "shadow",
+      level: "sm",
+      opacity: 0.1,
+      pairClass: "surface",
+      floor: 1.05,
+      ratio: expect.any(Number),
+    });
+  });
+
+  it("reports a collapsed alpha on every surface the level paints over", () => {
+    const [md] = getTheme("light").elevation.md;
+    if (md === undefined) {
+      throw new Error("the shipped light theme has no md level");
+    }
+    const collapsed = extendTheme(getTheme("light"), {
+      elevation: { md: [{ ...md, alpha: 0 }] },
+    });
+
+    expect(
+      themeContrastFailures(collapsed)
+        .filter(({ foreground }) => foreground === "shadow")
+        .map(({ background, level, opacity, ratio }) => [
+          level,
+          background,
+          opacity,
+          ratio,
+        ]),
+    ).toEqual(elevationSurfaces.map((surface) => ["md", surface, 0, 1]));
+  });
+
+  it("skips the reserved empty overlay level", () => {
+    shippedThemes.forEach(({ theme }) => {
+      const levels = themeContrastFailures(theme)
+        .filter(({ foreground }) => foreground === "shadow")
+        .map(({ level }) => level);
+      expect(levels, theme.name).not.toContain("overlay");
+    });
+  });
+});
+
 describe("contract completeness", () => {
   /**
    * The roles no pair measures, each with the reason it is not a pair. A role
    * that is neither here nor measured fails `every role is measured or exempt`,
-   * so a new role cannot ship unmeasured.
+   * so a new role cannot ship unmeasured. `shadow` used to be here; the
+   * elevation walk measures it composited at each level's alpha (plan 505).
    */
   const exempt = [
     [
       "scrollbar",
       "reserved; the pinned runtime paints the platform scrollbar and exposes no tint",
-    ],
-    [
-      "shadow",
-      "an elevation tint applied at a level's alpha, never painted as text or a bounded surface",
     ],
   ] as const;
 
@@ -800,6 +868,9 @@ describe("contract completeness", () => {
       ...overlayWashPairs,
     ].flatMap(([foreground, background]) => [foreground, background]),
   );
+  // The elevation walk measures `shadow` per level over `elevationSurfaces`,
+  // not through a static pair list.
+  measuredRoles.add("shadow");
 
   it("every role is measured or exempt", () => {
     const unaccounted = colorRoles.filter(
