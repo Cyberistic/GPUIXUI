@@ -513,6 +513,16 @@ retired once both branches are one
       buttons and stretches each to the group's width under the same clip. 2
       element-tree + 1 runtime + 1 example test, both directions measured (plan
       096)
+`[ ]` `packages/primitives`: **the caller's `style` does not always win last** —
+      the rule the package documents ("merged last": `COMPONENTS.md`'s Box row,
+      `docs/component-api.md` §3) has two exceptions where a component re-applies
+      its own layout *after* the merge. `Progress` forces `display` /
+      `flexDirection` over the caller's style (`Progress.tsx`), and `TextArea`
+      re-bases `height`, `paddingTop` and `paddingBottom` after `fieldChrome`
+      has already resolved the caller's `style` (`TextArea.tsx`), so
+      `style={{ height: 120 }}` paints a one-row field. Fix both to keep the
+      caller last, and add the missing cross-component guard (a sentinel style
+      property must survive on every `render*` that takes `style`). No plan yet.
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
