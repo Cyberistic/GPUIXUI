@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 122/170
+`[x]` `[███████░░░]` 123/171
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -105,6 +105,12 @@ the last hand-written list on the page: the link row omitted the four soft
 status fills plan 346 added, the loading row named four of eight surfaces, and
 the focus row named none; every state row now names its roles, and ten derived
 cases hold each to the pair list that enforces it (plan 354)
+`[x]` Hold the documented snippets to the public API — the fenced `ts`/`tsx`
+blocks in `docs/tokens.md` and the package README were the last unguarded
+documentation surface, and the platform-recipe snippet rendered
+`<ThemeProvider>` without importing it; a new guard checks every named import,
+every `theme.colors.*` and scale member, and every public function, component
+and type a snippet uses without importing it (plan 355)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls
