@@ -273,8 +273,9 @@ tables and the inventory reconciliation.
 | [`511-theme-toggle-smoke.md`](./511-theme-toggle-smoke.md) | The docs theme switch is operated: a press turns the document, the stored choice, the page background and every preview surface dark, survives a navigation and a reload, and returns to light | F/G | 410, 416, 434, 444–446, 495, 496, 510 | implemented — `smoke:theme`, five steps, 440 docs tests; three two-direction proofs and the measured mount-effect race in §4 |
 | [`512-docs-accessibility-smoke.md`](./512-docs-accessibility-smoke.md) | The docs site is accessibility-checked in a real browser: axe-core over every sitemap page in both schemes, with the list, scroll-region and dimmed-preview defects it found fixed | F/G | 410, 416, 439, 446, 495, 498–502, 509, 511 | implemented — `smoke:a11y`, 90 pages × 2 schemes, 0 violations; 8 report tests, four two-direction proofs and the measured preview-repaint race in §8 |
 | [`513-message-scroller-live-scene.md`](./513-message-scroller-live-scene.md) | The last stateful page gets a live scene: `SceneStep` gains a wheel gesture, so a real scroll away from the tail paints Message scroller's `Jump to latest` affordance and the exception set empties | F | 410, 412, 455, 456, 486, 508; `@gpuixui/components` | implemented — 42 scenes, `message-scroller` opened by one wheel step (18 text nodes); three two-direction proofs and all gates in §6 |
+| [`514-dark-mode-page.md`](./514-dark-mode-page.md) | The dark-mode page: the application's real mode switch (`getTheme`, the contrast axis, both providers, persistence) and a guard that the no-appearance claim stays true | F | 410, 416, 430, 503, 511; `@gpuixui/tokens` | implemented — `/docs/dark-mode`, reachable from Getting started and Theming; 5 two-direction proofs in §6 |
 
-> The `400–499` block is full; plans `500`–`509` take the next free numbers, as
+> The `400–499` block is full; plans `500`–`514` take the next free numbers, as
 > plan `051` did for the tokens workstream when `010–019` filled.
 >
 > The `200` block was written by the reference-adoption executor on
