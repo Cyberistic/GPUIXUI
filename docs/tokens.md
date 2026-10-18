@@ -150,7 +150,7 @@ control is hovered or pressed, the generic `hover`/`active` washes on a ghost or
 outline control, and `accent` for an outline toggle that is on — so the divider
 is held to its floor on those fills too, not only on the plain surfaces.
 
-There are 66 roles. The four status families — `info`, `success`, `warning` and
+There are 70 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
 a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
 edge (`xSoftBorder`) for alerts, badges and toasts, and a text role (`xText`) for
@@ -165,6 +165,12 @@ iris, so it can never be confused with `primary`. The unfilled groove of a value
 indicator — a progress bar, meter or slider rail — is `track`, a role of its
 own: a surface role cannot carry it, because the quiet panel equals the card in
 every platform dark style.
+
+A status panel's action is a family of its own: `softAction` with
+`softActionHover`/`softActionActive` and `softActionForeground`. The neutral
+washes cannot be perceived on a tone tint — 80 of the 288 shipped fill-on-tint
+pairs measured under 1.05:1 — so the action inside an Alert, Badge or Toast is a
+raised fill instead (see [An action inside a status panel](#an-action-inside-a-status-panel)).
 
 The same fill-versus-text split applies to the brand action. `primary` is a
 surface: it carries `primaryForeground`, and it is measured only as a fill.
@@ -224,6 +230,10 @@ A runnable example lives in
 | `destructiveSoft` | `#FFD6D6` | `#66191B` | soft destructive surface |
 | `destructiveSoftForeground` | `#5C1619` | `#FFF1F1` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#F0ACAE` | `#983235` | edge around `destructiveSoft` |
+| `softAction` | `#FFFFFF` | `#3A414D` | raised action on a soft status panel |
+| `softActionForeground` | `#191D25` | `#F6F8FB` | text and icons on `softAction` and on the panel a ghost action rests on |
+| `softActionHover` | `#F5F5F5` | `#454D5B` | `softAction` while hovered, and a ghost action's hover wash |
+| `softActionActive` | `#EBEBEB` | `#4C5462` | `softAction` while pressed, and a ghost action's press wash |
 | `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `successText` | `#0E5739` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
@@ -368,13 +378,52 @@ const resolveTone = (value: unknown): StatusTone =>
 
 A runnable example spreads the result onto a container and its text; see
 [`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
+
+### An action inside a status panel
+
+A status panel carries actions — a dismiss control, a "Try again" button — and
+they are the one composition the canvas washes cannot serve. In each mode the
+four soft fills sit in a narrow luminance band (light `0.742–0.765`, dark
+`0.012–0.039`), so a neutral wash tuned for the canvas has almost the tint's own
+value there: of the 288 shipped `hover`/`active`/`secondary`-on-`xSoft` pairs,
+**80** are under the 1.05:1 floor, the worst Windows light `active` on
+`destructiveSoft` at **1.0042:1** (`#E0E0E0` on `#FFD6D6`). A press that
+composites to its own panel is not a state, and `themeContrastFailures` returned
+`[]` because no pair measured it.
+
+`softAction(theme)` returns the family an action inside a soft status panel
+paints: a raised neutral fill, its hover and press, and the one foreground
+readable on all three. A filled action uses all four; a ghost action skips the
+resting fill and paints `softActionHover` and `softActionActive` on the panel
+with the same foreground.
+
+```ts
+import { getTheme, softAction } from "@gpuixui/tokens";
+
+const action = softAction(getTheme("light"));
+action.background; // "#FFFFFF" — the raised fill
+action.foreground; // "#191D25" — readable on all three fills
+action.hover; // "#F5F5F5"
+action.active; // "#EBEBEB"
+```
+
+The family is measured (`softActionPairs`, `softActionStepPairs` and
+`softActionLabelPairs`) in every shipped set at both contrast levels: each fill
+clears 1.05:1 on the four soft fills, the hover and press are one 1.05:1 step
+from the fill before them, and the foreground clears the on-colour floor on all
+three. It is inherited by every platform variant and recipe because the soft
+panels themselves are inherited, so a platform style keeps one panel action
+across the four tints. The `components` migration — the documented
+`<Button>Try again</Button>` and `AlertDismiss` — is recorded in `TODO.md`; the
+neutral washes are not a supported action surface inside a status panel, and
+§ [Limitations](#limitations-and-future-work) states the measurement.
 [`src/status-text.example.ts`](../packages/tokens/src/status-text.example.ts)
 does the same for a status label and an indicator dot on a plain surface.
 
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 66 roles and the same type, spacing, radius, density,
+`Theme` — the same 70 roles and the same type, spacing, radius, density,
 component dimensions, border width and icon scales — with colour values chosen
 to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
@@ -440,6 +489,10 @@ carries, so it cannot claim another.
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#A5262B` | `#FF6B6B` | edge around `destructiveSoft` |
+| `softAction` | `#FFFFFF` | `#3A414D` | raised action on a soft status panel |
+| `softActionForeground` | `#000000` | `#FFFFFF` | text and icons on `softAction` and on the panel a ghost action rests on |
+| `softActionHover` | `#F5F5F5` | `#454D5B` | `softAction` while hovered, and a ghost action's hover wash |
+| `softActionActive` | `#EBEBEB` | `#4C5462` | `softAction` while pressed, and a ghost action's press wash |
 | `infoText` | `#102352` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `successText` | `#082C1D` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
 | `warningText` | `#3A2500` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
@@ -1438,6 +1491,14 @@ An invalid field is an error state, not a decoration: `FieldInput` paints a
 the `background` canvas, so both are `boundary` pairs.
 `invalid-field-edge.test.ts` holds them and the erased-error regression.
 
+The action a soft status panel carries is measured in the same list:
+`softActionPairs` holds each of `softAction`, `softActionHover` and
+`softActionActive` to 1.05:1 on the four soft fills, `softActionStepPairs` holds
+the hover and press to the `step` floor, and `softActionLabelPairs` holds
+`softActionForeground` on the three fills (secondary) and on the four soft fills
+a ghost action's label rests on (body). It is the designed alternative to the
+canvas washes, which measure **1.0042:1** at worst on a tint (plan `394`).
+
 The modal scrim is measured the same way, because its job is to change the
 surface beneath it: `overlayWashPairs` composites `overlay` over the surfaces a
 dialog covers — `overlaySurfaces` is `background`, `card`, `muted`, `input`,
@@ -2152,6 +2213,21 @@ step (plus the authored Contoso light style), and macOS light's
 pair kept the old blue at 4.5:1. The measurement is in `selection-states.test.ts`, and the pair
 is part of the plain contract — taking it from 338 to **339** (plan `381`).
 
+The action a soft status panel carries is the last composition a canvas role
+could not serve. `hover`, `active` and `secondary` are tuned against
+`background`, `card`, `popover` and the quiet `muted` panel, and the four soft
+fills sit in the same luminance band as those washes in each mode: **80 of the
+288** shipped fill-on-tint pairs measured under 1.05:1, the worst Windows light
+`active` on `destructiveSoft` at **1.0042:1** (`#E0E0E0` on `#FFD6D6`), and the
+identity light press was 1.0492:1. Plan `394` ships `softAction`,
+`softActionHover`, `softActionActive` and `softActionForeground` as the raised
+family an Alert, Badge or Toast action paints. `softActionPairs` holds each fill
+to the surface floor on the four soft fills, `softActionStepPairs` holds the
+hover and press to the 1.05:1 `step` floor, and `softActionLabelPairs` holds
+`softActionForeground` on the three fills (the secondary floor) and on the four
+soft fills a ghost action's label rests on (the body floor) — taking it from 339
+to **360**. Every shipped set clears every pair, so no existing colour moves.
+
 The filled-family selection veil is derived from the same index that defines
 the families, so no family can ship without one. The audit that made the lists
 `filledControlFamilies.map(…)` found the fourth family's label below its floor
@@ -2368,7 +2444,7 @@ pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
 plans `076`–`348` closed. Both are still held to the **form** the helpers parse:
-`themeColorFailures` reports any of the 66 roles outside the six- or eight-digit
+`themeColorFailures` reports any of the 70 roles outside the six- or eight-digit
 hex form, and `isHexColor` is the single-value predicate. A measured role in
 another CSS form already fails the contrast check as `NaN`; `shadow` has no pair,
 and plan `085` applies it through `alpha()`, so an unparseable tint used to paint
@@ -2431,6 +2507,11 @@ block that presents itself as a module and then calls a public function or
 renders a public component it does not import (plans 355 and 356). The source
 examples caught two `<ThemeProvider>` blocks that never imported it.
 
+`packages/tokens/src/soft-action.test.ts` holds the panel action: every shipped
+set clears the three lists, the reviewed neutral composition is still measured
+at 80 of 288 pairs with the Windows light worst figure, and the public checker
+reports an erased fill, a collapsed press and the label on a tint.
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.
@@ -2470,6 +2551,12 @@ examples caught two `<ThemeProvider>` blocks that never imported it.
   and an unused level is dead data.
 - No second spacing or radius scale, and no second name for a role that already
   has one.
+- The neutral washes (`hover`, `active`) and the neutral fill (`secondary`) are
+  **not** a supported action surface inside a soft status panel: the four tints
+  sit in the same luminance band as those fills, and 80 of the 288 shipped
+  fill-on-tint pairs measure under 1.05:1 (worst **1.0042:1**, Windows light
+  `active` on `destructiveSoft`). An action there paints `softAction(theme)`; the
+  `components` migration is recorded in `TODO.md` (plan `394`).
 - No stacking scale; see [Layering](#layering).
 - Native visual proof is the playground's theme gallery, not this document. See
   `TODO.md`.

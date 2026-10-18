@@ -182,6 +182,19 @@ export interface ThemeColors {
   readonly destructiveSoftForeground: string;
   /** Designed edge around `destructiveSoft`, held to the divider floor on that fill. */
   readonly destructiveSoftBorder: string;
+  /**
+   * Raised neutral action on a tone-tinted status panel. A canvas-tuned wash
+   * cannot be perceived on a soft status fill — the four tints sit in one narrow
+   * luminance band in each mode — so an action inside an Alert, Badge or Toast
+   * paints this family instead.
+   */
+  readonly softAction: string;
+  /** Text and icons on the `softAction` family, and on the panel a ghost action rests on. */
+  readonly softActionForeground: string;
+  /** `softAction` while hovered. */
+  readonly softActionHover: string;
+  /** `softAction` while pressed. */
+  readonly softActionActive: string;
   /** Informational status text and indicators on plain surfaces and row washes. */
   readonly infoText: string;
   /** Success status text and indicators on plain surfaces and row washes. */
@@ -272,7 +285,9 @@ export interface ThemeColors {
  * selected with the row around it (plan 366). The selected row is iris 100, one
  * designed step past the `accent` wash a selectable row hovers with: selection
  * must be perceivable from the state before the click, or the two look alike
- * (plan 381).
+ * (plan 381). The raised action a soft status panel carries is the card surface
+ * pressed one step at a time (`softAction` → `softActionActive`), because a
+ * canvas-tuned wash has the tints' own luminance (plan 394).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -318,6 +333,12 @@ export const lightColors = {
   destructiveSoft: "#FFD6D6",
   destructiveSoftForeground: palette.red[900],
   destructiveSoftBorder: "#F0ACAE",
+  // The raised action on a soft status panel: the card surface, pressed one
+  // step darker (plan 394). A canvas wash has the tints' own luminance.
+  softAction: palette.neutral[0],
+  softActionForeground: palette.neutral[900],
+  softActionHover: "#F5F5F5",
+  softActionActive: "#EBEBEB",
   infoText: palette.blue[700],
   successText: "#0E5739",
   warningText: palette.amber[800],
@@ -366,7 +387,9 @@ export const lightColors = {
  * (plan 309). The selected row is one designed step lighter than the `accent`
  * wash a selectable row hovers with — between it and the pressed step — so the
  * click is perceivable and `selectedForeground` keeps its floor on it
- * (plan 381).
+ * (plan 381). The raised action a soft status panel carries lightens away from
+ * the tinted fill (`softAction` → `softActionActive`), because the canvas washes
+ * sit inside the tints' own luminance band (plan 394).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -412,6 +435,12 @@ export const darkColors = {
   destructiveSoft: "#66191B",
   destructiveSoftForeground: palette.red[50],
   destructiveSoftBorder: "#983235",
+  // The raised action on a soft status panel: a neutral step between the 800
+  // fill and the separator, lightening as it presses (plan 394).
+  softAction: "#3A414D",
+  softActionForeground: "#F6F8FB",
+  softActionHover: "#454D5B",
+  softActionActive: "#4C5462",
   infoText: palette.blue[200],
   successText: palette.green[200],
   warningText: palette.amber[200],
@@ -438,7 +467,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 66 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 70 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
  * skeleton is a perceivable step off the pressed wash (plan 094). The divider is
  * darker than the neutral press step, so an outlined control keeps its 3:1 edge
@@ -491,6 +520,10 @@ export const highContrastLightColors = {
   destructiveSoft: palette.red[200],
   destructiveSoftForeground: palette.red[950],
   destructiveSoftBorder: palette.red[700],
+  softAction: palette.neutral[0],
+  softActionForeground: "#000000",
+  softActionHover: "#F5F5F5",
+  softActionActive: "#EBEBEB",
   infoText: "#102352",
   successText: "#082C1D",
   warningText: "#3A2500",
@@ -517,7 +550,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 66 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 70 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it — the generic
  * `active` wash (plan 080) and the designed neutral press step (plan 318) — and
@@ -573,6 +606,10 @@ export const highContrastDarkColors = {
   destructiveSoft: palette.red[900],
   destructiveSoftForeground: palette.red[100],
   destructiveSoftBorder: palette.red[400],
+  softAction: "#3A414D",
+  softActionForeground: palette.neutral[0],
+  softActionHover: "#454D5B",
+  softActionActive: "#4C5462",
   infoText: palette.blue[100],
   successText: palette.green[100],
   warningText: palette.amber[100],
@@ -704,6 +741,10 @@ export const colorRoles = [
   "destructiveSoft",
   "destructiveSoftForeground",
   "destructiveSoftBorder",
+  "softAction",
+  "softActionForeground",
+  "softActionHover",
+  "softActionActive",
   "infoText",
   "successText",
   "warningText",

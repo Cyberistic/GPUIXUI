@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 159/216
+`[x]` `[███████░░░]` 160/217
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1202,13 +1202,25 @@ only the opaque value, so identity dark's `#3D4552` on `selected` measured
 `ContrastFailure` carries the fraction as `opacity`, and the dark skeleton moves
 a half-step to `#434C5A` (1.074:1 dim, 1.179:1 opaque) so no other value moves
 (plan 393)
-`[ ]` Hold the fills an action paints inside a soft status panel —
-`hover`/`active`/`secondary` on the four `xSoft` fills: 80 shipped pairs are
-under 1.05:1, the worst `active` on Windows light `destructiveSoft` at
-**1.004:1** and Windows light `active` on `successSoft` at 1.008:1, so an
-Alert's ghost dismiss control has no press state and the documented "Try again"
-action has no fill in the AAA dark destructive panel; no pair exists and
-`themeContrastFailures` returns `[]` (owner: `tokens`; plan 394 candidate)
+`[x]` Give an action inside a soft status panel a designed fill — the canvas
+`hover`/`active`/`secondary` fills cannot be perceived on a tone tint: 80 of the
+288 shipped fill-on-tint pairs measured under 1.05:1, the worst Windows light
+`active` on `destructiveSoft` at **1.0042:1**, so an Alert's ghost dismiss
+control had no press state and the documented "Try again" action had no fill
+while `themeContrastFailures` returned `[]`; `softAction`,
+`softActionHover`, `softActionActive` and `softActionForeground` are the raised
+family (66 → 70 roles), `softAction(theme)` resolves it in one call, and
+`softActionPairs`/`softActionStepPairs`/`softActionLabelPairs` hold it to the
+surface, step, secondary and body floors in all 24 shipped sets (339 → 360
+pairs) with no colour moving (plan 394)
+`[ ]` Cross-team: `components` paints an action inside a soft status panel with
+`softAction(theme)` — `AlertDescription`'s documented `<Button>Try again</Button>`
+and `AlertDismiss` (and the Toast's action) paint the canvas-tuned `secondary` →
+`hover` → `active` ladder, which measures 1.0102:1 (Windows dark) to
+**1.0042:1** (Windows light `active` on `destructiveSoft`) against the tint, so
+the action's press and the filled action's rest have no visible shape; the raised
+family and `softActionForeground` are measured on every shipped set in both
+modes (plan 394; owner: `components`)
 `[ ]` Cross-team: `primitives` paints a clipped ButtonGroup's focus ring as an
 inset border in `ring` on the button's own fill (`core/style.ts`
 `clippedFocusRingStyle`, `Button.tsx`, `ButtonGroup.tsx`), and `ring` equals

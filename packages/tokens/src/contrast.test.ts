@@ -185,6 +185,9 @@ import {
   selectionSurfaces,
   selectionWashPairs,
   shippedThemes,
+  softActionLabelPairs,
+  softActionPairs,
+  softActionStepPairs,
   softBorderSurfacePairs,
   softPanelTextPairs,
   stateFillSurfacePairs,
@@ -485,7 +488,10 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(339);
+    expect(contrastPairs.length).toBe(360);
+    expect(softActionPairs).toHaveLength(12);
+    expect(softActionStepPairs).toHaveLength(2);
+    expect(softActionLabelPairs).toHaveLength(7);
     expect(stateStepPairs).toHaveLength(8);
     expect(washStepPairs).toHaveLength(1);
     expect(selectionStepPairs).toHaveLength(1);
@@ -554,7 +560,9 @@ describe("themeContrastFailures", () => {
       },
     });
     const failures = themeContrastFailures(invisible).filter(
-      ({ pairClass }) => pairClass === "surface",
+      ({ pairClass, foreground, background }) =>
+        pairClass === "surface" &&
+        (foreground === "successSoft" || background === "successSoft"),
     );
 
     expect(
@@ -564,6 +572,7 @@ describe("themeContrastFailures", () => {
       ["successSoft", "card"],
       ["successSoft", "popover"],
       ["successSoft", "muted"],
+      ["softAction", "successSoft"],
     ]);
     expect(
       failures

@@ -673,6 +673,45 @@ export const toastTonePairs: readonly ContrastPair[] = statusTones.flatMap(
 );
 
 /**
+ * The designed action family for a tone-tinted status panel. `softAction` is the
+ * raised fill an action inside an Alert, Badge or Toast paints, and a ghost
+ * action paints its hover and press on the panel itself. Neither the canvas
+ * washes (`hover`, `active`) nor the neutral fill (`secondary`) is perceivable on
+ * a soft status fill — the four tints sit in a narrow luminance band and 80 of
+ * the 288 shipped fill-on-tint pairs measured under 1.05:1 — so each fill is held
+ * to the surface floor on the four fills, the family is a perceivable ladder, and
+ * the one foreground is held on all three fills and on the panel a ghost
+ * action's label rests on.
+ */
+export const softActionPairs: readonly ContrastPair[] = (
+  ["softAction", "softActionHover", "softActionActive"] as const
+).flatMap((fill) =>
+  softSurfaceRoles.map(
+    (background): ContrastPair => [fill, background, "surface"],
+  ),
+);
+
+/** The panel action's hover and press, one perceivable step apart. */
+export const softActionStepPairs: readonly ContrastPair[] = [
+  ["softActionHover", "softAction", "step"],
+  ["softActionActive", "softActionHover", "step"],
+];
+
+/**
+ * The panel action's one foreground: on the three fills a filled action paints,
+ * and on the four soft fills a ghost action's label rests on with no fill of its
+ * own.
+ */
+export const softActionLabelPairs: readonly ContrastPair[] = [
+  ["softActionForeground", "softAction", "secondary"],
+  ["softActionForeground", "softActionHover", "secondary"],
+  ["softActionForeground", "softActionActive", "secondary"],
+  ...softSurfaceRoles.map(
+    (background): ContrastPair => ["softActionForeground", background, "body"],
+  ),
+];
+
+/**
  * The generic washes the shipped secondary control still paints behind its
  * label. `components/internal/button.tsx` keeps `secondaryForeground` while the
  * fill becomes `hover` or `active`; the designed family is `secondaryHover` /
@@ -760,6 +799,16 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * card in every platform dark style. Its surface pairs and the four fills
  * painted on it (`trackSurfacePairs`, `trackMarkPairs`) keep an indeterminate
  * progress bar visible on a dark card and give a slider's unfilled span a shape.
+ *
+ * A **status panel's action** is the one family the canvas washes cannot carry:
+ * the four soft status fills sit in one narrow luminance band in each mode, so a
+ * neutral wash has the tint's own value there — 80 of the 288 shipped
+ * fill-on-tint pairs measured under the surface floor, the worst at 1.0042:1.
+ * `softAction` is a raised neutral fill, `softActionHover`/`softActionActive` are
+ * its ladder and `softActionForeground` is the one label role; each fill is
+ * measured on all four soft fills (`softActionPairs`), the ladder is the `step`
+ * class (`softActionStepPairs`), and the label is measured on the three fills and
+ * on the panel a ghost action rests on (`softActionLabelPairs`).
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ...bodyTextPairs,
@@ -841,6 +890,9 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...controlFillPairs,
   ...selectedRowEdgePairs,
   ...stateFillSurfacePairs,
+  ...softActionPairs,
+  ...softActionStepPairs,
+  ...softActionLabelPairs,
   ...stateStepPairs,
   ...washStepPairs,
   ...selectionStepPairs,
@@ -1359,7 +1411,9 @@ const fadedVisibilityFailures = (
  *   the row washes and the soft status fills; the control boundary, focus ring
  *   and dividers; the inactive label; the marks and the value track; every
  *   interactive fill against the panel it paints on; and the state steps of the
- *   filled families, the generic washes and the selected row.
+ *   filled families, the generic washes, the selected row and the status panel's
+ *   raised action — `softActionPairs`, `softActionStepPairs` and
+ *   `softActionLabelPairs`.
  * - `selectionPairs`, `selectionStatusPairs`, `selectionWashPairs`,
  *   `selectionSoftPairs` and `selectionSoftWashPairs` — text, status text and
  *   the wash's own perceivability through the composited `selection` colour.

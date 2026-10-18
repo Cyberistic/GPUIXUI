@@ -180,6 +180,33 @@ export function filledControl(
   };
 }
 
+/**
+ * Resolve the action family for a tone-tinted status panel.
+ *
+ * A canvas-tuned wash (`hover`, `active`) and the neutral fill (`secondary`)
+ * cannot be perceived on a soft status fill: the four tints sit in a narrow
+ * luminance band in each mode, and 80 of the 288 shipped fill-on-tint pairs are
+ * under the 1.05:1 floor. An action inside an Alert, Badge or Toast paints this
+ * raised family instead. A ghost action skips `background` and uses `hover` and
+ * `active` on the panel; a filled action uses all three and its foreground.
+ *
+ * @example
+ * ```ts
+ * import { getTheme, softAction } from "@gpuixui/tokens";
+ *
+ * const action = softAction(getTheme("light"));
+ * action.background; // "#FFFFFF"
+ * ```
+ */
+export function softAction(theme: Theme): FilledControlStyle {
+  return {
+    background: theme.colors.softAction,
+    foreground: theme.colors.softActionForeground,
+    hover: theme.colors.softActionHover,
+    active: theme.colors.softActionActive,
+  };
+}
+
 /** A focus ring, as the runtime's single-shadow shape. */
 export interface FocusRing {
   /** The shadow a component paints while it holds focus. */

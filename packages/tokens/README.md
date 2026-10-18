@@ -162,6 +162,16 @@ floor; the designed roles are opaque and measured. `filledControlFamilies` is
 the index (`primary`, `secondary`, `destructive`, `accent`) and
 `FilledControlFamily` derives from it.
 
+An action inside a soft status panel is a family of its own: `softAction(theme)`
+returns `softAction`/`softActionHover`/`softActionActive` and
+`softActionForeground`. The four soft fills sit in the same luminance band as the
+canvas washes, so **80 of the 288** shipped `hover`/`active`/`secondary`-on-tint
+pairs measure under 1.05:1 — the worst Windows light `active` on
+`destructiveSoft` at **1.0042:1** — and an Alert's dismiss control had no press
+state. `softActionPairs`, `softActionStepPairs` and `softActionLabelPairs` hold
+the raised family to the surface, step, secondary and body floors in every
+shipped set (plan 394).
+
 ## Persisted choices
 
 A stored preference or a URL parameter arrives as `unknown`. `isPlatformName`,
@@ -190,7 +200,7 @@ const size = isControlSize(storedSize) ? storedSize : "md";
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 66 roles, so no component changes.
+essential boundaries. It reuses the same 70 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";

@@ -188,6 +188,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [391](./391-contrast-reference.md) | The contrast reference names its lists | F | 071, 086, 307, 344, 375, 382 | done |
 | [392](./392-text-hierarchy.md) | The text tiers must stay a hierarchy | F | 306, 309, 317, 351, 383, 387, 388, 391 | done |
 | [393](./393-loading-pulse.md) | The loading pulse must stay visible | F | 019, 094, 309, 322, 358, 391, 392 | done |
+| [394](./394-soft-status-panel-action.md) | The action inside a soft status panel | F | 014, 090, 092, 093, 097, 300, 309, 338, 356, 371, 383, 387, 393 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1808,6 +1809,20 @@ at 1.000:1), which is a `primitives` fix.
 > (`010–019`, `020–040`, `050–053`, `100–130`, `410–412`) live on their own
 > branches and are merged into `main` as each workstream completes; this index is
 > the union.
+
+Plan `394` closes the last unmeasured state the tests' own audits recorded: an
+action inside a soft status panel. `components` paints the default Button —
+`secondary` at rest, the generic `hover` wash under the pointer, `active` while
+pressed — and a ghost dismiss control on the panel's tone-tinted root, and no
+pair measured any of the three against the tint. The audit found **80 of 288**
+shipped fill-on-tint pairs under the 1.05:1 floor, the worst Windows light
+`active` on `destructiveSoft` at **1.0042:1**; a neutral wash tuned for the
+canvas cannot be perceived on the four tints, which sit in one narrow luminance
+band in each mode, so the fix is a designed raised family
+(`softAction`/`softActionHover`/`softActionActive`/`softActionForeground`) and a
+`softAction(theme)` resolver rather than a palette move. The contract grows
+339 → 360 pairs and 66 → 70 roles, every shipped set passes, and the `components`
+migration is recorded cross-team.
 
 ## How to use a plan
 

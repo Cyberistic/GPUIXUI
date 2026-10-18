@@ -81,6 +81,9 @@ import {
   overlaySurfaces,
   selectionSurfaces,
   softBorderSurfacePairs,
+  softActionLabelPairs,
+  softActionPairs,
+  softActionStepPairs,
   stateFillRoles,
   stateFillSurfacePairs,
   stateFillSurfaces,
@@ -272,7 +275,7 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 338 to **${contrastPairs.length}**`,
+      `taking it from 339 to **${contrastPairs.length}**`,
     );
   });
 
@@ -1867,6 +1870,18 @@ describe("docs/design-system.md", () => {
     expect(row).toContain("`popover`");
   });
 
+  it("names every role and surface of the panel action's floor row", () => {
+    const row = tableRow("status-panel action (");
+    [
+      ...softActionPairs,
+      ...softActionStepPairs,
+      ...softActionLabelPairs,
+    ].forEach(([role, surface]) => {
+      expect(row, `${role} on ${surface}`).toContain(`\`${role}\``);
+      expect(row, `${role} on ${surface}`).toContain(`\`${surface}\``);
+    });
+  });
+
   it("names every control boundary role and surface the contract measures", () => {
     const row = tableRow("focus ring (`ring`) on");
 
@@ -2103,6 +2118,15 @@ describe("docs/design-system.md interaction states", () => {
 
   it("names every surface status text is measured on", () => {
     expect(missing("status", backgroundsOf("infoText"))).toEqual([]);
+  });
+
+  it("names the panel action's wash in both pointer rows", () => {
+    ["hover", "pressed"].forEach((label) => {
+      const text = tableRow(label);
+      ["softActionHover", "softActionActive"].forEach((role) => {
+        expect(text, `${label}: ${role}`).toContain(`\`${role}\``);
+      });
+    });
   });
 
   it("names the selection roles", () => {

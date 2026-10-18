@@ -93,7 +93,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite tint | black tint |
 
-Both themes expose exactly the same 66 roles; the type system and the colour
+Both themes expose exactly the same 70 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -303,8 +303,8 @@ the mounting rule and its no-portal limitation are documented once, under
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on `background`, `card`, `popover` and the quiet `muted` panel it paints on; a ghost or outline control paints no fill at rest, so its ladder is `surface` → `hover` → `active`; filled actions step to their family's `xHover` — opaque, contrast-checked, one 1.05:1 step from the resting fill — instead of compositing an alpha fill |
-| pressed | `active` wash on ghost and subtle surfaces, held to the same floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step from the `hover` that precedes it (`washStepPairs`); filled actions step to `xActive`, one 1.05:1 step past their hover |
+| hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on `background`, `card`, `popover` and the quiet `muted` panel it paints on; a ghost or outline control paints no fill at rest, so its ladder is `surface` → `hover` → `active`; filled actions step to their family's `xHover` — opaque, contrast-checked, one 1.05:1 step from the resting fill — instead of compositing an alpha fill; an action on a soft status panel paints `softActionHover`/`softActionActive` instead, because a canvas-tuned wash has the tint's own luminance (plan `394`) |
+| pressed | `active` wash on ghost and subtle surfaces, held to the same floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step from the `hover` that precedes it (`washStepPairs`); filled actions step to `xActive`, one 1.05:1 step past their hover; the panel action's press is `softActionActive`, one step past `softActionHover` (`softActionStepPairs`) |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on `background`, `card`, `popover`, the `muted` panel and the four row washes it fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the primitive paints the role at `skeletonPulseOpacity` (0.6) for half of every cycle, so `skeletonPulsePairs` holds that dim frame to the same floor on the same surfaces and reports it with the fraction as `opacity`; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground`: the fill is held to the perceivability floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step past the `accent` wash a selectable row hovers with (`selectionStepPairs`); the label is held on `selected`, the `hover`/`active` pointer washes and the `accent` wash; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
 | link | `primaryText` on `background`, `card`, `popover`, the `muted` panel, the `hover`/`active` washes a link paints, the `accent`/`selected` fills a selectable row paints under it and the four soft status fills a link in a status panel sits on; `primary` is a fill and is never the colour of text |
@@ -379,6 +379,23 @@ wash, so both pairs are held to the secondary floor (plan `334`). A migrated
 consumer paints `secondaryHover`/`secondaryActive` and the extra pairs are
 simply no longer exercised.
 
+A status panel's action is the one place no canvas family can go. The four soft
+status fills sit in a narrow luminance band in each mode — light `0.742–0.765`,
+dark `0.012–0.039` — and `hover`, `active` and `secondary` are designed to be
+perceivable against `background`, `card`, `popover` and the quiet panel, whose
+values are in the same band: **80 of the 288** shipped fill-on-tint pairs measure
+under 1.05:1, the worst Windows light `active` on `destructiveSoft` at
+**1.0042:1**. Moving the washes would break the canvas pairs and the neutral
+control in every set, and moving the tints would break their surface, text and
+selection floors, so the panel gets a designed raised family instead:
+`softAction` at rest, `softActionHover` and `softActionActive` as its ladder, and
+one `softActionForeground` readable on all three. A filled action paints all
+four; a ghost action — a dismiss control — skips the rest step and paints the
+hover and press on the panel with the same foreground. `softAction(theme)`
+returns the family in one call, and the three lists
+(`softActionPairs`, `softActionStepPairs`, `softActionLabelPairs`) hold it to the
+surface, step, secondary and body floors in every shipped set (plan `394`).
+
 The brand families have not migrated either, and their cost is the label rather
 than the fill: `components` hovers a primary action at 50% and `primitives` at
 90% and 80%, which drops the label to **2.06:1** on a Linux light card at 50%
@@ -435,6 +452,7 @@ Colour is checked, not assumed. The token suite enforces:
 | selected row label (`selectedForeground` on `selected`, the `accent` wash a hovered selectable row paints and the `hover`/`active` pointer washes) | 4.5:1 | 7:1 |
 | secondary text (`mutedForeground` on plain surfaces, on the `input` fill a field paints for its own chrome, on the `hover`, `active`, `accent` and `selected` washes and on the four soft status fills a status panel's caption sits on), on-colour text, placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground`/`accentForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
+| status-panel action (`softAction`/`softActionHover`/`softActionActive` on `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`, `softActionHover` from `softAction` and `softActionActive` from `softActionHover`, and `softActionForeground` on the three fills and the four soft fills) | 1.05:1 / 1.05:1 / 4.5:1 / 7:1 | 1.05:1 / 1.05:1 / 7:1 / 7:1 |
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | state steps (`xHover` from `x` and `xActive` from `xHover` for `primary`/`secondary`/`destructive`/`accent`, the generic wash's `active` from `hover`, and the selected row's `selected` from the `accent` hover wash) | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
@@ -547,7 +565,7 @@ change a value. Every numeric metric must be a **finite** number: the renderer
 casts each to a 32-bit float, and an infinity is invalid layout it paints as
 nothing, silently.
 
-The **format** check is `themeColorFailures(theme)`: every one of the 66 roles
+The **format** check is `themeColorFailures(theme)`: every one of the 70 roles
 must be a six- or eight-digit hex colour, because `alpha`, `compositeOver` and
 `contrastRatio` parse only that form. The runtime is broader — GPUix accepts
 CSS names and functional colours — so a copied theme can be paintable and still
