@@ -269,8 +269,8 @@ high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved
 them one ramp step — and the decorative `border` at 1.05:1 (3:1 at high
 contrast) on the plain surfaces, on the `secondary`, `secondaryHover`,
 `secondaryActive`, `hover`, `active`, `accent`, `accentHover` and
-`accentActive` fills a bordered control
-paints and on the four soft status fills a
+`accentActive` fills a bordered control paints, on the `selected` fill an
+outline action sits on in a selected row and on the four soft status fills a
 status panel divides, so an Alert, Badge or Toast, a loading placeholder, every
 divider and every outlined control's edge stay perceivable. The inherited dark
 `successSoft` measured 1.015:1 on Windows, 1.023:1 on the identity and 1.047:1

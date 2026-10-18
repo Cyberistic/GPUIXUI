@@ -54,6 +54,17 @@ stayed green because it only ever checked the names it already knew. That is the
 defect plan 326 fixed for the contract's *counts*: a document must be checked
 against the contract, not against a copy of it.
 
+### 1.3 The authored example
+
+The executed Contoso style (`platform-styles.example.ts`) moves its dark
+`selected` to `#0A3A63` and inherits the identity's graphite `border`, so the new
+pair measures **1.035:1** on the example — below the floor. The example is held
+to the contract by `platforms.test.ts`, so it must move with the pair: its dark
+selection fill steps one deeper (`#0A3A63` → `#082F52`), which is the whole-family
+rule plans 310, 330 and 331 already applied to its primary, accent and selection
+wash. Every other pair on the example keeps margin (`selected` vs the quiet panel
+1.098:1, `selectedForeground` 11.17:1, the wash 1.480:1).
+
 ## 2. Measured baseline
 
 Across the 24 distinct shipped colour sets (identity, the three real platform
@@ -235,6 +246,15 @@ Keep the progress bar current (`102/135` → `103/136`).
   the contract instead of a hand-typed six, which had hidden plan 327's accent
   steps.
 
+### 3.12 `packages/tokens/src/platform-styles.example.ts`
+
+The authored dark `selected` moves from `#0A3A63` to `#082F52`, and the style's
+comment records why: the inherited graphite divider must stay visible on the
+example's own selection fill. No other value in the example changes. The
+`platforms.test.ts` loop already holds both documented examples to
+`themeContrastFailures`, so no test edit is needed for this file beyond what
+§3.3 covers.
+
 ## 4. Commands and expected results
 
 From the worktree root, on branch `agent/tokens-theme`:
@@ -295,7 +315,9 @@ another workstream's: stop and record it rather than editing it.
 ## 7. Acceptance criteria
 
 - `border` on `selected` is a documented `divider` pair, exactly once.
-- All 24 shipped colour sets pass it; no token value moves.
+- All 24 shipped colour sets pass it; no shipped token value moves. The authored
+  Contoso example moves one value (its dark `selected`) so it keeps passing the
+  contract it is run against.
 - `contrastPairs.length` is 293 and every document, ledger row and guard that
   states it agrees.
 - The documentation guard derives the control-edge fills from `contrastPairs`,
@@ -304,3 +326,27 @@ another workstream's: stop and record it rather than editing it.
   observed).
 - `nub run --filter @gpuixui/tokens test`, `nub run check`, `nub run lint` and
   `nub run test` pass; the work is committed on `agent/tokens-theme` and pushed.
+
+## 8. Outcome (recorded by the executor)
+
+- Baseline confirmed by a probe over the 24 shipped sets: `border` on `selected`
+  is **1.113:1** on `win32` dark default (XP/Aero dark inherit the same palette),
+  1.146 on `win32` light, 1.171 on identity dark and 1.191 on Linux light; the
+  AAA minimum is **5.158:1** on the light sets and 5.778 on the dark ones. All
+  clear the 1.05 / 3 divider floors, so no shipped value moved.
+- The authored example did **not** clear the new pair: its dark `selected`
+  (`#0A3A63`) against the inherited graphite `border` measured **1.036:1**.
+  Moving its selection fill one step deeper to `#082F52` gives 1.210:1 on the
+  divider, 1.098:1 on the quiet panel, 11.17:1 for `selectedForeground` and
+  1.480:1 for the composited selection wash, so no other pair on the example is
+  near its floor.
+- Two directions observed: with `...selectedRowEdgePairs` commented out,
+  `selected-row-edge.test.ts` reported **3 failed | 2 passed (5)** (the pair was
+  missing and the erased edge was not reported; the two palette-reading cases
+  still passed); restored, **5 passed**.
+- Green, run not assumed: **57 test files, 3686 tests**,
+  `nub run --filter @gpuixui/tokens test`, `nub run check`, `nub run lint` and
+  `nub run test`.
+- The documentation guard now derives the control-edge fills from
+  `contrastPairs`, so plan 327's accent steps and this plan's `selected` pair are
+  both named without a hand-typed list.

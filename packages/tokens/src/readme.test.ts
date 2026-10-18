@@ -119,7 +119,7 @@ describe("packages/tokens/README.md", () => {
 
   it("states the fills a bordered control paints its edge on", () => {
     expect(readme).toContain(
-      "the `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`, `accent`, `accentHover` and `accentActive` fills a bordered control paints and on the four soft status fills a status panel divides",
+      "the `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`, `accent`, `accentHover` and `accentActive` fills a bordered control paints, on the `selected` fill an outline action sits on in a selected row and on the four soft status fills a status panel divides",
     );
     expect(readme).toContain(
       "macOS light and Windows light measured 1.000:1 and Linux light 1.009:1 on the pressed fill, and both AAA sets sat under their 3:1 floor",

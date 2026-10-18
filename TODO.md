@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 102/135
+`[x]` `[████████░░]` 103/136
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -240,6 +240,13 @@ hovering and pressing onto `hover`/`active`, but the contract measured only the
 designed family, so an edited wash could erase the label while the checker
 returned `[]`; every shipped set already passes (10.42:1 at the tightest), so no
 colour moves and the contract grows 290 → 292 (plan 334)
+`[x]` Hold the control edge on the selected row fill — `list.tsx` paints
+`selected` behind arbitrary row children and the outline Button paints no fill
+at rest, so an outline action or separator inside a selected row paints `border`
+on that fill, which the contract measured only on `hover`/`active`/`accent`;
+every shipped set passes (1.113:1 at the tightest), so no colour moves, the
+contract grows 292 → 293, and the hand-typed six-fill filter that hid plan 327's
+accent steps is now derived from the contract (plan 335)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the

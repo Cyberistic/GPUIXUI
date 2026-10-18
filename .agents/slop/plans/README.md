@@ -131,6 +131,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [332](./332-mark-contrast.md) | The fill as a mark: a graphic needs more than 1.05:1 | F | 057, 082, 097, 309, 314 | done |
 | [333](./333-tokens-suite-timeout-budget.md) | The tokens suite must not fail its own gate | F | 061, 311, 332 | done |
 | [334](./334-secondary-wash-text.md) | The secondary control's label on the washes it paints | F | 097, 309, 318, 332 | done |
+| [335](./335-selected-row-edge.md) | The control edge on the selected row fill | F | 080, 097, 309, 312, 316, 318, 327, 334 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -927,6 +928,19 @@ returned `[]`. The two pairs join the `secondary` class (290 → 292); every
 shipped set already clears its floor (10.42:1 and 9.44:1 at the tightest), so no
 colour moves. The designed family stays the target for the consumer migration
 recorded cross-team; the pair guards what ships in the meantime.
+
+335 closes the last row fill the control-edge contract never measured. A
+selectable row paints `selected` behind arbitrary children, and the `outline`
+Button variant paints no fill at rest — only a `border` edge — so an outline
+action, or a separator, inside a selected row paints the divider directly on
+that persistent fill, while the contract measured `border` only on
+`hover`/`active`/`accent`. The pair joins the `divider` class (292 → 293); every
+shipped set already clears its floor (1.113:1 on Windows dark at the tightest),
+so no colour moves. The same audit found the guard that should have caught the
+gap filtered `contrastPairs` through a hand-typed six-name list, which is why
+plan 327's `accentHover`/`accentActive` pairs never reached the verification
+paragraph; the guard now derives the fills from the contract, so a new edge pair
+cannot ship unmentioned.
 
 ### Reference adoption (block `200–299`)
 

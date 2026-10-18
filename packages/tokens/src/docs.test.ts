@@ -195,13 +195,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 290 to **${contrastPairs.length}**`,
+      `taking it from 292 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`334` closed");
+    expect(prose).toContain("plans `076`–`335` closed");
   });
 });
 
@@ -778,21 +778,28 @@ describe("docs/tokens.md contrast surfaces", () => {
   });
 
   it("names every fill the control edge is held against", () => {
+    // Derived from the contract. The filter used to name six fills by hand, so
+    // plan 327's `accentHover`/`accentActive` pairs never reached the sentence.
+    const plainSurfaces: ReadonlySet<string> = new Set([
+      "background",
+      "card",
+      "popover",
+      "muted",
+      "input",
+      "disabled",
+    ]);
+    const softFills: ReadonlySet<string> = new Set(
+      statusTones.map((tone) => `${tone}Soft`),
+    );
     const fills = [
       ...new Set(
         contrastPairs
           .filter(([foreground]) => foreground === "border")
           .map(([, background]) => background),
       ),
-    ].filter((background) =>
-      [
-        "secondary",
-        "secondaryHover",
-        "secondaryActive",
-        "hover",
-        "active",
-        "accent",
-      ].includes(background),
+    ].filter(
+      (background) =>
+        !plainSurfaces.has(background) && !softFills.has(background),
     );
 
     expect(fills).toEqual([
@@ -802,9 +809,16 @@ describe("docs/tokens.md contrast surfaces", () => {
       "hover",
       "active",
       "accent",
+      "accentHover",
+      "accentActive",
+      "selected",
     ]);
-    const sentence =
-      "the `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active` and `accent` fills a bordered control paints";
+
+    const controlFills = fills.slice(0, -1).map((fill) => `\`${fill}\``);
+    const controlList = `${controlFills.slice(0, -1).join(", ")} and ${
+      controlFills[controlFills.length - 1]
+    }`;
+    const sentence = `the ${controlList} fills a bordered control paints, on the \`selected\` fill an outline action sits on in a selected row`;
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -967,7 +981,7 @@ describe("docs/design-system.md", () => {
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
+      `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`selected\` fill an outline action sits on in a selected row, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);

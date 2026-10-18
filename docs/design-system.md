@@ -325,9 +325,12 @@ A row's metadata keeps its `mutedForeground` role on every wash the row paints �
 and `selected` when it is selected. That is why the secondary floor covers the
 washes, not only the plain surfaces: a description is read while the row moves.
 A bordered control keeps its `border` edge on the fill it paints, so the divider
-floor covers `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`
-and `accent`; a state fill never takes the divider's own value, or the edge would
-disappear as the pointer lands. The audit found the defect plan `080` had already
+floor covers `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`,
+`accent`, `accentHover` and `accentActive`; a state fill never takes the
+divider's own value, or the edge would disappear as the pointer lands. An
+outline action inside a selected row paints the same edge on the row's
+persistent `selected` fill — the one row fill the control does not paint itself —
+so that fill is held to the floor too. The audit found the defect plan `080` had already
 fixed for the generic washes on the three light platform pressed steps (1.000:1
 on macOS and Windows, 1.009:1 on Linux) and on both AAA sets, whose 3:1 divider
 floor the neutral press sat under at 2.31:1 and 2.57:1; the three pressed steps
@@ -366,7 +369,7 @@ Colour is checked, not assumed. The token suite enforces:
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes | 1.05:1 | 1.05:1 |
-| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
+| decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`popover`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on

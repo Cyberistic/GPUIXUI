@@ -173,6 +173,16 @@ const controlFillPairs: readonly ContrastPair[] = controlFillRoles.map(
 );
 
 /**
+ * The selected row fill an outline control keeps its edge on. A selectable row
+ * paints `selected` behind its children and the outline Button variant paints
+ * no fill at rest — only a `border` edge — so the edge lands on the row, as
+ * does a separator inside one.
+ */
+const selectedRowEdgePairs: readonly ContrastPair[] = [
+  ["border", "selected", "divider"],
+];
+
+/**
  * The interactive fills a control or a row paints as its own shape: the two
  * generic washes, the accent family at rest, hover and press, the selected
  * fill, and the filled-action families at rest, hover and press. A filled
@@ -515,8 +525,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * on the eight surfaces a chip sits on, the plain divider on those
  * soft fills, the decorative dividers
  * that must stay visible, including on the fills a bordered control paints —
- * the neutral family's resting, hovered and pressed fills and the generic washes
- * an outline control uses — and
+ * the neutral family's resting, hovered and pressed fills, the generic washes
+ * and the accent family an outline control uses, and the `selected` row fill an
+ * outline action sits on — and
  * on the inactive fill a disabled control keeps its shape with, and the inactive
  * label an unavailable control, menu item or row paints on its fill, the plain
  * surfaces and the state washes. The default text role of a list or menu row is
@@ -621,6 +632,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...fieldEdgePairs,
   ...invalidEdgePairs,
   ...controlFillPairs,
+  ...selectedRowEdgePairs,
   ...stateFillSurfacePairs,
   ...markPairs,
 ];

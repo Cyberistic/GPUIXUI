@@ -53,7 +53,9 @@ export const resolveEditedPlatformTheme = (mode: ThemeMode): Theme =>
  * foreground, hover and press — because an inherited state keeps the base hue:
  * this example's hover and press were the identity iris until plan 330. The
  * drag-selection wash follows the accent at the identity's alpha, so a copied
- * style does not select text in another hue (plan 331).
+ * style does not select text in another hue (plan 331). The dark selection fill
+ * steps one deeper than the accent's tint so the inherited graphite divider
+ * keeps a visible edge on it (plan 335).
  */
 export const contosoPlatformStyle = {
   types: { label: "Contoso", sans: systemUiFont, mono: "Cascadia Mono" },
@@ -80,7 +82,7 @@ export const contosoPlatformStyle = {
       accentHover: "#17497A",
       accentActive: "#245F96",
       ring: "#5CB8FF",
-      selected: "#0A3A63",
+      selected: "#082F52",
       selectedForeground: "#D6EBFF",
       selection: "#5CB8FF33",
     },

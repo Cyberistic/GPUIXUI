@@ -347,7 +347,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(292);
+    expect(contrastPairs.length).toBe(293);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(
@@ -489,6 +489,7 @@ describe("themeContrastFailures", () => {
       "accent",
       "accentHover",
       "accentActive",
+      "selected",
     ]);
     expect(failures.every(({ floor }) => floor === 3)).toBe(true);
     // Only the four white surfaces are the border's own value; the control

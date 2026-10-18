@@ -1369,7 +1369,9 @@ and 1.043:1 on Windows light until plan `300` moved the four light tints one ste
 deeper — or if a loading skeleton is indistinguishable
 on any surface or row wash it fills (also 1.05:1), if a decorative `border` is imperceptible on
 those surfaces, on the `secondary`, `secondaryHover`, `secondaryActive`, `hover`,
-`active` and `accent` fills a bordered control paints, or on the four soft status fills a status panel
+`active`, `accent`, `accentHover` and `accentActive` fills a bordered control
+paints, on the `selected` fill an outline action sits on in a selected row, or
+on the four soft status fills a status panel
 divides (1.05:1, and 3:1 at high contrast), or if body text over
 the composited `selection` wash drops below its body floor on any surface a glyph
 is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
@@ -1493,7 +1495,8 @@ brand, success and destructive fills as bars and glyphs on `background`, `card`,
 `popover` and `muted`, and the slider thumb's ring on its `input` fill — taking
 it from 276 to **290**. Plan `334` adds the secondary control's label on the
 generic `hover`/`active` washes the shipped Button paints, taking it from 290 to
-**292**.
+**292**. Plan `335` adds the control edge on the `selected` fill an outline
+action sits on in a selected row, taking it from 292 to **293**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1626,7 +1629,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`334` closed.
+plans `076`–`335` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
