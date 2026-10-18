@@ -385,6 +385,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a token role from the generated token index",
     },
+    {
+      query: "modal-focus-trap",
+      expected: "/docs/capabilities",
+      first: true,
+      what: "a scenario id from the generated capability index",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

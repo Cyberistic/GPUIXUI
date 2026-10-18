@@ -8,8 +8,10 @@ import { components } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
 import { componentSymbols } from "@/component-meta/symbols";
 import { valueExports } from "./api-values.generated";
+import { capabilitySearchEntry } from "./capability-search";
+import { exactNameRank, type GeneratedSearchEntry } from "./generated-search";
 import { source } from "./source";
-import { tokenEntryByUrl, tokenRank, tokenSearchEntries } from "./token-search";
+import { tokenSearchEntries } from "./token-search";
 
 export const DEFAULT_SEARCH_LIMIT = 10;
 export const MAX_SEARCH_LIMIT = 50;
@@ -72,11 +74,20 @@ export const valueSearchIndex: Index = {
   keywords: valueExports.map((value) => value.name).join(" "),
 };
 
+const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
+  ...tokenSearchEntries,
+  capabilitySearchEntry,
+];
+
+const generatedByUrl = new Map(
+  generatedEntries.map((entry) => [entry.index.url, entry]),
+);
+
 const registrySearch = createSearchAPI("simple", {
   indexes: [
     ...components.map(componentSearchIndex),
     valueSearchIndex,
-    ...tokenSearchEntries.map((entry) => entry.index),
+    ...generatedEntries.map((entry) => entry.index),
   ],
 });
 
@@ -147,12 +158,12 @@ export const withoutTypeTableRows = (
 /**
  * Merges the indexes into one ranked list (plan 431). A component name match —
  * its title or an exported name its props types imply (plan 500) — or an exact
- * distinctive token name (`destructiveSoft`, `spacing.md`, plan 504) moves ahead
- * of prose; everything else keeps plan 419's order: page results first, registry
- * hits in the tail. Ties break on the shorter title (`Buttons` before `Button
- * groups`) and then on the index's own order. One entry survives per page URL, so
- * a delivered component is not listed once as a page and again as a registry
- * record.
+ * promoted name from a generated document (`destructiveSoft`, `spacing.md`, a
+ * scenario id; plans 504 and 505) moves ahead of prose; everything else keeps
+ * plan 419's order: page results first, registry hits in the tail. Ties break on
+ * the shorter title (`Buttons` before `Button groups`) and then on the index's
+ * own order. One entry survives per page URL, so a delivered component is not
+ * listed once as a page and again as a registry record.
  *
  * Native `sort`/`Set` are deliberate: `effect` must not reach the docs bundle
  * (`architecture.test.ts`, plan 410 §2).
@@ -165,17 +176,18 @@ export const mergeResults = (
   const ranked = [...pageResults, ...registryResults]
     .map((result, index): Candidate => {
       const component = componentByUrl.get(result.url);
-      const token =
-        component === undefined ? tokenEntryByUrl.get(result.url) : undefined;
+      const generated =
+        component === undefined ? generatedByUrl.get(result.url) : undefined;
       const rank =
         component === undefined
-          ? tokenRank(result.url, query)
+          ? exactNameRank(generated, query)
           : componentRank(component, query);
       return {
         result,
         index,
         rank: rank ?? Number.POSITIVE_INFINITY,
-        titleLength: component?.title.length ?? token?.title.length ?? 0,
+        titleLength:
+          component?.title.length ?? generated?.index.title.length ?? 0,
       };
     })
     .sort(

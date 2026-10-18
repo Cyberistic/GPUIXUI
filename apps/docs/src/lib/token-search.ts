@@ -5,7 +5,7 @@ import {
   platformTypes,
   typography,
 } from "@gpuixui/tokens";
-import type { Index } from "fumadocs-core/search/server";
+import type { GeneratedSearchEntry } from "./generated-search";
 import {
   elevationLevels,
   platformNames,
@@ -20,12 +20,13 @@ import {
  * documents give every generated table its own index entry, the same fix plans
  * 419 and 490 applied to the component registry and the Values API: a reader
  * who types a role or a scale token reaches the table that documents it.
+ *
+ * Only distinctive names are promoted (`names`): camelCase or dotted. A plain
+ * word such as `input`, `label` or `body` is indexed but never outranks the
+ * component page that owns it.
  */
-export interface TokenSearchEntry {
-  readonly index: Index;
-  /** The tokens this document owns, for exact-match ranking. */
-  readonly names: ReadonlyArray<string>;
-}
+const isDistinctive = (name: string): boolean =>
+  /[A-Z]/.test(name) || name.includes(".");
 
 const colourContent = colorRoles
   .map(
@@ -50,6 +51,11 @@ const scaleRows = scaleGroups(lightTheme).flatMap((group) =>
   })),
 );
 
+const scaleNames = [
+  ...scaleRows.map((row) => row.name),
+  ...elevationLevels.map((level) => `elevation.${level}`),
+];
+
 const scaleContent = [
   ...scaleRows.map((row) => `${row.name}: ${row.value}`),
   ...elevationLevels.map(
@@ -64,9 +70,9 @@ const platformContent = platformNames
   })
   .join("\n");
 
-export const tokenSearchEntries: ReadonlyArray<TokenSearchEntry> = [
+export const tokenSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   {
-    names: colorRoles,
+    names: colorRoles.filter(isDistinctive),
     index: {
       title: "Colour roles",
       description: "Every semantic colour role, in both themes.",
@@ -77,7 +83,7 @@ export const tokenSearchEntries: ReadonlyArray<TokenSearchEntry> = [
     },
   },
   {
-    names: textRoles,
+    names: textRoles.filter(isDistinctive),
     index: {
       title: "Type scale",
       description: "Every typographic role and the family it resolves to.",
@@ -88,10 +94,7 @@ export const tokenSearchEntries: ReadonlyArray<TokenSearchEntry> = [
     },
   },
   {
-    names: [
-      ...scaleRows.map((row) => row.name),
-      ...elevationLevels.map((level) => `elevation.${level}`),
-    ],
+    names: scaleNames,
     index: {
       title: "Scales and control metrics",
       description:
@@ -99,11 +102,11 @@ export const tokenSearchEntries: ReadonlyArray<TokenSearchEntry> = [
       content: scaleContent,
       url: "/docs/theming#scales-and-control-metrics",
       breadcrumbs: ["Theming"],
-      keywords: scaleRows.map((row) => row.name).join(" "),
+      keywords: scaleNames.join(" "),
     },
   },
   {
-    names: platformNames,
+    names: [],
     index: {
       title: "Platform styles",
       description: "The macOS, Linux, Windows and default type families.",
@@ -114,34 +117,3 @@ export const tokenSearchEntries: ReadonlyArray<TokenSearchEntry> = [
     },
   },
 ];
-
-export const tokenEntryByUrl: ReadonlyMap<
-  string,
-  { readonly names: ReadonlyArray<string>; readonly title: string }
-> = new Map(
-  tokenSearchEntries.map((entry) => [
-    entry.index.url,
-    { names: entry.names, title: entry.index.title },
-  ]),
-);
-
-/**
- * A distinctive token name is one no ordinary English word can be mistaken for:
- * camelCase (`destructiveSoft`, `bodyStrong`) or dotted (`spacing.2`). Plain
- * names (`input`, `label`, `body`) are indexed but never promoted, so the
- * component page that carries the same word keeps the first result.
- */
-const isDistinctive = (name: string): boolean =>
-  /[A-Z]/.test(name) || name.includes(".");
-
-/** `0` when the query is exactly a distinctive token this document owns. */
-export const tokenRank = (url: string, query: string): number | undefined => {
-  const entry = tokenEntryByUrl.get(url);
-  const needle = query.trim().toLowerCase();
-  if (entry === undefined || needle.length === 0) return undefined;
-  return entry.names.some(
-    (name) => isDistinctive(name) && name.toLowerCase() === needle,
-  )
-    ? 0
-    : undefined;
-};

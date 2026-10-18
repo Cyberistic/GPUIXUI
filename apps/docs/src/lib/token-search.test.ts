@@ -4,7 +4,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { search } from "./search";
-import { tokenRank, tokenSearchEntries } from "./token-search";
+import { exactNameRank } from "./generated-search";
+import { tokenSearchEntries } from "./token-search";
 
 /**
  * The bug being guarded: the colour, type, scale and platform tables are
@@ -143,8 +144,11 @@ describe("token search", { timeout: 120_000 }, () => {
 
 describe("the promotion rule", () => {
   it("promotes a distinctive name and leaves a plain word alone", () => {
-    expect(tokenRank(colourUrl, "inputForeground")).toBe(0);
-    expect(tokenRank(colourUrl, "input")).toBeUndefined();
+    const entry = tokenSearchEntries.find(
+      (candidate) => candidate.index.url === colourUrl,
+    );
+    expect(exactNameRank(entry, "inputForeground")).toBe(0);
+    expect(exactNameRank(entry, "input")).toBeUndefined();
   });
 });
 

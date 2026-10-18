@@ -246,10 +246,14 @@ so `destructiveSoft` reaches the colour table and `spacing.md` reaches the scale
 table instead of returning nothing or component prose. An exact, distinctive
 token name (camelCase or dotted) is promoted like a component title; a plain word
 such as `input` or `label` is not, so the component page keeps the first result,
-and a pasted theme value finds the role that owns it. A blank query returns
-`[]`, and one page is listed once. `src/lib/search.test.ts` and
-`src/lib/token-search.test.ts` guard these rules, and `smoke:build` asserts the
-`Spinner` symbol and a token role against the production index.
+and a pasted theme value finds the role that owns it. The measured capability
+matrix is its own document (plan 505), so `modal-focus-trap` and
+`theme-color-roles` reach `/docs/capabilities`; only hyphenated ids are promoted,
+so `theme` and `log` still find their pages. A blank query returns `[]`, and one
+page is listed once. `src/lib/search.test.ts`, `src/lib/token-search.test.ts` and
+`src/lib/capability-search.test.ts` guard these rules, and `smoke:build` asserts
+the `Spinner` symbol, a token role and a scenario id against the production
+index.
 
 Generated prop-table rows (`#type-table-…`) are **not** returned as results
 (plan 479): every table repeats `aria-label`, `style` and `children`, so those
