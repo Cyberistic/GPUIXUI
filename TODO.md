@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 201/267
+`[x]` `[███████░░░]` 202/268
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1632,6 +1632,18 @@ while `docs.test.ts` measured only the `selected` surface and agreed with a
 superlative over a list it never read; `figures.test.ts` derives each figure
 from `shippedThemes` with the checker's own measurement and asserts the set the
 sentence names, and the three sentences are corrected (plan 536)
+
+`[x]` Derive the text hierarchy's tier figures — the two documents quoted two
+numbers the package does not produce: the catalogue attributed the panel action's
+1.542:1 step to identity dark (which measures 1.877:1; the minimum is
+high-contrast dark), and the design system still quoted plan 392's 1.440:1 for
+the hint after plan 527 moved it to 1.157:1; the case meant to guard them
+asserted each minimum appeared *somewhere* in the paragraph and never read the
+design system. `figures.ts` gains `tierSurfaces`, `deriveTierFigure` and
+`tierMinimum`, the seven catalogue claims are pinned with the set and surface
+each sentence names, the design-system summary is rebuilt from the tier groups,
+and a case proves the table and `themeTextTierFailures` compare the same
+surfaces (plan 537)
 
 ## Phase C — Tier 1–2 components
 

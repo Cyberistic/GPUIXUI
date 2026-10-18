@@ -1925,36 +1925,6 @@ describe("docs/tokens.md text hierarchy", () => {
       );
     });
   });
-
-  it("quotes the tightest shipped step of each tier", () => {
-    const surfacesOf = (
-      role: keyof ThemeColors,
-    ): ReadonlyArray<keyof ThemeColors> =>
-      contrastPairs
-        .flatMap(([foreground, background]) =>
-          foreground === role ? [background] : [],
-        )
-        .filter((surface, index, all) => all.indexOf(surface) === index);
-
-    textTiers.forEach(([dimmer, brighter]) => {
-      const brighterSurfaces = surfacesOf(brighter);
-      const shared = surfacesOf(dimmer).filter((surface) =>
-        brighterSurfaces.includes(surface),
-      );
-      const tightest = Math.min(
-        ...shippedThemes.flatMap(({ theme }) =>
-          shared.map(
-            (surface) =>
-              contrastRatio(theme.colors[brighter], theme.colors[surface]) /
-              contrastRatio(theme.colors[dimmer], theme.colors[surface]),
-          ),
-        ),
-      );
-      expect(markdownProse, `${dimmer} below ${brighter}`).toContain(
-        `**${tightest.toFixed(3)}:1**`,
-      );
-    });
-  });
 });
 
 describe("docs/tokens.md theme contract", () => {

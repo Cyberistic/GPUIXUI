@@ -2122,7 +2122,7 @@ light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
 high-contrast light on `muted`), **1.168:1** (`disabledForeground` vs
 `mutedForeground`, high-contrast dark on `active`), **1.157:1**
 (`placeholder` vs `mutedForeground`, high-contrast dark on every surface the two
-share) and **1.542:1** (`disabledForeground` vs `softActionForeground`, identity
+share) and **1.542:1** (`disabledForeground` vs `softActionForeground`, high-contrast
 dark on `successSoft`). Every shipped set
 still clears the step; the check exists for the theme a consumer edits. A theme
 that sets `disabledForeground` to
@@ -3151,7 +3151,14 @@ disabled panel action measures 5.148:1 identity dark and 7.310:1 AAA dark after
 plan `520` moved `disabledForeground`, and the value groove's tightest surface
 pair is Linux light `track` on the `active` wash at 1.050:1 — the page had named
 identity dark's `selected` fill, the tightest pair *within that one fill*, which
-is what `docs.test.ts` measured before plan `536` (plan `536`).
+is what `docs.test.ts` measured before plan `536` (plan `536`). Plan `537`
+extends the same table to the text hierarchy: a tier's figure is a ratio of
+ratios, so `tierSurfaces`, `deriveTierFigure` and `tierMinimum` measure it on
+the surfaces both roles are painted on — the rule `themeTextTierFailures` uses —
+and the seven minima above are pinned with the set and surface each sentence
+names. It found two: the panel action's 1.542:1 step is high-contrast dark
+rather than identity dark (1.877:1), and the design system still quoted plan
+392's 1.440:1 for the hint after plan `527` moved it to 1.157:1.
 
 ## Limitations and future work
 

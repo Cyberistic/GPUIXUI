@@ -658,8 +658,10 @@ comparison follows the pair lists. A theme that raises `disabledForeground` to
 body strength passes every floor and still makes an unavailable control look
 enabled; so does one that sets `popoverForeground` to `mutedForeground`, which
 renders every menu label at secondary strength. This is the check that reports
-both, and every shipped set clears it — 1.274:1, 1.168:1, 1.440:1 and 1.542:1
-at the tightest, with the three surface body roles also at 1.274:1.
+both, and every shipped set clears it — secondary text sits 1.274:1 below
+`foreground`, `cardForeground`, `popoverForeground` and `inputForeground`; the
+unavailable label 1.168:1 and the hint 1.157:1 below secondary text; and the
+disabled label of a status-panel action 1.542:1 below the enabled one.
 `selectedForeground` is deliberately not a body tier: it is the
 secondary-strength tint an inherited label keeps inside a selected row, whose
 title is `foreground`.
