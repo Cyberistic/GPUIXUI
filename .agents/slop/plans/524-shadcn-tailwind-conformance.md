@@ -161,10 +161,14 @@ are still present in `references/ui`; Input resolves to 36/12/4/6/14.
 ## 10. Results (2026-10-18)
 
 - `packages/tw` created; `cn@0.5.0` installed and re-exported.
-- 15 tests pass: `cn` conflict/join, Input 36/12/4/6/14, Button
+- 21 tests pass: `cn` conflict/join, Input 36/12/4/6/14, Button
   36/16/8 and the sm/lg/icon sizes, focus/invalid/disabled buckets,
-  dialog/popover motion, toast 500 ms cubic bezier, and the upstream
-  provenance guard.
+  dialog/popover motion, toast 500 ms cubic bezier, the upstream provenance
+  guard, and the `className` JSX runtime (classed hosts wrapped, components and
+  unclassed hosts untouched).
+- The JSX runtime (`jsx-runtime`/`jsx-dev-runtime`) lets a package set
+  `jsxImportSource: "@gpuixui/tw"` and keep shadcn host elements verbatim; the
+  `TwHost` wrapper reads the theme and resolves the classes at render time.
 - `nub run check` and `nub run test` pass in the worktree.
 - The upstream test reads `references/ui` and proves the copied Input/Button
   strings are still present; it skips when the reference clone is absent.

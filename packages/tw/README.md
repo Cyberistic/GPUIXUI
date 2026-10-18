@@ -33,6 +33,21 @@ import { Tw } from "@gpuixui/tw/react";
 <Tw.input className="h-9 px-3 py-1 rounded-md border border-input" />
 ```
 
+Or switch the package's `jsxImportSource` to `@gpuixui/tw` and keep shadcn
+TSX host elements as written:
+
+```json
+{ "compilerOptions": { "jsxImportSource": "@gpuixui/tw" } }
+```
+
+```tsx
+<div className="h-9 px-3 py-1 rounded-md border border-input" />
+```
+
+The runtime wraps only GPUix host elements that carry `className`; components
+and unclassed hosts go straight to React. The wrapper reads the nearest theme,
+so light/dark changes resolve at render time.
+
 ## What is supported
 
 - Geometry: `h-*`, `w-*`, `size-*`, `p-*`, `px-*`, `py-*`, `gap-*`, `rounded-*`.
