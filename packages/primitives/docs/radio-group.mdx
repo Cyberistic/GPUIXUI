@@ -99,11 +99,13 @@ same size are the same square/circle family. Gaps use `spacing.sm`.
 The **option row** — the element that owns the name, the tab stop and the click
 and key handlers — takes its layout and pointer feedback from
 `selectionRowStyle`: a `colors.hover` wash on hover and `colors.active` on press,
-and neither while disabled (plan 355). The circle keeps its own border feedback,
-so the row and the control both answer the pointer. An invalid **empty** circle
-keeps the destructive border on hover and press; the healthy interaction colours
-never paint over the error cue, while a chosen circle keeps its accent
-(plan 356).
+and neither while disabled (plan 355). The row also carries `minWidth: 0`, so a
+**horizontal** group shares its width between the options and a long label wraps
+inside its row instead of painting past the group (plan 380). The circle keeps
+its own border feedback, so the row and the control both answer the pointer. An
+invalid **empty** circle keeps the destructive border on hover and press; the
+healthy interaction colours never paint over the error cue, while a chosen
+circle keeps its accent (plan 356).
 
 ## Style by state
 
@@ -154,7 +156,7 @@ the option row:
 - No type-ahead selection.
 - A `description` is not associated with the option for assistive technology.
 - A long option label **wraps** inside the row rather than widening it, so the
-  text stays inside the group (plan `368`).
+  text stays inside the group in **both** orientations (plans `368`, `380`).
 
 ## Verification
 
@@ -172,8 +174,9 @@ the option row:
 - `src/components/selection.test.tsx` — roving index and data options; an arrow
   asks the group to move focus to the option it landed on; an `invalid` group
   paints the empty circles destructive and leaves the chosen one on its accent;
-  every enabled row declares the wash, a disabled option declares none, and the
-  caller's `optionStyle` wins last (plan 355).
+  every enabled row declares the wash, a disabled option declares none, the
+  caller's `optionStyle` wins last (plan 355), and a horizontal group's rows
+  carry the content-floor removal that lets them shrink (plan 380).
 - `runtime/row-feedback.runtime.test.tsx` — the same row contract in the real
   renderer, plus a vertical row painting at the group's width so the wash covers
   the hit area (plan 355).
@@ -184,7 +187,9 @@ the option row:
   circle selects; `invalid` paints the measured `borderColor` and the same tree
   without it paints the input role (plan 061); `Space` up and `Enter` activate
   the option that holds focus, not the value's stale tab stop, and an activation
-  key with no focused option still selects the tab stop (plan 353).
+  key with no focused option still selects the tab stop (plan 353); a bounded
+  horizontal group paints both option rows inside itself and wraps both labels
+  (plan 380).
 - `runtime/roving-arrows.runtime.test.tsx` — a controlled parent that **never
   applies** a reported value: three arrows move the ring on to Beta, Gamma and
   back to Alpha and report each change; a disabled option is still skipped; the

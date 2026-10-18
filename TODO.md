@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 124/124
+`[x]` `[██████████]` 125/125
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1120,6 +1120,14 @@ retired once both branches are one
       inverted pair swapped like every slider); 8 offline cases across four
       resolvers + 4 runtime cases, every guard reverted once to prove the failure
       direction (plan `371`).
+`[x]` `packages/primitives`: **a horizontal `RadioGroup` let its options escape
+      the group** — the containment fix in plan `368` held only while the group
+      was a column; in `orientation="horizontal"` the option row kept its
+      max-content width, so measured, a 220 px group painted its second row at
+      `x 371…724` and both 58-character labels stayed one line. `selectionRowStyle`
+      now removes the row's automatic content floor (`minWidth: 0`), so the row
+      shrinks, the labels wrap, and `CheckboxGroup`'s measured boxes are
+      unchanged; 1 element + 1 runtime case, both directions proven (plan `380`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
