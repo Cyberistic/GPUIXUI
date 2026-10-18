@@ -250,6 +250,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [553](./553-documented-brand-and-builder-examples.md) | The documented brand is a theme the contract rejects | F | 098, 347, 355, 356, 526 | done |
 | [554](./554-surface-metric-sign.md) | Every surface metric is a size, and every border is a width | F | 358, 360, 530, 531, 552 | done |
 | [555](./555-border-rationale-and-duplicate-claim.md) | The border rationale names five of the measured surfaces, and prints one rule twice | F | 080, 084, 300, 318, 327, 352, 550 | done |
+| [556](./556-dialog-calendar-and-mark-dimensions.md) | The dialog, calendar and mark metrics the dimension audits missed | B/F | 353, 389, 530, 550, 554 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2748,6 +2749,19 @@ and `docs.test.ts` derives both surface lists from `contrastPairs` — so a nint
 control fill or a fourteenth boundary surface fails the page until it is named.
 The three cases fail on the pre-fix page and pass after it; no colour, pair,
 floor, metric, theme, platform style or recipe value moves.
+
+Plan `556` closes a promise the design system already made in §6 — "They live in
+`theme.dimensions` so a brand can widen a dialog or a toast" — that was false:
+`dialog.tsx` kept `MAX_WIDTH` as a local `{ sm: 360, md: 480, lg: 640 }`.
+Auditing the same class of fixed metric in the consumer found the calendar day
+cell (34), the time segment (26) and the avatar presence dot (10), three more
+values a theme could not own. The six members join `dimensions`, every shipped
+theme, platform variant and recipe inherits them, and the metric contract holds
+the dialog ladder to grow, a day cell to fit the small control, a segment to be
+at least one body em and the dot to stay at most half the smallest avatar — the
+same rules the drawer ladders, carousel mark and inline avatar already carry.
+The four consumer migrations are recorded cross-team rather than edited in
+another workstream's tree; no colour, type, pair, floor or existing metric moves.
 
 ## How to use a plan
 
