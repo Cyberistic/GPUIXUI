@@ -164,3 +164,34 @@ Plan 022 §7 applies. Additional:
   supervisor tick.
 - This plan is indexed in `.agents/slop/plans/README.md`, and the components
   `TODO.md` interlock row cites it.
+
+## 8. Recurrence — 2026-10-18 02:46 (+03)
+
+The bug is live again, one tick after plan 325 started:
+
+```sh
+sqlite3 ~/.local/share/opencode/opencode.db \
+  "select id, datetime(time_created/1000,'unixepoch','localtime'),
+          datetime(time_updated/1000,'unixepoch','localtime')
+     from session_v2
+    where directory like '%/workspaces/components' and time_idle is null;"
+```
+
+| Session | Created | Role |
+| ------- | ------- | ---- |
+| `ses_eb3d04944ffe9ybaEImk0aDBPY` | 02:25:57 | previous turn, still generating |
+| `ses_eb3c0caf1ffexSHAOfZNV2FGzp` | 02:42:53 | this turn (`run-components.sh`, pid 91443) |
+
+The collision was observed, not inferred: this session's per-item hover change in
+`navigation-menu.tsx` was overwritten by the other session's root-owned variant
+within two minutes, and both sessions were editing
+`src/behaviour/navigation-menu.test.tsx` and plan 325 at once. `check-types`
+briefly failed on a half-and-half file (one session's context interface with the
+other's trigger reads).
+
+Resolution is unchanged and still the coordinator's: plan 022 §5. Until it
+lands, this workstream must treat the live-session count as a **hard** gate —
+the "rotating turn owns the tree" tie-breaker in §5 only works if the other
+turn actually stands down, and both turns are model-driven, so neither can
+enforce it. The pragmatic rule for the next tick: if the count is `2`, edit only
+`.agents/slop/` and report; do not touch `packages/components`.

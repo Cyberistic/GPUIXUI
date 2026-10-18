@@ -98,6 +98,7 @@ workstream declares in its own section below.
 | [322](./322-toast-action.md) | Toast actions: one labelled action per toast, provider-owned handler | C/F | 115, 123, 124 | done — 3 unit + 4 native tests (unit 299, Toast 14, behaviour 445), undo example and docs |
 | [323](./323-floating-placement.md) | Floating placement truth: centre alignment and a real near-edge flip | C/F | 112, 114, 116, 117, 156 | done — measured `align="center"` corrects from `start` + the trigger/surface difference, and a snapped surface flips off its trigger for Popover, Dropdown menu and Combobox; +6 native tests (Popover 12, Dropdown 35, Combobox 17), both-direction proof |
 | [324](./324-tier2-icon-adoption.md) | Tier 2 icon adoption: replace component-owned text glyphs with `@gpuixui/icons` | C/F | 110, 111, 112, 113, 114, 116, 119, 120, 132, 157, 158, 300–303, 310, 321–323, 031 | done — 14 component families on `Icon`; 451 native behaviour tests, both-direction proof, docs and inventory synced |
+| [325](./325-navigation-menu-hover.md) | Navigation menu hover-open over one shared hover-travel hook | F | 110, 112, 113, 114, 117, 200, 201, 317, 320 | done — 7 new native tests (458 behaviour), PreviewCard's 8 unchanged; both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

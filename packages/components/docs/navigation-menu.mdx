@@ -40,6 +40,9 @@ playground mounts.
 
 | Action | Result |
 | ------ | ------ |
+| Hover a trigger | opens its panel after `openDelay` (default 100 ms) |
+| Move the pointer into the panel | keeps it open |
+| Leave both the trigger and the panel | closes after `closeDelay` (default 150 ms) |
 | Press or `Enter`/`Space` on a trigger | toggles that item's panel |
 | `ArrowDown` on a trigger | opens its panel and moves focus to the panel surface |
 | `ArrowLeft` / `ArrowRight` on a trigger | moves focus between triggers; does not open |
@@ -52,6 +55,18 @@ playground mounts.
 The open item is `value` (`string | null`, `null` = closed), controllable with
 `onValueChange`. A controlled nav that ignores the change stays closed.
 
+## Opening policy
+
+Hover is on by default, matching the reference navigation menus. The pointer may
+cross the `sideOffset` gap into the panel; the close timer only runs once both
+surfaces are outside. Hover **never moves focus**: the panel is not auto-focused,
+so a keyboard user still reaches it through `ArrowDown`. Entering another trigger
+switches panels after `openDelay`, and entering the first trigger cancels its
+pending close.
+
+`openOnHover={false}` makes press and keys the only way in — useful for a nav in
+a dense toolbar. A disabled trigger never opens, by hover or by press.
+
 ## API
 
 Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
@@ -59,7 +74,7 @@ merges `style` last.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `NavigationMenu` | `role="navigation"` named by `label`, the dismiss layer | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, children |
+| `NavigationMenu` | `role="navigation"` named by `label`, the dismiss layer | `label` (required), `value?`, `defaultValue?`, `onValueChange?`, `openOnHover?` (default `true`), `openDelay?` (default `100`), `closeDelay?` (default `150`), children |
 | `NavigationMenuList` | `role="list"` row | children |
 | `NavigationMenuItem` | `role="listitem"`; owns its value | `value` (required), children |
 | `NavigationMenuTrigger` | button with `aria-expanded` | button props |
@@ -88,8 +103,11 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 
 - **No `href`:** `NavigationMenuLink` is a button; navigation is the consumer's
   `onSelect`.
-- **Hover does not open.** Press, `Enter`/`Space` or `ArrowDown` open; hover-open
-  is a second policy that would need its own tests, so it is not claimed.
+- **No pointer-type signal.** `0.10.0` cannot tell a mouse from a touch, so a
+  touch device has no hover and uses press; there is no long-press path.
+- **Hover does not take focus.** The panel is not auto-focused on hover, on
+  purpose: stealing focus from wherever the reader was typing would be worse
+  than the extra `ArrowDown`.
 - **`ArrowDown` focuses the panel surface**, not the first link; one `Tab` then
   reaches the links.
 - No `aria-haspopup` in `0.10.0`.
@@ -98,10 +116,13 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 ## Verification
 
 `src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer
-(10 tests): declaration order, press-to-open with `aria-expanded`, one panel at a
+(17 tests): declaration order, press-to-open with `aria-expanded`, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
 Escape with focus return, outside-press dismissal, a link running once and
-closing, a controlled nav staying closed, and both themes.
+closing, a controlled nav staying closed, both themes, and seven hover cases —
+delayed open without focus, switching triggers, pointer travel into the panel,
+`openOnHover={false}`, a disabled trigger, a key-opened panel surviving the
+previous close timer, and one reported hover intent on a controlled nav.
 
 One measured implementation fact: the trigger registry updates its ordered key
 list only when the key sequence changes. An always-new array (or a ref callback

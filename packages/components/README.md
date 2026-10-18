@@ -21,7 +21,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 
 | Area | State |
 | ---- | ----- |
-| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the merged host ref, the a11y-dump reader, the monotonic clock read and the behaviour-suite render helper |
+| `src/internal/*` | collection index arithmetic, key predicates, theme seam, the merged host ref, the shared hover-travel policy, the a11y-dump reader, the monotonic clock read and the behaviour-suite render helper |
 | `src/runtime.test.tsx` | the native-renderer guard (plan 117 §5b) |
 | `src/card.tsx` | Card and its five parts — verified natively |
 | `src/badge.tsx` | Badge — the status pill, seven variants, two sizes |
@@ -45,7 +45,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
 | `src/form.tsx` | Form: owned-value schema validation, one alert summary, decoded `onSubmit` |
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
-| `src/navigation-menu.tsx` | NavigationMenu: one open anchored panel, roving triggers |
+| `src/navigation-menu.tsx` | NavigationMenu: one open anchored panel, roving triggers, hover travel over the shared `internal/hover.ts` policy |
 | `src/mention-input.tsx`, `src/mention/logic.ts` | MentionInput: ranked `@` suggestions over the anchored layer |
 | `src/message-scroller.tsx`, `src/message-scroller/logic.ts` | MessageScroller: pinned follow, no yank, unread count and jump-to-latest over a bounded scroll viewport |
 | `src/preview-card.tsx` | PreviewCard: hover/focus preview with pointer travel into the card |

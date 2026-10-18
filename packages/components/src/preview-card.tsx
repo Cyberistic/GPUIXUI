@@ -20,7 +20,6 @@ import {
 } from "@gpuix/react/floating";
 import {
   createContext,
-  useCallback,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -30,6 +29,7 @@ import {
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { useHoverTravel, type HoverTravel } from "./internal/hover.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -45,10 +45,7 @@ interface PreviewCardContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
-  readonly scheduleOpen: () => void;
-  readonly scheduleClose: () => void;
-  readonly cancelTimers: () => void;
-  readonly setInside: (surface: "trigger" | "content", inside: boolean) => void;
+  readonly hover: HoverTravel;
 }
 
 const PreviewCardContext = createContext<PreviewCardContextValue | undefined>(
@@ -92,68 +89,16 @@ export const PreviewCard = ({
     onChange: onOpenChange,
   });
   const trigger = useRef<PublicInstance | null>(null);
-  const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  // The runtime delivers the new element's mouseEnter before the previous
-  // element's mouseLeave, so a leave must not schedule a close while the other
-  // surface still holds the pointer.
-  const inside = useRef({ trigger: false, content: false });
-
-  const cancelTimers = useCallback(() => {
-    if (openTimer.current !== undefined) {
-      clearTimeout(openTimer.current);
-      openTimer.current = undefined;
-    }
-    if (closeTimer.current !== undefined) {
-      clearTimeout(closeTimer.current);
-      closeTimer.current = undefined;
-    }
-  }, []);
-
-  useLayoutEffect(() => cancelTimers, [cancelTimers]);
-
-  const scheduleOpen = useCallback(() => {
-    cancelTimers();
-    if (open) return;
-    if (openDelay <= 0) {
-      setOpen(true);
-      return;
-    }
-    openTimer.current = setTimeout(() => setOpen(true), openDelay);
-  }, [cancelTimers, open, openDelay, setOpen]);
-
-  const scheduleClose = useCallback(() => {
-    cancelTimers();
-    if (!open || inside.current.trigger || inside.current.content) return;
-    if (closeDelay <= 0) {
-      setOpen(false);
-      return;
-    }
-    closeTimer.current = setTimeout(() => setOpen(false), closeDelay);
-  }, [cancelTimers, closeDelay, open, setOpen]);
-
-  const setInside = useCallback(
-    (surface: "trigger" | "content", value: boolean) => {
-      inside.current = { ...inside.current, [surface]: value };
-    },
-    [],
-  );
+  const hover = useHoverTravel({
+    isOpen: () => open,
+    close: () => setOpen(false),
+    openDelay,
+    closeDelay,
+  });
 
   const context = useMemo<PreviewCardContextValue>(
-    () => ({
-      open,
-      setOpen,
-      trigger,
-      scheduleOpen,
-      scheduleClose,
-      cancelTimers,
-      setInside,
-    }),
-    [cancelTimers, open, scheduleClose, scheduleOpen, setInside, setOpen],
+    () => ({ open, setOpen, trigger, hover }),
+    [hover, open, setOpen],
   );
 
   assertParts(previewCardRoot, children);
@@ -167,15 +112,7 @@ export const PreviewCard = ({
 
 /** Opens the card on hover, focus or press. */
 export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
-  const {
-    open,
-    setOpen,
-    trigger,
-    scheduleOpen,
-    scheduleClose,
-    cancelTimers,
-    setInside,
-  } = usePreviewCard();
+  const { open, setOpen, trigger, hover } = usePreviewCard();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
@@ -184,24 +121,22 @@ export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
       ref={setTrigger}
       aria-expanded={open}
       onMouseEnter={(event) => {
-        setInside("trigger", true);
-        scheduleOpen();
+        hover.enter("trigger", () => setOpen(true));
         rest.onMouseEnter?.(event);
       }}
       onMouseLeave={(event) => {
-        setInside("trigger", false);
-        scheduleClose();
+        hover.leave("trigger");
         rest.onMouseLeave?.(event);
       }}
       onFocus={(event) => {
-        cancelTimers();
+        hover.cancel();
         setOpen(true);
         rest.onFocus?.(event);
       }}
       onClick={(event) => {
         onClick?.(event);
         if (open) setOpen(false);
-        else scheduleOpen();
+        else hover.enter("trigger", () => setOpen(true));
       }}
       onKeyDown={(event: EventPayload) => {
         rest.onKeyDown?.(event);
@@ -239,8 +174,7 @@ export const PreviewCardContent = ({
   ...rest
 }: PreviewCardContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, scheduleClose, cancelTimers, setInside } =
-    usePreviewCard();
+  const { open, setOpen, trigger, hover } = usePreviewCard();
   const renderer = useGpuix().renderer;
 
   const close = useRef<() => void>(() => undefined);
@@ -274,13 +208,11 @@ export const PreviewCardContent = ({
       tabIndex={-1}
       {...rest}
       onMouseEnter={(event) => {
-        setInside("content", true);
-        cancelTimers();
+        hover.enter("content");
         rest.onMouseEnter?.(event);
       }}
       onMouseLeave={(event) => {
-        setInside("content", false);
-        scheduleClose();
+        hover.leave("content");
         rest.onMouseLeave?.(event);
       }}
       onMouseDownOutside={(event) => {
