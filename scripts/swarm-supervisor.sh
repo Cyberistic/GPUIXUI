@@ -191,10 +191,13 @@ touches:
 - live: \`nub apps/playground/dist/live/run.js --only <id>\` (repeat \`--only\` for
   more; \`--list\` prints the ids).
 
-A live run opens a real window and the full suite takes ~9 minutes. Never run
-the full live suite (\`--all\`) or the full headless suite while iterating. Run
-the full suite once at the end of the task, and only when the change is
-cross-cutting. Record the exact scenario ids you ran in the commit or plan.
+A live run opens a real window; the full live suite takes ~9 minutes. Never run
+\`--all\` while iterating. A new or changed scenario is verified with
+\`--only <id>\`; the full headless suite is the end-of-task check for a
+cross-cutting change. The full live suite is a **merge/release gate**: run it
+only before merging the branch, or when the plan explicitly needs a live
+capability total. Derive the scenario count from the registry instead of
+paying for a full live run. Record the exact scenario ids you ran.
 
 Your workstream: $(workstream_scope "$ws")
 
