@@ -891,7 +891,13 @@ retired once both branches are one
       from `availableWidth` on the resolved side (the same subtraction the side
       decision uses), so left, right and above/below each measure their own
       room. 1 core + 1 runtime case, both directions proven (plan `379`).
-`[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
+`[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site
+      workstream). **Audited 2026-10-19:** the docs site has 68 component pages
+      and the package's parts table has 31 parts; **six have no page** —
+      `IconButton`, `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip` and
+      `ThemeProvider`. The docs-site `TODO.md` says "all 20 pages landed", which
+      is true of the 20 it counted, not of the public surface. Listed in the
+      cross-workstream section below; do not edit their paths.
 `[x]` `packages/primitives`: **a slider answered a hover with nothing** — measured
       across the whole Tier 1 set: every pointer-interactive element declares
       `hover`/`active` except the `Slider` and `RangeSlider` **tracks**, which own
@@ -1362,10 +1368,16 @@ retired once both branches are one
       inside — so a row component should follow that contract rather than
       inventing a second one.
 
-`[ ]` **docs-site workstream**: `apps/docs` needs a **Checkbox Group** page —
-      the component landed on the primitives branch (plan 065) with its
-      in-package page at `packages/primitives/docs/checkbox-group.mdx`; the
-      existing `checkbox.mdx` on `agent/docs-site` predates it.
+`[ ]` **docs-site workstream**: `apps/docs` is missing **six** component pages
+      that the primitives parts table declares. Audited 2026-10-19 against
+      `packages/primitives/src/contract.test.ts`'s 31 parts and the 68 pages
+      under `apps/docs/content/docs/components/`: **`IconButton`,
+      `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip`, `ThemeProvider`**.
+      Every one already has a complete in-package page
+      (`packages/primitives/docs/{icon-button,toggle-group,checkbox-group,grid,info-tip,theme-provider}.mdx`)
+      to adapt, so this is a routing/linking job, not new writing. The existing
+      `checkbox.mdx` predates `CheckboxGroup` (plan 065). Their `TODO.md` counts
+      "all 20 pages" — those 20 landed; the public surface is 31.
 
 `[x]` **examples/basic-app** (owner: primitives workstream, outside
       `packages/primitives`): the info-icon tooltip trigger is now `InfoTip`,
