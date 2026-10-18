@@ -101,6 +101,13 @@ describe("component filter", () => {
     expect(matchesComponent(button, "buttonprops")).toBe(true);
   });
 
+  it("matches an exported symbol whose inventory title differs", () => {
+    expect(matchesComponent(record("spinner"), "Spinner")).toBe(true);
+    expect(matchesComponent(record("scroll-area"), "ScrollArea")).toBe(true);
+    expect(matchesComponent(record("inline-validation"), "Field")).toBe(true);
+    expect(matchesComponent(record("stack"), "Grid")).toBe(true);
+  });
+
   it("matches an exported part name on a compound record only", () => {
     expect(matchesComponent(record("dialog"), "DialogTitle")).toBe(true);
     expect(matchesComponent(record("dialog"), "dialogtitle")).toBe(true);

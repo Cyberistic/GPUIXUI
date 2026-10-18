@@ -282,22 +282,32 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
     {
       query: "button",
       expected: "/docs/components/button",
+      first: false,
       what: "a component name from the registry index",
     },
     {
       query: "aria-checked",
       expected: "/docs/components/checkbox",
+      first: false,
       what: "a component page's documented prose",
     },
     {
       query: "DialogTitle",
       expected: "/docs/components/dialog",
+      first: false,
       what: "an exported part name from the registry",
     },
     {
       query: "checkboxState",
       expected: "/docs/api-values",
+      first: false,
       what: "a helper name from the generated value index",
+    },
+    {
+      query: "Spinner",
+      expected: "/docs/components/spinner",
+      first: true,
+      what: "an exported symbol that is not the record's title",
     },
   ] as const;
 
@@ -317,12 +327,19 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
         ];
       }
       const urls = searchUrls(response.body);
-      return urls.some((url) => url.startsWith(check.expected))
+      const matched =
+        check.first === true
+          ? urls[0]?.startsWith(check.expected) === true
+          : urls.some((url) => url.startsWith(check.expected));
+      return matched
         ? []
         : [
             {
               where,
-              what: `no result under ${check.expected} for ${check.what}`,
+              what:
+                check.first === true
+                  ? `the first result is not under ${check.expected} for ${check.what}`
+                  : `no result under ${check.expected} for ${check.what}`,
             },
           ];
     }),

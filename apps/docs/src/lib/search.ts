@@ -6,6 +6,7 @@ import {
 } from "fumadocs-core/search/server";
 import { components } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
+import { componentSymbols } from "@/component-meta/symbols";
 import { valueExports } from "./api-values.generated";
 import { source } from "./source";
 
@@ -80,13 +81,13 @@ const componentByUrl = new Map(
 );
 
 /**
- * How closely a component title matches a query: `0` equal, `1` prefix, `2` a
- * word prefix, `3` substring anywhere, `undefined` no title match. A component
- * name is the strongest signal a reader can give ⌘K, so it is scored, not left
- * to the index's body-text ranking (plan 431).
+ * How closely a component name matches a query: `0` equal, `1` prefix, `2` a
+ * word prefix, `3` substring anywhere, `undefined` no match. A component name
+ * is the strongest signal a reader can give ⌘K, so it is scored, not left to
+ * the index's body-text ranking (plan 431).
  */
-const matchRank = (title: string, query: string): number | undefined => {
-  const normalized = title.trim().toLowerCase();
+const matchRank = (name: string, query: string): number | undefined => {
+  const normalized = name.trim().toLowerCase();
   const needle = query.trim().toLowerCase();
   if (needle.length === 0) return undefined;
   if (normalized === needle) return 0;
@@ -94,6 +95,25 @@ const matchRank = (title: string, query: string): number | undefined => {
   if (normalized.split(/[^a-z0-9]+/).some((word) => word.startsWith(needle)))
     return 2;
   return normalized.includes(needle) ? 3 : undefined;
+};
+
+/**
+ * The best rank a record earns for a query. Its title and every exported name
+ * its props types imply are names a reader can type: `Spinner` is what the
+ * consumer imports, even though the page is titled "Loading indicators"
+ * (plan 500).
+ */
+const componentRank = (
+  component: ComponentMetaInput,
+  query: string,
+): number | undefined => {
+  const ranks = [component.title, ...componentSymbols(component)].flatMap(
+    (name) => {
+      const rank = matchRank(name, query);
+      return rank === undefined ? [] : [rank];
+    },
+  );
+  return ranks.length === 0 ? undefined : Math.min(...ranks);
 };
 
 interface Candidate {
@@ -120,12 +140,13 @@ export const withoutTypeTableRows = (
   results.filter((result) => !result.url.includes(TYPE_TABLE_FRAGMENT));
 
 /**
- * Merges the two indexes into one ranked list (plan 431). A component title
- * match moves ahead of prose; everything else keeps plan 419's order — page
- * results first, registry hits in the tail. Ties break on the shorter title
- * (`Buttons` before `Button groups`) and then on the index's own order. One
- * entry survives per page URL, so a delivered component is not listed once as
- * a page and again as a registry record.
+ * Merges the two indexes into one ranked list (plan 431). A component name
+ * match — its title or an exported name its props types imply (plan 500) —
+ * moves ahead of prose; everything else keeps plan 419's order: page results
+ * first, registry hits in the tail. Ties break on the shorter title (`Buttons`
+ * before `Button groups`) and then on the index's own order. One entry survives
+ * per page URL, so a delivered component is not listed once as a page and again
+ * as a registry record.
  *
  * Native `sort`/`Set` are deliberate: `effect` must not reach the docs bundle
  * (`architecture.test.ts`, plan 410 §2).
@@ -139,7 +160,7 @@ export const mergeResults = (
     .map((result, index): Candidate => {
       const component = componentByUrl.get(result.url);
       const rank =
-        component === undefined ? undefined : matchRank(component.title, query);
+        component === undefined ? undefined : componentRank(component, query);
       return {
         result,
         index,

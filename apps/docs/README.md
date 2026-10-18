@@ -202,9 +202,13 @@ prefix, word prefix, then substring — so `button` reaches
 the page index's order and appends registry hits in the tail (plan 419). The
 props types a component documents are indexed too, so `ButtonProps` and
 `ToastViewportProps` reach their pages (plan 442), and so is every exported part
-name, so `DialogTitle` reaches Dialogs (plan 481). A blank query returns `[]`,
-and one page is listed once. `src/lib/search.test.ts` guards all four rules
-(plan 431).
+name, so `DialogTitle` reaches Dialogs (plan 481). A props type also **names its
+component**: `componentSymbols` strips the `Props` suffix and scores the stem
+like a title, so `Spinner` reaches the *Loading indicators* page first even
+though that title never contains the word (plan 500). A blank query returns
+`[]`, and one page is listed once. `src/lib/search.test.ts` guards all five
+rules (plans 431 and 500), and `smoke:build` asserts the `Spinner` symbol
+against the production index.
 
 Generated prop-table rows (`#type-table-…`) are **not** returned as results
 (plan 479): every table repeats `aria-label`, `style` and `children`, so those

@@ -96,6 +96,32 @@ describe("search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/components/button");
   });
 
+  it("finds a component by its exported name when the title differs", async () => {
+    const results = await search("Spinner");
+    expect(results[0]?.url).toBe("/docs/components/spinner");
+  });
+
+  it("ranks every exported name that differs from its inventory title first", async () => {
+    const expected = [
+      ["Spinner", "spinner"],
+      ["ScrollArea", "scroll-area"],
+      ["TextArea", "text-area"],
+      ["ButtonGroup", "button-group"],
+      ["NumberField", "number-field"],
+      ["OTPField", "otp-field"],
+      ["Field", "inline-validation"],
+      ["ConfirmDialog", "confirm-dialog"],
+      ["Grid", "stack"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, slug]) => {
+        const results = await search(query, 5);
+        return results[0]?.url === `/docs/components/${slug}` ? null : query;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("finds a component by one of its props types", async () => {
     const results = await search("ButtonProps");
     expect(results[0]?.url).toBe("/docs/components/button");
@@ -163,6 +189,15 @@ describe("mergeResults", () => {
       "input",
     );
     expect(merged[0]?.url).toBe("/docs/components/text-input");
+  });
+
+  it("moves an exported name match ahead of prose too", () => {
+    const merged = mergeResults(
+      [pageResult("/docs/patterns/settings-form")],
+      [pageResult("/docs/components/spinner")],
+      "Spinner",
+    );
+    expect(merged[0]?.url).toBe("/docs/components/spinner");
   });
 
   it("leaves prose first when no component title matches", () => {
