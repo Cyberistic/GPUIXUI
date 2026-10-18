@@ -48,8 +48,11 @@ Omit `value` to let the slider own its state (`defaultValue` sets the start).
 | `thumbStyle` | `StateStyle<SliderThumbState>` | — | merged last on the thumb; an object or a state callback |
 | `testId` | `string` | — | names the track; the thumb becomes `${testId}-thumb` |
 
-Out-of-range values are clamped, and a value between steps snaps to the step
-measured from `min`. `NaN` reads as `min`, never as a full track.
+Out-of-range values are clamped, and a value between stops snaps to the nearest
+stop measured from `min` (a tie goes to `max`). **`max` is always a stop**, so a
+step that does not divide the span still fills the track: `min 0`, `max 10`,
+`step 3` has the stops `0, 3, 6, 9, 10`. `NaN` reads as `min`, never as a full
+track.
 
 ## Keyboard
 
@@ -145,15 +148,19 @@ the thumb:
   081).
 
 - `src/core/value.test.ts` — clamping, snapping (no binary-float tails),
-  fractions, the key contract, the pointer mapping, the crossing rule.
+  fractions, the key contract, the pointer mapping, the crossing rule, and a
+  stop list that includes `max` when the step does not divide the span (plan
+  `331`).
 - `src/core/style.test.ts` — the inset/negative-margin geometry, the hit-test
   children, the fill fraction, the ring.
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
   by Tab, a drag that leaves the track keeps tracking and clamps at both ends,
-  and a right/middle click is refused. Measured 2026-10-17; plans 053 §11 and
-  063 §6 record the probes.
+  and a right/middle click is refused. A coarse step (`0..10` by `3`) paints
+  `value={10}` further than `9` and ArrowLeft from the end lands on `9` (plan
+  `331`). Measured 2026-10-17; plans 053 §11, 063 §6 and 331 §8 record the
+  probes.
 
 ```sh
 nub run --filter @gpuixui/primitives test

@@ -109,6 +109,53 @@ describe("stepping", () => {
   });
 });
 
+describe("a step that does not divide the span", () => {
+  // The bug guarded (plan 331): `max` was only an upper bound, so a value of
+  // 10 in a 0..10 range stepped by 3 snapped back to the last grid stop, 9 —
+  // `value={max}` painted 90 % of the track, ArrowRight at 9 was stuck,
+  // ArrowLeft from 10 jumped to 6, and a default RangeSlider never filled.
+  const COARSE = { min: 0, max: 10, step: 3 } as const;
+
+  it("makes the maximum a stop of its own", () => {
+    expect(clampValue(10, COARSE)).toBe(10);
+    expect(fractionValue(1, COARSE)).toBe(10);
+    expect(valueFraction(10, COARSE)).toBe(1);
+  });
+
+  it("snaps to the nearest stop, with a tie going to the maximum", () => {
+    expect(clampValue(8, COARSE)).toBe(9);
+    expect(clampValue(9.4, COARSE)).toBe(9);
+    expect(clampValue(9.5, COARSE)).toBe(10);
+  });
+
+  it("steps to the neighbour stop, not by raw arithmetic", () => {
+    expect(stepValue(9, COARSE, 1)).toBe(10);
+    expect(stepValue(10, COARSE, -1)).toBe(9);
+    expect(decideValueKey(9, COARSE, "right")).toStrictEqual(Option.some(10));
+    expect(decideValueKey(10, COARSE, "left")).toStrictEqual(Option.some(9));
+  });
+
+  it("keeps Home and End on the ends the track paints", () => {
+    expect(decideValueKey(4, COARSE, "home")).toStrictEqual(Option.some(0));
+    expect(decideValueKey(4, COARSE, "end")).toStrictEqual(Option.some(10));
+  });
+
+  it("includes the maximum for a decimal step that does not divide", () => {
+    const thirds = { min: 0, max: 1, step: 0.3 } as const;
+    expect(clampValue(1, thirds)).toBe(1);
+    expect(stepValue(0.9, thirds, 1)).toBe(1);
+    expect(stepValue(1, thirds, -1)).toBe(0.9);
+    expect(clampValue(0.94, thirds)).toBe(0.9);
+  });
+
+  it("leaves a divisible range and a continuous range unchanged", () => {
+    expect(clampValue(37, { min: 0, max: 100, step: 10 })).toBe(40);
+    expect(stepValue(100, RANGE, -1)).toBe(99);
+    expect(clampValue(37.5, { min: 0, max: 100, step: 0 })).toBe(37.5);
+    expect(stepValue(37.5, { min: 0, max: 100, step: 0 }, 1)).toBe(38.5);
+  });
+});
+
 describe("decideValueKey", () => {
   it("moves one step with every arrow", () => {
     expect(decideValueKey(50, RANGE, "right")).toStrictEqual(Option.some(51));

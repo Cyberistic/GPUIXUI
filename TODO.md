@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 79/79
+`[x]` `[██████████]` 80/80
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -598,6 +598,13 @@ retired once both branches are one
       example hid it by passing both numbers. A circle now takes its height as
       its width, an explicit `width` still wins, and a plain skeleton stays
       `100%`; 1 core + 1 runtime test, both directions proven (plan `330`)
+`[x]` `packages/primitives`: **the slider's maximum was not a stop** — with a
+      step that does not divide the span (`min 0`, `max 10`, `step 3`) a value
+      of `10` snapped back to `9`, so `End` announced a value the track painted
+      at 90 %, `ArrowRight` at `9` was stuck, `ArrowLeft` from `10` jumped to
+      `6`, and a default `RangeSlider` never reached its own maximum. The stops
+      now include `max` and arrow/Page/Home/End movement walks the stops; 6 core
+      + 3 runtime cases, both directions proven (plan `331`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

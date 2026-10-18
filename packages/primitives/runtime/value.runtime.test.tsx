@@ -382,3 +382,65 @@ it("keeps a meter out of the tab order", async () => {
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("b"));
 });
+
+it("paints the maximum of a step that does not divide the span", async () => {
+  // The bug guarded (plan 331 §1): a value of 10 with step 3 snapped back to
+  // the last grid stop, so `value={max}` painted the same 1116 px fill as 9.
+  const runtime = await mount(
+    <Stack direction="column" gap="md">
+      <Slider testId="nine" label="Nine" min={0} max={10} step={3} value={9} />
+      <Slider testId="ten" label="Ten" min={0} max={10} step={3} value={10} />
+    </Stack>,
+  );
+  const fillWidth = (testId: string): number => {
+    const fill = partsOf(runtime, testId)[0];
+    if (fill === undefined) return expect.fail(`${testId} painted no fill`);
+    return Option.getOrElse(runtime.boundsOfId(fill.id), () =>
+      expect.fail(`${testId} painted no fill box`),
+    ).width;
+  };
+  expect(fillWidth("ten")).toBeGreaterThan(fillWidth("nine"));
+  expect(announced(runtime, "Ten")).toBe("10");
+});
+
+it("walks the stop list with the keyboard at a coarse step", async () => {
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Coarse"
+      min={0}
+      max={10}
+      step={3}
+      defaultValue={0}
+    />,
+  );
+  runtime.keyDown("s", "end");
+  expect(announced(runtime, "Coarse")).toBe("10");
+  // The bug guarded (plan 331 §1): ArrowLeft from 10 jumped to 6, skipping 9.
+  runtime.keyDown("s", "left");
+  expect(announced(runtime, "Coarse")).toBe("9");
+  runtime.keyDown("s", "right");
+  expect(announced(runtime, "Coarse")).toBe("10");
+});
+
+it("starts a default RangeSlider at its maximum", async () => {
+  // `defaultValue` is documented as [min, max], but the step normalised the
+  // end to 9, so a "full" band left a strip of empty rail (plan 331 §1).
+  const runtime = await mount(
+    <Stack direction="column" gap="md">
+      <RangeSlider testId="full" label="Full" min={0} max={10} step={3} />
+      <RangeSlider
+        testId="nine"
+        label="Nine"
+        min={0}
+        max={10}
+        step={3}
+        defaultValue={[0, 9]}
+      />
+    </Stack>,
+  );
+  const offset = (testId: string): number =>
+    boundsOf(runtime, `${testId}-thumb-end`).x - boundsOf(runtime, testId).x;
+  expect(offset("full")).toBeGreaterThan(offset("nine"));
+  expect(announced(runtime, "Full maximum")).toBe("10");
+});

@@ -3,9 +3,10 @@
  *
  * The three components in the roles they actually differ in — a continuous
  * quality slider with a formatted value, a price range with two ends, and a
- * meter reporting a measurement. The sliders are controlled, so the example
- * shows the API a settings screen uses: the panel's own state is the source of
- * truth and the readout is derived from it.
+ * meter reporting a measurement. A coarse slider (`max` not on the step grid)
+ * shows the stop rule: 0, 3, 6, 9, then the maximum, 10. The sliders are
+ * controlled, so the example shows the API a settings screen uses: the panel's
+ * own state is the source of truth and the readout is derived from it.
  */
 
 import { useState, type ReactElement } from "react";
@@ -46,6 +47,7 @@ export const ValueExample = (): ReactElement => {
   const theme = useTheme();
   const [quality, setQuality] = useState(62);
   const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
+  const [depth, setDepth] = useState(10);
   const diskUsed = 68;
 
   return (
@@ -80,6 +82,21 @@ export const ValueExample = (): ReactElement => {
             onValueChange={setPrice}
             step={5}
             formatValue={(value) => `$${value}`}
+          />
+        </Row>
+
+        <Separator orientation="horizontal" />
+
+        <Row title="Colour depth" value={`${depth} bit`}>
+          <Slider
+            testId="value-example-depth"
+            label="Colour depth"
+            min={0}
+            max={10}
+            step={3}
+            value={depth}
+            onValueChange={setDepth}
+            formatValue={(value) => `${value} bit`}
           />
         </Row>
 

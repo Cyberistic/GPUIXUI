@@ -56,19 +56,87 @@ export const normalizeRange = (range: ValueRange): ValueRange => {
 const cleanStep = (value: number): number =>
   Number.parseFloat(value.toPrecision(15));
 
+/** The tolerance used to decide whether a grid stop landed on `max`. */
+const STEP_EPSILON = 1e-9;
+
 /**
- * Clamp a value into the range and snap it to the step, measured from `min`.
+ * A stepped range seen as its ordered stops.
  *
- * A value that is not a number reads as `min`: an unknown position must never
- * look like a deliberate one.
+ * The stops are `min`, `min + step`, … and then `max` itself when the grid did
+ * not land on it. `max` must always be reachable: it is the end of the track a
+ * caller asked for, and every caller sets `value={max}` expecting a full one.
+ * The model is O(1), so a million-step range costs nothing.
+ */
+interface Stops {
+  readonly range: ValueRange;
+  /** Whole grid intervals: `min + intervals * step` is the last grid stop. */
+  readonly intervals: number;
+  /** Whether `max` follows the last grid stop as its own stop. */
+  readonly extra: boolean;
+  /** `intervals + 1`, plus one when `max` is extra. */
+  readonly count: number;
+}
+
+const stopsOf = (range: ValueRange): Stops => {
+  const ratio = (range.max - range.min) / range.step;
+  const rounded = Math.round(ratio);
+  const intervals =
+    Math.abs(ratio - rounded) <= STEP_EPSILON ? rounded : Math.floor(ratio);
+  const extra =
+    range.max - (range.min + intervals * range.step) >
+    STEP_EPSILON * Math.max(1, Math.abs(range.max));
+  return { range, intervals, extra, count: intervals + 1 + (extra ? 1 : 0) };
+};
+
+/** The stop at an index, clamped into the stop list. */
+const stopAt = (
+  { range, intervals, extra, count }: Stops,
+  index: number,
+): number => {
+  const bounded = Math.min(count - 1, Math.max(0, index));
+  return extra && bounded > intervals
+    ? range.max
+    : Math.min(
+        range.max,
+        Math.max(
+          range.min,
+          cleanStep(range.min + Math.min(bounded, intervals) * range.step),
+        ),
+      );
+};
+
+/** The stop nearest a value; a tie goes to `max`, the end of the track. */
+const nearestStop = (stops: Stops, value: number): number => {
+  const { range, extra } = stops;
+  const candidate = stopAt(stops, Math.round((value - range.min) / range.step));
+  if (!extra) return candidate;
+  return Math.abs(range.max - value) <= Math.abs(candidate - value)
+    ? range.max
+    : candidate;
+};
+
+/** The index of a value that is already a stop. */
+const stopIndex = (stops: Stops, value: number): number =>
+  stops.extra && value >= stops.range.max
+    ? stops.count - 1
+    : Math.min(
+        stops.intervals,
+        Math.max(0, Math.round((value - stops.range.min) / stops.range.step)),
+      );
+
+/**
+ * Clamp a value into the range and snap it to the nearest stop.
+ *
+ * `max` is always a stop, so a step that does not divide the span still fills
+ * the track. A value that is not a number reads as `min`: an unknown position
+ * must never look like a deliberate one.
  */
 export const clampValue = (value: number, range: ValueRange): number => {
-  const { min, max, step } = normalizeRange(range);
-  if (!Number.isFinite(value)) return min;
-  const clamped = Math.min(max, Math.max(min, value));
-  if (step === 0) return clamped;
-  const snapped = min + Math.round((clamped - min) / step) * step;
-  return Math.min(max, Math.max(min, cleanStep(snapped)));
+  const normalized = normalizeRange(range);
+  if (!Number.isFinite(value)) return normalized.min;
+  const clamped = Math.min(normalized.max, Math.max(normalized.min, value));
+  if (normalized.step === 0) return clamped;
+  return nearestStop(stopsOf(normalized), clamped);
 };
 
 /** Where a value sits on its track: 0 at `min`, 1 at `max`. */
@@ -101,13 +169,25 @@ export const valueStep = (range: ValueRange): number => {
   return span > 0 ? span / 100 : 1;
 };
 
-/** `value` moved by `steps` steps (negative to decrease), clamped. */
+/**
+ * `value` moved by `steps` stops (negative to decrease), clamped.
+ *
+ * A stepped range moves along its stops, so the shorter last interval is one
+ * step like any other; a continuous range has no stops and moves by hundredths
+ * of its span.
+ */
 export const stepValue = (
   value: number,
   range: ValueRange,
   steps: number,
-): number =>
-  clampValue(clampValue(value, range) + steps * valueStep(range), range);
+): number => {
+  const normalized = normalizeRange(range);
+  const current = clampValue(value, normalized);
+  if (normalized.step === 0)
+    return clampValue(current + steps * valueStep(normalized), normalized);
+  const stops = stopsOf(normalized);
+  return stopAt(stops, stopIndex(stops, current) + steps);
+};
 
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   left: -1,
