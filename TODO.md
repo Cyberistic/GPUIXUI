@@ -469,10 +469,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–473)
+## Docs site workstream (plans 410–482)
 
-`[x]` `[██████████]` 79/80
+`[x]` `[██████████]` 80/81
 
+`[x]` **The public component API contract reaches the site (plan 482)** — `/docs/component-api` names the parts, controlled/uncontrolled, state-aware style, keyboard and accessibility rules; the parts index is generated from 29 compound records, the real `parts.ts`/`controllable.ts`/`keyboard.ts` sources are included, and the page records the runtime limitation the maintainer contract overstates
 `[x]` **A part name finds its component (plan 481)** — `DialogTitle` and every
       other declared part is searchable from ⌘K and the index filter, and a
       built-site query guards the production index
@@ -592,6 +593,7 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 `[~]` `[██░░░░░░░░]` 6/29
 
+`[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
 `[ ]` **Components**: expose the two props the remaining live scenes need — `ContextMenu.point` (its surface paints at an internal `{ x: 0, y: 0 }` set only by the trigger's aux click) and `DatePicker.defaultOpen` (it owns its open state). Plans 457 and the preview strategy record why both stay at their native tier until then
 `[ ]` **Components/primitives**: expose the open state the wrappers hide, so a live scene can prove it — `Select` and `Tooltip` (primitives) and `Combobox` (components) have no `open`/`defaultOpen`, while GPUix's primitives do; a headless check cannot prove a hover- or click-opened surface. Plan 458 records the three asks; no scene is faked meanwhile

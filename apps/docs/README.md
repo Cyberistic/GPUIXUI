@@ -177,6 +177,11 @@ src/component-meta/          the component registry (plan 411)
 public/screenshots/          real native screenshots (plan 412)
 ```
 
+`/docs/component-api` is the consumer-facing form of `docs/component-api.md`.
+Its parts index is generated from the registry (`src/components/part-index.tsx`),
+and `src/component-api-page.test.ts` pins the page's sections, its three real
+source includes and the runtime limitation the maintainer contract overstates.
+
 ## Landing page
 
 `/` is `src/components/landing.tsx`, extracted from the route so

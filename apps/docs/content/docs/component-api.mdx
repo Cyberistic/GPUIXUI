@@ -1,0 +1,164 @@
+---
+title: Component API
+description: The conventions every component follows — parts, controlled state, state-aware styles, keyboard and accessibility.
+---
+
+Most GPUIXUI components are **compounds**: one exported component and one props
+type per part, with the root owning the state. The rules are the same everywhere,
+so a reader who learns them once can predict any page. The full maintainer spec
+is [`docs/component-api.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/component-api.md);
+this page is the consumer-facing version, with the shared mechanisms included
+from the real source.
+
+## Parts
+
+A compound is composed from parts rather than configured with a prop for every
+region:
+
+```tsx
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@gpuixui/components/tabs";
+
+<Tabs defaultValue="billing">
+  <TabsList>
+    <TabsTrigger value="billing">Billing</TabsTrigger>
+    <TabsTrigger value="usage">Usage</TabsTrigger>
+  </TabsList>
+  <TabsContent value="billing">Invoices and receipts.</TabsContent>
+  <TabsContent value="usage">Requests this month.</TabsContent>
+</Tabs>;
+```
+
+- The **root** part owns the controlled-state props; a part never duplicates
+  them.
+- Children are typed by position: a parent declares `children?: PartChildren`,
+  which accepts elements and conditional slots, never text. A part used in a
+  parent that does not host it throws at render with both names. React 19 types
+  every JSX expression as the same element type, so this cannot be a compile
+  error — the render check is deliberate.
+- A component with one styled region exports **one** part (`Badge`, `Avatar`,
+  `Text`); it does not grow a `Root` that exists only to satisfy the rule.
+
+The position check and the `PartChildren` type the parts share:
+
+<include lang="ts" meta='title="packages/components/src/internal/parts.ts"'>
+  ../../../../packages/components/src/internal/parts.ts
+</include>
+
+### Every part in the library
+
+Generated from the same records that drive the pages. Each link leads to the
+component's own API tables; a `stateful` or `workspace` badge means the page also
+documents who owns its state.
+
+<PartIndex />
+
+## Controlled and uncontrolled
+
+Every stateful component takes both shapes:
+
+```tsx
+// Uncontrolled: the component starts at "billing" and owns the selection.
+<Tabs defaultValue="billing">…</Tabs>;
+
+// Controlled: the selection changes only when you pass a new `value`.
+const [tab, setTab] = useState("billing");
+<Tabs value={tab} onValueChange={setTab}>…</Tabs>;
+```
+
+`value` is authoritative. While it is set the component does not store a
+selection of its own; `onValueChange` still fires, so the caller can accept or
+reject the request. `defaultValue` is the uncontrolled starting point and is
+ignored while `value` is set. One hook implements the rule for every component:
+
+<include lang="ts" meta='title="packages/components/src/internal/controllable.ts"'>
+  ../../../../packages/components/src/internal/controllable.ts
+</include>
+
+## State-aware styles
+
+GPUix has no CSS, no data attributes and no CSS variables. A part that changes
+its look by state exposes a public state object instead: `style` accepts a
+`StyleDesc` **or** a `StateStyle<PartState>` function of the part's exported
+`<Part>State` type.
+
+```tsx
+<TabsTrigger
+  value="billing"
+  style={(state) => ({ opacity: state.active ? 1 : 0.85 })}
+>
+  Billing
+</TabsTrigger>
+```
+
+The state vocabulary is fixed — `active`, `checked`, `closed`, `disabled`,
+`focused`, `highlighted`, `invalid`, `open`, `orientation`, `selected` — and a
+part's type is named after the part: `TabsTriggerState`,
+`AccordionTriggerState`, `ComboboxItemState`. Every token a style reads comes
+from the active theme; see [Theming](/docs/theming).
+
+## Keyboard
+
+The shared decisions live in one module, and a component's page names the keys
+it adds on top:
+
+<include lang="ts" meta='title="packages/primitives/src/core/keyboard.ts"'>
+  ../../../../packages/primitives/src/core/keyboard.ts
+</include>
+
+- **Enter** activates on key down and **Space** on key up, so a held key never
+  fires repeatedly.
+- One roving tab stop per composite; arrows wrap and skip disabled parts, and
+  Home/End land on the nearest enabled end.
+- A menu, dialog or popover adds Escape and returns focus where it came from;
+  the component page states which.
+- **Limitation:** `@gpuix/native` 0.10.0 carries no `defaultPrevented` and no
+  way to prevent a platform default, so a Space key down inside a scroll
+  container may also scroll. No component fakes a `preventDefault` field; the
+  gap is recorded in the [capability matrix](/docs/capabilities).
+
+## Accessibility
+
+Only the props GPUix actually accepts are used:
+
+| Supported | Not available in 0.10.0 |
+| --------- | ----------------------- |
+| `role`, `aria-label`, `aria-description`, `aria-id` | `aria-labelledby`, `aria-describedby`, `aria-controls` |
+| `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level` | `aria-checked`, `aria-current`, `aria-valuenow`, `aria-modal` |
+| `tabIndex`, `autoFocus`, and the renderer's focus traversal | a visible-focus flag — a mouse press can paint the ring |
+
+A component that needs a missing attribute uses the strongest supported
+alternative (a required `label`, `aria-selected` or `aria-valuetext`) and records
+the gap in **Accessibility and limitations** on its page. The measured support
+matrix, with the evidence for each row, is on
+[GPUix capabilities](/docs/capabilities).
+
+## State ownership
+
+A stateful component is three modules: a pure runtime (`state.ts`) that turns
+commands into part-shaped state, a thin context that is the **only** place
+controlled and uncontrolled are resolved, and thin parts that emit one command
+per event and read their own state. The component owns the transition; the
+consumer owns the controlled value.
+
+If a workflow must survive a restart, the application writes it — the renderer
+stores nothing. Workspace persistence belongs to the app's own storage, and the
+component page names the serialised shape it expects. The interactive compound
+pages carry a **State and ownership** section; [Tabs](/docs/components/tabs) and
+[Toasts](/docs/components/toast) are the worked examples.
+
+## Where the rules live
+
+- [`docs/component-api.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/component-api.md) —
+  the full public contract, including the parts-by-component tables.
+- [`ADR 0004`](https://github.com/Cyberistic/GPUIXUI/blob/master/.agents/adr/0004-compound-part-api.md) —
+  why the API follows the compound-part shape.
+- [`ADR 0005`](https://github.com/Cyberistic/GPUIXUI/blob/master/.agents/adr/0005-component-state-model.md) —
+  the runtime/context/part split.
+- [GPUix capabilities](/docs/capabilities) — what the pinned runtime supports,
+  measured.
+- [Components](/docs/components) — every component, its status and its parts.
