@@ -406,7 +406,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ## Phase F — integration and polish
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[~]` `[███░░░░░░░]` 1/3
 
 `[~]` Consistency, keyboard, themes, composability pass
   - [x] Caller handler composition on interactive parts — plan 331: a part that
