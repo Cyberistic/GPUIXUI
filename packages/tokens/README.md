@@ -583,13 +583,17 @@ inherited `selectionColor`; apply it once on the app root. Chrome that must not
 be selectable sets `userSelect: "none"`. A native `<input>`/`<textarea>` is a
 custom element that paints its own fixed wash (`#7C86FF59`) and placeholder
 (`#8F8F8F`) in GPUix 0.10.0 and reads only `theme.caret`, so the theme's wash
-does not reach a native field. Content painted on a filled action uses
+does not reach a native field. Content painted on an opaque filled surface — a
+filled action such as `softAction`, or a solid status chip — uses
 `selectionStyle(theme, "fill")`: the accent-tinted wash composites to 1.000:1 on
 `primary` in six shipped palettes, so `selectionOnFill` is a neutral 15% veil.
-`selectionFillPairs` and `selectionFillWashPairs` hold all four filled families'
-(`primary`, `secondary`, `destructive`, `accent`) foregrounds and the veil itself
-to their floors. A runnable example lives in
-[`src/selection.example.ts`](./src/selection.example.ts).
+`selectionFillPairs` and `selectionFillWashPairs` hold every opaque fill's
+(`primary`, `secondary`, `destructive`, `accent`, `info`, `success`, `warning`,
+`softAction`, indexed by `selectionFillRoles`) foreground and the veil itself to
+their floors. A runnable example lives in
+[`src/selection.example.ts`](./src/selection.example.ts); the solid chip's
+copyable style in [`src/status-tone.example.ts`](./src/status-tone.example.ts)
+applies the same veil.
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";

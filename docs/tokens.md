@@ -249,7 +249,7 @@ A runnable example lives in
 | `placeholder` | `#66707F` | `#858F9F` | a hint the consumer renders on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
-| `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on a filled action (15% in both modes; `selectionColor`) |
+| `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
@@ -511,7 +511,7 @@ carries, so it cannot claim another.
 | `destructiveSoft` | `#FFC6C6` | `#5C1619` | soft destructive surface |
 | `destructiveSoftForeground` | `#3A0B0D` | `#FFE0E0` | text and icons on `destructiveSoft` |
 | `destructiveSoftBorder` | `#A5262B` | `#FF6B6B` | edge around `destructiveSoft` |
-| `softAction` | `#FFFFFF` | `#3A414D` | raised action on a soft status panel |
+| `softAction` | `#FFFFFF` | `#343B47` | raised action on a soft status panel |
 | `softActionForeground` | `#000000` | `#FFFFFF` | text and icons on `softAction` and on the panel a ghost action rests on |
 | `softActionHover` | `#F5F5F5` | `#454D5B` | `softAction` while hovered, and a ghost action's hover wash |
 | `softActionActive` | `#EBEBEB` | `#4C5462` | `softAction` while pressed, and a ghost action's press wash |
@@ -526,7 +526,7 @@ carries, so it cannot claim another.
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
-| `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on a filled action (15% in both modes; `selectionColor`) |
+| `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
 | `overlay` | `#000000A6` | `#FFFFFF26` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
@@ -1239,20 +1239,27 @@ const chrome = { userSelect: "none" } as const;
 A runnable example lives in
 [`src/selection.example.ts`](../packages/tokens/src/selection.example.ts).
 
-Content painted on a **filled action** uses `selectionOnFill` instead of
+Content painted on an **opaque filled surface** — a filled action such as
+`softAction`, or a solid status chip — uses `selectionOnFill` instead of
 `selection`. The accent-tinted wash *is* the accent, so on a `primary` fill it
 composites to **1.000:1** — an invisible highlight on the one surface a user
 message is painted on (identity dark, macOS light and dark, Linux light, Windows
-light and Aero light). The neutral 15% veil steps away from the fill in both
-modes: `selectionFillPairs` holds one text pair per filled family —
-`primary`, `secondary`, `destructive` and `accent`, derived from
-`filledControlFamilies` — at **4.827:1** at the tightest (macOS dark,
-`accentForeground` on `accent`), above the 4.5:1 the on-colour role already has,
-and `selectionFillWashPairs` holds the veil itself at **1.075:1** at the
-tightest (identity dark high, `selectionOnFill` on `primary`), above the 1.05:1
-perceivability floor.
+light and Aero light). It is just as lost on a solid status chip: identity light
+`success` measures **1.046:1**, macOS light 1.026:1, Linux light 1.027:1,
+Windows light `info` 1.011:1 and Windows 7 light 1.011:1, and the AAA dark
+`softAction` measured 1.047:1 before plan `504` moved that fill one step darker
+(`#3A414D` → `#343B47`), which also keeps its white label at 7.165:1 through the
+veil and the raised action at 1.071:1 on every AAA soft tint. `selectionFillRoles`
+is the list: `primary`, `secondary`, `destructive`, `accent`, `info`, `success`,
+`warning` and `softAction`. The neutral 15% veil steps away from each fill in
+both modes: `selectionFillPairs` holds one text pair per fill at **4.827:1** at
+the tightest (macOS dark, `accentForeground` on `accent`), above the 4.5:1 the
+on-colour role already has, and `selectionFillWashPairs` holds the veil itself at
+**1.060:1** at the tightest (identity dark high, `selectionOnFill` on `info`),
+above the 1.05:1 perceivability floor.
 `selectionStyle(theme, "fill")` applies it to a subtree, and
-`filledContentStyle` in the example is the copyable version:
+`filledContentStyle` and `statusSolidStyles` in the examples are the copyable
+versions:
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";
@@ -1267,13 +1274,17 @@ import { selectionStyle } from "@gpuixui/tokens";
 </div>;
 ```
 
-The eight pairs join the checker and are reported with
+The sixteen pairs join the checker and are reported with
 `wash: "selectionOnFill"`. Plan `344` measured the three families that existed
 in its pair list; plan `382` derives both lists from `filledControlFamilies`, so
 the fourth family (`accent`) is covered too. Its label measured **4.140:1** on
 macOS light and **4.430:1** on Linux dark through the veil, so the two accent
 foregrounds move one designed step (`#0055B3` → `#004A9E` and `#A8CBF0` →
-`#B4D5F7`); every other shipped set already cleared the floor.
+`#B4D5F7`); every other shipped set already cleared the floor. Plan `504` closes
+the rest of the surface: a solid status chip and the panel action are opaque
+fills no control-family index owns, and both lists now derive from
+`selectionFillRoles`, so a fifth tone or a new panel action joins one place. No
+other colour moves.
 
 ### Native text fields
 
@@ -2244,7 +2255,11 @@ to **315**. Plan `344` adds the inverse selection veil for content painted on a
 filled action — `selectionOnFill` on `primary`/`secondary`/`destructive` — as six
 wash pairs beside the plain `contrastPairs` list; plan `382` derives both fill
 lists from `filledControlFamilies`, so the fourth family (`accent`) brings the
-selection-contract total to **eight** pairs. Plan `346` holds a status
+selection-contract total to **eight** pairs. Plan `504` derives both lists from
+`selectionFillRoles` instead, adding the solid status chips (`info`, `success`,
+`warning`) and the status panel's `softAction`, which brings the total to
+**sixteen** pairs and moves the AAA dark `softAction` one step darker so its
+white label keeps 7:1 through the veil. Plan `346` holds a status
 panel's caption and link — `mutedForeground` and `primaryText` on the four soft
 status fills — taking it from 315 to **323**. Plan `347` adds the value
 indicator's groove — `track` on the four base surfaces and the persistent

@@ -1318,6 +1318,17 @@ seven values move one designed step and XP light names its own Luna green as the
 progress mark, because the inherited identity green is what made the palette
 appear infeasible (plan 503)
 
+`[x]` Hold a solid status chip's and the panel action's text selection — a
+solid `info`/`success`/`warning` chip carries its own on-colour and so does
+`softAction`, but both lists derived from the four *interactive* families, so
+the accent-tinted wash had no pair on any of them and measured under 1.05:1 on
+eleven shipped chip compositions (worst 1.011:1, Windows light `info`) and on
+the AAA dark `softAction` (1.047:1); `selectionFillRoles` now owns the eight
+opaque fills, both lists derive from it (4 + 4 → 8 + 8), the AAA dark
+`softAction` moves one step darker (`#3A414D` → `#343B47`) so its white label
+keeps 7:1 through the veil (7.165:1) while clearing 1.071:1 on every AAA soft
+tint, and `statusSolidStyles` paints the veil (plan 504)
+
 ## Phase C — Tier 1–2 components
 
 `[ ]` `[░░░░░░░░░░]` 0/3

@@ -199,7 +199,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [501](./501-floor-table-scrim-row.md) | The accessibility floor table's modal scrim row | F | 099, 359, 375, 395, 351, 352, 354, 398, 500 | done |
 | [502](./502-interaction-direction.md) | The interaction ladder's direction in the total check | F | 097, 327, 342, 357, 381, 383, 387, 388, 394, 398 | done |
 | [503](./503-track-row-washes.md) | The value indicator's groove on the row washes and status panels | F | 347, 094, 322, 300, 309, 366, 381, 388 | done |
-| [504](./504-solid-status-chip-selection.md) | The solid status chip and the panel action on the inverse selection veil | F | 344, 382, 394, 399 | in progress |
+| [504](./504-solid-status-chip-selection.md) | The solid status chip and the panel action on the inverse selection veil | F | 344, 382, 394, 399 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
