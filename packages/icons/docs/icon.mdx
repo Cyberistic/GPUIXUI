@@ -46,7 +46,7 @@ change the accessibility role or the name — those come from `label`.
 | `name` | `IconName` | — (required) | which icon; TypeScript rejects an unknown name |
 | `color` | `string` | — (required) | the tint; pass a theme role |
 | `size` | `IconSize \| number` | `"md"` | a named step or raw pixels; a non-finite or negative number falls back to `"md"` |
-| `label` | `string` | none | accessible name; presence promotes the icon to an image |
+| `label` | `string` | none | accessible name; a **non-blank** value promotes the icon to an image, a blank one leaves it decorative, and a real value is trimmed |
 | `testId` | `string` | — | stable locator |
 | `style` | `StyleDesc` | none | extra paint or layout, merged last |
 
@@ -74,7 +74,8 @@ Two rules the component enforces, because both fail silently otherwise:
 - **`color` is required.** A monochrome SVG with no tint paints black, which is
   invisible in a dark theme. There is no default palette by design.
 - **A decorative icon gets `role="presentation"`** and produces no accessibility
-  node; only a `label` promotes it to `role="img"` with a name. An icon that
+  node; only a **non-blank** `label` promotes it to `role="img"` with a name
+  (whitespace-only is absent, and a real name is trimmed). An icon that
   announces itself inside a button makes the button read twice.
 
 The rendered `<svg>` also sets `pointerEvents: "none"` by default, so an icon
@@ -104,13 +105,15 @@ paint values a monochrome tint can use. No individual icon carries a colour.
   of scripts, external references and embedded colours.
 - `src/sizes.test.ts` — every named step resolves, a raw number passes through,
   and a number the runtime cannot paint falls back to `md` (plan `371`).
-- `src/Icon.test.ts` — the decoration/image rule, required colour, the
-  pointer-events rule and the caller-style merge.
+- `src/Icon.test.ts` — the decoration/image rule (including a blank label as
+  decoration and a trimmed real name), required colour, the pointer-events rule
+  and the caller-style merge.
 - `src/docs.test.ts` — the API table lists exactly the props `Icon` accepts, and
   the size table matches `ICON_SIZES`.
 - `packages/primitives/runtime/icons.runtime.test.tsx` — the raw `<svg source>`
-  paints at 20×20 (`lg`) and 24×24 (`xl`); a decorative icon is absent from the
-  accessibility tree while a labelled one is an `Image`; a caller `marginLeft`
+  paints at 20×20 (`lg`) and 24×24 (`xl`); a decorative icon — including one
+  given a blank label — is absent from the accessibility tree while a labelled
+  one is an `Image`; a caller `marginLeft`
   moves the painted mark by exactly that many pixels; a red versus blue capture
   differs byte-wise, so the tint reaches the paint.
 

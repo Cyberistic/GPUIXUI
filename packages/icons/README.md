@@ -37,7 +37,8 @@ Two rules the component enforces, because both are silent bugs otherwise:
   is invisible in a dark theme. Pass a token role; there is no default palette
   by design (see `AGENTS.md` §4 on scattered literals).
 - **A decorative icon gets `role="presentation"`** and produces no
-  accessibility node; only a `label` promotes it to `role="img"`. An icon that
+  accessibility node; only a **non-blank** `label` promotes it to `role="img"`
+  (whitespace-only is absent, and a real name is trimmed). An icon that
   announces itself inside a button makes the button read twice.
 
 The rendered `<svg>` also sets `pointerEvents: "none"` by default, so an icon
@@ -96,8 +97,9 @@ package that consumes icons — see plan 041 §2.2). Measured 2026-10-17:
   24×24;
 - a caller `style` reaches the paint: `marginLeft: 12` moves the mark exactly 12
   pixels;
-- a decorative icon is absent from the accessibility tree, and a labelled one is
-  an `Image` node carrying its name;
+- a decorative icon — including one handed a blank label — is absent from the
+  accessibility tree, and a labelled one is an `Image` node carrying its trimmed
+  name;
 - `style.color` tints the painted mark: two captures of the same red icon are
   byte-identical while the blue capture differs.
 

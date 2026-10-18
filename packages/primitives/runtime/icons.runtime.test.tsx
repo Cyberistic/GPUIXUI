@@ -86,9 +86,20 @@ it("takes a decorative icon out of the accessibility tree and keeps a named one"
   mount(runtime, <Icon name="check" color="#123456" testId={ICON} />);
   expect(Option.isNone(a11yNode(runtime.a11y(), { role: "Image" }))).toBe(true);
 
+  // Plan 399: a blank label is decoration, not an unnamed `img`.
+  Arr.forEach(["", "   "], (label) => {
+    mount(
+      runtime,
+      <Icon name="check" color="#123456" label={label} testId={ICON} />,
+    );
+    expect(Option.isNone(a11yNode(runtime.a11y(), { role: "Image" }))).toBe(
+      true,
+    );
+  });
+
   mount(
     runtime,
-    <Icon name="check" color="#123456" label="Done" testId={ICON} />,
+    <Icon name="check" color="#123456" label=" Done " testId={ICON} />,
   );
   const named = Option.getOrElse(
     a11yNode(runtime.a11y(), { label: "Done" }),

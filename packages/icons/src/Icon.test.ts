@@ -40,6 +40,25 @@ describe("Icon", () => {
     expect(props["aria-label"]).toBe("Validation failed");
   });
 
+  it.each(["", "   "])(
+    "treats the blank label %j as decoration, not an unnamed image",
+    (label) => {
+      const { props } = render({ name: "check", color: "#123456", label });
+      expect(props.role).toBe("presentation");
+      expect(props["aria-label"]).toBeUndefined();
+    },
+  );
+
+  it("trims a real label before it becomes the name", () => {
+    const { props } = render({
+      name: "check",
+      color: "#123456",
+      label: "  Done  ",
+    });
+    expect(props.role).toBe("img");
+    expect(props["aria-label"]).toBe("Done");
+  });
+
   it("paints the requested geometry and tint", () => {
     const { props } = render({ name: "chevron-down", color: "#abcdef" });
     expect(props.source).toBe(icons["chevron-down"]);

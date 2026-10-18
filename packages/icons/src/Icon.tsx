@@ -18,7 +18,8 @@ export interface IconProps {
   size?: IconSize | number;
   /**
    * Accessible name. Give one when the icon is the only content of a control;
-   * omit it for decoration, which takes the icon out of the accessibility tree.
+   * omit it — or pass a blank string — for decoration, which takes the icon out
+   * of the accessibility tree. A real name is trimmed.
    */
   label?: string;
   /** Stable locator for automation. */
@@ -38,8 +39,8 @@ export interface IconProps {
  * here, not a component tree: no `<path>` children, no icon font, no CSS. Size
  * comes from `style.width`/`height`; tint from `style.color`. A caller's
  * `style` is merged **last**, so an icon can be nudged onto a baseline without
- * a wrapper — and it cannot change the role or the name, which come from the
- * props.
+ * a wrapper — and it cannot change the role or the name, which come from
+ * `label` (a blank label leaves the icon decorative).
  */
 export const Icon = ({
   name,
@@ -50,6 +51,8 @@ export const Icon = ({
   style: override,
 }: IconProps): ReactElement<SvgProps> => {
   const pixels = iconPixels(size);
+  const accessibleName = label?.trim();
+  const named = accessibleName !== undefined && accessibleName.length > 0;
   const style: NonNullable<SvgProps["style"]> = {
     width: pixels,
     height: pixels,
@@ -62,8 +65,8 @@ export const Icon = ({
   return (
     <svg
       source={icons[name]}
-      role={label === undefined ? "presentation" : "img"}
-      aria-label={label}
+      role={named ? "img" : "presentation"}
+      aria-label={named ? accessibleName : undefined}
       testId={testId}
       style={style}
     />

@@ -1354,6 +1354,16 @@ retired once both branches are one
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
 
+`[x]` `packages/primitives` + `packages/icons`: **a blank icon label created an
+      unnamed image** — `Icon` promoted any present `label` to `role="img"`, so
+      `label=""` or `"   "` (a computed missing translation) published an
+      unnamed image while the page promised only a label promotes it; the class
+      plan `396` fixed for Button/Toggle/ScrollArea. A blank label is now
+      absent (presentation, no `aria-label`) and a real name is trimmed; unit
+      cases plus the scoped runtime suite prove an `Image` node disappears for
+      both blank forms and ` Done ` announces `Done` (plan `399`; offline icons
+      23 → 27, primitives 705, scoped live 5/5).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: the `SUMMARIES` override table in
