@@ -178,6 +178,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [381](./381-selected-row-step.md) | The selected row is a perceivable step from the hover wash | F | 016, 059, 081, 097, 309, 327, 342, 357, 380 | done |
 | [382](./382-accent-fill-selection.md) | The accent family's text selection on its filled action | F | 097, 327, 344, 381 | done |
 | [383](./383-total-theme-check.md) | One total check for an edited theme | F | 071, 073, 358, 371, 380 | done |
+| [384](./384-content-box-fit.md) | A size that must fit must fit the content box | F | 353, 358, 360, 365, 372 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1615,6 +1616,24 @@ order (format, contrast, metrics), the `ThemeFailure` union names the `kind`,
 and the `contrast` argument reaches the contrast half unchanged. No role, pair,
 floor, metric or shipped value moves; the new suite holds every shipped set to
 `[]` and proves a partial check cannot pass a broken theme.
+
+384 closes the last three fit rules that compared an item to the **outer**
+metric. The contract already claimed that an icon and a field adornment "fit the
+smallest control" and that a chip "fits in a field", but a control paints its
+two borders inside its height and a field paints its borders and horizontal
+padding inside its minimum width — from `primitives/src/core/style.ts`, whose
+`height` is `controlHeight[size]`, `borderWidth` is `borderWidth.thin` and
+padding is `controlPaddingX[size]`. The probes returned `[]` for an adornment
+equal to the control height (a 24px glyph in a 22px content box), a chip equal
+to the field width (80px in a 68px content box at `fieldMinWidth: 90`) and an
+icon equal to the control height. The three bounds now name the container —
+`controlHeight.sm ≥ iconSize.md + 2 × borderWidth.thin`,
+`controlHeight.sm ≥ fieldAdornmentSize + 2 × borderWidth.thin`, and
+`fieldMinWidth ≥ chipMinWidth + 2 × controlPaddingX.md + 2 × borderWidth.thin` —
+so the check reports the metric a reader must raise. Every shipped set fits
+comfortably (16 in 24/28/32; 80 in 200), so no token value moves; the four new
+cases fail without the bounds and `metrics.test.ts`'s icon case moves from the
+removed `at-most` rule to the density member.
 
 ### Reference adoption (block `200–299`)
 
