@@ -306,11 +306,18 @@ const openPageSurface = async (
       const state = frame?.contentDocument?.documentElement?.dataset.gpuix;
       if (state === "ready") {
         const canvas = frame?.contentDocument?.querySelector("canvas");
-        return JSON.stringify({
-          state,
-          src: frame?.getAttribute("src") ?? "",
-          canvas: [canvas?.width ?? 0, canvas?.height ?? 0],
-        });
+        const width = canvas?.width ?? 0;
+        const height = canvas?.height ?? 0;
+        // Measured 2026-10-18: the first page visited reported a 1×1 canvas and
+        // passed, because a ready flag lands before the frame is sized. A blank
+        // first frame is what this gate exists to catch, so wait for the size.
+        if (width > 1 && height > 1) {
+          return JSON.stringify({
+            state,
+            src: frame?.getAttribute("src") ?? "",
+            canvas: [width, height],
+          });
+        }
       }
       if (state === "failed") {
         return JSON.stringify({
