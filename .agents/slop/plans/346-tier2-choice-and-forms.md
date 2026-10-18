@@ -291,10 +291,10 @@ binding (ADR 0003):
 
 | Scenario | Checks | Result |
 | -------- | ------ | ------ |
-| `tier2-choice` | 60 | pass |
+| `tier2-choice` | 59 | pass |
 | `tier2-forms` | 34 | pass |
 
-Suite `74 → 76` scenarios, `2070 → 2164` checks, exit `0`.
+Suite `74 → 76` scenarios, `2070 → 2163` checks, exit `0`.
 
 Live twins (real 1100×720 window):
 

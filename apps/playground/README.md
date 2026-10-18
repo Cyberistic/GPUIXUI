@@ -961,7 +961,7 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **76/76 green** here (`exit 0`, 2164 checks):
+The suite is **76/76 green** here (`exit 0`, 2163 checks):
 
 ```
 76/76 scenarios passed · capabilities: layout=verified text=verified

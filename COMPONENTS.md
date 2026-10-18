@@ -732,7 +732,7 @@ schema message replacing the description, `Required` in the description),
 `Fieldset` (named `Group`, disabled token paint, refused edits and tab-order
 exit) and `Form` (messages on an invalid submit, decoded value on a valid one,
 pending lock).
-The suite is `76/76` (2164 checks) and `tier2=verified`. Consumer-path facts
+The suite is `76/76` (2163 checks) and `tier2=verified`. Consumer-path facts
 recorded in plan `330` §8, plan `344` §8 and plan `346` §8: the renderer needs
 **one root host
 element** (a provider with sibling children at the root paints nothing), the

@@ -172,7 +172,6 @@ const Probe = () => {
           >
             <ComboboxTrigger
               testId="assign-trigger"
-              aria-id="assign-trigger"
               label="Assign reviewer"
               placeholder="No reviewer"
             />
@@ -319,11 +318,6 @@ export const tier2ChoiceScenario: PlaygroundScenario = {
       ctx.host.click("choice-outside");
       yield* ctx.expectEqual(
         "an outside press closes the popover",
-        Option.isNone(painted(ctx, "popover-panel")),
-        true,
-      );
-      yield* ctx.expectEqual(
-        "the outside press closed it once",
         Option.isNone(painted(ctx, "popover-panel")),
         true,
       );
