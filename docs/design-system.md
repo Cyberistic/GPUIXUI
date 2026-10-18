@@ -732,6 +732,15 @@ fails the contrast check as `NaN`; the colour check remains the one that names
 the form. All 24 shipped sets are hex, so the check moves no
 value; `isHexColor` is the predicate for a single stored role.
 
+The form has a second half. `themeOpacityFailures` asks for the alpha the role is
+painted with: the three veils — `selection`, `overlay` and `selectionOnFill` —
+composite over content, so each needs a byte strictly between `00` and `FF`, and
+every other role is opaque. `shadow` is the opposite case: each level's alpha
+writes the tint's fourth byte, so an eight-digit tint is a value the paint
+discards, and a solid `overlay` hides the window the scrim exists to keep
+recognisable. `roleForm` is the rule and `translucentRoles` the index; all 24
+shipped sets carry the form they need, so no colour moves.
+
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
 the identity metrics, the shipped role count, the theme surfaces, the type
 summary, and the spacing, density, radius, icon and avatar scales — to the same
@@ -770,7 +779,7 @@ design system cannot compensate for a missing role.
 | no `scrollbarColor`/`scrollbarWidth` in 0.10.0 | a scroll thumb cannot be tinted, so `scrollbar` is reserved |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are geometry plus an alpha over the `shadow` tint, not CSS strings |
-| invalid colour strings are ignored per property | a role outside the six- or eight-digit hex form the helpers parse is reported by `themeColorFailures`; the runtime would paint it while the token maths cannot |
+| invalid colour strings are ignored per property | a role outside the six- or eight-digit hex form the helpers parse is reported by `themeColorFailures`; the runtime would paint it while the token maths cannot. The channel is the other half: `themeOpacityFailures` reports a veil without an alpha byte and an opaque role with a partial one |
 
 ## 11. Extension
 
@@ -843,7 +852,8 @@ role, a metric or a shadow level. Nothing mutates the base, so a theme can be
 created once at startup and shared.
 
 Verify an edited theme with `themeFailures(theme)`: it composes the colour
-format, typeface, contrast, text hierarchy, interaction direction and numeric
+format, role opacity, typeface, contrast, text hierarchy, interaction direction
+and numeric
 metric checks, checks contrast at the level the theme declares, and tags every
 entry with the `kind` that found it. An empty array is the library's guarantee,
 and a non-empty one names every pair, tier, role, ladder or metric that needs
@@ -851,11 +861,13 @@ fixing. The direction half is `themeDirectionFailures`: a pointer ladder must
 step away from the canvas — darker in light, lighter in dark — so a light
 `primaryHover` that is lighter than its `primary` is reported even though it
 clears the 1.05:1 step, the on-colour floor and the surface floor. Each part is
-available on its own — `themeColorFailures`, `themeTypefaceFailures`,
+available on its own — `themeColorFailures`, `themeOpacityFailures`,
+`themeTypefaceFailures`,
 `themeContrastFailures`, `themeTextTierFailures`, `themeDirectionFailures` and
 `themeMetricFailures` — but
-a consumer that runs only one has not run the guarantee: a zero focus-ring spread
-or an unparseable `shadow` tint passes the contrast check alone. `themeChecks`
+a consumer that runs only one has not run the guarantee: a zero focus-ring spread,
+an unparseable `shadow` tint or a translucent one the paint discards passes the
+contrast check alone. `themeChecks`
 is the ordered index of those parts. A family name is one exact, non-empty
 family — not a CSS comma stack, not a CSS generic keyword and not a padded name
 — because `StyleDesc.fontFamily` is a single string and an unknown name falls

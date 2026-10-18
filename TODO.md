@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 204/270
+`[x]` `[███████░░░]` 205/271
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1665,6 +1665,14 @@ macOS light `input` fill; the three figures join `figures.ts` through a new
 `"dim"` kind, `src/disabled-state.example.ts` ships the three roles a control
 paints instead, and `disabled-state.test.ts` holds the brand dim below the
 inactive floor in all 24 shipped sets (plan 539)
+`[x]` Ship the alpha half of the theme contract — `themeOpacityFailures` asks
+for the alpha a role is painted with: the three veils (`selection`, `overlay`,
+`selectionOnFill`) need a byte strictly between `00` and `FF` and every other
+role is opaque, because `elevationShadow` writes the level's alpha into the
+`shadow` tint (a tint authored at 50% painted at 12%) and a solid `overlay`
+hides the window; the seventh check makes the guarantee seven, the docs' "third
+check" ordinal is gone, and the README no longer claims the composition suites
+run three separate checks (plan 540)
 
 ## Phase C — Tier 1–2 components
 

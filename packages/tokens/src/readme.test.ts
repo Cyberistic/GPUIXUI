@@ -74,10 +74,18 @@ describe("packages/tokens/README.md", () => {
       "four",
       "five",
       "six",
+      "seven",
     ] as const;
     const count = countWords[themeChecks.length];
     expect(readme).toContain(`That is one of ${count} checks`);
     expect(readme).toContain(`composes all ${count}`);
+  });
+
+  it("names the one check the composition suites run", () => {
+    expect(readme).toContain("holds each result to `themeFailures`");
+    expect(readme).not.toContain(
+      "`themeContrastFailures`, `themeMetricFailures` and `themeColorFailures`",
+    );
   });
 
   it("does not describe a subset as the guarantee", () => {

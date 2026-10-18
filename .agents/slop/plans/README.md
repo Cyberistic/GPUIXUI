@@ -234,6 +234,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [537](./537-tier-figures.md) | The tier figures the two documents quote | F | 392, 500, 510, 520, 527, 536 | done |
 | [538](./538-tier-surface-counts.md) | The tier paragraph's surface counts | F | 392, 500, 527, 537 | done |
 | [539](./539-disabled-dim-figure.md) | The disabled dim's documented figure | F | 306, 336, 537, 538 | done |
+| [540](./540-colour-role-opacity-form.md) | The alpha form of a colour role | F | 371, 383, 398, 505, 508, 509 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2491,6 +2492,20 @@ measures **3.273:1** on the macOS light `input` fill. The three figures join the
 `figures.ts` table through a new `"dim"` kind and are derived from
 `shippedThemes`, and `src/disabled-state.example.ts` ships the three roles a
 control paints instead. No colour, pair, floor or check moves.
+
+Plan `540` completes the total check's last domain: the **alpha channel** of a
+role. `themeColorFailures` accepts six- and eight-digit hex because the maths
+parses both, so `shadow: "#191D2580"` passed every check while
+`elevationShadow` replaced the authored 50% with the level's own 12% —
+`alpha()` writes the fourth byte rather than composing it — and
+`overlay: "#000000"` passed while a solid scrim hid the window the role exists
+to keep recognisable. `themeOpacityFailures` is the seventh check: the three
+veils (`translucentRoles` — `selection`, `overlay`, `selectionOnFill`) need a
+byte strictly between `00` and `FF`, every other role is opaque (`roleForm` is
+the total rule), and a value the hex parser cannot read stays the colour check's
+diagnostic. The docs' "third check" ordinal and the README's claim that the
+composition suites run three separate checks are corrected in the same pass. No
+colour, pair, floor or metric moves.
 
 ## How to use a plan
 

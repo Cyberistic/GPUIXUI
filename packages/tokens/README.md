@@ -288,11 +288,12 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-That is one of six checks, and running it alone is not the guarantee: a zero
-`borderWidth.strong` (no focus ring), a `scrollbar: "rebeccapurple"` role, a CSS
+That is one of seven checks, and running it alone is not the guarantee: a zero
+`borderWidth.strong` (no focus ring), a `scrollbar: "rebeccapurple"` role, a
+translucent `shadow` tint the paint discards, a solid `overlay` scrim, a CSS
 family stack, a `disabledForeground` raised to body strength or a light pointer
 ladder whose hover lightens passes it.
-`themeFailures(theme, contrast = theme.contrast)` composes all six and tags each
+`themeFailures(theme, contrast = theme.contrast)` composes all seven and tags each
 entry with the `kind` that found it:
 
 ```ts
@@ -301,12 +302,12 @@ import { themeFailures } from "@gpuixui/tokens";
 themeFailures(brandTheme); // [] when every colour, family, pair, tier, ladder and metric holds
 ```
 
-The order is diagnostic — `color`, `typeface`, `contrast`, `hierarchy`,
-`direction`, then
+The order is diagnostic — `color`, `opacity`, `typeface`, `contrast`,
+`hierarchy`, `direction`, then
 `metric` — and `themeChecks` is that order as a list, so a report or a settings
 screen iterates the index instead of retyping the kinds. The payload is the same
-`ColorFailure`, `TypefaceFailure`, `ContrastFailure`, `TextTierFailure`,
-`DirectionFailure` or
+`ColorFailure`, `OpacityFailure`, `TypefaceFailure`, `ContrastFailure`,
+`TextTierFailure`, `DirectionFailure` or
 `MetricFailure` the individual check returns. `themeTextTierFailures` is the
 fifth check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below the
 body role each surface paints — `foreground` on the canvas and the row washes,
@@ -359,6 +360,24 @@ metric check returns `[]`. Since plan 505 the elevation check reports the tint a
 `NaN` too, so the colour check is the one that names the form. `#000` and
 `rgb(0 0 0)` behave the same way; `isHexColor(value)` is the predicate for a
 single stored role.
+
+The same bytes have a second form: the alpha channel.
+`themeOpacityFailures(theme)` holds the three veils — `selection`, `overlay` and
+`selectionOnFill`, the `translucentRoles` index — to a byte strictly between `00`
+and `FF`, and every other role to an opaque value (`roleForm` is the rule). The
+tint is why: `elevationShadow` writes the level's alpha into the tint's fourth
+byte, so `shadow: "#191D2580"` painted at 12% while every other check returned
+`[]`, and a solid `overlay` hides the window the scrim exists to veil:
+
+```ts
+import { extendTheme, getTheme, themeOpacityFailures } from "@gpuixui/tokens";
+
+const tinted = extendTheme(getTheme("light"), {
+  colors: { shadow: "#191D2580" },
+});
+
+themeOpacityFailures(tinted); // [{ role: "shadow", expected: "opaque" }]
+```
 
 The two families are also held to the form the runtime reads:
 `themeTypefaceFailures(theme)` reports a name that is empty (`non-empty`), a
@@ -826,8 +845,7 @@ dark `skeleton`, because Linux owns a darker tint (plan 091) and a style applied
 over another platform's theme must not keep that platform's tint.
 `platform-composition.test.ts` applies every shipped base and style pair in both
 modes, both contrasts and both requested levels and holds each result to
-`themeContrastFailures`, `themeMetricFailures` and `themeColorFailures`
-(plan 374).
+`themeFailures` (plan 374), as one call since plan 398.
 
 ## Custom typefaces
 

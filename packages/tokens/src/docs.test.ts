@@ -1863,6 +1863,34 @@ describe("docs/tokens.md colour format contract", () => {
   });
 });
 
+describe("docs/tokens.md opacity contract", () => {
+  it("names the check, the failure type and both indexes", () => {
+    [
+      "themeOpacityFailures",
+      "OpacityFailure",
+      "translucentRoles",
+      "roleForm",
+    ].forEach((name) => {
+      expect(markdown).toContain(name);
+    });
+  });
+
+  it("states the three veils and the tint consequence", () => {
+    ["`selection`", "`overlay`", "`selectionOnFill`"].forEach((role) => {
+      expect(markdownProse).toContain(role);
+    });
+    expect(markdownProse).toContain("writes the fourth byte");
+    expect(markdownProse).toContain("`shadow`");
+    expect(markdownProse).toContain("opaque");
+  });
+
+  it("states the form in the design system", () => {
+    expect(designSystem).toContain("`themeOpacityFailures`");
+    expect(designSystem).toContain("`translucentRoles`");
+    expect(designSystem).toContain("`roleForm`");
+  });
+});
+
 describe("docs/tokens.md typeface contract", () => {
   it("names the check, the failure type and both indexes", () => {
     [
@@ -1897,6 +1925,7 @@ describe("docs/tokens.md typeface contract", () => {
   it("states the size of the guarantee in both documents", () => {
     const checkNames = {
       color: "colour format",
+      opacity: "role opacity",
       typeface: "typeface form",
       contrast: "contrast",
       hierarchy: "text hierarchy",
@@ -1911,6 +1940,7 @@ describe("docs/tokens.md typeface contract", () => {
       "four",
       "five",
       "six",
+      "seven",
     ] as const;
     const names = themeChecks.map((kind) => checkNames[kind]);
     const sentence = `${names.slice(0, -1).join(", ")} and ${names.slice(-1).join("")}`;

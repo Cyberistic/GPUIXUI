@@ -78,6 +78,7 @@ missing here is not public.
 | `BorderWidth` | Divider and focus-ring thickness. |
 | `BoxShadow` | The runtime's five-field shadow; `elevationShadow` returns one. |
 | `ColorFailure` | A colour role whose value is not a hex colour the token helpers parse. |
+| `ColorForm` | The alpha form a colour role's value must take: `"opaque"` or `"translucent"`. |
 | `ContrastFailure` | One documented pair a theme misses, with its floor and ratio, plus the wash, the opacity or the elevation `level` when the pair is composited. |
 | `ContrastPair` | A `[foreground, background, pairClass]` contract row. |
 | `ContrastPairClass` | The floor class a pair is held to. |
@@ -106,6 +107,7 @@ missing here is not public.
 | `MotionPhase` | An easing phase from `motionPhases`: `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
+| `OpacityFailure` | A colour role whose alpha channel is not the form it is painted in, with the form it needed. |
 | `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
 | `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
 | `PlatformShippedTheme` | A styled platform set in `shippedThemes`, with the variant it came from. |
@@ -131,12 +133,13 @@ missing here is not public.
 | `ThemeColors` | The 70 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
-| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast`, `hierarchy`, `direction` or `metric`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `hierarchy`, `direction` or `metric`. |
 | `ThemeFailureKind` | The check that found a `ThemeFailure`; one member of `themeChecks`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
 | `ThemeParamSource` | The lookup a URL search object provides: `get(key)` returning a string, `null` or `undefined`. |
 | `ThemeProviderProps` | Props for `ThemeProvider`. |
+| `TranslucentRole` | A role from `translucentRoles`, the three roles the runtime composites. |
 | `TypefaceFailure` | A family name that is not one exact, non-empty family the runtime can resolve. |
 | `TypefaceRole` | `sans` or `mono`, a key of `typefaceRoles`. |
 | `TypefaceRule` | `non-empty`, `trimmed`, `single-family` or `css-generic`, a key of `typefaceRules`. |
@@ -1057,7 +1060,9 @@ A level is geometry, not a colour: `offsetX`, `offsetY`, `blurRadius`,
 `elevationShadow` composes the two into a shadow — the exact five fields of
 GPUix's `StyleDesc.boxShadow` (`offsetX`, `offsetY`, `blurRadius`,
 `spreadRadius`, `color`). There is no `inset` and no shadow list: **the runtime
-paints one shadow per element.**
+paints one shadow per element.** The tint is opaque: a level's alpha writes the
+fourth byte, so an eight-digit tint is reported by
+[`themeOpacityFailures`](#role-opacity) rather than silently repainted.
 
 | Level | Light | Dark | Use |
 | ----- | ----- | ---- | --- |
@@ -1663,10 +1668,10 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones. The guarantee is six checks — colour
-format, typeface form, contrast, text hierarchy, interaction direction and
-numeric metrics — and
-[`themeFailures`](#one-check) runs all six in one call; the sections below
+the same floors as the shipped ones. The guarantee is seven checks — colour
+format, role opacity, typeface form, contrast, text hierarchy, interaction
+direction and numeric metrics — and
+[`themeFailures`](#one-check) runs all seven in one call; the sections below
 explain each one it composes.
 
 ```ts
@@ -1999,7 +2004,8 @@ const tinted = extendTheme(getTheme("light"), { colors: { shadow: "black" } });
 themeColorFailures(tinted); // [{ role: "shadow", value: "black" }]
 ```
 
-This is the third check in the editable-theme guarantee. A measured role in a
+This is the format half of the editable-theme guarantee; the opacity half
+follows below. A measured role in a
 non-hex form also fails the contrast check, because `contrastRatio` returns
 `NaN`, which never passes a floor; the tint roles have no pair. `shadow` is
 applied to every elevation level through `alpha()` (plan `085`), and an
@@ -2021,6 +2027,51 @@ No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary; `isHexColor` and `themeColorFailures` close
 the format half of that guard, not the shape half.
+
+#### Role opacity
+
+The form has two halves, and `themeColorFailures` only sees the first. The token
+maths parses six- and eight-digit hex, so an eight-digit role is a *valid*
+colour; whether the role is painted with that channel is a separate question.
+`themeOpacityFailures(theme)` asks it:
+
+- the three **veils** composite over content, so each needs an alpha byte
+  strictly between `00` and `FF`. `selection` highlights glyphs in place,
+  `overlay` veils the window a dialog opens over, and `selectionOnFill` veils
+  content painted on an opaque fill. A fully transparent byte paints nothing and
+  a fully opaque one is a solid block; neither is a wash.
+- every other role is **opaque**. `shadow` is the case that matters: a level
+  applies its own alpha through `alpha()`, which writes the fourth byte, so a
+  tint authored at 50% paints at the level's 8/12/16% and the authored value is
+  gone. An opaque role written `#RRGGBBFF` is accepted, because it paints the
+  same colour either way.
+
+`translucentRoles` is the index of the three veils, `roleForm` the total rule —
+`roleForm("overlay")` is `"translucent"` and `roleForm("shadow")` is `"opaque"` —
+and a failure is an `OpacityFailure` with the `role`, the `value` and the
+`expected` form. A value the hex parser cannot read stays `themeColorFailures`'
+diagnostic, so one defect keeps one report.
+
+```ts
+import {
+  extendTheme,
+  getTheme,
+  roleForm,
+  themeOpacityFailures,
+} from "@gpuixui/tokens";
+
+const tinted = extendTheme(getTheme("light"), {
+  colors: { shadow: "#191D2580" },
+});
+
+themeOpacityFailures(tinted);
+// [{ role: "shadow", value: "#191D2580", expected: "opaque" }]
+roleForm("overlay"); // "translucent"
+```
+
+Every shipped identity theme, platform variant and recipe carries the form its
+roles need, so the check moves no value; it guards the next edit. The executed
+example is [`src/opacity.example.ts`](../packages/tokens/src/opacity.example.ts).
 
 #### Typeface
 
@@ -2180,43 +2231,48 @@ constants.
 
 #### One check
 
-Running one of the six checks is not the guarantee. A copied theme whose only
+Running one of the seven checks is not the guarantee. A copied theme whose only
 defect is a zero `borderWidth.strong` — the focus ring's spread, and the only
 focus indicator the runtime can draw — a `shadow: "black"` tint, which makes
-every elevation level fully opaque, a `sans: "Inter, system-ui, sans-serif"`
+every elevation level fully opaque, a translucent `shadow` tint whose byte
+`elevationShadow` replaces, a solid `overlay` scrim that hides the window, a
+`sans: "Inter, system-ui, sans-serif"`
 stack, which silently paints the system face, a `disabledForeground` raised
 to body strength or a light pointer ladder that lightens on hover returns `[]`
 from `themeContrastFailures` while being unusable.
-`themeFailures(theme, contrast = theme.contrast)` composes all six and tags each
-entry with the check that found it:
+`themeFailures(theme, contrast = theme.contrast)` composes all seven and tags
+each entry with the check that found it:
 
 ```ts
 import { extendTheme, getTheme, themeFailures } from "@gpuixui/tokens";
 
 const theme = extendTheme(getTheme("dark"), {
-  colors: { shadow: "black" },
+  colors: { shadow: "#00000080" },
   typography: { sans: "Inter, system-ui, sans-serif" },
   borderWidth: { strong: 0 },
 });
 
 themeFailures(theme);
-// [ { kind: "color", … }, { kind: "typeface", … }, { kind: "metric", … } ]
+// [ { kind: "opacity", … }, { kind: "typeface", … }, { kind: "metric", … } ]
 ```
 
-The order is diagnostic: the two format checks first — `color`, then `typeface`,
-so a malformed role is named before the `NaN` ratios it causes and a malformed
-family before the type scale painted with it — then `contrast`, then
+The order is diagnostic: the three format checks first — `color`, `opacity`,
+then `typeface`, so a malformed role is named before the `NaN` ratios it causes,
+an alpha channel before the tint it repaints and a malformed family before the
+type scale painted with it — then `contrast`, then
 `hierarchy`, then `direction`, then `metric`. `themeChecks` is that order as a
 list and
 `ThemeFailureKind` is the union it derives, so a report or a settings screen
 names each check without retyping them, and adding a check is one edit at the
-index. A `ThemeFailure` is the underlying `ColorFailure`,
+index. A `ThemeFailure` is the underlying `ColorFailure`, `OpacityFailure`,
 `TypefaceFailure`, `ContrastFailure`, `TextTierFailure`, `DirectionFailure` or
 `MetricFailure` — the
 same payload the individual check returns — plus its `kind`. The `contrast`
 argument defaults to the level the theme declares and reaches the contrast and
 hierarchy halves unchanged, so `themeFailures(theme, "high")` asks a stricter
-question of a theme that does not claim AAA floors. A consumer's test is one
+question of a theme that does not claim AAA floors; the opacity and metric
+halves are level-independent, because a shape does not change at AAA. A
+consumer's test is one
 assertion:
 
 ```ts

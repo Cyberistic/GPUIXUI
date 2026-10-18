@@ -24,11 +24,16 @@
  * press in a light theme — the plan-097 defect — which the contrast check cannot
  * see because the step floor is direction-agnostic.
  *
+ * Plan 540 adds the seventh: a role whose alpha channel is not the form it is
+ * painted in. Neither a translucent elevation tint (`elevationShadow` replaces
+ * the byte with the level's own alpha) nor a solid modal scrim changes a single
+ * contrast pair, so this check is the only one that sees them.
+ *
  * Plan 387 moves the shipped list to `shippedThemes`: this suite was one of the
  * hand-built enumerations that called itself "every shipped set" while covering
  * the recipes at the default contrast only (20 of the 24 sets).
  *
- * Plan 398 gives the set an owner: `themeChecks` indexes the five kinds and
+ * Plan 398 gives the set an owner: `themeChecks` indexes the kinds and
  * `ThemeFailureKind` derives from it, so the composition's order is asserted
  * against the index rather than a second hand-written list.
  */
@@ -48,6 +53,7 @@ import {
   themeFailures,
   themeMetricFailures,
   themeModes,
+  themeOpacityFailures,
   themeTextTierFailures,
   themeTypefaceFailures,
   themeChecks,
@@ -89,6 +95,7 @@ describe("one total theme check", () => {
   it(`returns exactly the ${themeChecks.length} checks' failures, tagged and grouped`, () => {
     expect(brokenFailures.length).toBe(
       themeColorFailures(brokenTheme).length +
+        themeOpacityFailures(brokenTheme).length +
         themeTypefaceFailures(brokenTheme).length +
         themeContrastFailures(brokenTheme).length +
         themeTextTierFailures(brokenTheme).length +
@@ -98,17 +105,20 @@ describe("one total theme check", () => {
 
     expect(new Set(kinds(brokenFailures))).toEqual(new Set(themeChecks));
 
-    const firstTypeface = kinds(brokenFailures).indexOf("typeface");
     const lastColor = kinds(brokenFailures).lastIndexOf("color");
-    const firstContrast = kinds(brokenFailures).indexOf("contrast");
+    const firstOpacity = kinds(brokenFailures).indexOf("opacity");
+    const lastOpacity = kinds(brokenFailures).lastIndexOf("opacity");
+    const firstTypeface = kinds(brokenFailures).indexOf("typeface");
     const lastTypeface = kinds(brokenFailures).lastIndexOf("typeface");
-    const firstHierarchy = kinds(brokenFailures).indexOf("hierarchy");
+    const firstContrast = kinds(brokenFailures).indexOf("contrast");
     const lastContrast = kinds(brokenFailures).lastIndexOf("contrast");
-    const firstDirection = kinds(brokenFailures).indexOf("direction");
+    const firstHierarchy = kinds(brokenFailures).indexOf("hierarchy");
     const lastHierarchy = kinds(brokenFailures).lastIndexOf("hierarchy");
-    const firstMetric = kinds(brokenFailures).indexOf("metric");
+    const firstDirection = kinds(brokenFailures).indexOf("direction");
     const lastDirection = kinds(brokenFailures).lastIndexOf("direction");
-    expect(lastColor).toBeLessThan(firstTypeface);
+    const firstMetric = kinds(brokenFailures).indexOf("metric");
+    expect(lastColor).toBeLessThan(firstOpacity);
+    expect(lastOpacity).toBeLessThan(firstTypeface);
     expect(lastTypeface).toBeLessThan(firstContrast);
     expect(lastContrast).toBeLessThan(firstHierarchy);
     expect(lastHierarchy).toBeLessThan(firstDirection);
@@ -124,6 +134,12 @@ describe("one total theme check", () => {
       kind: "color",
       role: "shadow",
       value: "black",
+    });
+    expect(brokenFailures).toContainEqual({
+      kind: "opacity",
+      role: "overlay",
+      value: "#000000",
+      expected: "translucent",
     });
     expect(brokenFailures).toContainEqual({
       kind: "typeface",
@@ -187,6 +203,20 @@ describe("one total theme check", () => {
 
     expect(themeContrastFailures(inverted)).toEqual([]);
     expect(kinds(themeFailures(inverted))).toEqual(["direction", "direction"]);
+  });
+
+  it("catches an opacity-only defect the contrast check alone passes", () => {
+    const tinted = extendTheme(getTheme("light"), {
+      colors: { shadow: "#191D2580" },
+    });
+    const scrimmed = extendTheme(getTheme("light"), {
+      colors: { overlay: "#000000" },
+    });
+
+    expect(themeContrastFailures(tinted)).toEqual([]);
+    expect(kinds(themeFailures(tinted))).toEqual(["opacity"]);
+    expect(themeContrastFailures(scrimmed)).toEqual([]);
+    expect(kinds(themeFailures(scrimmed))).toEqual(["opacity"]);
   });
 
   it("catches a format-only defect the contrast check alone passes", () => {

@@ -33,6 +33,7 @@ import {
 } from "./contrast.js";
 import { motionLevels, motionPhases } from "./motion.js";
 import { metricGroups } from "./metrics.js";
+import { translucentRoles } from "./opacity.js";
 import { platformNames, platformTypes } from "./platforms.js";
 import { typefaceRules } from "./typeface.js";
 import { textRoles } from "./typography.js";
@@ -192,6 +193,16 @@ describe("COMPONENTS.md design-system rows", () => {
     const metrics = row("Theme metric check");
     expect(metrics).toContain("inline avatar");
     expect(metrics).toContain("`rowHeight`");
+  });
+
+  it("states the opacity check, its index and its rule", () => {
+    const opacity = row("Theme opacity check");
+    expect(opacity).toContain("`themeOpacityFailures(theme)`");
+    expect(opacity).toContain("`translucentRoles`");
+    expect(opacity).toContain("`roleForm`");
+    translucentRoles.forEach((role) => {
+      expect(opacity, role).toContain(`\`${role}\``);
+    });
   });
 
   it("states the checks from the index, never a subset", () => {
