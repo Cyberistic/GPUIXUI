@@ -71,7 +71,7 @@ a font size.
 | `decoration` | `"underline" \| "line-through"` | none | the runtime's `textDecoration`; paint only, never a semantic emphasis (plan `377`) |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | hard-clip after N lines (a value below 1 is ignored) |
-| `selectable` | `boolean` | `false` | `userSelect: "text"`; off for chrome, on for content |
+| `selectable` | `boolean` | `false` | a pointer drag takes the text (measured, plan `385`); off keeps chrome inert |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |
@@ -91,8 +91,11 @@ caller can raise the floor again with `style={{ minWidth: 120 }}`.
 
 ## Keyboard
 
-Not focusable. Selectable text is pointer-selectable when `selectable` is on;
-there is no copy command binding in the component.
+Not focusable. A `selectable` run takes a **pointer drag**, and the dragged text
+becomes the window's selection — measured in the runtime (plan `385`): a drag
+across `"Alpha bravo charlie"` selected the whole run, and the same drag over a
+non-selectable copy selected nothing. There is no keyboard selection and no copy
+command binding in the component; the highlight uses the platform's own colour.
 
 ## Accessibility
 
@@ -148,6 +151,8 @@ hard-coded pixel value.
   offset, and no way to decorate part of a string. Split the run into adjacent
   `Text` nodes when only a word is struck (they merge onto one line).
 - No responsive type scale or fluid sizing.
+- Selection is **pointer-only**: no keyboard extension, no copy binding, and no
+  `selectionColor` prop — the runtime paints its own highlight colour.
 - `truncate` needs a bounded width to truncate against.
 - `clamp` needs a bounded width to know how many lines the text would take;
   the cap is a maximum, so shorter text keeps its natural height.
@@ -161,6 +166,8 @@ hard-coded pixel value.
   selectable; every role removes the content floor and a caller's `minWidth`
   wins (plan `383`); decoration resolves, and a caller's `style` wins (plan
   `377`).
+- `runtime/text-selection.runtime.test.tsx` — a real drag selects a
+  `selectable` run and selects nothing from a non-selectable one (plan `385`).
 - `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,
   both directions of the shared-layout regression, and the full string in the
   accessibility tree (plan `082`).

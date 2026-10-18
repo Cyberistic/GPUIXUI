@@ -380,6 +380,27 @@ describe("type", () => {
     ).toStrictEqual(Option.some("none"));
   });
 
+  it("leaves chrome unselectable and content selectable", () => {
+    // The prop's only contribution is the host's `userSelect`; whether a drag
+    // actually takes the text is the runtime suite's job (plan 385).
+    expect(stringIn(renderText({}, testTheme), "userSelect")).toStrictEqual(
+      Option.some("none"),
+    );
+    expect(
+      stringIn(renderText({ selectable: true }, testTheme), "userSelect"),
+    ).toStrictEqual(Option.some("text"));
+    // The caller's style still wins, as it does everywhere else.
+    expect(
+      stringIn(
+        renderText(
+          { selectable: true, style: { userSelect: "none" } },
+          testTheme,
+        ),
+        "userSelect",
+      ),
+    ).toStrictEqual(Option.some("none"));
+  });
+
   it("hands a control its name, because GPUix has no aria-labelledby", () => {
     // The helper is only useful if a control can consume it: every control
     // takes `label` and writes the host's `aria-label` itself.

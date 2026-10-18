@@ -5,6 +5,8 @@
  * body, a strong lead, labels, a caption, inline code and a code block — so the
  * page demonstrates hierarchy instead of listing font sizes. Tones carry
  * meaning too: muted for metadata, destructive for the breaking-change notice.
+ * The release body is `selectable`, so content can be taken with the pointer
+ * while chrome and metadata stay inert (plan `385`).
  */
 
 import { Icon } from "@gpuixui/icons";
@@ -41,7 +43,7 @@ export const TypographyExample = (): ReactElement => {
           GPUixUI now draws every Tier 1 primitive in the real GPUix runtime.
         </Text>
 
-        <Text role="body">
+        <Text role="body" selectable>
           Layout, fields, selection controls, progress and tooltips share one
           theme and one keyboard contract. The docs site documents behaviour it
           has actually measured, and the playground runs the same components

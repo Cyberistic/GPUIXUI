@@ -28,6 +28,7 @@ import { Effect } from "effect";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
+import * as Str from "effect/String";
 import type {
   A11yTreeDump,
   A11yTreeNode,
@@ -149,6 +150,25 @@ export interface Runtime {
   readonly flush: () => void;
   /** A real hit-tested click on an element found by `all()`. */
   readonly clickElement: (element: TestElement) => void;
+  /**
+   * What the window has selected, or `None` when nothing is.
+   *
+   * Selection listeners are registered during **paint**, so a drag that is
+   * stepped without flushing selects nothing — the renderer's own drag helper
+   * flushes between steps (plan `385`).
+   */
+  readonly selection: () => Option.Option<string>;
+  /**
+   * Drag-select from one window point to another and return what was selected.
+   *
+   * This is the only honest way to prove `Text`'s `selectable`: a `userSelect`
+   * style assertion says the prop reached the host, not that the user can take
+   * the text (plan `385`).
+   */
+  readonly dragSelection: (
+    from: { readonly x: number; readonly y: number },
+    to: { readonly x: number; readonly y: number },
+  ) => Option.Option<string>;
 }
 
 const elementOf = (
@@ -246,6 +266,16 @@ export const a11yValueOf = (
   Option.flatMap(a11yNode(dump, match), (node) =>
     Option.fromNullishOr(node.aria?.value),
   );
+
+/**
+ * The renderer's selection as an `Option`, with the empty selection as `None`.
+ *
+ * The renderer reports `null` (or an empty string) for "nothing selected"; both
+ * mean the same thing to a test, and neither should have to be checked by hand
+ * (plan `385`).
+ */
+const selectedText = (selected: string | null): Option.Option<string> =>
+  Option.filter(Option.fromNullishOr(selected), Str.isNonEmpty);
 
 /**
  * A fresh 1280x800 offscreen window and the lookups over it.
@@ -375,5 +405,8 @@ export const createRuntime = (
               bounds.y + bounds.height / 2,
             ),
         }),
+      selection: () => selectedText(renderer.getSelectedText()),
+      dragSelection: (from, to) =>
+        selectedText(renderer.dragSelect(from.x, from.y, to.x, to.y)),
     };
   });

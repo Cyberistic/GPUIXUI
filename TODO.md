@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 129/129
+`[x]` `[██████████]` 130/130
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1167,6 +1167,14 @@ retired once both branches are one
       `minHeight` floor keeps explicit heights in an over-full column. The
       feedback example mounts the avatar + two-line row; 1 core + 3 runtime
       cases, both directions proven (plan `384`).
+`[x]` `packages/primitives`: **`Text.selectable` was never proven** — the page
+      promised pointer selection and the capability table listed it, but only the
+      `userSelect` style property had been asserted. The harness now exposes the
+      renderer's selection verbs (`selection`/`dragSelection`), and a real drag
+      proves that a selectable run is taken and a non-selectable one is not;
+      both mutations (always `"text"`, always `"none"`) fail by case name, and
+      the page now states the measured contract and the pointer-only limit
+      (plan `385`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
@@ -1177,6 +1185,17 @@ retired once both branches are one
       the host, not a component (plan `379` §6). Re-run from a fresh desktop
       session before merging; relative measurements (the new suites) are the
       robust shape. Owner: whoever merges this branch.
+      **Root cause, measured 2026-10-18 23:20:** the shared store's
+      `gpuix-native.darwin-x64.node` was rebuilt at 22:45 (the 21:25 baseline was
+      green at `618/618`), and the replay is **112 failed**, now also showing
+      hit-tested clicks landing off their target and the recipe heights short by
+      a border width — a *different* failure set from plan `379`'s, not the same
+      host degradation. The binding-gaps workstream's plan `529` records why the
+      artifact is not the published 0.10.0 at all: it is built from a moving
+      `references/gpuix` main, and the newer source changed bounds tracking, hit
+      testing and the frame model. Do **not** re-baseline these assertions on the
+      current artifact; the scoped relative suites remain valid, and the full
+      suite waits for plan `529`'s published-tag build.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
