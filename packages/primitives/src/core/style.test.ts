@@ -219,13 +219,13 @@ describe("controlStyle", () => {
     expect(spreadOf(focused)).toBeGreaterThan(0);
   });
 
-  it("puts the same ring inside the edge of a clipped surface", () => {
+  it("puts the ring it is given inside the edge of a clipped surface", () => {
     // Plan 344: an attached ButtonGroup clips at its buttons' outer edge, so
     // the ring painted outside a button was cut away. The overlay sits on the
-    // button and draws the ring as an inside border; its width and colour are
-    // read from `focusRing`, so the two cannot drift apart.
-    const inner = clippedFocusRingStyle(testTheme);
+    // button and draws the same ring as an inside border; Button passes the
+    // recipe's ring (plan 370), so the two cannot drift apart.
     const ring = focusRing(testTheme).boxShadow;
+    const inner = clippedFocusRingStyle(ring);
     expect(inner.borderWidth).toBe(ring.spreadRadius);
     expect(inner.borderColor).toBe(ring.color);
     expect(inner.position).toBe("absolute");

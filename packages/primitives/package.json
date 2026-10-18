@@ -26,6 +26,7 @@
   "dependencies": {
     "@gpuixui/icons": "workspace:*",
     "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

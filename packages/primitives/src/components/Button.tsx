@@ -32,15 +32,14 @@ import { useState, type ReactElement, type ReactNode } from "react";
 import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
+import { buttonRecipeRing, buttonRecipeStyle } from "../core/recipes.js";
 import {
   clippedFocusRingStyle,
-  controlFocusStyle,
   controlLabelStyle,
-  controlStyle,
   shrinkLayoutStyle,
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
-import { buttonVariants, type ButtonVariant } from "../core/variants.js";
+import type { ButtonVariant } from "../core/variants.js";
 import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
   composeHandler,
@@ -128,14 +127,6 @@ export const renderButton = (
   const clipped = group.clipped === true;
   const { variant = "primary", size = "md" } = props;
   const busy = isBusy(props);
-  const spec = {
-    variant: buttonVariants[variant],
-    size,
-    square: props.square,
-    radius: props.radius,
-    fullWidth: props.fullWidth,
-    disabled: props.disabled,
-  };
   const activate = (event: EventPayload): void => {
     if (busy) return;
     props.onClick?.(event);
@@ -161,10 +152,23 @@ export const renderButton = (
       handler?.(event);
     };
   const showRing = focus.focused && props.disabled !== true;
+  const recipe = buttonRecipeStyle(
+    {
+      variant,
+      size,
+      square: props.square === true,
+      radius: props.radius,
+      fullWidth: props.fullWidth,
+      disabled: props.disabled,
+      // A clipped button's ring is the inset overlay below: the group would cut
+      // the outer shadow away, and plan 344's contract is that the button
+      // itself paints none (plan 370 passes the recipe's ring to the overlay).
+      focused: showRing && !clipped,
+    },
+    theme,
+  );
   const chrome = mergeStyle(
-    clipped
-      ? mergeStyle(controlStyle(spec, theme), { position: "relative" })
-      : controlStyle(spec, theme),
+    clipped ? mergeStyle(recipe, { position: "relative" }) : recipe,
     group.shrink === true ? shrinkLayoutStyle : undefined,
   );
   return (
@@ -180,13 +184,7 @@ export const renderButton = (
       onBlur={composeHandler(focus.onBlur, props.onBlur)}
       onKeyDown={onKey("down", props.onKeyDown)}
       onKeyUp={onKey("up", props.onKeyUp)}
-      style={resolvePartStyle(
-        !clipped && showRing
-          ? mergeStyle(chrome, controlFocusStyle(spec, theme))
-          : chrome,
-        props.style,
-        state,
-      )}
+      style={resolvePartStyle(chrome, props.style, state)}
     >
       {props.loading === true ? (
         <Spinner size={theme.iconSize.sm} label="Loading" />
@@ -198,7 +196,7 @@ export const renderButton = (
       )}
       {props.trailing}
       {clipped && showRing ? (
-        <div style={clippedFocusRingStyle(theme)} />
+        <div style={clippedFocusRingStyle(buttonRecipeRing(theme))} />
       ) : null}
     </div>
   );

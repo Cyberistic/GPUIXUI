@@ -16,7 +16,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
-import { Button } from "../src/components/Button.js";
+import { Toggle } from "../src/components/Toggle.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import {
@@ -546,7 +546,7 @@ it("paints a Label's name and its description", async () => {
   expect(runtime.allText()).toContain("Required before saving");
 });
 
-it("moves a control's height with density and keeps its colour", async () => {
+it("moves a density-driven control's height and keeps its colour", async () => {
   const compact: Density = {
     name: "compact",
     controlHeight: { sm: 22, md: 26, lg: 30 },
@@ -560,7 +560,9 @@ it("moves a control's height with density and keeps its colour", async () => {
     runtime.render(
       <Surface density={density}>
         <Stack direction="row">
-          <Button testId="b">Save</Button>
+          <Toggle testId="b" pressed>
+            Bold
+          </Toggle>
         </Stack>
       </Surface>,
     );

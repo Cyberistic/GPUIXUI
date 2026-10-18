@@ -227,8 +227,9 @@ Implemented.
   reads anything else as one track.
 - Tests: `value.test.ts` (+2), `number.test.ts` (+5), `layout.test.ts` (+1),
   `loading.test.ts` (+2), `NumberField.test.tsx` (+1), `sizes.test.ts` (+1),
-  and a new 4-case `runtime/nonsense-numbers.runtime.test.tsx`. Offline 628,
-  runtime **606 in 32 files**.
+  and a new 4-case `runtime/nonsense-numbers.runtime.test.tsx`. Offline 628 on
+  its own (638 after plan `370` merged), runtime **606 on its own, 607 in 32
+  files as merged with plan `370`**.
 - Both-direction proof, each guard reverted once and restored:
   - identity `normalizeNumberRange` → the field paints `['NaN','NaN','0','5']`
     and the swapped field reports nothing;
