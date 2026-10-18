@@ -229,7 +229,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **48 files, 682 tests,
+`src/components/testing/element.ts`. Measured 2026-10-19: **48 files, 690 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), a guard that every documented `theme.…` path and
@@ -251,7 +251,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-19 on this host: **41 files, 655 tests, 544
+runtime-proven too. Measured 2026-10-19 on this host: **41 files, 657 tests, 546
 passing / 111 failing** — the failures are the focus-ring and absolute-geometry
 delta of the locally built `main`-derived binding, recorded with evidence in
 `TODO.md` (the full-live-suite row) and plan `529`; the same suite was green on

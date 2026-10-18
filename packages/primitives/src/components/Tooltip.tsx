@@ -57,6 +57,7 @@ import {
   FLOATING_MARGIN,
   isHorizontalSide,
   resolveAlign,
+  tipWidthCap,
   type VerticalSide,
 } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
@@ -65,7 +66,10 @@ import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
-  /** The label. Keep it short — the runtime does not wrap overlay content. */
+  /**
+   * The label. Long text wraps inside a measured cap; keep it short anyway,
+   * because a tip is a hint, not a paragraph.
+   */
   readonly content: ReactNode;
   /** The element the tooltip describes. It must be focusable. */
   readonly children: ReactNode;
@@ -119,8 +123,19 @@ export interface TooltipProps {
  */
 export const tooltipRootStyle: StyleDesc = { alignSelf: "flex-start" };
 
-/** The tip: the popover surface, the caption type, no wrapping. */
-export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc => ({
+/**
+ * The tip: the popover surface, the caption type, and a measured width cap.
+ *
+ * `maxWidth` is the room the resolved side and alignment have, measured by the
+ * wrapper. With a cap the text wraps into it; without one (the element-tree
+ * caller has no viewport) the tip keeps the single-line form. Measured: a
+ * 200-word tip without a cap painted 6 270 px wide in a 1 280 px window
+ * (plan `391`).
+ */
+export const tooltipStyle = (
+  theme: PrimitiveTheme,
+  maxWidth?: number,
+): StyleDesc => ({
   ...surfaceStyle(
     { tone: "popover", radius: "sm", border: true, elevation: "overlay" },
     theme,
@@ -131,7 +146,8 @@ export const tooltipStyle = (theme: PrimitiveTheme): StyleDesc => ({
   paddingBottom: theme.spacing.xs,
   fontSize: theme.typography.caption.fontSize,
   lineHeight: theme.typography.caption.lineHeight,
-  whiteSpace: "nowrap",
+  whiteSpace: maxWidth === undefined ? "nowrap" : "normal",
+  ...(maxWidth === undefined ? {} : { maxWidth }),
 });
 
 /**
@@ -166,6 +182,12 @@ export interface TooltipHandlers {
     readonly align: FloatingAlign;
     readonly offset: number;
   };
+  /**
+   * The widest the tip may paint: the room the resolved side and alignment
+   * have, measured by the wrapper. With it the content wraps; without it the
+   * tip is one line.
+   */
+  readonly maxWidth?: number;
 }
 
 /**
@@ -214,7 +236,7 @@ export const renderTooltip = (
         align={placed.align}
         alignOffset={placed.offset}
         collisionPadding={FLOATING_MARGIN}
-        style={tooltipStyle(theme)}
+        style={tooltipStyle(theme, handlers.maxWidth)}
         testId={testId}
       >
         {content}
@@ -233,6 +255,8 @@ interface TooltipBox {
   readonly height: number;
   readonly tipWidth?: number;
   readonly tipHeight?: number;
+  /** The painted tip's left edge, which is the true anchor once it exists. */
+  readonly tipLeft?: number;
 }
 
 /** A short label shown when its trigger is hovered or focused. */
@@ -280,8 +304,10 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
         tipBounds === null || tipBounds === undefined || tipBounds.height <= 0
           ? undefined
           : tipBounds.height,
+      tipLeft:
+        tipBounds === null || tipBounds === undefined ? undefined : tipBounds.x,
     });
-  }, [renderer, open]);
+  }, [renderer, open, props.content]);
   const viewport = readWindowSize(renderer);
   const side = Option.match(Option.fromNullishOr(box), {
     onNone: () => props.side ?? "top",
@@ -290,7 +316,10 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
         decideVerticalSide({
           triggerTop: measured.top,
           triggerBottom: measured.bottom,
-          layerHeight: tooltipHeight(theme),
+          // A wrapped tip is taller than the one-line estimate. The first frame
+          // has no measurement, so it places by the estimate and the measured
+          // height corrects the side on the frame after the tip is painted.
+          layerHeight: measured.tipHeight ?? tooltipHeight(theme),
           viewportHeight: viewport.height,
           margin: FLOATING_MARGIN,
           preferred,
@@ -311,6 +340,30 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
     },
   });
   const requested = props.align ?? "start";
+  // The runtime keeps the layer's left edge inside the margin but never caps
+  // its width (measured: a 200-word tip painted 6 270 px, plan `391`). The cap
+  // is the room the resolved side and alignment actually have, so a tip cannot
+  // be wider than the window whichever side it opens on.
+  const cap = Option.match(Option.fromNullishOr(box), {
+    onNone: () => Math.floor(viewport.width - 2 * FLOATING_MARGIN),
+    onSome: (measured) => {
+      // The tip's own box is the true anchor once it is painted; the wrapper's
+      // root can sit a few pixels left of the trigger the layer anchors to.
+      const anchorLeft = measured.tipLeft ?? measured.left;
+      const anchorRight =
+        measured.tipLeft === undefined || measured.tipWidth === undefined
+          ? measured.right
+          : measured.tipLeft + measured.tipWidth;
+      return tipWidthCap({
+        side,
+        align: requested,
+        anchorLeft,
+        anchorRight,
+        viewportWidth: viewport.width,
+        margin: FLOATING_MARGIN,
+      });
+    },
+  });
   // The runtime's own `center` is never passed through: until the tip is
   // measurable it paints from the exact `start`, then shifts to true centre.
   const unmeasured = {
@@ -335,6 +388,7 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
     ref: root,
     contentRef: tip,
     placement,
+    maxWidth: cap > 0 ? cap : undefined,
     onOpenChange: openState.set,
   });
 };

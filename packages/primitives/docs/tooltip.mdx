@@ -131,8 +131,9 @@ and flips **below** when the tip does not fit above — the runtime's layer is
 (plan `156` §8), so at the top edge the tip used to open at `y 8..34` over a
 trigger at `y 12..30` (plan `067` §1). The wrapper measures its root and
 estimates the tip's height from `tooltipStyle` (padding, one caption line,
-border). With no `side` it only decides the vertical axis; `left`/`right` is
-used when asked for.
+border) for the first frame, then uses the painted tip's measured height, so a
+wrapped tip flips too (plan `391`). With no `side` it only decides the vertical
+axis; `left`/`right` is used when asked for.
 
 A **requested side is a preference on both axes.** The wrapper measures the
 trigger's box: when the tip cannot fit on the requested side it opens on the
@@ -145,7 +146,7 @@ would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip pain
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
+| `content` | `ReactNode` | — (required) | the tip; long text wraps inside a window-wide cap |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
 | `open` | `boolean` | uncontrolled | controls the tip; requests arrive through `onOpenChange` |
 | `defaultOpen` | `boolean` | `false` | initial open state when uncontrolled |
@@ -183,7 +184,19 @@ dismisses it. A click dismisses it.
 ## Theming
 
 `tooltipStyle` uses the `popover` surface, `radius.sm`, `elevation.overlay`, the
-`caption` type and one spacing step of inset; content is `whiteSpace: nowrap`.
+`caption` type and one spacing step of inset. The wrapper caps the tip to the
+room its side and alignment have (the window less the margins) and wraps the
+text inside that cap; the element-tree caller, which has no viewport, keeps the
+single-line `nowrap` form.
+
+**Long content (plan `391`).** The runtime keeps a layer's left edge inside the
+window margin but never caps its width: measured, a 200-word tip painted **6 270 px
+wide** in a 1 280 px window, its text 6 258 px. The cap is the room the resolved
+side and alignment actually have — a `start` tip begins at the anchor's left, an
+`end` tip ends at its right, a centred tip needs equal room on both sides, and a
+tip beside its trigger takes the window width. The painted tip's own box is the
+anchor once it exists, so the second frame is exact even though the wrapper's
+root can sit a few pixels off the trigger the layer anchors to.
 
 ## Limitations
 
@@ -197,13 +210,16 @@ dismisses it. A click dismisses it.
   `width: "100%"` resolves against the hugging root and collapses; a `Slider`
   without an explicit root width paints 16 px. `style` on `Tooltip` supplies the
   width (see Full-width triggers).
-- **A `center` tip measures once.** The runtime has no layout callback, so the
-  tip's box is known only after its first layout; the offset is applied in a
-  layout effect before paint, so there is no visible jump. A tip whose size
-  changes while open (it cannot, with `whiteSpace: nowrap`) would not re-centre.
-- **The flip sees one line.** The side is chosen from an estimated height
-  (padding + one caption line + border), which is exact for the tip this wrapper
-  paints and for `whiteSpace: nowrap`; a multi-line tip is a popover.
+- **A `center` tip measures once per size.** The runtime has no layout callback,
+  so the tip's box is known only after its first layout; the offset is applied
+  in a layout effect before paint, so there is no visible jump. A content change
+  while the tip is open re-measures (plan `391`); a *trigger* that moves under
+  an open tip is still not re-placed.
+- **The flip estimates one line, then measures.** The side is first chosen from
+  `tooltipHeight` (padding + one caption line + border) because the tip does not
+  exist yet. Once it is painted, its measured height drives the decision, so a
+  wrapped tip flips on the next frame instead of staying on a side with no room
+  (plan `391`). A tip taller than both gaps still clamps.
 - **A tip wider than the room on both sides is clamped.** The horizontal side is
   chosen from the tip's measured width, but a tip wider than both sides can
   still be clamped by the runtime and painted over its trigger. The same holds
@@ -211,7 +227,8 @@ dismisses it. A click dismisses it.
 - No `aria-describedby` association: the content is the trigger's
   `aria-description` instead, which is a description but not a reference.
 - A non-string tip has no description on the trigger and no name of its own.
-- No wrapping or rich content: a paragraph is a popover, not a tooltip.
+- No rich content: text wraps, but a paragraph with headings, actions or a form
+  is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
 - **The interactions are GPUix's; the open state is this wrapper's.** Hover,
   focus, click, Escape and the hover delay are the published tooltip's; `open`,
@@ -231,11 +248,14 @@ dismisses it. A click dismisses it.
   content (plan `071`). **Open state (347):** the resolved `open`, the
   `disableHoverableContent` flag and the `onOpenChange` handler reach the host
   root, and a closed tip still passes `open={false}` rather than leaving the
-  runtime uncontrolled.
+  runtime uncontrolled. **Long content (391):** a cap makes the tip wrap and
+  puts both `maxWidth` and `whiteSpace: normal` on the rendered tip; the
+  uncapped tree keeps one line.
 - `src/core/floating.test.ts` — the shared side rule, including a preferred
   `top` and its fallback below, the horizontal fit rule (fits, flips, exact fit,
-  roomier) and the alignment rule on both axes (widths above/below, heights
-  beside — plans `098`, `335`).
+  roomier), the alignment rule on both axes (widths above/below, heights
+  beside — plans `098`, `335`), and the tip width cap for every alignment and a
+  horizontal side (plan `391`).
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, paints the tip against the trigger in a column (`start`, `end`)
@@ -253,6 +273,10 @@ dismisses it. A click dismisses it.
   on the right of its trigger (the failing direction painted the tip `x 8..55`
   over the trigger), and a `side="right"` tip at the right edge opens on the
   left. Without the side decision the runtime clamps both onto the trigger.
+  **Long content (391):** a 200-word tip wraps to `width ≤ window − 2 × 8` and
+  stays inside the window's right margin (the failing direction was 6 270 px
+  wide), it is taller than the one-line estimate, and a short tip still paints
+  one line.
   **Vertical fit (336):** a `side="top"` tip at the top edge opens below its
   trigger (the failing direction painted the tip `y 8..34` over a trigger at
   `y 12..36`), and a `side="bottom"` tip at the bottom edge opens above

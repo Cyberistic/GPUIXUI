@@ -179,6 +179,79 @@ export const availableWidth = (
 /** The alignment values the runtime accepts, on either axis. */
 export type LayerAlign = "start" | "center" | "end";
 
+/**
+ * What a tip's width cap needs: the side it opens on, the alignment of its own
+ * axis, the **anchor's** horizontal extent and the window.
+ *
+ * The anchor is the tip's own measured box when it is already painted, else the
+ * trigger's: the runtime places the layer against the trigger, which can sit a
+ * few pixels inside the root this wrapper measures (measured, plan `391`).
+ */
+export interface TipWidthRequest {
+  readonly side: LayerSide;
+  readonly align: LayerAlign;
+  readonly anchorLeft: number;
+  readonly anchorRight: number;
+  readonly viewportWidth: number;
+  readonly margin: number;
+}
+
+/**
+ * The widest a tooltip may paint without leaving the window.
+ *
+ * The runtime keeps the layer's **left** edge inside the margin but does not
+ * cap its width: measured, a 200-word tip painted 6 270 px in a 1 280 px window
+ * (plan `391`). A `start`-aligned vertical tip begins at the anchor's left
+ * edge, an `end`-aligned one ends at its right, and a centred one needs equal
+ * room on both sides of the anchor's centre — so the cap is the room the
+ * alignment actually has. A tip beside its trigger is not aligned on this axis
+ * (its `align` places the other one), so it only takes the window cap.
+ *
+ * `0` means the alignment has no room at all; the caller omits the cap then and
+ * lets the runtime clamp, because a zero-width tip would paint nothing.
+ */
+export const tipWidthCap = ({
+  side,
+  align,
+  anchorLeft,
+  anchorRight,
+  viewportWidth,
+  margin,
+}: TipWidthRequest): number => {
+  const windowCap = Math.max(0, viewportWidth - 2 * margin);
+  if (isHorizontalSide(side)) return Math.floor(windowCap);
+  if (align === "start")
+    return Math.floor(
+      Math.max(
+        0,
+        Math.min(
+          windowCap,
+          viewportWidth - margin - Math.max(anchorLeft, margin),
+        ),
+      ),
+    );
+  if (align === "end")
+    return Math.floor(
+      Math.max(
+        0,
+        Math.min(
+          windowCap,
+          Math.min(anchorRight, viewportWidth - margin) - margin,
+        ),
+      ),
+    );
+  const centre = (anchorLeft + anchorRight) / 2;
+  return Math.floor(
+    Math.max(
+      0,
+      Math.min(
+        windowCap,
+        2 * Math.min(centre - margin, viewportWidth - margin - centre),
+      ),
+    ),
+  );
+};
+
 /** The boxes a true centre is derived from. */
 export interface AlignRequest {
   readonly side: LayerSide;

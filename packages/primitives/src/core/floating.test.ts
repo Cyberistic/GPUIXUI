@@ -16,10 +16,12 @@ import {
   availableWidth,
   decideHorizontalSide,
   decideVerticalSide,
+  tipWidthCap,
   type HorizontalPlacementRequest,
   type LayerSide,
   type PlacementRequest,
   resolveAlign,
+  type TipWidthRequest,
 } from "./floating.js";
 
 const room = (overrides: Partial<PlacementRequest> = {}): PlacementRequest => ({
@@ -271,5 +273,61 @@ describe("resolveAlign", () => {
         layerHeight: 60,
       }),
     ).toStrictEqual({ align: "start", offset: -20 });
+  });
+});
+
+describe("tipWidthCap", () => {
+  // The bug guarded (plan 391): the runtime keeps a layer's left edge inside
+  // the margin but never caps its width, so a 200-word tip painted 6 270 px in
+  // a 1 280 px window.
+  const cap = (overrides: Partial<TipWidthRequest> = {}): number =>
+    tipWidthCap({
+      side: "bottom",
+      align: "start",
+      anchorLeft: 17,
+      anchorRight: 400,
+      viewportWidth: 1280,
+      margin: 8,
+      ...overrides,
+    });
+
+  it("caps a start-aligned vertical tip at the room right of its anchor", () => {
+    // 1280 - 8 - max(17, 8) = 1255; the left edge stays at the trigger.
+    expect(cap()).toBe(1255);
+  });
+
+  it("uses the window width when the trigger starts inside the margin", () => {
+    // The runtime clamps the left edge to 8, so the run is 1280 - 16 = 1264.
+    expect(cap({ anchorLeft: 4 })).toBe(1264);
+  });
+
+  it("caps an end-aligned vertical tip at the room left of its trigger", () => {
+    // The layer's right edge is the trigger's: 1272 - 8 = 1264, or 1200 - 8.
+    expect(cap({ align: "end", anchorRight: 1272 })).toBe(1264);
+    expect(cap({ align: "end", anchorRight: 1200 })).toBe(1192);
+  });
+
+  it("gives a centred tip equal room on both sides of the trigger", () => {
+    // A centre at 640 has 632 px either side; near the left edge, half a tip.
+    expect(cap({ align: "center", anchorLeft: 620, anchorRight: 660 })).toBe(
+      1264,
+    );
+    expect(cap({ align: "center", anchorLeft: 12, anchorRight: 100 })).toBe(96);
+  });
+
+  it("only takes the window cap beside its trigger", () => {
+    // On a left/right side `align` places the other axis, so the trigger's x
+    // does not bound the width (the side decision already fitted it).
+    expect(cap({ side: "left" })).toBe(1264);
+    expect(cap({ side: "right", align: "end" })).toBe(1264);
+  });
+
+  it("never returns a negative or fractional cap", () => {
+    expect(cap({ viewportWidth: 10 })).toBe(0);
+    expect(cap({ anchorLeft: 2000 })).toBe(0);
+    expect(cap({ align: "center", anchorLeft: 1279, anchorRight: 1300 })).toBe(
+      0,
+    );
+    expect(cap({ anchorLeft: 17.6 })).toBe(1254);
   });
 });

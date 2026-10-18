@@ -1242,6 +1242,17 @@ retired once both branches are one
       flipping the rows would turn a provenance gap into a completion claim. The
       table now says exactly that, and the preamble records the artifact's real
       source with the re-run condition (plan `529`).
+`[x]` `packages/primitives`: **a long `Tooltip` painted a 6 270 px layer and
+      ran off the window** — measured (2026-10-19): a 200-word tip painted
+      `x 15, width 6270, height 24` in a 1280 × 800 window (its text child 6258
+      wide), because `tooltipStyle` was `nowrap` with no width cap; the runtime
+      keeps a layer's left edge inside the margin but never caps its width.
+      `tipWidthCap` now caps the tip to the room the resolved side and
+      alignment have, the text wraps inside it, and the side decision uses the
+      measured tip height once it is painted (a content change while open
+      re-measures). 5 core assertions + 2 element + 2 runtime cases (the long
+      tip contained and wrapped, a short tip still one line); both directions
+      measured — 6270 px without the cap, 1258 with it (plan `391`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
@@ -1269,8 +1280,9 @@ retired once both branches are one
       `disabled` 15, `activation` 8, `overlay-trigger` 8), not a new regression.
       One of the 112 was this package's stale `__probe.runtime.test.tsx`
       (plan `390`). **After deleting it (re-run 2026-10-19):** 41 files, 655
-      tests, 544 passed / 111 failed, 19 failing files. No assertion was
-      re-baselined.
+      tests, 544 passed / 111 failed, 19 failing files. **Re-run after plan
+      `391`:** 41 files, 657 tests, 546 passed / 111 failed, the same 19 files —
+      the two new tooltip cases pass and nothing was re-baselined.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

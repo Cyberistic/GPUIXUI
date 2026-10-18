@@ -503,6 +503,36 @@ describe("Tooltip", () => {
     expect(style.backgroundColor).toBe(testTheme.colors.popover);
     expect(style.fontSize).toBe(testTheme.typography.caption.fontSize);
     expect(style.whiteSpace).toBe("nowrap");
+    expect(style.maxWidth).toBeUndefined();
+  });
+
+  it("caps a measured tip to the window and lets its text wrap", () => {
+    // The bug guarded (plan 391): a 200-word tip painted 6 270 px wide in a
+    // 1 280 px window because the tip was nowrap and had no width cap.
+    const style = tooltipStyle(testTheme, 400);
+    expect(style.maxWidth).toBe(400);
+    expect(style.whiteSpace).toBe("normal");
+  });
+
+  it("puts the measured cap on the tip it renders", () => {
+    const tipOf = (maxWidth?: number) =>
+      expectSome(
+        Arr.get(
+          elementChildren(
+            renderTooltip({ content: "A hint", children: null }, testTheme, {
+              maxWidth,
+            }),
+          ),
+          1,
+        ),
+      );
+    expect(expectSome(elementProp(tipOf(400), "style"))).toMatchObject({
+      maxWidth: 400,
+      whiteSpace: "normal",
+    });
+    expect(expectSome(elementProp(tipOf(), "style"))).toMatchObject({
+      whiteSpace: "nowrap",
+    });
   });
 
   it("hugs its trigger so the layer anchors to the trigger", () => {

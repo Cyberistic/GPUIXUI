@@ -2041,6 +2041,53 @@ it("keeps the Tooltip's content inside the frame it is anchored to", async () =>
   expect(tip.x + tip.width).toBeLessThanOrEqual(frame.x + frame.width);
 });
 
+it("wraps a long Tooltip inside the window", async () => {
+  // The bug guarded (plan 391): measured 2026-10-19, a 200-word tip painted
+  // `width 6270` from `x 15` in a 1280 x 800 window (its text 6258 wide),
+  // because the tip was nowrap and had no width cap. It now takes the window's
+  // usable width as `maxWidth` and wraps inside it.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip
+        content={"word ".repeat(200)}
+        side="bottom"
+        defaultOpen
+        testId="tip"
+      >
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.flush();
+  const tip = boundsOf(runtime, "tip");
+  expect(tip.width).toBeLessThanOrEqual(WINDOW.width - 2 * FLOATING_MARGIN);
+  expect(tip.x).toBeGreaterThanOrEqual(FLOATING_MARGIN);
+  expect(tip.x + tip.width).toBeLessThanOrEqual(WINDOW.width - FLOATING_MARGIN);
+  // The wrapped tip is taller than the one-line estimate the side decision
+  // starts from, which is what makes it a wrapped tip rather than a clipped one.
+  expect(tip.height).toBeGreaterThan(tooltipHeight(testTheme));
+});
+
+it("keeps a short Tooltip on one line", async () => {
+  // The other half of plan 391: a short tip must not wrap and must not grow.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" side="bottom" defaultOpen testId="tip">
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.flush();
+  const tip = boundsOf(runtime, "tip");
+  expect(tip.height).toBeLessThanOrEqual(tooltipHeight(testTheme));
+});
+
 /** A tooltip whose open state lives in the parent, as a consumer would wire it. */
 const ControlledTooltip = ({
   onRequest,
