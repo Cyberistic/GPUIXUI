@@ -164,7 +164,7 @@ import {
 import { shippedThemes } from "./shipped-themes.js";
 import { brandTheme } from "./brand-theme.example.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
-import { typefaceRules } from "./typeface.js";
+import { cssGenericFamilies, typefaceRules } from "./typeface.js";
 import {
   extendTheme,
   getPlatformTheme,
@@ -1852,9 +1852,15 @@ describe("docs/tokens.md typeface contract", () => {
     });
   });
 
-  it("states both rules from the index", () => {
+  it("states every rule from the index", () => {
     typefaceRules.forEach((rule) => {
       expect(markdown, rule).toContain(`\`${rule}\``);
+    });
+  });
+
+  it("names every CSS generic family the rule rejects", () => {
+    cssGenericFamilies.forEach((family) => {
+      expect(markdown, family).toContain(`\`${family}\``);
     });
   });
 

@@ -1590,6 +1590,12 @@ viewport, and a non-finite spacing step or drawer width blamed its neighbour;
 a ladder or bound now skips a comparison whose side the finite rule rejects, so
 the cause is not blamed on its neighbour (`-Infinity` still reports its sign as
 an independent defect) (plan 532)
+`[x]` Hold the typeface to the exact family name — `non-empty` and
+`single-family` let a padded name (`" Inter"`) and a CSS generic keyword
+(`system-ui`) pass all six checks and paint GPUI's silent system fallback; the
+`trimmed` and `css-generic` rules report them, `cssGenericFamilies` indexes the
+CSS Fonts 4 keywords, and a whitespace-only value stays the `non-empty`
+diagnostic alone (plan 533)
 `[ ]` Cross-team: `components` reads `theme.dimensions.drawerWidthSm/Md/Lg` and
 `drawerHeightSm/Md/Lg` for `Drawer`'s local `WIDTH`/`HEIGHT` maps
 (`packages/components/src/drawer.tsx:57-67`) instead of 320/400/560 and

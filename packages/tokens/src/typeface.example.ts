@@ -15,3 +15,19 @@ export const installedTheme = extendTheme(getTheme("dark"), {
 
 /** The empty array a usable brand theme earns. */
 export const installedFailures = themeTypefaceFailures(installedTheme);
+
+/** A stray space is not part of an installed name; the runtime matches exactly. */
+export const paddedTheme = extendTheme(getTheme("light"), {
+  typography: { sans: " Inter" },
+});
+
+/** The `trimmed` failure a padded family earns. */
+export const paddedFailures = themeTypefaceFailures(paddedTheme);
+
+/** A CSS generic keyword is browser syntax, not a family the runtime holds. */
+export const genericTheme = extendTheme(getTheme("light"), {
+  typography: { sans: "system-ui" },
+});
+
+/** The `css-generic` failure a web habit earns. */
+export const genericFailures = themeTypefaceFailures(genericTheme);

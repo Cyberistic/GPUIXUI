@@ -360,12 +360,13 @@ metric check returns `[]`. Since plan 505 the elevation check reports the tint a
 single stored role.
 
 The two families are also held to the form the runtime reads:
-`themeTypefaceFailures(theme)` reports a name that is empty or a CSS comma
-stack, because GPUix 0.10.0's `StyleDesc.fontFamily` is one string and an
-unknown name falls back silently. A copied theme with
-`sans: "Inter, system-ui, sans-serif"` used to pass every check and paint the
-system fallback; `typefaceRoles` and `typefaceRules` are the ordered indexes,
-and all 24 shipped sets pass:
+`themeTypefaceFailures(theme)` reports a name that is empty (`non-empty`), a
+padded name (`trimmed`, `" Inter"`), a CSS comma stack (`single-family`) or a CSS
+generic keyword (`css-generic`, `system-ui`), because GPUix 0.10.0's
+`StyleDesc.fontFamily` is one string and an unknown name falls back silently. A
+copied theme with `sans: "Inter, system-ui, sans-serif"` used to pass every check
+and paint the system fallback; `typefaceRoles`, `typefaceRules` and
+`cssGenericFamilies` are the ordered indexes, and all 24 shipped sets pass:
 
 ```ts
 import { themeTypefaceFailures } from "@gpuixui/tokens";

@@ -32,6 +32,7 @@ import { shippedThemes } from "./shipped-themes.js";
 import { statusTones } from "./styles.js";
 import { themes } from "./theme.js";
 import { themeChecks } from "./theme-check.js";
+import { typefaceRules } from "./typeface.js";
 import { textRoles } from "./typography.js";
 
 const readme = readFileSync(
@@ -190,12 +191,17 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
-  it("states the typeface check and both rules", () => {
+  it("states the typeface check and every rule", () => {
     expect(readme).toContain("`themeTypefaceFailures(theme)`");
     expect(readme).toContain(
       "GPUix 0.10.0's `StyleDesc.fontFamily` is one string",
     );
-    expect(readme).toContain("`typefaceRoles` and `typefaceRules`");
+    expect(readme).toContain("`typefaceRoles`");
+    expect(readme).toContain("`typefaceRules`");
+    expect(readme).toContain("`cssGenericFamilies`");
+    typefaceRules.forEach((rule) => {
+      expect(readme, rule).toContain(`\`${rule}\``);
+    });
   });
 
   it("holds the shipped-set count to the enumeration", () => {

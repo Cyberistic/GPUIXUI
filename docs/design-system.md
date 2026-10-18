@@ -849,10 +849,11 @@ available on its own — `themeColorFailures`, `themeTypefaceFailures`,
 `themeMetricFailures` — but
 a consumer that runs only one has not run the guarantee: a zero focus-ring spread
 or an unparseable `shadow` tint passes the contrast check alone. `themeChecks`
-is the ordered index of those parts. A family name is one non-empty family,
-never a CSS comma stack: `StyleDesc.fontFamily` is a single string and an
-unknown name falls back silently, so `themeTypefaceFailures` reports a stack or
-an empty name that no other check can see.
+is the ordered index of those parts. A family name is one exact, non-empty
+family — not a CSS comma stack, not a CSS generic keyword and not a padded name
+— because `StyleDesc.fontFamily` is a single string and an unknown name falls
+back silently, so `themeTypefaceFailures` reports those forms and an empty name
+that no other check can see.
 
 The set those checks run over is `shippedThemes` — every identity variant,
 platform variant and recipe at both modes and both contrasts, each with the axis

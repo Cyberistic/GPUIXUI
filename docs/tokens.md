@@ -137,9 +137,9 @@ missing here is not public.
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
 | `ThemeParamSource` | The lookup a URL search object provides: `get(key)` returning a string, `null` or `undefined`. |
 | `ThemeProviderProps` | Props for `ThemeProvider`. |
-| `TypefaceFailure` | A family name that is not one non-empty family. |
+| `TypefaceFailure` | A family name that is not one exact, non-empty family the runtime can resolve. |
 | `TypefaceRole` | `sans` or `mono`, a key of `typefaceRoles`. |
-| `TypefaceRule` | `non-empty` or `single-family`, a key of `typefaceRules`. |
+| `TypefaceRule` | `non-empty`, `trimmed`, `single-family` or `css-generic`, a key of `typefaceRules`. |
 | `Typography` | The sans/mono families and ten type roles. |
 | `TypographyOverrides` | Partial families and roles; roles merge field by field. |
 
@@ -2004,13 +2004,15 @@ machine does not have **falls back silently** to the system face. That makes the
 family names the one documented form no measurement can see — an edited theme
 paints a different typeface, not a broken contrast ratio.
 
-`themeTypefaceFailures(theme)` holds both fields to two rules, listed in
+`themeTypefaceFailures(theme)` holds both fields to four rules, listed in
 `typefaceRules` and checked in `typefaceRoles` order:
 
 | Rule | What it catches |
 | ---- | --------------- |
 | `non-empty` | A family that is empty or whitespace-only names nothing. |
+| `trimmed` | A name with surrounding whitespace — `" Inter"` — is not the installed name; the runtime matches the family string it is given. A whitespace-only value is the `non-empty` rule's diagnostic alone. |
 | `single-family` | A comma list — `"Inter, system-ui, sans-serif"` — is one string to the runtime, so it names a family no machine has. |
+| `css-generic` | A CSS generic keyword — `system-ui`, `sans-serif`, `monospace` and the rest of `cssGenericFamilies` — is CSS syntax, not a family the font database holds; `.SystemUIFont` is the native sentinel for the operating system's UI face. |
 
 ```ts
 import { extendTheme, getTheme, themeTypefaceFailures } from "@gpuixui/tokens";
@@ -2024,11 +2026,18 @@ themeTypefaceFailures(stacked);
 ```
 
 A `TypefaceFailure` carries the `role` (`sans` or `mono`), the `rule` it broke
-and the `value` the theme carried. A name with spaces inside it —
-`Helvetica Neue` — is one family and passes, and the `.SystemUIFont` sentinel
+and the `value` the theme carried. A name with a single space inside it —
+`Helvetica Neue` — is one family and passes: the rule is surrounding
+whitespace, not internal whitespace. The `.SystemUIFont` sentinel
 every shipped theme uses passes too. The check does not ask whether the machine
 has the face, because the package cannot know: it holds the form, and the type
 facts above already state that an unknown family falls back silently.
+
+`cssGenericFamilies` is the rule's domain, in CSS Fonts 4 order: `serif`,
+`sans-serif`, `cursive`, `fantasy`, `monospace`, `system-ui`, `ui-serif`,
+`ui-sans-serif`, `ui-monospace`, `ui-rounded`, `math`, `emoji` and `fangsong`.
+The test reads the value as written, so a padded keyword reports `trimmed`
+first; once trimmed it reports `css-generic`.
 
 Every shipped identity theme, platform variant and recipe passes, so no family
 moves; `platforms.test.ts` already holds the shipped platform table to the same

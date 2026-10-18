@@ -18,11 +18,44 @@ export const typefaceRoles = ["sans", "mono"] as const;
 /** A family field a theme paints with. */
 export type TypefaceRole = (typeof typefaceRoles)[number];
 
-/** The forms a family name must hold, in documentation order. */
-export const typefaceRules = ["non-empty", "single-family"] as const;
+/**
+ * The forms a family name must hold, in documentation order. `trimmed` and
+ * `css-generic` close the two forms a reader brings from the web: a stray space
+ * is not part of an installed name, and a CSS generic keyword is syntax the
+ * native runtime does not resolve — `.SystemUIFont` is its sentinel.
+ */
+export const typefaceRules = [
+  "non-empty",
+  "trimmed",
+  "single-family",
+  "css-generic",
+] as const;
 
 /** A form a family name can miss. */
 export type TypefaceRule = (typeof typefaceRules)[number];
+
+/**
+ * CSS's generic family keywords, in CSS Fonts 4 order. The native runtime has
+ * no CSS generics: `StyleDesc.fontFamily` is a family name looked up in the
+ * font database, and `.SystemUIFont` is the sentinel for the operating system's
+ * UI face. A theme that names one of these paints the silent fallback, so
+ * {@link themeTypefaceFailures} reports it.
+ */
+export const cssGenericFamilies = [
+  "serif",
+  "sans-serif",
+  "cursive",
+  "fantasy",
+  "monospace",
+  "system-ui",
+  "ui-serif",
+  "ui-sans-serif",
+  "ui-monospace",
+  "ui-rounded",
+  "math",
+  "emoji",
+  "fangsong",
+] as const;
 
 /** One family name that misses a form in a theme. */
 export interface TypefaceFailure {
@@ -37,12 +70,19 @@ export interface TypefaceFailure {
 /**
  * Every family name in a theme the runtime cannot resolve as written.
  *
- * A `single-family` failure is a value containing a comma: `fontFamily` is one
+ * A `non-empty` failure is a value that is empty or whitespace-only, which
+ * names nothing at all. A `trimmed` failure is a name with surrounding
+ * whitespace — `" Inter"` — because the runtime matches the family string it is
+ * given and the installed name has none; a whitespace-only value is the
+ * `non-empty` rule's diagnostic alone, so one bad value keeps one diagnostic. A
+ * `single-family` failure is a value containing a comma: `fontFamily` is one
  * string, so a CSS stack names a family no machine has and the text falls back
- * silently. A `non-empty` failure is a value that is empty or whitespace-only,
- * which names nothing at all. A name with spaces inside it (`Helvetica Neue`)
- * is a valid single family and is not reported; neither is the `.SystemUIFont`
- * sentinel every shipped theme uses.
+ * silently. A `css-generic` failure is one of {@link cssGenericFamilies} as the
+ * whole value: CSS syntax, not a family the font database holds. The generic
+ * test reads the value as written, so a padded keyword reports `trimmed`.
+ * A name with a space inside it (`Helvetica Neue`) is a valid single family and
+ * is not reported; neither is the `.SystemUIFont` sentinel every shipped theme
+ * uses.
  *
  * @example
  * ```ts
@@ -60,12 +100,17 @@ export function themeTypefaceFailures(
 ): ReadonlyArray<TypefaceFailure> {
   return typefaceRoles.flatMap((role): ReadonlyArray<TypefaceFailure> => {
     const value = theme.typography[role];
+    const trimmed = value.trim();
     return [
-      ...(value.trim() === ""
-        ? [{ role, rule: "non-empty" as const, value }]
+      ...(trimmed === "" ? [{ role, rule: "non-empty" as const, value }] : []),
+      ...(trimmed !== "" && value !== trimmed
+        ? [{ role, rule: "trimmed" as const, value }]
         : []),
       ...(value.includes(",")
         ? [{ role, rule: "single-family" as const, value }]
+        : []),
+      ...(cssGenericFamilies.some((family) => family === value.toLowerCase())
+        ? [{ role, rule: "css-generic" as const, value }]
         : []),
     ];
   });
