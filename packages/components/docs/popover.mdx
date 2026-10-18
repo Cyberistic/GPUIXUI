@@ -48,7 +48,8 @@ side. `align="center"` is exact: the runtime's `center` is not used.
 | Action | Result |
 | ------ | ------ |
 | `Escape` | closes, and returns focus to the trigger |
-| `Tab` | closes and lets focus move on — a popover is not modal |
+| `Tab` | moves to the next control inside the panel; past the last one it closes, and focus continues with the app control after the trigger |
+| `Shift+Tab` | the same, backwards |
 | press outside | closes without moving focus (the press already gave it) |
 | press inside | does nothing |
 | click the trigger while open | closes it |
@@ -67,9 +68,14 @@ from closing and then immediately re-opening the popover on the following click.
 
 ## Focus and keyboard
 
-Focus moves into the surface on open, so keys reach its content without a click.
-The surface is a tab stop (`tabIndex={-1}`) but not a trap: Tab leaves and closes
-it. The trigger is an ordinary button: `Enter`/`Space` toggle it.
+Focus moves to the panel's **first control** on open — or to the panel itself
+when it has none — so keys reach the content without a click. Tab then walks the
+panel's tab stops; it closes only at either end, where focus continues with the
+next (or previous) control after the trigger. A popover is not modal, so it never
+traps, and a keyboard user is never left on an unmounted surface.
+
+`autoFocus={false}` leaves focus to the caller (the date picker uses this to keep
+focus on its calendar); Tab then closes the panel, as it did before.
 
 ## API
 
@@ -104,17 +110,26 @@ The surface paints `colors.popover` / `colors.popoverForeground`,
   runtime's snap margin wins at the edges.
 - A press outside hands focus to whatever was pressed, so focus is not restored to
   the trigger in that path. Escape is the keyboard path that restores it.
+- The renderer has no way to list an element's tab stops, so the panel's first
+  stop is the one measured on open. Content that removes or adds tab stops while
+  open cannot trap the user — the visited stops bound the cycle — but a stop
+  removed mid-cycle can cost one extra Tab before the panel closes.
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (12 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (17 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
 instead of covering it, Escape closing and restoring focus, an outside press
 closing without the following click re-opening it, a press inside keeping it
-open, Tab closing it, a controlled popover reporting `onOpenChange` while staying
-as the consumer says (including an inline consumer that keeps it closed), both
-themes, and a caller trigger `ref`.
+open, Tab closing a control-less panel while handing focus to the next app
+control, opening focus on the first control, Tab walking the panel's controls
+(two presses, panel still open), Tab past the last control closing and continuing
+after the trigger, Shift+Tab walking backwards and leaving before the first
+control, closing rather than trapping when the first tab stop is removed, a
+controlled popover reporting `onOpenChange` while staying as the consumer says
+(including an inline consumer that keeps it closed), both themes, and a caller
+trigger `ref`.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

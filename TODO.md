@@ -358,6 +358,14 @@ retired once both branches are one
       value it held. The hook now compares the resolved value with `Object.is`;
       3 hook cases + 1 Tabs case (behaviour 672), both-direction proof (2 fail
       on the old comparison); docs, `COMPONENTS.md` and the inventory synced
+    - [x] Popover: Tab walks the panel's controls and leaves at the ends — plan
+      521. Measured: Tab closed a two-control panel on the first press and left
+      focus `null`. Focus now lands on the first tab stop on open, Tab walks the
+      panel and closes only at either end, where focus continues with the app
+      control after the trigger; the visited stops bound the cycle so a removed
+      first stop cannot trap; 5 new native cases + 1 strengthened (Popover 17,
+      behaviour 677), four mutation proofs; docs, `COMPONENTS.md` and the
+      inventory synced
     - [x] Pagination never hides a single page behind an ellipsis — plan 513.
       Measured: a 7-page list was windowed although all seven numbers fit, and
       a gap of one page rendered `…` instead of the page (also a zero-page

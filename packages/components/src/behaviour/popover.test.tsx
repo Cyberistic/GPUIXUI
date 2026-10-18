@@ -4,10 +4,12 @@
  * The bugs these guard: a panel that opens somewhere other than below its
  * trigger; a side other than the default being ignored; Escape not closing or not
  * returning focus; an outside press closing the panel and then the same click
- * re-opening it; a press inside the panel closing it; Tab trapping focus in a
- * non-modal surface; and a controlled popover that opens itself. A caller `ref`
- * on the trigger was also discarded in favour of the internal one, so the
- * picker that composes this trigger lost focus after a selection.
+ * re-opening it; a press inside the panel closing it; a controlled popover that
+ * opens itself; Tab closing a multi-control panel on the first press, so its
+ * second control was unreachable; and Tab closing the panel while leaving focus
+ * on the unmounted surface (`null`), stranding a keyboard user. A caller `ref` on
+ * the trigger was also discarded in favour of the internal one, so the picker that
+ * composes this trigger lost focus after a selection.
  */
 
 import * as Option from "effect/Option";
@@ -49,6 +51,45 @@ const Filters = ({
     <Button testId="elsewhere">Elsewhere</Button>
   </div>
 );
+
+/** A control-dense popover: the column chooser a keyboard user has to walk. */
+const Columns = () => (
+  <div
+    style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+  >
+    <Button testId="before">Before</Button>
+    <Popover>
+      <PopoverTrigger testId="trigger">Columns</PopoverTrigger>
+      <PopoverContent testId="panel">
+        <Button testId="first">First</Button>
+        <Button testId="second">Second</Button>
+        <Button testId="third">Third</Button>
+      </PopoverContent>
+    </Popover>
+    <Button testId="elsewhere">Elsewhere</Button>
+  </div>
+);
+
+/** A panel whose first tab stop can disappear while it is open. */
+const Removable = () => {
+  const [showFirst, setShowFirst] = useState(true);
+  return (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+    >
+      <Popover>
+        <PopoverTrigger testId="trigger">Open</PopoverTrigger>
+        <PopoverContent testId="panel">
+          {showFirst ? <Button testId="first">First</Button> : null}
+          <Button testId="remove" onClick={() => setShowFirst(false)}>
+            Remove
+          </Button>
+        </PopoverContent>
+      </Popover>
+      <Button testId="elsewhere">Elsewhere</Button>
+    </div>
+  );
+};
 
 /** A trigger near the window centre, where a centred panel has room to sit. */
 const CentredPopover = () => (
@@ -212,7 +253,7 @@ describe("Popover", () => {
     popover.unmount();
   });
 
-  it("closes on Tab so focus can leave a non-modal surface", () => {
+  it("closes on Tab and gives focus to the next app control", () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
 
@@ -221,6 +262,80 @@ describe("Popover", () => {
     popover.renderer.simulateKeystrokes("tab");
 
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    // The surface is unmounted, so leaving focus on it would strand the user.
+    expect(focusedTestId(popover)).toEqual(Option.some("elsewhere"));
+
+    popover.unmount();
+  });
+
+  it("opens with focus on the panel's first tab stop", () => {
+    const popover = renderComponent(<Columns />);
+    clickCentreOf(popover, "trigger");
+
+    expect(focusedTestId(popover)).toEqual(Option.some("first"));
+
+    popover.unmount();
+  });
+
+  it("moves to the next control on Tab and keeps the panel open", () => {
+    const popover = renderComponent(<Columns />);
+    clickCentreOf(popover, "trigger");
+
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("second"));
+
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("third"));
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    popover.unmount();
+  });
+
+  it("closes past the last control and continues after the trigger", () => {
+    const popover = renderComponent(<Columns />);
+    clickCentreOf(popover, "trigger");
+
+    popover.renderer.simulateKeystrokes("tab");
+    popover.renderer.simulateKeystrokes("tab");
+    popover.renderer.simulateKeystrokes("tab");
+
+    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(popover)).toEqual(Option.some("elsewhere"));
+
+    popover.unmount();
+  });
+
+  it("walks backwards on Shift+Tab and leaves before the first control", () => {
+    const popover = renderComponent(<Columns />);
+    clickCentreOf(popover, "trigger");
+
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("second"));
+
+    popover.renderer.simulateKeystrokes("shift-tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("first"));
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    popover.renderer.simulateKeystrokes("shift-tab");
+    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(popover)).toEqual(Option.some("before"));
+
+    popover.unmount();
+  });
+
+  it("closes instead of trapping when the first tab stop is removed", () => {
+    const popover = renderComponent(<Removable />);
+    clickCentreOf(popover, "trigger");
+
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("remove"));
+
+    popover.renderer.simulateKeystrokes("enter");
+    expect(popover.renderer.findByTestId("first")).toBeUndefined();
+
+    popover.renderer.simulateKeystrokes("tab");
+    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(popover)).toEqual(Option.some("elsewhere"));
 
     popover.unmount();
   });
