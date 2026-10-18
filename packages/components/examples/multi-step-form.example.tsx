@@ -52,6 +52,7 @@ export const MultiStepFormExample = () => {
       schema={Checkout}
       value={{ email, card }}
       steps={steps}
+      revalidate
       onSubmit={(checkout) => setPlaced(Option.some(checkout.email))}
       label="Checkout"
       style={{ width: 360 }}

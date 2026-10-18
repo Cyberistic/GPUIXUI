@@ -181,6 +181,7 @@ retired once both branches are one
     - [x] `src/behaviour/theme-matrix.test.tsx`: the both-theme matrix for the 11 components without one
     - [x] Six records corrected from `gpuixSupport: "yes"` to `partial` where the runtime lacks the ARIA surface or a keyboard path
   - Tier 2 hardening after the inventory closed (plans 120+)
+    - [x] Form and multi-step form re-check after an edit (`revalidate`) — plan 397; 5 pure + 7 native tests, both-direction proof (unit 395, behaviour 626); docs, examples, `COMPONENTS.md` and inventory synced
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

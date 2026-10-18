@@ -157,6 +157,23 @@ export const fieldMessageAt = (
 };
 
 /**
+ * Whether two validation passes report exactly the same failures, in the same
+ * order. `Form` and `MultiStepForm` use it to keep the previous array identity
+ * when a re-check finds nothing new, so an unrelated re-render cannot repaint.
+ */
+export const sameFieldMessages = (
+  left: ReadonlyArray<FieldMessage>,
+  right: ReadonlyArray<FieldMessage>,
+): boolean =>
+  Arr.length(left) === Arr.length(right) &&
+  Arr.every(
+    Arr.zip(left, right),
+    ([leftField, rightField]) =>
+      samePath(leftField.path, rightField.path) &&
+      leftField.message === rightField.message,
+  );
+
+/**
  * Every distinct message `schema` produces for `value`, in issue order, so a
  * field's message appears where the schema declared it.
  *

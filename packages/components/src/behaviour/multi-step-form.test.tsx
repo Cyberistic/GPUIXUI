@@ -57,6 +57,7 @@ const valid = { email: "ada@example.com", card: "4242" };
 const Harness = ({
   value,
   pending = false,
+  revalidate,
   onSubmit = () => undefined,
   step,
   defaultStep,
@@ -64,6 +65,7 @@ const Harness = ({
 }: {
   readonly value: unknown;
   readonly pending?: boolean;
+  readonly revalidate?: boolean;
   readonly onSubmit?: (value: Checkout) => void;
   readonly step?: number;
   readonly defaultStep?: number;
@@ -75,6 +77,7 @@ const Harness = ({
     steps={steps}
     onSubmit={onSubmit}
     pending={pending}
+    revalidate={revalidate}
     step={step}
     defaultStep={defaultStep}
     onStepChange={onStepChange}
@@ -372,6 +375,60 @@ describe("Multi-step form", () => {
       .getAllText()
       .filter((text) => expected.includes(text));
     expect(messages).toEqual(expected);
+
+    form.unmount();
+  });
+
+  it("does not validate before the first failed action", () => {
+    const form = renderComponent(
+      <Harness value={{ email: "nope", card: "4242" }} revalidate />,
+    );
+
+    expect(form.renderer.getAllText()).not.toContain(addressMessage);
+
+    form.rerender(
+      <Harness value={{ email: "also-nope", card: "4242" }} revalidate />,
+    );
+
+    expect(form.renderer.getAllText()).not.toContain(addressMessage);
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(0);
+
+    form.unmount();
+  });
+
+  it("re-checks a failed step when the draft changes", () => {
+    const form = renderComponent(
+      <Harness value={{ email: "nope", card: "4242" }} revalidate />,
+    );
+
+    clickCentreOf(form, "next");
+    expect(form.renderer.getAllText()).toContain(addressMessage);
+
+    form.rerender(
+      <Harness value={{ email: valid.email, card: "4242" }} revalidate />,
+    );
+
+    expect(form.renderer.getAllText()).not.toContain(addressMessage);
+    expect(form.renderer.getAllText()).toContain("0:true:false:false");
+
+    clickCentreOf(form, "next");
+    expect(form.renderer.getAllText()).toContain("1:false:true:false");
+
+    form.unmount();
+  });
+
+  it("keeps a failed step's messages when revalidation is off", () => {
+    const form = renderComponent(
+      <Harness value={{ email: "nope", card: "4242" }} />,
+    );
+
+    clickCentreOf(form, "next");
+    expect(form.renderer.getAllText()).toContain(addressMessage);
+
+    form.rerender(<Harness value={{ email: valid.email, card: "4242" }} />);
+
+    expect(form.renderer.getAllText()).toContain(addressMessage);
+    expect(form.renderer.getAllText()).toContain("0:true:false:false");
 
     form.unmount();
   });

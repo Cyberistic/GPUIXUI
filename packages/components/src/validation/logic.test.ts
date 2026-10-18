@@ -15,9 +15,11 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import {
   fieldMessageAt,
+  sameFieldMessages,
   validate,
   validateAll,
   validateFields,
+  type FieldMessage,
 } from "./logic.js";
 
 const addressMessage = "Enter an address with an @";
@@ -163,4 +165,43 @@ describe("validateFields", () => {
       expect(fieldMessageAt(fields, "missing")).toEqual(Option.none());
     }),
   );
+});
+
+/**
+ * The bug these guard: a re-check that repaints (or skips a repaint) because
+ * equality compared only the message, only the path, or ignored order.
+ */
+describe("sameFieldMessages", () => {
+  const email: FieldMessage = { path: ["email"], message: addressMessage };
+  const name: FieldMessage = { path: ["name"], message: "Name is required" };
+
+  it("is true for the same failures in the same order", () => {
+    expect(sameFieldMessages([email, name], [email, name])).toBe(true);
+  });
+
+  it("is false when a message differs", () => {
+    expect(
+      sameFieldMessages(
+        [email],
+        [{ path: ["email"], message: "Another message" }],
+      ),
+    ).toBe(false);
+  });
+
+  it("is false when the path differs", () => {
+    expect(
+      sameFieldMessages(
+        [email],
+        [{ path: ["backup"], message: addressMessage }],
+      ),
+    ).toBe(false);
+  });
+
+  it("is false when the number of failures differs", () => {
+    expect(sameFieldMessages([email], [email, name])).toBe(false);
+  });
+
+  it("is false when the same failures arrive in a different order", () => {
+    expect(sameFieldMessages([email, name], [name, email])).toBe(false);
+  });
 });

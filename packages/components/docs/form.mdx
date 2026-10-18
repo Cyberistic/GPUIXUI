@@ -104,11 +104,33 @@ caller that validates outside a `Form`.
 The caller owns the request: pass `pending` while it runs, then re-render with a
 new value. The form does not track a request, so it never claims one finished.
 
+## Revalidation
+
+By default a failed submit's messages stay until the next submit. Add
+`revalidate` to the form in the usage example to re-check them as the user
+edits.
+
+The rules are deliberate:
+
+1. Nothing is validated before the first failed submit, so an untouched form
+   never greets the user with errors.
+2. After a failure, changing `value` or `schema` runs the same validation pass
+   and updates both the summary and every `errorFor` result. `onSubmit` is never
+   called by a re-check.
+3. Fixing one field removes only its message; fixing everything removes the
+   summary and leaves the form valid to submit; a new failure replaces the old
+   one.
+
+`value` is compared by **identity**, the React convention. Pass a new value when
+the draft changes; mutating the same object in place is not detected. An
+unrelated re-render with a new object re-checks the schema but repaints nothing,
+because equal messages keep the previous array identity.
+
 ## API
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Form` | `div` (`role="form"` when `label` is given) | `schema: Schema.ConstraintDecoder<T>` (required), `value: unknown` (required), `onSubmit: (value: T) => void` (required), `pending?: boolean`, `label?: string`, `children: (state: FormState) => ReactNode` |
+| `Form` | `div` (`role="form"` when `label` is given) | `schema: Schema.ConstraintDecoder<T>` (required), `value: unknown` (required), `onSubmit: (value: T) => void` (required), `pending?: boolean`, `revalidate?: boolean`, `label?: string`, `children: (state: FormState) => ReactNode` |
 
 Every part takes the GPUix host props and merges `style` last.
 
@@ -126,10 +148,11 @@ Every part takes the GPUix host props and merges `style` last.
 - `errorFor` is the same data, looked up by path. `Field` paints the message it
   is given, so inline validation never re-runs the schema or invents a second
   message.
-- There is no validate-on-blur or validate-on-keystroke; the caller decides when
-  to call `submit`.
-- Errors persist until the next submit. Clearing them on an edit would need an
-  identity comparison that an inline `value` object cannot support.
+- There is no validate-on-blur or validate-on-keystroke; the first validation
+  is the caller's `submit`. `revalidate` only re-checks after a failure.
+- Without `revalidate`, errors persist until the next submit. With it, a value
+  change re-checks them; the owned value is compared by identity, so the caller
+  must pass a new value rather than mutate one in place.
 
 ## Theming
 
@@ -151,21 +174,26 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 - Owned-value: the caller passes the value; there is no field registration.
 - A message carries the schema's key path, not a display label. Renaming a field
   in the UI does not change the path; pass the schema's keys to `errorFor`.
-- No automatic re-validation on edit: errors persist until the next submit.
+- `revalidate` compares the owned value by identity: the caller must pass a new
+  value; an unrelated re-render with a new object re-checks but repaints nothing.
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
 
 ## Verification
 
-`src/behaviour/form.test.tsx` runs in the real GPUix renderer (9 tests): idle
+`src/behaviour/form.test.tsx` runs in the real GPUix renderer (13 tests): idle
 state, a valid submit delivering the decoded instance, an invalid submit showing
 every message and never submitting, one alert with separate message nodes,
 `pending` blocking a submit, a consumer `style` winning while the summary paints
 destructively in both themes, the named form landmark, each message located at
-its field path (with an accepted field returning `undefined`), and an inline
-`Field` painting the located message plus the destructive input border.
+its field path (with an accepted field returning `undefined`), an inline
+`Field` painting the located message plus the destructive input border, no
+validation before the first failed submit, a fixed field's message clearing on
+edit, the summary clearing when an edit makes the form valid, and messages
+persisting when `revalidate` is off.
 `src/validation/logic.test.ts` has 4 cases for `validateFields`/`errorFor`'s
-lookup, including nested and root paths.
+lookup, including nested and root paths, plus 5 for `sameFieldMessages` (path,
+message, order and length).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

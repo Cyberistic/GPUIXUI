@@ -46,11 +46,13 @@ class Signup extends Schema.Class<Signup>("Signup")({
 const Harness = ({
   value,
   pending = false,
+  revalidate,
   onSubmit,
   style,
 }: {
   readonly value: unknown;
   readonly pending?: boolean;
+  readonly revalidate?: boolean;
   readonly onSubmit: (value: Signup) => void;
   readonly style?: { readonly gap: number };
 }) => (
@@ -58,6 +60,7 @@ const Harness = ({
     schema={Signup}
     value={value}
     pending={pending}
+    revalidate={revalidate}
     onSubmit={onSubmit}
     label="Create account"
     testId="form"
@@ -268,6 +271,98 @@ describe("Form", () => {
     const landmarks = nodesWithRole(form.renderer, "form");
     expect(landmarks).toHaveLength(1);
     expect(landmarks[0]?.name).toBe("Create account");
+
+    form.unmount();
+  });
+
+  it("does not validate before the first failed submit", () => {
+    const form = renderComponent(
+      <Harness value={invalid} revalidate onSubmit={() => undefined} />,
+    );
+
+    expect(form.renderer.getAllText()).toContain("0:false");
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(0);
+
+    form.rerender(
+      <Harness
+        value={{ email: "nope", name: "Ada" }}
+        revalidate
+        onSubmit={() => undefined}
+      />,
+    );
+
+    expect(form.renderer.getAllText()).toContain("0:false");
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(0);
+
+    form.unmount();
+  });
+
+  it("clears the fixed field's message after an edit", () => {
+    const onSubmit = vi.fn();
+    const form = renderComponent(
+      <Harness value={invalid} revalidate onSubmit={onSubmit} />,
+    );
+
+    clickCentreOf(form, "submit");
+    expect(form.renderer.getAllText()).toEqual(
+      expect.arrayContaining([...expectedMessages]),
+    );
+
+    form.rerender(
+      <Harness
+        value={{ email: valid.email, name: "" }}
+        revalidate
+        onSubmit={onSubmit}
+      />,
+    );
+
+    const messages = form.renderer
+      .getAllText()
+      .filter((text) => expectedMessages.includes(text));
+    expect(messages).toEqual([expectedMessages[1]]);
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    form.unmount();
+  });
+
+  it("clears every message after the edit makes the form valid", () => {
+    const onSubmit = vi.fn();
+    const form = renderComponent(
+      <Harness value={invalid} revalidate onSubmit={onSubmit} />,
+    );
+
+    clickCentreOf(form, "submit");
+
+    form.rerender(<Harness value={valid} revalidate onSubmit={onSubmit} />);
+
+    expect(form.renderer.getAllText()).toContain("0:false");
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(0);
+    expect(
+      form.renderer
+        .getAllText()
+        .filter((text) => expectedMessages.includes(text)),
+    ).toEqual([]);
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    form.unmount();
+  });
+
+  it("keeps the messages when revalidation is off", () => {
+    const onSubmit = vi.fn();
+    const form = renderComponent(
+      <Harness value={invalid} onSubmit={onSubmit} />,
+    );
+
+    clickCentreOf(form, "submit");
+
+    form.rerender(<Harness value={valid} onSubmit={onSubmit} />);
+
+    expect(form.renderer.getAllText()).toEqual(
+      expect.arrayContaining([...expectedMessages]),
+    );
+    expect(nodesWithRole(form.renderer, "alert")).toHaveLength(1);
+    expect(onSubmit).not.toHaveBeenCalled();
 
     form.unmount();
   });

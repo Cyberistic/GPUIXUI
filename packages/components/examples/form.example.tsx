@@ -42,6 +42,7 @@ export const FormExample = () => {
     <Form
       schema={Signup}
       value={{ email, name }}
+      revalidate
       onSubmit={(signup) => setCreated(Option.some(signup.email))}
       label="Create account"
       style={{ width: 360 }}

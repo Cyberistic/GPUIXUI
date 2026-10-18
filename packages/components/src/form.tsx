@@ -10,8 +10,9 @@
  *
  * The submit handler is the runtime boundary: `validation/logic.ts` and the
  * decoder are pure, non-failing effects with no requirements, so they run with
- * `Effect.runSync` there. Errors persist until the next submit because an inline
- * object identity cannot tell an edit from a re-render.
+ * `Effect.runSync` there. Errors persist until the next submit by default; with
+ * `revalidate`, a failed submit is re-checked whenever the owned value changes,
+ * and `value` is compared by identity.
  *
  * `Form` has no compound parts (`docs/component-api.md` §8), so its children are
  * a render prop: that is how the consumer reaches `submit` without a part the
@@ -25,11 +26,18 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { ErrorSummary } from "./internal/error-summary.js";
 import { useTheme } from "./internal/theme.js";
 import {
   fieldMessageAt,
+  sameFieldMessages,
   validateFields,
   type FieldMessage,
 } from "./validation/logic.js";
@@ -63,6 +71,13 @@ export interface FormProps<T> extends Omit<Props, "children" | "onSubmit"> {
   readonly onSubmit: (value: T) => void;
   /** The caller's async state; a pending form refuses to submit again. */
   readonly pending?: boolean;
+  /**
+   * Re-check a failed submit whenever `value` or `schema` changes, so a field's
+   * message clears as the caller edits it. Validation never runs before the
+   * first failed submit. `value` is compared by identity: pass a new value when
+   * the draft changes. Default `false`.
+   */
+  readonly revalidate?: boolean;
   /** The form's accessible name. Without it the root is a plain container. */
   readonly label?: string;
   readonly children: (state: FormState) => ReactNode;
@@ -76,6 +91,7 @@ export const Form = <T,>({
   value,
   onSubmit,
   pending = false,
+  revalidate = false,
   label,
   children,
   style,
@@ -86,6 +102,23 @@ export const Form = <T,>({
     [],
   );
   const errors = Arr.dedupe(Arr.map(fieldErrors, (field) => field.message));
+
+  const lastValue = useRef(value);
+  const lastSchema = useRef(schema);
+
+  useLayoutEffect(() => {
+    const changed =
+      lastValue.current !== value || lastSchema.current !== schema;
+    lastValue.current = value;
+    lastSchema.current = schema;
+    if (!revalidate || !changed || Arr.isReadonlyArrayEmpty(fieldErrors))
+      return;
+
+    const next = Effect.runSync(validateFields(schema)(value));
+    setFieldErrors((current) =>
+      sameFieldMessages(current, next) ? current : next,
+    );
+  }, [fieldErrors, revalidate, schema, value]);
 
   const submit = useCallback((): void => {
     if (pending) return;
@@ -135,7 +168,7 @@ export const formMeta = {
     "owned-value: the caller passes the value and receives the decoded one; there is no runtime form element",
     "a render-prop child is the only way to reach submit, because the contract fixes Form as one part",
     "messages carry the schema's key path, not a display label; the caller still chooses when to validate and how each field renders it",
-    "no automatic re-validation on edit: errors persist until the next submit",
+    "revalidate compares the owned value by identity: the caller must pass a new value; an unrelated re-render with a new object re-checks but repaints nothing",
   ],
   docs: "docs/form.mdx",
   example: "examples/form.example.tsx",

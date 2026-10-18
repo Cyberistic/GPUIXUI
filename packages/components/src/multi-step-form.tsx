@@ -8,7 +8,9 @@
  *
  * Messages are stored with the index that produced them, so a controlled `step`
  * move cannot paint the previous step's failure — there is no effect to run and
- * no one-frame flash of stale text.
+ * no one-frame flash of stale text. With `revalidate`, a failed action is
+ * re-checked whenever the owned draft changes, using the schema that produced
+ * the stored messages. The draft is compared by identity.
  */
 
 import type { Props } from "@gpuix/react";
@@ -19,13 +21,20 @@ import * as Num from "effect/Number";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { ErrorSummary } from "./internal/error-summary.js";
 import { useTheme } from "./internal/theme.js";
 import { Stepper, StepperStep } from "./stepper.js";
 import {
   fieldMessageAt,
+  sameFieldMessages,
   validateFields,
   type FieldMessage,
 } from "./validation/logic.js";
@@ -61,6 +70,12 @@ export interface MultiStepFormProps<T> extends Omit<
   readonly onSubmit: (value: T) => void;
   /** The caller's async state; locks every move while true. */
   readonly pending?: boolean;
+  /**
+   * Re-check a failed `next` or `submit` whenever `value` changes, so a step's
+   * messages clear as the caller edits the draft. Validation never runs before
+   * the first failed action. `value` is compared by identity. Default `false`.
+   */
+  readonly revalidate?: boolean;
   /** The form's accessible name. Without it the root is a plain container. */
   readonly label?: string;
   /** The controlled 0-based index. */
@@ -100,6 +115,8 @@ export interface MultiStepFormState {
 /** A failed action, tagged with the step it belongs to. */
 interface StepFailure {
   readonly index: number;
+  /** The schema whose messages are stored, so a re-check runs the same pass. */
+  readonly schema: Schema.ConstraintDecoder<unknown>;
   readonly fieldErrors: ReadonlyArray<FieldMessage>;
 }
 
@@ -113,6 +130,7 @@ export const MultiStepForm = <T,>({
   steps,
   onSubmit,
   pending = false,
+  revalidate = false,
   label,
   step: stepProp,
   defaultStep = 0,
@@ -144,12 +162,35 @@ export const MultiStepForm = <T,>({
   });
   const errors = Arr.dedupe(Arr.map(fieldErrors, (field) => field.message));
 
+  const lastValue = useRef(value);
+
+  useLayoutEffect(() => {
+    const changed = lastValue.current !== value;
+    lastValue.current = value;
+    if (!revalidate || !changed) return;
+
+    const failed = Option.getOrUndefined(failure);
+    if (failed === undefined || failed.index !== index) return;
+
+    const next = Effect.runSync(validateFields(failed.schema)(value));
+    setFailure((current) => {
+      const stored = Option.getOrUndefined(current);
+      if (stored === undefined || stored.index !== index) return current;
+      if (sameFieldMessages(stored.fieldErrors, next)) return current;
+      return Arr.isReadonlyArrayEmpty(next)
+        ? Option.none()
+        : Option.some({ ...stored, fieldErrors: next });
+    });
+  }, [failure, index, revalidate, value]);
+
   const next = useCallback((): void => {
     if (pending || isLast) return;
 
     const messages = Effect.runSync(validateFields(step.schema)(value));
     if (Arr.isReadonlyArrayNonEmpty(messages)) {
-      setFailure(Option.some({ index, fieldErrors: messages }));
+      setFailure(
+        Option.some({ index, schema: step.schema, fieldErrors: messages }),
+      );
       return;
     }
 
@@ -172,6 +213,7 @@ export const MultiStepForm = <T,>({
       setFailure(
         Option.some({
           index,
+          schema,
           fieldErrors: Effect.runSync(validateFields(schema)(value)),
         }),
       );
@@ -235,7 +277,7 @@ export const multiStepFormMeta = {
     "each step's validator is a projection schema over the whole draft, so the step schema and the full schema declare the same keys twice",
     "a failed final submit reports every message by path, including fields on earlier steps; the summary names them, but the caller must move back to paint them inline",
     "no step click: Stepper is display-only in this runtime, so next and back are the only moves",
-    "no validate-on-edit: messages persist until the next action",
+    "revalidate compares the owned draft by identity, after a failed action only",
   ],
   docs: "docs/multi-step-form.mdx",
   example: "examples/multi-step-form.example.tsx",
