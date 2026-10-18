@@ -20,7 +20,7 @@ the native half (`apps/playground`) supplies the real renderer.
 ## Surface
 
 ```ts
-import { Report, Runtime, Smoke, State } from "@gpuixui/testing";
+import { Binding, Report, Runtime, Smoke, State } from "@gpuixui/testing";
 ```
 
 | Namespace | Responsibility |
@@ -30,6 +30,12 @@ import { Report, Runtime, Smoke, State } from "@gpuixui/testing";
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 | `Native`  | `createHost(renderer)`, the structural `NativeRenderer` port, and the lookups (`find`, `allElements`, `boundsOf`, `hitBoundsOf`, `centerOf`, `subtreeText`, `focusedElement`) |
 | `State`   | `runCommands(runtime, commands)` — fold a component runtime's commands and read its part-shaped queries, with no renderer |
+| `Binding` | `BindingPin` (the source a binding was built from), `describeBinding`, and `fingerprintIssue` — the release fingerprint from plan `529` |
+
+`Binding.fingerprintIssue` is a release guard, not a version ban: a pin of
+`0.10.0` rejects a binary that carries a capability the published release does
+not have (measured with `strings`, recorded in plan `529` §1.1). A suite that
+prints its pin in the report cannot silently verify a newer source again.
 
 `State.runCommands` is the shared half of the plan-201 state convention: pass
 any runtime with `initial`, `reduce` and `query`, and it returns the final state

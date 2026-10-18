@@ -4,3 +4,8 @@
 # is source-first, and its own tsconfig maps the JSX runtime to a `.d.ts`, which
 # `nub` cannot execute; the consumer compiles it instead (plan 330 §3).
 vendor/
+
+# The locally built release binding (`scripts/install-binding.mjs` installs it
+# into the shared package store on every build). A build product, never source:
+# plan 529 records the pinned tag and the fingerprint.
+native/

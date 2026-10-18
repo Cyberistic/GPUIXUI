@@ -1,6 +1,7 @@
 # 529 — The native evidence is built from a newer source than the published 0.10.0
 
-- **Status:** planned (execution in progress)
+- **Status:** landed (2026-10-18) — headless 101/101 (3536 checks) and live
+  50/50 (1014 checks), exit `0`, on the release-tag binding
 - **Phase:** B/F (evidence integrity — blocks every `verified 0.10.0` verdict)
 - **Depends on:** `140` (the build recipe), `110` (the smoke suite), `189` (the live suite)
 - **Owner:** playground workstream (`apps/playground`, `packages/testing`)
