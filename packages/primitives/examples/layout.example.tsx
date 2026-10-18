@@ -9,7 +9,7 @@
  */
 
 import * as Arr from "effect/Array";
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import {
   Box,
   Grid,
@@ -19,6 +19,7 @@ import {
   Stack,
   Text,
   useTheme,
+  type ScrollPosition,
 } from "../src/index.js";
 
 /** One property row: a name and its value. */
@@ -31,15 +32,31 @@ const properties: ReadonlyArray<{
   { name: "Height", value: "800 px" },
   { name: "X", value: "0 px" },
   { name: "Y", value: "24 px" },
+  { name: "Rotation", value: "0°" },
+  { name: "Opacity", value: "100%" },
   { name: "Corner radius", value: "12 px" },
   { name: "Fill", value: "Surface / Card" },
   { name: "Border", value: "1 px / Border" },
   { name: "Shadow", value: "Elevation / Overlay" },
+  { name: "Blend mode", value: "Normal" },
+  { name: "Constraints", value: "Left / Top" },
+  { name: "Export", value: "2x PNG" },
+  { name: "Name", value: "Frame 1280" },
+  { name: "Parent", value: "Canvas" },
+  { name: "Visible", value: "Yes" },
+  { name: "Lock aspect", value: "Off" },
+  { name: "Clip content", value: "On" },
+  { name: "Stroke", value: "Border / Strong" },
+  { name: "Stroke width", value: "1 px" },
+  { name: "Layer", value: "Content" },
+  { name: "Text", value: "Inter / 14" },
+  { name: "Fill opacity", value: "100%" },
 ];
 
 /** A property inspector: a fixed header, a scrolling body and a footer. */
 export const LayoutExample = (): ReactElement => {
   const theme = useTheme();
+  const [position, setPosition] = useState<ScrollPosition>({ x: 0, y: 0 });
   return (
     <Box
       tone="card"
@@ -72,6 +89,8 @@ export const LayoutExample = (): ReactElement => {
         axis="vertical"
         label="Component properties"
         testId="layout-example-properties"
+        onScrollPositionChange={setPosition}
+        style={{ flexGrow: 1, minHeight: 0 }}
       >
         <Stack
           direction="column"
@@ -108,8 +127,8 @@ export const LayoutExample = (): ReactElement => {
           Read-only
         </Text>
         <Spacer />
-        <Text role="caption" tone="primary">
-          Reset all
+        <Text role="caption" tone="primary" testId="layout-example-position">
+          {position.y === 0 ? "Top" : `${Math.round(-position.y)} px`}
         </Text>
       </Stack>
     </Box>

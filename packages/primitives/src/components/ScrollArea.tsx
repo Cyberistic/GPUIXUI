@@ -14,6 +14,12 @@
  * element id with this container's own id, so an `Input` inside the area keeps
  * its arrow keys. An unlabelled area stays the inert container it always was —
  * adding a tab stop to every existing layout silently would be worse.
+ *
+ * **Position (plan 337).** The scroll *event* carries deltas, and a scroll this
+ * component performs itself dispatches no event at all — measured, PageDown
+ * moved the region and reported nothing. `onScrollPositionChange` therefore
+ * reads the renderer's own absolute offset after both paths, so a consumer never
+ * has to accumulate deltas (and never drifts when the runtime clamps).
  */
 
 import { useRef, type ReactElement, type ReactNode, type Ref } from "react";
@@ -33,6 +39,12 @@ export interface ScrollAreaState {
   readonly focused: boolean;
 }
 
+/** An absolute scroll offset. `y` is `0` at the top and negative below it. */
+export interface ScrollPosition {
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface ScrollAreaProps extends ScrollSpec {
   /**
    * Names the region **and** makes it a keyboard scroll stop. Without a label a
@@ -41,10 +53,17 @@ export interface ScrollAreaProps extends ScrollSpec {
   readonly label?: string;
   /**
    * A wheel/trackpad scroll, as the runtime reports it: `deltaX`/`deltaY`,
-   * `precise` and `touchPhase`. There is **no absolute offset** — a consumer
-   * accumulates deltas itself.
+   * `precise` and `touchPhase`. The payload has no absolute offset; use
+   * `onScrollPositionChange` for one.
    */
   readonly onScroll?: (event: EventPayload) => void;
+  /**
+   * The absolute offset after a wheel or keyboard scroll, only when it changed.
+   * The runtime clamps a programmatic scroll, so an `End` reports where the
+   * content actually ends. A scroll this component performs itself dispatches no
+   * `onScroll`, so this is the only complete position signal (plan 337).
+   */
+  readonly onScrollPositionChange?: (position: ScrollPosition) => void;
   /** An object, or a callback over the area's public state. */
   readonly style?: StateStyle<ScrollAreaState>;
   readonly children?: ReactNode;
@@ -100,7 +119,33 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
   const root = useRef<PublicInstance | null>(null);
+  const lastPosition = useRef<ScrollPosition>({ x: 0, y: 0 });
   const focus = useFocus();
+
+  /** The runtime's own offset, which is already clamped after a scroll. */
+  const reportPosition = (): void => {
+    const id = root.current?.id;
+    if (id === undefined) return;
+    const position = Option.flatMap(
+      Option.fromNullishOr(renderer?.getScrollOffset?.(id)),
+      (values) =>
+        Option.all({
+          x: Option.fromNullishOr(values[0]),
+          y: Option.fromNullishOr(values[1]),
+        }),
+    );
+    if (Option.isNone(position)) return;
+    const next = position.value;
+    if (next.x === lastPosition.current.x && next.y === lastPosition.current.y)
+      return;
+    lastPosition.current = next;
+    props.onScrollPositionChange?.(next);
+  };
+
+  const onScroll = (event: EventPayload): void => {
+    props.onScroll?.(event);
+    reportPosition();
+  };
 
   const onKeyDown = (event: EventPayload): void => {
     if (props.label === undefined) return;
@@ -121,9 +166,10 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
       line: scrollLine(theme),
     });
     renderer?.scrollTo?.(id, target.x, target.y);
+    reportPosition();
   };
 
-  return renderScrollArea(props, theme, {
+  return renderScrollArea({ ...props, onScroll }, theme, {
     ref: root,
     focused: focus.focused,
     onFocus: focus.onFocus,

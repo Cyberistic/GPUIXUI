@@ -11,7 +11,12 @@ import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderScrollArea } from "./ScrollArea.js";
-import { expectSome, hostProp, hostStyle } from "./testing/element.js";
+import {
+  expectSome,
+  hostHandler,
+  hostProp,
+  hostStyle,
+} from "./testing/element.js";
 
 describe("ScrollArea", () => {
   it("is a named region and a tab stop when it is labelled", () => {
@@ -46,5 +51,21 @@ describe("ScrollArea", () => {
         "boxShadow",
       ),
     ).toStrictEqual(Option.none());
+  });
+
+  it("forwards the caller's onScroll to the viewport", () => {
+    // The impure wrapper composes a position reporter around this handler, so
+    // the pure renderer must pass the caller's own handler through unchanged.
+    const deltas: number[] = [];
+    const area = renderScrollArea(
+      {
+        axis: "vertical",
+        onScroll: (event) => deltas.push(event.deltaY ?? 0),
+      },
+      testTheme,
+    );
+    const handler = expectSome(hostHandler(area, "onScroll"));
+    handler({ elementId: 0, eventType: "scroll", deltaY: -100 });
+    expect(deltas).toStrictEqual([-100]);
   });
 });

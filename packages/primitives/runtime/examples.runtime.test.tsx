@@ -103,6 +103,23 @@ it("composes the layout example around a scrolling property list", async () => {
   );
 });
 
+it("updates the inspector's position readout on a wheel scroll", async () => {
+  // The example is the composed proof of the position contract (plan 337):
+  // wheel → renderer offset → onScrollPositionChange → caller state → repaint.
+  const runtime = await openWindow();
+  renderExample(runtime, "layout");
+  expect(runtime.allText()).toContain("Top");
+  runtime.wheel("layout-example-properties", 0, -100);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  const offset = Option.getOrElse(
+    runtime.scrollOffset("layout-example-properties"),
+    () => expect.fail("the inspector's property list did not scroll"),
+  );
+  expect(offset.y).toBeLessThan(0);
+  expect(runtime.allText()).toContain(`${Math.round(-offset.y)} px`);
+});
+
 it("runs the button-group example's stacked action", async () => {
   // The vertical group is the shape plan 096 added; this proves the example
   // wires a press through to caller-owned state, not just that it paints.

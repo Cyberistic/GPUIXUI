@@ -269,6 +269,106 @@ it("does not make an unlabelled ScrollArea a tab stop", async () => {
   expect(offsetOf(runtime).y).toBe(0);
 });
 
+it("reports an absolute position after a wheel scroll", async () => {
+  const runtime = await openWindow();
+  const positions: Array<{ readonly x: number; readonly y: number }> = [];
+  const deltas: number[] = [];
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        testId="s"
+        onScroll={(event) => deltas.push(event.deltaY ?? 0)}
+        onScrollPositionChange={(position) => positions.push(position)}
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.wheel("s", 0, -100);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  // The raw delta still reaches onScroll; the position is the runtime's own.
+  expect(deltas).toContain(-100);
+  expect(positions).toStrictEqual([{ x: 0, y: -100 }]);
+});
+
+it("reports the clamped position after a keyboard scroll", async () => {
+  // The bug guarded (plan 337): a scroll this component performs itself
+  // dispatches no `onScroll` at all, so a consumer accumulating deltas never
+  // hears about a keyboard move — and `End` would report a computed target,
+  // not the offset the runtime actually clamped to.
+  const runtime = await openWindow();
+  const positions: Array<{ readonly x: number; readonly y: number }> = [];
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        label="Properties"
+        style={{ height: 120, width: 300 }}
+        testId="s"
+        onScrollPositionChange={(position) => positions.push(position)}
+      >
+        <Box tone="card" style={{ width: 600, height: 600 }} testId="tall" />
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.keyDown("s", "pagedown");
+  const page = offsetOf(runtime);
+  expect(page.y).toBeLessThan(0);
+  runtime.keyDown("s", "home");
+  runtime.keyDown("s", "end");
+  expect(positions).toStrictEqual([page, { x: 0, y: 0 }, { x: 0, y: -480 }]);
+});
+
+it("does not report a position that did not change", async () => {
+  const runtime = await openWindow();
+  const positions: Array<{ readonly x: number; readonly y: number }> = [];
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        label="Properties"
+        style={{ height: 120, width: 300 }}
+        testId="s"
+        onScrollPositionChange={(position) => positions.push(position)}
+      >
+        <Box tone="card" style={{ width: 600, height: 600 }} testId="tall" />
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.focusNext();
+  // Already at the top: a positive delta and Home cannot move it.
+  runtime.wheel("s", 0, 100);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  runtime.keyDown("s", "home");
+  expect(positions).toStrictEqual([]);
+});
+
+it("reports a position for an unlabelled area", async () => {
+  const runtime = await openWindow();
+  const positions: Array<{ readonly x: number; readonly y: number }> = [];
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="vertical"
+        style={{ height: 60, width: 200 }}
+        testId="s"
+        onScrollPositionChange={(position) => positions.push(position)}
+      >
+        {card("tall", 200, 400)}
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.wheel("s", 0, -100);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(positions).toStrictEqual([{ x: 0, y: -100 }]);
+});
+
 it("keeps an Input's arrow keys when the field is inside the region", async () => {
   // The handler compares the runtime's focused id with the region's own, so a
   // focused field keeps its arrows instead of scrolling its container (plan 072).

@@ -3,7 +3,8 @@ title: ScrollArea
 description: A bounded container that scrolls on the chosen axes.
 ---
 
-`ScrollArea` sets the overflow axes and nothing else. GPUix paints the
+`ScrollArea` owns the overflow axes, the keyboard contract and the position
+report; it paints no chrome of its own. GPUix paints the
 scrollbar with the platform theme, so the thumb cannot be tinted and there is no
 fade mask. It is a `<div>`: the runtime has no separate scroller element.
 
@@ -37,13 +38,47 @@ layout silently would be the worse default.
 | `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` (the others are `hidden`) |
 | `label` | `string` | none | names the region **and** makes it a focusable keyboard scroll stop |
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad **deltas** (`deltaX`, `deltaY`, `precise`, `touchPhase`) |
+| `onScrollPositionChange` | `(position: ScrollPosition) => void` | none | the absolute offset, after a wheel or keyboard scroll, only when it changed |
 | `style` | `StateStyle<ScrollAreaState>` | — | merged last; put the bounded size here; an object or a state callback |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
 
-`onScroll` reports a delta, not a position: there is no `onScrollChange` and no
-absolute offset in `EventPayload`. A consumer that needs a position accumulates
-deltas itself and clamps at the content's ends.
+## Scroll position
+
+`onScroll` reports a delta, not a position: the `EventPayload` has no offset, and
+a scroll this component performs itself (the keyboard contract below) dispatches
+**no** `onScroll` at all. `onScrollPositionChange` is the complete signal: it
+reads the runtime's own `getScrollOffset` after every wheel and keyboard move, so
+it reports where the region actually is — including a clamped `End` — and stays
+silent when the position did not change.
+
+```tsx
+const [atTop, setAtTop] = useState(true);
+
+<ScrollArea
+  label="Activity"
+  onScrollPositionChange={(position) => setAtTop(position.y === 0)}
+  style={{ height: 240 }}
+>
+  {rows}
+</ScrollArea>;
+```
+
+`ScrollPosition` is `{ x, y }`: `y` is `0` at the top and negative below it, `x`
+is `0` at the left and negative to the right. The initial position is `{0, 0}`
+and is not reported — the callback is a change signal, like `onValueChange`.
+
+**To move the region** use its host `ref` and the renderer:
+
+```tsx
+const area = useRef<PublicInstance | null>(null);
+const { renderer } = useGpuix();
+
+renderer.scrollTo?.(area.current.id, 0, 0); // back to the top
+```
+
+There is no controlled position prop on purpose: "the caller set it again" and
+"the user moved it" would need a state machine the primitive does not own.
 
 ## Keyboard
 
@@ -95,8 +130,14 @@ property; returning `{}` keeps the default look. The state type is exported.
 - **No scrollbar tint and no scrollbar width control** in GPUix 0.10.0
   (`scrollbarColor`/`scrollbarWidth` exist only on the unreleased `main`).
 - **No fade mask** at the edges.
-- **No absolute scroll position.** `onScroll` carries deltas only; the runtime
-  has no `onScrollChange` and no offset field.
+- **No controlled scroll position.** `onScrollPositionChange` reports where the
+  region is; moving it is the host ref plus `renderer.scrollTo` (above). A
+  controlled `scrollPosition` prop would have to tell "set again" from "user
+  moved", so it is not offered.
+- **A component-performed scroll emits no `onScroll`.** The arrow/page/Home/End
+  moves go through the renderer, which dispatches no scroll event; use
+  `onScrollPositionChange` for the position and `onScroll` only for pointer
+  deltas.
 - **Focus does not follow into off-screen content.** Tab can land on a control
   painted outside the region: focus does not bubble from a child and
   `scrollIntoView` did not move a plain scroller in the 0.10.0 probe. The
@@ -114,12 +155,14 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 - `src/core/layout.test.ts` — `decideScroll` and `resolveScroll`: the key map,
   the per-axis rules, one line, one page, Home/End, and the minimum page step.
-- `src/components/ScrollArea.test.tsx` — region semantics and the focus ring on
-  the element tree.
+- `src/components/ScrollArea.test.tsx` — region semantics, the focus ring on the
+  element tree, and the caller's `onScroll` reaching the viewport.
 - `runtime/layout.runtime.test.tsx` — wheel scrolling, keyboard paging and
   Home/End, one line per arrow, the horizontal axis, an unlabelled area staying
-  out of the tab order, and an `Input` inside the area keeping its arrow keys.
-  Measured against the locally built 0.10.0 binding (ADR 0003).
+  out of the tab order, an `Input` inside the area keeping its arrow keys, and
+  the absolute position after a wheel and after each keyboard move — including
+  that a clamped `End` reports `-480` and an immobile attempt reports nothing
+  (plan 337). Measured against the locally built 0.10.0 binding (ADR 0003).
 
 ```sh
 nub run --filter @gpuixui/primitives test

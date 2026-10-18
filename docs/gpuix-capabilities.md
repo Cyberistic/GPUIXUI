@@ -127,7 +127,7 @@ verdict, the evidence, and the honest workaround.
 | Blend modes | **not supported** | no `mixBlendMode` field | pre-composited colours |
 | Text shadow | **not supported** | the text style has no shadow field | layered `<text>` only for display type |
 | Multi-line clamp (`lineClamp`) | **partial — shared between identical strings** | measured on this host (plan `082`): the runtime keeps one shaped text layout per string/font/width for the whole window, and `lineClamp` is applied to that layout without being part of the key. A 120 px body text measured `36 / 36 px` when a clamped copy was laid out before a plain copy of the same string (the plain text was clipped to two lines) and `108 / 108 px` when the plain copy came first (the clamp did nothing); a different string was unaffected | clamp with the element's own `maxHeight` + `overflow: "hidden"`; `truncate` (one line, ellipsis) is unaffected because the wrap mode is part of the key |
-| Sticky positioning | **not supported** | `position` is relative/absolute/fixed; "fixed" lays out like absolute because there is no scrolling document | track `onScroll` deltas and position the element yourself |
+| Sticky positioning | **not supported** | `position` is relative/absolute/fixed; "fixed" lays out like absolute because there is no scrolling document | position the element from `renderer.getScrollOffset` (what `ScrollArea`'s `onScrollPositionChange` reports, plan `337`) |
 | Scroll snap | **not supported** | no `scrollSnap*` fields | snap programmatically at scroll end |
 | Container or element queries | **not supported** | no field; responsiveness is window-level (`useWindowSize`, `useWindowInsets`) and measurement is `renderer.getElementBounds` | own the measurement and branch in JS |
 | `aspectRatio` | **not supported** | absent from the published 0.10.0 `StyleDesc`; documented on main only (§6) | set both axes explicitly |
@@ -137,7 +137,7 @@ verdict, the evidence, and the honest workaround.
 | Reduced-motion detection | **unverified** | no documented API or type in 0.10.0 | expose an app-owned preference prop |
 | Custom paint (`<canvas>`) | **unverified** | the element is in `ElementType`, but the README marks custom drawing "planned" and no drawing API is published | `<svg>` for static shapes; `setImagePixels` for frames |
 | Pointer, keyboard, focus and scroll events | **supported** | `host.d.ts` · `HostProps` handlers: `onClick`, `onAuxClick`, `onMouseDown/Up/Move/Enter/Leave`, `onMouseDownOutside`, `onKeyDown/Up`, `onFocus`, `onBlur`, `onScroll`, `onFileDrop`, `onChange`, `onSubmit`, `onVisibleRange` | — |
-| Scroll offset and layout reporting (`onScrollChange`, `onLayout`) | **not supported** | no `onScrollChange` and no `onLayout` in the 0.10.0 `HostProps` (main-only; §6) | accumulate `onScroll` deltas; measure with `getElementBounds` |
+| Scroll offset and layout reporting (`onScrollChange`, `onLayout`) | **not supported** | no `onScrollChange` and no `onLayout` in the 0.10.0 `HostProps` (main-only; §6) | read `renderer.getScrollOffset(elementId)` — it is already the post-scroll, clamped offset inside the `onScroll` handler (measured, plan `337`); measure with `getElementBounds` |
 | `role` plus a subset of `aria-*` | **partial** | `host.d.ts` · `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-valuemin`/`max`, `aria-disabled`, `aria-labelledby`, `aria-describedby`, `aria-invalid` | carry state in `aria-valuetext`/`aria-selected`; describe with `aria-description`; put a label inside one interactive element |
 | System appearance or high-contrast detection | **unverified** | `GpuixTheme.appearance` is set by the app; no OS preference API in 0.10.0 | the app owns the theme choice |
 | IME and composition input | **unverified** | no composition or paste events in `HostProps` | treat every `onChange` value as committed text and document the gap |
@@ -205,7 +205,7 @@ Never copy these from `references/gpuix` into a 0.10.0 component.
 | `focusVisible`, `keyboardFocusDim` | no such style states; only `hover` and `active` | track focus state in the component |
 | `scrollbarColor`, `scrollbarWidth` | absent from `StyleDesc` | the platform-themed thumb |
 | `boxShadow` list and `inset` | `boxShadow` is a single outset object | one shadow; borders for inner edges |
-| `onScrollChange`, `onLayout` | absent from `HostProps` | `onScroll` deltas + `getElementBounds` |
+| `onScrollChange`, `onLayout` | absent from `HostProps` | `getScrollOffset` for the offset; `onScroll` deltas + `getElementBounds` for the rest |
 | `KeyEvent` on `onKeyDown` | `EventPayload` (`key`, `keyChar`, `isHeld`, `modifiers`, all optional) | decode key facts at the boundary |
 | `registerFont` | not on `NativeRenderer` | installed family names |
 | `Button` / `buttonProps` / `./button` | no such export path | our keyboard + naming contract |
@@ -232,8 +232,11 @@ These are library laws, not suggestions:
    `fit="snap"` clamps without flipping. Measure, then choose `side`/`align`
    (plans `060`, `066`, `067`, `156`).
 4. **Motion is size/position/opacity/radius only** — no rotation or transform.
-5. **Scroll offset is not reported** (`onScroll` deltas only) — a component that
-   needs an offset owns it.
+5. **Scroll offset is not in the event payload** — `onScroll` carries deltas, but
+   `renderer.getScrollOffset` reports the absolute, already-clamped offset, and
+   a component-performed scroll dispatches no event at all. Read it from a
+   wrapper: `ScrollArea`'s `onScrollPositionChange` covers both paths
+   (plan `337`).
 6. **Labels must live inside the interactive element**; there is no
    `aria-labelledby` and a sibling `<text>` is not clickable (plan `065`).
 
