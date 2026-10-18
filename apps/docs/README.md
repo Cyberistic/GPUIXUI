@@ -277,7 +277,11 @@ The switcher is one **radio group** (WAI-ARIA APG single-select): one tab stop,
 `aria-checked`, and arrows that select and apply. `src/platform/platform-toggle-logic.ts`
 owns the neighbour table and its test walks it against `platformNames`, so a new
 platform cannot be added to the rendered list and silently left out of the
-keyboard order.
+keyboard order. The same component renders a native `<select>` below the `sm`
+breakpoint, where four labels do not fit beside the logo, search and the menu;
+both controls call the one provider setter, and `isPlatformName` decodes the
+select's string. `smoke:platform` operates the radio group in a 640×720 window
+and the select at 390 px, so neither path is inferred from the other (plan 519).
 
 ```sh
 nub run --filter docs smoke:platform
@@ -297,7 +301,16 @@ does: starting from a fresh profile in forced **light**, it clicks
 background, the stored `localStorage["theme"]` and every preview surface turn
 dark together; a client navigation and a parameter-free reload keep the mode
 (the scheme is still forced light, so storage is the only explanation); a second
-press returns to light.
+press returns to light. It runs at 1280 px, where the docs switch is in the
+header rather than the mobile sidebar.
+
+The landing page is the exception Fumadocs does not cover: `HomeLayout` hides
+its switch inside a `max-lg:hidden` container, so below 1024 px the page had no
+usable mode control. `src/components/theme-toggle.tsx` renders a compact
+`lg:hidden` switch in the home nav; it reads the same next-themes store, and its
+glyph follows the `dark` class through CSS so the server and client markup
+agree. Step 6 opens `/` at 390 px, proves the compact switch is the only
+displayed one, and presses it dark and back to light.
 
 ```sh
 nub run --filter docs smoke:theme
@@ -330,6 +343,10 @@ source includes, token tables and the rest. For each it asserts:
 It then opens the mobile sidebar with `button[aria-label="Open Sidebar"]`, waits
 for a visible `/docs/installation` link, clicks it and proves the route
 changes. Every docs page shares the shell, so the navigation is checked once.
+The same pass measures the two controls MISSION names: at 390 px the landing page
+paints the compact theme switch and the platform select with non-zero boxes
+inside the viewport, the desktop switch and radio group are not displayed, and
+the docs sidebar exposes `[data-theme-toggle]` after it opens (plan 519).
 Exit `1` names the page and the measurement, exit `2` means Chrome or the
 server was missing — never a pass.
 

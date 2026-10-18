@@ -214,6 +214,13 @@ const checkNavigation = async (
     return [`the mobile sidebar did not reveal ${navTarget}`];
   }
 
+  const themeState = controlState("[data-theme-toggle]");
+  const themeSettled = await session.waitFor(`(${themeState}) === "ok"`, 2_000);
+  if (!themeSettled) {
+    const state = await session.evaluate(themeState);
+    return [`the docs theme switch is ${String(state)} in the mobile sidebar`];
+  }
+
   const clicked = await session.evaluate(`(() => {
     const link = [...document.querySelectorAll(${JSON.stringify(selector)})].find(
       (candidate) => candidate.getBoundingClientRect().width > 0,
@@ -232,6 +239,64 @@ const checkNavigation = async (
   if (navigated) return [];
   const path = String(await session.evaluate("location.pathname"));
   return [`the mobile sidebar link did not navigate (path is "${path}")`];
+};
+
+/** How a control looks to a pointer: missing, hidden, zero-sized or outside. */
+const controlState = (selector: string): string => `(() => {
+  const node = document.querySelector(${JSON.stringify(selector)});
+  if (node === null) return "missing";
+  const rect = node.getBoundingClientRect();
+  const style = getComputedStyle(node);
+  if (style.visibility !== "visible" || style.display === "none") return "hidden";
+  if (rect.width === 0 || rect.height === 0) return "zero";
+  if (rect.left < 0 || rect.right > ${WIDTH} + 1) {
+    return \`outside \${Math.round(rect.left)}..\${Math.round(rect.right)}\`;
+  }
+  return "ok";
+})()`;
+
+/**
+ * The controls MISSION names must be reachable on a phone, not only wired.
+ * The landing page's Fumadocs switch lives in a `max-lg:hidden` container, so
+ * the site ships a compact one; the platform radio group becomes a select. A
+ * hidden but clickable control would pass the theme and platform gates, so the
+ * phone's own header is measured here (plan 519).
+ */
+const checkControls = async (
+  session: Session,
+  baseUrl: string,
+): Promise<ReadonlyArray<string>> => {
+  await session.navigate(`${baseUrl}/`);
+  const arrived = await session.waitFor(
+    `document.documentElement?.dataset.platform !== undefined && location.pathname === "/"`,
+  );
+  if (!arrived) throw new SetupError("/ did not hydrate");
+
+  const measured = JSON.parse(
+    String(
+      await session.evaluate(`JSON.stringify({
+        theme: ${controlState("[data-compact-theme-toggle]")},
+        platform: ${controlState("[data-platform-select]")},
+        desktopTheme: ${controlState("[data-theme-toggle]")},
+      })`),
+    ),
+  ) as {
+    readonly theme: string;
+    readonly platform: string;
+    readonly desktopTheme: string;
+  };
+
+  return [
+    ...(measured.theme === "ok"
+      ? []
+      : [`the compact theme switch is ${measured.theme} at ${WIDTH}px`]),
+    ...(measured.platform === "ok"
+      ? []
+      : [`the platform select is ${measured.platform} at ${WIDTH}px`]),
+    ...(measured.desktopTheme === "ok"
+      ? [`both theme switches are displayed at ${WIDTH}px`]
+      : []),
+  ];
 };
 
 const main = async (): Promise<number> => {
@@ -269,11 +334,18 @@ const main = async (): Promise<number> => {
     }
     console.log(`smoke: ${paths.length} pages responsive checked`);
 
+    const controlFailures = await checkControls(session, baseUrl);
+    if (controlFailures.length === 0) {
+      console.log("smoke: phone controls checked");
+    }
+
     const navFailures = await checkNavigation(session, baseUrl);
     problems.push(...navFailures.map((what) => ({ where: navPath, what })));
     if (navFailures.length === 0) {
       console.log("smoke: mobile navigation checked");
     }
+
+    problems.push(...controlFailures.map((what) => ({ where: "/", what })));
 
     if (problems.length === 0) return 0;
     for (const problem of problems) {

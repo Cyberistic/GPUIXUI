@@ -291,6 +291,25 @@ const clickPlatform = async (
   }
 };
 
+/**
+ * Choose a platform through the phone-width select, the way a reader's change
+ * event does. The native setter is used because React tracks a controlled
+ * `<select>`'s value; a plain assignment would be swallowed by the tracker.
+ */
+const selectPlatform = async (
+  session: Session,
+  platform: PlatformName,
+): Promise<boolean> =>
+  (await session.evaluate(`(() => {
+    const select = document.querySelector("[data-platform-select]");
+    if (select === null) return "missing";
+    const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+    if (setter === undefined) return "no-setter";
+    setter.call(select, ${JSON.stringify(platform)});
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    return "changed";
+  })()`)) === "changed";
+
 const main = async (): Promise<number> => {
   let preview: PreviewServer | null = null;
   let session: Session | null = null;
@@ -315,6 +334,10 @@ const main = async (): Promise<number> => {
     }
 
     session = await startSession(chrome);
+    // The radio group is the tablet/desktop control. At 640 px it is visible
+    // in the header, and a click on a control this size proves a reader can
+    // reach it; at a phone width the compact select is the control (step 9).
+    await session.setViewport(640, 720);
     const problems: string[] = [];
 
     // 1. The control starts on the default platform, and its previews say so.
@@ -334,6 +357,32 @@ const main = async (): Promise<number> => {
     urlProblems(problems, start, "default", "step 1");
     checkedProblems(problems, start, "default", "step 1");
     surfacesShow(problems, start, "default", "step 1");
+
+    interface Box {
+      readonly width: number;
+      readonly height: number;
+      readonly visible: boolean;
+      readonly inside: boolean;
+    }
+    const groupBox = JSON.parse(
+      String(
+        await session.evaluate(`JSON.stringify((() => {
+          const node = document.querySelector(${JSON.stringify(TOGGLE)});
+          if (node === null) return null;
+          const rect = node.getBoundingClientRect();
+          const style = getComputedStyle(node);
+          return { width: Math.round(rect.width), height: Math.round(rect.height), visible: style.visibility === "visible" && style.display !== "none", inside: rect.left >= 0 && rect.right <= 640 };
+        })())`),
+      ),
+    ) as Box | null;
+    check(
+      problems,
+      groupBox !== null &&
+        groupBox.visible &&
+        groupBox.width > 0 &&
+        groupBox.inside,
+      `step 1: the radio group is not usable at 640 px (${JSON.stringify(groupBox)})`,
+    );
 
     // 2. A click changes the platform, the URL, the checked option and the paint.
     await clickPlatform(session, "win32", "step 2", problems);
@@ -470,8 +519,81 @@ const main = async (): Promise<number> => {
       `step 8: a reload reports "${reloaded.platform}" after Default`,
     );
 
+    // 9. At a phone width the header has no room for four labels: the select is
+    //    the visible control and it carries the same choice, URL and paint.
+    await session.setViewport(390, 844);
+    const phone = await open(
+      session,
+      baseUrl,
+      BUTTON,
+      "default",
+      "step 9",
+      problems,
+    );
+    interface Box {
+      readonly width: number;
+      readonly height: number;
+      readonly visible: boolean;
+      readonly inside: boolean;
+    }
+    const boxes = JSON.parse(
+      String(
+        await session.evaluate(`JSON.stringify({
+          select: (() => {
+            const node = document.querySelector("[data-platform-select]");
+            if (node === null) return null;
+            const rect = node.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            return { width: Math.round(rect.width), height: Math.round(rect.height), visible: style.visibility === "visible" && style.display !== "none", inside: rect.x >= 0 && rect.right <= 390 };
+          })(),
+          radio: (() => {
+            const node = document.querySelector(${JSON.stringify(TOGGLE)});
+            if (node === null) return null;
+            const rect = node.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            return { width: Math.round(rect.width), height: Math.round(rect.height), visible: style.visibility === "visible" && style.display !== "none", inside: rect.x >= 0 && rect.right <= 390 };
+          })(),
+        })`),
+      ),
+    ) as { readonly select: Box | null; readonly radio: Box | null };
+
+    check(
+      problems,
+      boxes.select !== null &&
+        boxes.select.visible &&
+        boxes.select.width > 0 &&
+        boxes.select.inside,
+      `step 9: the platform select is not visible inside 390 px (${JSON.stringify(boxes.select)})`,
+    );
+    check(
+      problems,
+      boxes.radio === null || !boxes.radio.visible,
+      "step 9: the desktop radio group is still displayed at 390 px",
+    );
+
+    if (!(await selectPlatform(session, "win32"))) {
+      problems.push(`step 9: the platform select is not in the page`);
+    } else {
+      await settleProblems(session, "win32", "step 9", problems);
+      const chosen = await readToggle(session);
+      urlProblems(problems, chosen, "win32", "step 9");
+      surfacesShow(problems, chosen, "win32", "step 9");
+      check(
+        problems,
+        phone.platform === "default",
+        `step 9: the phone page started on "${phone.platform}", expected "default"`,
+      );
+
+      if (!(await selectPlatform(session, "default"))) {
+        problems.push("step 9: the platform select disappeared");
+      } else {
+        await settleProblems(session, "default", "step 9", problems);
+        urlProblems(problems, await readToggle(session), "default", "step 9");
+      }
+    }
+
     if (problems.length === 0) {
-      for (let step = 1; step <= 8; step += 1) {
+      for (let step = 1; step <= 9; step += 1) {
         console.log(`smoke: step ${step} checked`);
       }
       return 0;

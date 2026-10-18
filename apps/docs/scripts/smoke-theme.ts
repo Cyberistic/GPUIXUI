@@ -211,6 +211,15 @@ const clickToggle = async (session: Session): Promise<boolean> =>
     return "clicked";
   })()`)) === "clicked";
 
+/** Press the home layout's compact switch; a missing control is one problem. */
+const pressCompact = async (session: Session): Promise<boolean> =>
+  (await session.evaluate(`(() => {
+    const toggle = document.querySelector("[data-compact-theme-toggle]");
+    if (toggle === null) return "missing";
+    toggle.click();
+    return "clicked";
+  })()`)) === "clicked";
+
 /**
  * Press until the page reaches `mode`.
  *
@@ -283,6 +292,10 @@ const main = async (): Promise<number> => {
     }
 
     session = await startSession(chrome);
+    // The docs switch lives in the desktop header; at Chrome's default 640 px
+    // window Fumadocs hides it behind the mobile sidebar, and a click on a
+    // hidden node would prove the wiring without proving it is reachable.
+    await session.setViewport(1280, 800);
     const problems: string[] = [];
 
     // 1. A fresh profile starts light: no class, no stored choice, light paint.
@@ -364,8 +377,93 @@ const main = async (): Promise<number> => {
       `step 5: the press stored "${reset.stored ?? "nothing"}", expected "light"`,
     );
 
+    // 6. At a phone width the home layout's compact switch is the visible
+    //    control, and it drives the same next-themes store.
+    await session.setViewport(390, 844);
+    await session.setColorScheme("light");
+    await session.navigate(`${baseUrl}/`);
+    const atHome = await session.waitFor(`location.pathname === "/"`);
+    if (!atHome) problems.push("step 6: the landing page did not load");
+
+    interface Box {
+      readonly width: number;
+      readonly height: number;
+      readonly visible: boolean;
+    }
+    const boxes = JSON.parse(
+      String(
+        await session.evaluate(`JSON.stringify({
+          compact: (() => {
+            const node = document.querySelector("[data-compact-theme-toggle]");
+            if (node === null) return null;
+            const rect = node.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            return { width: Math.round(rect.width), height: Math.round(rect.height), visible: style.visibility === "visible" && style.display !== "none" };
+          })(),
+          desktop: (() => {
+            const node = document.querySelector("[data-theme-toggle]");
+            if (node === null) return null;
+            const rect = node.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            return { width: Math.round(rect.width), height: Math.round(rect.height), visible: style.visibility === "visible" && style.display !== "none" };
+          })(),
+        })`),
+      ),
+    ) as { readonly compact: Box | null; readonly desktop: Box | null };
+
+    check(
+      problems,
+      boxes.compact !== null &&
+        boxes.compact.visible &&
+        boxes.compact.width > 0 &&
+        boxes.compact.height > 0,
+      `step 6: the compact switch is not visible at 390 px (${JSON.stringify(boxes.compact)})`,
+    );
+    check(
+      problems,
+      boxes.desktop === null ||
+        !boxes.desktop.visible ||
+        boxes.desktop.width === 0 ||
+        boxes.desktop.height === 0,
+      "step 6: both theme switches are displayed at 390 px",
+    );
+
+    const compactDark = await pressCompact(session);
+    if (!compactDark) {
+      problems.push("step 6: the compact theme switch is not in the page");
+    } else {
+      const darkened = await session.waitFor(
+        `document.documentElement.classList.contains("dark") &&
+          getComputedStyle(document.body).backgroundColor === ${JSON.stringify(dark)} &&
+          localStorage.getItem("theme") === "dark"`,
+        1_500,
+      );
+      if (!darkened) await pressCompact(session);
+      const turned = await session.waitFor(
+        `document.documentElement.classList.contains("dark") &&
+          getComputedStyle(document.body).backgroundColor === ${JSON.stringify(dark)} &&
+          localStorage.getItem("theme") === "dark"`,
+      );
+      check(
+        problems,
+        turned,
+        `step 6: the compact press did not turn the page dark (${JSON.stringify(await readTheme(session))})`,
+      );
+      await pressCompact(session);
+      const restored = await session.waitFor(
+        `!document.documentElement.classList.contains("dark") &&
+          getComputedStyle(document.body).backgroundColor === ${JSON.stringify(light)} &&
+          localStorage.getItem("theme") === "light"`,
+      );
+      check(
+        problems,
+        restored,
+        `step 6: the second compact press did not return to light (${JSON.stringify(await readTheme(session))})`,
+      );
+    }
+
     if (problems.length === 0) {
-      for (let step = 1; step <= 5; step += 1) {
+      for (let step = 1; step <= 6; step += 1) {
         console.log(`smoke: step ${step} checked`);
       }
       return 0;

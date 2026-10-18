@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { Landing } from "@/components/landing";
 import { SkipLink } from "@/components/skip-link";
+import { CompactThemeToggle } from "@/components/theme-toggle";
 import { baseOptions } from "@/lib/layout.shared";
 import { absoluteUrl } from "@/lib/site";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site-head";
@@ -20,10 +21,23 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  const shared = baseOptions();
+
   return (
     <>
       <SkipLink href="#main-content" />
-      <HomeLayout {...baseOptions()}>
+      <HomeLayout
+        {...shared}
+        nav={{
+          ...shared.nav,
+          children: (
+            <>
+              <CompactThemeToggle />
+              {shared.nav?.children}
+            </>
+          ),
+        }}
+      >
         <Landing />
       </HomeLayout>
     </>
