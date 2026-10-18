@@ -86,3 +86,19 @@
      fn maps_common_aria_tokens() {
          assert_eq!(role_from_aria("button"), Some(Role::Button));
          assert_eq!(role_from_aria("heading"), Some(Role::Heading));
+--- a/packages/native/js/host.ts
++++ b/packages/native/js/host.ts
+@@ -509,8 +509,13 @@
+   "aria-id"?: string
+   "aria-expanded"?: boolean
+   "aria-selected"?: boolean
++  /** Checked state; `"mixed"` is the third state AccessKit reports. */
++  "aria-checked"?: boolean | "false" | "mixed" | "true"
+   /** String value reported to assistive technology. */
+   "aria-valuetext"?: string
++  "aria-valuenow"?: number
++  "aria-valuemin"?: number
++  "aria-valuemax"?: number
+   /** Heading level, 1-based. */
+   "aria-level"?: number
+   /** Stable locator id for automation. */
