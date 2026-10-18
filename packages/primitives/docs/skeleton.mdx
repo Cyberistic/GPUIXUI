@@ -19,15 +19,17 @@ import { Skeleton, Stack } from "@gpuixui/primitives";
 </Stack>;
 ```
 
-An avatar placeholder:
+An avatar placeholder — one dimension is enough:
 
 ```tsx
-<Skeleton width={32} height={32} circle />
+<Skeleton width={32} circle />
 ```
 
-`circle` already makes the block as wide as it is tall, so a bare
-`<Skeleton circle />` is a square at the body line height; pass `width` and
-`height` for a larger avatar.
+`circle` is a shape: the box is always square, so a bare `<Skeleton circle />`
+is a square at the body line height. Its diameter is a pixel `width`, else a
+pixel `height`, else that line height. A percentage cannot be a diameter (there
+is no pixel value to reuse on the other axis), so `<Skeleton circle width="50%" />`
+falls back to the line height — pass a pixel size for a larger avatar.
 
 A list row — an avatar beside text that has not arrived. The default width takes
 the space the row leaves, so the lines need no pixel widths:
@@ -49,18 +51,18 @@ told to take one, and its percentage-width children resolve against it.
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `width` | `number \| string` | `"100%"`, or the height when `circle` | the block's width; a percentage takes the space its row leaves, a pixel size is kept, and a non-finite or negative pixel value uses the default |
-| `height` | `number \| string` | body line height | the block's height, a floor a bounded column cannot squash; a non-finite or negative pixel value uses the default |
-| `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
-| `circle` | `boolean` | `false` | full radius and a square default; an avatar or icon placeholder |
+| `width` | `number \| string` | `"100%"`; a circle's diameter | the block's width; a percentage takes the space its row leaves, a pixel size is kept, and a non-finite or negative pixel value uses the default. On a circle this is the diameter when it is a pixel |
+| `height` | `number \| string` | body line height | the block's height, a floor a bounded column cannot squash; a non-finite or negative pixel value uses the default. On a circle it is the diameter when no pixel width is given |
+| `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius; ignored by a circle, which is always fully round |
+| `circle` | `boolean` | `false` | always square: the diameter is a pixel `width`, else a pixel `height`, else the body line height; a percentage width is ignored |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
 A default or percentage width **shrinks to fit**: `100%` is the parent's width,
 so beside a sibling it would paint outside the row without giving any back. A
-numeric width — including a circle's — does not shrink, so an avatar keeps its
-shape. The height is set as a floor too, so an over-full column keeps every
-placeholder at the height it was asked for.
+numeric width does not shrink, and a circle is one size in both axes, so an
+avatar keeps its shape. The height is set as a floor too, so an over-full column
+keeps every placeholder at the height it was asked for.
 
 ## Keyboard
 
@@ -80,7 +82,9 @@ skeleton.
 `typography.body.lineHeight`. The pulse alternates opacity `1` / `0.6` every
 700 ms. The box's shrink rule is layout, not paint: a percentage width may
 shrink in a row and the height is a floor, so a placeholder keeps the shape it
-stands in for.
+stands in for. A circle resolves its diameter first: a pixel `width`, else a
+pixel `height`, else the line height; a percentage width cannot be a diameter
+and is ignored for a circle.
 
 ## Limitations
 
@@ -93,21 +97,26 @@ stands in for.
 - A percentage width resolves against its parent's width. A column placed in a
   row has no width of its own — give it `grow` (or an explicit width) before its
   `100%` placeholders can fill anything.
+- A circle's diameter cannot be a percentage: give it a pixel `width` or
+  `height`. With only a percentage it paints at the body line height.
 
 ## Verification
 
 - `src/core/loading.test.ts` — the two pulse states and the block geometry; a
-  circle is as wide as it is tall, an explicit width wins, a plain block stays
+  circle is square for a bare, width-only, height-only, mismatched and
+  percentage input, an explicit pixel size is the diameter, a plain block stays
   `100%`, a pixel dimension the runtime cannot paint falls back to its default
-  (plans `330`, `371`), and a percentage width shrinks while a numeric width
-  and the height floor do not (plan `384`).
+  (plans `330`, `371`, `028`), and a percentage width shrinks while a numeric
+  width and the height floor do not (plan `384`).
 - `runtime/loading.runtime.test.tsx` — opacity samples take both `1` and `0.6`
   in the real renderer, and a bare circle paints a square box.
 - `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` height paints the body
   line height instead of a zero-high block (plan `371`).
-- `runtime/skeleton-containment.runtime.test.tsx` — a default line beside an
-  avatar stays inside a 220 px row, an over-full column keeps every explicit
-  height, and a lone placeholder still fills its row (plan `384`).
+- `runtime/skeleton-containment.runtime.test.tsx` — five circle inputs each
+  paint a square of the expected diameter in the real renderer (plan `028`); a
+  default line beside an avatar stays inside a 220 px row, an over-full column
+  keeps every explicit height, and a lone placeholder still fills its row
+  (plan `384`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

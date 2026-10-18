@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 141/141
+`[x]` `[████████████]` 142/142
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1407,6 +1407,20 @@ retired once both branches are one
       (trimmed; blank absent) in both groups; 4 element-tree cases and a scoped
       two-group runtime file prove it, both directions measured (plan `500`;
       offline 724 → 728, scoped live 2/2).
+
+`[x]` `packages/primitives`: **`Skeleton circle` was only a circle when the two
+      dimensions already matched** — measured (2026-10-19): the flag changed the
+      radius and defaulted the width to the height, so `<Skeleton circle
+      width={40} />` painted **`40 × 18`**, `width={40} height={20}` painted
+      `40 × 20`, and `width="50%"` in a 200 px column painted **`100 × 18`** —
+      the avatar placeholder shape is a pill unless the caller repeats the size.
+      A circle's box is now always square: its diameter is a pixel `width`, else
+      a pixel `height`, else the body line height, and it drives all three
+      dimensions with no shrink. A percentage cannot be a diameter, so a circle
+      ignores it (documented). The existing core case now covers width-only,
+      height-only, mismatched and percentage inputs, and one runtime case paints
+      five circles; both fail in the old direction (offline 728, scoped live
+      4/4; plan `028`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

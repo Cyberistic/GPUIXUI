@@ -61,14 +61,31 @@ describe("skeletonStyle", () => {
 
   it("makes a circle as wide as it is tall", () => {
     // The bug guarded (plan 330): `circle` only changed the radius, so the
-    // default `100%` width painted a pill.
+    // default `100%` width painted a pill. The bug guarded again (plan 028):
+    // an explicit width kept the line height, so `width={40}` painted a
+    // measured `40 × 18` pill.
     const circle = skeletonStyle({ circle: true }, testTheme);
     expect(circle.width).toBe(circle.height);
     expect(circle.width).toBe(testTheme.typography.body.lineHeight);
-    // an explicit width still wins, and a plain block stays full width
-    expect(skeletonStyle({ circle: true, width: 40 }, testTheme).width).toBe(
-      40,
-    );
+    const sized = skeletonStyle({ circle: true, width: 40 }, testTheme);
+    expect(sized).toMatchObject({ width: 40, height: 40, minHeight: 40 });
+    // Height alone is the other diameter source; the width keeps winning.
+    expect(
+      skeletonStyle({ circle: true, height: 40 }, testTheme),
+    ).toMatchObject({ width: 40, height: 40 });
+    expect(
+      skeletonStyle({ circle: true, width: 40, height: 20 }, testTheme),
+    ).toMatchObject({ width: 40, height: 40 });
+    // A percentage cannot be a diameter: it falls through to the line height.
+    const share = skeletonStyle({ circle: true, width: "50%" }, testTheme);
+    expect(share).toMatchObject({
+      width: testTheme.typography.body.lineHeight,
+      height: testTheme.typography.body.lineHeight,
+    });
+    // A nonsense width is not a diameter either; the real height is.
+    expect(
+      skeletonStyle({ circle: true, width: Number.NaN, height: 40 }, testTheme),
+    ).toMatchObject({ width: 40, height: 40 });
     expect(skeletonStyle({}, testTheme).width).toBe("100%");
   });
 

@@ -13,6 +13,7 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
 import { usableLength } from "./value.js";
@@ -41,15 +42,32 @@ const dimension = (
   return Number.isFinite(value) && value >= 0 ? value : fallback;
 };
 
+/** A circle's diameter: a pixel side, else one line of body text. */
+const circleDiameter = (spec: SkeletonSpec, theme: PrimitiveTheme): number => {
+  const pixel = (value: number | string | undefined): Option.Option<number> =>
+    typeof value === "number" && Number.isFinite(value) && value >= 0
+      ? Option.some(value)
+      : Option.none();
+  return Option.getOrElse(
+    Option.firstSomeOf([pixel(spec.width), pixel(spec.height)]),
+    () => theme.typography.body.lineHeight,
+  );
+};
+
 /**
  * A placeholder block.
  *
  * It paints the skeleton role, never the surface it stands in for, so it reads
  * as absence. Height defaults to one line of body text, which is what a
- * one-line placeholder should occupy. `circle` takes that height as its width,
- * so a bare `<Skeleton circle />` is a square rather than a full-width pill.
- * A pixel dimension that cannot be painted is the dimension's default; a
- * percentage is the caller's own layout and passes through.
+ * one-line placeholder should occupy. A pixel dimension that cannot be painted
+ * is the dimension's default; a percentage is the caller's own layout and
+ * passes through.
+ *
+ * **`circle` is a shape, so its box is always square.** The diameter is a pixel
+ * width, else a pixel height, else the body line height; a percentage cannot be
+ * a diameter, because there is no pixel value to reuse on the other axis
+ * (measured, plan `028`: `width={40}` painted a `40 × 18` pill and
+ * `width="50%"` a `100 × 18` one).
  *
  * **A placeholder's width is a share, its height is a size.** A default or
  * percentage width takes 100% of the row it is placed in, so beside a sibling
@@ -62,17 +80,25 @@ export const skeletonStyle = (
   spec: SkeletonSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
+  if (spec.circle === true) {
+    const diameter = circleDiameter(spec, theme);
+    return {
+      width: diameter,
+      height: diameter,
+      minHeight: diameter,
+      flexShrink: 0,
+      borderRadius: theme.radius.full,
+      backgroundColor: theme.colors.skeleton,
+    };
+  }
   const height = dimension(spec.height, theme.typography.body.lineHeight);
-  const width = dimension(spec.width, spec.circle === true ? height : "100%");
+  const width = dimension(spec.width, "100%");
   return {
     width,
     height,
     minHeight: height,
     flexShrink: typeof width === "number" ? 0 : 1,
-    borderRadius:
-      spec.circle === true
-        ? theme.radius.full
-        : theme.radius[spec.radius ?? "sm"],
+    borderRadius: theme.radius[spec.radius ?? "sm"],
     backgroundColor: theme.colors.skeleton,
   };
 };

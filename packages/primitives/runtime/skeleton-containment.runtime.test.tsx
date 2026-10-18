@@ -9,6 +9,10 @@
  * width now shrinks to the space offered; a numeric width, and a circle whose
  * width is its height, keeps its size. The height is a floor, so a bounded
  * column cannot squash it.
+ *
+ * The bug plan `028` guards: `circle` promised a shape but only changed the
+ * radius, so an explicit width left the line height — measured `40 × 18` for
+ * `width={40}` and `100 × 18` for `width="50%"` in a 200 px column.
  */
 
 import { expect, it } from "vitest";
@@ -45,6 +49,38 @@ it("keeps a placeholder line inside the row it shares with an avatar", async () 
   expect(line.x).toBe(right(avatar) + testTheme.spacing.sm);
   expect(line.width).toBe(right(row) - line.x);
   expect(right(line)).toBeLessThanOrEqual(right(row));
+});
+
+it("paints a square for every circle input", async () => {
+  // The bug guarded (plan 028): `circle` only changed the radius, so measured
+  // here before the fix, `width={40}` painted `40 × 18`, a mismatched pair
+  // `40 × 20`, and `width="50%"` of a 200 px column `100 × 18` — a pill and an
+  // ellipse, never the circle the flag promises.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ width: 200 }} gap="sm">
+        <Skeleton circle testId="bare" />
+        <Skeleton circle width={40} testId="width-only" />
+        <Skeleton circle height={40} testId="height-only" />
+        <Skeleton circle width={40} height={20} testId="mismatched" />
+        <Skeleton circle width="50%" testId="share" />
+      </Stack>
+    </Surface>,
+  );
+  const line = testTheme.typography.body.lineHeight;
+  const expected: ReadonlyArray<readonly [string, number]> = [
+    ["bare", line],
+    ["width-only", 40],
+    ["height-only", 40],
+    ["mismatched", 40],
+    ["share", line],
+  ];
+  Arr.forEach(expected, ([testId, diameter]) => {
+    const circle = boundsOf(runtime, testId);
+    expect(circle.width).toBe(diameter);
+    expect(circle.height).toBe(diameter);
+  });
 });
 
 it("keeps a placeholder's explicit height in an over-full column", async () => {
