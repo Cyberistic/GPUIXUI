@@ -56,6 +56,7 @@ import { commandPaletteScenario } from "../scenarios/command-palette.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { queryBuilderScenario } from "../scenarios/query-builder.js";
+import { rootSingleChildScenario } from "../scenarios/root.js";
 import { notificationCentreScenario } from "../scenarios/notification-centre.js";
 import { wizardScenario } from "../scenarios/wizard.js";
 import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
@@ -5525,9 +5526,56 @@ const media: LiveScenario = {
     }),
 };
 
+/**
+ * The app root's single child in a real window (plan `522`).
+ *
+ * The rule is enforced by the reconciler, not the test renderer, so the live
+ * twin checks that the earlier root of a two-root view is as absent in a window
+ * as it is offscreen. Colour and the retained count stay headless.
+ */
+const rootProbe: LiveScenario = {
+  id: "live-root",
+  title: "Live root: only the last child of the app root survives",
+  capability: "root",
+  view: rootSingleChildScenario.view,
+  ready: "root-last",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const last = yield* boxOf(ctx, "root-last");
+      yield* ctx.expectNear(
+        "the live surviving root is 200 wide",
+        last.width,
+        200,
+        1,
+      );
+
+      const first = yield* ctx.host.bounds("root-first");
+      yield* ctx.expectEqual(
+        "the live earlier root is not painted",
+        first === null,
+        true,
+      );
+
+      const painted = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the live last root's text is painted",
+        Arr.some(painted, Str.includes("last root survives")),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live dropped root's text is not painted",
+        Arr.some(painted, Str.includes("first root")),
+        false,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${rootProbe.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
+  rootProbe,
   input,
   scroll,
   panel,

@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 83/88 plans-and-harness
+`[x]` `[██████████]` 84/89 plans-and-harness
 
 `[x]` Scope **live smoke verification** per plan `517`: `--only <id[,id]>`
       (repeatable) runs just those scenarios, `--all` runs the full suite,
@@ -69,7 +69,21 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       iterating and `--all` only at the end. `nub run check` and `nub run test`
       pass.
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `521`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` and `522` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, `521` and `523` were taken by components, and the next plan takes `524`
+
+`[x]` Probe the **app root** per plan `522` — the rule every consumer's
+      top-level tree sits on (surfaced by `components` plan `510`):
+      `root-single-child` (10 checks) and `root-wrapper` (10), plus
+      `live-root` (5). The native root keeps **exactly one child, the last
+      one**: a two-root fragment silently drops the earlier root (no retained
+      testId, no bounds, no painted text) while its host nodes stay retained
+      (measured **6** for two 3-node roots); one wrapper keeps every sibling
+      (7 nodes, both painted, `gap: 12` exact). The live twin proves the
+      reconciler rule transfers to a window. Suite `95 → 97` (`3369 → 3389`),
+      live `45 → 46` (`924 → 929`), exit `0`, `root=verified`; five mutation
+      proofs (plan `522` §8). Consequence recorded in `COMPONENTS.md` and the
+      playground README: an `App` renders one root element, and a context
+      provider does not change the count.
 
 `[x]` Probe the **media surface** per plan `520` — the last inventory row with
       no runtime evidence: `media-surface` (62 checks) and `live-media` (14)
@@ -371,7 +385,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       be a live wheel target, and chrome metrics must be asserted against
       literals, not the layout constants.
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
-`[x]` **The native smoke suite is green on this host** (44/44 when the blocker closed; **95/95** today) — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and one screenshot per scenario. Two-direction proof recorded (plan `140` §4, plan `150` §4, plans `151`–`187` §7/§8/§9/§10: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
+`[x]` **The native smoke suite is green on this host** (44/44 when the blocker closed; **97/97** today) — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and one screenshot per scenario. Two-direction proof recorded (plan `140` §4, plan `150` §4, plans `151`–`187` §7/§8/§9/§10: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
 `[x]` Probe the modal contract per plan `155`: `modal-focus-trap` — component code moves native focus (`renderer.focusElement`), Tab wraps inside the surface (`focusNextWithin`/`focusPreviousWithin`), focus returns to the trigger, and a nested popover's Escape closes only the popover — 19/19 green (fails with exit `1` when the Tab trap or the focus return is removed)
 `[x]` Probe floating placement per plan `156`: `floating-placement` — `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is off by half the panel** and `fit="snap"` clamps inside the window without flipping, so a bottom-side menu can cover its trigger — 20/20 green (fails with exit `1` when the layer ignores `side`)
 `[x]` Probe native motion per plan `157`: `motion-collapse` — the paused motion clock makes a 200 ms width tween exact (96 px of 240 at 80 ms), the inner pane keeps its 240 px width (outer clipping, no reflow), and `AnimatePresence` retains the leaving toast until the native exit settles; `onMotionComplete` needs `dispatchNativeEvents` — 21/21 green (fails with exit `1` when the mid-tween expectation is a jump value)
@@ -478,6 +492,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` Probe the tree view per plan `153`: `tree-view` — exact per-depth indentation, expand/collapse repaint, click-to-focus and arrow-key delivery; the no-programmatic-focus limitation recorded — 17/17 green (fails with exit `1` when the directory toggle is disabled)
 `[x]` Probe the log viewer per plan `154`: `log-viewer` — bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; the overlap of `alignment`/`followTail` and the no-snap-back-on-scroll limitation recorded — 18/18 green (fails with exit `1` when both props are dropped)
 `[ ]` **Gold standard (outside this workstream):** add `.github/workflows/native-smoke.yml` running `nub run --filter playground smoke` on `macos-14` (Apple Silicon) to confirm with the **published** binary (this host's verdict uses a locally-built binding, ADR 0003). A **real window** and a live automation run are now confirmed locally (plan `189`), so CI only has to reproduce them on the published binary — `macos-14` runners have a display for `smoke:live`; a headless runner should expect its exit `2`. Owner: whoever owns CI/platform
+`[ ]` Cross-team: the docs-site capability matrix must gain the `root` capability and the ids `root-single-child` + `root-wrapper` (and `live-root` if its live list names ids) — `apps/docs/src/lib/capabilities.test.ts` compares `COMPONENTS.md`'s measured table with `apps/docs/src/lib/capabilities.ts` and requires every cited scenario to exist in the playground registry, so its gate stays red until the row lands (owner: `docs-site`; evidence: plan `522` §4)
 `[ ]` Cross-team: the docs' honest native previews need **committed** images; the smoke run writes 18 frames to the gitignored `apps/playground/.artifacts/screenshots`. Decide (docs-site) whether to commit a curated set under the docs app and how it is refreshed; never substitute a browser reimplementation. Owner: `docs-site`
 `[x]` Wire the playground to `@gpuixui/tokens` and delete the app-local `src/theme.ts` (plan `150`) — the shell, shared helpers and every scenario read `useTheme()`; the smoke runner wraps each view in `ThemeProvider`
 `[ ]` Make `@gpuixui/tokens/react` consumable by a GPUix app without a tsconfig shim: its JSX compiles against `@gpuix/react/jsx-runtime` because the consumer sets that `jsxImportSource`, but `packages/tokens` cannot resolve it, so `apps/playground` maps the type path in `tsconfig.check.json`/`tsconfig.build.json`. Fix in `packages/tokens` (a `/** @jsxImportSource react */` pragma, or `createElement`) and remove the mapping. Owner: `tokens` workstream

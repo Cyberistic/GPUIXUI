@@ -30,6 +30,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | Capability | Scenario | Verdict |
 | ---------- | -------- | ------- |
 | layout | `layout-flex`, `shell-navigation`, `shell-selection` | verified |
+| root | `root-single-child`, `root-wrapper` | verified |
 | grid-layout | `layout-grid` | verified |
 | typography | `typography-layout` | verified |
 | text | `text-native` | verified |
@@ -89,12 +90,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | qr | `qr-code` | verified |
 | media | `media-surface`, `live-media` | verified |
 
-The suite is **95/95 green here** (exit `0`, `.artifacts/smoke-report.json`,
-3369 checks).
+The suite is **97/97 green here** (exit `0`, `.artifacts/smoke-report.json`,
+3389 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **45/45 green
-here** (924 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`) and is **46/46 green
+here** (929 checks): `layout`, `root`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `reorder` and `tree-reorder` are confirmed there too
 — the shell fills the window and navigates by click and
@@ -175,6 +176,21 @@ focused element's `onKeyDown` — the command-palette / application-menu path.
 `shell-navigation` adds the shell's own rule: a flex child needs `minHeight: 0`
 before `overflowY: "scroll"` can make it scroll, which is what keeps the
 15-entry sidebar reachable in the 720px window.
+
+`root-single-child` and `root-wrapper` (plan `522`) measure the **app
+boundary**: the native root keeps exactly one child, and it is the **last** one.
+A view that returns a fragment with two roots loses the earlier root silently —
+it is absent from the reachable tree (`findByTestId` finds nothing), paints
+nothing, and its text never reaches `getPaintedText`, while its host nodes stay
+**retained** (measured: two text-bearing roots retain 6 nodes, 3 painted and 3
+dropped). One wrapper element keeps every sibling (measured: 7 nodes, both
+children painted, `gap: 12` exact). The probe's live twin (`live-root`) proves
+the reconciler rule transfers to a real window. Consequence for consumers: an
+`App` must render one root element (a context provider does not add a host
+element, so it does not change the count), and a fixture with two sibling roots
+must be wrapped or it measures only the last one. This is the fact plan `510`
+(components) surfaced; a dropped subtree is retained but unreachable, so an app
+that re-renders alternate root siblings churns host nodes without painting them.
 
 `motion-collapse` measures the native tween that collapsible sidebars, drawers,
 accordions and toasts depend on. The paused motion clock

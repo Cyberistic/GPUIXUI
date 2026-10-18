@@ -37,7 +37,10 @@ probe (`wizard-flow`), the editable-grid probe (`grid-cell-editing`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
-selecting an entry, the keyboard contract and the palette switch.
+selecting an entry, the keyboard contract and the palette switch — and the
+app-root probe (`root-single-child`, `root-wrapper`), which measures the one
+rule every scenario's mount sits on: the native root keeps only its **last**
+child.
 
 ## Run it
 
@@ -168,6 +171,26 @@ native input:
 | keyboard | Enter on key **down** switches; Space on key **up** switches; Space on the down alone does nothing. The nav uses the shipped `Button`'s `decideActivation`, not a second copy |
 | palette | `theme-mode-light` repaints `app-shell` from `#11141A` to the light `#F6F8FA`, keeps the selected scenario and leaves its view mounted |
 | isolation | the full suite mounts every scenario under a `Fragment` keyed by id: without it React kept the previous `<App>`'s Shell state and native scroll offset, and a click landed outside the viewport (found by this probe; `--only` passed, the full run did not) |
+
+## The app root (plan `522`)
+
+`root-single-child` and `root-wrapper` measure the boundary every other
+scenario's mount sits on: the native root keeps **exactly one child, the last
+one**. Both views are plain `div`s, so nothing but the root rule differs.
+
+| Fact | Measured |
+| ---- | -------- |
+| two roots | only `root-last` is reachable and painted (200 × 40 at the origin); `root-first` has no retained node, no bounds and no painted text |
+| silent cost | `retainedElements()` reports **6** — two text-bearing roots are three host nodes each, so the dropped subtree is retained but unreachable |
+| one wrapper | `root-wrap` paints 320 wide and content-high; both children paint, `gap: 12` is exact, both texts are painted, 7 host nodes |
+| live twin | `live-root` mounts the two-root view in the real window: the earlier root is absent there too, so the rule is the reconciler's, not the `TestRenderer`'s |
+
+The sidebar preview nests a view inside the shell's stage, so both roots paint
+there; the smoke mount **is** the app boundary and is the honest observation.
+Consequence for a consumer: an `App` must render one root element. A context
+provider (`ThemeProvider`, `useWindowKey`'s provider) adds no host element and
+does not change the count, so wrapping two roots in a provider does **not** fix
+them — wrap them in a `div`.
 
 ## The shipped Tier 1 components (plan `168`)
 
@@ -1474,10 +1497,10 @@ given.
 
 ## Evidence on this host
 
-The suite is **95/95 green** here (`exit 0`, 3369 checks):
+The suite is **97/97 green** here (`exit 0`, 3389 checks):
 
 ```
-95/95 scenarios passed · capabilities: layout=verified text=verified
+97/97 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1676,7 +1699,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (95/95), with a written report and
+  pass in real GPUix 0.10.0 on this host (97/97), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1684,7 +1707,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 45/45 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 46/46 — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the

@@ -19,6 +19,7 @@ import * as Str from "effect/String";
 /** Every capability the suite can report a verdict for. */
 export const CAPABILITIES = [
   "layout",
+  "root",
   "text",
   "input",
   "focus",
