@@ -471,7 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–473)
 
-`[~]` `[██████████]` 72/73
+`[~]` `[██████████]` 73/74
+
+`[x]` **A live scene's canvas must be sized (plan 475)** — the scene loop accepted a `ready` flag on a 1×1 frame, and the plan-474 run measured `dropdown-menu ready — 1x1 canvas` passing; every scene now waits for a canvas larger than 1×1, and a forced threshold fails the first scene with `timeout`
 
 `[x]` **The live-surface gate proves light mode too (plan 474)** — the scene loop hard-coded `mode=dark` and the page loop never asserted the mode, so a renderer or wiring that ignored light passed the release gate; the scheme is now forced through CDP, the Button scene's light and dark frames are compared (with two identical dark captures proving determinism), and both forced defects fail by name
 

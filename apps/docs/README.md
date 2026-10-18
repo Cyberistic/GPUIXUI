@@ -93,11 +93,12 @@ renderer (the browser's GPU backend) and exports one document per scene:
   says the renderer is ~20 MB.
 
 `smoke:preview` drives Chrome over CDP **in real time** — a virtual-time
-screenshot is black — and asserts every scene's text is in GPUI's tree, that the
-Button scene paints a different frame in light than in dark (with two identical
-dark captures proving the screenshot is deterministic), that an unknown scene
-reports a reason, that each component page loads the iframe on a click (after
-hydration) with the page's mode and platform in the URL, and that
+screenshot is black — and asserts every scene's text is in GPUI's tree, that
+every scene reaches a sized canvas (a `ready` flag on a 1×1 frame does not
+count), that the Button scene paints a different frame in light than in dark
+(with two identical dark captures proving the screenshot is deterministic), that
+an unknown scene reports a reason, that each component page loads the iframe on
+a click (after hydration) with the page's mode and platform in the URL, and that
 `/docs/theming?platform=win32` passes the platform through to the renderer. The
 page's colour scheme is forced through CDP, so the host's preference cannot
 decide which mode the gate checks. `--no-build` reuses the current build. Exit

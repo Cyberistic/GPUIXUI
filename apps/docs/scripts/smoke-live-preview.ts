@@ -267,7 +267,17 @@ const waitForSurface = async (session: Session): Promise<SurfaceState> => {
   const deadline = Date.now() + READY_TIMEOUT_MS;
   for (;;) {
     const surface = await readSurface(session);
-    if (surface.state === "ready" || surface.state === "failed") return surface;
+    if (surface.state === "failed") return surface;
+    // A ready flag lands before the frame is sized: the page iframe showed the
+    // same race (plan 473), and a scene did too (plan 475). A 1×1 canvas is
+    // blank, so it is not ready however the document reports itself.
+    if (
+      surface.state === "ready" &&
+      surface.canvas[0] > 1 &&
+      surface.canvas[1] > 1
+    ) {
+      return surface;
+    }
     if (Date.now() > deadline) {
       return { state: "timeout", canvas: surface.canvas };
     }
@@ -422,10 +432,6 @@ const main = async (): Promise<number> => {
         );
         return 1;
       }
-      if (surface.canvas[0] === 0 || surface.canvas[1] === 0) {
-        console.error(`FAIL live scene ${scene}: GPUI created no sized canvas`);
-        return 1;
-      }
       const text = await paintedText(session);
       if (!text.includes(SCENE_TEXT[scene])) {
         console.error(
@@ -468,9 +474,7 @@ const main = async (): Promise<number> => {
       return 1;
     }
     if (light === dark) {
-      console.error(
-        "FAIL live surface: mode=light painted the dark surface",
-      );
+      console.error("FAIL live surface: mode=light painted the dark surface");
       return 1;
     }
     console.log(

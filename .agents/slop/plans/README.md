@@ -234,6 +234,8 @@ tables and the inventory reconciliation.
 | [`472-scene-painted-text.md`](./472-scene-painted-text.md) | A live scene looks for text its component paints, not its own `h3` heading; the one component that paints none is a written, pinned exception | F | 455–458, 471 | implemented — four expectations moved into the component region, `skeleton` exempt with a reason, the guard fails by name when an old heading returns (§9) |
 | [`473-page-surface-sized-canvas.md`](./473-page-surface-sized-canvas.md) | The live-preview page check waits for a sized canvas instead of accepting a `ready` flag on a 1×1 frame | F/G | 455–458, 471, 472 | implemented — `/docs/components/button` reported 1×1 before; all twelve page loads now report 606×358, and a forced threshold fails the first page with `timeout` (§8) |
 | [`474-live-surface-light-mode.md`](./474-live-surface-light-mode.md) | The live-surface smoke proves light mode: the iframe carries the page's mode in both schemes, and the Button scene paints a different frame in light than in dark | F/G | 444, 445, 455–458, 473 | implemented — forced schemes replace the host preference; two forced defects fail by name (§8) |
+| [`475-scene-surface-sized-canvas.md`](./475-scene-surface-sized-canvas.md) | A live scene's canvas must be sized, not merely non-zero: the scene half of plan 473's rule | F/G | 455–458, 473, 474 | implemented — `dropdown-menu` passed on a 1×1 canvas before; every scene now waits for a sized canvas, and a forced threshold fails the first scene with `timeout` (§7) |
+
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
 > live on their own branches and are merged into the integration branch as each
