@@ -1303,15 +1303,23 @@ the `background` canvas, so both are `boundary` pairs.
 `invalid-field-edge.test.ts` holds them and the erased-error regression.
 
 The modal scrim is measured the same way, because its job is to change the
-surface beneath it: `overlayWashPairs` composites `overlay` over the app's four
-base surfaces — `overlaySurfaces` is `background`, `card`, `muted` and `popover`
-— and holds the painted value to the `surface` floor. A scrim that composites to
-its own surface is an invisible modal backdrop; the audit found high-contrast
-dark's `#000000CC` measured **1.000:1** on its pure black canvas, so the AAA dark
-theme now veils with a 15% white wash (`#FFFFFF26`, 1.388:1) — a dark veil cannot
-darken black. The failures are reported with `wash: "overlay"`. Row washes are
-deliberately not scrim surfaces: the pointer leaves the row to reach the dialog,
-so a scrim over a transient hover is not a composition the system supports.
+surface beneath it: `overlayWashPairs` composites `overlay` over the surfaces a
+dialog covers — `overlaySurfaces` is `background`, `card`, `muted`, `input`,
+`selected` and `popover` — and holds the painted value to the `surface` floor.
+A scrim that composites to its own surface is an invisible modal backdrop; the
+audit found high-contrast dark's `#000000CC` measured **1.000:1** on its pure
+black canvas, so the AAA dark theme now veils with a 15% white wash
+(`#FFFFFF26`, 1.388:1) — a dark veil cannot darken black. The failures are
+reported with `wash: "overlay"`. The pointer washes (`hover`, `active`,
+`accent`) are deliberately not scrim surfaces: the pointer leaves the row to
+reach the dialog, so a scrim over a transient state is not a composition the
+system supports. `selected` and `input` are not transient — a table, list or
+tree keeps a selected row while a modal opens over it, and every field in the
+layout behind a form dialog sits on the `input` fill — so plan `359` measured
+them too. The gap was real: macOS light's own `selected` fill used as `overlay`
+composited to **1.000:1** on a selected row while the checker returned `[]`,
+because the four base surfaces all passed. The tightest shipped pair is
+**1.164:1** (macOS dark, `overlay` on `input`), so no colour moves.
 
 The inactive state has its own floor. `disabledForeground` is measured on the
 thirteen surfaces an unavailable label paints — the `disabled` fill
@@ -1911,8 +1919,11 @@ wash and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 `destructiveSoft` 1.005:1 (plan `091`).
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
-over `background`, `card`, `muted` and `popover` and holds the result to 1.05:1,
-because a scrim that paints its own surface is an invisible modal backdrop. The
+over `background`, `card`, `muted`, `input`, `selected` and `popover` and holds
+the result to 1.05:1, because a scrim that paints its own surface is an invisible
+modal backdrop. The transient pointer washes are excluded — the pointer leaves
+the row to reach the dialog — but `selected` persists and `input` is part of the
+layout, so both are measured (plan `359`). The
 audit found high-contrast dark's `#000000CC` measured **1.000:1** on the pure
 black canvas — an 80% black veil over black — while every other shipped set
 cleared the floor. The AAA dark theme now veils with light (`#FFFFFF26`): a

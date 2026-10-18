@@ -91,8 +91,10 @@
  * Plan 099 closes the last role the contract exempted by choice: `overlay` is
  * the wash a Dialog paints across the window, and high-contrast dark's 80% black
  * scrim composited to the canvas itself — a 1.000:1 modal backdrop on pure
- * black. The scrim is measured over the four base surfaces as
- * `overlayWashPairs`, and the AAA dark theme veils with light instead.
+ * black. The scrim is measured over the surfaces a dialog covers as
+ * `overlayWashPairs` — the four base surfaces, the `input` fill a form paints
+ * and the persistent `selected` fill (plan 359) — and the AAA dark theme veils
+ * with light instead.
  *
  * Plan 300 closes plan 076's defect one surface over: the soft status tints were
  * held to 1.05:1 on the canvas, card and popover but not on the quiet `muted`
@@ -534,7 +536,7 @@ describe("themeContrastFailures", () => {
       "secondary",
       "destructive",
     ]);
-    expect(overlayWashPairs.length).toBe(4);
+    expect(overlayWashPairs.length).toBe(6);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {

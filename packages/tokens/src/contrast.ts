@@ -1046,21 +1046,26 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
 /**
  * The surfaces a modal scrim covers. A dialog's scrim is painted across the
  * window, so the app's base layout is behind it: the canvas, a card, the quiet
- * panel and the floating surface a menu opens on. A scrim that composites to its
- * own surface is an invisible modal backdrop, so each is held to the `surface`
- * floor.
+ * panel, the field fill a form paints, the persistent `selected` fill a table or
+ * list keeps and the floating surface a menu opens on. A scrim that composites
+ * to its own surface is an invisible modal backdrop, so each is held to the
+ * `surface` floor.
  */
 export const overlaySurfaces = [
   "background",
   "card",
   "muted",
+  "input",
+  "selected",
   "popover",
 ] as const;
 
 /**
- * The scrim composited over the surfaces it covers. Row washes are deliberately
- * absent: the pointer leaves the row to reach the dialog, so a scrim over a
- * transient hover is not a composition the design system supports.
+ * The scrim composited over the surfaces it covers. The pointer washes
+ * (`hover`, `active`, `accent`) are deliberately absent: the pointer leaves the
+ * row to reach the dialog, so a scrim over a transient state is not a
+ * composition the design system supports. `selected` persists while the modal
+ * opens and `input` is a layout surface, so both are measured.
  */
 export const overlayWashPairs: readonly ContrastPair[] = overlaySurfaces.map(
   (surface): ContrastPair => ["overlay", surface, "surface"],

@@ -3,9 +3,16 @@
  * paints across the window — was exempt from the contrast contract, so
  * high-contrast dark's `#000000CC` scrim composited to `#000000` on its own pure
  * black canvas: a 1.000:1 backdrop that made a modal look like an ordinary
- * panel. The scrim is now composited over the four base surfaces and held to the
- * surface floor, and the AAA dark theme veils with light because no dark wash
- * can darken black.
+ * panel. The scrim is composited over the surfaces a dialog covers and held to
+ * the surface floor, and the AAA dark theme veils with light because no dark
+ * wash can darken black.
+ *
+ * Plan 359 corrects the reasoning plan 099 used to leave the row washes out:
+ * `hover`, `active` and `accent` are transient, but `selected` persists while a
+ * modal opens over a table, list or tree, and `input` is the fill of every field
+ * in the layout behind a form dialog. An `overlay` equal to macOS light's own
+ * `selected` fill measured **1.000:1** on a selected row while this checker
+ * returned `[]`, because the four base surfaces all passed.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -39,7 +46,7 @@ const shipped: ReadonlyArray<readonly [string, Theme]> = [
 ];
 
 describe("modal scrim", () => {
-  it("veils every base surface in every shipped colour set", () => {
+  it("veils every surface a dialog covers in every shipped colour set", () => {
     shipped.forEach(([label, theme]) => {
       overlaySurfaces.forEach((surface) => {
         const painted = compositeOver(
@@ -76,12 +83,31 @@ describe("modal scrim", () => {
     ).not.toBe("#000000");
   });
 
-  it("covers the four base surfaces the scrim sits on", () => {
+  it("covers the six surfaces a dialog sits on", () => {
     expect(overlayWashPairs).toEqual([
       ["overlay", "background", "surface"],
       ["overlay", "card", "surface"],
       ["overlay", "muted", "surface"],
+      ["overlay", "input", "surface"],
+      ["overlay", "selected", "surface"],
       ["overlay", "popover", "surface"],
+    ]);
+  });
+
+  it("reports a scrim that disappears on a selected row", () => {
+    const macos = getPlatformTheme("darwin", "light");
+    const regressed = extendTheme(macos, {
+      colors: { overlay: macos.colors.selected },
+    });
+    expect(themeContrastFailures(regressed)).toEqual([
+      {
+        foreground: "overlay",
+        background: "selected",
+        wash: "overlay",
+        pairClass: "surface",
+        floor: contrastFloors.default.surface,
+        ratio: 1,
+      },
     ]);
   });
 });

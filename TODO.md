@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 126/176
+`[x]` `[███████░░░]` 127/177
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -132,6 +132,13 @@ invariants the components rely on; a zero `borderWidth.strong` removed the focus
 ring, a shortened leading clipped text and an inverted ladder changed what a
 name means, all while `themeContrastFailures` returned `[]`. Every shipped
 theme, platform variant and recipe passes, so no value moves (plan 358)
+`[x]` Hold the modal scrim on the two persistent surfaces a dialog opens over —
+`selected` is a row state that stays while the pointer moves to the dialog and
+`input` is the fill of every field behind a settings or rename dialog, yet plan
+099 excluded them with the transient pointer washes; an overlay equal to macOS
+light's `selected` measured **1.000:1** on that row while
+`themeContrastFailures` returned `[]`. Six scrim pairs now, every shipped set
+passes (1.164:1 at the tightest), so no colour moves (plan 359)
 `[ ]` Cross-team: `components` moves the secondary Button off the mixed
 `secondary` → `hover` → `active` ladder — `internal/button.tsx` rests on
 `secondary` and hovers to `hover`, and the pair is under the 1.05:1 step floor in

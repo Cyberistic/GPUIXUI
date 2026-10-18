@@ -243,12 +243,15 @@ is exactly one shadow, read with `elevationShadow(theme, level)`. A level is
 geometry plus an alpha; the tint is the single `shadow` role, so a brand retints
 every level by editing one value. Overlay layering uses the `overlay` scrim
 colour, a translucent wash a Dialog paints across the window. The scrim is held
-to the same 1.05:1 perceivability floor as every other painted value, on the four
-base surfaces it covers (`background`, `card`, the `muted` panel and `popover`),
+to the same 1.05:1 perceivability floor as every other painted value, on the six
+surfaces it covers — `background`, `card`, the `muted` panel, the `input` fill a
+form paints, the persistent `selected` fill a table or list keeps and `popover` —
 because a scrim that composites to the surface beneath it is an invisible modal
-backdrop. On the high-contrast dark theme's pure black canvas a dark veil cannot
-darken anything, so that theme veils with light: the modal is separated by a
-light wash, its own edge and elevation instead of a darker backdrop.
+backdrop. The transient pointer washes are the one exclusion: reaching the
+dialog takes the pointer off the row. On the high-contrast dark theme's pure
+black canvas a dark veil cannot darken anything, so that theme veils with light:
+the modal is separated by a light wash, its own edge and elevation instead of a
+darker backdrop.
 `elevation.overlay` is a different concern — a reserved shadow level, empty so
 the shape stays stable.
 Dark shadows are darker and more opaque because contrast between surfaces is
@@ -415,13 +418,16 @@ Colour is checked, not assumed. The token suite enforces:
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
-| modal scrim (`overlay` composited over `background`/`card`/`muted`/`popover`) | 1.05:1 | 1.05:1 |
+| modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite. The modal scrim is
-measured composited rather than as a value: `overlay` over the four base
-surfaces, which caught the AAA dark backdrop painting **1.000:1** on its own
-canvas until plan `099` gave it a light veil. A soft status surface is measured on
+measured composited rather than as a value: `overlay` over the six surfaces a
+dialog covers — the four base surfaces, the `input` fill a form paints and the
+persistent `selected` fill — which caught the AAA dark backdrop painting
+**1.000:1** on its own canvas until plan `099` gave it a light veil, and the
+macOS light `selected` fill used as a scrim painting **1.000:1** on a selected row
+until plan `359` measured it. A soft status surface is measured on
 the quiet panel as well as the canvas, card and popover: a status badge or small
 Alert in a sidebar is a real composition, and the platform light variants change
 `muted` while inheriting the identity's pastel tints — macOS, Linux and Windows
