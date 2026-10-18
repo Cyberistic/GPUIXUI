@@ -473,6 +473,12 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[x]` `[██████████]` 101/101
 
+`[~]` **A fragment link lands on a heading (plan 501)** — plan 438 stripped the
+      fragment before resolving a link, so a renamed heading silently broke
+      every generated `/docs/components/<slug>#api-reference` link; the
+      production crawl now compares each internal fragment with the ids the
+      destination page renders.
+
 `[x]` **A component's exported symbol reaches its page (plan 500)** — plan 431
       ranked titles only, so `Spinner`, `ScrollArea`, `TextArea`, `ButtonGroup`,
       `NumberField`, `OTPField`, `Field`, `ConfirmDialog` and `Grid` landed in the
