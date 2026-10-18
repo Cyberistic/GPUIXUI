@@ -71,7 +71,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | truncation | `text-truncation` | verified |
 
 The suite is **68/68 green here** (exit `0`, `.artifacts/smoke-report.json`,
-1781 checks).
+1785 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **20/20 green
