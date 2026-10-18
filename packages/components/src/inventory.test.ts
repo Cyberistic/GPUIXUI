@@ -6,9 +6,10 @@
  * `COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
  * finished Tier 2 row has no record, when two records claim the same name or
  * docs page, when one Tier 2 component has two rows (a stray `todo` copy beneath
- * the real one used to hide there), and when a row's stated native test count
- * disagrees with the behaviour suite (plan 139). It is the automated form of
- * plan 117 §1.
+ * the real one used to hide there), when a row's stated native test count
+ * disagrees with the behaviour suite (plan 139), and when a docs page's
+ * "Verification" line states a count the suite does not have (plan 333). It is
+ * the automated form of plan 117 §1.
  *
  * The date picker landed in plan 119, so every Tier 2 row now has a record.
  * `node:fs` is used here only because this is a test-time repository check —
@@ -21,6 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
 import { examples } from "../examples/index.js";
 import { inventory, type ComponentMeta } from "./inventory.js";
@@ -239,6 +241,34 @@ describe("inventory", () => {
         });
       },
     );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("states the real native test count in every docs verification line", () => {
+    // The suffix is captured separately and the closing backtick is consumed by
+    // `\S*`: a backtick inside a regex literal would open a template quote for
+    // `scripts/check-tests.ts`'s scanner, which then loses this test's asserts.
+    const stated =
+      /src\/behaviour\/([\w-]+)\.test\.tsx\S* runs in the real GPUix renderer \((\d+) tests?\)/g;
+    const problems = Arr.flatMap(inventory, (meta: ComponentMeta) => {
+      const page = readFileSync(
+        fileURLToPath(new URL(meta.docs, packageRoot)),
+        "utf8",
+      );
+      return Arr.filterMap(Arr.fromIterable(page.matchAll(stated)), (match) => {
+        const stem = match[1];
+        const claimed = match[2];
+        if (stem === undefined || claimed === undefined) return Result.failVoid;
+        const file = `${stem}.test.tsx`;
+        const actual = countBehaviourTests(`src/behaviour/${file}`);
+        return String(actual) === claimed
+          ? Result.failVoid
+          : Result.succeed(
+              `${meta.name}: ${file} says ${claimed}, suite has ${actual}`,
+            );
+      });
+    });
 
     expect(problems).toEqual([]);
   });

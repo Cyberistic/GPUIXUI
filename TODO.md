@@ -417,6 +417,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
     (`isHeld` in the shared predicates) and a button-shaped control activates
     Space on release; the two clear controls share the helper; 7 new native
     cases (behaviour 508, unit 334), both-direction proof
+  - [x] Docs truth: the native-test count a docs page states matches its
+    behaviour suite — plan 333; the one drifted page (`Field`) fixed and the
+    check added; both-direction proof (unit 335)
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
 
