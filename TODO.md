@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–515)
+## Docs site workstream (plans 410–499, plus 500–516)
 
-`[x]` `[██████████]` 116/116
+`[x]` `[██████████]` 117/117
+
+`[x]` **The tab and install surface ship (plan 516)** — plan 510's head named an
+      SVG favicon as its only icon and no manifest, so Safari had no tab icon
+      and no home screen had a name or colour; the guards asserted exactly what
+      the head named, so both absences passed. `/site.webmanifest` is now a route
+      built from `site-head.ts` and the token palette (`display: "browser"`, no
+      maskable claim), the head links a 32 px PNG beside the SVG, and a
+      `Schema.Class` suite plus the built crawl prove the document, every icon's
+      real size and each answer. 67 files / 462 docs tests, 91-page crawl,
+      `check` green; five two-direction proofs measured.
 
 `[x]` **The preview strategy names every shipped scene (plan 515)** — the tier‑L
       row had ended at `Carousels` since plan 513 added the Message scroller
