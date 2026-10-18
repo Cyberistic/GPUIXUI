@@ -10,7 +10,7 @@
  */
 
 import type { StyleDesc } from "@gpuix/react";
-import { alpha } from "@gpuixui/tokens";
+import { alpha, focusRing } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
@@ -43,17 +43,6 @@ export interface SelectionSpec {
    */
   readonly focused?: boolean;
 }
-
-/** The ring a focused selection control paints: no offset, no blur, a spread. */
-const focusRing = (
-  theme: PrimitiveTheme,
-): NonNullable<StyleDesc["boxShadow"]> => ({
-  offsetX: 0,
-  offsetY: 0,
-  blurRadius: 0,
-  spreadRadius: theme.borderWidth.strong,
-  color: theme.colors.ring,
-});
 
 const filled = (spec: SelectionSpec): boolean => spec.state !== "unchecked";
 
@@ -128,7 +117,7 @@ export const selectionBoxStyle = (
     };
     style.active = {};
   }
-  if (spec.focused === true) style.boxShadow = focusRing(theme);
+  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 
@@ -177,7 +166,7 @@ export const switchTrackStyle = (
     };
     style.active = {};
   }
-  if (spec.focused === true) style.boxShadow = focusRing(theme);
+  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 

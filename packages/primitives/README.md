@@ -27,7 +27,9 @@ import { darkTheme } from "@gpuixui/tokens";
 owns the values **and** the runtime-shaped helpers (`focusRing`,
 `elevationShadow`); primitives owns only the resolution from a semantic spec to a
 `StyleDesc`. There is one declaration of the theme in the library (plan 021) —
-a second copy would drift silently.
+a second copy would drift silently. The same holds for the two shadow helpers: a
+component names them, and `src/core/token-helpers.test.ts` fails by file and line
+if a source file builds a shadow itself (plan 099).
 
 There is deliberately **no default theme**: a primitive rendered without a
 `ThemeProvider` above it throws `MissingThemeProviderError` naming the provider.
@@ -187,7 +189,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **39 files, 510 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **40 files, 512 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`) and the axis-aware floating alignment rule
 (plan `098`).

@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 71/71
+`[x]` `[██████████]` 72/72
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -510,6 +510,13 @@ retired once both branches are one
       beside), `availableOn` over all four sides, and a tip-height measurement
       in `Tooltip`. 5 offline + 3 runtime tests, both directions proven
       (plan 098)
+`[x]` `packages/primitives`: **the focus ring had two owners** — D17/plan 021
+      deleted the primitives' local copy of the tokens helper, but
+      `core/selection.ts` still built the same five-field `BoxShadow` by hand, so
+      a change to `focusRing` would have to be mirrored there. It now names the
+      helper, and `src/core/token-helpers.test.ts` walks the real source and
+      fails by file and line when a component builds a shadow instead. 2 tests,
+      both directions proven (plan 099)
 `[ ]` **components workstream**: `internal/placement.ts` and
       `packages/primitives/src/core/floating.ts` now both know how to correct a
       centre alignment. **Updated 2026-10-18 (plan 098):** the primitives rule is
