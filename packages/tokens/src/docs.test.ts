@@ -93,6 +93,14 @@
  * string with the document. The row now derives from the resolved theme through
  * `platform-table.ts`, and the page states that a row describes the resolved
  * theme.
+ *
+ * Plan 567 gives the guarantee's two dimensions the owner each already had:
+ * five sentences still said "all six checks returned `[]`" after the seventh
+ * check landed, because the old guard was a blacklist of two numerals, and both
+ * documents restated the shipped enumeration's size while `shippedThemes` owns
+ * it. The check count is now spoken only in the sentence derived from
+ * `themeChecks`, no shipped-set total is retyped, and the cases below prove both
+ * patterns reject a planted stale phrase.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -2053,6 +2061,39 @@ describe("docs/tokens.md typeface contract", () => {
     [markdown, designSystem].forEach((document) => {
       expect(document).not.toMatch(/\ball (?:three|four) checks\b/);
     });
+  });
+});
+
+describe("contract prose counts", () => {
+  // A count is owned by an index: `themeChecks` for the guarantee's size,
+  // `shippedThemes` for the enumeration it runs over. Anything else in these
+  // two documents is a hand-typed copy that can drift.
+  const numbers =
+    "zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|twenty-one|twenty-two|twenty-three|twenty-four|twenty-five|\\d+";
+  const checkCount = new RegExp(
+    `\\b(?:${numbers})\\s+(?:format\\s+)?checks?\\b`,
+  );
+  const shippedSetCount = new RegExp(`\\b(?:${numbers})\\s+shipped sets\\b`);
+
+  it("states the guarantee's size only from the index", () => {
+    const guarantee = `The guarantee is ${countWord(themeChecks.length)} checks — `;
+    expect(markdownProse).toContain(guarantee);
+    [markdownProse, designSystem].forEach((document) => {
+      expect(document.split(guarantee).join("")).not.toMatch(checkCount);
+    });
+  });
+
+  it("never retypes the number of shipped sets", () => {
+    [markdownProse, designSystem].forEach((document) => {
+      expect(document).not.toMatch(shippedSetCount);
+    });
+  });
+
+  it("the counts' guards can fail", () => {
+    expect(checkCount.test("while all six checks returned")).toBe(true);
+    expect(checkCount.test("while every check returned")).toBe(false);
+    expect(shippedSetCount.test("All 24 shipped sets are hex")).toBe(true);
+    expect(shippedSetCount.test("Every shipped set is hex")).toBe(false);
   });
 });
 

@@ -5,7 +5,7 @@
  * avatar, an icon". The numeric contract held the avatar ladder positive,
  * ordered and round (`radius.full` covers the largest tier), but never compared
  * the inline mark with the row it leads. A theme whose whole ladder rose to
- * 40/44/48/52 returned `[]` from all six checks while a 40px mark could not fit
+ * 40/44/48/52 returned `[]` from every check while a 40px mark could not fit
  * a 28px macOS or XP row: the row's height is fixed, so the mark paints outside
  * it (or is clipped) instead of sitting inside it. The rule reads the theme's
  * own row, so a roomier density keeps the allowance, and equality is legal

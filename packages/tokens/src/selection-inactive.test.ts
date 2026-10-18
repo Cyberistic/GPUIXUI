@@ -5,7 +5,7 @@
  * shipped palette a selected disabled label measured **2.586:1** on Windows
  * light's `selected` fill, 2.604–2.945:1 on the other default light sets and
  * 3.430 / 4.357:1 in the two AAA sets — under the 3:1 / 4.5:1 `inactive` floor —
- * while all six `themeFailures` checks returned `[]`, because no pair painted the
+ * while every `themeFailures` check returned `[]`, because no pair painted the
  * composition. The list is `selectionInactivePairs`; the three values that moved
  * are `#545D6C`, `#444444` and `#D0D0D0` (the last one again in plan 520, for the
  * disabled panel action's inverse veil).

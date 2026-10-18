@@ -258,6 +258,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [564](./564-quoted-family-name.md) | A quoted family name is CSS syntax, not a family | F | 385, 533, 540, 558 | done |
 | [565](./565-colour-form-index.md) | The alpha form owns its two members | F | 540, 543, 558 | done |
 | [566](./566-overlay-feather-ladder.md) | A defined `overlay` joins the elevation feather ladder | F | 369, 390, 552 | done |
+| [567](./567-contract-prose-counts.md) | The guarantee's two counts have one owner each | F | 387, 398, 540, 543, 544 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2861,6 +2862,21 @@ compares the defined levels in that order, so the shipped empty `overlay` stays
 exempt and a future level joins one place; `elevation-overlay.example.ts` ships
 the valid topmost edit and `elevation-overlay.test.ts` proves both directions.
 No colour, pair, floor, metric or shipped theme moves.
+
+Plan `567` gives the guarantee's two dimensions the owner each has had since
+plans `398` and `387`, and stops the contract prose retyping them. The page and
+the design system said "all six checks returned `[]`" in five places after the
+seventh check landed, because the guard was a blacklist of two old numerals
+(`three`, `four`); and both documents stated the shipped enumeration's size five
+times ("all 24", "of the twenty-four", "the same twenty-four") while
+`shippedThemes` owns it and only the README derives it. Every such mention is now
+count-free — "every check", "those checks", "eight sets" — the one derived
+sentence (`The guarantee is seven checks — …`) remains held verbatim, the four
+historical test headers drop their `six`, and three `docs.test.ts` cases hold the
+two documents to it, including a case proving the patterns reject a planted
+stale phrase. A fifth platform or an eighth check now fails the docs guard
+instead of leaving a stale total behind. No colour, pair, floor, metric, platform
+style, recipe or shipped theme moves.
 
 ## How to use a plan
 

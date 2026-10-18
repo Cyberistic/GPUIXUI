@@ -652,7 +652,7 @@ beneath it: on a light surface it darkens the ground toward the disabled grey,
 on a dark surface it lifts the ground toward it. No pair measured the
 composition, so the previous light `#6E7787` measured **2.586:1** on Windows
 light's `selected` fill and 2.604–2.945:1 on the other default light sets while
-all six checks returned `[]`, and the AAA sets measured **3.430:1** (light,
+every check returned `[]`, and the AAA sets measured **3.430:1** (light,
 `destructiveSoft`) and **4.357:1** (dark, `active`) under 4.5:1.
 `selectionInactivePairs` holds `disabledForeground` through the wash on the same
 thirteen surfaces at the same floor, and three values move one designed step
@@ -665,7 +665,7 @@ A disabled raised action keeps its `softAction` fill, so its label is content on
 an opaque surface and uses the inverse `selectionOnFill` veil rather than the
 accent wash. No pair measured that composition: identity dark measured
 **2.799:1** and high-contrast dark **3.304:1** through the veil, under the 3:1 /
-4.5:1 `inactive` floor, while all six checks returned `[]`.
+4.5:1 `inactive` floor, while every check returned `[]`.
 `selectionFillInactivePairs` publishes the one resting composition, and
 `disabledForeground` moves one designed step in the two sets that failed —
 identity dark `#A1A9B7` → `#B0B8C6` (3.317:1) and AAA dark `#B0B0B0` →
@@ -749,7 +749,7 @@ and an unparseable tint is returned unchanged, so `shadow: "black"` painted a
 **fully opaque** shadow at every level — the 0.08, 0.12 and 0.16 gone — while the
 metric check returned `[]`. Plan `505` measures the shadow, so that tint also
 fails the contrast check as `NaN`; the colour check remains the one that names
-the form. All 24 shipped sets are hex, so the check moves no
+the form. Every shipped set is hex, so the check moves no
 value; `isHexColor` is the predicate for a single stored role.
 
 The form has a second half. `themeOpacityFailures` asks for the alpha the role is
@@ -759,8 +759,8 @@ every other role is opaque. `shadow` is the opposite case: each level's alpha
 writes the tint's fourth byte, so an eight-digit tint is a value the paint
 discards, and a solid `overlay` hides the window the scrim exists to keep
 recognisable. `roleForm` is the rule, `colorForms` the ordered index of the two
-forms and `translucentRoles` the index of the three veils; all 24
-shipped sets carry the form they need, so no colour moves.
+forms and `translucentRoles` the index of the three veils; every
+shipped set carries the form it needs, so no colour moves.
 
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
 the identity metrics, the shipped role count, the theme surfaces, the type

@@ -4,7 +4,7 @@
  * own border — a button's label, a field's typed text, a time picker's
  * separator — but the numeric contract held it only finite, ordered and
  * non-negative. A theme whose whole padding ladder fell to zero returned `[]`
- * from all six checks while every labelled control painted its glyph on its
+ * from every check while every labelled control painted its glyph on its
  * border, and a 1px inset did the same against the 2px hairline the spacing
  * scale defines for padding. The rule reads the theme's own
  * `spacing["2xs"]`, so a brand that widens its hairline gets the allowance, and

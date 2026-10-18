@@ -1,7 +1,7 @@
 /**
  * Bug guarded: `themeTypefaceFailures` held a family name only to `non-empty`
  * and `single-family`, so a padded name (`" Inter"`) or a CSS generic keyword
- * (`system-ui`) passed every one of the six checks and painted GPUI's silent
+ * (`system-ui`) passed every check and painted GPUI's silent
  * system fallback. Plan 385 closed the comma stack; this suite closes the two
  * forms it left.
  *

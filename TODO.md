@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 228/294
+`[x]` `[████████░░]` 229/295
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1869,6 +1869,16 @@ system says the level names are an order and plans 369/390 made a consumer's
 `elevationLevels`, keeps the shipped empty `overlay` exempt, and the example,
 JSDoc, catalogue, design system, README and ledger state the rule. No colour,
 pair, floor, metric or shipped theme moves (plan 566)
+
+`[x]` Give the guarantee's two counts one owner each — five sentences still said
+"all six checks returned `[]`" after the seventh check landed, because the old
+guard was a blacklist of two numerals, and both documents restated the shipped
+enumeration's size ("all 24", "of the twenty-four") while `themeChecks` and
+`shippedThemes` own them; every such mention is now count-free, the one derived
+guarantee sentence stays held verbatim, four test headers drop their `six`, and
+three `docs.test.ts` cases hold both documents to the two indexes, including a
+case proving the patterns reject a planted stale phrase. No colour, pair, floor,
+metric, platform style, recipe or shipped theme moves (plan 567)
 
 ## Phase C — Tier 1–2 components
 

@@ -1912,7 +1912,7 @@ disabled control's text like any other, and the accent-tinted wash composites
 over the surface beneath it — on a light surface it darkens the ground toward
 the disabled grey, and on a dark surface it lifts the ground toward it. No pair
 measured the composition, so a selected unavailable label could fall under the
-floor while all six checks returned `[]`: the previous light value `#6E7787`
+floor while every check returned `[]`: the previous light value `#6E7787`
 measured **2.586:1** on Windows light's `selected` fill and 2.604–2.945:1 on the
 other default light sets, and the AAA sets **3.430:1** (light,
 `destructiveSoft`) and **4.357:1** (dark, `active`), against 3:1 and 4.5:1.
@@ -2328,7 +2328,7 @@ constants.
 
 #### One check
 
-Running one of the seven checks is not the guarantee. A copied theme whose only
+Running one of those checks is not the guarantee. A copied theme whose only
 defect is a zero `borderWidth.strong` — the focus ring's spread, and the only
 focus indicator the runtime can draw — a `shadow: "black"` tint, which makes
 every elevation level fully opaque, a translucent `shadow` tint whose byte
@@ -2353,7 +2353,7 @@ themeFailures(theme);
 // [ { kind: "opacity", … }, { kind: "typeface", … }, { kind: "metric", … } ]
 ```
 
-The order is diagnostic: the three format checks first — `color`, `opacity`,
+The order is diagnostic: the format checks first — `color`, `opacity`,
 then `typeface`, so a malformed role is named before the `NaN` ratios it causes,
 an alpha channel before the tint it repaints and a malformed family before the
 type scale painted with it — then `contrast`, then
@@ -2654,7 +2654,7 @@ its secondary grey and pressed wash. A status panel's caption is checked on the
 four soft status fills too (`softPanelTextPairs`), tightest at
 `mutedForeground` on `destructiveSoft` at **6.61:1** (Aero light), so no value
 moves. The control edge is held there too: four
-shipped sets had `border` equal to the fill it sits on (identity light `active`,
+sets had `border` equal to the fill it sits on (identity light `active`,
 identity dark `secondary`/`active`/`accent`, macOS dark `hover`/`secondary`/
 `accent`, and high-contrast dark's `active` at 2.53:1 under the AAA floor), so
 an outlined control's edge disappeared exactly while pressed; plan `080` moved
@@ -2833,7 +2833,7 @@ modes, both contrast levels) and macOS light the two roles were the **same
 value**, and Windows light, macOS dark and XP light sat under the 1.05:1 step
 floor — hovering one row looked like selecting another. `selectionStepPairs`
 publishes the `selected`/`accent` pair under the same `step` class the filled
-families and the wash ladder use, eight shipped sets move `selected` one designed
+families and the wash ladder use, eight sets move `selected` one designed
 step (plus the authored Contoso light style), and macOS light's
 `selectedForeground` moves with its deeper fill because no step that cleared the
 pair kept the old blue at 4.5:1. The measurement is in `selection-states.test.ts`, and the pair
@@ -2935,7 +2935,7 @@ inverse selection veil. Plan `514` gave the raised action a resting
 `disabledForeground` label on `softAction` and plan `504` routes content on an
 opaque fill through `selectionOnFill`, but no pair measured the disabled label
 through that veil: identity dark measured **2.799:1** and high-contrast dark
-**3.304:1** there, under the 3:1 / 4.5:1 `inactive` floor, while all six checks
+**3.304:1** there, under the 3:1 / 4.5:1 `inactive` floor, while every check
 returned `[]`. `selectionFillInactivePairs` publishes the one resting
 composition, identity dark `disabledForeground` moves `#A1A9B7` → `#B0B8C6`
 (3.317:1) and AAA dark `#B0B0B0` → `#D0D0D0` (4.645:1), and every shipped set
@@ -2945,7 +2945,7 @@ Plan `525` measures the row's own text through the selection wash:
 `popoverForeground` on `hover`/`active`/`selected` and a selected row's inherited
 `selectedForeground` on `hover`/`active`/`accent` were unmeasured. High-contrast
 light's `selectedForeground` measured **6.693:1** through the wash on `active`,
-under 7:1, while all six checks returned `[]`; the role moves one iris step
+under 7:1, while every check returned `[]`; the role moves one iris step
 (`#2E2370` → `#1C1547`), the six pairs join the list (20 → **26**), every shipped
 set passes (4.898:1 macOS light at the tightest), and `contrastPairs` stays
 **396**.
@@ -2974,7 +2974,7 @@ link at 7:1 at AAA — which plan `366` had already disproved for the four statu
 tones — but a link in a paragraph, list row or Alert is selected with the copy
 around it. `selectionLinkPairs` publishes the role on the nine surfaces and the
 four soft status fills (thirteen pairs); the audit found twelve of the
-twenty-four shipped sets below their floor, the AAA light link at **5.376:1** on
+shipped sets below their floor, the AAA light link at **5.376:1** on
 `destructiveSoft` under 7:1, macOS dark **3.708:1** on `selected`, Windows light
 3.995:1, XP light 4.378:1, Aero light 4.022:1, macOS light 4.106:1 and Linux
 dark 4.485:1 under 4.5:1. Seven values move one designed step inside their own
@@ -3091,7 +3091,7 @@ same `step` class, so an edited theme that sets them equal is reported instead o
 returning `[]`. Every shipped set already clears the floor — identity dark is
 tightest at **1.059:1** — so no colour moves. The audit also found two shipped
 compositions on the *wrong* role pair: a secondary control whose `hover` is its
-own resting `secondary` fill (the same value in 19 of the 24 shipped sets), and a
+own resting `secondary` fill (the same value in 19 of the shipped sets), and a
 selectable row that presses to the neutral `active` while it hovers to `accent`
 (1.004:1 in identity dark). Both use a designed family instead — `secondaryHover`
 and `accentActive` — and are recorded in `TODO.md` rather than blessed as pairs.
@@ -3325,7 +3325,7 @@ across this page, the design system, the README and the ledger — and
 `packages/tokens/src/figures.test.ts` derives each one from `shippedThemes` with
 the checker's own measurement and asserts both the figure and the set (and
 surface) the sentence names. The quoted tightest figures beside each contract
-list are derived by `docs.test.ts` over the same twenty-four shipped sets, so
+list are derived by `docs.test.ts` over the same shipped sets, so
 both suites read one enumeration and a palette edit and a sentence cannot drift
 apart. It found three: the Toast's tone margin rounds to 11.98:1 (the page said
 11.97), the disabled panel action measures 5.148:1 identity dark and 7.310:1 AAA
