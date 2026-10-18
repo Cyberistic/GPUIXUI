@@ -513,6 +513,13 @@ preview changes" does not survive the merge (owner: `docs-site`; plans 420 and
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)
+`[ ]` Cross-team: `docs-site` moves the toggle's URL state to the package codec —
+`themeChoiceFromParams`/`themeChoiceParams`/`themeChoiceKeys` — so a shared link
+carries the mode, contrast, recipe and density the toggle resolves, not only
+`platform`, and the clear-then-set pattern stops a stale axis; its local
+`platformNames`, `isPlatformName`, `platformFromParams` and
+`applyPlatformToSearch` are deleted. The docs-site platform parser reads one of
+five axes and retypes the union (owner: `docs-site`; plan 529)
 `[ ]` Cross-team: `docs-site` calls `themeFailures(theme)` on the Theming page,
 so the copy-and-own path it teaches holds an edited theme to the colour, contrast
 and metric checks in one assertion instead of two of the three, and `isHexColor`
