@@ -459,6 +459,7 @@ describe("ruleStyle", () => {
     );
     expect(style.height).toBe(testTheme.borderWidth.thin);
     expect(style.width).toBeUndefined();
+    expect(style.alignSelf).toBe("stretch");
     expect(style.marginLeft).toBe(testTheme.spacing.md);
     expect(style.marginRight).toBe(testTheme.spacing.md);
   });
@@ -468,6 +469,7 @@ describe("ruleStyle", () => {
     expect(style.width).toBe(testTheme.borderWidth.thin);
     expect(style.height).toBeUndefined();
     expect(style.flexShrink).toBe(0);
+    expect(style.alignSelf).toBe("stretch");
     expect(style.backgroundColor).toBe(testTheme.colors.border);
   });
 });

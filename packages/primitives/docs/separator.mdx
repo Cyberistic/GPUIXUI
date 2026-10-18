@@ -25,6 +25,18 @@ A labelled rule is still one call:
 <Separator orientation="horizontal" label="Advanced" />
 ```
 
+A vertical rule divides a row, and fills the row's height:
+
+```tsx
+import { Button, Separator, Stack } from "@gpuixui/primitives";
+
+<Stack direction="row" align="center" gap="sm">
+  <Button>Save</Button>
+  <Separator orientation="vertical" />
+  <Button>Cancel</Button>
+</Stack>;
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -44,6 +56,14 @@ labelled separator's `style` styles its root: `marginTop`/`gap`/padding move the
 whole thing. To recolour the rule itself, use a `Box` with a border — the rule
 keeps the theme's border role (plan `364`).
 
+A rule **fills its stack's cross axis**: a horizontal separator spans the width
+of a column, and a vertical one spans the height of a row, whatever the stack's
+`align` says. Give the row a height (a sibling with content, or a bounded parent)
+and the vertical rule matches it; `inset` is subtracted from the stretched
+length. A rule laid **along** its stack's axis has no cross extent — a horizontal
+rule inside a `row` paints no width, and a vertical rule inside a `column` paints
+no height — so place each rule across the axis it should divide.
+
 ## Keyboard
 
 Not focusable. A focusable divider is a resize handle, which is a docking
@@ -58,21 +78,27 @@ associated with a region.
 
 ## Theming
 
-`ruleStyle` reads `spacing[inset]`, `borderWidth.thin` and `colors.border`. No
+`ruleStyle` reads `spacing[inset]`, `borderWidth.thin` and `colors.border`, and
+sets `alignSelf: "stretch"` so the rule follows its stack's cross axis. No
 literal colour or thickness appears in the component.
 
 ## Limitations
 
 - No dashed or dotted style: the runtime paints solid borders.
 - No draggable splitter and no resize event.
-- A vertical separator does not stretch to its parent automatically; give it a
-  bounded parent or a `fullHeight` box around it.
+- A vertical rule inside a `column`, or a horizontal rule inside a `row`, has no
+  cross-axis extent to fill: give that rule an explicit size, or move it to a
+  stack that crosses it.
 
 ## Verification
 
 - `src/components/presentational.test.tsx` — horizontal/vertical thickness,
-  inset and the labelled composition.
+  inset, the labelled composition and the cross-axis stretch (plan `381`).
 - `runtime/layout.runtime.test.tsx` — one border step across the surface.
+- `runtime/separator.runtime.test.tsx` — the rule fills a column under
+  `start`/`center`/`end` and a row under `start`/`center`/`end`/`baseline`; the
+  labelled rules stay one border tall; `inset` subtracts from the stretched
+  length; a caller's `alignSelf`/`width` wins (plan `381`).
 - `runtime/theme.runtime.test.tsx` — the rule repaints with the active palette.
 
 ```sh

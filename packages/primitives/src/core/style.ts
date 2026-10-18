@@ -420,13 +420,22 @@ export interface RuleSpec {
   readonly inset?: SpaceStep;
 }
 
-/** A separator: one border, on the theme's border colour, never a literal. */
+/**
+ * A separator: one border, on the theme's border colour, never a literal.
+ *
+ * The rule fills its stack's **cross** axis (`alignSelf: "stretch"`): an auto
+ * cross size under a centred or end-aligned stack resolves to zero, so a
+ * vertical rule in a row with `align="center"` painted no height at all
+ * (measured, plan `381`). A definite cross size — the labelled composition's
+ * `height` — is not stretched, so that shape is unchanged.
+ */
 export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
   const inset = spec.inset === undefined ? 0 : theme.spacing[spec.inset];
   return spec.orientation === "horizontal"
     ? {
         height: theme.borderWidth.thin,
         flexShrink: 0,
+        alignSelf: "stretch",
         backgroundColor: theme.colors.border,
         marginLeft: inset,
         marginRight: inset,
@@ -434,6 +443,7 @@ export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
     : {
         width: theme.borderWidth.thin,
         flexShrink: 0,
+        alignSelf: "stretch",
         backgroundColor: theme.colors.border,
         marginTop: inset,
         marginBottom: inset,

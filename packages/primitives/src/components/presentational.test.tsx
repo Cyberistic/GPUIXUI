@@ -141,6 +141,24 @@ describe("layout containers", () => {
     ).toStrictEqual(Option.some(testTheme.borderWidth.thin));
   });
 
+  it("stretch a rule across the stack's cross axis", () => {
+    // The bug guarded (plan 381): the rule's cross axis was auto, so under a
+    // `start`/`center`/`end` stack it painted zero — a vertical divider in a
+    // centred toolbar was invisible. Both orientations now stretch.
+    expect(
+      stringIn(
+        renderSeparator({ orientation: "vertical" }, testTheme),
+        "alignSelf",
+      ),
+    ).toStrictEqual(Option.some("stretch"));
+    expect(
+      stringIn(
+        renderSeparator({ orientation: "horizontal" }, testTheme),
+        "alignSelf",
+      ),
+    ).toStrictEqual(Option.some("stretch"));
+  });
+
   it("put a labelled separator's caller style on the control, not its rules", () => {
     // The bug guarded (plan 364): `style` was merged into the shared rule object
     // and spread onto both halves, so a container property landed twice while

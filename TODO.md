@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 125/125
+`[x]` `[██████████]` 126/126
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1128,6 +1128,19 @@ retired once both branches are one
       now removes the row's automatic content floor (`minWidth: 0`), so the row
       shrinks, the labels wrap, and `CheckboxGroup`'s measured boxes are
       unchanged; 1 element + 1 runtime case, both directions proven (plan `380`).
+`[x]` `packages/primitives`: **a `Separator` collapsed to nothing whenever its
+      stack did not stretch** — a rule painted only its thick axis, so the cross
+      axis was auto and the parent's `align` decided whether it had any extent.
+      Measured: a vertical rule in a `row` with `align="start"/"center"/"end"`
+      painted `w 1, h 0`, and a horizontal rule in a `column` painted
+      `w 0, h 1`, while the default stretch row and `baseline` worked — which is
+      why the one existing case missed it, and the page claimed a vertical rule
+      "does not stretch" (the opposite of the measurement). `ruleStyle` now sets
+      `alignSelf: "stretch"`, so a rule fills its stack's cross axis whatever
+      `align` says; the labelled composition's definite height, `inset` and the
+      caller's style are unchanged, and a rule laid along its stack's axis stays
+      zero (documented). 1 element + 12 runtime cases, three mutations fail by
+      name (plan `381`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
