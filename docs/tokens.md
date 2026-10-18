@@ -2553,6 +2553,8 @@ divides (1.05:1, and 3:1 at high contrast), or if body text over
 the composited `selection` wash drops below its body floor on any surface a glyph
 is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
 `popover` and `input`, with the selected row at the secondary floor.
+`controlFillRoles` is the ordered list of the eight fills a bordered control
+paints.
 The audit found four: the inherited `successSoft` (`#0C452D`) measured 1.015:1
 on Windows dark, 1.023:1 on the identity and 1.047:1 on Linux dark, and identity
 dark's `destructiveSoft` (`#6B1A1D`) 1.040:1, under the 1.05:1 divider floor.

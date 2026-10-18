@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 219/284
+`[x]` `[████████░░]` 220/284
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1798,6 +1798,13 @@ an extra dimension of 0 or an extra border of -1 was finite-checked and
 `themeMetricFailures` returned `[]` while the contract promised every surface
 metric is a positive size; both rules now walk the theme's own group, with
 `strong` keeping its stricter positive rule (plan 554)
+`[x]` Hold the design system's border rationale to the contract — §7 named six
+of the eight fills a bordered control paints (it omitted `accentHover` and
+`accentActive`) and five of the thirteen surfaces the functional boundary is
+measured on, while printing the strong-over-thin rule twice; `controlFillRoles`
+is exported as the fills' owner, both bullets name every measured member, and
+`docs.test.ts` derives the lists from `contrastPairs` so a ninth fill or a
+fourteenth surface fails the page until it is named (plan 555)
 
 ## Phase C — Tier 1–2 components
 

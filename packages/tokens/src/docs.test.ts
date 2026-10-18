@@ -109,6 +109,7 @@ import {
   contrastPairClasses,
   contrastPairs,
   contrastRatio,
+  controlFillRoles,
   dialogSurfacePairs,
   elevationSurfaces,
   inactivePairs,
@@ -2744,6 +2745,67 @@ describe("docs/design-system.md", () => {
   it("states the radius scale", () => {
     const sentence = `Radii: ${radius.none}, ${radius.sm}, ${radius.md}, ${radius.lg}, ${radius.xl}, full.`;
     expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+});
+
+/**
+ * The bug these cases catch: §7's two border bullets are the page's surface
+ * lists, and both had drifted from the pair lists the checker enforces. The
+ * `border` bullet named six of the eight fills `controlFillPairs` measures —
+ * `accentHover` and `accentActive`, the toggle's pointer steps, were missing —
+ * and the `borderStrong` bullet named five of the thirteen surfaces by role:
+ * it wrote the canvas as "canvas", omitted a card, a popover and the `input`
+ * fill, and described the four soft fills generically. The plan-550 edit also
+ * printed the strong-over-thin rule twice. A reader trusting §7 would paint the
+ * shortcut.
+ */
+describe("docs/design-system.md border roles", () => {
+  const slice = (start: string, end: string): string => {
+    const from = designSystem.indexOf(start);
+    const to = designSystem.indexOf(end, from);
+    if (from === -1 || to === -1) {
+      throw new Error(`docs/design-system.md has no §7 slice ${start}`);
+    }
+    return designSystem.slice(from, to);
+  };
+
+  it("names every fill a bordered control paints", () => {
+    const bullet = slice(
+      "- `border` is decorative",
+      "- `borderStrong` is functional",
+    );
+    controlFillRoles.forEach((role) => {
+      expect(
+        contrastPairs,
+        `${role} is a measured control fill`,
+      ).toContainEqual(["border", role, "divider"]);
+      expect(bullet, role).toContain(`\`${role}\``);
+    });
+  });
+
+  it("names every surface the functional boundary is measured on", () => {
+    const bullet = slice(
+      "- `borderStrong` is functional",
+      "Elevation is a semantic level",
+    );
+    const surfaces = contrastPairs
+      .flatMap(([foreground, background, pairClass]) =>
+        foreground === "borderStrong" && pairClass === "boundary"
+          ? [background]
+          : [],
+      )
+      .filter((surface, index, all) => all.indexOf(surface) === index);
+
+    expect(surfaces.length).toBeGreaterThan(0);
+    surfaces.forEach((surface) => {
+      expect(bullet, surface).toContain(`\`${surface}\``);
+    });
+  });
+
+  it("states the strong-over-thin rule once", () => {
+    const rule =
+      "The numeric contract holds `borderWidth.strong` at least `thin`";
+    expect(designSystem.split(rule).length - 1).toBe(1);
   });
 });
 

@@ -258,19 +258,19 @@ Two border roles:
   but held to a 1.05:1 perceivability floor (3:1 at high contrast), so subtle
   never means invisible. A bordered control paints it on the fill behind it —
   `secondary` at rest, the `secondaryHover`/`secondaryActive` steps of a filled
-  neutral control, the generic `hover` and `active` washes, and `accent` for an
-  outline toggle that is on — so the floor covers those fills as well, and a
+  neutral control, the generic `hover` and `active` washes, and the `accent`,
+  `accentHover` and `accentActive` fills of an outline toggle that is on
+  (`controlFillRoles`) — so the floor covers those eight fills as well, and a
   pointer state never turns the fill into the divider's own value. A status
   panel that separates a footer or an action row with a line paints it on a soft
   status fill, so those four fills carry the same floor; `xSoftBorder` is the
   edge around the surface, not a divider inside it.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
-  against the canvas, the `muted` panel, the `hover`/`active`/`accent`/
-  `selected` washes a row paints and the four soft status fills a tone-tinted
-  Alert paints, so a checkbox or field is perceivable without relying on fill alone.
-  The numeric contract holds `borderWidth.strong` at least `thin`: the focus
-  ring may match the default border but never be thinner than a divider, or the
-  only focus indicator is less prominent than the decoration it surrounds.
+  against the `background` canvas, a `card`, a `popover`, the `input` fill a
+  field paints, the `muted` panel, the `hover`/`active`/`accent`/`selected`
+  washes a row paints and the `infoSoft`/`successSoft`/`warningSoft`/
+  `destructiveSoft` fills a tone-tinted Alert paints, so a checkbox or field is
+  perceivable without relying on fill alone.
   The numeric contract holds `borderWidth.strong` at least `thin`: the focus
   ring may match the default border but never be thinner than a divider, or the
   only focus indicator is less prominent than the decoration it surrounds.

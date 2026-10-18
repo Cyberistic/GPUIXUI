@@ -242,8 +242,11 @@ const fieldSecondaryPairs: readonly ContrastPair[] = [
  * outline control uses, and the accent family a pressed outline toggle takes —
  * its resting fill and the designed hover and press it steps through. `border`
  * is painted on all eight, so the divider floor applies to each.
+ *
+ * Exported as the ordered owner of the list, so the reference states the eight
+ * fills a bordered control paints instead of retyping a subset of them.
  */
-const controlFillRoles = [
+export const controlFillRoles = [
   "secondary",
   "secondaryHover",
   "secondaryActive",
