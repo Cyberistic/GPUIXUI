@@ -162,6 +162,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [363](./363-selection-card-foreground.md) | The card's own foreground through a text selection | F | 071, 081, 087, 362 | done |
 | [364](./364-motion-contract.md) | The motion group the numeric contract left half-governed | F | 019, 358, 360 | done |
 | [365](./365-overlay-scroll-height.md) | The overlay list must fit a row | F | 353, 360 | done |
+| [366](./366-status-selection.md) | The status label through a text selection | F | 083, 087, 354, 362 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1344,6 +1345,22 @@ shorter than one of its rows, clipping every option. Plan 360 had already held
 row, because a list item is a row. Every shipped set ships 320 against a row of
 28–36, so no token value moves; `overlay-height.test.ts` states the 20/32 edit,
 the one-row floor and the compact density that lowers the bound.
+
+366 closes the last text role the selection contract never painted, and the
+omission plan 087's summary had grouped with accent-toned links. `xText` is the
+documented role for a status label, icon or dot on the four washes a row paints
+(plans 083 and 314), and a selectable row's label is dragged over with the copy
+around it like any description — but no pair measured it through the composited
+`selection` wash. The probe over the 24 shipped sets found **162** pairs under a
+declared floor: XP light `successText` **3.671:1** on `active`, macOS light
+3.826:1, Aero light 3.721:1 on `selected`, identity light 4.049:1, and every
+high-contrast light tone 6.12–6.72:1 under 7:1, while `themeContrastFailures`
+returned `[]`. `selectionStatusPairs` (four tones × nine surfaces, 36 pairs)
+joins the checker, the six light status roles move one designed half-step between
+the ramp steps they used, and every shipped set clears (4.661:1 XP light
+`infoText` on `active`, 7.370:1 AAA light `warningText` on `active`). No dark
+value, `contrastPairs` count, platform style or recipe changes; `primaryText`
+remains the one documented omission, now scoped to links.
 
 ### Reference adoption (block `200–299`)
 
