@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 218/284
+`[x]` `[████████░░]` 219/284
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1792,6 +1792,12 @@ the executed example role for role, `snippets.test.ts` builds every documented
 colour map and holds it to `themeFailures` (with a case that rebuilds the
 pre-fix map and proves the guard can fail), and the brand rationale's groove
 figure is derived after plan 503 moved it (plan 553)
+`[x]` Hold every surface metric and border width to a sign — the positive
+dimension checks and the non-negative width were hand-named, so a theme carrying
+an extra dimension of 0 or an extra border of -1 was finite-checked and
+`themeMetricFailures` returned `[]` while the contract promised every surface
+metric is a positive size; both rules now walk the theme's own group, with
+`strong` keeping its stricter positive rule (plan 554)
 
 ## Phase C — Tier 1–2 components
 

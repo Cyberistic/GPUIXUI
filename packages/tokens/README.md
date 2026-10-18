@@ -656,7 +656,9 @@ icon or avatar size of zero, shrink
 `strong` below `thin` so the focus ring is thinner than a divider, scroll
 an overlay in less than one row, ship a non-finite
 spacing step, radius, type size or dimension the renderer casts to a 32-bit
-float, ship a non-finite motion timing or a cubic-bezier easing the runtime
+float, ship a zero or negative surface dimension or a negative border width —
+both walked from the theme's own group, so a member a copied style adds is held
+too, and a zero `thin` is a borderless design — ship a non-finite motion timing or a cubic-bezier easing the runtime
 cannot interpolate, leave the largest avatar a rounded square, shrink a higher
 elevation level's feather below the level under it, or hand
 `elevationShadow` an alpha the colour helper cannot parse. The ladders are non-decreasing rather than

@@ -248,6 +248,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [551](./551-undefined-platform-colour-palette.md) | An `undefined` platform colour inherits the palette it asked for | F | 301, 321, 323, 373, 545 | done |
 | [552](./552-scale-ladder-totality.md) | Every size ladder walks the theme's own scale | F | 358, 360, 519, 531, 547–550 | done |
 | [553](./553-documented-brand-and-builder-examples.md) | The documented brand is a theme the contract rejects | F | 098, 347, 355, 356, 526 | done |
+| [554](./554-surface-metric-sign.md) | Every surface metric is a size, and every border is a width | F | 358, 360, 530, 531, 552 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2716,6 +2717,22 @@ proves the guard can fail. `theme.test.ts` now derives the brand rationale's
 groove figure, which plan `503` had moved from 2.67:1 to 2.23:1 while the
 sentence stayed. No colour, pair, floor, metric, theme, platform style or recipe
 value moves; 136 files / 5675 tests pass.
+
+Plan `554` finishes the completeness unit plan `552` left half-done. `552` made
+every size *ladder* walk the theme's own scale object, but the *sign* rules still
+read hand-typed lists: eighteen `positive` calls over `dimensions` and exactly
+two border widths. `extendTheme` keeps a member it does not know, so
+`extendTheme(light, { dimensions: { ...dimensions, extraSurface: 0 } })` and
+`extendTheme(light, { borderWidth: { ...borderWidth, hairline: -1 } })` were
+finite-checked and accepted while `themeMetricFailures` returned `[]`, against
+the JSDoc's "every surface metric is positive" and the catalogue's "a negative
+stroke is not a width". Both rules now walk the theme's own group; `strong` is
+filtered out of the generic non-negative walk so its stricter positive rule
+keeps one value to one diagnostic, and a zero `thin` or extra width stays a
+borderless design. The new `dimension-sign-totality.test.ts` has three cases
+that fail before the change and three that guard it after; every shipped set
+still returns `[]`, and no colour, pair, floor, metric, theme, platform style or
+recipe value moves.
 
 ## How to use a plan
 

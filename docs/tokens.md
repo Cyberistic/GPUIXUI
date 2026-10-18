@@ -1963,8 +1963,11 @@ ring's spread, so it may equal the default border but never be thinner than a
 divider, and `iconSize`, `avatarSize` and a
 control's horizontal padding must also stay above zero, because a named size
 that paints a 0×0 icon or avatar is not a size and a control with no inset
-paints its label on its own border; a control's padding is a padding before it
-is a density number, so each `controlPaddingX` size must also be at least the
+paints its label on its own border. Every surface metric in `dimensions` is a
+positive size and every border width is non-negative — both read from the
+theme's own group, so a member a copied style adds is held too — while `strong`
+is the one width that must stay above zero, because it is the ring's spread. A
+control's padding is a padding before it is a density number, so each `controlPaddingX` size must also be at least the
 theme's own hairline, `spacing["2xs"]`, the smallest step the spacing scale —
 documented as shared by padding, margin and gap — defines, because a brand that
 widens its hairline must not keep controls tighter than it; the two inline icon

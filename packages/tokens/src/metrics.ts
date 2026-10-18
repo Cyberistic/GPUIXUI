@@ -425,8 +425,9 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  * - **borderWidth**: `strong` is the focus ring's spread, and the ring is the
  *   only focus indicator the runtime can draw, so it may not be zero and may
  *   not be thinner than `thin` — a ring below a decorative border has inverted
- *   the two roles and can round away; `thin` may be zero in a borderless
- *   theme, so it is only non-negative.
+ *   the two roles and can round away. Every other width, including one a theme
+ *   adds, is read from the theme's own group and may not be negative; `thin`
+ *   may be zero in a borderless theme, so it is only non-negative.
  * - **density**: sizes and padding are ladders, a control's horizontal padding
  *   stays positive and is no tighter than the theme's own hairline
  *   (`spacing["2xs"]`), because it is the inset between the label and the
@@ -434,8 +435,9 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   and one body line — a field paints body type — plus the default icon and a
  *   field adornment, each plus its two borders, and a row fits one body line and
  *   the default `md` control it holds.
- * - **dimensions**: every surface metric is positive, each documented range has
- *   a minimum below its default, a chip fits in the field's content box — its
+ * - **dimensions**: every surface metric — the shipped members and one a theme
+ *   adds, read from the theme's own group — is positive, each documented range
+ *   has a minimum below its default, a chip fits in the field's content box — its
  *   minimum width less the field's two borders and horizontal padding — the
  *   overlay scroll height fits one row, because a list viewport shorter than a
  *   row clips every option, the message viewport fits one row for the same
@@ -543,7 +545,12 @@ export function themeMetricFailures(
       weighable(`${role}.fontWeight`, typography[role].fontWeight),
     ),
     ...finiteGroup("borderWidth", borderWidth),
-    ...nonNegative("borderWidth", "thin", borderWidth.thin),
+    // A width is a stroke: zero is a deliberate borderless design, but a
+    // negative one paints nothing. `strong` keeps the stricter `positive` rule
+    // below, so it is filtered here to keep one value to one diagnostic.
+    ...scaleSteps(borderWidth)
+      .filter(([member]) => member !== "strong")
+      .flatMap(([member, value]) => nonNegative("borderWidth", member, value)),
     ...positive("borderWidth", "strong", borderWidth.strong),
     // `strong` is the emphasis border and the spread of the only focus
     // indicator the runtime paints, so it may equal the default border but
@@ -644,9 +651,13 @@ export function themeMetricFailures(
     ...finiteGroup("spacing", spacing),
     ...ladder("spacing", scaleSteps(spacing), "non-decreasing"),
     ...finiteGroup("dimensions", dimensions),
-    ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
-    ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),
-    ...positive("dimensions", "overlayMaxHeight", dimensions.overlayMaxHeight),
+    // Every surface metric is a pixel size a component paints inside a fixed
+    // box, so a theme that adds one is held to the same rule as the shipped
+    // members. `extendTheme` copies the group, so the walk sees the arrived
+    // member in the order the theme holds it.
+    ...scaleSteps(dimensions).flatMap(([member, value]) =>
+      positive("dimensions", member, value),
+    ),
     // The overlay scrolls a list of rows, so its maximum height must fit one
     // complete row; a viewport shorter than a row clips every option.
     ...atLeast(
@@ -654,46 +665,6 @@ export function themeMetricFailures(
       "overlayMaxHeight",
       dimensions.overlayMaxHeight,
       density.rowHeight,
-    ),
-    ...positive("dimensions", "fieldMinWidth", dimensions.fieldMinWidth),
-    ...positive(
-      "dimensions",
-      "fieldAdornmentSize",
-      dimensions.fieldAdornmentSize,
-    ),
-    ...positive("dimensions", "chipMinWidth", dimensions.chipMinWidth),
-    ...positive("dimensions", "toastWidth", dimensions.toastWidth),
-    ...positive(
-      "dimensions",
-      "previewCardMinWidth",
-      dimensions.previewCardMinWidth,
-    ),
-    ...positive(
-      "dimensions",
-      "previewCardMaxWidth",
-      dimensions.previewCardMaxWidth,
-    ),
-    ...positive("dimensions", "keycapSize", dimensions.keycapSize),
-    ...positive("dimensions", "drawerWidthSm", dimensions.drawerWidthSm),
-    ...positive("dimensions", "drawerWidthMd", dimensions.drawerWidthMd),
-    ...positive("dimensions", "drawerWidthLg", dimensions.drawerWidthLg),
-    ...positive("dimensions", "drawerHeightSm", dimensions.drawerHeightSm),
-    ...positive("dimensions", "drawerHeightMd", dimensions.drawerHeightMd),
-    ...positive("dimensions", "drawerHeightLg", dimensions.drawerHeightLg),
-    ...positive(
-      "dimensions",
-      "chatViewportMinHeight",
-      dimensions.chatViewportMinHeight,
-    ),
-    ...positive(
-      "dimensions",
-      "carouselIndicatorSize",
-      dimensions.carouselIndicatorSize,
-    ),
-    ...positive(
-      "dimensions",
-      "carouselIndicatorActiveWidth",
-      dimensions.carouselIndicatorActiveWidth,
     ),
     // A keycap paints the caption role inside a fixed surface: its two borders
     // are inside `keycapSize`, so a caption leading that grows past the content
