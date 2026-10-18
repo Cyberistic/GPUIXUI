@@ -1590,6 +1590,50 @@ it("opens a left-side Select list on the right when the left edge has no room", 
   expect(list.x).toBeGreaterThanOrEqual(triggerBox.x + triggerBox.width - 1);
 });
 
+it("uses the room on a left-side list's own side", async () => {
+  // The bug guarded (plan 379): the width cap was always the space to the right
+  // of the trigger's left edge, so a left-side list on a right-aligned trigger
+  // painted only the few pixels that remained on the right (measured: 228 px
+  // wide where 1036 px were free on the left).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          width: 1100,
+        }}
+      >
+        <Select
+          testId="sel"
+          label="Wide"
+          placeholder="Pick"
+          side="left"
+          options={[
+            {
+              value: "a",
+              label:
+                "A very long option label that has plenty of room on the left of a right-aligned trigger",
+            },
+          ]}
+        />
+      </Box>
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  const list = selectListBoundsOf(runtime);
+  expect(list.x + list.width).toBeLessThanOrEqual(triggerBox.x);
+  expect(list.width).toBeGreaterThan(300);
+});
+
 it("opens a right-side Select list on the left at the right edge", async () => {
   // The other direction: the list cannot fit to the right of a trigger that
   // ends at the window's right margin.

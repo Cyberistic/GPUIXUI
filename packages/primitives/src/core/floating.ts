@@ -155,6 +155,27 @@ export const availableOn = (
       ? request.viewportHeight - request.margin - request.triggerBottom
       : request.viewportHeight - request.margin - request.triggerTop;
 
+/**
+ * The pixels a layer can use on its own horizontal axis, on `side`.
+ *
+ * A layer above or below its trigger starts at the trigger's left edge
+ * (`align="start"`); a layer on the left ends at the trigger, and one on the
+ * right starts at its right edge. The side decision subtracts the same numbers,
+ * so the width cap and the chosen side agree (plan `379`).
+ */
+export const availableWidth = (
+  request: Pick<
+    HorizontalPlacementRequest,
+    "triggerLeft" | "triggerRight" | "viewportWidth" | "margin"
+  >,
+  side: LayerSide,
+): number =>
+  side === "left"
+    ? request.triggerLeft - request.margin
+    : side === "right"
+      ? request.viewportWidth - request.margin - request.triggerRight
+      : request.viewportWidth - request.margin - request.triggerLeft;
+
 /** The alignment values the runtime accepts, on either axis. */
 export type LayerAlign = "start" | "center" | "end";
 

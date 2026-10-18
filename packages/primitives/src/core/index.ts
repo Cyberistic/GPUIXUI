@@ -26,6 +26,7 @@ export type { ControlMode, ValueState } from "./state.js";
 
 export {
   availableOn,
+  availableWidth,
   decideHorizontalSide,
   decideVerticalSide,
   FLOATING_MARGIN,

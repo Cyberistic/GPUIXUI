@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 import {
   availableOn,
+  availableWidth,
   decideHorizontalSide,
   decideVerticalSide,
   type HorizontalPlacementRequest,
@@ -177,6 +178,35 @@ describe("decideHorizontalSide", () => {
         across({ triggerLeft: 12, triggerRight: 44, preferred: "left" }),
       ),
     ).toBe("right");
+  });
+});
+
+describe("availableWidth", () => {
+  const across = (
+    overrides: Partial<HorizontalPlacementRequest> = {},
+  ): HorizontalPlacementRequest => ({
+    triggerLeft: 400,
+    triggerRight: 432,
+    layerWidth: 68,
+    viewportWidth: 800,
+    margin: 8,
+    ...overrides,
+  });
+
+  it("measures the room on the side the layer opens", () => {
+    // The bug guarded (plan 379): a right-aligned trigger's left-side list was
+    // capped by the room on its *right*, so a side with 1036 px painted a
+    // 228 px list. Above/below still measures from the trigger's left edge,
+    // which is where the runtime anchors them.
+    const rightAligned = across({
+      triggerLeft: 1044,
+      triggerRight: 1112,
+      viewportWidth: 1280,
+    });
+    expect(availableWidth(rightAligned, "left")).toBe(1036);
+    expect(availableWidth(rightAligned, "right")).toBe(160);
+    expect(availableWidth(rightAligned, "top")).toBe(228);
+    expect(availableWidth(rightAligned, "bottom")).toBe(228);
   });
 });
 

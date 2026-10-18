@@ -16,7 +16,10 @@
  *
  * A list beside its trigger (`side="left"`/`"right"`) is capped to the window's
  * height and scrolls, because that axis is bounded by the window rather than by
- * the trigger (measured, plan 098). That side is a preference too: the trigger's
+ * the trigger (measured, plan 098). Its width is the room on the side it
+ * actually opens, so a left-side list on a right-aligned trigger uses the left
+ * half instead of the few pixels that remain on the right (plan `379`). That
+ * side is a preference too: the trigger's
  * box and the list's measured width move it to the other side when it cannot fit
  * (measured, plan 335).
  *
@@ -77,6 +80,7 @@ import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   availableOn,
+  availableWidth,
   decideHorizontalSide,
   decideVerticalSide,
   FLOATING_MARGIN,
@@ -243,9 +247,11 @@ export const selectTriggerPartStyle =
  * to reach its far end (measured: a 30-option list painted 908 px from y 8 and
  * left the last option at y 888 in an 800 px window — plan 068).
  *
- * `maxWidth` is the window's usable width: the list hugs its widest option, and
- * a 200-character label painted a 1482 px list in a 1280 px window (measured,
- * plan `368`). Rows and headings then truncate inside it.
+ * `maxWidth` is the room on the side the list opens on: the list hugs its
+ * widest option, and a 200-character label painted a 1482 px list in a 1280 px
+ * window (measured, plan `368`). A left-side list is capped by the left half,
+ * not by the space on its right (plan `379`). Rows and headings then truncate
+ * inside it.
  */
 export const selectContentStyle = (
   theme: PrimitiveTheme,
@@ -749,12 +755,21 @@ export const Select = (props: SelectProps): ReactElement => {
       side: Option.getOrUndefined(side),
       collisionPadding: FLOATING_MARGIN,
       maxHeight,
-      maxWidth: Math.max(
-        0,
-        viewport.width -
-          (triggerBox === undefined ? FLOATING_MARGIN : triggerBox.left) -
-          FLOATING_MARGIN,
-      ),
+      maxWidth:
+        triggerBox === undefined
+          ? viewport.width - 2 * FLOATING_MARGIN
+          : Math.max(
+              0,
+              availableWidth(
+                {
+                  triggerLeft: triggerBox.left,
+                  triggerRight: triggerBox.right,
+                  viewportWidth: viewport.width,
+                  margin: FLOATING_MARGIN,
+                },
+                Option.getOrElse(side, () => "bottom"),
+              ),
+            ),
     },
   );
 };
