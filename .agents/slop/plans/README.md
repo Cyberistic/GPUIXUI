@@ -254,6 +254,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [557](./557-native-field-caret-mark.md) | The native field's caret is ink, not a fill | F | 082, 332, 337, 511, 527, 546 | done |
 | [558](./558-opaque-alpha-suffix.md) | The opaque `FF` spelling the format checks accept and the maths cannot read | F | 371, 540, 557 | done |
 | [559](./559-platform-easing.md) | A copied platform style owns its easings | B/F | 019, 321, 364, 389 | done |
+| [563](./563-caret-mark-list.md) | The caret mark outside the mark list | F | 332, 341, 351, 399, 557 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2808,6 +2809,18 @@ curve contract on a copied style, the shipped styles' unchanged easings and the
 example end to end. No shipped value moves; only the capability and its
 documentation.
 
+Plan `563` closes the last mark outside the mark list. Plan `557` published the
+native field's caret as `caretPairs` — `primaryText` on the `input` fill at the
+`mark` floor — but appended it to `contrastPairs` directly instead of to
+`markPairs`, the list documented as "every mark on every surface it can sit on".
+A consumer building a mark report from the public list, and the design system's
+graphic-marks floor row (which `docs.test.ts` derives from that list), therefore
+omitted the only mark the runtime paints inside a field; the checker enforced the
+pair all along, so nothing could erase a caret, but the list and the page were
+incomplete and the guard could not see it. `caretPairs` now sits inside
+`markPairs`, `contrastPairs` keeps one copy, the graphic-marks row names it, and
+`caret-mark-list.test.ts` fails on the pre-fix tree. No colour, pair count or
+floor moves: `contrastPairs` stays 405.
 
 ## How to use a plan
 
