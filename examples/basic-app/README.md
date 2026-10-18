@@ -55,3 +55,6 @@ header. There is no app-local theme.
   icon, plan 073).
 - **States** — a disabled save until the form is valid, a loading save, and an
   invalid field with an inline message.
+- **Reset** — restores every field and the palette, not just the palette: the
+  opening values are one `INITIAL` record used by both `useState` and `reset()`,
+  and the native suite proves the consent comes back unchecked (plan 327).

@@ -282,7 +282,7 @@ Tier 1 table are a cross-team `TODO.md` row.
 
 **Composed app (327):** `examples/basic-app` — the settings workflow that uses
 the whole Tier 1 set — now mounts in the real `TestRenderer`
-(`nub run --filter @gpuixui/basic-app test:runtime`, 5 tests): the skeleton hands
+(`nub run --filter @gpuixui/basic-app test:runtime`, 6 tests): the skeleton hands
 over to the form, the consent row paints its own label and is clickable, Save is
 refused until it is accepted and stays refused for an invalid email, the save
 lifecycle runs, and the Select paints its option's label. Its consent control is

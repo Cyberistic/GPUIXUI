@@ -174,6 +174,26 @@ it("keeps Save refused while the email is invalid", async () => {
   expect(text(runtime)).not.toContain("Saving your changes…");
 });
 
+it("Reset restores the form, not only the palette", async () => {
+  const runtime = await openApp();
+
+  runtime.wheel(SETTINGS, 0, -400);
+  runtime.flush();
+  click(runtime, "I accept the terms");
+  runtime.flush();
+  expect(announced(runtime, "I accept the terms")).toBe("checked");
+
+  // The bug guarded: Reset used to call `setMode(initialMode)` only, so the
+  // form stayed accepted while the button claimed to reset it.
+  click(runtime, "Reset");
+  runtime.flush();
+  expect(announced(runtime, "I accept the terms")).toBe("unchecked");
+
+  click(runtime, "Save changes");
+  runtime.flush();
+  expect(text(runtime)).not.toContain("Saving your changes…");
+});
+
 it("paints the Select's option label, not its value", async () => {
   const runtime = await openApp();
   expect(text(runtime)).toContain("Team — up to 20 members");

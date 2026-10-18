@@ -95,16 +95,28 @@ const Toggle = ({
   </Stack>
 );
 
+/** The values the form opens with; Reset restores exactly these. */
+const INITIAL = {
+  workspace: "Acme Design",
+  email: "",
+  bio: "",
+  plan: "team",
+  density: "comfortable",
+  digest: true,
+  telemetry: false,
+  terms: false,
+} as const;
+
 export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
   const [mode, setMode] = useState<Mode>(initialMode);
-  const [workspace, setWorkspace] = useState("Acme Design");
-  const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
-  const [plan, setPlan] = useState("team");
-  const [density, setDensity] = useState("comfortable");
-  const [digest, setDigest] = useState(true);
-  const [telemetry, setTelemetry] = useState(false);
-  const [terms, setTerms] = useState(false);
+  const [workspace, setWorkspace] = useState<string>(INITIAL.workspace);
+  const [email, setEmail] = useState<string>(INITIAL.email);
+  const [bio, setBio] = useState<string>(INITIAL.bio);
+  const [plan, setPlan] = useState<string>(INITIAL.plan);
+  const [density, setDensity] = useState<string>(INITIAL.density);
+  const [digest, setDigest] = useState<boolean>(INITIAL.digest);
+  const [telemetry, setTelemetry] = useState<boolean>(INITIAL.telemetry);
+  const [terms, setTerms] = useState<boolean>(INITIAL.terms);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -122,6 +134,21 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
   const save = (): void => {
     setSaving(true);
     setTimeout(() => setSaving(false), 1400);
+  };
+
+  // Reset restores the form, not just the palette: a button labelled "Reset"
+  // that only changed the theme would be the same class of lie as an invisible
+  // consent label.
+  const reset = (): void => {
+    setMode(initialMode);
+    setWorkspace(INITIAL.workspace);
+    setEmail(INITIAL.email);
+    setBio(INITIAL.bio);
+    setPlan(INITIAL.plan);
+    setDensity(INITIAL.density);
+    setDigest(INITIAL.digest);
+    setTelemetry(INITIAL.telemetry);
+    setTerms(INITIAL.terms);
   };
 
   return (
@@ -323,7 +350,7 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                 : "Changes apply to every member."}
             </Text>
             <Spacer />
-            <Button variant="outline" onActivate={() => setMode(initialMode)}>
+            <Button variant="outline" onActivate={reset}>
               Reset
             </Button>
             <Button

@@ -354,7 +354,7 @@ Expected: the app suite green (5 tests, exit 0); primitives 518 / 311 unchanged;
 
 ### 7.1 The app suite
 
-`nub run --filter @gpuixui/basic-app test:runtime` → **5/5 green, exit 0**
+`nub run --filter @gpuixui/basic-app test:runtime` → **6/6 green, exit 0**
 (one file; ~13 s wall clock, dominated by the app's two demo timers).
 
 What the run established, beyond the assertions:
@@ -373,6 +373,10 @@ What the run established, beyond the assertions:
 - A `minHeight: 0` on `scrollStyle` was tried as a possible fix and **reverted**:
   measured with and without it, the region scrolled identically (`offset
   [0, -105]` after the same wheel), so it was an unmeasured change.
+- **Reset only reset the theme.** The footer button labelled "Reset" called
+  `setMode(initialMode)` alone, so every field — including the consent the Save
+  gate depends on — survived. The form's opening values are now one `INITIAL`
+  record used by both `useState` and `reset()`, and the suite proves it.
 - **`autoFocus` does not survive a later mount.** After load,
   `runtime.focused()` was empty: the email field is added when the skeleton is
   replaced, and the runtime grants `autoFocus` only on the initial mount (plan
@@ -388,11 +392,12 @@ and the file restored:
 | consent back to `Checkbox` + `Text` caption (the shipped bug) | `paints the consent copy…` fails: `expected [...] to include 'I accept the terms'` — the label existed only as `aria-label` |
 | `canSave = true` | `reaches the consent row…` fails on its first refusal: `Saving your changes…` appears before consent |
 | `canSave = workspace !== "" && terms` (validation dropped) | `keeps Save refused while the email is invalid` fails on the same assertion |
+| Reset reverted to `setMode(initialMode)` only | `Reset restores the form, not only the palette` fails: consent still announces `checked` after Reset |
 
 ### 7.3 Counts
 
 - `packages/primitives` offline: **518 passed** (unchanged — the adapter move).
 - `packages/primitives` runtime: **311 passed** after the move (21 files).
-- `examples/basic-app` runtime: **5 passed** (1 file).
+- `examples/basic-app` runtime: **6 passed** (1 file).
 - `check-types` green for both packages; `nub run check`, `nub run lint`,
   `nub run test` run at the end of the change (§8 of `AGENTS.md`).

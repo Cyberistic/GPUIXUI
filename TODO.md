@@ -568,8 +568,9 @@ retired once both branches are one
       Tier 1 workflow has never been mounted, and its consent checkbox's
       accessible name is invisible (no painted label). It is now one visible,
       clickable `CheckboxGroup` row, the real `App` is mounted in the native
-      `TestRenderer` (5 workflow tests: mount, skeleton→form, consent gate and
-      reachability, save lifecycle, validation, label paint), `autoFocus` was
+      `TestRenderer` (6 workflow tests: mount, skeleton→form, consent gate and
+      reachability, save lifecycle, validation, label paint, and Reset
+      restoring the form), `autoFocus` was
       measured not to survive a later mount and removed, and the `TestRenderer`
       adapter moved to `@gpuixui/primitives/testing` so both suites share one
       (plan `327`)
