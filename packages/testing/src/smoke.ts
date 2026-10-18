@@ -45,6 +45,7 @@ export const CAPABILITIES = [
   "content",
   "drag",
   "reorder",
+  "tree-reorder",
   "selection",
   "menu",
   "components",

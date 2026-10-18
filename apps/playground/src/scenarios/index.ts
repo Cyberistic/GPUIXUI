@@ -20,6 +20,7 @@ import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
 import { dragAutoscrollScenario } from "./drag-autoscroll.js";
 import { listReorderScenario } from "./reorder.js";
+import { treeReorderScenario } from "./tree-reorder.js";
 import { contextMenuScenario } from "./context-menu.js";
 import { nestedLayerScenario } from "./layers.js";
 import { virtualizedTreeScenario } from "./virtual-tree.js";
@@ -138,6 +139,7 @@ export const PROBE_CAPABILITIES = [
   "motion",
   "drag",
   "reorder",
+  "tree-reorder",
   "menu",
   "search",
   "terminal",
@@ -227,6 +229,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   dragTargetsScenario,
   dragAutoscrollScenario,
   listReorderScenario,
+  treeReorderScenario,
   contextMenuScenario,
   nestedLayerScenario,
   virtualizedTreeScenario,

@@ -58,6 +58,7 @@ import { notificationCentreScenario } from "../scenarios/notification-centre.js"
 import { wizardScenario } from "../scenarios/wizard.js";
 import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
 import { listReorderScenario } from "../scenarios/reorder.js";
+import { treeReorderScenario } from "../scenarios/tree-reorder.js";
 import { fieldOf } from "../scenarios/probes.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
@@ -5125,6 +5126,129 @@ const reorder: LiveScenario = {
     }),
 };
 
+/** A real-window hierarchical reorder: into, cycles and keyboard nesting. */
+const treeReorder: LiveScenario = {
+  id: "live-tree-reorder",
+  title: "Live hierarchical reorder: into a folder, a cycle and the keyboard",
+  capability: "tree-reorder",
+  view: treeReorderScenario.view,
+  ready: "tree-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const state = (key: string) =>
+        Effect.gen(function* () {
+          const text = yield* textOf(ctx, "tree-state");
+          return Option.getOrElse(fieldOf(text, key), () => "none");
+        });
+
+      yield* waitForText(ctx, "tree-state", "visible=4");
+      yield* ctx.expectContains(
+        "the live tree starts collapsed",
+        yield* textOf(ctx, "tree-order"),
+        "dir-0,dir-1,dir-2,dir-3",
+      );
+
+      // 1. Open a folder.
+      yield* ctx.host.click("tree-toggle-dir-1");
+      yield* settle;
+      yield* waitForText(ctx, "tree-order", "dir-1/sub");
+      yield* ctx.expectEqual(
+        "the live folder opens",
+        yield* state("visible"),
+        "7",
+      );
+
+      // 2. A paced drag into a collapsed folder opens it and nests the row.
+      const handle = yield* boxOf(ctx, "tree-handle-dir-3");
+      const root = yield* boxOf(ctx, "tree-node-dir-0");
+      yield* ctx.host.drag(
+        "tree-handle-dir-3",
+        root.x + 20 - (handle.x + handle.width / 2),
+        root.y + 16 - (handle.y + handle.height / 2),
+        6,
+      );
+      yield* settle;
+      yield* waitForText(ctx, "tree-last", "parent=dir-0");
+      yield* ctx.expectEqual(
+        "the live into drop reports depth and parent",
+        yield* textOf(ctx, "tree-last"),
+        "id=dir-3 at=1 depth=1 parent=dir-0",
+      );
+      const moved = yield* boxOf(ctx, "tree-node-dir-3");
+      const movedLabel = yield* boxOf(ctx, "tree-label-dir-3");
+      const rootLabel = yield* boxOf(ctx, "tree-label-dir-0");
+      yield* ctx.expectNear(
+        "the live moved row paints one row below its parent",
+        moved.y,
+        root.y + 32,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the live moved row indents one step",
+        movedLabel.x,
+        rootLabel.x + 16,
+        1,
+      );
+
+      // 3. A drag into the source's own descendant is refused. The drag dwells
+      // long enough over the target that the hover expansion opens it too, so
+      // the invariant asserted is the moved row, not the visible row list.
+      const before = yield* textOf(ctx, "tree-last");
+      const descendant = yield* boxOf(ctx, "tree-node-dir-3");
+      const sourceHandle = yield* boxOf(ctx, "tree-handle-dir-0");
+      yield* ctx.host.drag(
+        "tree-handle-dir-0",
+        descendant.x + 36 - (sourceHandle.x + sourceHandle.width / 2),
+        descendant.y + 16 - (sourceHandle.y + sourceHandle.height / 2),
+        6,
+      );
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live cycle is refused",
+        yield* state("refused"),
+        "descendant",
+      );
+      yield* ctx.expectEqual(
+        "the live refused drop changes no order",
+        yield* textOf(ctx, "tree-last"),
+        before,
+      );
+
+      // 4. Keyboard: lift, choose the gap, indent, drop.
+      yield* ctx.host.click("tree-reset");
+      yield* settle;
+      yield* waitForText(ctx, "tree-state", "visible=4");
+      yield* ctx.host.click("tree-toggle-dir-1");
+      yield* settle;
+      yield* waitForText(ctx, "tree-order", "dir-1/sub");
+      yield* ctx.host.click("tree-handle-dir-2");
+      yield* settle;
+      yield* waitForFocus(ctx, "tree-handle-dir-2");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tree-last", "parent=dir-1/sub");
+      yield* ctx.expectEqual(
+        "the live keyboard nests the row",
+        yield* textOf(ctx, "tree-last"),
+        "id=dir-2 at=5 depth=2 parent=dir-1/sub",
+      );
+      yield* waitForFocus(ctx, "tree-handle-dir-2");
+      yield* ctx.expectEqual(
+        "the live keyboard drop keeps native focus",
+        yield* focusedOf(ctx),
+        "tree-handle-dir-2",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${treeReorder.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -5169,4 +5293,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   wizard,
   gridCellEditing,
   reorder,
+  treeReorder,
 ];
