@@ -215,6 +215,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [518](./518-shipped-weight-claims.md) | The shipped weight set, in one index and two last claims | F | 011, 367, 370, 387, 391, 396 | done |
 | [519](./519-motion-scale-indexes.md) | The motion scale's ordered indexes | F | 019, 064, 096, 305, 364, 372, 387, 518 | done |
 | [520](./520-disabled-panel-action-selection.md) | The disabled panel action through the inverse selection veil | F | 306, 344, 394, 397, 399, 504, 510, 512, 513, 514 | done |
+| [521](./521-inline-icon-line-fit.md) | The inline icon must fit its line box | F | 353, 358, 367, 372, 384, 386 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2250,6 +2251,21 @@ press fills stay out), the two `disabledForeground` values move one designed
 step (`#A1A9B7` → `#B0B8C6` and `#B0B0B0` → `#D0D0D0`, 3.317:1 and 4.645:1),
 and every shipped set passes; the other five checks stay blind to the edit, so
 the contrast pair is the only guard. `contrastPairs` stays **396**.
+
+Plan `521` closes the last alignment rule the design system publishes without a
+check. §6 says inline icons take `xs` "so they do not raise the line box", and
+`scale.ts` names the partners — `xs` inline with caption text, `sm` with label
+text — but `themeMetricFailures` only held the icon ladder positive and ordered,
+plus `md` inside the smallest control. A probe returned `[]` from all six checks
+for `iconSize.xs: 17` against the shipped 16px caption leading (the ladder still
+ascended, `md` still fitted), and for a theme whose `caption.lineHeight` was 11
+with the shipped icon; a 19px `sm` against the 18px label line did the same. Two
+`at-most` rules now bound the two inline sizes by the theme's **own** leading, so
+a brand that raises its type gets the allowance and one that raises only the
+glyph is reported; equality stays legal, because the rule is "does not raise the
+line box". Every shipped identity theme, platform variant and recipe passes
+(12 ≤ 16, 14 ≤ 18), so no colour, pair, floor or metric moves and `contrastPairs`
+stays **396**.
 
 ## How to use a plan
 
