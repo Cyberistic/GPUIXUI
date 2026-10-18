@@ -12,6 +12,11 @@
  * Plan 385 adds the fourth class: a family name the runtime cannot resolve as
  * written, which no older check could see.
  *
+ * Plan 392 adds the fifth: a text tier that is not a perceivable step below the
+ * tier above it. `brokenTheme` lowers the secondary text role to the canvas
+ * colour, which is both a contrast defect and an inverted hierarchy, so the
+ * composition now covers five classes without a new example theme.
+ *
  * Plan 387 moves the shipped list to `shippedThemes`: this suite was one of the
  * hand-built enumerations that called itself "every shipped set" while covering
  * the recipes at the default contrast only (20 of the 24 sets).
@@ -31,6 +36,7 @@ import {
   themeFailures,
   themeMetricFailures,
   themeModes,
+  themeTextTierFailures,
   themeTypefaceFailures,
   type ShippedTheme,
 } from "./index.js";
@@ -67,27 +73,31 @@ describe("one total theme check", () => {
     });
   });
 
-  it("returns exactly the four checks' failures, tagged and grouped", () => {
+  it("returns exactly the five checks' failures, tagged and grouped", () => {
     expect(brokenFailures.length).toBe(
       themeColorFailures(brokenTheme).length +
         themeTypefaceFailures(brokenTheme).length +
         themeContrastFailures(brokenTheme).length +
+        themeTextTierFailures(brokenTheme).length +
         themeMetricFailures(brokenTheme).length,
     );
 
     expect(new Set(kinds(brokenFailures))).toEqual(
-      new Set(["color", "typeface", "contrast", "metric"]),
+      new Set(["color", "typeface", "contrast", "hierarchy", "metric"]),
     );
 
     const firstTypeface = kinds(brokenFailures).indexOf("typeface");
     const lastColor = kinds(brokenFailures).lastIndexOf("color");
     const firstContrast = kinds(brokenFailures).indexOf("contrast");
     const lastTypeface = kinds(brokenFailures).lastIndexOf("typeface");
-    const firstMetric = kinds(brokenFailures).indexOf("metric");
+    const firstHierarchy = kinds(brokenFailures).indexOf("hierarchy");
     const lastContrast = kinds(brokenFailures).lastIndexOf("contrast");
+    const firstMetric = kinds(brokenFailures).indexOf("metric");
+    const lastHierarchy = kinds(brokenFailures).lastIndexOf("hierarchy");
     expect(lastColor).toBeLessThan(firstTypeface);
     expect(lastTypeface).toBeLessThan(firstContrast);
-    expect(lastContrast).toBeLessThan(firstMetric);
+    expect(lastContrast).toBeLessThan(firstHierarchy);
+    expect(lastHierarchy).toBeLessThan(firstMetric);
   });
 
   it("names each failure's payload", () => {
@@ -174,7 +184,7 @@ describe("one total theme check", () => {
   it("runs the documented examples", () => {
     expect(brandFailures).toEqual([]);
     expect(new Set(kinds(brokenFailures))).toEqual(
-      new Set(["color", "typeface", "contrast", "metric"]),
+      new Set(["color", "typeface", "contrast", "hierarchy", "metric"]),
     );
     expect(brandTheme.name).toBe("Acme");
   });

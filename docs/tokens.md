@@ -120,12 +120,13 @@ missing here is not public.
 | `TextRole` | A key of `textRoles`, excluding the family fields. |
 | `TextStyle` | Font size, line height and weight for one role. |
 | `TextStyleProperties` | A resolved role for `StyleDesc`, family included. |
+| `TextTierFailure` | A text tier that is not one step below the tier above it, with both ratios and the step. |
 | `Theme` | A complete resolved theme. |
 | `ThemeChoice` | A persisted theme choice: five unknown axes for `resolveThemeChoice`. |
 | `ThemeColors` | The 66 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
-| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast` or `metric`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast`, `hierarchy` or `metric`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
 | `ThemeProviderProps` | Props for `ThemeProvider`. |
@@ -1368,9 +1369,9 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones. The guarantee is four checks — colour
-format, typeface form, contrast and numeric metrics — and
-[`themeFailures`](#one-check) runs all four in one call; the sections below
+the same floors as the shipped ones. The guarantee is five checks — colour
+format, typeface form, contrast, text hierarchy and numeric metrics — and
+[`themeFailures`](#one-check) runs all five in one call; the sections below
 explain each one it composes.
 
 ```ts
@@ -1651,16 +1652,52 @@ moves; `platforms.test.ts` already holds the shipped platform table to the same
 single-family rule. The executed example is
 [`src/typeface.example.ts`](../packages/tokens/src/typeface.example.ts).
 
+#### Text hierarchy
+
+The colour check enforces minimums, so it cannot see an inverted hierarchy. The
+design system documents three tiers — body copy (`foreground`), secondary text
+(`mutedForeground`), and the two roles below it, an unavailable label
+(`disabledForeground`) and a field's hint (`placeholder`) — and
+`themeTextTierFailures(theme, contrast = theme.contrast)` holds each tier to one
+`contrastFloors[level].step` (1.05:1) below the tier above it, measured **on the
+same surface**, where both roles already have a documented pair. `textTiers` is
+the ordered list — `mutedForeground` below `foreground`, `disabledForeground`
+below `mutedForeground`, and `placeholder` below `mutedForeground` — and a
+`TextTierFailure` carries the two ratios and the step:
+
+```ts
+import { extendTheme, getTheme, themeTextTierFailures } from "@gpuixui/tokens";
+
+const identity = getTheme("light");
+const flattened = extendTheme(identity, {
+  colors: { disabledForeground: identity.colors.mutedForeground },
+});
+
+themeTextTierFailures(flattened); // a failure per surface the tiers share
+```
+
+The surfaces are derived from `contrastPairs`, not retyped: 12 shared surfaces
+for secondary text below body copy, 12 for the inactive label below secondary
+text (every surface `inactivePairs` measures except the `disabled` fill, which
+carries no secondary text), and the five surfaces a hint and a caption share.
+Every shipped set clears the step; the tightest are **1.274:1**
+(`mutedForeground` vs `foreground`, high-contrast light on `warningSoft`),
+**1.349:1** (`disabledForeground` vs `mutedForeground`, XP light on `card`) and
+**1.440:1** (`placeholder` vs `mutedForeground`, Windows dark on `input`). No
+shipped value moves; the check exists for the theme a consumer edits. A theme
+that sets `disabledForeground` to `foreground` still passes every floor, and is
+reported only here.
+
 #### One check
 
-Running one of the four checks is not the guarantee. A copied theme whose only
+Running one of the five checks is not the guarantee. A copied theme whose only
 defect is a zero `borderWidth.strong` — the focus ring's spread, and the only
 focus indicator the runtime can draw — a `shadow: "black"` tint, which makes
-every elevation level fully opaque, or a `sans: "Inter, system-ui, sans-serif"`
-stack, which silently paints the system face, returns `[]` from
-`themeContrastFailures` while being unusable. `themeFailures(theme, contrast =
-theme.contrast)` composes all four and tags each entry with the check that found
-it:
+every elevation level fully opaque, a `sans: "Inter, system-ui, sans-serif"`
+stack, which silently paints the system face, or a `disabledForeground` raised
+to body strength returns `[]` from `themeContrastFailures` while being unusable.
+`themeFailures(theme, contrast = theme.contrast)` composes all five and tags each
+entry with the check that found it:
 
 ```ts
 import { extendTheme, getTheme, themeFailures } from "@gpuixui/tokens";
@@ -1677,13 +1714,14 @@ themeFailures(theme);
 
 The order is diagnostic: the two format checks first — `color`, then `typeface`,
 so a malformed role is named before the `NaN` ratios it causes and a malformed
-family before the type scale painted with it — then `contrast`, then `metric`. A
-`ThemeFailure` is the underlying `ColorFailure`, `TypefaceFailure`,
-`ContrastFailure` or `MetricFailure` — the same payload the individual check
-returns — plus its `kind`. The `contrast` argument
-defaults to the level the theme declares and reaches the contrast half unchanged,
-so `themeFailures(theme, "high")` asks a stricter question of a theme that does
-not claim AAA floors. A consumer's test is one assertion:
+family before the type scale painted with it — then `contrast`, then
+`hierarchy`, then `metric`. A `ThemeFailure` is the underlying `ColorFailure`,
+`TypefaceFailure`, `ContrastFailure`, `TextTierFailure` or `MetricFailure` — the
+same payload the individual check returns — plus its `kind`. The `contrast`
+argument defaults to the level the theme declares and reaches the contrast and
+hierarchy halves unchanged, so `themeFailures(theme, "high")` asks a stricter
+question of a theme that does not claim AAA floors. A consumer's test is one
+assertion:
 
 ```ts
 import { themeFailures } from "@gpuixui/tokens";

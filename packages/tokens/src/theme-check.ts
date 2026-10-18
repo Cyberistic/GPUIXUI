@@ -1,8 +1,10 @@
 import {
   themeColorFailures,
   themeContrastFailures,
+  themeTextTierFailures,
   type ColorFailure,
   type ContrastFailure,
+  type TextTierFailure,
 } from "./contrast.js";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
 import type { Theme, ThemeContrast } from "./theme.js";
@@ -12,24 +14,28 @@ import { themeTypefaceFailures, type TypefaceFailure } from "./typeface.js";
  * One defect in an edited theme, tagged with the check that found it. `color`
  * is a role outside the hex form the token maths parses, `typeface` is a family
  * name the runtime cannot resolve as written, `contrast` is a documented pair
- * below its floor, and `metric` is a numeric invariant a component relies on.
+ * below its floor, `hierarchy` is a text tier that is not a perceivable step
+ * below the tier above it, and `metric` is a numeric invariant a component
+ * relies on.
  */
 export type ThemeFailure =
   | (ColorFailure & { readonly kind: "color" })
   | (TypefaceFailure & { readonly kind: "typeface" })
   | (ContrastFailure & { readonly kind: "contrast" })
+  | (TextTierFailure & { readonly kind: "hierarchy" })
   | (MetricFailure & { readonly kind: "metric" });
 
 /**
  * Every defect in an edited theme, from one call.
  *
  * The extension mechanism's guarantee is only whole when the colour-format,
- * typeface, contrast and metric checks all run: a theme whose only defect is a
- * `shadow: "black"` tint, a zero focus-ring spread or a CSS family stack
- * returns `[]` from the contrast check alone. This function composes the four
- * in diagnostic order — format first, so a malformed role is named before the
- * `NaN` ratios it causes and a malformed family before the type scale painted
- * with it, then contrast, then metrics — and tags each failure with the check
+ * typeface, contrast, text-hierarchy and metric checks all run: a theme whose
+ * only defect is a `shadow: "black"` tint, a zero focus-ring spread, a CSS
+ * family stack or a disabled label raised to body strength returns `[]` from the
+ * contrast check alone. This function composes the five in diagnostic order —
+ * format first, so a malformed role is named before the `NaN` ratios it causes
+ * and a malformed family before the type scale painted with it, then contrast,
+ * then the text hierarchy, then metrics — and tags each failure with the check
  * that found it.
  *
  * `contrast` defaults to the level the theme declares, exactly like
@@ -63,6 +69,9 @@ export function themeFailures(
     ),
     ...themeContrastFailures(theme, contrast).map(
       (failure): ThemeFailure => ({ kind: "contrast", ...failure }),
+    ),
+    ...themeTextTierFailures(theme, contrast).map(
+      (failure): ThemeFailure => ({ kind: "hierarchy", ...failure }),
     ),
     ...themeMetricFailures(theme).map(
       (failure): ThemeFailure => ({ kind: "metric", ...failure }),

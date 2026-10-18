@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 157/212
+`[x]` `[███████░░░]` 158/213
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1184,6 +1184,16 @@ after `inactiveSurfaces` grew to thirteen, and the inverse veil "measured on
 paragraph now names the nine lists it applies plus `filledControlFamilies` and
 `themeColorFailures`, states no count, and `contrast-reference.test.ts` fails if
 a list loses its name, a family literal returns or a count is restated (plan 391)
+`[x]` Hold the text tiers to their hierarchy — secondary text below body copy,
+and an unavailable label and a field's hint below secondary text, were documented
+in the design system and asserted on the shipped themes at one surface each, while
+every public check enforced only minimums: setting `disabledForeground` to
+`foreground`, `mutedForeground` to `foreground` or `placeholder` to `foreground`
+returned `[]` from `themeFailures` while a disabled control looked enabled and a
+caption looked like body copy; `themeTextTierFailures` is the fifth check,
+`textTiers` is the ordered list, its surfaces derive from `contrastPairs`, every
+shipped set and composed style clears the 1.05:1 step (1.274 / 1.349 / 1.440 at
+the tightest) so no colour, pair or metric moves (plan 392)
 
 ## Phase C — Tier 1–2 components
 

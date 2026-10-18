@@ -84,6 +84,7 @@ import {
   stateFillRoles,
   stateFillSurfacePairs,
   stateFillSurfaces,
+  textTiers,
   toastTonePairs,
   trackMarkPairs,
   trackSurfacePairs,
@@ -1391,10 +1392,58 @@ describe("docs/tokens.md typeface contract", () => {
 
   it("states the size of the guarantee in both documents", () => {
     expect(markdownProse).toContain(
-      "The guarantee is four checks — colour format, typeface form, contrast and numeric metrics",
+      "The guarantee is five checks — colour format, typeface form, contrast, text hierarchy and numeric metrics",
     );
-    expect(designSystem).toContain("The four parts are available on their own");
+    expect(designSystem).toContain("The five parts are available on their own");
     expect(designSystem).toContain("`themeTypefaceFailures`");
+  });
+});
+
+describe("docs/tokens.md text hierarchy", () => {
+  it("names the check, the failure type and the tier list", () => {
+    ["themeTextTierFailures", "TextTierFailure", "textTiers"].forEach(
+      (name) => {
+        expect(markdown, name).toContain(name);
+      },
+    );
+  });
+
+  it("states every tier from the published list", () => {
+    textTiers.forEach(([dimmer, brighter]) => {
+      expect(markdownProse, `${dimmer} below ${brighter}`).toContain(
+        `\`${dimmer}\` below \`${brighter}\``,
+      );
+    });
+  });
+
+  it("quotes the tightest shipped step of each tier", () => {
+    const surfacesOf = (
+      role: keyof ThemeColors,
+    ): ReadonlyArray<keyof ThemeColors> =>
+      contrastPairs
+        .flatMap(([foreground, background]) =>
+          foreground === role ? [background] : [],
+        )
+        .filter((surface, index, all) => all.indexOf(surface) === index);
+
+    textTiers.forEach(([dimmer, brighter]) => {
+      const brighterSurfaces = surfacesOf(brighter);
+      const shared = surfacesOf(dimmer).filter((surface) =>
+        brighterSurfaces.includes(surface),
+      );
+      const tightest = Math.min(
+        ...shippedThemes.flatMap(({ theme }) =>
+          shared.map(
+            (surface) =>
+              contrastRatio(theme.colors[brighter], theme.colors[surface]) /
+              contrastRatio(theme.colors[dimmer], theme.colors[surface]),
+          ),
+        ),
+      );
+      expect(markdownProse, `${dimmer} below ${brighter}`).toContain(
+        `**${tightest.toFixed(3)}:1**`,
+      );
+    });
   });
 });
 

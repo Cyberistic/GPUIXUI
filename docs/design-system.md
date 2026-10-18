@@ -494,6 +494,16 @@ reaches the state through `opacity: 0.5`, which composites the label with
 whatever is behind it (a disabled primary action measures 2.25:1 on the light
 canvas); the designed pair is what a control should paint instead.
 
+The inactive label is not merely above its floor; it stays **below** the
+secondary text it sits beside. The same is true of a field's hint. Those three
+relationships are the text hierarchy, and `themeTextTierFailures` holds an
+edited theme to them: each tier must sit one `contrastFloors[level].step`
+(1.05:1) below the tier above it, measured on the same surface. The surfaces come
+from `contrastPairs`, so the comparison follows the pair lists. A theme that
+raises `disabledForeground` to body strength passes every floor and still makes
+an unavailable control look enabled; this is the check that reports it, and every
+shipped set clears it — 1.274:1, 1.349:1 and 1.440:1 at the tightest.
+
 A fill is not automatically a surface. A solid role painted as a bar, a glyph or
 a dot — a progress segment, a slider fill, a slider thumb's ring, a rating star,
 a combobox check, a timeline dot — is a **mark**, held to 3:1 (4.5:1 at AAA).
@@ -625,7 +635,7 @@ edits included.
 A style is also an override set over the base it is applied to, so it names the
 canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their
 dark `skeleton`, and every shipped base and style pair is applied and held to all
-four checks (`platform-composition.test.ts`, plan `374`). A style applied over
+five checks (`platform-composition.test.ts`, plan `374`). A style applied over
 another platform's theme therefore keeps its own canvas's tint rather than the
 previous one's. A platform style also carries the **numeric scales** — type
 roles, spacing, border widths, icon and avatar sizes and component dimensions —
@@ -641,17 +651,17 @@ role, a metric or a shadow level. Nothing mutates the base, so a theme can be
 created once at startup and shared.
 
 Verify an edited theme with `themeFailures(theme)`: it composes the colour
-format, typeface, contrast and numeric metric checks, checks contrast at the
-level the theme declares, and tags every entry with the `kind` that found it. An
-empty array is the library's guarantee, and a non-empty one names every pair,
-role or metric that needs fixing. The four parts are available on their own —
-`themeColorFailures`, `themeTypefaceFailures`, `themeContrastFailures` and
-`themeMetricFailures` — but a consumer that runs only one has not run the
-guarantee: a zero focus-ring spread or an unparseable `shadow` tint passes the
-contrast check alone. A family name is one non-empty family, never a CSS comma
-stack: `StyleDesc.fontFamily` is a single string and an unknown name falls back
-silently, so `themeTypefaceFailures` reports a stack or an empty name that the
-other three checks cannot see.
+format, typeface, contrast, text hierarchy and numeric metric checks, checks
+contrast at the level the theme declares, and tags every entry with the `kind`
+that found it. An empty array is the library's guarantee, and a non-empty one
+names every pair, tier, role or metric that needs fixing. The five parts are
+available on their own — `themeColorFailures`, `themeTypefaceFailures`,
+`themeContrastFailures`, `themeTextTierFailures` and `themeMetricFailures` — but
+a consumer that runs only one has not run the guarantee: a zero focus-ring spread
+or an unparseable `shadow` tint passes the contrast check alone. A family name is
+one non-empty family, never a CSS comma stack: `StyleDesc.fontFamily` is a single
+string and an unknown name falls back silently, so `themeTypefaceFailures`
+reports a stack or an empty name that the other four checks cannot see.
 
 The set those checks run over is `shippedThemes` — every identity variant,
 platform variant and recipe at both modes and both contrasts, each with the axis

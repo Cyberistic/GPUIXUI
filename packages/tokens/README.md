@@ -215,20 +215,26 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-That is one of four checks, and running it alone is not the guarantee: a zero
-`borderWidth.strong` (no focus ring), a `shadow: "black"` tint or a CSS family
-stack passes it. `themeFailures(theme, contrast = theme.contrast)` composes all
-four and tags each entry with the `kind` that found it:
+That is one of five checks, and running it alone is not the guarantee: a zero
+`borderWidth.strong` (no focus ring), a `shadow: "black"` tint, a CSS family
+stack or a `disabledForeground` raised to body strength passes it.
+`themeFailures(theme, contrast = theme.contrast)` composes all five and tags each
+entry with the `kind` that found it:
 
 ```ts
 import { themeFailures } from "@gpuixui/tokens";
 
-themeFailures(brandTheme); // [] when every colour, family, pair and metric holds
+themeFailures(brandTheme); // [] when every colour, family, pair, tier and metric holds
 ```
 
-The order is diagnostic — `color`, `typeface`, `contrast`, then `metric` — and
-the payload is the same `ColorFailure`, `TypefaceFailure`, `ContrastFailure` or
-`MetricFailure` the individual check returns. A runnable example lives in
+The order is diagnostic — `color`, `typeface`, `contrast`, `hierarchy`, then
+`metric` — and the payload is the same `ColorFailure`, `TypefaceFailure`,
+`ContrastFailure`, `TextTierFailure` or `MetricFailure` the individual check
+returns. `themeTextTierFailures` is the fifth check: `textTiers` is
+`[dimmer, brighter]` for `mutedForeground` below `foreground`, and
+`disabledForeground` and `placeholder` below `mutedForeground`; each is held one
+1.05:1 step below the tier above it on the surfaces both are documented on. A
+runnable example lives in
 [`src/theme-check.example.ts`](./src/theme-check.example.ts).
 
 The library holds every shipped set to that same call. `shippedThemes` is the

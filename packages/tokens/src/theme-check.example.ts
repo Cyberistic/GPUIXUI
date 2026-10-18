@@ -30,5 +30,5 @@ export const brokenTheme = extendTheme(getTheme("light"), {
   borderWidth: { strong: 0 },
 });
 
-/** All four checks report through one call, in colour → typeface → contrast → metric order. */
+/** Every check reports through one call, in colour → typeface → contrast → hierarchy → metric order. */
 export const brokenFailures = themeFailures(brokenTheme);

@@ -862,6 +862,104 @@ export const contrastFloors: Readonly<
   },
 };
 
+/**
+ * The text tiers the library documents, each held a perceivable step below the
+ * tier above it, as `[dimmer, brighter]`: body copy, then secondary text, then
+ * the two roles below it — an unavailable label and a field's hint. A tier that
+ * is only *at least* as readable as the one above it is not a tier; the reader
+ * uses the difference to tell a caption from body copy, a hint from a caption
+ * and a disabled label from an enabled one. The step is the same 1.05:1 the
+ * filled families and the wash ladder publish, applied to roles a reader
+ * compares side by side.
+ */
+export const textTiers = [
+  ["mutedForeground", "foreground"],
+  ["disabledForeground", "mutedForeground"],
+  ["placeholder", "mutedForeground"],
+] as const satisfies ReadonlyArray<
+  readonly [keyof ThemeColors, keyof ThemeColors]
+>;
+
+/** A text tier that is not a perceivable step below the tier above it. */
+export interface TextTierFailure {
+  /** The dimmer role, which must measure below `brighter`. */
+  readonly dimmer: keyof ThemeColors;
+  /** The role above it in the hierarchy. */
+  readonly brighter: keyof ThemeColors;
+  /** The surface both are measured on. */
+  readonly surface: keyof ThemeColors;
+  /** The dimmer role's ratio on `surface`. */
+  readonly dimmerRatio: number;
+  /** The brighter role's ratio on `surface`. */
+  readonly brighterRatio: number;
+  /** The step the dimmer tier missed — `contrastFloors[level].step`. */
+  readonly step: number;
+}
+
+/** The surfaces a role is documented on, in pair order, deduplicated. */
+const textSurfaces = (
+  role: keyof ThemeColors,
+): ReadonlyArray<keyof ThemeColors> =>
+  contrastPairs
+    .flatMap(([foreground, background]) =>
+      foreground === role ? [background] : [],
+    )
+    .filter((surface, index, all) => all.indexOf(surface) === index);
+
+/**
+ * Every text tier that is not one step below the tier above it.
+ *
+ * The contrast check enforces minimums, so it cannot see an inverted hierarchy:
+ * a `disabledForeground` raised to body strength, or a `mutedForeground` set to
+ * `foreground`, clears every floor while the reader can no longer tell the
+ * tiers apart. This check compares the two roles **on the same surface**, where
+ * both already have a documented pair, and reports the tier when the brighter
+ * role's ratio is less than one `contrastFloors[level].step` above the dimmer
+ * one's. The level defaults to the one the theme declares, like the other
+ * checks.
+ *
+ * The surfaces come from `contrastPairs`, so a surface joins the comparison by
+ * joining a role's pairs and the check never names a surface no pair paints. A
+ * role whose value the token maths cannot parse reports `NaN` here as well as in
+ * {@link themeColorFailures}.
+ *
+ * @example
+ * ```ts
+ * import { extendTheme, getTheme, themeTextTierFailures } from "@gpuixui/tokens";
+ *
+ * const flattened = extendTheme(getTheme("light"), {
+ *   colors: { disabledForeground: getTheme("light").colors.mutedForeground },
+ * });
+ *
+ * themeTextTierFailures(flattened); // a failure per surface the tiers share
+ * ```
+ */
+export function themeTextTierFailures(
+  theme: Theme,
+  contrast: ThemeContrast = theme.contrast,
+): ReadonlyArray<TextTierFailure> {
+  const step = contrastFloors[contrast].step;
+  return textTiers.flatMap(([dimmer, brighter]) => {
+    const brighterSurfaces = textSurfaces(brighter);
+    return textSurfaces(dimmer).flatMap((surface) => {
+      if (!brighterSurfaces.includes(surface)) {
+        return [];
+      }
+      const dimmerRatio = contrastRatio(
+        theme.colors[dimmer],
+        theme.colors[surface],
+      );
+      const brighterRatio = contrastRatio(
+        theme.colors[brighter],
+        theme.colors[surface],
+      );
+      return brighterRatio / dimmerRatio >= step
+        ? []
+        : [{ dimmer, brighter, surface, dimmerRatio, brighterRatio, step }];
+    });
+  });
+}
+
 /** A colour role whose value the token helpers cannot parse. */
 export interface ColorFailure {
   /** The role, named the way the catalogue names it. */
