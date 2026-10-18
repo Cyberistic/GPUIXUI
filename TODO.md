@@ -798,10 +798,10 @@ bridge — its `runtime/theme-axes.runtime.test.tsx` imports it and
 mode)` and the bridge is then deleted from tokens (owner: `primitives`; plan 302)
 `[ ]` Cross-team: `primitives` updates its theme fixture to this branch's token
 generation — `src/core/testing/theme.fixture.ts` still declares the 47-role
-palette (62 ship now), an elevation level as `{ …, color }` (it is `{ …,
-alpha }` since plan 085) and a `Theme` without `contrast`, `motion` or
-`avatarSize`, so it cannot type-check against the merged package (owner:
-`primitives`; plans 019, 054, 073, 085, 302)
+palette (66 ship now, `track` included), an elevation level as `{ …, color }`
+(it is `{ …, alpha }` since plan 085) and a `Theme` without `contrast`, `motion`
+or `avatarSize`, so it cannot type-check against the merged package (owner:
+`primitives`; plans 019, 054, 073, 085, 302, 347)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
