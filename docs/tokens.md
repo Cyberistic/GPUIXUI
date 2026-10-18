@@ -1889,10 +1889,11 @@ floor table use — so a report iterates the contract instead of retyping the
 eight class names:
 
 ```ts
-import { contrastFloors } from "@gpuixui/tokens";
+import { contrastFloors, contrastPairClasses } from "@gpuixui/tokens";
 
 contrastFloors.default; // { body: 7, secondary: 4.5, inactive: 3, boundary: 3, mark: 3, surface: 1.05, step: 1.05, divider: 1.05 }
 contrastFloors.high; // { body: 7, secondary: 7, inactive: 4.5, boundary: 4.5, mark: 4.5, surface: 1.05, step: 1.05, divider: 3 }
+contrastPairClasses.map((pairClass) => contrastFloors.default[pairClass]); // the floors in documentation order
 ```
 
 The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).

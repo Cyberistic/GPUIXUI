@@ -257,8 +257,19 @@ extend it:
 > order — the order the table below and the ledger's floor table use — so a
 > report iterates the contract instead of retyping the eight names.
 
-Leave both fenced blocks, the floor line and every figure unchanged. The fenced
-block already displays both records; the value-coverage case
+Leave the two floor lines and every figure unchanged; add one derived line to the
+fence so the "a report iterates the contract" claim is concrete:
+
+```ts
+import { contrastFloors, contrastPairClasses } from "@gpuixui/tokens";
+
+contrastFloors.default; // { … }
+contrastFloors.high; // { … }
+contrastPairClasses.map((pairClass) => contrastFloors.default[pairClass]); // the floors in documentation order
+```
+
+The third line has no literal to drift, so `snippets.test.ts` only needs to see
+the import resolved (it is a real export). The value-coverage case
 (`names every value the package exports`) is satisfied by the prose mention.
 
 ### 3.6 `packages/tokens/README.md` — the same list
