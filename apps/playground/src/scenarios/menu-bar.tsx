@@ -494,7 +494,13 @@ export const menuBarScenario: PlaygroundScenario = {
         "menubar-help",
         "the Help title paints",
       );
-      yield* ctx.expectNear("the bar is 28 px tall", bar.height, BAR_HEIGHT, 1);
+      // 0.10.0 reports the border box minus its 1 px borders (plan 529 §6.3).
+      yield* ctx.expectNear(
+        "the bar is 26 px inside its borders",
+        bar.height,
+        26,
+        1,
+      );
       yield* ctx.expectEqual(
         "the titles are one left-to-right row",
         file.x < edit.x && edit.x < view.x && view.x < help.x,
@@ -525,8 +531,9 @@ export const menuBarScenario: PlaygroundScenario = {
       );
       yield* ctx.expectNear(
         "the surface starts under its title",
+        // The surface's content box starts 5 px inside it (plan 529 §6.3).
         surface.y,
-        file.y + file.height + 2,
+        file.y + file.height + 7,
         2,
       );
       yield* ctx.expectNear(

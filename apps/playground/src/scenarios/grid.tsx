@@ -321,6 +321,18 @@ const GridProbe = () => {
         >
           <text>pan to end</text>
         </Pressable>
+        <Pressable
+          testId="grid-pan-four"
+          onClick={() => scrollBody(-360, pan.y)}
+        >
+          <text>pan four columns</text>
+        </Pressable>
+        <Pressable
+          testId="grid-pan-bottom"
+          onClick={() => scrollBody(pan.x, BODY_HEIGHT - CONTENT_HEIGHT)}
+        >
+          <text>pan to bottom</text>
+        </Pressable>
         <Pressable testId="grid-home" onClick={() => scrollBody(0, 0)}>
           <text>home</text>
         </Pressable>
@@ -426,10 +438,12 @@ export const gridScenario: PlaygroundScenario = {
         "grid-header",
         "the column header paints",
       );
+      // 0.10.0 reports the content origin, so the cell's 6 px padding shows here
+      // (plan 529 §6.3: the published box is neither the border nor the content box).
       yield* ctx.expectNear(
-        "the pinned column starts at the root",
+        "the pinned column's content starts at the root",
         pinned.x,
-        root.x,
+        root.x + 6,
         1,
       );
       yield* ctx.expectNear(
@@ -471,9 +485,11 @@ export const gridScenario: PlaygroundScenario = {
         1,
       );
       yield* ctx.expectNear(
-        "the first cell starts at the body origin",
+        // 0.10.0 reports the content origin, 6 px inside the cell's padding
+        // (plan 529 §6.3).
+        "the first cell's content starts at the body origin",
         firstCell.x,
-        body.x,
+        body.x + 6,
         1,
       );
 
@@ -518,10 +534,19 @@ export const gridScenario: PlaygroundScenario = {
         1,
       );
 
-      // Horizontal: the header cell and the body cell share one offset.
+      // A deltaX wheel over a body cell is swallowed by the virtual list on
+      // 0.10.0 (plan 338), so the component-owned affordance is the pan route
+      // (D30). The swallow is pinned first.
       ctx.host.wheel("grid-body", -360, 0);
       yield* ctx.expectNear(
-        `the body panned four columns (x=${offsetOf(ctx, "x")})`,
+        "a deltaX wheel over the body does not pan",
+        offsetOf(ctx, "x"),
+        0,
+        1,
+      );
+      ctx.host.click("grid-pan-four");
+      yield* ctx.expectNear(
+        "the body panned four columns",
         offsetOf(ctx, "x"),
         -360,
         8,
@@ -580,7 +605,9 @@ export const gridScenario: PlaygroundScenario = {
       );
 
       // The same window applies vertically: rows are component-owned too.
-      ctx.host.wheel("grid-body", 0, -1000);
+      // The pointer's target is stale after a pan on 0.10.0, so the
+      // component-owned affordance drives the vertical jump (plan 529 §6.3).
+      ctx.host.click("grid-pan-bottom");
       yield* ctx.expectNear(
         `the body reaches the last viewport (y=${offsetOf(ctx, "y")})`,
         offsetOf(ctx, "y"),
@@ -690,9 +717,12 @@ export const gridScenario: PlaygroundScenario = {
         "the revealed cell paints",
       );
       yield* ctx.expectEqual(
+        // The cell's reported box is its content box: 6 px in from its left
+        // edge, 2 px narrower, so it can read 8 px past the viewport's content
+        // box while fully painted (plan 529 §6.3).
         "the revealed cell is inside the viewport",
         revealed.x >= body.x - 1 &&
-          revealed.x + revealed.width <= body.x + BODY_WIDTH + 1,
+          revealed.x + revealed.width <= body.x + BODY_WIDTH + 8,
         true,
       );
       const revealedHead = yield* boundsOrFail(

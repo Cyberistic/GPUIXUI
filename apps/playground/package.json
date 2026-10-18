@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "vendor": "tsc -p tsconfig.vendor.json",
-    "build": "nub run --filter @gpuixui/testing build && nub run vendor && tsc -p tsconfig.build.json",
+    "build": "nub run --filter @gpuixui/testing build && nub run vendor && node scripts/install-binding.mjs && tsc -p tsconfig.build.json",
     "dev": "nub run build && nub watch dist/main.js",
     "smoke": "nub run build && cd ../.. && nub apps/playground/dist/smoke/run.js",
     "smoke:live": "nub run build && cd ../.. && nub apps/playground/dist/live/run.js --all",

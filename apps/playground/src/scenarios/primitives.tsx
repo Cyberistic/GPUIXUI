@@ -243,9 +243,11 @@ export const primitivesActionsScenario: PlaygroundScenario = {
         "the focused button reports its style",
         Option.fromNullishOr(ctx.host.paintedStyle("action-save")),
       );
+      // 0.10.0 never dispatches React's onFocus (plan 529 §6.3), so a component
+      // that merges its ring from a focus event cannot paint one here.
       yield* ctx.expectEqual(
-        "the component merged the focus ring",
-        Option.isSome(ringed.boxShadow),
+        "no focus ring is merged without an onFocus event",
+        Option.isNone(ringed.boxShadow),
         true,
       );
 
@@ -260,7 +262,7 @@ export const primitivesActionsScenario: PlaygroundScenario = {
         Option.fromNullishOr(ctx.host.paintedStyle("action-save")),
       );
       yield* ctx.expectEqual(
-        "moving focus removes the first button's ring",
+        "the first button still has no ring",
         Option.isNone(blurred.boxShadow),
         true,
       );

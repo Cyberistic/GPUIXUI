@@ -290,7 +290,138 @@ Commands: `nub run --filter @gpuixui/testing test`,
 
 ## 6. Measured deltas (filled during execution)
 
-_Empty until §3.4 runs._
+### 6.1 The build and the fingerprint (2026-10-18)
+
+```
+cargo build --release --locked --target x86_64-apple-darwin   EXIT=0
+installed: node_modules/.store/node_modules/@gpuix/native/gpuix-native.darwin-x64.node
+markers focusVisible/keyboardFocusDim/outlineWidth/registerFont/
+        setFrameWakeCallback/scrollbarColor/borderStyle/keystrokeId  → all 0
+import("@gpuix/native") from apps/playground → TestGpuixRenderer is a function
+```
+
+### 6.2 The first re-baseline run
+
+`nub apps/playground/dist/smoke/run.js --all` → **exit `1`, 73/101 scenarios**,
+28 failures, one failed check per scenario. `images`/`frames`/`wizard` etc. stay
+green.
+
+### 6.3 Root cause 1 — `getElementBounds` reports an inconsistent box
+
+A direct measurement (`.agents/slop/scratch/plan-529/bounds-probe.mjs`, run in
+`apps/playground` on the release binding):
+
+| Fixture (layout box) | Reported bounds |
+| -------------------- | --------------- |
+| `100×50`, no border, no padding | `x 20  y 20  w 100  h 50` |
+| `100×50`, `borderWidth: 1` | `x 21  y 71  w 98   h 48` |
+| `100×50`, `padding: 10` | `x 30  y 130 w 100  h 50` |
+| `100×50`, `borderWidth: 2`, `padding: 10` | `x 32  y 182 w 96   h 46` |
+| child `20×20` inside that box | `x 32  y 182 w 20   h 20` |
+| `<img>` `96×64`, no border | `x 21  y 221 w 94   h 62` |
+
+So published 0.10.0 reports **`x`/`y` at the content origin** (inside border and
+padding) but **`width`/`height` as the border box minus its borders** (padding
+still included). It is neither the border box nor the content box. An `<img>`
+loses a further 1 px per axis.
+
+GPUix `main` replaced the `bounds_tracker` canvas child with `track_host_bounds`
+(`on_painted`) and reports the **border box** — the documented DOM
+`getBoundingClientRect` box. Our 28 failures are the reverse of that fix.
+
+Consequence for the library: any component that measures a surface through
+`renderer.getElementBounds` (the docking surface rect, a collapsible body, a
+crop stage) receives a box whose origin excludes padding but whose size includes
+it. A published consumer must reconstruct the surface from its own padding and
+border values. This is a **runtime defect, fixed on `main`, absent from the
+published release**, and it must be documented rather than hidden.
+
+Failure classes:
+
+- **box literals (23):** `window-layout`, `tab-strip-overflow`, `docking-layout`,
+  `grid-wide-table`, `data-grid-columns`, `column-config`, `app-chrome`,
+  `data-toolbar`, `query-builder`, `notification-centre`, `crop-area`,
+  `grid-cell-editing`, `property-panel`, `native-surfaces`,
+  `context-menu-pointer`, `menu-bar`, `nested-layer-dismiss`,
+  `shell-navigation`, `toast-lifecycle`, `tier2-dialog`, `tier2-toast`,
+  `floating-placement`, `drag-autoscroll`;
+- **focus dispatch (2):** `focus-traversal` (a click no longer runs React's
+  `onFocus`) and `primitives-actions` (the merged focus ring);
+- **component behaviour on published (3):** `tier2-navigation` (Tabs `active`
+  after a click), `tier2-editing` (InlineEdit commits on blur), `workspace-panes`
+  (a tab swap keeps the old offset).
+
+### 6.4 Triage rules
+
+The triage followed §3.5 (the STOP was a guard against unexplained mass edits;
+the cause is measured and systematic):
+
+1. a box literal becomes the **published** value, with a comment naming the
+   border/padding it excludes and a pointer to this plan — never a widened
+   tolerance;
+2. a focus-dispatch expectation moves to "the click focuses natively, React's
+   `onFocus` does not run" (already the live rule from plans `345`/`390`);
+3. a component behaviour that is a recorded cross-team defect (`Tabs`,
+   `InlineEdit`) is asserted as measured and named as a defect in
+   `COMPONENTS.md`/`TODO.md`, so the suite stays an honest capability contract;
+4. every changed check is re-run alone (`--only`) and then in the full suite.
+
+### 6.5 Results after the triage
+
+The full headless suite is **101/101 (3536 checks), exit `0`** on the release-tag
+binding. The report's host line reads
+`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+
+Two checks were removed rather than rewritten, both for measured reasons:
+
+- `workspace-panes`: the guard/clamp half cannot be driven by a pointer after an
+  ancestor scroll because the published tracker keeps the pre-scroll box;
+- the query builder's fourth-row reveal/picker block, because `scrollIntoView`
+  from a mount effect no-ops before the appended row's first paint.
+
+The scenario count is unchanged (101); the check count moved `3538 → 3536`.
+
+New measured facts this re-baseline adds (all pinned by a check or a comment):
+
+1. **Bounds are an inconsistent box on 0.10.0.** `x`/`y` are the content origin
+   (inside border + padding) and `width`/`height` are the border box minus its
+   borders (padding included). An `<img>` loses 1 px per axis. A scrolling
+   container's box **moves with its own scroll** (the drag probe read
+   `viewY=78` for a pointer 6 px from the top edge), and a child's box is
+   **stale after an ancestor scroll** (the pane probe read `y=-8` with the outer
+   at 0). Recipe: cache a scroller's bounds before it scrolls and use the event
+   payload's coordinates (`drag-autoscroll`).
+2. **`overflow: scroll` reserves a platform scrollbar** even for a horizontal
+   strip (`tab-strip-overflow`'s 320 px strip reports 298 px inside it), so
+   `scrollIntoView` stops with the last tab at the viewport's edge.
+3. **A viewport reveal stops short**: `scrollIntoView` on the sidebar leaves the
+   last entry ~98 px below the list; `scrollIntoView` from a mount effect no-ops
+   before the appended row paints (`query-builder`).
+4. **No focus path dispatches React `onFocus`** (click, `autoFocus`, traversal):
+   `onBlur` still runs. A component cannot derive a focus ring from `onFocus` on
+   the published runtime (`focus-traversal`, `primitives-actions`).
+5. **The native editor consumes Shift-Tab** while focused (`tier2-dialog`): the
+   modal trap works only from a non-editor focus point.
+6. **Tabs' roving `active` is never seeded** (no `onFocus`), so arrow navigation
+   after a traversal does not move; a click does (`tier2-navigation`, TODO 549).
+7. **InlineEdit does not commit on a native focus change** (`tier2-editing`,
+   TODO 548).
+8. **A `deltaX` wheel over a virtualized body is swallowed** (plan 338's rule),
+   so a grid's pan affordance is the route; after a pan, pointer targets can be
+   stale (`grid-wide-table`).
+9. **A caption-card / panel / popover content box** is inset by its own
+   border+padding and 2 px narrower, which is why the toast insets read 33/41
+   rather than 16/24 and the centred dialog's content centre is 7 px right and
+   down of the surface's outer centre.
+10. **`fit="snap"` stops at the window edge** without the collision margin the
+    plan-156 probe recorded on the newer source (`floating-placement`).
+11. **A wheel step is small**: 40 × `deltaY -600` could not reach the end of a
+    90-entry list (`shell-navigation`); one step moved it a few pixels, so the
+    scroll budget must come from the runtime's own offset, not from the delta.
+
+
+
+
 
 ## 7. Rollback
 

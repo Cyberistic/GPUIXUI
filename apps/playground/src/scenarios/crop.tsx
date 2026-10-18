@@ -461,19 +461,32 @@ export const cropScenario: PlaygroundScenario = {
         "img",
       );
       yield* ctx.expectNear(
-        "the crop box starts at x = 64",
+        // The box origin is its content origin, inside the stage's 2 px inset
+        // and its own border (plan 529 §6.3).
+        "the crop box starts at x = 66",
         box.x - stage.x,
-        64,
+        66,
         1,
       );
       yield* ctx.expectNear(
-        "the crop box starts at y = 40",
+        "the crop box starts at y = 42",
         box.y - stage.y,
-        40,
+        42,
         1,
       );
-      yield* ctx.expectNear("the crop box is 192 wide", box.width, 192, 1);
-      yield* ctx.expectNear("the crop box is 120 tall", box.height, 120, 1);
+      // The box's 2 px borders are excluded from its reported size (plan 529 §6.3).
+      yield* ctx.expectNear(
+        "the crop box is 188 wide inside its borders",
+        box.width,
+        188,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the crop box is 116 tall inside its borders",
+        box.height,
+        116,
+        1,
+      );
       yield* ctx.expectEqual(
         "a valid data URL paints no image fallback",
         Arr.some(ctx.host.paintedText(), (line) =>
@@ -539,13 +552,13 @@ export const cropScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the SE handle is centred on the crop's bottom-right",
         se.x + se.width / 2,
-        box.x + box.width,
+        box.x + box.width + 2,
         1,
       );
       yield* ctx.expectNear(
         "the SE handle's centre is on the crop's bottom edge",
         se.y + se.height / 2,
-        box.y + box.height,
+        box.y + box.height + 2,
         1,
       );
 

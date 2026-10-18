@@ -555,9 +555,10 @@ export const appChromeScenario: PlaygroundScenario = {
         1,
       );
       yield* ctx.expectNear(
-        "the status bar is 24 px tall",
+        // 0.10.0 reports the border box minus its 1 px borders (plan 529 §6.3).
+        "the status bar is 22 px inside its borders",
         status.height,
-        24,
+        22,
         1,
       );
       yield* ctx.expectNear(

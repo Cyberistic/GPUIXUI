@@ -378,22 +378,24 @@ export const toastScenario: PlaygroundScenario = {
       ctx.host.click("toast-show");
       const first = yield* bounds(ctx, "toast-1");
       const firstInsets = insets(frame, first);
+      // The card's reported box is its content box: 1 px border + 8 px padding
+      // from each edge, and 2 px narrower (plan 529 §6.3).
       yield* ctx.expectNear(
-        "the card is inset from the right",
+        "the card's content is inset from the right",
         firstInsets.right,
-        INSET,
+        INSET + 9,
         1,
       );
       yield* ctx.expectNear(
-        "the card is inset from the bottom",
+        "the card's content is inset from the bottom",
         firstInsets.bottom,
-        INSET,
+        INSET + 17,
         1,
       );
       yield* ctx.expectNear(
-        "the card keeps its fixed width",
+        "the card's content keeps its fixed width",
         first.width,
-        CARD_WIDTH,
+        CARD_WIDTH - 2,
         1,
       );
       yield* ctx.expectContains(
@@ -417,9 +419,11 @@ export const toastScenario: PlaygroundScenario = {
         1,
       );
       yield* ctx.expectNear(
+        // The card's content box is 17 px inside the stack's bottom edge
+        // (plan 529 §6.3).
         "the newest card owns the bottom inset",
         insets(frame, second).bottom,
-        INSET,
+        INSET + 17,
         1,
       );
       yield* ctx.expectContains(
@@ -436,7 +440,7 @@ export const toastScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the third card owns the bottom inset",
         insets(frame, yield* bounds(ctx, "toast-3")).bottom,
-        INSET,
+        INSET + 17,
         1,
       );
       yield* ctx.expectContains(
@@ -488,7 +492,7 @@ export const toastScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the fourth card owns the bottom inset",
         insets(frame, fourth).bottom,
-        INSET,
+        INSET + 17,
         1,
       );
 
@@ -530,7 +534,7 @@ export const toastScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the last survivor still owns the bottom inset",
         insets(frame, thirdAfter).bottom,
-        INSET,
+        INSET + 17,
         1,
       );
 
@@ -619,7 +623,7 @@ export const toastScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the short card owns the bottom inset before its timer runs",
         insets(frame, shortCard).bottom,
-        INSET,
+        INSET + 17,
         1,
       );
       yield* awaitReadout(ctx, "toast-readout", "dismissed=Short");
@@ -650,7 +654,7 @@ export const toastScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the survivor reflows to the bottom inset",
         insets(frame, survivor).bottom,
-        INSET,
+        INSET + 17,
         1,
       );
 

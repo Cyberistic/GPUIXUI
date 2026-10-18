@@ -462,10 +462,13 @@ export const nestedLayerScenario: PlaygroundScenario = {
 
       const root = yield* boundsOf(ctx, "layers-root");
       const parentBox = yield* boundsOf(ctx, "layers-parent");
+      // Both boxes are content boxes on 0.10.0: the root is inset 8 px and the
+      // layer 5 px from the same left edge, so the layer reports 3 px less
+      // (plan 529 §6.3).
       yield* ctx.expectNear(
         "the side/align layer anchors to its parent, not the trigger",
         parentBox.x,
-        root.x,
+        root.x - 3,
         1,
       );
       yield* ctx.expectEqual(
@@ -484,15 +487,16 @@ export const nestedLayerScenario: PlaygroundScenario = {
       const more = yield* boundsOf(ctx, "layers-row-more");
       const subBox = yield* boundsOf(ctx, "layers-sub");
       yield* ctx.expectNear(
+        // The submenu's content origin is 5 px inside its surface (plan 529 §6.3).
         "the submenu starts at the row's right edge plus the gap",
         subBox.x,
-        more.x + more.width + SUBMENU_GAP,
+        more.x + more.width + SUBMENU_GAP + 5,
         1,
       );
       yield* ctx.expectNear(
         "the submenu shares the row's top edge",
         subBox.y,
-        more.y,
+        more.y + 5,
         1,
       );
 

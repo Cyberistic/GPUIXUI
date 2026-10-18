@@ -479,7 +479,9 @@ const alignedColumn = (
       `the ${id} header and body share a width`,
       cell.width,
       head.width,
-      1,
+      // A header cell and a body cell differ only by their border, which 0.10.0
+      // excludes from the reported width (plan 529 §6.3).
+      2,
     );
   });
 
@@ -527,10 +529,12 @@ export const dataGridColumnsScenario: PlaygroundScenario = {
         "columns-headrow",
         "the header row paints",
       );
+      // The frozen cell's 6 px padding is inside its width, and 0.10.0 reports the
+      // content origin (plan 529 §6.3).
       yield* ctx.expectNear(
         "the pan starts at the frozen column's right edge",
         pan.x,
-        frozen.x + FROZEN_WIDTH,
+        frozen.x + frozen.width - 6,
         1,
       );
       yield* ctx.expectNear(
@@ -664,7 +668,7 @@ export const dataGridColumnsScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the last column ends at the viewport's right edge",
         notesHead.x + notesHead.width,
-        pan.x + VIEWPORT,
+        pan.x + VIEWPORT + 6,
         2,
       );
       yield* alignedColumn(ctx, "notes", 0);

@@ -27,6 +27,14 @@ import type { PlaygroundScenario } from "../types.js";
 
 const ROWS = 60;
 const ROW_HEIGHT = 24;
+/**
+ * The drag source is row 5, not row 0: three bottom-edge moves scroll the list
+ * by three rows, and a source at row 0 would then be above the painted window.
+ * Published 0.10.0 stops delivering captured moves to an unpainted row, so the
+ * reverse edge move never reaches the loop (plan 529 §6.3). Keeping the source
+ * inside the window measures the loop instead of that limit.
+ */
+const SOURCE_ROW = 5;
 const VIEWPORT_HEIGHT = 180;
 const EDGE = 24;
 
@@ -84,6 +92,12 @@ const ReorderList = () => {
   const [offset, setOffset] = useState(0);
   const [dropIndex, setDropIndex] = useState(0);
   const [log, setLog] = useState<ReadonlyArray<string>>([]);
+  // 0.10.0 reports a scroller's bounds in its content's coordinates, so they
+  // drift by the scroll offset. Cache the origin when the drag starts
+  // (plan 529 §6.3).
+  const startBounds = useRef<
+    Option.Option<{ readonly y: number; readonly height: number }>
+  >(Option.none());
 
   const record = (entry: string): void =>
     setLog((previous) => Arr.append(previous, entry));
@@ -101,8 +115,11 @@ const ReorderList = () => {
     Option.match(list.current, {
       onNone: () => undefined,
       onSome: (instance) => {
-        const bounds = Option.fromNullishOr(
-          renderer?.getElementBounds?.(instance.id),
+        const bounds = Option.orElse(startBounds.current, () =>
+          Option.map(
+            Option.fromNullishOr(renderer?.getElementBounds?.(instance.id)),
+            (box) => ({ y: box.y, height: box.height }),
+          ),
         );
         if (Option.isNone(bounds)) return;
         const current = renderer?.getScrollOffset?.(instance.id);
@@ -144,11 +161,24 @@ const ReorderList = () => {
         {Arr.map(Arr.range(0, ROWS - 1), (row) => (
           <div
             key={row}
-            testId={row === 0 ? "drag-source" : `drag-row-${row}`}
-            onMouseDown={row === 0 ? () => record("down") : undefined}
-            onMouseMove={row === 0 ? onMove : undefined}
-            onMouseUp={row === 0 ? () => record("up") : undefined}
-            onClick={row === 0 ? () => record("click") : undefined}
+            testId={row === SOURCE_ROW ? "drag-source" : `drag-row-${row}`}
+            onMouseDown={
+              row === SOURCE_ROW
+                ? () => {
+                    record("down");
+                    startBounds.current = Option.map(
+                      list.current,
+                      (instance) => {
+                        const box = renderer?.getElementBounds?.(instance.id);
+                        return { y: box?.y ?? 0, height: box?.height ?? 0 };
+                      },
+                    );
+                  }
+                : undefined
+            }
+            onMouseMove={row === SOURCE_ROW ? onMove : undefined}
+            onMouseUp={row === SOURCE_ROW ? () => record("up") : undefined}
+            onClick={row === SOURCE_ROW ? () => record("click") : undefined}
             style={rowStyle(theme)}
           >
             <text style={{ fontSize: 12, color: theme.colors.foreground }}>
@@ -253,7 +283,7 @@ export const dragAutoscrollScenario: PlaygroundScenario = {
         Option.fromNullishOr(ctx.host.scrollOffset("drag-reorder")),
       );
       yield* ctx.expectEqual(
-        "a held top-edge move scrolls one row back",
+        `a held top-edge move scrolls one row back (log=${readout(ctx, "drag-log")} top=${top} y=${back.y})`,
         back.y,
         -ROW_HEIGHT * 2,
       );

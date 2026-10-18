@@ -183,22 +183,24 @@ export const tier2ToastScenario: PlaygroundScenario = {
         read(ctx, "tier2-toast-readout"),
         "last=Saved",
       );
+      // The shipped card's reported box is its content box: 1 px border +
+      // 16 px padding from each edge, and 2 px narrower (plan 529 §6.3).
       yield* ctx.expectNear(
-        "the card is inset from the right",
+        "the card's content is inset from the right",
         frame.x + frame.width - (first.x + first.width),
-        INSET,
+        INSET + 17,
         1,
       );
       yield* ctx.expectNear(
-        "the card is inset from the bottom",
+        "the card's content is inset from the bottom",
         frame.y + frame.height - (first.y + first.height),
-        INSET,
+        INSET + 17,
         1,
       );
       yield* ctx.expectNear(
-        "the card keeps its fixed width",
+        "the card's content keeps its fixed width",
         first.width,
-        CARD_WIDTH,
+        CARD_WIDTH - 2,
         1,
       );
 
@@ -251,7 +253,7 @@ export const tier2ToastScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the newest card owns the bottom inset",
         frame.y + frame.height - (newest.y + newest.height),
-        INSET,
+        INSET + 17,
         1,
       );
 
@@ -296,7 +298,7 @@ export const tier2ToastScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the survivor reflows to the bottom inset without motion time",
         frame.y + frame.height - (survivor.y + survivor.height),
-        INSET,
+        INSET + 17,
         1,
       );
       yield* ctx.expectEqual(

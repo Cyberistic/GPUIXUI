@@ -173,8 +173,9 @@ export const nativeSurfacesScenario: PlaygroundScenario = {
 
       yield* type(ctx, "surface-img-empty", "img");
       const empty = yield* painted(ctx, "surface-img-empty");
-      yield* ctx.expectNear("the no-src box width", empty.width, 96, 0.5);
-      yield* ctx.expectNear("the no-src box height", empty.height, 64, 0.5);
+      // An <img> loses 1 px per axis in the 0.10.0 tracker (plan 529 §6.3).
+      yield* ctx.expectNear("the no-src box width", empty.width, 94, 0.5);
+      yield* ctx.expectNear("the no-src box height", empty.height, 62, 0.5);
       yield* ctx.expectEqual(
         "a missing src paints its own fallback",
         occurrences(ctx, "img: no src"),

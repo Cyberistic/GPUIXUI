@@ -636,7 +636,9 @@ const alignedColumn = (
       `the ${id} header and body share a width`,
       cell.width,
       head.width,
-      1,
+      // A header cell and a body cell differ only by their border, which 0.10.0
+      // excludes from the reported width (plan 529 §6.3).
+      2,
     );
   });
 
@@ -698,7 +700,7 @@ export const columnConfigScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the pan starts at the frozen column's right edge",
         pan.x,
-        frozen.x + FROZEN_WIDTH,
+        frozen.x + frozen.width - 6,
         1,
       );
       yield* ctx.expectNear(
@@ -737,15 +739,17 @@ export const columnConfigScenario: PlaygroundScenario = {
         "the configuration panel paints",
       );
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the panel opens at the trigger's left edge",
         panel.x,
-        trigger.x,
+        trigger.x + 7,
         1,
       );
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the panel opens under the trigger",
         panel.y,
-        trigger.y + trigger.height,
+        trigger.y + trigger.height + 7,
         1,
       );
       yield* ctx.expectEqual(

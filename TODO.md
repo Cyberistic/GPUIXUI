@@ -60,17 +60,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[~]` `[██████████]` 86/92 plans-and-harness
 
-`[~]` **Re-baseline the native evidence against the published 0.10.0 source** per
-      plan `529`: the binding was built from `references/gpuix` HEAD
-      (`515df19`, main) rather than the release tag (`9fcd6288`) and with the
-      main zed pin, so `verified 0.10.0` is currently unproven — the published
-      binary lacks `focusVisible`/`outlineWidth`/`registerFont`/
-      `setFrameWakeCallback`/`keystrokeId` that the local one has, and
-      `packages/native/src` differs by 3,330 lines (bounds tracking, hit
-      testing, frame pacing, event payload). Rebuild from the tag, run the full
-      headless suite, triage every delta, then re-run live; correct ADR 0003,
-      plan `140`, the `COMPONENTS.md` preamble and add the binary fingerprint
-      guard.
+`[x]` **Re-baseline the headless native evidence against the published 0.10.0
+      source** per plan `529`: the binding had been built from
+      `references/gpuix` HEAD (`515df19`, main) instead of the release tag
+      (`9fcd6288`) with the main zed pin. Rebuilt from the tag + zed
+      `81c99f81`; added the pin/fingerprint (`Binding`, `apps/playground/src/
+      binding.ts`, `scripts/install-binding.mjs`, because a shared `nub install`
+      restores the old artifact); triaged **28 → 0** failures; the suite is
+      **101/101, 3536 checks, exit `0`** on the release binding. Ledgers
+      corrected (ADR 0003 amendment, plan `140`, `COMPONENTS.md`). The measured
+      deltas are §6.5 of the plan — the big one is the 0.10.0 bounds box
+      (content origin + borderless size, and stale after an ancestor scroll).
+`[ ]` **Re-baseline the LIVE suite** on the release-tag binding (plan `529` §5):
+      the headless suite is green, but every live geometry check was measured on
+      the main-derived binding and is expected to move with the same box
+      contract. Run `nub apps/playground/dist/live/run.js --all`, triage, and
+      record the totals. Until then no live total is claimed for 0.10.0.
 
 `[x]` Probe the **paint/frame counters** per plan `527` — the last supported
 runtime surface with no contract: `frame-stats` (67 checks) and `live-frames`
@@ -88,6 +93,22 @@ the `full` overlay still activated. Suite `99 → 100` (`3455 → 3522`), exit `
 proof (plan `527` §6). The **full live suite was not run** (merge gate): the
 focused id is `live-frames`.
 
+`[ ]` **Cross-team (blocker for a11y):** `@gpuixui/primitives` and
+      `@gpuixui/components` derive focus rings from React `onFocus`, which the
+      published `@gpuix/native@0.10.0` **never dispatches** — a click,
+      `autoFocus` and `focusNext` all move native focus and run `onBlur`, but no
+      `onFocus` (plan `529` §6.5; `focus-traversal`/`primitives-actions` pin it).
+      Keyboard users therefore get no ring on the release runtime. Derive the
+      ring from a native focus source, or document the limitation on every
+      focusable component.
+`[ ]` **Cross-team:** `@gpuixui/components` geometry that reads
+      `renderer.getElementBounds` must account for the published 0.10.0 box
+      (plan `529` §6.5): `x`/`y` are the **content origin** (inside border and
+      padding), `width`/`height` exclude only the borders, a scroller's box
+      **moves with its own scroll**, and a child's box is **stale after an
+      ancestor scroll**. Cache a scroller's box before scrolling; do not use the
+      box as a stable frame. Affects docking surfaces, collapsible measurement,
+      anchored placement and drag edge loops.
 `[ ]` **Cross-team:** the docs-site capability matrix
       (`apps/docs/src/lib/capabilities.ts` + its test) must gain the `frames`
       capability and the ids `frame-stats` + `live-frames`, or its gate stays

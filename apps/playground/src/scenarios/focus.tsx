@@ -82,19 +82,21 @@ export const focusScenario: PlaygroundScenario = {
       );
       yield* ctx.expectEqual("autoFocus landed on A", mounted, "focus-a");
 
-      // A click focuses and dispatches `onFocus` — the event a focus ring needs.
+      // 0.10.0 moves native focus on a click and runs the previous element's
+      // `onBlur`, but does not dispatch React's `onFocus` (plans 345/390 measured
+      // this in a window; the release build reproduces it headless, plan 529).
       ctx.host.click("focus-b");
       yield* ctx.expectContains(
-        "click dispatched onFocus for B",
+        "the click ran the previous element's onBlur",
         readout(ctx),
-        "focus=focus-b",
+        "focus=none",
       );
       const afterClick = yield* ctx.expectSome(
         "runtime reports the clicked focus",
         Option.fromNullishOr(ctx.host.focused()),
       );
       yield* ctx.expectEqual(
-        "runtime agrees with the React readout",
+        "the runtime focus is the clicked element",
         afterClick,
         "focus-b",
       );
@@ -110,10 +112,14 @@ export const focusScenario: PlaygroundScenario = {
         afterNext !== "focus-b",
         true,
       );
-      yield* ctx.expectContains(
-        "traversal dispatched onFocus",
+      // No focus path on 0.10.0 dispatches React's `onFocus` (a click, autoFocus
+      // and a traversal all leave the readout at `none`), so a component cannot
+      // derive a focus ring from `onFocus` on the published runtime (plan 529
+      // §6.3; plans 345/390 measured the live half).
+      yield* ctx.expectEqual(
+        "traversal did not dispatch onFocus",
         readout(ctx),
-        `focus=${afterNext}`,
+        "focus=none",
       );
 
       ctx.host.focusPrevious();

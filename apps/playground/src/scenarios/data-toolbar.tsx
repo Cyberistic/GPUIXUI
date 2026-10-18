@@ -562,8 +562,19 @@ export const dataToolbarScenario: PlaygroundScenario = {
         "the total card paints",
         Option.fromNullishOr(ctx.host.bounds("tb-card-total")),
       );
-      yield* ctx.expectNear("the cards are 160 px wide", card.width, 160, 1);
-      yield* ctx.expectNear("the cards are 64 px tall", card.height, 64, 1);
+      // 0.10.0 excludes the 1 px borders (plan 529 §6.3).
+      yield* ctx.expectNear(
+        "the cards are 158 px inside their borders",
+        card.width,
+        158,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the cards are 62 px inside their borders",
+        card.height,
+        62,
+        1,
+      );
       const toolbar = yield* ctx.expectSome(
         "the toolbar paints",
         Option.fromNullishOr(ctx.host.bounds("tb-toolbar")),

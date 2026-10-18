@@ -478,12 +478,15 @@ export const dockingScenario: PlaygroundScenario = {
         left.x,
         surface.x,
       );
+      // The group has a 1 px border; 0.10.0 reports the width without it
+      // (plan 529 §6.3).
       yield* near(
         "the left group is the split's primary size",
         left.width,
-        240,
+        238,
       );
-      yield* near("the left group fills the surface height", left.height, 480);
+      // 1 px borders are excluded from the reported height (plan 529 §6.3).
+      yield* near("the left group fills the surface height", left.height, 478);
 
       const editor = yield* boxOf("dock-group-editor");
       yield* near(
@@ -491,11 +494,11 @@ export const dockingScenario: PlaygroundScenario = {
         editor.x,
         left.x + 246,
       );
-      yield* near("the editor takes the remaining width", editor.width, 654);
+      yield* near("the editor takes the remaining width", editor.width, 652);
       yield* near(
         "the editor is the vertical split's primary size",
         editor.height,
-        320,
+        318,
       );
 
       const terminal = yield* boxOf("dock-group-terminal");
@@ -507,7 +510,7 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the terminal takes the remaining height",
         terminal.height,
-        154,
+        152,
       );
 
       ctx.host.press("dock-tab-search");
@@ -521,7 +524,7 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the right bar ends at the pane's right edge",
         rightBar.x,
-        editor.x + editor.width - 4,
+        editor.x + editor.width - 2,
       );
       yield* near("the right bar is the pane's height", rightBar.height, 320);
       yield* ctx.expectEqual(
@@ -548,12 +551,12 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the editor keeps the primary half",
         editorAfterDrop.width,
-        324,
+        322,
       );
       yield* near(
         "the new group takes the secondary half",
         panelOne.width,
-        324,
+        322,
       );
       yield* near(
         "the new group starts after the new divider",
@@ -602,17 +605,17 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the collapsed centre gives the split the full height",
         editorAfterCollapse.height,
-        480,
+        478,
       );
       yield* near(
         "the top group is the new split's primary size",
         panelTwo.height,
-        157,
+        155,
       );
       yield* near(
         "the target group keeps the rest",
         panelOneAfterDrop.height,
-        317,
+        315,
       );
       yield* near(
         "the target group starts after the vertical divider",
@@ -628,8 +631,8 @@ export const dockingScenario: PlaygroundScenario = {
       );
       const panelTwoResized = yield* boxOf("dock-group-panel-2");
       const panelOneResized = yield* boxOf("dock-group-panel-1");
-      yield* near("the primary pane grew", panelTwoResized.height, 197);
-      yield* near("the secondary pane shrank", panelOneResized.height, 277);
+      yield* near("the primary pane grew", panelTwoResized.height, 195);
+      yield* near("the secondary pane shrank", panelOneResized.height, 275);
 
       ctx.host.drag("main-divider", 40, 0);
       yield* ctx.expectContains(
@@ -641,7 +644,7 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the left group took the pointer delta",
         leftResized.width,
-        280,
+        278,
       );
       const editorResized = yield* boxOf("dock-group-editor");
       yield* near(
@@ -652,13 +655,13 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the nested split kept its primary size",
         editorResized.width,
-        324,
+        322,
       );
       const panelOneNarrow = yield* boxOf("dock-group-panel-1");
       yield* near(
         "the nested split's secondary took the shrink",
         panelOneNarrow.width,
-        284,
+        282,
       );
 
       ctx.host.click("dock-save");
@@ -690,19 +693,19 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the outer divider size was restored",
         leftRestored.width,
-        280,
+        278,
       );
       const panelTwoRestored = yield* boxOf("dock-group-panel-2");
       const panelOneRestored = yield* boxOf("dock-group-panel-1");
       yield* near(
         "the nested primary size was restored",
         panelTwoRestored.height,
-        197,
+        195,
       );
       yield* near(
         "the nested secondary size was restored",
         panelOneRestored.height,
-        277,
+        275,
       );
       yield* ctx.expectEqual(
         "the pruned group was not resurrected",
@@ -829,7 +832,7 @@ export const dockingScenario: PlaygroundScenario = {
       yield* near(
         "the survivor keeps its own split size",
         editorAtOrigin.width,
-        324,
+        322,
       );
       yield* ctx.expectEqual(
         "the last move is active",

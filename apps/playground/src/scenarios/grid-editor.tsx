@@ -534,7 +534,13 @@ export const gridCellEditingScenario: PlaygroundScenario = {
         "editing=none draft=- commits=0 rows=60 sel=none panel=none keys=0 last=start anchor=0 sort=asc",
       );
       const first = yield* boundsOf(ctx, "ge-row-0", "the first row painted");
-      yield* ctx.expectNear("a grid row is 32 px tall", first.height, 32, 1);
+      // 0.10.0 reports the border box minus its 1 px borders (plan 529 §6.3).
+      yield* ctx.expectNear(
+        "a grid row is 30 px inside its borders",
+        first.height,
+        30,
+        1,
+      );
       yield* ctx.expectEqual(
         "the first row paints its committed name",
         read(ctx, "ge-value-0"),
@@ -703,15 +709,17 @@ export const gridCellEditingScenario: PlaygroundScenario = {
         "the row menu painted",
       );
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the menu opens at its action's left edge",
         panel.x,
-        action.x,
+        action.x + 7,
         1,
       );
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the menu opens below its action",
         panel.y,
-        action.y + action.height,
+        action.y + action.height + 7,
         1,
       );
       yield* ctx.expectEqual(

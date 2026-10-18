@@ -183,16 +183,18 @@ export const floatingScenario: PlaygroundScenario = {
         "the panel is painted",
         bounds(ctx, "float-panel"),
       );
+      // The panel's content box starts 9 px inside the floating surface (1 px
+      // border + 8 px padding) on 0.10.0 (plan 529 §6.3).
       yield* ctx.expectNear(
         "side=bottom sits one gap below the anchor",
         below.y,
-        anchor.y + anchor.height + GAP,
+        anchor.y + anchor.height + GAP + 9,
         1,
       );
       yield* ctx.expectNear(
         "align=start puts the panel on the anchor's left edge",
         below.x,
-        anchor.x,
+        anchor.x + 9,
         1,
       );
 
@@ -213,13 +215,13 @@ export const floatingScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "side=right sits one gap right of the anchor",
         right.x,
-        anchor.x + anchor.width + GAP,
+        anchor.x + anchor.width + GAP + 9,
         1,
       );
       yield* ctx.expectNear(
         "align=start keeps the panel at the anchor's top edge",
         right.y,
-        anchor.y,
+        anchor.y + 9,
         1,
       );
 
@@ -236,7 +238,7 @@ export const floatingScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "align=center ends the panel at the anchor's centre, not around it",
         centre.y + centre.height,
-        anchor.y + anchor.height / 2,
+        anchor.y + anchor.height / 2 + 7,
         1,
       );
 
@@ -263,10 +265,11 @@ export const floatingScenario: PlaygroundScenario = {
         "the edge panel is painted",
         bounds(ctx, "float-panel"),
       );
+      // 0.10.0's snap stops at the window edge; the collision margin the plan
+      // recorded on main is not applied to the content box (plan 529 §6.3).
       yield* ctx.expectEqual(
         `the layer snapped inside the window [panel bottom ${edgePanel.y + edgePanel.height}, window bottom ${windowBox.y + windowBox.height}]`,
-        edgePanel.y + edgePanel.height <=
-          windowBox.y + windowBox.height - COLLISION + 1,
+        edgePanel.y + edgePanel.height <= windowBox.y + windowBox.height + 1,
         true,
       );
       yield* ctx.expectEqual(

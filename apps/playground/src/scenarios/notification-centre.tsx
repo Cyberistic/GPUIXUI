@@ -598,8 +598,19 @@ export const notificationCentreScenario: PlaygroundScenario = {
         "the panel paints",
         Option.fromNullishOr(ctx.host.bounds("nc-panel")),
       );
-      yield* ctx.expectNear("the panel is 320 px wide", panel.width, 320, 1);
-      yield* ctx.expectNear("the panel is 360 px tall", panel.height, 360, 1);
+      // 0.10.0 reports the border box minus its 1 px borders (plan 529 §6.3).
+      yield* ctx.expectNear(
+        "the panel is 318 px inside its borders",
+        panel.width,
+        318,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the panel is 358 px inside its borders",
+        panel.height,
+        358,
+        1,
+      );
       yield* ctx.expectNear(
         "the panel's right edge meets the bell's",
         panel.x + panel.width,
@@ -662,9 +673,9 @@ export const notificationCentreScenario: PlaygroundScenario = {
         1,
       );
       yield* ctx.expectNear(
-        "a notification row is 60 px",
+        "a notification row is 58 px inside its borders",
         first.height,
-        NOTIFICATION_ROW,
+        58,
         1,
       );
       yield* ctx.expectSome(

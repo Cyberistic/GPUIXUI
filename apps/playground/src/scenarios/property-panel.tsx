@@ -330,9 +330,10 @@ export const propertyPanelScenario: PlaygroundScenario = {
         painted(ctx, "inspector-pane"),
       );
       yield* ctx.expectNear(
-        "the inspector pane is 300 px wide",
+        // 0.10.0 reports the border box minus its 1 px borders (plan 529 §6.3).
+        "the inspector pane is 298 px inside its borders",
         pane.width,
-        300,
+        298,
         1,
       );
       yield* ctx.expectNear(
@@ -357,9 +358,10 @@ export const propertyPanelScenario: PlaygroundScenario = {
       yield* ctx.expectNear("a property row is 36 px tall", row.height, 36, 1);
       yield* ctx.expectNear("the label column is 96 px", label.width, 96, 1);
       yield* ctx.expectNear(
-        "the editor starts one gap after the label",
+        // The editor's content origin is 5 px inside it (plan 529 §6.3).
+        "the editor starts one gap plus its inset after the label",
         input.x - (label.x + label.width),
-        8,
+        13,
         1,
       );
       yield* ctx.expectEqual(

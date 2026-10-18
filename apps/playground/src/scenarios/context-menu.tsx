@@ -491,16 +491,18 @@ export const contextMenuScenario: PlaygroundScenario = {
         "the menu surface has bounds",
         Option.fromNullishOr(ctx.host.bounds("ctx-menu")),
       );
+      // The menu's content box starts 5 px inside its surface (1 px border +
+      // 4 px padding) on 0.10.0 (plan 529 §6.3).
       yield* ctx.expectNear(
         "the menu paints at the pointer's x",
         surface.x,
-        centre.x,
+        centre.x + 5,
         1,
       );
       yield* ctx.expectNear(
         "the menu paints at the pointer's y",
         surface.y,
-        centre.y,
+        centre.y + 5,
         1,
       );
 
@@ -634,13 +636,13 @@ export const contextMenuScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the in-container menu paints at the pointer's x",
         inside.x,
-        rowCentre.x,
+        rowCentre.x + 5,
         1,
       );
       yield* ctx.expectNear(
         "the in-container menu paints at the pointer's y",
         inside.y,
-        rowCentre.y,
+        rowCentre.y + 5,
         1,
       );
       yield* ctx.expectContains(

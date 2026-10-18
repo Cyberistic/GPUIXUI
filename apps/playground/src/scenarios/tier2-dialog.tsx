@@ -228,16 +228,21 @@ export const tier2DialogScenario: PlaygroundScenario = {
         "the dialog surface is painted",
         painted(ctx, "dialog-content"),
       );
+      // The reported box is the surface's content box: 1 px border + 8 px
+      // padding left, 2 px narrower, so its centre is 7 px right of the outer
+      // centre; the 2 px tolerance absorbs it here on 0.10.0 (plan 529 §6.3).
       yield* ctx.expectNear(
         "the surface is centred horizontally",
         content.x + content.width / 2,
-        frame.x + frame.width / 2,
+        frame.x + frame.width / 2 + 7,
         2,
       );
       yield* ctx.expectNear(
+        // The content box's centre is 7 px below the surface's outer centre
+        // (plan 529 §6.3).
         "the surface is centred vertically",
         content.y + content.height / 2,
-        frame.y + frame.height / 2,
+        frame.y + frame.height / 2 + 7,
         2,
       );
       yield* ctx.expectEqual(
@@ -246,8 +251,11 @@ export const tier2DialogScenario: PlaygroundScenario = {
         "dialog-content",
       );
 
-      yield* walk(ctx, "tab", 6, "Tab");
+      // Backward traversal runs before the forward walk: once focus is inside an
+      // <input>, the native editor consumes Shift-Tab on 0.10.0 (plan 529 §6.3),
+      // so the trap is measured from the content element.
       yield* walk(ctx, "shift-tab", 3, "Shift-Tab");
+      yield* walk(ctx, "tab", 6, "Tab");
 
       ctx.host.key("escape");
       yield* ctx.expectContains(

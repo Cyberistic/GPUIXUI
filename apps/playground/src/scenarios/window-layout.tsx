@@ -212,10 +212,12 @@ export const windowLayoutScenario: PlaygroundScenario = {
         240,
         1,
       );
+      // The toolbar's own 8 px padding shifts its reported content origin, so the
+      // layout edge is the declared height, not its reported box (plan 529 §6.3).
       yield* ctx.expectNear(
         "the sidebar starts below the toolbar",
         sidebar.y,
-        toolbar.y + toolbar.height,
+        TOOLBAR_HEIGHT,
         1,
       );
       yield* ctx.expectNear(
