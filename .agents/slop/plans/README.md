@@ -135,6 +135,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [336](./336-quoted-figure-guards.md) | The catalogue's last unpinned tightest figures | F | 071, 075, 326, 335 | done |
 | [337](./337-native-field-reach.md) | The native field's own hint and selection | F | 069, 317, 319, 331, 335 | done |
 | [338](./338-filled-control-family.md) | The filled control's designed family, in one call | F | 055, 097, 327, 334 | done |
+| [339](./339-field-adornment-text.md) | The field's adornment text and the check the accent cannot carry | F | 059, 071–095, 300, 306–319, 335 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -988,6 +989,21 @@ fills with the one foreground, beside `filledControlFamilies`,
 `FilledControlFamily` and `FilledControlStyle`. A pair for the alpha composite
 would bless a composition no palette can pass, so the evidence is a TODO row
 plus guarded prose instead. No colour, pair or floor changes.
+
+339 closes the last surface of the secondary-text role. `mutedForeground` was
+measured on the four plain surfaces and the four row washes a description can
+sit on, but a time picker paints its separator and clear control on the `input`
+fill a field creates for its own chrome, so an edited theme could set the role
+to the field's own value and erase both while `themeContrastFailures` returned
+`[]`. The pair joins the `secondary` class (293 → 294); every shipped set already
+clears 4.5:1 / 7:1 (8.376:1 at the tightest), so no colour moves. The same audit
+found a defect no pair can fix: `MenuCheckboxItem` paints its check glyph with
+`accent` — a pale selected-row wash — on the menu's `popover` (1.11–1.39:1) and
+on the `hover`/`active` fill (1.00–1.08:1), under the 3:1 mark floor, so a
+checked item has no visible check. The role must be the row's own
+`popoverForeground`, which the contract already measures on all four fills;
+because the file belongs to `components`, the fix is recorded cross-team with its
+measured evidence instead of adding a pair the shipped palette fails.
 
 ### Reference adoption (block `200–299`)
 
