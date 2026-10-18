@@ -198,6 +198,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [500](./500-text-hierarchy-surface-body-roles.md) | The text hierarchy on each surface's own body role | F | 059, 071, 315, 319, 371, 383, 387, 388, 391, 392, 398 | done |
 | [501](./501-floor-table-scrim-row.md) | The accessibility floor table's modal scrim row | F | 099, 359, 375, 395, 351, 352, 354, 398, 500 | done |
 | [502](./502-interaction-direction.md) | The interaction ladder's direction in the total check | F | 097, 327, 342, 357, 381, 383, 387, 388, 394, 398 | done |
+| [503](./503-track-row-washes.md) | The value indicator's groove on the row washes and status panels | F | 347, 094, 322, 300, 309, 366, 381, 388 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1950,6 +1951,35 @@ an **equal** pair stays the step lists' defect, so one collapsed edit does not
 produce two diagnostics. Every shipped set already passes (the four families,
 `softAction`, the wash and the selection step included), so no colour, pair,
 floor or metric moves.
+
+Plan `503` closes the surface plan `347` deliberately left out of the groove's
+contract. `track` was measured on the six resting surfaces, with `hover`/`active`
+excluded on the argument that "the filled part still carries the value" and that
+XP light has no track that clears both the wash floor and the mark floor. Both
+halves fail: an *indeterminate* progress bar is only its groove (the case plan
+347 itself used), and a slider's unfilled rail is the span the reader is about to
+change — while a selectable `List` or table row is hovered and pressed before it
+is used, and the four soft status fills have been first-class surfaces since
+plans 090–095, 307, 320, 340 and 346, so a progress or slider inside an Alert is
+invited by the shipped API. The audit found shipped pairs under 1.05:1: identity
+light `track` on `destructiveSoft` at **1.009:1** and `infoSoft` 1.038, identity
+dark on `infoSoft` **1.019:1**, macOS light on `active` **1.020:1**, Linux light
+1.047, XP light on `warningSoft` **1.007:1** and `hover` 1.030, and every
+high-contrast dark set (which inherits the AAA palette) on `active` **1.047:1**
+and `warningSoft` 1.030. The XP blocker was real but was a *mark* constraint, not
+a groove one: the inherited identity `success` forces the groove above 0.643
+while XP's own `active` forces it below 0.618. A recipe that owns its era's
+palette names a deeper Luna green (`#0E6B40`, plan 328 made both recipes own
+their dark palette and plan 366 moved six light status roles for a contract), and
+the window opens. `trackSurfacePairs` now names twelve surfaces — the six plus
+`hover`/`active` and the four soft fills (388 → 394 pairs) — and seven values
+move one designed step: identity light `#D5D9E2`, identity dark
+`palette.neutral[700]`, AAA dark `#414141`, macOS light `#D3D3D8`, Linux light
+`#D8D8D8` and XP light `#D2CCB4` with its own `success`. Every shipped set
+passes `themeFailures` and the four mark pairs, so no other role moves and no
+floor changes; `track-contrast.test.ts` states the erased-groove regressions and
+both docs pages, the README and the ledger derive the new surface list and the
+tightest figures from the contract.
 
 ## How to use a plan
 
