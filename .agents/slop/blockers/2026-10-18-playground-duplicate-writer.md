@@ -54,3 +54,31 @@ Before each `opencode run`, the runner should refuse to start when the
 worktree's `git status --porcelain` is non-empty **and** the last writer pid is
 not the current runner; or pin one `--session` id per workstream and resume it
 instead of creating a new one. Either would have made this collision impossible.
+
+## Outcome
+
+The orphaned session finished the task cleanly and pushed it:
+
+| Commit | Contents |
+| ------ | -------- |
+| `311191a` | plan `330`, the plan index and this note |
+| `3a61720` | `tier2-dialog` / `tier2-menu` / `tier2-toast`, the `tier2` capability, the `awaitReadout` flake fix, the vendor tsconfig, `TODO.md` + `COMPONENTS.md` |
+
+The official runner turn then verified it independently, without writing:
+
+- `nub apps/playground/dist/smoke/run.js` → **64/64 passed**, exit `0`,
+  `… tier2=verified` (all three `tier2-*` scenarios green). This is the gate that
+  matters for the landed commit and it was a real run, not a report read back.
+- `nub run check` at 03:19 failed **only** on the other session's in-flight
+  `apps/playground/src/live/scenarios.tsx` (three unused imports for plan `331`,
+  then uncommitted). That is a transient state of a second task, not a defect in
+  `3a61720`; the full gate has to be re-run once `331` lands, because verifying a
+  tree while another writer holds it cannot produce a trustworthy answer. The
+  run was stopped rather than reported as a failure or as green.
+
+Two facts the collision cost, and the reason this note exists: the same task was
+planned twice (plans `324` and `330`), and two `edit` calls failed on stale
+`oldString` matches because the other writer had changed those exact lines
+seconds earlier. No file was lost, because the losing writer stopped at the
+first observable collision instead of retrying harder.
+
