@@ -18,6 +18,7 @@
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -25,7 +26,9 @@ import * as Str from "effect/String";
 import {
   createContext,
   Fragment,
+  useCallback,
   useContext,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -336,6 +339,7 @@ export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
       )}
     >
       <div
+        testId="command-list"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -383,14 +387,34 @@ export const CommandMenuItem = ({
   ...rest
 }: CommandMenuItemProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
   const { isActive, run } = useCommandMenu();
   const highlighted = isActive(action);
+  const [instance, setInstance] = useState<Option.Option<PublicInstance>>(
+    Option.none(),
+  );
+  const setRow = useCallback(
+    (next: PublicInstance | null) => setInstance(Option.fromNullishOr(next)),
+    [],
+  );
+
+  // The list scrolls; without this the highlight walks out of the viewport and
+  // Enter runs a row the user cannot see. The renderer scrolls to the nearest
+  // scroll parent's direct child, which is this row (plan 530).
+  useLayoutEffect(() => {
+    if (!highlighted) return;
+    Option.match(instance, {
+      onNone: () => undefined,
+      onSome: (element) => renderer?.scrollIntoView?.(element.id),
+    });
+  }, [highlighted, instance, renderer]);
 
   return (
     <div
       role="option"
       aria-selected={highlighted}
       testId={`command-${action.id}`}
+      ref={setRow}
       {...rest}
       onClick={(event) => {
         onClick?.(event);

@@ -385,6 +385,15 @@ retired once both branches are one
       failed. `until` / `isShown` are shared from `internal/interaction.ts`, the
       two tests finish the exit and wait for the reopened row, and the suite is
       green under load (21/21 five runs at eight burners; 708/708 full suite)
+    - [x] A highlighted command row is scrolled into view — plan 530. Measured:
+      with 30 actions and 24 arrow presses the highlight's bottom sat at 746
+      against a list viewport ending at 568, so `Enter` ran a row the user could
+      not see. The list's `scrollIntoView` was never called; the row now reveals
+      itself on the flip to highlighted, with two native cases (23 total,
+      behaviour 710) and a mutation proof. `Home`/`End` measured as consumed by
+      the GPUix `<input>` and documented. Combobox is recorded as the follow-up:
+      its options are nested inside list wrappers, so `scrollIntoView` moves only
+      9 px and needs a measured `scrollTo`
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook

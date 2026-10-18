@@ -9,6 +9,7 @@
  * ranking that ran the wrong row; and a global sort that interleaved groups.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -525,6 +526,71 @@ describe("CommandMenu", () => {
     const sidebar = requireBounds(palette, "command-sidebar");
     const open = requireBounds(palette, "command-open-file");
     expect(sidebar.y).toBeLessThan(open.y);
+
+    palette.unmount();
+  });
+
+  /** Thirty rows, so the list overflows its 320 px viewport. */
+  const overflowActions = (): ReadonlyArray<CommandAction> =>
+    Array.from({ length: 30 }, (_, index) => ({
+      id: `action-${index + 1}`,
+      label: `Action ${index + 1}`,
+      perform: () => undefined,
+    }));
+
+  /**
+   * The bug this guards (plan 530): 30 actions, 24 ArrowDown presses — the
+   * highlight sat 160 px below the 320 px list, and Enter still ran it. The
+   * scroll container is named so a suite can measure the viewport by testId.
+   */
+  it("keeps the highlighted row inside the list viewport", () => {
+    const palette = renderComponent(<LocalPalette items={overflowActions()} />);
+    Arr.forEach(Arr.range(1, 24), () =>
+      palette.renderer.simulateKeystrokes("down"),
+    );
+    palette.renderer.flush();
+
+    const list = requireBounds(palette, "command-list");
+    const row = requireBounds(palette, "command-action-25");
+    expect(row.y).toBeGreaterThanOrEqual(list.y);
+    expect(row.y + row.height).toBeLessThanOrEqual(list.y + list.height);
+
+    const scroll = palette.renderer.getScrollOffset(
+      palette.renderer.findByTestId("command-list")?.id ?? -1,
+    );
+    expect(scroll?.[1] ?? 0).toBeLessThan(0);
+
+    palette.unmount();
+  });
+
+  it("returns the list to the top when the highlight moves back up", () => {
+    const palette = renderComponent(<LocalPalette items={overflowActions()} />);
+    Arr.forEach(Arr.range(1, 24), () =>
+      palette.renderer.simulateKeystrokes("down"),
+    );
+    // Put the list further down than the highlight needs, as a wheel scroll
+    // would, so only the reveal can bring the first row back.
+    palette.renderer.scrollTo(
+      palette.renderer.findByTestId("command-list")?.id ?? -1,
+      0,
+      -400,
+    );
+    palette.renderer.flush();
+
+    Arr.forEach(Arr.range(1, 24), () =>
+      palette.renderer.simulateKeystrokes("up"),
+    );
+    palette.renderer.flush();
+
+    const list = requireBounds(palette, "command-list");
+    const first = requireBounds(palette, "command-action-1");
+    expect(first.y).toBeGreaterThanOrEqual(list.y);
+    expect(first.y).toBeLessThan(list.y + list.height);
+
+    const scroll = palette.renderer.getScrollOffset(
+      palette.renderer.findByTestId("command-list")?.id ?? -1,
+    );
+    expect(scroll?.[1] ?? 0).toBe(0);
 
     palette.unmount();
   });
