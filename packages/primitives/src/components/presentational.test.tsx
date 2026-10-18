@@ -310,6 +310,38 @@ describe("type", () => {
     expect(numberIn(truncated, "maxHeight")).toStrictEqual(Option.none());
   });
 
+  it("paints the decoration it is given, and a caller's style still wins", () => {
+    // The gap guarded (plan 377): the runtime paints underline and
+    // line-through, but `Text` had no prop for either.
+    const plain = renderText({}, testTheme);
+    expect(stringIn(plain, "textDecoration")).toStrictEqual(Option.none());
+    expect(
+      expectSome(
+        stringIn(
+          renderText({ decoration: "underline" }, testTheme),
+          "textDecoration",
+        ),
+      ),
+    ).toBe("underline");
+    expect(
+      expectSome(
+        stringIn(
+          renderText({ decoration: "line-through" }, testTheme),
+          "textDecoration",
+        ),
+      ),
+    ).toBe("line-through");
+    expect(
+      stringIn(
+        renderText(
+          { decoration: "underline", style: { textDecoration: "none" } },
+          testTheme,
+        ),
+        "textDecoration",
+      ),
+    ).toStrictEqual(Option.some("none"));
+  });
+
   it("hands a control its name, because GPUix has no aria-labelledby", () => {
     // The helper is only useful if a control can consume it: every control
     // takes `label` and writes the host's `aria-label` itself.

@@ -283,12 +283,17 @@ export interface TextSpec {
   readonly role: TextRole;
   readonly tone: TextTone;
   readonly align?: "start" | "center" | "end";
+  /** Inline decoration the runtime paints; omitted means none. */
+  readonly decoration?: TextDecoration;
   readonly truncate?: boolean;
   /** Maximum visible lines. GPUix clips after this many. */
   readonly clamp?: number;
   /** Selectable text: off by default for chrome, on for content. */
   readonly selectable?: boolean;
 }
+
+/** The inline decorations the runtime paints; absence is the third state. */
+export type TextDecoration = "underline" | "line-through";
 
 /** Roles whose family is the monospace face. */
 const MONO_ROLES: ReadonlyArray<TextRole> = ["code", "codeBlock"];
@@ -327,6 +332,7 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
   if (spec.align !== undefined) {
     style.textAlign = spec.align === "end" ? "right" : spec.align;
   }
+  if (spec.decoration !== undefined) style.textDecoration = spec.decoration;
   if (spec.truncate === true) {
     style.whiteSpace = "nowrap";
     style.textOverflow = "ellipsis";

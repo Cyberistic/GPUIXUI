@@ -354,6 +354,22 @@ describe("textStyle", () => {
     ).toBe("right");
   });
 
+  it("paints the inline decorations it is given, and none by default", () => {
+    // The gap guarded (plan 377): `StyleDesc` paints underline and line-through,
+    // but `Text` had no prop for either.
+    expect(
+      text({ role: "body", tone: "default" }).textDecoration,
+    ).toBeUndefined();
+    expect(
+      text({ role: "body", tone: "default", decoration: "underline" })
+        .textDecoration,
+    ).toBe("underline");
+    expect(
+      text({ role: "body", tone: "default", decoration: "line-through" })
+        .textDecoration,
+    ).toBe("line-through");
+  });
+
   it("truncates on one line, and clamps on several", () => {
     const truncated = text({ role: "body", tone: "default", truncate: true });
     expect(truncated.whiteSpace).toBe("nowrap");

@@ -9,7 +9,11 @@
 
 import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import { textStyle, type TextTone } from "../core/style.js";
+import {
+  textStyle,
+  type TextDecoration,
+  type TextTone,
+} from "../core/style.js";
 import type { PrimitiveTheme, TextRole } from "../core/theme.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -20,6 +24,8 @@ export interface TextProps {
   /** What the text means, which decides its colour. Defaults to `default`. */
   readonly tone?: TextTone;
   readonly align?: "start" | "center" | "end";
+  /** Underline or strike through the run. Omit for no decoration. */
+  readonly decoration?: TextDecoration;
   /** One line, clipped with an ellipsis. */
   readonly truncate?: boolean;
   /** Clip after this many lines. */
@@ -63,6 +69,7 @@ export const renderText = (
     role = "body",
     tone = "default",
     align,
+    decoration,
     truncate,
     clamp,
     selectable,
@@ -72,7 +79,7 @@ export const renderText = (
   }: TextProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
-  const spec = { role, tone, align, truncate, clamp, selectable };
+  const spec = { role, tone, align, decoration, truncate, clamp, selectable };
   return (
     <text
       testId={testId}

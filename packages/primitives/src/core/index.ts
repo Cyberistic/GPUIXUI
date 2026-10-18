@@ -225,6 +225,7 @@ export type {
   SliderSpec,
   SurfaceSpec,
   SurfaceTone,
+  TextDecoration,
   TextSpec,
   TextTone,
 } from "./style.js";
