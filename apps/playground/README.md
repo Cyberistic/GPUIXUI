@@ -65,7 +65,9 @@ Artifacts (gitignored, under `.artifacts/`):
 - `.artifacts/smoke-report.json` — the schema-encoded report (`Report.reportJson`);
 - `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
 
-Flags: `--json`, `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`.
+Flags: `--list` (print the scenario ids, exit `0`), `--json`,
+`--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`. An unknown flag or
+scenario id prints the usage line and exits `2` before the binding loads.
 
 Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
 is no evidence, and a stale report must never be mistaken for a fresh one.
