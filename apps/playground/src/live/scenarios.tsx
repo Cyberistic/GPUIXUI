@@ -125,6 +125,38 @@ const boxOf = (ctx: LiveContext, testId: string) =>
     );
   });
 
+/** Waits up to three seconds for `testId`'s painted text to contain `needle`. */
+const waitForText = (ctx: LiveContext, testId: string, needle: string) =>
+  ctx.host.text(testId).pipe(
+    Effect.flatMap((text) =>
+      text !== null && Str.includes(needle)(text)
+        ? Effect.void
+        : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/** Waits up to three seconds for `testId`'s list anchor to reach `expected`. */
+const waitForAnchor = (ctx: LiveContext, testId: string, expected: string) =>
+  ctx.host.listScrollTop(testId).pipe(
+    Effect.flatMap((anchor) =>
+      anchor !== null && `${anchor[0]},${anchor[1]}` === expected
+        ? Effect.void
+        : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
 /** The painted left edge of `testId`, or a failure naming the missing id. */
 const leftOf = (ctx: LiveContext, testId: string) =>
   Effect.gen(function* () {
@@ -1380,6 +1412,7 @@ const scroller: LiveScenario = {
         );
 
       // 1. A real window opens the chat at its latest message.
+      yield* waitForAnchor(ctx, "ms-list", "50,0");
       const opening = yield* anchor("the live list reports an anchor");
       yield* ctx.expectEqual(
         "the live scroller opens at the max scroll",
@@ -1405,6 +1438,8 @@ const scroller: LiveScenario = {
       // 2. A pinned append follows through the automation input path.
       yield* ctx.host.click("ms-append");
       yield* settle;
+      yield* waitForText(ctx, "ms-count", "61");
+      yield* waitForAnchor(ctx, "ms-list", "51,0");
       const appended = yield* anchor(
         "the appended live list reports an anchor",
       );
@@ -1427,6 +1462,8 @@ const scroller: LiveScenario = {
       // 3. A real wheel unpins.
       yield* ctx.host.wheel("ms-viewport", 0, 400);
       yield* settle;
+      yield* waitForText(ctx, "ms-pin", "false");
+      yield* waitForAnchor(ctx, "ms-list", "37,20");
       const scrolled = yield* anchor(
         "the scrolled live list reports an anchor",
       );
@@ -1449,6 +1486,8 @@ const scroller: LiveScenario = {
       // 4. An append while unpinned must not move the reader.
       yield* ctx.host.click("ms-append");
       yield* settle;
+      yield* waitForAnchor(ctx, "ms-list", "37,20");
+      yield* waitForText(ctx, "ms-unread", "1");
       const held = yield* anchor("the unpinned live list reports an anchor");
       yield* ctx.expectEqual(
         "the live unpinned append leaves the anchor untouched",
@@ -1469,6 +1508,9 @@ const scroller: LiveScenario = {
       // 5. Jump to latest re-pins in a real window.
       yield* ctx.host.click("ms-jump");
       yield* settle;
+      yield* waitForText(ctx, "ms-pin", "true");
+      yield* waitForText(ctx, "ms-unread", "0");
+      yield* waitForAnchor(ctx, "ms-list", "52,0");
       const jumped = yield* anchor("the jumped live list reports an anchor");
       yield* ctx.expectEqual(
         "the live jump re-pins",
@@ -1496,6 +1538,8 @@ const scroller: LiveScenario = {
       yield* settle;
       yield* ctx.host.click("ms-stream");
       yield* settle;
+      yield* waitForText(ctx, "ms-last-height", "50");
+      yield* waitForAnchor(ctx, "ms-list", "52,20");
       const streamed = yield* anchor(
         "the streamed live list reports an anchor",
       );
@@ -1526,6 +1570,8 @@ const scroller: LiveScenario = {
       // 7. A short history paints everything and offers nothing.
       yield* ctx.host.click("ms-reset");
       yield* settle;
+      yield* waitForText(ctx, "ms-count", "3");
+      yield* waitForAnchor(ctx, "ms-list", "0,0");
       const short = yield* anchor("the short live history reports an anchor");
       yield* ctx.expectEqual(
         "the short live history reached React",
@@ -1571,17 +1617,7 @@ const TIER2_FOCUSABLE: ReadonlyArray<string> = [
 
 /** Waits up to 3 s for the toast readout to report `count`. */
 const waitForToastCount = (ctx: LiveContext, count: number) =>
-  ctx.host.text("tier2-toast-readout").pipe(
-    Effect.flatMap((text) =>
-      text !== null && Str.includes(`count=${count}`)(text)
-        ? Effect.void
-        : Effect.fail("not yet"),
-    ),
-    Effect.retry(
-      Schedule.spaced("100 millis").pipe(Schedule.upTo({ duration: "3 seconds" })),
-    ),
-    Effect.orElseSucceed(() => undefined),
-  );
+  waitForText(ctx, "tier2-toast-readout", `count=${count}`);
 
 const tier2Dialog: LiveScenario = {
   id: "live-tier2-dialog",
@@ -1808,6 +1844,7 @@ const tier2Toast: LiveScenario = {
   ready: "toast-push",
   steps: (ctx) =>
     Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-toast-readout", "count=0");
       yield* ctx.expectContains(
         "the queue starts empty",
         yield* textOf(ctx, "tier2-toast-readout"),
@@ -1834,6 +1871,7 @@ const tier2Toast: LiveScenario = {
 
       yield* ctx.host.click("toast-dismiss");
       yield* settle;
+      yield* waitForToastCount(ctx, 0);
       yield* ctx.expectContains(
         "the dismiss control removed its card",
         yield* textOf(ctx, "tier2-toast-readout"),
@@ -1842,9 +1880,12 @@ const tier2Toast: LiveScenario = {
 
       yield* ctx.host.click("toast-push-action");
       yield* ctx.host.waitFor("toast-2");
+      yield* ctx.host.waitFor("toast-action");
       yield* settle;
       yield* ctx.host.click("toast-action");
       yield* settle;
+      yield* waitForText(ctx, "tier2-toast-readout", "actions=1");
+      yield* waitForToastCount(ctx, 0);
       yield* ctx.expectContains(
         "the action ran exactly once",
         yield* textOf(ctx, "tier2-toast-readout"),
@@ -1860,6 +1901,9 @@ const tier2Toast: LiveScenario = {
       yield* settle;
       yield* ctx.host.click("toast-push");
       yield* settle;
+      yield* ctx.host.waitFor("toast-3");
+      yield* ctx.host.waitFor("toast-4");
+      yield* waitForToastCount(ctx, 2);
       const older = yield* boxOf(ctx, "toast-3");
       const newest = yield* boxOf(ctx, "toast-4");
       yield* ctx.expectEqual(
@@ -1883,6 +1927,7 @@ const tier2Toast: LiveScenario = {
       );
 
       yield* ctx.host.click("toast-push-short");
+      yield* waitForToastCount(ctx, 3);
       yield* waitForToastCount(ctx, 2);
       yield* ctx.expectContains(
         "the short toast dismissed itself in real time",

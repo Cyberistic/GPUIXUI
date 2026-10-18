@@ -70,10 +70,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 The suite is **64/64 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **16/16 green
+(`nub run --filter playground smoke:live`, plan `189`) and is **19/19 green
 here**: `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
-`preview` and `scroller` are confirmed there too
+`preview`, `scroller` and `tier2` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -643,6 +643,12 @@ shortcut, a 300 ms duration dismisses itself). The suite is `64/64` and
 renderer needs **one root host element** (a provider with sibling children at the
 root paints nothing), and the components package is compiled by the consumer
 because its tsconfig maps the JSX runtime to a `.d.ts` that `nub` cannot execute.
+**In a real window (plan `331`):** `live-tier2-dialog`, `live-tier2-menu` and
+`live-tier2-toast` repeat the consumer path live — the surface centres within
+2 px, the Tab trap keeps native focus inside, the menu surface takes native
+focus, the context menu lands within 12 px of the right click, the toast card is
+inset 16 px, and a 300 ms duration really dismisses itself. Live `16 → 19`,
+exit `0`, three real-window screenshots.
 
 ## Tier 2 — composition and feedback
 

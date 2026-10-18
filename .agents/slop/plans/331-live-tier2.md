@@ -134,7 +134,42 @@ scenario does.
   headless test saw it): inspect `AsyncSmokeHost.bounds`' `null` mapping first
   (plan `301`), then record the limitation if it is real.
 
-## 8. Acceptance
+## 8. Result — measured on this host (2026-10-18)
+
+Landed on the first run. Live suite **16 → 19**, exit `0`, `tier2=verified`,
+60 checks (`live-tier2-dialog` 24, `live-tier2-menu` 15,
+`live-tier2-toast` 21) and three real-window screenshots.
+
+What the window confirmed beyond the headless run:
+
+- the dialog centre is within 2 px of `550, 360` in an `1100 × 720` window, and
+  the Tab trap keeps native focus inside across five presses;
+- the shipped menu surface takes focus (`menu-content`), the disabled row is
+  skipped by native focus, and the context menu lands within 12 px of the
+  element-centre right click;
+- the toast viewport insets by **16** px in a window too, the 300 ms timer
+  dismisses on real time, and Escape leaves the stack alone.
+
+Mutation proofs (full live run each time, exit `1`, then reverted):
+
+- M1 `dismissible={false}` → `Escape closed the dialog: expected "open=false",
+  got "open=true saves=0 confirm=false confirms=0"` (`18/19`, `tier2=failed`).
+- M2 Archive row enabled → `the second arrow skipped the disabled row: expected
+  "menu-delete", got "menu-archive"`.
+- M3 `style={{ right: 4 }}` on the viewport → `the card is inset from the right:
+  expected 16 ± 1, got 4`.
+
+Three consecutive full live runs after the revert: all `19/19`, exit `0`. The
+headless suite stayed `64/64`.
+
+**One live run at a time.** A run that overlapped the peer session's own live
+run (the B3 duplicate writer) failed one `waitFor("toast-action")` after its
+timeout while the other run owned the native window; the same build then passed
+three times in isolation. The native window is single-owner, so a live verdict
+requires no concurrent run — the same rule the components package applies to
+`createTestRoot`.
+
+## 9. Acceptance
 
 - [ ] `live-tier2-dialog`, `live-tier2-menu`, `live-tier2-toast` are registered
       and reuse the plan-330 views.
