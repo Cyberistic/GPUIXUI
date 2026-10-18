@@ -2,10 +2,10 @@
  * Dropdown menu example: a file row with a small actions menu.
  *
  * The menu is uncontrolled — it remembers whether it is open — while the
- * "Show hidden" checkbox is app state, because the row behind the menu shows the
- * effect. A menu action is an ordinary callback: the component does not own what
- * "Delete" means. Keyboard opens (`Enter`, `ArrowDown`, `ArrowUp`) land on the
- * first/last action.
+ * "Show hidden" checkbox and the "Sort by" radio group are app state, because
+ * the row behind the menu shows the effect. A menu action is an ordinary
+ * callback: the component does not own what "Delete" means. Keyboard opens
+ * (`Enter`, `ArrowDown`, `ArrowUp`) land on the first/last action.
  */
 
 import { useState } from "react";
@@ -15,6 +15,8 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -27,6 +29,7 @@ import { textStyle, useTheme } from "../src/internal/theme.js";
 export const DropdownMenuExample = () => {
   const theme = useTheme();
   const [showHidden, setShowHidden] = useState(false);
+  const [sort, setSort] = useState("name");
   const [lastAction, setLastAction] = useState("none");
 
   return (
@@ -35,7 +38,7 @@ export const DropdownMenuExample = () => {
         <CardTitle>notes.md</CardTitle>
         <CardDescription>
           Last action: {lastAction} · hidden files{" "}
-          {showHidden ? "shown" : "hidden"}
+          {showHidden ? "shown" : "hidden"} · sorted by {sort}
         </CardDescription>
       </CardHeader>
       <div
@@ -76,6 +79,18 @@ export const DropdownMenuExample = () => {
             >
               Show hidden files
             </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              label="Sort by"
+              value={sort}
+              onValueChange={setSort}
+            >
+              <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="modified">
+                Modified
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="size">Size</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
             <DropdownMenuSeparator />
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>

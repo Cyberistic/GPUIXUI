@@ -265,6 +265,18 @@ retired once both branches are one
     - [x] Form field-level errors: `validateFields` keeps the schema path and
       `Form` exposes `fieldErrors`/`errorFor` — plan 384; 4 logic + 2 native
       tests, both-direction proof
+    - [x] Menu radio groups: one exclusive value per group
+      (`DropdownMenuRadioGroup`/`DropdownMenuRadioItem` and the Context menu
+      pair), controlled, kept open, one marked row, available inside a submenu
+      — plan 387; 6 dropdown + 1 context native tests, 6 mutation proofs
+      (Dropdown menu 42, Context menu 19, behaviour 567); example, docs,
+      `docs/component-api.md` and inventory synced
+    - [x] Menu rows carry their accessible name: `MenuItem` names a plain-text
+      row from its child because 0.10.0 reports no name for a menu item; a
+      composed row still passes `aria-label` — measured in plan 387
+    - [x] Navigation menu: leaving an open panel for another trigger switches
+      panels — the pointer direction plan 387's probe found untested; 1 native
+      test (Navigation Menu 20); docs and inventory synced
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

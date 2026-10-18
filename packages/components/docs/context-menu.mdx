@@ -43,8 +43,13 @@ import {
 | `ContextMenuTrigger` | the area whose right click or `Shift+F10` opens the menu |
 | `ContextMenuContent` | the surface at the pointer, rendered while open |
 | `ContextMenuItem` / `ContextMenuCheckboxItem` | the shared rows |
+| `ContextMenuRadioGroup` / `ContextMenuRadioItem` | the shared exclusive choice |
 | `ContextMenuSeparator` / `ContextMenuLabel` / `ContextMenuGroup` | the shared structure |
 | `ContextMenuSub` / `ContextMenuSubTrigger` / `ContextMenuSubContent` | one secondary level |
+
+The radio group and row are the shared exclusive choice: controlled `value` /
+`onValueChange`, one marked row, and the menu stays open after choosing. The
+[Dropdown menu](./dropdown-menu) page has the long form.
 
 ## Right click
 
@@ -130,6 +135,8 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | `ContextMenuContent` | anchored surface | `label?: string` (default `"Context menu"`), `testId?: string` (default `"context-menu"`) |
 | `ContextMenuItem` | `div` (`role="menuitem"`) | the shared row props |
 | `ContextMenuCheckboxItem` | `div` (`role="menuitem"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
+| `ContextMenuRadioGroup` | `div` (`role="group"`) | `value: string \| null` (required), `onValueChange: (value: string) => void` (required), `label?: string` |
+| `ContextMenuRadioItem` | `div` (`role="menuitemradio"`) | `value: string` (required), plus the shared row props except `leading`, `closeOnSelect` and `style` (`style?: StateStyle<MenuRadioItemState>`) |
 | `ContextMenuGroup` | `div` (`role="group"`) | — |
 | `ContextMenuLabel` | `text` | — |
 | `ContextMenuSeparator` | `div` (`role="separator"`) | — |
@@ -148,13 +155,17 @@ match the row it represents.
 ## Style by state
 
 The rows are the shared menu parts: `ContextMenuItem.style` takes a
-`MenuItemState` (`{ disabled, highlighted }`) and `ContextMenuCheckboxItem.style`
-a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`). The
+`MenuItemState` (`{ disabled, highlighted }`), `ContextMenuCheckboxItem.style`
+a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`) and
+`ContextMenuRadioItem.style` a `MenuRadioItemState`
+(`{ checked, disabled, highlighted }`). The
 [Dropdown menu](./dropdown-menu) page has the same section.
 
 ## Accessibility and limitations
 
-- `role="menu"` on the surface, `menuitem`/`menuitemcheckbox` on rows. No
+- `role="menu"` on the surface, `menuitem`/`menuitemcheckbox`/`menuitemradio` on
+  rows and `group` on a group; a checkbox or radio row carries `aria-selected`
+  because 0.10.0 has no `aria-checked`. No
   `aria-haspopup` on the trigger (not available in 0.10.0), so the keyboard route
   is documented rather than announced.
 - There is no portal. The surface is a sibling of the trigger painted at window
@@ -167,16 +178,17 @@ a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`). The
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (18 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (19 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
 opening, `Shift+F10` opening at the trigger's bottom-left with focus in the menu,
 keyboard activation running a row, Escape returning focus to the trigger, a
-disabled trigger ignoring `Shift+F10`, type-ahead jumping to a row, and the
+disabled trigger ignoring `Shift+F10`, type-ahead jumping to a row, the
 submenu rules — `ArrowRight` opening and focusing the first row, a pointer click
 running a row and closing both levels, one-level Escape/ArrowLeft, and a
-right-edge menu whose submenu opens to the left.
+right-edge menu whose submenu opens to the left — and a radio row selected from
+the pointer that keeps the menu open.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

@@ -184,11 +184,16 @@ export const MenuItem = ({
   const active =
     instance !== undefined && Option.contains(activeId, instance.id);
   const state: MenuItemState = { disabled, highlighted: active };
+  // 0.10.0 does not lift a row's text child into its accessible name, so a
+  // plain-text row names itself. A composed row passes `aria-label`.
+  const name =
+    rest["aria-label"] ?? (P.isString(children) ? children : undefined);
 
   return (
     <div
       role="menuitem"
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       ref={setRow}
       tabIndex={disabled ? -1 : 0}
       onFocus={(event) => {

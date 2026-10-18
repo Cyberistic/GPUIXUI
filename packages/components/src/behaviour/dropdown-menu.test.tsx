@@ -24,6 +24,11 @@
  * Submenu placement regression: a submenu was always placed at its row's right
  * edge and relied on `fit="snap"`, so near the right window edge it was clamped
  * back over the row and the parent menu instead of opening to the left.
+ *
+ * Radio-group regression: the exclusive rule lived at every call site, so a
+ * group could mark none or several rows; a radio row closed the menu instead of
+ * staying open; a controlled group overwrote its caller's value; and a disabled
+ * radio row stayed reachable by the arrow keys.
  */
 
 import * as Option from "effect/Option";
@@ -38,6 +43,7 @@ import {
   hoverCentreOf,
   requireBounds,
 } from "../internal/interaction.js";
+import { a11yNodes } from "../internal/a11y.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -48,6 +54,8 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -218,6 +226,110 @@ const WithSubmenus = ({
     <Button testId="elsewhere">Elsewhere</Button>
   </div>
 );
+
+/** A controlled radio group with a disabled row and a following action. */
+const WithRadioGroup = ({
+  value,
+  onValueChange,
+}: {
+  readonly value: string | null;
+  readonly onValueChange: (value: string) => void;
+}) => (
+  <div style={{ display: "flex", flexDirection: "column", padding: 40 }}>
+    <DropdownMenu>
+      <DropdownMenuTrigger testId="trigger">View</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="View options">
+        <DropdownMenuRadioGroup
+          testId="sort-group"
+          label="Sort by"
+          value={value}
+          onValueChange={onValueChange}
+        >
+          <DropdownMenuRadioItem testId="sort-name" value="name">
+            Name
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem testId="sort-modified" value="modified">
+            Modified
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem testId="sort-size" value="size" disabled>
+            Size
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+        <DropdownMenuItem testId="after">After</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+);
+
+/** The same group owning its value, so a real selection can be observed. */
+const RadioMenu = ({
+  onValueChange,
+}: {
+  readonly onValueChange?: (value: string) => void;
+}) => {
+  const [value, setValue] = useState<string | null>("name");
+  return (
+    <WithRadioGroup
+      value={value}
+      onValueChange={(next) => {
+        setValue(next);
+        onValueChange?.(next);
+      }}
+    />
+  );
+};
+
+/** A radio group inside a submenu, so one level can be proven. */
+const WithRadioSubmenu = ({
+  value,
+  onValueChange,
+}: {
+  readonly value: string | null;
+  readonly onValueChange: (value: string) => void;
+}) => (
+  <div style={{ display: "flex", flexDirection: "column", padding: 40 }}>
+    <DropdownMenu defaultOpen>
+      <DropdownMenuTrigger testId="trigger">View</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="View options">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger testId="sort">Sort</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent testId="submenu" label="Sort">
+            <DropdownMenuRadioGroup
+              label="Sort by"
+              value={value}
+              onValueChange={onValueChange}
+            >
+              <DropdownMenuRadioItem testId="sub-name" value="name">
+                Name
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem testId="sub-modified" value="modified">
+                Modified
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  </div>
+);
+
+/** The same submenu group owning its value. */
+const RadioSubmenu = ({
+  onValueChange,
+}: {
+  readonly onValueChange: (value: string) => void;
+}) => {
+  const [value, setValue] = useState<string | null>("name");
+  return (
+    <WithRadioSubmenu
+      value={value}
+      onValueChange={(next) => {
+        setValue(next);
+        onValueChange(next);
+      }}
+    />
+  );
+};
 
 /** A menu at the right edge, where a right-hand submenu cannot fit. */
 const RightEdgeSubmenu = () => (
@@ -806,6 +918,157 @@ describe("DropdownMenu submenus", () => {
     menu.renderer.simulateKeystrokes("e");
 
     expect(focusedTestId(menu)).toEqual(Option.some("email"));
+
+    menu.unmount();
+  });
+});
+
+describe("DropdownMenu radio groups", () => {
+  it("marks exactly one radio row, reports the value and stays open", () => {
+    const onValueChange = vi.fn();
+    const menu = renderComponent(<RadioMenu onValueChange={onValueChange} />);
+    clickCentreOf(menu, "trigger");
+
+    clickCentreOf(menu, "sort-modified");
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith("modified");
+    expect(
+      menu.renderer.findByTestId("sort-modified")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(
+      menu.renderer.findByTestId("sort-name")?.customProps?.["aria-selected"],
+    ).toBe(false);
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+
+    const marked = ["sort-name", "sort-modified", "sort-size"].filter(
+      (testId) =>
+        menu.renderer.findByTestId(testId)?.customProps?.["aria-selected"] ===
+        true,
+    );
+    expect(marked).toEqual(["sort-modified"]);
+
+    menu.unmount();
+  });
+
+  it("keeps a controlled group on the caller's value", () => {
+    const onValueChange = vi.fn();
+    const menu = renderComponent(
+      <WithRadioGroup value="name" onValueChange={onValueChange} />,
+    );
+
+    clickCentreOf(menu, "trigger");
+    clickCentreOf(menu, "sort-modified");
+
+    expect(onValueChange).toHaveBeenCalledWith("modified");
+    expect(
+      menu.renderer.findByTestId("sort-name")?.customProps?.["aria-selected"],
+    ).toBe(true);
+    expect(
+      menu.renderer.findByTestId("sort-modified")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(false);
+
+    menu.unmount();
+  });
+
+  it("selects with Enter and Space and leaves one row marked", () => {
+    const onValueChange = vi.fn();
+    const menu = renderComponent(<RadioMenu onValueChange={onValueChange} />);
+    clickCentreOf(menu, "trigger");
+
+    menu.renderer.simulateKeystrokes("down");
+    expect(focusedTestId(menu)).toEqual(Option.some("sort-name"));
+    menu.renderer.simulateKeystrokes("down");
+    expect(focusedTestId(menu)).toEqual(Option.some("sort-modified"));
+    menu.renderer.simulateKeystrokes("enter");
+
+    menu.renderer.simulateKeystrokes("up");
+    menu.renderer.simulateKeystrokes("space");
+
+    // Pressing the row that is already marked reports nothing new.
+    menu.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange.mock.calls).toEqual([["modified"], ["name"]]);
+    expect(
+      menu.renderer.findByTestId("sort-modified")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(false);
+
+    menu.unmount();
+  });
+
+  it("skips a disabled radio row and refuses its press", () => {
+    const onValueChange = vi.fn();
+    const menu = renderComponent(<RadioMenu onValueChange={onValueChange} />);
+    clickCentreOf(menu, "trigger");
+
+    // Name, Modified, then After: the disabled Size row is skipped.
+    menu.renderer.simulateKeystrokes("down down down");
+    expect(focusedTestId(menu)).toEqual(Option.some("after"));
+
+    clickCentreOf(menu, "sort-size");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(
+      menu.renderer.findByTestId("sort-size")?.customProps?.["aria-selected"],
+    ).toBe(false);
+
+    menu.unmount();
+  });
+
+  it("names the group and reports the selected row as a menuitemradio", () => {
+    const menu = renderComponent(<RadioMenu />);
+    clickCentreOf(menu, "trigger");
+
+    expect(menu.renderer.findByTestId("sort-group")?.customProps).toMatchObject(
+      {
+        role: "group",
+        "aria-label": "Sort by",
+      },
+    );
+
+    const radios = a11yNodes(menu.renderer).filter(
+      (node) => node.role === "menuitemradio",
+    );
+    expect(radios.map((node) => node.name)).toEqual(
+      expect.arrayContaining(["Name", "Modified", "Size"]),
+    );
+    expect(
+      radios
+        .filter((node) => Option.getOrElse(node.selected, () => false))
+        .map((node) => node.name),
+    ).toEqual(["Name"]);
+
+    menu.unmount();
+  });
+
+  it("selects inside a submenu and closes one level on Escape", () => {
+    const onValueChange = vi.fn();
+    const menu = renderComponent(
+      <RadioSubmenu onValueChange={onValueChange} />,
+    );
+    clickCentreOf(menu, "sort");
+    expect(menu.renderer.findByTestId("submenu")).toBeDefined();
+
+    clickCentreOf(menu, "sub-modified");
+    expect(onValueChange).toHaveBeenCalledWith("modified");
+    expect(
+      menu.renderer.findByTestId("sub-modified")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(menu.renderer.findByTestId("submenu")).toBeDefined();
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+
+    menu.renderer.simulateKeystrokes("escape");
+    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+    expect(focusedTestId(menu)).toEqual(Option.some("sort"));
 
     menu.unmount();
   });

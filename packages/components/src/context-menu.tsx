@@ -43,6 +43,7 @@ import {
   MenuLabel,
   MenuSeparator,
 } from "./menu/item.js";
+import { MenuRadioGroup, MenuRadioItem } from "./menu/radio.js";
 import {
   MenuContext,
   useMenuState,
@@ -323,6 +324,8 @@ export {
   MenuGroup as ContextMenuGroup,
   MenuItem as ContextMenuItem,
   MenuLabel as ContextMenuLabel,
+  MenuRadioGroup as ContextMenuRadioGroup,
+  MenuRadioItem as ContextMenuRadioItem,
   MenuSeparator as ContextMenuSeparator,
 };
 
@@ -330,6 +333,12 @@ export type {
   MenuCheckboxItemProps as ContextMenuCheckboxItemProps,
   MenuItemProps as ContextMenuItemProps,
 } from "./menu/item.js";
+
+export type {
+  MenuRadioGroupProps as ContextMenuRadioGroupProps,
+  MenuRadioItemProps as ContextMenuRadioItemProps,
+  MenuRadioItemState as ContextMenuRadioItemState,
+} from "./menu/radio.js";
 
 export {
   MenuSub as ContextMenuSub,
@@ -353,6 +362,8 @@ const contextMenuParts: ReadonlyArray<PartComponent> = [
   MenuGroup,
   MenuLabel,
   MenuSeparator,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuSub,
   MenuSubTrigger,
   MenuSubContent,
@@ -374,6 +385,7 @@ const contextMenuContent: PartsContract = {
     MenuGroup,
     MenuLabel,
     MenuSeparator,
+    MenuRadioGroup,
     MenuSub,
   ],
   hint: "Put rows, groups, labels, separators and submenus directly inside ContextMenuContent.",

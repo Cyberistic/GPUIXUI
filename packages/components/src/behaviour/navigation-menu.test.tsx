@@ -328,6 +328,23 @@ describe("NavigationMenu", () => {
     nav.unmount();
   });
 
+  it("switches panels when the pointer leaves a panel for another trigger", async () => {
+    const nav = renderComponent(<Workspace openDelay={20} closeDelay={20} />);
+
+    hoverCentreOf(nav, "trigger-platform");
+    await until(() => isShown(nav, "panel-platform"));
+    hoverCentreOf(nav, "panel-platform");
+    await after(30);
+
+    hoverCentreOf(nav, "trigger-pricing");
+    await until(() => isShown(nav, "panel-pricing"));
+
+    expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
   it("stays open while the pointer travels into the panel", async () => {
     const nav = renderComponent(<Workspace openDelay={20} closeDelay={40} />);
 

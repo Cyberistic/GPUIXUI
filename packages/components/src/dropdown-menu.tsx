@@ -49,6 +49,7 @@ import {
   MenuLabel,
   MenuSeparator,
 } from "./menu/item.js";
+import { MenuRadioGroup, MenuRadioItem } from "./menu/radio.js";
 import {
   MenuContext,
   useMenuContext,
@@ -334,6 +335,8 @@ export {
   MenuGroup as DropdownMenuGroup,
   MenuItem as DropdownMenuItem,
   MenuLabel as DropdownMenuLabel,
+  MenuRadioGroup as DropdownMenuRadioGroup,
+  MenuRadioItem as DropdownMenuRadioItem,
   MenuSeparator as DropdownMenuSeparator,
 };
 
@@ -341,6 +344,12 @@ export type {
   MenuCheckboxItemProps as DropdownMenuCheckboxItemProps,
   MenuItemProps as DropdownMenuItemProps,
 } from "./menu/item.js";
+
+export type {
+  MenuRadioGroupProps as DropdownMenuRadioGroupProps,
+  MenuRadioItemProps as DropdownMenuRadioItemProps,
+  MenuRadioItemState as DropdownMenuRadioItemState,
+} from "./menu/radio.js";
 
 /** Every part of the dropdown menu, so a misplaced sibling is named. */
 const dropdownParts: ReadonlyArray<PartComponent> = [
@@ -352,6 +361,8 @@ const dropdownParts: ReadonlyArray<PartComponent> = [
   MenuGroup,
   MenuLabel,
   MenuSeparator,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuSub,
   MenuSubTrigger,
   MenuSubContent,
@@ -373,6 +384,7 @@ const dropdownContent: PartsContract = {
     MenuGroup,
     MenuLabel,
     MenuSeparator,
+    MenuRadioGroup,
     MenuSub,
   ],
   hint: "Put rows, groups, labels, separators and submenus directly inside DropdownMenuContent.",
@@ -391,6 +403,7 @@ export const dropdownMenuMeta = {
     "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
     "type-ahead is a case-insensitive 500 ms prefix search with no fuzzy scoring; a composed label needs textValue",
     "the checkbox row uses aria-selected and a check icon because 0.10.0 has no aria-checked",
+    "the radio row uses aria-selected and a dot because 0.10.0 has no aria-checked",
   ],
   docs: "docs/dropdown-menu.mdx",
   example: "examples/dropdown-menu.example.tsx",

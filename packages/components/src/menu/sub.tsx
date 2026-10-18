@@ -47,6 +47,7 @@ import {
   MenuSeparator,
   type MenuItemProps,
 } from "./item.js";
+import { MenuRadioGroup, MenuRadioItem } from "./radio.js";
 import {
   MenuContext,
   useMenuContext,
@@ -400,6 +401,8 @@ const subParts: ReadonlyArray<PartComponent> = [
   MenuGroup,
   MenuLabel,
   MenuSeparator,
+  MenuRadioGroup,
+  MenuRadioItem,
 ];
 
 const menuSub: PartsContract = {
@@ -418,6 +421,7 @@ const menuSubContent: PartsContract = {
     MenuGroup,
     MenuLabel,
     MenuSeparator,
+    MenuRadioGroup,
     MenuSub,
   ],
   hint: "Put rows, groups, labels, separators and nested submenus directly inside MenuSubContent.",

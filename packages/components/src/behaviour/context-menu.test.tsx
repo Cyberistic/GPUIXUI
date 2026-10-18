@@ -14,6 +14,10 @@
  * pointer press on a submenu row was treated as an outside press, closing both
  * levels before the click ran the row. Submenus also always opened right, so at
  * the window edge the runtime clamped one back over its row.
+ *
+ * Radio-group regression: a right-click menu could not express one exclusive
+ * choice, and a radio press closed the menu instead of leaving the setting
+ * visible.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -34,6 +38,8 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
   ContextMenuSeparator,
   ContextMenuSub,
   ContextMenuSubContent,
@@ -440,6 +446,53 @@ describe("ContextMenu submenus", () => {
     expect(row.renderer.findByTestId("submenu")).toBeUndefined();
     expect(row.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(row)).toEqual(Option.some("share"));
+
+    row.unmount();
+  });
+});
+
+/** A context menu whose sort order is one exclusive choice. */
+const WithRadioGroup = ({
+  onValueChange,
+}: {
+  readonly onValueChange: (value: string) => void;
+}) => (
+  <ContextMenu defaultOpen>
+    <ContextMenuTrigger testId="row" style={{ width: 320, height: 120 }}>
+      <text>Project</text>
+    </ContextMenuTrigger>
+    <ContextMenuContent testId="menu" label="Project actions">
+      <ContextMenuRadioGroup
+        label="Sort by"
+        value="name"
+        onValueChange={onValueChange}
+      >
+        <ContextMenuRadioItem testId="sort-name" value="name">
+          Name
+        </ContextMenuRadioItem>
+        <ContextMenuRadioItem testId="sort-modified" value="modified">
+          Modified
+        </ContextMenuRadioItem>
+      </ContextMenuRadioGroup>
+    </ContextMenuContent>
+  </ContextMenu>
+);
+
+describe("ContextMenu radio groups", () => {
+  it("selects a radio row from the pointer and keeps the menu open", () => {
+    const onValueChange = vi.fn();
+    const row = renderComponent(
+      <WithRadioGroup onValueChange={onValueChange} />,
+    );
+
+    clickCentreOf(row, "sort-modified");
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith("modified");
+    expect(row.renderer.findByTestId("menu")).toBeDefined();
+    expect(
+      row.renderer.findByTestId("sort-name")?.customProps?.["aria-selected"],
+    ).toBe(true);
 
     row.unmount();
   });
