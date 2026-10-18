@@ -672,11 +672,14 @@ the docs-site workstream; the `packages/components` half is plan 337)
 
 ## Phase G — release readiness
 
-`[ ]` `[░░░░░░░░░░]` 0/3
+`[~]` `[███░░░░░░░]` 1/3
 
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
-`[ ]` All gates green (`nub run check`, `nub run lint`, `nub run test`)
+`[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
+      re-run from the components worktree on 2026-10-18 (plan 517): all three
+      exit 0; the native behaviour suite is 672 and `test:perf` is 1/1. Re-run
+      before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)
 
