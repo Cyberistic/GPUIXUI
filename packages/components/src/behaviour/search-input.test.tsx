@@ -2,7 +2,9 @@
  * SearchInput behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: typing that never reached `onValueChange`; a clear
- * control offered on an empty field; clearing that forgot to give focus back to
+ * control offered on an empty field; a clear control offered on a disabled
+ * field, where it was the only way to change a value the user cannot type
+ * (plan 394); clearing that forgot to give focus back to
  * the field; Enter that submitted nothing; Escape that swallowed the key on an
  * empty field; a clear control that fired on Space key down instead of release;
  * a controlled field that changed its own display when the consumer said no; and
@@ -25,16 +27,19 @@ const Search = ({
   onSubmit,
   onClear,
   value,
+  disabled = false,
 }: {
   readonly onValueChange?: (value: string) => void;
   readonly onSubmit?: (value: string) => void;
   readonly onClear?: () => void;
   readonly value?: string;
+  readonly disabled?: boolean;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <SearchInput
       testId="search"
       value={value}
+      disabled={disabled}
       onValueChange={onValueChange}
       onSubmit={onSubmit}
       onClear={onClear}
@@ -164,6 +169,23 @@ describe("SearchInput", () => {
     expect(focusedTestId(search)).toEqual(Option.some("search"));
 
     search.unmount();
+  });
+
+  it("offers no clear control while the field is disabled", () => {
+    // A disabled field cannot be typed into, so a clear control there would be
+    // the only way to change it — and it would change a value the user cannot
+    // edit (plan 394). The enabled tree proves the same value still clears.
+    const disabled = renderComponent(<Search value="draft" disabled />);
+
+    expect(disabled.renderer.findByTestId("search-clear")).toBeUndefined();
+
+    disabled.unmount();
+
+    const enabled = renderComponent(<Search value="draft" />);
+
+    expect(enabled.renderer.findByTestId("search-clear")).toBeDefined();
+
+    enabled.unmount();
   });
 
   it("reflects autoFocus in its focus state", () => {

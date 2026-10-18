@@ -28,7 +28,7 @@ import {
 | Part | Responsibility |
 | ---- | -------------- |
 | `Collapsible` | open state and the column that holds the parts |
-| `CollapsibleTrigger` | a button with `aria-expanded`; click, Enter on press and Space on release toggle |
+| `CollapsibleTrigger` | a button with `aria-expanded`; click, Enter on press and Space on release toggle; `disabled` leaves it inert |
 | `CollapsibleContent` | the body; stays mounted and reveals its measured height |
 
 The body is not unmounted while closed. That keeps the state inside it — a
@@ -69,24 +69,29 @@ focus before letting go cancels the change. A held key does not toggle twice.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `Collapsible` | `div` | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
-| `CollapsibleTrigger` | `div` (`role="button"`, `aria-expanded`) | `style?: StateStyle<{ open: boolean; closed: boolean; focused: boolean }>` |
+| `CollapsibleTrigger` | `div` (`role="button"`, `aria-expanded`) | `disabled?: boolean` (default `false`), `style?: StateStyle<{ open: boolean; closed: boolean; disabled: boolean; focused: boolean }>` |
 | `CollapsibleContent` | `div` (inside the reveal) | `animate?: boolean` (default `true`) |
 
 `autoFocus` sets the initial `focused` state, so the trigger's ring is painted
 on the first commit — the runtime applies native focus after React's effects and
 never dispatches `onFocus`.
 
+A disabled trigger leaves the tab order, drops its own click and key action and
+dims to 50%; it paints no hover, press or focus ring, and a caller's `onKeyDown`
+still runs. `autoFocus` on a disabled trigger is ignored.
+
 ## Theming
 
 The trigger uses the `label` type role, `colors.foreground`, `colors.hover` on
-hover and `colors.active` while pressed, with a focus ring on focus. The body
+hover and `colors.active` while pressed, with a focus ring on focus. A disabled
+trigger paints none of those interaction states. The body
 uses `colors.mutedForeground` and the theme's spacing steps; there is no surface
 of its own, so it inherits the card or panel around it.
 
 ## Style by state
 
 `CollapsibleTrigger` takes a `StyleDesc` or a function of
-`CollapsibleTriggerState` (`{ open, closed, focused }`).
+`CollapsibleTriggerState` (`{ open, closed, disabled, focused }`).
 
 ```tsx
 <CollapsibleTrigger
@@ -115,11 +120,12 @@ of its own, so it inherits the card or panel around it.
 
 ## Verification
 
-`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (11 tests):
+`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (13 tests):
 click toggling with the body kept mounted, `aria-expanded` following the body,
 Enter on press and Space on release, the controlled contract in both directions,
-the closed and open tab order, state surviving a close and a re-open, and the
-measured-height tween (plus the `animate={false}` snap).
+the closed and open tab order, state surviving a close and a re-open, the
+measured-height tween (plus the `animate={false}` snap), and a disabled trigger
+that stays inert by pointer and key and paints no ring from `autoFocus`.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

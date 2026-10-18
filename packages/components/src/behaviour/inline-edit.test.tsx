@@ -5,9 +5,10 @@
  * commits twice (keyDown and submit); Escape that commits the draft; an
  * unchanged draft that still calls `onCommit`; a disabled control that opens;
  * a controlled edit state the component overrides; Space starting the edit
- * on key down instead of on release; and an edit that stays open when the user
+ * on key down instead of on release; an edit that stays open when the user
  * leaves the field, because a live window does not deliver React's `onBlur` for
- * a native focus change (plan 379).
+ * a native focus change (plan 379); and a disabled display that painted a ring
+ * from `autoFocus` and a hover fill (plan 394).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -347,6 +348,24 @@ describe("InlineEdit", () => {
 
     expect(focusedTestId(edit)).toEqual(Option.some("name"));
     expect(edit.renderer.findByTestId("name")?.style.boxShadow).toBeDefined();
+
+    edit.unmount();
+  });
+
+  it("paints no ring and no hover while disabled", () => {
+    // `autoFocus` on a disabled control could never be honoured, so seeding the
+    // focus state from the prop painted a ring on a control that cannot take
+    // focus; the hover fill had the same problem (plan 394).
+    const edit = renderComponent(
+      <Harness disabled host={{ autoFocus: true }} />,
+    );
+
+    const display = edit.renderer.findByTestId("name");
+
+    expect(focusedTestId(edit)).toEqual(Option.none());
+    expect(display?.style.boxShadow).toBeUndefined();
+    expect(display?.style.hover).toBeUndefined();
+    expect(display?.customProps?.tabIndex).toBe(-1);
 
     edit.unmount();
   });

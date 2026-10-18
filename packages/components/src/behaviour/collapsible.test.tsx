@@ -6,8 +6,10 @@
  * `trigger → draft → after`, plan 372 §2); `aria-expanded` that disagreed with
  * the visible body; a trigger that only answered the mouse, not Enter/Space; a
  * controlled section that opened itself when the consumer kept `open={false}`;
- * Space toggling on key down instead of on release; and a body that snapped
- * instead of tweening to its measured height.
+ * Space toggling on key down instead of on release; a body that snapped
+ * instead of tweening to its measured height; and a `disabled` trigger that
+ * stayed in the tab order, kept its hover fill and still toggled, or that
+ * painted a ring from `autoFocus` (plan 394).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -304,6 +306,61 @@ describe("Collapsible", () => {
     ).toBeLessThanOrEqual(1);
 
     section.renderer.clockResume();
+    section.unmount();
+  });
+
+  it("is inert while disabled", () => {
+    // A caller's `disabled` used to fall through to the host div: the trigger
+    // stayed in the tab order, kept its hover fill and still toggled (plan 394).
+    const onOpenChange = vi.fn();
+    const onKeyDown = vi.fn();
+    const section = renderComponent(
+      <Collapsible onOpenChange={onOpenChange}>
+        <CollapsibleTrigger testId="trigger" disabled onKeyDown={onKeyDown}>
+          Advanced options
+        </CollapsibleTrigger>
+        <CollapsibleContent testId="content">
+          <text>Retry budget</text>
+        </CollapsibleContent>
+      </Collapsible>,
+    );
+    const trigger = section.renderer.findByTestId("trigger");
+    expect(trigger).toBeDefined();
+    if (trigger === undefined) return;
+
+    clickCentreOf(section, "trigger");
+    section.renderer.nativeSimulateKeyDown(trigger.id, "enter");
+    section.renderer.nativeSimulateKeyUp(trigger.id, "enter");
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(isHidden(section, "content")).toBe(true);
+    expect(trigger.customProps?.tabIndex).toBe(-1);
+    expect(trigger.style.opacity).toBe(0.5);
+    expect(trigger.style.hover).toBeUndefined();
+    // The caller's handler still runs: the component mutes its own action only.
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+
+    section.unmount();
+  });
+
+  it("paints no ring while disabled and auto-focused", () => {
+    // `autoFocus` on a disabled trigger could never be honoured, so the focus
+    // state seeded from the prop painted a ring on an unreachable control
+    // (plan 394).
+    const section = renderComponent(
+      <Collapsible>
+        <CollapsibleTrigger testId="trigger" disabled autoFocus>
+          Advanced options
+        </CollapsibleTrigger>
+        <CollapsibleContent testId="content">body</CollapsibleContent>
+      </Collapsible>,
+    );
+
+    expect(focusedTestId(section)).toEqual(Option.none());
+    expect(
+      section.renderer.findByTestId("trigger")?.style.boxShadow,
+    ).toBeUndefined();
+
     section.unmount();
   });
 

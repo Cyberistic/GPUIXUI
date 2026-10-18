@@ -25,7 +25,8 @@
  * Type-ahead: typing a prefix moved nothing, a repeated letter did not advance,
  * a disabled row won the match, an uppercase letter never matched, a missed
  * prefix poisoned the next search, and a typed jump must not change the
- * selection in multiple mode.
+ * selection in multiple mode. A disabled row also kept the pointer cursor and
+ * the hover/press fills, so it read as pressable (plan 394).
  *
  * Paint cost (plan 339): a roving-focus move used to re-render every row. The
  * list repaints only the row that lost the ring and the row that gained it;
@@ -270,6 +271,25 @@ describe("List", () => {
 
     expect(onValueChange).not.toHaveBeenCalled();
     expect(list.renderer.findByTestId("row-b")?.style.opacity).toBe(0.5);
+
+    list.unmount();
+  });
+
+  it("shows no pointer affordance on a disabled row", () => {
+    // A disabled row is skipped by clicks but used to keep the pointer cursor
+    // and the hover/press fills, so it read as pressable (plan 394).
+    const list = renderComponent(catalog);
+
+    const disabled = list.renderer.findByTestId("row-b")?.style;
+    const enabled = list.renderer.findByTestId("row-a")?.style;
+
+    expect(disabled?.cursor).toBe("not-allowed");
+    expect(disabled?.hover).toBeUndefined();
+    expect(disabled?.active).toBeUndefined();
+    expect(enabled?.cursor).toBe("pointer");
+    expect(enabled?.hover).toMatchObject({
+      backgroundColor: darkTheme.colors.accent,
+    });
 
     list.unmount();
   });

@@ -57,7 +57,7 @@ never dispatches `onFocus`.
 | `onCommit` | `(value: string) => void` | — | Called on a changed Enter/blur commit. |
 | `label` | `string` | — | The accessible name of the display and the input. |
 | `placeholder` | `string` | `"—"` | Shown in `mutedForeground` while the value is empty. |
-| `disabled` | `boolean` | `false` | Leaves the tab order, ignores activation. |
+| `disabled` | `boolean` | `false` | Leaves the tab order, ignores activation, paints no hover and no ring (including from `autoFocus`). |
 | `editing` | `boolean` | — | Controlled edit state. |
 | `defaultEditing` | `boolean` | `false` | Uncontrolled starting state. |
 | `onEditingChange` | `(editing: boolean) => void` | — | Fired when the edit state changes. |
@@ -98,14 +98,15 @@ states with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (15 tests):
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (16 tests):
 display mode, click-to-edit with focus, keyboard entry with Space starting on
 release, Enter commit with focus return, Escape discard, blur commit, an outside
 press that commits and restores the display, a press on another control that
 keeps its focus, a `Tab` commit, an inside press that must not commit, the
 unchanged/disabled guards, a controlled edit state, and the caller's display
 (`onClick`/`onKeyDown`) and field (`onChange`/`onSubmit`/`onFocus`/`onBlur`/
-`onMouseDownOutside`) handlers composing with the swap and the commit contract.
+`onMouseDownOutside`) handlers composing with the swap and the commit contract,
+and a disabled display that paints neither a hover fill nor a ring.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

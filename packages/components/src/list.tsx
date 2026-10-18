@@ -775,7 +775,8 @@ export const ListItem = ({
             : theme.density.rowHeight + theme.spacing.md,
           borderRadius: theme.radius.sm,
           opacity: disabled ? 0.5 : 1,
-          ...(focusable
+          cursor: disabled ? "not-allowed" : undefined,
+          ...(focusable && !disabled
             ? {
                 cursor: "pointer",
                 hover: { backgroundColor: theme.colors.accent },

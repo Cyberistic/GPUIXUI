@@ -91,7 +91,7 @@ export const InlineEdit = ({
     onChange: onEditingChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useState(autoFocus);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const [input, setInput] = useState<PublicInstance | undefined>(undefined);
   const display = useRef<PublicInstance | null>(null);
   // Enter can arrive twice (keyDown and submit); one finish per edit.
@@ -198,7 +198,9 @@ export const InlineEdit = ({
             borderRadius: theme.radius.sm,
             opacity: disabled ? 0.5 : 1,
             ...(focused ? focusRing(theme) : {}),
-            hover: { backgroundColor: theme.colors.accent },
+            hover: disabled
+              ? undefined
+              : { backgroundColor: theme.colors.accent },
           },
           resolveStyle(style, state),
         )}

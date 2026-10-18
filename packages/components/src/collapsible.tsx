@@ -87,19 +87,23 @@ export const Collapsible = ({
 
 /** {@link CollapsibleTrigger} props. */
 export interface CollapsibleTriggerProps extends Omit<Props, "style"> {
+  /** Leave the tab order, drop activation and dim. Never inferred. */
+  readonly disabled?: boolean;
   /** A style, or a function of the trigger's state. */
   readonly style?: StateStyle<CollapsibleTriggerState>;
 }
 
-/** What the trigger draws: the section's open state and its own focus. */
+/** What the trigger draws: the section's open state, its own focus and input. */
 export interface CollapsibleTriggerState {
   readonly open: boolean;
   readonly closed: boolean;
+  readonly disabled: boolean;
   readonly focused: boolean;
 }
 
 /** A button that opens and closes its section. */
 export const CollapsibleTrigger = ({
+  disabled = false,
   onClick,
   onKeyDown,
   onKeyUp,
@@ -113,14 +117,17 @@ export const CollapsibleTrigger = ({
   const theme = useTheme();
   const { open, setOpen } = useCollapsibleContext();
   const name = controlName(rest["aria-label"], children);
-  const [focused, setFocused] = useState(autoFocus);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const state: CollapsibleTriggerState = {
     open,
     closed: !open,
+    disabled,
     focused,
   };
 
-  const toggle = (): void => setOpen(!open);
+  const toggle = (): void => {
+    if (!disabled) setOpen(!open);
+  };
 
   return (
     <div
@@ -128,13 +135,17 @@ export const CollapsibleTrigger = ({
       aria-expanded={open}
       {...rest}
       {...(name === undefined ? {} : { "aria-label": name })}
-      autoFocus={autoFocus}
-      tabIndex={0}
-      onClick={(event) => {
-        onClick?.(event);
-        toggle();
-      }}
-      {...activationHandlers(toggle, { onKeyDown, onKeyUp })}
+      autoFocus={autoFocus && !disabled}
+      tabIndex={disabled ? -1 : 0}
+      onClick={
+        disabled
+          ? undefined
+          : (event) => {
+              onClick?.(event);
+              toggle();
+            }
+      }
+      {...activationHandlers(toggle, { disabled, onKeyDown, onKeyUp })}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);
@@ -157,9 +168,12 @@ export const CollapsibleTrigger = ({
           paddingBottom: theme.spacing.sm,
           borderRadius: theme.radius.sm,
           color: theme.colors.foreground,
-          cursor: "pointer",
-          hover: { backgroundColor: theme.colors.hover },
-          active: { backgroundColor: theme.colors.active },
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+          hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
+          active: disabled
+            ? undefined
+            : { backgroundColor: theme.colors.active },
           ...(focused ? focusRing(theme) : {}),
         },
         resolveStyle(style, state),

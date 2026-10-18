@@ -289,6 +289,13 @@ retired once both branches are one
       run. The dismiss check now tests every enclosing menu surface; 4 dropdown
       + 1 context native tests, both-direction proof (behaviour 583); docs,
       examples and inventory synced
+    - [x] Disabled means inert — plan 394: measured five leaks (a disabled
+      Button/IconButton kept its hover/press fill, InlineEdit painted a ring and
+      a hover with `disabled` + `autoFocus`, `CollapsibleTrigger` had no
+      `disabled` at all, a disabled SearchInput still cleared, a disabled List row
+      kept the pointer cursor and hover). 6 native cases (Button 13, InlineEdit
+      16, Collapsible 13, SearchInput 10, List 44, behaviour 608), five mutation
+      proofs; docs, `COMPONENTS.md` and the inventory synced
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

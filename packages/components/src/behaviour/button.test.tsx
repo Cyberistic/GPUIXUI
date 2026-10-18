@@ -125,6 +125,31 @@ describe("Button", () => {
     button.unmount();
   });
 
+  it("carries no hover or press fill while disabled", () => {
+    // A control that cannot be pressed must not light up under the pointer: the
+    // variant's hover/active diffs have to be cleared, not merely muted
+    // (plan 394).
+    const pair = renderComponent(
+      <div style={{ display: "flex", flexDirection: "row", gap: 16 }}>
+        <Button testId="disabled" variant="primary" disabled>
+          Save
+        </Button>
+        <Button testId="enabled" variant="primary">
+          Save
+        </Button>
+      </div>,
+    );
+
+    const disabled = pair.renderer.findByTestId("disabled")?.style;
+    const enabled = pair.renderer.findByTestId("enabled")?.style;
+
+    expect(disabled?.hover).toBeUndefined();
+    expect(disabled?.active).toBeUndefined();
+    expect(enabled?.hover).toBeDefined();
+
+    pair.unmount();
+  });
+
   it("is a button that a tab stop can reach", () => {
     const button = renderComponent(<Button testId="button">Save</Button>);
 

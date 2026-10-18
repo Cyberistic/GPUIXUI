@@ -127,11 +127,20 @@ const activation = (
   }),
 });
 
-/** A control's look when it is disabled: dimmed, and out of the tab order. */
-const disabledStyle = (disabled: boolean): StyleDesc => ({
-  opacity: disabled ? 0.5 : 1,
-  cursor: disabled ? "not-allowed" : "pointer",
-});
+/**
+ * A control's look when it is disabled: dimmed, out of the tab order, and inert
+ * — the variant's hover and press diffs are cleared, because a control that
+ * cannot be pressed must not light up under the pointer (plan 394).
+ */
+const disabledStyle = (disabled: boolean): StyleDesc =>
+  disabled
+    ? {
+        opacity: 0.5,
+        cursor: "not-allowed",
+        hover: undefined,
+        active: undefined,
+      }
+    : { opacity: 1, cursor: "pointer" };
 
 /**
  * A labelled action. `variant` picks the look, `size` the density-defined

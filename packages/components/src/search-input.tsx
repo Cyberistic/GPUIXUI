@@ -150,7 +150,7 @@ export const SearchInput = ({
           color: theme.colors.inputForeground,
         }}
       />
-      {value === "" ? null : (
+      {value === "" || disabled ? null : (
         <div
           role="button"
           aria-label="Clear search"

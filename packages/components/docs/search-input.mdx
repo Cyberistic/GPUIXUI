@@ -71,6 +71,10 @@ Clicking the clear control (or pressing Escape) empties the field, calls
 | `disabled` | `boolean` | `false` |
 | `style` | `StateStyle<{ disabled: boolean; focused: boolean }>` | — |
 
+`disabled` makes the field `readOnly`, dims it, drops the focus ring and hides
+the clear control: a field the user cannot type into must not offer the only way
+to change it.
+
 ## Theming
 
 The container paints `colors.background`, a `borderWidth.thin` border in
@@ -105,9 +109,9 @@ dispatches `onFocus`.
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (9 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (10 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
-text, clearing and returning focus, clearing from the keyboard on Space
+text and never on a disabled field, clearing and returning focus, clearing from the keyboard on Space
 release, Enter submitting, Escape clearing once, the controlled contract, and a
 caller `ref` composed with the internal one.
 

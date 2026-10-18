@@ -141,6 +141,7 @@ describe("state-aware style", () => {
     expect(states.at(-1)).toEqual({
       open: true,
       closed: false,
+      disabled: false,
       focused: false,
     });
     root.unmount();
