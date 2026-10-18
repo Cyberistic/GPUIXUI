@@ -1,0 +1,149 @@
+---
+title: Native smoke suite
+description: The platform-free harness and the playground adapter that prove GPUix behaviour.
+---
+
+A component is only finished when it has been driven in a real GPUix runtime.
+The suite that does that is split in two on purpose, so its model, report and
+preflight can be tested on a host with no native binding:
+
+| Half | Package | May import GPUix | Runs on |
+| ---- | ------- | ---------------- | ------- |
+| platform-free | `@gpuixui/testing` | no | any host |
+| native adapter | `apps/playground` | yes | a host with the `0.10.0` binding |
+
+The playground adapts a real renderer to one interface, `SmokeHost`, and every
+scenario then talks to plain values. Nothing in a scenario imports `@gpuix/*`,
+and a browser preview is never evidence: the live surface on this site is a
+different renderer from the desktop binary.
+
+## Run it
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js
+
+# one scenario only
+nub apps/playground/dist/smoke/run.js --only floating-placement
+
+# build and run in one step
+nub run --filter playground smoke
+```
+
+The suite writes `.artifacts/smoke-report.json` and, when asked, screenshots.
+The exit code is the contract:
+
+| Code | Meaning |
+| ---- | ------- |
+| `0` | a report was produced and every scenario passed |
+| `1` | a report was produced and something failed |
+| `2` | no binding loaded, so no scenario ran and there is no evidence |
+
+`Report.exitCode` only returns `0` or `1` for a report. The playground CLI adds
+`2` **before running anything** when the preflight cannot load a binding
+(`EXIT.unverified`). An `exit 2` run upgrades no row in the
+[component inventory](/docs/components) — treat it as "run this where the check
+can run", never as a pass.
+
+The recorded `darwin-x64` results on this host come from a locally built
+`@gpuix/native@0.10.0` artifact. A published-binary run on CI is still the gold
+standard; [GPUix capabilities](/docs/capabilities) records which results were
+measured and on what.
+
+## The host boundary
+
+The adapter is the only place a GPUix type appears. It exposes an input surface
+and an inspection surface:
+
+| `SmokeHost` | What it answers |
+| ----------- | --------------- |
+| `text`, `paintedText` | what the tree contains, and what `<code>`/`<markdown>` painted |
+| `bounds`, `scrollOffset` | measured rectangles and offsets |
+| `paintedStyle` | the runtime's own style report for a `testId`, decoded |
+| `focused` | the currently focused `testId` |
+| `click`, `clickWindow`, `key` | pointer and keyboard input |
+| `focusNext`, `focusPrevious` | native focus traversal |
+| `wheel`, `drag` | scroll and pointer gestures |
+| `screenshot` | a capture written to a path |
+| `advance` | the runtime's clock |
+
+`paintedStyle` is a `StyleSnapshot` decoded at the adapter boundary. A property
+the runtime did not report is `None`; a payload whose type changed fails the
+decode, deliberately, because a runtime that altered its own style report is a
+defect a scenario must see rather than a difference to paper over. A screenshot
+is an artifact, never an assertion.
+
+## The check model
+
+A scenario is one capability, one view and one `steps` effect:
+
+- `expectEqual`, `expectNear`, `expectContains`, `expectSome` and `check` record
+  a passing check when they hold.
+- A failed assertion becomes `Failed` data with a label naming what was expected
+  and measured; a thrown or died step becomes `Errored`.
+- A scenario can never fail the suite. The next scenario still runs, and
+  `reportJson` encodes the whole report through its schema.
+- A capability's verdict in a report is `verified` when every scenario covering
+  it passed, otherwise `failed`. "Unverified" is not a row inside a report; it is
+  the absence of one (`exit 2`).
+
+`Report.formatReport` renders the table and the failure detail.
+`Report.reportJson` validates on the way out, so the same schema decodes it back.
+`Report.passed` is true only when at least one scenario ran and every scenario
+passed.
+
+## Write a scenario
+
+A real one, from the suite:
+
+<include lang="tsx" meta='title="apps/playground/src/scenarios/layout.tsx"'>
+  ../../../../apps/playground/src/scenarios/layout.tsx
+</include>
+
+Two rules are visible in it. Measure bounds and compare within a tolerance
+instead of asserting a screenshot; and never reach for a GPUix type from
+`steps` — the context only offers plain values.
+
+## Preflight
+
+`Runtime.detectRuntime` loads the caller's binding and never fails. It returns
+`RuntimeReady` or `RuntimeUnsupported` with a `bindingHint` that names the
+remedy for that platform and architecture. That is why the playground can
+explain an unsupported host instead of crashing, and why the report is only
+written after a green preflight.
+
+```sh
+nub run --filter @gpuixui/testing build
+nub run --filter @gpuixui/testing check-types
+nub run --filter @gpuixui/testing test
+```
+
+Those three prove the platform-free half on any host. They do not prove any
+GPUix behaviour; that needs the playground half and a real binding.
+
+## What it does not prove
+
+- **A browser renderer is not the desktop binary.** The live scenes on this site
+  are labelled as a browser surface, not as native evidence.
+- **A screenshot is not a check.** Look at it as an artifact; the assertions are
+  measured values in the report.
+- **Scenario coverage is not component coverage.** The scenarios are capability
+  probes. A per-component playground screen would move a page to tier S; most
+  pages currently name their native coverage or show a live scene.
+- **A local build is not the published artifact.** The host's `darwin-x64`
+  binding is built from the pinned source; a published-binary run belongs on CI.
+- **`exit 2` is not evidence.** No scenario ran, so no capability changed.
+
+## Source
+
+<include lang="ts" meta='title="packages/testing/src/index.ts"'>
+  ../../../../packages/testing/src/index.ts
+</include>
+
+## Related
+
+- [GPUix capabilities](/docs/capabilities) — the measured verdicts and the
+  scenario that proves each one.
+- [Contributing](/docs/contributing) — the gates a change must pass.
+- [Components](/docs/components) — the inventory the suite backs.
+- [Examples](/docs/examples) — the runnable compositions.

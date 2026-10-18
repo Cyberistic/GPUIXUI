@@ -76,7 +76,7 @@ export const EXCLUDED_ENTRIES: ReadonlyArray<{
   {
     package: "@gpuixui/testing",
     reason:
-      "the native smoke harness, built to dist and not a dependency of the docs site; its runs are documented on Contributing",
+      "the native smoke harness, built to dist and not a dependency of the docs site; it is documented on the Native smoke suite page",
   },
 ];
 

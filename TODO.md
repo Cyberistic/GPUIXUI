@@ -469,9 +469,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–489)
+## Docs site workstream (plans 410–491)
 
-`[x]` `[██████████]` 91/91
+`[x]` `[██████████]` 92/92
+
+`[x]` **The native smoke suite gets a real page (plan 491)** — `/docs/native-testing`
+      documents the platform-free harness, the playground adapter, the `0`/`1`/`2`
+      exit contract, the scenario model and the limits; Contributing, Architecture
+      and the Values API exclusion now point at it, and `native-testing.test.ts`
+      derives the namespaces and commands from the package and the CLI. Four
+      two-direction proofs recorded in plan 491 §8.
 
 `[x]` **The public value exports have a generated API index (plan 490)** — the
       component pages document props and `/docs/extending` shows the `core/`

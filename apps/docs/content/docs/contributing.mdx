@@ -36,6 +36,20 @@ is not complete until it is verified in the real GPUix runtime. The record
 fields, required sections, MDX blocks and guards a page owes are on
 [Component pages](/docs/component-pages).
 
+## Native runtime
+
+A component's interaction is not verified by a browser test. Build the
+playground and run the native smoke suite on a host with the GPUix binding:
+
+```sh
+nub run --filter playground smoke
+```
+
+Exit `0` means every scenario passed, `1` means one failed, and `2` means no
+binding loaded, so nothing ran. `2` is not a pass. The harness, the scenario
+model and the limits of what it proves are on
+[Native smoke suite](/docs/native-testing).
+
 ## Docs site
 
 `apps/docs` is a Fumadocs app. Its unit suite reads the content source and the
