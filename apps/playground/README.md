@@ -608,7 +608,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `22/22`.
+exact, and focus/Escape and the close button hold. The live suite is `24/24`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -797,7 +797,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 69-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 74-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -823,6 +823,8 @@ live pass is citable evidence rather than a second log format.
 | `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
 | `live-restore` | the shipped `workspace-restore` probe in a window: a paced divider drag paints 320 → 400, a tab activation makes `active=two`, `scrollToItem(120, 16)` anchors the list, and save → reset → restore re-applies the split, the tab and the anchor exactly (`[120,16]`, row 120 painted, row 0 absent). Native focus is **not** restored, and a click on row 121 focuses the restored list |
 | `live-table-sort` | the shipped `table-select-sort` view: a real wheel moves the body (`y ≈ -200`), `table-sort` makes `table-first` read `Item 199` (the reordered row the automation tree points at), a click selects `r199`, and the selection survives a re-sort back to `Item 000` |
+| `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and a disabled row is inert — 15 checks. **A key reaches the focused row but does not bubble to the List root**, so arrow navigation stays headless-only (see the rule below) |
+| `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 17 checks. **A live click focuses a tab natively without running React's `onFocus`**, so an arrow starts from the first tab (same root cause) |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).
@@ -837,6 +839,19 @@ Two rules the runner needs, both measured:
   reads. `simulateClick` returning is not the same as React having committed.
   The same rule paces a drag: six moves sent back to back left the split at
   `320`, and the same six one frame apart took it to `400`.
+
+A third rule came out of the Tier 2 catalogue and is a **component constraint**,
+not a harness quirk: a real window delivers a key to the **focused element
+only**. The `TestRenderer` bubbles a key from a row to its list (or from a tab
+trigger to the tab list), so ancestor `onKeyDown` handlers work headless; live
+they never run. `live-tier2-foundation` proves it with a counter on the row
+itself — the focused row's handler fires while the List root's does not — and
+`live-tier2-navigation` shows the same for Tabs, where a click also focuses
+natively without running React's `onFocus`. A component that wants keyboard
+navigation in a real window must put its roving handler on each focusable item
+(or use the window key handler). The two live scenarios assert the measured
+behaviour until the components workstream fixes it; the headless assertions are
+still valid for the `TestRenderer` contract.
 
 Exit codes match the headless suite: `0` passed, `1` a failed check, `2` no
 window (CI, a locked session, a missing binding) — and no report is written on
@@ -918,9 +933,10 @@ Three consumer-path rules hold across all five:
   `role="img"` to AccessKit `Image` even though the plan-160 table did not list
   it.
 
-`tier2-foundation` and `tier2-navigation` are `TestRenderer` evidence. Live
-parity for them is a follow-up; the overlay views already run in a real window
-via `live-tier2-*` (plan `331`).
+`tier2-foundation` and `tier2-navigation` also run in a real window as
+`live-tier2-foundation` and `live-tier2-navigation` (plan `344`). That run
+measured the key-delivery limit described above; the click-driven interactions
+all hold live.
 
 ## The cost model (plan `302`)
 
@@ -1103,7 +1119,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 22/22 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 24/24 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card and

@@ -37,7 +37,9 @@ import { messageScrollerScenario } from "../scenarios/message-scroller.js";
 import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
 import { replaceScenario } from "../scenarios/replace.js";
 import { tier2DialogScenario } from "../scenarios/tier2-dialog.js";
+import { tier2FoundationScenario } from "../scenarios/tier2-foundation.js";
 import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
+import { tier2NavigationScenario } from "../scenarios/tier2-navigation.js";
 import { tier2ToastScenario } from "../scenarios/tier2-toast.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -1981,6 +1983,201 @@ const tier2Toast: LiveScenario = {
     }),
 };
 
+const tier2Foundation: LiveScenario = {
+  id: "live-tier2-foundation",
+  title: "Live Tier 2: the foundation parts and the List selection",
+  capability: "tier2",
+  view: tier2FoundationScenario.view,
+  ready: "tier2-foundation-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-foundation-readout", "selected=inbox");
+      yield* ctx.expectEqual(
+        "the card title paints in a real window",
+        yield* textOf(ctx, "card-title"),
+        "Deployment",
+      );
+      const elevated = yield* boxOf(ctx, "card-elevated");
+      const plain = yield* boxOf(ctx, "card-plain");
+      yield* ctx.expectEqual(
+        "the cards stack in declaration order",
+        elevated.y < plain.y,
+        true,
+      );
+      const avatar = yield* boxOf(ctx, "avatar-md");
+      yield* ctx.expectEqual("the avatar is 32 px live", avatar.width, 32);
+
+      yield* ctx.host.click("alert-dismiss");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-foundation-readout", "dismissed=true");
+      yield* ctx.expectEqual(
+        "the alert left the live tree",
+        (yield* ctx.host.bounds("alert-info")) === null,
+        true,
+      );
+
+      yield* ctx.host.click("empty-action");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-foundation-readout", "created=1");
+      yield* ctx.expectContains(
+        "the empty state's action ran live",
+        yield* textOf(ctx, "tier2-foundation-readout"),
+        "created=1",
+      );
+
+      yield* ctx.host.click("list-row-trash");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-foundation-readout", "selected=trash");
+      yield* waitForFocus(ctx, "list-row-trash");
+
+      yield* ctx.host.click("list-row-inbox");
+      yield* waitForFocus(ctx, "list-row-inbox");
+      // Measured: the focused row receives the key (the probe counter moves),
+      // but the List root's `onKeyDown` never fires. The live runtime delivers
+      // a key to the focused element only; ancestor React handlers are not on
+      // the path. The headless `TestRenderer` bubbles here, which is why the
+      // headless List contract passes. Recorded as a components defect.
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the focused row receives the key",
+        yield* textOf(ctx, "tier2-foundation-readout"),
+        "keys=1",
+      );
+      yield* ctx.expectEqual(
+        "a key does not reach the List root in a live window (measured limit)",
+        yield* focusedOf(ctx),
+        "list-row-inbox",
+      );
+
+      yield* ctx.host.click("list-row-trash");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-foundation-readout", "selected=trash");
+      yield* ctx.host.click("list-row-spam");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a disabled row changes nothing live",
+        yield* textOf(ctx, "tier2-foundation-readout"),
+        "selected=trash",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Foundation.id}.png`);
+    }),
+};
+
+const tier2Navigation: LiveScenario = {
+  id: "live-tier2-navigation",
+  title: "Live Tier 2: Tabs, Accordion, Collapsible, Breadcrumb and Pagination",
+  capability: "tier2",
+  view: tier2NavigationScenario.view,
+  ready: "tier2-navigation-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-navigation-readout", "tab=overview");
+      yield* boxOf(ctx, "panel-overview");
+      yield* ctx.expectEqual(
+        "only the selected panel paints",
+        (yield* ctx.host.bounds("panel-activity")) === null,
+        true,
+      );
+
+      yield* ctx.host.click("tab-activity");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "tab=activity");
+      yield* ctx.expectEqual(
+        "the clicked tab holds focus live",
+        yield* focusedOf(ctx),
+        "tab-activity",
+      );
+      yield* boxOf(ctx, "panel-activity");
+      yield* ctx.expectEqual(
+        "the previous panel left the live tree",
+        (yield* ctx.host.bounds("panel-overview")) === null,
+        true,
+      );
+
+      yield* ctx.host.key("right");
+      yield* settle;
+      // Measured: a live click focuses the trigger natively but does not run
+      // React's `onFocus`, so the tab's roving `active` is still empty and the
+      // arrow starts from the first enabled tab. The headless suite clicks and
+      // asserts the next tab, so the difference is real. Recorded as a
+      // components defect alongside the missing key bubbling.
+      yield* ctx.expectContains(
+        "an arrow after a live click restarts at the first tab (measured limit)",
+        yield* textOf(ctx, "tier2-navigation-readout"),
+        "tab=overview",
+      );
+      yield* ctx.host.click("tab-settings");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "tab=settings");
+      yield* ctx.expectContains(
+        "a click still selects a later tab live",
+        yield* textOf(ctx, "tier2-navigation-readout"),
+        "tab=settings",
+      );
+
+      yield* ctx.host.click("acc-trigger-shipping");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "open=shipping");
+      yield* boxOf(ctx, "acc-content-shipping");
+      yield* ctx.host.click("acc-trigger-billing");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "open=billing");
+      yield* ctx.expectEqual(
+        "single mode replaced the open section live",
+        (yield* ctx.host.bounds("acc-content-shipping")) === null,
+        true,
+      );
+      yield* boxOf(ctx, "acc-content-billing");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "open=none");
+      yield* ctx.expectEqual(
+        "Enter closed the collapsible accordion live",
+        (yield* ctx.host.bounds("acc-content-billing")) === null,
+        true,
+      );
+
+      yield* ctx.host.click("collapse-trigger");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "collapsible=open");
+      yield* boxOf(ctx, "collapse-body");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "collapsible=closed");
+      yield* ctx.expectEqual(
+        "Enter closed the collapsible body live",
+        (yield* ctx.host.bounds("collapse-body")) === null,
+        true,
+      );
+
+      yield* ctx.host.click("crumb-home");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "path=home");
+      yield* ctx.host.click("crumb-projects");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "path=projects");
+
+      yield* ctx.host.click("page-six");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "page=6");
+      yield* ctx.host.click("page-next");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "page=7");
+      yield* ctx.host.click("page-prev");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "page=6");
+      yield* ctx.expectContains(
+        "pagination paged forward and back live",
+        yield* textOf(ctx, "tier2-navigation-readout"),
+        "page=6",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Navigation.id}.png`);
+    }),
+};
+
 const replace: LiveScenario = {
   id: "live-replace",
   title: "Live replace: a controlled rewrite, its caret and the washes",
@@ -2301,5 +2498,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Dialog,
   tier2Menu,
   tier2Toast,
+  tier2Foundation,
+  tier2Navigation,
   replace,
 ];

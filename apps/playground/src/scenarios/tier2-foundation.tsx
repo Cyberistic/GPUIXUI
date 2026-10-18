@@ -81,6 +81,7 @@ const Probe = () => {
   const [selected, setSelected] = useState("inbox");
   const [dismissed, setDismissed] = useState(false);
   const [created, setCreated] = useState(0);
+  const [keys, setKeys] = useState(0);
 
   return (
     <div
@@ -244,6 +245,10 @@ const Probe = () => {
             testId="list-row-inbox"
             aria-id="list-row-inbox"
             value="inbox"
+            // A live-window probe counter, not a component contract: it proves
+            // the focused row receives a key while the List root does not
+            // (plan `344` §8). The headless suite never asserts it.
+            onKeyDown={() => setKeys((count) => count + 1)}
           >
             <ListItemTitle>Inbox</ListItemTitle>
             <ListItemDescription>3 unread</ListItemDescription>
@@ -272,7 +277,7 @@ const Probe = () => {
           </ListItem>
         </List>
         <Readout testId="tier2-foundation-readout">
-          {`selected=${selected} dismissed=${dismissed} created=${created}`}
+          {`selected=${selected} dismissed=${dismissed} created=${created} keys=${keys}`}
         </Readout>
         <Readout testId="tier2-foundation-tokens">
           {`primary=${theme.colors.primary} selected=${theme.colors.selected}`}
