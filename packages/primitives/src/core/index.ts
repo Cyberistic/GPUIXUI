@@ -112,6 +112,7 @@ export {
   normalizeRange,
   normalizeSpan,
   pointerValue,
+  spanAfterMove,
   stepValue,
   usableLength,
   valueFraction,

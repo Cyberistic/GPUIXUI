@@ -242,6 +242,28 @@ describe("RangeSlider", () => {
     expect(onSpanChange).toHaveBeenCalledWith([60, 60]);
   });
 
+  it("does not report a key that cannot move its end", () => {
+    // Plan 373: `End` at the maximum rebuilt the pair, so the shared
+    // `Object.is` rule saw a change and woke the parent for a key that moved
+    // nothing. The view now routes through `spanAfterMove`, whose no-op result
+    // is the current pair itself.
+    const onSpanChange = vi.fn();
+    const state = spanOf(20, 100);
+    const element = renderRangeSlider(
+      { label: "Price" },
+      testTheme,
+      state,
+      { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
+      rangeHandlers(onSpanChange),
+    );
+    const end = partsOf(element)[3] ?? expect.fail("no end thumb");
+    expectSome(hostHandler(end, "onKeyDown"))(keyEvent("end"));
+    expect(onSpanChange).toHaveBeenCalledTimes(1);
+    expect(onSpanChange.mock.calls[0]?.[0]).toBe(state.current);
+    expectSome(hostHandler(end, "onKeyDown"))(keyEvent("left"));
+    expect(onSpanChange).toHaveBeenLastCalledWith([20, 99]);
+  });
+
   it("rings the focused thumb only", () => {
     const [, start, , end] = partsOf(render());
     expect(ringOf(start ?? expect.fail("no thumb"))).toStrictEqual(

@@ -15,7 +15,7 @@
  */
 
 import type { ReactNode } from "react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
@@ -320,6 +320,58 @@ it("keeps dragging a range end after the pointer leaves the track", async () => 
   runtime.mouseUpAt(end.x, box.y + box.height + 80);
   expect(announced(runtime, "Price minimum")).toBe("40");
   expect(announced(runtime, "Price maximum")).toBe("60");
+});
+
+it("does not report a press that lands on the value already there", async () => {
+  // Plan 373: each range gesture built a fresh tuple, so `useControlState`'s
+  // `Object.is` guard never saw the no-op — measured before the fix, a second
+  // press at the same point reported `[20, 91]` again and a press plus a 1 px
+  // move reported four times for one change.
+  const onValueChange = vi.fn();
+  const runtime = await mount(
+    <RangeSlider
+      testId="r"
+      label="Price"
+      defaultValue={[20, 60] as const}
+      onValueChange={onValueChange}
+    />,
+  );
+  const point = pointAt(runtime, "r", 0.9);
+  runtime.clickAt(point.x, point.y);
+  expect(onValueChange).toHaveBeenCalledTimes(1);
+  expect(onValueChange).toHaveBeenLastCalledWith([20, 90]);
+  runtime.clickAt(point.x, point.y);
+  expect(onValueChange).toHaveBeenCalledTimes(1);
+  runtime.mouseDownAt(point.x, point.y);
+  runtime.mouseMoveAt(point.x + 1, point.y, 0);
+  runtime.mouseUpAt(point.x + 1, point.y);
+  expect(onValueChange).toHaveBeenCalledTimes(1);
+  expect(onValueChange).toHaveBeenLastCalledWith([20, 90]);
+});
+
+it("does not report a key that cannot move its end", async () => {
+  // The same no-op, by keyboard: `End` at the maximum rebuilt the pair and
+  // reported again (measured: 3 calls for one real change).
+  const onValueChange = vi.fn();
+  const runtime = await mount(
+    <RangeSlider
+      testId="r"
+      label="Price"
+      defaultValue={[20, 60] as const}
+      onValueChange={onValueChange}
+    />,
+  );
+  const point = pointAt(runtime, "r", 0.9);
+  runtime.clickAt(point.x, point.y);
+  runtime.flush();
+  const focused = Option.getOrElse(runtime.focusedElement(), () =>
+    expect.fail("no thumb took focus"),
+  );
+  runtime.renderer.nativeSimulateKeyDown(focused.id, "end");
+  expect(onValueChange).toHaveBeenCalledTimes(2);
+  expect(onValueChange).toHaveBeenLastCalledWith([20, 100]);
+  runtime.renderer.nativeSimulateKeyDown(focused.id, "end");
+  expect(onValueChange).toHaveBeenCalledTimes(2);
 });
 
 it("refuses a non-primary press on a range and moves no focus", async () => {

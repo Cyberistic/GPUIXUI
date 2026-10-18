@@ -19,6 +19,7 @@ import {
   normalizeRange,
   normalizeSpan,
   pointerValue,
+  spanAfterMove,
   stepValue,
   usableLength,
   valueFraction,
@@ -268,5 +269,32 @@ describe("range spans", () => {
       start: 20,
       end: 70,
     });
+  });
+});
+
+describe("spanAfterMove", () => {
+  it("returns the current pair by identity when the move changes nothing", () => {
+    // The bug guarded (plan 373): a fresh tuple for an unchanged gesture is
+    // never Object.is-equal, so `useControlState` woke the parent on every
+    // pointer move inside one stop and on an End already at the maximum.
+    const atEnd = [20, 60] as const;
+    expect(spanAfterMove(atEnd, "end", 60, RANGE)).toBe(atEnd);
+    const atMin = [0, 60] as const;
+    expect(spanAfterMove(atMin, "start", -10, RANGE)).toBe(atMin);
+  });
+
+  it("returns a moved pair, not the current one", () => {
+    const current = [20, 60] as const;
+    const next = spanAfterMove(current, "end", 90, RANGE);
+    expect(next).toStrictEqual([20, 90]);
+    expect(next).not.toBe(current);
+  });
+
+  it("reports the clamped pair when an end is pushed past the other", () => {
+    expect(spanAfterMove([20, 60], "start", 95, RANGE)).toStrictEqual([60, 60]);
+  });
+
+  it("normalises a pair supplied out of order before deciding", () => {
+    expect(spanAfterMove([60, 20], "end", 90, RANGE)).toStrictEqual([20, 90]);
   });
 });

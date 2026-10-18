@@ -32,11 +32,11 @@ import * as Option from "effect/Option";
 import {
   clampValue,
   decideValueKey,
-  moveSpanEnd,
   nearestEnd,
   normalizeRange,
   normalizeSpan,
   pointerValue,
+  spanAfterMove,
   valueFraction,
   type ValueRange,
   type ValueSpan,
@@ -269,11 +269,6 @@ const spanOf = (
   range: ValueRange,
 ): ValueSpan => normalizeSpan({ start: values[0], end: values[1] }, range);
 
-const spanTuple = (span: ValueSpan): readonly [number, number] => [
-  span.start,
-  span.end,
-];
-
 /** The two thumbs and the fill between them. */
 export const renderRangeSlider = (
   props: RangeSliderProps,
@@ -315,7 +310,7 @@ export const renderRangeSlider = (
             onNone: () => {},
             onSome: (next) =>
               handlers.onSpanChange(
-                spanTuple(moveSpanEnd(span, end, next, range)),
+                spanAfterMove(state.current, end, next, range),
               ),
           });
         }}
@@ -460,8 +455,8 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     });
     setFocusedIndex(Option.some(index));
   };
-  const change = (span: ValueSpan, end: "start" | "end", value: number): void =>
-    state.set(spanTuple(moveSpanEnd(span, end, value, range)));
+  const change = (end: "start" | "end", value: number): void =>
+    state.set(spanAfterMove(state.value.current, end, value, range));
   return renderRangeSlider(
     props,
     theme,
@@ -494,7 +489,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
               const end = nearestEnd(value, span);
               activeEnd.current = end;
               dragging.current = true;
-              change(span, end, value);
+              change(end, value);
               focusThumb(end === "start" ? 0 : 1);
             },
           },
@@ -510,12 +505,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
           pointerOf(event, renderer, trackId.current, range, inset),
           {
             onNone: () => {},
-            onSome: (value) =>
-              change(
-                spanOf(state.value.current, range),
-                activeEnd.current,
-                value,
-              ),
+            onSome: (value) => change(activeEnd.current, value),
           },
         );
       },

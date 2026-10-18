@@ -304,3 +304,26 @@ export const moveSpanEnd = (
         end: Math.max(clampValue(value, range), current.start),
       };
 };
+
+/**
+ * The pair a gesture produces, or `current` **by identity** when it changed
+ * nothing.
+ *
+ * `useControlState` reports only a value that differs by `Object.is`, so an
+ * unchanged pair must not be a fresh tuple: a press that stays on the same stop
+ * would otherwise wake the parent on every pointer move, and a key that cannot
+ * move its end would report again (measured, plan `373`). `ToggleGroup` and
+ * `CheckboxGroup` return their current selection for the same reason.
+ */
+export const spanAfterMove = (
+  current: readonly [number, number],
+  end: "start" | "end",
+  value: number,
+  range: ValueRange,
+): readonly [number, number] => {
+  const span = normalizeSpan({ start: current[0], end: current[1] }, range);
+  const next = moveSpanEnd(span, end, value, range);
+  return next.start === span.start && next.end === span.end
+    ? current
+    : [next.start, next.end];
+};
