@@ -8,8 +8,11 @@
  * boxes, because a grid that also shows the adjacent month is a different
  * component with different selection rules.
  *
- * Month and day labels are fixed English strings: the repo has no i18n layer,
- * and inventing a half-locale here would be a second source of truth.
+ * The strings the grid paints — month names, weekday headings, the unavailable
+ * suffix and the three control names — are a typed label set with English
+ * defaults. A consumer with a message catalogue passes its entries in; there is
+ * no locale lookup here, because a locale id that silently failed to resolve
+ * would be worse than English.
  */
 
 import { Match, pipe } from "effect";
@@ -19,6 +22,22 @@ import * as Option from "effect/Option";
 
 /** Which weekday a week starts on: Sunday (`0`) or Monday (`1`). */
 export type WeekStart = 0 | 1;
+
+/** The display strings a calendar paints. Defaults are English. */
+export interface CalendarLabels {
+  /** Twelve month names, January first. */
+  readonly months: ReadonlyArray<string>;
+  /** Seven short weekday names, Sunday first. */
+  readonly weekdays: ReadonlyArray<string>;
+  /** The suffix after the name of a day that cannot be chosen. */
+  readonly unavailable: string;
+  /** The previous-month control's accessible name. */
+  readonly previousMonth: string;
+  /** The next-month control's accessible name. */
+  readonly nextMonth: string;
+  /** The clear control's text. */
+  readonly clear: string;
+}
 
 const MONTHS: ReadonlyArray<string> = [
   "January",
@@ -46,25 +65,60 @@ const WEEKDAYS: ReadonlyArray<string> = [
   "Sat",
 ];
 
+/** The English labels, used when a caller supplies none. */
+export const defaultCalendarLabels: CalendarLabels = {
+  months: MONTHS,
+  weekdays: WEEKDAYS,
+  unavailable: "unavailable",
+  previousMonth: "Previous month",
+  nextMonth: "Next month",
+  clear: "Clear",
+};
+
+/**
+ * Apply the caller's overrides over the defaults. Every omitted field keeps its
+ * default, so one renamed control does not blank the rest.
+ */
+export const resolveCalendarLabels = (
+  overrides?: Partial<CalendarLabels>,
+): CalendarLabels => ({
+  months: overrides?.months ?? defaultCalendarLabels.months,
+  weekdays: overrides?.weekdays ?? defaultCalendarLabels.weekdays,
+  unavailable: overrides?.unavailable ?? defaultCalendarLabels.unavailable,
+  previousMonth:
+    overrides?.previousMonth ?? defaultCalendarLabels.previousMonth,
+  nextMonth: overrides?.nextMonth ?? defaultCalendarLabels.nextMonth,
+  clear: overrides?.clear ?? defaultCalendarLabels.clear,
+});
+
 /** The weekday labels in the column order the grid uses. */
-export const weekdayLabels = (weekStartsOn: WeekStart): ReadonlyArray<string> =>
+export const weekdayLabels = (
+  weekStartsOn: WeekStart,
+  labels: CalendarLabels = defaultCalendarLabels,
+): ReadonlyArray<string> =>
   weekStartsOn === 1
-    ? [...Arr.drop(WEEKDAYS, 1), ...Arr.take(WEEKDAYS, 1)]
-    : WEEKDAYS;
+    ? [...Arr.drop(labels.weekdays, 1), ...Arr.take(labels.weekdays, 1)]
+    : labels.weekdays;
 
 /** `"October 2026"`. */
-export const formatMonthLabel = (value: DateTime.Utc): string => {
+export const formatMonthLabel = (
+  value: DateTime.Utc,
+  labels: CalendarLabels = defaultCalendarLabels,
+): string => {
   const parts = DateTime.toPartsUtc(value);
-  const month = Option.getOrElse(Arr.get(MONTHS, parts.month - 1), () =>
+  const month = Option.getOrElse(Arr.get(labels.months, parts.month - 1), () =>
     String(parts.month),
   );
   return `${month} ${parts.year}`;
 };
 
 /** `"17 October 2026"`, the accessible name of a day button. */
-export const formatDayLabel = (value: DateTime.Utc): string => {
+export const formatDayLabel = (
+  value: DateTime.Utc,
+  labels: CalendarLabels = defaultCalendarLabels,
+): string => {
   const parts = DateTime.toPartsUtc(value);
-  return `${parts.day} ${formatMonthLabel(value)}`;
+  return `${parts.day} ${formatMonthLabel(value, labels)}`;
 };
 
 /** The first moment of the month, in UTC. */

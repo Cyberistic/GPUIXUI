@@ -7,7 +7,8 @@
  * a year; a bound treated as exclusive (dropping the first and last legal day);
  * a malformed bound crashing instead of being ignored; movement past a bound
  * landing on an unavailable day; the month controls browsing past the bound's
- * month; and `min` after `max` still allowing a selection.
+ * month; `min` after `max` still allowing a selection; and a calendar that only
+ * spoke English, because its labels were constants rather than the caller's.
  */
 
 import { describe, expect, it } from "vitest";
@@ -19,6 +20,7 @@ import {
   boundsOf,
   canBrowseMonth,
   clampToBounds,
+  defaultCalendarLabels,
   formatDayLabel,
   formatIsoDay,
   formatMonthLabel,
@@ -27,6 +29,7 @@ import {
   lastDayOfMonth,
   monthGrid,
   parseIsoDay,
+  resolveCalendarLabels,
   startOfMonth,
   unbounded,
   weekdayLabels,
@@ -147,6 +150,64 @@ describe("day identity and labels", () => {
       "Sat",
       "Sun",
     ]);
+  });
+});
+
+describe("caller labels", () => {
+  it("defaults to the English strings", () => {
+    const labels = resolveCalendarLabels();
+    expect(labels.months[9]).toBe("October");
+    expect(labels.weekdays[0]).toBe("Sun");
+    expect(labels.unavailable).toBe("unavailable");
+    expect(labels.previousMonth).toBe("Previous month");
+    expect(labels.nextMonth).toBe("Next month");
+    expect(labels.clear).toBe("Clear");
+    expect(labels.months).toBe(defaultCalendarLabels.months);
+  });
+
+  it("keeps every other default when one field is overridden", () => {
+    const labels = resolveCalendarLabels({ clear: "Dismiss" });
+    expect(labels.clear).toBe("Dismiss");
+    expect(labels.months).toBe(defaultCalendarLabels.months);
+    expect(labels.weekdays).toBe(defaultCalendarLabels.weekdays);
+    expect(labels.unavailable).toBe("unavailable");
+  });
+
+  it("formats the month and day with the caller's names", () => {
+    const labels = resolveCalendarLabels({
+      months: [
+        "januar",
+        "februar",
+        "mars",
+        "april",
+        "mai",
+        "juni",
+        "juli",
+        "august",
+        "september",
+        "oktober",
+        "november",
+        "desember",
+      ],
+    });
+    expect(formatMonthLabel(day("2026-10-17"), labels)).toBe("oktober 2026");
+    expect(formatDayLabel(day("2026-10-17"), labels)).toBe("17 oktober 2026");
+  });
+
+  it("rotates the caller's weekdays in the chosen order", () => {
+    const labels = resolveCalendarLabels({
+      weekdays: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+    });
+    expect(weekdayLabels(1, labels)).toEqual([
+      "Mo",
+      "Di",
+      "Mi",
+      "Do",
+      "Fr",
+      "Sa",
+      "So",
+    ]);
+    expect(weekdayLabels(0, labels)[0]).toBe("So");
   });
 });
 

@@ -16,9 +16,9 @@
  * calendar keeps its own view month and focused day — those reset on open and
  * are not the component's value.
  *
- * Known scope, recorded in the docs: fixed English month/day labels (no i18n
- * layer in the repo yet), no adjacent-month days in the grid, and no time: a time
- * of day is the separate TimePicker.
+ * Known scope, recorded in the docs: display labels default to English and are
+ * the caller's (`labels`), never a locale lookup; no adjacent-month days in the
+ * grid, and no time: a time of day is the separate TimePicker.
  */
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
@@ -51,8 +51,10 @@ import {
   lastDayOfMonth,
   monthGrid,
   parseIsoDay,
+  resolveCalendarLabels,
   startOfMonth,
   weekdayLabels,
+  type CalendarLabels,
   type DayBounds,
   type WeekStart,
 } from "./date-picker/calendar.js";
@@ -90,6 +92,7 @@ interface DatePickerContextValue {
   readonly selectedIso: Option.Option<string>;
   readonly bounds: DayBounds;
   readonly weekStartsOn: WeekStart;
+  readonly labels: CalendarLabels;
   readonly todayDay: DateTime.Utc;
   readonly clearable: boolean;
   readonly disabled: boolean;
@@ -136,6 +139,14 @@ export interface DatePickerProps {
    * it when a test or a server boundary needs a fixed day.
    */
   readonly today?: string;
+  /**
+   * Display strings the calendar paints: month names, weekday headings, the
+   * unavailable suffix and the three control names. The defaults are English.
+   * This is not a locale — the component performs no lookup — so pass the
+   * entries from your own catalogue. Partial: every omitted field keeps its
+   * default.
+   */
+  readonly labels?: Partial<CalendarLabels>;
   readonly children?: PartChildren;
 }
 
@@ -158,6 +169,7 @@ export const DatePicker = ({
   clearable = false,
   disabled = false,
   today,
+  labels,
   children,
 }: DatePickerProps) => {
   const renderer = useGpuix().renderer;
@@ -174,6 +186,7 @@ export const DatePicker = ({
   );
   const selectedIso = Option.map(selectedDay, formatIsoDay);
   const bounds = boundsOf(min, max);
+  const calendarLabels = resolveCalendarLabels(labels);
   const [open, setOpen] = useState(false);
   const trigger = useRef<PublicInstance | null>(null);
 
@@ -208,6 +221,7 @@ export const DatePicker = ({
         selectedIso,
         bounds,
         weekStartsOn,
+        labels: calendarLabels,
         todayDay,
         clearable,
         disabled,
@@ -245,14 +259,14 @@ export const DatePickerTrigger = ({
   ...rest
 }: DatePickerTriggerProps) => {
   const theme = useTheme();
-  const { selectedDay, disabled, registerTrigger } = useDatePicker();
+  const { selectedDay, disabled, labels, registerTrigger } = useDatePicker();
   const setTrigger = useMergedRef<PublicInstance | null>(
     registerTrigger,
     rest.ref,
   );
   const labelText = Option.match(selectedDay, {
     onNone: () => placeholder,
-    onSome: formatDayLabel,
+    onSome: (day) => formatDayLabel(day, labels),
   });
 
   return (
@@ -375,6 +389,7 @@ export const DatePickerCalendar = ({
     selectedIso,
     bounds,
     weekStartsOn,
+    labels,
     todayDay,
     clearable,
     open,
@@ -512,7 +527,7 @@ export const DatePickerCalendar = ({
         }}
       >
         <IconButton
-          label="Previous month"
+          label={labels.previousMonth}
           size="sm"
           testId="date-prev"
           disabled={!canBrowseMonth(viewMonth, -1, bounds)}
@@ -531,10 +546,10 @@ export const DatePickerCalendar = ({
             color: theme.colors.foreground,
           }}
         >
-          {formatMonthLabel(viewMonth)}
+          {formatMonthLabel(viewMonth, labels)}
         </text>
         <IconButton
-          label="Next month"
+          label={labels.nextMonth}
           size="sm"
           testId="date-next"
           disabled={!canBrowseMonth(viewMonth, 1, bounds)}
@@ -558,9 +573,9 @@ export const DatePickerCalendar = ({
         }}
       >
         <div role="row" style={{ display: "flex", flexDirection: "row" }}>
-          {Arr.map(weekdayLabels(weekStartsOn), (name) => (
+          {Arr.map(weekdayLabels(weekStartsOn, labels), (name, index) => (
             <text
-              key={name}
+              key={index}
               aria-label={name}
               style={{
                 ...textStyle(theme, "caption"),
@@ -595,8 +610,8 @@ export const DatePickerCalendar = ({
                       role="gridcell"
                       aria-label={
                         available
-                          ? formatDayLabel(day)
-                          : `${formatDayLabel(day)}, unavailable`
+                          ? formatDayLabel(day, labels)
+                          : `${formatDayLabel(day, labels)}, ${labels.unavailable}`
                       }
                       aria-selected={isSelected}
                       tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
@@ -647,13 +662,15 @@ export const DatePickerCalendar = ({
       {clearable && Option.isSome(selectedDay) ? (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button variant="ghost" size="sm" testId="date-clear" onClick={clear}>
-            Clear
+            {labels.clear}
           </Button>
         </div>
       ) : null}
     </>
   );
 };
+
+export type { CalendarLabels } from "./date-picker/calendar.js";
 
 /** Every part of DatePicker, so a misplaced sibling is named. */
 const datePickerParts: ReadonlyArray<PartComponent> = [
@@ -684,7 +701,7 @@ export const datePickerMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "day and month labels are fixed English strings: the repo has no i18n layer",
+    "display labels default to English: pass `labels` from your own catalogue; there is no locale lookup, and the shape (Month YYYY / D Month YYYY) is fixed",
     "the grid shows only the current month; adjacent-month days are blank",
     "time is a separate TimePicker: this control owns one day only",
     "0.10.0 has no aria-current, so today is marked by a border only",

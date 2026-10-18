@@ -240,6 +240,9 @@ retired once both branches are one
       proof
     - [x] Carousel indicator dots: one named, pressable dot per slide — plan
       374; 3 native tests (Carousel 15)
+    - [x] DatePicker display labels are the caller's (`labels`), not fixed
+      English — plan 375; 4 calendar + 2 native tests, both-direction proof
+      (unit 361, behaviour 547)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

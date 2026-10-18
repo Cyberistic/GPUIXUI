@@ -106,6 +106,40 @@ selection path.
 The action is opt-in so an existing field does not gain a row; the caller still
 owns `null` as the "no date" state.
 
+## Labels
+
+Every string the calendar paints can come from the caller: month names, weekday
+headings, the suffix on a day that cannot be chosen, the previous/next month
+control names and the `Clear` text. The defaults are English.
+
+```tsx
+<DatePicker
+  labels={{
+    months: ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"],
+    weekdays: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+    unavailable: "nicht verfügbar",
+    previousMonth: "Vorheriger Monat",
+    nextMonth: "Nächster Monat",
+    clear: "Löschen",
+  }}
+>
+  <DatePickerTrigger label="Fällig am" />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
+```
+
+- The prop is **partial**: one overridden field keeps every other default.
+- This is **not a locale**. Nothing looks a locale up, so the strings are exactly
+  the ones you pass — feed them from your own message catalogue.
+- `months` is January-first and `weekdays` is Sunday-first, whatever
+  `weekStartsOn` displays; the grid rotates the headings.
+- Only the **strings** are configurable. The shape (`October 2026`,
+  `17 October 2026`) and the stored ISO value do not change, and weekday
+  headings may repeat (initials such as `S M T W T F S` are fine) because they
+  are keyed by column, not by text.
+
 ## Keyboard
 
 | Key | Result |
@@ -143,9 +177,10 @@ focus ring is `colors.ring`.
   tab order, does not activate, and is named as unavailable instead of carrying a
   disabled state.
 - **`min` after `max`** makes the grid inert (see Bounds) rather than throwing.
-- **Fixed English labels.** The repo has no i18n layer; month and weekday names
-  are strings in `date-picker/calendar.ts`. Wiring a locale means a real message
-  catalogue, not a prop that silently does nothing.
+- **Labels are the caller's.** The defaults are English; `labels` supplies the
+  month names, weekday headings, unavailable suffix and the three control names.
+  There is no locale lookup and no `Intl` call, and the display *shape* is fixed
+  (see Labels).
 - **No adjacent-month days** and no range selection in v1.
 - **No time of day.** A day and a time are separate values; compose **Time
   picker** beside this control when a form needs both. Folding them together
@@ -157,21 +192,23 @@ focus ring is `colors.ring`.
 
 ## Verification
 
-`src/date-picker/calendar.test.ts` (18 tests) covers leap February, a mid-week
+`src/date-picker/calendar.test.ts` (22 tests) covers leap February, a mid-week
 month start under both week starts, a month start on the week start, the 42-cell
 shape, uniqueness and month membership, year-crossing month arithmetic, the last
 day of a month without `Date`, day identity, labels, ISO parsing (including
-`2026-02-30`), inclusive bounds, malformed bounds, clamping, month browse limits
-and `min` after `max`.
+`2026-02-30`), inclusive bounds, malformed bounds, clamping, month browse limits,
+`min` after `max`, the English defaults, a partial label merge, caller month/day
+names and a rotated caller weekday list.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (18 tests): open + day focus,
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (20 tests): open + day focus,
 a no-value open on today, a no-value open clamped to `min`, selection
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 PageDown browsing without changing the value, Escape focus-return, the
 next-month control, both themes, a disabled trigger, an unavailable day, arrow
 clamping, the month-control bound, the clear action and its visibility rules, the
-trigger's own placeholder/name, and an empty surface when the calendar part is
-not composed.
+trigger's own placeholder/name, an empty surface when the calendar part is not
+composed, the caller's labels in the trigger/header/controls, and a partial label
+object keeping the remaining defaults.
 
 ```sh
 nub run --filter @gpuixui/components test

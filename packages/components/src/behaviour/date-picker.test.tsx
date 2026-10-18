@@ -8,8 +8,9 @@
  * Escape that does not return focus to the trigger; a selected day painted
  * from a constant instead of the theme; a click on an out-of-range day producing
  * a value; arrow keys walking past `min`/`max`; the month controls browsing past
- * the bound; a picked day that cannot be cleared from the surface; and Clear
- * appearing without a value or without `clearable`.
+ * the bound; a picked day that cannot be cleared from the surface; Clear
+ * appearing without a value or without `clearable`; and the labels: a calendar
+ * that only spoke English, or a partial `labels` object that wiped the defaults.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -22,6 +23,7 @@ import {
   DatePickerCalendar,
   DatePickerContent,
   DatePickerTrigger,
+  type CalendarLabels,
 } from "../date-picker.js";
 
 const Picker = ({
@@ -33,6 +35,7 @@ const Picker = ({
   max,
   clearable,
   triggerPlaceholder,
+  labels,
   showCalendar = true,
 }: {
   readonly value?: string | null;
@@ -43,6 +46,7 @@ const Picker = ({
   readonly max?: string;
   readonly clearable?: boolean;
   readonly triggerPlaceholder?: string;
+  readonly labels?: Partial<CalendarLabels>;
   readonly showCalendar?: boolean;
 }) => (
   <div style={{ width: 420, padding: 40 }}>
@@ -55,6 +59,7 @@ const Picker = ({
       min={min}
       max={max}
       clearable={clearable}
+      labels={labels}
     >
       <DatePickerTrigger
         label="Due date"
@@ -349,6 +354,81 @@ describe("DatePicker", () => {
     expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
     expect(picker.renderer.findByTestId("date-month")).toBeUndefined();
     expect(picker.renderer.findByTestId("date-day-2026-10-17")).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("paints the caller's labels in the trigger, header and controls", () => {
+    const picker = renderComponent(
+      <Picker
+        defaultValue="2026-10-17"
+        min="2026-10-17"
+        clearable
+        labels={{
+          months: [
+            "Januar",
+            "Februar",
+            "Mart",
+            "April",
+            "Maj",
+            "Jun",
+            "Jul",
+            "Avgust",
+            "Septembar",
+            "Oktobar",
+            "Novembar",
+            "Decembar",
+          ],
+          weekdays: ["Ned", "Pon", "Uto", "Sre", "Čet", "Pet", "Sub"],
+          unavailable: "nedostupno",
+          previousMonth: "Prethodni mesec",
+          nextMonth: "Sledeći mesec",
+          clear: "Obriši",
+        }}
+      />,
+    );
+
+    expect(picker.renderer.getAllText()).toContain("17 Oktobar 2026");
+
+    open(picker);
+
+    expect(picker.renderer.findByText("Oktobar 2026")).toBeDefined();
+    expect(picker.renderer.getAllText()).toContain("Ned");
+    expect(
+      picker.renderer.findByTestId("date-day-2026-10-16")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("16 Oktobar 2026, nedostupno");
+    expect(
+      picker.renderer.findByTestId("date-prev")?.customProps,
+    ).toMatchObject({
+      "aria-label": "Prethodni mesec",
+    });
+    expect(
+      picker.renderer.findByTestId("date-next")?.customProps,
+    ).toMatchObject({
+      "aria-label": "Sledeći mesec",
+    });
+    expect(picker.renderer.getAllText()).toContain("Obriši");
+
+    picker.unmount();
+  });
+
+  it("keeps the default labels when only one string is overridden", () => {
+    const picker = renderComponent(
+      <Picker
+        defaultValue="2026-10-17"
+        clearable
+        labels={{ clear: "Dismiss" }}
+      />,
+    );
+
+    open(picker);
+
+    expect(picker.renderer.findByText("October 2026")).toBeDefined();
+    expect(picker.renderer.getAllText()).toContain("Sun");
+    expect(picker.renderer.getAllText()).toContain("Dismiss");
+    expect(picker.renderer.getAllText()).not.toContain("Clear");
 
     picker.unmount();
   });
