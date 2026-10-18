@@ -7,10 +7,11 @@
  * element tree is where that decision is asserted.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderScrollArea } from "./ScrollArea.js";
+import { keyEvent } from "./testing/event.js";
 import {
   expectSome,
   hostHandler,
@@ -89,5 +90,64 @@ describe("ScrollArea", () => {
     const handler = expectSome(hostHandler(area, "onScroll"));
     handler({ elementId: 0, eventType: "scroll", deltaY: -100 });
     expect(deltas).toStrictEqual([-100]);
+  });
+
+  it("forwards the slot's handlers and description to its region", () => {
+    // The bug guarded (plan 399b): a labelled region is one focusable root, but
+    // it declared no `TriggerHandlers`, so a `Tooltip` around it painted
+    // nothing — the slot's cloned props stopped at the component boundary.
+    const onMouseEnter = vi.fn();
+    const onMouseLeave = vi.fn();
+    const onMouseDown = vi.fn();
+    const area = renderScrollArea(
+      {
+        axis: "vertical",
+        label: "Activity",
+        "aria-description": "Scroll for newer entries",
+        onMouseEnter,
+        onMouseLeave,
+        onMouseDown,
+      },
+      testTheme,
+    );
+    expect(expectSome(hostProp(area, "aria-description"))).toBe(
+      "Scroll for newer entries",
+    );
+    expect(Option.getOrUndefined(hostHandler(area, "onMouseEnter"))).toBe(
+      onMouseEnter,
+    );
+    expect(Option.getOrUndefined(hostHandler(area, "onMouseLeave"))).toBe(
+      onMouseLeave,
+    );
+    expect(Option.getOrUndefined(hostHandler(area, "onMouseDown"))).toBe(
+      onMouseDown,
+    );
+  });
+
+  it("composes the region's own focus and key handlers with the slot's", () => {
+    // Forwarding must not replace the scroll rule: the region's own handler
+    // runs first, then the slot's (the Button/Slider order).
+    const order: string[] = [];
+    const area = renderScrollArea(
+      {
+        axis: "vertical",
+        label: "Activity",
+        onFocus: () => order.push("slot-focus"),
+        onKeyDown: () => order.push("slot-key"),
+      },
+      testTheme,
+      {
+        onFocus: () => order.push("region-focus"),
+        onKeyDown: () => order.push("region-key"),
+      },
+    );
+    expectSome(hostHandler(area, "onFocus"))(keyEvent(""));
+    expectSome(hostHandler(area, "onKeyDown"))(keyEvent("pagedown"));
+    expect(order).toStrictEqual([
+      "region-focus",
+      "slot-focus",
+      "region-key",
+      "slot-key",
+    ]);
   });
 });

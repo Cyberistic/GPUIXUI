@@ -37,10 +37,13 @@ import { decideScroll, resolveScroll, scrollLine } from "../core/layout.js";
 import { scrollStyle, type ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import {
+  composeHandler,
+  passiveTriggerHandlers,
   resolvePartStyle,
   usableLabel,
   useFocus,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -69,7 +72,8 @@ export interface ScrollAreaHandle {
   readonly scrollTo: (target: Partial<ScrollPosition>) => void;
 }
 
-export interface ScrollAreaProps extends ScrollSpec {
+export interface ScrollAreaProps
+  extends ScrollSpec, Omit<TriggerHandlers, "onScroll"> {
   /**
    * The imperative handle: `scrollTo`/`element`. A method call reports its own
    * position, which a raw `renderer.scrollTo` cannot.
@@ -96,6 +100,11 @@ export interface ScrollAreaProps extends ScrollSpec {
   /** An object, or a callback over the area's public state. */
   readonly style?: StateStyle<ScrollAreaState>;
   readonly children?: ReactNode;
+  /**
+   * Extra description announced after the name. A slot (a `Tooltip`) writes the
+   * tip here; only a labelled area has a node to carry it.
+   */
+  readonly "aria-description"?: string;
   readonly testId?: string;
 }
 
@@ -110,30 +119,26 @@ export interface ScrollAreaHandlers {
 
 /** The element tree `ScrollArea` renders. Pure in its arguments. */
 export const renderScrollArea = (
-  {
-    axis = "vertical",
-    label,
-    onScroll,
-    style,
-    children,
-    testId,
-  }: ScrollAreaProps,
+  props: ScrollAreaProps,
   theme: PrimitiveTheme,
   handlers: ScrollAreaHandlers = {},
 ): ReactElement => {
+  const { axis = "vertical", label, onScroll, style, children, testId } = props;
   const name = Option.getOrUndefined(usableLabel(label));
   const named = name !== undefined;
   const ring = handlers.focused === true && named ? focusRing(theme) : {};
   return (
     <div
+      {...passiveTriggerHandlers(props)}
       testId={testId}
       ref={handlers.ref}
       role={named ? "region" : undefined}
       aria-label={name}
+      aria-description={props["aria-description"]}
       tabIndex={named ? 0 : undefined}
-      onFocus={handlers.onFocus}
-      onBlur={handlers.onBlur}
-      onKeyDown={handlers.onKeyDown}
+      onFocus={composeHandler(handlers.onFocus, props.onFocus)}
+      onBlur={composeHandler(handlers.onBlur, props.onBlur)}
+      onKeyDown={composeHandler(handlers.onKeyDown, props.onKeyDown)}
       onScroll={onScroll}
       style={resolvePartStyle({ ...scrollStyle({ axis }), ...ring }, style, {
         focused: named && handlers.focused === true,

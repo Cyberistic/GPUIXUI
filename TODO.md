@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 139/139
+`[x]` `[████████████]` 140/140
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1384,6 +1384,17 @@ retired once both branches are one
       page contract, and the contract suite reads the source and fails by part
       and prop when a page misses one or names a phantom (plan `027`; offline
       720 → 722, three mutation directions measured).
+
+`[x]` `packages/primitives`: **`ScrollArea` was the one single-root control that could not be a tooltip trigger** —
+      a labelled region is one focusable root (role, name, ring, keyboard rule), yet it
+      declared no `TriggerHandlers`, so a `Tooltip` around it painted nothing and its
+      `Region` node carried no description; the Tooltip page's "every single-root control
+      does" claim was false. It now forwards the slot contract, composes focus/blur/keys
+      with its scroll rule, and carries the tip as `aria-description`; a wrapped region
+      still scrolls by keyboard. Measured limit: GPUix hit-tests the painted child and
+      does not bubble hover to the ancestor, so a content-filled region is a keyboard
+      trigger (documented on both pages). 2 element + 4 scoped runtime cases, both
+      directions proven (plan `399b`; offline 722 → 724).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -42,6 +42,7 @@ adding one to every existing layout silently would be the worse default
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad **deltas** (`deltaX`, `deltaY`, `precise`, `touchPhase`) |
 | `onScrollPositionChange` | `(position: ScrollPosition) => void` | none | the absolute offset, after a wheel or keyboard scroll, only when it changed |
 | `style` | `StateStyle<ScrollAreaState>` | — | merged last; put the bounded size here; an object or a state callback |
+| `aria-description` | `string` | none | an extra description announced after the name; a `Tooltip` writes its tip here |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
 | `ref` | `Ref<ScrollAreaHandle>` | none | `element` for measuring and `scrollTo`, which reports the position it lands on |
@@ -111,6 +112,35 @@ A **labelled** area is one tab stop. While it holds focus:
 Keys for an axis the area does not scroll are ignored. The handler checks the
 runtime's focused element id against the container's own, so a field inside the
 area keeps its arrow keys instead of scrolling the region.
+
+## Tooltip trigger
+
+A **labelled** area accepts the `Tooltip` slot contract: the wrapper forwards the
+slot's handlers and composes its focus/blur/key handlers with the region's own
+scroll rule, so wrapping a region does not cost its keyboard scroll. The tip's
+string also becomes the `Region`'s `aria-description`, which is announced on
+focus and carries the hint while the tip is shut.
+
+```tsx
+import { ScrollArea, Tooltip } from "@gpuixui/primitives";
+
+<Tooltip content="Scroll for newer entries">
+  <ScrollArea label="Activity" style={{ height: 240 }}>
+    {rows}
+  </ScrollArea>
+</Tooltip>;
+```
+
+**Hover has one runtime limit.** GPUix delivers a mouse event to the element the
+pointer hit-tests and does not bubble it to an ancestor — the rule that also
+makes a text-host tooltip keyboard-only. The tip opens on hover only while the
+pointer is over the region itself: an area the content does not cover, a
+scrollbar gutter, or content that opts out with `pointerEvents: "none"`. A
+content-filled region is a keyboard trigger; its description still reaches
+assistive technology.
+
+An **unlabelled** area has no role and no tab stop, so it is not a trigger
+either — label it first.
 
 ## Accessibility
 

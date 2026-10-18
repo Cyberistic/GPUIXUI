@@ -28,6 +28,7 @@ accepts that contract:
 | ------- | ----- | -------------- |
 | `Button`, `IconButton`, `Toggle` | yes | yes |
 | `Checkbox`, `Switch`, `Slider`, `Select` | yes | yes |
+| `ScrollArea` (labelled) | the region itself only | yes¹ |
 | `Input`, `TextArea`, `NumberField` | **no** (text host) | yes |
 | `InfoTip` | yes | yes |
 | `RangeSlider`, `OTPField`, `Rating`, `CheckboxGroup`, `ToggleGroup` | no | no |
@@ -38,6 +39,18 @@ on hover. The roving composites (`RangeSlider`, `OTPField`, `Rating`,
 `CheckboxGroup`, `ToggleGroup`) have no single focusable root, so they are not
 triggers; put the tip on a label, an `InfoTip`, or a wrapper `div` with a role
 and a name.
+
+A labelled `ScrollArea` is a single focusable root, so it accepts the contract
+and its tip becomes the `Region`'s description (plan `399b`). Its hover path has
+the runtime's hit-testing limit: GPUix does not bubble a mouse event to an
+ancestor, so the tip opens only when the pointer is over the region itself (an
+uncovered area, the scrollbar gutter, or content with `pointerEvents: "none"`).
+A content-filled region is a keyboard trigger.
+
+¹ The slot's focus handler is proven at the element-tree boundary (plan
+`399b`); the runtime focus-open case — like every trigger's on this host — is
+blocked by the binding artifact recorded in plans `379`/`529`, so it is not
+claimed as re-measured here.
 
 ### Full-width triggers
 
