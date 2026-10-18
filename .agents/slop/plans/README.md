@@ -158,6 +158,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [359](./359-modal-scrim-surfaces.md) | The scrim over the surfaces a window actually shows | F | 099, 309, 326, 337, 347, 358 | done |
 | [360](./360-metric-completeness.md) | The numeric contract's last ungoverned members | F | 077, 353, 358, 359 | done |
 | [361](./361-pill-rounds-largest-avatar.md) | The pill radius must round the largest avatar | F | 054, 353, 358, 360 | done |
+| [362](./362-selection-status-panel-text.md) | Text selection in a status panel | F | 091, 320, 346, 351 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1284,6 +1285,22 @@ leaves the avatar a rounded square — and the probe returned `[]`. A third boun
 own diagnostic and `full` must round both. Every shipped theme,
 platform variant and recipe ships `full` 9999, so no value moves; the new case
 fails on the pre-fix `metrics.ts` and passes after it.
+
+362 closes the last three text roles a status panel carries that the selection
+contract measured only on the fill. Plan 091 measured the tone's own foreground
+through the wash, plan 320 added the body text an `AlertDescription` and ghost
+dismiss control paint, and plan 346 added the caption and link — but the body and
+caption went into the *fill* contract only, so a reader who selects an Alert's
+description or a Toast's caption had no pair behind it and an edited theme could
+erase it while `themeContrastFailures` returned `[]`. The probe over the 24
+shipped sets finds every set already clears the floors — identity dark
+`foreground` on `infoSoft` at **7.26:1** is the tightest body pair and Aero light
+`mutedForeground` on `destructiveSoft` at **4.78:1** the tightest caption — so no
+colour moves; `selectionSoftPairs` grows 4 → 12 (the plain `contrastPairs` count
+stays 338). Accent-toned text stays the documented omission: macOS light's
+`primaryText` measures 4.16–4.32:1 through the wash on the four fills, under the
+default secondary floor, and every AAA light set 5.38–5.90:1 under 7:1, so no
+perceivable wash can carry a link there.
 
 ### Reference adoption (block `200–299`)
 
