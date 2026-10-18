@@ -2072,6 +2072,17 @@ describe("docs/tokens.md theme contract", () => {
     );
   });
 
+  it("offers a platform style the whole motion scale", () => {
+    const structure = contosoDensityPlatformStyle.structure;
+
+    expect(structure.motion?.fast).toBe(150);
+    expect(structure.motion?.ease?.enter).toEqual([0.2, 0, 0, 1]);
+    expect(markdown).toContain("motion?: MotionOverrides;");
+    expect(markdown.replace(/\s+/g, " ")).toContain(
+      "A copied platform style may name the same curves in `structure.motion`; each omitted phase inherits the identity's.",
+    );
+  });
+
   it("states how the builder selects its contrast variant", () => {
     const page = markdown.replace(/\s+/g, " ");
 

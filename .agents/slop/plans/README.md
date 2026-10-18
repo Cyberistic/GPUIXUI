@@ -253,7 +253,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [556](./556-dialog-calendar-and-mark-dimensions.md) | The dialog, calendar and mark metrics the dimension audits missed | B/F | 353, 389, 530, 550, 554 | done |
 | [557](./557-native-field-caret-mark.md) | The native field's caret is ink, not a fill | F | 082, 332, 337, 511, 527, 546 | done |
 | [558](./558-opaque-alpha-suffix.md) | The opaque `FF` spelling the format checks accept and the maths cannot read | F | 371, 540, 557 | done |
-| [559](./559-platform-easing.md) | A copied platform style owns its easings | B/F | 019, 321, 364, 389 | ready |
+| [559](./559-platform-easing.md) | A copied platform style owns its easings | B/F | 019, 321, 364, 389 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

@@ -56,6 +56,15 @@ export interface Motion {
   readonly ease: MotionEasings;
 }
 
+/**
+ * Partial motion overrides: any timing, or the easings inside `ease`. Timings
+ * merge level by level and easings merge phase by phase, so one curve can move
+ * without retyping the other three.
+ */
+export type MotionOverrides = Partial<Omit<Motion, "ease">> & {
+  readonly ease?: Partial<MotionEasings>;
+};
+
 /** The motion timings the library ships, in documentation order. */
 export const motionLevels = [
   "none",

@@ -827,7 +827,8 @@ import {
 
 // A copied `PlatformStyle` with edited values. Its `structure` owns the
 // numeric scales — type roles, spacing, borders, icon/avatar sizes and
-// component dimensions — beside radii, density and motion.
+// component dimensions — beside radii, density and motion, whose timings and
+// easings both merge value by value.
 const contoso = applyPlatformStyle(getTheme("dark"), contosoStyle);
 const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
   colors: { primary: "#005A9E" },
@@ -840,8 +841,8 @@ A style's `structure` group names type roles but never families: `types` owns
 preset plus the metrics tuned inside it (`density: { preset: "compact",
 rowHeight: 30 }`), so a copied file keeps the preset it names and still owns the
 values inside it. The `platform-extension.example.ts` example names every numeric
-group and is applied in both modes, so the shape is compiled and held to
-`themeFailures`, not sketched.
+group plus a motion timing and easing, and is applied in both modes, so the shape
+is compiled and held to `themeFailures`, not sketched.
 
 Runnable examples live in
 [`src/platforms.example.ts`](./src/platforms.example.ts) and

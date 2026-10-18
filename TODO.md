@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 223/290
+`[x]` `[████████░░]` 224/291
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1831,6 +1831,15 @@ eight text surfaces (plan 557)
 failures (23 of them contrast, ratio `NaN`; dark `card` gave **67** with 62
 contrast); the opaque parser now accepts a fully opaque alpha byte, a partial
 alpha still fails, and the two halves of the contract agree (plan 558)
+
+`[x]` Let a copied platform style own its easings — `PlatformStyleStructure.motion`
+was `Partial<Omit<Motion, "ease">>` while `extendTheme` merged a partial `ease`
+phase by phase, so a copy-and-own file could name a timing but not a platform's
+curve, and a style that named one failed `check-types` even though the resolver
+already forwarded it; `MotionOverrides` is the one shape behind both, the
+authored example names a timing and a curve, and `platform-motion.test.ts`
+proves the phase merge, the inherited phases, the runtime's curve rules on a
+copied style and the shipped styles' unchanged easings (plan 559)
 
 ## Phase C — Tier 1–2 components
 

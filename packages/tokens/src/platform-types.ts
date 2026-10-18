@@ -6,7 +6,7 @@
 
 import type { ThemeColors } from "./color.js";
 import type { Elevation } from "./elevation.js";
-import type { Motion } from "./motion.js";
+import type { MotionOverrides } from "./motion.js";
 import type {
   AvatarSize,
   BorderWidth,
@@ -59,8 +59,8 @@ export interface PlatformStyleStructure {
    * Omitted, the base theme's density is kept.
    */
   readonly density?: DensityName | DensityOverrides;
-  /** Transition timings; easings are shared. */
-  readonly motion?: Partial<Omit<Motion, "ease">>;
+  /** Transition timings and easings; omitted values inherit the identity. */
+  readonly motion?: MotionOverrides;
   /**
    * Type roles — size, leading and weight. Families stay in `types`, so a style
    * cannot name two different UI faces. Omitted roles inherit the identity.

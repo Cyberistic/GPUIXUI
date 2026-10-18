@@ -105,6 +105,7 @@ missing here is not public.
 | `MotionEasing` | A cubic-bezier control-point tuple. |
 | `MotionEasings` | The `standard`, `enter`, `exit` and `linear` curves. |
 | `MotionLevel` | A timing level from `motionLevels`, `none` to `pulse`. |
+| `MotionOverrides` | Partial timings and easings for `extendTheme` or a platform style's `structure.motion`. |
 | `MotionPhase` | An easing phase from `motionPhases`: `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
@@ -113,7 +114,7 @@ missing here is not public.
 | `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
 | `PlatformShippedTheme` | A styled platform set in `shippedThemes`, with the variant it came from. |
 | `PlatformStyle` | Editable platform data: types, structure, colours and elevation. |
-| `PlatformStyleStructure` | Radii, density, motion, type roles, spacing, borders, icon/avatar sizes and component dimensions shared by both modes. |
+| `PlatformStyleStructure` | Radii, density, motion timings and easings, type roles, spacing, borders, icon/avatar sizes and component dimensions shared by both modes. |
 | `PlatformType` | The label and sans/mono families of one platform. |
 | `PlatformVariant` | A platform that carries its own style: `darwin`, `linux` or `win32`. |
 | `Radius` | The corner-radius scale. |
@@ -747,7 +748,7 @@ interface PlatformStyle {
   structure: {
     radius?: Partial<Radius>;
     density?: DensityName | DensityOverrides;
-    motion?: Partial<Omit<Motion, "ease">>;
+    motion?: MotionOverrides;
     typography?: Partial<Record<TextRole, Partial<TextStyle>>>;
     spacing?: Partial<Spacing>;
     borderWidth?: Partial<BorderWidth>;
@@ -762,7 +763,9 @@ interface PlatformStyle {
 
 A style owns its **whole look**, not only its colours: the type scale exists
 beside the families, and spacing, borders, icon/avatar sizes and component
-dimensions travel with radii, density and motion. Families live in `types`
+dimensions travel with radii, density and motion. Motion carries timings and the
+easings inside `ease`; each omitted value inherits, exactly like `extendTheme`.
+Families live in `types`
 (never in `typography`, so a style cannot name two UI faces), and each group
 merges field by field exactly like `extendTheme`. These groups are structural:
 they apply at both contrast levels, because they are geometry, not colour.
@@ -790,8 +793,9 @@ wash selects text in another hue (plan `331`).
 A second complete file,
 [`src/platform-extension.example.ts`](../packages/tokens/src/platform-extension.example.ts)
 (`contosoDensityPlatformStyle`), names every numeric group — type roles,
-density, spacing, borders, icon and avatar sizes and component dimensions — so
-the copy-and-own path is shown for geometry as well as colour. Its density is
+density, spacing, borders, icon and avatar sizes and component dimensions — and
+carries its own motion timing and easing, so the copy-and-own path is shown for
+geometry and motion as well as colour. Its density is
 `{ preset: "compact", rowHeight: 30 }`, the preset-plus-metrics form above, so
 the file keeps a named preset and still owns one metric inside it. It is applied
 in both modes and held to `themeFailures`, because a copied style is still an
@@ -1184,7 +1188,9 @@ easing phases, so a table or a settings row iterates the index instead of
 Easings are named per phase: `standard` (`easeInOut`), `enter` (`easeOut`),
 `exit` (`easeIn`) and `linear`. The runtime also takes a cubic-bezier tuple, so
 `extendTheme(base, { motion: { ease: { enter: [0.4, 0, 0.2, 1] } } })` works
-without a cast. The tuple is four finite control points whose two x values must
+without a cast. A copied platform style may name the same curves in
+`structure.motion`; each omitted phase inherits the identity's. The tuple is four
+finite control points whose two x values must
 lie inside `0…1`: the runtime's `validate_ease` rejects the whole transition
 otherwise, and a curve outside that range has no progress function. A y value may
 overshoot — a spring-like curve is a design choice — and a named easing is
@@ -3273,7 +3279,9 @@ style naming the type roles, spacing, borders, icon/avatar sizes and component
 dimensions applies every one, an omitted group inherits, an explicit `undefined`
 is ignored, the groups apply at high contrast, and no shipped style names them —
 so the copyable file in `platform-extension.example.ts` owns the whole look
-without moving a shipped value.
+without moving a shipped value. `platform-motion.test.ts` proves the same file
+carries a timing and one easing phase while the other phases inherit, and that a
+copied curve is held to the runtime's control-point rules (plan `559`).
 `docs.test.ts` builds the table above
 from `platformStyles`, so a value edit cannot ship a document that lies. There is
 no font-registration test because the pinned runtime has no API to test against;

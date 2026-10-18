@@ -12,7 +12,7 @@ import {
   type Elevation,
   type ElevationShape,
 } from "./elevation.js";
-import { motion, type Motion, type MotionEasings } from "./motion.js";
+import { motion, type Motion, type MotionOverrides } from "./motion.js";
 import {
   platformStyles,
   platformTypes,
@@ -147,9 +147,7 @@ export interface ThemeOverrides {
    * Override motion timings, or the easings inside `ease`. A partial override
    * keeps the other timings and the other phasings.
    */
-  readonly motion?: Partial<Omit<Motion, "ease">> & {
-    readonly ease?: Partial<MotionEasings>;
-  };
+  readonly motion?: MotionOverrides;
   /** Override border thicknesses. */
   readonly borderWidth?: Partial<BorderWidth>;
   /** Override icon sizes. */
@@ -196,11 +194,7 @@ const mergeDefined = <T extends object>(
 
 const mergeMotion = (
   base: Motion,
-  override:
-    | (Partial<Omit<Motion, "ease">> & {
-        readonly ease?: Partial<MotionEasings>;
-      })
-    | undefined,
+  override: MotionOverrides | undefined,
 ): Motion => {
   if (override === undefined) {
     return base;

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | ready |
+| Status | done |
 | Phase | B/F (theme extension) |
 | Owner | `tokens-theme` |
 | Paths | `packages/tokens/src`, `docs/tokens.md`, `docs/design-system.md`, `packages/tokens/README.md`, `COMPONENTS.md`, `TODO.md` |
@@ -237,3 +237,14 @@ Expected: all three exit 0 (the completion gate).
 - `nub run check`, `nub run lint`, `nub run test` pass.
 - `TODO.md` has the new row ticked; the progress bar reads `224/291`.
 - `COMPONENTS.md` mentions the capability in both rows.
+
+## 9. Verification (2026-10-19)
+
+- Before the type change, `nub run --filter @gpuixui/tokens check-types` failed
+  with `src/platform-extension.example.ts(26,26): error TS2353 ... 'ease' does
+  not exist in type 'Partial<Omit<Motion, "ease">>'` and the same error in
+  `platform-motion.test.ts`.
+- With the types in place but `motion: style.structure.motion` removed from
+  `platformOverrides`, 4 of the 5 new cases failed; restored, all pass.
+- `nub run --filter @gpuixui/tokens test`: 140 files / 5,719 tests pass.
+- `nub run check`, `nub run lint`, `nub run test`: exit 0.
