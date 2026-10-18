@@ -187,6 +187,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [390](./390-elevation-ladder.md) | The elevation ladder | F | 085, 358, 368, 369 | done |
 | [391](./391-contrast-reference.md) | The contrast reference names its lists | F | 071, 086, 307, 344, 375, 382 | done |
 | [392](./392-text-hierarchy.md) | The text tiers must stay a hierarchy | F | 306, 309, 317, 351, 383, 387, 388, 391 | done |
+| [393](./393-loading-pulse.md) | The loading pulse must stay visible | F | 019, 094, 309, 322, 358, 391, 392 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1773,6 +1774,20 @@ Every shipped set and every base × style composition clears it (1.274 / 1.349 /
 1.440 at the tightest), so no colour, pair, floor or metric moves. The one total
 call now composes five checks in colour → typeface → contrast → hierarchy →
 metric order.
+
+393 closes the same "a state must be perceivable" rule one paint further. A
+`Skeleton` paints the role at `skeletonPulseOpacity` (0.6) for half of every
+cycle, but the contract measured only the opaque value: identity dark's
+`#3D4552` on `selected` was 1.058:1 opaque and **1.008:1** at 60%, so the
+placeholder vanished on a selected row for half the pulse while
+`themeContrastFailures` returned `[]`. `skeletonPulsePairs` composites the dim
+frame on the same eight surfaces, `ContrastFailure` gains the optional
+`opacity`, and the dark skeleton moves a half-step to `#434C5A` (1.074:1 dim,
+1.179:1 opaque) so every shipped set passes. No other colour, pair, floor or
+metric moves. The audit that found it also recorded two follow-ups in `TODO.md`:
+the fills an action paints inside a soft status panel (80 shipped pairs under
+1.05:1) and the clipped ButtonGroup's inset ring on a filled button (seven sets
+at 1.000:1), which is a `primitives` fix.
 
 ### Reference adoption (block `200–299`)
 
