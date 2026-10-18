@@ -891,6 +891,15 @@ retired once both branches are one
       plain separator is unchanged; the docs state the trade (recolour the rule
       through a bordered `Box`). 1 element + 1 runtime case, both directions
       measured (offline 606 → 607, runtime 588 → 589; plan `364`).
+`[x]` `packages/primitives`: **`Text align="end"` painted nothing** — measured:
+      the prop was passed through verbatim, but the runtime's `text_align` match
+      implements only `center`, `right` and `left`/`start`; a capture of
+      `align="end"` was **byte-identical** to `align="start"`, while a manual
+      `textAlign: "right"` moved the glyphs. The resolver now sends `right` for
+      the public `end` (0.10.0 has no text direction, so there is no RTL claim),
+      and a new capture suite holds it. 2 offline + 1 runtime case, all three
+      failing in the old direction (offline 607 → 609, runtime 589 → 590,
+      29 → 30 files; plan `365`).
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts
       were unguarded** — `Icon` was the one renderer without a `style` prop, so
       an icon beside text could not be nudged onto a baseline without a `Box`
