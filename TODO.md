@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–497)
+## Docs site workstream (plans 410–498)
 
-`[x]` `[██████████]` 98/98
+`[x]` `[██████████]` 99/99
+
+`[x]` **The docs code palette clears the contrast floor (plan 498)** — the
+      default GitHub Light/Dark pair painted light `#e36209` at 3.49:1 and dark
+      `#6a737d` at 3.51:1 on the code background (146 of 180 page-modes); the
+      two colours are replaced per theme (`#b34700`, `#8b949e`), both Shiki
+      pipelines share the map, a unit suite pins the wiring and `smoke:browser`
+      measures every painted code leaf in both schemes — 0 failing pairs after,
+      with both directions proven
 
 `[x]` **The remaining value and disclosure controls get live scenes (plan 497)**
       — Accordions, Number fields, OTP fields, Ratings, Tag inputs and Toggles

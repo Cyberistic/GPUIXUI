@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Hydrated-preview smoke check (plans 446, 495).
+ * Hydrated-preview smoke check (plans 446, 495, 498).
  *
  * `smoke:build` reads the server HTML; this check lets a real browser hydrate
  * the production build and reads the **live** DOM. It is the guard for the bugs
@@ -13,6 +13,10 @@
  * publish, so one page outside the providers or one surface that ignores the
  * published state must fail here by name. The page list comes from the MDX
  * tree; `component-preview.test.tsx` keeps it equal to the preview registry.
+ *
+ * Every page also owes readable code: each distinct syntax colour is compared
+ * to the 4.5:1 text floor on the surface it is painted on (plan 498), because
+ * only the rendered document resolves Shiki's variables to pixels.
  *
  *   nub scripts/smoke-browser.ts [--base-url <url>] [--chrome <path>] [--no-build]
  *
@@ -29,6 +33,11 @@ import {
   themes,
   type Theme,
 } from "@gpuixui/tokens";
+import {
+  contrastRatio,
+  parseColour,
+  TEXT_CONTRAST_FLOOR,
+} from "../src/lib/code-palette.ts";
 import { findChrome, startSession, type Session } from "./chrome-session.ts";
 import { previewPageSlugs } from "./preview-pages.ts";
 import {
@@ -49,6 +58,14 @@ interface DomState {
   readonly platform: string;
   readonly surfaces: readonly string[];
   readonly note: string;
+  readonly codeText: readonly CodeText[];
+}
+
+/** One distinct syntax colour the page paints, with its first opaque background. */
+interface CodeText {
+  readonly colour: string;
+  readonly background: string;
+  readonly text: string;
 }
 
 interface Check {
@@ -139,6 +156,26 @@ const platformProblems = (
     : [`data-platform is "${dom.platform}", expected ${platform}`];
 
 /**
+ * Every distinct syntax colour has to clear the 4.5:1 text floor on the surface
+ * it is painted on (plan 498). The unit suite proves the configured palette; only
+ * the painted document proves the palette reached the renderer.
+ */
+const codeContrastProblems = (dom: DomState): ReadonlyArray<string> =>
+  dom.codeText.flatMap(({ colour, background, text }) => {
+    const foreground = parseColour(colour);
+    const behind = parseColour(background);
+    if (foreground === null || behind === null) {
+      return [`code colour ${colour} on ${background} could not be read`];
+    }
+    const ratio = contrastRatio(foreground, behind);
+    return ratio + 0.005 >= TEXT_CONTRAST_FLOOR
+      ? []
+      : [
+          `${colour} on ${background} is ${ratio.toFixed(2)}:1, below ${TEXT_CONTRAST_FLOOR}:1 (e.g. "${text}")`,
+        ];
+  });
+
+/**
  * Every preview page owes both schemes: its surfaces read the mode the
  * providers publish, so a dark page must paint the dark palette on all of them.
  */
@@ -219,6 +256,31 @@ const readDom = async (session: Session): Promise<DomState> =>
         platform: document.documentElement.dataset.platform ?? "",
         surfaces: [...document.querySelectorAll("[data-preview-surface]")].map((element) => element.getAttribute("style") ?? ""),
         note: document.querySelector("[data-platform-previews] p")?.textContent ?? "",
+        codeText: (() => {
+          const opaque = (element) => {
+            let node = element;
+            while (node !== null) {
+              const value = getComputedStyle(node).backgroundColor;
+              if (value.startsWith("rgb(")) return value;
+              node = node.parentElement;
+            }
+            return null;
+          };
+          const seen = new Map();
+          for (const span of document.querySelectorAll("pre span")) {
+            if (span.children.length > 0) continue;
+            const text = (span.textContent ?? "").trim();
+            if (text === "") continue;
+            const colour = getComputedStyle(span).color;
+            const background = opaque(span);
+            if (background === null) continue;
+            const key = colour + "|" + background;
+            if (!seen.has(key)) {
+              seen.set(key, { colour, background, text: text.slice(0, 30) });
+            }
+          }
+          return [...seen.values()];
+        })(),
       })`),
     ),
   ) as DomState;
@@ -289,7 +351,7 @@ const main = async (): Promise<number> => {
         label,
         check.dark ? darkTheme : lightTheme,
       );
-      const failures = check.problems(dom);
+      const failures = [...check.problems(dom), ...codeContrastProblems(dom)];
       problems.push(...failures.map((what) => ({ where: label, what })));
       if (failures.length === 0) console.log(`smoke: ${label} checked`);
     }

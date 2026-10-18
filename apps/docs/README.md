@@ -271,6 +271,20 @@ group, key or value drifts. The token root entry is the **only** `@gpuixui/*`
 import the site may make (`@gpuixui/tokens/react` is forbidden, as is every GPUix
 runtime package); `src/architecture.test.ts` enforces the allow-list.
 
+## Code highlighting
+
+Code fences, source includes and generated prop tables are highlighted by two
+separate Shiki pipelines. Both read one palette from
+`src/lib/code-palette.ts`; `source.config.ts` passes it to `rehypeCodeOptions`
+and to `remarkAutoTypeTable`'s `shiki` option.
+
+The base pair is GitHub Light/Dark, with two measured corrections (plan 498):
+`#e36209` painted 3.49:1 on the light code surface and `#6a737d` 3.51:1 on the
+dark one, both below the 4.5:1 text floor. They are replaced per theme
+(`#b34700`, `#8b949e`) so each correction reaches one scheme. Change the palette
+in that module, not in CSS: `src/code-palette.test.ts` recomputes every ratio,
+and `smoke:browser` measures each painted code colour on the pages it visits.
+
 ## Public URL
 
 Canonical links, OpenGraph `og:url` and the sitemap use `SITE_URL` from
