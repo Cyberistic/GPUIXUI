@@ -1104,11 +1104,22 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
 
 /**
  * The surfaces a modal scrim covers. A dialog's scrim is painted across the
- * window, so the app's base layout is behind it: the canvas, a card, the quiet
- * panel, the field fill a form paints, the persistent `selected` fill a table or
- * list keeps and the floating surface a menu opens on. A scrim that composites
- * to its own surface is an invisible modal backdrop, so each is held to the
- * `surface` floor.
+ * window, so everything the window shows is behind it: the base layout — the
+ * canvas, a card, the quiet panel, the field fill a form paints and the
+ * persistent `selected` fill a table or list keeps — the floating surface a
+ * menu opens on, the four resting fills of the actions on the page (`primary`,
+ * `secondary`, `accent` and `destructive`) and the four soft status panels an
+ * Alert, Badge or Toast paints. A scrim that composites to its own surface is
+ * an invisible modal backdrop, so each is held to the `surface` floor.
+ *
+ * The transient pointer states stay out: `hover`, `active` and the filled
+ * families' `xHover`/`xActive` steps are gone by the time the pointer reaches
+ * the dialog, so a scrim over them is not a composition the system supports.
+ * `accent` is included because it is also the resting fill of a toggled-on
+ * control, not only the wash a selectable row hovers. `disabled`, `skeleton`
+ * and `track` are not the content a dialog opens over: a scrim that is
+ * invisible on a disabled control, a loading placeholder or a progress groove
+ * still dims the layout the reader is looking at.
  */
 export const overlaySurfaces = [
   "background",
@@ -1117,14 +1128,25 @@ export const overlaySurfaces = [
   "input",
   "selected",
   "popover",
+  "primary",
+  "secondary",
+  "accent",
+  "destructive",
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
 ] as const;
 
 /**
  * The scrim composited over the surfaces it covers. The pointer washes
- * (`hover`, `active`, `accent`) are deliberately absent: the pointer leaves the
- * row to reach the dialog, so a scrim over a transient state is not a
- * composition the design system supports. `selected` persists while the modal
- * opens and `input` is a layout surface, so both are measured.
+ * (`hover`, `active`) and the filled families' `xHover`/`xActive` steps are
+ * deliberately absent: the pointer leaves the row to reach the dialog, so a
+ * scrim over a transient state is not a composition the design system supports.
+ * `selected` persists while the modal opens, `input` is a layout surface, the
+ * four filled actions are the resting fills on the page and `accent` is also
+ * the resting fill of a toggled-on control, so all of them are measured.
+ * `disabled`, `skeleton` and `track` are not the content a dialog opens over.
  */
 export const overlayWashPairs: readonly ContrastPair[] = overlaySurfaces.map(
   (surface): ContrastPair => ["overlay", surface, "surface"],
@@ -1180,8 +1202,9 @@ const washVisibilityFailures = (
  * on the quiet panel, the state washes and the soft status fills a bounded
  * control sits on, the inactive label on the nine surfaces a disabled control
  * paints, the disabled control's own edge and the divider on the quiet panel,
- * and the modal scrim composited over the base surfaces it
- * covers (reported with `wash: "overlay"`; the AAA dark scrim was 1.000:1 on its
+ * and the modal scrim composited over the surfaces a window shows — the base
+ * layout, the four filled actions and the four soft status panels it covers
+ * (reported with `wash: "overlay"`; the AAA dark scrim was 1.000:1 on its
  * own canvas). It also measures every interactive fill — the two washes, the
  * accent and selected fills and the three filled families at rest, hover and
  * press — against the canvas, card, popover and quiet panel it paints on,

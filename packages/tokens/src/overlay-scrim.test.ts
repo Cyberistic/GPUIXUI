@@ -13,6 +13,13 @@
  * in the layout behind a form dialog. An `overlay` equal to macOS light's own
  * `selected` fill measured **1.000:1** on a selected row while this checker
  * returned `[]`, because the four base surfaces all passed.
+ *
+ * Plan 375 closes the same gap one composition over: a window also shows filled
+ * actions and status panels, and a dialog opens over both. An `overlay` that
+ * composites to a `primary` fill or to a soft status panel leaves that control
+ * or Alert undimmed while the checker returns `[]`. The four resting filled
+ * actions and the four soft status panels join the measured surfaces; the
+ * transient pointer washes and the filled families' hover/press steps stay out.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -21,29 +28,61 @@ import {
   contrastRatio,
   darkTheme,
   extendTheme,
+  getPlatformRecipeTheme,
   getPlatformTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   lightTheme,
   overlaySurfaces,
   overlayWashPairs,
+  platformNames,
+  platformRecipeNames,
   themeContrastFailures,
+  themeContrasts,
   themeModes,
   type Theme,
+  type ThemeColors,
 } from "./index.js";
 
+/** Every shipped colour set: identity, platform variants and recipes. */
 const shipped: ReadonlyArray<readonly [string, Theme]> = [
   ["light", lightTheme],
   ["dark", darkTheme],
   ["high-contrast light", highContrastLightTheme],
   ["high-contrast dark", highContrastDarkTheme],
-  ...(["darwin", "linux", "win32"] as const).flatMap((platform) =>
-    themeModes.map(
-      (mode) =>
-        [`${platform} ${mode}`, getPlatformTheme(platform, mode)] as const,
-    ),
+  ...themeModes.flatMap((mode) =>
+    themeContrasts.flatMap((contrast) => [
+      ...platformNames
+        .filter((platform) => platform !== "default")
+        .map(
+          (platform) =>
+            [
+              `${platform} ${mode} ${contrast}`,
+              getPlatformTheme(platform, mode, contrast),
+            ] as const,
+        ),
+      ...platformRecipeNames.map(
+        (recipe) =>
+          [
+            `${recipe} ${mode} ${contrast}`,
+            getPlatformRecipeTheme(recipe, mode, contrast),
+          ] as const,
+      ),
+    ]),
   ),
 ];
+
+/** The persistent surfaces plan 375 adds to the scrim contract. */
+const persistentSurfaces = [
+  "primary",
+  "secondary",
+  "accent",
+  "destructive",
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
+] as const satisfies ReadonlyArray<keyof ThemeColors>;
 
 describe("modal scrim", () => {
   it("veils every surface a dialog covers in every shipped colour set", () => {
@@ -65,7 +104,11 @@ describe("modal scrim", () => {
     const regressed = extendTheme(highContrastDarkTheme, {
       colors: { overlay: "#000000CC" },
     });
-    expect(themeContrastFailures(regressed)).toEqual([
+    expect(
+      themeContrastFailures(regressed).filter(
+        ({ background }) => background === "background",
+      ),
+    ).toEqual([
       {
         foreground: "overlay",
         background: "background",
@@ -83,7 +126,7 @@ describe("modal scrim", () => {
     ).not.toBe("#000000");
   });
 
-  it("covers the six surfaces a dialog sits on", () => {
+  it("covers the surfaces a dialog sits over", () => {
     expect(overlayWashPairs).toEqual([
       ["overlay", "background", "surface"],
       ["overlay", "card", "surface"],
@@ -91,6 +134,14 @@ describe("modal scrim", () => {
       ["overlay", "input", "surface"],
       ["overlay", "selected", "surface"],
       ["overlay", "popover", "surface"],
+      ["overlay", "primary", "surface"],
+      ["overlay", "secondary", "surface"],
+      ["overlay", "accent", "surface"],
+      ["overlay", "destructive", "surface"],
+      ["overlay", "infoSoft", "surface"],
+      ["overlay", "successSoft", "surface"],
+      ["overlay", "warningSoft", "surface"],
+      ["overlay", "destructiveSoft", "surface"],
     ]);
   });
 
@@ -99,7 +150,11 @@ describe("modal scrim", () => {
     const regressed = extendTheme(macos, {
       colors: { overlay: macos.colors.selected },
     });
-    expect(themeContrastFailures(regressed)).toEqual([
+    expect(
+      themeContrastFailures(regressed).filter(
+        ({ background }) => background === "selected",
+      ),
+    ).toEqual([
       {
         foreground: "overlay",
         background: "selected",
@@ -109,5 +164,28 @@ describe("modal scrim", () => {
         ratio: 1,
       },
     ]);
+  });
+
+  it("reports a scrim that disappears on a filled action or status panel", () => {
+    persistentSurfaces.forEach((surface) => {
+      const regressed = extendTheme(lightTheme, {
+        colors: { overlay: lightTheme.colors[surface] },
+      });
+      expect(
+        themeContrastFailures(regressed).filter(
+          ({ background }) => background === surface,
+        ),
+        surface,
+      ).toEqual([
+        {
+          foreground: "overlay",
+          background: surface,
+          wash: "overlay",
+          pairClass: "surface",
+          floor: contrastFloors.default.surface,
+          ratio: 1,
+        },
+      ]);
+    });
   });
 });

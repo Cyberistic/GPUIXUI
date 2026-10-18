@@ -92,9 +92,10 @@
  * the wash a Dialog paints across the window, and high-contrast dark's 80% black
  * scrim composited to the canvas itself — a 1.000:1 modal backdrop on pure
  * black. The scrim is measured over the surfaces a dialog covers as
- * `overlayWashPairs` — the four base surfaces, the `input` fill a form paints
- * and the persistent `selected` fill (plan 359) — and the AAA dark theme veils
- * with light instead.
+ * `overlayWashPairs` — the four base surfaces, the `input` fill a form paints,
+ * the persistent `selected` fill (plan 359), the four resting filled actions and
+ * the four soft status panels a window shows (plan 375) — and the AAA dark
+ * theme veils with light instead.
  *
  * Plan 300 closes plan 076's defect one surface over: the soft status tints were
  * held to 1.05:1 on the canvas, card and popover but not on the quiet `muted`
@@ -545,7 +546,7 @@ describe("themeContrastFailures", () => {
       "secondary",
       "destructive",
     ]);
-    expect(overlayWashPairs.length).toBe(6);
+    expect(overlayWashPairs.length).toBe(14);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {
