@@ -118,6 +118,7 @@ workstream declares in its own section below.
 | [366](./366-dismiss-stack-event-identity.md) | One Escape closes one overlay: the dismiss stack uses the field claim, not payload identity | F | 110, 112, 114, 117, 131, 187, 326 | done — the runtime hands each handler a payload copy, so consumption moved to the shared field claim; unit copy case + 1 native nested-dismiss case (Dialog 14, behaviour 526); both fail on the `WeakSet` |
 | [367](./367-tabs-arrow-origin.md) | Tabs: the arrow origin is the natively focused tab, not the last React focus event | F | 110, 113, 117, 321, 334, 344/345 | done — `origin()` reads `getFocusedElementId` at key time (a live click and `autoFocus` never run `onFocus`); click records the highlight; 1 native case (Tabs 16, behaviour 527), fails on the old origin |
 | [368](./368-date-picker-open-anchor.md) | DatePicker opens on today (clamped to the bounds), not the month head | F | 110, 112, 119, 127, 303, 323, 346 | done — one clamped `anchor` feeds the view month, the open effect and the focus fallback; 2 native cases (DatePicker 18, behaviour 529), both fail on the old month-head fallback |
+| [369](./369-combobox-trigger-role.md) | ComboboxTrigger exposes a button role and its expanded state | F | 110, 116, 138, 302, 323, 328, 340, 346 | done — `role="button"` on the headless trigger; 1 native case (Combobox 28, behaviour 530), fails without the role |
 
 Interlocks this workstream depends on and does not own:
 

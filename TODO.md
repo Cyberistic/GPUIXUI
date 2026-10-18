@@ -473,6 +473,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
     - `[x]` DatePicker opens on today (clamped to the bounds) instead of the
       month head when it has no value — plan 368; 2 native cases (DatePicker 18,
       behaviour 529), both fail on the old fallback
+    - `[ ]` ComboboxTrigger exposes a button role and its expanded state — plan
+      369
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 
