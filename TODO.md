@@ -471,15 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–509)
 
-`[~]` `[██████████]` 109/110
+`[x]` `[██████████]` 110/110
 
-`[~]` **The platform toggle is proved by operating it (plan 509)** — the
-      switcher becomes one radio group (one tab stop, arrows move and apply),
-      and a new `smoke:platform` clicks Windows, navigates, reloads without the
-      parameter, chooses Default and drives the arrows, asserting the URL, the
-      stored choice and every preview surface from `@gpuixui/tokens`.
-      `smoke:browser` only ever *loaded* `?platform=win32`, so the control
-      itself had no gate.
+`[x]` **The platform toggle is proved by operating it (plan 509)** — the
+      switcher is one radio group (one tab stop, arrows move and apply), and
+      `smoke:platform` clicks Windows, loads a parameter-free document, navigates,
+      chooses Default and drives the arrows, asserting the URL, the stored choice
+      and every preview surface from `@gpuixui/tokens`. `smoke:browser` only ever
+      *loaded* `?platform=win32`, so the control itself had no gate. Five
+      two-direction proofs and the two settle facts are in plan 509 §4/§8.
 
 `[x]` **Every stateful page shows a live state (plan 508)** — six of the 21
       `stateful` records had no live scene, so their pages showed a rest

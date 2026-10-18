@@ -104,6 +104,11 @@ it is remembered in `localStorage` so moving between pages keeps the choice. A
 shared URL wins over a stale stored value; `default` is the absence of the
 parameter, which keeps canonical URLs clean.
 
+The switcher is one **radio group**, not four independent toggles: one tab stop,
+and the arrow keys move the choice and apply it. `nub run --filter docs
+smoke:platform` clicks it in a real browser and proves the URL, the stored
+choice and every preview follow.
+
 <PlatformValues />
 
 Every component preview on the site is a **labelled browser approximation** of

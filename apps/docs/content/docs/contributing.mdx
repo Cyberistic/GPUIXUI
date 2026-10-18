@@ -65,6 +65,7 @@ every check your change can affect:
 | `nub run --filter docs smoke:browser` | the built site hydrates; every preview surface paints the theme and platform the toggles publish, and every code colour clears the 4.5:1 text floor in both schemes | `1` wrong paint, `2` could not verify |
 | `nub run --filter docs smoke:preview` | every live GPUix scene reaches the renderer in headless Chrome, and the page wiring passes the platform | `1` scene failure, `2` could not verify |
 | `nub run --filter docs smoke:keyboard` | the skip link is the first tab stop, Enter moves focus into the page, and the focus ring is the theme's ring token | `1` wrong, `2` could not verify |
+| `nub run --filter docs smoke:platform` | the platform toggle is one radio group: a click updates the URL, the stored choice survives a parameter-free load, every preview repaints, arrows move and apply, and Default removes the parameter | `1` wrong, `2` could not verify |
 | `nub run --filter docs smoke:search` | ⌘K opens the search palette with its field focused, typing lists the real Installation page, Enter navigates and focuses the destination page, an unknown query says "No results found", and Escape returns focus to the search trigger | `1` wrong, `2` could not verify |
 | `nub run --filter docs smoke:responsive` | at a 390 px viewport no page scrolls sideways and no content column clips its content, and the mobile sidebar opens and navigates | `1` wrong, `2` could not verify |
 

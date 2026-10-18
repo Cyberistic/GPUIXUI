@@ -12,10 +12,11 @@
  *
  * This script operates the radio group in a real browser and proves the whole
  * path: a click changes `<html data-platform>`, the URL, the checked option and
- * every preview surface; a client navigation keeps it; a fresh document with no
- * parameter remembers it; Default removes the parameter; and the arrow keys
- * move the choice, apply it and keep focus. Every expected label and mono
- * family is derived from `@gpuixui/tokens`, never typed.
+ * every preview surface; a fresh document with no parameter remembers the stored
+ * choice; a client navigation keeps it; the Theming page names it; Default
+ * removes the parameter and restores the base theme; and the arrow keys move the
+ * choice, apply it and keep focus. Every expected label and mono family is
+ * derived from `@gpuixui/tokens`, never typed.
  *
  *   nub scripts/smoke-platform.ts [--base-url <url>] [--chrome <path>] [--no-build]
  *
@@ -342,7 +343,26 @@ const main = async (): Promise<number> => {
     checkedProblems(problems, clicked, "win32", "step 2");
     surfacesShow(problems, clicked, "win32", "step 2");
 
-    // 3. A client-side navigation keeps the choice the reader just made.
+    // 3. A fresh, parameter-free document remembers the click's stored choice.
+    //    This must come before any navigation that carries the parameter: the
+    //    only thing that can restore "win32" here is what the click wrote.
+    const stored = await open(
+      session,
+      baseUrl,
+      BUTTON,
+      "win32",
+      "step 3",
+      problems,
+    );
+    check(
+      problems,
+      stored.platform === "win32",
+      `step 3: a parameter-free load reports "${stored.platform}", expected the stored "win32"`,
+    );
+    urlProblems(problems, stored, "win32", "step 3");
+    surfacesShow(problems, stored, "win32", "step 3");
+
+    // 4. A client-side navigation keeps the choice the reader just made.
     const navigated = await session.evaluate(`(() => {
       const link = document.querySelector('a[href="${NEXT_PAGE}"]');
       if (link === null) return "missing";
@@ -350,60 +370,53 @@ const main = async (): Promise<number> => {
       return "clicked";
     })()`);
     if (navigated !== "clicked") {
-      problems.push(`step 3: no sidebar link to ${NEXT_PAGE}`);
+      problems.push(`step 4: no sidebar link to ${NEXT_PAGE}`);
     } else {
       const arrived = await session.waitFor(
         `location.pathname === ${JSON.stringify(NEXT_PAGE)}`,
       );
       if (!arrived)
-        problems.push(`step 3: ${NEXT_PAGE} did not load after the click`);
-      await settleProblems(session, "win32", "step 3", problems);
+        problems.push(`step 4: ${NEXT_PAGE} did not load after the click`);
+      await settleProblems(session, "win32", "step 4", problems);
       const page = await readToggle(session);
       check(
         problems,
         page.platform === "win32",
-        `step 3: navigation kept "${page.platform}", expected "win32"`,
+        `step 4: navigation kept "${page.platform}", expected "win32"`,
       );
-      urlProblems(problems, page, "win32", "step 3");
-      surfacesShow(problems, page, "win32", "step 3");
+      urlProblems(problems, page, "win32", "step 4");
+      surfacesShow(problems, page, "win32", "step 4");
     }
 
-    // 4. A fresh document with no parameter remembers the stored choice.
-    const stored = await open(
+    // 5. The Theming page names the platform it is showing.
+    const theming = await open(
       session,
       baseUrl,
       THEMING,
       "win32",
-      "step 4",
+      "step 5",
       problems,
     );
     check(
       problems,
-      stored.platform === "win32",
-      `step 4: a parameter-free load reports "${stored.platform}", expected the stored "win32"`,
-    );
-    urlProblems(problems, stored, "win32", "step 4");
-    surfacesShow(problems, stored, "win32", "step 4");
-    check(
-      problems,
-      stored.note.includes(labelFor("win32")),
-      `step 4: the platform note does not name "${labelFor("win32")}": ${stored.note}`,
+      theming.note.includes(labelFor("win32")),
+      `step 5: the platform note does not name "${labelFor("win32")}": ${theming.note}`,
     );
 
-    // 5. Default removes the parameter and restores the base theme.
-    await clickPlatform(session, "default", "step 5", problems);
-    await settleProblems(session, "default", "step 5", problems);
+    // 6. Default removes the parameter and restores the base theme.
+    await clickPlatform(session, "default", "step 6", problems);
+    await settleProblems(session, "default", "step 6", problems);
     const reset = await readToggle(session);
-    urlProblems(problems, reset, "default", "step 5");
-    checkedProblems(problems, reset, "default", "step 5");
-    surfacesShow(problems, reset, "default", "step 5");
+    urlProblems(problems, reset, "default", "step 6");
+    checkedProblems(problems, reset, "default", "step 6");
+    surfacesShow(problems, reset, "default", "step 6");
     check(
       problems,
       reset.note.includes(labelFor("default")),
-      `step 5: the platform note does not name "${labelFor("default")}": ${reset.note}`,
+      `step 6: the platform note does not name "${labelFor("default")}": ${reset.note}`,
     );
 
-    // 6. The arrow keys move, apply and keep focus on the choice.
+    // 7. The arrow keys move, apply and keep focus on the choice.
     const next = movePlatform("default", "ArrowRight");
     if (next === undefined) {
       throw new SetupError(
@@ -418,15 +431,15 @@ const main = async (): Promise<number> => {
     })()`);
     if (focused !== "focused") {
       problems.push(
-        `step 6: the checked option could not take focus (${String(focused)})`,
+        `step 7: the checked option could not take focus (${String(focused)})`,
       );
     } else {
       await session.press("ArrowRight");
-      await settleProblems(session, next, "step 6", problems);
+      await settleProblems(session, next, "step 7", problems);
       const arrowed = await readToggle(session);
-      urlProblems(problems, arrowed, next, "step 6");
-      checkedProblems(problems, arrowed, next, "step 6");
-      surfacesShow(problems, arrowed, next, "step 6");
+      urlProblems(problems, arrowed, next, "step 7");
+      checkedProblems(problems, arrowed, next, "step 7");
+      surfacesShow(problems, arrowed, next, "step 7");
       const holdsFocus = await session.waitFor(
         `document.activeElement === document.querySelector(${JSON.stringify(CHECKED)})`,
         2_000,
@@ -434,31 +447,31 @@ const main = async (): Promise<number> => {
       check(
         problems,
         holdsFocus,
-        `step 6: focus did not follow the arrow to ${labelFor(next)}`,
+        `step 7: focus did not follow the arrow to ${labelFor(next)}`,
       );
 
       await session.press("ArrowLeft");
-      await settleProblems(session, "default", "step 6", problems);
-      urlProblems(problems, await readToggle(session), "default", "step 6");
+      await settleProblems(session, "default", "step 7", problems);
+      urlProblems(problems, await readToggle(session), "default", "step 7");
     }
 
-    // 7. The run leaves the profile as it found it: Default is what is stored.
+    // 8. The run leaves the profile as it found it: Default is what is stored.
     const reloaded = await open(
       session,
       baseUrl,
       THEMING,
       "default",
-      "step 7",
+      "step 8",
       problems,
     );
     check(
       problems,
       reloaded.platform === "default",
-      `step 7: a reload reports "${reloaded.platform}" after Default`,
+      `step 8: a reload reports "${reloaded.platform}" after Default`,
     );
 
     if (problems.length === 0) {
-      for (let step = 1; step <= 7; step += 1) {
+      for (let step = 1; step <= 8; step += 1) {
         console.log(`smoke: step ${step} checked`);
       }
       return 0;

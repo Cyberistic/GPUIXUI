@@ -1,6 +1,6 @@
 # 509 — The platform toggle is one choice, and a click proves it
 
-**Status:** planned (2026-10-18) · **Phase:** F (showcase) / G (release gate) ·
+**Status:** implemented (2026-10-18) · **Phase:** F (showcase) / G (release gate) ·
 **Owner:** docs-site
 **Depends on:** `410`, `412`, `416`, `420`, `434`, `444`, `445`, `446`, `495`,
 `496`
@@ -290,39 +290,41 @@ const clickPlatform = async (
 
 **The steps, in one browser session, dark scheme:**
 
-1. `navigate("/docs/components/button")`; `waitFor` a toggle and at least one
-   preview surface.
+`open(path, platform)` navigates, then waits for a **settled** document: exactly
+one toggle group, `<html data-platform>` equal to the expected platform, at least
+one preview surface, and every surface's `--preview-font-mono` equal to
+`monoFor(platform)`. Without that wait the check reads the server's default
+snapshot for a frame (measured while writing this plan) and the *settle* failure
+would be reported as a preview failure.
+
+1. Open `/docs/components/button` on `default`.
    - `platform === "default"`, `search === ""`
    - every `mono` entry === `monoFor("default")`
    - `checked === labelFor("default")`, `tabStops === 1`
-2. Click `"win32"`.
-   - `platform === "win32"`, `search` includes `?platform=win32`
+2. Click `"win32"`; settle on `win32`.
+   - `platform === "win32"`, `search` carries `platform=win32`
    - every `mono` entry === `monoFor("win32")` (**this is the repaint**)
    - `checked === labelFor("win32")`, `tabStops === 1`
-3. Click the sidebar link `a[href="/docs/components/badge"]`; wait for
-   `location.pathname === "/docs/components/badge"` and at least one surface.
+3. **A fresh, parameter-free document** — open `/docs/components/button` with no
+   query at all.
+   - `platform === "win32"` and the provider re-writes `?platform=win32`
+   - every `mono` entry === `monoFor("win32")`
+4. Click the sidebar link `a[href="/docs/components/badge"]` (a client
+   navigation); wait for the path, then settle on `win32`.
    - `platform === "win32"`, `search` still carries `platform=win32`
    - every `mono` entry === `monoFor("win32")`
-4. `navigate("/docs/theming")` — a **fresh document with no query parameter**.
-   Wait for the toggle and `[data-platform-previews] p`.
-   - `platform === "win32"` (**the stored choice survived a full load**)
-   - `search` includes `platform=win32` (the provider re-wrote the URL)
-   - `note` includes `labelFor("win32")`
-   - every `mono` entry === `monoFor("win32")`
-5. Click `"default"`.
+5. Open `/docs/theming` (fresh, parameter-free), settle on `win32`.
+   - `note` includes `labelFor("win32")` (the page's live sentence follows)
+6. Click `"default"`; settle on `default`.
    - `platform === "default"`, `search === ""` (**Default removes the parameter**)
-   - `note` includes `labelFor("default")`, every `mono` entry === `monoFor("default")`
-6. Keyboard: focus the checked radio, `press("ArrowRight")`, wait for the next
-   platform in `platformNames` order.
-   - `platform === next` where `next` is the first name after `"default"`
-     (derived with `movePlatform("default", "ArrowRight")`; STOP if it is
-     undefined)
-   - `search` includes `platform=<next>`
-   - `checked === labelFor(next)` and **focus is on that option**
-     (`document.activeElement === [aria-checked="true"]`)
-   - then `press("ArrowLeft")`: back to `"default"`, `search === ""`
-7. Reload `/docs/theming` (`navigate` again) and assert `platform === "default"`
-   — the run leaves the profile in the state it found it, and Default was stored.
+   - `note` includes `labelFor("default")`, every `mono` === `monoFor("default")`
+7. Keyboard: focus the checked radio, `press("ArrowRight")`, settle on `next`.
+   - `next = movePlatform("default", "ArrowRight")` (`darwin`); STOP if undefined
+   - `search` carries `platform=darwin`, `checked === labelFor(next)`
+   - **focus is on that option** (`activeElement === [aria-checked="true"]`)
+   - then `press("ArrowLeft")`: settle on `"default"`, `search === ""`
+8. Open `/docs/theming` again (parameter-free) and assert `platform === "default"`
+   — the run leaves the profile as it found it, and Default was stored.
 
 Every step appends named problems (`"step 2: …"`) instead of throwing, so one run
 reports every disagreement. Return `1` when any problem exists, `0` otherwise,
@@ -409,16 +411,25 @@ Apply each defect, run the named command, record the exact failure line in this
 plan's results section, then revert. A smoke that passes with the defect present
 is a broken smoke.
 
-| # | Forced defect | Where | Must fail with |
-| - | ------------- | ----- | -------------- |
-| A | delete `replaceSearch(next)` from `setPlatform` | `platform-provider.tsx` | step 2: the URL no longer carries `platform=win32` |
-| B | delete `writeStored(next)` from `setPlatform` | `platform-provider.tsx` | step 4: a parameter-free load reports `data-platform is "default", expected "win32"` |
-| C | make `subscribeToDocument` return `() => {}` without observing | `src/components/preview/theme-surface.tsx` | step 2: the surface mono is still `Menlo` |
-| D | delete the `onKeyDown` handler | `platform-toggle.tsx` | step 6: ArrowRight leaves the platform default |
-| E | change `tabIndex={checked ? 0 : -1}` to `tabIndex={0}` | `platform-toggle.tsx` | `platform-values.test.tsx` "one tab stop" test |
+| # | Forced defect | Where | Must fail with | Measured (2026-10-18) |
+| - | ------------- | ----- | -------------- | --------------------- |
+| A | delete `replaceSearch(next)` from `setPlatform` | `platform-provider.tsx` | step 2: the URL no longer carries `platform=win32` | 4 problems, exit `1`: `step 2: the URL carries platform=null, expected win32`; steps 6–7 keep the stale parameter |
+| B | delete `writeStored(next)` from `setPlatform` | `platform-provider.tsx` | the choice does not survive without the query string | 113 problems, exit `1`: `step 6: clicking Default left data-platform "win32"` — the mount effect re-resolves from storage, so without the click's write Default does not stick. **Not step 3 as planned:** the mount effect persists the URL value on navigation, so a parameter-free load still recovers `win32`; the click's write is proved by Default |
+| C | make `subscribeToDocument` return `() => {}` without observing | `src/components/preview/theme-surface.tsx` | a surface keeps the previous mono family | 104 problems, exit `1`: `step 6: the page did not settle on Default (data-platform "default", previews Consolas…)` and `preview surface 1 paints Consolas, expected Menlo`. **Not step 2 as planned:** the first click re-renders the route for another reason, the second repaint needs the observer |
+| D | delete the `onKeyDown` handler | `platform-toggle.tsx` | step 7: the arrow keys do nothing | 3 problems, exit `1`: `step 7: ArrowRight left the platform on default` (reported as `did not settle on macOS`, `URL carries platform=null, expected darwin`, `checked "Default", expected "macOS"`) |
+| E | change `tabIndex={checked ? 0 : -1}` to `tabIndex={0}` | `platform-toggle.tsx` | `platform-values.test.tsx` "one tab stop" test | `2 failed | 432 passed` — the radio test fails, as does `docs-checks.test.ts` while the new smoke is undocumented |
 
 Proofs A–D need a rebuilt site (`nub run --filter docs smoke:platform` builds by
-default); E is the unit suite.
+default); E is the unit suite. Every defect was reverted with `git checkout --`
+before the next proof.
+
+**What the proofs changed in the plan.** Two predictions were wrong and the
+plan now records the truth rather than the guess: B fails at Default (the mount
+effect is a second writer, so the click's storage write is what keeps Default
+from being re-resolved back to the stored platform), and C fails on the second
+platform change, not the first. Both are stronger tests than planned: they drive
+the state machine through a mount effect and a click, not a single attribute
+write.
 
 ## 5. STOP conditions
 
@@ -461,3 +472,63 @@ default); E is the unit suite.
   remains green.
 - The plan index, `TODO.md` and this plan's results section are updated in the
   same branch.
+
+## 8. Results (2026-10-18)
+
+### What shipped
+
+- `apps/docs/src/platform/platform-toggle-logic.ts` — the neighbour table and
+  `movePlatform`; `platform-toggle-logic.test.ts` — seven tests.
+- `apps/docs/src/platform/platform-toggle.tsx` — a `radiogroup` with roving
+  tabindex, `aria-checked`, arrows that select and apply, and focus that follows.
+- `apps/docs/src/components/platform-values.test.tsx` — the radio contract
+  replaces the `aria-pressed` assertion, plus a one-tab-stop test.
+- `apps/docs/scripts/smoke-platform.ts` — eight steps, `smoke:platform` in
+  `package.json`, `ArrowLeft`/`ArrowRight` in `scripts/chrome-session.ts`.
+- `apps/docs/README.md` — the command and its section;
+  `content/docs/contributing.mdx` — the gate row (`docs-checks.test.ts` refuses
+  to let the smoke ship undocumented); `content/docs/theming.mdx` — the radio
+  and arrow-key contract, and the gate that proves it.
+
+### Commands
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter docs test` | 63 files, **434 tests**, exit `0` (was 62 / 426) |
+| `nub run --filter docs check-types` | `Done`, exit `0` |
+| `nub run --filter docs smoke:platform` | **step 1–8 checked**, `smoke: ok`, exit `0` |
+| `nub run --filter docs smoke:browser` (`--no-build`) | every preview page in both schemes + the three platform URLs, `smoke: ok`, exit `0` |
+| `nub run --filter docs smoke:build` | exit `0` |
+| `nub run check` | test-quality, lint, format, types, exit `0` |
+| `nub run lint` | exit `0` |
+| `nub run test` | every workspace package green, exit `0` |
+
+### Two facts found while building the gate
+
+1. **The server HTML is not the settled page.** On a fresh parameter-free load
+   the provider publishes `<html data-platform>` and rewrites the URL after
+   hydration, and a preview repaints one frame later. The first draft read the
+   DOM as soon as a toggle and a surface existed, so a working site reported
+   `preview surface 1 paints Menlo, expected Consolas` and a note still saying
+   "Default". `open` now waits for exactly **one** toggle group, the expected
+   `data-platform`, and every surface's `--preview-font-mono`. The settle
+   failure is reported as a settle failure, not as a preview failure.
+2. **A client-side route change briefly renders a second toggle group**
+   (measured: 2 groups with 2 `tabindex="0"` options for ~300 ms after a
+   navigation, then 1). Counting tab stops across the document made step 1 flake
+   for that frame. Requiring exactly one group in `settle` both removes the
+   flake and fails by name if a duplicate control ever persists.
+
+### Two-direction proofs
+
+The table in §4 records every measured failure. Two predictions were wrong and
+are corrected there: removing the click's `writeStored` fails at **Default**, not
+at the parameter-free load (the provider's mount effect is a second writer), and
+removing the preview subscription fails on the **second** platform change, not
+the first. Both failures are real and named; neither assertion was weakened.
+
+### Not touched
+
+- `docs/preview-strategy.md` — this plan adds no preview tier or capture.
+- The component-page template and every component record.
+- `packages/*`, `examples/*`, `apps/playground`.

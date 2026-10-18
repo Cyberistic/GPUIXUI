@@ -22,6 +22,7 @@ nub run --filter docs smoke:build   # build, serve and crawl the production outp
 nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
 nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
 nub run --filter docs smoke:keyboard # skip link, focus ring and Enter in a real browser
+nub run --filter docs smoke:platform # the toggle: click, URL, storage, arrows
 nub run --filter docs smoke:responsive # 390 px: no sideways scroll and no clipped column
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run --filter docs api:values    # regenerate the generated Values API index
@@ -220,6 +221,36 @@ decision rules.
 nub run --filter docs smoke:search
 # or against a running server:
 nub apps/docs/scripts/smoke-search.ts --base-url http://127.0.0.1:4173 --no-build
+```
+
+Exit `1` names the step that broke, exit `2` means Chrome or the server was
+missing — never a pass.
+
+## Platform toggle smoke
+
+`MISSION.md` accepts the platform styles on one sentence: a reader toggles
+macOS → Windows and every preview changes, the choice lives in the URL so a link
+carries it, and it is remembered across navigation. `smoke:browser` only ever
+*loaded* `?platform=win32`, so the control itself had no gate.
+
+`smoke:platform` operates the switcher in a real browser and proves the whole
+path: a click changes `<html data-platform>`, the URL, the checked option and
+every preview surface; a fresh document with no query parameter restores the
+stored choice; a client-side navigation keeps it; the Theming page's live
+sentence names it; Default removes the parameter and restores the base theme;
+and the arrow keys move, apply and keep focus. Every expected label and mono
+family comes from `@gpuixui/tokens`, so the script carries no platform literal.
+
+The switcher is one **radio group** (WAI-ARIA APG single-select): one tab stop,
+`aria-checked`, and arrows that select and apply. `src/platform/platform-toggle-logic.ts`
+owns the neighbour table and its test walks it against `platformNames`, so a new
+platform cannot be added to the rendered list and silently left out of the
+keyboard order.
+
+```sh
+nub run --filter docs smoke:platform
+# or against a running server:
+nub apps/docs/scripts/smoke-platform.ts --base-url http://127.0.0.1:4173 --no-build
 ```
 
 Exit `1` names the step that broke, exit `2` means Chrome or the server was
