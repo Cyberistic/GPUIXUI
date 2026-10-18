@@ -14,7 +14,7 @@ import { createTheme, darkTheme } from "./index.js";
  * The groove moves with it too (plan 347). A progress segment paints `primary`
  * on `track`, so a brand that lightens its primary in dark mode needs a groove
  * dark enough to keep the mark at 3:1 and to clear the washes and status tints
- * the rail is painted on; the identity groove leaves this fill at 2.67:1.
+ * the rail is painted on; the identity groove leaves this fill at 2.23:1.
  * `#20202E` is the brand's own neutral step.
  *
  * The scrim moves with the brand as well (plan 526). A dialog's face is measured

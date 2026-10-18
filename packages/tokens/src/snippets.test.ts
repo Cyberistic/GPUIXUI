@@ -22,6 +22,14 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { brandTheme } from "./brand-theme.example.js";
+import {
+  contrastFloors,
+  createTheme,
+  darkTheme,
+  extendTheme,
+  themeFailures,
+} from "./index.js";
 import * as tokens from "./index.js";
 import * as react from "./react.js";
 
@@ -280,5 +288,107 @@ describe("documented snippets", () => {
           ).toBe(false);
         });
       });
+  });
+});
+
+/**
+ * Guards the defect plan 553 fixes: the snippets that teach the brand and the
+ * two builder JSDoc examples were held to the API surface but not to the
+ * contract. The docs page and the README showed the executed brand palette
+ * without `track`, so a reader who copied it shipped a progress segment at
+ * 2.225:1 on the identity groove, under the 3:1 mark floor, while the page said
+ * the executed example was "this exact family". The `extendTheme` and
+ * `createTheme` examples moved only `primary`, so each built a theme the
+ * package's own checker rejected three times.
+ *
+ * `colourMapOf` reads the literal map a documented example writes. It is not a
+ * TypeScript parser: a snippet is a fragment, and the only thing this guard
+ * needs is the role/value pairs it names.
+ */
+const colourMapOf = (code: string): Readonly<Record<string, string>> => {
+  const body = /colors:\s*\{([^}]*)\}/.exec(code)?.[1] ?? "";
+  return Object.fromEntries(
+    [...body.matchAll(/([A-Za-z]+):\s*"(#[0-9A-Fa-f]{6,8})"/g)].map(
+      ([, role, value]) => [role ?? "", value ?? ""],
+    ),
+  );
+};
+
+/** The documented blocks that claim to build a theme with colours. */
+const documentedBrands = snippets.filter(({ label, code }) =>
+  label === "docs/tokens.md" || label === "packages/tokens/README.md"
+    ? code.includes("brandTheme =")
+    : label.includes("theme.ts @example") && code.includes("colors:"),
+);
+
+const buildDocumented = (
+  code: string,
+  colors: Readonly<Record<string, string>>,
+) =>
+  code.includes("createTheme(")
+    ? createTheme({ mode: "dark", name: "Documented", colors })
+    : extendTheme(darkTheme, { name: "Documented", colors });
+
+describe("documented theme examples", () => {
+  it("finds every documented brand map", () => {
+    const labels = documentedBrands.map(({ label }) => label);
+    expect(labels).toContain("docs/tokens.md");
+    expect(labels).toContain("packages/tokens/README.md");
+    expect(labels.some((label) => label.includes("theme.ts @example"))).toBe(
+      true,
+    );
+  });
+
+  it("builds a theme the contract accepts", () => {
+    documentedBrands.forEach(({ label, index, code }) => {
+      expect(
+        themeFailures(buildDocumented(code, colourMapOf(code))),
+        `${label} #${index}`,
+      ).toEqual([]);
+    });
+  });
+
+  it("moves the whole filled family and the groove", () => {
+    documentedBrands.forEach(({ label, index, code }) => {
+      const roles = Object.keys(colourMapOf(code));
+      [
+        "primary",
+        "primaryForeground",
+        "primaryHover",
+        "primaryActive",
+        "primaryText",
+        "track",
+      ].forEach((role) => {
+        expect(roles, `${label} #${index}: ${role}`).toContain(role);
+      });
+    });
+  });
+
+  it("is the palette the executed example ships", () => {
+    documentedBrands.forEach(({ label, index, code }) => {
+      expect(brandTheme.colors, `${label} #${index}`).toMatchObject(
+        colourMapOf(code),
+      );
+    });
+  });
+
+  it("catches the snippet it replaced", () => {
+    const [documented] = documentedBrands;
+    expect(documented).toBeDefined();
+    if (documented === undefined) {
+      return;
+    }
+    const { track: _track, ...withoutGroove } = colourMapOf(documented.code);
+    expect(
+      themeFailures(buildDocumented(documented.code, withoutGroove)),
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "contrast",
+        foreground: "primary",
+        background: "track",
+        pairClass: "mark",
+        floor: contrastFloors.default.mark,
+      }),
+    );
   });
 });

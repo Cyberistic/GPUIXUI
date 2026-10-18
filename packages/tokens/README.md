@@ -156,6 +156,7 @@ export const brandTheme = createTheme({
     primaryHover: "#8F73FF",
     primaryActive: "#A28CFF",
     primaryText: "#C9BDFF",
+    track: "#20202E",
     ring: "#9B8CFF",
     overlay: "#000000D9",
   },
@@ -167,12 +168,14 @@ export const brandTheme = createTheme({
 A theme that moves a filled family moves the whole family: the brand's
 `primaryForeground`, `primaryHover`, `primaryActive` and `primaryText` are set
 beside `primary`, and `accentForeground`, `accentHover` and `accentActive` belong
-beside `accent`, and `selection` is the accent's translucent wash. An inherited
-state keeps the base hue running the interaction, and an inherited foreground can
-miss the on-colour floor. A dark brand whose accent is darker than the base's
-also deepens the modal scrim (`overlay`): the face is measured on the scrim over
-every surface a window shows, and the base's 65% scrim left this brand's floating
-face at 1.038:1 over its own primary action, so the example ships 85%.
+beside `accent`, and `selection` is the accent's translucent wash. A fill that is
+also painted as a value indicator names `track` too: the identity groove leaves
+this brand's fill under the 3:1 mark floor. An inherited state keeps the base hue
+running the interaction, and an inherited foreground can miss the on-colour
+floor. A dark brand whose accent is darker than the base's also deepens the
+modal scrim (`overlay`): the face is measured on the scrim over every surface a
+window shows, and the base's 65% scrim left this brand's floating face at
+1.038:1 over its own primary action, so the example ships 85%.
 
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts) and is held to

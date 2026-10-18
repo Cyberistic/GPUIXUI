@@ -120,7 +120,11 @@ export interface ThemeOverrides {
    * measurement: `themeContrastFailures(theme)` checks it.
    */
   readonly contrast?: ThemeContrast;
-  /** Override individual semantic colour roles. */
+  /**
+   * Override individual semantic colour roles. A filled family moves as a set —
+   * the fill, its foreground and its two pointer states — and a fill painted as
+   * a value indicator moves `track` with it; see `brand-theme.example.ts`.
+   */
   readonly colors?: Partial<ThemeColors>;
   /** Override font families or text roles. */
   readonly typography?: TypographyOverrides;
@@ -373,13 +377,18 @@ export function getTheme(
 }
 
 /**
- * Derive a theme from a base theme without mutating it.
+ * Derive a theme from a base theme without mutating it. A colour change moves
+ * the whole filled family, the value groove included; the complete, executed
+ * example is `src/brand-theme.example.ts`.
  *
  * @example
  * ```ts
- * const brand = extendTheme(darkTheme, {
- *   name: "Acme",
- *   colors: { primary: "#7C5CFF" },
+ * import { darkTheme, extendTheme } from "@gpuixui/tokens";
+ *
+ * const compact = extendTheme(darkTheme, {
+ *   name: "Acme compact",
+ *   density: "compact",
+ *   radius: { md: 8 },
  * });
  * ```
  */
@@ -409,10 +418,22 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
  *
  * @example
  * ```ts
+ * import { createTheme } from "@gpuixui/tokens";
+ *
  * const brand = createTheme({
  *   mode: "dark",
  *   name: "Acme",
- *   colors: { primary: "#7C5CFF" },
+ *   colors: {
+ *     primary: "#7C5CFF",
+ *     primaryForeground: "#000000",
+ *     primaryHover: "#8F73FF",
+ *     primaryActive: "#A28CFF",
+ *     primaryText: "#C9BDFF",
+ *     track: "#20202E",
+ *     ring: "#9B8CFF",
+ *     overlay: "#000000D9",
+ *   },
+ *   radius: { md: 8 },
  *   density: "compact",
  * });
  *

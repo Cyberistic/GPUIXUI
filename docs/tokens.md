@@ -1565,6 +1565,7 @@ export const brandTheme = createTheme({
     primaryHover: "#8F73FF",
     primaryActive: "#A28CFF",
     primaryText: "#C9BDFF",
+    track: "#20202E",
     ring: "#9B8CFF",
     overlay: "#000000D9",
   },
@@ -1592,9 +1593,12 @@ this rule was written down. A dark brand whose accent is darker than the base's
 also deepens the modal scrim: a dialog's face is measured on the scrim over every
 surface a window shows, and the inherited 65% scrim left the floating face at
 1.038:1 over this brand's own primary action, so the example ships 85%
-(`#000000D9`). A lighter accent can keep the base scrim. The executed example in
+(`#000000D9`). A lighter accent can keep the base scrim. A dark brand also moves
+the value groove: `primary` is a progress segment painted on `track`, and the
+identity groove leaves this fill under the 3:1 mark floor, so the example names
+its own neutral step. The executed example in
 [`src/brand-theme.example.ts`](../packages/tokens/src/brand-theme.example.ts) is
-this exact family, and `theme.test.ts` holds it to `themeContrastFailures`.
+this exact palette, and `theme.test.ts` holds it to `themeContrastFailures`.
 
 A persisted choice arrives as `unknown`. The package guards its own unions, so a
 consumer does not retype them: `isPlatformName(value)` narrows to a shipped

@@ -13,6 +13,8 @@ import { accessibleDarkTheme, resolveTheme } from "./high-contrast.example.js";
 import { alpha, densityPresets, type ElevationShape } from "./index.js";
 import { shippedThemes } from "./shipped-themes.js";
 import {
+  contrastFloors,
+  contrastRatio,
   createTheme,
   darkTheme,
   elevationShadow,
@@ -288,6 +290,20 @@ describe("brand example", () => {
   it("holds the documented examples to the contrast contract", () => {
     expect(themeContrastFailures(brandTheme)).toEqual([]);
     expect(themeContrastFailures(brandLightTheme)).toEqual([]);
+  });
+
+  it("quotes the shipped identity groove in its rationale", () => {
+    // Plan 503 moved `track`; the example's rationale kept plan 347's figure.
+    const source = readFileSync(
+      new URL("./brand-theme.example.ts", import.meta.url),
+      "utf8",
+    );
+    const groove = contrastRatio(
+      brandTheme.colors.primary,
+      darkTheme.colors.track,
+    );
+    expect(groove).toBeLessThan(contrastFloors.default.mark);
+    expect(source).toContain(`leaves this fill at ${groove.toFixed(2)}:1`);
   });
 
   it("moves the whole brand family, not only the fill", () => {
