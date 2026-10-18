@@ -32,10 +32,6 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last, on the track |
 | `testId` | `string` | — | stable locator |
 
-There is no `aria-valuemax` in the runtime, so pair the meter with visible text
-when the range matters ("68 of 100 GB" above) — the announcement is the value
-alone unless `formatValue` says more.
-
 ## Keyboard
 
 Not focusable and not interactive. A meter is status; there is no slider
@@ -46,6 +42,9 @@ behaviour and no tab stop.
 - Role: `meter` (AccessKit `Meter` — verified in the real renderer).
 - The measurement is announced through **`aria-valuetext`**, because GPUix
   0.10.0 has no `aria-valuenow`/`min`/`max`.
+- With no `aria-valuemax`, the announcement is the value alone unless
+  `formatValue` says more — pair the meter with visible text when the range
+  matters ("68 of 100 GB" in the example above).
 - The name comes from `label`. Without one the meter is unnamed; give it the
   measurement's subject ("Disk usage").
 
