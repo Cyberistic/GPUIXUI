@@ -130,6 +130,14 @@ reason plan 552 moved the ladders: a `PlatformStyle` may carry a
 `dimensions` override. `density`, `typography` and `avatarSize` are already
 destructured locals in `themeMetricFailures`.
 
+A dependent rule compares only when its bound is a usable size. A zero or
+non-finite `avatarSize.xs`, `density.controlHeight.sm` or `body.fontSize` is
+already the positive rule's diagnostic; comparing the fitted metric against it
+would report one cause twice (the probe in `positive-sizes.test.ts` sets
+`avatarSize.xs: 0`, and the naive dot rule blamed the 10px dot as well). A tiny
+`usableBound(bound)` helper gates the three fit rules, in the spirit of plan
+532's one-diagnostic rule.
+
 The JSDoc bullet for `dimensions` gains one sentence: "A dialog's three widths
 must grow, a calendar cell fits the small control, a time segment is at least
 one body em wide, and an avatar's presence dot is at most half the smallest
@@ -174,8 +182,8 @@ Cases:
 7. **a presence dot larger than half the smallest avatar is reported** —
    `avatarPresenceDotSize: 11` reports exactly one `at-most` at bound `10`.
 8. **the rules are not blanket minimums** — the shipped values, and a theme that
-   only widens a dialog, return `[]`; a zero `timeSegmentWidth` is still the
-   generic `positive` diagnostic, not `at-least`, so one value keeps one report.
+   only widens a dialog, return `[]`; each merge case asserts the other five
+   members are untouched, so a rule cannot be satisfied by moving a neighbour.
 
 Cases 4–7 must fail on the pre-rule implementation (`themeMetricFailures`
 returns `[]` for each). Record the real output before adding §2.2.
@@ -281,7 +289,7 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/tokens-theme`.
    ```sh
    nub run --filter @gpuixui/tokens test
    ```
-   Expected: PASS — 138 files, 5,692 tests (one file, eight cases more).
+   Expected: PASS — 138 files, 5,694 tests (one file, ten cases more).
 5. Gates:
    ```sh
    nub run check

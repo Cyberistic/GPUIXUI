@@ -149,6 +149,18 @@ export interface Dimensions {
   readonly carouselIndicatorSize: number;
   /** 18px — the active carousel indicator's width. */
   readonly carouselIndicatorActiveWidth: number;
+  /** 360px — a small dialog's maximum surface width. */
+  readonly dialogWidthSm: number;
+  /** 480px — the default dialog's maximum surface width. */
+  readonly dialogWidthMd: number;
+  /** 640px — a large dialog's maximum surface width. */
+  readonly dialogWidthLg: number;
+  /** 34px — one day cell in a calendar grid; at least a small control. */
+  readonly calendarCellSize: number;
+  /** 26px — the hours or minutes segment of a time field; at least one body em. */
+  readonly timeSegmentWidth: number;
+  /** 10px — an avatar's presence dot; at most half the smallest avatar. */
+  readonly avatarPresenceDotSize: number;
 }
 
 /** Default component dimensions. */
@@ -172,6 +184,12 @@ export const dimensions: Dimensions = {
   chatViewportMinHeight: 160,
   carouselIndicatorSize: 8,
   carouselIndicatorActiveWidth: 18,
+  dialogWidthSm: 360,
+  dialogWidthMd: 480,
+  dialogWidthLg: 640,
+  calendarCellSize: 34,
+  timeSegmentWidth: 26,
+  avatarPresenceDotSize: 10,
 };
 
 /**

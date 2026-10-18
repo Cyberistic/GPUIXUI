@@ -250,7 +250,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [553](./553-documented-brand-and-builder-examples.md) | The documented brand is a theme the contract rejects | F | 098, 347, 355, 356, 526 | done |
 | [554](./554-surface-metric-sign.md) | Every surface metric is a size, and every border is a width | F | 358, 360, 530, 531, 552 | done |
 | [555](./555-border-rationale-and-duplicate-claim.md) | The border rationale names five of the measured surfaces, and prints one rule twice | F | 080, 084, 300, 318, 327, 352, 550 | done |
-| [556](./556-dialog-calendar-and-mark-dimensions.md) | The dialog, calendar and mark metrics the dimension audits missed | B/F | 353, 389, 530, 550, 554 | planned |
+| [556](./556-dialog-calendar-and-mark-dimensions.md) | The dialog, calendar and mark metrics the dimension audits missed | B/F | 353, 389, 530, 550, 554 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

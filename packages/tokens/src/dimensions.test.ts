@@ -63,6 +63,20 @@ describe("component dimensions", () => {
     );
   });
 
+  it("keeps the dialog, calendar, time and presence metrics coherent", () => {
+    expect(dimensions.dialogWidthSm).toBeLessThan(dimensions.dialogWidthMd);
+    expect(dimensions.dialogWidthMd).toBeLessThan(dimensions.dialogWidthLg);
+    expect(dimensions.calendarCellSize).toBeGreaterThanOrEqual(
+      controlHeight(lightTheme, "sm"),
+    );
+    expect(dimensions.timeSegmentWidth).toBeGreaterThanOrEqual(
+      lightTheme.typography.body.fontSize,
+    );
+    expect(dimensions.avatarPresenceDotSize).toBeLessThanOrEqual(
+      lightTheme.avatarSize.xs / 2,
+    );
+  });
+
   it("gives every shipped theme the identity dimensions", () => {
     shippedThemes.forEach(({ theme }) => {
       expect(theme.dimensions, theme.name).toEqual(dimensions);
@@ -89,6 +103,9 @@ describe("component dimensions", () => {
 
   it("runs the copy-and-own example through the total check", () => {
     expect(narrowDrawerTheme.dimensions.drawerWidthMd).toBe(360);
+    expect(narrowDrawerTheme.dimensions.dialogWidthMd).toBe(520);
+    expect(narrowDrawerTheme.dimensions.dialogWidthSm).toBe(360);
+    expect(narrowDrawerTheme.dimensions.dialogWidthLg).toBe(640);
     expect(narrowDrawerTheme.dimensions.chatViewportMinHeight).toBe(200);
     expect(dimensionsBaseTheme.dimensions).toEqual(dimensions);
     expect(themeFailures(narrowDrawerTheme)).toEqual([]);

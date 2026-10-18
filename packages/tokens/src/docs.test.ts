@@ -2381,6 +2381,11 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 
+  it("states the dialog, calendar, time and presence dimensions", () => {
+    const sentence = `A dialog's surface is ${dimensions.dialogWidthSm}/${dimensions.dialogWidthMd}/${dimensions.dialogWidthLg}px wide at \`sm\`/\`md\`/\`lg\`, a calendar day cell is ${dimensions.calendarCellSize}px, a two-digit time segment is ${dimensions.timeSegmentWidth}px, and an avatar's presence dot is ${dimensions.avatarPresenceDotSize}px — at most half the smallest avatar.`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
   it("names the platform families the implementation ships", () => {
     const sentinel = `Sans is GPUI's \`${systemUiFont}\` sentinel`;
     expect(designSystem.includes(sentinel), sentinel).toBe(true);

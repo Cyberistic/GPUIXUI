@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 220/284
+`[x]` `[████████░░]` 221/288
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1805,6 +1805,17 @@ measured on, while printing the strong-over-thin rule twice; `controlFillRoles`
 is exported as the fills' owner, both bullets name every measured member, and
 `docs.test.ts` derives the lists from `contrastPairs` so a ninth fill or a
 fourteenth surface fails the page until it is named (plan 555)
+`[x]` Ship the dialog, calendar, time-segment and avatar-presence metrics — the
+design system promised a brand could widen a dialog through `theme.dimensions`
+while `dialog.tsx` kept 360/480/640 as a local `MAX_WIDTH`; the calendar day cell
+(34), the time segment (26) and the avatar presence dot (10) were the same class
+of literal, so all four join `dimensions` with a dialog ladder, a cell fit, a
+segment em and a dot bound (plan 556)
+`[ ]` Cross-team: `components` reads `theme.dimensions.dialogWidthSm/Md/Lg` for
+`DialogContent`'s local `MAX_WIDTH` in `dialog.tsx`, `calendarCellSize` for the
+date-picker's `CELL`, `timeSegmentWidth` for the time-picker's `SEGMENT_WIDTH`
+and `avatarPresenceDotSize` for the avatar's `DOT` instead of the literals
+(owner: `components`; plan 556)
 
 ## Phase C — Tier 1–2 components
 

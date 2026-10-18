@@ -242,7 +242,10 @@ dialog or a toast without touching component source. A keycap is 20px and holds
 one `caption` line plus its two borders; the metric contract reports a theme
 whose caption leading outgrows it. A drawer opens 320/400/560px wide, or
 240/320/420px tall from the bottom; a message viewport never shrinks below 160px,
-and a carousel's active dot is 18px beside an idle 8px one.
+and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface is
+360/480/640px wide at `sm`/`md`/`lg`, a calendar day cell is 34px, a two-digit
+time segment is 26px, and an avatar's presence dot is 10px — at most half the
+smallest avatar.
 
 ## 7. Radii, borders and elevation
 

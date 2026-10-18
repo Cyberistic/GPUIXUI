@@ -87,7 +87,7 @@ missing here is not public.
 | `Density` | Resolved control heights, padding and row height for a preset. |
 | `DensityName` | A preset name from `densityNames`. |
 | `DensityOverrides` | Partial density metrics and the preset they start from; they merge size by size. |
-| `Dimensions` | Fixed surface metrics: overlay, field, toast, preview-card, drawer, chat and carousel sizes. |
+| `Dimensions` | Fixed surface metrics: overlay, field, dialog, calendar, time-segment, toast, preview-card, drawer, chat and avatar-mark sizes. |
 | `DirectionFailure` | An interaction ladder step that moves toward the canvas, with both luminances. |
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
 | `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`, derived from `elevationLevels`. |
@@ -1051,15 +1051,25 @@ every density.
 | `dimensions.chatViewportMinHeight` | 160 | shortest message viewport; held to one `density.rowHeight` |
 | `dimensions.carouselIndicatorSize` | 8 | inactive carousel indicator |
 | `dimensions.carouselIndicatorActiveWidth` | 18 | active carousel indicator's width; at least the idle dot |
+| `dimensions.dialogWidthSm` | 360 | small dialog's maximum surface width |
+| `dimensions.dialogWidthMd` | 480 | default dialog's maximum surface width |
+| `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow |
+| `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
+| `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least one `body` em |
+| `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half `avatarSize.xs` |
 
 A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
 whose caption leading outgrows it.
 
 A drawer's width and height are ladders: `sm` → `md` → `lg` grows in both axes,
-so a theme cannot make "large" narrower than "medium". A carousel's active mark
-may elongate but never shrink below its idle dot, and a message viewport holds at
-least one row.
+so a theme cannot make "large" narrower than "medium". A dialog's three surface
+widths are a third ladder for the same reason — `lg` may not be narrower than
+`md`. A carousel's active mark may elongate but never shrink below its idle dot,
+and a message viewport holds at least one row. A calendar day is a control, so
+its cell fits the theme's own small control; a time segment holds two body
+digits, so it is at least one `body` em wide; and an avatar's presence dot is at
+most half the smallest avatar, because it sits on that avatar's corner.
 
 A metric override merges field by field, like the spacing and radius scales:
 
@@ -1074,10 +1084,11 @@ const wider = extendTheme(lightTheme, {
 A runnable example lives in
 [`src/dimensions.example.ts`](../packages/tokens/src/dimensions.example.ts).
 
-`dimensions` is inherited by every platform variant and recipe: overlay widths,
-field chrome, card widths and the keycap size are shared surface metrics, not
-platform conventions. A consumer who wants a narrower platform menu edits the
-group on the resolved theme.
+`dimensions` is inherited by every platform variant and recipe: overlay and
+dialog widths, field chrome, card widths, the calendar cell, the time segment,
+the avatar presence mark and the keycap size are shared surface metrics, not
+platform conventions. A consumer who wants a narrower platform menu or a wider
+dialog edits the group on the resolved theme.
 
 ## Elevation
 
