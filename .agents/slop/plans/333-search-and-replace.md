@@ -41,14 +41,14 @@ mounting the same `ReplaceProbe` view. Checks:
 | Check | Asserts |
 | ----- | ------- |
 | the document paints one wash per match | `host.highlights()` has 2 washes for the preview's `highlight` |
-| the editor reports no highlight matches | `editor=none` — the `<input>`'s own `highlight` never fires `onHighlight` (or the measured opposite, recorded in §8) |
+| the editor reports no highlight matches | measured `editor=0`: the `<input>`'s own `highlight` fires `onHighlight` with zero matches — its text is not a highlight run (§7) |
 | the pre-replace text is painted twice | the editor and the preview both paint the source sentence (occurrence count, so the readout cannot satisfy it) |
 | replace-one rewrites the value | `replaces=1`, the new sentence is painted twice, the old one zero |
 | replace-one leaves one wash | the preview drops to 1 wash |
 | replace-all clears every match | `replaces=3` total, `doc=0` washes |
 | a second replace-all is inert | `replaces=3` again |
 | undo restores the document | the source sentence is painted twice and 2 washes return |
-| the caret after a programmatic change | click, End, replace-one with a **longer** word, type `z`; the resulting value is pinned exactly (measurement, see §8) |
+| the caret after a programmatic change | click, End, replace-one with a **longer** word, type `z`; the resulting value is pinned exactly (measurement, see §7) |
 
 The pure replacement rule lives in `apps/playground/src/scenarios/replace-core.ts`
 with a co-located unit test: `replaceFirst` / `replaceAll` over a query, using
@@ -97,7 +97,7 @@ concurrent run makes a scenario fail its `waitFor` (measured 2026-10-18).
   measured value; a no-op replace fails "replace-one rewrites the value", and a
   stale paint fails the occurrence counts.
 - Two-direction proof: make `replaceFirst` return the source unchanged → the
-  headless suite must exit `1`; restore → exit `0`. Record both runs in §8.
+  headless suite must exit `1`; restore → exit `0`. Record both runs in §7.
 - `check:tests` must accept both test files.
 
 ## 6. STOP conditions
@@ -114,19 +114,7 @@ Stop and report (do not fudge an assertion) if:
   runs — replace the occurrence count with the a11y `value` and record why;
 - the live window cannot be acquired because another live run holds it.
 
-## 7. Acceptance
-
-- [ ] `replace-core` and its unit test exist; `nub run --filter playground test`
-      is green.
-- [ ] `replace-contract` is registered and green headless; the suite is `65/65`
-      and reports `replace=verified`.
-- [ ] `live-replace` is green in a real window; the live suite is `20/20`.
-- [ ] The two-direction proof is recorded in §8.
-- [ ] `COMPONENTS.md` records the measured verdict and the limits (no
-      programmatic selection; whatever the editor highlight answered).
-- [ ] `TODO.md`, the plan index and this plan's result section agree.
-
-## 8. Result — measured on this host (2026-10-18)
+## 7. Result — measured on this host (2026-10-18)
 
 Landed. Headless **66/66**, exit `0`, `replace=verified`, two consecutive full
 runs; live **20/20**, exit `0`, `replace=verified`; `nub run --filter playground
@@ -184,14 +172,14 @@ real-timer flakes that passed alone:
 
 Two consecutive full runs after the change: `66/66`, exit `0`.
 
-## 9. Acceptance
+## 8. Acceptance
 
 - [x] `replace-core` and its unit test exist; `nub run --filter playground test`
       is green.
 - [x] `replace-contract` is registered and green headless; the suite is `66/66`
       and reports `replace=verified`.
 - [x] `live-replace` is green in a real window; the live suite is `20/20`.
-- [x] The two-direction proof is recorded in §8.
+- [x] The two-direction proof is recorded in §7.
 - [x] `COMPONENTS.md` records the measured verdict and the limits (no
       programmatic selection; the editor reports zero highlight matches).
 - [x] `TODO.md`, the plan index and this plan's result section agree.
