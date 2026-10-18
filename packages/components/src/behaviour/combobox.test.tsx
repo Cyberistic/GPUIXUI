@@ -171,11 +171,15 @@ const LoadingPicker = ({ loading }: { readonly loading: boolean }) => (
 );
 
 /** A trigger near the window centre, where a centred popup has room to sit. */
-const CentredPicker = () => (
+const CentredPicker = ({
+  align = "center",
+}: {
+  readonly align?: "start" | "center";
+}) => (
   <div style={{ paddingLeft: 540, paddingTop: 100 }}>
     <Combobox options={options}>
       <ComboboxTrigger label="Assign reviewer" />
-      <ComboboxContent align="center">
+      <ComboboxContent align={align}>
         <ComboboxInput label="Search reviewers" />
         <ComboboxList label="Reviewers" />
       </ComboboxContent>
@@ -275,19 +279,31 @@ describe("Combobox", () => {
     picker.unmount();
   });
 
+  /**
+   * The surface must be centred on the trigger. The runtime anchors `start` to
+   * the trigger's layout edge, so a centre request adds half the width
+   * difference; asserted as a shift, because the rebuilt binding reports each
+   * element's content-box origin (its padding inset cancels between the two
+   * surfaces, but not between the trigger and the surface — plan 536).
+   */
   it("centres a requested popup on its trigger", async () => {
-    const picker = renderComponent(<CentredPicker />);
+    const start = renderComponent(<CentredPicker align="start" />);
+    await open(start);
+    const trigger = requireBounds(start, "combobox-trigger");
+    const startSurface = requireBounds(start, "combobox-content");
+    start.unmount();
 
-    await open(picker);
+    const centred = renderComponent(<CentredPicker align="center" />);
+    await open(centred);
+    const surface = requireBounds(centred, "combobox-content");
+    centred.unmount();
 
-    const trigger = requireBounds(picker, "combobox-trigger");
-    const surface = requireBounds(picker, "combobox-content");
-
+    expect(surface.width).toBe(startSurface.width);
     expect(
-      Math.abs(surface.x + surface.width / 2 - (trigger.x + trigger.width / 2)),
+      Math.abs(
+        surface.x - startSurface.x - (trigger.width - surface.width) / 2,
+      ),
     ).toBeLessThanOrEqual(1);
-
-    picker.unmount();
   });
 
   it("opens above a trigger near the window bottom instead of covering it", async () => {
@@ -1005,8 +1021,13 @@ describe("Combobox", () => {
   /**
    * Focus visibility (plan 523). The bug this guards, measured: opening the
    * popup focuses the search field natively, but the field painted no ring, so
-   * the surface the user typed into was invisible. The ring must follow focus
-   * away and come back on a reopen.
+   * the surface the user typed into was invisible.
+   *
+   * The rebuilt binding delivers no `focus`/`blur` for `focusElement`,
+   * `focusNext` or a pointer focus change (measured in plan 536), so "the ring
+   * leaves while the popup stays open" cannot be observed here; the live-window
+   * check is recorded in `TODO.md` → Interlocks. What is observable: the ring is
+   * seeded on open, the field unmounts on close, and a reopen rings it again.
    */
   it("paints the focus ring on the search field", async () => {
     const picker = renderComponent(<Picker />);
@@ -1017,17 +1038,12 @@ describe("Combobox", () => {
       picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
     ).toBeDefined();
 
-    picker.renderer.focusElement(
-      picker.renderer.findByTestId("combobox-trigger")?.id ?? -1,
-    );
-    expect(
-      picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
-    ).toBeUndefined();
-
     picker.renderer.simulateKeystrokes("escape");
     await settle();
-    await open(picker);
+    expect(picker.renderer.findByTestId("combobox-input")).toBeUndefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
 
+    await open(picker);
     expect(
       picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
     ).toBeDefined();

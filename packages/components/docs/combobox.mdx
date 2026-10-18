@@ -290,11 +290,14 @@ same shape for a row composed by hand.
 - `align="center"` is clamped by the snap margin near a window edge.
 - The trigger is a `div` with button semantics (the `@gpuixui/primitives`
   stand-in), not a native button element.
+- The locally built native binding (`c0e554b…`) delivers no `focus`/`blur` for a
+  programmatic or pointer focus change, so "the ring leaves while the popup
+  stays open" is a live-window check, not a renderer assertion (plan 536).
 
 ## Verification
 
 `src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (39 tests):
-open + input focus and its focus ring (which follows focus away and returns on
+open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), a centred popup and a near-bottom popup that opens above its
 trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
