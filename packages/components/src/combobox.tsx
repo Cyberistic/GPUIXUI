@@ -10,10 +10,16 @@
  * consecutive rows into a labelled section, ranked within the section so its
  * heading never repeats (plan 395).
  *
- * Focus, the active row and Enter/arrow/Escape handling stay GPUix's: those are
- * proven in its own suite and reimplementing them here would be a second, worse
- * copy. The parts own the trigger label, the ranking adapter and the selection
- * payload, and a part is never given a duplicated `value` prop.
+ * The popup is a dismiss layer like every other overlay here (plan 398): GPUix's
+ * headless handlers close it but cannot claim the event, so without our layer one
+ * Escape or backdrop press closed the popup **and** an enclosing dialog, and a
+ * trigger press toggled it back open. The layer claims the event through the
+ * shared stack, and a re-open that belongs to the dismissing gesture is ignored.
+ *
+ * Focus, the active row and Enter/arrow handling stay GPUix's: those are proven
+ * in its own suite and reimplementing them here would be a second, worse copy.
+ * The parts own the trigger label, the ranking adapter and the selection payload,
+ * and a part is never given a duplicated `value` prop.
  *
  * `onCreate` appends one synthetic trailing item over the typed query, so the
  * create path reuses the runtime's highlight and Enter semantics. The synthetic
@@ -68,6 +74,7 @@ import {
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
+import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -230,6 +237,8 @@ export const Combobox = ({
   const trigger = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
+  const dismissedByOutsidePress = useRef(false);
+  const close = useRef<() => void>(() => undefined);
 
   const [selected, setSelected] = useControllableState<ComboboxValue>({
     value: toRuntimeValue(valueProp, multiple),
@@ -280,6 +289,35 @@ export const Combobox = ({
     if (!open) restoreFocus.current = false;
     wasOpen.current = open;
   }, [open, renderer]);
+
+  // The close path is read by the dismiss layer, which must not re-push on every
+  // render: a re-push would put this popup above a surface opened after it.
+  useLayoutEffect(() => {
+    close.current = () => {
+      setOpen(false);
+      setQuery("");
+    };
+  });
+
+  // The popup is a dismiss layer, like every other overlay here. GPUix closes it
+  // on Escape and outside presses but cannot claim the event, so without this an
+  // enclosing dialog closed on the same Escape (plan 398).
+  useLayoutEffect(() => {
+    if (!open) return;
+    return pushDismissLayer((event) => {
+      close.current();
+      if (event.eventType === "keyDown") {
+        restoreFocus.current = true;
+        return;
+      }
+      // The press already moved focus, and the click it belongs to must not
+      // re-open what the same gesture just dismissed.
+      dismissedByOutsidePress.current = true;
+      queueMicrotask(() => {
+        dismissedByOutsidePress.current = false;
+      });
+    });
+  }, [open]);
 
   return (
     <ComboboxContext.Provider
@@ -353,14 +391,19 @@ export const Combobox = ({
         open={open}
         onOpenChange={(next) => {
           if (next) {
+            // The click that follows the press which dismissed this popup hangs
+            // onto the same gesture; it must not re-open it (plan 398).
+            if (dismissedByOutsidePress.current) {
+              dismissedByOutsidePress.current = false;
+              return;
+            }
             restoreFocus.current = false;
             setQuery("");
             onQueryChange?.("");
             setOpen(true);
             return;
           }
-          setOpen(false);
-          setQuery("");
+          close.current();
         }}
         multiple={multiple}
         disabled={disabled}
@@ -393,6 +436,7 @@ export const ComboboxTrigger = ({
   placeholder = "Select…",
   label,
   testId = "combobox-trigger",
+  onKeyDown,
   ...rest
 }: ComboboxTriggerProps) => {
   const theme = useTheme();
@@ -415,6 +459,11 @@ export const ComboboxTrigger = ({
       testId={testId}
       disabled={disabled}
       {...rest}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        // Escape closes the open popup as one surface, like the search field.
+        if (isDismiss(event)) dismissTopLayer(event);
+      }}
       style={{
         ...textStyle(theme, "label"),
         display: "flex",
@@ -511,6 +560,7 @@ export const ComboboxContent = ({
       {...rest}
       onMouseDownOutside={(event) => {
         noteOutsidePress();
+        dismissTopLayer(event);
         onMouseDownOutside?.(event);
       }}
       style={mergeStyles(
@@ -569,7 +619,14 @@ export const ComboboxInput = ({
         onChange?.(event);
       }}
       onKeyDown={(event) => {
-        if (isDismiss(event)) noteEscape();
+        // Offer Escape to the stack from the focused surface itself: GPUix's
+        // handler closes this popup but cannot claim the event, and the runtime
+        // flushes React's update before an enclosing surface sees the key, so
+        // the layer would already be gone by then (plan 398).
+        if (isDismiss(event)) {
+          noteEscape();
+          dismissTopLayer(event);
+        }
       }}
       style={{
         ...textStyle(theme, "body"),

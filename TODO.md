@@ -299,6 +299,11 @@ retired once both branches are one
       days, adjacent days are muted, selectable and bounds-aware, so the grid has
       no dead cells; 2 pure + 3 native tests, both-direction proof (unit 390,
       behaviour 619); docs, inventory and `COMPONENTS.md` synced
+    - [x] Combobox joins the dismiss stack: one Escape or outside press
+      closes the popup, not the enclosing dialog, and a trigger press does not
+      re-open what it just dismissed — plan 398; 3 native cases (Combobox 36,
+      behaviour 629), both-direction proof; docs, `COMPONENTS.md` and inventory
+      synced
     - [x] Disabled means inert — plan 394: measured five leaks (a disabled
       Button/IconButton kept its hover/press fill, InlineEdit painted a ring and
       a hover with `disabled` + `autoFocus`, `CollapsibleTrigger` had no

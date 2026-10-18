@@ -16,6 +16,11 @@
  * above an earlier group and split its heading; a missing heading hid the
  * sections the caller declared; and a create row that inherited the previous
  * group's heading looked like a real option of that group.
+ *
+ * Dismissal (plan 398): the popup did not participate in the dismiss stack, so
+ * one Escape or one backdrop press closed the popup **and** the dialog around
+ * it, and pressing the trigger closed the popup only for the click that follows
+ * to re-open it.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -43,6 +48,7 @@ import {
   ComboboxTrigger,
   type ComboboxOption,
 } from "../combobox.js";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 
 const options: ReadonlyArray<ComboboxOption> = [
   { value: "calendar", label: "Calendar", description: "Scheduling" },
@@ -190,11 +196,36 @@ const LowPicker = () => (
   </div>
 );
 
+/** A combobox inside an open dialog: one event must close one surface. */
+const DialogPicker = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent label="Assign reviewer" testId="dialog">
+        <DialogTitle>Assign reviewer</DialogTitle>
+        <Combobox options={options}>
+          <ComboboxTrigger testId="dialog-combo" label="Assign reviewer" />
+          <ComboboxContent>
+            <ComboboxInput label="Search reviewers" />
+            <ComboboxList label="Reviewers" />
+          </ComboboxContent>
+        </Combobox>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 /** Let the runtime's microtask (focus) and React's updates settle. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
+};
+
+/** Open the dialog's combobox, then settle. */
+const openInDialog = async (root: ComponentTestRoot): Promise<void> => {
+  clickCentreOf(root, "dialog-combo");
+  await settle();
 };
 
 /** Open the popup and wait for its input. */
@@ -379,6 +410,62 @@ describe("Combobox", () => {
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
 
     picker.unmount();
+  });
+
+  it("closes on a second trigger press without re-opening", async () => {
+    const picker = renderComponent(<Picker />);
+    await open(picker);
+
+    clickCentreOf(picker, "combobox-trigger");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    // A separate press is a new gesture and opens it again.
+    clickCentreOf(picker, "combobox-trigger");
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("closes one surface per Escape inside a dialog", async () => {
+    const nested = renderComponent(<DialogPicker />);
+    await openInDialog(nested);
+
+    expect(nested.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    await settle();
+
+    expect(nested.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    await settle();
+
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
+  });
+
+  it("closes one surface per backdrop press inside a dialog", async () => {
+    const nested = renderComponent(<DialogPicker />);
+    await openInDialog(nested);
+
+    nested.renderer.nativeSimulateClick(12, 12);
+    await settle();
+
+    expect(nested.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.nativeSimulateClick(12, 12);
+    await settle();
+
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("ranks a prefix match above a substring match", async () => {

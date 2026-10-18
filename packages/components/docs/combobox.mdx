@@ -52,6 +52,12 @@ The root owns the state because ranking and the selection payload need the whole
 option set; the parts own their own labels and place. `ComboboxItem` is exported
 so a caller can compose the rows of a custom list from the same root.
 
+The popup is a dismiss layer like every other overlay in the library: open it
+inside a `Dialog`, `Popover` or menu and **one Escape or outside press closes one
+surface** — the popup first, the enclosing surface second. Pressing the trigger
+while the popup is open closes it; the click that belongs to that same press does
+not re-open it.
+
 ## Values, not labels
 
 `onValueChange` receives the option **value** (`"ada"`), never the display label
@@ -214,6 +220,9 @@ filters a local array in `onQueryChange`, which is where a request would go.
 | `Escape` | closes and returns focus to the trigger |
 | outside press | closes without stealing focus back |
 
+The popup closes one layer per event: inside a dialog, the first Escape or
+outside press closes the popup and leaves the dialog open.
+
 The search input keeps focus; the highlighted row is visual. **No
 `aria-activedescendant`** exists in 0.10.0, so assistive technology does not get
 the input→row relationship; `aria-selected` on the rows is the supported signal.
@@ -279,12 +288,14 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (33 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (36 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
-add/remove with order, the disabled row, Escape restoring focus,
+add/remove with order, the disabled row, Escape restoring focus, a second trigger
+press closing the popup (and the next press opening it), one surface per Escape
+and per backdrop press inside a dialog,
 prefix-before-substring ranking, both themes, the pointer path — selecting an
 option, toggling several while skipping a disabled one, closing on an outside
 press — a caller-supplied empty state, the trigger's placeholder/name coming
