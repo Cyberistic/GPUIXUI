@@ -130,6 +130,7 @@ workstream declares in its own section below.
 | [380](./380-components-run-from-source.md) | Components run from source: the JSX runtime shim must be loadable | F | 110, 330, 338 | done — the `.d.ts` path mapping made `nub` fail with `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`; two `.ts` shims carry the GPUIX intrinsic map, `nub -e` imports 210 exports, and a drift check holds the shim to the installed declaration (unit 362) |
 | [381](./381-tag-chip-remove-name.md) | The tag chip's removal control is nameable (`<chip testId>-remove`) | F | 314, 330, 333, 335 | done — the playground could only press it by coordinates and our suite found it by child index; 1 native test (Tag / token input 10, behaviour 555), both-direction proof |
 | [382](./382-submenu-placement.md) | Submenu placement: open left when the right side has no room | F | 112, 114, 131, 323, 376 | done — measured once per open: right when it fits, otherwise left of the row; 7 rule + 2 native tests (Dropdown menu 36, Context menu 18, behaviour 557), both-direction proof (reverting `sub.tsx` fails both native cases) |
+| [383](./383-component-page-api.md) | Every component page documents its public API | F | 110, 117, 200, 337 | planned — 15 pages have no `## API` and four omit exported parts; the check fails on the current tree |
 
 Interlocks this workstream depends on and does not own:
 
