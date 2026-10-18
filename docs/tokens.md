@@ -579,6 +579,10 @@ define tracking.
 `textRoles` lists the ten roles in this order, so a table can be generated
 without retyping them.
 
+`fontWeights` is the ascending set the shipped scale uses — `400`, `500` and
+`600` — and the weights a bundled font has to provide; it is derived from the
+roles, not a second list. A brand may still name any weight in `1…1000`.
+
 The scale is two exported ladders: `proseLadder` (`display` → `caption`) and
 `codeLadder` (`code` → `codeBlock`). `bodyStrong` shares `body`'s size and is a
 weight variant, so it is on neither. `themeMetricFailures` holds an edited theme

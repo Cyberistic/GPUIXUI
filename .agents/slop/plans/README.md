@@ -212,6 +212,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [514](./514-disabled-panel-action.md) | The disabled action inside a status panel | F | 306, 307, 392, 394, 397, 500, 502, 512, 513 | done |
 | [516](./516-ring-on-value-groove.md) | The focus ring on the value groove | F | 086, 093, 332, 342, 347, 354, 384, 503 | done |
 | [517](./517-keycap-surface-metric.md) | The keycap surface a theme cannot own or check | F | 011, 353, 358, 360, 367, 384, 386 | done |
+| [518](./518-shipped-weight-claims.md) | The shipped weight set, in one index and two last claims | F | 011, 367, 370, 387, 391, 396 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2211,6 +2212,16 @@ literals the newer components added are deliberately not tokens: a carousel
 dot's diameter, a timeline dot's diameter and the toast's 3px tone bar are mark
 and chrome geometry, not surfaces a theme owns. The `components` migration to
 read the token is a cross-team row.
+
+Plan `518` publishes `fontWeights`, the ascending weight set the shipped type
+scale actually uses, derived from `textRoles`/`typography` rather than a second
+literal, and corrects the two surfaces plan `396` left behind: the public
+`FontWeight` JSDoc named a `700` no role uses and `docs/design-system.md` still
+said "The four weights", while `docs/tokens.md` and its guard already said three.
+The JSDoc, the design-system sentence and the catalogue now name the same
+derived list, `font-weights.example.ts` is the font manifest a bundler copies,
+and `font-weights.test.ts` fails on both pre-fix sentences and on a stale
+literal. No colour, pair, floor, metric or shipped weight moves.
 
 ## How to use a plan
 

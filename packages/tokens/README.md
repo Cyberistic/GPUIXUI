@@ -805,6 +805,10 @@ import { textRoles, typography } from "@gpuixui/tokens";
 const rows = textRoles.map((role) => ({ role, ...typography[role] }));
 ```
 
+`fontWeights` is the ascending weight set those roles use — `400`, `500` and
+`600` today — derived from the scale rather than a second list, so a font
+bundle loads exactly the weights the shipped roles select.
+
 `statusTones` and `platformNames` do the same for the four status families and
 the four platform variants, in documentation and toggle order.
 

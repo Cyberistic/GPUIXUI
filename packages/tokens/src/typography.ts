@@ -1,10 +1,11 @@
 import { systemMonoFamily, systemUiFont } from "./platforms.js";
 
 /**
- * A CSS numeric font weight, `1…1000`. The shipped scale uses four — `400`
- * regular, `500` medium, `600` semibold and `700` bold — but a brand may name
- * any weight its installed family provides, including a variable font's
- * intermediate step. GPUix receives the number on `StyleDesc.fontWeight`.
+ * A CSS numeric font weight, `1…1000`. The shipped scale uses `400` regular,
+ * `500` medium and `600` semibold — {@link fontWeights} is that set — but a
+ * brand may name any weight its installed family provides, including a
+ * variable font's intermediate step. GPUix receives the number on
+ * `StyleDesc.fontWeight`.
  */
 export type FontWeight = number;
 
@@ -124,3 +125,13 @@ export const typography: Typography = {
   code: text(13, 20, 400),
   codeBlock: text(12, 18, 400),
 };
+
+/**
+ * The font weights the shipped type scale uses, ascending. This is the set to
+ * load for the shipped scale; it is not a restriction — {@link FontWeight}
+ * accepts any CSS weight in `1…1000`, and a brand's own role may name another.
+ * Derived from the roles rather than a second literal, like `shippedThemes`.
+ */
+export const fontWeights: ReadonlyArray<FontWeight> = [
+  ...new Set(textRoles.map((role) => typography[role].fontWeight)),
+].toSorted((left, right) => left - right);

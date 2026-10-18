@@ -171,6 +171,7 @@ import {
 } from "./theme.js";
 import {
   codeLadder,
+  fontWeights,
   proseLadder,
   textRoles,
   typography,
@@ -343,9 +344,6 @@ const typeRow = (name: string): string => {
 
 const timingLevels = Object.keys(motion).filter((key) => key !== "ease");
 const easingPhases = Object.keys(motion.ease);
-const shippedWeights = [
-  ...new Set(textRoles.map((role) => typography[role].fontWeight)),
-].toSorted((left, right) => left - right);
 const documentedWeight = /`(\d{2,4})`/g;
 
 describe("docs/tokens.md type index", () => {
@@ -369,8 +367,8 @@ describe("docs/tokens.md type index", () => {
     const claimed = [...typeRow("FontWeight").matchAll(documentedWeight)].map(
       (match) => Number(match[1]),
     );
-    expect(new Set(claimed)).toEqual(new Set(shippedWeights));
-    const quoted = shippedWeights.map((weight) => `\`${weight}\``);
+    expect(new Set(claimed)).toEqual(new Set(fontWeights));
+    const quoted = fontWeights.map((weight) => `\`${weight}\``);
     expect(markdownProse).toContain(
       `shipped weights are ${quoted.slice(0, -1).join(", ")} and ${quoted.at(-1)}`,
     );
