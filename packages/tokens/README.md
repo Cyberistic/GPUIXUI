@@ -377,7 +377,11 @@ accents one step deeper. Each filled family also walks `x` → `xHover` →
 holds every `xHover` to 1.05:1 from its `x` and every `xActive` from its
 `xHover`, under the `step` class, at both contrast levels. The generic washes are
 one ladder too: `washStepPairs` holds `active` to 1.05:1 from `hover`, so a ghost
-or outline control whose press equals its hover is reported.
+or outline control whose press equals its hover is reported. A selectable row
+adds one step: it paints `accent` under the pointer and `selected` once chosen,
+so `selectionStepPairs` holds `selected` to 1.05:1 from `accent`; the two roles
+were the same fill in the identity and macOS light, and the selected value moved
+one designed step in eight shipped sets (plan 381).
 A field's pointer edges are both measured on its own `input` fill:
 `borderStrong` under the pointer and `ring` while pressed
 (`fieldPressedEdgePairs`). The focus shadow still sits on the surface behind the

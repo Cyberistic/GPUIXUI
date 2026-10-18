@@ -127,7 +127,10 @@ export interface ThemeColors {
   readonly muted: string;
   /** Secondary text on `muted` and on `background`. */
   readonly mutedForeground: string;
-  /** Tinted surface for hover and selection emphasis. */
+  /**
+   * Highlight wash for a menu row, a selectable row under the pointer and a
+   * toggle that is on. A persistent row selection is `selected`.
+   */
   readonly accent: string;
   /** Text and icons on `accent`. */
   readonly accentForeground: string;
@@ -216,7 +219,10 @@ export interface ThemeColors {
   readonly hover: string;
   /** Pressed wash for ghost and subtle surfaces; a filled control uses `xActive`. */
   readonly active: string;
-  /** Selected row or item background. */
+  /**
+   * Selected row or item background, held one perceivable step past the
+   * `accent` wash a selectable row hovers with.
+   */
   readonly selected: string;
   /** Text and icons on `selected`. */
   readonly selectedForeground: string;
@@ -263,7 +269,10 @@ export interface ThemeColors {
  * the canvas — so a `hover`, `secondary`, `accent` or `selected` fill painted on
  * a sidebar stays perceivable (plan 309). The status text roles sit a half-step
  * between their ramp steps, so a label keeps the secondary floor when it is
- * selected with the row around it (plan 366).
+ * selected with the row around it (plan 366). The selected row is iris 100, one
+ * designed step past the `accent` wash a selectable row hovers with: selection
+ * must be perceivable from the state before the click, or the two look alike
+ * (plan 381).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -324,7 +333,7 @@ export const lightColors = {
   overlay: "#00000073",
   hover: palette.neutral[100],
   active: palette.neutral[200],
-  selected: palette.iris[50],
+  selected: palette.iris[100],
   selectedForeground: palette.iris[800],
   disabled: palette.neutral[100],
   disabledForeground: "#6E7787",
@@ -352,7 +361,10 @@ export const lightColors = {
  * it to clear the 3:1 `inactive` floor (plan 306). The hover wash is a designed
  * step between the neutral-850 quiet panel and the neutral-800 press, so a menu
  * item or a sidebar row reacts to the pointer on the surface it paints on
- * (plan 309).
+ * (plan 309). The selected row is one designed step lighter than the `accent`
+ * wash a selectable row hovers with — between it and the pressed step — so the
+ * click is perceivable and `selectedForeground` keeps its floor on it
+ * (plan 381).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -413,7 +425,7 @@ export const darkColors = {
   overlay: "#000000A6",
   hover: "#262C36",
   active: palette.neutral[800],
-  selected: palette.iris[900],
+  selected: "#402F94",
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],
   disabledForeground: palette.neutral[400],
@@ -430,7 +442,8 @@ export const darkColors = {
  * darker than the neutral press step, so an outlined control keeps its 3:1 edge
  * while pressed (plan 318). The status text roles sit a half-step between their
  * ramp steps, so a label keeps the 7:1 floor when it is selected with the row
- * around it (plan 366).
+ * around it (plan 366). The selected row is a step past the `accent` wash a
+ * selectable row hovers with, so the click is perceivable (plan 381).
  */
 export const highContrastLightColors = {
   background: "#FFFFFF",
@@ -491,7 +504,7 @@ export const highContrastLightColors = {
   overlay: "#000000A6",
   hover: "#E8E8E8",
   active: "#D6D6D6",
-  selected: "#E0E3FF",
+  selected: "#D8DBFF",
   selectedForeground: "#2E2370",
   disabled: "#E8E8E8",
   disabledForeground: "#5A5A5A",
@@ -511,7 +524,8 @@ export const highContrastLightColors = {
  * pressed wash (plan 094). `disabledForeground` is a mid grey because the pressed
  * wash needs 4.5:1 for an inactive label (plan 306). The accent and selected
  * fills are a lighter iris, so a selected row is perceivable on the AAA dark
- * quiet panel and popover (plan 309).
+ * quiet panel and popover (plan 309); `selected` sits on the accent's hover step
+ * so the selection is also a step past the row's hover wash (plan 381).
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -572,7 +586,7 @@ export const highContrastDarkColors = {
   overlay: "#FFFFFF26",
   hover: "#2E2E2E",
   active: "#3D3D3D",
-  selected: "#251B5C",
+  selected: "#33257A",
   selectedForeground: "#E0E3FF",
   disabled: "#2E2E2E",
   disabledForeground: "#A9A9A9",

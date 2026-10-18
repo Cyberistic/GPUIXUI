@@ -100,7 +100,6 @@ describe("the control edge on the fills it paints", () => {
       "accent",
       "active",
       "secondary",
-      "selected",
     ]);
     expect(
       failures.every(

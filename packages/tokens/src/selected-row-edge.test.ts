@@ -9,7 +9,7 @@
  * `themeContrastFailures` returned `[]`.
  *
  * The pair is a guard, not a palette fix: every shipped set already clears its
- * divider floor (1.113:1 on Windows dark at the tightest), so no colour moves.
+ * divider floor (1.081:1 on Windows light at the tightest), so no colour moves.
  * The same plan replaces the documentation guard's hand-typed six-fill list
  * with one derived from the contract — it was that list which let plan 327's
  * `accentHover`/`accentActive` pairs stay out of the verification paragraph.
@@ -139,12 +139,12 @@ describe("the control edge on the selected row fill", () => {
     const [highLabel, highRatio] = worst("high");
 
     expect([defaultLabel, Number(defaultRatio.toFixed(3))]).toEqual([
-      "win32 dark default",
-      1.113,
+      "win32 light default",
+      1.081,
     ]);
     expect([highLabel, Number(highRatio.toFixed(3))]).toEqual([
-      "identity light high",
-      5.158,
+      "identity dark high",
+      4.762,
     ]);
   });
 });

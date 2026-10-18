@@ -130,8 +130,8 @@ describe("status text through a text selection", () => {
     };
 
     const defaultWorst = tightest("default");
-    expect(defaultWorst[0]).toBe("XP light default infoText on active");
-    expect(Number(defaultWorst[1].toFixed(3))).toBe(4.661);
+    expect(defaultWorst[0]).toBe("XP light default infoText on selected");
+    expect(Number(defaultWorst[1].toFixed(3))).toBe(4.584);
 
     const highWorst = tightest("high");
     expect(highWorst[0]).toBe("identity light high warningText on active");

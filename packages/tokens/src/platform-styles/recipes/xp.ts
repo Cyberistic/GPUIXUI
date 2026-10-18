@@ -10,8 +10,9 @@ import { windowsPlatformStyle } from "../windows.js";
  * XP's 3D bevel cannot be an inset shadow (GPUix has none), so it is a designed
  * light/dark border pair. XP shipped no dark mode: the dark half carries the
  * Windows dark palette and is documented as an interpretation.
- * The values are held to `themeContrastFailures` in both modes by
- * `platform-recipes.test.ts`.
+ * The selected row is a step past the accent wash a selectable row hovers with,
+ * so the Luna click is perceivable (plan 381). The values are held to
+ * `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
  */
 export const xpPlatformRecipe = {
   types: { label: "Windows XP", sans: systemUiFont, mono: "Consolas" },
@@ -51,7 +52,7 @@ export const xpPlatformRecipe = {
       accentActive: "#B0CBF7",
       ring: "#0054E3",
       selection: "#5B8DE647",
-      selected: "#C9DDFF",
+      selected: "#BDD4FF",
       selectedForeground: "#003C74",
       placeholder: "#6B6555",
       skeleton: "#CFC8AE",

@@ -182,6 +182,7 @@ import {
   selectionSoftPairs,
   selectionSoftWashPairs,
   selectionStatusPairs,
+  selectionStepPairs,
   selectionSurfaces,
   selectionWashPairs,
   softBorderSurfacePairs,
@@ -238,6 +239,7 @@ const publishedPairLists: ReadonlyArray<
   ["stateFillSurfacePairs", stateFillSurfacePairs],
   ["stateStepPairs", stateStepPairs],
   ["washStepPairs", washStepPairs],
+  ["selectionStepPairs", selectionStepPairs],
   ["markPairs", markPairs],
   ["inactivePairs", inactivePairs],
   ["inactiveSoftPairs", inactiveSoftPairs],
@@ -493,9 +495,10 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(338);
+    expect(contrastPairs.length).toBe(339);
     expect(stateStepPairs).toHaveLength(8);
     expect(washStepPairs).toHaveLength(1);
+    expect(selectionStepPairs).toHaveLength(1);
     expect(softPanelTextPairs).toHaveLength(8);
     expect(toastTonePairs).toHaveLength(4);
     expect(softBorderSurfacePairs.length).toBe(32);

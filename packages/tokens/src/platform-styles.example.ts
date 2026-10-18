@@ -55,7 +55,8 @@ export const resolveEditedPlatformTheme = (mode: ThemeMode): Theme =>
  * drag-selection wash follows the accent at the identity's alpha, so a copied
  * style does not select text in another hue (plan 331). The dark selection fill
  * steps one deeper than the accent's tint so the inherited graphite divider
- * keeps a visible edge on it (plan 335).
+ * keeps a visible edge on it (plan 335). The selected row follows the accent at
+ * a perceivable step, so the selection is not the hover wash again (plan 381).
  */
 export const contosoPlatformStyle = {
   types: { label: "Contoso", sans: systemUiFont, mono: "Cascadia Mono" },
@@ -71,7 +72,7 @@ export const contosoPlatformStyle = {
       accentHover: "#D5E8F7",
       accentActive: "#B7D4F0",
       ring: "#0F6CBD",
-      selected: "#DCEEFB",
+      selected: "#D3E8F9",
       selectedForeground: "#003A6B",
       selection: "#0F6CBD3D",
     },

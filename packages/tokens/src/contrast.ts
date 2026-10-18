@@ -310,6 +310,19 @@ export const washStepPairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The selection step. A selectable list row paints `accent` under the pointer
+ * and `selected` once it is chosen, so the two fills are the state before and
+ * after a click. In the identity (both modes, both contrast levels) and macOS
+ * light they were the same role value, and Windows light, macOS dark and XP
+ * light sat under the step floor — hovering one row looked like selecting
+ * another, and clicking a hovered row changed nothing. The pair publishes the
+ * same rule the filled families and the wash ladder carry.
+ */
+export const selectionStepPairs: readonly ContrastPair[] = [
+  ["selected", "accent", "step"],
+];
+
+/**
  * The solid roles painted as marks, and the surfaces they sit on. A progress
  * segment (`primitives/src/core/style.ts` `progressFillStyle`) and a slider fill
  * paint over the `muted` track; a slider thumb rings its own `input` fill with
@@ -717,7 +730,12 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * class), so a collapsed hover or press is reported like an invisible fill. The
  * generic washes are a ladder too: `active` is held one perceivable step from
  * `hover` (`washStepPairs`, the same class), because a ghost or outline control
- * paints no fill at rest and its press is the only change the pointer sees.
+ * paints no fill at rest and its press is the only change the pointer sees. A
+ * selectable row is the same story one state further: `accent` is the wash it
+ * paints under the pointer and `selected` the fill it keeps once chosen, so
+ * `selected` is held one perceivable step from `accent` (`selectionStepPairs`,
+ * the same class) — otherwise hovering one row looks like selecting another and
+ * the click changes nothing.
  *
  * A solid role painted as a **mark** — a progress segment, a slider fill, a
  * slider thumb's ring, a rating star, a combobox check or a timeline dot — is a
@@ -814,6 +832,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...stateFillSurfacePairs,
   ...stateStepPairs,
   ...washStepPairs,
+  ...selectionStepPairs,
   ...markPairs,
 ];
 
@@ -1212,7 +1231,9 @@ const washVisibilityFailures = (
  * `secondary`, `accent` and `selected` fills. It also holds each filled
  * family's hover and press to one perceivable step from the fill before it
  * (`pairClass: "step"`), so an edited theme cannot flatten a state; the generic
- * `hover`/`active` ladder is reported the same way (`active` from `hover`). It
+ * `hover`/`active` ladder is reported the same way (`active` from `hover`), as
+ * is the selection step a selectable row makes from its hover wash (`selected`
+ * from `accent`). It
  * measures
  * a row's own default text on the washes it paints, secondary text on the
  * `input` fill a time picker's separator and clear control paint, and the field

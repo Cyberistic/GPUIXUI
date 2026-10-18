@@ -27,7 +27,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * outlined control keeps its edge while pressed (plan 318). The dark soft
  * destructive tint is named rather than left to inheritance, so applying this
  * style over another platform's theme cannot keep that platform's tint (plan
- * 374).
+ * 374). The selected row is a step past the accent wash a selectable row hovers
+ * with, and its readable text step moves with it — no deeper selection keeps
+ * the old blue at 4.5:1 (plan 381).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -64,8 +66,8 @@ export const macosPlatformStyle = {
       accentActive: "#BFD9F8",
       ring: "#0071E3",
       selection: "#0071E333",
-      selected: "#D9EAFD",
-      selectedForeground: "#0055B3",
+      selected: "#CFE3FA",
+      selectedForeground: "#004A9E",
       placeholder: "#6E6E73",
       track: "#DADADF",
       shadow: "#000000",
@@ -99,7 +101,7 @@ export const macosPlatformStyle = {
       accentActive: "#2D577E",
       ring: "#409CFF",
       selection: "#0A84FF33",
-      selected: "#123A5C",
+      selected: "#1A4568",
       selectedForeground: "#CFE8FF",
       placeholder: "#9A9AA0",
       destructiveSoft: darkColors.destructiveSoft,

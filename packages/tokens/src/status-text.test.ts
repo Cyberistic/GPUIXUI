@@ -107,12 +107,21 @@ describe("status text on the state washes", () => {
       ({ wash }) => wash === undefined,
     );
 
-    expect(failures).toHaveLength(1);
-    expect(failures[0]?.foreground).toBe("warningText");
-    expect(failures[0]?.background).toBe("active");
-    expect(failures[0]?.pairClass).toBe("secondary");
-    expect(failures[0]?.floor).toBe(contrastFloors.default.secondary);
-    expect(failures[0]?.ratio).toBeLessThan(contrastFloors.default.secondary);
+    expect(failures.map(({ background }) => background).toSorted()).toEqual([
+      "active",
+      "selected",
+    ]);
+    expect(
+      failures.every(
+        ({ foreground, pairClass, floor }) =>
+          foreground === "warningText" &&
+          pairClass === "secondary" &&
+          floor === contrastFloors.default.secondary,
+      ),
+    ).toBe(true);
+    expect(
+      failures.every(({ ratio }) => ratio < contrastFloors.default.secondary),
+    ).toBe(true);
   });
 
   it("publishes all sixteen status-wash pairs", () => {

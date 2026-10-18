@@ -20,7 +20,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * designed opaque roles in Fluent's blue and grey families, not alpha composites
  * (plan 097). The light quiet panel and accent are a step toward the card, so a
  * sidebar wash, a neutral filled control and a toggle-on fill stay perceivable
- * on the surface they paint on (plan 309), and the pressed neutral step sits one
+ * on the surface they paint on (plan 309), the selected row is a step past the
+ * accent wash a selectable row hovers with (plan 381), and the pressed neutral
+ * step sits one
  * designed step below the divider so an outlined control keeps its edge while
  * pressed (plan 318). The dark soft destructive tint is named rather than left
  * to inheritance, so applying this style over another platform's theme cannot
@@ -62,7 +64,7 @@ export const windowsPlatformStyle = {
       accentActive: "#B9D3EF",
       ring: "#0067C0",
       selection: "#0067C033",
-      selected: "#CCE8FF",
+      selected: "#C2E2FF",
       selectedForeground: "#003A6B",
       placeholder: "#6B6B6B",
       track: "#D8D8D8",

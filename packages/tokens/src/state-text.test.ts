@@ -87,6 +87,7 @@ describe("secondary text on the state washes", () => {
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
       "active",
       "hover",
+      "selected",
     ]);
     expect(
       failures.every(

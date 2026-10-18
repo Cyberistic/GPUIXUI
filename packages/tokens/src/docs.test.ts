@@ -266,7 +266,7 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 337 to **${contrastPairs.length}**`,
+      `taking it from 338 to **${contrastPairs.length}**`,
     );
   });
 
@@ -908,8 +908,8 @@ describe("docs/tokens.md quoted tightest figures", () => {
       ["primaryText", "selected", "Linux dark", 4.53],
       ["foreground", "selected", "Linux dark", 7.47],
       ["popoverForeground", "selected", "Linux dark", 7.95],
-      ["selectedForeground", "active", "macOS light", 5.21],
-      ["selectedForeground", "accent", "macOS light", 5.81],
+      ["selectedForeground", "active", "macOS light", 6.22],
+      ["selectedForeground", "accent", "macOS light", 6.93],
       ["successText", "muted", "Aero light", 7.68],
       ["mutedForeground", "destructiveSoft", "Aero light", 6.61],
       ["primaryText", "destructiveSoft", "Windows light", 5.26],
@@ -977,8 +977,8 @@ describe("docs/tokens.md quoted tightest figures", () => {
 
     const [defaultLabel, defaultRatio] = tightest("default");
     expect([defaultLabel, Number(defaultRatio.toFixed(3))]).toEqual([
-      "XP light infoText on active",
-      4.661,
+      "XP light infoText on selected",
+      4.584,
     ]);
     const [highLabel, highRatio] = tightest("high");
     expect([highLabel, Number(highRatio.toFixed(3))]).toEqual([
@@ -987,7 +987,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
     ]);
 
     expect(markdownProse).toContain(
-      "**4.661:1** (XP light `infoText` on `active`)",
+      "**4.584:1** (XP light `infoText` on `selected`)",
     );
     expect(markdownProse).toContain(
       "**7.370:1** at AAA (identity light high `warningText` on `active`)",
@@ -1097,7 +1097,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
     const [markLabel, markRatio] = tightest("success", "track");
 
     expect([surfaceLabel, Number(surfaceRatio.toFixed(2))]).toEqual([
-      "XP light",
+      "identity light",
       1.06,
     ]);
     expect([markLabel, Number(markRatio.toFixed(2))]).toEqual([
@@ -1603,7 +1603,7 @@ describe("docs/design-system.md", () => {
       `| brand-toned text (\`primaryText\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\` washes, the \`accent\`/\`selected\` row fills and the four soft status fills a link in a status panel sits on | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| state steps (\`xHover\` from \`x\` and \`xActive\` from \`xHover\` for \`primary\`/\`secondary\`/\`destructive\`/\`accent\`, and the generic wash's \`active\` from \`hover\`) | ${contrastFloors.default.step}:1 | ${contrastFloors.high.step}:1 |`,
+      `| state steps (\`xHover\` from \`x\` and \`xActive\` from \`xHover\` for \`primary\`/\`secondary\`/\`destructive\`/\`accent\`, the generic wash's \`active\` from \`hover\`, and the selected row's \`selected\` from the \`accent\` hover wash) | ${contrastFloors.default.step}:1 | ${contrastFloors.high.step}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| a Toast's tone glyph and bar (\`infoSoftForeground\`/\`successSoftForeground\`/\`warningSoftForeground\`/\`destructiveSoftForeground\` on \`popover\`, the shipped composition until \`components\` paints \`xText\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,

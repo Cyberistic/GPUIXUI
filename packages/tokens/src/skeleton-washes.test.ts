@@ -87,7 +87,7 @@ describe("the loading skeleton on a row surface", () => {
     expect(contrastRatio(palette.neutral[200], light.active)).toBeLessThan(
       contrastFloors.default.surface,
     );
-    expect(contrastRatio(palette.neutral[800], dark.selected)).toBeLessThan(
+    expect(contrastRatio(palette.neutral[800], dark.active)).toBeLessThan(
       contrastFloors.default.surface,
     );
     surfaces.forEach((surface) => {
@@ -123,8 +123,11 @@ describe("the loading skeleton on a row surface", () => {
       ({ foreground }) => foreground === "skeleton",
     );
 
+    const pressed = failures.filter(
+      ({ background }) => background === "active",
+    );
     expect(
-      failures.map(({ background, pairClass, floor }) => ({
+      pressed.map(({ background, pairClass, floor }) => ({
         background,
         pairClass,
         floor,
@@ -136,6 +139,12 @@ describe("the loading skeleton on a row surface", () => {
         floor: contrastFloors.default.surface,
       },
     ]);
+    expect(
+      failures.every(
+        ({ pairClass, floor }) =>
+          pairClass === "surface" && floor === contrastFloors.default.surface,
+      ),
+    ).toBe(true);
   });
 
   it("names the accent wash when a selectable row regresses", () => {
