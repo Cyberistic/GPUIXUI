@@ -471,8 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–466)
 
-`[~]` `[██████████]` 64/65
+`[~]` `[██████████]` 65/66
 
+`[x]` **The page template checks content, not only headings (plan 466)** — every delivered page must keep a `tsx`/`ts` example importing `@gpuixui/` under Usage, an `<auto-type-table>` under API reference and an `<include>` under Source; each rule fails on a real page when its block is removed
 `[x]` **Tier 2 page truth (plan 463)** — eight pages stop denying features the components ship: accordion header keys, list multi-select and type-ahead, dropdown/context submenus and 500 ms type-ahead, command-menu subsequence ranking, toast pause and one action, the real reason the dialog/search glyph is text; `preview-server.ts` waits 90 s so a 45 s cold start is not reported unverified
 `[x]` **`docs/preview-strategy.md` gap truth (plan 464)** — the document names all nine pages with neither a live scene nor an illustration, `gaps.ts` owns the set, and `preview-gaps.test.ts` fails when the document and the code disagree
 `[x]` **The record's limitations stop denying shipped features (plan 465)** — the `shippedFeatures` table now also reads each record's limitations, so the status block above a page cannot contradict the prose below it; seven stale strings corrected (list, toast, dropdown, two context, command, accordion)
