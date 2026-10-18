@@ -25,6 +25,7 @@ import { renderSpinner } from "./Spinner.js";
 import { renderGrid, renderStack } from "./Stack.js";
 import { renderText, textSemantics } from "./Text.js";
 import {
+  elementChildren,
   elementProp,
   expectSome,
   hostProp,
@@ -124,6 +125,28 @@ describe("layout containers", () => {
         "height",
       ),
     ).toStrictEqual(Option.some(testTheme.borderWidth.thin));
+  });
+
+  it("put a labelled separator's caller style on the control, not its rules", () => {
+    // The bug guarded (plan 364): `style` was merged into the shared rule object
+    // and spread onto both halves, so a container property landed twice while
+    // the element the caller named (`testId` on the root) never moved.
+    const element = renderSeparator(
+      {
+        orientation: "horizontal",
+        label: "Advanced",
+        style: { marginTop: 40 },
+      },
+      testTheme,
+    );
+    expect(numberIn(element, "marginTop")).toStrictEqual(Option.some(40));
+    const rules = Arr.filter(elementChildren(element), (child) =>
+      Option.isSome(hostTag(child)),
+    );
+    expect(rules.length).toBeGreaterThan(0);
+    expect(Arr.map(rules, (rule) => numberIn(rule, "marginTop"))).toStrictEqual(
+      Arr.map(rules, () => Option.none()),
+    );
   });
 
   it("spacer either takes a fixed step or fills what is left", () => {

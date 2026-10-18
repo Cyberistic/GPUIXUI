@@ -32,12 +32,17 @@ A labelled rule is still one call:
 | `orientation` | `"horizontal" \| "vertical"` | — (required) | which way the rule runs |
 | `inset` | spacing step | none | margin at both ends, from `spacing` |
 | `label` | `string` | none | a centred caption; ignored for vertical rules |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StyleDesc` | — | merged last, onto the **control** (for a labelled separator, the row that holds the caption and rules) |
 | `testId` | `string` | — | stable locator |
 
 The rule's thickness is `theme.borderWidth.thin` and its colour is
 `theme.colors.border`. A labelled separator is composed from two rules and a
 `caption`-role text, not a new visual primitive.
+
+Because the caption and its rules are the control's internal structure, a
+labelled separator's `style` styles its root: `marginTop`/`gap`/padding move the
+whole thing. To recolour the rule itself, use a `Box` with a border — the rule
+keeps the theme's border role (plan `364`).
 
 ## Keyboard
 

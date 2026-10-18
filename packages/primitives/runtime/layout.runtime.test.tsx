@@ -134,6 +134,49 @@ it("draws a horizontal Separator as one border step across the surface", async (
   expect(rule.width).toBe(next.width);
 });
 
+it("moves a labelled Separator by the caller's margin, not its rules'", async () => {
+  // The bug guarded (plan 364): `style` was merged into the shared rule object
+  // and spread onto both halves, so `marginTop: 40` left a 40 px band above each
+  // half while the separator itself did not move.
+  const runtime = await openWindow();
+  const render = (marginTop?: number): void =>
+    runtime.render(
+      <Surface>
+        <Stack direction="column">
+          <Text role="body">Above</Text>
+          <Separator
+            orientation="horizontal"
+            label="Advanced"
+            testId="sep"
+            style={marginTop === undefined ? undefined : { marginTop }}
+          />
+          <Text role="body">Below</Text>
+        </Stack>
+      </Surface>,
+    );
+  render();
+  const before = boundsOf(runtime, "sep").y;
+  render(40);
+  expect(boundsOf(runtime, "sep").y - before).toBe(40);
+  const root = Option.getOrElse(runtime.element("sep"), () =>
+    expect.fail("the separator painted no root"),
+  );
+  expect(root.style.marginTop).toBe(40);
+  // The rules are the root's own structure: the caller's margin must not reach
+  // them, or it would be applied twice.
+  const rules = Arr.flatMap(root.children, (id) =>
+    Option.match(Option.fromNullishOr(runtime.renderer.getElement(id)), {
+      onNone: () => [],
+      onSome: (child) => (child.type === "div" ? [child] : []),
+    }),
+  );
+  expect(rules).toHaveLength(2);
+  expect(Arr.map(rules, (rule) => rule.style.marginTop)).toStrictEqual([
+    undefined,
+    undefined,
+  ]);
+});
+
 it("lets a Spacer push its sibling to the far edge", async () => {
   const runtime = await openWindow();
   runtime.render(

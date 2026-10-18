@@ -5,6 +5,11 @@
  * separator is a rule with a caption, which is a composition rather than a rule
  * property, so it is built from the same two elements here instead of growing
  * the resolver.
+ *
+ * A caller's `style` lands on the **control** — the one element of a plain rule,
+ * or the flex row of a labelled one — so a container property moves the
+ * separator as it would any other part (plan `364`). The caption and its two
+ * rules are internal structure and keep the themed look.
  */
 
 import type { ReactElement } from "react";
@@ -28,19 +33,22 @@ export const renderSeparator = (
   { orientation, inset, label, style, testId }: SeparatorProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
-  const rule = mergeStyle(ruleStyle({ orientation, inset }, theme), style);
+  const rule = ruleStyle({ orientation, inset }, theme);
   if (label === undefined || orientation === "vertical") {
-    return <div testId={testId} style={rule} />;
+    return <div testId={testId} style={mergeStyle(rule, style)} />;
   }
   return (
     <div
       testId={testId}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: theme.spacing.sm,
-      }}
+      style={mergeStyle(
+        {
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing.sm,
+        },
+        style,
+      )}
     >
       <div style={{ ...rule, flexGrow: 1 }} />
       <Text role="caption" tone="muted">
