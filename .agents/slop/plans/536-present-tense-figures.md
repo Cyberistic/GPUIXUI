@@ -105,8 +105,8 @@ The sentences are matched after whitespace normalisation, so a reflowed
 paragraph does not fail the guard but an edited figure does.
 
 `docs.test.ts`'s track case keeps its mark half (`success` on the groove,
-3.04:1) and delegates the surface half to `figures.ts`, so the two suites cannot
-measure different lists again.
+3.04:1) and drops its one-surface measurement — the new guard owns the surface
+claim, so the two suites cannot measure different lists again.
 
 **Fix the sentences.** No colour, pair, floor or metric moves:
 
@@ -124,7 +124,7 @@ measure different lists again.
 | ---- | ------ |
 | `packages/tokens/src/figures.ts` | new — provenance, the three measurement kinds, `tightestFigure`, the five claims |
 | `packages/tokens/src/figures.test.ts` | new — derives each figure, asserts the provenance and the sentence |
-| `packages/tokens/src/docs.test.ts` | the track case measures `trackSurfacePairs`, not one surface |
+| `packages/tokens/src/docs.test.ts` | the track case keeps the mark and drops its one-surface minimum |
 | `docs/tokens.md` | three sentences corrected; the Verification section names the new guard |
 | `COMPONENTS.md` | the Toast figure in the *Theme contrast check* row |
 | `TODO.md` | plan 348's figure, the new row, the progress bar |

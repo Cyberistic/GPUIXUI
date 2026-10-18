@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 197/259
+`[x]` `[███████░░░]` 201/267
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -77,7 +77,7 @@ with the high-contrast colour set winning over platform resemblance (plan 063)
 `[x]` Hold the Toast's tone on its floating card — it paints its glyph and 3px
 bar with `xSoftForeground` on `popover`, which the contract measured only on its
 own soft fill, so an edited theme could erase a toast's tone while the checker
-returned `[]`; every shipped set passes (11.97:1 at the tightest), so no colour
+returned `[]`; every shipped set passes (11.98:1 at the tightest), so no colour
 moves and the contract grows 333 → 337 (plan 348)
 `[x]` Hold the contract's own guards to their claims — every "unique pairs"
 assertion built a `Set` of tuple arrays, which compares identity, so a repeated
@@ -1621,6 +1621,17 @@ focus-ring rationale quoted 2.50:1 for a wash that measures 2.836:1; the rows
 now derive from `applyPlatformStyle`, both documents state that, and
 `platform-claims.test.ts` derives every current ratio the three platform files
 quote (plan 535)
+`[x]` Hold the catalogue's present-tense figures to the shipped themes — three
+claims had drifted while every suite stayed green: the Toast's tone margin is
+**11.98:1**, not the 11.97 plan 348 quoted (the same figure was copied into
+`COMPONENTS.md` and this file); the disabled panel action measures **5.148:1**
+identity dark and **7.310:1** AAA dark after plan 520 moved
+`disabledForeground`, not the 4.343/5.199 plan 514 measured; and the value
+groove's "tightest" pair is Linux light `track` on `active` at **1.050:1**,
+while `docs.test.ts` measured only the `selected` surface and agreed with a
+superlative over a list it never read; `figures.test.ts` derives each figure
+from `shippedThemes` with the checker's own measurement and asserts the set the
+sentence names, and the three sentences are corrected (plan 536)
 
 ## Phase C — Tier 1–2 components
 

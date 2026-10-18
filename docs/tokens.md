@@ -351,7 +351,7 @@ The shipped Toast is the one exception to that split: `toast/viewport.tsx`
 places its tone glyph and its 3px tone bar with `xSoftForeground` on the
 `popover` card rather than on a soft fill. That composition is held at the
 secondary floor as `toastTonePairs` until `components` moves the glyph to
-`xText`; every shipped set clears it with a wide margin (**11.97:1** at the
+`xText`; every shipped set clears it with a wide margin (**11.98:1** at the
 tightest, Linux dark `infoSoftForeground`), so the pair is a guard against an
 edited theme, not a change to the palette.
 
@@ -2409,8 +2409,8 @@ stays near the panel by design, so a disabled control's shape is carried by its
 `border` edge — held to the divider floor on `disabled`, and on the `muted` panel
 a settings sidebar divides (plan `306`). The filled action inside a status panel
 keeps its raised fill when it is disabled and paints `disabledForeground`:
-`inactivePanelActionPairs` holds the resting label (4.343:1 identity dark,
-5.199:1 AAA dark), and the label is also a step below `softActionForeground`, so
+`inactivePanelActionPairs` holds the resting label (5.148:1 identity dark,
+7.310:1 AAA dark), and the label is also a step below `softActionForeground`, so
 a disabled action cannot look enabled. The hover and press fills are outside the
 list because a disabled control does not step, and a ghost disabled action is
 already covered by `inactiveSoftPairs`.
@@ -2956,10 +2956,11 @@ interacts with it (plan `503`). `primary`, `success`, `destructive` and
 `mutedForeground` — the four `PROGRESS_TONES` — are marks on the groove
 (`trackMarkPairs`). XP light's own `success` (`#0E6B40`) is what lets its rail
 clear the pressed wash: the inherited identity green forced the groove toward the
-canvas while XP's `active` fill forced it away. The tightest shipped pairs are
-identity dark `track` on its `selected` fill at **1.06:1** and macOS light
-`success` on the groove at **3.04:1**. `primitives` still paints `muted`; the
-migration is recorded in `TODO.md`.
+canvas while XP's `active` fill forced it away. The tightest shipped pair is
+Linux light `track` on the `active` wash at **1.050:1**, while identity dark's
+`track` on its `selected` fill measures **1.058:1**; the tightest mark is macOS
+light `success` on the groove at **3.04:1**. `primitives` still paints `muted`;
+the migration is recorded in `TODO.md`.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and
@@ -3140,6 +3141,17 @@ reports an erased fill, a collapsed press and the label on a tint.
 set, the solid fills clear the surface floor on every chip surface, the public
 checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
+
+`packages/tokens/src/figures.test.ts` holds every figure this page states in the
+present tense to the themes it ships: it derives the ratio from `shippedThemes`
+with the checker's own measurement and asserts both the figure and the set the
+sentence names, so a palette edit and a sentence cannot drift apart. It found
+three: the Toast's tone margin rounds to 11.98:1 (the page said 11.97), the
+disabled panel action measures 5.148:1 identity dark and 7.310:1 AAA dark after
+plan `520` moved `disabledForeground`, and the value groove's tightest surface
+pair is Linux light `track` on the `active` wash at 1.050:1 — the page had named
+identity dark's `selected` fill, the tightest pair *within that one fill*, which
+is what `docs.test.ts` measured before plan `536` (plan `536`).
 
 ## Limitations and future work
 

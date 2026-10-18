@@ -1599,21 +1599,13 @@ describe("docs/tokens.md quoted tightest figures", () => {
     });
   });
 
-  it("quotes the weakest value groove and the mark it carries", () => {
-    const [surfaceLabel, surfaceRatio] = tightest("track", "selected");
+  it("quotes the mark the weakest value groove carries", () => {
     const [markLabel, markRatio] = tightest("success", "track");
 
-    expect([surfaceLabel, Number(surfaceRatio.toFixed(2))]).toEqual([
-      "identity dark",
-      1.06,
-    ]);
     expect([markLabel, Number(markRatio.toFixed(2))]).toEqual([
       "macOS light",
       3.04,
     ]);
-    expect(markdownProse).toContain(
-      `${surfaceLabel} \`track\` on its \`selected\` fill at **1.06:1**`,
-    );
     expect(markdownProse).toContain(
       `${markLabel} \`success\` on the groove at **3.04:1**`,
     );
