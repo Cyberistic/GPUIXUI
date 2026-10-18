@@ -59,11 +59,11 @@ export type ThemeFailure = {
  * typeface, contrast, text-hierarchy and metric checks all run: a theme whose
  * only defect is a `shadow: "black"` tint, a zero focus-ring spread, a CSS
  * family stack or a disabled label raised to body strength returns `[]` from the
- * contrast check alone. This function composes the five in diagnostic order —
- * format first, so a malformed role is named before the `NaN` ratios it causes
- * and a malformed family before the type scale painted with it, then contrast,
- * then the text hierarchy, then metrics — and tags each failure with the check
- * that found it.
+ * contrast check alone. This function composes them all in diagnostic order —
+ * the order {@link themeChecks} owns — format first, so a malformed role is
+ * named before the `NaN` ratios it causes and a malformed family before the
+ * type scale painted with it, then contrast, then the text hierarchy, then
+ * metrics — and tags each failure with the check that found it.
  *
  * `contrast` defaults to the level the theme declares, exactly like
  * {@link themeContrastFailures}, so a high-contrast theme is checked against
