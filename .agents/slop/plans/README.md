@@ -137,6 +137,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [338](./338-filled-control-family.md) | The filled control's designed family, in one call | F | 055, 097, 327, 334 | done |
 | [339](./339-field-adornment-text.md) | The field's adornment text and the check the accent cannot carry | F | 059, 071–095, 300, 306–319, 335 | done |
 | [340](./340-invalid-control-ring.md) | The invalid control's focus ring | F | 017, 071–095, 300, 325, 339 | done |
+| [341](./341-combobox-check-mark.md) | The combobox check on a highlighted option | F | 071–095, 300, 306–332, 339–340 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1013,9 +1014,16 @@ when a field fails validation. The contract measured `destructive` as a fill and
 since plan 325, as the field's own edge, but never as the ring painted on the
 surface behind the control, so an edited theme could set the error colour close
 to a card, popover, row wash or soft status fill and erase the focus indicator
-while the checker returned `[]`. The twelve boundary pairs join the contract
-(294 → 306); every shipped set already clears 3:1 / 4.5:1 (3.048:1 at the
+while the checker returned `[]`. The eleven boundary pairs join the contract
+(294 → 305); every shipped set already clears 3:1 / 4.5:1 (3.048:1 at the
 tightest), so no colour moves.
+
+341 closes the last mark composition plan 332 left: `ComboboxItem` marks a
+selected option with a `primary` check, and `rowStyle` paints the `hover` wash
+behind the row while it is highlighted, but `markPairs` measured `primary` only
+on the plain surfaces and the slider thumb. The pair is a guard (3.111:1 on
+macOS dark at the tightest), so no colour moves; the menu checkbox's `accent`
+glyph — the wrong role — stays the cross-team finding recorded by plan 339.
 
 ### Reference adoption (block `200–299`)
 
