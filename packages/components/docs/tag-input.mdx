@@ -37,6 +37,7 @@ The runnable build is `examples/tag-input.example.tsx`, registered in
 | Reaching `max` | further additions are refused; existing tokens stay |
 | The chip's clear control | removes that token |
 | Whitespace-only input | never becomes a token |
+| A refused edit (duplicate, `max`, empty draft) | reports no change: `onValueChange` is not called |
 
 A pasted list arrives as one `onChange` carrying every comma-separated token, so
 the whole list commits at once. A comma the user types is a different shape — it
@@ -108,7 +109,8 @@ rendering, Enter, comma commit, duplicates, the named removal control, removal
 by pointer and Space release, the chip control's focus ring, the group ring a
 field's `autoFocus` seeds, `max`, a disabled field (read-only, no removal
 controls, no Enter path, out of the tab order, ignoring `autoFocus` and painting
-no ring) and a caller that refuses a change.
+no ring), a caller that refuses a change, and a refused duplicate, cap or empty
+commit reporting nothing.
 
 `src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
 duplicates, the cap and first-match removal.

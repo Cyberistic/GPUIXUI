@@ -5,8 +5,9 @@
  * cap that truncates existing tokens, Backspace that removes when a draft is
  * present, a disabled chip that still removes, a draft that stops the field
  * from keeping focus, a chip control that removes on Space key down instead of
- * on release, a removal control that only a child index could find, and a
- * disabled field whose Enter path still committed (plan 394).
+ * on release, a removal control that only a child index could find, a
+ * disabled field whose Enter path still committed (plan 394), and a refused
+ * duplicate, cap or empty commit that still reported a change (plan 562).
  */
 
 import type { TestElement } from "@gpuix/react/testing";
@@ -116,11 +117,21 @@ describe("TagInput", () => {
     tags.unmount();
   });
 
-  it("ignores a duplicate", () => {
-    const tags = renderComponent(<Harness initial={["design"]} />);
+  it("reports nothing for a duplicate, a typed comma and an empty commit", () => {
+    // A refused edit must not report a change (plan 562): the consumer owns the
+    // list, so the callback is the only signal and a phantom one marks it dirty.
+    const onValueChange = vi.fn();
+    const tags = renderComponent(
+      <Harness initial={["design"]} onValueChange={onValueChange} />,
+    );
 
     type(tags, "design");
     tags.renderer.simulateKeystrokes("enter");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    type(tags, ",");
+    tags.renderer.simulateKeystrokes("enter");
+    expect(onValueChange).not.toHaveBeenCalled();
 
     expect(tags.renderer.getAllText()).toEqual(["design"]);
 
@@ -180,7 +191,7 @@ describe("TagInput", () => {
     type(tags, "c");
     tags.renderer.simulateKeystrokes("enter");
 
-    expect(onValueChange).toHaveBeenLastCalledWith(["a", "b"]);
+    expect(onValueChange).not.toHaveBeenCalled();
     expect(tags.renderer.findByTestId("chip-c")).toBeUndefined();
 
     tags.unmount();

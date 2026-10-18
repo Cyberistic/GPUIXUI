@@ -105,8 +105,11 @@ export const TagInput = ({
   const [focused, setFocused] = useState(false);
   assertParts(tagInputRoot, children);
 
+  // The rules return the current list by reference when they accept nothing, so
+  // a refused duplicate, cap or empty draft reports no change (plan 562).
   const add = (incoming: ReadonlyArray<string>): void => {
-    onValueChange(addTokens(value, incoming, { allowDuplicates, max }));
+    const next = addTokens(value, incoming, { allowDuplicates, max });
+    if (next !== value) onValueChange(next);
   };
 
   const commit = (): void => {
@@ -127,7 +130,10 @@ export const TagInput = ({
     disabled,
     editDraft: editDraftValue,
     addDraft: commit,
-    remove: (token) => onValueChange(removeToken(value, token)),
+    remove: (token) => {
+      const next = removeToken(value, token);
+      if (next !== value) onValueChange(next);
+    },
     setFocused,
   };
 

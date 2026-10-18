@@ -140,3 +140,14 @@ Stop and report rather than loosening an assertion if:
   documented.
 - Unit suite, `nub run check` and `nub run lint` pass.
 - Docs, `COMPONENTS.md`, `TODO.md` and the plan index record the rule.
+
+## 8. Observed (2026-10-19)
+
+- The guarded suite: `14 passed | 1 failed (15)` — the one failure is the
+  pre-existing plan-540/536 chip-ring binding defect, unchanged.
+- Mutation (`add` reverted to `onValueChange(addTokens(...))`): both
+  strengthened cases fail. The cap case reports **two** phantom calls with
+  `["a", "b"]` — one on typing the `"c"` keystroke (an incomplete draft, no token
+  added) and one on `Enter` — which is larger than the plan first described.
+  The duplicate case reports the same shape.
+- With the guard restored, both pass. No test count changed.
