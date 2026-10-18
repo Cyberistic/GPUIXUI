@@ -135,12 +135,14 @@ export {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
+  selectionRowStyle,
   switchThumbStyle,
   switchTrackStyle,
 } from "./selection.js";
 export type {
   SelectableOption,
   SelectionAccent,
+  SelectionRowSpec,
   SelectionSpec,
   SelectionState,
 } from "./selection.js";

@@ -119,12 +119,17 @@ order. A press that changes nothing does not call `onValueChange`.
 Each row paints through `core/selection.ts`, the same resolver `Checkbox`,
 `RadioGroup` and `Switch` use: box side from `iconSize`, radius from `radius.sm`,
 empty border from `input` (or `destructive` when `invalid`), fill from the accent
-role, mark from `selectionMarkColor`. Hover and press are declared in
-`style.hover`/`style.active`; disabled adds half opacity and removes pointer
-feedback. Focus paints `colors.ring` on the box, not on the row, so the ring sits
-on the control the way it does in `Checkbox`. A disabled row paints **no** ring,
-even when it kept native focus: the rule lives in `controlFocusStyle` and the
-selection painters, so an inert control never advertises the caret (plan 332).
+role, mark from `selectionMarkColor`. The **row** — the element that owns the
+role, the name, the tab stop and both handlers — takes its layout and pointer
+feedback from `selectionRowStyle`: a `colors.hover` wash on hover and
+`colors.active` on press, and **neither** while disabled, so the label column
+responds exactly like the box does (plan 355). The box keeps its own border
+feedback, so hovering the circle shows both signals. A disabled row adds half
+opacity and no wash. Focus paints `colors.ring` on the box, not on the row, so
+the ring sits on the control the way it does in `Checkbox`. A disabled row
+paints **no** ring, even when it kept native focus: the rule lives in
+`controlFocusStyle` and the selection painters, so an inert control never
+advertises the caret (plan 332).
 
 ## Style by state
 
@@ -197,11 +202,17 @@ the row that owns the hit area, the tab stop and the accessible name:
   options only, select-all that leaves a disabled value alone, and the identity
   no-op.
 - `src/components/selection.test.tsx` — the group/row roles, `aria-valuetext`,
-  tab stops, the error border and the focus ring at the render seam.
+  tab stops, the error border and the focus ring at the render seam; the row's
+  hover/active wash, absent on a disabled row, and the caller's `rowStyle`
+  winning last (plan 355).
 - `runtime/checkbox-group.runtime.test.tsx` — a hit-tested press anywhere on the
   row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
   value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a
   disabled row, and the painted error border and ring.
+- `runtime/row-feedback.runtime.test.tsx` — every enabled `CheckboxGroup` and
+  `RadioGroup` row declares the theme's hover/active wash in the real renderer,
+  a disabled row declares neither, and a vertical row's painted width equals the
+  group's, so the wash covers the hit area (plan 355).
 - `runtime/disabled.runtime.test.tsx` — the cross-control "disabled after focus"
   matrix: every control acts while enabled, focus survives the disable, nothing
   acts afterwards, and no disabled control paints a ring (plan 332).

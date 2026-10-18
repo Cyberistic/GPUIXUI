@@ -91,6 +91,12 @@ The circle is `selectionBoxStyle` with `shape: "circle"` and the dot is
 `radioDotStyle`, both from `core/selection.ts`, so a radio and a checkbox of the
 same size are the same square/circle family. Gaps use `spacing.sm`.
 
+The **option row** — the element that owns the name, the tab stop and the click
+and key handlers — takes its layout and pointer feedback from
+`selectionRowStyle`: a `colors.hover` wash on hover and `colors.active` on press,
+and neither while disabled (plan 355). The circle keeps its own border feedback,
+so the row and the control both answer the pointer.
+
 ## Style by state
 
 `style` takes an object or a callback over `RadioGroupState` — the runtime's own
@@ -151,10 +157,16 @@ the option row:
 
 - `src/core/keyboard.test.ts` — arrow movement, wrapping, skipping, and
   Home/End landing on the nearest enabled end.
-- `src/core/selection.test.ts` — circle and dot paint, including the focus ring.
+- `src/core/selection.test.ts` — circle and dot paint, including the focus ring;
+  the row's hover/active wash and its disabled rule (plan 355).
 - `src/components/selection.test.tsx` — roving index and data options; an arrow
   asks the group to move focus to the option it landed on; an `invalid` group
-  paints the empty circles destructive and leaves the chosen one on its accent.
+  paints the empty circles destructive and leaves the chosen one on its accent;
+  every enabled row declares the wash, a disabled option declares none, and the
+  caller's `optionStyle` wins last (plan 355).
+- `runtime/row-feedback.runtime.test.tsx` — the same row contract in the real
+  renderer, plus a vertical row painting at the group's width so the wash covers
+  the hit area (plan 355).
 - `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
   options (plan 044); Home/End jump to the enabled ends (plan 048); the focused
   option paints the ring and no other does; arrows move native focus with the

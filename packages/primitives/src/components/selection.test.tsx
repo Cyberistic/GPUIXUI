@@ -559,3 +559,146 @@ describe("selection controls as slot triggers", () => {
     expect(expectSome(hostProp(element, "aria-description"))).toBe("A hint");
   });
 });
+
+describe("the row that owns the pointer paints its feedback", () => {
+  // Plan 355: `CheckboxGroup` and `RadioGroup` put the role, name, tab stop and
+  // both handlers on the row, but only the inner box declared hover/active, so
+  // hovering the label column — most of the hit area — painted nothing.
+  const wash = (element: ReactElement): unknown =>
+    expectSome(hostStyle(element, "hover"));
+
+  it("gives every enabled CheckboxGroup row the theme's wash", () => {
+    const element = renderCheckboxGroup(
+      {
+        options: [
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push" },
+        ],
+        selectAll: "All channels",
+        label: "Channels",
+      },
+      testTheme,
+      initValueState(Option.some([]), []),
+      groupFocus,
+      groupHandlers(),
+    );
+    const rows = elementChildren(element);
+    expect(Arr.length(rows)).toBe(3);
+    Arr.forEach(rows, (row) => {
+      expect(wash(row)).toMatchObject({
+        backgroundColor: testTheme.colors.hover,
+      });
+      expect(expectSome(hostStyle(row, "active"))).toMatchObject({
+        backgroundColor: testTheme.colors.active,
+      });
+      // A label stacked over its description aligns to the top of the box.
+      expect(expectSome(hostStyleString(row, "alignItems"))).toBe("flex-start");
+    });
+  });
+
+  it("declares no feedback on a disabled CheckboxGroup row or group", () => {
+    const oneDisabled = renderCheckboxGroup(
+      {
+        options: [
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push", disabled: true },
+        ],
+      },
+      testTheme,
+      initValueState(Option.some([]), []),
+      groupFocus,
+      groupHandlers(),
+    );
+    const disabledRow = expectSome(Arr.get(elementChildren(oneDisabled), 1));
+    expect(hostStyle(disabledRow, "hover")).toStrictEqual(Option.none());
+    const disabledGroup = renderCheckboxGroup(
+      { options: [{ value: "email", label: "Email" }], disabled: true },
+      testTheme,
+      initValueState(Option.some([]), []),
+      groupFocus,
+      groupHandlers(),
+    );
+    expect(
+      hostStyle(
+        expectSome(Arr.get(elementChildren(disabledGroup), 0)),
+        "hover",
+      ),
+    ).toStrictEqual(Option.none());
+  });
+
+  it("lets a caller's rowStyle replace the wash, merged last", () => {
+    const element = renderCheckboxGroup(
+      {
+        options: [{ value: "email", label: "Email" }],
+        rowStyle: { hover: { backgroundColor: "#123456" } },
+      },
+      testTheme,
+      initValueState(Option.some([]), []),
+      groupFocus,
+      groupHandlers(),
+    );
+    expect(
+      wash(expectSome(Arr.get(elementChildren(element), 0))),
+    ).toMatchObject({ backgroundColor: "#123456" });
+  });
+
+  it("gives every enabled RadioGroup row the theme's wash", () => {
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    Arr.forEach(elementChildren(element), (row) => {
+      expect(wash(row)).toMatchObject({
+        backgroundColor: testTheme.colors.hover,
+      });
+      expect(expectSome(hostStyle(row, "active"))).toMatchObject({
+        backgroundColor: testTheme.colors.active,
+      });
+      // The radio's description is a sibling, so the row centres its content.
+      expect(expectSome(hostStyleString(row, "alignItems"))).toBe("center");
+    });
+  });
+
+  it("declares no feedback on a disabled radio option", () => {
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "alpha", label: "Alpha" },
+          { value: "beta", label: "Beta", disabled: true },
+        ],
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const enabledRow = expectSome(Arr.get(elementChildren(element), 0));
+    const disabledRow = expectSome(Arr.get(elementChildren(element), 1));
+    expect(wash(enabledRow)).toMatchObject({
+      backgroundColor: testTheme.colors.hover,
+    });
+    expect(hostStyle(disabledRow, "hover")).toStrictEqual(Option.none());
+  });
+
+  it("lets a caller's optionStyle replace the wash, merged last", () => {
+    const element = renderRadioGroup(
+      {
+        options: [{ value: "alpha", label: "Alpha" }],
+        optionStyle: { hover: { backgroundColor: "#654321" } },
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(
+      wash(expectSome(Arr.get(elementChildren(element), 0))),
+    ).toMatchObject({ backgroundColor: "#654321" });
+  });
+});

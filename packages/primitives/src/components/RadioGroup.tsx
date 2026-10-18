@@ -31,6 +31,7 @@ import {
   initialActiveIndex,
   radioDotStyle,
   selectionBoxStyle,
+  selectionRowStyle,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
@@ -248,13 +249,7 @@ export const renderRadioGroup = (
             onFocus={() => focus.onFocus(index)}
             onBlur={() => focus.onBlur(index)}
             style={resolvePartStyle(
-              {
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: theme.spacing.sm,
-                cursor: disabled ? "not-allowed" : "pointer",
-              },
+              selectionRowStyle({ disabled, align: "center" }, theme),
               props.optionStyle,
               {
                 value: option.value,

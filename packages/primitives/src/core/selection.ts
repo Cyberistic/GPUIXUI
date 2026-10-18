@@ -124,9 +124,44 @@ export const selectionBoxStyle = (
   return style;
 };
 
+/** How a data-driven selection group lays out the row it makes interactive. */
+export interface SelectionRowSpec {
+  readonly disabled?: boolean;
+  /** `flex-start` when the row stacks a label over its description. */
+  readonly align: "flex-start" | "center";
+}
+
+/**
+ * The row a data-driven selection group makes interactive.
+ *
+ * `CheckboxGroup` and `RadioGroup` put the role, name, tab stop and both
+ * handlers on the row, so the row is the control and owes the pointer the same
+ * feedback every other control gives. The inner box keeps its own border
+ * feedback; a wash on the row is what makes the label column — most of the hit
+ * area — respond at all (plan `355`). A disabled row declares neither rule,
+ * because an inert control must not respond (plan `332`).
+ */
+export const selectionRowStyle = (
+  spec: SelectionRowSpec,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const style: StyleDesc = {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: spec.align,
+    gap: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+  };
+  if (spec.disabled !== true) {
+    style.hover = { backgroundColor: theme.colors.hover };
+    style.active = { backgroundColor: theme.colors.active };
+  }
+  return style;
+};
+
 /** The pill's width as a multiple of its height (measured: 28×16 at `md`). */
 const SWITCH_TRACK_RATIO = 1.75;
-
 /** The thumb's side: the track height less one `2xs` inset on each edge. */
 const switchThumbSide = (spec: SelectionSpec, theme: PrimitiveTheme): number =>
   theme.iconSize[spec.size] - theme.spacing["2xs"] * 2;

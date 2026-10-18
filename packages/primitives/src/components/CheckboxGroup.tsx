@@ -34,6 +34,7 @@ import { decideActivation } from "../core/keyboard.js";
 import {
   selectionBoxStyle,
   selectionMarkColor,
+  selectionRowStyle,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
@@ -134,17 +135,6 @@ interface RowSpec {
   readonly style?: StateStyle<CheckboxRowState>;
 }
 
-const rowLayoutStyle = (
-  disabled: boolean,
-  theme: PrimitiveTheme,
-): StyleDesc => ({
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "flex-start",
-  gap: theme.spacing.sm,
-  cursor: disabled ? "not-allowed" : "pointer",
-});
-
 const rowTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
   display: "flex",
   flexDirection: "column",
@@ -214,7 +204,7 @@ const renderRow = (
       onFocus={() => focus.onFocus(index)}
       onBlur={() => focus.onBlur(index)}
       style={resolvePartStyle(
-        rowLayoutStyle(disabled, theme),
+        selectionRowStyle({ disabled, align: "flex-start" }, theme),
         style,
         partState,
       )}

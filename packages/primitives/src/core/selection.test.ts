@@ -4,6 +4,7 @@ import {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
+  selectionRowStyle,
   switchThumbOffset,
   switchThumbStyle,
   switchTrackStyle,
@@ -125,6 +126,37 @@ describe("selectionBoxStyle", () => {
   it("sizes the box from the theme's icon scale, so it aligns with the label", () => {
     expect(selectionBoxStyle(spec({ size: "lg" }), testTheme).width).toBe(
       testTheme.iconSize.lg,
+    );
+  });
+});
+
+describe("selectionRowStyle", () => {
+  it("gives the row that owns the pointer a hover and press wash", () => {
+    // Plan 355: the group row is the control (role, name, tab stop, click and
+    // keys), but only the inner box had feedback, so hovering the label column
+    // painted nothing.
+    const style = selectionRowStyle({ align: "flex-start" }, testTheme);
+    expect(style.hover?.backgroundColor).toBe(testTheme.colors.hover);
+    expect(style.active?.backgroundColor).toBe(testTheme.colors.active);
+    expect(style.backgroundColor).toBeUndefined();
+  });
+
+  it("declares no feedback on a disabled row", () => {
+    const style = selectionRowStyle(
+      { disabled: true, align: "center" },
+      testTheme,
+    );
+    expect(style.hover).toBeUndefined();
+    expect(style.active).toBeUndefined();
+    expect(style.cursor).toBe("not-allowed");
+  });
+
+  it("takes the alignment its content needs", () => {
+    expect(
+      selectionRowStyle({ align: "flex-start" }, testTheme).alignItems,
+    ).toBe("flex-start");
+    expect(selectionRowStyle({ align: "center" }, testTheme).alignItems).toBe(
+      "center",
     );
   });
 });

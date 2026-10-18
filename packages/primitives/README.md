@@ -224,7 +224,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **43 files, 574 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **43 files, 583 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), and a guard that every documented `theme.…` path and
@@ -243,7 +243,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **26 files, 529 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **27 files, 534 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -263,7 +263,9 @@ slider drag measured outside the track with the non-primary buttons refused
 (plan 063),
 an `autoFocus` field's ring painted from mount and cleared on blur (plan
 064), a checkbox group's row hit area, derived select-all state and skipped
-disabled tab stop (plan 065), a rating's failed validation painted on the
+disabled tab stop (plan 065), every checkbox/radio group row's hover and press
+wash painted on the row that owns the pointer (plan 355), a rating's failed
+validation painted on the
 empty stars only (plan 070), a labelled scroll region scrolled by
 PageDown/arrow/Home/End through the runtime while an `Input` inside it kept its
 arrow keys (plan 072), and `InfoTip` opening on hover and on `focusNext` with

@@ -802,6 +802,17 @@ retired once both branches are one
       activation target reverted to the value-derived tab stop (4, failing on
       the reported value). Offline 574, runtime 529; plan `354`.
 
+`[x]` `packages/primitives`: **a group row owns the pointer but painted no
+      feedback** — measured (2026-10-18): the `CheckboxGroup` row and the
+      `RadioGroup` option row carry the role, accessible name, tab stop, click
+      and key handlers, yet declared **no** `hover`/`active`; only the inner
+      circle reacted, so hovering the label column — most of the hit area —
+      painted nothing. One `selectionRowStyle` resolver in `core/selection.ts`
+      now gives both rows the theme's hover/active wash and none while
+      disabled (it also replaced `CheckboxGroup`'s second copy of the row
+      layout); 3 core + 6 element-tree + 5 runtime cases, four mutations fail by
+      name (offline 583, runtime 534; plan `355`).
+
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open
       contract** — GPUix publishes `open`/`defaultOpen`/`onOpenChange` and
