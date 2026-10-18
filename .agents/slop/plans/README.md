@@ -205,6 +205,7 @@ B1, so it is planned, not done.
 | [524](./524-shadcn-tailwind-conformance.md) | shadcn/Base UI conformance: Tailwind recipes → `StyleDesc`, with `cn` | infra | `020`, `200`, `201` | in progress |
 | [525](./525-gpui-transform.md) | GPUI transform/scale: audit the 0xErwin1 branch, merge surface, licence, and the fork-or-fallback decision | infra (renderer) | `020`, `524`, `140` | research complete — **needs port**; fallback recommended until a forked runtime ships |
 | [537](./537-gpui-ce.md) | `gpui-ce`: capability delta, patch-vs-switch, and the integration verdict | infra (runtime) | `020`, `524`, `525` | research complete — **do not switch**; port binding-level patches, keep renderer features unsupported |
+| [530](./530-gpuix-zindex.md) | `zIndex` in the GPUix binding: paint order and hit order | infra (runtime) | `140`, `529`, `524` | done — patch applied to the source-built `darwin-x64` binding; 27 Rust tests and 397 playground tests pass; transform/scale/rotate stay out of scope |
 
 ## How to use a plan
 
