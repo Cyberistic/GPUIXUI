@@ -315,7 +315,9 @@ determinate `Progress` that schedules
 no animation timer while an indeterminate one paints its requested tone
 (plan 328), and a switch whose thumb slides through an intermediate position and
 rests at the layout painter's two ends (plan 329), and a bare `<Skeleton circle />`
-that paints a square rather than a full-width pill (plan 330), and a
+that paints a square rather than a full-width pill (plan 330), and a `circle`
+skeleton that stays square for a width-only, height-only, mismatched or
+percentage input (plan 028), and a
 "disabled after focus" matrix over thirteen controls that act while enabled, keep
 native focus across the disable, and then act no more, with fifteen controls
 painting no ring once disabled (plan 332), and a number field whose
