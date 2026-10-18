@@ -860,6 +860,32 @@ retired once both branches are one
       disabled → none) with `Rating`'s preview recorded as the one exception.
       Three docs pages corrected (the rail, not the track, is `colors.muted`),
       both directions proven by name (plan `361`).
+`[x]` `packages/primitives`: **`NumberField` treated three parts of its own
+      contract as advice** — measured: a supplied `value={150}` under `max={100}`
+      painted and announced `"150"`, and `ArrowUp` on it reported a *smaller*
+      `100` while the up stepper was disabled; a field disabled after an edit
+      still committed its draft on blur (a second `onValueChange`); and the
+      caller's `onKeyUp` never reached the input (events: `blur, change, focus,
+      keyDown, submit`) while every sibling forwards it. The supplied value now
+      goes through the same `clampNumeric` as typed text for paint,
+      announcement, stepper state, steps and keys; a step or commit that lands on
+      the painted value reports nothing; the blur commit is disabled-guarded; and
+      `onKeyUp` is wired. 2 element + 3 runtime tests, five mutations fail by
+      name (offline 603 → 605, runtime 584 → 587; plan `362`).
+`[ ]` `packages/primitives`: **`Select` paints an orphan heading for an empty
+      option group** — `renderSelect` renders every group's `SelectLabel`
+      unconditionally, while `selectRowCounts` already excludes an empty group
+      from the row/height model, so the list is taller than its own placement
+      estimate; `docs/select.mdx` and the inventory both promise "an empty group
+      paints nothing". Guard the group branch, then prove it in the element tree
+      and the runtime (next plan, `363`).
+`[ ]` `packages/primitives`: **a labelled `Separator` applies the caller's
+      `style` to both rule halves, not the control** — `style` is merged into the
+      shared rule object, which is spread onto two children, so a container
+      property (`marginTop`, `gap`, padding) never reaches the root that
+      `docs/separator.mdx` documents as "merged last". Merge the caller's style
+      into the root and keep the rule's own look on the halves (next plan,
+      `364`).
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts
       were unguarded** — `Icon` was the one renderer without a `style` prop, so
       an icon beside text could not be nudged onto a baseline without a `Box`
