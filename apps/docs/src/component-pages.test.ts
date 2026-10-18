@@ -158,6 +158,9 @@ describe("component page template", () => {
   });
 
   it("keeps each finished page's example, API table and source", () => {
+    expect(
+      components.filter((component) => component.status !== "planned").length,
+    ).toBeGreaterThan(10);
     expect(pageContentProblems()).toEqual([]);
   });
 });
