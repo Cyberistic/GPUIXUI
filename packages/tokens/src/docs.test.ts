@@ -116,6 +116,7 @@ import {
 } from "./elevation.js";
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
+import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { motion, skeletonPulseOpacity } from "./motion.js";
 import {
   getPlatformRecipeTheme,
@@ -1477,11 +1478,36 @@ describe("docs/tokens.md typeface contract", () => {
   });
 
   it("states the size of the guarantee in both documents", () => {
+    const checkNames = {
+      color: "colour format",
+      typeface: "typeface form",
+      contrast: "contrast",
+      hierarchy: "text hierarchy",
+      metric: "numeric metrics",
+    } as const satisfies Record<ThemeFailureKind, string>;
+    const countWords = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+    ] as const;
+    const names = themeChecks.map((kind) => checkNames[kind]);
+    const sentence = `${names.slice(0, -1).join(", ")} and ${names.slice(-1).join("")}`;
+
     expect(markdownProse).toContain(
-      "The guarantee is five checks — colour format, typeface form, contrast, text hierarchy and numeric metrics",
+      `The guarantee is ${countWords[themeChecks.length]} checks — ${sentence}`,
     );
-    expect(designSystem).toContain("The five parts are available on their own");
+    expect(designSystem).toContain("Each part is available on its own");
     expect(designSystem).toContain("`themeTypefaceFailures`");
+  });
+
+  it("does not describe a subset as the guarantee", () => {
+    [markdown, designSystem].forEach((document) => {
+      expect(document).not.toMatch(/\ball (?:three|four) checks\b/);
+    });
   });
 });
 

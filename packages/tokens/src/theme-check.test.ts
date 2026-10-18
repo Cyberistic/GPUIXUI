@@ -20,6 +20,10 @@
  * Plan 387 moves the shipped list to `shippedThemes`: this suite was one of the
  * hand-built enumerations that called itself "every shipped set" while covering
  * the recipes at the default contrast only (20 of the 24 sets).
+ *
+ * Plan 398 gives the set an owner: `themeChecks` indexes the five kinds and
+ * `ThemeFailureKind` derives from it, so the composition's order is asserted
+ * against the index rather than a second hand-written list.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -38,6 +42,7 @@ import {
   themeModes,
   themeTextTierFailures,
   themeTypefaceFailures,
+  themeChecks,
   type ShippedTheme,
 } from "./index.js";
 import {
@@ -73,7 +78,7 @@ describe("one total theme check", () => {
     });
   });
 
-  it("returns exactly the five checks' failures, tagged and grouped", () => {
+  it(`returns exactly the ${themeChecks.length} checks' failures, tagged and grouped`, () => {
     expect(brokenFailures.length).toBe(
       themeColorFailures(brokenTheme).length +
         themeTypefaceFailures(brokenTheme).length +
@@ -82,9 +87,7 @@ describe("one total theme check", () => {
         themeMetricFailures(brokenTheme).length,
     );
 
-    expect(new Set(kinds(brokenFailures))).toEqual(
-      new Set(["color", "typeface", "contrast", "hierarchy", "metric"]),
-    );
+    expect(new Set(kinds(brokenFailures))).toEqual(new Set(themeChecks));
 
     const firstTypeface = kinds(brokenFailures).indexOf("typeface");
     const lastColor = kinds(brokenFailures).lastIndexOf("color");
@@ -98,6 +101,10 @@ describe("one total theme check", () => {
     expect(lastTypeface).toBeLessThan(firstContrast);
     expect(lastContrast).toBeLessThan(firstHierarchy);
     expect(lastHierarchy).toBeLessThan(firstMetric);
+  });
+
+  it("emits the index's kinds, in its order", () => {
+    expect([...new Set(kinds(brokenFailures))]).toEqual([...themeChecks]);
   });
 
   it("names each failure's payload", () => {
@@ -183,9 +190,7 @@ describe("one total theme check", () => {
 
   it("runs the documented examples", () => {
     expect(brandFailures).toEqual([]);
-    expect(new Set(kinds(brokenFailures))).toEqual(
-      new Set(["color", "typeface", "contrast", "hierarchy", "metric"]),
-    );
+    expect(new Set(kinds(brokenFailures))).toEqual(new Set(themeChecks));
     expect(brandTheme.name).toBe("Acme");
   });
 });

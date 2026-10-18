@@ -75,7 +75,7 @@ describe("body-line fit", () => {
     expect(themeMetricFailures(getTheme("light"))).toEqual([]);
   });
 
-  it("is invisible to the other three checks", () => {
+  it("is invisible to every other check", () => {
     expect(themeColorFailures(crampedField)).toEqual([]);
     expect(themeTypefaceFailures(crampedField)).toEqual([]);
     expect(themeContrastFailures(crampedField)).toEqual([]);

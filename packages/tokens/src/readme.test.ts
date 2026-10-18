@@ -31,6 +31,7 @@ import { defaultDensity, radius } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
 import { statusTones } from "./styles.js";
 import { themes } from "./theme.js";
+import { themeChecks } from "./theme-check.js";
 import { textRoles } from "./typography.js";
 
 const readme = readFileSync(
@@ -61,6 +62,25 @@ describe("packages/tokens/README.md", () => {
 
   it("states the type-role count textRoles lists", () => {
     expect(readme).toContain(`all ${textRoles.length} typographic roles`);
+  });
+
+  it("states the number of checks from the index", () => {
+    const countWords = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+    ] as const;
+    const count = countWords[themeChecks.length];
+    expect(readme).toContain(`That is one of ${count} checks`);
+    expect(readme).toContain(`composes all ${count}`);
+  });
+
+  it("does not describe a subset as the guarantee", () => {
+    expect(readme).not.toMatch(/\ball (?:three|four) checks\b/);
   });
 
   it("states that a theme records the floor set it is designed against", () => {

@@ -22,9 +22,8 @@ import {
   platformRecipeNames,
   platformRecipes,
   platformStyles,
-  themeColorFailures,
-  themeContrastFailures,
-  themeMetricFailures,
+  themeChecks,
+  themeFailures,
   themeModes,
   type PlatformStyle,
 } from "./index.js";
@@ -32,7 +31,7 @@ import {
 const realPlatforms = platformNames.filter((name) => name !== "default");
 
 describe("a forced default palette is whole", () => {
-  it("passes all three checks for every shipped style", () => {
+  it(`passes all ${themeChecks.length} checks for every shipped style`, () => {
     themeModes.forEach((mode) => {
       realPlatforms.forEach((platform) => {
         const theme = applyPlatformStyle(
@@ -41,9 +40,7 @@ describe("a forced default palette is whole", () => {
           "default",
         );
 
-        expect(themeContrastFailures(theme), `${mode}/${platform}`).toEqual([]);
-        expect(themeMetricFailures(theme), `${mode}/${platform}`).toEqual([]);
-        expect(themeColorFailures(theme), `${mode}/${platform}`).toEqual([]);
+        expect(themeFailures(theme), `${mode}/${platform}`).toEqual([]);
       });
     });
   });
@@ -98,7 +95,7 @@ describe("a forced default palette is whole", () => {
           "default",
         );
 
-        expect(themeContrastFailures(theme), `${mode}/${recipe}`).toEqual([]);
+        expect(themeFailures(theme), `${mode}/${recipe}`).toEqual([]);
         expect(theme.colors, recipe).toEqual(
           getPlatformRecipeTheme(recipe, mode, "default").colors,
         );

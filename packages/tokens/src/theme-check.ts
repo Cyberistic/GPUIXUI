@@ -11,6 +11,34 @@ import type { Theme, ThemeContrast } from "./theme.js";
 import { themeTypefaceFailures, type TypefaceFailure } from "./typeface.js";
 
 /**
+ * The checks {@link themeFailures} composes, in diagnostic order.
+ *
+ * A report, a settings screen or a CI summary can iterate this index instead of
+ * retyping the kinds, and {@link ThemeFailureKind} is the union it derives. The
+ * list owns the count: a check is added here and composed below, and a kind
+ * without a payload does not type-check.
+ */
+export const themeChecks = [
+  "color",
+  "typeface",
+  "contrast",
+  "hierarchy",
+  "metric",
+] as const;
+
+/** The check that found a failure — one member of {@link themeChecks}. */
+export type ThemeFailureKind = (typeof themeChecks)[number];
+
+/** The failure each check returns, keyed by the kind that tags it. */
+type FailurePayload = {
+  readonly color: ColorFailure;
+  readonly typeface: TypefaceFailure;
+  readonly contrast: ContrastFailure;
+  readonly hierarchy: TextTierFailure;
+  readonly metric: MetricFailure;
+};
+
+/**
  * One defect in an edited theme, tagged with the check that found it. `color`
  * is a role outside the hex form the token maths parses, `typeface` is a family
  * name the runtime cannot resolve as written, `contrast` is a documented pair
@@ -18,12 +46,11 @@ import { themeTypefaceFailures, type TypefaceFailure } from "./typeface.js";
  * below the tier above it, and `metric` is a numeric invariant a component
  * relies on.
  */
-export type ThemeFailure =
-  | (ColorFailure & { readonly kind: "color" })
-  | (TypefaceFailure & { readonly kind: "typeface" })
-  | (ContrastFailure & { readonly kind: "contrast" })
-  | (TextTierFailure & { readonly kind: "hierarchy" })
-  | (MetricFailure & { readonly kind: "metric" });
+export type ThemeFailure = {
+  readonly [Kind in ThemeFailureKind]: FailurePayload[Kind] & {
+    readonly kind: Kind;
+  };
+}[ThemeFailureKind];
 
 /**
  * Every defect in an edited theme, from one call.

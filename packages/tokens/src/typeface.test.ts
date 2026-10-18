@@ -89,7 +89,7 @@ describe("themeTypefaceFailures", () => {
     });
   });
 
-  it("is invisible to the other three checks", () => {
+  it("is invisible to every other check", () => {
     expect(themeColorFailures(stackedTheme)).toEqual([]);
     expect(themeContrastFailures(stackedTheme)).toEqual([]);
     expect(themeMetricFailures(stackedTheme)).toEqual([]);

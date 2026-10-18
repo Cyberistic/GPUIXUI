@@ -18,8 +18,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { themeColorFailures, themeContrastFailures } from "./contrast.js";
-import { themeMetricFailures } from "./metrics.js";
 import {
   getPlatformRecipeTheme,
   platformRecipeNames,
@@ -34,23 +32,16 @@ import {
   themeModes,
   type Theme,
 } from "./theme.js";
+import { themeChecks, themeFailures } from "./theme-check.js";
 import { resolveThemeChoice } from "./theme-choice.js";
 import { resolvedChoice, storedChoice } from "./theme-choice.example.js";
 import { themeWithDensity } from "./persisted-choices.example.js";
 
 /** Every check a resolved theme must pass, named for the failing axis. */
-const failuresOf = (theme: Theme, where: string): ReadonlyArray<string> => [
-  ...themeContrastFailures(theme).map(
-    (failure) =>
-      `${where}: contrast ${failure.foreground} on ${failure.background} (${failure.ratio.toFixed(3)}:1 < ${failure.floor}:1)`,
-  ),
-  ...themeMetricFailures(theme).map(
-    (failure) => `${where}: metric ${failure.group}.${failure.member}`,
-  ),
-  ...themeColorFailures(theme).map(
-    (failure) => `${where}: colour ${failure.role} = ${failure.value}`,
-  ),
-];
+const failuresOf = (theme: Theme, where: string): ReadonlyArray<string> =>
+  themeFailures(theme).map(
+    (failure) => `${where}: ${failure.kind} ${JSON.stringify(failure)}`,
+  );
 
 /** The six shipped style axes: four platforms and two recipes. */
 const shippedAxes = [
@@ -67,7 +58,7 @@ const shippedAxes = [
 ];
 
 describe("resolveThemeChoice", () => {
-  it("resolves every shipped axis combination to a theme all three checks accept", () => {
+  it(`resolves every shipped axis combination to a theme all ${themeChecks.length} checks accept`, () => {
     const failures = themeModes.flatMap((mode) =>
       themeContrasts.flatMap((contrast) =>
         shippedAxes.flatMap(({ label, platform, recipe }) =>
@@ -197,6 +188,6 @@ describe("resolveThemeChoice", () => {
     expect(resolvedChoice.radius.md).toBe(
       platformStyles.win32.structure.radius?.md,
     );
-    expect(themeContrastFailures(resolvedChoice)).toEqual([]);
+    expect(themeFailures(resolvedChoice)).toEqual([]);
   });
 });

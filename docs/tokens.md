@@ -127,6 +127,7 @@ missing here is not public.
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
 | `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast`, `hierarchy` or `metric`. |
+| `ThemeFailureKind` | The check that found a `ThemeFailure`; one member of `themeChecks`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
 | `ThemeProviderProps` | Props for `ThemeProvider`. |
@@ -732,7 +733,7 @@ Linux owns a darker tint (plan `091`) and the others name the identity tint they
 paint, so neither can leave the other's value behind on its own canvas.
 `platform-composition.test.ts` applies every shipped style and recipe to every
 shipped base in both modes, both contrasts and both requested levels and holds
-each result to all four checks (plan `374`).
+each result to every check (plan `374`).
 
 ### Platform recipes
 
@@ -1785,7 +1786,10 @@ themeFailures(theme);
 The order is diagnostic: the two format checks first — `color`, then `typeface`,
 so a malformed role is named before the `NaN` ratios it causes and a malformed
 family before the type scale painted with it — then `contrast`, then
-`hierarchy`, then `metric`. A `ThemeFailure` is the underlying `ColorFailure`,
+`hierarchy`, then `metric`. `themeChecks` is that order as a list and
+`ThemeFailureKind` is the union it derives, so a report or a settings screen
+names each check without retyping them, and adding a check is one edit at the
+index. A `ThemeFailure` is the underlying `ColorFailure`,
 `TypefaceFailure`, `ContrastFailure`, `TextTierFailure` or `MetricFailure` — the
 same payload the individual check returns — plus its `kind`. The `contrast`
 argument defaults to the level the theme declares and reaches the contrast and

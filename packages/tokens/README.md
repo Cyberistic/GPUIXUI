@@ -244,9 +244,11 @@ themeFailures(brandTheme); // [] when every colour, family, pair, tier and metri
 ```
 
 The order is diagnostic — `color`, `typeface`, `contrast`, `hierarchy`, then
-`metric` — and the payload is the same `ColorFailure`, `TypefaceFailure`,
-`ContrastFailure`, `TextTierFailure` or `MetricFailure` the individual check
-returns. `themeTextTierFailures` is the fifth check: `textTiers` is
+`metric` — and `themeChecks` is that order as a list, so a report or a settings
+screen iterates the index instead of retyping the kinds. The payload is the same
+`ColorFailure`, `TypefaceFailure`, `ContrastFailure`, `TextTierFailure` or
+`MetricFailure` the individual check returns. `themeTextTierFailures` is the
+fifth check: `textTiers` is
 `[dimmer, brighter]` for `mutedForeground` below `foreground`, and
 `disabledForeground` and `placeholder` below `mutedForeground`; each is held one
 1.05:1 step below the tier above it on the surfaces both are documented on. A
@@ -270,7 +272,7 @@ failures; // []
 not a fourth look. The executed example is
 [`src/shipped-themes.example.ts`](./src/shipped-themes.example.ts).
 
-The other three checks are available on their own.
+Every check is also available on its own.
 `themeMetricFailures(theme)` holds the numbers (§ *Checking the numbers* below),
 and `themeColorFailures(theme)` holds every role to the six- or eight-digit hex
 form the colour helpers parse:

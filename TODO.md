@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 163/220
+`[x]` `[███████░░░]` 164/221
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1256,6 +1256,14 @@ following the guidance produced an invisible rest fill while the checker returne
 `[]`; the prose now names a tone-tinted Alert or Badge, the Toast action keeps the
 measured canvas neutral family on `popover`, and a guard fails if the phrase
 returns or a document loses the distinction. No colour or pair moves (plan 397)
+`[x]` Give the five checks an owner — `themeChecks` indexes the kinds and
+`ThemeFailureKind` derives from it, so `applied-palette`, `theme-choice` and
+`platform-composition` can no longer run a hand-built subset: they ran 3, 3 and 4
+of the 5 checks, so a composed theme whose only defect was a CSS family stack or
+an inverted text tier passed a case titled "all checks"; the three suites now
+ask `themeFailures`, the documents build the guarantee's count from the index
+instead of retyping "five", and a docs guard fails on "all three/four checks"
+(plan 398)
 
 ## Phase C — Tier 1–2 components
 

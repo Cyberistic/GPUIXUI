@@ -14,8 +14,6 @@
 
 import { describe, expect, it } from "vitest";
 import { darkColors, palette } from "./color.js";
-import { themeColorFailures, themeContrastFailures } from "./contrast.js";
-import { themeMetricFailures } from "./metrics.js";
 import {
   getPlatformRecipeTheme,
   platformRecipes,
@@ -31,30 +29,20 @@ import {
   themeModes,
   type Theme,
 } from "./theme.js";
-import { themeTypefaceFailures } from "./typeface.js";
+import {
+  themeChecks,
+  themeFailures,
+  type ThemeFailure,
+} from "./theme-check.js";
 
 const modes = themeModes;
 const levels = themeContrasts;
 /** The styles that inherited the identity dark tint before plan 374 named it. */
 const tintInheritors = ["darwin", "win32"] as const;
 
-/** Every check a theme must pass, so a composition is held to all four. */
-const failuresOf = (theme: Theme): ReadonlyArray<string> => [
-  ...themeContrastFailures(theme).map(
-    (failure) =>
-      `contrast ${failure.foreground} on ${failure.background} (${failure.ratio.toFixed(3)}:1 < ${failure.floor}:1)`,
-  ),
-  ...themeMetricFailures(theme).map(
-    (failure) => `metric ${failure.group}.${failure.member} (${failure.rule})`,
-  ),
-  ...themeColorFailures(theme).map(
-    (failure) => `colour ${failure.role} = ${failure.value}`,
-  ),
-  ...themeTypefaceFailures(theme).map(
-    (failure) =>
-      `typeface ${failure.role} (${failure.rule}) = ${failure.value}`,
-  ),
-];
+/** Every check a theme must pass, so a composition is held to all of them. */
+const failuresOf = (theme: Theme): ReadonlyArray<ThemeFailure> =>
+  themeFailures(theme);
 
 /** The shipped styles a consumer can apply, keyed for a labelled failure. */
 const appliedStyles = [
@@ -115,7 +103,7 @@ describe("a platform style applied over another platform", () => {
     });
   });
 
-  it("holds every shipped base and applied style to all four checks", () => {
+  it(`holds every shipped base and applied style to all ${themeChecks.length} checks`, () => {
     const failures = modes.flatMap((mode) =>
       levels.flatMap((contrast) =>
         shippedBases(mode, contrast).flatMap(([baseName, base]) =>
@@ -123,7 +111,7 @@ describe("a platform style applied over another platform", () => {
             levels.flatMap((level) => {
               const label = `${mode}/${contrast} ${baseName} -> ${styleName} @${level}`;
               return failuresOf(applyPlatformStyle(base, style, level)).map(
-                (failure) => `${label}: ${failure}`,
+                (failure) => `${label}: ${JSON.stringify(failure)}`,
               );
             }),
           ),
