@@ -94,6 +94,10 @@ export function SearchFocusRestore() {
     const observer = new MutationObserver(() => {
       const open = searchDialog() !== null;
       if (open) {
+        if (destinationTimer !== null) {
+          clearTimeout(destinationTimer);
+          destinationTimer = null;
+        }
         if (!wasOpen) pathAtOpen = location.pathname;
         wasOpen = true;
         return;
