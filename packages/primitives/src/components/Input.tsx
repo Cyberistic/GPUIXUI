@@ -90,7 +90,13 @@ export const fieldChrome = (
   });
 };
 
-/** The props an `<input>`/`<textarea>` shares, from the spec and its state. */
+/**
+ * The props an `<input>`/`<textarea>` shares, from the spec and its state.
+ *
+ * `style` is not among them: each renderer resolves the chrome itself so a
+ * caller's style is merged exactly once, last (`TextArea` re-bases the row
+ * height first — plan `097`).
+ */
 export const fieldHostProps = (
   props: FieldProps,
   theme: PrimitiveTheme,
@@ -106,7 +112,6 @@ export const fieldHostProps = (
   theme: nativeTextTheme(theme),
   testId: props.testId,
   "aria-label": props.label,
-  style: fieldChrome(props, theme, focus.focused),
   onChange: (event: EventPayload) => {
     if (props.disabled !== true) onValueChange(event.value ?? "");
   },
@@ -122,7 +127,10 @@ export const renderInput = (
   focus: FocusState,
   onValueChange: (value: string) => void,
 ): ReactElement => (
-  <input {...fieldHostProps(props, theme, state, focus, onValueChange)} />
+  <input
+    {...fieldHostProps(props, theme, state, focus, onValueChange)}
+    style={fieldChrome(props, theme, focus.focused)}
+  />
 );
 
 export type InputProps = FieldProps;
