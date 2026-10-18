@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 122/169
+`[x]` `[███████░░░]` 122/170
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -847,6 +847,14 @@ and field adornment instead of the literals in plan 353 §1, settling the
 `[ ]` Cross-team: `primitives` reads `theme.dimensions.fieldAdornmentSize` for a
 field's clear or search glyph where it paints one (owner: `primitives`; plan
 353)
+`[ ]` Cross-team: `components` settles two fixed surface metrics that plan 353's
+audit table missed on the merged tree — `popover.tsx` gives an overlay a 200px
+minimum where the token set has `overlayMinWidth` 180 / `overlayWidth` 220, and
+`combobox.tsx` scrolls its list at 280px where `overlayMaxHeight` is 320. Either
+read the existing token (the 16px/18px adornment split set the precedent for
+settling an outlier on the token) or record the compact overlay as a new
+dimension if it is a real concept; do not leave the literal (owner:
+`components`; plan 353 audit, re-checked on the merged tree)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
