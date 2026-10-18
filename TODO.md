@@ -1313,6 +1313,13 @@ retired once both branches are one
       TS2741. `axis` is now optional and `scrollStyle` owns the default; 1 core
       case proves the omitted axis paints the vertical pair, and the blank-label
       runtime case omits it (plan `397`).
+`[x]` `packages/primitives`: **an open tooltip's text was selectable** —
+      measured (2026-10-19): a real drag across a tip selected the whole hint
+      (`"A hint that can be dragged"`) because `tooltipStyle` declared no
+      `userSelect`; plan `386`'s chrome rule fixed button/toggle/select surfaces
+      and missed the tip. The tip now declares `userSelect: "none"` (a caller can
+      opt back in through `Tooltip.style`), and the chrome-selection class file
+      gains one runtime case (plan `398`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,

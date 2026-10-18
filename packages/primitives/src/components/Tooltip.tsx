@@ -147,6 +147,10 @@ export const tooltipStyle = (
   fontSize: theme.typography.caption.fontSize,
   lineHeight: theme.typography.caption.lineHeight,
   whiteSpace: maxWidth === undefined ? "nowrap" : "normal",
+  // A tip is chrome, not content: a drag across it must not take the hint's
+  // text (measured, plan `398`; the class plan `386` fixed for buttons and
+  // selects). A caller can opt back in through `Tooltip.style`, merged last.
+  userSelect: "none",
   ...(maxWidth === undefined ? {} : { maxWidth }),
 });
 

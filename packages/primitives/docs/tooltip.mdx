@@ -187,7 +187,9 @@ dismisses it. A click dismisses it.
 `caption` type and one spacing step of inset. The wrapper caps the tip to the
 room its side and alignment have (the window less the margins) and wraps the
 text inside that cap; the element-tree caller, which has no viewport, keeps the
-single-line `nowrap` form.
+single-line `nowrap` form. The tip is chrome, so it declares `userSelect:
+"none"` — a drag across it must not take the hint's text (measured, plan `398`);
+`Tooltip.style` is merged last, so a caller can opt back in.
 
 **Long content (plan `391`).** The runtime keeps a layer's left edge inside the
 window margin but never caps its width: measured, a 200-word tip painted **6 270 px

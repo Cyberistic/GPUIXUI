@@ -25,6 +25,7 @@ import { Select } from "../src/components/Select.js";
 import { Text } from "../src/components/Text.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
+import { Tooltip } from "../src/components/Tooltip.js";
 import type { Bounds, Runtime } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
@@ -157,6 +158,29 @@ it("takes no text from an open list's option or group heading", async () => {
 
   expect(dragText(runtime, "Banana")).toStrictEqual(Option.none());
   expect(dragText(runtime, "Fruits")).toStrictEqual(Option.none());
+});
+
+it("takes no text from an open tooltip", async () => {
+  // Plan 398: plan 386 fixed the five raw-string chrome surfaces but missed
+  // the tip; measured, a drag across it selected the whole hint.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint that can be dragged" testId="tip">
+        <Button testId="target" label="Explain">
+          Hover
+        </Button>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  runtime.flush();
+  // Keep the tip open while the drag crosses it.
+  runtime.hover("tip");
+  runtime.flush();
+
+  expect(dragAcross(runtime, "tip")).toStrictEqual(Option.none());
+  expect(styleOf(runtime, "tip")["userSelect"]).toBe("none");
 });
 
 it("still takes content, and honours a caller who opts back in", async () => {
