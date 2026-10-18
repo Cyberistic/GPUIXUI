@@ -245,8 +245,14 @@ Cases:
    `platformStyles.win32.colors[mode].primary` at default contrast and
    `getTheme(mode, "high").colors.primary` at high contrast, so the fix is not
    silently recolouring the shipped gallery.
+7. **The shipped recipes get the same replacement.** For every real
+   `platformRecipeName` and mode, applying the recipe with `"default"` to an AAA
+   base returns `[]` from the contrast check and its `colors` equal
+   `getPlatformRecipeTheme(recipe, mode, "default").colors` — a recipe is the
+   same `PlatformStyle` shape through the same path.
 
-Use `getPlatformTheme`, `themeModes`, `themeContrasts`, `platformNames` and
+Use `getPlatformTheme`, `getPlatformRecipeTheme`, `platformRecipeNames`,
+`platformRecipes`, `themeModes`, `themeContrasts`, `platformNames` and
 `platformStyles` from `./index.js`; keep `extendTheme`'s brand edit local to the
 file.
 
@@ -327,7 +333,7 @@ The new `applied-palette.test.ts` must fail without 3.1. Write 3.3 first, then:
 cd /Users/cyberistic/GPUIXUI/workspaces/tokens-theme
 (cd packages/tokens && ./node_modules/.bin/vitest run src/applied-palette.test.ts)
 # EXPECT: case 1 fails for light macOS/Linux/Windows and dark Linux with the
-# ratios in §1; case 2 fails for the same four palettes. Cases 3–6 pass, which
+# ratios in §1; case 2 fails for the same four palettes. Cases 3–7 pass, which
 # shows the test is discriminating rather than asserting the empty set.
 ```
 

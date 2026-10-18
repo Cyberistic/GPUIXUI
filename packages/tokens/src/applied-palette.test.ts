@@ -15,9 +15,12 @@ import { describe, expect, it } from "vitest";
 import {
   applyPlatformStyle,
   extendTheme,
+  getPlatformRecipeTheme,
   getPlatformTheme,
   getTheme,
   platformNames,
+  platformRecipeNames,
+  platformRecipes,
   platformStyles,
   themeColorFailures,
   themeContrastFailures,
@@ -84,6 +87,23 @@ describe("a forced default palette is whole", () => {
     expect(themed.colors.background).toBe(
       platformStyles.linux.colors.dark.background,
     );
+  });
+
+  it("applies the same set-level replacement to a shipped recipe", () => {
+    themeModes.forEach((mode) => {
+      platformRecipeNames.forEach((recipe) => {
+        const theme = applyPlatformStyle(
+          getTheme(mode, "high"),
+          platformRecipes[recipe],
+          "default",
+        );
+
+        expect(themeContrastFailures(theme), `${mode}/${recipe}`).toEqual([]);
+        expect(theme.colors, recipe).toEqual(
+          getPlatformRecipeTheme(recipe, mode, "default").colors,
+        );
+      });
+    });
   });
 
   it("does not rebase when no colour applies", () => {
