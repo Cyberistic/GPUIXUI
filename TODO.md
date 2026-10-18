@@ -1428,7 +1428,7 @@ after plan 504); no colour, pair or floor moves (plan 513)
 `[x]` Hold the disabled action inside a status panel — a raised action kept no
 disabled state, and the canvas `disabled` fill is not a panel shape (1.0066:1 on
 XP light's `warningSoft`), so it keeps the resting `softAction` fill and paints
-`disabledForeground` (identity dark 4.343:1, AAA dark 5.199:1), while `textTiers`
+`disabledForeground` (identity dark 5.148:1, AAA dark 7.310:1, after plan 520 moved the dark value), while `textTiers`
 holds that label a step below `softActionForeground` (2.156:1 at the tightest);
 `contrastPairs` grows 394 → 395 and no colour moves (plan 514)
 `[x]` Hold the focus ring on the value groove — a focused slider's shadow is

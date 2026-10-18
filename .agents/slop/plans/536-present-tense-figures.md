@@ -117,6 +117,8 @@ claim, so the two suites cannot measure different lists again.
   the tightest *mark* at **3.04:1**.
 - `COMPONENTS.md` (*Theme contrast check*) and `TODO.md` (plan 348's row):
   `11.97:1` → `11.98:1`.
+- `TODO.md` (plan 514's row): `4.343:1, AAA dark 5.199:1` → `5.148:1, AAA dark
+  7.310:1`, with the plan-520 cause named.
 
 ## Files
 
