@@ -102,7 +102,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   collapsible: "Only failed runs are reported.",
   pagination: "Showing results 31–40",
   "time-picker": "Reminder at 10:30",
-  carousel: "Pricing details on screen",
+  carousel: "Release notes slide 2 of 2",
 };
 
 /**

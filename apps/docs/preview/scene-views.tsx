@@ -1165,7 +1165,7 @@ const CarouselScene = (): ReactElement => {
         />
         <CarouselControl direction="next" testId="scene-carousel-next" />
       </Carousel>
-      {index === 1 ? <Text role="body">Pricing details on screen</Text> : null}
+      {index === 1 ? <Text role="body">Release notes slide 2 of 2</Text> : null}
     </Stack>
   );
 };
