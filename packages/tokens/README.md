@@ -406,7 +406,8 @@ edit path can clip a type role by shortening its leading, invert one of the two
 type ladders (`proseLadder` / `codeLadder`), flatten `bodyStrong` onto `body`'s
 weight, name a font weight outside the `1…1000` range the text system can
 select or a non-finite one, shrink the smallest control below one label line,
-invert a size ladder, scroll an overlay in less than one row, ship a non-finite
+invert a size ladder, name an icon or avatar size of zero, scroll an overlay in
+less than one row, ship a non-finite
 spacing step, radius, type size or dimension the renderer casts to a 32-bit
 float, ship a non-finite motion timing or a cubic-bezier easing the runtime
 cannot interpolate, leave the largest avatar a rounded square, or hand
@@ -416,7 +417,9 @@ strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ship
 `elevation.overlay`), while a level a consumer defines is held to the same rules
 because `elevationShadow` paints its first entry. Every shipped theme, platform
 variant and recipe passes.
-`metricGroups` is the ordered index a settings row iterates. A runnable example
+`metricGroups` is the ordered index a settings row iterates. `metricRules` is
+the ordered index of the nine rules a failure can carry, so a diagnostics view
+does not retype the union. A runnable example
 lives in [`src/metrics.example.ts`](./src/metrics.example.ts).
 
 ## Status tones

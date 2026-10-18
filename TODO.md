@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 139/190
+`[x]` `[███████░░░]` 140/191
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1004,6 +1004,12 @@ unparseable value unchanged, so a copied theme with `shadow: "black"` painted a
 design-system's claim that tests restrict roles to hex; `isHexColor` publishes
 the predicate, `themeColorFailures` names every role outside the form, all 24
 shipped sets pass, and no colour moves (plan 371)
+`[x]` Hold the named icon and avatar sizes to a positive size, and give the nine
+metric rules the ordered index their type index row never had — a zero `xs` was
+a non-decreasing ladder that passed all three checks while the glyph or avatar
+painted a 0×0 box, and the `MetricRule` row named `ladder`, `fit` and `fraction`,
+none of which the contract emits; `metricRules` derives the union, the two size
+ladders take a `positive` step rule, and the row is guarded (plan 372)
 
 ## Phase C — Tier 1–2 components
 

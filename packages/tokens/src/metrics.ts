@@ -40,17 +40,26 @@ export const metricGroups = [
 /** A group of theme metrics the contract governs. */
 export type MetricGroup = (typeof metricGroups)[number];
 
+/**
+ * The rules a metric can miss, in documentation order. `MetricRule` derives
+ * from this list, so a new rule must also gain a value here and a line in the
+ * rule reference; a diagnostics table iterates it instead of retyping the
+ * names.
+ */
+export const metricRules = [
+  "positive",
+  "non-negative",
+  "zero",
+  "finite",
+  "increasing",
+  "non-decreasing",
+  "at-least",
+  "at-most",
+  "within",
+] as const;
+
 /** The rule a metric missed. */
-export type MetricRule =
-  | "positive"
-  | "non-negative"
-  | "zero"
-  | "finite"
-  | "increasing"
-  | "non-decreasing"
-  | "at-least"
-  | "at-most"
-  | "within";
+export type MetricRule = (typeof metricRules)[number];
 
 /** One metric that misses a rule in a theme. */
 export interface MetricFailure {
@@ -189,16 +198,26 @@ const ladder = (
   group: MetricGroup,
   steps: ReadonlyArray<readonly [string, number]>,
   rule: "increasing" | "non-decreasing",
+  /**
+   * The rule every step is held to. A spacing step or a radius may be zero — a
+   * borderless or square theme is a design — while a named icon or avatar size
+   * is a shape that must paint, so those two ladders ask for `positive`.
+   */
+  stepRule: "non-negative" | "positive" = "non-negative",
 ): ReadonlyArray<MetricFailure> =>
   steps.flatMap(([member, value], index) => {
     const previous = steps[index - 1];
+    const sign =
+      stepRule === "positive"
+        ? positive(group, member, value)
+        : nonNegative(group, member, value);
     if (previous === undefined) {
-      return nonNegative(group, member, value);
+      return sign;
     }
     const ok =
       rule === "increasing" ? value > previous[1] : value >= previous[1];
     return [
-      ...nonNegative(group, member, value),
+      ...sign,
       ...(ok ? [] : [failure(group, member, rule, value, previous[1])]),
     ];
   });
@@ -245,8 +264,9 @@ const ascendingSizes = (
  *   a minimum below its default, an adornment fits the smallest control, a chip
  *   fits in a field, and the overlay scroll height fits one row — a list
  *   viewport shorter than a row clips every option.
- * - **iconSize**, **avatarSize**: named ladders, and the default icon fits the
- *   smallest control.
+ * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
+ *   paints no icon or identity mark — and the default icon fits the smallest
+ *   control.
  * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
  *   the largest radius, half the largest control and half the largest avatar —
  *   a 40px avatar at a smaller radius is a rounded square.
@@ -404,6 +424,7 @@ export function themeMetricFailures(
         (size) => [size, iconSize[size]] as const,
       ),
       "non-decreasing",
+      "positive",
     ),
     ...atMost("iconSize", "md", iconSize.md, density.controlHeight.sm),
     ...finiteMembers(
@@ -418,6 +439,7 @@ export function themeMetricFailures(
         (size) => [size, avatarSize[size]] as const,
       ),
       "non-decreasing",
+      "positive",
     ),
     ...finiteMembers("radius", [
       ["none", radius.none],

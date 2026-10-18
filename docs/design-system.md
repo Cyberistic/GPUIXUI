@@ -491,9 +491,10 @@ edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
 shrink the smallest control below one label line plus its borders, clip a row
 below the default `md` control it holds, round a "square" corner, leave the
-largest avatar a rounded square, invert a named size ladder, ship a zero-width
-surface metric, hand the renderer a non-finite shadow offset, ship a non-finite
-type size, spacing step, radius, border width, dimension, icon or avatar, or hand
+largest avatar a rounded square, invert a named size ladder, name a zero-size
+icon or avatar, ship a zero-width surface metric, hand the renderer a
+non-finite shadow offset, ship a non-finite type size, spacing step, radius,
+border width, dimension, icon or avatar, or hand
 `elevationShadow` an alpha the colour helper cannot parse — each of which
 returned `[]` from the colour check. Every shipped theme, platform variant and
 recipe passes, so the checker exists for the theme a consumer edits, not to

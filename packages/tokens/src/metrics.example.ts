@@ -49,3 +49,13 @@ export const invertedScale = extendTheme(getTheme("light"), {
   typography: { h1: { fontSize: 12, lineHeight: 16 } },
 });
 export const invertedScaleFailures = themeMetricFailures(invertedScale);
+
+/**
+ * An icon size of zero: the ladder does not step backwards, so before plan 372
+ * the numeric check accepted it and the `xs` icon painted a 0×0 box. The named
+ * size is now held to `positive`.
+ */
+export const invisibleIcon = extendTheme(getTheme("light"), {
+  iconSize: { xs: 0 },
+});
+export const invisibleIconFailures = themeMetricFailures(invisibleIcon);

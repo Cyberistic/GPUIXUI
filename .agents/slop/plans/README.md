@@ -168,6 +168,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [369](./369-defined-overlay-elevation.md) | A defined elevation level is a level, `overlay` included | F | 085, 358, 360, 368 | done |
 | [370](./370-font-weight-metric.md) | A type weight is a paintable number | F | 058, 358, 364, 367, 368 | done |
 | [371](./371-colour-role-format.md) | Every colour role is a hex colour the helpers parse | F | 011, 014, 071, 085, 099, 306 | done |
+| [372](./372-positive-named-sizes.md) | A named size is a positive size, and the rule index is the type | F | 054, 058, 358, 360–371 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1442,6 +1443,20 @@ holding the exempt role. Measured roles are caught incidentally as `NaN` by
 form, and the ledger, both documents and the README state the format half beside
 the contrast and metric halves. All 24 shipped sets are hex, so no token value,
 colour, pair or floor moves.
+
+372 closes the last numeric member a ladder accepted at zero. `iconSize` and
+`avatarSize` were held only to a non-decreasing ladder, so `iconSize.xs: 0` or
+`avatarSize.xs: 0` returned `[]` from all three checks while an `xs` icon or
+avatar painted a 0×0 box — a missing glyph or identity mark, not a size. The
+ladder helper now takes the rule each step is held to, defaults to
+`non-negative`, and the two size ladders ask for `positive`; a ladder of zeroes
+names every step, and `xs: 1` stays valid, so the rule is zero, not a house
+minimum. The same audit found the `MetricRule` row in `docs/tokens.md` naming
+`ladder`, `fit` and `fraction` — none of which the contract emits — because the
+union had no ordered index. `metricRules` is now the nine-rule index and
+`MetricRule` derives from it, the row is built from the index, and a test fails
+on a missing or retired rule. No shipped theme, platform variant or recipe
+carries a zero size, so no token value, colour, pair or floor moves.
 
 ### Reference adoption (block `200–299`)
 

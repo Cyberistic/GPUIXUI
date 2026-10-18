@@ -32,6 +32,7 @@ import {
   isHexColor,
   isStatusTone,
   lightTheme,
+  metricRules,
   motionTransition,
   platformNames,
   platformStyles,
@@ -94,7 +95,7 @@ missing here is not public.
 | `IconSize` | Icon sizes for `xs` to `xl`. |
 | `MetricFailure` | One metric a theme misses, with its group, rule and values. |
 | `MetricGroup` | A group of theme metrics from `metricGroups`. |
-| `MetricRule` | The rule a metric is held to: positive, ladder, fit or fraction. |
+| `MetricRule` | One of `metricRules`: `positive`, `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`, `at-most` or `within`. |
 | `Motion` | Six timing levels and four easing phases. |
 | `MotionEasing` | A cubic-bezier control-point tuple. |
 | `MotionEasings` | The `standard`, `enter`, `exit` and `linear` curves. |
@@ -1426,8 +1427,10 @@ must round the largest radius and half of the taller of the largest control and
 the largest avatar — a 40px avatar painted at a smaller radius is a rounded
 square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
 `avatarSize`, `controlHeight`, `controlPaddingX` and the motion timings — must
-not step backwards, and a timing must also be finite; an icon and a field
-adornment must fit the smallest control; a chip must fit in a field; an
+not step backwards, and `iconSize` and `avatarSize` must also stay above zero,
+because a named size that paints a 0×0 icon or avatar is not a size; a timing
+must also be finite; an icon and a field adornment must fit the smallest
+control; a chip must fit in a field; an
 overlay's `overlayMaxHeight` must fit one `density.rowHeight`, because a list
 viewport shorter than a row clips every option; a cubic-bezier easing must be
 four finite control points with both x values inside `0…1`, because the runtime
@@ -1451,6 +1454,9 @@ and recipe passes, so the check moves no value; it guards the next edit.
 
 `metricGroups` is the ordered index of the ten governed groups, so a
 documentation table or a settings row iterates it instead of retyping the names.
+`metricRules` is the ordered index of the nine rules a `MetricFailure` can
+carry, beside `metricGroups`, so a diagnostics table or a rule reference
+iterates it instead of retyping the union.
 A failure is a `MetricFailure`: the `MetricGroup`, the dotted `member`
 (`controlHeight.sm`), the `MetricRule` it broke and both numbers — the `actual`
 value and the `bound` it missed. A `MetricRule` is one of `positive`,
