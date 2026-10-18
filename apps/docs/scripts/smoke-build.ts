@@ -171,8 +171,22 @@ const auditPage = async (
   }
 
   if (title(page.body) === "") fail("no <title>");
-  const headings = [...page.body.matchAll(/<h1\b/g)].length;
-  if (headings !== 1) fail(`expected one <h1>, found ${headings}`);
+  const headingLevels = [...page.body.matchAll(/<h([1-6])[^>]*>/g)].flatMap(
+    (match) => {
+      const level = match[1];
+      return level === undefined ? [] : [Number.parseInt(level, 10)];
+    },
+  );
+  const h1Count = headingLevels.filter((level) => level === 1).length;
+  if (h1Count !== 1) fail(`expected one <h1>, found ${h1Count}`);
+  const jump = headingLevels.reduce<string | null>((found, level, index) => {
+    if (found !== null) return found;
+    const previous = headingLevels[index - 1];
+    return previous !== undefined && level > previous + 1
+      ? `h${previous} → h${level}`
+      : null;
+  }, null);
+  if (jump !== null) fail(`heading order skips: ${jump}`);
   const landmarks = [...page.body.matchAll(/<main\b/g)].length;
   if (landmarks !== 1) fail(`expected one <main>, found ${landmarks}`);
   if (!/<html[^>]*\slang="en"/.test(page.body)) fail('no <html lang="en">');

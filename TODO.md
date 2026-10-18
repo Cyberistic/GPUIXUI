@@ -469,9 +469,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–498)
+## Docs site workstream (plans 410–499)
 
-`[x]` `[██████████]` 99/99
+`[x]` `[██████████]` 100/100
+
+`[x]` **Every page's heading outline is ordered (plan 499)** — `/docs/components`,
+      `/docs/api-reference` and `/docs/api-values` jumped `h1 → h3` because their
+      generated group headings were `<h3>`; the three indexes now open at `<h2>`
+      and the built-site crawl checks the full outline of all 90 pages, naming
+      the page and the jump
 
 `[x]` **The docs code palette clears the contrast floor (plan 498)** — the
       default GitHub Light/Dark pair painted light `#e36209` at 3.49:1 and dark

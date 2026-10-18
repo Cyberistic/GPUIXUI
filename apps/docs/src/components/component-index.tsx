@@ -166,9 +166,9 @@ export function ComponentIndex() {
       ) : (
         visible.map((group) => (
           <section key={`${group.tier}-${group.group}`}>
-            <h3 className="mb-3 text-lg font-medium">
+            <h2 className="mb-3 text-lg font-medium">
               {tierGroupTitle(group.tier, group.group)}
-            </h3>
+            </h2>
             <ul className="grid gap-2 sm:grid-cols-2">
               {group.items.map((component) => (
                 <li key={component.slug}>

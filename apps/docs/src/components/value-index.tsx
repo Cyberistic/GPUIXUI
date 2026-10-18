@@ -45,13 +45,13 @@ export function ValueIndex() {
     <div className="not-prose flex flex-col gap-10">
       {byPackage(valueExports).map((group) => (
         <section key={group.package} data-package={group.package}>
-          <h3 className="mb-3 flex flex-wrap items-baseline gap-3 text-lg font-medium">
+          <h2 className="mb-3 flex flex-wrap items-baseline gap-3 text-lg font-medium">
             <span className="font-mono">{group.package}</span>
             <span className="text-sm font-normal text-fd-muted-foreground">
               {group.entries.length}{" "}
               {group.entries.length === 1 ? "export" : "exports"}
             </span>
-          </h3>
+          </h2>
           <ul className="grid gap-2">
             {group.entries.map((value) => (
               <li

@@ -24,9 +24,9 @@ export function ApiIndex() {
         if (documented.length === 0) return null;
         return (
           <section key={`${group.tier}-${group.group}`}>
-            <h3 className="mb-3 text-lg font-medium">
+            <h2 className="mb-3 text-lg font-medium">
               {tierGroupTitle(group.tier, group.group)}
-            </h3>
+            </h2>
             <ul className="grid gap-2">
               {documented.map((component) => (
                 <li key={component.slug} data-api-slug={component.slug}>

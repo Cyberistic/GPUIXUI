@@ -61,11 +61,11 @@ suite before bumping.
 The unit suite reads the source tree. `smoke:build` reads the **production
 build**: it builds, serves the worker with `vite preview` on a free loopback
 port, and crawls the result (plan 439). It fails when a page does not render,
-loses its title, `<h1>`, `<main>` landmark, `lang` or canonical link; when an
-internal link or asset 404s; when `/api/search` stops answering; when an unknown
-slug is not 404; or when `robots.txt` loses its sitemap. It exits `2` — not `0`
-— when the check could not run (build or preview failure), so "unverified" is
-never reported as a pass.
+loses its title, `<h1>`, `<main>` landmark, `lang` or canonical link, skips a
+heading level (plan 499); when an internal link or asset 404s; when
+`/api/search` stops answering; when an unknown slug is not 404; or when
+`robots.txt` loses its sitemap. It exits `2` — not `0` — when the check could not
+run (build or preview failure), so "unverified" is never reported as a pass.
 
 ```sh
 nub run --filter docs smoke:build
