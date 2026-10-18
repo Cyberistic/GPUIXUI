@@ -53,14 +53,14 @@ export const quietRingTheme = extendTheme(getTheme("light"), {
 export const quietRingFailures = themeContrastFailures(quietRingTheme);
 
 /**
- * A theme whose progress segment is its own track: `primary` is the quiet
- * panel's value, so a filled bar, a rating star or a slider's rail has no shape
- * while every interactive-fill pair still passes at 1.05:1. Plan 332's `mark`
- * pairs are what catch it.
+ * A theme whose progress segment is nearly its own track: `primary` is a
+ * near-panel grey that still clears the 1.05:1 interactive-fill floor on every
+ * panel, so the old check passed while a 4px bar, a rating star or a slider's
+ * rail had no shape. Plan 332's `mark` pairs are what report it.
  */
 export const quietMarkTheme = extendTheme(getTheme("light"), {
   name: "Quiet mark",
-  colors: { primary: "#FBFCFD" },
+  colors: { primary: "#E6E9EE" },
 });
 
 /** Every mark pair the quiet theme misses — the card, panel, popover and field. */
