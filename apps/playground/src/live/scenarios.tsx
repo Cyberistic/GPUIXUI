@@ -35,6 +35,7 @@ import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { variableRowsScenario } from "../scenarios/variable-rows.js";
+import { pointerEntryScenario } from "../scenarios/pointer-entry.js";
 import { tableSelectSortScenario } from "../scenarios/table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
 import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
@@ -494,6 +495,84 @@ const inputPayload: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${inputPayload.id}.png`);
+    }),
+};
+
+const pointerEntry: LiveScenario = {
+  id: "live-pointer-entry",
+  title: "Live pointer entry: where a click puts the caret",
+  capability: "input",
+  view: pointerEntryScenario.view,
+  ready: "pointer-field",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // A click places the caret at the nearest glyph: middle, end, start.
+      const field = yield* boxOf(ctx, "pointer-field");
+      const mid = field.y + field.height / 2;
+      yield* ctx.host.clickWindow(field.x + 25, mid);
+      yield* settle;
+      yield* ctx.host.key("m");
+      yield* settle;
+      const middle = yield* textOf(ctx, "pointer-field-readout");
+      yield* ctx.expectNear(
+        "a live middle click puts the caret inside the run",
+        middle.indexOf("m"),
+        3,
+        2,
+      );
+
+      yield* ctx.host.clickWindow(field.x + field.width - 4, mid);
+      yield* settle;
+      yield* ctx.host.key("2");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live right-edge click appends",
+        Str.endsWith("2")(yield* textOf(ctx, "pointer-field-readout")),
+        true,
+      );
+
+      yield* ctx.host.clickWindow(field.x + 3, mid);
+      yield* settle;
+      yield* ctx.host.key("1");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live left-edge click prepends",
+        Str.startsWith("1")(yield* textOf(ctx, "pointer-field-readout")),
+        true,
+      );
+
+      // A textarea takes a newline and Up returns to the previous line.
+      const area = yield* boxOf(ctx, "pointer-area");
+      yield* ctx.host.clickWindow(area.x + 3, area.y + 12);
+      yield* settle;
+      yield* ctx.host.key("x");
+      yield* ctx.host.key("enter");
+      yield* ctx.host.key("y");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Enter inserts a newline in a live textarea",
+        yield* textOf(ctx, "pointer-area-readout"),
+        "x\ny",
+      );
+      const grown = yield* boxOf(ctx, "pointer-area");
+      yield* ctx.expectNear(
+        "a two-line live textarea autosizes",
+        grown.height,
+        64,
+        2,
+      );
+
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* ctx.host.key("z");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Up returns to the previous line live",
+        yield* textOf(ctx, "pointer-area-readout"),
+        "xz\ny",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${pointerEntry.id}.png`);
     }),
 };
 
@@ -6468,6 +6547,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveFrames,
   input,
   inputPayload,
+  pointerEntry,
   scroll,
   panel,
   motion,

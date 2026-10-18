@@ -1254,6 +1254,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-shell` | `app-shell` fills the 1100 × 720 window; clicking a sidebar entry mounts that view and paints its own text; `Enter` on a focused entry switches the stage |
 | `live-input` | a click focuses the field, `h i` reaches `onChange` (`value=hi`), and `Enter` reaches `onSubmit` (`submits=1`) |
 | `live-input-payload` | two real clicks 80 ms apart are **two** clicks, each `clickCount=1`; the live editor receives `é` and `日` (`keyChar` carries each), `cmd-a` is consumed before React and the next space replaces the value, and a live wheel is `40/true/moved` — 12 checks (plan `533`) |
+| `live-pointer-entry` | where a live click puts the caret: a click at `x + 25` lands inside `abcdef` (index 1–5), a right-edge click appends, a left-edge click prepends, a `<textarea>` takes a newline and autosizes to 64 px, and Up returns to the previous line — 14 checks (plan `535`) |
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
 | `live-motion` | the paused clock collapses a 240 px sidebar exactly: 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and a leaving toast stays painted until the exit settles — 25 checks. **`onExitComplete` fires twice live for one exit**; treat it as idempotent |
@@ -1362,6 +1363,14 @@ re-implement text handling:
 | placeholder | exposed in the dump **and** painted, and it stops painting once text exists |
 | fixed width | 40 characters left the field at `158` px before and after; `width: "auto"` also fills rather than grows |
 | textarea autosize | `minRows={2}` paints `64` px, four lines `116`, six lines `168`, seven lines `168` — it grows 26 px per line to `maxRows`, then scrolls |
+
+**The pointer half is live-proven (`live-pointer-entry`, plan `535`):** in a real
+window a click at `x + 25` of a 300 px field puts the caret inside `abcdef`
+(index 1–5), a right-edge click appends, a left-edge click prepends, a
+`<textarea>` takes `x`, Enter, `y` as exactly `x\ny` and autosizes to 64 px, and
+Up returns to the previous line (`xz\ny`). A drag-to-select gesture is live
+through `live-selection` (the renderer's own drag), so a component must not
+reimplement either half.
 
 Two limits worth stating rather than hiding. **The accessibility `value` is the
 authored prop, not the live editor**: an uncontrolled field reports no value

@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[██████████]` 89/94 plans-and-harness
+`[~]` `[██████████]` 90/95 plans-and-harness
 
 `[x]` Prove **variable row heights in a real window** per plan `534`: the last
       interaction family whose evidence was headless-only. `live-variable-rows`
@@ -77,6 +77,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       against the wrapper `div` with no correction term. `COMPONENTS.md`'s
       `Virtualized lists` and `Expandable rows` rows now cite it. Focused ids
       run: `live-variable-rows`; `nub run check` and `nub run test` green.
+
+`[x]` Prove **pointer text entry in a real window** per plan `535`: the gesture
+      behind inline rename, a search box and a cell editor was headless-only.
+      `live-pointer-entry` reuses the `pointer-entry` view in the real
+      `1100×720` window — a click at `x + 25` of the 300 px field puts the caret
+      inside `abcdef` (index 1–5), a right-edge click appends, a left-edge click
+      prepends, a `<textarea>` takes `x\ny` and autosizes to 64 px, and Up
+      returns to the previous line (`xz\ny`). **14 checks**, 1/1 exit `0`; live
+      registry `52 → 53`. Two levers: the middle click moved to the right edge
+      fails `expected 3 ± 2, got 6`, and rendering the area as an `<input>`
+      fails `expected "x\ny", got "xy"` (both exit `1`). Not claimed: a live
+      press-drag-release selection gesture — the async host has no
+      press/move/release verbs and `live-selection` already proves a real drag.
+      `COMPONENTS.md`'s `Text inputs` row and the README cite it.
 
 `[x]` Guard the **headless smoke CLI's arguments** per plan `531`: `--list`
       prints the 101 ids and exits `0` without loading the binding; `--only`
