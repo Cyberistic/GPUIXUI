@@ -212,3 +212,56 @@ it("leaves a disabled group out of the tab order and inert", async () => {
   runtime.focusNext();
   expect(focused(runtime)).toBe("after");
 });
+
+/**
+ * The bug guarded (plan `394`): the page listed `←` `↑` and `→` `↓` for both
+ * orientations, but the group answers only its own axis. A horizontal group
+ * ignored `Up` (focus and value stayed on Left) while `Right` moved; the
+ * vertical case is the mirror. The page now says so, and this measures it.
+ */
+it("answers only its orientation's arrow axis", async () => {
+  const horizontal = await openWindow();
+  horizontal.render(
+    <Surface>
+      <ToggleGroup
+        type="single"
+        testId="tg"
+        label="Alignment"
+        options={align}
+        defaultValue="left"
+      />
+    </Surface>,
+  );
+  horizontal.click("tg-left");
+  expect(focused(horizontal)).toBe("tg-left");
+  horizontal.keyDown("tg-left", "up");
+  horizontal.keyUp("tg-left", "up");
+  expect(focused(horizontal)).toBe("tg-left");
+  expect(announced(horizontal, "Left")).toBe("pressed");
+  horizontal.keyDown("tg-left", "right");
+  expect(focused(horizontal)).toBe("tg-centre");
+  expect(announced(horizontal, "Centre")).toBe("pressed");
+
+  const vertical = await openWindow();
+  vertical.render(
+    <Surface>
+      <ToggleGroup
+        type="single"
+        testId="tg"
+        label="Alignment"
+        options={align}
+        defaultValue="left"
+        orientation="vertical"
+      />
+    </Surface>,
+  );
+  vertical.click("tg-left");
+  expect(focused(vertical)).toBe("tg-left");
+  vertical.keyDown("tg-left", "right");
+  vertical.keyUp("tg-left", "right");
+  expect(focused(vertical)).toBe("tg-left");
+  expect(announced(vertical, "Left")).toBe("pressed");
+  vertical.keyDown("tg-left", "down");
+  expect(focused(vertical)).toBe("tg-centre");
+  expect(announced(vertical, "Centre")).toBe("pressed");
+});

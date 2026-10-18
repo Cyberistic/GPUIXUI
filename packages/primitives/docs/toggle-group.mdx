@@ -81,12 +81,17 @@ last held focus (`multiple`). Tab moves into the group once and out again.
 
 | Key | `single` | `multiple` |
 | --- | -------- | ---------- |
-| `←` `↑` | move focus **and** select the previous item, wrapping | move focus only |
-| `→` `↓` | move focus **and** select the next item, wrapping | move focus only |
+| `←` / `→` (horizontal) | move focus **and** select the previous / next item, wrapping | move focus only |
+| `↑` / `↓` (vertical) | the same on the vertical axis | the same on the vertical axis |
 | `Home` / `End` | focus and select the first / last enabled item | focus the first / last enabled item |
 | `Enter` | select on key **down** | toggle on key **down** |
 | `Space` | select on key **up** | toggle on key **up** |
 | a held key | ignored | ignored |
+
+The group answers **only its orientation's axis**: `orientation="horizontal"`
+(default) moves with `←`/`→`, `orientation="vertical"` with `↑`/`↓`, and the
+cross-axis arrow is inert — the same contract as `RadioGroup`, and what keeps a
+horizontal segmented control still while a user scrolls a form.
 
 A disabled option is skipped by every movement and never receives focus; a
 disabled group has no tab stop at all. Clicking an item selects or toggles it,
@@ -207,6 +212,9 @@ the item — after its own paint and focus ring:
   applies the reported value, three arrows in `single` move the ring on to
   Centre, Right and back, and `multiple` keeps moving focus without reporting a
   press (plan `359`).
+- `src/docs-keyboard.test.ts` — the arrow rows on this page name their
+  orientation and match `core/keyboard.ts`: every documented key is delivered for
+  that axis, and the cross-axis pair is `None` (plan `394`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

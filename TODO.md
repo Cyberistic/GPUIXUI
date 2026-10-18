@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[███████████]` 133/133
+`[x]` `[███████████]` 134/134
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1276,6 +1276,15 @@ retired once both branches are one
       own side and a short tip keeps its width; 3 core + 4 scoped runtime cases,
       four mutations fail by name (offline 693 → 695, scoped live 4/4; plan
       `393`). The false "wider than both sides is clamped" limitation is gone.
+`[x]` `packages/primitives`: **the `ToggleGroup` page promised arrow keys the
+      group never received** — measured 2026-10-19: a horizontal group answered
+      `Up` with nothing (focus and value stayed on Left) while `Right` moved, yet
+      the page listed `←` `↑` and `→` `↓` for both orientations. The page now
+      qualifies each axis and states the cross-axis rule, and
+      `src/docs-keyboard.test.ts` ties its rows to `decideMove`'s orientation
+      rule (3 tests, failing on the old rows and on a swapped axis); the runtime
+      case proves both orientations (offline 695 → 698, scoped live 9/9; plan
+      `394`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
