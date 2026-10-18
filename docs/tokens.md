@@ -1429,7 +1429,11 @@ because the runtime drops a transition it cannot interpolate; and an elevation l
 must hold a shadow whose alpha is a fraction, because `alpha()` falls back to the
 opaque tint on a value it cannot parse, and whose two offsets, blur and spread
 are finite — a negative offset or spread is a direction, a `NaN` is a shadow the
-renderer cannot paint. Two ladders are deliberately non-decreasing rather than
+renderer cannot paint. Every other numeric metric — a type size, leading or
+weight, a border width, a density or dimension metric, an icon, avatar, radius
+or spacing step, and every motion timing — must be a **finite** number too,
+because the renderer casts each to a 32-bit float and an infinity becomes
+invalid layout it paints as nothing, with no error. Two ladders are deliberately non-decreasing rather than
 strict: Linux and Windows ship `radius.lg === radius.xl`, and Windows ships
 `motion.fast === motion.step`. `elevation.overlay` is exempt because it is
 reserved and empty. Every shipped theme, platform variant and recipe passes, so

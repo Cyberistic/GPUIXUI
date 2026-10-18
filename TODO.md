@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 135/185
+`[x]` `[███████░░░]` 136/186
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -968,6 +968,14 @@ arrays over the shipped constant, so an edited theme rendered `h1` below `h2`,
 checkers returned `[]`; the ladders are now exported as `proseLadder` /
 `codeLadder`, the contract holds each `non-decreasing` and `bodyStrong` no
 smaller and heavier than `body`, and no shipped value moves (plan 367)
+`[x]` Hold every numeric metric to finiteness — `finite` covered elevation
+geometry (plan 360) and motion (plan 364) but the other eight groups accepted
+`Infinity`: a ladder's last step has no successor, so `spacing["5xl"]`,
+`radius.full`, `borderWidth.strong`, `iconSize.xl`, `density.rowHeight`,
+`dimensions.toastWidth` and an infinite display size returned `[]` while the
+renderer casts each to `f32::INFINITY` and paints invalid layout silently; one
+`finiteMembers` pass now walks every numeric member of those eight groups and no
+shipped value moves (plan 368)
 
 ## Phase C — Tier 1–2 components
 

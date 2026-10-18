@@ -486,11 +486,14 @@ the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
 shrink the smallest control below one label line plus its borders, clip a row
 below the default `md` control it holds, round a "square" corner, leave the
 largest avatar a rounded square, invert a named size ladder, ship a zero-width
-surface metric, hand the renderer a non-finite
-shadow offset or hand `elevationShadow` an alpha the colour helper cannot
-parse — each of which returned `[]` from the colour check. Every shipped theme,
-platform variant and recipe passes, so the checker exists for the theme a
-consumer edits, not to change a value.
+surface metric, hand the renderer a non-finite shadow offset, ship a non-finite
+type size, spacing step, radius, border width, dimension, icon or avatar, or hand
+`elevationShadow` an alpha the colour helper cannot parse — each of which
+returned `[]` from the colour check. Every shipped theme, platform variant and
+recipe passes, so the checker exists for the theme a consumer edits, not to
+change a value. Every numeric metric must be a **finite** number: the renderer
+casts each to a 32-bit float, and an infinity is invalid layout it paints as
+nothing, silently.
 
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
 the identity metrics, the shipped role count, the theme surfaces, the type
