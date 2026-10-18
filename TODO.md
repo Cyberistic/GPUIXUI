@@ -1186,6 +1186,15 @@ retired once both branches are one
       takes a pointer cursor (`not-allowed` disabled), and a caller's style can
       still opt back in. 3 offline + 5 runtime cases, five mutations fail by
       name (plan `386`).
+`[x]` `packages/primitives`: **a wrapping `Stack` stretched its line boxes** —
+      the playground's plan `341` §2 measured a bounded wrapping row spreading
+      its leftover height between lines: a 200 px row of 30 px children put the
+      second line at `y 103` instead of `36`, and a wrapped column at `x 103`
+      instead of `66`. `stackStyle` now sets `alignContent: "flex-start"`
+      whenever `wrap` is on; the auto-height row was already exact and is
+      unchanged, and a caller's style can still override. 1 offline case + 3
+      relative runtime cases, the bounded row and column failing in the old
+      direction (plan `387`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,

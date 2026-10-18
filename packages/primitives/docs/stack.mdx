@@ -29,7 +29,7 @@ import { Stack, Text, Button } from "@gpuixui/primitives";
 | `gap` | spacing step | none | distance between children, from `spacing` |
 | `align` | `start \| center \| end \| stretch \| baseline` | runtime default (`stretch`) | cross-axis alignment |
 | `justify` | `start \| center \| end \| between \| around` | runtime default | main-axis distribution |
-| `wrap` | `boolean` | `false` | allows wrapping to a second line |
+| `wrap` | `boolean` | `false` | allows wrapping to a second line; lines pack at the cross-axis start |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
 | `fullWidth` / `fullHeight` | `boolean` | `false` | `100%` on that axis |
 | `style` | `StyleDesc` | — | merged last |
@@ -38,6 +38,16 @@ import { Stack, Text, Button } from "@gpuixui/primitives";
 
 Spacing steps are the theme's: `2xs xs sm md lg xl 2xl 3xl 4xl 5xl`. There is no
 pixel `gap` prop; a call site cannot introduce a one-off spacing value.
+
+### Wrapping
+
+`wrap` packs its lines at the **cross-axis start**. The runtime's default —
+CSS's `align-content: stretch` — spreads a bounded row's leftover height between
+its lines, so a second line floated to the middle of the box (measured:
+a 200 px row of 30 px children put the second line at `103` instead of `36`).
+`stackStyle` sets `alignContent: "flex-start"` whenever `wrap` is on; an
+auto-height row was already exact and is unchanged. If a caller genuinely wants
+stretched line boxes, `style={{ alignContent: "stretch" }}` merges last.
 
 ## Keyboard
 
@@ -64,9 +74,14 @@ flex strings in one table.
 ## Verification
 
 - `src/core/layout.test.ts` — every direction, align, justify and gap resolves
-  to the expected `StyleDesc`.
+  to the expected `StyleDesc`; a wrapping stack also resolves
+  `alignContent: "flex-start"`.
 - `runtime/layout.runtime.test.tsx` — row and column gaps equal the theme step
   in a real frame.
+- `runtime/stack-wrap.runtime.test.tsx` — a bounded wrapping row puts its second
+  line directly under the first (the old direction floated it to `y 103`), an
+  auto-height row keeps its line offsets, and a wrapping column packs at the
+  start.
 
 ```sh
 nub run --filter @gpuixui/primitives test

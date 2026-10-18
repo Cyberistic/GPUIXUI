@@ -51,6 +51,7 @@ describe("stackStyle", () => {
     const plain = stackStyle({ direction: "row" }, testTheme);
     expect(plain.flexGrow).toBeUndefined();
     expect(plain.width).toBeUndefined();
+    expect(plain.alignContent).toBeUndefined();
     const asked = stackStyle(
       {
         direction: "row",
@@ -65,6 +66,10 @@ describe("stackStyle", () => {
     expect(asked.width).toBe("100%");
     expect(asked.height).toBe("100%");
     expect(asked.flexWrap).toBe("wrap");
+    // The bug guarded (plan 387): a bounded wrapping row inherited the
+    // runtime's `align-content: stretch`, which floated its second line to the
+    // middle of the box. A wrapped stack packs its lines at the start.
+    expect(asked.alignContent).toBe("flex-start");
   });
 });
 

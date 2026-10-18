@@ -82,7 +82,14 @@ export const stackStyle = (
   if (spec.align !== undefined) style.alignItems = alignToFlex[spec.align];
   if (spec.justify !== undefined)
     style.justifyContent = justifyToFlex[spec.justify];
-  if (spec.wrap === true) style.flexWrap = "wrap";
+  if (spec.wrap === true) {
+    style.flexWrap = "wrap";
+    // The runtime inherits CSS's `align-content: stretch`, which spreads a
+    // bounded row's leftover cross-axis space between its lines (measured,
+    // plan 387). A wrapped stack packs its lines at the start; a caller can
+    // still override this through `style`.
+    style.alignContent = "flex-start";
+  }
   if (spec.grow === true) style.flexGrow = 1;
   if (spec.fullWidth === true) style.width = "100%";
   if (spec.fullHeight === true) style.height = "100%";
