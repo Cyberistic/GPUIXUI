@@ -229,12 +229,14 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **47 files, 679 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **48 files, 682 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), a guard that every documented `theme.…` path and
-`@gpuixui/tokens` import resolves on the shipped package (plan `333`), and one
-that every public component is rendered by at least one example (plan `374`).
+`@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
+that every public component is rendered by at least one example (plan `374`),
+and one that fails by file name when a runtime suite has no header or is named
+like a scratch probe (plan `390`).
 
 **What the element-tree suites cannot reach:** a component *function* is a React
 hook holder, so a test cannot call `Button(props)` — it asserts on the render
@@ -249,8 +251,12 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **33 files, 619 tests, all passing** —
-including a theme switch on a mounted tree, using the shipped `lightTheme` /
+runtime-proven too. Measured 2026-10-18 on this host: **42 files, 655 tests, 544
+passing / 111 failing** — the failures are the focus-ring and absolute-geometry
+delta of the locally built `main`-derived binding, recorded with evidence in
+`TODO.md` (the full-live-suite row) and plan `529`; the same suite was green on
+the day's 21:25 baseline, and no assertion has been re-baselined on the newer
+artifact. The contracts it proves include a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
@@ -267,6 +273,8 @@ bottom edge — opened above the trigger instead of over it, a long list capped 
 scrolled with the keyboard highlight kept in view (plans 062, 066, 068, 069), a
 slider drag measured outside the track with the non-primary buttons refused
 (plan 063),
+a select option selected by clicking its **painted label**, with focus returning
+to the trigger and a disabled option refusing the same gesture (plan 390),
 an `autoFocus` field's ring painted from mount and cleared on blur (plan
 064), a checkbox group's row hit area, derived select-all state and skipped
 disabled tab stop (plan 065), every checkbox/radio group row's hover and press

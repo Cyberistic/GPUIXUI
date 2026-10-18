@@ -584,7 +584,12 @@ retired once both branches are one
       restoring the form), `autoFocus` was
       measured not to survive a later mount and removed, and the `TestRenderer`
       adapter moved to `@gpuixui/primitives/testing` so both suites share one
-      (plan `327`)
+      (plan `327`). **Re-run 2026-10-18 23:57 on the 23:35 artifact: 5/6** — the
+      failing case is the consent row's reachability check, and the cause is the
+      artifact, not the app: the scroller's own painted bounds move with its
+      scroll offset (measured: region `y 91 → -18` for an offset of `-109`) while
+      the row lands at `607..643`, exactly the region's pre-scroll bottom. Do not
+      re-baseline the assertion; re-run on plan `529`'s published-tag build.
 `[x]` `packages/primitives`: **`Progress`'s indeterminate fill ignored `tone`,
       and a determinate bar ran the step timer forever** — measured: with
       `tone="success"` the segment painted the brand role (`#000007`, not
