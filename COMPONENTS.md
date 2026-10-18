@@ -20,8 +20,10 @@ surface, not our status.
 
 **Measured native evidence** is separate, and it is what a `done` row needs. It
 comes from the native smoke suite in this repo, run **on this host** against the
-pinned `@gpuix/native@0.10.0` built from the pinned source with
-`gpui_macos/runtime_shaders` (ADR 0003). Reproduce it with:
+pinned `@gpuix/native@0.10.0` built from the **release tag** (`gpuix 9fcd6288`,
+`zed 81c99f81`) with `gpui_macos/runtime_shaders` (ADR 0003 as amended by plan
+`529`). The suite fails before running if the installed binary carries a
+capability that release does not have. Reproduce it with:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js

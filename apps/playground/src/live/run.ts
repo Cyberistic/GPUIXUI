@@ -10,15 +10,24 @@
  * It exits `2` — never `1` — when the host cannot open a window (CI, a locked
  * session, a missing binding): no window means no evidence.
  */
-import { Clock, Console, Effect, FileSystem, Match, Option } from "effect";
+import {
+  Clock,
+  Console,
+  Effect,
+  FileSystem,
+  Match,
+  Option,
+  Path,
+} from "effect";
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
-import { NodeFileSystem } from "@effect/platform-node";
+import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Report, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
 import { createElement, Fragment } from "react";
+import { hostLabel, provenanceIssue } from "../binding.js";
 import { palettes } from "../palettes.js";
 import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
 import {
@@ -55,8 +64,8 @@ class NoWindowError extends Schema.TaggedError<NoWindowError>()(
   },
 ) {}
 
-const hostLabel = (): string =>
-  `gpuix live window ${process.platform}-${process.arch} @gpuix/native 0.10.0`;
+const hostLabelOf = (): string =>
+  hostLabel("live window", process.platform, process.arch);
 
 const unavailable = (error: NoWindowError): string =>
   Arr.join(
@@ -97,10 +106,18 @@ export const program = (
 ): Effect.Effect<
   ExitCode,
   NoWindowError | PlatformError.PlatformError,
-  FileSystem.FileSystem
+  FileSystem.FileSystem | Path.Path
 > =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
+    const issue = yield* provenanceIssue(process.platform, process.arch);
+    if (Option.isSome(issue)) {
+      yield* Console.error(issue.value);
+      yield* Console.error(
+        "rebuild the binding from the 0.10.0 tag (plan 529 §3) — the live suite cannot claim verified 0.10.0 on a newer source",
+      );
+      return EXIT.failed;
+    }
     // The app-level window key handler, exactly as `src/smoke/run.ts` wires it:
     // GPUix delivers window keys only through `render({ onKeyDown })`, so the
     // runner is the "app" that forwards to whatever the mounted view registered
@@ -196,7 +213,7 @@ export const program = (
     const report = yield* Smoke.runAsyncScenarios(
       host,
       selected,
-      { host: hostLabel(), startedAt },
+      { host: hostLabelOf(), startedAt },
       mount,
     );
 
@@ -280,6 +297,7 @@ const main = (): Effect.Effect<void> =>
 
     const code = yield* program(parsed.flags, selection.selected).pipe(
       Effect.provide(NodeFileSystem.layer),
+      Effect.provide(NodePath.layer),
       Effect.matchEffect({
         onFailure: (error) =>
           Effect.as(

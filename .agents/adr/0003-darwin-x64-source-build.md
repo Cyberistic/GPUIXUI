@@ -80,3 +80,28 @@ runtime compiler (`MTLDevice.newLibraryWithSource`), which ships with macOS.
 - *Target 0.5.1*: rejected in ADR 0002 (no focus events).
 - *Ship the wasm browser build as evidence*: rejected — a browser canvas is not
   the native runtime.
+
+## Amendment 1 — the source was not the release (2026-10-18, plan `529`)
+
+Decision 2 and the "same source revision" provenance sentence above were
+**wrong**. The scratch tree was a copy of `references/gpuix` at its **HEAD**
+(`515df19`, `main`), not the published release, and it used that clone's zed
+submodule (`2565b8a3`) rather than the release's (`81c99f81`).
+
+Evidence (plan `529` §1):
+
+- the release tag is `@gpuix/native@0.10.0` = `9fcd6288…`; the zed submodule it
+  pins is `81c99f81…`;
+- `packages/native/src` differs between the two commits by **12 files, 3,330
+  lines** (bounds tracking, hit testing, frame pacing, event payload, style);
+- the published `darwin-arm64` 0.10.0 binary contains none of
+  `focusVisible`, `keyboardFocusDim`, `outlineWidth`, `registerFont`,
+  `setFrameWakeCallback`, `scrollbarColor`, `borderStyle`, `keystrokeId`,
+  `scrollX`/`scrollY`; the local x64 artifact contains all of them.
+
+Decision 2 is amended: **the artifact is built from the release tag
+`9fcd6288…` with zed `81c99f81…`**, and the suite pins that provenance, prints
+it in every report and refuses a binary that carries a capability the release
+does not have (plan `529` §3.6). A `verified 0.10.0` verdict may only cite the
+re-baselined artifact. The shader feature remains the only difference from the
+published package.

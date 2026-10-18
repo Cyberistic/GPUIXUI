@@ -141,13 +141,22 @@ copy it to `gpuix-native.darwin-x64.node` and drop it into
 exports `napi_register_module_v1`; `napi_build::setup()` (run by the crate's
 build script) sets the linker flags, so no `@napi-rs/cli` is required.
 
-The artifact is **gitignored** (it is a build product, not source) but its
-provenance is recorded: same version (0.10.0), same source revision, same Rust
-code, only the shader-compilation feature differs. That provenance lives in ADR
-0003, the `COMPONENTS.md` preamble and the app README — the ledgers a status row
-is read from — rather than in the report's `host` string (which names the
-version, as before); a machine-readable marker would cost more machinery than the
-one label is worth.
+The artifact is **gitignored** (it is a build product, not source). Its
+provenance is recorded in ADR 0003, the `COMPONENTS.md` preamble and the app
+README — the ledgers a status row is read from — rather than in the report's
+`host` string.
+
+> **Corrected by plan `529` (2026-10-18).** The original text claimed the build
+> was "same version, same source revision, same Rust code as the published
+> package; only the shader-compilation feature differs". That was wrong: the
+> scratch tree was copied from `references/gpuix` **HEAD** (`515df19`, main),
+> not the `@gpuix/native@0.10.0` release tag (`9fcd6288`), and it compiled the
+> main zed pin (`2565b8a3`) rather than the release's (`81c99f81`).
+> `packages/native/src` differs by 12 files / 3,330 lines, and the published
+> 0.10.0 binary lacks `focusVisible`, `outlineWidth`, `registerFont` and
+> `setFrameWakeCallback`, which the artifact contains. Plan `529` rebuilds from
+> the release tag, re-baselines the suite, and adds a binary fingerprint guard.
+> **A `verified 0.10.0` verdict may only be cited from the plan-529 artifact.**
 
 ## 4. Measured facts (this host, `@gpuix/native@0.10.0` from source)
 
@@ -161,9 +170,10 @@ reproducible with `apps/playground/dist/smoke/run.js` after the build in §5.
   **9 m 59 s**; `libgpuix_native.dylib`, 25.7 MB, `Mach-O x86_64`.
 - `import("@gpuix/native")` loads and exports `TestGpuixRenderer`,
   `hasTestGpuixRenderer`.
-- Binding provenance: same version (0.10.0), same source revision, same Rust
-  code as the published package; **only** the shader-compilation feature
-  differs (runtime Metal compilation instead of a build-time `metallib`).
+- Binding provenance: **wrong, see plan `529`** — this artifact was built from
+  the `references/gpuix` clone at `515df19` (main) with zed `2565b8a3`, not the
+  published release (`9fcd6288` / zed `81c99f81`). The numbers below were
+  measured on it; plan `529` re-baselines them on the release source.
 
 **Suite**
 

@@ -5,6 +5,7 @@
  * `Smoke.runScenarios`, `Report.formatReport`, `Runtime.detectRuntime` and
  * `Native.createHost`.
  */
+export * as Binding from "./binding.js";
 export * as Native from "./native.js";
 export * as Report from "./report.js";
 export * as Runtime from "./runtime.js";

@@ -28,6 +28,7 @@ import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
 import { createElement, Fragment, type ReactNode } from "react";
+import { hostLabel, provenanceIssue } from "../binding.js";
 import type { PlaygroundScenario } from "../types.js";
 import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
@@ -168,8 +169,8 @@ class NativeLoadError extends Schema.TaggedError<NativeLoadError>()(
   },
 ) {}
 
-const hostLabel = (): string =>
-  `gpuix TestRenderer ${process.platform}-${process.arch} @gpuix/native 0.10.0`;
+const hostLabelOf = (): string =>
+  hostLabel("TestRenderer", process.platform, process.arch);
 
 const viewOf = (
   views: ReadonlyArray<PlaygroundScenario>,
@@ -247,6 +248,15 @@ export const program = (
       },
     );
 
+    const issue = yield* provenanceIssue(process.platform, process.arch);
+    if (Option.isSome(issue)) {
+      yield* Console.error(issue.value);
+      yield* Console.error(
+        "rebuild the binding from the 0.10.0 tag (plan 529 §3) — the suite cannot claim verified 0.10.0 on a newer source",
+      );
+      return EXIT.failed;
+    }
+
     const testing = yield* Effect.tryPromise({
       try: () => import("@gpuix/react/testing"),
       catch: (cause) =>
@@ -294,7 +304,7 @@ export const program = (
     const report = yield* Smoke.runScenarios(
       host,
       selected,
-      { host: hostLabel(), startedAt },
+      { host: hostLabelOf(), startedAt },
       mount(flags, root, path, registerWindowKey),
     );
 
