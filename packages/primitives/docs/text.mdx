@@ -55,13 +55,19 @@ a font size.
 | ---- | ---- | ------- | ----------- |
 | `role` | `TextRole` | `"body"` | size, leading, weight and family |
 | `tone` | `TextTone` | `"default"` | colour role |
-| `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment |
+| `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment; `"end"` is sent to the runtime as its `right` (plan `365`) |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | hard-clip after N lines (a value below 1 is ignored) |
 | `selectable` | `boolean` | `false` | `userSelect: "text"`; off for chrome, on for content |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |
+
+`align="end"` means the end of a **left-to-right** box: GPUix 0.10.0 has no text
+direction, and its `textAlign` implements `center`, `right` and `left`/`start`
+only. The resolver therefore sends `"right"` for the public `"end"`; passed
+through verbatim it painted as `start` (measured, plan `365`). There is no RTL
+claim to make.
 
 ## Keyboard
 
@@ -128,6 +134,9 @@ hard-coded pixel value.
 - `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,
   both directions of the shared-layout regression, and the full string in the
   accessibility tree (plan `082`).
+- `runtime/text-align.runtime.test.tsx` — `align="end"` is byte-identical to a
+  manual `textAlign: "right"` frame and different from `align="start"` (plan
+  `365`).
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and each role's measured semantics match the
   table above: `h1`/`h2` are `Heading` nodes with level 1/2 and their text as

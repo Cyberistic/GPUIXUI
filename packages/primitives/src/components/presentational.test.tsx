@@ -268,6 +268,21 @@ describe("type", () => {
     ).toStrictEqual(Option.none());
   });
 
+  it("sends an end alignment to the runtime as a right alignment", () => {
+    // The bug guarded (plan 365): the runtime's `text_align` match has no
+    // `end`, so the documented value painted like `start`.
+    expect(
+      expectSome(
+        stringIn(renderText({ align: "end" }, testTheme), "textAlign"),
+      ),
+    ).toBe("right");
+    expect(
+      expectSome(
+        stringIn(renderText({ align: "start" }, testTheme), "textAlign"),
+      ),
+    ).toBe("start");
+  });
+
   it("clamps after a line count and truncates on one line", () => {
     const clamped = renderText({ clamp: 3 }, testTheme);
     expect(numberIn(clamped, "maxHeight")).toStrictEqual(

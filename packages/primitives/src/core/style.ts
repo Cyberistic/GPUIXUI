@@ -305,7 +305,13 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     color: toneColor(theme, spec.tone),
     userSelect: spec.selectable === true ? "text" : "none",
   };
-  if (spec.align !== undefined) style.textAlign = spec.align;
+  // The runtime maps `center`, `right` and `left`/`start`; `end` was in its
+  // style type but implemented nowhere, so our `end` went nowhere at all
+  // (measured, plan 365). There is no text direction in `StyleDesc`, so the end
+  // of a left-to-right box is `right`.
+  if (spec.align !== undefined) {
+    style.textAlign = spec.align === "end" ? "right" : spec.align;
+  }
   if (spec.truncate === true) {
     style.whiteSpace = "nowrap";
     style.textOverflow = "ellipsis";

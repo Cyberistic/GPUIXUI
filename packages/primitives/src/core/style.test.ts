@@ -340,6 +340,20 @@ describe("textStyle", () => {
     expect(text({ role: "body", tone: "inherit" }).color).toBeUndefined();
   });
 
+  it("sends every public alignment in the runtime's own vocabulary", () => {
+    // The bug guarded (plan 365): `end` was passed through verbatim, and the
+    // runtime maps only center/right/left/start — so it painted as `start`.
+    expect(
+      text({ role: "body", tone: "default", align: "start" }).textAlign,
+    ).toBe("start");
+    expect(
+      text({ role: "body", tone: "default", align: "center" }).textAlign,
+    ).toBe("center");
+    expect(
+      text({ role: "body", tone: "default", align: "end" }).textAlign,
+    ).toBe("right");
+  });
+
   it("truncates on one line, and clamps on several", () => {
     const truncated = text({ role: "body", tone: "default", truncate: true });
     expect(truncated.whiteSpace).toBe("nowrap");
