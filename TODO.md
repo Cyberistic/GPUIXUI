@@ -469,7 +469,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–496)
+## Docs site workstream (plans 410–497)
 
 `[x]` `[██████████]` 98/98
 
@@ -477,7 +477,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       — Accordions, Number fields, OTP fields, Ratings, Tag inputs and Toggles
       render on the real wasm renderer (36 scenes total), and a page or record
       can no longer deny a live scene it declares: the widened guard caught the
-      shipped `search-input` denial before it was fixed; six two-direction
+      shipped `search-input` denial before it was fixed; four two-direction
       proofs in plan 497 §4
 
 `[x]` **Skip navigation and the docs focus ring (plan 496)** — every page now
