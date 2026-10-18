@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 123/123
+`[x]` `[██████████]` 124/124
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -878,6 +878,14 @@ retired once both branches are one
       normalised range, so the up button is live at the range's minimum and the
       down button at its maximum; one element-tree case and one runtime click
       case fail in the old direction (plan `378`).
+`[x]` `packages/primitives`: **a left-side select list was capped by the room on
+      its right** — measured (2026-10-18): a `side="left"` list on a trigger at
+      `x 1044..1112` opened at `816` with **228 px**, exactly the space right of
+      the trigger's left edge, although 1036 px were free on the left; the label
+      truncated inside a third of the space its side offered. The cap now comes
+      from `availableWidth` on the resolved side (the same subtraction the side
+      decision uses), so left, right and above/below each measure their own
+      room. 1 core + 1 runtime case, both directions proven (plan `379`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **a slider answered a hover with nothing** — measured
       across the whole Tier 1 set: every pointer-interactive element declares

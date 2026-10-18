@@ -258,7 +258,11 @@ width (the trigger's width is its minimum) and the trigger's edges; when the
 list cannot fit on the requested side it opens on the other one, or on the
 roomier side when it fits on neither. The runtime alone would clamp it —
 measured on a trigger at `x 524..572`, a `side="right"` list painted
-`x 535..592`, over the trigger (plan `335`).
+`x 535..592`, over the trigger (plan `335`). Its **width cap follows the side it
+opens on** (plan `379`): a `side="left"` list on a right-aligned trigger used to
+paint the 228 px that happened to remain on the *right*, truncating a label with
+1036 px of left room. The cap is now the room between the window margin and the
+trigger on that side.
 
 A **`top`/`bottom` side is the same preference on the vertical axis** (plan
 `336`). At the bottom edge a `side="bottom"` list used to be squashed to the
@@ -364,7 +368,8 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   fallback, a preferred side, and the space on each side — including the height
   a left/right layer may use (plan `098`); and the horizontal rule: fits right,
   flips left, the collision margin, an exact fit, the more-room fallback and a
-  preferred side (plan `335`).
+  preferred side (plan `335`); the width room on each side — a right-aligned
+  trigger has 1036 px on its left and 160 px on its right (plan `379`).
 - `runtime/fields.runtime.test.tsx` — measured 2026-10-17: a closed Select is a
   named `ComboBox` with `expanded: false` and the placeholder as its value;
   opening flips `expanded` to `true` and paints a named `ListBox` of named
@@ -386,7 +391,10 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   row at `y 888.5`. **Side fit (335):** a `side="left"` list at the window's left
   edge opens to the right of its trigger (the failing direction painted the list
   at `x 8`, over the trigger), and a `side="right"` list at the right edge opens
-  to the left (the failing direction clamped it to `x 1272`). **Vertical side fit
+  to the left (the failing direction clamped it to `x 1272`). **Left-side width
+  (379):** a `side="left"` list on a right-aligned trigger opens left and uses the
+  left room — the failing direction capped its width to the 213 px remaining on
+  the right. **Vertical side fit
   (336):** a `side="bottom"` list at the bottom edge opens above at its full
   height (the failing direction painted `y 772..792`, 20 px, because the pin also
   fed the cap), a `side="top"` list at the top edge opens below (the failing
