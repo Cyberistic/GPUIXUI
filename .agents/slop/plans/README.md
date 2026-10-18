@@ -2423,6 +2423,20 @@ start from, `mergeDensity` resolves it first, and the style field widens to
 its row height inside it, every shipped style keeps its name-only density, and no
 colour, pair, floor or metric moves.
 
+Plan `535` closes the two claims that were still read from the wrong subject. The
+catalogue and README platform/recipe rows were built from a `PlatformStyle`'s
+override record, but `structure.radius` is partial and `structure.density` may be
+`{ preset, … }`: a style the type contract allows printed `undefined` radius
+cells and `[object Object]` for its density, and the doc guard compared its own
+wrong string with the document. The row now derives from
+`applyPlatformStyle(getTheme(mode), style)` through `platform-table.ts`, both
+documents state that a row describes the resolved theme, and
+`platform-table.test.ts` fails against the old record. The same audit found the
+macOS focus-ring rationale quoting 2.50:1 for a wash that measures 2.836:1;
+`platform-claims.test.ts` derives every current ratio the three platform files
+quote, so the next palette edit takes them with it. No shipped row, colour,
+pair, floor or metric moves.
+
 ## How to use a plan
 
 1. Read it fully before starting. Do not skim the STOP conditions.
