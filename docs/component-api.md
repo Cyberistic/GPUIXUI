@@ -64,8 +64,8 @@ history. No landed component currently deviates.
   both modes: it changes nothing and calls no callback (plan `517`). A component
   whose value is not a selection names its pair after the state it owns — for
   example `onOpenChange`, `onQueryChange`, `onPageChange`, `onStepChange` — and
-  the same no-op rule applies. A local guard must never weaken this rule; the
-  hook is the one place that enforces it.
+  the same no-op rule applies. A component may guard a no-op earlier for its own
+  logic; the hook is still the one place that enforces the rule.
 - The resolution lives in exactly one hook — `useControllableState` from
   `@gpuix/react/floating` (published in 0.10.0) or this package's
   `internal/controllable.ts` wrapper. Do not write a second implementation.
