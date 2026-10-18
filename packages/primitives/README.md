@@ -147,6 +147,17 @@ value, not the host event, and the accepted cross-package contract names one
 value callback (`docs/component-api.md` §2, plan `088`). `src/callback-names.test.ts`
 fails by file and line if a component, page or example reintroduces it.
 
+### Controlled and uncontrolled values
+
+`value` / `defaultValue` / `onValueChange(value)` is the one value contract. A
+part is **controlled on the render where `value` is supplied** and uncontrolled
+on a render where it is not — the decision is not frozen at mount, so
+`value={loaded?.name}` works when `loaded` arrives later (plan `324`). `internal`
+is the uncontrolled draft and survives the switch; a controlled part never keeps
+a private copy of an interaction. Switching modes in a mounted tree is
+deterministic, but a control that flips by accident is usually a caller
+mistake.
+
 ### What GPUix does not provide, and what this package does instead
 
 | Capability | GPUix 0.10.0 | Here |

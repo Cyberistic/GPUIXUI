@@ -25,10 +25,11 @@ export interface ValueState<Value> {
 }
 
 /**
- * Build the state for a control.
+ * Build the initial state for a control.
  *
  * A supplied `value` (even `Some(undefined)` is impossible — `Option` cannot
- * hold a hole) makes the control controlled and its internal copy irrelevant.
+ * hold a hole) makes the control controlled on its first render and its internal
+ * copy irrelevant. Later renders go through `withValue`.
  */
 export const initValueState = <Value>(
   value: Option.Option<Value>,
@@ -66,17 +67,26 @@ export const setValue = <Value>(
 /**
  * Re-derive the rendered value after a parent re-render.
  *
- * A controlled control follows its `value`; an uncontrolled one keeps whatever
- * it last produced, so a re-render never resets user input.
+ * Controlled-ness is a property of **this render**: a supplied `value` makes the
+ * control controlled and it follows the parent, while an absent one leaves it
+ * uncontrolled on its own draft. The decision is not frozen at mount, so a
+ * parent that loads its value later (`value={data?.name}`) is not ignored.
+ * `internal` is the uncontrolled draft and survives the switch; a controlled
+ * control keeps no private copy of an interaction.
  */
 export const withValue = <Value>(
   state: ValueState<Value>,
   value: Option.Option<Value>,
 ): ValueState<Value> =>
-  state.mode === "controlled"
-    ? {
-        mode: "controlled",
-        current: Option.getOrElse(value, () => state.internal),
-        internal: state.internal,
-      }
-    : state;
+  Option.match(value, {
+    onNone: () => ({
+      mode: "uncontrolled",
+      current: state.internal,
+      internal: state.internal,
+    }),
+    onSome: (current) => ({
+      mode: "controlled",
+      current,
+      internal: state.internal,
+    }),
+  });

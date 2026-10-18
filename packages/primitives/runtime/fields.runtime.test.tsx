@@ -100,6 +100,39 @@ it("edits an Input through the runtime's own text handling", async () => {
   expect(lastValue(field.values)).toBe("hello");
 });
 
+it("takes a value supplied after mount", async () => {
+  // The bug guarded (plan 324): the controlled decision was frozen at mount, so
+  // `<Input value={data?.name}>` ignored the value once the load completed. The
+  // observation is the native field's own edit: it reports the parent's text
+  // plus the typed character, not an empty draft plus it.
+  const runtime = await openWindow();
+  const field = recorder();
+  runtime.render(
+    <Surface>
+      <Input
+        testId="field"
+        label="Name"
+        autoFocus
+        defaultValue=""
+        onValueChange={field.onValueChange}
+      />
+    </Surface>,
+  );
+  runtime.render(
+    <Surface>
+      <Input
+        testId="field"
+        label="Name"
+        autoFocus
+        value="loaded"
+        onValueChange={field.onValueChange}
+      />
+    </Surface>,
+  );
+  runtime.type("x");
+  expect(lastValue(field.values)).toBe("loadedx");
+});
+
 /** Whether a painted element carries the focus ring. */
 const ringed = (runtime: Runtime, testId: string): boolean =>
   Option.exists(

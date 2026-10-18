@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 72/72
+`[x]` `[██████████]` 73/73
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -543,6 +543,14 @@ retired once both branches are one
       package-wide guard (`src/components/style-order.test.tsx`) walks the
       element tree of all 29 `render*` functions that take `style` and fails by
       property name, in two independent directions (plan `097`).
+`[x]` `packages/primitives`: **a value supplied after mount was ignored** — the
+      shared controlled rule froze its mode at mount, so a parent that loaded
+      its record later (`value={data?.name}`) never saw it: measured, an
+      `<Input value="loaded">` typed `"x"` instead of `"loadedx"`, and a late
+      `checked` stayed `"unchecked"`. The mode is now derived from the value
+      present on **every render**; all 14 `useControlState` parts share the
+      fix. 3 transition tests + 2 runtime tests, both directions proven
+      (plan `324`)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

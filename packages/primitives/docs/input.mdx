@@ -7,7 +7,9 @@ description: A single-line text field, controlled or uncontrolled.
 native element holds the text; `onValueChange` reports every edit and `value` pushes an
 external value back in. The controlled/uncontrolled decision is
 `core/state.ts`'s, so an input and a checkbox cannot disagree about which value
-wins.
+wins. It is decided on **every render**: a `value` supplied now wins, and an
+absent one leaves the field on its own draft — so a form that loads its record
+after mount does not need to remount the field.
 
 ## Usage
 
@@ -30,8 +32,8 @@ const email = "Contact email";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `string` | — | controlled text; omit to let the field keep its own draft |
-| `defaultValue` | `string` | `""` | initial text when uncontrolled |
+| `value` | `string` | — | controlled text; omit to let the field keep its own draft. A value supplied after mount takes over, so `value={loaded?.name}` works when the data arrives |
+| `defaultValue` | `string` | `""` | initial text when uncontrolled; it is also the draft a controlled field falls back to if `value` is removed |
 | `onValueChange` | `(value: string) => void` | none | called after each edit that changed the value |
 | `onSubmit` | `(event) => void` | none | Enter; the raw runtime event |
 | `placeholder` | `string` | none | empty-state text |

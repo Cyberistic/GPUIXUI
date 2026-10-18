@@ -10,6 +10,10 @@ import { initValueState, setValue, withValue } from "./state.js";
  * wins, and the field appears to revert what the user just typed. `withValue`
  * is the guard — an uncontrolled control must survive a parent re-render, and a
  * controlled one must follow the parent.
+ *
+ * Plan 324 added the other half: the mode is derived from **this render's**
+ * `value`, so a parent that loads its value after mount (`value={data?.name}`)
+ * takes over instead of being ignored forever.
  */
 
 describe("initValueState", () => {
@@ -61,13 +65,33 @@ describe("withValue", () => {
     expect(next.current).toBe("second");
   });
 
-  it("never reverts an uncontrolled control's own input on a re-render", () => {
+  it("keeps an uncontrolled control's draft while no value is supplied", () => {
     const { state } = setValue(
       initValueState<string>(Option.none(), ""),
       "typed",
     );
-    const next = withValue(state, Option.some("ignored"));
+    const next = withValue(state, Option.none());
     expect(next.mode).toBe("uncontrolled");
     expect(next.current).toBe("typed");
+  });
+
+  it("takes over when a value is supplied after mount", () => {
+    // The bug guarded (plan 324): the mode was frozen at mount, so a parent that
+    // loaded its value later (`value={data?.name}`) was ignored forever.
+    const { state } = setValue(
+      initValueState<string>(Option.none(), ""),
+      "typed",
+    );
+    const next = withValue(state, Option.some("loaded"));
+    expect(next.mode).toBe("controlled");
+    expect(next.current).toBe("loaded");
+    expect(next.internal).toBe("typed");
+  });
+
+  it("falls back to the uncontrolled draft when the value is removed", () => {
+    const state = initValueState(Option.some("parent"), "default");
+    const next = withValue(state, Option.none());
+    expect(next.mode).toBe("uncontrolled");
+    expect(next.current).toBe("default");
   });
 });

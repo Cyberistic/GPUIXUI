@@ -535,6 +535,25 @@ it("toggles a Checkbox on a click, and announces the state", async () => {
   expect(announced(runtime, "Enable")).toBe("unchecked");
 });
 
+it("takes a checked supplied after mount", async () => {
+  // The bug guarded (plan 324): the shared controlled rule froze the mode at
+  // mount, so a checkbox that became controlled later kept announcing
+  // "unchecked". The observable is the accessibility value, not the prop.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Checkbox testId="cb" label="Enable" />
+    </Surface>,
+  );
+  expect(announced(runtime, "Enable")).toBe("unchecked");
+  runtime.render(
+    <Surface>
+      <Checkbox testId="cb" label="Enable" checked />
+    </Surface>,
+  );
+  expect(announced(runtime, "Enable")).toBe("checked");
+});
+
 it("does not toggle a standalone Checkbox from a Label beside it", async () => {
   // Plan 087's docs claim, measured: the runtime has no `htmlFor` or
   // `aria-labelledby` and a sibling `<text>` is not part of the control, so the
