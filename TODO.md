@@ -676,6 +676,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source. The Message Scroller behaviour port (MIT) needs its own `provenance.md` row (plan 206 credits it on the docs page) | licensing | pending |
 | `LICENSES/`: credit shadcn/ui AI Elements `chat` + `message` (MIT) for plan 207's behaviour port; both docs pages already credit it in prose | licensing | pending |
 | `@gpuixui/tw`: `classesToStyle` returns `shadow-sm/md/lg/xl` as a flat `BoxShadow`, so its `color` overwrites the element's text colour (`classesToStyle("text-popover-foreground shadow-xl", light).style.color` is `#191D2529`, the shadow, not `#191D25`). Found while evaluating the plan-524 Dialog/Popover recipes; the component integration is blocked until `shadow-*` wraps the value in `boxShadow` (plan 524 is owned by the tw workstream) | tw (plan 524) | pending — measured 2026-10-18 in this worktree |
+| A `bell` icon (and a few notification marks) for the notification centre's trigger; `ICON_NAMES` has no `bell`, so v1 uses a text label plus the count badge and accepts a custom child | icons | pending — plan 568 records the gap; no icon was copied into `packages/components` |
 
 ## Phase D — data and workspace components
 
@@ -696,6 +697,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
     delivers the decoded value, messages carry the step that produced them;
     controlled/uncontrolled `step`, one `role="alert"` summary, 12 native tests,
     example, docs page and inventory row; five mutation proofs (behaviour 595)
+  - [x] Notification centre — plan 568: the unclaimed `packages/components` task
+    from the playground's measured contract (plan 381). `NotificationCentre` +
+    Trigger/Content/Header/Title/MarkAll/Clear/List: the unread badge is derived
+    from the caller's read flags, grouping is one heading per contiguous run in
+    the caller's newest-first order, a press or `Enter` requests one read and
+    keeps the panel open, opening marks nothing read, the empty state is a real
+    `EmptyState`, Escape closes and returns focus while an outside press closes
+    without stealing it, and arrows move the active row over notifications only.
+    12 native tests + 5 pure model tests, four mutation proofs; example, docs
+    page, `COMPONENTS.md`, the §8 parts table and the inventory synced. v1
+    renders every row in a plain viewport (the `<virtual-list>` host needs
+    app-side windowing) and uses a labelled text trigger until `@gpuixui/icons`
+    gains a bell
 `[ ]` Document every capability GPUix does not provide, with evidence
 
 ## Phase F — integration and polish
