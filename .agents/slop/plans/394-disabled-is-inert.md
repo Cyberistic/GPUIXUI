@@ -5,7 +5,7 @@
 | Phase | F (integration and polish — interaction-state consistency) |
 | Owner | components workstream |
 | Depends on | `110`, `111`, `113`, `116`, `200`, `201`, `305`, `332`, `334`, `388`, `393` |
-| Status | done — five measured leaks fixed; 6 new native cases (Button 13, InlineEdit 16, Collapsible 13, SearchInput 10, List 44, behaviour 608); five mutation proofs (one fix reverted at a time fails exactly its case) |
+| Status | done — six measured leaks fixed; 7 new native cases (Button 13, InlineEdit 16, Collapsible 13, SearchInput 11, List 44, behaviour 609); six mutation proofs (one fix reverted at a time fails exactly its case). §1 row 4 was extended after the first pass, when the Escape/Enter path was still live with the clear control hidden |
 | Number | First free number in the `300–399` block (last landed: `393`) |
 
 This plan is self-contained. A weaker executor can run every step without
@@ -29,7 +29,7 @@ Five measured holes, all reproduced on `HEAD` `9f1097b` with one probe suite
 | 1 | `internal/button.tsx` `Button` / `IconButton` | keeps the variant's `hover` and `active` fills, so it lights up under the pointer although it cannot be pressed | `style.hover` defined on the disabled button (and on the enabled one) |
 | 2 | `inline-edit.tsx` display | paints the focus ring when `disabled` **and** `autoFocus` are both set, and keeps `hover: accent` | `style.boxShadow` defined; `style.hover` defined |
 | 3 | `collapsible.tsx` `CollapsibleTrigger` | has no `disabled` prop at all: a caller's `disabled` falls through to the host div, stays in the tab order and still toggles | `customProps.tabIndex: 0`, `onOpenChange` called once, `style.hover` defined |
-| 4 | `search-input.tsx` clear control | still renders while the field is disabled, so a press clears a field the user cannot type in | `findByTestId("search-clear")` returned an element |
+| 4 | `search-input.tsx` clear control and key path | still renders while the field is disabled, so a press clears a field the user cannot type in; with the control hidden, Escape still ran `clear` and Enter still ran `onSubmit` | `findByTestId("search-clear")` returned an element; a disabled field reported `clear: 1, submit: 1` |
 | 5 | `list.tsx` `ListItem` | a disabled row in a selectable/activatable list still gets `cursor: pointer` and the hover/press fills | `style.cursor: "pointer"`, `style.hover` defined |
 
 Parts that already do this correctly — use them as the reference shape, do not
@@ -142,6 +142,20 @@ The clear control becomes conditional on the field being usable:
 (around line 150). This mirrors `TimePickerClear` and `HotkeyRecorder`'s clear
 control. An empty or disabled field shows no clear affordance.
 
+Hiding the control is not enough, because the input's own key path still ran:
+guard `clear` and the submit handler as well:
+
+```ts
+const clear = (): void => {
+  if (disabled || value === "") return;
+  // …
+};
+
+onSubmit={() => {
+  if (!disabled) onSubmit?.(value);
+}}
+```
+
 ### 3.5 `packages/components/src/list.tsx`
 
 In `ListItem`'s style, replace the `focusable` spread (around line 778) with one
@@ -176,6 +190,7 @@ Add these cases; keep the suite's two-space `it(` convention so
 | `src/behaviour/collapsible.test.tsx` | "a disabled trigger is inert" | renders a disabled trigger inside `Collapsible` with an `onOpenChange` spy; asserts `tabIndex -1`, a real centre press and Enter/Space call nothing, a caller `onKeyDown` still runs once, opacity `0.5`, and `hover` undefined | the missing prop (it currently falls through and toggles) |
 | `src/behaviour/collapsible.test.tsx` | "a disabled trigger never takes focus" | renders disabled + `autoFocus`; asserts `focusedTestId` is `None` and no ring is painted | the unconditional `autoFocus={autoFocus}` |
 | `src/behaviour/search-input.test.tsx` | "a disabled field offers no clear control" | renders `value="draft" disabled`; asserts `findByTestId("search-clear")` is `undefined`; then the same tree enabled has one | the press that clears an unusable field |
+| `src/behaviour/search-input.test.tsx` | "ignores Escape and Enter while the field is disabled" | focuses a disabled field with a value, sends `escape` and `enter`, and asserts `onClear`/`onSubmit` never ran | the key path that survived hiding the control |
 | `src/behaviour/list.test.tsx` | "a disabled row shows no pointer affordance" | single-select list with an enabled and a disabled row; asserts the disabled row's `style.cursor` is `"not-allowed"` and `style.hover`/`style.active` are `undefined`, while the enabled row keeps `cursor: "pointer"` and a hover fill | the `focusable`-only gate |
 
 Expected new totals:
@@ -185,9 +200,9 @@ Expected new totals:
 | `button.test.tsx` | 12 | 13 |
 | `inline-edit.test.tsx` | 15 | 16 |
 | `collapsible.test.tsx` | 11 | 13 |
-| `search-input.test.tsx` | 9 | 10 |
+| `search-input.test.tsx` | 9 | 11 |
 | `list.test.tsx` | 43 | 44 |
-| behaviour, whole package | 602 | 608 |
+| behaviour, whole package | 602 | 609 |
 
 Update every stated count (COMPONENTS.md rows and each docs page's Verification
 line) — `inventory.test.ts` fails otherwise.
@@ -233,7 +248,7 @@ Run from `packages/components` unless stated:
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/button.test.tsx src/behaviour/inline-edit.test.tsx src/behaviour/collapsible.test.tsx src/behaviour/search-input.test.tsx src/behaviour/list.test.tsx
 ```
 
-Expected: 5 files, **13 + 16 + 13 + 10 + 44 = 96** tests passing.
+Expected: 5 files, **13 + 16 + 13 + 11 + 44 = 97** tests passing.
 
 ```sh
 nub run --filter @gpuixui/components test
@@ -245,7 +260,7 @@ Expected: 39 files, **383** unit tests passing (no unit test changes).
 nub run --filter @gpuixui/components test:behaviour
 ```
 
-Expected: 49 files, **608** behaviour tests passing.
+Expected: 49 files, **609** behaviour tests passing.
 
 ```sh
 nub run --filter @gpuixui/components check-types
@@ -265,8 +280,8 @@ prove it by hand and record the result in the commit message:
 
 1. With the new tests in place and the source **unfixed**, run the five files
    above with the probe-equivalent assertions. Expected: exactly the new cases
-   fail (5–6 failures), the pre-existing cases still pass.
-2. Apply §3. With the tests unchanged, run them again. Expected: all 96 pass.
+   fail (6–7 failures), the pre-existing cases still pass.
+2. Apply §3. With the tests unchanged, run them again. Expected: all 97 pass.
 3. Revert one fix at a time (for the Button, the InlineEdit seed, the
    Collapsible guard, the SearchInput condition, the List gate) and confirm only
    that fix's case fails. Record each mutation in the commit message or as a
@@ -286,17 +301,17 @@ Stop and report, do not improvise, if any of these happen:
 - The `List` row's `tabIndex` changes behaviour for an enabled row; the roving
   model's `focusable` flag is not part of this plan.
 - Any existing test that is not listed above fails.
-- The behaviour suite reports fewer than 608 tests (a case was silently not
+- The behaviour suite reports fewer than 609 tests (a case was silently not
   collected — check the two-space `it(` convention).
 
 ---
 
 ## 9. Acceptance criteria
 
-- The five measured holes are gone, each proven by a native case that fails
+- The six measured holes are gone, each proven by a native case that fails
   without its fix.
 - The disabled contract (§2) holds for `Button`, `IconButton`, `InlineEdit`,
-  `CollapsibleTrigger`, `SearchInput` and `ListItem`.
+  `CollapsibleTrigger`, `SearchInput` (pointer and keys) and `ListItem`.
 - All five suites, the whole behaviour suite and the unit suite pass with the
   counts above.
 - Docs pages, `COMPONENTS.md` and the inventory check agree with the code.

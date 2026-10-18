@@ -188,6 +188,28 @@ describe("SearchInput", () => {
     enabled.unmount();
   });
 
+  it("ignores Escape and Enter while the field is disabled", () => {
+    // Hiding the clear control is not enough: Escape ran `clear` and Enter ran
+    // `onSubmit` straight from the input, so a disabled field could still be
+    // changed and submitted (plan 394).
+    const onClear = vi.fn();
+    const onSubmit = vi.fn();
+    const search = renderComponent(
+      <Search value="draft" disabled onClear={onClear} onSubmit={onSubmit} />,
+    );
+
+    search.renderer.focusElement(
+      search.renderer.findByTestId("search")?.id ?? -1,
+    );
+    search.renderer.simulateKeystrokes("escape");
+    search.renderer.simulateKeystrokes("enter");
+
+    expect(onClear).not.toHaveBeenCalled();
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    search.unmount();
+  });
+
   it("reflects autoFocus in its focus state", () => {
     // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
     // runs; the public `focused` state must still be true (plan 388).

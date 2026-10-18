@@ -87,7 +87,7 @@ export const SearchInput = ({
   const setInput = useMergedRef<PublicInstance | null>(attach, ref);
 
   const clear = (): void => {
-    if (value === "") return;
+    if (disabled || value === "") return;
     setValue("");
     onClear?.();
     const instance = input.current;
@@ -133,7 +133,9 @@ export const SearchInput = ({
           onKeyDown?.(event);
           if (isDismiss(event)) clear();
         }}
-        onSubmit={() => onSubmit?.(value)}
+        onSubmit={() => {
+          if (!disabled) onSubmit?.(value);
+        }}
         onFocus={(event) => {
           setFocused(true);
           rest.onFocus?.(event);
