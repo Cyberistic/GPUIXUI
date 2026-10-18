@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 127/177
+`[x]` `[███████░░░]` 128/178
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -909,6 +909,14 @@ so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
 `main`; `agent/tokens-theme` is the union); this agent was instructed not to push
 `main`
+`[x]` Close the numeric contract's last two ungoverned members — a probe on the
+shipped light theme found `themeMetricFailures` returning `[]` for
+`elevation.md[0].offsetX = NaN` (while `elevationShadow` handed the renderer an
+unpaintable shadow) and for `controlHeight.md = 40` over the shipped
+`rowHeight = 32`, which clips every default control inside a list, table, menu or
+tree row; a `finite` rule now governs both offsets, the blur and the spread
+(negative offsets stay valid) and `rowHeight` is held to `controlHeight.md`
+beside the body-line rule, with no shipped value moving (plan 360)
 
 ## Phase C — Tier 1–2 components
 

@@ -471,12 +471,13 @@ its own test suite.
 The floors are the colour half. `themeMetricFailures` is the numeric half: an
 edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
-shrink the smallest control below one label line plus its borders, round a
-"square" corner, invert a named size ladder, ship a zero-width surface metric or
-hand `elevationShadow` an alpha the colour helper cannot parse — each of which
-returned `[]` from the colour check. Every shipped theme, platform variant and
-recipe passes, so the checker exists for the theme a consumer edits, not to
-change a value.
+shrink the smallest control below one label line plus its borders, clip a row
+below the default `md` control it holds, round a "square" corner, invert a named
+size ladder, ship a zero-width surface metric, hand the renderer a non-finite
+shadow offset or hand `elevationShadow` an alpha the colour helper cannot
+parse — each of which returned `[]` from the colour check. Every shipped theme,
+platform variant and recipe passes, so the checker exists for the theme a
+consumer edits, not to change a value.
 
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
 the identity metrics, the shipped role count, the theme surfaces, the type
