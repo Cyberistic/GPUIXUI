@@ -9,6 +9,11 @@
  * The paint uses two icons of the same geometry — an outline star and a filled
  * one — tinted with the brand and muted roles, because GPUix's `<svg>` is
  * monochrome and cannot be filled by a style.
+ *
+ * While the pointer is over an interactive rating the stars preview the value a
+ * click would set. The preview is paint only: `aria-valuetext` and
+ * `onValueChange` still describe the committed rating, and `disabled`/`readOnly`
+ * never preview, because a preview is an input affordance.
  */
 
 import { useRef, useState, type ReactElement } from "react";
@@ -17,7 +22,12 @@ import type { PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
-import { clampRating, decideRating, ratingTabStop } from "../core/rating.js";
+import {
+  clampRating,
+  decideRating,
+  previewRating,
+  ratingTabStop,
+} from "../core/rating.js";
 import { ratingStarColor, ratingStarStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -78,6 +88,18 @@ export interface RatingFocus {
   readonly onBlur: (index: number) => void;
 }
 
+/**
+ * The star under the pointer, and how the group learns it moved.
+ *
+ * A preview is paint, not selection: the component keeps announcing the
+ * committed value while the stars show what a click would set.
+ */
+export interface RatingHover {
+  readonly preview: Option.Option<number>;
+  readonly onEnter: (index: number) => void;
+  readonly onLeave: () => void;
+}
+
 export interface RatingHandlers {
   readonly onSelect: (value: number) => void;
   /** Select, then move native focus to the star the change landed on. */
@@ -96,10 +118,12 @@ export const renderRating = (
   theme: PrimitiveTheme,
   state: ValueState<number>,
   focus: RatingFocus,
+  hover: RatingHover,
   handlers: RatingHandlers,
 ): ReactElement => {
   const max = ratingMax(props.max);
   const value = clampRating(state.current, max);
+  const painted = previewRating(value, hover.preview, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
   const star = (index: number): ReactElement => {
@@ -107,6 +131,7 @@ export const renderRating = (
       focus.focusedIndex,
       (focusedIndex) => focusedIndex === index,
     );
+    const filled = index <= painted;
     return (
       <div
         key={index}
@@ -123,6 +148,7 @@ export const renderRating = (
         onClick={() => {
           if (interactive) handlers.onSelect(index);
         }}
+        onMouseEnter={interactive ? () => hover.onEnter(index) : undefined}
         onFocus={() => focus.onFocus(index)}
         onBlur={() => focus.onBlur(index)}
         style={resolvePartStyle(
@@ -138,7 +164,7 @@ export const renderRating = (
           props.starStyle,
           {
             index,
-            filled: index <= value,
+            filled,
             disabled: props.disabled === true,
             readOnly: props.readOnly === true,
             invalid: props.invalid === true,
@@ -147,9 +173,9 @@ export const renderRating = (
         )}
       >
         <Icon
-          name={index <= value ? "star-filled" : "star"}
+          name={filled ? "star-filled" : "star"}
           size={props.size ?? "md"}
-          color={ratingStarColor(index <= value, theme, props.invalid === true)}
+          color={ratingStarColor(filled, theme, props.invalid === true)}
         />
       </div>
     );
@@ -159,6 +185,7 @@ export const renderRating = (
       role="radiogroup"
       aria-label={props.label}
       testId={props.testId}
+      onMouseLeave={interactive ? hover.onLeave : undefined}
       onKeyDown={(event) => {
         if (!interactive) return;
         Option.match(decideRating(value, max, event.key ?? ""), {
@@ -193,6 +220,7 @@ export const Rating = (props: RatingProps): ReactElement => {
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
     Option.none(),
   );
+  const [preview, setPreview] = useState<Option.Option<number>>(Option.none());
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
@@ -209,6 +237,11 @@ export const Rating = (props: RatingProps): ReactElement => {
         setFocusedIndex((current) =>
           Option.filter(current, (focused) => focused !== index),
         ),
+    },
+    {
+      preview,
+      onEnter: (index) => setPreview(Option.some(index)),
+      onLeave: () => setPreview(Option.none()),
     },
     {
       onSelect: state.set,

@@ -19,6 +19,24 @@ export const clampRating = (value: number, max: number): number => {
   return Math.min(limitOf(max), Math.max(0, Math.trunc(value)));
 };
 
+/**
+ * The star count to paint.
+ *
+ * A pointer over an interactive rating previews the value a click would set, but
+ * a preview is not a selection: the announcement keeps the committed value.
+ * Clamping both inputs is what stops a shorter `max` from painting a star that
+ * no longer exists while the pointer still rests on its old position.
+ */
+export const previewRating = (
+  value: number,
+  preview: Option.Option<number>,
+  max: number,
+): number =>
+  clampRating(
+    Option.getOrElse(preview, () => value),
+    max,
+  );
+
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   right: 1,
   up: 1,

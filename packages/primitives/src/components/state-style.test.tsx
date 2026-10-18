@@ -45,6 +45,7 @@ import {
 import {
   renderRating,
   type RatingHandlers,
+  type RatingHover,
   type RatingStarState,
   type RatingState,
 } from "./Rating.js";
@@ -280,6 +281,12 @@ const groupFocus = {
   onBlur: vi.fn(),
 };
 
+const noPreview: RatingHover = {
+  preview: Option.none(),
+  onEnter: vi.fn(),
+  onLeave: vi.fn(),
+};
+
 const rangeFocus = {
   focusedIndex: Option.none<0 | 1>(),
   onFocus: vi.fn(),
@@ -387,6 +394,7 @@ describe("group roots and overlays", () => {
       testTheme,
       initValueState(Option.some(3), 0),
       groupFocus,
+      noPreview,
       handlers,
     );
     expect(lastState(record.seen)).toStrictEqual({
@@ -664,6 +672,7 @@ describe("per-item style", () => {
       testTheme,
       initValueState(Option.some(2), 0),
       groupFocus,
+      noPreview,
       handlers,
     );
     expect(record.seen).toStrictEqual([

@@ -4,13 +4,16 @@
  * A rating is a radio group whose arrows clamp rather than wrap, so the runtime
  * suite proves the parts an element-tree test cannot: a hit-tested click on a
  * star, native focus following the value, the filled/outline icons actually
- * painted in two theme roles, and the single tab stop.
+ * painted in two theme roles, the single tab stop, and the hover preview the
+ * pointer drives (plan 094).
  */
 
+import type { ReactElement } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
+import { Box } from "../src/components/Box.js";
 import { Rating } from "../src/components/Rating.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
@@ -233,4 +236,87 @@ it("paints a failed validation on the empty stars only", async () => {
     </Surface>,
   );
   expect(colorOf("3 of 5")).toBe(testTheme.colors.mutedForeground);
+});
+
+/** The tint of the icon under a star, by the star's announced name. */
+const filledColor = (runtime: Runtime, label: string): unknown => {
+  const star = byLabel(runtime, label);
+  const iconId = Option.getOrElse(Option.fromNullishOr(star.children[0]), () =>
+    expect.fail(`the star ${label} painted no icon`),
+  );
+  return Option.getOrElse(
+    Option.fromNullishOr(runtime.renderer.getElement(iconId)),
+    () => expect.fail(`the icon under ${label} vanished`),
+  ).style["color"];
+};
+
+const pointerScene = (rating: ReactElement): ReactElement => (
+  <Surface>
+    <Stack direction="row">
+      {rating}
+      <Box testId="outside" tone="none" style={{ width: 40, height: 40 }} />
+    </Stack>
+  </Surface>
+);
+
+it("previews the rating under the pointer, and leaving restores it", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    pointerScene(<Rating testId="ra" label="Quality" defaultValue={2} />),
+  );
+  runtime.hover("ra-star-4");
+  expect(filledColor(runtime, "1 of 5")).toBe(testTheme.colors.primary);
+  expect(filledColor(runtime, "4 of 5")).toBe(testTheme.colors.primary);
+  expect(filledColor(runtime, "5 of 5")).toBe(testTheme.colors.mutedForeground);
+  // A preview is paint, not a selection: the announcement stays committed.
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+  ]);
+  runtime.hover("outside");
+  expect(filledColor(runtime, "4 of 5")).toBe(testTheme.colors.mutedForeground);
+});
+
+it("previews downward from a higher committed value", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    pointerScene(<Rating testId="ra" label="Quality" defaultValue={4} />),
+  );
+  runtime.hover("ra-star-1");
+  expect(filledColor(runtime, "1 of 5")).toBe(testTheme.colors.primary);
+  expect(filledColor(runtime, "2 of 5")).toBe(testTheme.colors.mutedForeground);
+  expect(filledColor(runtime, "4 of 5")).toBe(testTheme.colors.mutedForeground);
+  runtime.hover("outside");
+  expect(filledColor(runtime, "2 of 5")).toBe(testTheme.colors.primary);
+  expect(filledColor(runtime, "4 of 5")).toBe(testTheme.colors.primary);
+});
+
+it("previews with the brand role while an invalid rating marks only what is missing", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    pointerScene(
+      <Rating testId="ra" label="Quality" defaultValue={2} invalid />,
+    ),
+  );
+  runtime.hover("ra-star-4");
+  expect(filledColor(runtime, "4 of 5")).toBe(testTheme.colors.primary);
+  expect(filledColor(runtime, "5 of 5")).toBe(testTheme.colors.destructive);
+});
+
+it("takes no preview when the rating cannot take input", async () => {
+  const runtime = await openWindow();
+  Arr.forEach([{ disabled: true }, { readOnly: true }] as const, (props) => {
+    runtime.render(
+      pointerScene(
+        <Rating testId="ra" label="Quality" defaultValue={2} {...props} />,
+      ),
+    );
+    runtime.hover("ra-star-5");
+    expect(filledColor(runtime, "5 of 5")).toBe(
+      testTheme.colors.mutedForeground,
+    );
+  });
 });

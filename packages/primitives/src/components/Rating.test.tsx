@@ -3,8 +3,9 @@
  *
  * The guarded defects: an arrow that wraps instead of clamping, a group with one
  * tab stop per star instead of one for the whole rating, an unrated group with
- * no tab stop at all, and a selected star painting the same icon as an empty one.
- * The native focus movement is the runtime suite's job.
+ * no tab stop at all, a selected star painting the same icon as an empty one,
+ * and a pointer that previews nothing while a preview is an input affordance.
+ * The native focus movement and the pointer itself are the runtime suite's job.
  */
 
 import type { ReactElement } from "react";
@@ -16,6 +17,7 @@ import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   renderRating,
   type RatingHandlers,
+  type RatingHover,
   type RatingProps,
 } from "./Rating.js";
 import type { RatingFocus } from "./Rating.js";
@@ -44,13 +46,27 @@ const handlers = (over: Partial<RatingHandlers> = {}): RatingHandlers => ({
   ...over,
 });
 
+const hover = (preview?: number): RatingHover => ({
+  preview: Option.fromNullishOr(preview),
+  onEnter: vi.fn(),
+  onLeave: vi.fn(),
+});
+
 const render = (
   props: RatingProps,
   value: number,
   focused?: number,
   over: Partial<RatingHandlers> = {},
+  pointer: RatingHover = hover(),
 ): ReactElement =>
-  renderRating(props, testTheme, state(value), focus(focused), handlers(over));
+  renderRating(
+    props,
+    testTheme,
+    state(value),
+    focus(focused),
+    pointer,
+    handlers(over),
+  );
 
 const starsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(element);
@@ -119,6 +135,68 @@ describe("Rating", () => {
     expect(iconName(stars[0] ?? expect.fail("no star"))).toBe("star-filled");
     expect(iconName(stars[1] ?? expect.fail("no star"))).toBe("star-filled");
     expect(iconName(stars[2] ?? expect.fail("no star"))).toBe("star");
+  });
+
+  it("paints the hovered star and the ones before it, without changing the rating", () => {
+    // The bug guarded: a pointer over star 4 of an unrated control showed five
+    // outline stars, so a reader could not tell what a click would set. The
+    // second half is the opposite mistake — previewing must not announce itself
+    // as a selection.
+    const stars = starsOf(render({}, 2, undefined, {}, hover(4)));
+    const iconName = (star: ReactElement): unknown =>
+      Option.getOrUndefined(
+        elementProp(elementChildren(star)[0] ?? expect.fail("no icon"), "name"),
+      );
+    expect(stars.map(iconName)).toStrictEqual([
+      "star-filled",
+      "star-filled",
+      "star-filled",
+      "star-filled",
+      "star",
+    ]);
+    expect(
+      stars.map((star) => expectSome(hostProp(star, "aria-valuetext"))),
+    ).toStrictEqual([
+      "checked",
+      "checked",
+      "unchecked",
+      "unchecked",
+      "unchecked",
+    ]);
+  });
+
+  it("reports the painted fill to starStyle, not the committed value", () => {
+    const fills: boolean[] = [];
+    render(
+      { starStyle: (star) => (fills.push(star.filled), {}) },
+      2,
+      undefined,
+      {},
+      hover(4),
+    );
+    expect(fills).toStrictEqual([true, true, true, true, false]);
+  });
+
+  it("previews only while the rating can take input", () => {
+    const interactive = hover();
+    const element = render({}, 0, undefined, {}, interactive);
+    expectSome(
+      hostHandler(
+        starsOf(element)[3] ?? expect.fail("no star"),
+        "onMouseEnter",
+      ),
+    )(keyEvent("mouseenter"));
+    expect(interactive.onEnter).toHaveBeenCalledWith(4);
+    expectSome(hostHandler(element, "onMouseLeave"))(keyEvent("mouseleave"));
+    expect(interactive.onLeave).toHaveBeenCalledTimes(1);
+
+    Arr.forEach([{ disabled: true }, { readOnly: true }] as const, (props) => {
+      const inert = render(props, 2);
+      expect(
+        hostProp(starsOf(inert)[3] ?? expect.fail("no star"), "onMouseEnter"),
+      ).toStrictEqual(Option.none());
+      expect(hostProp(inert, "onMouseLeave")).toStrictEqual(Option.none());
+    });
   });
 
   it("marks the empty stars as an error and leaves the chosen ones on the brand", () => {

@@ -1,11 +1,11 @@
-# 092 — `Rating` has no hover preview, and the reason given was false
+# 094 — `Rating` has no hover preview, and the reason given was false
 
 | Field | Value |
 | ----- | ----- |
 | Phase | C/F (Tier 1 selection control) |
 | Owner | primitives workstream |
 | Depends on | `030`, `040`, `041`, `047`, `054`, `070`, `079`, `081` |
-| Status | **in progress** |
+| Status | **done** (on `agent/primitives-hover`, a private worktree — see §7) |
 
 Self-contained: §1 the gap and the measurement, §2 the rule, §3 the exact files,
 §4 the commands and expected results, §5 the test plan and the two-direction
@@ -68,10 +68,10 @@ prospective value; the committed value and its announcement do not change.**
 | `packages/primitives/runtime/rating.runtime.test.tsx` | the real pointer: hover paints, leaving restores, an invalid preview keeps the brand role, disabled/read-only do not preview |
 | `packages/primitives/docs/rating.mdx` | a Hover preview section; delete the false limitation; `filled` row and Verification updated |
 | `packages/primitives/README.md` | the Rating note gains the preview clause |
-| `COMPONENTS.md` | the Rating row gains the plan-092 clause |
+| `COMPONENTS.md` | the Rating row gains the plan-094 clause |
 | `TODO.md` | add and tick the task under the primitives ledger |
 | `.agents/slop/plans/README.md` | index this plan |
-| `.agents/slop/plans/092-rating-hover-preview.md` | §7 results after the run |
+| `.agents/slop/plans/094-rating-hover-preview.md` | §7 results after the run |
 
 Do **not** edit `packages/tokens`, `packages/components`, `packages/icons` or
 `apps/*`. No new dependency.
@@ -164,21 +164,72 @@ Stop and report (do not improvise) if:
 
 ## 7. Outcome
 
+### Concurrent writers (why this landed on a second branch)
+
+When this plan was claimed, the `primitives` worktree had **three live
+`swarm:primitives` sessions** writing it at once (blocker B3): `sqlite3
+~/.local/share/opencode/opencode.db` reported three rows with `time_idle is
+null` for this directory, and two peers committed `3fe2496`, `a1426fe`,
+`129f381` and then plan `093` while this turn ran. Rather than clobber them, this
+work took the documented workaround (`blockers/2026-10-17-concurrent-tokens-writers.md`):
+a private worktree from the committed tip —
+
+```sh
+git -C ~/GPUIXUI worktree add workspaces/primitives-hover \
+  -b agent/primitives-hover agent/primitives
+nub install
+```
+
+so the deliverable is on `agent/primitives-hover` and the shared tree keeps its
+one writer. The plan was first written as `092-…`; a peer's `git add -A` swept
+that untracked file into `a1426fe` while the number was also claimed by
+`092-examples-suite-parity.md`. This branch deletes the stray copy and keeps the
+plan at `094`.
+
 ### Measured before (the old direction)
 
-_(filled in after the failing run)_
+With the paint reverted to the committed value **and** the pointer handlers
+removed:
+
+```text
+FAIL src/components/Rating.test.tsx > Rating > paints the hovered star and the ones before it, without changing the rating
+FAIL src/components/Rating.test.tsx > Rating > reports the painted fill to starStyle, not the committed value
+FAIL src/components/Rating.test.tsx > Rating > previews only while the rating can take input
+```
+
+and in the real runtime:
+
+```text
+× previews the rating under the pointer, and leaving restores it
+   AssertionError: expected '#00000C' to be '#000007'   # mutedForeground → primary
+× previews downward from a higher committed value
+× previews with the brand role while an invalid rating marks only what is missing
+   AssertionError: expected '#00000F' to be '#000007'   # destructive → primary
+Tests  3 failed | 266 passed (269)
+```
+
+The fourth runtime case ("takes no preview when the rating cannot take input")
+passes in both directions by design: it guards against over-correcting, exactly
+like plan 091's valid-field case.
 
 ### After
 
-_(filled in after the green run)_
+- `Rating` previews the prospective value while the pointer is over an
+  interactive group; the committed value, its `aria-valuetext` and
+  `onValueChange` are unchanged, and leaving the group restores the paint.
+- `disabled` and `readOnly` attach no pointer handlers; an invalid preview keeps
+  the brand role on the previewed stars; `starStyle`'s `filled` follows the paint.
+- Offline: **38 files / 439 tests passed** (433 before; +3 core, +3 element-tree).
+- Runtime: **20 files / 269 tests passed** (265 before; +4).
+- `nub run check`, `nub run lint` and `nub run test` all exit `0`.
 
 ## 8. Acceptance
 
-- [ ] A pointer over an interactive rating previews the prospective value.
-- [ ] Leaving the group restores the committed value; the announcement never
+- [x] A pointer over an interactive rating previews the prospective value.
+- [x] Leaving the group restores the committed value; the announcement never
       changes.
-- [ ] `disabled`/`readOnly` never preview; an invalid preview uses the brand role.
-- [ ] `starStyle`'s `filled` follows the paint.
-- [ ] The new tests fail with the wiring removed and pass with it.
-- [ ] Docs, README, `COMPONENTS.md`, `TODO.md` and the plan index are updated.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] `disabled`/`readOnly` never preview; an invalid preview uses the brand role.
+- [x] `starStyle`'s `filled` follows the paint.
+- [x] The new tests fail with the wiring removed and pass with it.
+- [x] Docs, README, `COMPONENTS.md`, `TODO.md` and the plan index are updated.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.

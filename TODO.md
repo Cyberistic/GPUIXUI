@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 65/66
+`[~]` `[██████████]` 66/67
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -474,6 +474,15 @@ retired once both branches are one
       the mount and the dark-palette pass, and a new example needed no record.
       `SCREENS` now has all 12 and a registry-parity test fails on a missing or
       stale record; both directions measured (plan 092)
+`[x]` `packages/primitives`: **`Rating` had no hover preview, and the docs blamed
+      the runtime for it** — the recorded reason was that there is no cheap
+      "which star is under the pointer" query, but every star is its own element
+      with `onMouseEnter`/`onMouseLeave`. A pointer over an interactive rating
+      now paints the prospective value while the committed value and its
+      announcement stay put; leaving restores it, `disabled`/`readOnly` never
+      preview, an invalid preview keeps the brand role, and `starStyle`'s
+      `filled` follows the paint. 3 core + 3 element-tree + 4 runtime tests,
+      both directions measured (plan 094)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

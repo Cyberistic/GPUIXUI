@@ -7,7 +7,7 @@ description: A whole number of stars, or none.
 and native focus with it. It differs from `RadioGroup` in two ways a rating
 needs — the arrows **clamp** at the ends instead of wrapping, and `Delete`
 clears it back to zero. It is not a slider: the value is a small whole number,
-not a position.
+not a position. A pointer over the stars previews the rating a click would set.
 
 ## Usage
 
@@ -62,6 +62,22 @@ The group holds **one tab stop** — on the current rating, or on the first star
 when unrated — and an arrow moves the selection and native focus together, so
 the ring is always on the star the value came from.
 
+## Hover preview
+
+Moving the pointer over star `N` paints stars `1..N` filled, so the reader can
+see what a click would set before taking it; moving off the group restores the
+committed rating. The preview is **paint only**:
+
+- `aria-valuetext` still reports the committed value — a preview is not a
+  selection, and announcing it would lie to assistive technology;
+- `onValueChange` only fires on a click or a key;
+- `disabled` and `readOnly` never preview, because a preview is an input
+  affordance;
+- an `invalid` rating previews with the brand role on the filled stars; the
+  destructive role still marks only the stars that are *missing* at rest.
+
+Hovering does not take focus, so the ring stays wherever the keyboard left it.
+
 ## Accessibility
 
 - Roles: `radiogroup` with the group's `label`, and one `radio` per star
@@ -78,7 +94,9 @@ A selected star paints `colors.primary`, an empty one
 `colors.mutedForeground`, using two icons of the same geometry: `star-filled`
 and `star`. With `invalid`, the **empty** stars paint `colors.destructive` while
 a chosen one keeps the brand role — the error marks what is missing, not what is
-chosen (the `RadioGroup` rule, plan `061`). The filled icon is still monochrome —
+chosen (the `RadioGroup` rule, plan `061`). A hover preview paints the stars it
+covers with the brand role, so a prospective star never reads as an error. The
+filled icon is still monochrome —
 its `#000` fill is what GPUix retints — so a theme change repaints both states.
 The star size is `theme.iconSize[size]` and the focus ring is the shared
 `focusRing`.
@@ -112,7 +130,7 @@ each star:
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `index` | `number` | 1-based, matching the star's announced "N of max" |
-| `filled` | `boolean` | this star is at or below the value |
+| `filled` | `boolean` | this star is painted filled — at or below the value, or inside the pointer's preview |
 | `disabled` | `boolean` | the rating is disabled |
 | `readOnly` | `boolean` | the rating is read-only |
 | `invalid` | `boolean` | paints the empty stars destructive |
@@ -130,9 +148,6 @@ each star:
 - **Whole stars only.** Half stars would need clipping or a transform, neither of
   which exists in GPUix 0.10.0; a caller that needs a finer score can keep it in
   state and paint the label beside the stars.
-- **No hover preview.** A hover-filled preview needs per-star hover state and a
-  re-render per movement; the runtime gives hover styles but not a cheap
-  "which star is under the pointer" query for a group.
 - **Clearing is explicit** (Delete/Backspace or the app), not "click the selected
   star again" — a rating is not a toggle.
 
@@ -146,16 +161,19 @@ each star:
   081).
 
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
-  the tab-stop choice, a zero or fractional `max`.
+  the tab-stop choice, a zero or fractional `max`, and the preview clamp.
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
   single tab stop, filled vs outline icons, the invalid tint rule, keys, click,
-  disabled/readOnly, ring.
+  disabled/readOnly, ring, and the preview paint without an announcement change.
 - `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
   arrow moves the checked star and native focus; Right at five stays at five;
   Delete clears; filled stars paint `colors.primary`; Tab enters on the rating
   and the next Tab leaves the group; disabled refuses input; an `invalid` rating
   paints the empty stars' icons `destructive` and leaves the chosen ones
-  `primary` (plan `070`). Measured 2026-10-17 (plan 054 §9, plan 070 §6).
+  `primary` (plan `070`); a real pointer previews stars 1..4 and leaving restores
+  the value, an invalid preview keeps the brand role, and a disabled/read-only
+  rating never previews (plan `094`). Measured 2026-10-17/18 (plans 054, 070,
+  094).
 
 ```sh
 nub run --filter @gpuixui/primitives test

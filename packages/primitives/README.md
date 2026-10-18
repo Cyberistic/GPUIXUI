@@ -127,8 +127,11 @@ Deviations, kept deliberate:
 
 Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
 `surfaceStyle`, `textStyle`, `ruleStyle`, `progress*Style`) or `core/selection.ts`;
-none paints a literal and none scripts hover or press
-(GPUIx applies `style.hover`/`style.active` natively).
+none paints a literal. Hover and press **feedback** is declared in
+`style.hover`/`style.active` and applied natively by the runtime. The one
+interaction that needs the pointer's identity is `Rating`'s hover preview
+(plan `094`): it tracks the star under the pointer to paint the prospective
+value, and never calls the value callback from that path.
 
 ### One value callback
 
