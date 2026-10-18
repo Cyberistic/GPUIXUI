@@ -115,8 +115,11 @@ has no `transform` — a rotation is not available.
   switch and its controls leave the tab order.
 - The measured natural height is re-measured on open, not on a width change, so a
   rewrap while collapsed can correct once on the next open.
-- Closing a section while focus is inside its body hides the focused element; the
-  component does not move focus back to the header.
+- Closing a section with focus inside its body (for example a controlled close
+  from elsewhere) leaves focus on the hidden element: 0.10.0 has no focus-within
+  event or `inert`, so the component cannot tell that case apart from a close
+  where focus is already on the header. A consumer that closes a section while
+  its body owns focus should move focus itself.
 
 ## Verification
 

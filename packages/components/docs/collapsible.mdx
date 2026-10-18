@@ -89,8 +89,11 @@ of its own, so it inherits the card or panel around it.
   reachable, then it leaves.
 - The natural height is re-measured on open, not on a width change, so a rewrap
   while collapsed can correct once on the next open.
-- Closing a section while focus is inside the body hides the focused element; the
-  component does not move focus back to the trigger.
+- Closing with focus inside the body (for example a controlled close from
+  elsewhere) leaves focus on the hidden element: 0.10.0 has no focus-within event
+  or `inert`, so the component cannot tell a programmatic close from one where
+  focus is already on the trigger. A consumer that closes a section while its
+  body owns focus should move focus itself.
 - No `aria-controls` in 0.10.0 (`HostProps`), so the trigger→body relationship
   is positional.
 

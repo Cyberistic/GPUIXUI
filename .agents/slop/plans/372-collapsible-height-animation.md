@@ -382,8 +382,17 @@ moved the full height. Fixtures: 76 px for the Collapsible body (60 px row +
 only after the close tween, so a closing body stays visible (and briefly
 reachable) for the 200 ms transition. That is recorded as a limitation on both
 docs pages, together with the residual plan 186 rewrap caveat (the height is
-re-measured on open, not on a width change) and the fact that hiding a body
-whose descendant holds focus does not return focus to the trigger.
+re-measured on open, not on a width change).
+
+**Focus inside a closing body.** A probe focused `draft` and switched a
+controlled Collapsible from `open` to closed: after the tween the content read
+`visibility: "hidden"` and `getFocusedElementId()` still reported `draft`.
+0.10.0 has no focus-within event and no `inert`, and the production renderer
+exposes no element tree, so a component cannot tell "focus is inside me" from
+"focus is elsewhere" without stealing focus in the common path (where the trigger
+still holds it). The docs therefore state the rule: a consumer that closes a
+section programmatically while its body owns focus moves focus itself.
+
 
 **Two-direction proofs** (each mutation applied alone, the named suites run, the
 file restored):
