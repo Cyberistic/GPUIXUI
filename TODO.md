@@ -469,9 +469,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500)
+## Docs site workstream (plans 410–499, plus 500–508)
 
-`[x]` `[██████████]` 108/108
+`[x]` `[██████████]` 109/109
+
+`[x]` **Every stateful page shows a live state (plan 508)** — six of the 21
+      `stateful` records had no live scene, so their pages showed a rest
+      illustration and no interactive proof. Lists, Collapsible sections,
+      Pagination, Time pickers and Carousels gain a gesture-driven scene;
+      Message scroller stays at tier A/V behind a measured, test-pinned reason.
+      Two stale denial sentences were found and removed by the widened guard.
 
 `[x]` **Every shipped icon is visible and findable (plan 507)** — the Icons page
       told the reader to use an `IconName` and listed none of them, so
