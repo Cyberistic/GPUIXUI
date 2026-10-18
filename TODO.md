@@ -208,6 +208,14 @@ retired once both branches are one
       `focused`, paints the token ring unless disabled or open, and merges the
       caller's style last; 4 native cases (Combobox 45), four mutation proofs;
       docs, `COMPONENTS.md` and the inventory synced
+    - [x] A tab panel needs a live trigger — plan 566; a selected value that
+      named a removed tab kept painting its panel, so the tab set revealed a
+      region no trigger could select (the controlled case was documented; the
+      uncontrolled case was not). `TabsContent` now renders only while a
+      registered trigger carries its value; the selection is never rewritten,
+      and a disabled selected tab still keeps its panel. 3 native cases
+      (Tabs 31), both-direction proof plus a disabled-gate mutation; docs,
+      `COMPONENTS.md` and the inventory synced
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

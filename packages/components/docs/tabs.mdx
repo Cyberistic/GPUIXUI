@@ -32,7 +32,7 @@ import {
 | `Tabs` | the selected value, the trigger registry, the tab stop |
 | `TabsList` | `role="tablist"`, the arrow/Home/End keys, the rail |
 | `TabsTrigger` | one `role="tab"`, `aria-selected`, its own focus |
-| `TabsContent` | one `role="tabpanel"`, mounted only while selected |
+| `TabsContent` | one `role="tabpanel"`, mounted only while selected and its trigger is registered |
 
 Only the selected trigger is in the tab order; every other trigger is `-1`.
 Arrow keys move focus *and* the selection in `automatic` mode; in `manual` mode
@@ -119,9 +119,12 @@ the live tabs:
 </Tabs>;
 ```
 
-Focus tracking covers the triggers themselves. A controlled `value` that names a
-tab removed from the list still renders its panel, because the value is the
-app's; clear it when the tab goes away.
+A panel follows the live triggers: it renders only while a trigger with its
+value is registered. Removing the trigger therefore takes its panel with it,
+whether the value came from the uncontrolled selection or a controlled `value`;
+the selection itself is never rewritten, so re-adding the trigger brings the
+panel back. A **disabled** selected tab still keeps its panel — it is a tab, it
+just refuses input.
 
 ## API
 
@@ -132,7 +135,7 @@ Every part takes the GPUix host props and **merges `style` last**.
 | `Tabs` | provider (no host element) | `value?: string`, `defaultValue?: string` (default `""`), `onValueChange?: (value: string) => void`, `orientation?: "horizontal" \| "vertical"` (default `"horizontal"`), `activation?: "automatic" \| "manual"` (default `"automatic"`) |
 | `TabsList` | `div` (`role="tablist"`) | `label?: string` (the list's accessible name) |
 | `TabsTrigger` | `div` (`role="tab"`) | `value: string` (required), `disabled?: boolean` (default `false`), `style?: StateStyle<{ active: boolean; disabled: boolean; focused: boolean; highlighted: boolean; orientation: TabsOrientation }>` |
-| `TabsContent` | `div` (`role="tabpanel"`) | `value: string` (required); an `aria-label` overrides the trigger's name |
+| `TabsContent` | `div` (`role="tabpanel"`), only while a live trigger with `value` is registered | `value: string` (required); an `aria-label` overrides the trigger's name |
 
 `autoFocus` sets the initial `focused` state and the roving highlight, so the
 trigger's ring is painted on the first commit — the runtime applies native focus
@@ -174,8 +177,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   `aria-level`. A panel borrows its trigger's name instead — the same plain-text
   label the trigger paints (plan 391) — so `<TabsTrigger value="profile">Profile</TabsTrigger>`
   announces the panel as `Profile`, not `profile`. An explicit `aria-label` on
-  `TabsContent` wins; a composed trigger with no plain text, and a controlled
-  `value` whose trigger was removed, fall back to the value. The
+  `TabsContent` wins; a composed trigger with no plain text falls back to the
+  value. A panel with no live trigger is not painted at all. The
   trigger→panel relationship itself stays positional.
 - The list owns the keys because a key event on a focused trigger bubbles to the
   list — measured in the real renderer, the same behaviour `List` relies on.
@@ -184,7 +187,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (28 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (31 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
@@ -196,7 +199,10 @@ activation. Dynamic tabs: a tab that becomes disabled or is removed hands the
 tab stop and focus to a live tab, a disabled tab stops reporting itself as
 highlighted, the handover never changes the selection, a consumer's same-update
 focus is never stolen, and a disable/enable round trip keeps the authored tab
-order. Panels are named by their triggers: the visible label, the caller's
+order. A panel needs a live trigger: removing a trigger unmounts its panel
+(and restoring it brings the panel back without changing the selection), a
+controlled value with no trigger paints nothing, and a disabled selected tab
+still keeps its panel (plan 566). Panels are named by their triggers: the caller's
 `aria-label` override, the value fallback for a composed trigger, and a label
 change renaming the panel without reordering the row (plan 564). The vertical
 guard is

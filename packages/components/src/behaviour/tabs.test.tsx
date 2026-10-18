@@ -12,6 +12,8 @@
  * Space selected on key down instead of on release. The visible panel was named
  * by its internal value (`profile`) instead of the tab's label (`Profile`), so a
  * screen reader heard an opaque id for the only region the tab set revealed.
+ * A selected value that named a removed tab kept painting its panel, so the tab
+ * set revealed a region no trigger could select.
  */
 
 import * as Arr from "effect/Array";
@@ -404,6 +406,91 @@ describe("Tabs", () => {
 
     clickCentreOf(tabs, "tab-danger");
     expect(onValueChange.mock.calls).toEqual([["danger"]]);
+
+    tabs.unmount();
+  });
+
+  it("takes a panel with its trigger when that tab is removed", () => {
+    const removable = (showBilling: boolean) => (
+      <Tabs defaultValue="billing">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+          {showBilling ? (
+            <TabsTrigger testId="tab-billing" value="billing">
+              Billing
+            </TabsTrigger>
+          ) : null}
+        </TabsList>
+        <TabsContent testId="panel-profile" value="profile">
+          <text>Profile</text>
+        </TabsContent>
+        <TabsContent testId="panel-billing" value="billing">
+          <text>Billing</text>
+        </TabsContent>
+      </Tabs>
+    );
+    const tabs = renderComponent(removable(true));
+
+    expect(tabs.renderer.findByTestId("panel-billing")).toBeDefined();
+
+    tabs.rerender(removable(false));
+    expect(tabs.renderer.findByTestId("panel-billing")).toBeUndefined();
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeUndefined();
+
+    tabs.rerender(removable(true));
+    expect(tabs.renderer.findByTestId("panel-billing")).toBeDefined();
+
+    tabs.unmount();
+  });
+
+  it("renders no panel when the controlled value has no trigger", () => {
+    const tabs = renderComponent(
+      <Tabs value="other">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent testId="panel-other" value="other">
+          <text>Other</text>
+        </TabsContent>
+      </Tabs>,
+    );
+
+    expect(tabs.renderer.findByTestId("panel-other")).toBeUndefined();
+    expect(
+      tabs.renderer.findByTestId("tab-profile")?.customProps,
+    ).toMatchObject({
+      "aria-selected": false,
+    });
+
+    tabs.unmount();
+  });
+
+  it("keeps the panel of a disabled selected tab", () => {
+    const tabs = renderComponent(
+      <Tabs defaultValue="billing">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-billing" value="billing" disabled>
+            Billing
+          </TabsTrigger>
+          <TabsTrigger testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent testId="panel-billing" value="billing">
+          <text>Billing</text>
+        </TabsContent>
+        <TabsContent testId="panel-profile" value="profile">
+          <text>Profile</text>
+        </TabsContent>
+      </Tabs>,
+    );
+
+    expect(tabs.renderer.findByTestId("panel-billing")).toBeDefined();
+    expect(tabs.renderer.findByTestId("panel-profile")).toBeUndefined();
 
     tabs.unmount();
   });

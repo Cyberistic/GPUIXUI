@@ -651,10 +651,14 @@ export const TabsContent = ({ value, style, ...rest }: TabsContentProps) => {
   const { rows, selected } = useTabsContext();
   const theme = useTheme();
 
-  if (selected !== value) return null;
+  // The panel follows the live tabs: a trigger that unmounts takes its panel
+  // with it, while the selection stays what the app (or the user) chose. A
+  // disabled trigger is still a tab and keeps its panel.
+  const isLive = Arr.some(rows, (row) => row.value === value);
+  if (selected !== value || !isLive) return null;
   // 0.10.0 has no `aria-labelledby`, so the panel borrows the trigger's name —
   // the same plain-text rule the trigger paints. The caller's `aria-label` wins,
-  // and a composed trigger or a removed tab falls back to the value.
+  // and a composed trigger falls back to the value.
   const panelName = Option.getOrElse(
     Option.firstSomeOf([
       Option.fromNullishOr(rest["aria-label"]),
@@ -714,7 +718,7 @@ export const tabsMeta = {
   limitations: [
     "no aria-orientation, aria-controls or aria-labelledby in 0.10.0; the panel borrows its trigger's plain-text name, falling back to the value for a composed trigger",
     "the trigger/panel relationship is positional, not semantic",
-    "a controlled value that names a removed tab still renders its panel: the value is the app's",
+    "a panel renders only while a live trigger with its value is registered; the selection is never rewritten",
   ],
   docs: "docs/tabs.mdx",
   example: "examples/tabs.example.tsx",

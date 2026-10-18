@@ -5,7 +5,7 @@
 | Phase | C/F (Tier 2 hardening) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `113`, `117`, `200`, `201`, `391`, `510`, `511`, `564` |
-| Status | planned |
+| Status | done — 3 native cases (Tabs 31), both-direction proof plus a disabled-gate mutation |
 | Blocker | none — the assertion reads the rendered tree (`findByTestId`), so the plan-540 binding defects (box conventions, focus events) are out of scope |
 
 This plan is self-contained. A weaker executor must be able to run it without
@@ -135,16 +135,20 @@ trigger could select.**
 
 ### 5.1 Native (`src/behaviour/tabs.test.tsx`, real `TestRenderer`)
 
-Use the existing `dynamicTabs` fixture; no new fixture is required.
+The `dynamicTabs` fixture unmounts a removed value's **content** along with its
+trigger, so it cannot express the orphan case. Use a local fixture whose
+`TabsContent` stays mounted while only the trigger is conditional.
 
 1. **A removed trigger takes its panel with it (uncontrolled).**
-   Render `dynamicTabs(["a", "b", "c"])`, press `tab-c` (`clickCentreOf`),
-   assert `panel-c` is shown. Rerender with `dynamicTabs(["a", "b"])` and assert
-   `panel-c` is `undefined` while `panel-a`/`panel-b` are also absent (only one
-   panel is ever shown). Rerender `dynamicTabs(["a", "b", "c"])` again and
-   assert `panel-c` is shown — the selection was never rewritten, so restoring
-   the trigger restores the panel.
-   *Fails today*: `panel-c` stays painted after the first rerender.
+   Render a set with `defaultValue="billing"`, a permanent `profile` trigger,
+   and a `billing` trigger gated by a `showBilling` argument; both panels are
+   always rendered. Assert `panel-billing` is shown, rerender with
+   `showBilling=false` and assert both panels are absent, then rerender with
+   `showBilling=true` and assert `panel-billing` returns — the selection was
+   never rewritten, so restoring the trigger restores the panel.
+   *Fails today*: `panel-billing` stays painted after the first rerender.
+   (Measured: a `dynamicTabs`-based draft passed on the old code because the
+   fixture removed the content too, so it proved nothing.)
 2. **A controlled value with no trigger paints nothing.**
    Render `<Tabs value="other">` with a `profile` trigger and a `TabsContent`
    value `"other"`; assert `findByTestId("panel-other")` is `undefined`, and
@@ -183,7 +187,11 @@ Run from `workspaces/components`:
 ```sh
 cd packages/components
 nub exec vitest run --config vitest.behaviour.config.ts \
-  src/behaviour/tabs.test.tsx                          # 31 passed
+  src/behaviour/tabs.test.tsx                          # 26 passed, 5 failed
+nub exec vitest run --config vitest.behaviour.config.ts \
+  src/behaviour/tabs.test.tsx \
+  -t "takes a panel|controlled value has no trigger|disabled selected"
+                                                       # 3 passed
 cd ../..
 nub run --filter @gpuixui/components test              # unit suite passes
 nub run --filter @gpuixui/components check-types       # exit 0
@@ -191,9 +199,13 @@ nub run check                                          # exit 0
 nub run lint                                           # exit 0
 ```
 
-The full `test:behaviour` run still carries the pre-existing plan-540 binding
-failures (recorded in `TODO.md` → Interlocks); scope the run to the file and say
-so. Never report the full native suite green unless it is.
+Measured 2026-10-19: the file has 31 cases; 26 pass and the 5 failures are the
+pre-existing plan-540 binding focus/blur cases ("runs a caller onBlur…",
+"takes focus and the ring off a tab that becomes disabled", "hands focus to the
+selected tab…", "does not change the selection when it hands focus over",
+"does not select the tab it lands on…"). They fail at `HEAD` without this
+change. The full `test:behaviour` run carries the same class of failures
+(`TODO.md` → Interlocks); never report the full native suite green unless it is.
 
 ## 7. Docs, inventory and TODO
 
@@ -230,8 +242,10 @@ Stop and report instead of improvising when:
   the gate);
 - the count check fails because a count was not synced (fix the count, not the
   check);
-- the plan-540 binding failures appear in the scoped run (they should not —
-  this suite reads the tree, not boxes or focus events).
+- the new cases pass on the old implementation (the fixture unmounted the
+  content too — keep the content mounted and remove only the trigger);
+- any failure beyond the five measured plan-540 focus cases appears in the
+  scoped file run (name it and stop).
 
 ## 9. Acceptance
 
