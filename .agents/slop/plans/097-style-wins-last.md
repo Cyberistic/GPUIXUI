@@ -5,7 +5,7 @@
 | Phase | F (consistency) |
 | Owner | primitives workstream |
 | Depends on | `030`, `040`, `047`, `079`, `080`, `081`, `090` |
-| Status | planned |
+| Status | done |
 
 Self-contained: §1 the gap, §2 the rule, §3 the files, §4 commands and expected
 results, §5 the test plan and the two-direction proof, §6 STOP conditions, §7
@@ -199,17 +199,39 @@ Stop and report (do not improvise) if:
 
 ## 7. Outcome
 
-(Fill after the run: the two failing guard cases, the measured before/after
-heights, and the final counts.)
+Both exceptions are gone and the guard holds the whole package.
+
+- **`Progress`** now builds its indeterminate row into the base and merges the
+  caller's style last. Reverting only that line failed
+  `Progress paints every caller property` with
+  `display did not survive: expected ['flex'] to include 'block'`.
+- **`TextArea`** builds the row re-base first (with `fieldChrome` resolving the
+  chrome, then `height: undefined` and the density padding) and resolves the
+  caller's `style` over it with `resolvePartStyle` and the same `FieldState`.
+  The caller's callback runs once, not twice. Reverting it failed two cases:
+  `TextArea paints every caller property` (`height did not survive: expected []
+  to include 77`) and `honours a caller's height over the row model`.
+- **The guard** (`src/components/style-order.test.tsx`) covers 29 `render*`
+  functions: every part that takes a `style` prop, plus plain and labelled
+  separators. 58 table cases (one "survives" and one "is not a base value" per
+  part) plus two TextArea cases. `Arr.filterMap` in Effect v4 takes a `Result`,
+  not an `Option`, so the collector maps to `Option` and uses `Arr.getSomes`.
+- **Runtime measurement** (`runtime/fields.runtime.test.tsx`): a `TextArea` with
+  `style={{ height: 60 }}` and one with `style={{ height: 120 }}` paint heights
+  that differ by 60 ± 1 px (the 2 px inset is the runtime's box model). In the
+  old direction both painted the one-row height and the case failed.
+- Counts after the change: **offline 39 files / 505 tests**, **runtime 21 files /
+  304 tests**, both green. `Progress`'s indeterminate row and `TextArea`'s rows
+  are unchanged, proven by the loading and fields runtime suites.
 
 ## 8. Acceptance
 
-- [ ] Every public part that takes `style` paints a caller's property unchanged,
+- [x] Every public part that takes `style` paints a caller's property unchanged,
       proven by one guard.
-- [ ] `Progress` still paints its row and the indeterminate bar still moves
+- [x] `Progress` still paints its row and the indeterminate bar still moves
       inside its track.
-- [ ] `TextArea` still derives its height from rows when the caller sets none,
+- [x] `TextArea` still derives its height from rows when the caller sets none,
       and honours a caller's `height` and padding when they do.
-- [ ] The guard fails in two independent directions before the fix.
-- [ ] Docs, `COMPONENTS.md`, `README.md`, `TODO.md` and the index record it.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] The guard fails in two independent directions before the fix.
+- [x] Docs, `COMPONENTS.md`, `README.md`, `TODO.md` and the index record it.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.

@@ -63,7 +63,10 @@ state (`docs/component-api.md` §3, adopted from the components workstream):
 ```
 
 The callback's result merges after the component's own rules, so it wins per
-property; an object style behaves exactly as before. State types are exported
+property; an object style behaves exactly as before. That rule holds for
+**every** part that takes `style`, layout properties included: `Progress`'s row
+and `TextArea`'s row height/padding are resolved first, then the caller's style
+wins (`src/components/style-order.test.tsx`, plan `097`). State types are exported
 (`ButtonState`, `ToggleState`, `CheckboxState`, `SwitchState`, `FieldState`,
 `CheckboxGroupState`, `RadioGroupState`, `ToggleGroupState`, `RatingState`,
 `OTPFieldState`, `SliderState`, `RangeSliderState`, `LabelState`,
@@ -100,6 +103,9 @@ enforcement here are the ones that hold across the set:
 - `src/callback-names.test.ts` holds the one value callback name (§2).
 - `src/components/state-style.test.tsx` proves each state callback receives its
   part's state at runtime (§3).
+- `src/components/style-order.test.tsx` proves a caller's `style` survives last
+  on every part that takes one, including `Progress`'s forced row and
+  `TextArea`'s row re-base (§3, plan `097`).
 
 Deviations, kept deliberate:
 
@@ -181,7 +187,9 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`.
+`src/components/testing/element.ts`. Measured 2026-10-18: **39 files, 505 tests,
+all passing**, including a package-wide guard that a caller's `style` wins last
+on every part (plan `097`).
 
 **What the element-tree suites cannot reach:** a component *function* is a React
 hook holder, so a test cannot call `Button(props)` — it asserts on the render
@@ -196,7 +204,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **21 files, 303 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **21 files, 304 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -235,7 +243,8 @@ accessible-name matrix that proves the role and exact name of 28 name-bearing
 Tier 1 nodes, that no interactive node in a composed scene is unnamed, and that
 the presentational primitives invent no role (plan 093), and a rating whose
 hover preview paints the prospective value without changing the committed value
-or its announcement (plan 094).
+or its announcement (plan 094), and a `TextArea` whose painted height follows a
+caller's `style.height` instead of its rows (plan 097).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

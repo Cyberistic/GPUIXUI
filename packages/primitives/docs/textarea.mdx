@@ -79,9 +79,11 @@ changes.
 />
 ```
 
-The textarea re-bases its own vertical padding after the resolved style, so a
-callback's `paddingTop`/`paddingBottom` does not survive (every other property
-does). `FieldState` is exported from `Input`.
+The textarea re-bases its own height and vertical padding **before** the resolved
+style, so the caller wins: `style={{ height: 120 }}` paints a 120 px composer and
+a callback's `paddingTop`/`paddingBottom` survive too. With no caller height the
+field still derives its height from `rows`. `FieldState` is exported from
+`Input`, and `src/components/style-order.test.tsx` guards the merge order.
 
 ## Limitations
 
@@ -101,6 +103,8 @@ does). `FieldState` is exported from `Input`.
 
 - `src/components/fields.test.tsx` — rows, chrome and the absence of `onSubmit`
   in the public props.
+- `src/components/style-order.test.tsx` — a caller's `height` and padding win
+  over the row re-base; with no caller height the rows own it (plan 097).
 - `runtime/fields.runtime.test.tsx` — height follows `rows`; a newline is
   accepted; the probe in plan 046 measured that adding `onSubmit` costs the
   newline, which is why it is not in the type.

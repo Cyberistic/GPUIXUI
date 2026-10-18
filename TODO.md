@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 69/70
+`[x]` `[██████████]` 70/70
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -513,16 +513,17 @@ retired once both branches are one
       buttons and stretches each to the group's width under the same clip. 2
       element-tree + 1 runtime + 1 example test, both directions measured (plan
       096)
-`[ ]` `packages/primitives`: **the caller's `style` does not always win last** —
+`[x]` `packages/primitives`: **the caller's `style` did not always win last** —
       the rule the package documents ("merged last": `COMPONENTS.md`'s Box row,
-      `docs/component-api.md` §3) has two exceptions where a component re-applies
-      its own layout *after* the merge. `Progress` forces `display` /
-      `flexDirection` over the caller's style (`Progress.tsx`), and `TextArea`
-      re-bases `height`, `paddingTop` and `paddingBottom` after `fieldChrome`
-      has already resolved the caller's `style` (`TextArea.tsx`), so
-      `style={{ height: 120 }}` paints a one-row field. Fix both to keep the
-      caller last, and add the missing cross-component guard (a sentinel style
-      property must survive on every `render*` that takes `style`). Plan `097`.
+      `docs/component-api.md` §3) had two exceptions where a component re-applied
+      its own layout *after* the merge. `Progress` forced `display` /
+      `flexDirection` over the caller's style, and `TextArea` re-based `height`,
+      `paddingTop` and `paddingBottom` after `fieldChrome` had already resolved
+      the caller's `style`, so `style={{ height: 120 }}` painted a one-row field.
+      Both now build their layout first and merge the caller last; a
+      package-wide guard (`src/components/style-order.test.tsx`) walks the
+      element tree of all 29 `render*` functions that take `style` and fails by
+      property name, in two independent directions (plan `097`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

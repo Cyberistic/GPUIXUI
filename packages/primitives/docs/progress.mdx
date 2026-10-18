@@ -30,11 +30,14 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
 | `label` | `string` | none | accessible name |
-| `style` | `StyleDesc` | — | merged last |
+| `style` | `StyleDesc` | — | merged last, layout included |
 | `testId` | `string` | — | stable locator |
 
 Values outside 0–100 are clamped, so a bar can never paint outside its track.
-`NaN` is treated as empty, never as complete.
+`NaN` is treated as empty, never as complete. The indeterminate row layout is the
+component's default, not a rule the caller cannot touch: `display` and
+`flexDirection` are merged before `style`, so a caller who sets them owns the
+consequence. The guard in `src/components/style-order.test.tsx` holds that.
 
 ## Keyboard
 
@@ -65,6 +68,8 @@ radius change moves the whole family.
 
 - `src/core/style.test.ts` — clamping, including `NaN` and infinity.
 - `src/components/Progress.test.tsx` — tree-level track/fill and tone.
+- `src/components/style-order.test.tsx` — the caller's `style`, `display` and
+  `flexDirection` included, survives the merged row layout (plan 097).
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
   and −5 to `"0%"`, the fill tracks the value, and the indeterminate segment
   moves over real time.
