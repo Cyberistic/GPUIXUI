@@ -73,6 +73,7 @@ export const CAPABILITIES = [
   "crop",
   "wizard",
   "cell-editing",
+  "upload",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -195,6 +196,7 @@ export class BoxShadowSnapshot extends Schema.Class<BoxShadowSnapshot>(
 export class StyleSnapshot extends Schema.Class<StyleSnapshot>("StyleSnapshot")(
   {
     backgroundColor: Schema.OptionFromOptional(Schema.String),
+    borderColor: Schema.OptionFromOptional(Schema.String),
     color: Schema.OptionFromOptional(Schema.String),
     fontFamily: Schema.OptionFromOptional(Schema.String),
     fontSize: Schema.OptionFromOptional(Schema.Number),

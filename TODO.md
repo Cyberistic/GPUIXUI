@@ -154,16 +154,31 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       (`2990 → 3047`), live `39 → 40` (`726 → 762`), exit `0`,
       `cell-editing=verified`; six mutation + one reverse proof (plan `387`
       §9.3); 33 model unit tests (231 → 264).
+`[x]` Probe a **file-upload queue** per plan `388`: `file-upload` (41 checks) —
+      a drop carries paths only, and a row is `size=unknown` until the app stats
+      it; a drop reaches the **nearest** handler once (a handler-less child lets
+      the zone run, a nested handler takes it alone); a handled drop delivers
+      **no** trailing click, so the planned click guard was deleted — it
+      swallowed the first real click (`picker 0`); a 20/40/100% fill measures
+      48/96/240 px of a 240 px track; cancel freezes the fill and retry resets
+      it; a failed row paints the destructive border; a duplicate path and a
+      refused `.exe` add no row. The OS picker is a documented boundary:
+      `promptForPaths` is blocking and has no automation verb. Suite
+      `89 → 90` (`3047 → 3088`), exit `0`, `upload=verified`; five mutation
+      proofs (plan `388` §10.1); 19 model unit tests (264 → 283).
 `[x]` Correct the unearned **File / folder selection = verified** verdict in
       `COMPONENTS.md`: no scenario in `apps/` or `packages/` calls
       `promptForPaths`, the picker is a blocking OS dialog with no automation
       verb, and `TestRenderer.promptForPaths` forwards to GPUI's
       `cx.prompt_for_paths`, which waits on the platform panel. The row now
       reads docs-only, with the reason inline.
-`[ ]` Playground: prove or bound the platform path picker
-      (`promptForPaths`) — a manual macOS run (cancel and one selection) with
-      the outcome recorded, or keep it docs-only with the automation gap
-      recorded. It cannot run unattended.
+`[x]` Playground: prove or bound the platform path picker
+      (`promptForPaths`) — **bounded by plan `388`**: the picker is a blocking
+      OS panel, `TestRenderer.promptForPaths` forwards to `cx.prompt_for_paths`,
+      and no automation verb exists, so the suite drives the drop and records
+      the picker request instead of opening the panel. The gap is recorded on
+      the File / folder selection row; a manual macOS run is not required to
+      claim the interaction.
 `[ ]` **packages/components** (no owner yet): implement a notification centre
       from the contract plan `381` measured — a bell with a derived unread badge
       and an accessible label, a non-modal `align="end"` panel, grouped

@@ -89,7 +89,11 @@ class FakeRenderer implements NativeRenderer {
     frame: { node_count: 1, tab_stop_count: 0 },
     nodes: { a: { aria: { role: "Button" } } },
   };
-  style: unknown = { backgroundColor: "#101010", fontSize: 13 };
+  style: unknown = {
+    backgroundColor: "#101010",
+    fontSize: 13,
+    borderColor: "#abcdef",
+  };
   retained = 0;
   syntax: ReadonlyArray<number> = [0, 0, 0];
   readonly calls: Array<string> = [];
@@ -365,6 +369,9 @@ describe("runtime reports", () => {
     const host = createHost(renderer);
     expect(host.paintedStyle("panel")?.backgroundColor).toEqual(
       Option.some("#101010"),
+    );
+    expect(host.paintedStyle("panel")?.borderColor).toEqual(
+      Option.some("#abcdef"),
     );
     renderer.style = { backgroundColor: "#101010", fontSize: "big" };
     expect(host.paintedStyle("panel")).toBeNull();

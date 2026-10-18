@@ -1,6 +1,6 @@
 # 388 — Tier 5 feasibility: a file-upload queue — drop paths, progress, cancel/retry and the picker bound
 
-**Status:** planned 2026-10-18 · **Phase:** D/E · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D/E · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `162`, `188`, `330`, `337`,
@@ -176,9 +176,12 @@ A 680 × 520 surface:
   (`/tmp/report.png` → 2 048, `/tmp/data.csv` → 1 536 000); any other path is
   `Option.none()`. That is the app's `stat` boundary; the view never reads the
   filesystem.
-- The click handler calls `clickZone`; when `picker` increments, the view calls
+- The click handler calls `clickZone`, which increments `picker`; the view calls
   **nothing** (it does not call `promptForPaths` — that is the app's blocking
   boundary). The readout is the evidence that the request was made once.
+  **As measured (§10):** there is no trailing click after a handled drop, so no
+  click guard is armed; the first click opens the picker. The planned guard was
+  deleted because it swallowed that click.
 
 ### 3.3 What the scenario measures
 
@@ -196,23 +199,18 @@ A 680 × 520 surface:
 6. A drop of `/tmp/tool.exe` → `files=3`, the rejected line paints
    `tool.exe: type`.
 7. `click("upload-action-0")` starts row 0; `setProgress` is driven by the view
-   on a **probe control** `upload-step-0` (`+25%`) because no timer is needed:
-   assert `uploading`, fill width `60 ± 1` at 25%, then `240` and `done` at
-   100%.
+   on a **probe control** `upload-step-0` (`+20%`) because no timer is needed:
+   assert `uploading`, fill width `48 ± 1` at 20%, then `240` and `done` at
+   100% (five steps).
 8. Start row 1, progress 40, `click("upload-action-1")` cancels → `canceled`,
    fill stays `96 ± 1`, the action is `Retry`.
 9. Retry row 1 → `queued`/0; start + fail (a probe control `upload-fail-1`) →
    `error`, destructive border; retry again → `queued`/0.
 10. The summary reports `3 files · 1 done · 50%` and the known bytes only.
-11. A drop on `upload-hint` (no handler): assert the **measured** count
-    (`drops` before/after). Record the result in the scenario's header and in
-    plan §10: `bubbles` or `bubbles: false`. Do the same for `upload-inner`
-    (with a handler) and assert it receives the drop. The plan's design rule is
-    one of:
-    - **bubbles**: the child handler is redundant; keep it only if a later
-      consumer needs a different children surface, and assert both counts equal;
-    - **does not bubble**: every child of a drop zone needs the handler (the
-      `hover` rule from plan `335`), and the scenario asserts the difference.
+11. A drop on `upload-hint` (no handler) and on `upload-inner` (its own
+    handler): both are measured by §10 — the hint's drop reaches the zone, the
+    inner's reaches only the inner. The scenario asserts `events +1` for the
+    hint and `events +0` / `inner 1` for the inner.
 12. `role="button"` on the action and `role="status"` on the summary are in the
     AccessKit dump (`Button`, `Status`).
 
@@ -288,19 +286,10 @@ Each test must be able to fail. At least:
 
 ### 6.2 Native two-direction proofs
 
-Run one mutation at a time and restore it after the run:
-
-| Mutation | Expected failure |
-| -------- | ---------------- |
-| M1: remove the trailing-click guard (`clickZone` always opens the picker) | `picker=1` after the drop → the step-2 check fails |
-| M2: remove the drop handler from `upload-inner` | if drops do not bubble: the inner-drop count falls to 0 |
-| M3: set the fill width to `progress` instead of `240 * progress / 100` | the 25% fill is `25`, not `60 ± 1` |
-| M4: cancel does not freeze progress (a later step overwrites it) | the frozen `96` becomes `100` |
-| M5: `retry` keeps the old progress | the retried fill is `96`, not `0` |
-| M6: reject-all is removed from a copy of the model | the `.exe` row appears and `rejected` is empty |
-
-Record the actual failure message for each in the plan (add a §10 table at the
-end after the run).
+The executed mutations and their observed failures are in §10.1. The original
+plan proposed a trailing-click guard mutation; the run disproved the guard
+itself, so M1 is now "the click no longer opens the picker" instead. Run one
+mutation at a time and restore it after the run.
 
 ## 7. STOP conditions
 
@@ -342,12 +331,43 @@ Stop and report with evidence — do not improvise — if:
 - The picker bound belongs here, not in a component: `promptForPaths` is the
   app's blocking OS boundary.
 
-## 10. Measured results (fill after the run)
+## 10. Measured results
 
 | Question | Measurement |
 | -------- | ----------- |
-| Does `onFileDrop` bubble from a child without a handler? | _to be measured_ |
-| Does the trailing click arrive after a drop on the zone? | _to be measured_ |
-| Fill width at 25% / 100% of a 240 px track | _to be measured_ |
-| Suite count / checks after the run | _to be measured_ |
-| Mutation proofs M1–M6 | _to be measured_ |
+| Does `onFileDrop` bubble from a child without a handler? | **Yes** — the drop is delivered to the nearest ancestor-or-self with a handler, once. A drop on `upload-hint` (no handler) reached the zone (`events +1`). |
+| Does a child with its own handler also reach the zone? | **No** — a drop on `upload-inner` reached its own handler only (`inner 1`, `events +0`). A nested drop target must add the file itself. |
+| Does a drop on a handled zone deliver a trailing click? | **No** — `clicks` stayed `0` after the drop. Plan `162`'s click belongs to an element **without** a drop handler. |
+| Was the planned click guard needed? | **No, and it was harmful.** The guard stayed armed because no trailing click arrived, so the **first real click was swallowed** (`picker 0`). It was deleted: `clickZone` always opens the picker. The unit test now guards the opposite bug. |
+| How many `onFileDrop` events per simulated drop? | **One** — GPUI's `Entered`/`Submit` pair reaches the handler once, with both paths. |
+| Fill width at 20% / 40% / 100% of a 240 px track | **48 / 96 / 240 px**, exact within 1 px. |
+| Does cancel freeze the fill? | **Yes** — 96 px before and after cancel; retry resets it to 0. |
+| Does an error row repaint with the destructive border? | **Yes** — `paintedStyle.borderColor` equals the dark palette's `destructive`. |
+| Does a drop carry file sizes? | **No** — paths only; `upload-size-2` paints `size=unknown` for an unstatted path. |
+| The picker | Not called: `promptForPaths` is a blocking OS panel with no automation verb; the probe records the request (`picker`) and stops. |
+| Suite count / checks after the run | **90/90** scenarios, **3088** checks (was 89/89, 3047), exit `0`, `upload=verified`; 41 checks in `file-upload`. |
+| Unit tests | **283** in `apps/playground` (was 264 before plans 387/388; +19 here). |
+
+### 10.1 Two-direction proofs
+
+| Mutation | Observed failure |
+| -------- | ---------------- |
+| M1: `clickZone` no longer increments `picker` | `a real click opens the picker: expected "1", got "0"` |
+| M2: the zone ignores its drop (`receive([])`) | `the drop queued two files: expected "2", got "0"` |
+| M3: the fill uses `progress` as its pixel width | `a 20% fill is 48 px of 240: expected 48 ± 1, got 20` |
+| M4: `cancel` resets the progress | `cancel freezes the fill: expected 96 ± 1, got 0` |
+| M5: `addFiles` drops the duplicate check | `a duplicate is not a row: expected "2", got "3"` |
+
+Every mutation was applied alone, rebuilt, run with
+`nub apps/playground/dist/smoke/run.js --only file-upload`, and reverted.
+
+### 10.2 What the component should do
+
+- Put **one** `onFileDrop` on the zone; plain children are covered. A child
+  that owns its own drop handler must add the file itself, because the zone
+  will not see it.
+- Do **not** arm a click guard on a handled zone; there is no trailing click.
+- Treat a dropped path as identity and dedupe by it; sizes need an app-owned
+  `stat` at the boundary, so a row is honest as `size=unknown` until then.
+- The picker is the app's blocking `promptForPaths` boundary, not a component
+  interaction the suite can drive.
