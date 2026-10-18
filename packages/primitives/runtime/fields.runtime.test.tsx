@@ -375,6 +375,31 @@ it("opens a Select's list and paints its options", async () => {
   expect(runtime.allText()).toContain("Apple");
 });
 
+it("paints the Select's chevron as decoration inside the trigger", async () => {
+  // The bug guarded (plan 343): a Select rendered no dropdown affordance, so it
+  // was indistinguishable from an Input until pressed.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select {...selectProps} />
+    </Surface>,
+  );
+  const chevron = Option.getOrElse(runtime.element("sel-chevron"), () =>
+    expect.fail("the Select painted no chevron"),
+  );
+  expect(chevron.type).toBe("svg");
+  expect(chevron.style["pointerEvents"]).toBe("none");
+  // Decoration: it must not become an Image node or rename the combobox.
+  expect(Option.isNone(a11yNode(runtime.a11y(), { role: "Image" }))).toBe(true);
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "ComboBox", label: "Fruit" }),
+    ),
+  ).toBe(true);
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  expect(runtime.allText()).toContain("Pear");
+});
+
 it("selects a Select option by clicking it", async () => {
   const runtime = await openWindow();
   const field = recorder();

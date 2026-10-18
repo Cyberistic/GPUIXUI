@@ -119,6 +119,59 @@ describe("Select", () => {
     ).toBeUndefined();
   });
 
+  it("paints a decorative trailing chevron in the trigger", () => {
+    // The bug guarded (plan 343): the trigger reserved `space-between` for a
+    // trailing child and rendered none, so a select looked like an Input.
+    const at = (disabled: boolean) =>
+      renderSelect(
+        { options: [], label: "Fruit", testId: "sel", disabled },
+        testTheme,
+        valueState(""),
+        false,
+        noFocus,
+        handlers,
+      );
+    const trigger = childAt(at(false), 0);
+    const indicator = expectSome(
+      Option.fromNullishOr(elementChildren(trigger)[1]),
+    );
+    expect(elementChildren(trigger)).toHaveLength(2);
+    expect(expectSome(elementProp(indicator, "name"))).toBe("chevron-down");
+    expect(expectSome(elementProp(indicator, "size"))).toBe(
+      testTheme.iconSize.sm,
+    );
+    expect(expectSome(elementProp(indicator, "color"))).toBe(
+      testTheme.colors.mutedForeground,
+    );
+    expect(expectSome(elementProp(indicator, "testId"))).toBe("sel-chevron");
+    // Decoration, not content: it must not invent a name for the combobox.
+    expect(Option.isNone(elementProp(indicator, "label"))).toBe(true);
+    expect(expectSome(elementProp(trigger, "aria-label"))).toBe("Fruit");
+
+    const disabledTrigger = childAt(at(true), 0);
+    const disabledIndicator = expectSome(
+      Option.fromNullishOr(elementChildren(disabledTrigger)[1]),
+    );
+    expect(expectSome(elementProp(disabledIndicator, "color"))).toBe(
+      testTheme.colors.placeholder,
+    );
+  });
+
+  it("points the chevron up while the list is open", () => {
+    const element = renderSelect(
+      { options: [], label: "Fruit" },
+      testTheme,
+      valueState(""),
+      true,
+      noFocus,
+      handlers,
+    );
+    const indicator = expectSome(
+      Option.fromNullishOr(elementChildren(childAt(element, 0))[1]),
+    );
+    expect(expectSome(elementProp(indicator, "name"))).toBe("chevron-up");
+  });
+
   it("names the trigger separately and wires its focus handlers", () => {
     const element = renderSelect(
       { options: [], label: "Fruit", testId: "sel" },

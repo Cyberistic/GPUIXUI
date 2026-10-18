@@ -23,6 +23,11 @@
  * The options are data rather than compound children because the trigger needs
  * their labels; the `SelectItem` composition below is the shadcn escape hatch
  * for anything the data shape cannot express.
+ *
+ * The trigger carries a **decorative chevron** (`renderSelectIndicator`), down
+ * at rest and up while the list is open, because the runtime has no `transform`
+ * to rotate one. It releases `justifyContent: "space-between"`'s reserved
+ * trailing child and tells a user the field opens a list (plan `343`).
  */
 
 import {
@@ -36,6 +41,7 @@ import {
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
+import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
@@ -135,6 +141,32 @@ export interface SelectProps {
   readonly triggerStyle?: StateStyle<SelectTriggerState>;
   readonly testId?: string;
 }
+
+/** The trigger's trailing affordance: down at rest, up while the list is open. */
+export interface SelectIndicatorProps {
+  readonly open: boolean;
+  readonly disabled: boolean;
+  readonly testId?: string;
+}
+
+/**
+ * The chevron that says "this field opens a list".
+ *
+ * Decoration, not content: no `label`, so it stays out of the accessibility
+ * tree and cannot rename the combobox. The icon sets `pointerEvents: "none"`,
+ * so a click inside it still reaches the trigger.
+ */
+export const renderSelectIndicator = (
+  { open, disabled, testId }: SelectIndicatorProps,
+  theme: PrimitiveTheme,
+): ReactElement => (
+  <Icon
+    name={open ? "chevron-up" : "chevron-down"}
+    size={theme.iconSize.sm}
+    color={disabled ? theme.colors.placeholder : theme.colors.mutedForeground}
+    testId={testId}
+  />
+);
 
 /** The trigger is the field chrome with the value pushed to the far edge. */
 export const selectTriggerStyle =
@@ -431,6 +463,14 @@ export const renderSelect = (
         style={selectTriggerPartStyle(spec, theme, focus.focused, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />
+        {renderSelectIndicator(
+          {
+            open,
+            disabled: disabled === true,
+            testId: testId === undefined ? undefined : `${testId}-chevron`,
+          },
+          theme,
+        )}
       </SelectTrigger>
       <SelectContent
         ref={handlers.registerContent}

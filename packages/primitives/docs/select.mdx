@@ -51,6 +51,18 @@ Group a long list by giving `options` a `{ label, options }` entry:
 />;
 ```
 
+## Trigger indicator
+
+The trigger paints a **decorative chevron** after the value: it points down at
+rest and up while the list is open, so the field reads as "this opens a list"
+before it is pressed (plan `343`). The runtime has no `transform`, so the two
+directions are two icons rather than a rotation.
+
+It is `theme.iconSize.sm` on the `mutedForeground` role — `placeholder` while the
+select is disabled — carries no accessible name (it is decoration, not content),
+and sets `pointerEvents: "none"`, so a click aimed at it reaches the trigger. The
+indicator does not change the combobox's name or add an `Image` node.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -68,7 +80,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 | `label` | `string` | none | accessible name for the select |
 | `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | merged last on the visible trigger; an object or a state callback |
-| `testId` | `string` | — | names the select; the visible trigger becomes `${testId}-trigger` |
+| `testId` | `string` | — | names the select; the visible trigger becomes `${testId}-trigger`, the indicator `${testId}-chevron` |
 
 ```ts
 interface SelectOption {
@@ -273,9 +285,10 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   select's open state, and the per-item states reaching the paint (plans 080,
   081).
 
-- `src/components/Select.test.tsx` — trigger chrome, **the focus ring on focus
-  or open and none when disabled**, the trigger's own name and focus handlers,
-  list surface, item states,
+- `src/components/Select.test.tsx` — trigger chrome, **the decorative chevron
+  (down at rest, up while open, muted when disabled, unnamed)**, **the focus
+  ring on focus or open and none when disabled**, the trigger's own name and
+  focus handlers, list surface, item states,
   the measured `minWidth` (present with a width, absent without), the decoded
   role/name/expanded/selected props the wrapper passes down, the list-height
   estimate checked against the styles it mirrors, the capped content style, the
@@ -331,6 +344,10 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   focus inside it and the trigger keeps the ring; Escape and a committed option
   both return focus to the ringed trigger; a disabled select is skipped by Tab
   and paints no ring. Before the fix every focused trigger painted `undefined`.
+  **Indicator (343):** the mounted trigger contains a painted `svg`
+  (`sel-chevron`) with `pointerEvents: "none"`, it produces no `Image`
+  accessibility node, the `ComboBox` is still named `Fruit`, and a hit-tested
+  click on the trigger still opens the list.
 
 
 ```sh

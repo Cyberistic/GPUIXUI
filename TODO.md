@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 90/90
+`[x]` `[██████████]` 91/91
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -724,6 +724,13 @@ retired once both branches are one
       background image, `borderStyle`, multi-stop/radial); an element case, a
       runtime paint case and a cross-doc guard in `capabilities.test.ts` fail if
       the false claim returns (plan `342`)
+
+`[x]` `packages/primitives`: **`Select` had no dropdown affordance** — the
+      trigger's style reserved `space-between` for a trailing child and rendered
+      only `SelectValue`, so a select looked like an `Input` until pressed. It
+      now paints a decorative `chevron-down`/`chevron-up`, muted and unnamed,
+      with `pointerEvents: "none"`; 2 element-tree + 1 runtime test, both
+      directions proven (plan `343`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
