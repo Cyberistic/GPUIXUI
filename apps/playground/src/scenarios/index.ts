@@ -19,6 +19,7 @@ import { toastScenario } from "./toast.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
 import { dragTargetsScenario } from "./drag-targets.js";
 import { dragAutoscrollScenario } from "./drag-autoscroll.js";
+import { listReorderScenario } from "./reorder.js";
 import { contextMenuScenario } from "./context-menu.js";
 import { nestedLayerScenario } from "./layers.js";
 import { virtualizedTreeScenario } from "./virtual-tree.js";
@@ -136,6 +137,7 @@ export const PROBE_CAPABILITIES = [
   "command",
   "motion",
   "drag",
+  "reorder",
   "menu",
   "search",
   "terminal",
@@ -224,6 +226,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   nativeSurfacesScenario,
   dragTargetsScenario,
   dragAutoscrollScenario,
+  listReorderScenario,
   contextMenuScenario,
   nestedLayerScenario,
   virtualizedTreeScenario,

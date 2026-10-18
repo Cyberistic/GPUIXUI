@@ -96,6 +96,12 @@ describe("scenarioProblems", () => {
       "drag-autoscroll",
     );
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "list-reorder",
+    );
+    expect(Arr.map(scenarios, (scenario) => scenario.capability)).toContain(
+      "reorder",
+    );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "tab-strip-overflow",
     );
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(

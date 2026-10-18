@@ -57,6 +57,8 @@ import { queryBuilderScenario } from "../scenarios/query-builder.js";
 import { notificationCentreScenario } from "../scenarios/notification-centre.js";
 import { wizardScenario } from "../scenarios/wizard.js";
 import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
+import { listReorderScenario } from "../scenarios/reorder.js";
+import { fieldOf } from "../scenarios/probes.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -1292,6 +1294,9 @@ const preview: LiveScenario = {
 
       yield* ctx.host.hover("preview-away");
       yield* graceClose;
+      // The close is a real JS timer: under load it can land after 300 ms, so
+      // wait for the state a close should produce (plan `391`'s flake fix).
+      yield* waitForText(ctx, "preview-state", "open=false");
       const left = yield* textOf(ctx, "preview-state");
       yield* ctx.expectContains(
         "leaving the card closes it",
@@ -1325,6 +1330,7 @@ const preview: LiveScenario = {
 
       yield* ctx.host.hover("preview-away");
       yield* graceClose;
+      yield* waitForText(ctx, "preview-state", "open=false");
       const closed = yield* textOf(ctx, "preview-state");
       yield* ctx.expectContains(
         "a leave with no return closes",
@@ -5008,6 +5014,117 @@ const wizard: LiveScenario = {
     }),
 };
 
+/** A real-window reorder: the drop, the click trap and the keyboard path. */
+const reorder: LiveScenario = {
+  id: "live-reorder",
+  title: "Live reorder: a paced drop, keyboard move and cancel",
+  capability: "reorder",
+  view: listReorderScenario.view,
+  ready: "reorder-list",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const state = (key: string) =>
+        Effect.gen(function* () {
+          const text = yield* textOf(ctx, "reorder-state");
+          return Option.getOrElse(fieldOf(text, key), () => "none");
+        });
+
+      yield* waitForText(ctx, "reorder-order", "alpha,bravo,charlie");
+
+      // 1. A paced pointer drop: row 0 to boundary 3 means index 2.
+      yield* ctx.host.drag("reorder-handle-alpha", 0, 80, 6);
+      yield* settle;
+      yield* waitForText(ctx, "reorder-order", "bravo,charlie,alpha,delta");
+      yield* ctx.expectEqual(
+        "the live drop applies the boundary rule",
+        yield* textOf(ctx, "reorder-order"),
+        "bravo,charlie,alpha,delta,echo,foxtrot,golf,hotel",
+      );
+      const bravo = yield* boxOf(ctx, "reorder-row-bravo");
+      const alpha = yield* boxOf(ctx, "reorder-row-alpha");
+      yield* ctx.expectNear(
+        "the live moved row paints two rows below bravo",
+        alpha.y,
+        bravo.y + 64,
+        2,
+      );
+      yield* ctx.expectEqual(
+        "the live drop is not an activation",
+        yield* state("activations"),
+        "0",
+      );
+
+      // 2. A click focuses the handle and activates, but does not reorder.
+      yield* ctx.host.click("reorder-handle-bravo");
+      yield* settle;
+      yield* waitForText(ctx, "reorder-order", "bravo,charlie,alpha,delta");
+      yield* ctx.expectEqual(
+        "a live click on a handle activates without reordering",
+        yield* state("activations"),
+        "1",
+      );
+      yield* ctx.expectEqual(
+        "a live click focuses its handle",
+        yield* focusedOf(ctx),
+        "reorder-handle-bravo",
+      );
+
+      // 3. Keyboard: lift alpha at index 2, one step up, drop at index 1.
+      yield* ctx.host.click("reorder-handle-alpha");
+      yield* settle;
+      yield* waitForFocus(ctx, "reorder-handle-alpha");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "reorder-state", "mode=keyboard");
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "reorder-order", "bravo,alpha,charlie");
+      yield* ctx.expectEqual(
+        "the live keyboard drop applies the boundary rule",
+        yield* textOf(ctx, "reorder-order"),
+        "bravo,alpha,charlie,delta,echo,foxtrot,golf,hotel",
+      );
+      const keyed = yield* boxOf(ctx, "reorder-row-alpha");
+      const first = yield* boxOf(ctx, "reorder-row-bravo");
+      yield* ctx.expectNear(
+        "the live keyboard-moved row paints one row below bravo",
+        keyed.y,
+        first.y + 32,
+        2,
+      );
+      yield* waitForFocus(ctx, "reorder-handle-alpha");
+      yield* ctx.expectEqual(
+        "the live keyboard drop keeps native focus",
+        yield* focusedOf(ctx),
+        "reorder-handle-alpha",
+      );
+
+      // 4. Keyboard cancel leaves the order and no indicator.
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "reorder-order", "bravo,alpha,charlie");
+      yield* ctx.expectEqual(
+        "a live cancel leaves the order unchanged",
+        yield* textOf(ctx, "reorder-order"),
+        "bravo,alpha,charlie,delta,echo,foxtrot,golf,hotel",
+      );
+      const indicator = yield* ctx.host.bounds("reorder-indicator");
+      yield* ctx.expectEqual(
+        "a live cancel removes the indicator",
+        indicator === null,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${reorder.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -5051,4 +5168,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   notificationCentre,
   wizard,
   gridCellEditing,
+  reorder,
 ];
