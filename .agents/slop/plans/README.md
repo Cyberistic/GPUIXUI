@@ -156,6 +156,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [357](./357-wash-state-steps.md) | The generic wash ladder's press | F | 071, 097, 306, 309, 334, 342, 354, 356 | done |
 | [358](./358-metric-contract.md) | The numeric half of an editable theme | F | 010–019, 050–072, 071, 086, 089, 096, 342, 353, 355–357 | done |
 | [359](./359-modal-scrim-surfaces.md) | The scrim over the surfaces a window actually shows | F | 099, 309, 326, 337, 347, 358 | done |
+| [360](./360-metric-completeness.md) | The numeric contract's last ungoverned members | F | 077, 353, 358, 359 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1253,6 +1254,24 @@ passed. The two surfaces join `overlaySurfaces` (four → six scrim pairs); a
 24-set probe finds the tightest pair at 1.164:1 (macOS dark, `overlay` on
 `input`), so no colour moves and the regression case now reports the invisible
 row.
+
+360 closes the numeric contract's last two ungoverned members. Plan 358 promised
+that `themeMetricFailures` holds an edited theme's numbers to the invariants the
+components paint with, but a probe on the shipped light theme found two edits
+that returned `[]`: `elevation.md[0].offsetX = NaN` (the checker accepted it and
+`elevationShadow` handed the renderer `{ offsetX: NaN, … }`, a shadow it cannot
+paint) and `controlHeight.md = 40` with the shipped `rowHeight = 32` (every row
+is painted at `density.rowHeight`, and the default control a row holds is `md`,
+so every action, checkbox or badge inside a list, table, menu or tree row clips).
+The elevation case generalises: `offsetX`, `offsetY`, `spreadRadius` and an
+infinite `blurRadius` were never checked at all, while `alpha` was. A `finite`
+`MetricRule` joins the contract for the four geometry fields — a negative offset
+or spread is a direction, not breakage; the shipped light level already ships
+`spreadRadius: -2` — and `rowHeight` is held to `controlHeight.md` beside the
+body-line rule. Every shipped theme, platform variant and recipe already
+satisfies both (all three density presets ship `rowHeight === controlHeight.md`),
+so no token, colour, pair or floor moves; the two new cases fail on the pre-fix
+`metrics.ts` and pass after it.
 
 ### Reference adoption (block `200–299`)
 
