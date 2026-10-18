@@ -17,8 +17,8 @@ export const brandFailures = themeFailures(brandTheme);
 
 /**
  * A copied theme with one defect from each class: a tint the helpers cannot
- * parse, a secondary text role that erases itself on the canvas, and a focus
- * ring with no spread.
+ * parse, a family the runtime cannot resolve as written, a secondary text role
+ * that erases itself on the canvas, and a focus ring with no spread.
  */
 export const brokenTheme = extendTheme(getTheme("light"), {
   name: "Broken",
@@ -26,8 +26,9 @@ export const brokenTheme = extendTheme(getTheme("light"), {
     shadow: "black",
     mutedForeground: getTheme("light").colors.background,
   },
+  typography: { sans: "Inter, system-ui, sans-serif" },
   borderWidth: { strong: 0 },
 });
 
-/** All three checks report through one call, in format → contrast → metric order. */
+/** All four checks report through one call, in colour → typeface → contrast → metric order. */
 export const brokenFailures = themeFailures(brokenTheme);

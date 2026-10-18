@@ -32,6 +32,7 @@ import {
 import { motion } from "./motion.js";
 import { metricGroups } from "./metrics.js";
 import { platformNames, platformTypes } from "./platforms.js";
+import { typefaceRules } from "./typeface.js";
 import { textRoles } from "./typography.js";
 
 const ledger = readFileSync(
@@ -161,10 +162,20 @@ describe("COMPONENTS.md design-system rows", () => {
     expect(metrics).toContain("**Theme contrast check**");
   });
 
-  it("states the colour-format check beside the other two", () => {
+  it("states the colour-format check beside the other format half", () => {
     const colour = row("Theme colour check");
     expect(colour).toContain("`themeColorFailures(theme)`");
     expect(colour).toContain(`${colorRoles.length} \`colorRoles\``);
     expect(colour).toContain("`isHexColor(value)`");
+  });
+
+  it("states the typeface check and both indexes", () => {
+    const typeface = row("Theme typeface check");
+    expect(typeface).toContain("`themeTypefaceFailures(theme)`");
+    expect(typeface).toContain("`typefaceRoles`");
+    expect(typeface).toContain("`typefaceRules`");
+    typefaceRules.forEach((rule) => {
+      expect(typeface, rule).toContain(rule);
+    });
   });
 });

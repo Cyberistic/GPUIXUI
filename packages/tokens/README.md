@@ -215,23 +215,23 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-That is one of three checks, and running it alone is not the guarantee: a zero
-`borderWidth.strong` (no focus ring) or a `shadow: "black"` tint passes it.
-`themeFailures(theme, contrast = theme.contrast)` composes all three and tags
-each entry with the `kind` that found it:
+That is one of four checks, and running it alone is not the guarantee: a zero
+`borderWidth.strong` (no focus ring), a `shadow: "black"` tint or a CSS family
+stack passes it. `themeFailures(theme, contrast = theme.contrast)` composes all
+four and tags each entry with the `kind` that found it:
 
 ```ts
 import { themeFailures } from "@gpuixui/tokens";
 
-themeFailures(brandTheme); // [] when every colour, pair and metric holds
+themeFailures(brandTheme); // [] when every colour, family, pair and metric holds
 ```
 
-The order is diagnostic — `color`, then `contrast`, then `metric` — and the
-payload is the same `ColorFailure`, `ContrastFailure` or `MetricFailure` the
-individual check returns. A runnable example lives in
+The order is diagnostic — `color`, `typeface`, `contrast`, then `metric` — and
+the payload is the same `ColorFailure`, `TypefaceFailure`, `ContrastFailure` or
+`MetricFailure` the individual check returns. A runnable example lives in
 [`src/theme-check.example.ts`](./src/theme-check.example.ts).
 
-The other two checks are available on their own.
+The other three checks are available on their own.
 `themeMetricFailures(theme)` holds the numbers (§ *Checking the numbers* below),
 and `themeColorFailures(theme)` holds every role to the six- or eight-digit hex
 form the colour helpers parse:
@@ -248,6 +248,20 @@ unchanged, so a copied theme with `shadow: "black"` paints a **fully opaque**
 shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone — while the
 contrast and metric checks both return `[]`. `#000` and `rgb(0 0 0)` behave the
 same way; `isHexColor(value)` is the predicate for a single stored role.
+
+The two families are also held to the form the runtime reads:
+`themeTypefaceFailures(theme)` reports a name that is empty or a CSS comma
+stack, because GPUix 0.10.0's `StyleDesc.fontFamily` is one string and an
+unknown name falls back silently. A copied theme with
+`sans: "Inter, system-ui, sans-serif"` used to pass every check and paint the
+system fallback; `typefaceRoles` and `typefaceRules` are the ordered indexes,
+and all 20 shipped sets pass:
+
+```ts
+import { themeTypefaceFailures } from "@gpuixui/tokens";
+
+themeTypefaceFailures(brandTheme); // [] when both families are one name
+```
 
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
 the parts, and the selection wash is measured as it paints on every surface a

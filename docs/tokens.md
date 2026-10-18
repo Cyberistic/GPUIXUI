@@ -120,10 +120,13 @@ missing here is not public.
 | `ThemeColors` | The 66 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
-| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `contrast` or `metric`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast` or `metric`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
 | `ThemeProviderProps` | Props for `ThemeProvider`. |
+| `TypefaceFailure` | A family name that is not one non-empty family. |
+| `TypefaceRole` | `sans` or `mono`, a key of `typefaceRoles`. |
+| `TypefaceRule` | `non-empty` or `single-family`, a key of `typefaceRules`. |
 | `Typography` | The sans/mono families and ten type roles. |
 | `TypographyOverrides` | Partial families and roles; roles merge field by field. |
 
@@ -642,7 +645,7 @@ Linux owns a darker tint (plan `091`) and the others name the identity tint they
 paint, so neither can leave the other's value behind on its own canvas.
 `platform-composition.test.ts` applies every shipped style and recipe to every
 shipped base in both modes, both contrasts and both requested levels and holds
-each result to all three checks (plan `374`).
+each result to all four checks (plan `374`).
 
 ### Platform recipes
 
@@ -725,9 +728,10 @@ the sentinel to the operating system's own UI font, so a theme never names a
 face the machine may not have. `mono` names a family each platform installs.
 GPUix 0.10.0's `StyleDesc.fontFamily` is a **single** string, not a CSS stack, so
 an entry never contains a comma; a family the machine does not have falls back
-silently. `currentPlatform` is the platform this code runs on (`default` in a
-browser or on an OS the library does not know) and `systemMonoFamily` is its mono
-family, which the default typography uses.
+silently. `themeTypefaceFailures` holds an edited theme to that form (see
+[Typeface](#typeface)). `currentPlatform` is the platform this code runs on
+(`default` in a browser or on an OS the library does not know) and
+`systemMonoFamily` is its mono family, which the default typography uses.
 
 ### Custom typefaces are unavailable in 0.10.0
 
@@ -1338,9 +1342,10 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones. The guarantee is three checks — colour
-format, contrast and numeric metrics — and [`themeFailures`](#one-check) runs
-all three in one call; the sections below explain each one it composes.
+the same floors as the shipped ones. The guarantee is four checks — colour
+format, typeface form, contrast and numeric metrics — and
+[`themeFailures`](#one-check) runs all four in one call; the sections below
+explain each one it composes.
 
 ```ts
 import { themeContrastFailures } from "@gpuixui/tokens";
@@ -1574,30 +1579,76 @@ A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary; `isHexColor` and `themeColorFailures` close
 the format half of that guard, not the shape half.
 
+#### Typeface
+
+The two families a theme carries — `typography.sans` and `typography.mono` — are
+painted as `StyleDesc.fontFamily`. GPUix 0.10.0's `StyleDesc.fontFamily` is
+**one** string, not a CSS stack, and GPUI resolves it by name: a family the
+machine does not have **falls back silently** to the system face. That makes the
+family names the one documented form no measurement can see — an edited theme
+paints a different typeface, not a broken contrast ratio.
+
+`themeTypefaceFailures(theme)` holds both fields to two rules, listed in
+`typefaceRules` and checked in `typefaceRoles` order:
+
+| Rule | What it catches |
+| ---- | --------------- |
+| `non-empty` | A family that is empty or whitespace-only names nothing. |
+| `single-family` | A comma list — `"Inter, system-ui, sans-serif"` — is one string to the runtime, so it names a family no machine has. |
+
+```ts
+import { extendTheme, getTheme, themeTypefaceFailures } from "@gpuixui/tokens";
+
+const stacked = extendTheme(getTheme("light"), {
+  typography: { sans: "Inter, system-ui, sans-serif" },
+});
+
+themeTypefaceFailures(stacked);
+// [{ role: "sans", rule: "single-family", value: "Inter, system-ui, sans-serif" }]
+```
+
+A `TypefaceFailure` carries the `role` (`sans` or `mono`), the `rule` it broke
+and the `value` the theme carried. A name with spaces inside it —
+`Helvetica Neue` — is one family and passes, and the `.SystemUIFont` sentinel
+every shipped theme uses passes too. The check does not ask whether the machine
+has the face, because the package cannot know: it holds the form, and the type
+facts above already state that an unknown family falls back silently.
+
+Every shipped identity theme, platform variant and recipe passes, so no family
+moves; `platforms.test.ts` already holds the shipped platform table to the same
+single-family rule. The executed example is
+[`src/typeface.example.ts`](../packages/tokens/src/typeface.example.ts).
+
 #### One check
 
-Running one of the three checks is not the guarantee. A copied theme whose only
+Running one of the four checks is not the guarantee. A copied theme whose only
 defect is a zero `borderWidth.strong` — the focus ring's spread, and the only
-focus indicator the runtime can draw — or a `shadow: "black"` tint, which makes
-every elevation level fully opaque, returns `[]` from `themeContrastFailures`
-while being unusable. `themeFailures(theme, contrast = theme.contrast)` composes
-all three and tags each entry with the check that found it:
+focus indicator the runtime can draw — a `shadow: "black"` tint, which makes
+every elevation level fully opaque, or a `sans: "Inter, system-ui, sans-serif"`
+stack, which silently paints the system face, returns `[]` from
+`themeContrastFailures` while being unusable. `themeFailures(theme, contrast =
+theme.contrast)` composes all four and tags each entry with the check that found
+it:
 
 ```ts
 import { extendTheme, getTheme, themeFailures } from "@gpuixui/tokens";
 
 const theme = extendTheme(getTheme("dark"), {
   colors: { shadow: "black" },
+  typography: { sans: "Inter, system-ui, sans-serif" },
   borderWidth: { strong: 0 },
 });
 
-themeFailures(theme); // [ { kind: "color", … }, { kind: "metric", … } ]
+themeFailures(theme);
+// [ { kind: "color", … }, { kind: "typeface", … }, { kind: "metric", … } ]
 ```
 
-The order is diagnostic: `color` first, so a malformed role is named before the
-`NaN` ratios it causes, then `contrast`, then `metric`. A `ThemeFailure` is the
-underlying `ColorFailure`, `ContrastFailure` or `MetricFailure` — the same
-payload the individual check returns — plus its `kind`. The `contrast` argument
+The order is diagnostic: the two format checks first — `color`, then `typeface`,
+so a malformed role is named before the `NaN` ratios it causes and a malformed
+family before the type scale painted with it — then `contrast`, then `metric`. A
+`ThemeFailure` is the underlying `ColorFailure`, `TypefaceFailure`,
+`ContrastFailure` or `MetricFailure` — the same payload the individual check
+returns — plus its `kind`. The `contrast` argument
 defaults to the level the theme declares and reaches the contrast half unchanged,
 so `themeFailures(theme, "high")` asks a stricter question of a theme that does
 not claim AAA floors. A consumer's test is one assertion:

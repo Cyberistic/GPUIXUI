@@ -121,6 +121,7 @@ import {
   spacing,
 } from "./scale.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
+import { typefaceRules } from "./typeface.js";
 import {
   getPlatformTheme,
   getTheme,
@@ -1326,6 +1327,40 @@ describe("docs/tokens.md colour format contract", () => {
     const row = tableRow("invalid colour strings are ignored per property");
     expect(row).toContain("themeColorFailures");
     expect(row).toContain("six- or eight-digit hex form");
+  });
+});
+
+describe("docs/tokens.md typeface contract", () => {
+  it("names the check, the failure type and both indexes", () => {
+    [
+      "themeTypefaceFailures",
+      "TypefaceFailure",
+      "typefaceRoles",
+      "typefaceRules",
+    ].forEach((name) => {
+      expect(markdown, name).toContain(name);
+    });
+  });
+
+  it("states both rules from the index", () => {
+    typefaceRules.forEach((rule) => {
+      expect(markdown, rule).toContain(`\`${rule}\``);
+    });
+  });
+
+  it("states why the runtime needs one family", () => {
+    expect(markdownProse).toContain(
+      "`StyleDesc.fontFamily` is **one** string, not a CSS stack",
+    );
+    expect(markdownProse).toContain("falls back silently");
+  });
+
+  it("states the size of the guarantee in both documents", () => {
+    expect(markdownProse).toContain(
+      "The guarantee is four checks — colour format, typeface form, contrast and numeric metrics",
+    );
+    expect(designSystem).toContain("The four parts are available on their own");
+    expect(designSystem).toContain("`themeTypefaceFailures`");
   });
 });
 

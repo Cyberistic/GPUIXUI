@@ -1120,7 +1120,7 @@ inside the box overflowed it; the three rules now subtract the control's or
 field's two borders and, for the chip, the field's horizontal
 `controlPaddingX.md` padding, every shipped set still fits (16 in 24/28/32; 80
 in 200) so no value moves, and four new cases fail without the bounds (plan 384)
-`[~]` Hold a copied theme's family names to the form the runtime reads — the
+`[x]` Hold a copied theme's family names to the form the runtime reads — the
 docs state that GPUix 0.10.0's `StyleDesc.fontFamily` is one string, so a family
 is never a CSS comma stack, but that was held only for the shipped
 `platformTypes` table: `sans: "Inter, system-ui, sans-serif"`, `""` and `"   "`

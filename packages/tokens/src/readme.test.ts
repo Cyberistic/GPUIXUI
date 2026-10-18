@@ -169,6 +169,14 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("states the typeface check and both rules", () => {
+    expect(readme).toContain("`themeTypefaceFailures(theme)`");
+    expect(readme).toContain(
+      "GPUix 0.10.0's `StyleDesc.fontFamily` is one string",
+    );
+    expect(readme).toContain("`typefaceRoles` and `typefaceRules`");
+  });
+
   it("lists every motion level, including the zero one", () => {
     const levelNames = Object.entries(motion)
       .filter(([, value]) => typeof value === "number")

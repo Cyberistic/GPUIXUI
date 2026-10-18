@@ -31,13 +31,14 @@ import {
   themeModes,
   type Theme,
 } from "./theme.js";
+import { themeTypefaceFailures } from "./typeface.js";
 
 const modes = themeModes;
 const levels = themeContrasts;
 /** The styles that inherited the identity dark tint before plan 374 named it. */
 const tintInheritors = ["darwin", "win32"] as const;
 
-/** Every check a theme must pass, so a composition is held to all three. */
+/** Every check a theme must pass, so a composition is held to all four. */
 const failuresOf = (theme: Theme): ReadonlyArray<string> => [
   ...themeContrastFailures(theme).map(
     (failure) =>
@@ -48,6 +49,10 @@ const failuresOf = (theme: Theme): ReadonlyArray<string> => [
   ),
   ...themeColorFailures(theme).map(
     (failure) => `colour ${failure.role} = ${failure.value}`,
+  ),
+  ...themeTypefaceFailures(theme).map(
+    (failure) =>
+      `typeface ${failure.role} (${failure.rule}) = ${failure.value}`,
   ),
 ];
 
@@ -110,7 +115,7 @@ describe("a platform style applied over another platform", () => {
     });
   });
 
-  it("holds every shipped base and applied style to all three checks", () => {
+  it("holds every shipped base and applied style to all four checks", () => {
     const failures = modes.flatMap((mode) =>
       levels.flatMap((contrast) =>
         shippedBases(mode, contrast).flatMap(([baseName, base]) =>

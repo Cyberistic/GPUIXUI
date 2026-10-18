@@ -1,13 +1,16 @@
 /**
  * Guards the gap plan 383 closes: the extension mechanism advertises one
- * guarantee but shipped three checks — colour format, contrast and numeric
+ * guarantee but shipped separate checks — colour format, contrast and numeric
  * metrics — and each is total only over its own domain. The reference
  * introduces `themeContrastFailures` first, so a copied theme whose only defect
  * is a `shadow: "black"` tint or a zero focus-ring spread returned `[]` from the
  * check a consumer is most likely to run alone; the docs-site interlock row is
- * the first real consumer of that mistake. `themeFailures` composes the three
- * into one tagged list, and this suite proves the composition neither drops a
- * class nor hides a partial check.
+ * the first real consumer of that mistake. `themeFailures` composes them into
+ * one tagged list, and this suite proves the composition neither drops a class
+ * nor hides a partial check.
+ *
+ * Plan 385 adds the fourth class: a family name the runtime cannot resolve as
+ * written, which no older check could see.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -25,6 +28,7 @@ import {
   themeFailures,
   themeMetricFailures,
   themeModes,
+  themeTypefaceFailures,
   type Theme,
 } from "./index.js";
 import {
@@ -78,22 +82,26 @@ describe("one total theme check", () => {
     });
   });
 
-  it("returns exactly the three checks' failures, tagged and grouped", () => {
+  it("returns exactly the four checks' failures, tagged and grouped", () => {
     expect(brokenFailures.length).toBe(
       themeColorFailures(brokenTheme).length +
+        themeTypefaceFailures(brokenTheme).length +
         themeContrastFailures(brokenTheme).length +
         themeMetricFailures(brokenTheme).length,
     );
 
     expect(new Set(kinds(brokenFailures))).toEqual(
-      new Set(["color", "contrast", "metric"]),
+      new Set(["color", "typeface", "contrast", "metric"]),
     );
 
-    const firstContrast = kinds(brokenFailures).indexOf("contrast");
+    const firstTypeface = kinds(brokenFailures).indexOf("typeface");
     const lastColor = kinds(brokenFailures).lastIndexOf("color");
+    const firstContrast = kinds(brokenFailures).indexOf("contrast");
+    const lastTypeface = kinds(brokenFailures).lastIndexOf("typeface");
     const firstMetric = kinds(brokenFailures).indexOf("metric");
     const lastContrast = kinds(brokenFailures).lastIndexOf("contrast");
-    expect(lastColor).toBeLessThan(firstContrast);
+    expect(lastColor).toBeLessThan(firstTypeface);
+    expect(lastTypeface).toBeLessThan(firstContrast);
     expect(lastContrast).toBeLessThan(firstMetric);
   });
 
@@ -102,6 +110,12 @@ describe("one total theme check", () => {
       kind: "color",
       role: "shadow",
       value: "black",
+    });
+    expect(brokenFailures).toContainEqual({
+      kind: "typeface",
+      role: "sans",
+      rule: "single-family",
+      value: "Inter, system-ui, sans-serif",
     });
     expect(brokenFailures).toContainEqual({
       kind: "metric",
@@ -119,6 +133,15 @@ describe("one total theme check", () => {
       floor: contrastFloors.default.secondary,
       ratio: 1,
     });
+  });
+
+  it("catches a typeface-only defect the contrast check alone passes", () => {
+    const stacked = extendTheme(getTheme("light"), {
+      typography: { sans: "Inter, system-ui, sans-serif" },
+    });
+
+    expect(themeContrastFailures(stacked)).toEqual([]);
+    expect(kinds(themeFailures(stacked))).toEqual(["typeface"]);
   });
 
   it("catches a metric-only defect the contrast check alone passes", () => {
@@ -166,7 +189,7 @@ describe("one total theme check", () => {
   it("runs the documented examples", () => {
     expect(brandFailures).toEqual([]);
     expect(new Set(kinds(brokenFailures))).toEqual(
-      new Set(["color", "contrast", "metric"]),
+      new Set(["color", "typeface", "contrast", "metric"]),
     );
     expect(brandTheme.name).toBe("Acme");
   });

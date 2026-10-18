@@ -619,7 +619,7 @@ edits included.
 A style is also an override set over the base it is applied to, so it names the
 canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their
 dark `skeleton`, and every shipped base and style pair is applied and held to all
-three checks (`platform-composition.test.ts`, plan `374`). A style applied over
+four checks (`platform-composition.test.ts`, plan `374`). A style applied over
 another platform's theme therefore keeps its own canvas's tint rather than the
 previous one's.
 
@@ -631,13 +631,17 @@ role, a metric or a shadow level. Nothing mutates the base, so a theme can be
 created once at startup and shared.
 
 Verify an edited theme with `themeFailures(theme)`: it composes the colour
-format, contrast and numeric metric checks, checks contrast at the level the
-theme declares, and tags every entry with the `kind` that found it. An empty
-array is the library's guarantee, and a non-empty one names every pair, role or
-metric that needs fixing. The three parts are available on their own —
-`themeColorFailures`, `themeContrastFailures` and `themeMetricFailures` — but a
-consumer that runs only one has not run the guarantee: a zero focus-ring spread
-or an unparseable `shadow` tint passes the contrast check alone.
+format, typeface, contrast and numeric metric checks, checks contrast at the
+level the theme declares, and tags every entry with the `kind` that found it. An
+empty array is the library's guarantee, and a non-empty one names every pair,
+role or metric that needs fixing. The four parts are available on their own —
+`themeColorFailures`, `themeTypefaceFailures`, `themeContrastFailures` and
+`themeMetricFailures` — but a consumer that runs only one has not run the
+guarantee: a zero focus-ring spread or an unparseable `shadow` tint passes the
+contrast check alone. A family name is one non-empty family, never a CSS comma
+stack: `StyleDesc.fontFamily` is a single string and an unknown name falls back
+silently, so `themeTypefaceFailures` reports a stack or an empty name that the
+other three checks cannot see.
 
 A brand may change any value but should not remove roles: every component
 expects the full role set. A brand that needs a different structure should add
