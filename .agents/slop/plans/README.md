@@ -238,6 +238,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [541](./541-applied-level-palette-name-elevation.md) | The applied theme's level, name, palette and elevation agree | F | 073, 301, 323, 373, 505 | done |
 | [542](./542-shareable-choice-density-rule.md) | The shareable choice's density rule | F | 380, 529, 534 | done |
 | [543](./543-contrast-floor-class-index.md) | The contrast contract's floor classes have no owner | F | 071, 303, 313, 326, 351, 372, 519 | done |
+| [544](./544-quoted-figure-extent.md) | The catalogue's quoted tightest figures are measured on ten of twenty-four sets | F | 380, 387, 388, 536–538 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2552,6 +2553,25 @@ green — and the reference's floor snippet took its order from the
 ordered list, `ContrastPairClass` derives from it, and the ledger, the reference
 and the design system enumerate it; a class with a floor but no pair is reported.
 No colour, pair, floor or metric moves.
+
+Plan `544` closes the last figure set measured on a hand-built list. The
+catalogue calls the ratios beside each contract list "the tightest shipped
+pair", "the weakest shipped set" and "the weakest … the shipped themes produce",
+but `docs.test.ts` derived them from ten of the twenty-four shipped sets — the
+identity and platform variants at the default contrast and the recipes in light
+only — so both AAA identity sets, all six AAA platform variants, the two recipe
+darks and the two recipe AAA sets were unmeasured, and plan 388's guard does not
+see the file because its titles never say "every shipped set". The alpha-hover
+figures the same describe holds are a different claim — the light composition
+the shipped consumers paint — and now narrow explicitly instead of relying on
+the subset. A probe over the full enumeration finds every quoted minimum still
+produced by the set its sentence names (5.68 / 8.44 / 8.98 / 6.22 / 6.93 /
+7.68 / 6.61 / 6.19 / 1.25 / 3.04 / 1.262), so no document value or colour
+moves; `quotedSets` derives from `shippedThemes` with a label that carries
+` high` at AAA, an extent case fails on any narrower list, and the Verification
+paragraph now names both owners — `figures.ts`/`figures.test.ts` for the
+sixteen-entry current-figure table and `docs.test.ts` for the quoted tightest
+figures.
 
 ## How to use a plan
 
