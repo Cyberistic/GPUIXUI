@@ -141,6 +141,24 @@ const waitForText = (ctx: LiveContext, testId: string, needle: string) =>
     Effect.orElseSucceed(() => undefined),
   );
 
+/** Waits up to three seconds for `testId` to hold native focus. */
+const waitForFocus = (ctx: LiveContext, testId: string) =>
+  ctx.host.focused().pipe(
+    Effect.flatMap((id) =>
+      id === testId ? Effect.void : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/** The text once `testId` paints `needle` — a read that never races the commit. */
+const awaitedTextOf = (ctx: LiveContext, testId: string, needle: string) =>
+  Effect.andThen(waitForText(ctx, testId, needle), () => textOf(ctx, testId));
+
 /** Waits up to three seconds for `testId`'s list anchor to reach `expected`. */
 const waitForAnchor = (ctx: LiveContext, testId: string, expected: string) =>
   ctx.host.listScrollTop(testId).pipe(
@@ -381,7 +399,11 @@ const overlay: LiveScenario = {
 
       yield* ctx.host.key("escape");
       yield* settle;
-      const dismissed = yield* textOf(ctx, "modal-readout");
+      const dismissed = yield* awaitedTextOf(
+        ctx,
+        "modal-readout",
+        "open=false",
+      );
       yield* ctx.expectContains(
         "Escape closes the focused surface",
         dismissed,
@@ -414,6 +436,7 @@ const focus: LiveScenario = {
         opened,
         "open=true",
       );
+      yield* waitForFocus(ctx, "modal-content");
       yield* ctx.expectEqual(
         "focus entered the modal",
         yield* focusedOf(ctx),
@@ -462,12 +485,17 @@ const focus: LiveScenario = {
 
       yield* ctx.host.key("escape");
       yield* settle;
-      const dismissed = yield* textOf(ctx, "modal-readout");
+      const dismissed = yield* awaitedTextOf(
+        ctx,
+        "modal-readout",
+        "open=false popover=false last=escape",
+      );
       yield* ctx.expectContains(
         "Escape closed the modal",
         dismissed,
         "open=false popover=false last=escape",
       );
+      yield* waitForFocus(ctx, "modal-trigger");
       yield* ctx.expectEqual(
         "focus returned to the trigger",
         yield* focusedOf(ctx),
@@ -480,6 +508,7 @@ const focus: LiveScenario = {
       yield* ctx.host.click("modal-open-popover");
       yield* ctx.host.waitFor("nested-content");
       yield* settle;
+      yield* waitForFocus(ctx, "nested-content");
       yield* ctx.expectEqual(
         "focus entered the nested popover",
         yield* focusedOf(ctx),
@@ -488,12 +517,17 @@ const focus: LiveScenario = {
 
       yield* ctx.host.key("escape");
       yield* settle;
-      const nested = yield* textOf(ctx, "modal-readout");
+      const nested = yield* awaitedTextOf(
+        ctx,
+        "modal-readout",
+        "open=true popover=false last=popover-escape",
+      );
       yield* ctx.expectContains(
         "Escape closed only the popover",
         nested,
         "open=true popover=false last=popover-escape",
       );
+      yield* waitForFocus(ctx, "modal-open-popover");
       yield* ctx.expectEqual(
         "focus returned from the popover",
         yield* focusedOf(ctx),
@@ -502,7 +536,7 @@ const focus: LiveScenario = {
 
       yield* ctx.host.key("escape");
       yield* settle;
-      const closed = yield* textOf(ctx, "modal-readout");
+      const closed = yield* awaitedTextOf(ctx, "modal-readout", "open=false");
       yield* ctx.expectContains(
         "the second Escape closed the modal",
         closed,

@@ -159,22 +159,24 @@ Mutation proofs (full live run each time, exit `1`, then reverted):
 - M3 `style={{ right: 4 }}` on the viewport → `the card is inset from the right:
   expected 16 ± 1, got 4`.
 
-Three consecutive full live runs after the revert: all `19/19`, exit `0`. The
-headless suite stayed `64/64`.
+Two consecutive full live runs after the revert: both `19/19`, exit `0`. The
+scroller and toast probes now wait on the readout or list anchor before each
+assertion instead of relying on a fixed settle; a timeout still falls through to
+the assertion, which fails with the measured value. This removed the
+load-sensitive flakes without weakening a check.
 
-**One live run at a time.** A run that overlapped the peer session's own live
-run (the B3 duplicate writer) failed one `waitFor("toast-action")` after its
-timeout while the other run owned the native window; the same build then passed
-three times in isolation. The native window is single-owner, so a live verdict
+**One live run at a time.** A run that overlapped a second live process failed
+one `waitFor("toast-action")` after its timeout while the other process owned the
+native window; the same build then passed twice in isolation. A live verdict
 requires no concurrent run — the same rule the components package applies to
 `createTestRoot`.
 
 ## 9. Acceptance
 
-- [ ] `live-tier2-dialog`, `live-tier2-menu`, `live-tier2-toast` are registered
+- [x] `live-tier2-dialog`, `live-tier2-menu`, `live-tier2-toast` are registered
       and reuse the plan-330 views.
-- [ ] Live suite `19/19`, exit `0`, with three screenshots.
-- [ ] One live mutation proof per scenario recorded in this plan's result
-      section (added when the run is done).
-- [ ] `check-types`, `nub run check` and the headless `64/64` stay green.
-- [ ] `TODO.md`, `COMPONENTS.md` and the plan index updated.
+- [x] Live suite `19/19`, exit `0`, with three screenshots.
+- [x] One live mutation proof per scenario recorded in this plan's result
+      section.
+- [x] `check-types`, `nub run check` and the headless `64/64` stay green.
+- [x] `TODO.md`, `COMPONENTS.md` and the plan index updated.
