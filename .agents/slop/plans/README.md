@@ -209,6 +209,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [511](./511-native-field-caret.md) | The native field's caret is the accent | F | 337, 332, 315–319, 350, 387 | done |
 | [512](./512-panel-action-selection.md) | The panel action's label through the text-selection wash | F | 091, 362, 394, 506, 510, 387 | done |
 | [513](./513-selection-veil-pointer-states.md) | The inverse veil's pointer-state gap and its stale rationale | F | 344, 382, 504, 506, 510, 387 | done |
+| [514](./514-disabled-panel-action.md) | The disabled action inside a status panel | F | 306, 307, 392, 394, 397, 500, 502, 512, 513 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2160,6 +2161,22 @@ compositions across the eight resting fills are under the floor, not fourteen;
 six are the accent wash on `primary` (the exact list is six, not seven); the AAA
 dark `softAction` veil is **1.574:1**, not 1.047:1. No colour, pair or floor
 moves; `contrastPairs` stays **394**.
+
+Plan `514` gives the disabled action inside a tone-tinted status panel its
+state. `softAction` is the raised fill an Alert or Badge action paints, but the
+contract defined only its available states: a disabled "Try again" had no
+presentation and no pair. The canvas `disabled` fill cannot be the panel shape —
+it measures **1.0066:1** on XP light's `warningSoft` and **1.0242:1** on the
+high-contrast dark `destructiveSoft` — so a raised action keeps `softAction`
+when it is disabled and paints `disabledForeground` (4.343:1 identity dark,
+5.199:1 AAA dark, so no colour moves), and it does not step because a disabled
+control receives no pointer state. `inactivePanelActionPairs` publishes the
+resting pair (`contrastPairs` 394 → **395**), and a `textTiers` entry holds the
+unavailable label a perceivable step below `softActionForeground` on the five
+surfaces they share (2.156:1 at the tightest, high-contrast light on
+`successSoft`), so a copied theme cannot make a disabled action look enabled.
+The ghost state was already covered by `inactiveSoftPairs`. The consumer
+migration is a cross-team row; no colour, floor or type moves.
 
 ## How to use a plan
 
