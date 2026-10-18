@@ -144,6 +144,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [345](./345-contrast-platform-elevation.md) | A high-contrast platform variant keeps its elevation | F | 063, 073, 085, 301, 311, 323 | done |
 | [346](./346-soft-panel-text.md) | The caption and link inside a status panel | F | 071, 076, 082, 088, 307, 320, 339 | done |
 | [347](./347-value-track-role.md) | The value indicator's track | F | 071, 076, 300, 309, 332, 338 | done |
+| [348](./348-toast-tone-on-floating-card.md) | The toast's tone on its floating card | F | 071, 074, 332, 334, 339, 346, 347 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1129,6 +1130,21 @@ persistent `accent`/`selected` fills; `trackMarkPairs` holds the four
 passes (1.06:1 and 3.15:1 at the tightest), so no existing colour moves; the
 brand example gains its own groove because its lighter primary measured 2.67:1
 on the identity one, and the `primitives` migration is a cross-team row.
+
+348 closes the last shipped composition a status role is painted on outside its
+own surface. The Toast paints its tone glyph and its 3px tone bar with
+`statusTone(...).foreground` — `xSoftForeground`, the role designed for the
+`xSoft` fill — directly on its floating `popover` card
+(`components/src/toast/viewport.tsx`), and the contract measured each soft
+foreground only on its own fill. An edited platform style or brand theme that
+set `warningSoftForeground` close to its `popover` therefore erased the glyph
+and the bar while `themeContrastFailures` returned `[]`. `toastTonePairs` holds
+the four roles on `popover` at the secondary floor (333 → 337); every shipped
+set already clears it with a wide margin (**11.97:1** at the tightest, Linux
+dark `infoSoftForeground`), so no colour moves. The pair is documented as the
+shipped composition, not the recommended one: plan 334 set the precedent for
+the secondary Button's generic washes, and the `components` migration to
+`statusTone(...).text` remains a cross-team row.
 
 ### Reference adoption (block `200–299`)
 

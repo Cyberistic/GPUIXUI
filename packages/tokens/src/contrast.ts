@@ -622,6 +622,21 @@ export const softPanelTextPairs: readonly ContrastPair[] =
   );
 
 /**
+ * The soft tone foreground a Toast paints on its floating card. The shipped
+ * `toast/viewport.tsx` paints its tone glyph and its 3px bar with
+ * `statusTone(...).foreground` (`xSoftForeground`) directly on the `popover`
+ * card, not on the soft fill the role is designed for. The `components`
+ * migration to `statusTone(...).text` is recorded cross-team; until it lands
+ * this pair keeps the glyph — and, because the secondary floor is stricter, the
+ * bar's mark — visible in an edited theme.
+ */
+export const toastTonePairs: readonly ContrastPair[] = statusTones.flatMap(
+  (tone): ReadonlyArray<ContrastPair> => [
+    [`${tone}SoftForeground`, "popover", "secondary"],
+  ],
+);
+
+/**
  * The generic washes the shipped secondary control still paints behind its
  * label. `components/internal/button.tsx` keeps `secondaryForeground` while the
  * fill becomes `hover` or `active`; the designed family is `secondaryHover` /
@@ -640,7 +655,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * link paints and the row fills it sits on, default body text on the quiet panel,
  * the floating surface and the four soft status fills an Alert's description and
  * ghost dismiss control paint, a status panel's caption and link — `mutedForeground`
- * and `primaryText` on the same four fills (`softPanelTextPairs`) — the focus ring
+ * and `primaryText` on the same four fills (`softPanelTextPairs`) — a Toast's
+ * tone glyph and bar, which the shipped component paints with the soft
+ * foreground on its floating `popover` card (`toastTonePairs`) — the focus ring
  * on every surface a focused control
  * can sit on, the ring on the soft status fills a toast's action button sits on,
  * the `destructive` ring an invalid control paints on those same surfaces,
@@ -748,6 +765,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...rowTextPairs,
   ...softBodyPairs,
   ...softPanelTextPairs,
+  ...toastTonePairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 115/150
+`[x]` `[████████░░]` 116/151
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -74,6 +74,11 @@ prebuilt `dist` (plan 016)
 editable `platformStyles` themes and `getPlatformTheme(platform, mode, contrast)`,
 with the high-contrast colour set winning over platform resemblance (plan 063)
 `[x]` Add the design-system rows to `COMPONENTS.md`
+`[x]` Hold the Toast's tone on its floating card — it paints its glyph and 3px
+bar with `xSoftForeground` on `popover`, which the contract measured only on its
+own soft fill, so an edited theme could erase a toast's tone while the checker
+returned `[]`; every shipped set passes (11.97:1 at the tightest), so no colour
+moves and the contract grows 333 → 337 (plan 348)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls
@@ -384,7 +389,8 @@ role measures 4.21:1 on the macOS light canvas and 3.82:1 on a card, under the
 `xSoftForeground` — `toast/viewport.tsx` paints `palette.fg`, the soft-surface
 foreground designed for its own tint, on the `popover` card; use
 `statusTone(...).text` (`xText`), which the status-text contract measures on
-`popover` (plan 332; owner: `components`)
+`popover` (plan 332; owner: `components`); the shipped pair is held by
+`toastTonePairs` at the secondary floor until this lands (plan 348)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —

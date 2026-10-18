@@ -138,6 +138,12 @@
  * could set either role equal to a fill while the checker returned `[]`.
  * `softPanelTextPairs` adds both on all four fills; every shipped set clears
  * the secondary floor, so no colour moves (315 → 323 pairs).
+ *
+ * Plan 348 closes the shipped Toast's tone: `toast/viewport.tsx` paints its
+ * glyph and its 3px bar with `xSoftForeground` on the `popover` card, but the
+ * contract measured each soft foreground only on its own fill. `toastTonePairs`
+ * holds the four roles there until the `components` migration to `xText`; every
+ * shipped set clears the secondary floor with a wide margin, so no colour moves.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -166,6 +172,7 @@ import {
   softPanelTextPairs,
   stateStepPairs,
   themeContrastFailures,
+  toastTonePairs,
   type Theme,
   type ThemeContrast,
 } from "./index.js";
@@ -389,11 +396,12 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(333);
+    expect(contrastPairs.length).toBe(337);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(stateStepPairs).toHaveLength(8);
     expect(new Set(stateStepPairs).size).toBe(8);
     expect(softPanelTextPairs).toHaveLength(8);
+    expect(toastTonePairs).toHaveLength(4);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(
       softBorderSurfacePairs.map(([foreground, background]) => [

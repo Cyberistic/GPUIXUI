@@ -297,6 +297,14 @@ a status badge sat at 1.023:1 on Linux light, 1.036:1 on macOS light and 1.043:1
 on Windows light until plan `300` moved the four light tints one small step
 deeper.
 
+The shipped Toast is the one exception to that split: `toast/viewport.tsx`
+places its tone glyph and its 3px tone bar with `xSoftForeground` on the
+`popover` card rather than on a soft fill. That composition is held at the
+secondary floor as `toastTonePairs` until `components` moves the glyph to
+`xText`; every shipped set clears it with a wide margin (**11.97:1** at the
+tightest, Linux dark `infoSoftForeground`), so the pair is a guard against an
+edited theme, not a change to the palette.
+
 The edge is a role, not a mixture: `xSoftBorder` is designed per tone and
 measured on the fill it borders and on the eight surfaces a chip sits on
 (`background`, `card`, `popover`, the `muted` panel and the `hover`, `active`,
@@ -1605,7 +1613,9 @@ panel's caption and link — `mutedForeground` and `primaryText` on the four sof
 status fills — taking it from 315 to **323**. Plan `347` adds the value
 indicator's groove — `track` on the four base surfaces and the persistent
 `accent`/`selected` fills, with the four progress fills as marks on it — taking
-it from 323 to **333**.
+it from 323 to **333**. Plan `348` holds the soft tone foreground a Toast paints
+on its floating card — the four `xSoftForeground` roles on `popover` — taking it
+from 333 to **337**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1811,7 +1821,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`347` closed.
+plans `076`–`348` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
