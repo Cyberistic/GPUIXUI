@@ -197,6 +197,29 @@ const LowPicker = () => (
   </div>
 );
 
+/** A run of options long enough to overflow the popup. */
+const overflowOptions = (count: number): ReadonlyArray<ComboboxOption> =>
+  Arr.map(Arr.range(1, count), (index) => ({
+    value: `option-${index}`,
+    label: `Option ${index}`,
+  }));
+
+const OverflowPicker = ({
+  options: rows = overflowOptions(30),
+}: {
+  readonly options?: ReadonlyArray<ComboboxOption>;
+}) => (
+  <div style={{ width: 360, padding: 40 }}>
+    <Combobox options={rows}>
+      <ComboboxTrigger label="Pick an option" />
+      <ComboboxContent>
+        <ComboboxInput label="Search options" />
+        <ComboboxList label="Options" />
+      </ComboboxContent>
+    </Combobox>
+  </div>
+);
+
 /** A combobox inside an open dialog: one event must close one surface. */
 const DialogPicker = () => {
   const [open, setOpen] = useState(true);
@@ -905,6 +928,76 @@ describe("Combobox", () => {
     await settle();
 
     expect(onCreate).toHaveBeenCalledWith("ca");
+
+    picker.unmount();
+  });
+
+  /**
+   * Scrolling (plan 535). The bugs this guards, measured on this host: with 30
+   * options and 24 `ArrowDown` presses the highlighted row sat at `y: 755`
+   * against a list viewport ending at `351` — `Enter` selected a row the user
+   * could not see. `scrollIntoView` under-scrolls here because the option is
+   * nested in a group wrapper, and using the popup content as the scroll
+   * container took the focused search field to `y: -360`. The list is now the
+   * viewport, the field stays fixed, and the row is revealed by a measured
+   * `scrollTo`.
+   */
+  it("keeps the highlighted option inside the list viewport", async () => {
+    const picker = renderComponent(<OverflowPicker />);
+    await open(picker);
+
+    Arr.forEach(Arr.range(1, 24), () =>
+      picker.renderer.simulateKeystrokes("down"),
+    );
+    picker.renderer.flush();
+
+    const content = requireBounds(picker, "combobox-content");
+    const row = requireBounds(picker, "combobox-option-option-24");
+    expect(row.y).toBeGreaterThanOrEqual(content.y);
+    expect(row.y + row.height).toBeLessThanOrEqual(content.y + content.height);
+
+    const scroll = picker.renderer.getScrollOffset(
+      picker.renderer.findByTestId("combobox-list")?.id ?? -1,
+    );
+    expect(scroll?.[1] ?? 0).toBeLessThan(0);
+
+    // The field the user is typing into must not scroll away with the list, and
+    // it must keep its control height rather than shrink to nothing.
+    const input = requireBounds(picker, "combobox-input");
+    expect(input.y).toBeGreaterThanOrEqual(content.y);
+    expect(input.y + input.height).toBeLessThanOrEqual(row.y);
+    expect(input.height).toBeGreaterThan(0);
+
+    picker.unmount();
+  });
+
+  it("returns the list to the top when the highlight moves back up", async () => {
+    // Twelve rows still overflow (12 × 28 > the 240 px list), and reaching the
+    // first row from the last proves the upward reveal without 47 key presses.
+    const picker = renderComponent(
+      <OverflowPicker options={overflowOptions(12)} />,
+    );
+    await open(picker);
+    // `ArrowUp` with no highlight wraps to the last row, which reveals the end.
+    picker.renderer.simulateKeystrokes("up");
+    picker.renderer.flush();
+
+    const list = picker.renderer.findByTestId("combobox-list")?.id ?? -1;
+    expect(picker.renderer.getScrollOffset(list)?.[1] ?? 0).toBeLessThan(0);
+
+    Arr.forEach(Arr.range(1, 11), () =>
+      picker.renderer.simulateKeystrokes("up"),
+    );
+    picker.renderer.flush();
+
+    const content = requireBounds(picker, "combobox-content");
+    const first = requireBounds(picker, "combobox-option-option-1");
+    expect(first.y).toBeGreaterThanOrEqual(content.y);
+    expect(first.y).toBeLessThan(content.y + content.height);
+    expect(picker.renderer.getScrollOffset(list)?.[1] ?? null).toBeCloseTo(
+      0,
+      5,
+    );
 
     picker.unmount();
   });

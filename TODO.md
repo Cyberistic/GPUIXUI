@@ -394,6 +394,15 @@ retired once both branches are one
       the GPUix `<input>` and documented. Combobox is recorded as the follow-up:
       its options are nested inside list wrappers, so `scrollIntoView` moves only
       9 px and needs a measured `scrollTo`
+    - [x] The highlighted combobox option is scrolled into the list's viewport —
+      plan 535. Measured: the popup content was the scroll container, so
+      revealing a row took the focused search field to `y -360`, and flex shrink
+      squeezed the field to `height: 0`. The popup is now a fixed field over a
+      scrolling list; the row observes `highlighted` through GPUix's
+      children-as-function API and the reveal works in the list's content space
+      (a window-space rule re-scrolled on every key). 2 native cases + 6 rule
+      cases (Combobox 39, unit 411), mutation proofs; docs, `COMPONENTS.md` and
+      the inventory synced
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook
@@ -608,6 +617,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
 | Root `README.md`'s status line still says 517 behaviour tests / 41 areas; the suite is now 611 and the package has 43 modules | repo README (coordinator) | pending — recorded by plan 373, count refreshed by plan 394 (390 last touched it); not edited from `packages/components` |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
+| The shared store's `@gpuix/native` binding was **rebuilt in place by another worktree while suites were running** (2026-10-18 21:47 and 22:00, `workspaces/gpuix-zindex`; md5 `c0e554b…`). The new build changes bounds/anchoring — the combobox trigger measures `{x:549,width:738}` instead of `{x:540,width:740}` — so "centres a requested popup on its trigger" is off by 4 px and "paints the focus ring on the search field" keeps the ring after focus moves. **Both fail at `HEAD` with that binding and passed on the 21:47 build**, so no component change is at fault; every native verdict taken across the swap is suspect until one build is pinned | gpuix-zindex / playground | pending — plan 535 §7 has the measurements; pin one binding per run and re-verify |
 | The native renderer keeps **one** child at the root: a two-`div` fragment renders only the second (measured while writing plan 510's test fixture, both children identical in every other respect) | playground / `docs/gpuix-capabilities.md` (plan 203) | pending — behaviour fixtures wrap sibling roots in a container; no production example is affected |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source. The Message Scroller behaviour port (MIT) needs its own `provenance.md` row (plan 206 credits it on the docs page) | licensing | pending |

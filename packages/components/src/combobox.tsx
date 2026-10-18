@@ -56,11 +56,13 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import {
   createContext,
+  useCallback,
   useContext,
   useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
+  type Ref,
   type RefObject,
 } from "react";
 import {
@@ -83,6 +85,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
+import { scrollRowIntoView } from "./internal/scroll.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
@@ -115,6 +118,10 @@ interface ComboboxContextValue {
   readonly noteQueryChange: (query: string) => void;
   readonly trigger: RefObject<PublicInstance | null>;
   readonly registerTrigger: (instance: PublicInstance | null) => void;
+  /** The scrolling listbox, the viewport a highlighted row is revealed in. */
+  readonly registerList: (instance: PublicInstance | null) => void;
+  /** Scroll a highlighted row into the list's viewport. */
+  readonly revealRow: (row: PublicInstance) => void;
   /** An Escape press: close and return focus to the trigger. */
   readonly noteEscape: () => void;
   /** An outside press already moved focus, so do not restore it. */
@@ -237,10 +244,30 @@ export const Combobox = ({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const trigger = useRef<PublicInstance | null>(null);
+  const list = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
   const dismissedByOutsidePress = useRef(false);
   const close = useRef<() => void>(() => undefined);
+
+  // The list is the scroll viewport. `scrollIntoView` would scroll to its group
+  // wrapper, so the row and the list are measured and the list is scrolled to a
+  // computed offset (plan 535).
+  const revealRow = useCallback(
+    (row: PublicInstance) => {
+      const listId = list.current?.id;
+      if (listId === undefined) return;
+      scrollRowIntoView(
+        {
+          row: renderer?.getElementBounds?.(row.id),
+          viewport: renderer?.getElementBounds?.(listId),
+          offsetY: renderer?.getScrollOffset?.(listId)?.[1],
+        },
+        (offsetY) => renderer?.scrollTo?.(listId, 0, offsetY),
+      );
+    },
+    [renderer],
+  );
 
   const [selected, setSelected] = useControllableState<ComboboxValue>({
     value: toRuntimeValue(valueProp, multiple),
@@ -343,6 +370,10 @@ export const Combobox = ({
         registerTrigger: (instance) => {
           trigger.current = instance;
         },
+        registerList: (instance) => {
+          list.current = instance;
+        },
+        revealRow,
         noteEscape: () => {
           restoreFocus.current = true;
         },
@@ -573,7 +604,7 @@ export const ComboboxContent = ({
           gap: theme.spacing["2xs"],
           minWidth: 220,
           maxHeight: 280,
-          overflowY: "scroll",
+          overflow: "hidden",
           padding: theme.spacing.xs,
           backgroundColor: theme.colors.popover,
           color: theme.colors.popoverForeground,
@@ -639,6 +670,7 @@ export const ComboboxInput = ({
       style={{
         ...textStyle(theme, "body"),
         height: controlHeight(theme, "sm"),
+        flexShrink: 0,
         paddingLeft: theme.spacing.md,
         paddingRight: theme.spacing.md,
         backgroundColor: theme.colors.input,
@@ -656,6 +688,8 @@ export const ComboboxInput = ({
 export interface ComboboxListProps extends Omit<HeadlessListProps, "children"> {
   /** The listbox's accessible name. Default `"Options"`. */
   readonly label?: string;
+  /** Default `"combobox-list"`. */
+  readonly testId?: string;
   /** A style for every option row, or a function of its state. */
   readonly itemStyle?: StateStyle<ComboboxItemState>;
 }
@@ -666,22 +700,39 @@ export interface ComboboxListProps extends Omit<HeadlessListProps, "children"> {
  * the rows as nodes (rather than through the headless render prop) is what lets
  * a heading sit between runs; item registration and highlight still come from
  * the root context.
+ *
+ * It is the popup's scroll viewport, so the search field above it stays fixed
+ * while a highlighted row is revealed (plan 535).
  */
 export const ComboboxList = ({
   label = "Options",
+  testId = "combobox-list",
   itemStyle,
   style,
+  ref,
   ...rest
 }: ComboboxListProps) => {
   const theme = useTheme();
-  const { rows, groupOf } = useCombobox();
+  const { rows, groupOf, registerList } = useCombobox();
+  const setList = useMergedRef<PublicInstance | null>(registerList, ref);
 
   return (
     <HeadlessList
       role="listbox"
       aria-label={label}
       {...rest}
-      style={mergeStyles({ display: "flex", flexDirection: "column" }, style)}
+      ref={setList}
+      testId={testId}
+      style={mergeStyles(
+        {
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          minHeight: 0,
+          overflowY: "scroll",
+        },
+        style,
+      )}
     >
       {Arr.map(rowRuns(rows, groupOf), (run, index) => {
         const group = Option.getOrUndefined(run.group);
@@ -725,15 +776,50 @@ export interface ComboboxItemProps {
   readonly value: string;
   /** A style, or a function of the row's state (GPUix's `ComboboxItemState`). */
   readonly style?: StateStyle<ComboboxItemState>;
+  readonly ref?: Ref<PublicInstance>;
 }
 
+/** Run `onHighlight` on the flip to highlighted; a stable state is a no-op. */
+const RowBody = ({
+  highlighted,
+  onHighlight,
+  children,
+}: {
+  readonly highlighted: boolean;
+  readonly onHighlight: () => void;
+  readonly children: ReactNode;
+}) => {
+  const was = useRef(false);
+  useLayoutEffect(() => {
+    if (highlighted && !was.current) onHighlight();
+    was.current = highlighted;
+  }, [highlighted, onHighlight]);
+  return <>{children}</>;
+};
+
 /** One option row: label, description and the selected mark. */
-export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
+export const ComboboxItem = ({ value, style, ref }: ComboboxItemProps) => {
   const theme = useTheme();
-  const { options, selectedValues, labelFor, isDisabled } = useCombobox();
+  const { options, selectedValues, labelFor, isDisabled, revealRow } =
+    useCombobox();
   const option = optionOf(options, value);
   const selected = Arr.contains(selectedValues, value);
   const creates = Option.isSome(parseCreateValue(value));
+  // State, not a ref: a headless row rebuilds its ref callback each render, so a
+  // ref is briefly null while this subtree's layout effects run (the same reason
+  // `MenuItem` keeps its instance in state).
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setRow = useMergedRef<PublicInstance | null>(attach, ref);
+  // The headless row owns the highlight; reveal on the flip, not on every
+  // render, so a stable highlight never fights the caller's scroll (plan 535).
+  const onHighlight = useCallback(() => {
+    if (instance !== undefined) revealRow(instance);
+  }, [instance, revealRow]);
 
   return (
     <HeadlessItem
@@ -743,51 +829,56 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
       disabled={isDisabled(value)}
       {...stateDescription(isDisabled(value))}
       testId={creates ? "combobox-option-create" : `combobox-option-${value}`}
+      ref={setRow}
       style={(state) =>
         mergeStyles(rowStyle(theme, state), resolveStyle(style, state)) ??
         rowStyle(theme, state)
       }
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-          minWidth: 0,
-          gap: theme.spacing["2xs"],
-        }}
-      >
-        <text
-          style={{
-            ...textStyle(theme, "label"),
-            color: theme.colors.popoverForeground,
-          }}
-        >
-          {labelFor(value)}
-        </text>
-        {Option.match(option, {
-          onNone: () => null,
-          onSome: (candidate) =>
-            candidate.description === undefined ? null : (
-              <text
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.mutedForeground,
-                }}
-              >
-                {candidate.description}
-              </text>
-            ),
-        })}
-      </div>
-      {selected ? (
-        <Icon
-          name="check"
-          color={theme.colors.primary}
-          size="sm"
-          label="Selected"
-        />
-      ) : null}
+      {(state) => (
+        <RowBody highlighted={state.highlighted} onHighlight={onHighlight}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              flexGrow: 1,
+              minWidth: 0,
+              gap: theme.spacing["2xs"],
+            }}
+          >
+            <text
+              style={{
+                ...textStyle(theme, "label"),
+                color: theme.colors.popoverForeground,
+              }}
+            >
+              {labelFor(value)}
+            </text>
+            {Option.match(option, {
+              onNone: () => null,
+              onSome: (candidate) =>
+                candidate.description === undefined ? null : (
+                  <text
+                    style={{
+                      ...textStyle(theme, "caption"),
+                      color: theme.colors.mutedForeground,
+                    }}
+                  >
+                    {candidate.description}
+                  </text>
+                ),
+            })}
+          </div>
+          {selected ? (
+            <Icon
+              name="check"
+              color={theme.colors.primary}
+              size="sm"
+              label="Selected"
+            />
+          ) : null}
+        </RowBody>
+      )}
     </HeadlessItem>
   );
 };

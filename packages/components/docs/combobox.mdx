@@ -224,7 +224,9 @@ The popup closes one layer per event: inside a dialog, the first Escape or
 outside press closes the popup and leaves the dialog open.
 
 The search input keeps focus and paints the token focus ring while it holds it
-(plan 523); the highlighted row is visual. **No
+(plan 523); the highlighted row is visual. The field stays fixed at the top of
+the popup and only the list scrolls, so the highlighted option is scrolled into
+the list's viewport as the arrows move it (plan 535). **No
 `aria-activedescendant`** exists in 0.10.0, so assistive technology does not get
 the input→row relationship; `aria-selected` on the rows is the supported signal.
 
@@ -244,8 +246,8 @@ ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 | `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string`, `testId?: string` (default `"combobox-trigger"`) |
 | `ComboboxContent` | anchored popup | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
 | `ComboboxInput` | `input` | `placeholder?: string` (default `"Search…"`), `label?: string` (default `"Search options"`), `onChange?: (event: EventPayload) => void` |
-| `ComboboxList` | GPUix's listbox: one labelled group per contiguous run, one row per visible option | `label?: string` (default `"Options"`), `itemStyle?: StateStyle<ComboboxItemState>` |
-| `ComboboxItem` | GPUix's option row | `value: string` (required), `style?: StateStyle<ComboboxItemState>` |
+| `ComboboxList` | GPUix's listbox: one labelled group per contiguous run, one row per visible option | `label?: string` (default `"Options"`), `testId?: string` (default `"combobox-list"`), `itemStyle?: StateStyle<ComboboxItemState>` |
+| `ComboboxItem` | GPUix's option row | `value: string` (required), `style?: StateStyle<ComboboxItemState>`, `ref?: Ref<PublicInstance>` |
 | `ComboboxEmpty` | GPUix's empty slot | `children?: ReactNode` |
 
 ## Theming
@@ -291,7 +293,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (37 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (39 tests):
 open + input focus and its focus ring (which follows focus away and returns on
 reopen), a centred popup and a near-bottom popup that opens above its
 trigger, the trigger exposed as a button with its expanded state, filtering,
@@ -311,7 +313,10 @@ filtering, a caller replacing the options for a query, the loading empty
 state in both directions, and the grouping contract: one heading per contiguous
 run in declaration order (with a named `role="group"`), in-run ranking that
 keeps a later group from jumping an earlier one, a heading disappearing with its
-last match, grouped rows selecting by value, and an ungrouped create row.
+last match, grouped rows selecting by value, and an ungrouped create row, plus
+the scroll contract: 30 options keep the highlighted row inside the popup after
+24 arrow presses while the search field stays fixed, and the list returns to the
+top when the highlight walks back up.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf`, the run rule
 (`groupOfOption`, `optionRuns`, `rowRuns`, in-run ranking and disappearing
