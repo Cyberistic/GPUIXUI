@@ -61,6 +61,7 @@ export const CAPABILITIES = [
   "states",
   "truncation",
   "grid-layout",
+  "typography",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);

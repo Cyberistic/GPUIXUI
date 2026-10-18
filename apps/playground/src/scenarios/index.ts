@@ -30,6 +30,7 @@ import { replaceScenario } from "./replace.js";
 import { layoutScenario } from "./layout.js";
 import { layoutGridScenario } from "./layout-grid.js";
 import { textScenario } from "./text.js";
+import { typographyScenario } from "./typography.js";
 import { inputScenario } from "./input.js";
 import { textEntryScenario } from "./text-entry.js";
 import { focusScenario } from "./focus.js";
@@ -132,6 +133,7 @@ export const PROBE_CAPABILITIES = [
   "states",
   "truncation",
   "grid-layout",
+  "typography",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -139,6 +141,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   layoutScenario,
   layoutGridScenario,
   textScenario,
+  typographyScenario,
   inputScenario,
   textEntryScenario,
   focusScenario,

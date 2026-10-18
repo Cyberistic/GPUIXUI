@@ -31,6 +31,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | ---------- | -------- | ------- |
 | layout | `layout-flex`, `shell-navigation`, `shell-selection` | verified |
 | grid-layout | `layout-grid` | verified |
+| typography | `typography-layout` | verified |
 | text | `text-native` | verified |
 | input | `input-edit`, `text-entry` | verified |
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus`, `live-focus` | verified |
@@ -72,8 +73,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | states | `declared-styles` | verified |
 | truncation | `text-truncation` | verified |
 
-The suite is **70/70 green here** (exit `0`, `.artifacts/smoke-report.json`,
-1923 checks).
+The suite is **71/71 green here** (exit `0`, `.artifacts/smoke-report.json`,
+1951 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **22/22 green
@@ -633,7 +634,7 @@ carries an evidenced limitation. The capability evidence lives in
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
-| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Truncation (`text-truncation`, plan `335`):** `truncate` is measured — `textOverflow: "ellipsis"` collapses to **one line** (26 px against 364 px wrapped), and the truncated string is still reported in full by `getPaintedText()`, so the ellipsis glyph itself is not assertable. `clamp` is measured — `lineClamp` clips to exactly N lines (2 → 52 px, 3 → 78 px) and works on a width-constrained box with no fixed height. **Caveat:** the runtime shares text layout per `(string, width)` and the key ignores `lineClamp`, so two identical strings at one width clamp together (first laid out wins); and `whiteSpace: "nowrap"` alone has the same geometry as `ellipsis`. |
+| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Truncation (`text-truncation`, plan `335`):** `truncate` is measured — `textOverflow: "ellipsis"` collapses to **one line** (26 px against 364 px wrapped), and the truncated string is still reported in full by `getPaintedText()`, so the ellipsis glyph itself is not assertable. `clamp` is measured — `lineClamp` clips to exactly N lines (2 → 52 px, 3 → 78 px) and works on a width-constrained box with no fixed height. **Caveat:** the runtime shares text layout per `(string, width)` and the key ignores `lineClamp`, so two identical strings at one width clamp together (first laid out wins); and `whiteSpace: "nowrap"` alone has the same geometry as `ellipsis`. **Type layout (`typography-layout`, plan `342`):** an explicit `lineHeight` is exact (30 → 60 for two wrapped lines); the default line box is ~1.6× the font size (12 → 19.5, 16 → 26, 24 → 39); `fontWeight` reaches the layout (a word at 700 is ~4 px wider at 16 px); a `<text>` block **fills its parent** by default. **`textAlign` is a no-op in 0.10.0** — left/centre/right all leave the glyph run at the block's left edge, on the `<text>` and on its parent — so `Text`'s documented `align` prop currently does nothing. The working routes are moving the block: `alignSelf: "center"`/`"flex-end"` in a column flex (measured 82.5 / 165 in a 200 px column) or a narrower explicit width in a `justifyContent: "center"` row (70). **Defect recorded cross-team** for `primitives` to implement or document. |
 | Icons | wip | yes | [icon](packages/icons/docs/icon.mdx) · icons | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. |
 | Separators | wip | yes | [separator](packages/primitives/docs/separator.mdx) · layout | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
 | Spacers | wip | yes | [spacer](packages/primitives/docs/spacer.mdx) · layout | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |

@@ -185,9 +185,23 @@ The scenario is the test; every check reads a runtime bound or a painted wash.
 
 Record the exact failing strings in §8, restore, and re-run to green.
 
-## 8. Result (filled in after the run)
+## 8. Result (measured 2026-10-18)
 
-_(executor records the M-strings, the final counts and any correction to §2)_
+`--only typography-layout`: **28 checks, exit `0`**. Full suite: **71/71
+scenarios, 1951 checks**, exit `0`; `typography=verified`. Three mutation
+proofs, each run separately and restored afterwards:
+
+| Mutation | Measured failure | Exit |
+| -------- | ---------------- | ---- |
+| M1: drop `lineHeight: 30` | `one line uses the declared height: expected 30 ± 1, got 22.5` | 1 |
+| M2: bold run → `fontWeight: "400"` | `bold is wider than regular: expected true, got false` | 1 |
+| M4: centre run gains `alignSelf: "center"` | `textAlign centre does not move the glyphs: expected 0 ± 0.5, got 82.5` | 1 |
+
+No correction to §2 was needed — the recorded numbers reproduced exactly. The
+live suite is unchanged at 22/22 (geometry-only, no live scenario).
+
+The `Text.align` defect is recorded in `TODO.md` for the `primitives`
+workstream with the two working block-alignment routes.
 
 ## 9. STOP conditions
 

@@ -69,7 +69,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (70/70 green); -> 2 on a host with no binding
+# -> 0 here (71/71 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -911,10 +911,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **70/70 green** here (`exit 0`, 1923 checks):
+The suite is **71/71 green** here (`exit 0`, 1951 checks):
 
 ```
-70/70 scenarios passed · capabilities: layout=verified text=verified
+71/71 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -924,7 +924,7 @@ content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
 toast=verified grid=verified data-grid=verified layers=verified
 scroller=verified scale=verified tier2=verified replace=verified
-grid-layout=verified
+grid-layout=verified typography=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -932,6 +932,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | Capability | Measured on 0.10.0 here |
 | ---------- | ----------------------- |
 | layout, text, input | exact bounds; `getAllText`/`getPaintedText`; `onChange`/`onSubmit` |
+| typography | an explicit `lineHeight` is exact (30 → 60 for two wrapped lines); the default line box is ~1.6× the font size (12 → 19.5, 16 → 26, 24 → 39); `fontWeight` widens the run; a `<text>` block fills its parent. **`textAlign` is a no-op** (`left`/`center`/`right` all leave the glyph run at the block edge) — `alignSelf` in a column flex or a narrower width in a `justifyContent` row is the working route |
 | grid layout | equal tracks split a width to the half pixel (`93.5/93/93.5` in 300 with 10 px gaps); explicit rows split a fixed height and stretch an unsized child, but a declared height wins; auto rows follow the tallest child; **default and `zero` `gridColumnMin` are equal**, `min-content` fills with unequal tracks, `max-content` leaves the remainder unused; nested grids resolve against their cell; an oversized child **overflows** its track; `justifyContent` centres content-sized tracks; a fixed-height wrapping row **stretches its line boxes** unless it sets `alignContent: "flex-start"` (measured 104 → 38) |
 | focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do. **Overflow:** a clipped tab is still a tab stop and focus does not reveal it (`tab-strip-focus`) |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
@@ -1011,6 +1012,7 @@ src/scenarios/command-palette.tsx the window shortcut, a non-modal overlay, filt
 src/scenarios/workspace-panes.tsx tabbed panes: visibility, tab order, nested scroll, resize
 src/scenarios/docking.tsx   docking: drop zones, split creation, prune, restore
 src/scenarios/layout-grid.tsx grid tracks, rows, column minima, overflow and wrap
+src/scenarios/typography.tsx line height, weight and the alignment routes
 src/scenarios/grid.tsx      pinned grid chrome: sticky, one scroll source, column windows
 src/scenarios/grid-window.ts the pure window: clamp, visible range, keyboard reveal
 src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
@@ -1057,8 +1059,8 @@ narrower. Each deviation is deliberate and measured:
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
   the pinned-grid probe, the virtualized data-grid probe, the
   collapsible-height probe, the nested-layer probe and the variable-row-height
-  probe and the grid/wrap layout probe pass in real GPUix 0.10.0 on this host
-  (70/70), with a written report and screenshots. The **message-scroller** probe
+  probe, the grid/wrap layout probe and the typography probe pass in real
+  GPUix 0.10.0 on this host (71/71), with a written report and screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history. The
