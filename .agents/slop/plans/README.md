@@ -181,8 +181,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
 playground plans take the free numbers above the components (`300–324`) and
-tokens-theme (`300–328`) reservations — `330`–`336` are landed and `337` is the
-next free number.
+tokens-theme (`300–328`) reservations — `330`–`336` are landed, `337` is
+planned, and `338` is the next free number.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -252,6 +252,7 @@ next free number.
 | [333](./333-search-and-replace.md) | Search and replace: can a find bar rewrite the edited text? | D/E | 171, 188, 189, 197 | **landed** — `replace-contract` + `live-replace`: an `<input>`'s own `highlight` reports `matchCount=0` (an editor cannot carry washes), a component-set value repaints the editor and the preview's washes, **the caret moves to the end** across the rewrite, `replace-all` is idempotent and there is no `setSelection`. Suite `65 → 66`, live `19 → 20`, exit `0`, `replace=verified`; 8 pure tests + the two-direction proof (§8) |
 | [335](./335-declared-styles-and-text-truncation.md) | Declared interaction states and text truncation: hover, active, ellipsis, line clamp | B→F | 100, 110, 120, 140, 150, 196, 188 | **landed** — `declared-styles` (17 checks) and `text-truncation` (12): hover 100 → 140 and active → 180, **per element** (a child's hover cancels its parent's), the style report is the authored one, a press does not enter hover and `active` outlives the pointer; `textOverflow` is one line, `lineClamp` is exact and inherited, **but the shared text layout is keyed on `(string, width)` and ignores `lineClamp`**, and `getPaintedText` is the source run (no ellipsis glyph). Suite `66 → 68`, exit `0`, six mutation proofs |
 | [336](./336-toast-frozen-exit.md) | `toast-lifecycle`: make the frozen-exit assertion deterministic | F | 100, 110, 120, 140, 183, 330, 333, 335 | **landed** — the frozen exit is asserted on a synchronous dismissal; the timer path asserts only timer-observable effects, and both cards are named before the timer starts. Suite `68/68`, 1785 checks (+4), exit `0`; three mutation proofs (M1 no exit, M2 dropped push, M3 the timer never fires). Measured: a motion element's first painted frame is its from-state; a timer racing a paint and an `AnimatePresence` re-render is not a deterministic observation point |
+| [337](./337-tier2-toast-timer-exit.md) | The shipped toast's real timer under a frozen motion clock | F | 100, 110, 120, 140, 183, 330, 336 | **planned** — measures the shipped `ToastViewport`'s timer path and asserts the deterministic half (`tier2-toast`) |
 
 Cross-cutting records:
 
