@@ -117,6 +117,7 @@ workstream declares in its own section below.
 | [365](./365-carousel-hiding.md) | Carousel hides inactive slides in the real runtime (`display: none` is a no-op in 0.10.0) | F | 110, 117, 315, 326, 338 | done — `visibility: hidden` + a collapsed box keeps the slide mounted and its state; 3 new painted/bounds/hit-test cases (Carousel 12, behaviour 525); 6 of 12 fail on the old `display` code |
 | [366](./366-dismiss-stack-event-identity.md) | One Escape closes one overlay: the dismiss stack uses the field claim, not payload identity | F | 110, 112, 114, 117, 131, 187, 326 | done — the runtime hands each handler a payload copy, so consumption moved to the shared field claim; unit copy case + 1 native nested-dismiss case (Dialog 14, behaviour 526); both fail on the `WeakSet` |
 | [367](./367-tabs-arrow-origin.md) | Tabs: the arrow origin is the natively focused tab, not the last React focus event | F | 110, 113, 117, 321, 334, 344/345 | done — `origin()` reads `getFocusedElementId` at key time (a live click and `autoFocus` never run `onFocus`); click records the highlight; 1 native case (Tabs 16, behaviour 527), fails on the old origin |
+| [368](./368-date-picker-open-anchor.md) | DatePicker opens on today (clamped to the bounds), not the month head | F | 110, 112, 119, 127, 303, 323, 346 | planned — measured: a no-value open focuses `2026-10-01` even with `min="2026-10-17"` |
 
 Interlocks this workstream depends on and does not own:
 
