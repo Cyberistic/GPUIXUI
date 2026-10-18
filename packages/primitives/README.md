@@ -200,7 +200,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **41 files, 560 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **41 files, 567 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), and a guard that every documented `theme.…` path and
@@ -219,14 +219,16 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **23 files, 386 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **23 files, 398 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
 the paint (plan 055), a tooltip measured against its trigger in a column and a
 row and flipped below at the window's top edge (plans 060, 067), a Rating's
-clear leaving native focus and the ring on the same star (plan 334), a radio group's failed validation measured on the circles (plan
+clear leaving native focus and the ring on the same star (plan 334), a tooltip
+opening from every single-root control and the text hosts' focus-only rule
+(plan 345), a radio group's failed validation measured on the circles (plan
 061), a select's list measured against its trigger's width and — at the window's
 bottom edge — opened above the trigger instead of over it, a long list capped and
 scrolled with the keyboard highlight kept in view (plans 062, 066, 068, 069), a
