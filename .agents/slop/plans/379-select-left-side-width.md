@@ -154,7 +154,8 @@ has no room":
 ### 3.3 Both directions
 
 Revert `maxWidth` to the old subtraction and run the runtime case: it fails with
-`expected 228 to be greater than 300`. Revert `availableWidth`'s `left` branch to
+`expected 213 to be greater than 300` (the window's scale decides the last few
+pixels; the run measured 213, the first probe 228). Revert `availableWidth`'s `left` branch to
 the top/bottom formula and the core case fails on the expected `1036`. Restore
 and both pass. Record both mutation outcomes in §6.
 
