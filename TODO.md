@@ -469,10 +469,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–461)
+## Docs site workstream (plans 410–462)
 
-`[~]` `[██████████]` 60/61
+`[~]` `[██████████]` 61/62
 
+`[x]` **The compound contract meets real components (plan 462)** — Tabs and Toasts are `pattern: "stateful"` with real parts, both pages carry `## State and ownership`, and the Toast page includes the viewport source it tells the reader to render; the three guards that were fixtures-only now run on shipped records, with two-direction proofs
 `[x]` **Document the 17 Tier 2 components merged from `master` (plan 461)** —
 time picker, message scroller, fieldset, form, navigation menu, preview card,
 drawer, stepper, timeline, colour picker, tag input, mention input, hotkey
@@ -547,8 +548,9 @@ previews (the four interaction-only pages carry a measured tier-V reason).
       part-source and `kind: "interaction"` preview guards are landed
       (`component-meta/contract.ts`, `registry.test.ts`,
       `component-pages.test.ts`, `content-references.test.ts`,
-      `preview.test.tsx`); Tier 3–4 pages and the first compound record still
-      wait on `packages/data-grid` / `packages/docking`
+      `preview.test.tsx`); Tabs and Toasts now prove the contract on shipped
+      records (plan 462), and the Tier 3–4 pages still wait on
+      `packages/data-grid` / `packages/docking`
 
 ## Cross-team tasks raised by the docs-site workstream
 

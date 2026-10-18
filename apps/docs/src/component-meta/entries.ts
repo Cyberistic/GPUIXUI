@@ -858,6 +858,17 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "yes",
       sourcePath: "packages/components/src/toast/provider.tsx",
       api: ["ToastProviderProps", "ToastViewportProps"],
+      pattern: "stateful",
+      parts: [
+        {
+          name: "ToastProvider",
+          sourcePath: "packages/components/src/toast/provider.tsx",
+        },
+        {
+          name: "ToastViewport",
+          sourcePath: "packages/components/src/toast/viewport.tsx",
+        },
+      ],
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/toast.test.tsx",
@@ -1033,6 +1044,13 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "partial",
     sourcePath: "packages/components/src/tabs.tsx",
     api: ["TabsProps"],
+    pattern: "stateful",
+    parts: [
+      { name: "Tabs", sourcePath: "packages/components/src/tabs.tsx" },
+      { name: "TabsList", sourcePath: "packages/components/src/tabs.tsx" },
+      { name: "TabsTrigger", sourcePath: "packages/components/src/tabs.tsx" },
+      { name: "TabsContent", sourcePath: "packages/components/src/tabs.tsx" },
+    ],
     liveScene: "tabs",
     runtime: nativeSuite("@gpuixui/components", "src/behaviour/tabs.test.tsx"),
     status: "done",

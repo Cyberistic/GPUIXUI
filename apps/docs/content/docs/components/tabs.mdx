@@ -54,6 +54,16 @@ The tabs example is a settings panel with real panels per tab:
   ../../../../../packages/components/examples/tabs.example.tsx
 </include>
 
+## State and ownership
+
+`Tabs` owns the uncontrolled selection, the register of triggers and the roving
+tab stop; it moves native focus to the trigger it activates. `TabsContent`
+unmounts while another tab is selected, so a hidden panel keeps no state. The
+consumer owns the controlled value and the panel content: pass `value` +
+`onValueChange` and render the panels from the new value. With
+`activation="manual"`, focus and selection are separate — the focused trigger is
+not selected until Enter or Space.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/tabs.tsx" name="TabsProps" />

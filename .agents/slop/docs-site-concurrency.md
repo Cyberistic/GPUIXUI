@@ -121,3 +121,31 @@ session's duplicate plan was deleted.
 
 The supervisor guard above is still the permanent fix: a live `session_v2` row
 for a worktree must block a new loop turn. `TODO.md` still carries that ask.
+
+## 2026-10-18 03:06–03:30 — killing the CLI did not stop the turns
+
+After the loop was stopped at 03:06, `run-docs-site.sh` was restarted by a
+supervisor tick at 03:13 and the tree gained five **live server-side** turns for
+the same worktree (`session_v2` rows where `time_idle is null`), while the docs
+writer was mid-run:
+
+| Session | Created | Last update |
+| ------- | ------- | ----------- |
+| `ses_eb3a4eff…` | 03:13:18 | 03:28:48 |
+| `ses_eb3b1163…` | 03:00:02 | 03:29:48 |
+| `ses_eb3aba13…` | 03:06:00 | 03:25:55 |
+| `ses_eb3cd9c8…` | 02:28:53 | 03:27:23 |
+| `ses_eb3c0c62…` | 02:42:55 | 03:29:48 |
+
+Those turns committed plan 461 (`c9a883c`…`2a2d662`) and started plan 462
+while this session was editing the same files; `pgrep -f run-docs-site.sh`
+returned nothing, so no loop was spawning them — killing the `opencode run`
+CLI is not enough, because the turn lives in `opencode serve`. The docs work
+converged (461 landed, 462 landed with its evidence), but the lesson for plan
+022 §5 is stronger than recorded: the supervisor must key on the **server-side
+session row**, not on the runner pid, and a turn must be abortable through the
+server API rather than by killing its client.
+
+No session was deleted from this session — the server enforces a
+`loopback-secret` header the workstream does not own. The tree was committed
+only after `git log` showed the other turns' work landed.

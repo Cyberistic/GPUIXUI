@@ -58,6 +58,14 @@ viewport last:
   ../../../../../packages/components/examples/toast.example.tsx
 </include>
 
+## State and ownership
+
+`ToastProvider` owns the Effect runtime, the store and the auto-dismiss timers;
+`ToastViewport` only paints the queue. A provider is not a singleton — two
+providers are two stores — so mount one above everything that pushes and render
+the viewport last. The consumer owns the push decision and any action handler it
+attaches; a toast never navigates or calls the network itself.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/toast/provider.tsx" name="ToastProviderProps" />
@@ -97,6 +105,10 @@ the tone's colour from the shared status palette.
 
 <include lang="tsx" meta='title="packages/components/src/toast/provider.tsx"'>
   ../../../../../packages/components/src/toast/provider.tsx
+</include>
+
+<include lang="tsx" meta='title="packages/components/src/toast/viewport.tsx"'>
+  ../../../../../packages/components/src/toast/viewport.tsx
 </include>
 
 ## Related

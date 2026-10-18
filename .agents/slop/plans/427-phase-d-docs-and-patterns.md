@@ -222,4 +222,11 @@ fixture record/page, then the real one.
 - **Parts A–C pages remain blocked** on `packages/data-grid` and
   `packages/docking`, which do not exist (STOP condition §9). No placeholder
   record or page was added.
+- **The contract now runs on shipped records (2026-10-18, plan 462).** `tabs`
+  and `toast` are `pattern: "stateful"` with real exported parts, so
+  `missingSections`, `missingPartSources` and `registryViolations` see real data
+  instead of fixtures. `registry.test.ts`'s migration guard became the opt-in
+  list (`["tabs", "toast"]`), which is the only place the opted-in set is named.
+  Two-direction proofs are in plan 462 §9. Tier 3–4 pages remain the only
+  blocked half.
 

@@ -207,7 +207,10 @@ runtime-mounted example. Copy their shape.
    must carry its native `runtime` suite, and partial support also needs a
    documented limitation. The `planned`/`delivered` helpers default `parts` to `[]`, `pattern` to
    `"static"` and `persistence` to `null`; a compound or workspace record
-   overrides them (plan 427). A `delivered` record also names
+   overrides them (plan 427). The shipped worked examples are **Tabs**
+   (`stateful`, four parts in one file) and **Toasts / notifications**
+   (`stateful`, provider and viewport in separate files) — copy their record and
+   page when a compound component lands. A `delivered` record also names
    its props types in `api` — `api: ["ButtonProps"]` — because
    `/docs/api-reference` is generated from the registry, and
    `content-references.test.ts` fails when that set and the page's prop tables

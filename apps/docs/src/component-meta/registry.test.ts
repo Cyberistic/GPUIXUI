@@ -323,8 +323,8 @@ describe("compound record contract", () => {
     return names.includes(name);
   };
 
-  it("leaves the new fields at their defaults on every existing record", () => {
-    const wrong = components
+  it("lists the records that opted into the compound contract", () => {
+    const compound = components
       .filter(
         (entry) =>
           entry.pattern !== "static" ||
@@ -332,7 +332,7 @@ describe("compound record contract", () => {
           entry.persistence !== null,
       )
       .map((entry) => entry.slug);
-    expect(wrong).toEqual([]);
+    expect(compound.toSorted()).toEqual(["tabs", "toast"]);
   });
 
   it("holds every real record to the compound contract", () => {
