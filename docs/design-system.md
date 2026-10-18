@@ -264,7 +264,7 @@ the mounting rule and its no-portal limitation are documented once, under
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on the canvas, card, popover and quiet panel it paints on; filled actions step to their family's `xHover` (opaque, contrast-checked), one 1.05:1 step from the resting fill |
+| hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on the canvas, card, popover and quiet panel it paints on; filled actions step to their family's `xHover` — opaque, contrast-checked, one 1.05:1 step from the resting fill — instead of compositing an alpha fill |
 | pressed | `active` wash on ghost and subtle surfaces, held to the same floor on the same four surfaces; filled actions step to `xActive`, one 1.05:1 step past their hover |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every surface and row wash a placeholder fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground`, the fill held to the perceivability floor on the surface it marks; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
