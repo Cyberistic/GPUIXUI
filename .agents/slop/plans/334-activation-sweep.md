@@ -284,8 +284,8 @@ Run from `packages/components/` unless stated.
 4. `nub run --filter @gpuixui/components test`
    Expected: green (334 unit tests, unchanged).
 5. `nub run --filter @gpuixui/components test:behaviour`
-   Expected: green, **518** behaviour tests (508 + 10). Record the exact
-   number and correct §5 and this plan if it differs.
+   Expected: green, **517** behaviour tests (508 + 9). Record the exact number
+   and correct §5 and this plan if it differs.
 6. From the repository root:
    `nub run check`, `nub run lint`, `nub run test`
    Expected: all green; `check:tests` accepts the new cases and the inventory
