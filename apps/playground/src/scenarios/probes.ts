@@ -10,6 +10,7 @@ import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import type { Smoke } from "@gpuixui/testing";
+import { nodeFor as nodeForAuthor } from "../a11y.js";
 
 /** A readout's text, or `"none"` so a failure names the absence. */
 export const read = (ctx: Smoke.SmokeContext, testId: string): string =>
@@ -84,4 +85,18 @@ export const node = (
   ctx.expectSome(
     `node ${role} "${label}" is exposed`,
     nodeFor(tree, role, label),
+  );
+
+/** A painted element's bounds, or `None` when it never painted. */
+export const painted = (ctx: Smoke.SmokeContext, testId: string) =>
+  Option.fromNullishOr(ctx.host.bounds(testId));
+
+/** An element's applied style, or `None` when it never painted. */
+export const styleOf = (ctx: Smoke.SmokeContext, testId: string) =>
+  Option.fromNullishOr(ctx.host.paintedStyle(testId));
+
+/** The accessible node authored as `aria-id={authorId}`, when the frame holds one. */
+export const ariaOf = (ctx: Smoke.SmokeContext, authorId: string) =>
+  Option.flatMap(Option.fromNullishOr(ctx.host.a11y()), (tree) =>
+    nodeForAuthor(tree, authorId),
   );

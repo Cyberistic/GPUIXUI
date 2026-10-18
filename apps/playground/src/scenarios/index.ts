@@ -86,6 +86,8 @@ import { tier2FoundationScenario } from "./tier2-foundation.js";
 import { tier2MenuScenario } from "./tier2-menu.js";
 import { tier2NavigationScenario } from "./tier2-navigation.js";
 import { tier2ToastScenario } from "./tier2-toast.js";
+import { tier2ChoiceScenario } from "./tier2-choice.js";
+import { tier2FormsScenario } from "./tier2-forms.js";
 import { declaredStylesScenario, textTruncationScenario } from "./styles.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
@@ -213,6 +215,8 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tier2MenuScenario,
   tier2NavigationScenario,
   tier2ToastScenario,
+  tier2ChoiceScenario,
+  tier2FormsScenario,
   declaredStylesScenario,
   textTruncationScenario,
 ];

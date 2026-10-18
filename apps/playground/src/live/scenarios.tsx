@@ -41,6 +41,8 @@ import { tier2FoundationScenario } from "../scenarios/tier2-foundation.js";
 import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
 import { tier2NavigationScenario } from "../scenarios/tier2-navigation.js";
 import { tier2ToastScenario } from "../scenarios/tier2-toast.js";
+import { tier2ChoiceScenario } from "../scenarios/tier2-choice.js";
+import { EMAIL_MESSAGE, tier2FormsScenario } from "../scenarios/tier2-forms.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -2288,6 +2290,224 @@ const tier2Navigation: LiveScenario = {
     }),
 };
 
+const tier2Choice: LiveScenario = {
+  id: "live-tier2-choice",
+  title:
+    "Live Tier 2: Popover, SearchInput, Combobox, DatePicker and TimePicker",
+  capability: "tier2",
+  view: tier2ChoiceScenario.view,
+  ready: "tier2-choice-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-choice-readout", "visible=name,status");
+
+      // 1. Popover: a real click opens below, a row toggles, Escape restores.
+      yield* ctx.host.click("popover-trigger");
+      yield* settle;
+      yield* ctx.host.waitFor("popover-panel");
+      const trigger = yield* boxOf(ctx, "popover-trigger");
+      const panel = yield* boxOf(ctx, "popover-panel");
+      yield* ctx.expectEqual(
+        "the popover opens below its trigger live",
+        panel.y >= trigger.y + trigger.height,
+        true,
+      );
+      yield* ctx.host.click("popover-row-name");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "visible=status");
+      yield* ctx.expectEqual(
+        "a row click toggles the consumer's selection live",
+        (yield* ctx.host.bounds("popover-panel")) !== null,
+        true,
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Escape closes the popover live",
+        (yield* ctx.host.bounds("popover-panel")) === null,
+        true,
+      );
+      yield* waitForFocus(ctx, "popover-trigger");
+
+      // 2. SearchInput: typing, Enter and Escape in a live editor.
+      yield* ctx.host.click("search-field");
+      yield* settle;
+      yield* ctx.host.key("c a r d");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "query=card");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "submitted=card");
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "query=none");
+      yield* ctx.expectContains(
+        "Escape clears and reports once live",
+        yield* textOf(ctx, "tier2-choice-readout"),
+        "cleared=1",
+      );
+      yield* waitForFocus(ctx, "search-field");
+
+      // 3. Combobox: rank a query, select a value, paint its label.
+      yield* ctx.host.click("assign-trigger");
+      yield* settle;
+      yield* ctx.host.waitFor("combobox-content");
+      yield* ctx.host.click("combobox-input");
+      yield* settle;
+      yield* ctx.host.key("g r a");
+      yield* settle;
+      yield* ctx.host.waitFor("combobox-option-grace");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "reviewer=grace");
+      yield* ctx.expectEqual(
+        "a single selection closes the popup live",
+        (yield* ctx.host.bounds("combobox-content")) === null,
+        true,
+      );
+      yield* ctx.expectContains(
+        "the trigger paints the selected label live",
+        yield* textOf(ctx, "assign-trigger"),
+        "Grace Hopper",
+      );
+
+      // 4. DatePicker: the live tree, the month head and a pointer choice.
+      yield* ctx.host.click("date-picker-trigger");
+      yield* settle;
+      yield* ctx.host.waitFor("date-picker-content");
+      yield* ctx.expectEqual(
+        "the calendar focuses the month head live (measured; components task)",
+        yield* focusedOf(ctx),
+        "date-day-2026-10-01",
+      );
+      yield* ctx.host.click("date-day-2026-10-19");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "due=2026-10-19");
+      yield* ctx.expectEqual(
+        "choosing a day closes the calendar live",
+        (yield* ctx.host.bounds("date-picker-content")) === null,
+        true,
+      );
+      yield* ctx.host.click("date-picker-trigger");
+      yield* settle;
+      yield* ctx.host.waitFor("date-clear");
+      yield* ctx.host.click("date-clear");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "due=none");
+
+      // 5. TimePicker: both live segments compose one value.
+      yield* ctx.host.click("standup-hours");
+      yield* settle;
+      yield* ctx.host.key("0 9");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "time=09:00");
+      yield* ctx.host.click("standup-minutes");
+      yield* settle;
+      yield* ctx.host.key("3 0");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "time=09:30");
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "time=09:45");
+      yield* ctx.host.click("standup-clear");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-choice-readout", "time=none");
+      yield* ctx.expectEqual(
+        "the time segments cleared live",
+        yield* focusedOf(ctx),
+        "standup-hours",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Choice.id}.png`);
+    }),
+};
+
+const tier2Forms: LiveScenario = {
+  id: "live-tier2-forms",
+  title: "Live Tier 2: Field validation, Fieldset disable and Form submit",
+  capability: "tier2",
+  view: tier2FormsScenario.view,
+  ready: "tier2-forms-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-forms-readout", "error=none");
+
+      // 1. Field: the consumer triggers validation; the error replaces copy.
+      yield* ctx.host.click("slug-fill");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-forms-readout", "slug=my-workspace");
+      yield* ctx.host.click("slug-break");
+      yield* settle;
+      yield* ctx.expectContains(
+        "editing an invalid value does not validate live",
+        yield* textOf(ctx, "tier2-forms-readout"),
+        "error=none",
+      );
+      yield* ctx.host.click("slug-validate");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-forms-readout", "error=set");
+      yield* ctx.expectContains(
+        "the schema's message paints live",
+        yield* textOf(ctx, "slug-field"),
+        "Use lowercase words joined by a hyphen",
+      );
+
+      // 2. Fieldset: a disabled input refuses a live edit.
+      yield* ctx.host.click("shipping-street");
+      yield* settle;
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a disabled input refuses a live edit",
+        yield* textOf(ctx, "tier2-forms-readout"),
+        "edits=0",
+      );
+
+      // 3. Form: messages, a decoded submit and the pending lock.
+      yield* ctx.host.click("form-submit");
+      yield* settle;
+      yield* ctx.expectContains(
+        "an invalid submit paints the schema's message live",
+        yield* textOf(ctx, "signup-form"),
+        EMAIL_MESSAGE,
+      );
+      yield* ctx.expectContains(
+        "an invalid submit does not reach the consumer live",
+        yield* textOf(ctx, "tier2-forms-readout"),
+        "submits=0",
+      );
+      yield* ctx.host.click("form-email");
+      yield* settle;
+      yield* ctx.host.key("a d a");
+      yield* settle;
+      yield* ctx.host.click("form-name");
+      yield* settle;
+      yield* ctx.host.key("g p u i");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-forms-readout", "email=ada");
+      yield* ctx.host.click("form-submit");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-forms-readout", "submits=1");
+      yield* ctx.expectContains(
+        "the success line paints the decoded value live",
+        yield* textOf(ctx, "form-created"),
+        "Created ada",
+      );
+      yield* ctx.host.click("form-hold");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-forms-readout", "pending=true");
+      yield* ctx.host.click("form-submit");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a pending form refuses a live submit",
+        yield* textOf(ctx, "tier2-forms-readout"),
+        "submits=1",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Forms.id}.png`);
+    }),
+};
+
 const replace: LiveScenario = {
   id: "live-replace",
   title: "Live replace: a controlled rewrite, its caret and the washes",
@@ -2611,5 +2831,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   keyRouting,
   tier2Foundation,
   tier2Navigation,
+  tier2Choice,
+  tier2Forms,
   replace,
 ];

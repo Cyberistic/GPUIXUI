@@ -44,25 +44,10 @@ import {
   TabsTrigger,
 } from "../../vendor/packages/components/src/index.js";
 import { useTheme } from "@gpuixui/tokens/react";
-import type { Smoke } from "@gpuixui/testing";
-import { nodeFor } from "../a11y.js";
+import { fieldText } from "../a11y.js";
 import { Body, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
-import { focusedId, read } from "./probes.js";
-
-/** A painted element's bounds, or `None` when it never painted. */
-const painted = (ctx: Smoke.SmokeContext, testId: string) =>
-  Option.fromNullishOr(ctx.host.bounds(testId));
-
-/** The accessible node authored as `aria-id={id}`, when the frame holds one. */
-const ariaOf = (ctx: Smoke.SmokeContext, authorId: string) =>
-  Option.flatMap(Option.fromNullishOr(ctx.host.a11y()), (tree) =>
-    nodeFor(tree, authorId),
-  );
-
-/** A node's field, or `"none"` so a failure names the absence. */
-const fieldText = (value: Option.Option<string>): string =>
-  Option.getOrElse(value, () => "none");
+import { ariaOf, focusedId, painted, read } from "./probes.js";
 
 const Probe = () => {
   const theme = useTheme();
