@@ -24,6 +24,7 @@ export interface StackProps extends StackSpec {
   readonly testId?: string;
 }
 
+/** The element tree `Stack` renders its children along one axis. */
 export const renderStack = (
   { style, children, testId, ...spec }: StackProps,
   theme: PrimitiveTheme,
@@ -43,6 +44,7 @@ export interface GridProps extends GridSpec {
   readonly testId?: string;
 }
 
+/** The element tree `Grid` renders in fixed numeric tracks. */
 export const renderGrid = (
   { style, children, testId, ...spec }: GridProps,
   theme: PrimitiveTheme,

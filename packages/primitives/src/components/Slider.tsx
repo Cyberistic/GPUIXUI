@@ -164,6 +164,7 @@ export interface SliderHandlers {
   readonly onPointerUp: () => void;
 }
 
+/** The element tree `Slider` renders from its normalised value and gesture state. */
 export const renderSlider = (
   props: SliderProps,
   theme: PrimitiveTheme,

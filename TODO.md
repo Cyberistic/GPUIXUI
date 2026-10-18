@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 96/96
+`[x]` `[██████████]` 97/97
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -784,11 +784,28 @@ retired once both branches are one
       a `dependency` of both, and `src/package-manifest.test.ts` scans every
       shipped import of both packages and fails by package, module and file;
       three mutation directions proven, offline 573 tests (plan `348`).
+`[x]` `packages/primitives` + `packages/icons`: **every exported value carries a
+      TSDoc summary** — the docs site's Values API found twelve undocumented
+      public values, and the same scan found 36 across the package (the rest are
+      the module-level `render*`/internal seams plan `090` keeps out of the
+      root). All 36 are documented, and `src/tsdoc.test.ts` scans both packages
+      and fails by file:line for an undocumented value declaration (five
+      mutation directions proven, offline 574 tests; plan `349`). The docs site's
+      `SUMMARIES` override must drop its twelve keys — its guard fails until it
+      does.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
+
+`[ ]` **docs-site workstream**: the `SUMMARIES` override table in
+      `apps/docs/src/lib/api-values.ts` must drop the twelve primitives keys now
+      that the source documents them (`BUTTON_GROUP_MODES`, `BUTTON_VARIANTS`,
+      `buttonVariants`, `ENTER_KEY`, `PROGRESS_TONES`, `SELECTION_STATES`,
+      `SPACE_KEY`, `STACK_DIRECTIONS`, `SURFACE_TONES`, `surfaceStyle`,
+      `textStyle`, `TOGGLE_VARIANTS`) — its own guard fails until it does, which
+      is the contract it documents. Owner: docs-site (plan `349` §7.5).
 
 `[ ]` **tokens workstream**: plan `052`'s `registerFont` does **not** exist in
       published GPUix 0.10.0 — it is absent from the `NativeRenderer` type and

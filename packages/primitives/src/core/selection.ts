@@ -15,6 +15,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 
+/** The states a selectable control paints: empty, filled, or neither. */
 export const SELECTION_STATES = [
   "unchecked",
   "checked",
@@ -268,6 +269,7 @@ export interface SelectableOption {
   readonly disabled?: boolean;
 }
 
+/** The group's tab stop: the selected option's index, else the first enabled one. */
 export const initialActiveIndex = <Item extends SelectableOption>(
   options: ReadonlyArray<Item>,
   value: string,

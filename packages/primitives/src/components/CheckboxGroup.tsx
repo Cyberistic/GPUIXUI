@@ -242,6 +242,7 @@ const renderRow = (
   );
 };
 
+/** The element tree `CheckboxGroup` renders: one interactive row per option. */
 export const renderCheckboxGroup = (
   props: CheckboxGroupProps,
   theme: PrimitiveTheme,

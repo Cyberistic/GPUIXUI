@@ -45,6 +45,7 @@ export const labelledBy = (name: string): { readonly label: string } => ({
   label: name,
 });
 
+/** The element tree `Label` renders for a field's visible name. */
 export const renderLabel = ({
   required,
   invalid,

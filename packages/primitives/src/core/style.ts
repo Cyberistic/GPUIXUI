@@ -292,6 +292,7 @@ const clampLines = (clamp: number | undefined): Option.Option<number> =>
       : Option.none(),
   );
 
+/** Resolve a text role and tone to the runtime's text style. */
 export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
   const role = theme.typography[spec.role];
   const style: StyleDesc = {
@@ -323,6 +324,7 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
 
 // ── Surfaces ─────────────────────────────────────────────────────────
 
+/** The surfaces a container can paint: page, card, popover and their siblings. */
 export const SURFACE_TONES = [
   "none",
   "background",
@@ -356,6 +358,7 @@ export interface SurfaceSpec {
   readonly elevation?: ElevationLevel;
 }
 
+/** Resolve a surface tone, padding, radius and elevation to a container style. */
 export const surfaceStyle = (
   spec: SurfaceSpec,
   theme: PrimitiveTheme,
@@ -438,6 +441,7 @@ export const scrollStyle = (spec: ScrollSpec): StyleDesc => ({
 export const progressPercent = (value: number): number =>
   Number.isNaN(value) ? 0 : Math.min(100, Math.max(0, value));
 
+/** The tones a progress bar can paint; `primary` by default. */
 export const PROGRESS_TONES = [
   "primary",
   "success",

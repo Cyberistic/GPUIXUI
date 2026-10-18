@@ -83,6 +83,7 @@ export const checkboxState = (props: CheckboxProps): SelectionState =>
 const markName = (state: SelectionState): "check" | "minus" =>
   state === "indeterminate" ? "minus" : "check";
 
+/** The element tree `Checkbox` renders for one value and focus state. */
 export const renderCheckbox = (
   props: CheckboxProps,
   theme: PrimitiveTheme,

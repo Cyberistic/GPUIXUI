@@ -31,6 +31,7 @@ export interface SpinnerProps {
   readonly testId?: string;
 }
 
+/** The element tree `Spinner` renders with its lit dot at the given index. */
 export const renderSpinner = (
   { size, accent = "primary", label = "Loading", style, testId }: SpinnerProps,
   theme: PrimitiveTheme,

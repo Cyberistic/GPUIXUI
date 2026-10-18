@@ -16,6 +16,7 @@ import type { KeyName, Orientation } from "./keyboard.js";
 import type { PrimitiveTheme, SpaceStep } from "./theme.js";
 import { surfaceStyle, type SurfaceSpec } from "./style.js";
 
+/** The two axes a `Stack` lays its children out on. */
 export const STACK_DIRECTIONS = ["row", "column"] as const;
 export type StackDirection = (typeof STACK_DIRECTIONS)[number];
 

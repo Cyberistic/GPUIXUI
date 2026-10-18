@@ -23,6 +23,7 @@ export interface SeparatorProps extends RuleSpec {
   readonly testId?: string;
 }
 
+/** The element tree `Separator` renders: one rule across its axis. */
 export const renderSeparator = (
   { orientation, inset, label, style, testId }: SeparatorProps,
   theme: PrimitiveTheme,
@@ -62,6 +63,7 @@ export interface SpacerProps {
   readonly testId?: string;
 }
 
+/** The element tree `Spacer` renders: a filler that pushes its siblings apart. */
 export const renderSpacer = (
   { size, style, testId }: SpacerProps,
   theme: PrimitiveTheme,

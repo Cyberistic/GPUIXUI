@@ -15,6 +15,7 @@ import { createContext, useContext } from "react";
 import * as Option from "effect/Option";
 import type { RadiusStep } from "../core/theme.js";
 
+/** The radius an attached `ButtonGroup` supplies to its buttons; empty outside one. */
 export const GroupShapeContext = createContext<Option.Option<RadiusStep>>(
   Option.none(),
 );

@@ -20,6 +20,7 @@ export interface BoxProps extends BoxSpec {
   readonly testId?: string;
 }
 
+/** The element tree `Box` renders from its spec and the active theme. */
 export const renderBox = (
   { style, children, testId, ...spec }: BoxProps,
   theme: PrimitiveTheme,

@@ -125,6 +125,7 @@ export { initialActiveIndex };
 const itemState = (option: RadioOption, value: string): SelectionState =>
   option.value === value && value !== "" ? "checked" : "unchecked";
 
+/** The element tree `RadioGroup` renders: one option row per value. */
 export const renderRadioGroup = (
   props: RadioGroupProps,
   theme: PrimitiveTheme,

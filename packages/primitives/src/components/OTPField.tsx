@@ -121,6 +121,7 @@ export const otpCellLabel = (
   index: number,
 ): string => `${label ?? "Code"} digit ${index + 1}`;
 
+/** The element tree `OTPField` renders: one cell per character. */
 export const renderOtpField = (
   props: OTPFieldProps,
   theme: PrimitiveTheme,

@@ -27,7 +27,9 @@ export type KeyName = string;
 /** The phase of the key event being decided. */
 export type KeyPhase = "down" | "up";
 
+/** The runtime's key name for Enter, as `onKeyDown` reports it. */
 export const ENTER_KEY = "enter";
+/** The runtime's key name for Space, as `onKeyDown` reports it. */
 export const SPACE_KEY = "space";
 
 /**

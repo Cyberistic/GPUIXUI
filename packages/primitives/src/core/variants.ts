@@ -16,6 +16,7 @@ import { alpha } from "@gpuixui/tokens";
 import type { PrimitiveTheme } from "./theme.js";
 import type { ControlVariant } from "./style.js";
 
+/** The button variants, in the order the docs list them. */
 export const BUTTON_VARIANTS = [
   "primary",
   "secondary",
@@ -96,6 +97,7 @@ const link: ControlVariant = {
   active: (theme) => ({ backgroundColor: theme.colors.active }),
 };
 
+/** The paint behind each button variant, per interaction state. */
 export const buttonVariants: Record<ButtonVariant, ControlVariant> = {
   primary,
   secondary,
@@ -137,6 +139,7 @@ export const variantTable: ReadonlyArray<{
   { name: "link", variant: link, description: "A text action." },
 ];
 
+/** The toggle variants: a filled selection, or an outlined one. */
 export const TOGGLE_VARIANTS = ["default", "outline"] as const;
 
 export type ToggleVariant = (typeof TOGGLE_VARIANTS)[number];

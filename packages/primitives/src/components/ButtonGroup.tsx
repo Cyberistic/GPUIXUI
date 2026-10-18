@@ -21,9 +21,11 @@ import { GroupShapeContext } from "./group-shape.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
+/** The button groups' two layouts: joined into one control, or spaced apart. */
 export const BUTTON_GROUP_MODES = ["attached", "separated"] as const;
 export type ButtonGroupMode = (typeof BUTTON_GROUP_MODES)[number];
 
+/** The axes a button group can lay its buttons out on. */
 export const BUTTON_GROUP_AXES = ["horizontal", "vertical"] as const;
 export type ButtonGroupOrientation = (typeof BUTTON_GROUP_AXES)[number];
 
@@ -47,6 +49,7 @@ export interface ButtonGroupProps {
   readonly testId?: string;
 }
 
+/** The element tree `ButtonGroup` renders, including the shared radius it supplies. */
 export const renderButtonGroup = (
   {
     mode = "attached",

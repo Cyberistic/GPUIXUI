@@ -132,6 +132,7 @@ export const fieldHostProps = (
   onKeyUp: props.onKeyUp,
 });
 
+/** The element tree `Input` renders from its props and field state. */
 export const renderInput = (
   props: FieldProps,
   theme: PrimitiveTheme,

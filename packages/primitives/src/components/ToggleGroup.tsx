@@ -126,6 +126,7 @@ export interface ToggleGroupHandlers {
   ) => (instance: PublicInstance | null) => void;
 }
 
+/** The element tree `ToggleGroup` renders: one toggle per option. */
 export const renderToggleGroup = (
   props: ToggleGroupProps,
   theme: PrimitiveTheme,

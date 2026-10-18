@@ -66,6 +66,7 @@ export interface SwitchProps extends TriggerHandlers {
 /** How long the thumb takes to cross the track. */
 const SWITCH_THUMB_SLIDE_MS = 200;
 
+/** The element tree `Switch` renders with its thumb at the current offset. */
 export const renderSwitch = (
   props: SwitchProps,
   theme: PrimitiveTheme,

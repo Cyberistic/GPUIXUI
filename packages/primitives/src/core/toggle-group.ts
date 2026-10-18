@@ -14,6 +14,7 @@
 
 import * as Arr from "effect/Array";
 
+/** The toggle group's selection modes: one choice, or a set of them. */
 export const TOGGLE_GROUP_TYPES = ["single", "multiple"] as const;
 
 export type ToggleGroupType = (typeof TOGGLE_GROUP_TYPES)[number];

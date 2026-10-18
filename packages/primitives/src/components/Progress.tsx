@@ -49,6 +49,7 @@ const SEGMENT = 40;
 const isIndeterminate = (value: number | undefined): value is undefined =>
   value === undefined;
 
+/** The element tree `Progress` renders, determinate or indeterminate. */
 export const renderProgress = (
   { value, tone = "primary", size = "md", label, style, testId }: ProgressProps,
   theme: PrimitiveTheme,

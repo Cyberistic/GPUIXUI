@@ -165,6 +165,7 @@ export interface FocusState {
   readonly onBlur: () => void;
 }
 
+/** Track native focus, so a control that owns its chrome can paint the ring. */
 export const useFocus = (initiallyFocused = false): FocusState => {
   const [focused, setFocused] = useState(initiallyFocused);
   return {

@@ -108,6 +108,7 @@ export interface RatingHandlers {
 export const ratingMax = (max: number | undefined): number =>
   Math.max(1, Math.trunc(max ?? 5));
 
+/** The element tree `Rating` renders from its value and any hovered star. */
 export const renderRating = (
   props: RatingProps,
   theme: PrimitiveTheme,

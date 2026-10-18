@@ -24,6 +24,7 @@ export interface SkeletonProps extends SkeletonSpec {
   readonly testId?: string;
 }
 
+/** The element tree `Skeleton` renders at the given pulse opacity. */
 export const renderSkeleton = (
   { style, testId, ...spec }: SkeletonProps,
   theme: PrimitiveTheme,
