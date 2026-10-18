@@ -1915,6 +1915,13 @@ from `platformStyles`, so a value edit cannot ship a document that lies. There i
 no font-registration test because the pinned runtime has no API to test against;
 see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
 
+`packages/tokens/src/snippets.test.ts` holds every copyable fenced block — the
+ones in this page, the package README and the `@example` comments in the
+package's modules — to the export, role and scale names it uses, and fails a
+block that presents itself as a module and then calls a public function or
+renders a public component it does not import (plans 355 and 356). The source
+examples caught two `<ThemeProvider>` blocks that never imported it.
+
 ## Limitations and future work
 
 - No CSS variables or CSS pipeline; GPUix paints inline values.

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 123/171
+`[x]` `[███████░░░]` 124/172
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -111,6 +111,14 @@ documentation surface, and the platform-recipe snippet rendered
 `<ThemeProvider>` without importing it; a new guard checks every named import,
 every `theme.colors.*` and scale member, and every public function, component
 and type a snippet uses without importing it (plan 355)
+`[x]` Hold the source JSDoc examples to the public API — plan 355 called the
+docs and README the last unguarded surface, but the `@example` blocks in the
+package's own modules were never read: `getPlatformTheme` and
+`getPlatformRecipeTheme` both rendered `<ThemeProvider>` without importing it,
+and `applyPlatformStyle` applied an undefined `contosoStyle`; the snippet guard
+now reads every non-test module, both providers are imported, the deprecated
+bridge is a complete block, and the apply example uses `platformStyles.win32`
+(plan 356)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

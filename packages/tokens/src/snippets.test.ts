@@ -4,8 +4,13 @@
  * held them to the package. The platform-recipe snippet rendered
  * `<ThemeProvider>` without importing it while every gate stayed green.
  *
+ * Plan 356 extends the same guard to the `@example` blocks in the package's own
+ * modules, the surface plan 355 had called closed: `getPlatformTheme` and
+ * `getPlatformRecipeTheme` each still rendered `<ThemeProvider>` without
+ * importing it, one documentation surface over.
+ *
  * This is not a compiler: a snippet is a contextual fragment, so `theme`,
- * `children` and `contosoStyle` have no module scope. It checks the four facts a
+ * `children` and `brandTheme` have no module scope. It checks the four facts a
  * fragment can still get wrong about this package — that its imports exist,
  * that the colour roles and scale members it names exist, and that a public
  * function, component or type it uses is imported by the same block.
@@ -15,7 +20,7 @@
  * I/O, and the package ships zero runtime dependencies by design.
  */
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as tokens from "./index.js";
 import * as react from "./react.js";
@@ -48,7 +53,36 @@ const snippetsOf = (document: (typeof documents)[number]): Snippet[] =>
     code: match[2] ?? "",
   }));
 
-const snippets = documents.flatMap(snippetsOf);
+const moduleDir = new URL("./", import.meta.url);
+
+const modules = readdirSync(moduleDir).filter(
+  (name) =>
+    name.endsWith(".ts") &&
+    !name.endsWith(".test.ts") &&
+    !name.endsWith(".example.ts"),
+);
+
+/** Remove the ` * ` prefix a JSDoc fence carries on every line. */
+const stripJsdoc = (block: string): string =>
+  block
+    .split("\n")
+    .map((line) => line.replace(/^\s*\*\s?/, ""))
+    .join("\n");
+
+/** Every fenced `@example` block in the package's non-test modules. */
+const sourceSnippets: Snippet[] = modules.flatMap((name) =>
+  [
+    ...readFileSync(new URL(name, moduleDir), "utf8").matchAll(
+      /```(ts|tsx)\n([\s\S]*?)```/g,
+    ),
+  ].map((match, index) => ({
+    label: `packages/tokens/src/${name} @example`,
+    index,
+    code: stripJsdoc(match[2] ?? ""),
+  })),
+);
+
+const snippets = [...documents.flatMap(snippetsOf), ...sourceSnippets];
 
 const importPattern =
   /import\s+(?:type\s+)?\{([^}]+)\}\s+from\s+"(@gpuixui\/tokens(?:\/react)?)"/g;
@@ -176,6 +210,16 @@ const usesWithoutImport = (code: string, name: string): boolean => {
 describe("documented snippets", () => {
   it("has snippets to check", () => {
     expect(snippets.length).toBeGreaterThan(40);
+  });
+
+  it("finds an example in every module that documents one", () => {
+    expect(sourceSnippets.length).toBeGreaterThanOrEqual(20);
+    expect(sourceSnippets.some(({ label }) => label.includes("theme.ts"))).toBe(
+      true,
+    );
+    expect(
+      sourceSnippets.some(({ label }) => label.includes("platform-recipes.ts")),
+    ).toBe(true);
   });
 
   it("imports only names the package exports", () => {

@@ -428,6 +428,9 @@ export function createTheme(config: ThemeConfig): Theme {
  *
  * @example
  * ```tsx
+ * import { platformTheme, themes } from "@gpuixui/tokens";
+ * import { ThemeProvider } from "@gpuixui/tokens/react";
+ *
  * <ThemeProvider theme={platformTheme(themes.dark, "win32")} />
  * ```
  */
@@ -489,9 +492,13 @@ const platformOverrides = (
  *
  * @example
  * ```ts
- * import { applyPlatformStyle, getTheme } from "@gpuixui/tokens";
+ * import {
+ *   applyPlatformStyle,
+ *   getTheme,
+ *   platformStyles,
+ * } from "@gpuixui/tokens";
  *
- * const contoso = applyPlatformStyle(getTheme("dark"), contosoStyle);
+ * const windows = applyPlatformStyle(getTheme("dark"), platformStyles.win32);
  * ```
  */
 export function applyPlatformStyle(
@@ -513,6 +520,7 @@ export function applyPlatformStyle(
  * @example
  * ```tsx
  * import { getPlatformTheme } from "@gpuixui/tokens";
+ * import { ThemeProvider } from "@gpuixui/tokens/react";
  *
  * <ThemeProvider theme={getPlatformTheme("win32", "dark")} />
  * ```

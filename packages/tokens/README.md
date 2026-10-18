@@ -590,3 +590,8 @@ nub run --filter @gpuixui/tokens build
 `build` emits `dist/` (JavaScript plus declarations) to validate the package on
 its own; consumers never need it and `packages/tokens/src/exports.test.ts` fails
 if an `exports` target points back at a build directory.
+
+The suite also holds the copyable documentation: every `src/*.example.ts` runs
+(plan 350), and every fenced block in `docs/tokens.md`, this README and the
+`@example` comments in the package's modules names only shipped exports, roles
+and scale members (plans 355 and 356).

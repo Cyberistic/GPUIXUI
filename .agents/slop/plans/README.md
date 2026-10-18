@@ -152,6 +152,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [353](./353-component-dimensions.md) | Component dimensions: the surface metrics components still hardcode | B | 010, 011, 056–062, 089, 096, 321 | done |
 | [354](./354-interaction-state-table.md) | The interaction-state table names the surfaces the contract measures | F | 346, 351, 352 | done |
 | [355](./355-documented-snippets.md) | The documented snippets nothing compiles | F | 056, 066, 324, 350 | done |
+| [356](./356-jsdoc-example-guard.md) | The source JSDoc examples are unguarded | F | 324, 350, 355 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1189,6 +1190,18 @@ type a copyable block uses is imported by that block. A block with no package
 import is a contextual continuation (an expression or a shape sketch), not a
 module, so the import rule applies only to blocks that present themselves as
 one. No token value, pair or floor changes.
+
+356 closes the surface 355 had called closed: the `@example` blocks in the
+package's own modules are fenced snippets a doc generator renders and a reader
+copies, and no test read them. The audit found the same defect one surface
+over — `getPlatformTheme` and `getPlatformRecipeTheme` both rendered
+`<ThemeProvider>` with a package import and no provider import — plus
+`applyPlatformStyle` applying an undefined `contosoStyle`. `snippets.test.ts`
+now reads every non-test, non-`*.example.ts` module, strips the JSDoc line
+prefix, and applies the same import, role and scale-member checks it runs on the
+docs; the two providers are imported, the deprecated `platformTheme` bridge is a
+complete block, and the apply example uses `platformStyles.win32` so it runs.
+No token value, pair or floor changes.
 
 ### Reference adoption (block `200–299`)
 

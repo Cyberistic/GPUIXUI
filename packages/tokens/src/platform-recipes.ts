@@ -61,6 +61,7 @@ export const platformRecipes: Readonly<
  * @example
  * ```tsx
  * import { getPlatformRecipeTheme } from "@gpuixui/tokens";
+ * import { ThemeProvider } from "@gpuixui/tokens/react";
  *
  * <ThemeProvider theme={getPlatformRecipeTheme("xp", "light")} />
  * ```
