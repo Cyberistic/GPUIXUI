@@ -8,21 +8,10 @@ import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import appCss from "@/styles/app.css?url";
 import { PlatformProvider } from "@/platform/platform-provider";
 import { SearchFocusRestore } from "@/search/search-focus";
+import { siteHead, THEME_COLOR_META } from "@/lib/site-head";
 
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GPUIXUI" },
-      {
-        name: "description",
-        content: "A native UI component library for GPUix.",
-      },
-      { property: "og:site_name", content: "GPUIXUI" },
-    ],
-    links: [{ rel: "stylesheet", href: appCss }],
-  }),
+  head: () => siteHead(appCss),
   component: RootComponent,
 });
 
@@ -31,6 +20,14 @@ function RootComponent() {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {THEME_COLOR_META.map((entry) => (
+          <meta
+            key={entry.media}
+            name="theme-color"
+            media={entry.media}
+            content={entry.content}
+          />
+        ))}
       </head>
       <body className="flex min-h-screen flex-col">
         <RootProvider>

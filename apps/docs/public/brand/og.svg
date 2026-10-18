@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#11141a"/>
+  <circle cx="1070" cy="96" r="300" fill="#2e2370"/>
+  <g transform="translate(96 96)">
+    <rect width="72" height="72" fill="#5f4bdb"/>
+    <g fill="#ffffff">
+      <rect x="13" y="13" width="21" height="21" rx="4"/>
+      <rect x="38" y="13" width="21" height="21" rx="4" opacity="0.55"/>
+      <rect x="13" y="38" width="21" height="21" rx="4" opacity="0.55"/>
+      <rect x="38" y="38" width="21" height="21" rx="4"/>
+    </g>
+  </g>
+  <text x="96" y="330" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="96" font-weight="700" fill="#eef1f5">GPUIXUI</text>
+  <text x="96" y="404" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="40" fill="#a1a9b7">A native UI component library for GPUix</text>
+  <text x="96" y="552" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="28" fill="#a7a9ff">docs.gpuixui.dev</text>
+</svg>
