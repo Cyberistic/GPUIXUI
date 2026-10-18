@@ -592,6 +592,8 @@ export const toastScenario: PlaygroundScenario = {
 
       ctx.host.click("toast-show");
       ctx.host.click("toast-show-short");
+      // Register the exit watcher before the real timer can remove the card.
+      ctx.host.fastForwardMotion(0);
       yield* awaitReadout(ctx, "toast-readout", "dismissed=Short");
       yield* ctx.expectContains(
         "the short toast's timer fired",
