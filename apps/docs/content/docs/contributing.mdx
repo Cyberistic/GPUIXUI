@@ -36,14 +36,30 @@ is not complete until it is verified in the real GPUix runtime.
 
 ## Docs site
 
-`apps/docs` is a Fumadocs app whose unit suite reads the content source. The
-built-site check builds and crawls the production output instead:
+`apps/docs` is a Fumadocs app. Its unit suite reads the content source and the
+component registry; the smoke checks drive the built site in a real browser. Run
+every check your change can affect:
+
+| Command | What it proves | Exit codes |
+| ------- | -------------- | ---------- |
+| `nub run --filter docs test` | pages, registry, links, search, previews | `1` on a failure |
+| `nub run --filter docs check-types` | the app, the preview document and MDX types | `1` on a type error |
+| `nub run --filter docs build` | the production Worker bundle builds | `1` on a build error |
+| `nub run --filter docs smoke:build` | every sitemap page renders in the production output, every internal link resolves, search answers, an unknown slug is a 404 | `1` broken, `2` could not verify |
+| `nub run --filter docs smoke:browser` | the built site hydrates; every preview surface paints the theme and platform the toggles publish | `1` wrong paint, `2` could not verify |
+| `nub run --filter docs smoke:preview` | every live GPUix scene reaches the renderer in headless Chrome, and the page wiring passes the platform | `1` scene failure, `2` could not verify |
+
+The smokes exit `2` when Chrome or the server is missing. An unverified site is
+not a passing one: treat `2` as "run it where the check can run", never as a
+pass.
+
+### Authoring
+
+The pages are plain MDX. Fumadocs Studio edits them in place without rewriting
+untouched blocks; it is a dev-only command and is never part of the built site:
 
 ```sh
-nub run --filter docs smoke:build
+nub run --filter docs studio
 ```
 
-It fails when a page does not render, loses its title, `<h1>`, `<main>` or
-canonical, an internal link breaks, search stops answering or an unknown slug is
-not a 404. It exits `2` when it cannot run, never `0` — an unverified site is
-not a passing one.
+`apps/docs/README.md` carries the editor's contract and the round-trip guard.

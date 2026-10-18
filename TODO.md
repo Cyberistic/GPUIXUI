@@ -469,9 +469,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–469)
+## Docs site workstream (plans 410–470)
 
-`[~]` `[██████████]` 67/68
+`[~]` `[██████████]` 68/69
+
+`[x]` **The Contributing page names every docs check (plan 470)** — six commands with what each proves and its exit codes (`2` is never a pass), the Studio authoring command, and a guard that reads `apps/docs/package.json` so the next smoke cannot ship undocumented
 
 `[x]` **The page template checks content, not only headings (plan 466)** — every delivered page must keep a `tsx`/`ts` example importing `@gpuixui/` under Usage, an `<auto-type-table>` under API reference and an `<include>` under Source; each rule fails on a real page when its block is removed
 `[x]` **Fumadocs Studio authors the pages (plan 467)** — a dev-only `studio` command opens `content/docs`; every one of the 84 pages round-trips byte-for-byte, a parse failure names the page, no editor module reaches `dist`, and Studio serves `200`
