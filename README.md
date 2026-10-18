@@ -54,6 +54,7 @@ edited:
 
 - GPUix — https://github.com/remorses/gpuix
 - GPUI transform branch — https://github.com/0xErwin1/zed, `feature/53306-07-text-raster-subpixel-regressions` (audited in plan 525; treeless clone at `references/transform-zed`)
+- GPUI Community Edition — https://github.com/gpui-ce/gpui-ce, `main` @ `a8d3969` (audited in plan 537; Apache-2.0; full clone at `references/gpui-ce`)
 - GPUI Kit — https://github.com/longbridge/gpui-kit
 - shadcn/ui — https://github.com/shadcn-ui/ui
 - Fumadocs — https://github.com/fuma-nama/fumadocs
