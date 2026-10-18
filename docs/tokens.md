@@ -1536,7 +1536,8 @@ action sits on in a selected row, taking it from 292 to **293**. Plan `339` adds
 secondary text on the `input` fill a field paints for its own chrome, taking it
 from 293 to **294**. Plan `340` holds the invalid control's `destructive` focus
 ring on the eleven surfaces the ring adds — `background` is already the field
-edge — taking it from 294 to **305**.
+edge — taking it from 294 to **305**. Plan `341` adds the combobox check glyph on
+the `hover` row wash, taking it from 305 to **306**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1633,7 +1634,9 @@ card, a deliberate decision rather than an accident.
 A solid role painted as a **mark** is held to 3:1 (4.5:1 at AAA) instead: a
 progress segment and a slider fill sit on the `muted` track, a slider thumb rings
 its own `input` fill, and a rating star, combobox check or timeline dot sits on
-the panel it paints on — `markRoles` is the role list and `markPairs` the pairs.
+the panel it paints on — a selected combobox option's check also sits on the
+`hover` wash the row highlights with, so it is measured there too — `markRoles`
+is the role list and `markPairs` the pairs.
 A fill's 1.05:1 is a wash's floor: it says a hover is visible, not that a 4px bar
 is. A status indicator is not a mark: the solid `warning` is **1.78:1** on the
 light canvas, so a status dot uses `xText`, which the status-text pairs already
@@ -1700,7 +1703,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`340` closed.
+plans `076`–`341` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

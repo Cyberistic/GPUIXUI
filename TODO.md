@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 108/141
+`[x]` `[████████░░]` 109/142
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -279,6 +279,11 @@ only one ring, but the contract measured that role as a fill and as the field's
 own edge, never as the ring on the surface behind the control; every shipped set
 passes (3.048:1 at the tightest), so no colour moves and the contract grows
 294 → 305 (plan 340)
+`[x]` Hold the combobox's selected check on the row wash — `ComboboxItem` marks
+a selected option with a `primary` check and `rowStyle` paints `hover` behind it
+while highlighted, but `markPairs` measured `primary` only on the plain surfaces
+and the slider thumb; every shipped set passes (3.111:1 at the tightest), so no
+colour moves and the contract grows 305 → 306 (plan 341)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the

@@ -211,13 +211,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 294 to **${contrastPairs.length}**`,
+      `taking it from 305 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`340` closed");
+    expect(prose).toContain("plans `076`–`341` closed");
   });
 });
 
