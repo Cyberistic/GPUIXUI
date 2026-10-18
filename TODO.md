@@ -358,9 +358,10 @@ shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `[ ]` Cross-team: `components` uses `statusTone(...).text` for inline status
 text, icons and indicator dots and retires its local `tone()` foreground, which
 reads the solid `success`/`warning` fills as text (plan 057; owner: `components`)
-`[ ]` Cross-team: `components` uses `destructiveText` for the Field error text
-(`field.tsx:122`, `:154`) and the destructive Menu item label
-(`menu/item.tsx:76`). The solid `destructive` is a fill: it measures 4.04–4.28:1
+`[ ]` Cross-team: `components` uses `destructiveText` for every error signal it
+paints as text — the `FieldError` and `FieldLabel`'s required asterisk
+(`field.tsx`), the `Form` error list (`form.tsx`), and the destructive Menu item
+label (`menu/item.tsx`). The solid `destructive` is a fill: it measures 4.04–4.28:1
 on the hover wash and 3.29–3.86:1 on the active wash across the shipped light
 sets, under the 4.5:1 secondary floor, while `destructiveText` clears every
 wash (≥5.28:1). The token contract checks `destructiveText` on
@@ -574,8 +575,9 @@ that is on and deletes the `alpha(accent, 0.9/0.8)` hover and press in
 `packages/primitives/src/core/variants.ts` (`togglePressedBase`); the two roles
 are designed, platform-specific and measured in both modes now, and the outlined
 toggle's `border` edge is held on both (plan 327; owner: `primitives`)
-`[ ]` Cross-team: `components` gives the neutral Badge a visible chip fill —
-`badge.tsx` paints `muted` behind `mutedForeground`, but `muted` is a surface
+`[ ]` Cross-team: `components` gives the neutral Badge and the Stepper's upcoming
+marker a visible fill — `badge.tsx` and `stepper.tsx` paint `muted` behind
+`mutedForeground`, but `muted` is a surface
 role: on the identity light theme it measures 1.036:1 on `background`, 1.027:1
 on `card`, and 1.000:1 on the `muted` panel it sits on again, so the pill has no
 shape. `secondary`/`secondaryForeground` is the designed neutral fill and clears
