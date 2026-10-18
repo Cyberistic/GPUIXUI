@@ -126,8 +126,9 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**46/46 green** (929 checks); plan `525` added `live-input-payload` (12/12 in a
-focused run), so the registry now lists **47**, and the **full live suite is a
+**46/46 green** (929 checks); plans `525` and `526` added `live-input-payload`
+(12/12) and `live-window` (29/29) in focused runs, so the registry now lists
+**48**, and the **full live suite is a
 merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `reorder` and `tree-reorder` are confirmed there too

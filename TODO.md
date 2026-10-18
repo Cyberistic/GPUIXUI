@@ -58,7 +58,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 85/90 plans-and-harness
+`[x]` `[██████████]` 85/91 plans-and-harness
+
+`[ ]` Probe the **paint/frame counters** (`getDebugFrameOverlayStats`,
+`resetDebugFrameOverlayStats`, `setDebugFrameOverlay`, and the `dispatch*`
+sample paths) — the last supported runtime surface with no contract. The
+reconnaissance in plan `526` §1 measured that the stats are structural, not
+timing noise: a reset leaves `frames` counting, `nativeSimulateScrollWheel`
+costs **two** paints (flush before and after) while `dispatchScrollWheel` costs
+**one** until the caller flushes, and the overlay cycles
+`hidden → minimal → full`. The read/reset themselves appear to cost a paint, so
+the probe must pin that before asserting deltas. Next free plan number `527`.
 
 `[x]` Probe the **window as the layout root** per plan `526` — the desktop
       boundary every shell sits on: `window-layout` (27 checks) and `live-window`

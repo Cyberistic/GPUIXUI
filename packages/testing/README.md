@@ -76,6 +76,11 @@ process-wide syntax cache's `[hits, misses, documents]`, decoded into
 The syntax counters are **cumulative across the process**, so a scenario asserts
 deltas around a change it makes itself, never an absolute count.
 
+`windowSize()` is the renderer's paintable size as a `WindowSize` (never null):
+the same value `useWindowSize()` reads, so a scenario can compare a painted
+readout to the host's own report instead of hard-coding the runner's size
+(plan `526`).
+
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and
 fails with a label naming the id via `ctx.expectSome`.
@@ -110,8 +115,8 @@ returns the **same** `SmokeReport`, which is what lets a live run reuse
 
 `AsyncSmokeHost` is deliberately **smaller** than `SmokeHost`: bounds, text,
 painted text, input (click/click-at-coordinates/right-click/hover/keys/wheel/drag),
-`waitFor`, scroll offsets, focus, selection, highlights, list anchors, screenshots
-and the motion clock. `clickWindow(x, y)` is the point form: the automation
+`waitFor`, scroll offsets, focus, selection, highlights, list anchors, screenshots,
+the motion clock and the window (`windowSize`, and `zoomWindow` to change it). `clickWindow(x, y)` is the point form: the automation
 protocol resolves a locator to its centre, so a surface that owns no `testId`
 (a modal veil) or an element whose type changes under one `testId` (an inline
 editor) can only be pressed by coordinates (plan `347` §8.1).
