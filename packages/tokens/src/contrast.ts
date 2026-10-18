@@ -1452,6 +1452,9 @@ export const selectionFillPairs: readonly ContrastPair[] =
  * an opaque fill, and plan `513`'s `selectionFillPairs` rationale reserves the
  * inverse veil for exactly that. The disabled state does not step, so the
  * `softActionHover`/`softActionActive` fills are deliberately outside this list.
+ * Like the enabled `softActionForeground` pair, this measures the composition
+ * the shipped panel invites; a consumer that opts a filled control's chrome out
+ * with `userSelect: "none"` does not paint it.
  */
 export const selectionFillInactivePairs: readonly ContrastPair[] = [
   ["disabledForeground", "softAction", "inactive"],
