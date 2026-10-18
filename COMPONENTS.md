@@ -277,6 +277,19 @@ no role. Measured: a `TextArea` is `MultilineTextInput`, not `TextInput`;
 removing `Switch`'s label fails the table and the closure, and removing
 `Slider`'s role leaves no node at all.
 
+**Validation matrix (351):** `runtime/invalid.runtime.test.tsx` guards the state
+that produced two shipped defects — `RadioGroup` had no `invalid` at all (plan
+`061`) and `Rating` accepted it and painted nothing (plan `070`). Thirteen cases,
+one per control that declares the prop (`Checkbox`, `CheckboxGroup`, `Input`,
+`Label`, `NumberField`, `OTPField`, `RadioGroup`, `RangeSlider`, `Rating`,
+`Select`, `Slider`, `Switch`, `TextArea`), mount each with and without `invalid`
+in fresh windows and require the theme's destructive role to appear only in the
+first. The scan is whole-tree because the state lands on a border, a tint or a
+text colour depending on the control, and the defect class is "paints nothing";
+each control's own suite still asserts where it lands. All three mutation
+directions (drop Rating's, drop the field chrome's, hard-code the switch's) fail
+by case name.
+
 **Style order (097):** `src/components/style-order.test.tsx` holds the other
 written promise — *a caller's `style` wins last* — over every one of the 29
 `render*` functions that take one. It walks the whole decoded tree and requires

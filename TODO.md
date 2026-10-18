@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 98/98
+`[x]` `[██████████]` 99/99
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -802,6 +802,12 @@ retired once both branches are one
       states the recipe with the measured blockage recorded in plan `350`; no
       runtime proof can live here until the tokens fix lands, which `TODO.md`'s
       tokens row now names as the hand-off.
+`[x]` `packages/primitives`: **the validation matrix** — two shipped defects were
+      one class (`RadioGroup` had no `invalid`, plan `061`; `Rating` accepted it
+      and painted nothing, plan `070`), and no cross-control guard covered it.
+      Thirteen runtime cases, one per control that declares the prop, prove the
+      destructive role appears when invalid and not when valid; all three
+      mutation directions fail by case name (runtime 422; plan `351`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
