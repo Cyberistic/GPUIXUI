@@ -1,4 +1,4 @@
-# 375 — Tier 4 feasibility: a multi-pane editing layout
+# 376 — Tier 4 feasibility: a multi-pane editing layout
 
 **Status:** planned 2026-10-18 · **Phase:** D · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
@@ -7,8 +7,8 @@
 `198`, `338`, `339`, `343`, `350`.
 
 > Numbering: `351`–`374` were claimed by the components and tokens workstreams
-> after `350` landed; this playground plan takes `375`, and the next playground
-> plan takes `376`.
+> after `350` landed; this playground plan takes `376`, and the next playground
+> plan takes `377`.
 
 ## 1. Why this plan exists
 
@@ -91,7 +91,7 @@ Change:
 - `packages/testing/src/smoke.ts` — add `"editor"` to `CAPABILITIES`.
 - `apps/playground/src/live/scenarios.tsx` — import the view, add `live-editor`
   after `live-app-chrome`, and append it to `liveScenarios`.
-- `apps/playground/README.md` — a `## Multi-pane editor (plan 375)` section and
+- `apps/playground/README.md` — a `## Multi-pane editor (plan 376)` section and
   the new file under `Structure`.
 - `COMPONENTS.md` — the `editor` capability row and the measured evidence on
   **Multi-pane editing layouts** (status stays `todo`: the probe is the runtime
@@ -99,8 +99,8 @@ Change:
   integration** for the read-only composition.
 - `TODO.md` — tick the new playground task with the measured counts.
 - `PLAN.md` — a decision row.
-- `.agents/slop/plans/README.md` — add the `375` row; the next playground plan
-  takes `376`.
+- `.agents/slop/plans/README.md` — add the `376` row; the next playground plan
+  takes `377`.
 
 Do **not** change any package, `apps/docs`, the shell, `SplitPane` or the
 smoke runner.

@@ -720,7 +720,7 @@ collapse into a menu (`ref` + `renderer.getElementBounds` is available, as
 fixed-size; no native menu bar exists in 0.10.0 (`command-palette` records the
 in-window alternative).
 
-## Multi-pane editor (plan `375`)
+## Multi-pane editor (plan `376`)
 
 `multi-pane-editor` is the composition the Tier 4 row never had: two tabbed
 panes around one live split, each holding a scrolling read-only `<code>`

@@ -60,8 +60,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 72/76 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350` and `375` written and indexed for the playground workstream; the next plan takes `376` (`351`–`374` are held by the components and tokens workstreams)
-`[x]` Probe the **multi-pane editing layout** per plan `375`:
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350` and `376` written and indexed for the playground workstream; the next plan takes `377` (`351`–`374` are held by the components and tokens workstreams)
+`[x]` Probe the **multi-pane editing layout** per plan `376`:
       `multi-pane-editor` (55 checks) and `live-editor` (19): two tabbed panes
       around one live split, each a 28 px `userSelect: none` strip over a 372 px
       `overflowY: "scroll"` viewport holding a `<code showLineNumbers>`; a

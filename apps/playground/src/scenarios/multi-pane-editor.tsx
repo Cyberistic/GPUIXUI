@@ -1,5 +1,5 @@
 /**
- * `multi-pane-editor` — a two-pane editing layout (plan `375`).
+ * `multi-pane-editor` — a two-pane editing layout (plan `376`).
  *
  * The Tier 4 row "Multi-pane editing layouts" had no runtime evidence. Every
  * ingredient was measured alone — a pointer-captured split (`panel-nested`),
@@ -124,7 +124,7 @@ const EditorPane = ({
    * A tab swap starts the new document at the top.
    *
    * The runtime silently clamps a shorter document's offset and fires no
-   * `onScroll` for it (measured in plan `375` §8), so keeping the old offset
+   * `onScroll` for it (measured in plan `376` §8), so keeping the old offset
    * would leave both the scroller and the readout disagreeing. A per-tab
    * restore needs a post-layout pass; this probe owns the simple policy.
    */
