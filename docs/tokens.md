@@ -1374,16 +1374,16 @@ runtime can draw, so a zero ring removes focus entirely — while
 `themeContrastFailures` still returns `[]`, because the ring's colour is fine. A
 type role's leading must not be shorter than its size; the smallest control must
 fit one `label` line plus its two borders; a row must fit one `body` line and the
-default `md` control it holds;
-`radius.none` must be square; `radius.full` must round the largest radius and
-half the largest control; every named ladder — `spacing`, `radius`, `iconSize`,
-`avatarSize`, `controlHeight`, `controlPaddingX` and the motion timings — must
-not step backwards; an icon and a field adornment must fit the smallest control;
-a chip must fit in a field; and an elevation level must hold a shadow whose alpha
-is a fraction, because `alpha()` falls back to the opaque tint on a value it
-cannot parse, and whose two offsets, blur and spread are finite — a negative
-offset or spread is a direction, a `NaN` is a shadow the renderer cannot paint. Two ladders are deliberately non-decreasing rather than strict:
-Linux and Windows ship `radius.lg === radius.xl`, and Windows ships
+default `md` control it holds; `radius.none` must be square; `radius.full` must
+round the largest radius and half the largest control; every named ladder —
+`spacing`, `radius`, `iconSize`, `avatarSize`, `controlHeight`, `controlPaddingX`
+and the motion timings — must not step backwards; an icon and a field adornment
+must fit the smallest control; a chip must fit in a field; and an elevation level
+must hold a shadow whose alpha is a fraction, because `alpha()` falls back to the
+opaque tint on a value it cannot parse, and whose two offsets, blur and spread
+are finite — a negative offset or spread is a direction, a `NaN` is a shadow the
+renderer cannot paint. Two ladders are deliberately non-decreasing rather than
+strict: Linux and Windows ship `radius.lg === radius.xl`, and Windows ships
 `motion.fast === motion.step`. `elevation.overlay` is exempt because it is
 reserved and empty. Every shipped theme, platform variant and recipe passes, so
 the check moves no value; it guards the next edit.
