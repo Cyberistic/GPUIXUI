@@ -467,8 +467,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
       field claim instead of payload identity — plan 366; unit copy case + 1
       native nested-dismiss case (Dialog 14, behaviour 526), both fail on the old
       `WeakSet`
-    - `[ ]` Tabs starts an arrow move from the natively focused tab (a live click
-      and `autoFocus` never run React's `onFocus`) — plan 367
+    - `[x]` Tabs starts an arrow move from the natively focused tab (a live click
+      and `autoFocus` never run React's `onFocus`) — plan 367; 1 native case
+      (Tabs 16, behaviour 527), fails on the old origin
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

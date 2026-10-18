@@ -3,7 +3,8 @@
 **Phase.** F — integration and polish (a measured live-window defect).
 **Workstream.** components (`packages/components`).
 **Depends on.** 110, 113, 117, 321, 334, 344/345 (playground evidence).
-**Status.** planned 2026-10-18.
+**Status.** done 2026-10-18 — 1 native regression case (Tabs 16, behaviour 527);
+it fails on the old `active`-only origin and passes on the focused origin.
 
 ## 1. Why this plan exists
 
@@ -171,4 +172,16 @@ Expected: behaviour 527, unit unchanged, `check` exit `0`.
 
 ## 7. Result
 
-_To be filled after execution._
+Executed on this host, 2026-10-18.
+
+- `src/behaviour/tabs.test.tsx`: **16/16 green**. With `tabs.tsx` restored to the
+  pre-fix code the new case fails (`expected [ Array(4) ] to include 'Third
+  panel'` — the panel stays `First panel`); with the fix, `Third panel` is
+  selected and `aria-selected` is on tab C.
+- Probe evidence for §1 (deleted): `autoFocus` on B leaves `boxShadow`
+  `undefined` on B (`onFocus` never ran) and `ArrowRight` leaves the **First**
+  panel selected.
+- The click path now records the highlight and focus state itself, so a live
+  click's trigger paints its focus ring and reports `highlighted`.
+- Docs and inventory say 16 native tests; `docs/tabs.mdx` states the
+  focused-origin rule.

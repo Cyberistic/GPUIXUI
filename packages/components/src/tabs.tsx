@@ -191,12 +191,33 @@ export const Tabs = ({
     [rows],
   );
 
+  /**
+   * The tab an arrow move starts from: the natively focused one when the runtime
+   * names it, otherwise the last highlighted tab. A live click and `autoFocus`
+   * move native focus without running React's `onFocus` (plan 345), so the
+   * focused element is the only reliable origin.
+   */
+  const origin = useCallback(
+    (): Option.Option<string> =>
+      pipe(
+        Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
+        Option.flatMap((id) => Arr.findFirst(rows, (row) => row.id === id)),
+        Option.map((row) => row.value),
+        Option.orElse(() => active),
+      ),
+    [active, renderer, rows],
+  );
+
   const moveBy = useCallback(
     (delta: 1 | -1): void => {
       pipe(
         rowAt(
           rows,
-          nextEnabled(collection(rows), Option.flatMap(active, indexOf), delta),
+          nextEnabled(
+            collection(rows),
+            Option.flatMap(origin(), indexOf),
+            delta,
+          ),
         ),
         Option.match({
           onNone: () => undefined,
@@ -204,7 +225,7 @@ export const Tabs = ({
         }),
       );
     },
-    [activation, active, focusRow, indexOf, rows],
+    [activation, focusRow, indexOf, origin, rows],
   );
 
   const jumpTo = useCallback(
@@ -467,6 +488,10 @@ export const TabsTrigger = ({
           ? undefined
           : (event) => {
               onClick?.(event);
+              // A live click focuses natively without running `onFocus`
+              // (plan 345), so the click supplies the state `onFocus` misses.
+              noteFocus(value);
+              setFocused(true);
               select(value);
             }
       }

@@ -101,7 +101,52 @@ const VerticalSettings = ({
   </Tabs>
 );
 
+/** Three tabs selected on A, with native focus starting on B and no onFocus. */
+const AutoFocusedTabs = () => (
+  <Tabs defaultValue="a">
+    <TabsList>
+      <TabsTrigger testId="tab-a" value="a">
+        One
+      </TabsTrigger>
+      <TabsTrigger testId="tab-b" value="b" autoFocus>
+        Two
+      </TabsTrigger>
+      <TabsTrigger testId="tab-c" value="c">
+        Three
+      </TabsTrigger>
+    </TabsList>
+    <TabsContent value="a">
+      <text>First panel</text>
+    </TabsContent>
+    <TabsContent value="b">
+      <text>Second panel</text>
+    </TabsContent>
+    <TabsContent value="c">
+      <text>Third panel</text>
+    </TabsContent>
+  </Tabs>
+);
+
 describe("Tabs", () => {
+  it("starts an arrow move from the focused tab without a React focus event", () => {
+    const tabs = renderComponent(<AutoFocusedTabs />);
+
+    // `autoFocus` sets native focus but never runs React's `onFocus` (plan 140).
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-b"));
+    expect(
+      tabs.renderer.findByTestId("tab-b")?.style.boxShadow,
+    ).toBeUndefined();
+
+    tabs.renderer.simulateKeystrokes("right");
+
+    expect(tabs.renderer.getPaintedText()).toContain("Third panel");
+    expect(
+      tabs.renderer.findByTestId("tab-c")?.customProps?.["aria-selected"],
+    ).toBe(true);
+
+    tabs.unmount();
+  });
+
   it("shows only the panel of the clicked tab", () => {
     const tabs = renderComponent(<Settings />);
 

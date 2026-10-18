@@ -37,7 +37,10 @@ import {
 Only the selected trigger is in the tab order; every other trigger is `-1`.
 Arrow keys move focus *and* the selection in `automatic` mode; in `manual` mode
 they only move focus, and Enter/Space selects. Disabled triggers are skipped by
-every key and cannot be clicked.
+every key and cannot be clicked. A move starts from the tab that actually holds
+native focus (read from the renderer at key time); the last highlighted tab is
+only the fallback, because a live click and `autoFocus` move focus without
+running React's `onFocus`.
 
 ## Orientation
 
@@ -120,8 +123,9 @@ after the trigger's own rules.
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (15 tests): click
-switching, the active theme role in both themes, arrow wrap with a disabled tab,
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (16 tests): click
+switching, the active theme role in both themes, an arrow move starting from a
+natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
 controlled contract, a panel
 whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
