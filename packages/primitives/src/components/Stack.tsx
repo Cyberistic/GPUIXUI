@@ -1,9 +1,9 @@
 /**
  * `Stack` and `Grid` — the two layouts the runtime draws.
  *
- * A Stack is flexbox in one direction; a Grid is the runtime's fixed-size grid.
- * Both are pure resolvers, so their spacing always comes from the theme instead
- * of a call-site pixel value.
+ * A Stack is flexbox in one direction; a Grid is the runtime's numeric-track
+ * grid, whose track minimums can fit their content. Both are pure resolvers, so
+ * their spacing always comes from the theme instead of a call-site pixel value.
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -44,7 +44,7 @@ export interface GridProps extends GridSpec {
   readonly testId?: string;
 }
 
-/** The element tree `Grid` renders in fixed numeric tracks. */
+/** The element tree `Grid` renders in numeric tracks. */
 export const renderGrid = (
   { style, children, testId, ...spec }: GridProps,
   theme: PrimitiveTheme,
@@ -55,10 +55,12 @@ export const renderGrid = (
 );
 
 /**
- * A fixed-size grid of equal tracks.
+ * A numeric-track grid whose minimum can fit its content.
  *
- * The runtime's grid is numeric — no track strings, no auto-flow, no named
- * areas (plan 020 §1.2) — so anything raggedy belongs in a wrapping `Stack`.
+ * The runtime's grid is numeric — no auto-flow, no named areas, no template
+ * strings (plan 020 §1.2) — so anything raggedy belongs in a wrapping `Stack`.
+ * What it can do is size a track to its content: `columnMin="max-content"` is
+ * the table-like grid (plan 376).
  */
 export const Grid = (props: GridProps): ReactElement =>
   renderGrid(props, useTheme());

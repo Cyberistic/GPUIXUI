@@ -112,6 +112,20 @@ describe("layout containers", () => {
     expect(stringIn(element, "gridAutoFlow")).toStrictEqual(Option.none());
   });
 
+  it("carry the runtime's track minimums on the resolved style", () => {
+    // The bug guarded (plan 376): the grid hid `gridColumnMin`/`gridRowMin`, so
+    // a content-sized label column was unreachable from the public API.
+    const content = renderGrid(
+      { columns: 2, columnMin: "max-content", rows: 2, rowMin: "min-content" },
+      testTheme,
+    );
+    expect(expectSome(stringIn(content, "gridColumnMin"))).toBe("max-content");
+    expect(expectSome(stringIn(content, "gridRowMin"))).toBe("min-content");
+    const plain = renderGrid({ columns: 2 }, testTheme);
+    expect(stringIn(plain, "gridColumnMin")).toStrictEqual(Option.none());
+    expect(stringIn(plain, "gridRowMin")).toStrictEqual(Option.none());
+  });
+
   it("draw a rule on the border role, one border wide", () => {
     expect(
       numberIn(

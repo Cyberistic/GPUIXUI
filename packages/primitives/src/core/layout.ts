@@ -95,7 +95,19 @@ export interface GridSpec {
   readonly rows?: number;
   readonly gap?: SpaceStep;
   readonly grow?: boolean;
+  /**
+   * How each column's minimum is sized. `max-content` fits every column to its
+   * widest cell — a table-like grid; `min-content` is the smallest the content
+   * can take; `zero` is the runtime's equal-track default.
+   */
+  readonly columnMin?: GridTrackMin;
+  /** The same rule on the row axis. */
+  readonly rowMin?: GridTrackMin;
 }
+
+/** The runtime's three track minimums, mirrored verbatim. */
+export const GRID_TRACK_MINS = ["zero", "min-content", "max-content"] as const;
+export type GridTrackMin = (typeof GRID_TRACK_MINS)[number];
 
 /** A track count must be a whole, positive number; a nonsense count is one. */
 const tracks = (count: number): number =>
@@ -104,9 +116,11 @@ const tracks = (count: number): number =>
 /**
  * A fixed-size grid.
  *
- * GPUix exposes `gridTemplateColumns`/`gridTemplateRows` as **numbers** and has
- * no auto-flow or named areas (plan 020 §1.2), so a grid is always `columns`
- * equal tracks; anything raggedy uses a wrapping Stack.
+ * The track **counts** are numbers — there is no auto-flow, no named area and no
+ * track string (plan 020 §1.2). The track **minimum** is the runtime's own
+ * `gridColumnMin`/`gridRowMin`: `max-content` earns a table-like grid (measured,
+ * a label column at 33 px beside a 235 px value, plan 376), and the grid then
+ * hugs its content instead of filling its parent.
  */
 export const gridStyle = (spec: GridSpec, theme: PrimitiveTheme): StyleDesc => {
   const style: StyleDesc = {
@@ -116,6 +130,8 @@ export const gridStyle = (spec: GridSpec, theme: PrimitiveTheme): StyleDesc => {
   if (spec.rows !== undefined) {
     style.gridTemplateRows = tracks(spec.rows);
   }
+  if (spec.columnMin !== undefined) style.gridColumnMin = spec.columnMin;
+  if (spec.rowMin !== undefined) style.gridRowMin = spec.rowMin;
   if (spec.gap !== undefined) style.gap = theme.spacing[spec.gap];
   if (spec.grow === true) style.flexGrow = 1;
   return style;

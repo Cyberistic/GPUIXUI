@@ -115,6 +115,97 @@ it("lays a Grid's children into equal columns and wraps to a new row", async () 
   expect(c.y).toBeGreaterThan(a.y);
 });
 
+it("gives a grid's columns equal tracks when no minimum is asked for", async () => {
+  // The default half of plan 376's proof: without `columnMin`, a short label
+  // and a long value share the width equally — the shape the page used to call
+  // the only one possible.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Grid columns={2} style={{ width: 600 }}>
+        <Box tone="none" testId="label">
+          <Text role="caption">Name</Text>
+        </Box>
+        <Box tone="none" testId="value">
+          <Text role="caption">
+            A very long value that should be much wider
+          </Text>
+        </Box>
+      </Grid>
+    </Surface>,
+  );
+  const label = boundsOf(runtime, "label");
+  const value = boundsOf(runtime, "value");
+  expect(label.width).toBe(value.width);
+});
+
+it("sizes a grid's columns to their content with columnMin", async () => {
+  // The bug guarded (plan 376): `Grid` hid the runtime's `gridColumnMin`, and
+  // `docs/grid.mdx` said a narrow label column was impossible. Measured: the
+  // label track takes its content width and the value track takes its own, so
+  // the grid hugs the pair instead of filling 600.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Grid columns={2} columnMin="max-content" style={{ width: 600 }}>
+        <Box tone="none" testId="label">
+          <Text role="caption">Name</Text>
+        </Box>
+        <Box tone="none" testId="value">
+          <Text role="caption">
+            A very long value that should be much wider
+          </Text>
+        </Box>
+      </Grid>
+    </Surface>,
+  );
+  const label = boundsOf(runtime, "label");
+  const value = boundsOf(runtime, "value");
+  expect(label.width).toBeLessThan(value.width);
+  expect(value.x).toBe(label.x + label.width);
+  expect(label.width + value.width).toBeLessThan(600);
+});
+
+it("sizes a grid's rows to their content with rowMin", async () => {
+  // The row axis of the same defect: two equal default rows, then a first row
+  // that fits its one line and a second that keeps its wrapped height.
+  const plain = await openWindow();
+  plain.render(
+    <Surface>
+      <Grid columns={1} rows={2} style={{ width: 200 }}>
+        <Box tone="none" testId="one">
+          <Text role="caption">One</Text>
+        </Box>
+        <Box tone="none" testId="two">
+          <Text role="caption">
+            A long value that wraps onto several lines once it is squeezed
+          </Text>
+        </Box>
+      </Grid>
+    </Surface>,
+  );
+  expect(boundsOf(plain, "one").height).toBe(boundsOf(plain, "two").height);
+
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Grid columns={1} rows={2} rowMin="max-content" style={{ width: 200 }}>
+        <Box tone="none" testId="one">
+          <Text role="caption">One</Text>
+        </Box>
+        <Box tone="none" testId="two">
+          <Text role="caption">
+            A long value that wraps onto several lines once it is squeezed
+          </Text>
+        </Box>
+      </Grid>
+    </Surface>,
+  );
+  expect(boundsOf(runtime, "one").height).toBeLessThan(
+    boundsOf(runtime, "two").height,
+  );
+});
+
 it("draws a horizontal Separator as one border step across the surface", async () => {
   const runtime = await openWindow();
   runtime.render(

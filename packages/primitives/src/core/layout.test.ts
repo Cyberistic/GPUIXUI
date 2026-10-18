@@ -3,6 +3,7 @@ import * as Option from "effect/Option";
 import {
   boxStyle,
   decideScroll,
+  GRID_TRACK_MINS,
   gridStyle,
   resolveScroll,
   scrollLine,
@@ -96,6 +97,27 @@ describe("gridStyle", () => {
       gridStyle({ columns: 2, rows: Number.NaN }, testTheme).gridTemplateRows,
     ).toBe(1);
   });
+
+  it("leaves the track minimums to the runtime unless asked", () => {
+    // The bug guarded (plan 376): the page said content-sized tracks were
+    // impossible, so the component had no way to reach `gridColumnMin`. A plain
+    // grid must stay exactly as it was — equal tracks.
+    const plain = gridStyle({ columns: 2 }, testTheme);
+    expect(plain.gridColumnMin).toBeUndefined();
+    expect(plain.gridRowMin).toBeUndefined();
+  });
+
+  it.each(GRID_TRACK_MINS)(
+    "mirrors the runtime's `%s` track minimum on each axis",
+    (min) => {
+      const columns = gridStyle({ columns: 2, columnMin: min }, testTheme);
+      expect(columns.gridColumnMin).toBe(min);
+      expect(columns.gridRowMin).toBeUndefined();
+      const rows = gridStyle({ columns: 2, rows: 2, rowMin: min }, testTheme);
+      expect(rows.gridRowMin).toBe(min);
+      expect(rows.gridColumnMin).toBeUndefined();
+    },
+  );
 });
 
 describe("boxStyle", () => {

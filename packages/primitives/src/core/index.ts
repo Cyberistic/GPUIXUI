@@ -123,6 +123,7 @@ export type { TrackBox, ValueRange, ValueSpan } from "./value.js";
 export {
   boxStyle,
   decideScroll,
+  GRID_TRACK_MINS,
   gridStyle,
   resolveScroll,
   SCROLL_DIRECTIONS,
@@ -135,6 +136,7 @@ export {
 export type {
   BoxSpec,
   GridSpec,
+  GridTrackMin,
   ScrollDirection,
   ScrollGeometry,
   ScrollMove,
