@@ -119,7 +119,18 @@ Change:
 
 ## 7. Measured results
 
-To be filled by the executor.
+Run on this host, 2026-10-18.
+
+| Check | Result |
+| ----- | ------ |
+| two full live runs with the wait | `36/36`, exit `0`, `query=verified` (checks unchanged at `678`) |
+| reveal removed from `query-builder.tsx` | `the live appended row sits at the strip's bottom: expected 181 ± 2, got 221` — the wait timed out and the real assertion failed, so it does not mask the defect |
+
+The flake was observed once on the **notification-centre** full run before the
+fix (the same `221 vs 181`), and not again in two consecutive full runs after
+it. The wait is 3 s with a 50 ms poll: the reveal lands in the first frame in a
+healthy run; a missing reveal costs the timeout and the same failure.
+
 
 ## 8. Acceptance
 

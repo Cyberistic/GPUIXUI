@@ -780,7 +780,10 @@ builders** never had: a rule list over a virtualized table. 83 checks; live twin
 and the reveal then runs before the new rows are laid out — the appended row
 stayed at the strip's bottom edge (`221` against `181` expected). The live step
 settles between clicks, as a human would; `scrollIntoView` is the reveal, not a
-`scrollTo` formula.
+`scrollTo` formula. The reveal assertion is **bounded** (`waitForBounds`, 3 s at
+50 ms): `rules=4` can land before the effect paints, and a full-suite run once
+read the pre-reveal box. With the reveal removed the wait times out and the same
+assertion fails with `221`, so it cannot mask the defect (plan `382`).
 
 Limits: the builder is inline (an overlay panel is `tier2-choice`'s `Popover`),
 rules are AND/OR without nesting or groups, operators are the four numeric

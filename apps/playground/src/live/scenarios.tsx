@@ -192,6 +192,24 @@ const waitForAnchor = (ctx: LiveContext, testId: string, expected: string) =>
     Effect.orElseSucceed(() => undefined),
   );
 
+/** Waits up to three seconds for `testId`'s painted box to satisfy `within`. */
+const waitForBounds = (
+  ctx: LiveContext,
+  testId: string,
+  within: (box: Smoke.Bounds) => boolean,
+) =>
+  ctx.host.bounds(testId).pipe(
+    Effect.flatMap((box) =>
+      box !== null && within(box) ? Effect.void : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
 /** The painted left edge of `testId`, or a failure naming the missing id. */
 const leftOf = (ctx: LiveContext, testId: string) =>
   Effect.gen(function* () {
@@ -3939,8 +3957,14 @@ const queryBuilder: LiveScenario = {
       yield* ctx.host.click("qb-add");
       yield* settle;
       yield* waitForText(ctx, "qb-state", "rules=4");
-      const revealed = yield* boxOf(ctx, "qb-rule-3");
       const scrolledStrip = yield* boxOf(ctx, "qb-rules");
+      yield* waitForBounds(
+        ctx,
+        "qb-rule-3",
+        (box) =>
+          box.y + box.height <= scrolledStrip.y + scrolledStrip.height + 2,
+      );
+      const revealed = yield* boxOf(ctx, "qb-rule-3");
       yield* ctx.expectNear(
         "the live appended row sits at the strip's bottom",
         revealed.y + revealed.height,

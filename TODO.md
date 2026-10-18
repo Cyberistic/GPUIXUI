@@ -82,6 +82,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       proofs and one reverse proof (plan `381` §9.3). Also measured: the
       headless `click(testId)` verb does not run an ancestor's `onClick` for a
       press on a descendant
+`[x]` **Harden the live query-builder reveal assertion** per plan `382`: a
+      bounded `waitForBounds` (3 s, 50 ms poll) closes the race between
+      `rules=4` and the post-commit `scrollIntoView`. Observed once under full-suite
+      load (`the live appended row sits at the strip's bottom: expected 181 ± 2,
+      got 221`), not again in two consecutive full runs after the fix; removing
+      the reveal still fails with the same `221`, so the wait does not mask a
+      defect. Live stays `36/36` (`678`) and no check was added.
+
 `[ ]` **packages/components** (no owner yet): implement a notification centre
       from the contract plan `381` measured — a bell with a derived unread badge
       and an accessible label, a non-modal `align="end"` panel, grouped
