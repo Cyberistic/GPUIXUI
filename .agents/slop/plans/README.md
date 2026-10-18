@@ -208,6 +208,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [510](./510-inactive-label-selection-wash.md) | The unavailable label through the text-selection wash | F | 306, 087, 091, 362, 366, 392, 506 | done |
 | [511](./511-native-field-caret.md) | The native field's caret is the accent | F | 337, 332, 315–319, 350, 387 | done |
 | [512](./512-panel-action-selection.md) | The panel action's label through the text-selection wash | F | 091, 362, 394, 506, 510, 387 | done |
+| [513](./513-selection-veil-pointer-states.md) | The inverse veil's pointer-state gap and its stale rationale | F | 344, 382, 504, 506, 510, 387 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2140,6 +2141,25 @@ follows its own accent and `themeContrastFailures` already reports a collapsed
 one; a consumer that wants another caret replaces the field. A cross-team row
 asks `primitives` to pass the helper to the fields it renders. No colour, pair or
 floor moves.
+
+Plan `513` measures the one text-selection composition the inverse veil cannot
+cover and retires the rationale that no longer matches the palette. A filled
+control's label is a plain text child and neither control implementation opts it
+out of selection, so dragging over it selects the label while the fill steps to
+`xHover`/`xActive`. At the shipped 15% veil **60 of the 360** shipped state-fill
+label pairs miss the on-colour floor in **20 of 24** sets (worst **3.353:1**,
+macOS dark `accentActive`). The gap is not a missing pair: probed over every
+integer alpha from 1% to 30%, in both directions, no single neutral veil clears
+both the on-colour floor and the 1.05:1 perceivability floor on the high-contrast
+light set, so a state-fill pair would publish a guarantee the AAA palette cannot
+meet. The design rule is explicit instead — a filled control's chrome sets
+`userSelect: "none"`, and the resting pairs cover content that keeps its fill (a
+message bubble, a solid chip, the panel action); the cross-team change is in
+`TODO.md`. The same audit corrects the stale pre-506 figures: 17 shipped
+compositions across the eight resting fills are under the floor, not fourteen;
+six are the accent wash on `primary` (the exact list is six, not seven); the AAA
+dark `softAction` veil is **1.574:1**, not 1.047:1. No colour, pair or floor
+moves; `contrastPairs` stays **394**.
 
 ## How to use a plan
 
