@@ -74,6 +74,7 @@ describe("the selection wash on painted surfaces", () => {
     ]);
     expect(selectionPairs.map(([, background]) => background)).toEqual([
       ...surfaces,
+      "card",
       ...surfaces,
     ]);
     expect(selectionPairs.map(([foreground]) => foreground)).toEqual([
@@ -86,6 +87,7 @@ describe("the selection wash on painted surfaces", () => {
       "popoverForeground",
       "inputForeground",
       "selectedForeground",
+      "cardForeground",
       "mutedForeground",
       "mutedForeground",
       "mutedForeground",

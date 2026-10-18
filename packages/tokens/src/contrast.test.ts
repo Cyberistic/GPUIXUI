@@ -442,6 +442,7 @@ describe("themeContrastFailures", () => {
       ["popoverForeground", "popover"],
       ["inputForeground", "input"],
       ["selectedForeground", "selected"],
+      ["cardForeground", "card"],
       ...selectionSurfaces.map((surface) => ["mutedForeground", surface]),
       ...selectionSoftPairs.map(([foreground, background]) => [
         foreground,
@@ -526,7 +527,7 @@ describe("themeContrastFailures", () => {
       "warningSoft",
       "destructiveSoft",
     ]);
-    expect(selectionPairs.length).toBe(18);
+    expect(selectionPairs.length).toBe(19);
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(12);
     expect(selectionSoftWashPairs.length).toBe(4);

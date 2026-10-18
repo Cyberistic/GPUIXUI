@@ -1047,7 +1047,10 @@ be selected on: `background`, `card`, `muted`, `hover`, `active` and `accent`
 with `foreground`; `popover` with `popoverForeground`; `input` with
 `inputForeground`; and `selected` with `selectedForeground` at the secondary
 floor; a soft status surface carries its own tone with `xSoftForeground`, its
-description with `foreground` and its caption with `mutedForeground`.
+description with `foreground` and its caption with `mutedForeground`. A card
+carries two text roles — the default `foreground` a `CardTitle` paints and its
+own `cardForeground`, which a context menu trigger sets on its `card` fill — so
+both are measured through the wash.
 Secondary text is held to the secondary floor through the same wash on all nine
 surfaces (`mutedForeground`), because a row description, a card caption or a
 message timestamp is selected with the body copy around it. The soft surfaces
@@ -1292,7 +1295,8 @@ it paints, with both text roles each surface carries: the body role over
 `accent`; `popoverForeground` over `popover`; `inputForeground` over `input`; and
 `selectedForeground` over `selected`; and `mutedForeground` on all nine surfaces
 at the secondary floor — reported with `wash: "selection"`. `selectionPairs` is
-the text list. An Alert, Badge or Toast is measured the same way:
+the text list; it names both of a card's text roles, the default `foreground` and
+`cardForeground`. An Alert, Badge or Toast is measured the same way:
 `selectionSoftPairs` holds the tone's foreground, the body and the caption
 through the wash and `selectionSoftWashPairs` the highlight's own perceivability
 on the four soft fills. The wash itself is compared with each surface it paints
@@ -1738,7 +1742,11 @@ to **338**. Plan `362` adds a status panel's body (`foreground`) and caption
 (`mutedForeground`) to `selectionSoftPairs`, beside the plain `contrastPairs`
 list — the soft list grows from 4 to **12** and the plain count stays **338**;
 the tightest new pairs are **7.26:1** (identity dark, `infoSoft`) and
-**4.78:1** (Aero light, `destructiveSoft`), so no colour moves.
+**4.78:1** (Aero light, `destructiveSoft`), so no colour moves. Plan `363` adds
+the card's own `cardForeground` to `selectionPairs` (18 → 19) beside the default
+`foreground`, because the two are apart in both Windows recipes and only the
+default role was measured through the wash; Windows dark is the tightest at
+**9.07:1**, so no colour moves and the plain `contrastPairs` count stays **338**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1938,7 +1946,11 @@ and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 added in plan `362` — the identity dark body on `infoSoft` at **7.26:1** and Aero
 light's caption on `destructiveSoft` at **4.78:1** at the tightest — so a status
 panel now keeps its description and its caption selected on any platform, and
-accent-toned text stays the documented omission.
+accent-toned text stays the documented omission. The card's own
+`cardForeground` is measured beside the default `foreground` (plan `363`), so a
+theme whose card text is readable at rest cannot lose it under the wash — the
+two roles are already apart in both Windows recipes, and Windows dark is the
+tightest at **9.07:1**, so no colour moves.
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
 over `background`, `card`, `muted`, `input`, `selected` and `popover` and holds

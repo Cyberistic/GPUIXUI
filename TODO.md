@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 130/180
+`[x]` `[███████░░░]` 131/181
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -931,6 +931,13 @@ edited theme could erase it while `themeContrastFailures` returned `[]`;
 `selectionSoftPairs` grows 4 → 12, every shipped set passes (7.26:1 identity
 dark body and 4.78:1 Aero light caption at the tightest), so no colour moves,
 and accent-toned text stays the documented omission (plan 362)
+`[x]` Hold the card's own text role through a text selection — a card carries the
+default `foreground` a `CardTitle` paints and its own `cardForeground`, which a
+context menu trigger sets on its `card` fill, but `selectionPairs` named only the
+default role, so card text readable at rest could lose its floor under the wash
+while `themeContrastFailures` returned `[]`; the two roles are apart in both
+Windows recipes, `selectionPairs` grows 18 → 19, every shipped set passes
+(Windows dark 9.07:1 at the tightest) and no colour moves (plan 363)
 
 ## Phase C — Tier 1–2 components
 

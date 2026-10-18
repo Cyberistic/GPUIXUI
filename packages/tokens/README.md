@@ -215,7 +215,9 @@ a timestamp is selected with the body copy: seven shipped sets were under
 4.5:1 there — identity light 4.06:1 and identity dark 3.49:1 on a pressed row —
 until plan 087 moved their secondary grey. `selectionWashPairs` also holds the
 wash itself to 1.05:1 against each surface, so a highlight cannot be made
-invisible to satisfy a text floor. High-contrast dark shipped at 6.48:1 on `hover`
+invisible to satisfy a text floor. A card's own `cardForeground` is measured
+beside the default `foreground`, because both Windows recipes ship the two apart
+(plan 363). High-contrast dark shipped at 6.48:1 on `hover`
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
 `active`, until plan 081 darkened the three wash bases. An Alert, Badge or Toast
 is measured the same way: the tone's `xSoftForeground` is held to the body floor

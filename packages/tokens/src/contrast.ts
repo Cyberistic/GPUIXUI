@@ -971,9 +971,11 @@ const selectionForegrounds: Readonly<
 
 /**
  * Every text pair a selected glyph paints: the role each surface uses for its
- * own text on the left, and secondary text on the right. A row description or a
- * message timestamp is selected with the body copy around it, so it carries the
- * secondary floor through the same wash.
+ * own text on the left, and secondary text on the right. A card carries two —
+ * the default `foreground` a `CardTitle` paints and its own `cardForeground`,
+ * which a context menu trigger sets on its `card` fill — and both are measured.
+ * A row description or a message timestamp is selected with the body copy
+ * around it, so it carries the secondary floor through the same wash.
  */
 export const selectionPairs: readonly ContrastPair[] = [
   ...selectionSurfaces.map(
@@ -983,6 +985,7 @@ export const selectionPairs: readonly ContrastPair[] = [
       surface === "selected" ? "secondary" : "body",
     ],
   ),
+  ["cardForeground", "card", "body"],
   ...selectionSurfaces.map(
     (surface): ContrastPair => ["mutedForeground", surface, "secondary"],
   ),
