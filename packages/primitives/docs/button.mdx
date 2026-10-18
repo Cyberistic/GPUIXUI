@@ -46,7 +46,8 @@ import { Button, Stack } from "@gpuixui/primitives";
 - `fullWidth` — stretches to its parent.
 - `disabled` — refuses click and keys, and leaves the tab order.
 - `loading` — shows a spinner, announces `Loading`, refuses activation, and
-  **stays focusable**.
+  **stays focusable** — unless `disabled` is also set, which always removes the
+  tab stop.
 
 ## API
 
@@ -77,6 +78,8 @@ import { Button, Stack } from "@gpuixui/primitives";
 
 `disabled` and `loading` refuse both. A `disabled` button is not tabbable; a
 `loading` one is, so a keyboard user is not dropped from the page mid-action.
+When both are set, `disabled` wins: a busy control that is also disabled is not
+a tab stop.
 
 `onClick` receives the event that activated the button — the pointer click, or
 the key event itself — so a button wired with the familiar prop still works from

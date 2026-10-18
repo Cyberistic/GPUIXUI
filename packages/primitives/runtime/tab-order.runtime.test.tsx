@@ -212,3 +212,65 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase.node] as const))(
     expect(focusedId(runtime)).toBe("after");
   },
 );
+
+/**
+ * The disabled guard must not be conditional on a second prop.
+ *
+ * Plan 340 measured the case the matrix above cannot see: `Button` decided its
+ * tab stop with `disabled === true && loading !== true`, so the common
+ * `disabled={saving} loading={saving}` call left the dead control in the tab
+ * order, while both docs pages say a disabled button is not tabbable. `loading`
+ * alone is the documented exception and must stay reachable, so both halves run.
+ */
+const BUSY_CASES: ReadonlyArray<{
+  readonly name: string;
+  readonly node: ReactElement;
+}> = [
+  {
+    name: "Button",
+    node: (
+      <Button testId="c" disabled loading>
+        Save
+      </Button>
+    ),
+  },
+  {
+    name: "IconButton",
+    node: <IconButton testId="c" icon="x" label="Close" disabled loading />,
+  },
+];
+
+const LOADING_CASES: ReadonlyArray<{
+  readonly name: string;
+  readonly node: ReactElement;
+}> = [
+  {
+    name: "Button",
+    node: (
+      <Button testId="c" loading>
+        Save
+      </Button>
+    ),
+  },
+  {
+    name: "IconButton",
+    node: <IconButton testId="c" icon="x" label="Close" loading />,
+  },
+];
+
+it.each(BUSY_CASES.map((testCase) => [testCase.name, testCase.node] as const))(
+  "%s leaves the tab order when disabled while loading",
+  async (_name, node) => {
+    const runtime = await mountAtStart(node);
+    runtime.focusNext();
+    expect(focusedId(runtime)).toBe("after");
+  },
+);
+
+it.each(
+  LOADING_CASES.map((testCase) => [testCase.name, testCase.node] as const),
+)("%s keeps its tab stop while loading", async (_name, node) => {
+  const runtime = await mountAtStart(node);
+  runtime.focusNext();
+  expect(focusedId(runtime)).toBe("c");
+});

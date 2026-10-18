@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 87/87
+`[x]` `[██████████]` 88/88
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -696,6 +696,14 @@ retired once both branches are one
       through the host's `onSubmit` (commit → caller) and exposes `onSubmit`;
       a disabled field does neither. Measured: Enter paints `1.50`, the caller's
       handler runs once (plan `339`).
+
+`[x]` `packages/primitives`: **a disabled button kept its tab stop while
+      loading** — `Button`'s guard read `disabled === true && loading !== true`,
+      so `disabled={saving} loading={saving}` (the common save lifecycle) left a
+      dead control in the tab order while both docs pages state that a disabled
+      button is not tabbable. `disabled` now wins unconditionally; `loading`
+      alone keeps its stop. The tab-order matrix gains the busy pair for
+      `Button` and `IconButton`, both directions measured (plan `340`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

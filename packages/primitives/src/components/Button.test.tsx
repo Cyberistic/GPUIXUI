@@ -147,6 +147,20 @@ describe("Button", () => {
     );
   });
 
+  it("leaves the tab order when disabled, even while loading", () => {
+    // The bug guarded (plan 340): the disabled guard read
+    // `disabled === true && loading !== true`, so the common
+    // `disabled={saving} loading={saving}` call stayed a tab stop — against the
+    // rule both docs pages state.
+    expect(
+      hostProp(resting({ disabled: true, loading: true }), "tabIndex"),
+    ).toStrictEqual(Option.none());
+    // and the busy-but-live case is untouched
+    expect(expectSome(hostProp(resting({ loading: true }), "tabIndex"))).toBe(
+      0,
+    );
+  });
+
   it("resolves a different chrome while it holds focus", () => {
     const idle = hostProp(resting({}), "style");
     const focused = hostProp(

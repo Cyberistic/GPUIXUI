@@ -53,7 +53,10 @@ export interface ButtonProps {
   readonly radius?: RadiusStep;
   readonly fullWidth?: boolean;
   readonly disabled?: boolean;
-  /** Busy: shows a spinner and blocks activation, but stays focusable. */
+  /**
+   * Busy: shows a spinner and blocks activation, but stays focusable — unless
+   * `disabled` is also set, which always leaves the tab order.
+   */
   readonly loading?: boolean;
   readonly leading?: ReactNode;
   readonly trailing?: ReactNode;
@@ -119,9 +122,7 @@ export const renderButton = (
       role="button"
       aria-label={props.label ?? Option.getOrUndefined(textOf(props.children))}
       aria-description={props.loading === true ? "Loading" : undefined}
-      tabIndex={
-        props.disabled === true && props.loading !== true ? undefined : 0
-      }
+      tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onClick={activate}
       onFocus={focus.onFocus}
