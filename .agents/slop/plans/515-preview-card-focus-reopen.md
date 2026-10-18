@@ -11,6 +11,10 @@
 This plan is self-contained. Facts marked **measured** were reproduced on this
 host (Intel macOS, the locally built `darwin-x64` binding from plan `140`).
 
+An earlier combined draft, `514-preview-card-nested-dismiss.md`, was split into
+plan `514` (the trigger's Escape claim) and this plan (the focus guard); the
+draft is retired and its two probes are reproduced here in §1.
+
 ---
 
 ## 1. Goal
