@@ -473,6 +473,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[x]` `[██████████]` 90/90
 
+`[ ]` **The public value exports still have no generated API index.** The
+      component pages document props, and `/docs/extending` shows the `core/`
+      surface as source; the helpers a consumer can import (`checkboxState`,
+      `numberRange`, `otpCellLabel`, `initialActiveIndex`, `sliderValueText`,
+      `iconPixels`, `ICON_SIZES`, `useToast`, …) and the `*Meta` inventory
+      records are not indexed, so their only documentation is the source. Needs
+      an explicit public/internal classification plus a guard that a new export
+      is not silently undocumented; owner: docs-site
+
 `[x]` **The License page names the real record (plan 489)** — it had said "none
       is written yet" while `LICENSES/README.md` and `LICENSES/base-gpui.md`
       (MIT, commit `64b2233`) existed; it now lists what is recorded, keeps
@@ -646,6 +655,7 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 `[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
+`[ ]` **Licensing**: `LICENSES/README.md` still ends "Nothing is recorded yet", but `LICENSES/base-gpui.md` is a verified record (plan 489 corrected the site's License page to match). Update the README line; owner: licensing
 `[-]` **Components**: expose `ContextMenu.point` and `DatePicker.defaultOpen` —
       superseded by plan 486: the docs' live scenes drive the real right-click
       and trigger click, so no prop is needed. A prop would still be a fine
