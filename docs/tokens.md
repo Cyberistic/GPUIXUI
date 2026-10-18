@@ -1337,6 +1337,13 @@ Rules:
    the ring is never a border and never changes layout. See [Focus](#focus).
 6. A filled control reads its resting, hover and pressed fills from
    `filledControl(theme, family)`; never composite `alpha(fill, …)` for a state.
+7. Text paints a foreground role: `foreground`/`mutedForeground`, the surface's
+   own `*Foreground` (`cardForeground`, `popoverForeground`,
+   `selectedForeground`, `accentForeground`, a family's `xForeground`), a tone's
+   `xText` through `statusTone`, or `primaryText` for a link. A solid fill
+   (`primary`, `success`, `warning`, `destructive`) is a surface, never a label
+   colour — the light `success` fill barely clears the secondary floor on a card,
+   and a platform style can take it below.
 
 ```tsx
 const theme = useTheme();
