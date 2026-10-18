@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 168/231
+`[x]` `[███████░░░]` 169/232
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1307,6 +1307,16 @@ canvas, `relativeLuminance` publishes the comparison, and the sixth check kind
 `direction` joins `themeChecks` between `hierarchy` and `metric`; an equal pair
 stays the step lists' defect and every shipped set already steps the expected
 way, so no colour moves (plan 502)
+`[x]` Hold the value indicator's groove on the row washes and status panels —
+`track` was measured on the six resting surfaces, but an indeterminate progress
+bar is only its groove and a slider's rail is the value the pointer is about to
+change, so macOS light measured 1.020:1 on `active`, XP light 1.030:1 on `hover`
+and 1.007–1.020:1 on the four soft fills, identity light 1.009:1 on
+`destructiveSoft`, identity dark 1.019:1 on `infoSoft` and every AAA dark set
+1.047:1 on `active`; `trackSurfacePairs` now covers twelve surfaces (388 → 394),
+seven values move one designed step and XP light names its own Luna green as the
+progress mark, because the inherited identity green is what made the palette
+appear infeasible (plan 503)
 
 ## Phase C — Tier 1–2 components
 

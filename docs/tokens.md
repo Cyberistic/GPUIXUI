@@ -258,7 +258,7 @@ A runnable example lives in
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#6E7787` | `#A1A9B7` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#434C5A` | loading placeholder |
-| `track` | `#DBDFE5` | `#323945` | the unfilled groove of a progress bar, meter or slider rail |
+| `track` | `#D5D9E2` | `#3D4552` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#191D25` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
@@ -535,7 +535,7 @@ carries, so it cannot claim another.
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#5A5A5A` | `#A9A9A9` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
-| `track` | `#C6C8CD` | `#3A3A3A` | the unfilled groove of a progress bar, meter or slider rail |
+| `track` | `#C6C8CD` | `#414141` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#000000` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
@@ -2331,7 +2331,13 @@ to **360**. Every shipped set clears every pair, so no existing colour moves.
 Plan `399` adds the solid status fill on the eight surfaces a status chip sits
 on (`statusFillPairs`) — `destructive`'s four base surfaces are already
 measured as an action fill — taking it from 360 to **388**; every shipped set
-clears the floor (1.262:1 at the tightest), so no colour moves.
+clears the floor (1.262:1 at the tightest), so no colour moves. Plan `503` adds
+the value indicator's groove on the `hover`/`active` washes and the four soft
+status fills — the surfaces plan `347` had left out — after identity light
+`track` on `destructiveSoft` measured **1.009:1**, macOS light on `active`
+**1.020:1**, XP light on `warningSoft` **1.007:1** and every AAA dark set on
+`active` **1.047:1**; seven values move one designed step and XP light names its
+own Luna green as the progress mark, taking it from 388 to **394**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2456,17 +2462,21 @@ on a dark card, and a slider's unfilled span had no shape. `muted` cannot become
 a fill — plan `309` tuned it as the panel ladder — `border` is a line role
 (`primary` measures 1.432:1 on the AAA divider) and `active` is a pressed wash
 (`primary` measures 2.84:1 on macOS dark), so `track` is a designed neutral step
-in each palette: `#DBDFE5` light and `#323945` dark in the identity, one value
-per platform style, and `#C6C8CD`/`#3A3A3A` at high contrast. It is measured on
-the four base surfaces and the persistent `accent`/`selected` row fills at
-1.05:1 (`trackSurfacePairs`), and `primary`, `success`, `destructive` and
-`mutedForeground` — the four `PROGRESS_TONES` — on the groove at the mark floor
-(`trackMarkPairs`). The momentary `hover`/`active` washes are out of scope: the
-filled part still carries the value while the pointer is down, and XP light has
-no track that clears both the 1.05:1 wash floor and the 3:1 mark floor at once.
-The tightest shipped pairs are identity light `track` on its `selected` fill at
-**1.06:1** and Aero light `success` on the groove at **3.15:1**. `primitives`
-still paints `muted`; the migration is recorded in `TODO.md`.
+in each palette: `#D5D9E2` light and `#3D4552` dark in the identity, one value
+per platform style, and `#C6C8CD`/`#414141` at high contrast. It is measured on
+the four base surfaces, the persistent `accent`/`selected` row fills, the
+`hover`/`active` washes a row or a slider paints under the pointer and the four
+soft status fills an Alert or Badge provides, at 1.05:1 (`trackSurfacePairs`) —
+a groove that disappears in a hovered row or inside a status panel erases an
+indeterminate indicator, because the rail *is* the value while the reader
+interacts with it (plan `503`). `primary`, `success`, `destructive` and
+`mutedForeground` — the four `PROGRESS_TONES` — are marks on the groove
+(`trackMarkPairs`). XP light's own `success` (`#0E6B40`) is what lets its rail
+clear the pressed wash: the inherited identity green forced the groove toward the
+canvas while XP's `active` fill forced it away. The tightest shipped pairs are
+identity dark `track` on its `selected` fill at **1.06:1** and macOS light
+`success` on the groove at **3.04:1**. `primitives` still paints `muted`; the
+migration is recorded in `TODO.md`.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and

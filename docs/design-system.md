@@ -427,8 +427,12 @@ A value indicator's unfilled groove is `track`, not `muted`: identity dark's
 `muted` equals its `popover` and every platform dark style's equals its card, so
 a track painted with it vanished on the surface it sat on — and an indeterminate
 progress bar, which is only its track, painted nothing at all. The role is
-measured on the four base surfaces and the persistent `accent`/`selected` row
-fills, and its four progress fills are marks against it (plan `347`).
+measured on the four base surfaces, the persistent `accent`/`selected` row fills,
+the `hover`/`active` washes a row or a slider paints under the pointer and the
+four soft status fills a status panel provides, and its four progress fills are
+marks against it (plans `347` and `503`). A rail that disappears while the row
+is hovered or inside an Alert erases an indeterminate indicator, because the
+groove *is* the value until the fill moves.
 A bordered control keeps its `border` edge on the fill it paints, so the divider
 floor covers `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`,
 `accent`, `accentHover` and `accentActive`; a state fill never takes the
@@ -477,7 +481,7 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection veil on a filled action (`selectionOnFill` over `primary`/`secondary`/`destructive`/`accent`) | 1.05:1 | 1.05:1 |
 | focus ring (`ring`) on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, the `destructive` ring an invalid control paints on the same surfaces, essential boundaries (`borderStrong`) on `background`/`card`/`popover`/`muted` and the `input` fill a field sits on, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) and the field's pressed edge (`ring` on `input`) | 3:1 | 4.5:1 |
 | graphic marks (`primary`/`success`/`destructive` on `background`/`card`/`popover`/`muted`, `primary` and `destructive` on the `input` fill a slider thumb rings, and `primary` on the `hover` wash a highlighted combobox option paints its check on) | 3:1 | 4.5:1 |
-| value indicator groove (`track`) on `background`/`card`/`popover`/`muted` and the `accent`/`selected` fills | 1.05:1 | 1.05:1 |
+| value indicator groove (`track`) on `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft` fills | 1.05:1 | 1.05:1 |
 | value indicator marks (`primary`/`success`/`destructive`/`mutedForeground` on `track`) | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
