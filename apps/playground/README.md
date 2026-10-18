@@ -1188,7 +1188,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | -------- | ------------------------------ |
 | `live-shell` | `app-shell` fills the 1100 × 720 window; clicking a sidebar entry mounts that view and paints its own text; `Enter` on a focused entry switches the stage |
 | `live-input` | a click focuses the field, `h i` reaches `onChange` (`value=hi`), and `Enter` reaches `onSubmit` (`submits=1`) |
-| `live-input-payload` | two real clicks 80 ms apart are **two** clicks, each `clickCount=1`; the live editor receives `é` and `日` (`keyChar` carries each), `cmd-a` is consumed before React and the next space replaces the value, and a live wheel is `40/true/moved` — 12 checks (plan `524`) |
+| `live-input-payload` | two real clicks 80 ms apart are **two** clicks, each `clickCount=1`; the live editor receives `é` and `日` (`keyChar` carries each), `cmd-a` is consumed before React and the next space replaces the value, and a live wheel is `40/true/moved` — 12 checks (plan `525`) |
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
 | `live-motion` | the paused clock collapses a 240 px sidebar exactly: 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and a leaving toast stays painted until the exit settles — 25 checks. **`onExitComplete` fires twice live for one exit**; treat it as idempotent |
@@ -1305,7 +1305,7 @@ mask, so a typed secret is held, announced and painted in clear. A password
 field is an app-owned OS prompt, not a component; the shipped library must not
 pretend otherwise.
 
-## Input payloads (plan `524`)
+## Input payloads (plan `525`)
 
 `input-payload` (headless) and `live-input-payload` (a real window) read the
 event fields behind every handler, rather than the field's value:
@@ -1729,7 +1729,7 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) was last run at 46/46 (929 checks);
-  plan `524` added `live-input-payload` (12/12 in a focused run), so the registry
+  plan `525` added `live-input-payload` (12/12 in a focused run), so the registry
   is now 47 and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table

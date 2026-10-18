@@ -1,4 +1,4 @@
-# 524 — The input payload contract: click counts, key chars and repeat
+# 525 — The input payload contract: click counts, key chars and repeat
 
 | Field | Value |
 | ----- | ----- |
@@ -158,7 +158,7 @@ This is additive: every existing call site keeps its two-argument form.
   harnesses), so edit-on-second-press is the honest pattern; `keyChar` carries
   the produced character on a text field (Unicode included) and is absent on a
   plain focusable `div`; the native editor consumes `cmd-a` before React sees it.
-- `apps/playground/README.md`: a "Input payloads (plan `524`)" subsection after
+- `apps/playground/README.md`: a "Input payloads (plan `525`)" subsection after
   "Text entry (plan `188`)" with the table from §2 and the two scenario ids.
 - `PLAN.md` §4: a new decision row (`D64`) recording that a double-click
   contract is unsupported and a component owns a second-press rule.

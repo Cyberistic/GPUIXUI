@@ -69,9 +69,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       iterating and `--all` only at the end. `nub run check` and `nub run test`
       pass.
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` and `522` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, `521` and `523` were taken by components, and the next plan takes `525`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` and `522` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, `521` and `523` were taken by components (and `524` by the `tw` workstream), and the next plan takes `526`
 
-`[x]` Probe the **input payload contract** per plan `524` — the last unmeasured
+`[x]` Probe the **input payload contract** per plan `525` — the last unmeasured
       fields of the event the library's handlers receive: `input-payload`
       (39 checks) and `live-input-payload` (12), six mutation proofs. A
       **double click is not observable** (`clickCount` is always `1`, headless
@@ -91,7 +91,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `1` on this host in both harnesses, so List/Tree/Grid keep the
       second-press rule; if a double click is wanted, the component owns the
       interval and a test can only assert the two presses (owner: `components`;
-      evidence: plan `524` §2/§8)
+      evidence: plan `525` §2/§8)
 
 `[x]` Probe the **app root** per plan `522` — the rule every consumer's
       top-level tree sits on (surfaced by `components` plan `510`):
