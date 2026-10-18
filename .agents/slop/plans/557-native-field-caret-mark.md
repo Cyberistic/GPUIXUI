@@ -145,7 +145,7 @@ package's exports, so the suite does not type-check until it is listed (plan 546
 
 - §Native text fields: replace the `{ caret: theme.colors.primary }` sentence and
   its "no second role" rationale with the caret being `primaryText`, the accent's
-  readable ink; name `caretPairs`, the nine surfaces a field sits on, the macOS dark 2.748:1 /
+  readable ink; name `caretPairs` and the nine surfaces a field sits on, the macOS dark 2.748:1 /
   2.836:1 failure and the 5.587:1 tightest shipped pair. Keep the runtime-default
   figures and the runnable-example link.
 - The "No themeable native field placeholder or selection" bullet: "supplies it
@@ -214,8 +214,10 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/tokens-theme`.
    ```sh
    cd packages/tokens && nub exec vitest run src/native-field-caret.test.ts
    ```
-   Expected: PASS, 8 tests. Revert §2.2 alone and re-run: cases 1, 4 and 8 must
-   fail (two directions).
+   Expected: PASS, 8 tests. Revert §2.2 alone and re-run: cases 1, 2, 3, 5 and
+   7 fail (the probe's five). Remove `...caretPairs` from `contrastPairs` and
+   re-run: cases 4 and 8 fail, and `contrast.test.ts`, `mark-contrast.test.ts`
+   and `inventory.test.ts` fail their pair-count cases (two directions).
 4. Update §2.5–2.9, then the whole package:
    ```sh
    nub run --filter @gpuixui/tokens test
