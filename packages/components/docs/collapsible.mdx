@@ -4,8 +4,9 @@ description: One section that reveals its body on demand.
 ---
 
 `Collapsible` is the smallest disclosure: a trigger with `aria-expanded` and a
-body that is mounted only while open. Compose it when an accordion would be
-overkill — one advanced-options block, one "show details" row.
+body that is kept mounted while its height reveals from a measurement. Compose it
+when an accordion would be overkill — one advanced-options block, one "show
+details" row.
 
 ```tsx
 import {
@@ -28,10 +29,21 @@ import {
 | ---- | -------------- |
 | `Collapsible` | open state and the column that holds the parts |
 | `CollapsibleTrigger` | a button with `aria-expanded`; click, Enter on press and Space on release toggle |
-| `CollapsibleContent` | the body; **unmounts** while closed |
+| `CollapsibleContent` | the body; stays mounted and reveals its measured height |
 
-Unmounting is deliberate: a closed body holds no focus, no subscriptions and no
-stale values. The cost is that closing loses local state inside the body.
+The body is not unmounted while closed. That keeps the state inside it — a
+draft, a scroll position, a running sub-view — but the content is hidden with
+`visibility: hidden`, so it leaves the tab order and the accessible tree. The
+clip alone is not enough: the runtime refuses the pointer but leaves a clipped
+subtree in the keyboard order (measured in plan 372).
+
+The height is measured from the content's own bounds after commit. GPUix 0.10.0
+has no layout callback, so the first measurement happens while the body is
+already collapsed, the value is kept in state, and later opens use it. The one
+remaining gap is a rewrap while closed: the stored height is re-measured on the
+next open, not on a width change.
+
+`animate={false}` snaps the height instead of tweening it.
 
 ## Controlled and uncontrolled
 
@@ -45,9 +57,10 @@ the consumer put it.
 
 ## Keyboard
 
-Tab reaches the trigger. `Enter` toggles on press; `Space` toggles on release, so
-moving focus before letting go cancels the change. A held key does not toggle
-twice.
+Tab reaches the trigger, and the open body's own controls follow it in the tab
+order. A closed body is skipped: hiding it removes the whole subtree from the
+keyboard order. `Enter` toggles on press; `Space` toggles on release, so moving
+focus before letting go cancels the change. A held key does not toggle twice.
 
 ## Theming
 
@@ -71,19 +84,23 @@ of its own, so it inherits the card or panel around it.
 
 - `aria-expanded` on the trigger, and real button semantics (Tab reaches it,
   Enter/Space activate it).
-- **No height animation in v1.** GPUix's `motion` animates to a numeric height;
-  an auto-height reveal needs a measured first paint. The body mounts instantly
-  and the follow-up is recorded as a `TODO` in `src/collapsible.tsx` rather than
-  promised in this page.
+- The body is hidden rather than unmounted: its state survives, and hidden
+  content leaves the tab order. During the 200 ms close it is still visible and
+  reachable, then it leaves.
+- The natural height is re-measured on open, not on a width change, so a rewrap
+  while collapsed can correct once on the next open.
+- Closing a section while focus is inside the body hides the focused element; the
+  component does not move focus back to the trigger.
 - No `aria-controls` in 0.10.0 (`HostProps`), so the trigger→body relationship
   is positional.
 
 ## Verification
 
-`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (5 tests):
-click toggling with the body unmounted while closed, `aria-expanded` following
-the body, Enter on press and Space on release, and the controlled contract in
-both directions.
+`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (10 tests):
+click toggling with the body kept mounted, `aria-expanded` following the body,
+Enter on press and Space on release, the controlled contract in both directions,
+the closed and open tab order, state surviving a close and a re-open, and the
+measured-height tween (plus the `animate={false}` snap).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

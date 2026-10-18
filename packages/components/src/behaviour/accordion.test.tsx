@@ -5,25 +5,43 @@
  * section closed everything when its own header was pressed; multiple mode lost
  * an open section when another was toggled; a disabled section opened anyway;
  * `aria-expanded` disagreed with the visible body; a controlled accordion
- * changed its own open set when the consumer said no; and arrow movement either
- * landed on a disabled header or opened the section it moved to. A caller `ref`
- * on a header was discarded in favour of the internal one, a held Enter
- * toggled the section twice, and Space toggled on key down instead of on
- * release.
+ * changed its own open set when the consumer said no; arrow movement landed on
+ * a disabled header or opened the section it moved to; a caller `ref` on a
+ * header was discarded; a held Enter toggled twice; Space toggled on key down.
+ * A closed section used to unmount its body, so its state vanished; a clipped
+ * body also stayed in the tab order (plan 372 §2). The body now tweens to its
+ * measured height, and these tests guard that tween.
  */
 
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef } from "react";
+import { createRef, useState } from "react";
 import * as Option from "effect/Option";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
-import { renderComponent } from "../internal/test-root.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+} from "../internal/interaction.js";
+import {
+  renderComponent,
+  type ComponentTestRoot,
+} from "../internal/test-root.js";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../accordion.js";
+
+/** Whether a section body is hidden (and so out of the tab order). */
+const isHidden = (root: ComponentTestRoot, testId: string): boolean =>
+  root.renderer.findByTestId(testId)?.style.visibility === "hidden";
+
+/** Advance the paused motion clock past a complete reveal. */
+const settle = (root: ComponentTestRoot): void => {
+  root.renderer.clockFastForward(200);
+  root.renderer.dispatchNativeEvents();
+};
 
 const section = (value: string, label: string, disabled = false) => (
   <AccordionItem value={value} disabled={disabled} testId={`item-${value}`}>
@@ -57,19 +75,87 @@ const Faq = ({
   </Accordion>
 );
 
+/** Two sections whose bodies have a focus target, all closed. */
+const Walkable = () => (
+  <div testId="root">
+    <Accordion type="single" collapsible>
+      <AccordionItem value="one">
+        <AccordionTrigger testId="trigger-one">One</AccordionTrigger>
+        <AccordionContent testId="content-one">
+          <input testId="draft-one" />
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="two">
+        <AccordionTrigger testId="trigger-two">Two</AccordionTrigger>
+        <AccordionContent testId="content-two">
+          <input testId="draft-two" />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+    <div role="button" tabIndex={0} testId="after">
+      after
+    </div>
+  </div>
+);
+
+/** A counter that lives inside the first section's body. */
+const Stateful = () => {
+  const [count, setCount] = useState(0);
+  return (
+    <Accordion type="single" collapsible defaultValue="one">
+      <AccordionItem value="one">
+        <AccordionTrigger testId="trigger-one">One</AccordionTrigger>
+        <AccordionContent testId="content-one">
+          <div
+            role="button"
+            tabIndex={0}
+            testId="bump"
+            onClick={() => setCount((current) => current + 1)}
+          >
+            bump
+          </div>
+          <text testId="count">{String(count)}</text>
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="two">
+        <AccordionTrigger testId="trigger-two">Two</AccordionTrigger>
+        <AccordionContent testId="content-two">
+          <text>Body two</text>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+};
+
+/** A body with a fixed natural height and a measurable sibling after it. */
+const Measured = ({ animate = true }: { readonly animate?: boolean }) => (
+  <div testId="root">
+    <Accordion type="multiple">
+      <AccordionItem value="one">
+        <AccordionTrigger testId="trigger-one">One</AccordionTrigger>
+        <AccordionContent testId="content-one" animate={animate}>
+          <div style={{ height: 60 }} />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+    <div testId="after" style={{ height: 20 }} />
+  </div>
+);
+
 describe("Accordion", () => {
   it("opens the clicked section and closes the previous one", () => {
     const faq = renderComponent(<Faq />);
 
     expect(faq.renderer.findByType("svg")).toHaveLength(3);
     expect(faq.renderer.getAllText()).not.toContain("⌄");
-    expect(faq.renderer.findByTestId("content-one")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+    expect(isHidden(faq, "content-one")).toBe(false);
+    expect(isHidden(faq, "content-two")).toBe(true);
 
     clickCentreOf(faq, "trigger-two");
+    settle(faq);
 
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+    expect(isHidden(faq, "content-one")).toBe(true);
+    expect(isHidden(faq, "content-two")).toBe(false);
     expect(faq.renderer.findByTestId("trigger-one")?.customProps).toMatchObject(
       {
         "aria-expanded": false,
@@ -89,7 +175,7 @@ describe("Accordion", () => {
 
     clickCentreOf(faq, "trigger-one");
 
-    expect(faq.renderer.findByTestId("content-one")).toBeDefined();
+    expect(isHidden(faq, "content-one")).toBe(false);
     expect(faq.renderer.findByTestId("trigger-one")?.customProps).toMatchObject(
       {
         "aria-expanded": true,
@@ -103,8 +189,9 @@ describe("Accordion", () => {
     const faq = renderComponent(<Faq collapsible />);
 
     clickCentreOf(faq, "trigger-one");
+    settle(faq);
 
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    expect(isHidden(faq, "content-one")).toBe(true);
     expect(faq.renderer.findByTestId("trigger-one")?.customProps).toMatchObject(
       {
         "aria-expanded": false,
@@ -125,13 +212,14 @@ describe("Accordion", () => {
 
     clickCentreOf(faq, "trigger-two");
 
-    expect(faq.renderer.findByTestId("content-one")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+    expect(isHidden(faq, "content-one")).toBe(false);
+    expect(isHidden(faq, "content-two")).toBe(false);
 
     clickCentreOf(faq, "trigger-one");
+    settle(faq);
 
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+    expect(isHidden(faq, "content-one")).toBe(true);
+    expect(isHidden(faq, "content-two")).toBe(false);
 
     faq.unmount();
   });
@@ -141,7 +229,7 @@ describe("Accordion", () => {
 
     clickCentreOf(faq, "trigger-three");
 
-    expect(faq.renderer.findByTestId("content-three")).toBeUndefined();
+    expect(isHidden(faq, "content-three")).toBe(true);
     expect(
       faq.renderer.findByTestId("trigger-three")?.customProps,
     ).toMatchObject({
@@ -159,9 +247,10 @@ describe("Accordion", () => {
     );
 
     faq.renderer.simulateKeystrokes("enter");
+    settle(faq);
 
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    expect(isHidden(faq, "content-two")).toBe(false);
+    expect(isHidden(faq, "content-one")).toBe(true);
 
     faq.unmount();
   });
@@ -173,14 +262,14 @@ describe("Accordion", () => {
     if (first === undefined) return;
 
     faq.renderer.nativeSimulateKeyDown(first.id, "enter");
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+    expect(isHidden(faq, "content-two")).toBe(false);
 
     const second = faq.renderer.findByTestId("trigger-two");
     expect(second).toBeDefined();
     if (second === undefined) return;
     faq.renderer.nativeSimulateKeyDown(second.id, "enter", true);
 
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+    expect(isHidden(faq, "content-two")).toBe(false);
 
     faq.unmount();
   });
@@ -192,10 +281,10 @@ describe("Accordion", () => {
     if (trigger === undefined) return;
 
     faq.renderer.nativeSimulateKeyDown(trigger.id, "space");
-    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+    expect(isHidden(faq, "content-two")).toBe(true);
 
     faq.renderer.nativeSimulateKeyUp(trigger.id, "space");
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
+    expect(isHidden(faq, "content-two")).toBe(false);
 
     faq.unmount();
   });
@@ -209,8 +298,8 @@ describe("Accordion", () => {
     clickCentreOf(faq, "trigger-two");
 
     expect(onValueChange).toHaveBeenCalledWith("two");
-    expect(faq.renderer.findByTestId("content-one")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+    expect(isHidden(faq, "content-one")).toBe(false);
+    expect(isHidden(faq, "content-two")).toBe(true);
 
     faq.unmount();
   });
@@ -224,7 +313,7 @@ describe("Accordion", () => {
     clickCentreOf(faq, "trigger-one");
 
     expect(onValueChange).toHaveBeenCalledWith(null);
-    expect(faq.renderer.findByTestId("content-one")).toBeDefined();
+    expect(isHidden(faq, "content-one")).toBe(false);
 
     faq.unmount();
   });
@@ -238,8 +327,8 @@ describe("Accordion", () => {
     faq.renderer.simulateKeystrokes("down");
 
     expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
-    expect(faq.renderer.findByTestId("content-one")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-two")).toBeUndefined();
+    expect(isHidden(faq, "content-one")).toBe(false);
+    expect(isHidden(faq, "content-two")).toBe(true);
 
     faq.renderer.simulateKeystrokes("up");
 
@@ -286,9 +375,10 @@ describe("Accordion", () => {
 
     faq.renderer.simulateKeystrokes("down");
     faq.renderer.simulateKeystrokes("enter");
+    settle(faq);
 
-    expect(faq.renderer.findByTestId("content-two")).toBeDefined();
-    expect(faq.renderer.findByTestId("content-one")).toBeUndefined();
+    expect(isHidden(faq, "content-two")).toBe(false);
+    expect(isHidden(faq, "content-one")).toBe(true);
 
     faq.unmount();
   });
@@ -321,6 +411,93 @@ describe("Accordion", () => {
     faq.renderer.simulateKeystrokes("down");
     expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
 
+    faq.unmount();
+  });
+
+  it("keeps closed sections out of the tab order and the open one in it", () => {
+    const faq = renderComponent(<Walkable />);
+    faq.renderer.clockPause();
+    faq.renderer.focusElement(
+      faq.renderer.findByTestId("trigger-one")?.id ?? -1,
+    );
+
+    faq.renderer.focusNextWithin(faq.renderer.findByTestId("root")?.id ?? -1);
+    expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
+
+    clickCentreOf(faq, "trigger-one");
+    settle(faq);
+    faq.renderer.focusElement(
+      faq.renderer.findByTestId("trigger-one")?.id ?? -1,
+    );
+    faq.renderer.focusNextWithin(faq.renderer.findByTestId("root")?.id ?? -1);
+
+    expect(focusedTestId(faq)).toEqual(Option.some("draft-one"));
+
+    faq.renderer.clockResume();
+    faq.unmount();
+  });
+
+  it("keeps a closed section's state across a switch to another section", () => {
+    const faq = renderComponent(<Stateful />);
+    faq.renderer.clockPause();
+    settle(faq);
+
+    clickCentreOf(faq, "bump");
+    expect(faq.renderer.getAllText()).toContain("1");
+
+    clickCentreOf(faq, "trigger-two");
+    settle(faq);
+    expect(isHidden(faq, "content-one")).toBe(true);
+    expect(faq.renderer.getAllText()).toContain("1");
+
+    clickCentreOf(faq, "trigger-one");
+    settle(faq);
+    expect(isHidden(faq, "content-one")).toBe(false);
+    expect(faq.renderer.getAllText()).toContain("1");
+
+    faq.renderer.clockResume();
+    faq.unmount();
+  });
+
+  it("tweens a section to the measured content height", () => {
+    const faq = renderComponent(<Measured />);
+    faq.renderer.clockPause();
+    const closed = requireBounds(faq, "after").y;
+
+    clickCentreOf(faq, "trigger-one");
+    faq.renderer.clockFastForward(80);
+    faq.renderer.dispatchNativeEvents();
+
+    const natural = requireBounds(faq, "content-one").height;
+    const mid = requireBounds(faq, "after").y - closed;
+    expect(natural).toBeGreaterThan(0);
+    expect(mid).toBeGreaterThan(0);
+    expect(Math.abs(mid - natural * 0.4)).toBeLessThanOrEqual(4);
+
+    settle(faq);
+    expect(
+      Math.abs(requireBounds(faq, "after").y - closed - natural),
+    ).toBeLessThanOrEqual(1);
+
+    faq.renderer.clockResume();
+    faq.unmount();
+  });
+
+  it("snaps instead of tweening when animate is false", () => {
+    const faq = renderComponent(<Measured animate={false} />);
+    faq.renderer.clockPause();
+    const closed = requireBounds(faq, "after").y;
+
+    clickCentreOf(faq, "trigger-one");
+    faq.renderer.clockFastForward(1);
+    faq.renderer.dispatchNativeEvents();
+
+    const natural = requireBounds(faq, "content-one").height;
+    expect(
+      Math.abs(requireBounds(faq, "after").y - closed - natural),
+    ).toBeLessThanOrEqual(1);
+
+    faq.renderer.clockResume();
     faq.unmount();
   });
 });

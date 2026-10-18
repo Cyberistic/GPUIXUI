@@ -1,8 +1,8 @@
 /**
  * Collapsible example: advanced run options inside a card.
  *
- * Closed by default, so the common path is two fields. The body unmounts while
- * closed — that is the component's contract, not an animation shortcut.
+ * Closed by default, so the common path is two fields. The body stays mounted
+ * and reveals from its measured height — a draft inside it survives the cycle.
  */
 
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";

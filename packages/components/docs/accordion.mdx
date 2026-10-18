@@ -31,7 +31,14 @@ import {
 | `Accordion` | the open state, the mode rules, the divider order |
 | `AccordionItem` | one section, its value and its disabled flag |
 | `AccordionTrigger` | a full-width button with `aria-expanded` and a chevron |
-| `AccordionContent` | the body; unmounts while its section is closed |
+| `AccordionContent` | the body; stays mounted and reveals its measured height |
+
+A closed body is hidden with `visibility: hidden`, not unmounted, so its state
+survives a switch between sections and it leaves the tab order and the
+accessible tree. Hiding by the `overflow` clip alone was not enough: the runtime
+refuses the pointer but keeps a clipped subtree in the keyboard order (plan
+372). The height is measured from the content's own bounds after commit, and
+`animate={false}` snaps instead of tweening.
 
 ## The two modes
 
@@ -65,7 +72,8 @@ is why it is not used for the closed state. Multiple mode reports the array.
 
 ## Keyboard
 
-The trigger is a button: Tab reaches it, Enter and Space toggle it.
+The trigger is a button: Tab reaches it, Enter and Space toggle it. A closed
+body is skipped by Tab; an open body's own controls follow its header.
 
 | Key | Effect |
 | --- | ------ |
@@ -103,16 +111,23 @@ has no `transform` — a rotation is not available.
 - **No `aria-controls`** in 0.10.0; the relationship is positional.
 - The indicator is decorative: `aria-expanded` on the trigger carries the state.
 - Arrow keys move focus between enabled headers; they do not activate them.
-- No height animation (see **Collapsible** for the measured reason).
+- A closed body stays mounted and is hidden, so its state survives a section
+  switch and its controls leave the tab order.
+- The measured natural height is re-measured on open, not on a width change, so a
+  rewrap while collapsed can correct once on the next open.
+- Closing a section while focus is inside its body hides the focused element; the
+  component does not move focus back to the header.
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (15 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (19 tests):
 single mode closing the previous section, the non-collapsible no-op, the
 collapsible close, multiple mode keeping sections, the disabled section, Enter
-activation, Space on release, a held Enter toggling only once, the controlled contract
-including the `null` close, arrow / `Home` / `End` movement between headers
-(wrapping past a disabled one, without opening it), and a caller header `ref`.
+activation, Space on release, a held Enter toggling only once, the controlled
+contract including the `null` close, arrow / `Home` / `End` movement between
+headers (wrapping past a disabled one, without opening it), a caller header
+`ref`, the closed/open tab order, state surviving a switch, and the
+measured-height tween (plus the `animate={false}` snap).
 
 `src/accordion/logic.test.ts` covers the transition table (15 cases), and
 `src/internal/collection.test.ts` covers the shared movement arithmetic.

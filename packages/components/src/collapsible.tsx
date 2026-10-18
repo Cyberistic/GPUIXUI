@@ -1,10 +1,10 @@
 /**
  * Collapsible: one section that reveals its content on demand.
  *
- * The content unmounts while closed. That is the honest v1: GPUix's `motion`
- * animates a numeric height, and an automatic-height reveal needs a measured
- * first paint. The `TODO` on {@link CollapsibleContent} records the follow-up
- * instead of promising an animation the runtime cannot measure yet.
+ * The content stays mounted and is revealed from its measured height
+ * (`internal/reveal.tsx`), so a draft inside a collapsed section survives the
+ * cycle. Closed content is hidden with `visibility`, because the clipped body
+ * still took keyboard focus (plan 372 §2).
  */
 
 import type { Props } from "@gpuix/react";
@@ -22,6 +22,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { Reveal } from "./internal/reveal.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 
 /** The rules a collapsible part follows; throws outside a root. */
@@ -161,17 +162,30 @@ export const CollapsibleTrigger = ({
   );
 };
 
-/** The revealed body. Unmounts while closed, so nothing inside it is running. */
-export const CollapsibleContent = ({ style, children, ...rest }: Props) => {
+/** {@link CollapsibleContent} props. */
+export interface CollapsibleContentProps extends Props {
+  /** Tween to the measured height; `false` snaps. Default `true`. */
+  readonly animate?: boolean;
+}
+
+/**
+ * The revealed body. It stays mounted so its state survives a close, and the
+ * body height tweens to the content's measured height. While closed it is
+ * hidden, which also removes it from the tab order.
+ */
+export const CollapsibleContent = ({
+  animate = true,
+  style,
+  children,
+  ...rest
+}: CollapsibleContentProps) => {
   const theme = useTheme();
   const { open } = useCollapsibleContext();
 
-  // TODO: measure the body with `onLayout` and animate to that height once a
-  // motion budget exists; 0.10.0's `motion` needs a numeric target.
-  if (!open) return null;
-
   return (
-    <div
+    <Reveal
+      open={open}
+      animate={animate}
       {...rest}
       style={mergeStyles(
         {
@@ -188,7 +202,7 @@ export const CollapsibleContent = ({ style, children, ...rest }: Props) => {
       )}
     >
       {children}
-    </div>
+    </Reveal>
   );
 };
 
@@ -213,7 +227,8 @@ export const collapsibleMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "mounts and unmounts instantly: 0.10.0's motion needs a numeric height, and an auto-height reveal needs a measured first paint",
+    "hidden by `visibility` while closed, so it leaves the tab order; a rewrap while closed is not re-measured until the next open",
+    "no `aria-controls` in 0.10.0, so the trigger→body relationship is positional",
   ],
   docs: "docs/collapsible.mdx",
   example: "examples/collapsible.example.tsx",

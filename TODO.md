@@ -481,11 +481,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
     - `[x]` Docs truth: the example pointer names the package's own registry and
       native example suite, not another app's catalogue — plan 371; 19 pointers
       across 17 pages, no docs page mentions the playground
-    - `[ ]` Collapsible/Accordion measured-height animation: plan 186's recipe
-      keeps the content mounted under `overflow: "hidden"`; the collapsed body's
-      **tab order** was never measured (that plan measured clicks only), so prove
-      focus containment before animating — and note that Accordion renders its
-      own content, so both surfaces need the mechanism
+    - `[x]` Collapsible/Accordion measured-height animation — plan 372: the
+      collapsed body **was** in the tab order (measured `trigger → draft →
+      after`), so both surfaces hide it with `visibility` through the shared
+      `internal/reveal.tsx`; the body stays mounted, state survives a close or a
+      section switch, and it tweens to the measured content height
+      (`animate={false}` snaps). Collapsible 10, Accordion 19 native tests;
+      both-direction proof (5 mutations); docs, inventory and COMPONENTS rows
+      synced
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

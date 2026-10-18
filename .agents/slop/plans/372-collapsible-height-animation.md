@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §10) |
 | Phase | F (integration and polish) |
 | Owner | components workstream |
 | Depends on | `110`, `111`, `113`, `117`, `186` (playground, measured recipe in §10), `326`, `327` |
@@ -343,5 +343,59 @@ Stop and report with evidence rather than improvising:
 
 ## 10. Measured facts after implementation
 
-_(filled in after the runs: suite counts, each new case, each mutation's failing
-assertion, the exact natural heights, and any residual limitation.)_
+Implemented on 2026-10-18; both surfaces reveal through
+`packages/components/src/internal/reveal.tsx`.
+
+**Suite.** Collapsible 5 → 10 native cases, Accordion 15 → 19; the behaviour
+suite is **539 tests across 47 files** (530 before this plan). The unit suite is
+357 and the inventory checks agree with both docs pages and both
+`COMPONENTS.md` rows.
+
+**Tab containment (the new fact).** A throwaway probe walked focus on this host:
+
+| Variant | Tab order from `trigger` | Content bounds |
+| ------- | ------------------------ | -------------- |
+| clip only (`height: 0`, `overflow: hidden`) | `draft` → `inner-button` → `after` | `52` |
+| clip + `visibility: "hidden"` on content | `after` → `trigger` | `null` |
+| clip + `pointerEvents: "none"` | `draft` → `inner-button` → `after` | `52` |
+
+So the clip alone leaves a collapsed body keyboard-reachable. `visibility`
+removes it from the tab order and from the accessible tree, and returns `null`
+bounds; that is why the measurement is taken while visible and kept in state.
+The shipped component tests assert both directions (`trigger → after` closed,
+`trigger → draft` open) for Collapsible and (`trigger-one → trigger-two`, then
+`trigger-one → draft-one`) for Accordion.
+
+**State.** A counter inside the Collapsible body reads `1` before the close,
+while hidden, and after the re-open. In Accordion single mode the same counter
+in section one survives a switch to section two and back. Removing the mount
+(M3) makes both fail.
+
+**The tween.** With the motion clock paused, 80 ms into the 200 ms tween the
+following sibling moved 40 % of the measured content height, and at 200 ms it
+moved the full height. Fixtures: 76 px for the Collapsible body (60 px row +
+6 px top + 10 px bottom padding) and 70 px for the Accordion body (60 px row +
+10 px bottom padding). `ease: "linear"` keeps the mid-point assertion exact;
+`animate={false}` needs 1 ms to apply and lands at the full height.
+
+**`onMotionComplete`** settles the close exactly once; the content is hidden
+only after the close tween, so a closing body stays visible (and briefly
+reachable) for the 200 ms transition. That is recorded as a limitation on both
+docs pages, together with the residual plan 186 rewrap caveat (the height is
+re-measured on open, not on a width change) and the fact that hiding a body
+whose descendant holds focus does not return focus to the trigger.
+
+**Two-direction proofs** (each mutation applied alone, the named suites run, the
+file restored):
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | `hidden` forced to `false` | exit 1 — both tab-order cases fail (focus stayed on `draft`) |
+| M2 | `animate={{ height: open ? measured : 0 }}` → `animate={{ height: 0 }}` | exit 1 — both tween cases fail, *expected 0 to be greater than 0* |
+| M3 | `{open ? children : null}` inside the body | exit 1 — both state cases fail, *expected `[…]` to include `'1'`* |
+| M4 | measure `100` instead of the bounds | exit 1 — both tween cases fail (the sibling moved 100 px, not 76/70) |
+| M5 | `onMotionComplete` never settles | exit 1 — 3 close/hidden cases fail, *expected false to be true* |
+
+**Gates.** `nub run check`, `nub run lint`, `nub run test` and
+`nub run --filter @gpuixui/components test:behaviour` all pass on this host.
+

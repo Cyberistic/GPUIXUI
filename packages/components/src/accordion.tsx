@@ -51,6 +51,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
+import { Reveal } from "./internal/reveal.js";
 import {
   controlHeight,
   focusRing,
@@ -504,16 +505,31 @@ export const AccordionTrigger = ({
   );
 };
 
-/** The body of an open section. Unmounts while closed. */
-export const AccordionContent = ({ style, children, ...rest }: Props) => {
+/** {@link AccordionContent} props. */
+export interface AccordionContentProps extends Props {
+  /** Tween to the measured height; `false` snaps. Default `true`. */
+  readonly animate?: boolean;
+}
+
+/**
+ * The body of a section. It stays mounted — so its state survives a switch —
+ * and its height tweens to the measured content height. While closed it is
+ * hidden, which also removes it from the tab order (plan 372).
+ */
+export const AccordionContent = ({
+  animate = true,
+  style,
+  children,
+  ...rest
+}: AccordionContentProps) => {
   const theme = useTheme();
   const { isOpen } = useAccordionContext();
   const { value } = useAccordionItemContext();
 
-  if (!isOpen(value)) return null;
-
   return (
-    <div
+    <Reveal
+      open={isOpen(value)}
+      animate={animate}
       {...rest}
       style={mergeStyles(
         {
@@ -529,7 +545,7 @@ export const AccordionContent = ({ style, children, ...rest }: Props) => {
       )}
     >
       {children}
-    </div>
+    </Reveal>
   );
 };
 
@@ -563,7 +579,7 @@ export const accordionMeta = {
   gpuixSupport: "yes",
   limitations: [
     "the chevron swaps direction: 0.10.0's StyleDesc has no transform",
-    "sections mount and unmount instantly; no height animation",
+    "closed bodies stay mounted and are hidden by `visibility`; a rewrap while closed is not re-measured until the next open",
   ],
   docs: "docs/accordion.mdx",
   example: "examples/accordion.example.tsx",
