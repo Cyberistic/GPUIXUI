@@ -146,15 +146,18 @@ Record the exact failure messages in §9.
   the `studio` authoring command.
 - `docs-checks.test.ts` derives the smoke list from
   `apps/docs/package.json` (`smoke:` keys) instead of hard-coding it; four
-  tests cover the non-empty list, the documented names, the unit suite and the
-  authoring command, and the `could not verify` sentence.
+  page-contract tests cover the non-empty list, the documented names, the unit
+  suite, the authoring command and the `could not verify` sentence, and two
+  content-tree tests walk every page's commands.
 - Two-direction proofs, measured and reverted:
   - deleting the `smoke:browser` row → `expected [ 'smoke:browser' ] to deeply
     equal []`;
   - adding a `smoke:newcheck` script → `expected [ 'smoke:newcheck' ] to deeply
     equal []`;
   - replacing the `could not verify` sentence → `expected '---\ntitle:
-    Contributing…' to contain 'could not verify'`.
+    Contributing…' to contain 'could not verify'`;
+  - appending `nub run --filter docs nope` to `contributing.mdx` →
+    `contributing.mdx: no script "nope"`.
 - `docs-checks.test.ts` also walks `content/docs` and checks every
   `nub run --filter docs <script>` against `package.json`; every current page
   passes (7 commands, all real).
