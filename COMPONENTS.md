@@ -95,12 +95,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | frames | `frame-stats`, `live-frames` | verified |
 
 The suite is **101/101 green here** (exit `0`, `.artifacts/smoke-report.json`,
-**3536 checks**) and the live suite **51/51** (`live-report.json`,
-**1062 checks**, exit `0`) on the release-tag binding; the plan `532` terminal
-twin is part of that total because the merge gate on 2026-10-19 ran the whole
-registry. The registry now lists **52** after plan `534`'s variable-row twin,
-verified focused (`--only live-variable-rows`, 49 checks) and not yet folded
-into a full-run total. Both `host` lines carry the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
+**3536 checks**) and the live suite **52/52** (`live-report.json`,
+**1111 checks**, exit `0`) on the release-tag binding; the merge gate on
+2026-10-19 ran the whole registry, so the plan `532` terminal twin and the plan
+`534` variable-row twin are both in that total. Both `host` lines carry the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
 and a borderless size — is what every geometry check now asserts.
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**

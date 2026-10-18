@@ -185,4 +185,5 @@ Two-direction proofs (both exit `1`, both restored):
 Measured note for future live probes: a `<virtual-list>` has no bounds live
 (plan `532`) but its **rows do**, and the plan `529` content-origin box makes
 the declared geometry directly assertable against the wrapper `div` — no
-correction term was needed. The `nub run check`/`nub run test` gates pass.
+correction term was needed. The merge gate then ran the whole live registry at
+**52/52**, 1,111 checks, exit `0`. The `nub run check`/`nub run test` gates pass.

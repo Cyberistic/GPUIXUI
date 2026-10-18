@@ -67,8 +67,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       exactly 120 px and moves rows 3–5 by exactly `+60` with the anchor
       `[0,0,300]` unmoved, a second click collapses it, `scrollToItem(30)` sits
       row 30 at the viewport top, and a real `-120` wheel keeps its in-row
-      offset. **49 checks**, 1/1 exit `0`; live registry `51 → 52` (the
-      full-run total stays the merge gate's 51/51). Two mutation proofs:
+      offset. **49 checks**, 1/1 exit `0`; live registry `51 → 52` and the
+      merge gate then ran the whole registry at **52/52** (`1111` checks,
+      exit `0`). Two mutation proofs:
       `EXPAND_BY 60 → 40` fails with `expected 120 ± 1, got 100`, and a
       never-expanding toggle fails with `expected "expanded=2", got
       "expanded=none"` (both exit `1`). Measured: a `<virtual-list>` has no
@@ -608,8 +609,8 @@ focused id is `live-frames`.
       two truths, and the plan-number collision on `525` is fixed by renumbering
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      re-run after the merge: headless **101/101** (`3536` checks) and live
-      **51/51** (`1062` checks), both exit `0`; `nub run check` and
+      re-run on the final branch: headless **101/101** (`3536` checks) and live
+      **52/52** (`1111` checks), both exit `0`; `nub run check` and
       `nub run test` pass (1,384 tests). The workstream's own instruction is
       *never push to master*, so an owner/supervisor performs the final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)

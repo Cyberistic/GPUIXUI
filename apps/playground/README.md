@@ -1792,12 +1792,10 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **51/51** on
-  2026-10-19 (1062 checks, exit `0`, the merge gate) — the plan `532` terminal
-  twin is included — and the registry now lists **52** after the plan `534`
-  variable-row twin, which this workstream verified with
-  `--only live-variable-rows` (49 checks) and has not folded into a full-run
-  total. The full suite is a **merge/release gate** — layout, **root**, input, scroll,
+  The **real-window** suite (`smoke:live`) ran in full at **52/52** on
+  2026-10-19 (1111 checks, exit `0`, the merge gate) — the plan `532` terminal
+  twin and the plan `534` variable-row twin are both included — and the full
+  suite is a **merge/release gate** — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
