@@ -10,6 +10,7 @@ import {
 } from "fumadocs-ui/layouts/docs/page";
 import { Suspense, use } from "react";
 import { useMDXComponents } from "@/components/mdx";
+import { SkipLink } from "@/components/skip-link";
 import { baseOptions } from "@/lib/layout.shared";
 import { docsPageHead, docsPageMeta } from "@/lib/page-meta";
 import { docs, source } from "@/lib/source";
@@ -47,7 +48,7 @@ function Content({ path }: { path: string }) {
   const MDX = page.body;
 
   return (
-    <DocsPage toc={toc}>
+    <DocsPage toc={toc} tabIndex={-1}>
       <DocsTitle>{page.title}</DocsTitle>
       <DocsDescription>{page.description}</DocsDescription>
       <DocsBody>
@@ -61,10 +62,13 @@ function Page() {
   const data = useFumadocsLoader(Route.useLoaderData());
 
   return (
-    <DocsLayout {...baseOptions()} tree={data.pageTree}>
-      <Suspense>
-        <Content path={data.path} />
-      </Suspense>
-    </DocsLayout>
+    <>
+      <SkipLink href="#nd-page" />
+      <DocsLayout {...baseOptions()} tree={data.pageTree}>
+        <Suspense>
+          <Content path={data.path} />
+        </Suspense>
+      </DocsLayout>
+    </>
   );
 }

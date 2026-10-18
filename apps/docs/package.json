@@ -15,6 +15,7 @@
     "smoke:browser": "nub scripts/smoke-browser.ts",
     "build:preview": "nub scripts/build-preview.ts",
     "smoke:preview": "nub scripts/smoke-live-preview.ts",
+    "smoke:keyboard": "nub scripts/smoke-keyboard.ts",
     "studio": "fumadocs-studio"
   },
   "dependencies": {

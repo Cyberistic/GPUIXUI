@@ -71,3 +71,13 @@ html[data-platform] {
   --font-mono:
     var(--platform-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+/*
+ * The site's own interactive elements focus with the library's ring token in
+ * both themes (plan 496). `:where` keeps specificity at zero, so Fumadocs'
+ * component styles still win where it styles focus itself.
+ */
+:where(a, button, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-fd-ring);
+  outline-offset: 2px;
+}

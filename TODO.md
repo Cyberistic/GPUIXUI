@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–492)
+## Docs site workstream (plans 410–496)
 
-`[x]` `[██████████]` 96/96
+`[x]` `[██████████]` 97/97
+
+`[x]` **Skip navigation and the docs focus ring (plan 496)** — every page now
+      leads with a `sr-only` skip link; its target carries `tabIndex={-1}` so
+      Enter moves focus (`#nd-page` on docs, `#main-content` on home/404), and
+      one `:where(...):focus-visible` rule paints the library's ring token on
+      the site's own links, buttons, selects and tab stops. `smoke:keyboard`
+      drives a real Tab/Enter on a docs page (dark), the landing page (light) and
+      an unknown slug (the 404 body in dark) and exits `1` on a missing link, a
+      hidden link, a non-token outline or a target that does not take focus; five
+      two-direction proofs in plan 496 §7
 
 `[x]` **The hydrated-preview smoke covers every preview page (plan 495)** — it
       checked five URLs while 49 component pages carry a labelled preview, so a

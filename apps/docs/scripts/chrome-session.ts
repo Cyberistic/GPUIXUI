@@ -36,6 +36,8 @@ export interface Session {
   readonly evaluate: (expression: string) => Promise<unknown>;
   readonly navigate: (url: string) => Promise<void>;
   readonly setColorScheme: (mode: "light" | "dark") => Promise<void>;
+  /** Dispatch one real key press, so focus traversal and activation are the browser's. */
+  readonly press: (key: SessionKey) => Promise<void>;
   /** Whether `expression` became `true` within the timeout; polls every 100 ms. */
   readonly waitFor: (
     expression: string,
@@ -44,6 +46,14 @@ export interface Session {
   readonly captureScreenshot: () => Promise<string>;
   readonly stop: () => Promise<void>;
 }
+
+/** The keys the smokes drive; the numeric codes are the Windows virtual keys. */
+export type SessionKey = "Tab" | "Enter";
+
+const KEY_CODES: Readonly<Record<SessionKey, number>> = {
+  Tab: 9,
+  Enter: 13,
+};
 
 const freePort = (): Promise<number> =>
   new Promise((resolve, reject) => {
@@ -198,6 +208,30 @@ export const startSession = async (
     return false;
   };
 
+  // A focus assertion must come from the browser's own traversal: `press`
+  // dispatches the same key events a reader produces, so Tab moves focus and
+  // Enter activates the focused element (plan 496). Enter needs the `char`
+  // event for the anchor's default action.
+  const press = async (key: SessionKey): Promise<void> => {
+    const code = KEY_CODES[key];
+    const base = {
+      key,
+      code: key,
+      windowsVirtualKeyCode: code,
+      nativeVirtualKeyCode: code,
+    };
+    await send("Input.dispatchKeyEvent", { type: "rawKeyDown", ...base });
+    if (key === "Enter") {
+      await send("Input.dispatchKeyEvent", {
+        type: "char",
+        ...base,
+        text: "\r",
+        unmodifiedText: "\r",
+      });
+    }
+    await send("Input.dispatchKeyEvent", { type: "keyUp", ...base });
+  };
+
   const captureScreenshot = async (): Promise<string> => {
     const result = await send("Page.captureScreenshot", { format: "png" });
     return typeof result === "object" &&
@@ -212,6 +246,7 @@ export const startSession = async (
     evaluate,
     navigate,
     setColorScheme,
+    press,
     waitFor,
     captureScreenshot,
     stop,

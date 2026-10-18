@@ -118,7 +118,11 @@ export function Landing() {
   ).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-14 px-4 py-20">
+    <div
+      id="main-content"
+      tabIndex={-1}
+      className="mx-auto flex w-full max-w-4xl flex-col gap-14 px-4 py-20"
+    >
       <header className="flex flex-col gap-5">
         <p className="text-sm font-medium text-fd-muted-foreground">
           A native UI component library

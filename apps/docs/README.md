@@ -160,6 +160,36 @@ from `@gpuixui/tokens`, so the script carries no colour or font literal. The
 Chrome session itself (`scripts/chrome-session.ts`) is shared with
 `smoke:preview`, which drives the live GPUix scenes.
 
+## Keyboard and focus
+
+Every page leads with a **skip link** (`src/components/skip-link.tsx`). It is
+`sr-only` until focused, then fixed at the top-left. Its target carries
+`tabIndex={-1}` so Enter **moves focus** into the page rather than only changing
+the hash: `#nd-page` (the docs article) on a docs page, `#main-content` (the
+landing and 404 bodies) on the home layouts.
+
+The site's own links, buttons, selects, summaries and tab stops draw a 2 px
+`--color-fd-ring` outline on `:focus-visible` (`src/styles/app.css`), so keyboard
+focus belongs to the docs identity in both themes; `theme.test.ts` pins the rule
+to the token. Fumadocs' own styles keep precedence because the rule uses
+`:where`.
+
+`smoke:keyboard` proves the contract in a real browser — the first Tab reaches
+the skip link, it is visible only then, the outline is the resolved ring token,
+and Enter focuses the target:
+
+```sh
+nub run --filter docs smoke:keyboard
+# or against a running server:
+nub apps/docs/scripts/smoke-keyboard.ts --base-url http://127.0.0.1:4173 --no-build
+```
+
+Two pages cover both layouts and the 404 path: `/docs/components/button` in dark
+(`#nd-page`), `/` in light (`#main-content`), and an unknown docs slug in dark
+(the not-found body). Exit `1` names the step that broke, exit `2` means Chrome
+or the server was missing — never a pass.
+
+
 
 ## Search
 

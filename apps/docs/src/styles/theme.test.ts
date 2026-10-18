@@ -86,4 +86,13 @@ describe("docs theme", () => {
     expect(Arr.difference(roleNames(":root"), mappedRoles)).toEqual([]);
     expect(Arr.difference(roleNames(".dark"), mappedRoles)).toEqual([]);
   });
+
+  it("draws keyboard focus with the ring token", () => {
+    // The failure guarded (plan 496): a retyped literal or a deleted rule
+    // leaves the site on the browser's default outline instead of the identity.
+    const rule = css.match(/:where\(([^)]*)\):focus-visible\s*\{([^}]*)\}/);
+    expect(rule?.[1]).toContain("a");
+    expect(rule?.[1]).toContain("button");
+    expect(rule?.[2]).toContain("outline: 2px solid var(--color-fd-ring)");
+  });
 });

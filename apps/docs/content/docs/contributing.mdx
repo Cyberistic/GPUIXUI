@@ -64,6 +64,7 @@ every check your change can affect:
 | `nub run --filter docs smoke:build` | every sitemap page renders in the production output, every internal link resolves, search answers, an unknown slug is a 404 | `1` broken, `2` could not verify |
 | `nub run --filter docs smoke:browser` | the built site hydrates; every preview surface paints the theme and platform the toggles publish | `1` wrong paint, `2` could not verify |
 | `nub run --filter docs smoke:preview` | every live GPUix scene reaches the renderer in headless Chrome, and the page wiring passes the platform | `1` scene failure, `2` could not verify |
+| `nub run --filter docs smoke:keyboard` | the skip link is the first tab stop, Enter moves focus into the page, and the focus ring is the theme's ring token | `1` wrong, `2` could not verify |
 
 The smokes exit `2` when Chrome or the server is missing. An unverified site is
 not a passing one: treat `2` as "run it where the check can run", never as a
