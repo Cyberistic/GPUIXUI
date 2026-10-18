@@ -31,6 +31,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
 import { examples } from "../examples/index.js";
+import { themeMatrixCoverage } from "./behaviour/theme-coverage.js";
 import { inventory, type ComponentMeta } from "./inventory.js";
 
 const packageRoot = new URL("../", import.meta.url);
@@ -294,6 +295,39 @@ describe("inventory", () => {
       inventory,
       (meta) => !Array.isArray(meta.limitations),
     ).map((meta) => `${meta.name}: limitations is not an array`);
+
+    expect(problems).toEqual([]);
+  });
+
+  it("proves every component in both themes", () => {
+    // A suite proves both themes when it names `lightTheme`; the rest are the
+    // shared matrix's responsibility, and `theme-coverage.ts` names exactly
+    // those suites. Either side drifting is a real coverage gap (plan 528).
+    const uncovered = Arr.filter(
+      inventory,
+      (meta) =>
+        !readFileSync(
+          fileURLToPath(new URL(meta.testFile, packageRoot)),
+          "utf8",
+        ).includes("lightTheme"),
+    );
+    const problems = [
+      ...Arr.filterMap(uncovered, (meta) =>
+        Arr.contains(themeMatrixCoverage, meta.testFile)
+          ? Result.failVoid
+          : Result.succeed(
+              `${meta.name}: no both-theme assertion (own suite or theme matrix)`,
+            ),
+      ),
+      ...Arr.map(
+        Arr.filter(
+          themeMatrixCoverage,
+          (file) => !Arr.some(uncovered, (meta) => meta.testFile === file),
+        ),
+        (file) =>
+          `${file}: listed as matrix-covered but its suite now proves both themes`,
+      ),
+    ];
 
     expect(problems).toEqual([]);
   });

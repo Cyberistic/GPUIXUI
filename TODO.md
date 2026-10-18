@@ -370,6 +370,14 @@ retired once both branches are one
       with `!disabled`; 4 native cases (Mention input 17, Tag / token input 15,
       behaviour 702), six mutation proofs; docs, `COMPONENTS.md` and the
       inventory synced
+    - [x] Every component is proven in both themes — plan 528. Six components
+      landed after the theme matrix (Carousel, Countdown, Inline edit, Mention
+      input, Preview Card, Tag / token input) and five `COMPONENTS.md` rows
+      already claimed "both themes" while their suites rendered dark only. One
+      role assertion each (behaviour 702 → 708), six mutation proofs, and a
+      `theme-coverage.ts` registry held to the suites by `inventory.test.ts` so
+      a new dark-only component or a stale entry fails (unit 404 → 405); docs,
+      `COMPONENTS.md` and the inventory synced
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook
