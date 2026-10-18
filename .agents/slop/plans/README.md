@@ -243,6 +243,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [546](./546-pair-list-uniqueness-owner.md) | "Every exported pair list" checked 28 of 35 | F | 071, 339, 340, 349, 393, 394, 510, 514, 516 | done |
 | [547](./547-interactive-fill-family-index.md) | The interactive-fill index retypes the families it says it derives | F | 097, 309, 327, 342, 502, 546 | done |
 | [548](./548-soft-status-tone-index.md) | The soft-status lists retype the tone index | F | 014, 057, 090, 091, 300, 307, 347, 394, 503, 508, 546, 547 | done |
+| [549](./549-status-text-tone-index.md) | The status-text pairs retype the tone index | F | 014, 057, 083, 314, 546–548 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2629,8 +2630,8 @@ from it too, and the catalogue names the owner. No colour, pair, floor, metric,
 theme, platform style or recipe value moves; 131 files / 5641 tests pass.
 
 Plan `548` closes the same class one index over. The solid status fills, the
-`xText` roles, the chip edge and the selection list all derived from
-`statusTones`, but the **soft** fill was retyped by hand in six places:
+chip edge and the selection list all derived from `statusTones`, but the
+**soft** fill was retyped by hand in six places:
 `softSurfaceRoles`, `trackSurfaces`, `softBorderPairs`, the soft body-text
 literals in `contrastPairs`, `selectionSoftWashPairs` and
 `contentFillSurfaces`. A fifth tone added to the index therefore joined the
@@ -2642,6 +2643,17 @@ the tone index the same probe reports every one, and the new
 `soft-surface-index.test.ts` derives its expectation from the index too. No
 colour, pair, floor, metric, theme, platform style or recipe value moves; 132
 files / 5649 tests pass.
+
+Plan `549` finishes the half plan 548 claimed but did not reach: the **status
+text** roles were still a separate `statusTextTones` array plus twelve literal
+pairs for `background`/`card`/`popover`, so a fifth tone joined the solid, soft
+and chip lists but shipped its label on the canvas, a card, a popover, the
+quiet panel and the four row washes unpainted by the contract. The surfaces are
+now a public index (`statusTextSurfaces`) and the pairs derive from it and
+`statusTones`; `status-text-index.test.ts` derives its expectation the same way,
+so the probe that adds a fifth tone fails before the change (`4 × 8` pairs where
+the index asks for `5 × 8`) and passes after it. No colour, pair or floor moves
+and the contract still holds 404 plain pairs; 133 files / 5653 tests pass.
 
 ## How to use a plan
 
