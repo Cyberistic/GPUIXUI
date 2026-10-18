@@ -8,7 +8,9 @@
  *
  * The host wiring is not affected: a component body writes
  * `onChange: (event) => …` inside a props object, never as a public
- * `readonly onChange?:` declaration.
+ * `readonly onChange?:` declaration. The patterns match the **identifier**
+ * `onChange`, so a callback named after the state it reports — such as
+ * `onScrollPositionChange` (plan 337) — is not a hit.
  */
 
 import { Effect, FileSystem, Path } from "effect";
@@ -95,12 +97,12 @@ describe("the value callback name", () => {
           hitsIn(
             ["docs"],
             Arr.filter(docs, Str.endsWith(".mdx")),
-            /onChange=\{|^[|] `onChange` /,
+            /\bonChange=\{|\| `onChange` /,
           ),
           hitsIn(
             ["examples"],
             Arr.filter(examples, Str.endsWith(".tsx")),
-            /onChange/,
+            /\bonChange\b/,
           ),
         ],
         { concurrency: 2 },
