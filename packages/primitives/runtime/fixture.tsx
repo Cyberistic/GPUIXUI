@@ -21,7 +21,7 @@ import { Box } from "../src/components/Box.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
 import { testTheme, testThemeDark } from "../src/core/testing/theme.fixture.js";
 import type { Density, PrimitiveTheme } from "../src/core/theme.js";
-import { createRuntime, type Runtime } from "./harness.js";
+import { createRuntime, type Runtime } from "../src/testing/index.js";
 
 export { testTheme, testThemeDark };
 

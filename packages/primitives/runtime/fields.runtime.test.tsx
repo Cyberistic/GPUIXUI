@@ -32,7 +32,7 @@ import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Tooltip, tooltipHeight } from "../src/components/Tooltip.js";
 import { FLOATING_MARGIN } from "../src/core/floating.js";
-import { a11yNode, type Bounds, type Runtime } from "./harness.js";
+import { a11yNode, type Bounds, type Runtime } from "../src/testing/index.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>

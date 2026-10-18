@@ -1,6 +1,11 @@
 /**
  * The GPUix `TestRenderer`, adapted to the verbs a component runtime test needs.
  *
+ * It lives at `src/testing/` and ships as `@gpuixui/primitives/testing` because
+ * it has two consumers: this package's `runtime/` suites and
+ * `examples/basic-app`'s workflow suite. Two consumers is the repo's rule for
+ * hoisting a shared module (plan `327`); the package root does not re-export it.
+ *
  * These suites are the only place in this workstream that loads the native
  * binding (`@gpuix/react/testing` → `@gpuix/native`). Plan 020 §3 measured that
  * no `darwin-x64` binary is published, and plan 140 (playground) built one from

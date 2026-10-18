@@ -21,7 +21,7 @@ import type { TestElement } from "@gpuix/react/testing";
 import { Button } from "../src/components/Button.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, type Runtime } from "./harness.js";
+import { a11yNode, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** The reported values, in order. */

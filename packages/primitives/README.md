@@ -265,6 +265,15 @@ the window and scrollable (plan 098).
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
 
+The adapter is reusable: it ships as
+`@gpuixui/primitives/testing` (`createRuntime`, the `Runtime` verbs and the
+accessibility helpers), so a consumer's own native tests — and this repo's
+`examples/basic-app` workflow suite — drive the same one. It is test-only; the
+package root does not re-export it, and the native binding is loaded through a
+dynamic import, so merely importing the subpath cannot fail on a host without
+one. `@gpuixui/testing` (playground workstream) remains the smoke-report host;
+this is the thinner component-level adapter (plan `041` §2.2).
+
 What it observed, per component, is in `COMPONENTS.md`; the measured details and
 the two-direction proof are in
 `.agents/slop/plans/041-tier1-runtime-verification.md` §9 and

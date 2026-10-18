@@ -11,7 +11,7 @@ import { expect } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
-import type { Runtime } from "./harness.js";
+import type { Runtime } from "../src/testing/index.js";
 
 /** The applied style of the element with `testId`, as the runtime holds it. */
 export const styleOf = (

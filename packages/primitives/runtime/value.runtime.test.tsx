@@ -23,7 +23,7 @@ import { Meter } from "../src/components/Meter.js";
 import { RangeSlider, Slider } from "../src/components/Slider.js";
 import { Stack } from "../src/components/Stack.js";
 import { sliderInset } from "../src/core/index.js";
-import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const INSET = sliderInset("md", testTheme);

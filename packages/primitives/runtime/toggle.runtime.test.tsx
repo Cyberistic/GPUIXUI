@@ -13,7 +13,7 @@ import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { Stack } from "../src/components/Stack.js";
 import { Toggle } from "../src/components/Toggle.js";
-import { a11yValueOf, type Runtime } from "./harness.js";
+import { a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const announced = (runtime: Runtime, label: string): string =>

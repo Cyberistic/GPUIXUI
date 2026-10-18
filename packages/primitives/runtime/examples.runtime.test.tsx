@@ -21,7 +21,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import type { ComponentType } from "react";
 import { examples } from "../examples/index.js";
-import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme, testThemeDark } from "./fixture.js";
 
 /** The root and the headline each example must paint. */

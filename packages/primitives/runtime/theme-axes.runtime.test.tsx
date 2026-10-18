@@ -40,7 +40,7 @@ import { Switch } from "../src/components/Switch.js";
 import { Text } from "../src/components/Text.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
 import type { PrimitiveTheme } from "../src/core/theme.js";
-import type { Runtime } from "./harness.js";
+import type { Runtime } from "../src/testing/index.js";
 import { openWindow } from "./fixture.js";
 import { painted, paintedColours, rgbOf } from "./theme.js";
 

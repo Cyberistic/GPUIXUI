@@ -13,7 +13,7 @@ import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { Stack } from "../src/components/Stack.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
-import { a11yValueOf, type Runtime } from "./harness.js";
+import { a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 const align = [

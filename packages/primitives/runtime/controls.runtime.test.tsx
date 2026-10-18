@@ -33,7 +33,7 @@ import {
   a11yValueOf,
   type Bounds,
   type Runtime,
-} from "./harness.js";
+} from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>

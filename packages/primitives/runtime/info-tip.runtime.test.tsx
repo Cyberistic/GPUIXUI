@@ -11,7 +11,7 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
 import { InfoTip } from "../src/components/InfoTip.js";
-import { a11yNode, type Runtime } from "./harness.js";
+import { a11yNode, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const CONTENT = "Booked revenue, net of refunds.";

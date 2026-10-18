@@ -46,7 +46,7 @@ import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { Tooltip } from "../src/components/Tooltip.js";
-import { a11yNode, a11yNodes, type Runtime } from "./harness.js";
+import { a11yNode, a11yNodes, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 /** Roles that carry an action or a value, so an unnamed one is a real defect. */

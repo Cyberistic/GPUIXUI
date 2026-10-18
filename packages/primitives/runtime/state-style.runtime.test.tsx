@@ -23,7 +23,7 @@ import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { Toggle } from "../src/components/Toggle.js";
-import type { Runtime } from "./harness.js";
+import type { Runtime } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 const FOCUSED = "#ff0000";

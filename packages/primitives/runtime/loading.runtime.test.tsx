@@ -21,7 +21,7 @@ import { Progress } from "../src/components/Progress.js";
 import { Skeleton } from "../src/components/Skeleton.js";
 import { Spinner } from "../src/components/Spinner.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** The child elements of `testId`, in order. */

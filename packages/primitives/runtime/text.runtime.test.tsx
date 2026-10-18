@@ -22,7 +22,7 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
 import { Text } from "../src/components/Text.js";
-import { a11yValueOf, type Runtime } from "./harness.js";
+import { a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const LINE = testTheme.typography.body.lineHeight;

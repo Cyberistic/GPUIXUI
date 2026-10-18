@@ -33,8 +33,8 @@ import { Switch } from "../src/components/Switch.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
-import type { Runtime } from "./harness.js";
-import { isWithin } from "./harness.js";
+import type { Runtime } from "../src/testing/index.js";
+import { isWithin } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 interface TabCase {

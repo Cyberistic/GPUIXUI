@@ -23,7 +23,12 @@ import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import type { Density } from "../src/core/theme.js";
-import { a11yNode, a11yNodes, type Bounds, type Runtime } from "./harness.js";
+import {
+  a11yNode,
+  a11yNodes,
+  type Bounds,
+  type Runtime,
+} from "../src/testing/index.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const next = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;

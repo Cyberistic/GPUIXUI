@@ -15,7 +15,7 @@ import { Button } from "../src/components/Button.js";
 import { Rating } from "../src/components/Rating.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
-import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
+import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const byLabel = (runtime: Runtime, label: string) =>
