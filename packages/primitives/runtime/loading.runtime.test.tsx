@@ -13,10 +13,11 @@
  * were painted", which cannot flake the way a single timed sample would.
  */
 
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { ReactElement } from "react";
 import { Progress } from "../src/components/Progress.js";
 import { Skeleton } from "../src/components/Skeleton.js";
 import { Spinner } from "../src/components/Spinner.js";
@@ -162,6 +163,44 @@ it("moves an indeterminate Progress's segment over time", async () => {
     6,
   );
   expect(new Set(offsets).size).toBeGreaterThan(1);
+});
+
+it("paints an indeterminate Progress in its requested tone", async () => {
+  // The bug guarded (plan 328 §1.1): the indeterminate branch hard-coded the
+  // brand role, so this fill painted #000007 where the theme's success is
+  // #000011. A determinate bar already obeyed the tone.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress testId="pg" tone="success" label="Saving" />
+    </Surface>,
+  );
+  const fill = Option.getOrElse(Arr.get(childrenOf(runtime, "pg"), 1), () =>
+    expect.fail("the indeterminate bar painted no fill"),
+  );
+  expect(styleOf(runtime, fill)["backgroundColor"]).toBe(
+    testTheme.colors.success,
+  );
+});
+
+it("animates an indeterminate Progress and leaves a determinate one still", async () => {
+  // The bug guarded (plan 328 §1.2): the step hook ran for every mount, so a
+  // determinate bar re-rendered every 120 ms with nothing to move (measured:
+  // one interval scheduled). Fake timers cannot be used here — the native
+  // renderer already owns `Now` — so the count is taken with a spy.
+  const timersFor = async (progress: ReactElement): Promise<number> => {
+    const runtime = await openWindow();
+    const spy = vi.spyOn(globalThis, "setInterval");
+    try {
+      runtime.render(<Surface>{progress}</Surface>);
+      runtime.flush();
+      return spy.mock.calls.length;
+    } finally {
+      spy.mockRestore();
+    }
+  };
+  expect(await timersFor(<Progress testId="still" value={42} />)).toBe(0);
+  expect(await timersFor(<Progress testId="moving" label="Saving" />)).toBe(1);
 });
 
 it("pulses a Skeleton's opacity between both of its states", async () => {

@@ -7,10 +7,16 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderProgress } from "./Progress.js";
-import { expectSome, hostProp } from "./testing/element.js";
+import {
+  elementChildren,
+  expectSome,
+  hostProp,
+  hostStyleString,
+} from "./testing/element.js";
 
 const bar = (value: Option.Option<number>) =>
   renderProgress(
@@ -44,5 +50,19 @@ describe("Progress", () => {
     const element = bar(Option.some(42));
     expect(hostProp(element, "aria-valuenow")).toStrictEqual(Option.none());
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42%");
+  });
+
+  it("paints an indeterminate bar in the requested tone", () => {
+    // The bug guarded (plan 328): the indeterminate branch hard-coded the brand
+    // role, so tone="success" painted primary while a determinate bar obeyed.
+    const element = renderProgress(
+      { tone: "success", label: "Saving" },
+      testTheme,
+      0,
+    );
+    const fill = expectSome(Arr.get(elementChildren(element), 1));
+    expect(expectSome(hostStyleString(fill, "backgroundColor"))).toBe(
+      testTheme.colors.success,
+    );
   });
 });

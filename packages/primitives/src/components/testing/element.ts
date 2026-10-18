@@ -11,7 +11,7 @@
  */
 
 import type { ReactElement } from "react";
-import { isValidElement } from "react";
+import { Fragment, isValidElement } from "react";
 import type { EventPayload } from "@gpuix/react";
 import { expect } from "vitest";
 import * as Arr from "effect/Array";
@@ -131,7 +131,8 @@ const ReactElement = Schema.declare(
  * no element (a plain string, or a `null` from a conditional branch) is omitted,
  * which is why an array is filtered rather than decoded as `Array(ReactElement)`.
  * A nested array (a mapped run beside a literal child) is flattened, because
- * React sees the same child list either way.
+ * React sees the same child list either way, and a fragment is transparent: its
+ * children are the element's children, because a fragment paints nothing.
  */
 export const elementChildren = (
   element: ReactElement,
@@ -142,7 +143,8 @@ export const elementChildren = (
   );
   const asElement = (value: unknown): ReadonlyArray<ReactElement> =>
     Option.match(Schema.decodeUnknownOption(ReactElement)(value), {
-      onSome: (child) => [child],
+      onSome: (child) =>
+        child.type === Fragment ? elementChildren(child) : [child],
       onNone: () => [],
     });
   const flatten = (value: unknown): ReadonlyArray<ReactElement> =>

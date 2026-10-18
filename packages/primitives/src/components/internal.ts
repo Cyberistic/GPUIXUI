@@ -155,15 +155,24 @@ export const useControlState = <Value>(
  * the indicator unmounts — so a `useState`/`useEffect` pair is the right tool;
  * an Atom would make a private frame counter shared, global state. The step
  * *maths* stays in `core/loading.ts` where it is provable.
+ *
+ * `active` is false for an indicator with nothing to animate (a determinate
+ * progress bar): it then holds one render and schedules no timer at all. Making
+ * it a dependency is what starts and stops the interval when a bar changes mode.
  */
-export const useStep = (steps: number, intervalMs: number): number => {
+export const useStep = (
+  steps: number,
+  intervalMs: number,
+  active = true,
+): number => {
   const [step, setStep] = useState(0);
   useEffect(() => {
+    if (!active) return;
     const id = setInterval(
       () => setStep((current) => (current + 1) % steps),
       intervalMs,
     );
     return () => clearInterval(id);
-  }, [steps, intervalMs]);
+  }, [steps, intervalMs, active]);
   return step;
 };

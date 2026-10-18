@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 76/76
+`[x]` `[██████████]` 77/77
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -574,6 +574,14 @@ retired once both branches are one
       measured not to survive a later mount and removed, and the `TestRenderer`
       adapter moved to `@gpuixui/primitives/testing` so both suites share one
       (plan `327`)
+`[x]` `packages/primitives`: **`Progress`'s indeterminate fill ignored `tone`,
+      and a determinate bar ran the step timer forever** — measured: with
+      `tone="success"` the segment painted the brand role (`#000007`, not
+      `#000011`), and a determinate mount scheduled the 120 ms interval once for
+      its whole life. Both modes now resolve one `progressToneColor`, and
+      `useStep` takes an explicit `active`, so a determinate bar schedules
+      nothing while an indeterminate one keeps its one timer. 1 element-tree +
+      2 runtime tests, both directions proven (plan `328`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

@@ -445,6 +445,17 @@ export const progressTrackStyle = (
   overflow: "hidden",
 });
 
+/**
+ * The colour role a progress tone paints.
+ *
+ * Exported so the indeterminate segment resolves the same map as the determinate
+ * fill: a bar asked for `success` must paint success in both modes (plan 328).
+ */
+export const progressToneColor = (
+  tone: ProgressTone,
+  theme: PrimitiveTheme,
+): string => progressTones[tone](theme);
+
 /** The fill. A value outside 0–100 is clamped, never painted out of the track. */
 export const progressFillStyle = (
   spec: ProgressSpec,
@@ -453,7 +464,7 @@ export const progressFillStyle = (
   height: "100%",
   width: `${progressPercent(spec.value ?? 0)}%`,
   borderRadius: theme.radius.full,
-  backgroundColor: paint(progressTones[spec.tone], theme),
+  backgroundColor: progressToneColor(spec.tone, theme),
 });
 
 // ── Value controls: Slider, RangeSlider ──────────────────────────────

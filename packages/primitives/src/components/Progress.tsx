@@ -4,7 +4,9 @@
  * The runtime exposes **no `aria-valuenow`** (plan 020 §1.4), so the value is
  * reported through `aria-valuetext`, which is the one supported way to make a
  * progressbar legible to assistive technology. A `value` outside 0–100 is
- * clamped by `core/style.ts`; an absent `value` means indeterminate.
+ * clamped by `core/style.ts`; an absent `value` means indeterminate. The step
+ * timer runs only while the bar is indeterminate, and `tone` colours the fill
+ * in both modes (plan 328).
  */
 
 import type { ReactElement } from "react";
@@ -18,6 +20,7 @@ import {
 import {
   progressFillStyle,
   progressPercent,
+  progressToneColor,
   progressTrackStyle,
   type ProgressSpec,
   type ProgressTone,
@@ -42,6 +45,10 @@ export interface ProgressProps {
 /** The segment width of an indeterminate bar, as a percentage of the track. */
 const SEGMENT = 40;
 
+/** An absent value means the bar has no proportion to show. */
+const isIndeterminate = (value: number | undefined): value is undefined =>
+  value === undefined;
+
 export const renderProgress = (
   { value, tone = "primary", size = "md", label, style, testId }: ProgressProps,
   theme: PrimitiveTheme,
@@ -53,11 +60,11 @@ export const renderProgress = (
     flexDirection: "row",
   });
   const track = mergeStyle(row, style);
-  const determinate = value !== undefined;
+  const determinate = !isIndeterminate(value);
   const percent = determinate ? progressPercent(value) : 0;
   const fill = determinate
     ? progressFillStyle(spec, theme)
-    : indeterminateFillStyle(SEGMENT, theme.colors.primary, theme);
+    : indeterminateFillStyle(SEGMENT, progressToneColor(tone, theme), theme);
   return (
     <div
       role="progressbar"
@@ -82,4 +89,8 @@ export const renderProgress = (
 
 /** A progress bar. */
 export const Progress = (props: ProgressProps): ReactElement =>
-  renderProgress(props, useTheme(), useStep(SPINNER_SEGMENTS, 120));
+  renderProgress(
+    props,
+    useTheme(),
+    useStep(SPINNER_SEGMENTS, 120, isIndeterminate(props.value)),
+  );

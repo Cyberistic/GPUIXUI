@@ -7,6 +7,9 @@ description: A determinate or indeterminate progress bar.
 clamped); without it, it is indeterminate and a segment advances through eight
 positions on a 120 ms interval. It cannot rotate, and does not try to.
 
+A determinate bar is **static**: the step timer runs only while the bar is
+indeterminate, so a form showing 42% schedules nothing and re-renders nothing.
+
 ## Usage
 
 ```tsx
@@ -27,7 +30,7 @@ import { Progress, Stack, Text } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `value` | `number` | — | 0–100 determinate fill; omit for indeterminate |
-| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
+| `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role, in both the determinate and the indeterminate bar |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs`/`sm` |
 | `label` | `string` | none | accessible name |
 | `style` | `StyleDesc` | — | merged last, layout included |
@@ -54,8 +57,9 @@ Not focusable. Progress is status, not a control; there is no slider behaviour.
 ## Theming
 
 `progressTrackStyle` paints `colors.muted`; `progressFillStyle` paints the tone's
-role. Height is a spacing step and both ends are `radius.full`, so a density or
-radius change moves the whole family.
+role — the indeterminate segment resolves the same `progressToneColor` map, so
+`success` means success in both modes. Height is a spacing step and both ends are
+`radius.full`, so a density or radius change moves the whole family.
 
 ## Limitations
 
@@ -67,12 +71,14 @@ radius change moves the whole family.
 ## Verification
 
 - `src/core/style.test.ts` — clamping, including `NaN` and infinity.
-- `src/components/Progress.test.tsx` — tree-level track/fill and tone.
+- `src/components/Progress.test.tsx` — tree-level track/fill, tone (determinate
+  and indeterminate) and the value text.
 - `src/components/style-order.test.tsx` — the caller's `style`, `display` and
   `flexDirection` included, survives the merged row layout (plan 097).
 - `runtime/loading.runtime.test.tsx` — announces `"42%"`, clamps 140 to `"100%"`
-  and −5 to `"0%"`, the fill tracks the value, and the indeterminate segment
-  moves over real time.
+  and −5 to `"0%"`, the fill tracks the value, the indeterminate segment moves
+  over real time and paints its requested tone, and a determinate bar schedules
+  no interval while an indeterminate one schedules exactly one (plan 328).
 
 ```sh
 nub run --filter @gpuixui/primitives test
