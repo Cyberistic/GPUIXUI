@@ -68,7 +68,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | data-grid | `data-grid-virtual` | verified |
 | layers | `nested-layer-dismiss` | verified |
 | scroller | `message-scroller` | verified |
-| tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation` | verified |
+| tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
 | states | `declared-styles` | verified |
 | truncation | `text-truncation` | verified |
@@ -700,8 +700,9 @@ All five playground scenarios now mount the shipped package; together with the
 primitives' own `test:runtime` suites, every interactive Tier 1 row has both an
 in-package and an end-to-end native verdict.
 
-**End-to-end Tier 2 composition (playground plans `330` and `344`).** Five
-scenarios mount the shipped `@gpuixui/components` through its published root:
+**End-to-end Tier 2 composition (playground plans `330`, `344` and `346`).**
+Seven scenarios mount the shipped `@gpuixui/components` through its published
+root:
 `tier2-dialog` drives `Dialog`/`ConfirmDialog` (centred surface, focus entry,
 Tab/Shift-Tab containment, Escape and focus return, Cancel holding initial
 focus, confirm reporting once and leaving the dialog open), `tier2-menu` drives
@@ -719,8 +720,21 @@ through click, arrow keys, Enter and a disabled row) and `tier2-navigation`
 `TabPanel`, Accordion's single-mode replacement and `collapsible` Enter path,
 Collapsible's `expanded` header, Breadcrumb's `navigation`/`Link` nodes, and
 Pagination's `aria-selected` page, page click, Next/Prev and painted window).
-The suite is `74/74` (2070 checks) and `tier2=verified`. Consumer-path facts
-recorded in plan `330` §8 and plan `344` §8: the renderer needs **one root host
+Plan `346` adds the choice and form families: `tier2-choice` drives `Popover`
+(opens below its trigger, a row toggles the consumer's selection, Escape returns
+focus, an outside press closes without reopening), `SearchInput` (typing,
+Enter submit, Escape clear with focus return and one clear report), `Combobox`
+(ranked filter, value selection, disabled option inert, label on the trigger,
+empty state, Escape), `DatePicker` (month grid, minimum-bound clamp, Enter
+select, clearable reset) and `TimePicker` (segment composition, clamping,
+`minuteStep` arrows and clear); `tier2-forms` drives `Field` (consumer-triggered
+schema message replacing the description, `Required` in the description),
+`Fieldset` (named `Group`, disabled token paint, refused edits and tab-order
+exit) and `Form` (messages on an invalid submit, decoded value on a valid one,
+pending lock).
+The suite is `76/76` (2164 checks) and `tier2=verified`. Consumer-path facts
+recorded in plan `330` §8, plan `344` §8 and plan `346` §8: the renderer needs
+**one root host
 element** (a provider with sibling children at the root paints nothing), the
 components package is compiled by the consumer because its tsconfig maps the JSX
 runtime to a `.d.ts` that `nub` cannot execute, and an accessibility node keeps
@@ -737,7 +751,10 @@ stack, the 32 px avatar, the alert dismiss, the empty-state action, List click
 selection with the disabled row inert; then a tab click swaps the panel,
 Accordion single mode and its Enter close, Collapsible's Enter close, Breadcrumb
 clicks and Pagination's page/Next/Prev. Live `22 → 24`, checks `373 → 405`,
-exit `0`, two screenshots. They also measured the live focus rule (plan `345`):
+exit `0`, two screenshots. Plan `346`'s `live-tier2-choice` and
+`live-tier2-forms` add the same path for the choice and form families; live
+`25 → 27`, checks `431 → 458`, exit `0`, two screenshots. They also measured the
+live focus rule (plan `345`):
 a key reaches the focused element, bubbles through every ancestor and then the
 window handler; `autoFocus` and a click focus natively **without running React's
 `onFocus`**. `live-key-routing` isolates it (23 checks), including a live
@@ -769,8 +786,8 @@ remaining live-only defect (see the Tabs row).
 | Breadcrumbs | done | partial | declarative trail with `maxItems` collapsing the middle (first + … + tail), separators follow their item; 5 native behaviour tests + 7 collapse tests. No `aria-current` in 0.10.0, so the current page is text and colour |
 | Pagination | done | partial | compound parts (`Pagination`, `PaginationPrevious`, `PaginationList`, `PaginationItem`, `PaginationNext`, `PaginationEllipsis`) over a derived window: the root clamps the page and computes the window once, so the caller never repeats the stable-width rule; 10 native behaviour tests + 9 window tests, both themes. Current page uses `aria-selected` because 0.10.0 has no `aria-current`; no page-size control |
 | Search inputs | done | yes | leading glyph, conditional clear control, Enter submit, Escape clears only when non-empty, controlled/uncontrolled, caller `ref` composed with the internal focus ref; 7 native behaviour tests. No debounce (the consumer's job); the glyph is text until an icon set lands |
-| Comboboxes | done | partial | compound parts (`Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty`) wrapping GPUix's headless combobox with our ranked option shape; the popup flips once off a snapping trigger and `align="center"` is measured, single and multiple selection by value, disabled rows, empty state, Escape focus restore, pointer selection/toggling and outside-press dismissal; 17 native behaviour tests + ranking suite, both themes. No async options/create-new, no `aria-activedescendant` |
-| Date pickers | done | partial | compound parts (`DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar`) over a month grid (Effect `DateTime`, no `Date`), surfaced through `Popover`; arrow/Home/End/PageUp/PageDown, inclusive `min`/`max` that clamp movement and stop month browsing at the bound, a `clearable` reset to `null`, ISO-day value; 16 native behaviour tests + 18 calendar tests, both themes. Fixed English labels, no adjacent-month days, no time of day (see **Time pickers**), no `aria-current`, no `aria-disabled` (an unavailable day leaves the tab order and is named `, unavailable`) |
+| Comboboxes | done | partial | compound parts (`Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`, `ComboboxEmpty`) wrapping GPUix's headless combobox with our ranked option shape; the popup flips once off a snapping trigger and `align="center"` is measured, single and multiple selection by value, disabled rows, empty state, Escape focus restore, pointer selection/toggling and outside-press dismissal; 17 native behaviour tests + ranking suite, both themes. No async options/create-new, no `aria-activedescendant`. **Consumer path (`tier2-choice`, plan `346`):** filtering, value selection, the disabled row, the empty state and the label-on-trigger all hold. Measured gap: the trigger authors `aria-expanded` but **no `role`**, and no accessible node was addressable by its authored `aria-id`, so the expanded state is not exposed — recorded for `components` |
+| Date pickers | done | partial | compound parts (`DatePicker`, `DatePickerTrigger`, `DatePickerContent`, `DatePickerCalendar`) over a month grid (Effect `DateTime`, no `Date`), surfaced through `Popover`; arrow/Home/End/PageUp/PageDown, inclusive `min`/`max` that clamp movement and stop month browsing at the bound, a `clearable` reset to `null`, ISO-day value; 16 native behaviour tests + 18 calendar tests, both themes. Fixed English labels, no adjacent-month days, no time of day (see **Time pickers**), no `aria-current`, no `aria-disabled` (an unavailable day leaves the tab order and is named `, unavailable`). **Measured defect (`tier2-choice`, plan `346`):** with no value, opening focuses the **month head** (`date-day-2026-10-01`), not `today` (`2026-10-17`); with `min="2026-10-17"` the focused day is before the bound. The focus effect falls back to `startOfMonth(viewMonth)` instead of the clamped anchor. The scenario asserts the measured behaviour; the fix belongs to `components` |
 | Time pickers | done | yes | compound parts (`TimePicker`, `TimePickerSegment`, `TimePickerSeparator`, `TimePickerClear`); `HH:mm` 24-hour value (`null` = none), two labelled input segments, typed digits clamp per segment (`99` hours → `23`), arrows carry across the hour and wrap at midnight from one clock function, `minuteStep` for arrows only, blur pads both segments, opt-in `clearable` reset; 10 native behaviour tests + 12 logic tests, both themes. A field, not a trigger/popup (no `aria-valuenow` for a spinbutton); fixed 24-hour/no locale, no `aria-disabled` (disabled is `readOnly` + dimmed), no seconds or timezone |
 | Message scroller | done | partial | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` over a pure pin/unread rule set; follows appended rows and a taller streamed row while pinned, leaves the reader's offset untouched when scrolled up, counts arrivals in the affordance, returns to the end on jump or wheel-down; 10 native behaviour tests + 11 rule tests, both themes. **Every row renders** (`<virtual-list>` takes an item count rather than compound children, so it is not virtualized in v1); the affordance sits beneath the viewport because `position: "absolute"` resolves against the mount parent; no resize observer and no `aria-live` in 0.10.0. **Probe (`message-scroller`, plan `300`):** `<virtual-list>` has no `onScroll` and the `onVisibleRange` payload is a built window with overdraw that lags one gesture; the pin must read `renderer.getListScrollTop(id)` inside the handler, and the runtime follows neither an append nor a growing row (scroll to `scrollToItem(list, count)` only while pinned). **Live (`live-scroller`, plan `301`):** the whole path holds in a real window (45 checks). |
 | Fieldset | done | partial | `Fieldset` + `FieldsetLegend` over a `role="group"` named by the legend; `disabled` reaches `FieldInput` (read-only, out of the tab order, disabled roles) and dims only the legend; 7 native behaviour tests. 0.10.0 has no `fieldset` element and no `aria-disabled`, so the group state is not announced; other controls keep their own `disabled` |

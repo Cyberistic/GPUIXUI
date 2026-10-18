@@ -27,7 +27,7 @@ markdown probe
 collapsible-height probe (`collapsible-height`), the nested-layer probe
 (`nested-layer-dismiss`), the shipped Tier 2 catalogue
 (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
-`tier2-navigation`), the shell
+`tier2-navigation`, `tier2-choice`, `tier2-forms`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -71,7 +71,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (74/74 green); -> 2 on a host with no binding
+# -> 0 here (76/76 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -608,7 +608,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `25/25`.
+exact, and focus/Escape and the close button hold. The live suite is `27/27`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -961,10 +961,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **74/74 green** here (`exit 0`, 2070 checks):
+The suite is **76/76 green** here (`exit 0`, 2164 checks):
 
 ```
-74/74 scenarios passed · capabilities: layout=verified text=verified
+76/76 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1112,19 +1112,21 @@ narrower. Each deviation is deliberate and measured:
   the pinned-grid probe, the virtualized data-grid probe, the
   collapsible-height probe, the nested-layer probe and the variable-row-height
   probe, the grid/wrap layout probe, the typography probe and the **Tier 2
-  catalogue** (`tier2-foundation`, `tier2-navigation`; plan `344`) pass in real
-  GPUix 0.10.0 on this host (74/74), with a written report and screenshots. The **message-scroller** probe
+  catalogue** (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
+  `tier2-navigation`, `tier2-choice`, `tier2-forms`; plans `330`, `344`, `346`)
+  pass in real GPUix 0.10.0 on this host (76/76), with a written report and
+  screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history. The
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 25/25 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 27/27 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
-  with its exact anchor, a painted **find** probe, a **live hover** card and
-  the **message scroller** — including the modal's
+  with its exact anchor, a painted **find** probe, a **live hover** card, the
+  **message scroller**, the **Tier 2 choice and form families** — including the modal's
   Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
   with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
   frame (plan `192`), a pointer-placed menu in a scrolled container (plan

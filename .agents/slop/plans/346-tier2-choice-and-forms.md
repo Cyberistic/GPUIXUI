@@ -1,6 +1,6 @@
 # 346 — Tier 2 choice and form catalogue in the playground
 
-**Status:** planned · **Phase:** C/D · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** C/D · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `155`, `156`, `159`, `188`, `330`,
@@ -286,8 +286,82 @@ Every failing label and exit code goes in §8.
 
 ## 8. Measured results
 
-<!-- Filled after implementation: counts, failing-first layout fixes, mutation
-proofs with exact labels, live parity and any measured consumer facts. -->
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003):
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `tier2-choice` | 60 | pass |
+| `tier2-forms` | 34 | pass |
+
+Suite `74 → 76` scenarios, `2070 → 2164` checks, exit `0`.
+
+Live twins (real 1100×720 window):
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `live-tier2-choice` | 13 | pass |
+| `live-tier2-forms` | 14 | pass |
+
+Live suite `25 → 27`, checks `431 → 458`, exit `0`, two screenshots. Both live
+twins were green on their first full run.
+
+### 8.1 Findings the first runs produced
+
+Two of the three initial failures were real, and one was a view bug:
+
+1. **`DatePicker` focuses the month head when it opens with no value** —
+   measured `date-day-2026-10-01` with `today="2026-10-17"` and
+   `min="2026-10-17"`, so the focused day is before the bound. The focus effect
+   falls back to `startOfMonth(viewMonth)` because `active` is still `None` in
+   that commit; the effect that seeds `active` from `selectedDay ?? todayDay`
+   only renders afterwards. The tab stop (`tabbable`) is correctly clamped, so
+   Tab entry is fine and only the open-focus is wrong. The in-package suite
+   opens with a selected day, which is why it never saw this. Recorded as a
+   cross-team task; both scenarios assert the measured behaviour and must flip
+   to `today` when `components` fixes it.
+2. **`ComboboxTrigger` has no accessible node** — it authors `aria-expanded`
+   but no `role`, so the trigger's authored `aria-id` is absent from the dump
+   and the expanded state is not announced. Recorded as a cross-team a11y task;
+   the scenario asserts the search field's `TextInput` node instead.
+3. **The required marker is not text.** `Field` paints `*` and announces
+   `Required` through the control's `aria-description`; the view's first
+   assertion read the field's subtree text and saw `Project title*`. The check
+   now reads the exposed description and, separately, the painted marker.
+
+### 8.2 Mutation proofs
+
+Each mutation was applied temporarily, built, run with `--only`, and reverted.
+
+| # | Mutation | Failing check |
+| - | -------- | ------------- |
+| M1 | `PopoverContent side="bottom"` → `side="right"` | `the panel opens below its trigger: expected true, got false` |
+| M2 | drop `min="2026-10-17"` from the DatePicker | `Left clamps at the minimum bound: expected "date-day-2026-10-17", got "date-day-2026-09-30"` |
+| M3 | `minuteStep={15}` → `1` | `Up steps the minutes by the step: expected a string containing "time=09:45", got "... time=09:31"` |
+| M4 | drop `disabled` from the shipping `Fieldset` | `the disabled input paints the disabled token: expected "#222730", got "#191D25"` |
+| R1 | `Field error={Option.getOrUndefined(error)}` → `error={undefined}` | `the error is the schema's own message: expected a string containing "Use lowercase words joined by a hyphen", got "Workspace URLLowercase words joined by hyphens"` |
+| R2 | `Form onSubmit` → `() => undefined` | `a valid submit reports once: expected a string containing "submits=1", got "... submits=0 created=none ..."` |
+
+M1 was first attempted as `side="top"`; the runtime's snap flipped the panel
+back below a trigger near the top of the frame, so the check passed. `side="right"`
+is honoured and the below-trigger assertion fails — the proof uses a placement
+the frame can actually satisfy.
+
+### 8.3 Consumer facts
+
+- `Form`'s messages are the schema's own (`validateAll`), and the error summary
+  is painted inside the form root, so `host.text(formTestId)` is the whole
+  workflow readout.
+- A `Fieldset disabled` reaches `FieldInput` only: the input paints
+  `theme.colors.disabled`, refuses an edit and leaves the tab order
+  (`focusNext` jumps from the enabled group to the following control).
+- `SearchInput`'s clear control has a fixed testId (`search-clear`), so one
+  search field per view; the `TimePicker`'s parts are namespaced by its
+  `testId`.
+- A required field's accessible description is `Required` while its label stays
+  clean; the painted `*` is a separate labelled node.
+- The readout is built with `Arr.join(..., " ")` rather than a multi-line
+  template: a newline made the `key=value` parser miss the fields after it.
 
 ## 9. Acceptance
 
