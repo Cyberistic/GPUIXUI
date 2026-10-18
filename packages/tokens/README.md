@@ -357,7 +357,10 @@ the runtime has no `:focus-visible` equivalent. A runnable example lives in
 
 `selectionStyle(theme)` maps the translucent `selection` role to the runtime's
 inherited `selectionColor`; apply it once on the app root. Chrome that must not
-be selectable sets `userSelect: "none"`. A runnable example lives in
+be selectable sets `userSelect: "none"`. A native `<input>`/`<textarea>` is a
+custom element that paints its own fixed wash (`#7C86FF59`) and placeholder
+(`#8F8F8F`) in GPUix 0.10.0 and reads only `theme.caret`, so the theme's wash
+does not reach a native field. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts).
 
 ```tsx
@@ -529,6 +532,11 @@ persisted theme at its own boundary, where `Schema` belongs.
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
   only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.
+- No themeable native field hint or selection: GPUix 0.10.0's
+  `<input>`/`<textarea>` paints both itself (`#8F8F8F` and `#7C86FF59`) and reads
+  only `theme.caret`. The `placeholder` role covers a hint the consumer renders;
+  `selectionColor` covers app text. The fixed grey measures 3.23:1 on the
+  identity light `input`, under the 4.5:1 secondary floor.
 - Exports point at `src/`: the package is private, so a consumer compiles it
   directly and no build step is required. Phase G flips `exports` to `dist` when
   the package is published.

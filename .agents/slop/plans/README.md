@@ -133,6 +133,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [334](./334-secondary-wash-text.md) | The secondary control's label on the washes it paints | F | 097, 309, 318, 332 | done |
 | [335](./335-selected-row-edge.md) | The control edge on the selected row fill | F | 080, 097, 309, 312, 316, 318, 327, 334 | done |
 | [336](./336-quoted-figure-guards.md) | The catalogue's last unpinned tightest figures | F | 071, 075, 326, 335 | done |
+| [337](./337-native-field-reach.md) | The native field's own hint and selection | F | 069, 317, 319, 331, 335 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -951,6 +952,22 @@ its 15% wash. `docs.test.ts` now derives each figure, its theme label and the
 scrim's percentage from the shipped themes, so a palette edit cannot leave the
 page quoting a ratio the package no longer produces. No token, pair, floor or
 document value changes.
+
+337 closes the two reach claims the 069/317 audits left one level too broad. The
+catalogue said native text selection is themeable through `selectionColor` and
+listed `placeholder` as text on the `input` fill; both hold for text the library
+paints itself, not for a GPUix `<input>`. At the pinned
+`@gpuix/native@0.10.0` tag (`9fcd628`) the editor paints its placeholder and
+selection with constants — `rgba(0x8f8f8fff)` and `rgba(0x7c86ff59)` — takes
+typed text from `style.color`, and reads the `theme` prop only for `caret`. The
+measured consequence is a real floor miss the contract cannot see: the fixed
+placeholder is **3.23:1** on the identity light `input` and 4.08–4.38:1 on the
+dark platform inputs, under the 4.5:1 secondary floor, while the designed
+`placeholder` role clears 5:1. The reference and the README now separate the two
+paths, `selectionStyle`'s JSDoc states the field limit, two `docs.test.ts` cases
+hold the claims, and the consumer fix — a `<text>` hint over the input, or the
+documented grey — is recorded for `primitives`. No colour, pair or floor
+changes.
 
 ### Reference adoption (block `200–299`)
 

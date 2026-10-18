@@ -163,7 +163,8 @@ export interface SelectionStyle {
  * wash once on its root; a chrome subtree that must not be selectable sets
  * `userSelect: "none"` itself. The wash is translucent, so selected text keeps
  * the theme's foreground contrast on the canvas and card the contrast contract
- * measures.
+ * measures. A native `<input>`/`<textarea>` paints its own fixed wash in GPUix
+ * 0.10.0 and does not read this property, so a field does not inherit it.
  *
  * @example
  * ```tsx

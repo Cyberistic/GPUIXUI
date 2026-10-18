@@ -203,7 +203,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
-| `placeholder` | `#66707F` | `#858F9F` | placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
+| `placeholder` | `#66707F` | `#858F9F` | a hint the consumer renders on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
@@ -959,8 +959,8 @@ A runnable example lives in
 ## Text selection
 
 GPUix 0.10.0 exposes `selectionColor` and `userSelect` as inherited `StyleDesc`
-properties, so native text selection is themeable. `selectionStyle(theme)` maps
-the `selection` role to the property:
+properties, so text the library paints itself is themeable. `selectionStyle(theme)`
+maps the `selection` role to the property:
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";
@@ -1007,6 +1007,28 @@ const chrome = { userSelect: "none" } as const;
 
 A runnable example lives in
 [`src/selection.example.ts`](../packages/tokens/src/selection.example.ts).
+
+### Native text fields
+
+A GPUix `<input>`/`<textarea>` is a custom element: it paints its own content, and
+the pinned runtime fixes two of those paints. The editor draws its placeholder in
+`#8F8F8F` (`rgba(0x8f8f8fff)`) and its selection in `#7C86FF59`
+(`rgba(0x7c86ff59)`); it reads the `theme`
+prop for `caret` alone, takes typed text from the element's `style.color`
+(`inputForeground`), and never reads `textFaint`, `accent` or the inherited
+`selectionColor`.
+
+The consequence is measurable: the fixed placeholder is **3.23:1** on the
+identity light `input` fill and 4.08–4.38:1 on the dark platform inputs, under
+the 4.5:1 secondary floor, while the designed `placeholder` role clears 5:1 on
+the same fills. The `placeholder` pairs therefore describe a hint the consumer
+renders itself — the transparent fields (`SearchInput`, `InlineEdit`,
+`ColorPicker`, `TagInput`, `MentionInput`) paint one on a `Surface` tone — and
+the selection pairs describe app text, not selected text inside a native field.
+A field that must carry the theme's hint colour draws a `<text>` hint over the
+input and hides the native placeholder; until a consumer does that, the native
+grey and wash stand. Evidence: `@gpuix/native@0.10.0` (`9fcd628`),
+`packages/native/src/custom_elements/input.rs`.
 
 ### Scrollbars
 
@@ -1699,6 +1721,11 @@ see [Custom typefaces](#custom-typefaces-are-unavailable-in-0100).
   `scrollbarWidth` (both are unreleased on GPUix main), so `scrollbar` is
   reserved for the release that does. Text selection **is** supported through
   `selectionColor`; see [Text selection](#text-selection).
+- No themeable native field placeholder or selection: GPUix 0.10.0's
+  `<input>`/`<textarea>` paints both itself (`#8F8F8F` and `#7C86FF59`) and
+  reads only `theme.caret`. The `placeholder` role covers a hint the consumer
+  renders, and `selectionColor` covers app text; see
+  [Native text fields](#native-text-fields).
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
   only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.

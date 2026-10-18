@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 104/137
+`[x]` `[████████░░]` 105/138
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -253,6 +253,14 @@ edge, the AAA scrim and its wash strength) were computed once by hand and no
 test held them, so a palette edit could leave the page quoting a number the
 package no longer produces while every pair still passed; `docs.test.ts` now
 derives each figure, its theme label and the scrim's percentage (plan 336)
+`[x]` Correct the two runtime-reach claims that were one level too broad — the
+reference said `selectionColor` themes native text selection and listed
+`placeholder` as painted on the `input` fill, but pinned `@gpuix/native@0.10.0`
+(`9fcd628`) `<input>` paints its own fixed placeholder (`#8F8F8F`) and
+selection (`#7C86FF59`), takes typed text from `style.color` and reads only
+`theme.caret`; the fixed grey measures 3.23:1 on the light `input`, the docs and
+README now separate the paths, `selectionStyle`'s JSDoc states the limit, and
+two `docs.test.ts` cases hold the evidence (plan 337)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the
@@ -288,6 +296,15 @@ visible edge (`primitives/src/core/selection.ts` `emptyBorder`, used at
 `selectionBoxStyle` and `switchTrackStyle`). It should paint the designed
 `borderStrong` control boundary, which plan 084 already holds to 3:1 (4.5:1 at
 AAA) on the quiet panel and the row washes (owner: `primitives`; plans 084, 312)
+`[ ]` Cross-team: `primitives` stops trusting `nativeTextTheme` for a native
+field's hint and selection — pinned `@gpuix/native@0.10.0` (`9fcd628`)
+`<input>`/`<textarea>` reads only `theme.caret`, hardcodes the placeholder
+(`#8F8F8F`, 3.23:1 on the light `input`, under the 4.5:1 secondary floor) and
+the selection wash (`#7C86FF59`), and takes typed text from `style.color`, so
+`textFaint`, `textMuted`, `bg`, `accent` and the inherited `selectionColor` do
+not reach the field; pass `selectionStyle(theme)` on the field and either draw
+the hint as a `<text>` overlay with the `placeholder` role or document the
+runtime grey (owner: `primitives`; plan 337)
 `[ ]` Cross-team: `docs-site` moves the platform toggle from the pre-063
 `platformTheme(base, platform)` API to `getPlatformTheme(platform, mode,
 contrast)`, deletes its structural `packages/tokens` copy (still the 47-role

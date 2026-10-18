@@ -30,6 +30,12 @@
  * the invalid field edge while the pair-count history still ended at 262. Both
  * are derived here from `inactiveSurfaces` and `contrastPairs`, so the document
  * cannot state a size the package does not ship.
+ *
+ * Plan 337 guards the two runtime-reach claims that were one level too broad:
+ * `selectionColor` themes text the library paints, not a native `<input>`, and
+ * the `placeholder` role is a consumer-rendered hint. The pinned editor paints
+ * its own fixed placeholder and wash and reads only `theme.caret`; these cases
+ * hold both documents and the `selectionStyle` JSDoc to that evidence.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -749,6 +755,27 @@ describe("docs/tokens.md runtime reach", () => {
   it("records the scrollbar tint the pinned runtime lacks", () => {
     expect(markdown).toContain("`scrollbarColor`");
     expect(markdown).toContain("`scrollbarWidth`");
+  });
+
+  it("records the native placeholder and selection the editor paints itself", () => {
+    expect(markdownProse).toContain(
+      "The editor draws its placeholder in `#8F8F8F` (`rgba(0x8f8f8fff)`)",
+    );
+    expect(markdownProse).toContain("and its selection in `#7C86FF59`");
+    expect(markdownProse).toContain("never reads `textFaint`, `accent`");
+    expect(markdownProse).toContain("`@gpuix/native@0.10.0` (`9fcd628`)");
+    expect(markdownProse).toContain("**3.23:1** on the identity light `input`");
+  });
+
+  it("keeps the native-field limitation in the selectionStyle JSDoc", () => {
+    const styles = readFileSync(
+      new URL("./styles.ts", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+    expect(styles).toContain(
+      "A native `<input>`/`<textarea>` paints its own fixed wash in GPUix",
+    );
+    expect(styles).toContain("does not read this property");
   });
 });
 
