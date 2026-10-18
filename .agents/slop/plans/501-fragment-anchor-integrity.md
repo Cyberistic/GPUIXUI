@@ -4,7 +4,8 @@
 **Depends on:** 410 (site), 438 (internal-link integrity), 439 (built-site
 smoke), 441 (API index), 499 (heading outline)
 **Owner:** docs-site
-**Status:** planned
+**Status:** implemented — `smoke:build` checks every internal fragment; both
+directions measured in §7.
 
 ## 1. The bug this closes
 
@@ -220,5 +221,58 @@ must fail with the message above before the guard counts as done.
 
 ## 7. Results
 
-*(filled in by the executor: commands, counts, the two failing runs and their
-exact messages, then the restored green run.)*
+Measured on `agent/docs-site`, 2026-10-18.
+
+**Baseline** (`nub run --filter docs smoke:build`, then `--no-build` against the
+same build) — exit `0`:
+
+```
+smoke: sitemap 90 pages
+smoke: pages 90 checked
+smoke: links 109 checked
+smoke: anchors 1143 checked
+smoke: search checked
+smoke: not-found checked
+smoke: robots checked
+smoke: ok
+```
+
+1 143 anchors is the deduped census: every page's table of contents, every
+heading's own anchor link, the two prose fragment links and the 66 generated
+API-index links. One request per sitemap page now feeds the page audit, the link
+census and the id map; the crawl makes **one** page request per page, not two
+(`mapLimit` over `paths`), so the check costs nothing extra.
+
+**Direction 1 — a generated link loses its target.** `#api-reference` →
+`#api-references` in `src/components/api-index.tsx`, rebuilt, crawl:
+
+```
+FAIL /docs/api-reference: #api-references has no element with that id in /docs/components/button
+…
+FAIL /docs/api-reference: #api-references has no element with that id in /docs/components/keycap
+smoke: 66 problem(s)
+```
+
+Exit `1`, one problem per documented component. Restored; green again.
+
+**Direction 2 — a heading is renamed under a prose link.**
+`## What is verified` → `## What was verified` in
+`content/docs/patterns/settings-form.mdx` (the page's own
+`[What is verified](#what-is-verified)` link), rebuilt, crawl:
+
+```
+FAIL /docs/patterns/settings-form: #what-is-verified has no element with that id in /docs/patterns/settings-form
+smoke: 1 problem(s)
+```
+
+Exit `1`. Restored; the crawl reports 1 143 anchors and exits `0` again.
+
+**Regressions:** `nub run --filter docs test` 56 files / 369 tests green,
+`check-types` green, `build` green, and the repo gates `nub run check`,
+`nub run lint` and `nub run test` all exit `0`.
+
+**False positive recorded:** the Effect enforcer flags the boundary
+`try/catch` around `decodeURIComponent` and the script's `console.*`/
+`.sort()` calls. `apps/docs` deliberately has no Effect runtime (bundle
+boundary enforced by `src/architecture.test.ts`), and every existing script in
+`apps/docs/scripts` is plain Node with the same conventions; no change made.

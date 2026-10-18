@@ -151,16 +151,52 @@ const searchUrls = (body: string): ReadonlyArray<string> => {
     : [];
 };
 
-const auditPage = async (
-  baseUrl: string,
+/** Element ids in rendered HTML; a script body is data, not markup. */
+const elementIds = (html: string): ReadonlySet<string> =>
+  new Set(
+    [
+      ...html
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .matchAll(/<[a-z][^>]*\sid="([^"]+)"/g),
+    ].flatMap((match) => (match[1] === undefined ? [] : [match[1]])),
+  );
+
+interface FragmentLink {
+  /** The sitemap path that writes the link. */
+  readonly source: string;
+  /** The path the fragment is checked in. */
+  readonly target: string;
+  readonly fragment: string;
+}
+
+/** `href="#x"` and `href="/docs/…#x"`; external links and bare `#` are not ours. */
+const fragmentLinks = (
+  source: string,
+  html: string,
+): ReadonlyArray<FragmentLink> =>
+  [...html.matchAll(/\bhref="([^"]*#[^"]*)"/g)].flatMap((match) => {
+    const raw = match[1];
+    if (raw === undefined || raw.startsWith("//")) return [];
+    const [path = "", fragment = ""] = raw.split("#");
+    if (fragment === "" || /^[a-z][a-z0-9+.-]*:/i.test(raw)) return [];
+    const target = path === "" ? source : path;
+    if (!target.startsWith("/")) return [];
+    try {
+      return [{ source, target, fragment: decodeURIComponent(fragment) }];
+    } catch {
+      return [{ source, target, fragment }];
+    }
+  });
+
+const auditPage = (
   path: string,
-): Promise<ReadonlyArray<Problem>> => {
+  page: Fetched | null,
+): ReadonlyArray<Problem> => {
   const problems: Problem[] = [];
   const fail = (what: string): void => {
     problems.push({ where: path, what });
   };
 
-  const page = await request(baseUrl + path);
   if (page === null) {
     fail("request failed");
     return problems;
@@ -260,23 +296,57 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
   }
   console.log(`smoke: sitemap ${paths.length} pages`);
 
-  const pageProblems = await mapLimit(paths, CONCURRENCY, (path) =>
-    auditPage(baseUrl, path),
-  ).then((groups) => groups.flat());
+  const fetched = await mapLimit(paths, CONCURRENCY, async (path) => ({
+    path,
+    page: await request(baseUrl + path),
+  }));
+  const pages = fetched.filter(
+    (entry): entry is { path: string; page: Fetched } =>
+      entry.page !== null && entry.page.status === 200,
+  );
+
+  const pageProblems = fetched.flatMap(({ path, page }) =>
+    auditPage(path, page),
+  );
   problems.push(...pageProblems);
   console.log(`smoke: pages ${paths.length} checked`);
 
-  const html = await mapLimit(paths, CONCURRENCY, (path) =>
-    request(baseUrl + path),
-  );
   const targets = [
-    ...new Set(
-      html.flatMap((page) => (page === null ? [] : internalTargets(page.body))),
-    ),
+    ...new Set(pages.flatMap(({ page }) => internalTargets(page.body))),
   ].sort();
   const linkProblems = await auditLinks(baseUrl, targets);
   problems.push(...linkProblems);
   console.log(`smoke: links ${targets.length} checked`);
+
+  const ids = new Map(
+    pages.map(({ path, page }) => [path, elementIds(page.body)] as const),
+  );
+  const anchors = [
+    ...new Map(
+      pages
+        .flatMap(({ path, page }) => fragmentLinks(path, page.body))
+        .map(
+          (link) =>
+            [`${link.source}→${link.target}#${link.fragment}`, link] as const,
+        ),
+    ).values(),
+  ];
+  const anchorProblems = anchors.flatMap(({ source, target, fragment }) => {
+    const targetIds = ids.get(target);
+    // A target outside the sitemap is not a claim this check makes; the link
+    // audit already proves it answers below 400.
+    if (targetIds === undefined) return [];
+    return targetIds.has(fragment)
+      ? []
+      : [
+          {
+            where: source,
+            what: `#${fragment} has no element with that id in ${target}`,
+          },
+        ];
+  });
+  problems.push(...anchorProblems);
+  console.log(`smoke: anchors ${anchors.length} checked`);
 
   const searchChecks = [
     {

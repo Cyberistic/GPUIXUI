@@ -471,13 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 101/101
+`[x]` `[██████████]` 102/102
 
-`[~]` **A fragment link lands on a heading (plan 501)** — plan 438 stripped the
+`[x]` **A fragment link lands on a heading (plan 501)** — plan 438 stripped the
       fragment before resolving a link, so a renamed heading silently broke
       every generated `/docs/components/<slug>#api-reference` link; the
       production crawl now compares each internal fragment with the ids the
-      destination page renders.
+      destination page renders (1 143 anchors over 90 pages), and both a broken
+      API index (66 failures) and a renamed heading fail by name.
 
 `[x]` **A component's exported symbol reaches its page (plan 500)** — plan 431
       ranked titles only, so `Spinner`, `ScrollArea`, `TextArea`, `ButtonGroup`,
