@@ -511,6 +511,17 @@ export interface AsyncSmokeHost {
   readonly selectedText: () => Effect.Effect<string | null, SmokeHostError>;
   readonly clearSelection: () => Effect.Effect<void, SmokeHostError>;
   readonly click: (testId: string) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Clicks window coordinates.
+   *
+   * The automation protocol targets a locator by its centre, so a point is the
+   * only way to press a surface that owns no `testId` — a modal veil, empty
+   * space, or a gesture that ends outside every hitbox.
+   */
+  readonly clickWindow: (
+    x: number,
+    y: number,
+  ) => Effect.Effect<void, SmokeHostError>;
   /** Right-clicks `testId`'s centre, delivering `onAuxClick` with `isRightClick`. */
   readonly rightClick: (testId: string) => Effect.Effect<void, SmokeHostError>;
   readonly hover: (testId: string) => Effect.Effect<void, SmokeHostError>;

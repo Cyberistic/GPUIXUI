@@ -87,6 +87,8 @@ import { tier2MenuScenario } from "./tier2-menu.js";
 import { tier2NavigationScenario } from "./tier2-navigation.js";
 import { tier2ToastScenario } from "./tier2-toast.js";
 import { tier2ChoiceScenario } from "./tier2-choice.js";
+import { tier2EditingScenario } from "./tier2-editing.js";
+import { tier2FlowScenario } from "./tier2-flow.js";
 import { tier2FormsScenario } from "./tier2-forms.js";
 import { declaredStylesScenario, textTruncationScenario } from "./styles.js";
 
@@ -217,6 +219,8 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tier2ToastScenario,
   tier2ChoiceScenario,
   tier2FormsScenario,
+  tier2EditingScenario,
+  tier2FlowScenario,
   declaredStylesScenario,
   textTruncationScenario,
 ];

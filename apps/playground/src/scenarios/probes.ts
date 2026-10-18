@@ -91,6 +91,16 @@ export const node = (
 export const painted = (ctx: Smoke.SmokeContext, testId: string) =>
   Option.fromNullishOr(ctx.host.bounds(testId));
 
+/** The host element type behind `testId`, or `"none"` so a failure names it. */
+export const elementTypeOf = (
+  ctx: Smoke.SmokeContext,
+  testId: string,
+): string =>
+  Option.getOrElse(
+    Option.fromNullishOr(ctx.host.elementType(testId)),
+    () => "none",
+  );
+
 /** An element's applied style, or `None` when it never painted. */
 export const styleOf = (ctx: Smoke.SmokeContext, testId: string) =>
   Option.fromNullishOr(ctx.host.paintedStyle(testId));

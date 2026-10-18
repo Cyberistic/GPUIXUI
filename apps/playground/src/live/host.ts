@@ -171,6 +171,10 @@ export const createHost = (
       app.call("clearSelection", {}).then(() => undefined),
     ),
   click: (testId) => verb(`click ${testId}`, () => at(app, testId).click()),
+  clickWindow: (x, y) =>
+    verb(`clickWindow ${x},${y}`, () =>
+      app.mouse.click({ x, y }).then(() => undefined),
+    ),
   rightClick: (testId) =>
     verb(`rightClick ${testId}`, () =>
       app.mouse.click(at(app, testId), { button: 2 }),

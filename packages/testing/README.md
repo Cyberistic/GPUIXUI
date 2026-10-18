@@ -109,8 +109,12 @@ returns the **same** `SmokeReport`, which is what lets a live run reuse
 `Report.formatReport` and `Report.exitCode` instead of inventing a second log.
 
 `AsyncSmokeHost` is deliberately **smaller** than `SmokeHost`: bounds, text,
-painted text, input (click/right-click/hover/keys/wheel/drag), `waitFor`, scroll offsets,
-focus, selection, highlights, list anchors, screenshots and the motion clock.
+painted text, input (click/click-at-coordinates/right-click/hover/keys/wheel/drag),
+`waitFor`, scroll offsets, focus, selection, highlights, list anchors, screenshots
+and the motion clock. `clickWindow(x, y)` is the point form: the automation
+protocol resolves a locator to its centre, so a surface that owns no `testId`
+(a modal veil) or an element whose type changes under one `testId` (an inline
+editor) can only be pressed by coordinates (plan `347` §8.1).
 
 Two layers provide those verbs. The automation protocol supplies input, bounds,
 text, scroll offsets and screenshots; the live runner **owns the renderer it

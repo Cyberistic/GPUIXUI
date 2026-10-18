@@ -43,6 +43,8 @@ import { tier2NavigationScenario } from "../scenarios/tier2-navigation.js";
 import { tier2ToastScenario } from "../scenarios/tier2-toast.js";
 import { tier2ChoiceScenario } from "../scenarios/tier2-choice.js";
 import { EMAIL_MESSAGE, tier2FormsScenario } from "../scenarios/tier2-forms.js";
+import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
+import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -2508,6 +2510,329 @@ const tier2Forms: LiveScenario = {
     }),
 };
 
+const tier2Editing: LiveScenario = {
+  id: "live-tier2-editing",
+  title:
+    "Live Tier 2: InlineEdit, TagInput, HotkeyRecorder, MentionInput and Drawer",
+  capability: "tier2",
+  view: tier2EditingScenario.view,
+  ready: "tier2-editing-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-editing-readout", "name=Docs");
+
+      // 1. InlineEdit: the display→editor swap, a real edit and a cancel.
+      //
+      // Measured 2026-10-18: the automation locator's `click(testId)` resolves
+      // the pre-swap display node, so the swapped editor only takes a live
+      // pointer focus from a coordinate click inside it — which is what a user
+      // does anyway. React's `onBlur` does not run for a native focus change in
+      // a window (the same gap plan `345` measured for `onFocus`), so the
+      // blur-commit path stays headless; the keyboard commits and cancels work.
+      yield* ctx.host.click("ws-name");
+      yield* settle;
+      yield* ctx.expectSome(
+        "the live display swaps to an editor",
+        Option.fromNullishOr(yield* ctx.host.bounds("ws-name")),
+      );
+      yield* ctx.expectEqual(
+        "the new editor is empty because its text is native",
+        yield* textOf(ctx, "ws-name"),
+        "",
+      );
+      yield* waitForFocus(ctx, "ws-name");
+      const editor = yield* boxOf(ctx, "ws-name");
+      yield* ctx.host.clickWindow(editor.x + 200, editor.y + editor.height / 2);
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("l i v e");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "name=live commits=1");
+      yield* ctx.expectContains(
+        "a live inline edit commits once",
+        yield* textOf(ctx, "ws-name"),
+        "live",
+      );
+      yield* ctx.expectEqual(
+        "the committed display takes focus back live",
+        yield* focusedOf(ctx),
+        "ws-name",
+      );
+
+      yield* ctx.host.click("ws-name");
+      yield* settle;
+      const again = yield* boxOf(ctx, "ws-name");
+      yield* ctx.host.clickWindow(again.x + 200, again.y + again.height / 2);
+      yield* settle;
+      yield* ctx.host.key("x");
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Escape discards the live draft",
+        yield* textOf(ctx, "tier2-editing-readout"),
+        "name=live commits=1",
+      );
+      yield* ctx.expectContains(
+        "Escape returns the live display",
+        yield* textOf(ctx, "ws-name"),
+        "live",
+      );
+
+      // 2. TagInput: a typed comma adds a live token.
+      yield* ctx.host.click("tag-field");
+      yield* settle;
+      yield* ctx.host.key("d o c s ,");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "tags=design,docs");
+      yield* boxOf(ctx, "chip-docs");
+
+      // 3. HotkeyRecorder: the chord is captured, then cleared.
+      yield* ctx.host.click("hotkey");
+      yield* settle;
+      yield* waitForText(ctx, "hotkey", "Press keys");
+      yield* ctx.host.key("ctrl-shift-k");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "hotkey=ctrl+shift+k");
+      yield* ctx.host.click("hotkey-clear");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "hotkey=none");
+      yield* ctx.expectContains(
+        "clearing the chord returns the placeholder live",
+        yield* textOf(ctx, "hotkey"),
+        "Click to record",
+      );
+
+      // 4. MentionInput: `@` opens, arrows move, Enter inserts.
+      yield* ctx.host.click("comment");
+      yield* settle;
+      yield* ctx.host.key("@");
+      yield* settle;
+      yield* ctx.host.waitFor("mention-ana");
+      yield* ctx.host.key("a n");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "mentions=anna");
+      yield* ctx.expectContains(
+        "Enter inserts the highlighted mention live",
+        yield* textOf(ctx, "tier2-editing-readout"),
+        "mentions=anna",
+      );
+      yield* ctx.expectEqual(
+        "inserting closes the candidate list live",
+        (yield* ctx.host.bounds("mention-ana")) === null,
+        true,
+      );
+
+      // 5. Drawer: edge placement, focus, the trap and dismissal.
+      yield* ctx.host.click("drawer-open");
+      yield* settle;
+      yield* ctx.host.waitFor("drawer-surface");
+      const surface = yield* boxOf(ctx, "drawer-surface");
+      yield* ctx.expectEqual(
+        "the live drawer is flush to the right edge",
+        surface.x + surface.width,
+        1100,
+      );
+      yield* ctx.expectEqual(
+        "the live drawer keeps its md width",
+        surface.width,
+        400,
+      );
+      yield* ctx.expectEqual(
+        "the live drawer spans the window height",
+        surface.height,
+        720,
+      );
+      yield* waitForFocus(ctx, "drawer-surface");
+      yield* ctx.host.key("tab");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Tab moves focus inside the live drawer",
+        yield* focusedOf(ctx),
+        "drawer-cancel",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "drawer=closed");
+      yield* waitForFocus(ctx, "drawer-open");
+
+      yield* ctx.host.click("drawer-open");
+      yield* settle;
+      yield* ctx.host.waitFor("drawer-surface");
+      yield* ctx.host.clickWindow(12, 12);
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "drawer=closed");
+      yield* ctx.expectEqual(
+        "a press on the live veil closes the drawer",
+        (yield* ctx.host.bounds("drawer-surface")) === null,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Editing.id}.png`);
+    }),
+};
+
+const tier2Flow: LiveScenario = {
+  id: "live-tier2-flow",
+  title:
+    "Live Tier 2: Stepper, Timeline, Countdown, KeyboardShortcuts, Carousel, ColorPicker and NavigationMenu",
+  capability: "tier2",
+  view: tier2FlowScenario.view,
+  ready: "tier2-flow-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-flow-readout", "step=2");
+
+      // 1. Stepper: the consumer's control moves the live value.
+      yield* ctx.host.click("step-next");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "step=3");
+
+      // 2. Timeline: order and the current event's copy.
+      const build = yield* boxOf(ctx, "timeline-build");
+      const tests = yield* boxOf(ctx, "timeline-tests");
+      const deploy = yield* boxOf(ctx, "timeline-deploy");
+      yield* ctx.expectEqual(
+        "the live events stack in declaration order",
+        build.y < tests.y && tests.y < deploy.y,
+        true,
+      );
+      yield* ctx.expectContains(
+        "the live timeline paints its description",
+        yield* textOf(ctx, "timeline-tests"),
+        "412 tests, 0 failures",
+      );
+
+      // 3. Countdown: the application's clock drives the display.
+      yield* ctx.host.click("countdown-tick");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "remaining=29000");
+      yield* waitForText(ctx, "countdown", "00:29");
+      yield* ctx.host.click("countdown-expire");
+      yield* settle;
+      yield* waitForText(ctx, "countdown", "00:00");
+
+      // 4. KeyboardShortcuts: the platform glyphs are explicit, not host-dependent.
+      yield* ctx.expectContains(
+        "the darwin row draws command glyphs live",
+        yield* textOf(ctx, "shortcut-palette"),
+        "⌘⇧P",
+      );
+      yield* ctx.expectContains(
+        "the linux row draws named modifiers live",
+        yield* textOf(ctx, "shortcut-palette-linux"),
+        "CtrlShiftP",
+      );
+
+      // 5. Carousel: controls, the keyboard contract and the hiding mechanism.
+      yield* boxOf(ctx, "slide-0");
+      yield* ctx.expectEqual(
+        "an inactive slide is still painted live (display: none is a no-op on 0.10.0)",
+        (yield* ctx.host.bounds("slide-2")) !== null,
+        true,
+      );
+      yield* ctx.host.click("slide-next");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "slide=1");
+      yield* ctx.host.click("slide-next");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "slide=2");
+      yield* ctx.host.click("slide-next");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live Next control clamps at the last slide",
+        yield* textOf(ctx, "tier2-flow-readout"),
+        "slide=2",
+      );
+      yield* ctx.host.key("home");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "slide=0");
+
+      // 6. ColorPicker: a swatch, then a normalising hex commit.
+      yield* ctx.host.click("picker-swatch-2");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "color=#");
+      const swatchColor = yield* textOf(ctx, "tier2-flow-readout");
+      yield* ctx.expectEqual(
+        "a swatch replaces the initial colour live",
+        Str.includes("color=#000000")(swatchColor),
+        false,
+      );
+      yield* ctx.host.click("picker-hex");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* ctx.host.key("a b c");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "color=#aabbcc");
+
+      // 7. NavigationMenu: one panel, pointer, keyboard and dismissal.
+      yield* ctx.host.click("trigger-platform");
+      yield* settle;
+      yield* ctx.host.waitFor("panel-platform");
+      const panel = yield* boxOf(ctx, "panel-platform");
+      const trigger = yield* boxOf(ctx, "trigger-platform");
+      yield* ctx.expectEqual(
+        "the live panel opens below its trigger",
+        panel.y >= trigger.y + trigger.height,
+        true,
+      );
+      yield* ctx.host.click("trigger-pricing");
+      yield* settle;
+      yield* ctx.host.waitFor("panel-pricing");
+      yield* ctx.expectEqual(
+        "exactly one live panel is open",
+        (yield* ctx.host.bounds("panel-platform")) === null,
+        true,
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Escape closes the live panel",
+        (yield* ctx.host.bounds("panel-pricing")) === null,
+        true,
+      );
+      yield* waitForFocus(ctx, "trigger-pricing");
+      yield* ctx.host.key("left");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Left moves focus between live triggers",
+        yield* focusedOf(ctx),
+        "trigger-platform",
+      );
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.waitFor("panel-platform");
+      yield* waitForFocus(ctx, "panel-platform");
+      yield* ctx.host.click("link-overview");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-flow-readout", "picked=overview");
+      yield* ctx.expectEqual(
+        "choosing a live link closes the panel",
+        (yield* ctx.host.bounds("panel-platform")) === null,
+        true,
+      );
+      yield* ctx.host.click("trigger-platform");
+      yield* settle;
+      yield* ctx.host.waitFor("panel-platform");
+      yield* ctx.host.click("flow-outside");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "an outside press closes the live nav",
+        (yield* ctx.host.bounds("panel-platform")) === null,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Flow.id}.png`);
+    }),
+};
+
 const replace: LiveScenario = {
   id: "live-replace",
   title: "Live replace: a controlled rewrite, its caret and the washes",
@@ -2833,5 +3158,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Navigation,
   tier2Choice,
   tier2Forms,
+  tier2Editing,
+  tier2Flow,
   replace,
 ];
