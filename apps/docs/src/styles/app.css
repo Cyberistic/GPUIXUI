@@ -73,6 +73,16 @@ html[data-platform] {
 }
 
 /*
+ * Inline code is prose, not a scrollable block. Fumadocs clips the article
+ * horizontally, so an unbreakable suite path in a sentence loses its tail at a
+ * phone width instead of scrolling (plan 502). Code blocks keep their own
+ * horizontal scroll; only inline code wraps.
+ */
+:where(:not(pre) > code) {
+  overflow-wrap: anywhere;
+}
+
+/*
  * The site's own interactive elements focus with the library's ring token in
  * both themes (plan 496). `:where` keeps specificity at zero, so Fumadocs'
  * component styles still win where it styles focus itself.

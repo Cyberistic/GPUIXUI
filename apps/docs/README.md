@@ -21,6 +21,7 @@ nub run --filter docs test          # registry, IA, search, theme and preview te
 nub run --filter docs smoke:build   # build, serve and crawl the production output
 nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
 nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
+nub run --filter docs smoke:responsive # 390 px: no sideways scroll and no clipped column
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run --filter docs api:values    # regenerate the generated Values API index
 nub run --filter docs studio        # author the MDX in Fumadocs Studio (dev-only)
@@ -194,6 +195,35 @@ Two pages cover both layouts and the 404 path: `/docs/components/button` in dark
 (`#nd-page`), `/` in light (`#main-content`), and an unknown docs slug in dark
 (the not-found body). Exit `1` names the step that broke, exit `2` means Chrome
 or the server was missing — never a pass.
+
+## Responsive layout
+
+`smoke:responsive` gives the site a **390×844** layout viewport through CDP
+(`Emulation.setDeviceMetricsOverride`, so the media queries see it) and checks
+six page shapes: the landing page, the introduction, the component index, a
+component page with generated tables and source includes, the API reference and
+Theming. For each it asserts:
+
+1. `documentElement.scrollWidth` stays at the viewport — the page never scrolls
+   sideways;
+2. the article (`#nd-page`, or `#main-content` on the landing page) has
+   `scrollWidth === clientWidth` — no block is clipped. Fumadocs wraps the
+   article in `overflow-x: clip`, so a wide block does **not** grow the
+   document: it silently loses its tail. That second assertion found a real
+   bug (plan 502): the tier-V suite path on the Buttons page was 423 px wide in
+   a 390 px column. Inline code now wraps (`:not(pre) > code` in
+   `src/styles/app.css`); code blocks keep their own horizontal scroll.
+
+It then opens the mobile sidebar with `button[aria-label="Open Sidebar"]`, waits
+for a visible `/docs/installation` link, clicks it and proves the route
+changes. Every docs page shares the shell, so the navigation is checked once.
+Exit `1` names the page and the measurement, exit `2` means Chrome or the
+server was missing — never a pass.
+
+```sh
+nub run --filter docs build
+nub apps/docs/scripts/smoke-responsive.ts --no-build
+```
 
 
 

@@ -66,12 +66,17 @@ New file `apps/docs/scripts/smoke-responsive.ts`, cloned from
   {
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
-    body: document.body.scrollWidth,
+    container: { id, client, scroll },   // #nd-page, or #main-content on /
   }
   ```
 
-  A failure is `document > viewport + 1` (a 1 px rounding tolerance):
-  `scrolls horizontally (421 > 390)`.
+  Two failures, both by page:
+  `scrolls horizontally (… > 390)` when `document > viewport + 1`, and
+  `clips content in #nd-page (… > …)` when the container's
+  `scrollWidth > clientWidth + 1`. The second one matters because Fumadocs'
+  `#nd-docs-layout` has `overflow-x: clip`: a wide block does not grow the
+  document, it silently loses its tail — the measured failure this plan found
+  (see §3).
 - **The mobile navigation works** (checked once, on the buttons page, because
   every docs page shares the shell): the resting visible `/docs` link count is
   read; `button[aria-label="Open Sidebar"]` is clicked; the check waits until
@@ -80,7 +85,29 @@ New file `apps/docs/scripts/smoke-responsive.ts`, cloned from
   that never opens and a link that does not navigate each fail by name.
 - Prints `smoke: <path> responsive checked`, then `smoke: ok` when clean.
 
-### 2.3 Wiring
+### 2.3 The layout fix the check found
+
+The check's first run on the Buttons page reported `clips content in #nd-page
+(476 > 390)`. Two long suite paths were inline code in prose:
+
+- `packages/primitives/runtime/controls.runtime.test.tsx` in the tier-V notice
+  (`RuntimeCoverage`);
+- `packages/primitives/runtime/examples.runtime.test.tsx` in a sentence on the
+  page.
+
+`src/styles/app.css` gains one rule, so **every** page's inline code may wrap
+and no page needs a bespoke class:
+
+```css
+:where(:not(pre) > code) {
+  overflow-wrap: anywhere;
+}
+```
+
+Code blocks stay unwrapped and keep their own horizontal scroll. `theme.test.ts`
+pins the rule (the file already pins the focus and skip-target rules).
+
+### 2.4 Wiring
 
 - `apps/docs/package.json`: `"smoke:responsive": "nub scripts/smoke-responsive.ts"`.
 - `content/docs/contributing.mdx`: a sixth row — "no page scrolls sideways at a
@@ -98,14 +125,19 @@ The property is only observable in a layout engine, so the smoke is the test
 
 1. **Baseline.** `nub run --filter docs build && nub
    apps/docs/scripts/smoke-responsive.ts --no-build` → exit `0`, six
-   `responsive checked` lines.
-2. **A page too wide.** Add `<div style={{ width: "600px" }} />` at the end of
-   `content/docs/components/button.mdx`, rebuild, rerun → exit `1`,
-   `FAIL /docs/components/button: scrolls horizontally (… > 390)`. Restore.
-3. **A missing mobile nav.** Temporarily start the session with a 1200×900
-   viewport (`WIDTH`/`HEIGHT` constants) → exit `1`, naming the missing
-   `Open Sidebar` button on the buttons page. Restore 390×844.
-4. **No regressions.** `nub run --filter docs test` (369 tests),
+   `responsive checked` lines and `mobile navigation checked`.
+2. **A real clipped column (the bug this found).** Before the fix, the Buttons
+   page reported `clips content in #nd-page (476 > 390)`: the tier-V notice's
+   suite path and a sentence's suite path could not wrap, and Fumadocs clipped
+   them. Fix it at the source of the class — inline code wraps
+   (`src/styles/app.css`, `:where(:not(pre) > code) { overflow-wrap: anywhere }`),
+   with a unit test in `src/styles/theme.test.ts` — then the same page reports
+   `responsive checked`. Record both runs.
+3. **A missing mobile nav.** Temporarily start the session at 1200×900
+   (`WIDTH`/`HEIGHT` constants) → exit `1`,
+   `FAIL /docs/components/button: no visible Open Sidebar button at a phone
+   width`. Restore 390×844.
+4. **No regressions.** `nub run --filter docs test`,
    `check-types`, `build`; then `nub run check`, `nub run lint`,
    `nub run test`.
 
@@ -136,4 +168,62 @@ row: this is a docs-site check, not a component.
 
 ## 7. Results
 
-*(filled in by the executor.)*
+Measured on `agent/docs-site`, 2026-10-18.
+
+**The bug the check found.** The first run of the container assertion on the
+built site failed — not on a contrived defect, but on the shipped Buttons page:
+
+```
+FAIL /docs/components/button: clips content in #nd-page (476 > 390)
+```
+
+`#nd-page` was 476 px wide inside a 390 px column, and `#nd-docs-layout`'
+`overflow-x: clip` made the extra width unreachable. The offending elements
+were two inline `<code>` paths — the tier-V notice's
+`packages/primitives/runtime/controls.runtime.test.tsx` (447 px) and a sentence's
+`packages/primitives/runtime/examples.runtime.test.tsx` (423 px).
+
+Wrapping only the `RuntimeCoverage` block reduced the overflow to 443 px; the
+page's sentence still clipped. The fixed rule is the general one in §2.3
+(`:where(:not(pre) > code) { overflow-wrap: anywhere }`), after which the
+Buttons page reports `responsive checked`.
+
+**A full sweep.** A one-off pass over the **90 sitemap pages** at 390×844 after
+the fix reported `checked 90 pages; 0 clip`, so the six-page sample stands for a
+clean site rather than a clean sample.
+
+**Baseline** (`nub apps/docs/scripts/smoke-responsive.ts --no-build`) — exit
+`0`:
+
+```
+smoke: viewport 390x844
+smoke: / responsive checked
+smoke: /docs responsive checked
+smoke: /docs/components responsive checked
+smoke: /docs/components/button responsive checked
+smoke: /docs/api-reference responsive checked
+smoke: /docs/theming responsive checked
+smoke: mobile navigation checked
+smoke: ok
+```
+
+**Direction 2 — the mobile nav is load-bearing.** At a 1200×900 viewport the
+same script exits `1`:
+
+```
+FAIL /docs/components/button: no visible Open Sidebar button at a phone width
+smoke: 1 problem(s)
+```
+
+Restored to 390×844; green again.
+
+**Regressions:** `nub run --filter docs test` 56 files / **370 tests** (the new
+`theme.test.ts` rule pin included), `check-types` green, `build` green, and
+`nub run check`, `nub run lint`, `nub run test` exit `0`.
+
+**False positives recorded:** the Effect enforcer flags the shared-session
+`try/catch`, `fetch`, `console.*`, `JSON.parse` and the `for` loop in the smoke
+scripts. `apps/docs` deliberately has no Effect runtime (the bundle boundary is
+enforced by `src/architecture.test.ts`), and every script under
+`apps/docs/scripts` is a plain Node boundary with the same conventions; no
+change made.

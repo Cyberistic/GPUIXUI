@@ -471,12 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 102/102
+`[x]` `[██████████]` 103/103
 
-`[~]` **The site is usable at a phone width (plan 502)** — `smoke:responsive`
+`[x]` **The site is usable at a phone width (plan 502)** — `smoke:responsive`
       proves six page shapes do not scroll sideways at 390 px and that the
-      mobile sidebar opens and navigates; the property was last checked by hand
-      in plan 410, before 86 of the 90 pages landed.
+      mobile sidebar opens and navigates. It found a real bug: the Buttons page
+      clipped a 423 px suite path in a 390 px column because Fumadocs clips the
+      article; inline code now wraps, and a one-off sweep of all 90 pages is
+      clean.
 
 `[x]` **A fragment link lands on a heading (plan 501)** — plan 438 stripped the
       fragment before resolving a link, so a renamed heading silently broke

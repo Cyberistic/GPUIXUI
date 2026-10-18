@@ -103,4 +103,13 @@ describe("docs theme", () => {
     );
     expect(rule?.[1]).toContain("outline: none");
   });
+
+  it("wraps inline code so a long path is not clipped", () => {
+    // The failure guarded (plan 502): a tier-V suite path in a sentence was
+    // 423 px wide at a 390 px viewport, and Fumadocs clips the article instead
+    // of scrolling it, so the tail of the path was unreachable. Code blocks
+    // must keep scrolling; only inline code wraps.
+    const rule = css.match(/:where\(:not\(pre\) > code\)\s*\{([^}]*)\}/);
+    expect(rule?.[1]).toContain("overflow-wrap: anywhere");
+  });
 });

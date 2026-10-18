@@ -36,6 +36,8 @@ export interface Session {
   readonly evaluate: (expression: string) => Promise<unknown>;
   readonly navigate: (url: string) => Promise<void>;
   readonly setColorScheme: (mode: "light" | "dark") => Promise<void>;
+  /** The layout viewport a reader's device gives the page. */
+  readonly setViewport: (width: number, height: number) => Promise<void>;
   /** Dispatch one real key press, so focus traversal and activation are the browser's. */
   readonly press: (key: SessionKey) => Promise<void>;
   /** Whether `expression` became `true` within the timeout; polls every 100 ms. */
@@ -196,6 +198,15 @@ export const startSession = async (
     });
   };
 
+  const setViewport = async (width: number, height: number): Promise<void> => {
+    await send("Emulation.setDeviceMetricsOverride", {
+      width,
+      height,
+      deviceScaleFactor: 1,
+      mobile: true,
+    });
+  };
+
   const waitFor = async (
     expression: string,
     timeoutMs = 15_000,
@@ -246,6 +257,7 @@ export const startSession = async (
     evaluate,
     navigate,
     setColorScheme,
+    setViewport,
     press,
     waitFor,
     captureScreenshot,
