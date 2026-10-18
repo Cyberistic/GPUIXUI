@@ -196,6 +196,8 @@ Run on this host (Intel macOS, wasm renderer in headless Chrome), 2026-10-18.
 | `nub run check` | pass (test quality, oxlint, oxfmt, types) |
 | `nub run lint` | pass |
 | `nub run test` | pass (every workspace suite) |
+| `nub run --filter docs smoke:build` | exit 0 (production crawl) |
+| `nub run --filter docs smoke:browser` | exit 0 (hydrated previews)
 
 Two-direction proofs, each run against a rebuilt preview:
 
