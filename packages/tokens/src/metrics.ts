@@ -258,8 +258,9 @@ const ascendingSizes = (
  *   only focus indicator the runtime can draw, so it may not be zero; `thin`
  *   may be zero in a borderless theme, so it is only non-negative.
  * - **density**: sizes and padding are ladders, the smallest control fits one
- *   label line, the default icon and a field adornment plus its two borders, and
- *   a row fits one body line and the default `md` control it holds.
+ *   label line and one body line — a field paints body type — plus the default
+ *   icon and a field adornment, each plus its two borders, and a row fits one
+ *   body line and the default `md` control it holds.
  * - **dimensions**: every surface metric is positive, each documented range has
  *   a minimum below its default, a chip fits in the field's content box — its
  *   minimum width less the field's two borders and horizontal padding — and the
@@ -395,11 +396,15 @@ export function themeMetricFailures(
       "non-decreasing",
     ),
     ...positive("density", "rowHeight", density.rowHeight),
+    // A control is not always a label: a field paints the body role, so the
+    // smallest box has to fit the taller of the two line boxes. Both are
+    // painted inside the two borders.
     ...atLeast(
       "density",
       "controlHeight.sm",
       density.controlHeight.sm,
-      typography.label.lineHeight + 2 * borderWidth.thin,
+      Math.max(typography.label.lineHeight, typography.body.lineHeight) +
+        2 * borderWidth.thin,
     ),
     // A control paints its two borders inside its height, so a glyph or a
     // field adornment equal to the height overflows the content box.

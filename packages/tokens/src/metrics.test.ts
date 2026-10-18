@@ -131,14 +131,14 @@ describe("theme metric contract", () => {
     ]);
   });
 
-  it("reports a smallest control that cannot fit its label", () => {
+  it("reports a smallest control that cannot fit its label or a body line", () => {
     expect(failuresOf({ density: { controlHeight: { sm: 19 } } })).toEqual([
       {
         group: "density",
         member: "controlHeight.sm",
         rule: "at-least",
         actual: 19,
-        bound: 20,
+        bound: 22,
       },
     ]);
   });

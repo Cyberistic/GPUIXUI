@@ -511,7 +511,8 @@ its own test suite.
 The floors are the colour half. `themeMetricFailures` is the numeric half: an
 edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
-shrink the smallest control below one label line plus its borders, clip a row
+shrink the smallest control below one label line or one body line plus its
+borders, clip a row
 below the default `md` control it holds, round a "square" corner, leave the
 largest avatar a rounded square, invert a named size ladder, name a zero-size
 icon or avatar, ship a zero-width surface metric, hand the renderer a

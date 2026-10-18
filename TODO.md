@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 149/201
+`[x]` `[███████░░░]` 150/201
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1129,7 +1129,7 @@ painted the system fallback while the guarantee said the theme was good;
 `themeTypefaceFailures` is the fourth check, `themeFailures` composes it in
 colour → typeface → contrast → metric order, and every shipped set passes, so no
 family moves (plan 385)
-`[ ]` Hold the smallest field to a body line — `controlHeight.sm` was held to
+`[x]` Hold the smallest field to a body line — `controlHeight.sm` was held to
 one label line while `fieldTextStyle` and `otpCellStyle` paint the body role in
 the same box, so a theme with a 30px body line returned `[]` from every check
 while a 26px content box clipped a small field (plan 386)

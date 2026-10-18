@@ -1492,9 +1492,10 @@ ladders (`proseLadder` and `codeLadder`) must not be inverted — a role below
 another may not render larger — and `bodyStrong`, the weight variant of `body`,
 may not shrink below it and must stay heavier, because an emphasis role the
 reader cannot distinguish from body text is not emphasis; the smallest control
-must fit one `label` line, the default `iconSize.md` and a field adornment, each
-plus its two borders — the borders are painted inside the height, so a glyph
-equal to the outer metric overflows the content box; a row must fit one `body`
+must fit one `label` line and one `body` line — a field paints body type, not
+the label role — plus the default `iconSize.md` and a field adornment, each plus
+its two borders — the borders are painted inside the height, so a glyph equal to
+the outer metric overflows the content box; a row must fit one `body`
 line and the default `md` control it holds; `radius.none` must be square; `radius.full`
 must round the largest radius and half of the taller of the largest control and
 the largest avatar — a 40px avatar painted at a smaller radius is a rounded

@@ -453,7 +453,8 @@ ring removed focus while `themeContrastFailures` still returned `[]`. The same
 edit path can clip a type role by shortening its leading, invert one of the two
 type ladders (`proseLadder` / `codeLadder`), flatten `bodyStrong` onto `body`'s
 weight, name a font weight outside the `1…1000` range the text system can
-select or a non-finite one, shrink the smallest control below one label line,
+select or a non-finite one, shrink the smallest control below one label line or
+one body line,
 fit an icon, a field adornment or a chip into a content box shorter or narrower
 than they are, invert a size ladder, name an icon or avatar size of zero, scroll
 an overlay in less than one row, ship a non-finite

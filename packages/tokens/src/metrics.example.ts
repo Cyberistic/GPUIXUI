@@ -59,3 +59,13 @@ export const invisibleIcon = extendTheme(getTheme("light"), {
   iconSize: { xs: 0 },
 });
 export const invisibleIconFailures = themeMetricFailures(invisibleIcon);
+
+/**
+ * A body line taller than the smallest field: a field paints the body role, so
+ * a 30px line cannot fit the 26px content box of the 28px `sm` control. The
+ * colour, typeface and contrast checks are empty; the numeric one names it.
+ */
+export const crampedField = extendTheme(getTheme("light"), {
+  typography: { body: { fontSize: 14, lineHeight: 30 } },
+});
+export const crampedFieldFailures = themeMetricFailures(crampedField);
