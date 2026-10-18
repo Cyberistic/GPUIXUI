@@ -326,6 +326,11 @@ retired once both branches are one
       5 native cases (Collapsible 16, Accordion 22, behaviour 636), both-direction
       proof (3 fail without the restore, the 2 outside cases pass); docs,
       `COMPONENTS.md` and the inventory synced
+    - [~] List: the roving tab stop and focus survive a change in the rows —
+      plan 510. Measured: removing the active row left every remaining row
+      `tabIndex -1` with focus `null`, and disabling it kept the tab stop and
+      the ring on the disabled row. `liveActive`, a live-row tab stop and
+      focus relocation only when the list held focus.
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
