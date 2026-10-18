@@ -12,6 +12,14 @@
  * ring too; that limitation is recorded in `COMPONENTS.md`. The `focused` flag
  * is React-local render state with no other reader, so `useState` is the right
  * tool; an Atom would make one button's highlight global state.
+ *
+ * The button is also a valid **slot trigger**: `Tooltip`'s `asChild` clones
+ * host props onto its child, and a component boundary would otherwise drop
+ * them (plan 341). `TriggerHandlers` forwards the mouse handlers and composes
+ * the focus, blur and key handlers with the button's own, so a tooltip opens on
+ * hover and focus and its text becomes the button's `aria-description`. The
+ * same contract makes this the trigger for the components workstream's future
+ * popover/menu parts.
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
@@ -23,10 +31,13 @@ import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
 import { useGroupShape } from "./group-shape.js";
 import {
+  composeHandler,
   mergeStyle,
+  passiveTriggerHandlers,
   resolvePartStyle,
   textOf,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -39,7 +50,7 @@ export interface ButtonState {
   readonly loading: boolean;
 }
 
-export interface ButtonProps {
+export interface ButtonProps extends TriggerHandlers {
   /** Defaults to `primary`. */
   readonly variant?: ButtonVariant;
   /** Defaults to `md`. */
@@ -69,6 +80,11 @@ export interface ButtonProps {
    * key event (Enter down / Space up). Runs before `onActivate`.
    */
   readonly onClick?: (event: EventPayload) => void;
+  /**
+   * Extra description announced after the name. A slot (a `Tooltip` trigger)
+   * writes the tip here; a busy button still announces `Loading` first.
+   */
+  readonly "aria-description"?: string;
   /** An object, or a callback over this button's public state. */
   readonly style?: StateStyle<ButtonState>;
   readonly children?: ReactNode;
@@ -111,24 +127,33 @@ export const renderButton = (
     focused: focus.focused,
     loading: props.loading === true,
   };
+  const description = Option.match(
+    Option.fromNullishOr(props["aria-description"]),
+    {
+      onNone: () => (props.loading === true ? "Loading" : undefined),
+      onSome: (tip) => (props.loading === true ? `Loading. ${tip}` : tip),
+    },
+  );
   const onKey =
-    (phase: "down" | "up") =>
+    (phase: "down" | "up", handler?: (event: EventPayload) => void) =>
     (event: EventPayload): void => {
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         activate(event);
+      handler?.(event);
     };
   return (
     <div
+      {...passiveTriggerHandlers(props)}
       role="button"
       aria-label={props.label ?? Option.getOrUndefined(textOf(props.children))}
-      aria-description={props.loading === true ? "Loading" : undefined}
+      aria-description={description}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onClick={activate}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
-      onKeyDown={onKey("down")}
-      onKeyUp={onKey("up")}
+      onFocus={composeHandler(focus.onFocus, props.onFocus)}
+      onBlur={composeHandler(focus.onBlur, props.onBlur)}
+      onKeyDown={onKey("down", props.onKeyDown)}
+      onKeyUp={onKey("up", props.onKeyUp)}
       style={resolvePartStyle(
         focus.focused
           ? mergeStyle(

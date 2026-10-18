@@ -19,11 +19,14 @@ import { Button, Tooltip } from "@gpuixui/primitives";
 </Tooltip>;
 ```
 
-The child must be a single **focusable host element with a role and a name**.
-`Tooltip`'s trigger clones its child with the hover and focus handlers, so a
-component that does not forward those props (including this package's `Box`)
-will not open the tip — and a bare focus stop with no role produces no
-accessibility node at all.
+The child must be a single **focusable element with a role and a name**.
+`Tooltip`'s trigger clones its child with the hover, focus, key and description
+props the runtime's slot injects. `Button`, `IconButton` and `Toggle` accept
+that contract (plan `341`), and a raw host element accepts it directly. A
+component that drops those props will not open the tip — this package's `Box`
+is a container with no event props, and the data-driven groups do not implement
+the contract, so use a raw styled `div` or `InfoTip` for a non-button trigger.
+A bare focus stop with no role produces no accessibility node at all.
 
 For the common "info icon that explains a term" case, use **InfoTip** instead of
 writing that trigger by hand: it owns the role, the name, the tab stop and the
@@ -110,7 +113,9 @@ dismisses it. A click dismisses it.
 
 ## Limitations
 
-- The trigger must be a focusable host element (above).
+- The trigger must be a focusable element that forwards the slot contract
+  (above); `Button`, `IconButton` and `Toggle` do, `Box` and the data-driven
+  groups do not.
 - **A `center` tip measures once.** The runtime has no layout callback, so the
   tip's box is known only after its first layout; the offset is applied in a
   layout effect before paint, so there is no visible jump. A tip whose size
@@ -165,6 +170,10 @@ dismisses it. A click dismisses it.
   node — the failing direction had neither.
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
   hover and on keyboard focus, and its trigger announces the description.
+- `runtime/overlay-trigger.runtime.test.tsx` — the documented composition, a
+  `Button` trigger: hover and focus open the tip, click closes it, and the
+  trigger's `aria-description` carries the text; `IconButton` and `Toggle` open
+  on hover too (plan `341`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

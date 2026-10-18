@@ -66,6 +66,10 @@ disappear on a filled button.
 `children`, `leading`, `trailing` and `fullWidth` are deliberately absent: an
 icon button has one content slot and a square box.
 
+The **slot trigger contract is inherited from `Button`** (plan `341`): a
+`Tooltip` wrapping an `IconButton` opens on hover and focus, closes on click and
+Escape, and the tip text arrives as the button's `aria-description`.
+
 ## Keyboard
 
 | Key | Contract |

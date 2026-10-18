@@ -14,7 +14,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import type { StyleDesc } from "@gpuix/react";
+import type { Props, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import {
   initValueState,
@@ -29,6 +29,64 @@ export const mergeStyle = (
   base: StyleDesc,
   override: StyleDesc | undefined,
 ): StyleDesc => (override === undefined ? base : { ...base, ...override });
+
+/**
+ * The interaction handlers a slot (`asChild`) injects into its trigger.
+ *
+ * GPUix's `Tooltip`, `FloatingLayer` slots and this package's future overlays
+ * clone a trigger element with these props. A component that can be a trigger
+ * accepts them and forwards them to its one host element; the events it
+ * already owns (`onFocus`, `onBlur`, `onKeyDown`, `onKeyUp` and `onClick`) are
+ * composed, not replaced. Without this the props stop at the component
+ * boundary and the tooltip never hears the hover (plan 341).
+ */
+export type TriggerHandlers = Pick<
+  Props,
+  | "onMouseEnter"
+  | "onMouseLeave"
+  | "onMouseMove"
+  | "onMouseDown"
+  | "onMouseUp"
+  | "onMouseDownOutside"
+  | "onAuxClick"
+  | "onScroll"
+  | "onFocus"
+  | "onBlur"
+  | "onKeyDown"
+  | "onKeyUp"
+>;
+
+/**
+ * The handlers a trigger forwards unchanged.
+ *
+ * Focus, blur and the key events stay out: the component owns them and composes
+ * the injected handler with its own rule, so the ring and the activation
+ * contract cannot be skipped by a slot.
+ */
+export const passiveTriggerHandlers = (
+  props: TriggerHandlers,
+): TriggerHandlers => ({
+  onMouseEnter: props.onMouseEnter,
+  onMouseLeave: props.onMouseLeave,
+  onMouseMove: props.onMouseMove,
+  onMouseDown: props.onMouseDown,
+  onMouseUp: props.onMouseUp,
+  onMouseDownOutside: props.onMouseDownOutside,
+  onAuxClick: props.onAuxClick,
+  onScroll: props.onScroll,
+});
+
+/** Call both handlers for one event, in order, when either exists. */
+export const composeHandler = <Event>(
+  first: ((event: Event) => void) | undefined,
+  second: ((event: Event) => void) | undefined,
+): ((event: Event) => void) | undefined =>
+  first === undefined || second === undefined
+    ? (first ?? second)
+    : (event) => {
+        first(event);
+        second(event);
+      };
 
 /**
  * A part's `style`: an object, or a callback that reads its public state.

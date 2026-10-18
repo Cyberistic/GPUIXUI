@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 88/88
+`[x]` `[██████████]` 89/89
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -704,6 +704,17 @@ retired once both branches are one
       button is not tabbable. `disabled` now wins unconditionally; `loading`
       alone keeps its stop. The tab-order matrix gains the busy pair for
       `Button` and `IconButton`, both directions measured (plan `340`).
+
+`[x]` `packages/primitives`: **the documented `Tooltip`-around-`Button` example
+      was hover- and focus-dead** — GPUix's `asChild` clones host props onto the
+      child, and a component boundary drops props it does not declare, so the
+      tip never opened (measured) and the tip's `aria-description` never reached
+      the button. `Button`, `IconButton` (inherited) and `Toggle` now accept
+      `TriggerHandlers`, forward the passive mouse handlers, compose
+      focus/blur/keys with their own ring and activation rule, and forward the
+      description — joined after `Loading` while busy. `Box` and the
+      data-driven groups stay documented non-triggers. 6 runtime + 9 element
+      cases, both directions proven (plan `341`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

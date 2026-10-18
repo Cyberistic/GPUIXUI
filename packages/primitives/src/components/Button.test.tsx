@@ -12,6 +12,7 @@
 
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton } from "./Button.js";
@@ -179,5 +180,79 @@ describe("Button", () => {
     expect(radiusOf(resting({ radius: "none" }))).toBe(0);
     expect(radiusOf(resting({}))).toBe(testTheme.radius.md);
     expect(radiusOf(resting({ radius: "lg" }))).toBe(testTheme.radius.lg);
+  });
+
+  it("forwards the passive handlers a slot injects", () => {
+    // The bug guarded (plan 341): `TooltipTrigger asChild` clones mouse props
+    // onto this component, and a boundary that drops them leaves the tip shut.
+    const handlers = {
+      onMouseEnter: vi.fn(),
+      onMouseLeave: vi.fn(),
+      onMouseMove: vi.fn(),
+      onMouseDown: vi.fn(),
+      onMouseUp: vi.fn(),
+      onMouseDownOutside: vi.fn(),
+      onAuxClick: vi.fn(),
+      onScroll: vi.fn(),
+    };
+    const names = [
+      "onMouseEnter",
+      "onMouseLeave",
+      "onMouseMove",
+      "onMouseDown",
+      "onMouseUp",
+      "onMouseDownOutside",
+      "onAuxClick",
+      "onScroll",
+    ] as const;
+    const element = resting(handlers);
+    Arr.forEach(names, (name) =>
+      expectSome(hostHandler(element, name))(clickEvent),
+    );
+    Arr.forEach(
+      Arr.map(names, (name) => handlers[name]),
+      (handler) => expect(handler).toHaveBeenCalledTimes(1),
+    );
+  });
+
+  it("composes focus and blur with the slot's handlers", () => {
+    const tracked = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    const element = renderButton({ onFocus, onBlur }, testTheme, tracked);
+    expectSome(hostHandler(element, "onFocus"))(clickEvent);
+    expectSome(hostHandler(element, "onBlur"))(clickEvent);
+    expect(tracked.onFocus).toHaveBeenCalledTimes(1);
+    expect(tracked.onBlur).toHaveBeenCalledTimes(1);
+    expect(onFocus).toHaveBeenCalledTimes(1);
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs the activation rule before the slot's key handlers", () => {
+    const onActivate = vi.fn();
+    const onKeyDown = vi.fn();
+    const element = resting({ onActivate, onKeyDown });
+    press(element, "enter", "down");
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    // Escape must reach the slot (the tooltip's dismissal) without activating.
+    press(element, "escape", "down");
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onKeyDown).toHaveBeenCalledTimes(2);
+  });
+
+  it("forwards the slot's description, keeping the busy one", () => {
+    expect(
+      hostProp(resting({ "aria-description": "A hint" }), "aria-description"),
+    ).toStrictEqual(Option.some("A hint"));
+    expect(
+      hostProp(
+        resting({ "aria-description": "A hint", loading: true }),
+        "aria-description",
+      ),
+    ).toStrictEqual(Option.some("Loading. A hint"));
+    expect(
+      hostProp(resting({ loading: true }), "aria-description"),
+    ).toStrictEqual(Option.some("Loading"));
   });
 });

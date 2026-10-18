@@ -24,13 +24,16 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
 import {
+  composeHandler,
   mergeStyle,
+  passiveTriggerHandlers,
   resolvePartStyle,
   textOf,
   useControlState,
   useFocus,
   type FocusState,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -42,7 +45,7 @@ export interface ToggleState {
   readonly focused: boolean;
 }
 
-export interface ToggleProps {
+export interface ToggleProps extends TriggerHandlers {
   /** Controlled pressed state. Omit to let the toggle own it. */
   readonly pressed?: boolean;
   readonly defaultPressed?: boolean;
@@ -58,6 +61,11 @@ export interface ToggleProps {
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the toggle has only an icon. */
   readonly label?: string;
+  /**
+   * Extra description announced after the name. A slot (a `Tooltip` trigger)
+   * writes the tip here.
+   */
+  readonly "aria-description"?: string;
   /** An object, or a callback over this toggle's public state. */
   readonly style?: StateStyle<ToggleState>;
   readonly children?: ReactNode;
@@ -94,23 +102,26 @@ export const renderToggle = (
     focused: focus.focused,
   };
   const onKey =
-    (phase: "down" | "up") =>
+    (phase: "down" | "up", handler?: (event: EventPayload) => void) =>
     (event: EventPayload): void => {
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
+      handler?.(event);
     };
   return (
     <div
+      {...passiveTriggerHandlers(props)}
       role="button"
       aria-label={props.label ?? Option.getOrUndefined(textOf(props.children))}
+      aria-description={props["aria-description"]}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onClick={toggle}
-      onKeyDown={onKey("down")}
-      onKeyUp={onKey("up")}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
+      onKeyDown={onKey("down", props.onKeyDown)}
+      onKeyUp={onKey("up", props.onKeyUp)}
+      onFocus={composeHandler(focus.onFocus, props.onFocus)}
+      onBlur={composeHandler(focus.onBlur, props.onBlur)}
       style={resolvePartStyle(
         focus.focused
           ? mergeStyle(

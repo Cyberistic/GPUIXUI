@@ -14,7 +14,7 @@ import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderToggle } from "./Toggle.js";
 import type { FocusState } from "./internal.js";
-import { keyEvent } from "./testing/event.js";
+import { keyEvent, clickEvent } from "./testing/event.js";
 import {
   expectSome,
   hostHandler,
@@ -176,5 +176,36 @@ describe("Toggle", () => {
     expect(
       Option.getOrUndefined(hostStyleRecord(rest))?.["boxShadow"],
     ).toBeUndefined();
+  });
+
+  it("forwards a slot's handlers and composes its key rule", () => {
+    // The bug guarded (plan 341): a Tooltip can target a toolbar toggle, and
+    // the cloned handlers must cross the component boundary.
+    const onMouseEnter = vi.fn();
+    const onKeyDown = vi.fn();
+    const onPressedChange = vi.fn();
+    const element = renderToggle(
+      { onMouseEnter, onKeyDown },
+      testTheme,
+      state(false),
+      idle,
+      onPressedChange,
+    );
+    expectSome(hostHandler(element, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
+    expect(onPressedChange).toHaveBeenCalledTimes(1);
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+  });
+
+  it("forwards the slot's description", () => {
+    const element = renderToggle(
+      { "aria-description": "A hint" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe("A hint");
   });
 });

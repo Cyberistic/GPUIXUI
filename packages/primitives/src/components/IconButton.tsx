@@ -10,7 +10,9 @@
  *
  * It composes `Button` and adds no paint of its own — `square` supplies the
  * geometry, `controlStyle` supplies the foreground, and the icon is tinted with
- * the very role the button already paints its text in.
+ * the very role the button already paints its text in. It inherits `Button`'s
+ * slot-trigger contract (`TriggerHandlers` + `aria-description`), so a
+ * `Tooltip` wrapping an `IconButton` opens on hover and focus (plan 341).
  */
 
 import type { ReactElement } from "react";

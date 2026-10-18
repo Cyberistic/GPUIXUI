@@ -64,6 +64,9 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `label` | `string` | none | accessible name. Overrides the name derived from text children; required when the content is not text (e.g. an icon) |
 | `onActivate` | `() => void` | none | called after `onClick` for a click or an activating key; not called while busy |
 | `onClick` | `(event) => void` | none | the event that activated the button: the pointer click, or the Enter/Space key event. Runs before `onActivate` |
+| `onMouseEnter`, `onMouseLeave`, `onMouseMove`, `onMouseDown`, `onMouseUp`, `onMouseDownOutside`, `onAuxClick`, `onScroll` | host handlers | none | forwarded to the button element — the slot contract a `Tooltip` trigger uses |
+| `onFocus`, `onBlur`, `onKeyDown`, `onKeyUp` | host handlers | none | composed with the button's own focus ring and activation rule, never replacing them |
+| `aria-description` | `string` | none | announced after the name; a `Tooltip` trigger's text arrives here, joined after `"Loading"` while busy |
 | `style` | `StateStyle<ButtonState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
@@ -85,6 +88,30 @@ a tab stop.
 the key event itself — so a button wired with the familiar prop still works from
 the keyboard. `onActivate` is the no-argument convenience, called after it on
 the same path.
+
+Escape is not a button key. A slot's `onKeyDown` still runs **after** the
+activation rule, so a `Tooltip` trigger closes on Escape without activating.
+
+## As an overlay trigger
+
+GPUix composes an overlay's trigger with `asChild`, which clones the child with
+its mouse, focus and key handlers and `aria-description`. A React component
+boundary drops any prop it does not declare, so `Button` accepts that slot
+contract explicitly (plan `341`) — which makes the documented tooltip shape work:
+
+```tsx
+import { Button, Tooltip } from "@gpuixui/primitives";
+
+<Tooltip content="Delete this file">
+  <Button label="Delete">Delete</Button>
+</Tooltip>;
+```
+
+Hover opens the tip, Tab (focus) opens it, Escape and click close it, and the
+string tip becomes the button's `aria-description`. `IconButton` inherits the
+same contract; `Toggle` implements it too. Activation is still the button's:
+the injected `onClick` runs through the activation path, so a disabled or busy
+button reports nothing, while hover still opens its tip.
 
 ## Accessibility
 
@@ -143,12 +170,17 @@ look. `ButtonState` is exported.
 
 - `src/core/keyboard.test.ts` — the Enter/Space/held rules as pure decisions.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
-  loading description, and the `radius` resolution with its `md` default.
+  loading description, and the `radius` resolution with its `md` default; the
+  slot handlers reach the host, focus/blur/keys compose, and a busy description
+  keeps `Loading` (plan 341).
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name; a button wired with `onClick`
   alone reports Enter and Space, while a held key, a disabled one and a busy one
   report nothing (plan 085).
+- `runtime/overlay-trigger.runtime.test.tsx` — a `Tooltip` around a `Button`,
+  `IconButton` and `Toggle` opens on hover; the `Button` also opens on focus,
+  closes on click, and carries the tip as its `aria-description` (plan 341).
 - `runtime/examples.runtime.test.tsx` — the form example's busy action creates a
   progress state.
 

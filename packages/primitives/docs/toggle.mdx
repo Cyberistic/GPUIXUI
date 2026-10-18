@@ -55,6 +55,18 @@ different states.
 A click activates as well. The toggle is one tab stop and paints the focus ring
 while it holds focus.
 
+## As an overlay trigger
+
+`Toggle` accepts the same slot contract as `Button` (plan `341`): a `Tooltip`
+can wrap it, and the injected hover, focus and key handlers cross the component
+boundary. The tip's string becomes the toggle's `aria-description`.
+
+```tsx
+<Tooltip content="Bold text">
+  <Toggle label="Bold">B</Toggle>
+</Tooltip>;
+```
+
 ## Accessibility
 
 - Role: `button` (AccessKit `Button`).
