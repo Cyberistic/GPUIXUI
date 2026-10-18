@@ -51,16 +51,46 @@ export const normalizeNumberRange = (range: NumberRange): NumberRange => {
     : { min, max, step };
 };
 
-/** Clamp to whichever bounds exist; an absent bound does not constrain. */
+/**
+ * A value the field can paint, from one that may not be a number.
+ *
+ * `NaN` reads as the floor — the rule `core/value.ts`'s `clampValue` already
+ * follows for a slider, so an unknown number never looks like a deliberate
+ * one. An infinity reads as the bound on its own side, because that is the
+ * nearest paintable value the caller could have meant.
+ */
+const finiteFieldValue = (
+  value: number,
+  min: number | undefined,
+  max: number | undefined,
+): number => {
+  if (Number.isFinite(value)) return value;
+  const floor = min ?? 0;
+  if (Number.isNaN(value)) return floor;
+  return value > 0 ? (max ?? floor) : (min ?? max ?? 0);
+};
+
+/**
+ * Clamp to whichever bounds exist; an absent bound does not constrain.
+ *
+ * A value that is not a finite number is made total first, so the paint, the
+ * announcement, the steppers and the keys can never see `NaN` or an unbounded
+ * infinity (plan `392`).
+ */
 export const clampNumeric = (value: number, range: NumberRange): number => {
   const { min, max } = normalizeNumberRange(range);
-  const aboveMin = min === undefined ? value : Math.max(min, value);
+  const usable = finiteFieldValue(value, min, max);
+  const aboveMin = min === undefined ? usable : Math.max(min, usable);
   return max === undefined ? aboveMin : Math.min(max, aboveMin);
 };
 
-/** Fixed decimals, never a thousands separator. */
+/** Fixed decimals, never a thousands separator. A non-finite precision is 0. */
 export const formatNumber = (value: number, precision = 0): string =>
-  value.toFixed(Math.min(20, Math.max(0, Math.trunc(precision))));
+  value.toFixed(
+    Number.isFinite(precision)
+      ? Math.min(20, Math.max(0, Math.trunc(precision)))
+      : 0,
+  );
 
 /**
  * The most decimal places a step may claim.
@@ -82,7 +112,10 @@ export const stepNumber = (
   steps: number,
 ): number => {
   const { min, max, step } = normalizeNumberRange(range);
-  return exact(clampNumeric(value + steps * step, { min, max, step }));
+  // The base is the value the field paints, not the raw prop: an out-of-range
+  // or non-finite base must step from the bound it is shown at (plan `392`).
+  const current = clampNumeric(value, { min, max, step });
+  return exact(clampNumeric(current + steps * step, { min, max, step }));
 };
 
 /** A number field's in-progress text, and the two values it can belong to. */

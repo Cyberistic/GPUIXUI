@@ -106,6 +106,27 @@ describe("clampNumeric", () => {
     expect(clampNumeric(150, inverted)).toBe(100);
     expect(clampNumeric(-5, inverted)).toBe(0);
   });
+
+  it("reads a value that is not a number as a finite one", () => {
+    // The bug guarded (plan 392): a controlled `value={NaN}` went straight to
+    // the paint as "NaN", a bound did not help (Math.max(10, NaN) is NaN), and
+    // an unbounded infinity painted "Infinity". The rule is the one a slider
+    // already follows: an unknown value reads as the floor, an infinity as the
+    // bound on its own side.
+    expect(clampNumeric(Number.NaN, { step: 1 })).toBe(0);
+    expect(clampNumeric(Number.NaN, { step: 1, min: 10, max: 20 })).toBe(10);
+    expect(
+      clampNumeric(Number.POSITIVE_INFINITY, { step: 1, min: 0, max: 100 }),
+    ).toBe(100);
+    expect(
+      clampNumeric(Number.NEGATIVE_INFINITY, { step: 1, min: 0, max: 100 }),
+    ).toBe(0);
+    expect(clampNumeric(Number.POSITIVE_INFINITY, { step: 1 })).toBe(0);
+    expect(clampNumeric(Number.NEGATIVE_INFINITY, { step: 1 })).toBe(0);
+    expect(clampNumeric(Number.NEGATIVE_INFINITY, { step: 1, max: -10 })).toBe(
+      -10,
+    );
+  });
 });
 
 describe("formatNumber", () => {
@@ -120,6 +141,15 @@ describe("formatNumber", () => {
     // toFixed accepts at most 20 decimals; a larger precision is clamped, not
     // handed to the runtime to fail on.
     expect(formatNumber(1.23456789, 40)).toHaveLength(22);
+  });
+
+  it("treats a precision that is not a number as zero decimals", () => {
+    // The bug guarded (plan 392): `precision={Infinity}` reached the 20-decimal
+    // ceiling and painted "1.25000000000000000000"; a precision is either a
+    // usable decimal count or the documented default of 0.
+    expect(formatNumber(1.25, Number.POSITIVE_INFINITY)).toBe("1");
+    expect(formatNumber(1.25, Number.NEGATIVE_INFINITY)).toBe("1");
+    expect(formatNumber(1.25, Number.NaN)).toBe("1");
   });
 });
 
@@ -156,6 +186,16 @@ describe("stepNumber", () => {
 
   it("trims after clamping, so a bound is still exact", () => {
     expect(stepNumber(0.2, { step: 0.1, max: 0.3 }, 1)).toBe(0.3);
+  });
+
+  it("starts from the value the field paints", () => {
+    // The bug guarded (plan 392): the base was the raw prop, so a base outside
+    // the range could not move in either direction (`150` under `max=100` gave
+    // 100 for both `+1` and `-1`) and a `NaN` base stayed `NaN`, freezing the
+    // arrows. A step starts at the clamped value (plan 362's component rule).
+    expect(stepNumber(150, RANGE, -1)).toBe(99);
+    expect(stepNumber(Number.NaN, { step: 1 }, 1)).toBe(1);
+    expect(stepNumber(Number.POSITIVE_INFINITY, RANGE, -1)).toBe(99);
   });
 });
 

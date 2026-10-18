@@ -14,6 +14,13 @@
  *
  * One window per test, as `fixture.tsx` requires; the style walk reads the
  * renderer's own retained tree rather than a decoded element.
+ *
+ * **The follow-up this file also guards (plan 392).** Plan 371 made the bounds
+ * and lengths total but never mounted the field's own `value`: a controlled
+ * `value={NaN}` and an unbounded `value={±Infinity}` painted `"NaN"` /
+ * `"Infinity"`, `defaultValue={NaN}` painted `"NaN"`, and `precision={Infinity}`
+ * painted the 20-decimal ceiling. Every field now reads a non-finite value as a
+ * finite neighbour, so the same matrix covers the value itself.
  */
 
 import { expect, it } from "vitest";
@@ -141,14 +148,79 @@ it("never paints NaNs for a bound or a step it cannot read", async () => {
         step={Number.POSITIVE_INFINITY}
         defaultValue={5}
       />
+      <NumberField testId="nan-value" label="NaN value" value={Number.NaN} />
+      <NumberField
+        testId="nan-min-value"
+        label="NaN value with a minimum"
+        value={Number.NaN}
+        min={10}
+      />
+      <NumberField
+        testId="inf-value"
+        label="Unbounded infinite value"
+        value={Number.POSITIVE_INFINITY}
+      />
+      <NumberField
+        testId="neg-inf-value"
+        label="Unbounded negative infinite value"
+        value={Number.NEGATIVE_INFINITY}
+      />
+      <NumberField
+        testId="nan-default"
+        label="NaN default"
+        defaultValue={Number.NaN}
+      />
+      <NumberField
+        testId="inf-precision"
+        label="Infinite precision"
+        value={1.25}
+        precision={Number.POSITIVE_INFINITY}
+      />
     </Surface>,
   );
   const painted = runtime.paintedText();
   expect(painted).not.toContain("NaN");
   expect(painted).not.toContain("Infinity");
   // A non-finite bound is absent, so the value is painted as it was given; an
-  // inverted pair is swapped, so 150 takes the range's top.
-  expect(painted).toStrictEqual(["5", "5", "100", "5"]);
+  // inverted pair is swapped, so 150 takes the range's top. A non-finite value
+  // reads as the field's floor (its `min`, else 0) and a non-finite precision
+  // is zero decimals (plan `392`).
+  expect(painted).toStrictEqual([
+    "5",
+    "5",
+    "100",
+    "5",
+    "0",
+    "10",
+    "0",
+    "0",
+    "0",
+    "1",
+  ]);
+});
+
+it("steps from the painted floor when the value is not a number", async () => {
+  // The bug guarded (plan 392): a `NaN` value made every step a no-op, because
+  // `stepNumber` returned `NaN` and the no-op guard suppressed the report.
+  const values: number[] = [];
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <NumberField
+        testId="nan-default"
+        label="NaN default"
+        defaultValue={Number.NaN}
+        onValueChange={(value) => values.push(value)}
+      />
+    </Surface>,
+  );
+  expect(runtime.paintedText()).toStrictEqual(["0"]);
+  runtime.renderer.nativeSimulateKeyDown(
+    inputOf(runtime, "nan-default").id,
+    "down",
+  );
+  expect(values).toStrictEqual([-1]);
+  expect(runtime.paintedText()).toStrictEqual(["-1"]);
 });
 
 it("steps an inverted field inside the swapped range", async () => {

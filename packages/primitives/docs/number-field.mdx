@@ -44,6 +44,15 @@ pair is swapped, the rule every slider and meter follows. Before that rule,
 max={0}` collapsed to `0` for a value of `150`, and `step={Infinity}` painted
 `"Infinity"`. A `step` that is not a finite positive number is one.
 
+The **value is made total the same way** (plan `392`): a non-finite `value` or
+`defaultValue` reads as a number the field can paint, so it can never show
+`"NaN"` or `"Infinity"`. `NaN` reads as the field's floor — its `min`, else `0`
+— which is the rule `Slider` already follows; `+Infinity` reads as the bound on
+its own side (`max`, else the floor) and `-Infinity` as `min` (else `max`, else
+`0`). The keyboard uses the same value: a field whose value was not a number
+steps from the floor instead of swallowing every key. A `precision` that is not
+a finite number is `0` decimals.
+
 The two spin buttons read that **same normalised range** (plan `378`), so with
 `min={100} max={0}` the field is simply `0…100`: at `0` the up button is live and
 the down button is blocked, and at `100` the reverse. Before that rule both
@@ -54,13 +63,13 @@ inverted pair blocked the pointer while the arrow keys kept stepping.
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `number` | — | controlled value |
-| `defaultValue` | `number` | none | start value; the field shows empty without one |
+| `value` | `number` | — | controlled value; a non-finite value reads as a finite neighbour (plan `392`) |
+| `defaultValue` | `number` | none | start value; the field shows empty without one, and a non-finite default reads as the floor |
 | `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
 | `onSubmit` | `(event) => void` | — | Enter: the draft is committed and reformatted first |
 | `min` / `max` | `number` | none | bound the value; absent or non-finite means unbounded, an inverted pair is swapped |
 | `step` | `number` | `1` | arrow step; a non-finite or non-positive step is `1` |
-| `precision` | `number` | `0` | decimals shown on commit |
+| `precision` | `number` | `0` | decimals shown on commit; a non-finite precision is `0` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: a field is one height (`h-9`, 36 px) |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert; a pending draft is not committed on blur |
 | `invalid` | `boolean` | `false` | destructive border |
@@ -197,7 +206,13 @@ after the wrapper's chrome:
   core range cases. **Plan `378`:** the spin buttons resolve their blocked state
   from that same range, so the swapped pair leaves the up button live at `0` and
   blocks the down one (the reverse at `100`); the element tree and a hit-tested
-  runtime click prove both ends.
+  runtime click prove both ends. **Plan `392`:** a non-finite value is a finite
+  one before it paints — `value={NaN}`/`defaultValue={NaN}` paint `"0"` (or
+  `"10"` under `min={10}`), unbounded `value={±Infinity}` paint `"0"`, and
+  `precision={Infinity}` paints `0` decimals; a `NaN` field steps to `-1`
+  instead of reporting nothing. Proven in
+  `runtime/nonsense-numbers.runtime.test.tsx` (5 cases) and the core range
+  cases.
 
 ```sh
 nub run --filter @gpuixui/primitives test

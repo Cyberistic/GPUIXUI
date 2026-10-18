@@ -1253,6 +1253,18 @@ retired once both branches are one
       re-measures). 5 core assertions + 2 element + 2 runtime cases (the long
       tip contained and wrapped, a short tip still one line); both directions
       measured — 6270 px without the cap, 1258 with it (plan `391`).
+`[x]` `packages/primitives`: **a non-finite `NumberField` value reached the
+      paint** — plan `371` made the bounds total but never the field's own
+      value: measured (2026-10-19), `value={NaN}` and `defaultValue={NaN}`
+      painted `"NaN"` (a `min` did not help), unbounded `value={±Infinity}`
+      painted `"Infinity"`/`"-Infinity"`, `precision={Infinity}` painted 20
+      decimals, and the arrows were frozen because `stepNumber` returned `NaN`
+      and the no-op guard suppressed the report. `clampNumeric` now maps a
+      non-finite value to a finite neighbour (`NaN` → the floor, `±Infinity` →
+      the bound on that side), `stepNumber` starts from the painted value, and
+      `formatNumber` treats a non-finite precision as `0`; 3 core + 1 live case
+      (six fields plus a step), both directions proven (offline 690 → 693, the
+      scoped live file 5/5; plan `392`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
