@@ -127,7 +127,6 @@ describe("the control boundary on the state washes", () => {
 
   it("publishes one pair per boundary surface", () => {
     expect(boundaryPairs).toHaveLength(boundarySurfaces.length);
-    expect(new Set(boundaryPairs).size).toBe(boundaryPairs.length);
     expect(
       boundaryPairs.map(([, background]) => background).toSorted(),
     ).toEqual([...boundarySurfaces].toSorted());

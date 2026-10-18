@@ -125,7 +125,6 @@ describe("a divider inside a soft status surface", () => {
 
   it("publishes one pair per soft status fill", () => {
     expect(softDividerPairs).toHaveLength(softFills.length);
-    expect(new Set(softDividerPairs).size).toBe(softDividerPairs.length);
     expect(softDividerPairs.map(([, background]) => background)).toEqual([
       ...softFills,
     ]);

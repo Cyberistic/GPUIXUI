@@ -124,7 +124,6 @@ describe("the focus ring on a soft status surface", () => {
 
   it("publishes one pair per soft status fill", () => {
     expect(ringSoftPairs).toHaveLength(softFills.length);
-    expect(new Set(ringSoftPairs).size).toBe(ringSoftPairs.length);
     expect(softPairs).toHaveLength(softFills.length);
     expect(softPairs.map(([, background]) => background).toSorted()).toEqual(
       [...softFills].toSorted(),

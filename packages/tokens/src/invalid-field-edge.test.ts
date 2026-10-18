@@ -69,7 +69,6 @@ describe("the invalid field edge", () => {
     expect(
       invalidEdgePairs.map(([, background]) => background).toSorted(),
     ).toEqual(["background", "input"]);
-    expect(new Set(invalidEdgePairs).size).toBe(invalidEdgePairs.length);
   });
 
   it("keeps every shipped theme's error edge perceivable", () => {

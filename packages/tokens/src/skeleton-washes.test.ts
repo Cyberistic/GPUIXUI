@@ -162,7 +162,6 @@ describe("the loading skeleton on a row surface", () => {
 
   it("publishes one pair per surface a placeholder fills", () => {
     expect(skeletonPairs).toHaveLength(surfaces.length);
-    expect(new Set(skeletonPairs).size).toBe(skeletonPairs.length);
     expect(skeletonPairs.map(([, background]) => background)).toEqual([
       ...surfaces,
     ]);

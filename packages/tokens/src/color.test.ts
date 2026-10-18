@@ -3,6 +3,7 @@
  * shipped theme, including the high-contrast variants. A palette edit that makes
  * text unreadable fails here rather than shipping.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   alpha,
@@ -125,6 +126,17 @@ describe("colour roles", () => {
 
   it("indexes every role in documentation order", () => {
     expect(colorRoles).toEqual(Object.keys(lightColors));
+  });
+
+  it("states the shipped role count in the high-contrast JSDoc", () => {
+    // `node:fs` is deliberate: this is a policy test over the package's own
+    // source, and the package ships zero dependencies (see exports.test.ts).
+    const source = readFileSync(new URL("./color.ts", import.meta.url), "utf8");
+    const claims = [...source.matchAll(/The same (\d+) roles/g)];
+    expect(claims).toHaveLength(2);
+    claims.forEach(([, count]) => {
+      expect(Number(count), "high-contrast JSDoc").toBe(colorRoles.length);
+    });
   });
 
   it("moves every filled surface away from its resting role", () => {

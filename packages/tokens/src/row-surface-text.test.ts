@@ -99,7 +99,6 @@ describe("row, sidebar and link surfaces", () => {
         [foreground, background, pairClass],
       ]);
     });
-    expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 
   it("keeps every shipped theme above its declared floor", () => {

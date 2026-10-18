@@ -150,9 +150,6 @@ describe("the control boundary inside a soft status surface", () => {
 
   it("publishes one pair per soft status fill", () => {
     expect(controlBoundarySoftPairs).toHaveLength(softFills.length);
-    expect(new Set(controlBoundarySoftPairs).size).toBe(
-      controlBoundarySoftPairs.length,
-    );
     expect(softPairs).toHaveLength(softFills.length);
     expect(softPairs.map(([, background]) => background).toSorted()).toEqual(
       [...softFills].toSorted(),

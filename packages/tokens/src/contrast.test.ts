@@ -153,14 +153,19 @@ import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
+  controlBoundarySoftPairs,
   darkTheme,
   extendTheme,
   getTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
   inactivePairs,
+  inactiveSoftPairs,
+  invalidRingPairs,
   lightTheme,
+  markPairs,
   overlayWashPairs,
+  ringSoftPairs,
   selectionFillPairs,
   selectionFillWashPairs,
   selectionPairs,
@@ -170,9 +175,13 @@ import {
   selectionWashPairs,
   softBorderSurfacePairs,
   softPanelTextPairs,
+  stateFillSurfacePairs,
   stateStepPairs,
   themeContrastFailures,
   toastTonePairs,
+  trackMarkPairs,
+  trackSurfacePairs,
+  type ContrastPair,
   type Theme,
   type ThemeContrast,
 } from "./index.js";
@@ -184,6 +193,74 @@ import {
   quietRingFailures,
   quietRingTheme,
 } from "./contrast.example.js";
+
+/**
+ * Guards the defect plan 349 fixes: every "unique" assertion in this suite built
+ * a `Set` of tuple arrays, which compares identity — two copies of the same
+ * `[foreground, background, class]` are different objects — so a repeated pair
+ * could never fail one. The checker would report the same missed composition
+ * twice while every suite stayed green.
+ *
+ * Lists that measure the same roles through a different wash are separate
+ * checks, not duplicates, so uniqueness is asserted inside each published list,
+ * never across lists.
+ */
+const duplicatePairKeys = (
+  pairs: ReadonlyArray<ContrastPair>,
+): ReadonlyArray<string> => {
+  const seen = new Set<string>();
+  return pairs.flatMap((pair) => {
+    const key = pair.join("|");
+    if (!seen.has(key)) {
+      seen.add(key);
+      return [];
+    }
+    return [key];
+  });
+};
+
+const publishedPairLists: ReadonlyArray<
+  readonly [string, ReadonlyArray<ContrastPair>]
+> = [
+  ["contrastPairs", contrastPairs],
+  ["stateFillSurfacePairs", stateFillSurfacePairs],
+  ["stateStepPairs", stateStepPairs],
+  ["markPairs", markPairs],
+  ["inactivePairs", inactivePairs],
+  ["inactiveSoftPairs", inactiveSoftPairs],
+  ["controlBoundarySoftPairs", controlBoundarySoftPairs],
+  ["ringSoftPairs", ringSoftPairs],
+  ["invalidRingPairs", invalidRingPairs],
+  ["softPanelTextPairs", softPanelTextPairs],
+  ["toastTonePairs", toastTonePairs],
+  ["softBorderSurfacePairs", softBorderSurfacePairs],
+  ["trackSurfacePairs", trackSurfacePairs],
+  ["trackMarkPairs", trackMarkPairs],
+  ["selectionPairs", selectionPairs],
+  ["selectionWashPairs", selectionWashPairs],
+  ["selectionSoftPairs", selectionSoftPairs],
+  ["selectionSoftWashPairs", selectionSoftWashPairs],
+  ["selectionFillPairs", selectionFillPairs],
+  ["selectionFillWashPairs", selectionFillWashPairs],
+  ["overlayWashPairs", overlayWashPairs],
+];
+
+describe("published pair lists", () => {
+  it("detects a repeated composition, so the guard can fail", () => {
+    expect(
+      duplicatePairKeys([
+        ["border", "card", "divider"],
+        ["border", "card", "divider"],
+      ]),
+    ).toEqual(["border|card|divider"]);
+  });
+
+  it("never repeats a composition inside a list", () => {
+    publishedPairLists.forEach(([name, pairs]) => {
+      expect(duplicatePairKeys(pairs), name).toEqual([]);
+    });
+  });
+});
 
 describe("contrastRatio", () => {
   it("returns the WCAG extremes", () => {
@@ -397,9 +474,7 @@ describe("themeContrastFailures", () => {
 
   it("covers every documented pair", () => {
     expect(contrastPairs.length).toBe(337);
-    expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(stateStepPairs).toHaveLength(8);
-    expect(new Set(stateStepPairs).size).toBe(8);
     expect(softPanelTextPairs).toHaveLength(8);
     expect(toastTonePairs).toHaveLength(4);
     expect(softBorderSurfacePairs.length).toBe(32);
@@ -439,7 +514,6 @@ describe("themeContrastFailures", () => {
       "destructiveSoft",
     ]);
     expect(selectionPairs.length).toBe(18);
-    expect(new Set(selectionPairs).size).toBe(selectionPairs.length);
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(4);
     expect(selectionSoftWashPairs.length).toBe(4);
@@ -451,7 +525,6 @@ describe("themeContrastFailures", () => {
       "destructive",
     ]);
     expect(overlayWashPairs.length).toBe(4);
-    expect(new Set(overlayWashPairs).size).toBe(overlayWashPairs.length);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {

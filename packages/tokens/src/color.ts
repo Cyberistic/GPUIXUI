@@ -422,7 +422,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 64 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 66 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
  * skeleton is a perceivable step off the pressed wash (plan 094). The divider is
  * darker than the neutral press step, so an outlined control keeps its 3:1 edge
@@ -498,7 +498,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 64 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 66 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it — the generic
  * `active` wash (plan 080) and the designed neutral press step (plan 318) — and

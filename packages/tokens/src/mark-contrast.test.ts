@@ -86,7 +86,6 @@ describe("the mark contract", () => {
         .map(([foreground, background]) => `${foreground} on ${background}`)
         .toSorted(),
     ).toEqual(expected);
-    expect(new Set(markPairs).size).toBe(markPairs.length);
   });
 
   it("names only colour roles and the mark class", () => {

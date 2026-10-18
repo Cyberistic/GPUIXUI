@@ -117,6 +117,5 @@ describe("status text on the state washes", () => {
     );
 
     expect(washPairs).toHaveLength(statusTones.length * washes.length);
-    expect(new Set(washPairs).size).toBe(washPairs.length);
   });
 });

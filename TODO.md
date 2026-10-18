@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 116/151
+`[x]` `[███████░░░]` 117/162
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -79,6 +79,12 @@ bar with `xSoftForeground` on `popover`, which the contract measured only on its
 own soft fill, so an edited theme could erase a toast's tone while the checker
 returned `[]`; every shipped set passes (11.97:1 at the tightest), so no colour
 moves and the contract grows 333 → 337 (plan 348)
+`[x]` Hold the contract's own guards to their claims — every "unique pairs"
+assertion built a `Set` of tuple arrays, which compares identity, so a repeated
+`[foreground, background, class]` could never fail one and the checker could
+report a composition twice; each published list is now checked by content and
+the guard has a case that proves it can fail. The high-contrast palette's JSDoc
+still said 64 roles (66 ship) and is now held to `colorRoles.length` (plan 349)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

@@ -75,7 +75,6 @@ describe("typed text on the canvas field", () => {
     });
     expect(surfacesOf("input")).toEqual([["inputForeground", "input", "body"]]);
     expect(typedTextPairs).toHaveLength(5);
-    expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
   });
 
   it("keeps every shipped theme above its declared floor", () => {

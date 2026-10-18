@@ -60,7 +60,6 @@ describe("filled state steps", () => {
 
   it("exports one pair per family step", () => {
     expect(stateStepPairs).toHaveLength(filledControlFamilies.length * 2);
-    expect(new Set(stateStepPairs).size).toBe(stateStepPairs.length);
   });
 
   it("reports a hover that is the fill it follows", () => {

@@ -1246,6 +1246,13 @@ fills. The wash itself is compared with each surface it paints on, so a
 highlight that has become imperceptible is reported as well;
 `selectionWashPairs` is that list.
 
+Every exported pair list is held to content uniqueness: a repeated
+`[foreground, background, class]` would make the checker report one composition
+twice, so `contrast.test.ts` fails on it. Lists that measure the same roles
+through a different wash — `selectionPairs` beside `contrastPairs`, for example
+— are separate checks, not duplicates, so uniqueness is asserted inside each
+list and never across them.
+
 An invalid field is an error state, not a decoration: `FieldInput` paints a
 `destructive` border over its `input` fill and the ColorPicker hex field over
 the `background` canvas, so both are `boundary` pairs.
