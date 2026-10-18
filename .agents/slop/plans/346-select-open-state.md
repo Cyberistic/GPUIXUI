@@ -110,11 +110,10 @@ const open = props.disabled !== true && openState.value.current;
    - four runtime cases (see §4); reuse `triggerOf`, `focusedId` and the existing
      option fixture. Add a small `ControlledSelect` test component with
      `useState` only for the controlled round trip.
-3. **`packages/primitives/src/components/Select.test.tsx`**
-   - one element-tree case: `renderSelect` with the chevron's `open` argument is
-     already covered; add an assertion that the root `style` callback receives
-     `open: true` while open (the callback already exists — plan `080`). This is
-     the only offline surface of the change.
+3. **`packages/primitives/src/core/select.ts` + `select.test.ts`**
+   - one pure rule, `selectOpen(requestedOpen, disabled)`, so "a disabled select
+     is closed" is provable without a window;
+   - one test with the three truth-table rows (see §4.2).
 4. **`packages/primitives/docs/select.mdx`**
    - props table: `open`, `defaultOpen`, `onOpenChange`;
    - a short **Open state** section with a copyable controlled example
@@ -161,18 +160,17 @@ Failure directions (measure, then revert):
 | do not pass `open={open}` to `GpuixSelect` | the controlled round trip (never opens) and the `open={false}` case (opens) |
 | pass `open` but drop `onOpenChange` | the controlled round trip never opens (`seen` stays `[]`) |
 
-### 4.2 Element tree (`src/components/Select.test.tsx`)
+### 4.2 Offline (`src/core/select.test.ts`)
 
-- render with `open = true` and a style callback that records its argument;
-  assert `open: true`, `disabled: false`, `invalid: false` — the root callback
-  follows the same value the list does.
-- Failure direction: pass a hardcoded `open: false` to the callback and the case
-  fails on that field.
+- `selectOpen(true, true)` is `false`, `selectOpen(true, false)` is `true`,
+  `selectOpen(false, false)` is `false`.
+- Failure direction: return `requestedOpen` alone (ignore `disabled`) and the
+  case fails on the first row.
 
 ### 4.3 Commands
 
 ```sh
-nub run --filter @gpuixui/primitives test -- src/components/Select.test.tsx
+nub run --filter @gpuixui/primitives test -- src/core/select.test.ts
 nub run --filter @gpuixui/primitives test
 nub run --filter @gpuixui/primitives test:runtime -- runtime/fields.runtime.test.tsx
 nub run --filter @gpuixui/primitives test:runtime
@@ -182,7 +180,9 @@ nub run lint
 ```
 
 Expected before: offline 41 files / 567; runtime 23 files / 398.
-Expected after: offline 41 files / 568; runtime 23 files / 402 (four new cases).
+Expected after: offline 41 files / 568; runtime 23 files / 403 (five new
+runtime cases — the plan was written with four; the controlled/disabled pair
+needed one case each, and one case covers the pure rule offline).
 
 ## 5. STOP conditions
 
@@ -221,5 +221,49 @@ Stop and report with the measurement rather than improvise if:
 
 ## 7. Result
 
-_To be filled in after implementation, with the measured before/after and the
-three mutation results._
+Landed on `agent/primitives`, 2026-10-18.
+
+### 7.1 Measured before/after
+
+| Observation | Before | After |
+| --- | --- | --- |
+| disabling an open select | `paintedText()` = `['Apple','Pear']` | no list painted; trigger still painted; no value reported |
+| `<Select open />` (controlled) | ignored — `paintedText()` = `[]` | list paints; the parent decides every transition |
+| `<Select defaultOpen />` | not a prop (uncontrolled only via interaction) | paints on mount; Escape closes and reports `[false]` |
+| disabled + controlled `open` | list painted | no list; parent receives one `onOpenChange(false)` |
+
+The pure rule is `selectOpen(requestedOpen, disabled)` in `core/select.ts`;
+`Select` wires `open`/`defaultOpen`/`onOpenChange` through
+`useControlState` and passes the derived value to `GpuixSelect`.
+
+### 7.2 Both-direction proofs (each mutation measured, then reverted)
+
+| Mutation | Failing tests (exact names) |
+| --- | --- |
+| remove the disabled-close effect | `closes the list when the select becomes disabled while open`; `closes a disabled select whose controlled open still says open` |
+| `selectOpen` ignores `disabled` | the same two runtime cases, plus `closes a disabled select whatever the requested open says` (core) |
+| stop passing `open={open}` to `GpuixSelect` | `lets a controlled open prop decide, not the runtime's request`; `opens on defaultOpen and closes on Escape`; `closes the list when the select becomes disabled while open` |
+| stop passing `onOpenChange` to `GpuixSelect` | every open-path case: `opens a Select's list and paints its options`, `keeps the Select trigger ringed while its list is open`, `follows a controlled open state through the trigger`, … (the controlled state never updates, so nothing opens) |
+
+### 7.3 Suites
+
+| Run | Result |
+| --- | --- |
+| `nub run --filter @gpuixui/primitives test` | **41 files / 568 tests green** (was 567; +1 core) |
+| `nub run --filter @gpuixui/primitives test:runtime` | **23 files / 403 tests green** (was 398; +5) |
+| `nub run --filter @gpuixui/primitives check-types` | clean |
+| `nub run check` / `nub run lint` / `nub run test` | green |
+
+### 7.4 Deviations
+
+- The planned element-tree case was replaced by the pure `selectOpen` rule and
+  its test: the element renderer already received `open` before this change, so
+  an element assertion there could not fail for this fix. The rule is the part
+  that was missing, and it is provable without a window.
+- One runtime case was added beyond the plan (five, not four): the controlled
+  and uncontrolled disabled cases assert different things — paint with a stale
+  controlled `open`, and the single close request.
+- Closing on disable does not call GPUix's own `setOpen`, so focus is not
+  returned to the trigger. That is deliberate: the trigger is disabled and has
+  no tab stop; the list is unmounted and native focus is dropped with it.
+

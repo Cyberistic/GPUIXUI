@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 93/93
+`[x]` `[██████████]` 94/94
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -752,6 +752,17 @@ retired once both branches are one
       documented non-triggers, and `Tooltip.style` sizes the hugging root so a
       full-width child (a Slider) keeps its width. 7 element + 12 runtime cases,
       both directions proven (plan `345`).
+
+`[x]` `packages/primitives`: **a `Select` disabled while its list was open left
+      the list painted**, and the wrapper's private open state hid the
+      runtime's controlled contract (`open={true}` was ignored). Measured:
+      re-rendering a select with `disabled` after opening its list kept
+      `['Apple','Pear']` painted, and the runtime refuses every choice on a
+      disabled select, so it was a dead menu. `open`/`defaultOpen`/
+      `onOpenChange` now go through `useControlState`, one derived value drives
+      the chevron, ring, `SelectState.open` and list, and a disabled select is
+      closed (a controlled parent is asked once). 5 runtime + 1 core test, three
+      mutations fail by name (plan `346`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

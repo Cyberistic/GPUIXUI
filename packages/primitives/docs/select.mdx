@@ -3,11 +3,13 @@ title: Select
 description: One choice from a list, in a popover — a themed wrapper over GPUix's own Select.
 ---
 
-`Select` reuses `@gpuix/react/select` for the open state, dismissal and arrow
-navigation, and themes it to match the field chrome. It is **not** a
-reimplementation: what this package owns is the trigger's paint, the list
-surface, the item states, and the **accessibility contract** GPUix's headless
-Select does not set (plan `057`).
+`Select` reuses `@gpuix/react/select` for dismissal and arrow navigation, and
+themes it to match the field chrome. The **open state is the wrapper's** — it
+follows the package's one controlled rule — so a select can be opened from code
+and a disabled select cannot be left with a dead menu (plan `346`). It is **not**
+a reimplementation: what this package owns is the trigger's paint, the list
+surface, the item states, the open state and the **accessibility contract**
+GPUix's headless Select does not set (plan `057`).
 
 ## Usage
 
@@ -63,6 +65,39 @@ select is disabled — carries no accessible name (it is decoration, not content
 and sets `pointerEvents: "none"`, so a click aimed at it reaches the trigger. The
 indicator does not change the combobox's name or add an `Image` node.
 
+## Open state
+
+`open` / `defaultOpen` / `onOpenChange` follow the same rule as every value in
+this package: a supplied `open` makes the parent the owner, and the list changes
+only when the parent supplies a new one. That is what lets a command palette, an
+"edit" button or a tour open a select from code:
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<Button onClick={() => setOpen(true)}>Change region</Button>
+<Select
+  open={open}
+  onOpenChange={setOpen}
+  value={region}
+  onValueChange={setRegion}
+  label="Region"
+  options={regions}
+/>;
+```
+
+`defaultOpen` opens an uncontrolled select on mount; a click on the trigger,
+Escape, an outside press and committing an option all report through
+`onOpenChange`. The chevron, the trigger ring, `SelectState.open` and the list
+read one derived value, so they cannot disagree.
+
+**A disabled select is closed.** Disabling a select while its list is open
+removes the list: GPUix refuses every choice and the outside-press path on a
+disabled select, so a painted list would be a menu that cannot act (measured,
+plan `346`). An uncontrolled select closes itself; a controlled parent receives
+`onOpenChange(false)` and the wrapper paints closed regardless, so a stale
+`open` cannot resurrect the dead menu.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -71,8 +106,11 @@ indicator does not change the combobox's name or add an `Image` node.
 | `value` | `string` | — | controlled selection |
 | `defaultValue` | `string` | — | initial selection when uncontrolled |
 | `onValueChange` | `(value: string) => void` | none | committed value |
+| `open` | `boolean` | — | controlled open state; the list changes only when the parent changes it |
+| `defaultOpen` | `boolean` | `false` | initial open state when uncontrolled |
+| `onOpenChange` | `(open: boolean) => void` | none | the select asks to open or close; a disabled select asks to close |
 | `placeholder` | `string` | none | shown before a choice |
-| `disabled` | `boolean` | `false` | refuses opening |
+| `disabled` | `boolean` | `false` | refuses opening, closes an open list, and leaves the tab order |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | trigger height and padding |
 | `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
@@ -275,8 +313,13 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - **The side uses a measured list width.** A move to the other horizontal side
   is decided from the width the list painted on open; a list wider than both
   sides is still clamped by the runtime and may cover its trigger.
-- The list's dismissal and positioning are GPUix's; this package cannot change
-  the open animation or the outside-click rules.
+- The list's dismissal and positioning are GPUix's; this package owns the open
+  **state** (above) but cannot change the open animation or the outside-click
+  rules.
+- A controlled parent that ignores `onOpenChange(false)` while the select is
+  disabled keeps `open` true; the wrapper still paints closed and shows the list
+  again if both `open` and `disabled` stop disagreeing. The request is sent once,
+  not on every render.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
 - No multi-select.
 - No `aria-haspopup` (absent from the runtime's host props); the `combobox`
@@ -302,7 +345,8 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   the flat `items` order, and the selected label across a group (plan `075`).
 - `src/core/select.test.ts` — the entry model: a flat list reads as itself, a
   group flattens in paint order without its heading, an empty group contributes
-  nothing, and disabled flags survive the flatten.
+  nothing, disabled flags survive the flatten, and a disabled select is closed
+  whatever its requested open says (plan `346`).
 - `src/core/floating.test.ts` — the side decision: fits below, does not fit
   below but fits above, the collision margin, an exact fit, the more-room
   fallback, a preferred side, and the space on each side — including the height
@@ -353,7 +397,13 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   **Indicator (343):** the mounted trigger contains a painted `svg`
   (`sel-chevron`) with `pointerEvents: "none"`, it produces no `Image`
   accessibility node, the `ComboBox` is still named `Fruit`, and a hit-tested
-  click on the trigger still opens the list.
+  click on the trigger still opens the list. **Open state (346):** a controlled
+  select opens from the trigger, Escape closes it and the parent sees
+  `[true, false]`; an `open={false}` select ignores the runtime's open request
+  until the parent supplies `true`; `defaultOpen` paints on mount and Escape
+  closes it; disabling a select while its list is open removes the list (the
+  failing direction left `Apple`/`Pear` painted), and a controlled `open` that
+  stays true on a disabled select paints closed and reports one `false`.
 
 
 ```sh
