@@ -246,6 +246,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [549](./549-status-text-tone-index.md) | The status-text pairs retype the tone index | F | 014, 057, 083, 314, 546–548 | done |
 | [550](./550-border-width-ladder.md) | The strong border may not be thinner than the thin one | F | 017, 358, 360, 372, 523, 533 | done |
 | [551](./551-undefined-platform-colour-palette.md) | An `undefined` platform colour inherits the palette it asked for | F | 301, 321, 323, 373, 545 | done |
+| [552](./552-scale-ladder-totality.md) | Every size ladder walks the theme's own scale | F | 358, 360, 519, 531, 547–550 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2679,6 +2680,22 @@ colour inherits from the requested level's palette — the base still wins when
 the style contributes no colour at all, which is plan 323's case, and a
 same-level base keeps its edits. No colour, pair, floor, metric, theme, platform
 style or recipe value moves; 135 files / 5663 tests pass.
+
+Plan `552` closes the last domain split inside the numeric contract. Plan `531`
+made the **finite** half total by walking a theme's group value, but the
+**ladder** half still read hand-typed lists of the shipped member names, so a
+member the theme carried outside that list was never compared:
+`extendTheme(light, { spacing: { ...spacing, "6xl": 1 } })` kept the step and
+`themeMetricFailures` returned `[]`, while the catalogue promised every named
+ladder must not step backwards. `extendTheme` copies the base group and appends
+the override's members, so the theme's own insertion order *is* the authored
+ladder; the six ladders (`spacing`, `radius`, `iconSize`, `avatarSize`,
+`controlHeight`, `controlPaddingX`) now walk the theme's object through the same
+`numericMembers` walker the finite pass uses. `radius.none` and `radius.full`
+stay out of the ladder because each has its own rule, so one defect keeps one
+report. The new `scale-ladder-totality.test.ts` fails on five extra steps
+before the change and passes after it, every shipped set still returns `[]`, and
+no colour, pair, floor, metric, theme, platform style or recipe value moves.
 
 ## How to use a plan
 
