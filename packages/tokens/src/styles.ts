@@ -88,17 +88,37 @@ export interface StatusToneStyle {
    * this: the light `warning` is 1.78:1 against the canvas.
    */
   readonly text: string;
+  /**
+   * The solid fill and its one readable foreground — the third tonality the
+   * status families publish, beside the soft surface and the plain-surface text.
+   * The fill is measured on the eight surfaces a status chip sits on
+   * (`statusFillPairs`) and the foreground on the fill; a status *dot* is
+   * `text`, not this, because the light `warning` fill is 1.78:1 on the canvas,
+   * under the 3:1 a mark needs.
+   */
+  readonly solid: {
+    /** The solid fill: `info`, `success`, `warning` or `destructive`. */
+    readonly background: string;
+    /** The on-colour foreground (`xForeground`). */
+    readonly foreground: string;
+  };
 }
 
 /**
- * Resolve a status tone to the roles a soft status surface needs. The soft
+ * Resolve a status tone to the roles a status surface needs. The soft
  * foreground is designed per theme, so no component has to mix a readable text
  * colour from the solid status colour. `text` is the tone's plain-surface
- * foreground, for inline status labels, icons and indicator dots.
+ * foreground, for inline status labels, icons and indicator dots; `solid` is
+ * the fill-and-on-colour pair a solid chip paints.
+ *
+ * A solid chip is a fill on the eight surfaces a chip sits on; a dot or label is
+ * `text`, never the solid fill — the light `warning` fill is 1.78:1 on the
+ * canvas, under the 3:1 a mark needs.
  *
  * @example
  * ```tsx
  * const tone = statusTone(theme, "info");
+ * tone.solid.background; // "#2559D6" in the light theme — the solid chip fill
  * <div
  *   style={{
  *     backgroundColor: tone.background,
@@ -114,6 +134,10 @@ export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
     foreground: theme.colors[`${tone}SoftForeground`],
     border: theme.colors[`${tone}SoftBorder`],
     text: theme.colors[`${tone}Text`],
+    solid: {
+      background: theme.colors[tone],
+      foreground: theme.colors[`${tone}Foreground`],
+    },
   };
 }
 

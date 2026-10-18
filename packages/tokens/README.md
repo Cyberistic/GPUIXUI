@@ -431,7 +431,12 @@ washes — because the fill is deliberately close to a row wash and the edge is 
 shape a reader sees. The light warning edge measured 1.036:1 on the macOS light
 pressed wash and 1.042:1 on the Linux light one until plan 308 moved it to
 `#EFC055`, and the 30% mixture that measured 1.12:1 at high contrast cannot
-return.
+return. The solid status fill is a fill too: `statusFillPairs` holds
+`info`/`success`/`warning`/`destructive` to the same 1.05:1 floor on those eight
+surfaces (the four `destructive` base surfaces are already the action fill's
+pairs), so an edited theme cannot make a solid chip vanish into its panel. A
+status dot or label stays `xText`: the light `warning` fill is 1.78:1 on the
+canvas, under the 3:1 a mark needs.
 Four shipped sets had the divider equal to the fill it sits on (1.00:1) until
 plan 080, so an edge vanished exactly while a control was pressed. The designed
 neutral family repeated the defect one role generation later: a secondary control

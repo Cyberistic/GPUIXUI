@@ -102,6 +102,7 @@ import {
   stateFillRoles,
   stateFillSurfacePairs,
   stateFillSurfaces,
+  statusFillPairs,
   skeletonPulsePairs,
   textTiers,
   toastTonePairs,
@@ -298,7 +299,7 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 339 to **${contrastPairs.length}**`,
+      `taking it from 360 to **${contrastPairs.length}**`,
     );
   });
 
@@ -1037,6 +1038,28 @@ describe("docs/tokens.md quoted tightest figures", () => {
       );
     });
   });
+
+  it("quotes the weakest solid status fill", () => {
+    const weakest = statusFillPairs
+      .flatMap(([fill, surface]) => {
+        const [label, ratio] = tightest(fill, surface);
+        return [{ fill, surface, label, ratio }];
+      })
+      .reduce((worst, current) =>
+        current.ratio < worst.ratio ? current : worst,
+      );
+
+    expect([
+      weakest.fill,
+      weakest.surface,
+      weakest.label,
+      Number(weakest.ratio.toFixed(3)),
+    ]).toEqual(["warning", "selected", "XP light", 1.262]);
+    expect(markdownProse).toContain(
+      "**1.262:1** (XP light `warning` on `selected`)",
+    );
+  });
+
   it("quotes the tightest filled-action selection text and veil", () => {
     const fillSets: ReadonlyArray<readonly [string, Theme]> =
       themeModes.flatMap((mode) =>
@@ -2101,8 +2124,19 @@ describe("docs/design-system.md", () => {
         fillRoles.has(foreground) && pairClass === "surface",
     );
 
-    expect(pairs).toEqual(stateFillSurfacePairs);
-    expect(pairs).toHaveLength(60);
+    // A role can serve two families: `destructive` is an action fill and a
+    // solid status fill, so its chip pairs join the surface rows. Every
+    // interactive fill still has every one of its four panels.
+    stateFillSurfacePairs.forEach((pair) => expect(pairs).toContainEqual(pair));
+    stateFillRoles.forEach((fill) =>
+      stateFillSurfaces.forEach((surface) =>
+        expect(pairs, `${fill} on ${surface}`).toContainEqual([
+          fill,
+          surface,
+          "surface",
+        ]),
+      ),
+    );
     stateFillRoles.forEach((fill) => {
       expect(markdown, fill).toContain(`\`${fill}\``);
     });
@@ -2112,6 +2146,21 @@ describe("docs/design-system.md", () => {
     expect(markdown).toContain("stateFillSurfacePairs");
     expect(markdown).toContain("stateFillRoles");
     expect(markdown).toContain("stateFillSurfaces");
+  });
+
+  it("names every solid status fill and the surfaces it is held against", () => {
+    const rowText = tableRow("solid status fill");
+    statusTones.forEach((tone) => {
+      expect(rowText, tone).toContain(`\`${tone}\``);
+      expect(markdown, tone).toContain(`\`${tone}\``);
+    });
+    const surfaces = [...new Set(statusFillPairs.map(([, fill]) => fill))];
+    surfaces.forEach((surface) => {
+      expect(rowText, surface).toContain(`\`${surface}\``);
+      expect(designSystem, surface).toContain(`\`${surface}\``);
+    });
+    expect(markdown).toContain("statusFillPairs");
+    expect(designSystem).toContain("statusFillPairs");
   });
 
   it("names every surface default body text is measured on", () => {

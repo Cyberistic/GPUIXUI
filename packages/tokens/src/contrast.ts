@@ -157,12 +157,13 @@ const softBorderPairs: readonly ContrastPair[] = [
 ];
 
 /**
- * The surfaces a soft status chip occupies. A Badge sits on the plain surfaces,
- * the quiet panel and the four washes a row paints, so the chip's designed edge
- * is the boundary a reader sees — its fill is deliberately close to the row
- * wash (plan 300), which makes the edge the shape.
+ * The surfaces a status chip occupies — soft or solid. A Badge sits on the
+ * plain surfaces, the quiet panel and the four washes a row paints, so a soft
+ * chip's designed edge is the boundary a reader sees (its fill is deliberately
+ * close to the row wash, plan 300) and a solid chip's fill is the shape; both
+ * are held to the perceivability floor on the same list.
  */
-const softBorderSurfaces = [
+const chipSurfaces = [
   "background",
   "card",
   "popover",
@@ -176,7 +177,7 @@ const softBorderSurfaces = [
 /** Each soft status edge measured on the surfaces a chip sits on. */
 export const softBorderSurfacePairs: readonly ContrastPair[] =
   statusTones.flatMap((tone) =>
-    softBorderSurfaces.map(
+    chipSurfaces.map(
       (background): ContrastPair => [
         `${tone}SoftBorder`,
         background,
@@ -290,6 +291,35 @@ export const stateFillSurfacePairs: readonly ContrastPair[] =
     stateFillSurfaces.map(
       (background): ContrastPair => [fill, background, "surface"],
     ),
+  );
+
+/** The interactive compositions, so a later fill list does not repeat one. */
+const stateFillCompositions: ReadonlySet<string> = new Set(
+  stateFillSurfacePairs.map(
+    ([foreground, background]) => `${foreground}|${background}`,
+  ),
+);
+
+/**
+ * The solid status fill on the surfaces a chip occupies. The solid roles carry a
+ * measured foreground (`xForeground` on `x`), so they are designed as fills; the
+ * fill half of that pair was the one no list measured, because plan 309 holds
+ * the *interactive* fills and a status chip is not interactive. A status dot or
+ * label is a different class: it is `xText` at the secondary floor, because the
+ * light `warning` fill is 1.78:1 on the canvas, under the 3:1 a mark needs. A
+ * solid chip is a fill, so it is held to the perceivability floor where it is
+ * painted. `destructive` is also an action fill, so the four base surfaces it
+ * already has through `stateFillSurfacePairs` are not repeated.
+ */
+export const statusFillPairs: readonly ContrastPair[] = statusTones
+  .flatMap((tone) =>
+    chipSurfaces.map(
+      (background): ContrastPair => [tone, background, "surface"],
+    ),
+  )
+  .filter(
+    ([foreground, background]) =>
+      !stateFillCompositions.has(`${foreground}|${background}`),
   );
 
 /**
@@ -744,7 +774,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * status surfaces and the loading skeleton a canvas, a quiet panel or a row wash
  * must distinguish, the
  * designed edge around each soft status surface, measured on its own fill and
- * on the eight surfaces a chip sits on, the plain divider on those
+ * on the eight surfaces a chip sits on, the solid status fill on those same
+ * surfaces (`statusFillPairs`) — a solid role is a fill, while a status dot is
+ * `xText` — the plain divider on those
  * soft fills, the decorative dividers
  * that must stay visible, including on the fills a bordered control paints —
  * the neutral family's resting, hovered and pressed fills, the generic washes
@@ -892,6 +924,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...controlFillPairs,
   ...selectedRowEdgePairs,
   ...stateFillSurfacePairs,
+  ...statusFillPairs,
   ...softActionPairs,
   ...softActionStepPairs,
   ...softActionLabelPairs,
@@ -1417,9 +1450,10 @@ const fadedVisibilityFailures = (
  * - `contrastPairs` — body and secondary text on the plain surfaces, the field,
  *   the row washes and the soft status fills; the control boundary, focus ring
  *   and dividers; the inactive label; the marks and the value track; every
- *   interactive fill against the panel it paints on; and the state steps of the
- *   filled families, the generic washes, the selected row and the status panel's
- *   raised action — `softActionPairs`, `softActionStepPairs` and
+ *   interactive fill against the panel it paints on; the solid status fill on
+ *   the surfaces a status chip occupies (`statusFillPairs`); and the state steps
+ *   of the filled families, the generic washes, the selected row and the status
+ *   panel's raised action — `softActionPairs`, `softActionStepPairs` and
  *   `softActionLabelPairs`.
  * - `selectionPairs`, `selectionStatusPairs`, `selectionWashPairs`,
  *   `selectionSoftPairs` and `selectionSoftWashPairs` — text, status text and

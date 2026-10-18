@@ -332,6 +332,15 @@ a status badge sat at 1.023:1 on Linux light, 1.036:1 on macOS light and 1.043:1
 on Windows light until plan `300` moved the four light tints one small step
 deeper.
 
+Because the solid role is a fill, it is held like one: `statusFillPairs`
+measures each of the four solid fills on the eight surfaces a status chip sits
+on — `background`, `card`, `popover`, the `muted` panel and the four row washes
+— at 1.05:1 in both contrast levels. The tightest shipped pair is
+**1.262:1** (XP light `warning` on `selected`), so the pairs guard an edited
+theme rather than a shipped value. A status *dot* is still `xText`: a fill that
+is perceptible as a large chip is not a mark, and the light `warning` fill is
+1.78:1 on the canvas, under the 3:1 a mark needs.
+
 The shipped Toast is the one exception to that split: `toast/viewport.tsx`
 places its tone glyph and its 3px tone bar with `xSoftForeground` on the
 `popover` card rather than on a soft fill. That composition is held at the
@@ -355,7 +364,7 @@ under the 3:1 divider floor. Because it is a role, a copied platform style edits
 it with the rest of the palette.
 
 `statusTone(theme, tone)` resolves the soft surface, its readable foreground, its
-designed edge, and the plain-surface text role:
+designed edge, the plain-surface text role and the solid fill with its on-colour:
 
 ```ts
 import { statusTone } from "@gpuixui/tokens";
@@ -365,6 +374,8 @@ tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
 tone.border; // theme.colors.infoSoftBorder
 tone.text; // theme.colors.infoText — labels and dots on plain surfaces and row washes
+tone.solid.background; // theme.colors.info — the solid chip fill
+tone.solid.foreground; // theme.colors.infoForeground — readable on it
 ```
 
 A tone can arrive as data — a server payload, a stored notification. It is
@@ -2240,6 +2251,10 @@ hover and press to the 1.05:1 `step` floor, and `softActionLabelPairs` holds
 `softActionForeground` on the three fills (the secondary floor) and on the four
 soft fills a ghost action's label rests on (the body floor) — taking it from 339
 to **360**. Every shipped set clears every pair, so no existing colour moves.
+Plan `399` adds the solid status fill on the eight surfaces a status chip sits
+on (`statusFillPairs`) — `destructive`'s four base surfaces are already
+measured as an action fill — taking it from 360 to **388**; every shipped set
+clears the floor (1.262:1 at the tightest), so no colour moves.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2455,7 +2470,8 @@ Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionFillPairs`, `selectionFillWashPairs`, `softPanelTextPairs` and
 `overlayWashPairs` measure the
 painted roles — `inactivePairs` is the thirteen-surface
-inactive list, `softBorderSurfacePairs` the eight-surface chip edge and `disabled`
+inactive list, `softBorderSurfacePairs` the eight-surface chip edge,
+`statusFillPairs` the solid status fill on the same chip surfaces and `disabled`
 is measured as its own fill — and
 `contrast.test.ts` keeps a
 declared exemption list for the two that are not pairs: `scrollbar` (reserved; the
@@ -2530,6 +2546,11 @@ examples caught two `<ThemeProvider>` blocks that never imported it.
 set clears the three lists, the reviewed neutral composition is still measured
 at 80 of 288 pairs with the Windows light worst figure, and the public checker
 reports an erased fill, a collapsed press and the label on a tint.
+`packages/tokens/src/status-solid.test.ts` holds the third status tonality:
+`statusTone(...).solid` resolves the fill and its on-colour in every shipped
+set, the solid fills clear the surface floor on every chip surface, the public
+checker reports a solid fill that matches its panel, and the mark class stays
+`xText`.
 
 ## Limitations and future work
 

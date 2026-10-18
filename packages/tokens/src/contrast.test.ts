@@ -191,6 +191,7 @@ import {
   softBorderSurfacePairs,
   softPanelTextPairs,
   stateFillSurfacePairs,
+  statusFillPairs,
   stateStepPairs,
   themeContrastFailures,
   toastTonePairs,
@@ -250,6 +251,7 @@ const publishedPairLists: ReadonlyArray<
   ["softPanelTextPairs", softPanelTextPairs],
   ["toastTonePairs", toastTonePairs],
   ["softBorderSurfacePairs", softBorderSurfacePairs],
+  ["statusFillPairs", statusFillPairs],
   ["trackSurfacePairs", trackSurfacePairs],
   ["trackMarkPairs", trackMarkPairs],
   ["selectionPairs", selectionPairs],
@@ -488,7 +490,34 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(360);
+    expect(contrastPairs.length).toBe(388);
+    expect(statusFillPairs).toHaveLength(28);
+    expect(
+      statusFillPairs.map(([foreground, background]) => [
+        foreground,
+        background,
+      ]),
+    ).toEqual(
+      ["info", "success", "warning", "destructive"].flatMap((tone) =>
+        [
+          "background",
+          "card",
+          "popover",
+          "muted",
+          "hover",
+          "active",
+          "accent",
+          "selected",
+        ]
+          .filter(
+            (surface) =>
+              !stateFillSurfacePairs.some(
+                ([role, fill]) => role === tone && fill === surface,
+              ),
+          )
+          .map((surface) => [tone, surface]),
+      ),
+    );
     expect(softActionPairs).toHaveLength(12);
     expect(softActionStepPairs).toHaveLength(2);
     expect(softActionLabelPairs).toHaveLength(7);

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 164/221
+`[x]` `[███████░░░]` 165/222
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1264,6 +1264,19 @@ an inverted text tier passed a case titled "all checks"; the three suites now
 ask `themeFailures`, the documents build the guarantee's count from the index
 instead of retyping "five", and a docs guard fails on "all three/four checks"
 (plan 398)
+`[x]` Hold the solid status fill like the fill it is and resolve it in one call —
+the documents publish a `Solid fill` column, `ThemeColors.success` is "success
+background and indicator" and the design system offers "its solid role for a
+fill", but only the on-colour foreground was measured: `stateFillSurfacePairs`
+holds the *interactive* fills, and a status chip is not interactive, so a copied
+theme whose status fill equalled its card erased a solid chip while all five
+checks returned `[]`. `statusTone(theme, tone).solid` now returns the fill and
+its on-colour, and `statusFillPairs` holds the four fills to the 1.05:1 surface
+floor on the eight surfaces a chip sits on (28 pairs — `destructive`'s four base
+surfaces are already the action fill's; 360 → 388), every shipped set passes
+(1.262:1 at the tightest, XP light `warning` on `selected`) and no colour moves.
+The mark story is unchanged: a status dot or label is `xText`, not the solid fill
+(plan 399)
 
 ## Phase C — Tier 1–2 components
 
