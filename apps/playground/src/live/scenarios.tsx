@@ -32,6 +32,7 @@ import { scrollScenario } from "../scenarios/scroll.js";
 import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
+import { tableSelectSortScenario } from "../scenarios/table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
 import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
 import { replaceScenario } from "../scenarios/replace.js";
@@ -2195,6 +2196,88 @@ const restore: LiveScenario = {
     }),
 };
 
+const tableSort: LiveScenario = {
+  id: "live-table-sort",
+  title: "Live table sort: a reorder, a row click and a surviving selection",
+  capability: "table",
+  view: tableSelectSortScenario.view,
+  ready: "table-readout",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The window mounts the table in its default ascending order.
+      yield* ctx.expectContains(
+        "the table starts ascending and unselected",
+        yield* textOf(ctx, "table-readout"),
+        "rows=200 sorted=name-asc selected=none",
+      );
+      yield* ctx.expectContains(
+        "the first row is the ascending head",
+        yield* textOf(ctx, "table-first"),
+        "Item 000",
+      );
+
+      // 2. A real wheel moves the body and leaves the first row alone.
+      yield* ctx.host.wheel("table-scroll", 0, -200);
+      yield* settle;
+      const scrolled = yield* offsetOf(ctx, "table-scroll");
+      yield* ctx.expectNear(
+        `the live body scrolled (y=${scrolled.y})`,
+        scrolled.y,
+        -200,
+        8,
+      );
+      yield* ctx.expectContains(
+        "the first row did not move in the model",
+        yield* textOf(ctx, "table-first"),
+        "Item 000",
+      );
+      yield* ctx.host.wheel("table-scroll", 0, 200);
+      yield* settle;
+
+      // 3. The sort reorders the row the automation tree points at.
+      yield* ctx.host.click("table-sort");
+      yield* settle;
+      yield* waitForText(ctx, "table-readout", "sorted=name-desc");
+      yield* ctx.expectContains(
+        "the sorted readout names the descending order",
+        yield* textOf(ctx, "table-readout"),
+        "sorted=name-desc",
+      );
+      yield* ctx.expectContains(
+        "the first row is now the descending head",
+        yield* textOf(ctx, "table-first"),
+        "Item 199",
+      );
+
+      // 4. A real click selects the reordered row.
+      yield* ctx.host.click("table-first");
+      yield* settle;
+      yield* waitForText(ctx, "table-readout", "selected=r199");
+      yield* ctx.expectContains(
+        "a live row click selects by row id",
+        yield* textOf(ctx, "table-readout"),
+        "selected=r199",
+      );
+
+      // 5. Selection is row-id state; a re-sort keeps it.
+      yield* ctx.host.click("table-sort");
+      yield* settle;
+      yield* waitForText(ctx, "table-readout", "sorted=name-asc");
+      yield* ctx.expectContains(
+        "the re-sort restores the ascending head",
+        yield* textOf(ctx, "table-first"),
+        "Item 000",
+      );
+      yield* ctx.expectContains(
+        "the selection survives the re-sort",
+        yield* textOf(ctx, "table-readout"),
+        "selected=r199",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tableSort.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -2210,6 +2293,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   float,
   primitives,
   table,
+  tableSort,
   highlights,
   preview,
   scroller,

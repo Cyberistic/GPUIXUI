@@ -42,7 +42,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | scroll | `scroll-container`, `scroll-into-view`, `tab-strip-overflow` | verified |
 | panel | `panel-resize`, `panel-nested` | verified |
 | virtual-list | `virtual-list-window`, `variable-rows`, `live-table` | verified |
-| table | `table-select-sort`, `table-column-resize`, `virtualized-table`, `live-table` | verified |
+| table | `table-select-sort`, `table-column-resize`, `virtualized-table`, `live-table`, `live-table-sort` | verified |
 | tree | `tree-view`, `virtualized-tree` | verified |
 | log | `log-viewer` | verified |
 | workspace | `workspace-tab-drag`, `workspace-restore`, `live-restore`, `workspace-panes` | verified |
@@ -75,10 +75,10 @@ The suite is **69/69 green here** (exit `0`, `.artifacts/smoke-report.json`,
 1848 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **21/21 green
+(`nub run --filter playground smoke:live`, plan `189`) and is **22/22 green
 here**: `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
-`preview`, `scroller`, `workspace` (restore) `tier2` and `replace` are confirmed there too
+`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2` and `replace` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -769,8 +769,8 @@ exit `0`, three real-window screenshots.
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
 | Tables | todo | ? | No `<table>` element; grid + `div` rows. Keyboard row navigation builds on the `roving-focus` contract. **Pinned chrome (`grid-wide-table`, plan `185`):** `position: "sticky"` is **ignored** by 0.10.0 (a sticky header scrolls with its content; `style.rs` maps only absolute/fixed/relative), so a header and a frozen column must be derived from the body's one scroll offset (`renderer.getScrollOffset`) and re-rendered from it — measured alignment within 1 px on both axes under a wheel pan. `role="gridcell"` maps to AccessKit `GridCell`, and `aria-selected` reaches the dump. |
-| Sortable tables | todo | ? | Grid + keyboard headers. **Playground (`data-grid-virtual`, plan `338`):** sorting a virtualized grid from anchor 45 must reset the list to row 0 (`scrollToItem`) — without the reset the anchor stays 45 and the frozen column shows unrelated rows; ascending then paints `Item 000`, descending `Item 059`. |
-| Row selection | todo | ? | `aria-selected` is supported (verified). **Playground (`data-grid-virtual`):** clicking a cell in a horizontally panned virtual row selects its row, moves native focus to the cell and does not move the pan. |
+| Sortable tables | todo | ? | Grid + keyboard headers. **Live (`live-table-sort`, plan `340`):** a real click on `table-sort` reorders the row the automation tree points at (`table-first` becomes `Item 199`), a click selects `r199`, and the selection survives a re-sort. **Playground (`data-grid-virtual`, plan `338`):** sorting a virtualized grid from anchor 45 must reset the list to row 0 (`scrollToItem`) — without the reset the anchor stays 45 and the frozen column shows unrelated rows; ascending then paints `Item 000`, descending `Item 059`. |
+| Row selection | todo | ? | `aria-selected` is supported (verified). **Live (`live-table-sort`):** a real row click selects by row id and the selection survives a re-sort. **Playground (`data-grid-virtual`):** clicking a cell in a horizontally panned virtual row selects its row, moves native focus to the cell and does not move the pan. |
 | Column configuration | todo | ? | Grid tracks + a menu. **Two measured shapes:** a wide grid can window columns in component code (`grid-wide-table`) or put all columns inside a `<virtual-list>` that is wider than its viewport (`data-grid-virtual`). The second shape pans the header and every row from one plain scroller; a `deltaX` wheel over the **header** pans, while the same wheel over a body cell is swallowed by the list (a grid needs a pan affordance outside its rows). Columns are **component-windowed** on a wide table: `grid-wide-table` keeps only the visible columns in the tree (at `x=-360` columns 3–10; at the end 17–23), because the runtime keeps clipped children in its paint log. Track widths are `style.width` per cell; `gridTemplateColumns` is a count, not a track list. |
 | Resizable columns | todo | ? | Pointer events + grid tracks. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
