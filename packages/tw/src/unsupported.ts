@@ -9,6 +9,7 @@
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
 
 const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
   [
@@ -71,16 +72,6 @@ const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
       "[&_svg]:pointer-events-none",
       "[&_svg:not([class*='size-'])]:size-3",
       "[&_svg:not([class*='size-'])]:size-4",
-      "has-data-[icon=inline-end]:pr-2",
-      "has-data-[icon=inline-end]:pr-2.5",
-      "has-data-[icon=inline-end]:pr-3",
-      "has-data-[icon=inline-start]:pl-2",
-      "has-data-[icon=inline-start]:pl-2.5",
-      "has-data-[icon=inline-start]:pl-3",
-      "has-[>svg]:px-1.5",
-      "has-[>svg]:px-2.5",
-      "has-[>svg]:px-3",
-      "has-[>svg]:px-4",
     ],
   ],
   [
@@ -100,18 +91,6 @@ const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
     ],
   ],
   [
-    "Base UI data/aria state variants are applied by the owning component.",
-    [
-      "aria-expanded:bg-muted",
-      "aria-expanded:bg-secondary",
-      "aria-expanded:text-foreground",
-      "aria-expanded:text-secondary-foreground",
-      "data-behind:opacity-0",
-      "data-expanded:opacity-100",
-      "data-limited:opacity-0",
-    ],
-  ],
-  [
     "GPUix StyleDesc has no background-clip, text-underline-offset or isolation.",
     ["bg-clip-padding", "underline-offset-4", "isolate"],
   ],
@@ -124,6 +103,7 @@ const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
     "`sr-only` needs clipping and a 1px box the native style cannot express.",
     ["sr-only"],
   ],
+  ["GPUix has no user-resize handle; the textarea is fixed.", ["resize-none"]],
   [
     "Percentage offsets and auto margins are not native numbers.",
     ["top-1/2", "left-1/2", "mx-auto"],
@@ -134,24 +114,7 @@ const GROUPS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
   ],
   [
     "Registry apply-hook or group marker, not a Tailwind utility.",
-    [
-      "cn-font-heading",
-      "cn-input",
-      "cn-dialog-close",
-      "cn-dialog-content",
-      "cn-dialog-description",
-      "cn-dialog-footer",
-      "cn-dialog-header",
-      "cn-dialog-overlay",
-      "cn-dialog-title",
-      "cn-popover-content",
-      "cn-popover-content-logical",
-      "cn-popover-description",
-      "cn-popover-header",
-      "cn-popover-title",
-      "cn-toast",
-      "group/toast",
-    ],
+    ["cn-font-heading", "group/toast"],
   ],
 ];
 
@@ -166,6 +129,14 @@ export const unsupportedClasses: ReadonlyArray<string> = Arr.flatMap(
   GROUPS,
   ([, tokens]) => tokens,
 );
+
+/** The reason table, for a registry that wants to extend it. */
+export const unsupportedReasons: Readonly<Record<string, string>> =
+  R.fromEntries(
+    Arr.flatMap(GROUPS, ([reason, tokens]) =>
+      Arr.map(tokens, (token) => [token, reason] as const),
+    ),
+  );
 
 /** Why `className` cannot become a `StyleDesc`, or undefined when it can. */
 export const unsupportedReason = (className: string): string | undefined =>

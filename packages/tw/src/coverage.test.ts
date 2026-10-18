@@ -12,8 +12,10 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { lightTheme } from "@gpuixui/tokens";
+import { BASE_ALIASES } from "./aliases.js";
 import { classesToStyle } from "./classes.js";
 import { present, read } from "./reference.js";
 import { unsupportedClasses, unsupportedReason } from "./unsupported.js";
@@ -59,6 +61,8 @@ const LUMA_BLOCKS = [
   "cn-popover-title",
   "cn-popover-description",
   "cn-toast",
+  "cn-textarea",
+  "cn-skeleton",
 ] as const;
 
 /** Resumes the scan after a string literal or one nesting level. */
@@ -160,6 +164,20 @@ describe.skipIf(!hasSource)("upstream class coverage", () => {
     ];
     expect(
       Arr.filter(expected, (token) => !HashSet.has(corpus, token)),
+    ).toEqual([]);
+  });
+
+  it("maps every luma cn-* block to an alias", () => {
+    expect(
+      Arr.filter(LUMA_BLOCKS, (name) => !R.has(BASE_ALIASES, name)),
+    ).toEqual([]);
+  });
+
+  it("resolves cn-* tokens through aliases instead of unsupported markers", () => {
+    expect(
+      Arr.filter(LUMA_BLOCKS, (name) =>
+        classesToStyle(name, lightTheme).unsupported.includes(name),
+      ),
     ).toEqual([]);
   });
 

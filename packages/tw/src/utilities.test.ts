@@ -110,7 +110,6 @@ describe("expanded shadcn utilities", () => {
     "origin-(--transform-origin)",
     "transition-opacity",
     "supports-backdrop-filter:backdrop-blur-sm",
-    "has-[>svg]:px-3",
     "[&_svg]:pointer-events-none",
     "ring-offset-background",
   ])("records %s as unsupported with a reason", (token) => {

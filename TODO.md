@@ -43,6 +43,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
+`[x]` Land the `@gpuixui/tw` extension registry, luma `cn-*` aliases and state
+variants (plan 524)
 `[ ]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix

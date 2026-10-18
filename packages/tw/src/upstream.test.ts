@@ -8,6 +8,9 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
+import * as R from "effect/Record";
+import { BASE_ALIASES } from "./aliases.js";
 import {
   BUTTON_BASE,
   BUTTON_SIZES,
@@ -67,5 +70,15 @@ describe.skipIf(!hasSource)("shadcn source provenance", () => {
     ]) {
       expect(css).toContain(token);
     }
+  });
+
+  it("keeps every cn-* alias verbatim in the luma preset", () => {
+    const css = read("apps/v4/registry/styles/style-luma.css");
+    expect(
+      Arr.filter(
+        R.values(BASE_ALIASES),
+        (recipe) => !css.includes(`@apply ${recipe};`),
+      ),
+    ).toEqual([]);
   });
 });
