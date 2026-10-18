@@ -523,7 +523,12 @@ retired once both branches are one
       no longer horizontal-only — `resolveAlign` takes the difference on the
       layer's own axis (widths above/below, heights beside) and is exported from
       `@gpuixui/primitives/core`. Import it there and delete the local copy so
-      the library has one answer again (plans 323, 095, 098). Owner: components.
+      the library has one answer again (plans 323, 095, 098). **Updated
+      2026-10-18 (plan 335):** the same module now exports
+      `decideHorizontalSide`, so a `left`/`right` side that cannot fit beside its
+      trigger opens on the side with room; a component with its own placement
+      rule should import that too instead of keeping a third copy. Owner:
+      components.
 `[x]` `packages/primitives`: **`ButtonGroup` was the one group that could not
       stack** — `CheckboxGroup`, `RadioGroup` and `ToggleGroup` all take
       `orientation`, but `ButtonGroup` was hard-coded to a centred row, so a
