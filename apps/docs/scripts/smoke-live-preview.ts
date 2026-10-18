@@ -104,6 +104,8 @@ const freePort = (): Promise<number> =>
 interface Session {
   readonly evaluate: (expression: string) => Promise<unknown>;
   readonly navigate: (url: string) => Promise<void>;
+  readonly setColorScheme: (mode: "light" | "dark") => Promise<void>;
+  readonly captureScreenshot: () => Promise<string>;
   readonly stop: () => Promise<void>;
 }
 
@@ -220,7 +222,32 @@ const startSession = async (chrome: string): Promise<Session> => {
     await send("Page.navigate", { url });
   };
 
-  return { evaluate, navigate, stop };
+  // The docs page colour scheme must not depend on the host's preference: the
+  // gate checks a named mode, so it forces one. The emulation survives
+  // navigation for this target.
+  const setColorScheme = async (mode: "light" | "dark"): Promise<void> => {
+    await send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-color-scheme", value: mode }],
+    });
+  };
+
+  const captureScreenshot = async (): Promise<string> => {
+    const result = await send("Page.captureScreenshot", { format: "png" });
+    return typeof result === "object" &&
+      result !== null &&
+      "data" in result &&
+      typeof result.data === "string"
+      ? result.data
+      : "";
+  };
+
+  return {
+    evaluate,
+    navigate,
+    setColorScheme,
+    captureScreenshot,
+    stop,
+  };
 };
 
 interface SurfaceState {
@@ -277,6 +304,34 @@ const paintedText = async (
     "(async () => globalThis.gpuix === undefined ? '[]' : JSON.stringify((await globalThis.gpuix.call('getAllText', {})).text))()",
   );
   return JSON.parse(String(raw)) as ReadonlyArray<string>;
+};
+
+/**
+ * The Button scene in one mode, as a PNG. The screenshot is the only signal
+ * that the mode reached the paint: `getAllText` is identical in both modes by
+ * design, and the wasm renderer exposes no style query (plan 474).
+ */
+const captureScene = async (
+  session: Session,
+  baseUrl: string,
+  mode: "light" | "dark",
+): Promise<string> => {
+  const surface = await openScene(
+    session,
+    `${baseUrl}/gpuix-preview/?scene=button&platform=win32&mode=${mode}`,
+  );
+  if (surface.state !== "ready") {
+    throw new Error(
+      `the button scene reported ${surface.state} in ${mode} mode`,
+    );
+  }
+  const text = await paintedText(session);
+  if (!text.includes(SCENE_TEXT.button)) {
+    throw new Error(
+      `the button scene painted no "${SCENE_TEXT.button}" in ${mode} mode`,
+    );
+  }
+  return session.captureScreenshot();
 };
 
 interface PageSurface {
@@ -395,11 +450,40 @@ const main = async (): Promise<number> => {
     }
     console.log(`smoke: unknown scene reported — ${failed.reason}`);
 
+    // A scene can report ready and still ignore the mode it was given:
+    // `getAllText` is the same in both modes, so only the painted frame can
+    // prove it. Capture the same scene twice in dark to show the capture is
+    // deterministic, then once in light (plan 474).
+    const dark = await captureScene(session, baseUrl, "dark");
+    const darkAgain = await captureScene(session, baseUrl, "dark");
+    const light = await captureScene(session, baseUrl, "light");
+    if (dark === "") {
+      console.error("FAIL live surface: the dark scene captured no frame");
+      return 1;
+    }
+    if (dark !== darkAgain) {
+      console.error(
+        "FAIL live surface: the same dark scene captured twice differs; the capture is not deterministic",
+      );
+      return 1;
+    }
+    if (light === dark) {
+      console.error(
+        "FAIL live surface: mode=light painted the dark surface",
+      );
+      return 1;
+    }
+    console.log(
+      `smoke: the scene paints light and dark — dark ${dark.length} bytes, light ${light.length} bytes`,
+    );
+
     // The surface working on its own is not the feature: the page must load it
     // on request, with the docs' platform and mode, and the iframe must reach
     // GPUI. Every scene's page is driven — the slug equals the scene key, which
     // `scene-contract.test.ts` pins — then the Theming page with the Windows
-    // platform in the URL.
+    // platform in the URL. The scheme is forced so the host cannot decide which
+    // mode the gate checks.
+    await session.setColorScheme("dark");
     for (const scene of LIVE_SCENES) {
       const slug = scene;
       const componentPage = await openPageSurface(
@@ -418,10 +502,40 @@ const main = async (): Promise<number> => {
         );
         return 1;
       }
+      if (!(componentPage.src ?? "").includes("mode=dark")) {
+        console.error(
+          `FAIL live surface: /docs/components/${slug} reported ${componentPage.src ?? ""}, expected mode=dark`,
+        );
+        return 1;
+      }
       console.log(
         `smoke: /docs/components/${slug} loaded the live iframe — ${componentPage.src} (${componentPage.canvas?.[0] ?? 0}x${componentPage.canvas?.[1] ?? 0})`,
       );
     }
+
+    // The same page in the light scheme: the iframe must carry the mode the
+    // chrome is painting, not the mode the previous check happened to see.
+    await session.setColorScheme("light");
+    const lightPage = await openPageSurface(
+      session,
+      `${baseUrl}/docs/components/button`,
+    );
+    if (lightPage.state !== "ready") {
+      console.error(
+        `FAIL live surface: /docs/components/button in light mode reported ${lightPage.state}${lightPage.reason === undefined ? "" : ` (${lightPage.reason})`}`,
+      );
+      return 1;
+    }
+    if (!(lightPage.src ?? "").includes("mode=light")) {
+      console.error(
+        `FAIL live surface: /docs/components/button in light mode reported ${lightPage.src ?? ""}`,
+      );
+      return 1;
+    }
+    console.log(
+      `smoke: /docs/components/button follows light mode — ${lightPage.src}`,
+    );
+    await session.setColorScheme("dark");
 
     const themed = await openPageSurface(
       session,

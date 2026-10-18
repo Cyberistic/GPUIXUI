@@ -37,10 +37,13 @@ is tier N/S/V. A live scene is built from the real package code:
 Dialog, Popover, Command menu). An interactive scene opens in the state it
 documents — a menu, a dialog, a popover or the command palette starts open — so
 the surface proves the real composition without a pointer.
-`smoke:preview` proves every scene's text reached GPUI's tree in headless Chrome.
-Its output is a canvas, so browser assistive technology cannot read it: the
-page's accessibility notes and source remain the accessible description, and the
-live surface never stands in for them.
+`smoke:preview` proves every scene's text reached GPUI's tree in headless Chrome,
+that every page's iframe carries the page's own mode, that the Button scene
+paints a different frame in light than in dark (and the same frame twice in
+dark), and that a `?platform=win32` page passes the platform through to the
+renderer. Its output is a canvas, so browser assistive technology cannot read
+it: the page's accessibility notes and source remain the accessible description,
+and the live surface never stands in for them.
 
 **Tier V is coverage, not a pass.** It names the suite file and the exact
 command; the component's status badge (mirrored from `COMPONENTS.md`) is the

@@ -471,7 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–473)
 
-`[~]` `[██████████]` 71/72
+`[~]` `[██████████]` 72/73
+
+`[x]` **The live-surface gate proves light mode too (plan 474)** — the scene loop hard-coded `mode=dark` and the page loop never asserted the mode, so a renderer or wiring that ignored light passed the release gate; the scheme is now forced through CDP, the Button scene's light and dark frames are compared (with two identical dark captures proving determinism), and both forced defects fail by name
 
 `[x]` **The page surface waits for a sized canvas (plan 473)** — the page half of `smoke:preview` accepted a `ready` flag on a 1×1 frame, so the first page it visited could be blank and still pass; every frame now has to reach more than 1×1, and all twelve page loads report 606×358
 
