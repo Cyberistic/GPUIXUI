@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 107/107
+`[x]` `[██████████]` 108/108
+
+`[x]` **Every shipped icon is visible and findable (plan 507)** — the Icons page
+      told the reader to use an `IconName` and listed none of them, so
+      `chevrons-up-down`, `star-filled` and `external-link` returned zero
+      search results. The page now renders all 48 names from a generated
+      catalogue (labelled as the package's markup drawn in the browser), and
+      every name is indexed; only hyphenated names are promoted, so `search`,
+      `copy` and `list` keep their pages. `nub run --filter docs icons`
+      regenerates it; two suites and a production query guard it.
 
 `[x]` **The search palette is usable end to end (plan 506)** — ⌘K opens it,
       typing lists the real Installation page, Enter navigates and moves focus
