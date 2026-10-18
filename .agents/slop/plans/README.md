@@ -140,6 +140,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [341](./341-combobox-check-mark.md) | The combobox check on a highlighted option | F | 071–095, 300, 306–332, 339–340 | done |
 | [342](./342-filled-state-steps.md) | The filled family's step in the public contract | F | 071, 097, 306, 327, 338, 341 | done |
 | [343](./343-field-pressed-edge.md) | The field's pressed edge in the public contract | F | 071, 084, 325, 340–342 | done |
+| [344](./344-selection-on-fill.md) | The selection veil for content on a filled action | F | 069, 071, 081, 087, 091, 099, 343 | ready |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
