@@ -245,15 +245,17 @@ whose caption leading outgrows it. A drawer opens 320/400/560px wide, or
 and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface is
 360/480/640px wide at `sm`/`md`/`lg`, a calendar day cell is 34px, a two-digit
 time segment is 26px, and an avatar's presence dot is 10px — at most half the
-smallest avatar.
+smallest avatar the theme carries.
 
 ## 7. Radii, borders and elevation
 
 Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.
 Pills and avatars use `full` (clamped by the renderer to half the short side).
-The numeric contract holds `full` to at least half of the larger of the largest
-control and the largest avatar, so a theme that shrinks it cannot turn a 40px
-avatar into a rounded square.
+The numeric contract holds `full` to the largest corner step the theme carries
+and to at least half of the larger of the largest control and the largest avatar
+— each read from the theme's own scale, so a brand that adds a step moves the
+bound — so a theme that shrinks it cannot turn a 40px avatar into a rounded
+square.
 
 Two border roles:
 

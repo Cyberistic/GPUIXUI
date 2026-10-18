@@ -1060,7 +1060,7 @@ every density.
 | `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow |
 | `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
 | `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least one `body` em |
-| `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half `avatarSize.xs` |
+| `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
 
 A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
@@ -1073,7 +1073,8 @@ widths are a third ladder for the same reason — `lg` may not be narrower than
 and a message viewport holds at least one row. A calendar day is a control, so
 its cell fits the theme's own small control; a time segment holds two body
 digits, so it is at least one `body` em wide; and an avatar's presence dot is at
-most half the smallest avatar, because it sits on that avatar's corner.
+most half the smallest avatar the theme carries, because it sits on that
+avatar's corner.
 
 A metric override merges field by field, like the spacing and radius scales:
 
@@ -1979,9 +1980,10 @@ the label role — plus the default `iconSize.md` and a field adornment, each pl
 its two borders — the borders are painted inside the height, so a glyph equal to
 the outer metric overflows the content box; a row must fit one `body`
 line and the default `md` control it holds; `radius.none` must be square; `radius.full`
-must round the largest radius and half of the taller of the largest control and
-the largest avatar — a 40px avatar painted at a smaller radius is a rounded
-square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
+must round the largest corner step the theme carries and half of the taller of the
+largest control and the largest avatar — each read from the theme's own scale, so
+a step a brand adds moves the bound, and a 40px avatar painted at a smaller
+radius is a rounded square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
 `avatarSize`, `controlHeight`, `controlPaddingX`, the two border widths, the
 motion timings and the
 elevation feather — must not step backwards, each size ladder read from the

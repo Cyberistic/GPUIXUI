@@ -369,6 +369,56 @@ const ascendingSizes = (
 const scaleSteps = (scale: unknown): ReadonlyArray<readonly [string, number]> =>
   numericMembers(scale, "");
 
+/**
+ * The smallest or largest finite value a named scale the theme carries. A rule
+ * that says "the largest avatar" or "the smallest avatar" means the theme's own
+ * extreme, not the shipped member's name: `extendTheme` keeps a widened scale,
+ * and the ladders walk it. A non-finite member is the finite rule's diagnostic,
+ * so it is not compared here.
+ */
+const extremeSize = (
+  scale: unknown,
+  kind: "smallest" | "largest",
+  excluded: ReadonlyArray<string> = [],
+): number | undefined =>
+  scaleSteps(scale)
+    .flatMap(([member, value]) =>
+      excluded.includes(member) || !Number.isFinite(value) ? [] : [value],
+    )
+    .reduce<number | undefined>(
+      (extreme, value) =>
+        extreme === undefined
+          ? value
+          : kind === "smallest"
+            ? Math.min(extreme, value)
+            : Math.max(extreme, value),
+      undefined,
+    );
+
+/**
+ * Whether a named scale is ordered as its ladder rule requires. A shape bound
+ * derived from a broken scale would blame `full` or the presence dot for the
+ * scale's own defect, so an unordered scale yields no extreme (the ladder
+ * failure is the diagnostic).
+ */
+const orderedScale = (
+  scale: unknown,
+  excluded: ReadonlyArray<string> = [],
+): boolean => {
+  const steps = scaleSteps(scale).filter(
+    ([member]) => !excluded.includes(member),
+  );
+  return steps.every(([, value], index) => {
+    const previous = steps[index - 1];
+    return (
+      previous === undefined ||
+      !Number.isFinite(value) ||
+      !Number.isFinite(previous[1]) ||
+      value >= previous[1]
+    );
+  });
+};
+
 /** A density size ladder, named the way a failure reports it. */
 const sizeSteps = (
   group: "controlHeight" | "controlPaddingX",
@@ -457,7 +507,8 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   heights each grow from `sm` to `lg`, a carousel's active mark is at least as
  *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a calendar
  *   day cell fits the smallest control, a time segment is at least one body em
- *   wide, and an avatar's presence dot is at most half the smallest avatar.
+ *   wide, and an avatar's presence dot is at most half the smallest avatar the
+ *   theme carries.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark; the default icon fits the smallest control,
  *   and an inline icon fits the line box it shares with text (`xs` a `caption`
@@ -466,8 +517,10 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   `ListItem` fixes that row's height and documents its leading slot for an
  *   avatar.
  * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
- *   the largest radius, half the largest control and half the largest avatar —
- *   a 40px avatar at a smaller radius is a rounded square.
+ *   the largest corner step the theme carries, half the largest control and half
+ *   the largest avatar — each read from the theme's own scale, so a brand that
+ *   adds a step moves the bound, and a 40px avatar at a smaller radius is a
+ *   rounded square.
  * - **spacing**: a ladder.
  * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose two offsets, blur and
  *   spread are finite, whose blur is non-negative, and whose alpha is a
@@ -519,6 +572,22 @@ export function themeMetricFailures(
     elevation,
     motion,
   } = theme;
+  // The shape bounds name an extreme, not a shipped member: a copied scale may
+  // carry a larger corner, control or avatar, or a smaller avatar, and the
+  // ladder rules already govern that member. A broken scale yields no bound, so
+  // its ladder failure stays the one diagnostic.
+  const largestCorner = orderedScale(radius, ["none", "full"])
+    ? extremeSize(radius, "largest", ["none", "full"])
+    : undefined;
+  const largestControl = orderedScale(density.controlHeight)
+    ? extremeSize(density.controlHeight, "largest")
+    : undefined;
+  const largestAvatar = orderedScale(avatarSize)
+    ? extremeSize(avatarSize, "largest")
+    : undefined;
+  const smallestAvatar = orderedScale(avatarSize)
+    ? extremeSize(avatarSize, "smallest")
+    : undefined;
   return [
     ...finiteGroup("typography", typography),
     ...textRoles.flatMap((role) => [
@@ -660,9 +729,17 @@ export function themeMetricFailures(
       scaleSteps(radius).filter(([step]) => step !== "none" && step !== "full"),
       "non-decreasing",
     ),
-    ...atLeast("radius", "full", radius.full, radius.xl),
-    ...atLeast("radius", "full", radius.full, density.controlHeight.lg / 2),
-    ...atLeast("radius", "full", radius.full, avatarSize.lg / 2),
+    // `full` rounds the largest corner step the theme carries and half the
+    // largest control and avatar it carries — not the shipped `xl`/`lg`.
+    ...(largestCorner !== undefined && usableBound(largestCorner)
+      ? atLeast("radius", "full", radius.full, largestCorner)
+      : []),
+    ...(largestControl !== undefined && usableBound(largestControl)
+      ? atLeast("radius", "full", radius.full, largestControl / 2)
+      : []),
+    ...(largestAvatar !== undefined && usableBound(largestAvatar)
+      ? atLeast("radius", "full", radius.full, largestAvatar / 2)
+      : []),
     ...finiteGroup("spacing", spacing),
     ...ladder("spacing", scaleSteps(spacing), "non-decreasing"),
     ...finiteGroup("dimensions", dimensions),
@@ -783,14 +860,14 @@ export function themeMetricFailures(
         )
       : []),
     // A presence dot sits on the smallest avatar's corner, so it may not be
-    // larger than half that avatar. The shipped dot is exactly half of the
-    // 20px `avatarSize.xs`.
-    ...(usableBound(avatarSize.xs)
+    // larger than half that avatar — the smallest the theme carries, not the
+    // shipped `xs`.
+    ...(smallestAvatar !== undefined && usableBound(smallestAvatar)
       ? atMost(
           "dimensions",
           "avatarPresenceDotSize",
           dimensions.avatarPresenceDotSize,
-          avatarSize.xs / 2,
+          smallestAvatar / 2,
         )
       : []),
     ...finiteGroup("elevation", elevation),

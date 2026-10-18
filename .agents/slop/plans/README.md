@@ -259,6 +259,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [565](./565-colour-form-index.md) | The alpha form owns its two members | F | 540, 543, 558 | done |
 | [566](./566-overlay-feather-ladder.md) | A defined `overlay` joins the elevation feather ladder | F | 369, 390, 552 | done |
 | [567](./567-contract-prose-counts.md) | The guarantee's two counts have one owner each | F | 387, 398, 540, 543, 544 | done |
+| [568](./568-theme-extreme-bounds.md) | The largest and smallest are the theme's own | F | 361, 372, 531, 552, 554, 566 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2877,6 +2878,22 @@ two documents to it, including a case proving the patterns reject a planted
 stale phrase. A fifth platform or an eighth check now fails the docs guard
 instead of leaving a stale total behind. No colour, pair, floor, metric, platform
 style, recipe or shipped theme moves.
+
+Plan `568` finishes the migration plans `552` and `554` began. The numeric
+contract walks a theme's own scale, but four shape bounds still read the shipped
+member's name: `radius.full` against `radius.xl`, `density.controlHeight.lg` and
+`avatarSize.lg`, and the presence dot against `avatarSize.xs`. A theme carrying
+a wider scale — a copied or decoded one — could therefore paint an 80px avatar,
+a 48px control or a 24px corner at `full` 20 as a rounded square, or carry an 8px
+avatar under a 10px dot, while `themeMetricFailures` returned `[]`; both
+documents' "largest"/"smallest" sentences were false for exactly the shape they
+invite. The extremes are now derived from the theme's own values (by value, not
+insertion order), a non-finite member stays the finite rule's diagnostic, and an
+unordered scale yields no bound so one broken ladder keeps one report — the
+first cut cascaded into the presence dot until `orderedScale` gated it. Six
+cases cover the avatar, control and corner extensions, the decoded smaller
+avatar, the valid bound and the shipped pass; no shipped value, pair, floor,
+metric, platform style, recipe or theme moves.
 
 ## How to use a plan
 

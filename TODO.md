@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 229/295
+`[x]` `[████████░░]` 230/296
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1879,6 +1879,17 @@ guarantee sentence stays held verbatim, four test headers drop their `six`, and
 three `docs.test.ts` cases hold both documents to the two indexes, including a
 case proving the patterns reject a planted stale phrase. No colour, pair, floor,
 metric, platform style, recipe or shipped theme moves (plan 567)
+
+`[x]` Make the shape bounds read the theme's own extremes — the ladders walk a
+theme's own scale since plan 552, but `radius.full` was still bounded by the
+shipped `xl` and `lg` names and the presence dot by the shipped `xs`, so a copied or
+decoded scale with an 80px avatar, a 48px control, a 24px corner or an 8px
+avatar painted a rounded square or an oversized dot while `themeMetricFailures`
+returned `[]` and both documents' "largest"/"smallest" sentences were false;
+the bounds now derive from the theme's own values (by value, not order), an
+unordered scale yields no bound so one broken ladder keeps one diagnostic, six
+cases cover the four extensions and the shipped pass, and no shipped value,
+pair, floor, metric, platform style, recipe or theme moves (plan 568)
 
 ## Phase C — Tier 1–2 components
 
