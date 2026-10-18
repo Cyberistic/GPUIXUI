@@ -256,6 +256,7 @@ retired once both branches are one
     - [x] Mention input — plan 319: 12 rule + 9 native tests; both-direction proof
     - [x] Navigation Menu — plan 320: 6 parts, 10 native tests; both-direction proof
     - [x] Message scroller — plan 206: pinned follow over a 1px tail sentinel, no yank when scrolled up, unread count, jump-to-latest, streamed growth; 11 rule + 10 native tests + 1 theme-matrix case; both-direction proof (behaviour 437, unit 296). Non-virtualized viewport recorded as the limitation (`<virtual-list>` takes an item count, not compound children)
+    - [x] AI conversation — plan 207: `Message` (variants + avatar/content/reasoning/tool calls/sources/attachments/streaming/actions) and `Chat` (transcript + composer + status union); 10 + 9 native behaviour tests, 10 transition tests, both-theme rows; credit on both docs pages, `LICENSES/` interlock recorded
     - [x] Tier 2 gap cluster complete: all twelve landed with code, a native test, an example, a docs page and an inventory row; after plan 206 the suite is behaviour 437, unit 296
 `[x]` Verify every component in both themes
 

@@ -13,6 +13,7 @@ import { badgeMeta } from "./badge.js";
 import { breadcrumbMeta } from "./breadcrumb.js";
 import { carouselMeta } from "./carousel.js";
 import { cardMeta } from "./card.js";
+import { chatMeta } from "./chat.js";
 import { collapsibleMeta } from "./collapsible.js";
 import { colorPickerMeta } from "./color-picker.js";
 import { comboboxMeta } from "./combobox.js";
@@ -33,6 +34,7 @@ import { inlineEditMeta } from "./inline-edit.js";
 import { keyboardShortcutsMeta } from "./keyboard-shortcuts.js";
 import { listMeta } from "./list.js";
 import { mentionInputMeta } from "./mention-input.js";
+import { messageMeta } from "./message.js";
 import { messageScrollerMeta } from "./message-scroller.js";
 import { navigationMenuMeta } from "./navigation-menu.js";
 import { paginationMeta } from "./pagination.js";
@@ -72,6 +74,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   breadcrumbMeta,
   carouselMeta,
   cardMeta,
+  chatMeta,
   collapsibleMeta,
   colorPickerMeta,
   comboboxMeta,
@@ -92,6 +95,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   keyboardShortcutsMeta,
   listMeta,
   mentionInputMeta,
+  messageMeta,
   messageScrollerMeta,
   navigationMenuMeta,
   paginationMeta,

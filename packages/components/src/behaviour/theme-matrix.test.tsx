@@ -25,6 +25,7 @@ import {
   BreadcrumbPage,
 } from "../breadcrumb.js";
 import { Button } from "../internal/button.js";
+import { Chat, ChatComposer } from "../chat.js";
 import {
   Collapsible,
   CollapsibleContent,
@@ -46,6 +47,7 @@ import {
 import { EmptyState } from "../empty-state.js";
 import { darkTheme, lightTheme, type Theme } from "../internal/theme.js";
 import { List, ListItem, ListItemTitle } from "../list.js";
+import { Message, MessageContent } from "../message.js";
 import {
   MessageScroller,
   MessageScrollerItem,
@@ -325,6 +327,40 @@ describe("theme matrix", () => {
         expect(
           root.renderer.findByTestId("command-menu")?.style.backgroundColor,
         ).toBe(theme.colors.popover);
+      },
+    );
+  });
+
+  it("Message paints the assistant bubble with the muted role", () => {
+    bothThemes(
+      () => (
+        <Message variant="assistant">
+          <MessageContent testId="bubble" text="Hello" />
+        </Message>
+      ),
+      (root, theme) => {
+        expect(
+          root.renderer.findByTestId("bubble")?.style.backgroundColor,
+        ).toBe(theme.colors.muted);
+      },
+    );
+  });
+
+  it("ChatComposer reads its field border from the theme", () => {
+    bothThemes(
+      () => (
+        <Chat
+          label="Assistant"
+          status={{ _tag: "idle" }}
+          onSubmit={() => undefined}
+        >
+          <ChatComposer label="Message the assistant" testId="composer" />
+        </Chat>
+      ),
+      (root, theme) => {
+        expect(root.renderer.findByTestId("composer")?.style.borderColor).toBe(
+          theme.colors.border,
+        );
       },
     );
   });

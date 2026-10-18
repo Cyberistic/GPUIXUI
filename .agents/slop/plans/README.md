@@ -189,7 +189,7 @@ B1, so it is planned, not done.
 | `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |
 | `205` | Implement the "not provided by GPUix" cluster | C/E | `200`, `201`, `203`, `030`, `110–117` | planned |
 | `206` | Port **shadcn/ui's Message Scroller** behaviour — pinned follow, no yank, jump-to-latest, streaming rows | C | `200`, `201`, `203` | done — 11 rule + 10 native tests + 1 theme-matrix case (behaviour 437, unit 296); plain scroll viewport recorded as the limitation; both-direction proof |
-| `207` | Port **shadcn/ui's AI Elements `chat` + `message`** — conversation scaffold and message row (streaming, reasoning, tool calls, sources, retry) | C | `200`, `201`, `206` | planned |
+| [207](./207-ai-chat-and-message.md) | Port **shadcn/ui's AI Elements `chat` + `message`** — conversation scaffold and message row (streaming, reasoning, tool calls, sources, retry) | C | `200`, `201`, `206` | done — `Message` (9 parts) + `Chat` (4 parts); 10 + 9 native tests, 10 transition tests, 2 theme-matrix rows; both-direction proof |
 | `433` | **Platform theme recipes** — reshape the Windows variant into XP (Luna) / 7 (Aero), and follow Omarchy's live system theme | E | `063`, `203`, `200` | planned |
 | `434` | **Landing page** — a "Hunter License" identity over a stacked macOS / Windows / Linux hero, in the register of cap.so / klack | E | `063`, `433`, `423` | planned |
 | `435a` | **Pele** (Obsidian's design system) — recon, licence, and an inventory diff | A | `203`, `200` | planned |

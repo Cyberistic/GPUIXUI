@@ -49,15 +49,17 @@ const countBehaviourTests = (relative: string): number =>
     ),
   );
 
-/** The Tier 2 rows of `COMPONENTS.md`, parsed from its markdown table. */
-const tier2Rows = (): ReadonlyArray<Row> => {
+/** The rows of one tier's `COMPONENTS.md` table, parsed from its markdown. */
+const tierRows = (tier: number): ReadonlyArray<Row> => {
   const markdown = readFileSync(
     fileURLToPath(new URL("COMPONENTS.md", repoRoot)),
     "utf8",
   );
-  const start = markdown.indexOf("## Tier 2");
-  const end = markdown.indexOf("## Tier 3");
-  if (start < 0 || end < 0 || end <= start) return [];
+  const marker = `## Tier ${tier}`;
+  const start = markdown.indexOf(marker);
+  if (start < 0) return [];
+  const next = markdown.indexOf("\n## ", start + marker.length);
+  const end = next < 0 ? markdown.length : next;
 
   return Arr.flatMap(markdown.slice(start, end).split("\n"), (line) => {
     if (!line.startsWith("|")) return [];
@@ -104,8 +106,8 @@ describe("inventory", () => {
   });
 
   it("agrees with its COMPONENTS.md row", () => {
-    const rows = tier2Rows();
     const problems = Arr.flatMap(inventory, (meta) => {
+      const rows = tierRows(meta.tier);
       const row = Arr.findFirst(
         rows,
         (candidate) => candidate.name === meta.name,
@@ -133,7 +135,7 @@ describe("inventory", () => {
 
   it("has a record for every Tier 2 row that is no longer todo", () => {
     const problems = Arr.filter(
-      Arr.filter(tier2Rows(), (row) => row.status !== "todo"),
+      Arr.filter(tierRows(2), (row) => row.status !== "todo"),
       (row) => !Arr.some(inventory, (meta) => meta.name === row.name),
     ).map(
       (row) => `${row.name}: row is ${row.status} with no inventory record`,
@@ -150,19 +152,20 @@ describe("inventory", () => {
     ]).toEqual([]);
   });
 
-  it("has no duplicate Tier 2 row names", () => {
-    const names = Arr.map(tier2Rows(), (row) => row.name);
+  it("has no duplicate row names in any tier", () => {
+    const names = Arr.flatMap([1, 2, 3, 4, 5], (tier) =>
+      Arr.map(tierRows(tier), (row) => row.name),
+    );
 
     expect(duplicates(names)).toEqual([]);
   });
 
-  it("states the real native test count in every Tier 2 row", () => {
-    const rows = tier2Rows();
+  it("states the real native test count in every done row", () => {
     const problems = Arr.flatMap(
       Arr.filter(inventory, (meta: ComponentMeta) => meta.status === "done"),
       (meta: ComponentMeta) => {
         const row = Arr.findFirst(
-          rows,
+          tierRows(meta.tier),
           (candidate) => candidate.name === meta.name,
         );
         return Option.match(row, {

@@ -1,0 +1,142 @@
+---
+title: Chat
+description: The conversation scaffold — a pinned transcript, a composer and a status contract.
+---
+
+`Chat` is the conversation surface: a transcript that follows new rows only while
+the reader is at the end (`MessageScroller`), a composer that knows when it may
+send and when it may stop, and one status union the app drives. The behaviour is
+ported from **shadcn/ui's AI Elements `chat`**; the GPUix implementation and API
+are original.
+
+## Usage
+
+```tsx
+import {
+  Chat,
+  ChatComposer,
+  ChatMessages,
+  Message,
+  MessageContent,
+} from "@gpuixui/components";
+
+<Chat
+  label="Assistant"
+  status={status}
+  onStatusChange={setStatus}
+  onSubmit={send}
+  onStop={stop}
+>
+  <ChatMessages>
+    {turns.map((turn) => (
+      <Message key={turn.id} variant={turn.from}>
+        <MessageContent text={turn.body} />
+      </Message>
+    ))}
+  </ChatMessages>
+  <ChatComposer label="Message the assistant" />
+</Chat>;
+```
+
+The runnable build is `examples/chat.example.tsx`, which the native playground
+mounts: it simulates a stream, can fail mid-reply, and retries from the alert.
+
+## Status
+
+`status` is a schema tagged union:
+
+```ts
+type ChatStatus =
+  | { _tag: "idle" }
+  | { _tag: "submitting" }
+  | { _tag: "streaming" }
+  | { _tag: "error"; message: string };
+```
+
+| From | Intent | To |
+| ---- | ------ | -- |
+| `idle`, `error` | submit | `submitting` |
+| `submitting` | first token (`beginStream`) | `streaming` |
+| `streaming` | finish (`endStream`) | `idle` |
+| `submitting`, `streaming` | stop | `idle` |
+| `submitting`, `streaming` | failure | `error` with the message |
+
+Every inapplicable intent returns the same value, so a late completion cannot
+reopen a stream the reader stopped. The helpers live in `src/chat/logic.ts`; the
+app calls them or sets `status` directly. `Chat` also reports the status it would
+move to through `onStatusChange`; the app may ignore it.
+
+## Composer
+
+- **Enter** sends a trimmed, non-empty draft and clears it.
+- **Shift+Enter** inserts a newline and never sends.
+- **Escape** stops while `submitting` or `streaming`; otherwise it is passed on.
+- While work is in flight, **Stop replaces Send**; a second Enter cannot submit.
+- `error` shows the message in a `role="alert"` row and enables Send again
+  (retry).
+- `onAttach` renders an Attach control; without it nothing is rendered. 0.10.0
+  has no file picker on an input, so the caller owns the picking.
+
+## Transcript
+
+`ChatMessages` composes `MessageScroller`: it wraps each child in a
+`MessageScrollerItem`, follows appended rows and a growing last row while pinned,
+leaves the reader's offset alone once they scroll up, and shows
+`JumpToLatest` with the unread count. `ChatEmpty` is the empty-state slot; the
+component cannot know the row count, so the caller places it.
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Props |
+| ---- | ----- |
+| `Chat` | `label` (required), `status` (required), `onStatusChange?`, `onSubmit`, `onStop?`, `onAttach?`, `attachLabel?`, children |
+| `ChatMessages` | `label?` (`"Conversation"`), children |
+| `ChatComposer` | `label` (required), `placeholder?`, `submitLabel?` (`"Send"`), `stopLabel?` (`"Stop"`), `value?`, `defaultValue?`, `onValueChange?` |
+| `ChatEmpty` | `title` (required), `description?`, `action?` |
+
+`ChatComposer`'s draft is controlled-or-uncontrolled: a controlled `value` is
+authoritative, and `onValueChange` fires in both modes.
+
+## Theming
+
+The composer paints `background`, `border` and `foreground`; Send is the
+`primary` button variant, Stop `secondary`; the error row is the `danger` tone
+surface. The transcript reads whatever `Message` and `MessageScroller` paint.
+A custom theme changes all of it with no code change.
+
+## Accessibility
+
+- The conversation and the transcript are named `group`s.
+- The field is a real `<textarea>` with an `aria-label`.
+- Stop and Send are real focusable controls with visible labels.
+- The failure is `role="alert"`.
+- 0.10.0 has no `aria-live`, no `aria-labelledby`, and no way to describe the
+  composer as "multiline"; the label carries the field's purpose.
+
+## Limitations
+
+- **Every message row renders.** The transcript is a plain scroll container in
+  v1; `<virtual-list>` takes an item count rather than compound children.
+- No attachments picker, upload progress or paste handling: `onAttach` is the
+  caller's control.
+- No token accounting, model selection or conversation persistence — the app
+  owns those.
+- Enter/Shift+Enter/Escape are the runtime's keyboard path; there is no
+  `preventDefault` in 0.10.0.
+- New rows and the alert are not announced, because there is no `aria-live`.
+
+## Testing
+
+`src/chat/logic.test.ts` covers every transition and identity row.
+`src/behaviour/chat.test.tsx` drives the real renderer: it types and sends,
+proves Shift+Enter does not submit, stops a stream, refuses a second submit,
+retries after an error, stops on Escape, attaches, follows an appended row and
+renders the empty slot.
+
+## Credit
+
+Behaviour ported from [shadcn/ui AI Elements `chat`](https://ui.shadcn.com/docs/ai-elements/base/chat),
+MIT. No shadcn source is copied.

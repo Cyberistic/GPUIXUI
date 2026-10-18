@@ -244,6 +244,8 @@ parts.
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 | Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206 |
+| Message (AI message row) | `Message`, `MessageAvatar`, `MessageContent`, `MessageStreaming`, `MessageReasoning`, `MessageToolCalls`, `MessageSources`, `MessageAttachments`, `MessageActions` | `Message` (shape only) | plan 207 |
+| Chat (AI conversation) | `Chat`, `ChatMessages`, `ChatComposer`, `ChatEmpty` | `Chat` (shape only) | plan 207 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the
@@ -256,8 +258,6 @@ implementation cannot invent a shape):
 
 | Component | Parts | Source |
 | --------- | ----- | ------ |
-| Chat | `ChatRoot`, `ChatMessages`, `ChatComposer` | plan 207 |
-| Message | `MessageRoot`, `MessageAvatar`, `MessageContent`, `MessageActions` | plan 207 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
 | Countdown | `Countdown` | plan 205 |
 | Inline edit | `InlineEdit` | plan 205 |

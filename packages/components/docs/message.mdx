@@ -1,0 +1,135 @@
+---
+title: Message
+description: One conversation row — a variant bubble plus the slots a model reply needs.
+---
+
+`Message` is the row of an AI conversation: a `user`, `assistant` or `system`
+variant, a markdown body, and the slots a reply needs — avatar, reasoning, tool
+calls, citations, attachments, a streaming status and consumer-wired actions.
+The behaviour is ported from **shadcn/ui's AI Elements `message`**; the GPUix
+implementation and API are original.
+
+## Usage
+
+```tsx
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageReasoning,
+  MessageActions,
+} from "@gpuixui/components";
+
+<Message variant="assistant">
+  <MessageAvatar name="Ada Lovelace" />
+  <MessageContent text={reply} onLinkClick={open} />
+  <MessageReasoning text="Checked the modal focus rules." />
+  <MessageActions>
+    <Button size="sm" onClick={retry}>
+      Retry
+    </Button>
+  </MessageActions>
+</Message>;
+```
+
+The runnable build is `examples/message.example.tsx`, which the native playground
+mounts: it streams a reply, fails a tool call and reports the Retry intent.
+
+## Variants
+
+| `variant` | Placement | Bubble |
+| --------- | --------- | ------ |
+| `"user"` | right, avatar on the right | `primary` fill, `primaryForeground` text |
+| `"assistant"` | left | `muted` fill, `foreground` text, `border` edge |
+| `"system"` | left | no fill; `mutedForeground` text |
+
+The row is a wrapping flex line: the avatar and body take the first line, and
+every full-width slot (reasoning, tool calls, sources, attachments, actions,
+streaming) wraps onto its own line. There is no grid-template-area API in
+0.10.0, so this is the honest layout.
+
+## Slots
+
+Every slot is a part, never a boolean. Absent data renders nothing.
+
+| Part | Data | Renders |
+| ---- | ---- | ------- |
+| `MessageAvatar` | `name`, `src?` | the shared `Avatar`, `sm` |
+| `MessageContent` | `text`, `format?`, `onLinkClick?` | `<markdown>` (default) or `<text>` |
+| `MessageReasoning` | `text`, `label?`, `defaultOpen?` | a `Collapsible`, closed by default |
+| `MessageToolCalls` | `calls` | one row per call with status and result |
+| `MessageSources` | `sources`, `onSelect?` | caller-opened citation rows |
+| `MessageAttachments` | `attachments` | muted chips with optional meta |
+| `MessageStreaming` | `label?` | a `status` line, only while `streaming` |
+| `MessageActions` | children | a right-aligned action row |
+
+A tool call is `{ name, status: "pending" | "running" | "done" | "failed", result? }`.
+`failed` paints the `destructive` role and keeps the result visible; `done` uses
+`success`. An empty `calls`, `sources` or `attachments` array renders no group.
+
+## Behaviour
+
+| Action | Result |
+| ------ | ------ |
+| A stream appends a token to the body | `<markdown>` repaints the new source |
+| Reasoning is closed | its content is unmounted and absent from the tree |
+| the reasoning trigger is activated | the content mounts |
+| a cited source is activated | `onSelect(source)` fires once |
+| the row is `streaming` | `MessageStreaming` appears; otherwise it renders nothing |
+| no `MessageActions` children | no action row, no empty space |
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Props |
+| ---- | ----- |
+| `Message` | `variant` (required), `streaming?` (false), children |
+| `MessageAvatar` | `name` (required), `src?` |
+| `MessageContent` | `text` (required), `format?` (`"markdown"`), `onLinkClick?` |
+| `MessageReasoning` | `text` (required), `label?` (`"Reasoning"`), `defaultOpen?` (false) |
+| `MessageToolCalls` | `calls` (required) |
+| `MessageSources` | `sources` (required), `onSelect?`, `label?` (`"Sources"`) |
+| `MessageAttachments` | `attachments` (required) |
+| `MessageStreaming` | `label?` (`"Streaming"`) |
+| `MessageActions` | children |
+
+## Theming
+
+The bubble reads `primary`/`primaryForeground`, `muted`, `border`, `card`,
+`foreground` and `mutedForeground`; tool-call status uses `success`, `info` and
+`destructive`; spacing, type and radii are theme roles. A custom theme changes
+all of it with no code change.
+
+## Accessibility
+
+- The row is a named `group`: `<variant> message`.
+- Reasoning is a real disclosure with `aria-expanded`.
+- Citations are focusable controls labelled `Open source <label>`; they report a
+  URL through `onSelect` because 0.10.0 has no `href` element.
+- `MessageStreaming` is `role="status"`.
+- 0.10.0 has no `aria-labelledby`/`aria-describedby` and no `aria-live`, so a
+  row cannot reference its author element and the streaming status is not
+  announced.
+
+## Limitations
+
+- The body is one markdown block; per-token markdown repaint is the tested path,
+  not a token-level parser.
+- Sources and links report URLs; the caller opens them.
+- Tool-call rows are display-only; a consumer wires retry/cancel outside.
+- No `aria-live`; streamed text is not announced.
+
+## Testing
+
+`src/behaviour/message.test.tsx` drives the real renderer: it compares the two
+alignments, appends a token and reads `getPaintedText`, opens the reasoning
+disclosure, clicks a citation, flips a failed tool call, and checks that empty
+slots render nothing. `src/inventory.test.ts` checks this page, the example and
+the `COMPONENTS.md` row.
+
+## Credit
+
+Behaviour ported from [shadcn/ui AI Elements `message`](https://ui.shadcn.com/docs/ai-elements/base/message),
+MIT. No shadcn source is copied.
