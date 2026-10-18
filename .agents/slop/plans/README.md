@@ -169,6 +169,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [370](./370-font-weight-metric.md) | A type weight is a paintable number | F | 058, 358, 364, 367, 368 | done |
 | [371](./371-colour-role-format.md) | Every colour role is a hex colour the helpers parse | F | 011, 014, 071, 085, 099, 306 | done |
 | [372](./372-positive-named-sizes.md) | A named size is a positive size, and the rule index is the type | F | 054, 058, 358, 360–371 | done |
+| [373](./373-applied-default-palette.md) | The default palette a caller asked for | F | 011, 063, 073, 301, 323, 345 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1457,6 +1458,22 @@ union had no ordered index. `metricRules` is now the nine-rule index and
 `MetricRule` derives from it, the row is built from the index, and a test fails
 on a missing or retired rule. No shipped theme, platform variant or recipe
 carries a zero size, so no token value, colour, pair or floor moves.
+
+373 closes the last failing shipped call in the extension mechanism. Plan 301 made
+`applyPlatformStyle(highBase, style, "default")` declare the level of the palette
+it carries, but the declaration only followed the roles the style *named*; the
+roles it left out stayed at the AAA level, so the returned `default` theme carried
+half an AAA palette and the library's own checker rejected four mode × style
+combinations (light macOS `border` on `destructiveSoft` 1.0248:1, Linux light
+1.0162:1, Windows light 1.0133:1 on `infoSoft` and 1.0215:1 on `destructiveSoft`,
+Linux dark 1.0375:1 and 1.0346:1 on its card, popover and quiet panel). Asking for
+a level now replaces the palette as a set — the unnamed roles come from the
+default-level identity of the same mode — so every shipped style applied this way
+passes all three checks and its `colors` equal the default-level platform
+variant's. A base already at the requested level keeps its own colours and edits,
+so a style still overrides only what it names, and a style with no defined colour
+keeps the base's level (plan 323). No shipped theme, platform variant or recipe
+changes, so no token value, colour, pair or floor moves.
 
 ### Reference adoption (block `200–299`)
 

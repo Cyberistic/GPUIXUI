@@ -3,7 +3,9 @@
  * "default")` applied the platform's default palette but kept the base's
  * `contrast: "high"` declaration, so the theme claimed floors it could not meet
  * and the library's own checker reported 46 failures for a call made on purpose.
- * The returned declaration now follows the palette the theme actually carries.
+ * The returned declaration now follows the palette the theme actually carries,
+ * and plan 373 made that palette whole — the roles the style does not name come
+ * from the default-level identity, not from the AAA base being replaced.
  *
  * Plan 323 closes the same claim one input shape over: a colour key set to
  * `undefined` is not a colour override, so it must not downgrade an AAA theme's
@@ -28,13 +30,11 @@ describe("applied platform style contrast", () => {
     );
 
     expect(dropped.contrast).toBe("default");
-    // The mixed palette keeps the AAA roles the style does not override, so the
-    // checker still reports the one divider they no longer satisfy; what the fix
-    // removes is the AAA judgement of a default palette.
-    const declared = themeContrastFailures(dropped);
-    const aaa = themeContrastFailures(dropped, "high");
-    expect(declared.length).toBeLessThan(aaa.length);
-    expect(declared.every(({ floor }) => floor < 7)).toBe(true);
+    // The palette is replaced as a set (plan 373), so the default-level floors
+    // hold; the AAA judgement still has failures to report, which proves the
+    // theme no longer carries the AAA colours.
+    expect(themeContrastFailures(dropped)).toEqual([]);
+    expect(themeContrastFailures(dropped, "high").length).toBeGreaterThan(0);
   });
 
   it("cannot claim high when only shape was applied", () => {

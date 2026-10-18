@@ -583,8 +583,11 @@ keeps the base's declaration and `applyPlatformStyle` and
 applied style declares the level of the palette it ends with: asking for the
 platform's default colours on an AAA base returns a `default` theme, because the
 AAA palette is gone, while a style with no colour overrides keeps the base's
-level. A declaration is a claim; `themeContrastFailures` is what proves it, and a
-mixed palette is reported rather than silently repaired.
+level. A declaration is a claim; `themeContrastFailures` is what proves it.
+Asking for a level replaces the palette as a set, so the roles a style does not
+name come from the identity at that level — a forced default palette is whole,
+not half of one — while a base already at that level keeps its own colours,
+edits included.
 
 Overrides merge by group; typography merges field by field, density metrics size
 by size, motion timing by timing and easing by easing; elevation levels are

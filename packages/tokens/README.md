@@ -557,7 +557,12 @@ The applied theme declares the level of the palette it carries (plan 301):
 while naming `"default"` applies the platform colours and returns a `default`
 theme, and a style with no colour overrides keeps the base's level. A colour key
 set to `undefined` is not an override: the role inherits and the level stays with
-the base (plan 323).
+the base (plan 323). Naming `"default"` on a base at another level replaces the
+palette as a set: the roles the style does not name come from the default-level
+identity of the same mode, so the applied theme is held to the floors it declares
+and `themeContrastFailures` returns `[]` for every shipped style. A base that
+already declares the level keeps its own colours, so this is not a rewrite of a
+consumer's edits (plan 373).
 
 ## Custom typefaces
 

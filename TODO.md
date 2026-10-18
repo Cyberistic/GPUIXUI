@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 140/191
+`[x]` `[███████░░░]` 141/192
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1010,6 +1010,14 @@ a non-decreasing ladder that passed all three checks while the glyph or avatar
 painted a 0×0 box, and the `MetricRule` row named `ladder`, `fit` and `fraction`,
 none of which the contract emits; `metricRules` derives the union, the two size
 ladders take a `positive` step rule, and the row is guarded (plan 372)
+`[x]` Make a forced default palette whole — `applyPlatformStyle(highBase, style,
+"default")` replaced only the roles a style names, so the returned theme declared
+`default` while it still carried the AAA soft tints and border: the library's own
+checker rejected four shipped combinations (light macOS 1.0248:1, Linux light
+1.0162:1, Windows light 1.0133:1/1.0215:1, Linux dark 1.0346–1.0375:1). Asking
+for a level now replaces the palette as a set, taking the unnamed roles from the
+default-level identity of the same mode; a same-level base keeps its edits and a
+style still overrides only what it names, so no token value moves (plan 373)
 
 ## Phase C — Tier 1–2 components
 

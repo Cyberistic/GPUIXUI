@@ -442,6 +442,18 @@ export function platformTheme(base: Theme, platform: PlatformName): Theme {
   });
 }
 
+/**
+ * The palette an applied platform colour set is written over. A theme that
+ * already declares the default level keeps its own colours, edits included. A
+ * base at another level is replaced as a set, because a platform palette is
+ * designed at the default floors and the roles a style does not name must not
+ * stay behind from a palette the caller asked to leave (plan 373).
+ */
+const appliedPalette = (base: Theme): ThemeColors =>
+  base.contrast === "default"
+    ? base.colors
+    : getTheme(base.mode, "default").colors;
+
 const platformOverrides = (
   base: Theme,
   style: PlatformStyle,
@@ -468,7 +480,7 @@ const platformOverrides = (
   );
   return {
     ...structural,
-    colors,
+    colors: appliesColors ? { ...appliedPalette(base), ...colors } : colors,
     // The declaration follows the palette: a defined platform colour is an
     // override designed at the default floors, while an undefined one inherits
     // the base role and leaves the base's level alone.
@@ -487,8 +499,13 @@ const platformOverrides = (
  * declares the level of the palette it carries:
  * naming `"default"` on an AAA base applies the platform colours and returns a
  * `default` theme, while a style with no colour overrides keeps the base's
- * level. The result is a normal {@link Theme}, so it composes through
- * {@link extendTheme} like any other.
+ * level. Naming `"default"` on a base at another level replaces the palette as a
+ * set: the roles the style does not name come from the default-level identity of
+ * the same mode, so the returned theme is held to the floors it declares and
+ * `themeContrastFailures` returns `[]` for every shipped style. A base that
+ * already declares the level keeps its own colours, so a consumer's edits and a
+ * style's unnamed roles are untouched. The result is a normal {@link Theme}, so
+ * it composes through {@link extendTheme} like any other.
  *
  * @example
  * ```ts

@@ -586,10 +586,13 @@ Naming `"high"` on a default base applies only families, shape and elevation
 levels, so the theme stays `default`; a style with no colour overrides keeps the
 base's level because it changes no colour. A colour key set to `undefined` is
 not an override either: the role inherits and the declaration stays with the base
-(plan `323`). A style overrides only the roles it names, so a mixed palette can
-still miss a default-floor pair — for example the AAA `border` it does not
-override on an inherited soft tint — and `themeContrastFailures` reports it
-rather than rewriting the consumer's palette (plan `301`).
+(plan `323`). A style overrides only the roles it names, and the roles it does
+not name belong to the palette it is written over: naming `"default"` on a base
+at another level replaces the palette as a set, taking the unnamed roles from the
+default-level identity of the same mode. The result is a whole palette rather
+than half of one, so `themeContrastFailures` returns `[]` for every shipped style
+applied this way; a base that already declares the level keeps its own colours,
+edits included, so a style still overrides only what it names (plan `373`).
 
 ### Authoring a platform style
 
