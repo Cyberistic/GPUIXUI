@@ -69,7 +69,23 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       iterating and `--all` only at the end. `nub run check` and `nub run test`
       pass.
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `393`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517` and `518` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `519`
+
+`[x]` Probe a **QR code** per plan `518` — the last `todo` inventory row with no
+      runtime evidence: `qr-code` (53 checks) renders the same version-1 fixture
+      (21 × 21, 226 dark, Python `qrcode` 7.4.2 EC M) three ways. The module grid
+      is exact — `(index + 4) × 6` from the matrix origin, `foreground` modules on
+      the `background` quiet zone, a real hit target (`hit=r3c3`), no node for a
+      light module — and costs **one retained host node per dark module**:
+      `246` vs `21` for either single-node route (`226 − 1`), `611` vs `21` at
+      version 4 (`591 − 226` delta). A sourced `<svg>` is one node, one path,
+      tinted by `color` (its quiet zone is the container); an `<img>` SVG data URL
+      is one node on the full-colour path and bakes a white quiet zone so the code
+      stays two-colour in both themes. `role="img"` + `aria-label` give one
+      `Image` node named for the payload; mode/version switches remount cleanly.
+      Suite `92 → 93` (`3198 → 3251` checks), exit `0`, `qr=verified`; four
+      mutation proofs (§8.3). **Not claimed:** scannability (no decoder, no pixel
+      readback), and no encoder is chosen or implemented.
 
 `[x]` Probe a **reorderable list** per plan `391` — the unmeasured half of the
       Drag and drop row: `list-reorder` (36 checks) and `live-reorder` (19) with

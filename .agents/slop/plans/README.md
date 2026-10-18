@@ -191,7 +191,10 @@ and tokens workstreams first), then `385` (the crop area), `386` (the
 multi-step form), `387` (editable grid cells), `388` (the file-upload
 queue), `389` (the command palette in a real window), `390` (the
 window-state-dependent live focus correction), `391` (the reorderable list) and
-`392` (hierarchical reorder); the next playground plan takes `393`.
+`392` (hierarchical reorder). `393`–`399` and `500`–`516` were claimed by the
+components and tokens workstreams before this workstream needed a number, so this
+workstream took `517` (focused live smoke) and `518` (the QR probe); the next
+playground plan takes `519`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -289,6 +292,7 @@ window-state-dependent live focus correction), `391` (the reorderable list) and
 | [390](./390-live-focus-variance.md) | Live focus delivery is window-state dependent — correct the two live checks | F | 190, 344, 345, 347, 389 | **landed** — the old `onFocus=0` and "arrow restarts at the first tab" checks read one way at 15:03/15:10 and the other from 15:25 on the same clean `HEAD` (four runs). The suite now asserts that a click focuses the child (22 checks) and no longer asserts the arrow result (15 checks); live `41/41` (`839`), exit `0`. Tabs/InlineEdit cross-team rows are **re-verify** |
 | [391](./391-list-reorder.md) | Tier 5 feasibility: a reorderable list — the drop rule, keyboard move and cancel | D/E | 100, 110, 120, 140, 152, 158, 162, 172, 182, 189, 190, 197, 335 | **landed** — `list-reorder` (36 checks) and `live-reorder` (19) over a pure `insertionAt`/`dropIndex`/`moveItem` model (16 tests): a drop at boundary 3 from index 0 lands at **index 2**, rows paint at `index * rowHeight` within 1 px, a click activates without reordering, a >2 px travel starts a drag, the source's ending click is suppressed (else `activations 1 → 2`), Escape cancels through the window handler, keyboard lift/arrows/drop uses the same rule and focus follows the keyed move **without** an explicit refocus, and a `<virtual-list>` reorders keyed children in place with its anchor intact (`[0, 0, 240]`). Suite `90 → 91` (`3088 → 3124`), live `41 → 42` (`839 → 858`), exit `0`, `reorder=verified`; five mutation proofs (§9). Also hardens `live-preview`'s real-timer close with a bounded wait after it flaked twice under full-suite load |
 | [392](./392-hierarchical-reorder.md) | Tier 5 feasibility: hierarchical reorder — into a folder, between rows, cycles and the flattened index | D/E | 100, 110, 120, 140, 152, 158, 162, 165, 172, 189, 190, 197, 391 | **landed** — `tree-reorder` (74 checks) and `live-tree-reorder` (23) over a pure pre-order tree model (21 tests): the drop target is a row plus `before`/`after`/`into`, where `into` is the middle 50 % of a directory row with one 16 px indent step of x, so a file never accepts a child. A move removes the whole subtree, shifts every moved node's depth, refuses self/descendant/a-file (and a corrupt pre-order as `illegal-depth`), opens a collapsed target on drop or after a 500 ms hover, and keeps a `<virtual-list>` anchor (`[20,0,240]`). The live drag also dwelled long enough that the hover opened the refusal target — recorded, and the invariant asserted is the moved row, not the visible list. Suite `91 → 92` (`3124 → 3198`), live `42 → 43` (`858 → 881`), exit `0`, `tree-reorder=verified`; seven mutation proofs (§9) |
+| [518](./518-qr-code-rendering.md) | Tier 5 feasibility: a QR code — module grid, SVG mask and image, with the retained-node cost | D/E | 100, 110, 120, 140, 161, 180, 302 | planned — the last inventory row with no runtime evidence |
 
 Cross-cutting records:
 

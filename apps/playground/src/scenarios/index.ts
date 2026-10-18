@@ -94,6 +94,7 @@ import {
   primitivesEntryScenario,
 } from "./primitives-advanced.js";
 import { messageScrollerScenario } from "./message-scroller.js";
+import { qrScenario } from "./qr-code.js";
 import { scaleCostScenario } from "./scale.js";
 import { tier2DialogScenario } from "./tier2-dialog.js";
 import { tier2FoundationScenario } from "./tier2-foundation.js";
@@ -169,6 +170,7 @@ export const PROBE_CAPABILITIES = [
   "wizard",
   "cell-editing",
   "upload",
+  "qr",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -254,6 +256,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   toastScenario,
   messageScrollerScenario,
   scaleCostScenario,
+  qrScenario,
   tier2DialogScenario,
   tier2FoundationScenario,
   tier2MenuScenario,
