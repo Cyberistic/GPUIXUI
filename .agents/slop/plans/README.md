@@ -181,8 +181,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
 playground plans take the free numbers above the components (`300–324`) and
-tokens-theme (`300–328`) reservations — `330` and `331` are landed and `332` is
-the next free number.
+tokens-theme (`300–328`) reservations — `330`–`334` are landed and `335` is
+planned, so `336` is the next free number.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -250,6 +250,7 @@ the next free number.
 | [332](./332-shared-command-replay.md) | `@gpuixui/testing`: replay a component runtime without a renderer | B | 100, 201 | **landed** — `State.runCommands` folds a structural runtime's commands and returns the final state plus the query output; 5 tests (fold, one query on the final state, empty replay, untouched initial, a runtime with a private `run`); mutation proof in §8 |
 | [334](./334-search-replace.md) | Search and replace: washing editable text and the replace cursor | D | 100, 110, 120, 140, 171, 188, 197 | **landed** — the find half is measured by plan `171`; this measures the replace half: document mutation re-washes and recounts, the cursor clamps, a count-preserving replacement moves the washes without a count event, length changes shift later matches, `<code>` re-highlights by prop, and an editor's text is painted but never washed; 50 checks, 9 pure tests, suite `64 → 66` (§9) |
 | [333](./333-search-and-replace.md) | Search and replace: can a find bar rewrite the edited text? | D/E | 171, 188, 189, 197 | **landed** — `replace-contract` + `live-replace`: an `<input>`'s own `highlight` reports `matchCount=0` (an editor cannot carry washes), a component-set value repaints the editor and the preview's washes, **the caret moves to the end** across the rewrite, `replace-all` is idempotent and there is no `setSelection`. Suite `65 → 66`, live `19 → 20`, exit `0`, `replace=verified`; 8 pure tests + the two-direction proof (§8) |
+| [335](./335-declared-styles-and-text-truncation.md) | Declared interaction states and text truncation: hover, active, ellipsis, line clamp | B→F | 100, 110, 120, 140, 150, 196, 188 | **planned** — reconnaissance already measured hover/active as real and **per element** (a child's hover cancels its parent's), `textOverflow` as a single line, `lineClamp` as exact but **shared per `(string, width)` ignoring the clamp**, and `getPaintedText` as the source run (no ellipsis glyph). Adds the `states` and `truncation` capabilities |
 
 Cross-cutting records:
 
