@@ -158,7 +158,7 @@ Cross-cutting records:
 | `433` | **Platform theme recipes** — reshape the Windows variant into XP (Luna) / 7 (Aero), and follow Omarchy's live system theme | E | `063`, `203`, `200` | planned |
 | `434` | **Landing page** — a "Hunter License" identity over a stacked macOS / Windows / Linux hero, in the register of cap.so / klack | E | `063`, `433`, `423` | planned (number collides with docs `434-platform-styled-previews`) |
 | `435a` | **Pele** (Obsidian's design system) — recon, licence, and an inventory diff | A | `203`, `200` | planned |
-| `435b` | **Fumadocs Editor** — adopt it for authoring the docs, keeping MDX the source of truth | E | `435a`, `423` | planned (number collides with docs `435-tier1-value-and-choice-pages`) |
+| `435b` | **Fumadocs Editor** — adopt it for authoring the docs, keeping MDX the source of truth | E | `435a`, `423` | implemented by plan `467` (dev-only Studio; number collides with docs `435-tier1-value-and-choice-pages`) |
 | `435c` | **RTL** — logical placement, a direction token, mirrored directional icons, and an RTL docs toggle | C/D | `063`, `200` | planned (number collides with docs `435-tier1-value-and-choice-pages`) |
 
 ### Docs site (block `400–499`)
