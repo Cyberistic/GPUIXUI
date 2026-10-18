@@ -5,6 +5,10 @@
  * `destructive` only as a fill. An edited theme whose `destructive` approached
  * `input` could therefore erase the only error signal while
  * `themeContrastFailures` returned `[]`.
+ *
+ * Plan 340 later gives `destructive` boundary pairs on the surfaces an invalid
+ * control's ring sits on, so this file reads only the two field surfaces the
+ * edge itself paints.
  */
 
 import { describe, expect, it } from "vitest";
@@ -46,9 +50,13 @@ const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
     ]),
 );
 
+const fieldSurfaces = ["background", "input"] as const;
+
 const invalidEdgePairs = contrastPairs.filter(
-  ([foreground, , pairClass]) =>
-    foreground === "destructive" && pairClass === "boundary",
+  ([foreground, background, pairClass]) =>
+    foreground === "destructive" &&
+    pairClass === "boundary" &&
+    fieldSurfaces.some((surface) => surface === background),
 );
 
 describe("the invalid field edge", () => {
@@ -82,8 +90,10 @@ describe("the invalid field edge", () => {
       colors: { destructive: base.colors.input },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ foreground, pairClass }) =>
-        foreground === "destructive" && pairClass === "boundary",
+      ({ foreground, background, pairClass }) =>
+        foreground === "destructive" &&
+        pairClass === "boundary" &&
+        fieldSurfaces.some((surface) => surface === background),
     );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual([

@@ -390,6 +390,25 @@ export const ringSoftPairs: readonly ContrastPair[] = softSurfaceRoles.map(
 );
 
 /**
+ * The invalid control's focus ring. `controlFocusStyle` recolours the ring with
+ * `destructive` when a field fails validation, and the runtime can draw only
+ * one ring, so the error ring is the control's only focus indicator. It is
+ * painted outside the control on the same surfaces the regular ring sits on,
+ * not on the field's own fill.
+ */
+export const invalidRingPairs: readonly ContrastPair[] = [
+  // `destructive` on `background` is already the ColorPicker hex field's error
+  // edge (plan 325), and the ring shares that composition; adding it twice
+  // would break the contract's uniqueness.
+  ...ringSurfaces
+    .filter((background) => background !== "background")
+    .map((background): ContrastPair => ["destructive", background, "boundary"]),
+  ...softSurfaceRoles.map(
+    (background): ContrastPair => ["destructive", background, "boundary"],
+  ),
+];
+
+/**
  * The surfaces a status label, icon or indicator dot paints on: the quiet
  * panel of a sidebar or settings group, and the four washes a row paints. A
  * status dot in a sidebar sits on `muted` the way a soft status chip does
@@ -526,6 +545,7 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * the floating surface and the four soft status fills an Alert's description and
  * ghost dismiss control paint, the focus ring on every surface a focused control
  * can sit on, the ring on the soft status fills a toast's action button sits on,
+ * the `destructive` ring an invalid control paints on those same surfaces,
  * status text on a floating surface, the functional control
  * boundary on a floating surface, a quiet panel, the state washes and the soft
  * status fills a control sits in, the soft
@@ -584,6 +604,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...inputTextSurfacePairs,
   ...ringPairs,
   ...ringSoftPairs,
+  ...invalidRingPairs,
   ["secondaryForeground", "secondary", "secondary"],
   ["secondaryForeground", "secondaryHover", "secondary"],
   ["secondaryForeground", "secondaryActive", "secondary"],
@@ -919,7 +940,8 @@ const washVisibilityFailures = (
  * tone's own foreground on the four soft status surfaces a selected Alert,
  * Badge or Toast paints, the control edge measured
  * on the fills a bordered control paints, the focus ring on the soft status fills
- * a toast's action button sits on, and the functional boundary measured
+ * a toast's action button sits on, the `destructive` ring an invalid control
+ * paints on those surfaces, and the functional boundary measured
  * on the quiet panel, the state washes and the soft status fills a bounded
  * control sits on, the inactive label on the nine surfaces a disabled control
  * paints, the disabled control's own edge and the divider on the quiet panel,
