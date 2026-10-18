@@ -150,6 +150,13 @@ Do not invent `aria-checked`, `aria-valuenow`, `aria-labelledby`,
 does not accept them. Record the gap as a limitation and use the strongest
 supported alternative (`aria-selected`, `aria-valuetext`, a required `label`).
 
+**A disabled part says so.** 0.10.0 has no `aria-disabled`; a part whose own
+state makes it inert appends `Disabled` to its `aria-description`, joining the
+caller's text and any component message (validation, required, status). This is
+a description, not a disabled role: assistive technology hears that the control
+is unavailable while the host still exposes it as an ordinary control (plan
+`516`).
+
 **A part that draws an interactive role names itself.** 0.10.0 reports no
 accessible name for a `div role="button"` (or tab, link, …) whose label is only a
 text child — measured for menu rows in plan `387` and for every example in plan

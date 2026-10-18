@@ -54,6 +54,7 @@ import {
   type CollectionItem,
 } from "./internal/collection.js";
 import { useMergedRef } from "./internal/ref.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   assertParts,
   type PartChildren,
@@ -810,6 +811,7 @@ export const ListItem = ({
       role={selectable ? "option" : "listitem"}
       {...(selectable ? { "aria-selected": isSelected } : {})}
       {...rest}
+      {...stateDescription(disabled, rest["aria-description"])}
       ref={setElement}
       autoFocus={autoFocus && !disabled}
       tabIndex={focusable ? (isTabbable ? 0 : -1) : undefined}

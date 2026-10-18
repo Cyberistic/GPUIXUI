@@ -343,6 +343,14 @@ retired once both branches are one
       the trigger, whose focus handler re-opened the card, so it never closed.
       The dismiss layer marks the restore and the trigger consumes the mark; 2
       native cases (PreviewCard 15, behaviour 656), both-direction proof.
+    - [x] A disabled control announces its state — plan 516. Measured: 0.10.0
+      has no `aria-disabled`, so a part that dropped its handlers, left the tab
+      order and dimmed was still announced as an ordinary control. A shared
+      `stateDescription` appends `Disabled` to the supported `aria-description`
+      for 16 control families, keeping the caller's text and any validation
+      message; 6 pure + 12 native cases (unit 404, behaviour 668), mutation proof
+      (removing it from Button, FieldInput and ComboboxTrigger fails 4 cases);
+      docs, `COMPONENTS.md` and the inventory synced
     - [x] Pagination never hides a single page behind an ellipsis — plan 513.
       Measured: a 7-page list was windowed although all seven numbers fit, and
       a gap of one page rendered `…` instead of the page (also a zero-page

@@ -42,6 +42,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   addMinutes,
   clampSegment,
@@ -259,6 +260,7 @@ export const TimePicker = ({
       <div
         role="group"
         aria-label={groupLabel}
+        {...stateDescription(disabled)}
         testId={testId}
         style={{
           display: "flex",
@@ -321,6 +323,7 @@ export const TimePickerSegment = ({
   const props: InputProps = {
     testId: `${testId}-${segment}`,
     "aria-label": `${groupLabel} ${segment}`,
+    ...stateDescription(disabled),
     value: text,
     placeholder: segment === "hours" ? "HH" : "MM",
     readOnly: disabled,

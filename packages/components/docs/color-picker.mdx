@@ -76,13 +76,17 @@ Swatches are the colours you pass (defaults from the theme); the grid uses
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The root is a named `group`.
 - Every swatch is a `role="button"` named by its hex value, with `aria-selected`
   on the current one; selected swatches also carry the strong border.
 - The field is a real input named "<label> hex value"; an invalid draft is
   described through `aria-description` (`0.10.0` supports it).
 - Disabled is `tabIndex={-1}` plus `readOnly` and dimming: there is no
-  `aria-disabled` in `0.10.0`.
+  `aria-disabled` in `0.10.0`; the swatches and the hex field announce
+  `Disabled` through `aria-description`.
 
 ## Limitations
 

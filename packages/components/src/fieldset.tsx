@@ -21,6 +21,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { stateDescription } from "./internal/state-description.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 
 /** What the controls inside a fieldset inherit. */
@@ -68,6 +69,7 @@ export const Fieldset = ({
         role="group"
         aria-label={legend}
         {...rest}
+        {...stateDescription(disabled, rest["aria-description"])}
         style={mergeStyles(
           {
             display: "flex",

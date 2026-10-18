@@ -32,6 +32,8 @@ export interface A11yNode {
   readonly selected: Option.Option<boolean>;
   /** `aria-expanded`, present only where the dump reports an expanded state. */
   readonly expanded: Option.Option<boolean>;
+  /** `aria-description`, present only where a part supplied one. */
+  readonly description: Option.Option<string>;
 }
 
 /** Every node in the accessibility tree of the frame painted just now. */
@@ -53,6 +55,7 @@ export const a11yNodes = (renderer: TestRenderer): ReadonlyArray<A11yNode> => {
             level: Option.fromNullishOr(node.aria.level),
             selected: Option.fromNullishOr(node.aria.selected),
             expanded: Option.fromNullishOr(node.aria.expanded),
+            description: Option.fromNullishOr(node.aria.description),
           }),
     ),
   );
@@ -67,3 +70,10 @@ export const nodesWithRole = (
     a11yNodes(renderer),
     (node) => node.role === Str.toLowerCase(role),
   );
+
+/** Every node whose accessible name is exactly `name`. */
+export const nodesNamed = (
+  renderer: TestRenderer,
+  name: string,
+): ReadonlyArray<A11yNode> =>
+  Arr.filter(a11yNodes(renderer), (node) => node.name === name);

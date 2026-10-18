@@ -169,6 +169,9 @@ a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`) and
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - `role="menu"` on the surface, `menuitem`/`menuitemcheckbox`/`menuitemradio` on
   rows and `group` on a group; a checkbox or radio row carries `aria-selected`
   because 0.10.0 has no `aria-checked`. No

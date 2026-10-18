@@ -273,6 +273,9 @@ is on.
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - `role="list"`/`"listitem"` without selection and `listbox`/`option` with it, so
   assistive technology reads a list of rows either way.
 - `aria-selected` is set on every row in both selectable modes, so the selection

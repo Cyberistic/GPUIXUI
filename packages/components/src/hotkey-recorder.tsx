@@ -25,6 +25,7 @@ import { acceleratorOf } from "./hotkey/logic.js";
 import { activationHandlers } from "./internal/activate.js";
 import { claimEvent, isEventClaimed } from "./internal/event-claim.js";
 import { isDismiss, isEnter, isSpaceRelease } from "./internal/key.js";
+import { stateDescription } from "./internal/state-description.js";
 import { Keycap } from "./keyboard-shortcuts.js";
 import { formatAccelerator } from "./shortcut/accelerator.js";
 import {
@@ -100,6 +101,7 @@ export const HotkeyRecorder = ({
       aria-label={label}
       tabIndex={disabled ? -1 : 0}
       {...rest}
+      {...stateDescription(disabled, rest["aria-description"])}
       testId={testId}
       autoFocus={autoFocus && !disabled}
       onClick={(event) => {

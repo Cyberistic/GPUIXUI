@@ -83,6 +83,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
   elevationShadow,
@@ -459,6 +460,7 @@ export const ComboboxTrigger = ({
       testId={testId}
       disabled={disabled}
       {...rest}
+      {...stateDescription(disabled, rest["aria-description"])}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         // Escape closes the open popup as one surface, like the search field.
@@ -732,6 +734,7 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
       role="option"
       aria-selected={selected}
       disabled={isDisabled(value)}
+      {...stateDescription(isDisabled(value))}
       testId={creates ? "combobox-option-create" : `combobox-option-${value}`}
       style={(state) =>
         mergeStyles(rowStyle(theme, state), resolveStyle(style, state)) ??

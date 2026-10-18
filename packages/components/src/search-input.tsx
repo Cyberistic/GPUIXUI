@@ -25,6 +25,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
   focusRing,
@@ -122,6 +123,7 @@ export const SearchInput = ({
       <Icon name="search" color={theme.colors.mutedForeground} size="md" />
       <input
         {...rest}
+        {...stateDescription(disabled, rest["aria-description"])}
         ref={setInput}
         testId={rest.testId ?? "search-input"}
         autoFocus={autoFocus && !disabled}

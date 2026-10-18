@@ -152,6 +152,9 @@ still owns the group focus ring.
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The field is a labelled `group`; each input carries `aria-label="<label>
   hours"` / `"<label> minutes"` and its value natively.
 - **No `aria-valuenow` / spinbutton role** in `@gpuix/native@0.10.0`. The inputs
@@ -159,7 +162,8 @@ still owns the group focus ring.
   enter a time.
 - **No `aria-disabled`** in 0.10.0. `disabled` makes both inputs `readOnly`,
   removes the clear control, dims the field, takes the segments out of the tab
-  order and makes the arrow keys inert; it does not announce a disabled state.
+  order and makes the arrow keys inert; the segments announce `Disabled`
+  through `aria-description`.
 - **Fixed 24-hour display.** No AM/PM and no locale: the repo has no i18n layer,
   and a 12-hour toggle would need a real message catalogue. No seconds and no
   timezone either — the value is a time of day, not an instant.

@@ -27,6 +27,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss, isEnter, isTab } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
   focusRing,
@@ -174,6 +175,7 @@ export const InlineEdit = ({
         aria-label={label}
         tabIndex={disabled ? -1 : 0}
         {...rest}
+        {...stateDescription(disabled, rest["aria-description"])}
         ref={setDisplay}
         autoFocus={autoFocus && !disabled}
         onClick={(event) => {
@@ -240,6 +242,7 @@ export const InlineEdit = ({
       <input
         {...rest}
         aria-label={label}
+        {...stateDescription(disabled, rest["aria-description"])}
         ref={attachInput}
         value={draft}
         readOnly={disabled}

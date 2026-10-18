@@ -85,6 +85,9 @@ the frame with no code change — see [Theming](/docs/theming).
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The root is a named `group` and takes focus for the arrow keys.
 - Controls are buttons named "Previous slide" / "Next slide"; a control at an
   edge is disabled (out of the tab order, dimmed) unless `loop`.

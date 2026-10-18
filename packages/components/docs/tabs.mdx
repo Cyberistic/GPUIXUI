@@ -155,6 +155,9 @@ after the trigger's own rules.
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
   exposed; the roving tab index is the single-stop pattern. Give the list a
   `label` so the tab set has a name.

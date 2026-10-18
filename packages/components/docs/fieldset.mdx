@@ -85,13 +85,18 @@ sizes, so a custom theme changes the group with no code change — see
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The group renders `role="group"` and `aria-label={legend}`. GPUix 0.10.0 has no
   `aria-labelledby`, so the legend text is the name; it is not referenced by id.
 - `@gpuix/native@0.10.0` has no `aria-disabled`. A disabled group is conveyed by
-  its controls leaving the tab order and by the dimmed legend, not by a state
-  announced on the group.
+  its controls leaving the tab order and by the dimmed legend; the group and the
+  `FieldInput`s that honour it also announce `Disabled` through
+  `aria-description`.
 - A disabled `FieldInput` is `readOnly`, not a disabled input: assistive
-  technology reads an editable-looking field that refuses input.
+  technology reads an ordinary field that refuses input, so the description
+  carries the state.
 
 ## Limitations
 

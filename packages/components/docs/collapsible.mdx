@@ -101,6 +101,9 @@ of its own, so it inherits the card or panel around it.
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - `aria-expanded` on the trigger, and real button semantics (Tab reaches it,
   Enter/Space activate it).
 - The trigger names itself from its plain-text child, because 0.10.0 reports no

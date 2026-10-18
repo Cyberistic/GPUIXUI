@@ -30,6 +30,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { stateDescription } from "./internal/state-description.js";
 import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
 import {
   controlHeight,
@@ -134,6 +135,7 @@ export const TagInput = ({
         role="group"
         aria-label={label}
         {...rest}
+        {...stateDescription(disabled, rest["aria-description"])}
         style={mergeStyles(
           {
             display: "flex",
@@ -189,6 +191,7 @@ export const TagInputField = ({
   return (
     <input
       {...rest}
+      {...stateDescription(disabled, rest["aria-description"])}
       readOnly={disabled}
       value={draft}
       onChange={(event) => editDraft(event.value ?? "")}

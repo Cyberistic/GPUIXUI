@@ -102,6 +102,9 @@ and a caption type role.
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - `role="navigation"` and a name on the root; `aria-label="Page N"` on every page
   button; `aria-label="More pages"` on each ellipsis.
 - **No `aria-current="page"`** in 0.10.0 (`HostProps`): the current page carries

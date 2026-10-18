@@ -20,6 +20,7 @@ import { useLayoutEffect, useState } from "react";
 import { normalizeHex, sameHex } from "./color/hex.js";
 import { useControllableState } from "./internal/controllable.js";
 import { isActivation } from "./internal/key.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
   focusRing,
@@ -112,6 +113,7 @@ export const ColorPicker = ({
       role="group"
       aria-label={label}
       {...rest}
+      {...stateDescription(disabled, rest["aria-description"])}
       testId={testId}
       style={mergeStyles(
         {
@@ -139,6 +141,7 @@ export const ColorPicker = ({
               role="button"
               aria-label={swatch}
               aria-selected={selected}
+              {...stateDescription(disabled)}
               testId={
                 testId === undefined ? undefined : `${testId}-swatch-${index}`
               }
@@ -189,7 +192,10 @@ export const ColorPicker = ({
         />
         <input
           aria-label={`${label} hex value`}
-          {...(valid ? {} : { "aria-description": "Invalid hex colour" })}
+          {...stateDescription(
+            disabled,
+            valid ? undefined : "Invalid hex colour",
+          )}
           testId={testId === undefined ? undefined : `${testId}-hex`}
           value={draft}
           readOnly={disabled}

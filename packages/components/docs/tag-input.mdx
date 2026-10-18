@@ -70,6 +70,9 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The root is a named `group`; every chip's removal control is a `button` named
   "Remove <token>".
 - A chip with `testId="chip-design"` renders its removal control as
@@ -78,7 +81,8 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 - The field is a real input, so typing, selection and focus are native.
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
   `Enter`, or releasing `Space`.
-- The group's disabled state is visual: there is no `aria-disabled` in 0.10.0.
+- There is no `aria-disabled` in 0.10.0; the field and the group announce
+  `Disabled` through `aria-description`.
 
 ## Limitations
 

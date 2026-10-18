@@ -31,6 +31,7 @@ import {
   textStyle,
   useTheme,
 } from "./internal/theme.js";
+import { stateDescription } from "./internal/state-description.js";
 
 /** What a {@link FieldInput} inherits from the field around it. */
 interface FieldContextValue {
@@ -227,9 +228,7 @@ export const FieldInput = ({
       autoFocus={autoFocus && !isDisabled}
       {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
       {...(field === undefined ? {} : { "aria-label": field.label })}
-      {...(description === undefined
-        ? {}
-        : { "aria-description": description })}
+      {...stateDescription(isDisabled, description, rest["aria-description"])}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

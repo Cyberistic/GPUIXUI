@@ -102,6 +102,9 @@ dispatches `onFocus`.
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The input carries the caller's `aria-label` (or the field's label); the clear
   control is a labelled button.
 - **No debounce.** Debouncing is the consumer's: fire the query from

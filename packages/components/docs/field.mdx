@@ -106,6 +106,9 @@ ring; an invalid one keeps the destructive border instead.
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The input's accessible name is the field's label; the message is passed as
   `aria-description`.
 - **No `aria-describedby`, `aria-invalid` or `aria-required`** in

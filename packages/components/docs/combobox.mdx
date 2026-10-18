@@ -271,6 +271,8 @@ same shape for a row composed by hand.
 
 ## Limitations
 
+- No `aria-disabled` in 0.10.0: a disabled trigger and disabled option rows
+  announce `Disabled` through `aria-description` (plan 516).
 - Group headings follow contiguous runs of equal `group` values; a caller that
   interleaves a group gets two headings. Create-new is a synchronous caller
   callback (`onCreate`), not a persistence layer.

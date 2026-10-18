@@ -39,6 +39,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   applyMention,
   mentionQuery,
@@ -199,6 +200,7 @@ export const MentionInput = ({
           <input
             {...rest}
             aria-label={label}
+            {...stateDescription(disabled, rest["aria-description"])}
             testId={testId}
             value={text}
             readOnly={disabled}

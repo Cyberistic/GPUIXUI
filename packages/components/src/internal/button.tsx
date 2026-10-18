@@ -21,6 +21,7 @@ import { Match } from "effect";
 import { useState } from "react";
 import { activationHandlers } from "./activate.js";
 import { controlName } from "./name.js";
+import { stateDescription } from "./state-description.js";
 import {
   alpha,
   controlHeight,
@@ -170,6 +171,7 @@ export const Button = ({
       tabIndex={disabled ? -1 : 0}
       {...rest}
       {...(name === undefined ? {} : { "aria-label": name })}
+      {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}
       onFocus={(event) => {
@@ -221,6 +223,7 @@ export const IconButton = ({
       aria-label={label}
       tabIndex={disabled ? -1 : 0}
       {...rest}
+      {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}
       onFocus={(event) => {

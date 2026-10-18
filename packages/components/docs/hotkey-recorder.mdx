@@ -72,14 +72,18 @@ no code change — see [Theming](/docs/theming).
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The recorder is a `role="button"` named by `label`; the clear control is a
   separately named button, so both are reachable by keyboard.
 - `Enter` starts a recording on press and `Space` on release. The clear control
   clears on the same split, and its key never reaches the recorder, so clearing
   from the keyboard does not start a recording.
 - Recording is visual ("Press keys…") and the field keeps focus while listening.
-- There is no `aria-keyshortcuts` and no `aria-disabled` in `0.10.0`; disabled is
-  the tab order plus dimming.
+- There is no `aria-keyshortcuts` and no `aria-disabled` in `0.10.0`; disabled
+  leaves the tab order, dims and announces `Disabled` through
+  `aria-description`.
 
 ## Limitations
 

@@ -123,6 +123,9 @@ has no `transform` — a rotation is not available.
 
 ## Accessibility and limitations
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - `aria-expanded` on each trigger; the trigger names the section.
 - A plain-text header names itself (`aria-label`), because 0.10.0 reports no
   name from contents; a header composed from elements passes `aria-label`.

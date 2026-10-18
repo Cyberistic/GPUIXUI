@@ -41,6 +41,7 @@ import {
 } from "./internal/collection.js";
 import { useControllableState } from "./internal/controllable.js";
 import { controlName } from "./internal/name.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   isDown,
   isFirst,
@@ -542,6 +543,7 @@ export const TabsTrigger = ({
       aria-selected={isSelected}
       {...rest}
       {...(name === undefined ? {} : { "aria-label": name })}
+      {...stateDescription(disabled, rest["aria-description"])}
       ref={setElement}
       autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : isTabbable ? 0 : -1}

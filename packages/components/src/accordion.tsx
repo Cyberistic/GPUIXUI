@@ -39,6 +39,7 @@ import {
 } from "./accordion/logic.js";
 import { activationHandlers } from "./internal/activate.js";
 import { controlName } from "./internal/name.js";
+import { stateDescription } from "./internal/state-description.js";
 import {
   firstEnabled,
   lastEnabled,
@@ -457,6 +458,7 @@ export const AccordionTrigger = ({
       aria-expanded={open}
       {...rest}
       {...(name === undefined ? {} : { "aria-label": name })}
+      {...stateDescription(disabled, rest["aria-description"])}
       ref={setElement}
       autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : 0}

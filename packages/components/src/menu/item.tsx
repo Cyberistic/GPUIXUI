@@ -33,6 +33,7 @@ import {
   type PartsContract,
 } from "../internal/parts.js";
 import { useMergedRef } from "../internal/ref.js";
+import { stateDescription } from "../internal/state-description.js";
 import { useMenuContext } from "./state.js";
 
 /** How much emphasis a row carries. `destructive` asks before it is used. */
@@ -194,6 +195,7 @@ export const MenuItem = ({
       role="menuitem"
       {...rest}
       {...(name === undefined ? {} : { "aria-label": name })}
+      {...stateDescription(disabled, rest["aria-description"])}
       ref={setRow}
       tabIndex={disabled ? -1 : 0}
       onFocus={(event) => {

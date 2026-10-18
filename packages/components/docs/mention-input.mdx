@@ -84,6 +84,9 @@ see [Theming](/docs/theming).
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The field is a real input named by `label`, so typing, selection and focus are
   native.
 - Suggestion rows are buttons with `aria-selected` on the highlighted one; the

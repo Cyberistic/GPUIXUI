@@ -77,6 +77,9 @@ states with no code change — see [Theming](/docs/theming).
 
 ## Accessibility
 
+Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
+`aria-disabled` semantics (plan 516).
+
 - The display is a `role="button"` named by `label`; the input is a real input
   with the same name.
 - Focus is moved with the renderer's `focusElement`; `autoFocus` alone does not
@@ -84,7 +87,8 @@ states with no code change — see [Theming](/docs/theming).
 - `@gpuix/native@0.10.0` has no `aria-invalid` or `aria-describedby`, so a
   rejected value needs the consumer's own message (pair it with `Field`).
 - Disabled is `tabIndex={-1}` with no handlers, plus dimming; there is no
-  `aria-disabled` in 0.10.0.
+  `aria-disabled` in 0.10.0, so the display announces `Disabled` through
+  `aria-description`.
 
 ## Limitations
 
