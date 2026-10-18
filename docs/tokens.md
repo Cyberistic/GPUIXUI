@@ -186,7 +186,7 @@ Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
 `accent`/`selected` fills a selectable row paints under it, and on the four soft
 status fills a link in a status panel sits on. The split is not
 cosmetic: the macOS accent `#0071E3` measures 4.21:1 on that canvas and 3.44:1
-on the pressed wash, while its text step `#0055B3` clears both.
+on the pressed wash, while its text step `#004A9A` clears both.
 
 A runnable example lives in
 [`src/primary-text.example.ts`](../packages/tokens/src/primary-text.example.ts).
@@ -203,7 +203,7 @@ A runnable example lives in
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |
-| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links and icons on plain surfaces and the `accent`/`selected` row fills |
+| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links and icons on plain surfaces, the `accent`/`selected` row fills and through a text selection |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
@@ -493,7 +493,7 @@ carries, so it cannot claim another.
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
 | `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
 | `primaryActive` | `#1C1547` | `#EEF0FF` | primary action while pressed |
-| `primaryText` | `#3B2C8F` | `#E0E3FF` | brand-toned text, links and icons on plain surfaces and the `accent`/`selected` row fills |
+| `primaryText` | `#241C5C` | `#E0E3FF` | brand-toned text, links and icons on plain surfaces, the `accent`/`selected` row fills and through a text selection |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `secondaryHover` | `#D6D6D6` | `#3D3D3D` | secondary action while hovered |
@@ -1282,10 +1282,20 @@ XP light `successText` at 3.671:1 on `active`, Aero light at 3.721:1 on
 floor while the dark sets already passed; the six light status roles move one
 half-step between the ramp steps they used, so the tightest shipped pair is
 **4.584:1** (XP light `infoText` on `selected`) and the AAA tightest **7.370:1**
-(identity light high `warningText` on `active`). An accent-toned
-link is the one deliberate omission: the shipped `primaryText` does not clear
-7:1 at AAA, and macOS light measures 4.32:1 through the wash on
-`infoSoft`, under the default secondary floor. The audit found two gaps:
+(identity light high `warningText` on `active`). An accent-toned link is the last
+text role the washed contract covers (`selectionLinkPairs`): `primaryText` is
+text a reader selects with the copy around it, and calling it a deliberate
+omission hid twelve failing shipped sets — the AAA light link measured
+**5.376:1** through the wash on `destructiveSoft` under its 7:1 floor, macOS dark
+**3.708:1** on `selected`, Windows light 3.995:1, XP light 4.378:1, Aero light
+4.022:1, macOS light 4.106:1 and Linux dark 4.485:1 under 4.5:1. Seven values
+move one designed step inside their own families — AAA light `#3B2C8F` →
+`#241C5C`, macOS `#0055B3` → `#004A9A` in light and `#64B5FF` → `#96CDFF` in
+dark, Linux dark `#99C1F1` → `#A5CBF5`, Windows light `#005BA1` → `#004F8A`, XP
+`#0046BD` → `#003FA8` and Aero `#0F55A3` → `#0C4A8C` — so every shipped set
+clears its floor (4.729:1 at the tightest, Windows dark on `selected`; 7.484:1
+at AAA, high-contrast light on `destructiveSoft`).
+The audit found two gaps:
 identity light `successSoftForeground`
 measured 5.83:1 through the wash, under the 7:1 body floor, and Windows dark's
 wash over `destructiveSoft` measured 1.005:1 — an invisible highlight. The four
@@ -1602,8 +1612,8 @@ functional control boundary on the `muted` panel, those washes and the four soft
 status fills (`controlBoundarySoftPairs`), a status panel's caption and link —
 `mutedForeground` and `primaryText` on the four soft status fills
 (`softPanelTextPairs`), the selection
-wash — body, secondary and status text through it, and the wash's own
-perceivability —
+wash — body, secondary, status and brand-toned link text through it, and the
+wash's own perceivability —
 the soft status surfaces, the designed edge on its own fill and on the eight
 surfaces a chip sits on (`softBorderSurfacePairs`), the plain divider on those
 fills, and the decorative
@@ -2372,8 +2382,8 @@ ship as an unreadable link: the audit found macOS light at 4.21:1 on its
 canvas and 3.44:1 on the pressed wash, macOS dark at 2.84:1 on `active`, and
 high-contrast dark at 6.94:1 under its 7:1 floor. The two row fills were added
 by plan `314`; the tightest shipped pair is `primaryText` on `selected` at
-**4.58:1** (macOS dark), and the soft fills are tightest at
-`primaryText` on `destructiveSoft` at **5.26:1** (Windows light), so no value
+**5.68:1** (Linux dark), and the soft fills are tightest at
+`primaryText` on `destructiveSoft` at **6.19:1** (identity light), so no value
 moves.
 Every platform variant is checked on its own canvas, not the identity's, so a
 style that moves `background` or `card` is held to the status tints and skeleton
@@ -2694,6 +2704,22 @@ fourteen shipped hints move one designed step (identity dark `#858F9F` →
 light `#4A4F58` → `#3D4047`, AAA dark `#B0B0B0` → `#D1D1D1`), every shipped set
 passes (4.651:1 at the tightest, Linux dark on `active`; 7.113:1 at AAA) and the
 hint stays a step below `mutedForeground` (1.157:1 at the tightest).
+Plan `528` measures the last text role the washed contract omitted:
+`primaryText` through the selection wash. The reference called an accent-toned
+link a deliberate omission, on the reasoning that no perceivable wash keeps a
+link at 7:1 at AAA — which plan `366` had already disproved for the four status
+tones — but a link in a paragraph, list row or Alert is selected with the copy
+around it. `selectionLinkPairs` publishes the role on the nine surfaces and the
+four soft status fills (thirteen pairs); the audit found twelve of the
+twenty-four shipped sets below their floor, the AAA light link at **5.376:1** on
+`destructiveSoft` under 7:1, macOS dark **3.708:1** on `selected`, Windows light
+3.995:1, XP light 4.378:1, Aero light 4.022:1, macOS light 4.106:1 and Linux
+dark 4.485:1 under 4.5:1. Seven values move one designed step inside their own
+families (AAA light `#3B2C8F` → `#241C5C`, macOS `#0055B3` → `#004A9A` light and
+`#64B5FF` → `#96CDFF` dark, Linux dark `#99C1F1` → `#A5CBF5`, Windows light
+`#005BA1` → `#004F8A`, XP `#0046BD` → `#003FA8`, Aero `#0F55A3` → `#0C4A8C`),
+every shipped set passes (4.729:1 at the tightest, Windows dark on `selected`;
+7.484:1 at AAA) and `contrastPairs` stays **404**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2891,8 +2917,8 @@ light's caption on `destructiveSoft` at **4.78:1** at the tightest — and the
 ghost action's label plan `394` moved off `foreground` joins them in plan `512`:
 every shipped set clears **8.667:1** (identity dark on `infoSoft`), so no colour
 moves. A status panel now keeps its description, its action and its caption
-selected on any platform, and
-accent-toned text stays the documented omission. The card's own
+selected on any platform, and a brand-toned link is held through the wash too
+(`selectionLinkPairs`, plan `528`). The card's own
 `cardForeground` is measured beside the default `foreground` (plan `363`), so a
 theme whose card text is readable at rest cannot lose it under the wash — the
 two roles are already apart in both Windows recipes, and Windows dark is the

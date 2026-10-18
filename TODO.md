@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 192/254
+`[x]` `[███████░░░]` 193/255
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1539,6 +1539,20 @@ the four washes (396 → 404 pairs), fourteen shipped hints move one designed st
 `#B0B0B0` → `#D1D1D1`), every shipped set passes (4.651:1 at the tightest, Linux
 dark on `active`; 7.113:1 at AAA) and the hint stays 1.157:1 below
 `mutedForeground` at the tightest (plan 527)
+`[x]` Hold a brand-toned link through the text-selection wash — `primaryText` is
+a text role, and a link in a paragraph, row or Alert is selected with the copy
+around it, but the selection contract called it “the one deliberate omission”
+(plan 087) while twelve of the twenty-four shipped sets missed their floor: AAA
+light **5.376:1** on `destructiveSoft` under 7:1, macOS dark 3.708:1 on
+`selected`, Windows light 3.995:1, XP light 4.378:1, Aero light 4.022:1, macOS
+light 4.106:1 and Linux dark 4.485:1, all under 4.5:1, while every check
+returned `[]`; `selectionLinkPairs` adds thirteen pairs (nine surfaces + the
+four soft fills), seven values move one designed step inside their own families
+(AAA light `#3B2C8F` → `#241C5C`, macOS `#0055B3` → `#004A9A` / `#64B5FF` →
+`#96CDFF`, Linux dark `#99C1F1` → `#A5CBF5`, Windows light `#005BA1` →
+`#004F8A`, XP `#0046BD` → `#003FA8`, Aero `#0F55A3` → `#0C4A8C`), every
+shipped set passes (4.729:1 at the tightest, Windows dark; 7.484:1 at AAA) and
+the plain 404 pairs do not move (plan 528)
 
 ## Phase C — Tier 1–2 components
 

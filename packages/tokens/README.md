@@ -75,7 +75,9 @@ a fill. Brand-toned text — a link, a label, an icon — reads `primaryText`, w
 is held to the text floor on the plain surfaces, the `hover`/`active` washes a
 link paints, the `accent`/`selected` fills a link sits on inside a row
 (plan 314) and the four soft status fills a link in a status panel sits on
-(plan 346). A brand that changes `primary` should set `primaryText` beside it.
+(plan 346), and through the text-selection wash on all thirteen of those
+surfaces (plan 528). A brand that changes `primary` should set `primaryText`
+beside it.
 A runnable example lives in
 [`src/primary-text.example.ts`](./src/primary-text.example.ts).
 
@@ -386,8 +388,9 @@ lowered the identity wash to 14% and the Windows one to 33% so a selected row's
 title keeps 7:1 through it, and darkened Linux dark's selected fill one step. The panel's
 description and caption are measured through the same wash — `foreground` at the
 body floor and `mutedForeground` at the secondary floor on each soft fill,
-because an Alert's body and caption are selected with it (plan 362);
-accent-toned links stay the documented omission. The focus ring is
+because an Alert's body and caption are selected with it (plan 362); a
+brand-toned link is measured through it too, on the nine surfaces and the four
+soft fills (plan 528). The focus ring is
 checked on the canvas, card, popover, the `muted` panel and the `accent` wash,
 the `hover`, `active` and `selected` washes, the four soft status fills —
 because an Alert's action button is focused while it sits on its own tint — and
