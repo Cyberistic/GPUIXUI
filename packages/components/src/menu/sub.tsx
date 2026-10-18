@@ -8,8 +8,9 @@
  * A press on the submenu surface is **outside the parent surface** (the runtime
  * compares geometry), so the parent's outside handler offers it to this layer
  * first. The layer must ignore that press: closing would unmount the row before
- * the click lands on it. {@link MenuSubContent} therefore checks its own painted
- * bounds before treating a mouse-down as a dismissal.
+ * the click lands on it. {@link MenuSubContent} therefore checks every enclosing
+ * menu surface before treating a mouse-down as a dismissal — a press on a row of
+ * an enclosing submenu is not an outside press on the deeper level.
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
@@ -17,6 +18,7 @@ import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import { Match } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   createContext,
@@ -55,7 +57,7 @@ import {
   type MenuCloseReason,
 } from "./state.js";
 import { resolveSubmenuPoint } from "./sub-placement.js";
-import { MenuSurface } from "./surface.js";
+import { MenuSurface, MenuSurfaceStack } from "./surface.js";
 
 /** The rules a {@link MenuSubContent} follows; throws outside a sub. */
 interface SubContextValue {
@@ -207,6 +209,11 @@ export const MenuSubContent = ({
   const parentClaim = parent.claimSubmenu;
   const restoreFocus = useRef(false);
   const surface = useRef<PublicInstance | null>(null);
+  const enclosing = useContext(MenuSurfaceStack);
+  const stack = useMemo(
+    () => Arr.append(enclosing, surface),
+    [enclosing, surface],
+  );
 
   const close = useCallback(
     (reason: MenuCloseReason) => {
@@ -247,24 +254,29 @@ export const MenuSubContent = ({
     closeRef.current = close;
   });
 
-  /** Whether a pointer event landed on this submenu's own surface. */
+  /**
+   * Whether a pointer event landed on this submenu or any surface enclosing it.
+   * A press on an enclosing row must reach that row instead of closing the
+   * parent before the click lands.
+   */
   const insideSurface = useCallback(
     (event: EventPayload): boolean => {
-      const instance = surface.current;
-      if (instance === null) return false;
-      const bounds = renderer?.getElementBounds?.(instance.id);
-      if (bounds === null || bounds === undefined) return false;
       const { x, y } = event;
-      return (
-        x !== undefined &&
-        y !== undefined &&
-        x >= bounds.x &&
-        x <= bounds.x + bounds.width &&
-        y >= bounds.y &&
-        y <= bounds.y + bounds.height
-      );
+      if (x === undefined || y === undefined) return false;
+      return Arr.some(stack, (ref) => {
+        const instance = ref.current;
+        if (instance === null) return false;
+        const bounds = renderer?.getElementBounds?.(instance.id);
+        if (bounds === null || bounds === undefined) return false;
+        return (
+          x >= bounds.x &&
+          x <= bounds.x + bounds.width &&
+          y >= bounds.y &&
+          y <= bounds.y + bounds.height
+        );
+      });
     },
-    [renderer],
+    [renderer, stack],
   );
 
   const setSurface = useCallback((next: PublicInstance | null) => {
@@ -363,30 +375,32 @@ export const MenuSubContent = ({
 
   return (
     <MenuContext.Provider value={menu}>
-      <anchored
-        position={point}
-        fit="snap"
-        snapMargin={SUBMENU_MARGIN}
-        deferred
-        priority={1}
-        occlude
-      >
-        <MenuSurface
-          ref={setSurface}
-          testId={testId}
-          label={label}
-          {...rest}
-          onKeyDown={(event) => {
-            // Claim every key: the parent menu must not also move its highlight.
-            claimEvent(event);
-            if (isLeft(event)) close("dismiss");
-            onKeyDown?.(event);
-          }}
-          style={mergeStyles({ maxHeight: 320, overflowY: "scroll" }, style)}
+      <MenuSurfaceStack.Provider value={stack}>
+        <anchored
+          position={point}
+          fit="snap"
+          snapMargin={SUBMENU_MARGIN}
+          deferred
+          priority={1}
+          occlude
         >
-          {children}
-        </MenuSurface>
-      </anchored>
+          <MenuSurface
+            ref={setSurface}
+            testId={testId}
+            label={label}
+            {...rest}
+            onKeyDown={(event) => {
+              // Claim every key: the parent menu must not also move its highlight.
+              claimEvent(event);
+              if (isLeft(event)) close("dismiss");
+              onKeyDown?.(event);
+            }}
+            style={mergeStyles({ maxHeight: 320, overflowY: "scroll" }, style)}
+          >
+            {children}
+          </MenuSurface>
+        </anchored>
+      </MenuSurfaceStack.Provider>
     </MenuContext.Provider>
   );
 };

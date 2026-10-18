@@ -227,6 +227,51 @@ const WithSubmenus = ({
   </div>
 );
 
+/** A menu whose Share submenu contains a More submenu and an outside target. */
+const NestedSubmenus = ({
+  onSelect,
+}: {
+  readonly onSelect: (action: string) => void;
+}) => (
+  <div
+    style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+  >
+    <DropdownMenu>
+      <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="File actions">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger testId="share">Share</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent testId="submenu" label="Share">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger testId="more">
+                More
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent testId="nested" label="More">
+                <DropdownMenuItem
+                  testId="deep"
+                  onSelect={() => onSelect("deep")}
+                >
+                  Copy as Markdown
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem
+              testId="copy-link"
+              onSelect={() => onSelect("copy-link")}
+            >
+              Copy link
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuItem testId="rename" onSelect={() => onSelect("rename")}>
+          Rename
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+    <Button testId="elsewhere">Elsewhere</Button>
+  </div>
+);
+
 /** A controlled radio group with a disabled row and a following action. */
 const WithRadioGroup = ({
   value,
@@ -918,6 +963,79 @@ describe("DropdownMenu submenus", () => {
     menu.renderer.simulateKeystrokes("e");
 
     expect(focusedTestId(menu)).toEqual(Option.some("email"));
+
+    menu.unmount();
+  });
+
+  it("runs a row in the enclosing submenu while a nested submenu is open", () => {
+    const onSelect = vi.fn();
+    const menu = renderComponent(<NestedSubmenus onSelect={onSelect} />);
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "share");
+    hoverCentreOf(menu, "more");
+
+    expect(menu.renderer.findByTestId("nested")).toBeDefined();
+
+    clickCentreOf(menu, "copy-link");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("copy-link");
+    expect(menu.renderer.findByTestId("nested")).toBeUndefined();
+    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+
+    menu.unmount();
+  });
+
+  it("runs a root row while a nested submenu is open", () => {
+    const onSelect = vi.fn();
+    const menu = renderComponent(<NestedSubmenus onSelect={onSelect} />);
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "share");
+    hoverCentreOf(menu, "more");
+
+    clickCentreOf(menu, "rename");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("rename");
+    expect(menu.renderer.findByTestId("nested")).toBeUndefined();
+    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+
+    menu.unmount();
+  });
+
+  it("closes every level on an outside press while nested", () => {
+    const onSelect = vi.fn();
+    const menu = renderComponent(<NestedSubmenus onSelect={onSelect} />);
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "share");
+    hoverCentreOf(menu, "more");
+
+    clickCentreOf(menu, "elsewhere");
+
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(menu.renderer.findByTestId("nested")).toBeUndefined();
+    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+
+    menu.unmount();
+  });
+
+  it("runs the deepest row once and closes every level", () => {
+    const onSelect = vi.fn();
+    const menu = renderComponent(<NestedSubmenus onSelect={onSelect} />);
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "share");
+    hoverCentreOf(menu, "more");
+
+    clickCentreOf(menu, "deep");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("deep");
+    expect(menu.renderer.findByTestId("nested")).toBeUndefined();
+    expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
 
     menu.unmount();
   });

@@ -95,6 +95,21 @@ export const DropdownMenuExample = () => {
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
               <DropdownMenuSubContent label="Share">
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>More</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent label="More">
+                    <DropdownMenuItem
+                      onSelect={() => setLastAction("Share → Copy as Markdown")}
+                    >
+                      Copy as Markdown
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => setLastAction("Share → Copy as HTML")}
+                    >
+                      Copy as HTML
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuItem onSelect={() => setLastAction("Copy link")}>
                   Copy link
                 </DropdownMenuItem>

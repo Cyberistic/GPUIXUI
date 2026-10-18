@@ -283,6 +283,12 @@ retired once both branches are one
       were wrong. 12 parts seed `focused` from the prop and the two roving roots
       are told; 11 new native tests (behaviour 578), 6 mutation proofs, docs and
       inventory synced
+    - [x] Nested submenu rows stay clickable while a deeper level is open —
+      plan 389; a press on an enclosing submenu row was reported as an outside
+      press by the deeper layer, which closed the parent before the click could
+      run. The dismiss check now tests every enclosing menu surface; 4 dropdown
+      + 1 context native tests, both-direction proof (behaviour 583); docs,
+      examples and inventory synced
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

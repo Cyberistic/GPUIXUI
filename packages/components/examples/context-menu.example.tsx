@@ -67,6 +67,21 @@ export const ContextMenuExample = () => {
             <ContextMenuSub>
               <ContextMenuSubTrigger>Share</ContextMenuSubTrigger>
               <ContextMenuSubContent label="Share">
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>More</ContextMenuSubTrigger>
+                  <ContextMenuSubContent label="More">
+                    <ContextMenuItem
+                      onSelect={() => setLastAction("Share → Copy as Markdown")}
+                    >
+                      Copy as Markdown
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onSelect={() => setLastAction("Share → Copy as HTML")}
+                    >
+                      Copy as HTML
+                    </ContextMenuItem>
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
                 <ContextMenuItem
                   onSelect={() => setLastAction("Share → Copy link")}
                 >

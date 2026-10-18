@@ -50,7 +50,7 @@ import {
   type MenuCloseReason,
 } from "./menu/state.js";
 import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
-import { MenuSurface } from "./menu/surface.js";
+import { MenuSurface, MenuSurfaceStack } from "./menu/surface.js";
 
 /** A point in window coordinates. */
 interface Point {
@@ -293,31 +293,36 @@ export const ContextMenuContent = ({
   ...rest
 }: ContextMenuContentProps) => {
   const { open, point } = useContextMenuContext();
+  const surface = useRef<PublicInstance | null>(null);
+  const surfaceStack = useMemo(() => [surface], [surface]);
   assertParts(contextMenuContent, children);
 
   if (!open) return null;
 
   return (
-    <anchored position={point} deferred priority={1} occlude>
-      <MenuSurface
-        {...rest}
-        label={label}
-        testId={testId}
-        onMouseDownOutside={(event) => {
-          onMouseDownOutside?.(event);
-          dismissTopLayer(event);
-        }}
-        style={mergeStyles(
-          // The anchored host does no layout of its own; the surface carries the
-          // floating look. `position: relative` keeps it a positioned box for the
-          // anchored layer's own measurement.
-          { position: "relative" },
-          style,
-        )}
-      >
-        {children}
-      </MenuSurface>
-    </anchored>
+    <MenuSurfaceStack.Provider value={surfaceStack}>
+      <anchored position={point} deferred priority={1} occlude>
+        <MenuSurface
+          {...rest}
+          label={label}
+          testId={testId}
+          ref={surface}
+          onMouseDownOutside={(event) => {
+            onMouseDownOutside?.(event);
+            dismissTopLayer(event);
+          }}
+          style={mergeStyles(
+            // The anchored host does no layout of its own; the surface carries the
+            // floating look. `position: relative` keeps it a positioned box for the
+            // anchored layer's own measurement.
+            { position: "relative" },
+            style,
+          )}
+        >
+          {children}
+        </MenuSurface>
+      </anchored>
+    </MenuSurfaceStack.Provider>
   );
 };
 
@@ -402,7 +407,6 @@ export const contextMenuMeta = {
   limitations: [
     "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",
-    "one level of submenus is tested; deeper nesting follows the same rule but is untested",
     'a submenu opens right when it fits and otherwise left of its row; a surface wider than both sides is still clamped by fit="snap"',
     "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
   ],

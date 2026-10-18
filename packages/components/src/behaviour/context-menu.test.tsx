@@ -144,6 +144,43 @@ const WithSubmenu = ({
   </ContextMenu>
 );
 
+/** A project row whose Share submenu contains a More submenu. */
+const NestedSubmenu = ({
+  onSelect,
+}: {
+  readonly onSelect: (action: string) => void;
+}) => (
+  <ContextMenu defaultOpen>
+    <ContextMenuTrigger testId="row" style={{ width: 320, height: 120 }}>
+      <text>Project</text>
+    </ContextMenuTrigger>
+    <ContextMenuContent testId="menu" label="Project actions">
+      <ContextMenuItem testId="open" onSelect={() => onSelect("open")}>
+        Open
+      </ContextMenuItem>
+      <ContextMenuSub>
+        <ContextMenuSubTrigger testId="share">Share</ContextMenuSubTrigger>
+        <ContextMenuSubContent testId="submenu" label="Share">
+          <ContextMenuSub>
+            <ContextMenuSubTrigger testId="more">More</ContextMenuSubTrigger>
+            <ContextMenuSubContent testId="nested" label="More">
+              <ContextMenuItem testId="deep" onSelect={() => onSelect("deep")}>
+                Copy as Markdown
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuItem
+            testId="copy-link"
+            onSelect={() => onSelect("copy-link")}
+          >
+            Copy link
+          </ContextMenuItem>
+        </ContextMenuSubContent>
+      </ContextMenuSub>
+    </ContextMenuContent>
+  </ContextMenu>
+);
+
 /** A project row at the right edge, whose submenu cannot open further right. */
 const RightEdgeSubmenu = ({
   onSelect,
@@ -446,6 +483,29 @@ describe("ContextMenu submenus", () => {
     expect(row.renderer.findByTestId("submenu")).toBeUndefined();
     expect(row.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(row)).toEqual(Option.some("share"));
+
+    row.unmount();
+  });
+
+  it("runs an enclosing-submenu row while the nested level is open", () => {
+    const onSelect = vi.fn();
+    const row = renderComponent(<NestedSubmenu onSelect={onSelect} />);
+
+    // Open, Share, then the nested More level: focus starts on the surface.
+    row.renderer.simulateKeystrokes("down");
+    row.renderer.simulateKeystrokes("down");
+    row.renderer.simulateKeystrokes("right");
+    row.renderer.simulateKeystrokes("right");
+
+    expect(row.renderer.findByTestId("nested")).toBeDefined();
+
+    clickCentreOf(row, "copy-link");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("copy-link");
+    expect(row.renderer.findByTestId("nested")).toBeUndefined();
+    expect(row.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
 
     row.unmount();
   });

@@ -9,11 +9,16 @@
  * opened inside a dialog closes only the menu.
  */
 
-import type { EventPayload, Props, StyleDesc } from "@gpuix/react";
+import type {
+  EventPayload,
+  Props,
+  PublicInstance,
+  StyleDesc,
+} from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Option from "effect/Option";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, type RefObject } from "react";
 import { isEventClaimed } from "../internal/event-claim.js";
 import { dismissTopLayer } from "../internal/dismiss-layer.js";
 import {
@@ -33,6 +38,15 @@ import {
   type Theme,
 } from "../internal/theme.js";
 import { useMenuContext, type MenuContextValue } from "./state.js";
+
+/**
+ * The menu surfaces enclosing a part, outermost first. A submenu publishes itself
+ * on top, so a press on an enclosing row is not an outside press on the deeper
+ * level.
+ */
+export const MenuSurfaceStack = createContext<
+  ReadonlyArray<RefObject<PublicInstance | null>>
+>([]);
 
 /** The floating surface every menu paints. */
 export const menuSurfaceStyle = (theme: Theme): StyleDesc => ({
@@ -104,6 +118,7 @@ export const MenuSurface = ({
   children,
   onKeyDown,
   style,
+  ref,
   ...rest
 }: MenuSurfaceProps) => {
   const theme = useTheme();
@@ -116,6 +131,7 @@ export const MenuSurface = ({
       aria-label={label}
       tabIndex={-1}
       autoFocus
+      ref={ref}
       {...rest}
       onKeyDown={(event) => {
         keys(event);

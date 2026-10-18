@@ -194,19 +194,24 @@ submenu focuses its first row, so the next `Enter` runs the first action without
 an extra arrow press. Only one submenu per menu is open at a time; moving onto
 another row closes the open one.
 
+A submenu may itself contain a submenu. The rules are the same at every depth,
+and a row in an enclosing submenu stays clickable while a deeper level is open:
+the deeper layer treats a press inside any enclosing surface as inside the menu
+tree, so the click reaches the row and that row's action closes the levels above
+it.
+
 The surface's side is decided once per open from measured bounds: it opens at
 the trigger row's right edge when it fits there, otherwise at the row's left
 edge. A surface taller than the room below is bottom-aligned to its row, so it
 never covers the row it belongs to. A surface wider than either side of the
 window is still clamped by GPUix's `fit="snap"`, and the roomier side wins. A
-press on the submenu is geometrically
-outside the parent surface, so the runtime reports it to the parent's outside
-handler first; the submenu's own dismiss layer recognises the press inside its
-painted bounds and lets it reach the row. A press on the parent menu's background
-does not land in those bounds and still closes the whole menu.
+press on a submenu surface is geometrically outside the parent surface, so the
+runtime reports it to the parent's outside handler first; the submenu's dismiss
+layer recognises a press inside its own or any enclosing surface and lets it
+reach the row. A press outside every menu surface closes the whole menu.
 
 A row is chosen by pointer as well as by keyboard: clicking it runs the action
-once and closes both levels.
+once and closes every level.
 
 `Escape` and `ArrowLeft` close **one** level: the submenu disappears, focus
 returns to its trigger, and the parent menu stays open. Choosing a submenu action
@@ -282,8 +287,9 @@ focus is on.
   `aria-level`. The checkbox and radio rows therefore use `aria-selected`, and the
   link between trigger and surface is positional. A submenu trigger announces
   `aria-expanded` but not `aria-haspopup`.
-- One level of submenus is tested. A submenu inside a submenu follows the same
-  rule but is not exercised by a suite.
+- Nested submenus are exercised to two levels, including a row of an enclosing
+  submenu chosen while a deeper level is open. Placement, hover travel and
+  dismissal follow the same rule at every depth.
 - Submenus open to the right when they fit and otherwise to the left of their
   row, from one measurement per open; a submenu wider than both sides is still
   clamped by `fit="snap"`.
@@ -296,7 +302,7 @@ focus is on.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (42 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (46 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
@@ -308,11 +314,12 @@ hover and pointer opening, right-edge placement — including a right-edge row
 whose submenu opens to its left — focus entering the first row,
 arrows and type-ahead staying inside, one submenu at a time, one-level
 Escape/ArrowLeft, a pointer click running the row and closing both levels, and an
-outside press closing both levels — and the radio group: one marked row, the
-reported value, the menu staying open, a controlled value that does not drift,
-`Enter`/`Space` selection, a skipped disabled row, the `menuitemradio` role and
-its selected state, and a group inside a submenu that closes one level on
-`Escape`.
+outside press closing both levels — a nested submenu's enclosing rows staying
+clickable, its deepest row running once, and an outside press still closing every
+level — and the radio group: one marked row, the reported value, the menu
+staying open, a controlled value that does not drift, `Enter`/`Space` selection,
+a skipped disabled row, the `menuitemradio` role and its selected state, and a
+group inside a submenu that closes one level on `Escape`.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

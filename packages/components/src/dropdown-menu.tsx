@@ -57,7 +57,11 @@ import {
   type MenuCloseReason,
 } from "./menu/state.js";
 import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
-import { menuKeyHandler, menuSurfaceStyle } from "./menu/surface.js";
+import {
+  MenuSurfaceStack,
+  menuKeyHandler,
+  menuSurfaceStyle,
+} from "./menu/surface.js";
 
 /** The rules a {@link DropdownMenuContent} follows. */
 interface DropdownContextValue {
@@ -264,6 +268,7 @@ export const DropdownMenuContent = ({
   const keys = menuKeyHandler(menu);
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const surfaceStack = useMemo(() => [surface], [surface]);
   const placement = usePlacement({
     open,
     side,
@@ -287,34 +292,36 @@ export const DropdownMenuContent = ({
   if (!open) return null;
 
   return (
-    <FloatingLayer
-      side={placement.side}
-      align={placement.align}
-      sideOffset={sideOffset}
-      alignOffset={placement.alignOffset + alignOffset}
-      collisionPadding={collisionPadding}
-      role="menu"
-      {...(label === undefined ? {} : { "aria-label": label })}
-      tabIndex={-1}
-      autoFocus
-      ref={setSurface}
-      {...rest}
-      onMouseDownOutside={(event) => {
-        onMouseDownOutside?.(event);
-        dismissTopLayer(event);
-      }}
-      onKeyDown={(event) => {
-        if (isEventClaimed(event)) return;
-        keys(event);
-        onKeyDown?.(event);
-      }}
-      style={mergeStyles(
-        { ...textStyle(theme, "body"), ...menuSurfaceStyle(theme) },
-        style,
-      )}
-    >
-      {children}
-    </FloatingLayer>
+    <MenuSurfaceStack.Provider value={surfaceStack}>
+      <FloatingLayer
+        side={placement.side}
+        align={placement.align}
+        sideOffset={sideOffset}
+        alignOffset={placement.alignOffset + alignOffset}
+        collisionPadding={collisionPadding}
+        role="menu"
+        {...(label === undefined ? {} : { "aria-label": label })}
+        tabIndex={-1}
+        autoFocus
+        ref={setSurface}
+        {...rest}
+        onMouseDownOutside={(event) => {
+          onMouseDownOutside?.(event);
+          dismissTopLayer(event);
+        }}
+        onKeyDown={(event) => {
+          if (isEventClaimed(event)) return;
+          keys(event);
+          onKeyDown?.(event);
+        }}
+        style={mergeStyles(
+          { ...textStyle(theme, "body"), ...menuSurfaceStyle(theme) },
+          style,
+        )}
+      >
+        {children}
+      </FloatingLayer>
+    </MenuSurfaceStack.Provider>
   );
 };
 
@@ -397,7 +404,6 @@ export const dropdownMenuMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "one level of submenus is tested; deeper nesting follows the same rule but is untested",
     'the root surface flips once when snapping would cover its trigger, and align="center" is measured from the trigger; the snap margin wins near a window edge',
     'a submenu opens right when it fits and otherwise left of its row; a surface wider than both sides is still clamped by fit="snap"',
     "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
