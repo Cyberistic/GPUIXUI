@@ -197,6 +197,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [399](./399-solid-status-fill.md) | The solid status fill and its one call | F | 014, 057, 071, 083, 090, 300, 308, 309, 314, 332, 347, 371, 383, 387, 388, 394, 398 | done |
 | [500](./500-text-hierarchy-surface-body-roles.md) | The text hierarchy on each surface's own body role | F | 059, 071, 315, 319, 371, 383, 387, 388, 391, 392, 398 | done |
 | [501](./501-floor-table-scrim-row.md) | The accessibility floor table's modal scrim row | F | 099, 359, 375, 395, 351, 352, 354, 398, 500 | done |
+| [502](./502-interaction-direction.md) | The interaction ladder's direction in the total check | F | 097, 327, 342, 357, 381, 383, 387, 388, 394, 398 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1929,6 +1930,26 @@ The row and the explanation now name all fifteen, and two cases derive their
 members, the count word and the row's floor cells from `overlaySurfaces` and
 `contrastFloors`, so the next scrim surface cannot leave either behind. No
 token value, pair, floor or metric moves.
+
+Plan `502` closes the one rule the step contract could not express. Plans 342,
+357 and 381 publish each pointer state's **distance** — one 1.05:1 step — but a
+ratio is symmetric, so they cannot see a step that moves the wrong way. Plan
+097's original defect was exactly that: the light primary's hover and press came
+out *lighter* than the resting fill, toward the white canvas. Every shipped
+theme now steps away from the canvas (darker in light, lighter in dark) and
+`filled-states.test.ts` asserts it on the shipped constants, but a copied theme
+could reintroduce the defect and still return `[]` from all five checks. A probe
+made the gap concrete: `primary #1E1060 → #2A1A7A → #372394` clears the on-colour
+floor (11.47:1 at the tightest) and the step floor (1.176 and 1.199), while both
+steps move *lighter*. `stateLadders` names the four filled families (derived
+from `filledControlFamilies`), the panel action, the generic wash and the
+selected step; `themeDirectionFailures` reports a step that moves toward the
+canvas, and `relativeLuminance` publishes the comparison it makes. A sixth
+check kind, `direction`, joins `themeChecks` between `hierarchy` and `metric`;
+an **equal** pair stays the step lists' defect, so one collapsed edit does not
+produce two diagnostics. Every shipped set already passes (the four families,
+`softAction`, the wash and the selection step included), so no colour, pair,
+floor or metric moves.
 
 ## How to use a plan
 
