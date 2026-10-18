@@ -48,6 +48,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[ ]` Land one fully working component running in GPUix
 `[~]` Land the docs shell and document that component in Fumadocs — the shell
 is deployed at <https://gpuixui.sudokw.com>; component pages are still pending
+`[x]` Land the marketing landing page at `/` (plan 434) — Hunter License
+identity, stacked-native deck hero, library grid, proof, attribution
 `[x]` Deploy the Fumadocs app (landing + getting started) to
 <https://gpuixui.sudokw.com> on Cloudflare Workers via the alchemy stack
 
