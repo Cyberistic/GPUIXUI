@@ -16,7 +16,7 @@ import {
   Box,
   Button,
   ButtonGroup,
-  Checkbox,
+  CheckboxGroup,
   InfoTip,
   Input,
   Label,
@@ -35,6 +35,7 @@ import {
   ThemeProvider,
   type PrimitiveTheme,
 } from "@gpuixui/primitives";
+import * as Arr from "effect/Array";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
 
 type Mode = "light" | "dark";
@@ -157,6 +158,7 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
           <ScrollArea
             axis="vertical"
             label="Workspace settings"
+            testId="settings-form"
             style={{ flexGrow: 1 }}
           >
             <Stack direction="column" gap="xl">
@@ -195,7 +197,6 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                       label="Contact email"
                       placeholder="you@example.com"
                       invalid={badEmail}
-                      autoFocus
                       fullWidth
                     />
                   </Field>
@@ -277,14 +278,21 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                     />
                   </Stack>
 
-                  <Checkbox
-                    checked={terms}
-                    onValueChange={setTerms}
-                    label="I accept the terms"
+                  <CheckboxGroup
+                    label="Terms"
+                    value={terms ? ["terms"] : []}
+                    onValueChange={(values) =>
+                      setTerms(Arr.contains(values, "terms"))
+                    }
+                    options={[
+                      {
+                        value: "terms",
+                        label: "I accept the terms",
+                        description:
+                          "Required before the workspace can be saved.",
+                      },
+                    ]}
                   />
-                  <Text role="caption" tone="muted">
-                    Required before the workspace can be saved.
-                  </Text>
 
                   {saving ? (
                     <Stack direction="column" gap="sm">

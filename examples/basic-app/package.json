@@ -6,7 +6,8 @@
   "description": "Runnable GPUixUI example: the Tier 1 set composed into one settings workflow.",
   "scripts": {
     "check-types": "tsc --noEmit",
-    "dev": "bun src/main.tsx"
+    "dev": "bun src/main.tsx",
+    "test:runtime": "vitest run --config vitest.runtime.config.ts"
   },
   "dependencies": {
     "@gpuixui/icons": "workspace:*",
@@ -21,7 +22,9 @@
     "@gpuix/react": "catalog:",
     "@gpuixui/config": "workspace:*",
     "@types/react": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

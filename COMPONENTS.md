@@ -214,8 +214,8 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 (valid/invalid `Input` and `TextArea`) and `otp.runtime` (every cell).
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (307 tests in
-21 files at plan 098; 304 at plan 097; 303 at plan 096; 301 at plan 095; 300 at plan 094; 295 at plan 093; 265 at plan 092; 264 at plan 091; 263 at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (**311 tests
+in 21 files** at plan `327`; 307 at plan 098; 304 at plan 097; 303 at plan 096; 301 at plan 095; 300 at plan 094; 295 at plan 093; 265 at plan 092; 264 at plan 091; 263 at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
 175 at plan 073; 172 at plan 072, 167 at plan 071 and 165 at plan 070, including plan 069's
 three Select scroll tests and plan 070's rating validation; 161 after plan 068's long-list cap;
 160 after plan 067's tooltip placement;
@@ -279,6 +279,21 @@ a re-exported `renderIconButton`, a deleted `## Keyboard`, a renamed
 `ButtonState`, an added `aria-checked`); the fixes were one demoted `IconButton`
 seam and this record. The four shipped parts missing from the contract doc's own
 Tier 1 table are a cross-team `TODO.md` row.
+
+**Composed app (327):** `examples/basic-app` — the settings workflow that uses
+the whole Tier 1 set — now mounts in the real `TestRenderer`
+(`nub run --filter @gpuixui/basic-app test:runtime`, 5 tests): the skeleton hands
+over to the form, the consent row paints its own label and is clickable, Save is
+refused until it is accepted and stays refused for an invalid email, the save
+lifecycle runs, and the Select paints its option's label. Its consent control is
+a one-row **`CheckboxGroup`**, because a standalone `Checkbox`'s `label` is only
+an accessible name: measured, the app painted an empty box under a caption that
+never named the agreement (the `Label`-beside-a-box class of plan `087`). The
+form is taller than its scroll region, so the suite wheels the region to the row
+and asserts it is reachable. One measured limitation is recorded in the app's
+README: a field mounted after the first render does not receive `autoFocus`
+(`runtime.focused()` was empty after the skeleton), so `autoFocus` is proven on
+the initial mount only (plan `064`).
 
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
 active palette, and re-rendering with the dark palette repaints every asserted

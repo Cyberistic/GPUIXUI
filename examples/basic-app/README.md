@@ -16,9 +16,9 @@ nub run --filter @gpuixui/basic-app dev      # bun src/main.tsx
 ```
 
 **Requirements:** the GPUix native binding and a desktop session. This host has
-no GUI session, so the app itself **has not been executed here**. The binding
-can be built from source (`apps/playground`, ADR 0003, plan 140); opening this
-window remains the missing step.
+no GUI session, so the **window** has not been opened here. The binding can be
+built from source (`apps/playground`, ADR 0003, plan 140); opening this window
+remains the missing step. What *is* verified is the composition, below.
 
 ## What is verified, and what is not
 
@@ -26,11 +26,15 @@ window remains the missing step.
 | --- | --- |
 | verified | `nub run --filter @gpuixui/basic-app check-types` — every component is used with its real props |
 | verified | the components themselves in the real GPUix 0.10.0 `TestRenderer` (`packages/primitives/runtime/`) — layout, controls, fields, loading, both themes, the labelled scroll region and the info tip |
-| **not verified** | *this composition* — the window opening, its layout, hit-testing and the app's own focus order |
+| verified | **this composition** in the same real `TestRenderer` — `nub run --filter @gpuixui/basic-app test:runtime` (5 tests): it mounts, the skeleton hands over to the form, the consent row's label is painted and clickable, Save is refused until it is accepted, an invalid e-mail keeps it refused, the save lifecycle runs, and the Select paints the option's label. The form is taller than its region, so the suite scrolls the region with a real wheel to reach the consent row — a row below the fold must be reachable, and that is asserted too. |
+| **not verified** | *the native window* — `bun src/main.tsx` opening on a machine with a desktop session. The `TestRenderer` is offscreen: it proves layout, paint, hit-testing and focus dispatch, not the window chrome. |
 
-The components are verified individually; the app that composes them is not.
-That distinction matters: a passing primitives suite is not a screenshot of this
-screen.
+One measured consequence, recorded rather than papered over: a field that mounts
+*after* the first render (here, when the skeleton is replaced by the form) does
+**not** receive `autoFocus` from the runtime — `runtime.focused()` was empty
+after load. Plan `064` proved `autoFocus` on the initial mount only. The e-mail
+field therefore sets no `autoFocus`; the header is the first tab stop, and focus
+is the user's or the host window's decision.
 
 ## Theme
 
@@ -41,7 +45,8 @@ header. There is no app-local theme.
 ## What it demonstrates
 
 - **Fields** — `Input` with live e-mail validation, `TextArea`, `Select`,
-  `RadioGroup` (density), `Checkbox` (terms) and `Switch` rows.
+  `RadioGroup` (density), `CheckboxGroup` (one visible, clickable consent row —
+  plan 327) and `Switch` rows.
 - **Loading** — a skeleton while the form "arrives", `Progress` while saving and
   a `Spinner` in the save button.
 - **Scroll and tips** — a labelled `ScrollArea` (a keyboard scroll stop with

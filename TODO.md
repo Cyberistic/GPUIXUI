@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 75/75
+`[x]` `[██████████]` 76/76
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -564,6 +564,16 @@ retired once both branches are one
       reported `7` instead of `427`. The gate now also passes when the field is
       controlled on this render; 1 runtime test, both directions proven
       (plan `326`)
+`[x]` **examples/basic-app** (owner: primitives workstream): the composed
+      Tier 1 workflow has never been mounted, and its consent checkbox's
+      accessible name is invisible (no painted label). It is now one visible,
+      clickable `CheckboxGroup` row, the real `App` is mounted in the native
+      `TestRenderer` (5 workflow tests: mount, skeleton→form, consent gate and
+      reachability, save lifecycle, validation, label paint), `autoFocus` was
+      measured not to survive a later mount and removed, and the `TestRenderer`
+      adapter moved to `@gpuixui/primitives/testing` so both suites share one
+      (plan `327`)
+
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
