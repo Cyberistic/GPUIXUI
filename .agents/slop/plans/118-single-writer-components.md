@@ -148,6 +148,21 @@ has committed and pushed everything it produced (`bd215f9`, `7786193`, `f424b1e`
 `packages/components` further. If a later measurement still lists it as live, it
 is idle, and the coordinator may end it.
 
+### Recurrence, 2026-10-18 04:38 (+03)
+
+Measured again after the server restarted under a live turn:
+
+| Session | Created | Process | Role |
+| ------- | ------- | ------- | ---- |
+| `ses_eb379273…` | 04:01:11 | none — its `opencode run` was ended by the restart | **stale turn** |
+| `ses_eb3739fc…` | 04:07:12 | pid 2826, `--title swarm:components` | current supervisor turn |
+
+The stale turn had landed plan 326 (`b9509fa`), merged `origin/master` (`7416cb3`) and pushed both;
+the current turn then landed `15c0777` and was editing `plans/207` and
+`behaviour/preview-card.test.tsx` while the stale turn was still live. The stale turn stood
+down again — it made no further `packages/components` change — so the precedent in §3 holds:
+exactly one writer, the one the supervisor can see. The permanent fix is still plan 022 §5.
+
 ## 6. STOP conditions
 
 Plan 022 §7 applies. Additional:
