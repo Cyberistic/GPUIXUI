@@ -55,6 +55,7 @@ describe("the mark contract", () => {
         (role) => `${role} on input`,
       ),
       "primary on hover",
+      "primaryText on input",
       ...(
         ["primary", "success", "destructive", "mutedForeground"] as const
       ).map((role) => `${role} on track`),

@@ -251,6 +251,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [554](./554-surface-metric-sign.md) | Every surface metric is a size, and every border is a width | F | 358, 360, 530, 531, 552 | done |
 | [555](./555-border-rationale-and-duplicate-claim.md) | The border rationale names five of the measured surfaces, and prints one rule twice | F | 080, 084, 300, 318, 327, 352, 550 | done |
 | [556](./556-dialog-calendar-and-mark-dimensions.md) | The dialog, calendar and mark metrics the dimension audits missed | B/F | 353, 389, 530, 550, 554 | done |
+| [557](./557-native-field-caret-mark.md) | The native field's caret is ink, not a fill | F | 082, 332, 337, 511, 527, 546 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2762,6 +2763,18 @@ at least one body em and the dot to stay at most half the smallest avatar — th
 same rules the drawer ladders, carousel mark and inline avatar already carry.
 The four consumer migrations are recorded cross-team rather than edited in
 another workstream's tree; no colour, type, pair, floor or existing metric moves.
+
+Plan `557` closes the last composition the caret story missed. Plan `511` gave
+`nativeFieldTheme` the `primary` **fill** because the accent is a `mark` pair on
+the `input` fill and the four `Surface` tones — but plan `527` established that
+`InlineEdit` swaps a row's text for a field in place, on the four row washes, and
+the caret inherits there. On macOS dark the fill measures **2.748:1** on
+`selected` and **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a
+selected inline edit vanished while every check returned `[]`; `primaryText` is
+the accent's readable ink, clears the floor on all nine surfaces in every
+shipped set (5.587:1 at the tightest), and now carries the caret through a
+published `caretPairs` list. No colour moves: the role already existed, and the
+only new pairs are the contract stating a composition the components paint.
 
 ## How to use a plan
 

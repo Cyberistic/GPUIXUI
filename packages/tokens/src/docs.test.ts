@@ -1809,6 +1809,7 @@ describe("docs/tokens.md runtime reach", () => {
 
   it("states the caret the native field reads and the default it replaces", () => {
     expect(markdown).toContain("`nativeFieldTheme(theme)`");
+    expect(markdown).toContain("`caretPairs`");
     expect(markdownProse).toContain(
       `${contrastRatio("#7C86FF", Tokens.highContrastLightTheme.colors.input).toFixed(3)}:1`,
     );
@@ -1816,6 +1817,7 @@ describe("docs/tokens.md runtime reach", () => {
       `${contrastRatio("#7C86FF", Tokens.highContrastLightTheme.colors.muted).toFixed(3)}:1`,
     );
     expect(designSystem).toContain("`nativeFieldTheme(theme)`");
+    expect(designSystem).toContain("`caretPairs`");
   });
 });
 
@@ -2893,7 +2895,15 @@ describe("docs/design-system.md interaction states", () => {
   });
 
   it("names every surface a link is measured on", () => {
-    expect(missing("link", backgroundsOf("primaryText"))).toEqual([]);
+    // `primaryText` is also the native field's caret, a mark on the `input`
+    // fill (plan 557); the link contract is its text pairs.
+    const linkSurfaces = contrastPairs
+      .filter(
+        ([role, , pairClass]) =>
+          role === "primaryText" && pairClass === "secondary",
+      )
+      .map(([, background]) => background);
+    expect(missing("link", linkSurfaces)).toEqual([]);
   });
 
   it("names every surface an inactive label is measured on", () => {

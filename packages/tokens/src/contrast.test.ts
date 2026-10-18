@@ -176,6 +176,7 @@ import * as Tokens from "./index.js";
 import {
   colorRoles,
   compositeOver,
+  caretPairs,
   contrastFloors,
   contrastPairClasses,
   contrastPairs,
@@ -271,6 +272,7 @@ type PairListName = {
 const publishedPairLists: Readonly<
   Record<PairListName, ReadonlyArray<ContrastPair>>
 > = {
+  caretPairs,
   contrastPairs,
   controlBoundarySoftPairs,
   dialogSurfacePairs,
@@ -608,7 +610,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(404);
+    expect(contrastPairs.length).toBe(405);
     expect(statusFillPairs).toHaveLength(28);
     expect(
       statusFillPairs.map(([foreground, background]) => [

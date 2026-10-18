@@ -209,7 +209,7 @@ A runnable example lives in
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |
-| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links and icons on plain surfaces, the `accent`/`selected` row fills and through a text selection |
+| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected` row fills and through a text selection |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
@@ -507,7 +507,7 @@ carries, so it cannot claim another.
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
 | `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
 | `primaryActive` | `#1C1547` | `#EEF0FF` | primary action while pressed |
-| `primaryText` | `#241C5C` | `#E0E3FF` | brand-toned text, links and icons on plain surfaces, the `accent`/`selected` row fills and through a text selection |
+| `primaryText` | `#241C5C` | `#E0E3FF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected` row fills and through a text selection |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `secondaryHover` | `#D6D6D6` | `#3D3D3D` | secondary action while hovered |
@@ -1499,11 +1499,17 @@ grey and wash stand. Evidence: `@gpuix/native@0.10.0` (`9fcd628`),
 `packages/native/src/custom_elements/input.rs`.
 
 The one paint the theme can reach is the caret. `nativeFieldTheme(theme)` returns
-the runtime `theme` prop a field reads — `{ caret: theme.colors.primary }` —
-because the accent is already held to the `mark` floor on the `input` fill and on
-the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on
-(`markPairs`), so there is no second role for the same colour. Without the prop
-the field keeps the runtime's built-in dark caret (`#7C86FF`), which measures
+the runtime `theme` prop a field reads — `{ caret: theme.colors.primaryText }` —
+because a caret is a 1px **mark**, not a label on a fill: `primary` is the fill,
+and on macOS dark it measures **2.748:1** on a `selected` row and **2.836:1** on
+a pressed one, under the 3:1 mark floor, so a caret in an in-place editor
+(`InlineEdit` paints a field on the four row washes) vanished there while every
+check returned `[]`. `primaryText` is the accent's readable ink: the text pairs
+already hold it on the four `Surface` tones and the four row washes at the
+4.5:1 secondary floor, and `caretPairs` holds it on the field's own `input`
+fill at the mark floor. It clears all nine surfaces in every shipped set
+(**5.587:1** at the tightest, Windows dark on `active`). Without the prop the
+field keeps the runtime's built-in dark caret (`#7C86FF`), which measures
 **3.129:1** on the AAA light `input` and **2.795:1** on its quiet panel, under
 the 4.5:1 mark floor the AAA theme declares. Apply it beside the field's style; a
 consumer that wants a different caret replaces the field of the returned object.
@@ -2945,7 +2951,14 @@ families (AAA light `#3B2C8F` → `#241C5C`, macOS `#0055B3` → `#004A9A` light
 `#64B5FF` → `#96CDFF` dark, Linux dark `#99C1F1` → `#A5CBF5`, Windows light
 `#005BA1` → `#004F8A`, XP `#0046BD` → `#003FA8`, Aero `#0F55A3` → `#0C4A8C`),
 every shipped set passes (4.729:1 at the tightest, Windows dark on `selected`;
-7.484:1 at AAA) and `contrastPairs` stays **404**.
+7.484:1 at AAA) and `contrastPairs` stays **404**. Plan `557` adds the native
+field's caret — `primaryText`, the accent's ink rather than the `primary` fill,
+on the field's own `input` fill (`caretPairs`) — after macOS dark's fill
+measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
+the 3:1 mark floor, while the eight other surfaces a field sits on were already
+held by the `primaryText` text pairs. Every shipped set clears the new pair
+(**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
+396 to **405** across plans `527` and `557`.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -3057,7 +3070,11 @@ progress segment and a slider fill sit on the `track` groove, a slider thumb rin
 its own `input` fill, and a rating star, combobox check or timeline dot sits on
 the panel it paints on — a selected combobox option's check also sits on the
 `hover` wash the row highlights with, so it is measured there too — `markRoles`
-is the role list and `markPairs` the pairs.
+is the role list and `markPairs` the pairs. The native field's caret is a mark
+too, but it is the accent's ink rather than a fill: `primaryText` on the
+field's own `input` fill is `caretPairs`, while the four `Surface` tones and the
+four row washes an in-place editor paints are already `secondary` text pairs
+(plan `557`).
 A fill's 1.05:1 is a wash's floor: it says a hover is visible, not that a 4px bar
 is. A status indicator is not a mark: the solid `warning` is **1.78:1** on the
 light canvas, so a status dot uses `xText`, which the status-text pairs already
@@ -3318,8 +3335,9 @@ still quoted plan 392's 1.440:1 for the hint after plan `527` moved it to
   `selectionColor`; see [Text selection](#text-selection).
 - No themeable native field placeholder or selection: GPUix 0.10.0's
   `<input>`/`<textarea>` paints both itself (`#8F8F8F` and `#7C86FF59`). The
-  caret **is** themeable: `nativeFieldTheme(theme)` supplies it from the accent
-  through the `theme` prop, the only field that prop reaches. The `placeholder`
+  caret **is** themeable: `nativeFieldTheme(theme)` supplies it from the accent's
+  readable ink (`primaryText`) through the `theme` prop, the only field that prop
+  reaches, and `caretPairs` holds it on the field's `input` fill. The `placeholder`
   role covers a hint the consumer renders, and `selectionColor` covers app text;
   see [Native text fields](#native-text-fields).
 - No `transition`, `animation`, `transform` or colour interpolation: motion can

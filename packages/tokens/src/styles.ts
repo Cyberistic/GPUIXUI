@@ -322,11 +322,15 @@ export interface NativeFieldTheme {
  *
  * GPUix 0.10.0's editor takes typed text from the element's `style.color`,
  * paints its own fixed placeholder and selection, and reads exactly one field
- * from its `theme` prop: `caret`. The caret is the accent — `primary` — because
- * `primary` is already held to the `mark` floor on the `input` fill and the
- * four `Surface` tones a transparent field sits on, so there is no second role
- * for the same colour and a copied theme that collapses its accent is reported
- * by `themeContrastFailures`.
+ * from its `theme` prop: `caret`. The caret is the accent's readable **ink** —
+ * `primaryText` — not the `primary` fill: a caret is a 1px mark painted on the
+ * field's surface, and the fill is tuned for a label on top of it. On the
+ * shipped macOS dark set the fill measures **2.748:1** on a selected row and
+ * **2.836:1** on a pressed one, under the 3:1 mark floor, so a caret in an
+ * in-place editor (`InlineEdit`, which plan 527 holds on the four row washes)
+ * vanished there. `primaryText` clears the floor on every surface a field sits
+ * on — {@link caretPairs} publishes the nine — in all 24 shipped sets (5.587:1
+ * at the tightest).
  *
  * Without this prop the field keeps the runtime's built-in dark caret, which
  * measures 3.129:1 on the AAA light `input` and 2.795:1 on its quiet panel,
@@ -344,5 +348,5 @@ export interface NativeFieldTheme {
  * ```
  */
 export function nativeFieldTheme(theme: Theme): NativeFieldTheme {
-  return { caret: theme.colors.primary };
+  return { caret: theme.colors.primaryText };
 }

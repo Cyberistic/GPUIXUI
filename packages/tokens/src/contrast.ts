@@ -521,6 +521,23 @@ const primaryTextPairs: readonly ContrastPair[] = primaryTextSurfaces.map(
 );
 
 /**
+ * The native field's caret on the one surface the text contract does not
+ * already hold: its own `input` fill. The caret is the accent's readable ink
+ * (`primaryText`), not the `primary` fill — the fill is tuned for a label on top
+ * of it, and on macOS dark it measures **2.748:1** on `selected` and
+ * **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a selected
+ * inline edit vanished while every check returned `[]`. The other eight
+ * surfaces a field sits on — the four `Surface` tones and the four row washes an
+ * in-place editor paints — are already held by `primaryTextPairs` at the higher
+ * `secondary` floor. This pair is a `mark` because a caret is a 1px indicator,
+ * not text; `primaryText` clears it on all nine surfaces in every shipped set
+ * (5.587:1 at the tightest, Windows dark on `active`).
+ */
+export const caretPairs: readonly ContrastPair[] = [
+  ["primaryText", "input", "mark"],
+];
+
+/**
  * The surfaces a focused control can sit on: the plain surfaces, the quiet
  * panel a sidebar control sits on, the accent wash a selectable row paints, and
  * the three state washes a focused row paints. The ring is painted outside the
@@ -1011,6 +1028,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...washStepPairs,
   ...selectionStepPairs,
   ...markPairs,
+  ...caretPairs,
 ];
 
 /** WCAG floors by contrast level and pair class. */
@@ -1792,7 +1810,10 @@ const elevationFailures = (
  *   the row washes and the soft status fills; the control boundary, focus ring
  *   (the value groove a focused slider's thumb sits on included, through
  *   `ringTrackPairs`) and dividers; the inactive label; the marks and the value
- *   track; every
+ *   track; the native field's caret — `primaryText`, the accent's ink rather
+ *   than its fill — on the field's own `input` fill (`caretPairs`), with the
+ *   `Surface` tones and row washes an in-place editor paints already held by
+ *   `primaryTextPairs`; every
  *   interactive fill against the panel it paints on; the solid status fill on
  *   the surfaces a status chip occupies (`statusFillPairs`); and the state steps
  *   of the filled families, the generic washes, the selected row and the status

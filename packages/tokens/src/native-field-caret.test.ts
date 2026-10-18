@@ -1,16 +1,26 @@
 /**
- * Guards the defect plan 511 fixes: the pinned native editor reads exactly one
- * paint from its `theme` prop — `caret` — and the package shipped no value for
- * it, so a field kept the runtime's built-in dark `#7C86FF`. That caret
- * measures **3.129:1** on the AAA light `input` and **2.795:1** on its quiet
- * panel, under the 4.5:1 mark floor the AAA theme declares, while every theme
- * check returned `[]` because no pair paints the runtime default.
+ * Guards two defects. Plan 511 shipped the native field's caret as the
+ * `primary` **fill** because the accent is a `mark` pair on the `input` fill and
+ * the four `Surface` tones; plan 527 established that `InlineEdit` swaps a row's
+ * text for a field in place, on the four row washes the caret inherits onto.
+ * On the shipped macOS dark set that fill measures **2.748:1** on `selected` and
+ * **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a selected
+ * inline edit vanished while every theme check returned `[]`. The caret is the
+ * accent's readable ink (`primaryText`) and `caretPairs` holds it on the nine
+ * surfaces a field sits on.
+ *
+ * The plan-511 regression the role already fixed stays: the runtime's built-in
+ * dark caret (`#7C86FF`) measures 3.129:1 on the AAA light `input` and 2.795:1
+ * on its quiet panel, under the 4.5:1 mark floor.
  */
 import { describe, expect, it } from "vitest";
 import {
+  caretPairs,
   contrastFloors,
+  contrastPairs,
   contrastRatio,
   extendTheme,
+  getPlatformTheme,
   getTheme,
   highContrastLightTheme,
   lightTheme,
@@ -23,20 +33,24 @@ import { shippedThemes } from "./shipped-themes.js";
 /** The runtime's built-in caret, `oklch(0.673, 0.182, 276.935)`. */
 const runtimeCaret = "#7C86FF";
 
-/** Every surface a field can sit on: its own fill and the four `Surface` tones. */
+/** Every surface a field can sit on: its fill, the four tones and four washes. */
 const caretSurfaces = [
   "input",
   "background",
   "card",
   "popover",
   "muted",
+  "hover",
+  "active",
+  "accent",
+  "selected",
 ] as const;
 
 describe("native field caret", () => {
-  it("carries the accent on every shipped set", () => {
+  it("carries the accent's readable ink on every shipped set", () => {
     shippedThemes.forEach(({ theme }) => {
       expect(nativeFieldTheme(theme).caret, theme.name).toBe(
-        theme.colors.primary,
+        theme.colors.primaryText,
       );
     });
   });
@@ -52,6 +66,74 @@ describe("native field caret", () => {
         ).toBeGreaterThanOrEqual(floor);
       });
     });
+  });
+
+  it("records the fill the caret used to be, and why it could not stay", () => {
+    const macOSDark = getPlatformTheme("darwin", "dark");
+    const selected = contrastRatio(
+      macOSDark.colors.primary,
+      macOSDark.colors.selected,
+    );
+    const active = contrastRatio(
+      macOSDark.colors.primary,
+      macOSDark.colors.active,
+    );
+    expect(selected).toBeCloseTo(2.748, 3);
+    expect(active).toBeCloseTo(2.836, 3);
+    expect(selected).toBeLessThan(contrastFloors.default.mark);
+    expect(active).toBeLessThan(contrastFloors.default.mark);
+
+    // The ink it is now clears both, so the fix is the role, not a palette edit.
+    const { caret } = nativeFieldTheme(macOSDark);
+    expect(
+      contrastRatio(caret, macOSDark.colors.selected),
+    ).toBeGreaterThanOrEqual(contrastFloors.default.mark);
+    expect(
+      contrastRatio(caret, macOSDark.colors.active),
+    ).toBeGreaterThanOrEqual(contrastFloors.default.mark);
+  });
+
+  it("reports a collapsed caret on the field and on a row wash", () => {
+    const collapsedInput = extendTheme(lightTheme, {
+      colors: { primaryText: lightTheme.colors.input },
+    });
+    expect(
+      themeContrastFailures(collapsedInput).some(
+        (failure) =>
+          failure.foreground === "primaryText" &&
+          failure.background === "input" &&
+          failure.pairClass === "mark",
+      ),
+    ).toBe(true);
+
+    const collapsedRow = extendTheme(lightTheme, {
+      colors: { primaryText: lightTheme.colors.selected },
+    });
+    expect(
+      themeContrastFailures(collapsedRow).some(
+        (failure) =>
+          failure.foreground === "primaryText" &&
+          failure.background === "selected" &&
+          failure.pairClass === "secondary",
+      ),
+    ).toBe(true);
+  });
+
+  it("follows edited ink instead of the fill", () => {
+    const edited = extendTheme(lightTheme, {
+      colors: { primaryText: "#7A1FA2" },
+    });
+    expect(nativeFieldTheme(edited).caret).toBe("#7A1FA2");
+    expect(
+      contrastRatio(nativeFieldTheme(edited).caret, edited.colors.input),
+    ).toBeGreaterThanOrEqual(contrastFloors.default.mark);
+
+    const movedFill = extendTheme(lightTheme, {
+      colors: { primary: "#7A1FA2" },
+    });
+    expect(nativeFieldTheme(movedFill).caret).toBe(
+      lightTheme.colors.primaryText,
+    );
   });
 
   it("replaces the runtime default the AAA theme cannot read", () => {
@@ -85,33 +167,34 @@ describe("native field caret", () => {
     ).toBeGreaterThanOrEqual(highFloor);
   });
 
-  it("follows an edited accent instead of a stale copy", () => {
-    const edited = extendTheme(lightTheme, {
-      colors: { primary: "#7A1FA2" },
+  it("publishes the caret list on the public contract", () => {
+    expect(caretPairs).toEqual([["primaryText", "input", "mark"]]);
+    // The other eight surfaces are the text contract's, at a stricter floor.
+    const textSurfaces = caretSurfaces.filter((surface) => surface !== "input");
+    textSurfaces.forEach((surface) => {
+      expect(
+        contrastPairs.some(
+          ([foreground, background, pairClass]) =>
+            foreground === "primaryText" &&
+            background === surface &&
+            pairClass === "secondary",
+        ),
+        surface,
+      ).toBe(true);
     });
-    expect(nativeFieldTheme(edited).caret).toBe("#7A1FA2");
-    expect(nativeFieldTheme(edited).caret).not.toBe(lightTheme.colors.primary);
     expect(
-      contrastRatio(nativeFieldTheme(edited).caret, edited.colors.input),
-    ).toBeGreaterThanOrEqual(contrastFloors.default.mark);
-  });
-
-  it("inherits the accent's public mark contract", () => {
-    const collapsed = extendTheme(lightTheme, {
-      colors: { primary: lightTheme.colors.input },
-    });
-    const failures = themeContrastFailures(collapsed).filter(
-      (failure) =>
-        failure.foreground === "primary" &&
-        failure.background === "input" &&
-        failure.pairClass === "mark",
-    );
-    expect(failures.length).toBeGreaterThan(0);
+      contrastPairs.some(
+        ([foreground, background, pairClass]) =>
+          foreground === "primaryText" &&
+          background === "input" &&
+          pairClass === "mark",
+      ),
+    ).toBe(true);
   });
 
   it("runs the example", () => {
     const dark = getTheme("dark");
-    expect(darkSearchField.theme.caret).toBe(dark.colors.primary);
+    expect(darkSearchField.theme.caret).toBe(dark.colors.primaryText);
     expect(darkSearchField.style.color).toBe(dark.colors.inputForeground);
   });
 });

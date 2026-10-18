@@ -43,8 +43,11 @@ const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
   ({ theme }) => [theme.name, theme] as const,
 );
 
+// The link contracts are the text pairs; `caretPairs` holds the same role as a
+// mark on the field's `input` fill (plan 557) and is measured separately.
 const primaryTextPairs = contrastPairs.filter(
-  ([foreground]) => foreground === "primaryText",
+  ([foreground, , pairClass]) =>
+    foreground === "primaryText" && pairClass === "secondary",
 );
 
 const opaqueHex = /^#[0-9A-F]{6}$/;
