@@ -12,7 +12,8 @@
  *
  * Submenu regression: the Context menu had no submenu parts, and in both menus a
  * pointer press on a submenu row was treated as an outside press, closing both
- * levels before the click ran the row.
+ * levels before the click ran the row. Submenus also always opened right, so at
+ * the window edge the runtime clamped one back over its row.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -23,6 +24,7 @@ import {
   boundsOf,
   clickCentreOf,
   focusedTestId,
+  requireBounds,
 } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -134,6 +136,34 @@ const WithSubmenu = ({
       </ContextMenuSub>
     </ContextMenuContent>
   </ContextMenu>
+);
+
+/** A project row at the right edge, whose submenu cannot open further right. */
+const RightEdgeSubmenu = ({
+  onSelect,
+}: {
+  readonly onSelect: (action: string) => void;
+}) => (
+  <div style={{ paddingLeft: 1000 }}>
+    <ContextMenu>
+      <ContextMenuTrigger testId="row" style={{ width: 180, height: 40 }}>
+        <text>Project</text>
+      </ContextMenuTrigger>
+      <ContextMenuContent testId="menu" label="Project actions">
+        <ContextMenuSub>
+          <ContextMenuSubTrigger testId="share">Share</ContextMenuSubTrigger>
+          <ContextMenuSubContent testId="submenu" label="Share">
+            <ContextMenuItem
+              testId="copy-link"
+              onSelect={() => onSelect("copy-link")}
+            >
+              Copy link
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+      </ContextMenuContent>
+    </ContextMenu>
+  </div>
 );
 
 describe("ContextMenu", () => {
@@ -367,6 +397,25 @@ describe("ContextMenu submenus", () => {
     expect(focusedTestId(row)).toEqual(Option.some("copy-link"));
 
     row.unmount();
+  });
+
+  it("opens its submenu to the left at the right window edge", () => {
+    const menu = renderComponent(<RightEdgeSubmenu onSelect={vi.fn()} />);
+    const rowBounds = requireBounds(menu, "row");
+    rightClickAt(
+      menu,
+      rowBounds.x + rowBounds.width - 10,
+      rowBounds.y + rowBounds.height / 2,
+    );
+    clickCentreOf(menu, "share");
+
+    const row = requireBounds(menu, "share");
+    const surface = requireBounds(menu, "submenu");
+
+    expect(surface.x + surface.width).toBeLessThanOrEqual(row.x);
+    expect(surface.x).toBeGreaterThanOrEqual(8);
+
+    menu.unmount();
   });
 
   it("closes one level on Escape and returns focus to the sub trigger", () => {

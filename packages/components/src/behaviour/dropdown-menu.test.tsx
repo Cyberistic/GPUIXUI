@@ -20,6 +20,10 @@
  * Submenu regression: a pointer press on a submenu row counted as an outside
  * press on the parent surface, so both levels closed before the click landed and
  * `onSelect` never ran. Only the keyboard path was covered.
+ *
+ * Submenu placement regression: a submenu was always placed at its row's right
+ * edge and relied on `fit="snap"`, so near the right window edge it was clamped
+ * back over the row and the parent menu instead of opening to the left.
  */
 
 import * as Option from "effect/Option";
@@ -212,6 +216,23 @@ const WithSubmenus = ({
       </DropdownMenuContent>
     </DropdownMenu>
     <Button testId="elsewhere">Elsewhere</Button>
+  </div>
+);
+
+/** A menu at the right edge, where a right-hand submenu cannot fit. */
+const RightEdgeSubmenu = () => (
+  <div style={{ paddingLeft: 1000, paddingTop: 100 }}>
+    <DropdownMenu defaultOpen>
+      <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="Actions">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger testId="share">Share</DropdownMenuSubTrigger>
+          <DropdownMenuSubContent testId="submenu" label="Share">
+            <DropdownMenuItem testId="copy">Copy link</DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   </div>
 );
 
@@ -621,6 +642,20 @@ describe("DropdownMenu submenus", () => {
     const row = requireBounds(menu, "share");
     const surface = requireBounds(menu, "submenu");
     expect(surface.x).toBeGreaterThanOrEqual(row.x + row.width);
+    expect(Math.abs(surface.y - row.y)).toBeLessThanOrEqual(8);
+
+    menu.unmount();
+  });
+
+  it("opens to the left when the right side cannot hold it", () => {
+    const menu = renderComponent(<RightEdgeSubmenu />);
+    clickCentreOf(menu, "share");
+
+    const row = requireBounds(menu, "share");
+    const surface = requireBounds(menu, "submenu");
+
+    expect(surface.x + surface.width).toBeLessThanOrEqual(row.x);
+    expect(surface.x).toBeGreaterThanOrEqual(8);
     expect(Math.abs(surface.y - row.y)).toBeLessThanOrEqual(8);
 
     menu.unmount();

@@ -108,7 +108,9 @@ A submenu groups actions behind one secondary level, using the same parts as
 
 The trigger is an ordinary row: arrows and type-ahead reach it, and clicking,
 `Enter`, `Space`, `ArrowRight` or hovering opens the submenu and focuses its first
-row. Only one submenu is open at a time. `Escape` and `ArrowLeft` close one level
+row. The surface uses the same measured placement as the Dropdown menu's
+submenus: its right edge when that fits, otherwise its left edge, decided once
+per open. Only one submenu is open at a time. `Escape` and `ArrowLeft` close one level
 and return focus to the sub-trigger; choosing a row (by keyboard or pointer)
 runs it once, closes both levels, and a pointer-opened menu leaves focus where
 the click put it. A press elsewhere closes both levels.
@@ -143,7 +145,7 @@ a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`). The
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (18 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
@@ -151,7 +153,8 @@ opening, `Shift+F10` opening at the trigger's bottom-left with focus in the menu
 keyboard activation running a row, Escape returning focus to the trigger, a
 disabled trigger ignoring `Shift+F10`, type-ahead jumping to a row, and the
 submenu rules — `ArrowRight` opening and focusing the first row, a pointer click
-running a row and closing both levels, and one-level Escape/ArrowLeft.
+running a row and closing both levels, one-level Escape/ArrowLeft, and a
+right-edge menu whose submenu opens to the left.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

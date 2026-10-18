@@ -53,6 +53,7 @@ import {
   useMenuState,
   type MenuCloseReason,
 } from "./state.js";
+import { resolveSubmenuPoint } from "./sub-placement.js";
 import { MenuSurface } from "./surface.js";
 
 /** The rules a {@link MenuSubContent} follows; throws outside a sub. */
@@ -173,6 +174,9 @@ export const MenuSubTrigger = ({
 /** The gap between the trigger row and its submenu surface, in pixels. */
 const SUBMENU_GAP = 4;
 
+/** The margin the submenu keeps from the window edge, matching `snapMargin`. */
+const SUBMENU_MARGIN = 8;
+
 /** {@link MenuSubContent} props: the secondary menu surface. */
 export interface MenuSubContentProps extends Omit<Props, "children"> {
   /** The submenu's accessible name. */
@@ -181,9 +185,10 @@ export interface MenuSubContentProps extends Omit<Props, "children"> {
 }
 
 /**
- * The floating second level, rendered only while open. Its position is the
- * trigger row's right edge in window coordinates, clamped by the runtime's
- * `fit="snap"`; it owns its dismiss layer so Escape closes one level only.
+ * The floating second level, rendered only while open. Its position is measured
+ * once per open: the row's right edge when the surface fits there, otherwise its
+ * left edge; a surface taller than the room below is bottom-aligned to the row
+ * (plan 382). It owns its dismiss layer so Escape closes one level only.
  */
 export const MenuSubContent = ({
   label,
@@ -308,6 +313,38 @@ export const MenuSubContent = ({
     );
   }, [open, renderer, trigger]);
 
+  // The side is decided once, after the surface has a size to measure: the
+  // runtime snaps but never flips, so a right-edge submenu would be clamped
+  // back over its row (plan 382).
+  const settled = useRef(false);
+  useLayoutEffect(() => {
+    if (!open) {
+      settled.current = false;
+      return;
+    }
+    if (point === undefined || settled.current) return;
+    const measured = Option.all({
+      row: Option.flatMap(Option.fromNullishOr(trigger.current), (element) =>
+        Option.fromNullishOr(renderer?.getElementBounds?.(element.id)),
+      ),
+      surface: Option.flatMap(
+        Option.fromNullishOr(surface.current),
+        (element) =>
+          Option.fromNullishOr(renderer?.getElementBounds?.(element.id)),
+      ),
+      window: Option.fromNullishOr(renderer?.getWindowSize?.()),
+    });
+    if (Option.isNone(measured)) return;
+    settled.current = true;
+    setPoint(
+      resolveSubmenuPoint({
+        ...measured.value,
+        gap: SUBMENU_GAP,
+        margin: SUBMENU_MARGIN,
+      }),
+    );
+  }, [open, point, renderer, trigger]);
+
   // Focus the first row once the submenu's rows have registered. The ref keeps
   // the effect from re-running after its own focus move changes the highlight.
   const pendingFocus = useRef(true);
@@ -328,7 +365,7 @@ export const MenuSubContent = ({
       <anchored
         position={point}
         fit="snap"
-        snapMargin={8}
+        snapMargin={SUBMENU_MARGIN}
         deferred
         priority={1}
         occlude

@@ -389,6 +389,7 @@ export const contextMenuMeta = {
     "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",
     "one level of submenus is tested; deeper nesting follows the same rule but is untested",
+    'a submenu opens right when it fits and otherwise left of its row; a surface wider than both sides is still clamped by fit="snap"',
     "no aria-haspopup in 0.10.0; a submenu trigger announces aria-expanded only",
   ],
   docs: "docs/context-menu.mdx",

@@ -165,8 +165,12 @@ submenu focuses its first row, so the next `Enter` runs the first action without
 an extra arrow press. Only one submenu per menu is open at a time; moving onto
 another row closes the open one.
 
-The surface is positioned at the trigger row's right edge in window coordinates
-and clamped by GPUix's `fit="snap"`. A press on the submenu is geometrically
+The surface's side is decided once per open from measured bounds: it opens at
+the trigger row's right edge when it fits there, otherwise at the row's left
+edge. A surface taller than the room below is bottom-aligned to its row, so it
+never covers the row it belongs to. A surface wider than either side of the
+window is still clamped by GPUix's `fit="snap"`, and the roomier side wins. A
+press on the submenu is geometrically
 outside the parent surface, so the runtime reports it to the parent's outside
 handler first; the submenu's own dismiss layer recognises the press inside its
 painted bounds and lets it reach the row. A press on the parent menu's background
@@ -222,8 +226,9 @@ focus is on.
   `aria-expanded` but not `aria-haspopup`.
 - One level of submenus is tested. A submenu inside a submenu follows the same
   rule but is not exercised by a suite.
-- Submenus open to the right of their trigger and rely on `fit="snap"` to stay
-  in the window; there is no left-side flip.
+- Submenus open to the right when they fit and otherwise to the left of their
+  row, from one measurement per open; a submenu wider than both sides is still
+  clamped by `fit="snap"`.
 - The root surface flips once per open, from measured bounds. A surface taller
   than both sides can still cover its trigger, and `align="center"` is clamped by
   the snap margin near a window edge.
@@ -233,7 +238,7 @@ focus is on.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (35 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (36 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
@@ -241,7 +246,8 @@ restoring focus, clicked and disabled rows, Escape/outside press/trigger re-pres
 dismissal, checkbox toggling and its check mark, the destructive colour, the
 surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
 Shift, window expiry, unmatched-prefix reset), and the submenu rules — keyboard,
-hover and pointer opening, right-edge placement, focus entering the first row,
+hover and pointer opening, right-edge placement — including a right-edge row
+whose submenu opens to its left — focus entering the first row,
 arrows and type-ahead staying inside, one submenu at a time, one-level
 Escape/ArrowLeft, a pointer click running the row and closing both levels, and an
 outside press closing both levels.
