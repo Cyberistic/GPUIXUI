@@ -1,0 +1,200 @@
+--- a/packages/native/src/style.rs
++++ b/packages/native/src/style.rs
+@@ -143,6 +143,18 @@
+     }
+ }
+ 
++impl DimensionValue {
++    /// The GPUI length for a margin or inset. `auto` is meaningful for both:
++    /// a margin absorbs free space, an inset defers to the layout engine.
++    pub(crate) fn length(&self) -> gpui::Length {
++        match self {
++            Self::Pixels(value) => gpui::px(*value as f32).into(),
++            Self::Percentage(value) => gpui::relative(*value as f32).into(),
++            Self::Auto => gpui::Length::Auto,
++        }
++    }
++}
++
+ /// Style description that can be serialized from JS
+ /// Note: This is only used for JSON deserialization, not direct napi binding
+ #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
+@@ -186,18 +198,18 @@
+     pub padding_left: Option<f64>,
+ 
+     // Spacing (margin)
+-    pub margin: Option<f64>,
+-    pub margin_top: Option<f64>,
+-    pub margin_right: Option<f64>,
+-    pub margin_bottom: Option<f64>,
+-    pub margin_left: Option<f64>,
++    pub margin: Option<DimensionValue>,
++    pub margin_top: Option<DimensionValue>,
++    pub margin_right: Option<DimensionValue>,
++    pub margin_bottom: Option<DimensionValue>,
++    pub margin_left: Option<DimensionValue>,
+ 
+     // Position
+     pub position: Option<String>,
+-    pub top: Option<f64>,
+-    pub right: Option<f64>,
+-    pub bottom: Option<f64>,
+-    pub left: Option<f64>,
++    pub top: Option<DimensionValue>,
++    pub right: Option<DimensionValue>,
++    pub bottom: Option<DimensionValue>,
++    pub left: Option<DimensionValue>,
+     /// Stacking level among positioned siblings. It orders paint and hits only:
+     /// `absolute`/`fixed` children paint after the in-flow ones, sorted by this
+     /// value, and no in-flow child ever moves.
+@@ -510,4 +522,29 @@
+         let style: StyleDesc = serde_json::from_str(r#"{"textDecoration":"none"}"#).unwrap();
+         assert_eq!(style.text_decoration.as_deref(), Some("none"));
+     }
++
++    #[test]
++    fn deserializes_percentage_and_auto_insets_and_margins() {
++        let style: StyleDesc = serde_json::from_str(
++            r#"{"top":"50%","right":"auto","bottom":24,"left":"12.5%","marginLeft":"auto","marginRight":"50%"}"#,
++        )
++        .unwrap();
++
++        assert_eq!(style.top, Some(DimensionValue::Percentage(0.5)));
++        assert_eq!(style.right, Some(DimensionValue::Auto));
++        assert_eq!(style.bottom, Some(DimensionValue::Pixels(24.0)));
++        assert_eq!(style.left, Some(DimensionValue::Percentage(0.125)));
++        assert_eq!(style.margin_left, Some(DimensionValue::Auto));
++        assert_eq!(style.margin_right, Some(DimensionValue::Percentage(0.5)));
++    }
++
++    #[test]
++    fn maps_dimensions_to_gpui_lengths() {
++        let pixels: gpui::Length = gpui::px(24.0).into();
++        let half: gpui::Length = gpui::relative(0.5).into();
++
++        assert_eq!(DimensionValue::Pixels(24.0).length(), pixels);
++        assert_eq!(DimensionValue::Percentage(0.5).length(), half);
++        assert_eq!(DimensionValue::Auto.length(), gpui::Length::Auto);
++    }
+ }
+--- a/packages/native/src/renderer.rs
++++ b/packages/native/src/renderer.rs
+@@ -6331,20 +6331,20 @@
+     if let Some(pl) = style.padding_left {
+         el = el.pl(gpui::px(pl as f32));
+     }
+-    if let Some(m) = style.margin {
+-        el = el.m(gpui::px(m as f32));
++    if let Some(ref m) = style.margin {
++        el = el.m(m.length());
+     }
+-    if let Some(mt) = style.margin_top {
+-        el = el.mt(gpui::px(mt as f32));
++    if let Some(ref mt) = style.margin_top {
++        el = el.mt(mt.length());
+     }
+-    if let Some(mr) = style.margin_right {
+-        el = el.mr(gpui::px(mr as f32));
++    if let Some(ref mr) = style.margin_right {
++        el = el.mr(mr.length());
+     }
+-    if let Some(mb) = style.margin_bottom {
+-        el = el.mb(gpui::px(mb as f32));
++    if let Some(ref mb) = style.margin_bottom {
++        el = el.mb(mb.length());
+     }
+-    if let Some(ml) = style.margin_left {
+-        el = el.ml(gpui::px(ml as f32));
++    if let Some(ref ml) = style.margin_left {
++        el = el.ml(ml.length());
+     }
+     // Taffy has no viewport-fixed position, and GPUI has no scrolling document,
+     // so "fixed" lays out exactly like "absolute". `should_occlude` already
+@@ -6354,18 +6354,18 @@
+         Some("relative") => el = el.relative(),
+         _ => {}
+     }
+-    if let Some(top) = style.top {
+-        el = el.top(gpui::px(top as f32));
++    if let Some(ref top) = style.top {
++        el = el.top(top.length());
+     }
+-    if let Some(right) = style.right {
+-        el = el.right(gpui::px(right as f32));
+-    }
+-    if let Some(bottom) = style.bottom {
+-        el = el.bottom(gpui::px(bottom as f32));
++    if let Some(ref right) = style.right {
++        el = el.right(right.length());
+     }
+-    if let Some(left) = style.left {
+-        el = el.left(gpui::px(left as f32));
++    if let Some(ref bottom) = style.bottom {
++        el = el.bottom(bottom.length());
+     }
++    if let Some(ref left) = style.left {
++        el = el.left(left.length());
++    }
+     if let Some(ratio) = style.aspect_ratio {
+         if ratio > 0.0 && ratio.is_finite() {
+             el = el.aspect_ratio(ratio as f32);
+--- a/packages/native/src/motion.rs
++++ b/packages/native/src/motion.rs
+@@ -62,16 +62,16 @@
+             style.opacity = Some(value);
+         }
+         if let Some(value) = self.top {
+-            style.top = Some(value);
++            style.top = Some(DimensionValue::Pixels(value));
+         }
+         if let Some(value) = self.right {
+-            style.right = Some(value);
++            style.right = Some(DimensionValue::Pixels(value));
+         }
+         if let Some(value) = self.bottom {
+-            style.bottom = Some(value);
++            style.bottom = Some(DimensionValue::Pixels(value));
+         }
+         if let Some(value) = self.left {
+-            style.left = Some(value);
++            style.left = Some(DimensionValue::Pixels(value));
+         }
+         if let Some(value) = self.border_radius {
+             style.border_radius = Some(value);
+--- a/packages/native/js/host.ts
++++ b/packages/native/js/host.ts
+@@ -22,6 +22,7 @@
+ export * from "./mutations.js"
+ export * from "./renderer-state.js"
+ 
++/** Pixels as a number, a percentage of the parent like `"50%"`, or `"auto"`. */
+ export type DimensionValue = number | string
+ 
+ export interface MotionStyle {
+@@ -151,17 +152,17 @@
+   paddingBottom?: number
+   paddingLeft?: number
+ 
+-  margin?: number
+-  marginTop?: number
+-  marginRight?: number
+-  marginBottom?: number
+-  marginLeft?: number
++  margin?: DimensionValue
++  marginTop?: DimensionValue
++  marginRight?: DimensionValue
++  marginBottom?: DimensionValue
++  marginLeft?: DimensionValue
+ 
+   position?: string
+-  top?: number
+-  right?: number
+-  bottom?: number
+-  left?: number
++  top?: DimensionValue
++  right?: DimensionValue
++  bottom?: DimensionValue
++  left?: DimensionValue
+   /** Stacking level among `absolute`/`fixed` siblings: higher paints later and
+    *  hit-tests first. In-flow children keep their tree order and paint under
+    *  the positioned ones. */

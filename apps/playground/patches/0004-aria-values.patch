@@ -1,0 +1,88 @@
+--- a/packages/native/src/accessibility.rs
++++ b/packages/native/src/accessibility.rs
+@@ -54,6 +54,18 @@
+     if let Some(selected) = bool_prop(props, "aria-selected") {
+         el = el.aria_selected(selected);
+     }
++    if let Some(checked) = toggled_prop(props, "aria-checked") {
++        el = el.aria_toggled(checked);
++    }
++    if let Some(value) = f64_prop(props, "aria-valuenow") {
++        el = el.aria_numeric_value(value);
++    }
++    if let Some(value) = f64_prop(props, "aria-valuemin") {
++        el = el.aria_min_numeric_value(value);
++    }
++    if let Some(value) = f64_prop(props, "aria-valuemax") {
++        el = el.aria_max_numeric_value(value);
++    }
+     if let Some(level) = usize_prop(props, "aria-level") {
+         el = el.aria_level(level);
+     }
+@@ -125,6 +137,26 @@
+         .filter(|value| *value > 0)
+ }
+ 
++fn f64_prop(props: &HashMap<String, serde_json::Value>, key: &str) -> Option<f64> {
++    props.get(key).and_then(|value| value.as_f64())
++}
++
++/// `aria-checked` is a boolean or `"mixed"`, the tri-state AccessKit calls
++/// `Toggled`.
++fn toggled_prop(props: &HashMap<String, serde_json::Value>, key: &str) -> Option<gpui::Toggled> {
++    match props.get(key)? {
++        serde_json::Value::Bool(true) => Some(gpui::Toggled::True),
++        serde_json::Value::Bool(false) => Some(gpui::Toggled::False),
++        serde_json::Value::String(value) => match value.as_str() {
++            "true" => Some(gpui::Toggled::True),
++            "false" => Some(gpui::Toggled::False),
++            "mixed" => Some(gpui::Toggled::Mixed),
++            _ => None,
++        },
++        _ => None,
++    }
++}
++
+ /// ARIA token → AccessKit role. Unknown tokens are ignored, like a bad style.
+ fn role_from_aria(token: &str) -> Option<Role> {
+     Some(match token {
+@@ -214,10 +246,37 @@
+ 
+ #[cfg(test)]
+ mod tests {
+-    use super::role_from_aria;
+-    use gpui::Role;
++    use super::{f64_prop, role_from_aria, toggled_prop};
++    use gpui::{Role, Toggled};
++    use std::collections::HashMap;
+ 
++    fn props(json: &str) -> HashMap<String, serde_json::Value> {
++        serde_json::from_str(json).unwrap()
++    }
++
+     #[test]
++    fn maps_aria_checked_to_toggled() {
++        let checked = |json: &str| toggled_prop(&props(json), "aria-checked");
++
++        assert_eq!(checked(r#"{"aria-checked":true}"#), Some(Toggled::True));
++        assert_eq!(checked(r#"{"aria-checked":false}"#), Some(Toggled::False));
++        assert_eq!(checked(r#"{"aria-checked":"mixed"}"#), Some(Toggled::Mixed));
++        assert_eq!(checked(r#"{"aria-checked":"false"}"#), Some(Toggled::False));
++        assert_eq!(checked(r#"{"aria-checked":"nope"}"#), None);
++        assert_eq!(checked(r#"{"aria-selected":true}"#), None);
++    }
++
++    #[test]
++    fn reads_numeric_aria_values() {
++        let values = props(r#"{"aria-valuenow":42,"aria-valuemin":-10,"aria-valuemax":99.5}"#);
++
++        assert_eq!(f64_prop(&values, "aria-valuenow"), Some(42.0));
++        assert_eq!(f64_prop(&values, "aria-valuemin"), Some(-10.0));
++        assert_eq!(f64_prop(&values, "aria-valuemax"), Some(99.5));
++        assert_eq!(f64_prop(&props(r#"{"aria-valuenow":"42"}"#), "aria-valuenow"), None);
++    }
++
++    #[test]
+     fn maps_common_aria_tokens() {
+         assert_eq!(role_from_aria("button"), Some(Role::Button));
+         assert_eq!(role_from_aria("heading"), Some(Role::Heading));
