@@ -58,6 +58,7 @@ import { floatScenario } from "./float.js";
 import { previewScenario } from "./preview.js";
 import { gridScenario } from "./grid.js";
 import { dataGridScenario } from "./data-grid.js";
+import { propertyPanelScenario } from "./property-panel.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
@@ -141,6 +142,7 @@ export const PROBE_CAPABILITIES = [
   "truncation",
   "grid-layout",
   "typography",
+  "inspector",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -180,6 +182,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   previewScenario,
   gridScenario,
   dataGridScenario,
+  propertyPanelScenario,
   shortcutScenario,
   themeColorRolesScenario,
   themeTypeAndShadowScenario,

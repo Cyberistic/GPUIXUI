@@ -45,6 +45,7 @@ import { tier2ChoiceScenario } from "../scenarios/tier2-choice.js";
 import { EMAIL_MESSAGE, tier2FormsScenario } from "../scenarios/tier2-forms.js";
 import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
 import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
+import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -3130,6 +3131,161 @@ const tableSort: LiveScenario = {
     }),
 };
 
+const inspector: LiveScenario = {
+  id: "live-inspector",
+  title:
+    "Live inspector: an editor in a virtual list, commit, scroll and reset",
+  capability: "inspector",
+  view: propertyPanelScenario.view,
+  ready: "inspector-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const paints = (line: string) =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.contains(lines, line),
+        );
+
+      // 1. The probe mounts at its baseline.
+      yield* ctx.expectContains(
+        "the inspector starts at its baseline",
+        yield* textOf(ctx, "inspector-readout"),
+        "name=Untitled drafts=0 filter=- commits=0",
+      );
+
+      // 2. A live click focuses the editor; typing is a draft.
+      yield* ctx.host.click("inspector-input-0");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live click focuses the property editor",
+        yield* focusedOf(ctx),
+        "inspector-input-0",
+      );
+      yield* ctx.host.key("cmd-a");
+      yield* ctx.host.key("r e n a m e d");
+      yield* settle;
+      yield* waitForText(ctx, "inspector-readout", "drafts=1");
+      yield* ctx.expectContains(
+        "the draft is not committed before Enter",
+        yield* textOf(ctx, "inspector-readout"),
+        "name=Untitled drafts=1",
+      );
+
+      // 3. Enter commits; the preview reads the model.
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "inspector-readout", "commits=1");
+      yield* ctx.expectContains(
+        "a live Enter commits the draft",
+        yield* textOf(ctx, "inspector-readout"),
+        "name=renamed drafts=0",
+      );
+      yield* ctx.expectContains(
+        "the committed value reaches the live preview",
+        yield* textOf(ctx, "inspector-preview-name"),
+        "renamed",
+      );
+
+      // 4. A numeric property drives painted geometry.
+      yield* ctx.host.click("inspector-input-1");
+      yield* settle;
+      yield* ctx.host.key("cmd-a");
+      yield* ctx.host.key("4 0");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.expectNear(
+        "a live Opacity edit resizes the preview bar",
+        yield* widthOf(ctx, "inspector-preview-bar"),
+        48,
+        1,
+      );
+
+      // 5. Windowing: the row leaves the painted list and comes back edited.
+      yield* ctx.host.scrollToItem("inspector-list", 40);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the edited row leaves the live window",
+        yield* paints("Name"),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the window paints the row it scrolled to",
+        yield* paints("Property 40"),
+        true,
+      );
+      yield* ctx.host.scrollToItem("inspector-list", 0);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the committed value survives the live windowing scroll",
+        yield* paints("renamed"),
+        true,
+      );
+
+      // 6. A draft is parent-owned and survives the same scroll.
+      yield* ctx.host.click("inspector-input-0");
+      yield* settle;
+      yield* ctx.host.key("z");
+      yield* settle;
+      yield* waitForText(ctx, "inspector-readout", "drafts=1");
+      yield* ctx.host.scrollToItem("inspector-list", 40);
+      yield* settle;
+      yield* ctx.host.scrollToItem("inspector-list", 0);
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live draft survives the windowing scroll",
+        yield* textOf(ctx, "inspector-readout"),
+        "drafts=1",
+      );
+      yield* ctx.expectEqual(
+        "the returned editor paints the surviving draft",
+        yield* paints("renamedz"),
+        true,
+      );
+
+      // 7. Filtering hides rows but keeps the draft; Escape restores them.
+      yield* ctx.host.click("inspector-filter");
+      yield* settle;
+      yield* ctx.host.key("r o l e");
+      yield* settle;
+      yield* waitForText(ctx, "inspector-readout", "filter=role");
+      yield* ctx.expectEqual(
+        "the live filter keeps the matching row",
+        yield* paints("Role"),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live filter hides the other rows",
+        yield* paints("Name"),
+        false,
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "inspector-readout", "filter=-");
+      yield* ctx.expectEqual(
+        "Escape in the live filter restores the rows",
+        yield* paints("Name"),
+        true,
+      );
+
+      // 8. Reset restores the model, the drafts and the preview.
+      yield* ctx.host.click("inspector-reset");
+      yield* settle;
+      yield* waitForText(ctx, "inspector-readout", "name=Untitled");
+      yield* ctx.expectContains(
+        "a live reset clears the draft",
+        yield* textOf(ctx, "inspector-readout"),
+        "drafts=0 filter=- commits=2",
+      );
+      yield* ctx.expectNear(
+        "a live reset restores the preview bar",
+        yield* widthOf(ctx, "inspector-preview-bar"),
+        96,
+        1,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${inspector.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -3161,4 +3317,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Editing,
   tier2Flow,
   replace,
+  inspector,
 ];

@@ -17,7 +17,8 @@ other. Each scenario is one capability, one view, one `steps` effect: the core
 capabilities (including the theme gallery, the modal contract and floating
 placement), the Tier 3/4 probes
 (`table-select-sort`, `table-column-resize`, `virtualized-table`,
-`tree-view`, `log-viewer`, `workspace-tab-drag`, `workspace-restore`), the
+`tree-view`, `log-viewer`, `property-panel`, `workspace-tab-drag`,
+`workspace-restore`), the
 command surface probe (`command-palette`), the tabbed-pane probe
 (`workspace-panes`), the docking probe (`docking-layout`), the detachable-tab
 probe (`float-tab`), the hover-card probe (`preview-card`), the app-level
@@ -72,7 +73,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (78/78 green); -> 2 on a host with no binding
+# -> 0 here (79/79 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -657,6 +658,35 @@ range event to read. The probe is the suite's slowest (≈ 10–19 s) because a
 60-row re-render dominates; it is the cheapest shape that still proves the
 composition.
 
+## Inspector panels (plan `348`)
+
+`property-panel` is the composition the four Tier 3/4 rows — key-value
+displays, property panels, inspector panels, property editors — never had: an
+860 × 440 frame with a rendered preview and a 300 px inspector, whose **virtual
+list owns the native editors**. 42 checks.
+
+| Fact | Measured |
+| ---- | -------- |
+| key/value geometry | the 300 px pane ends within 1 px of the frame's right edge; a row is exactly 36 px; the label column is 96 px and the editor starts exactly one 8 px gap after it |
+| the commit path | Enter in a focused `<input>` arrives as the field's **`onSubmit`**, not as a key that bubbles to the row: the row's `onKeyDown` did not deliver the commit. Escape does arrive on the field's key down |
+| draft vs model | typing updates a parent-owned draft; the preview, which reads the committed model, does not move until Enter. Enter clears the draft and repaints the preview; Escape drops a draft without a commit |
+| model → paint | `Opacity = 40` resizes the preview bar to exactly 48 px (a percentage of a 120 px bar), so an inspector edit is assertable outside the list |
+| windowing | `scrollToItem(list, 40)` unpaints row 0 (and paints `Property 40`); scrolling back repaints the editor with the **committed** value. The editor is controlled, so the model — not a native echo — is what returns |
+| draft survival | a draft typed into row 0 survives a scroll to row 40 and back (the parent owns it, so a windowed rebuild cannot lose it) |
+| filtering | `role` paints only the matching row; the draft on the hidden `Name` row is still there; Escape clears the query and restores every row |
+| reset | restores every baseline value, clears the draft and the filter, and returns the preview bar to 96 px |
+| accessibility | the editor is a `TextInput` with its committed value in the dump; the filter and the editor are addressable by their authored `aria-id` |
+
+**Live lesson (plan `348` §9):** typing and Enter can arrive in the same React
+batch — the live automation has no frame boundary — so a commit handler that
+closes over `state` reads a stale, draft-less value and silently commits
+nothing. Every inspector mutation is a functional update; the same fix that
+plan `195` needed for a drag-ending click.
+
+Limits: the probe proves the **value and the model** survive windowing, not
+that an off-window editor keeps native focus. A grid that edits while scrolling
+should still reveal the cell (`scrollToItem`) or assert focus itself.
+
 ## Terminal surfaces (plan `179`)
 
 `terminal-grid` asks whether a Tier 4 terminal is feasible. The runtime has no
@@ -973,10 +1003,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **78/78 green** here (`exit 0`, 2270 checks):
+The suite is **79/79 green** here (`exit 0`, 2312 checks):
 
 ```
-78/78 scenarios passed · capabilities: layout=verified text=verified
+79/79 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -986,7 +1016,7 @@ content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
 toast=verified grid=verified data-grid=verified layers=verified
 scroller=verified scale=verified tier2=verified replace=verified
-grid-layout=verified typography=verified
+grid-layout=verified typography=verified inspector=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1028,6 +1058,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | toast | `position: "absolute"` + `right`/`bottom` is exact and bottom-anchored; the viewport's `pointerEvents: "none"` lets a control under its strip take the click (the cards do not need `auto`); paint order covers the app; `role="status"` is an AccessKit `Status`; a toast does not steal focus; a per-toast JS timer is real time and its frozen exit needs a dispatched frame first; removal is a `bounds` check, not painted text |
 | chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
 | markdown | `<markdown>` paints GFM blocks as addressable text; a crossing drag copies the document; a coordinate click on a link fires `onLinkClick`; children are retained but unpainted; one named `Article` node, with no per-heading nodes |
+| inspector | Enter in a focused `<input>` is the field's `onSubmit` (not a bubbled key); a row editor's draft survives a virtual-list scroll and the committed model repaints it on return; a 96 px label column plus an 8 px gap positions the editor; an inspector edit resizes a rendered surface outside the list |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
 (`./legacy-probe/run.sh probe`); they never set a component status.
@@ -1078,6 +1109,9 @@ src/scenarios/layout-grid.tsx grid tracks, rows, column minima, overflow and wra
 src/scenarios/typography.tsx line height, weight and the alignment routes
 src/scenarios/pointer-entry.tsx caret placement, drag selection and textarea lines
 src/scenarios/grid.tsx      pinned grid chrome: sticky, one scroll source, column windows
+src/scenarios/property-panel.tsx key/value rows and a native editor inside <virtual-list>
+src/scenarios/property-model.ts  the inspector's drafts, commits, filter and bar maths
+src/scenarios/property-model.test.ts the pure inspector rules
 src/scenarios/grid-window.ts the pure window: clamp, visible range, keyboard reveal
 src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
 src/scenarios/chart.tsx     chart: bars, one svg layer per series, SVG text, img gradients
@@ -1123,11 +1157,12 @@ narrower. Each deviation is deliberate and measured:
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
   the pinned-grid probe, the virtualized data-grid probe, the
   collapsible-height probe, the nested-layer probe and the variable-row-height
-  probe, the grid/wrap layout probe, the typography probe and the **Tier 2
-  catalogue** (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
+  probe, the grid/wrap layout probe, the typography probe, the **inspector
+  probe** (`property-panel`, plan `348`) and the **Tier 2 catalogue**
+  (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`)
-  pass in real GPUix 0.10.0 on this host (78/78), with a written report and
+  pass in real GPUix 0.10.0 on this host (79/79), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1135,7 +1170,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 29/29 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 30/30 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
@@ -1146,7 +1181,9 @@ narrower. Each deviation is deliberate and measured:
   `193`), a tab torn out into a floating panel (plan `195`), highlights plus
   `getListScrollTop` read from the renderer (plan `197`), a live hover card
   with its grace close (plan `199`), and the scroller's pin/no-yank/jump/stream
-  path through the automation protocol (plan `301`).
+  path through the automation protocol (plan `301`), and a live inspector whose
+  editor commits, scrolls out of and back into a virtual list, and resets
+  (plan `348`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery
