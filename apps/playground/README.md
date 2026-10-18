@@ -73,7 +73,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (80/80 green); -> 2 on a host with no binding
+# -> 0 here (81/81 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -610,7 +610,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `31/31`.
+exact, and focus/Escape and the close button hold. The live suite is `32/32`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -689,6 +689,36 @@ Limits: no auto-fit or double-click reset, no column reordering, no persisted
 widths (the reset control plus app state cover storage, as `workspace-restore`
 did for layouts), and every column is painted — column windowing stays
 `grid-wide-table`.
+
+## Application chrome (plan `350`)
+
+`app-chrome` builds the shell the Tier 4 rows never had evidence for: a 36 px
+toolbar, a two-pane body and a 24 px status bar in a 640 × 420 surface. 46
+checks; live twin `live-app-chrome` (19 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| pinned status bar | the 24 px bar's bottom edge is the shell's; a `-100` sidebar wheel and a `-240` list wheel each move only their own scroller and never the bar |
+| independent panes | the sidebar holds `-100` while the list anchors at line 10; the status text reads the list's `getListScrollTop` anchor, not the offset |
+| toolbar overflow | a 380 px viewport over a 720 px row: the trailing `sync` action starts past the edge but keeps painted bounds; one `scrollTo(-340)` moves it by exactly `-340`, and it then hit-tests and runs |
+| the spacer's place | a 300 px spacer **after** the primary actions keeps `new`/`split`/`close` visible at rest and leaves exactly one trailing item to reveal; before them, it hid the primary actions |
+| breadcrumb collapse | `Workspace / … / file.ts` — the middle segment is unpainted, the root and the current page stay; expanding restores all four |
+| breadcrumb navigation | each crumb is a focusable `Link` in a `Navigation` named `Trail`; a click truncates the trail to that depth and drops the deeper crumbs; Enter on the focused root does the same |
+| a11y | the trail is `Navigation:Trail` and the bar `Status:Status` |
+
+**Two measured traps:** a flex row of `flexShrink: 0` items **overflows its
+declared width**, so a reveal must cover the trailing item's real layout x, not
+`viewport − rowWidth` (560 px and `-180` left `sync` off-screen); and a
+`<virtual-list>` is not a live wheel target — wrap it and wheel the wrapper, as
+`vtable-viewport`/`ms-viewport` already do. The probe asserts the chrome metrics
+against literals (`36`/`360`/`24`), because comparing them to the same constants
+that lay the view out lets a changed height pass.
+
+Limits: overflow is a scroller plus an explicit reveal, not measurement-driven
+collapse into a menu (`ref` + `renderer.getElementBounds` is available, as
+`docking-layout` measured, but needs a first-layout pass); the shell is
+fixed-size; no native menu bar exists in 0.10.0 (`command-palette` records the
+in-window alternative).
 
 ## Inspector panels (plan `348`)
 
@@ -1035,10 +1065,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **80/80 green** here (`exit 0`, 2399 checks):
+The suite is **81/81 green** here (`exit 0`, 2445 checks):
 
 ```
-80/80 scenarios passed · capabilities: layout=verified text=verified
+81/81 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1047,6 +1077,7 @@ theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
 toast=verified grid=verified data-grid=verified columns=verified
+chrome=verified
 layers=verified scroller=verified scale=verified tier2=verified
 replace=verified grid-layout=verified typography=verified
 inspector=verified
@@ -1092,6 +1123,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
 | markdown | `<markdown>` paints GFM blocks as addressable text; a crossing drag copies the document; a coordinate click on a link fires `onLinkClick`; children are retained but unpainted; one named `Article` node, with no per-heading nodes |
 | inspector | Enter in a focused `<input>` is the field's `onSubmit` (not a bubbled key); a row editor's draft survives a virtual-list scroll and the committed model repaints it on return; a 96 px label column plus an 8 px gap positions the editor; an inspector edit resizes a rendered surface outside the list |
+| chrome | a 24 px status bar stays pinned while two panes scroll independently; a 380 px toolbar keeps its clipped trailing action addressable and reveals it with one `scrollTo`; a breadcrumb collapses its middle and each crumb is a focusable `Link` |
 | columns | a header-cell handle drives per-column width state; the virtual rows, the frozen column, the row width and the pan maximum follow within 1 px; a shrink clamps the live offset at once; a handle on the cell boundary loses its centre click to the next cell; the anchor and selection survive a resize; `Home`/`End`/arrows clamp |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
@@ -1154,6 +1186,7 @@ src/scenarios/data-grid.tsx the panned virtual grid: frozen column, sort and fil
 src/scenarios/column-resize-model.ts the pure column widths, offsets, row width and pan bound
 src/scenarios/column-resize-model.test.ts the pure width rules
 src/scenarios/data-grid-columns.tsx header-drag column resize over the virtual body
+src/scenarios/app-chrome.tsx toolbar, pinned status bar and a breadcrumb trail
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1201,7 +1234,7 @@ narrower. Each deviation is deliberate and measured:
   (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`)
-  pass in real GPUix 0.10.0 on this host (80/80), with a written report and
+  pass in real GPUix 0.10.0 on this host (81/81), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1209,7 +1242,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 31/31 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 32/32 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
@@ -1222,8 +1255,9 @@ narrower. Each deviation is deliberate and measured:
   with its grace close (plan `199`), and the scroller's pin/no-yank/jump/stream
   path through the automation protocol (plan `301`), and a live inspector whose
   editor commits, scrolls out of and back into a virtual list, and resets
-  (plan `348`), and a live column drag that resizes the header, the virtual
-  rows and the pan (plan `349`).
+  (plan `348`), a live column drag that resizes the header, the virtual rows
+  and the pan (plan `349`), and a live app shell whose status bar stays pinned
+  while two panes scroll (plan `350`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

@@ -3408,7 +3408,12 @@ const appChrome: LiveScenario = {
       yield* ctx.host.wheel("chrome-sidebar", 0, -100);
       yield* settle;
       const sidebar = yield* offsetOf(ctx, "chrome-sidebar");
-      yield* ctx.expectNear("the live sidebar wheel scrolls", sidebar.y, -100, 2);
+      yield* ctx.expectNear(
+        "the live sidebar wheel scrolls",
+        sidebar.y,
+        -100,
+        2,
+      );
       yield* ctx.expectContains(
         "a live sidebar wheel leaves the list line alone",
         yield* textOf(ctx, "chrome-status-text"),

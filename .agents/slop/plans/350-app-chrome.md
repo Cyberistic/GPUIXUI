@@ -1,6 +1,6 @@
 # 350 — Tier 4 feasibility: application chrome — a toolbar, a pinned status bar and a breadcrumb trail
 
-**Status:** planned 2026-10-18 · **Phase:** D · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `158`, `166`, `173`, `176`, `185`,
@@ -45,12 +45,12 @@ This plan changes **no package code**.
 Capability: `chrome` (new). Scenario: `app-chrome`; live twin: `live-app-chrome`.
 
 View: a 640 × 420 shell (toolbar 36, body 360, status 24). The toolbar is a
-380 px `overflowX: "scroll"` viewport over a 560 px item row: a four-segment
-breadcrumb trail, three action buttons, a 1 px separator and a trailing `sync`
-button that starts clipped. The body holds a 200 px sidebar list (20 rows, its
-own vertical scroller) and a 440 px `<virtual-list>` of 40 lines. The status bar
-prints the active pane, the list line, the sidebar selection, the action count,
-the trail depth and the toolbar offset.
+380 px `overflowX: "scroll"` viewport over a 720 px item row: a four-segment
+breadcrumb trail, three action buttons, a 1 px separator, a 300 px spacer and a
+trailing `sync` button that starts clipped. The body holds a 200 px sidebar list
+(20 rows, its own vertical scroller) and a 440 px `<virtual-list>` of 40 lines.
+The status bar prints the active pane, the list line, the sidebar selection, the
+action count, the trail depth and both offsets.
 
 | Area | Check |
 | ---- | ----- |
@@ -58,7 +58,7 @@ the trail depth and the toolbar offset.
 | pinned status | a wheel in the sidebar and a wheel in the main list both move their scroller and leave the status bar's `y` unchanged |
 | independent panes | a sidebar wheel (`-100`) changes the sidebar offset and leaves the list anchor at 0; a list wheel (`-240`) anchors the list at line 10 and leaves the sidebar at `-100` |
 | active pane | clicking a sidebar row sets `sel` and `pane=sidebar`; clicking a virtual line sets `line` and `pane=main` |
-| toolbar clipping | at rest the trailing `sync` button's painted x is past the toolbar's right edge; a `pan end` control (`renderer.scrollTo(-180)`) moves the offset to `-180`, the button's x by `-180`, and a click then runs it once |
+| toolbar clipping | at rest the trailing `sync` button's painted x is past the toolbar's right edge; a `pan end` control (`renderer.scrollTo(-340)`) moves the offset to `-340`, the button's x by `-340`, and a click then runs it once |
 | toolbar actions | `new` increments the action count once; the separator is 1 px |
 | breadcrumb collapse | collapsing hides the **middle** segment (`src` is absent from the painted text) and keeps the first and last; expanding restores all four |
 | breadcrumb navigation | clicking a middle crumb truncates the trail to that depth; a crumb takes native focus and Enter activates it |
@@ -100,7 +100,7 @@ Do **not** change any other package, `apps/docs`, or the shell.
 
 Constants: `SHELL = { width: 640, height: 420 }`, `TOOLBAR_HEIGHT = 36`,
 `STATUS_HEIGHT = 24`, `BODY_HEIGHT = 360`, `TOOLBAR_VIEWPORT = 380`,
-`TOOLBAR_ROW_WIDTH = 560`, `TOOLBAR_MAX_PAN = -180`, `SIDEBAR_WIDTH = 200`,
+`TOOLBAR_ROW_WIDTH = 720`, `TOOLBAR_MAX_PAN = -340`, `SIDEBAR_WIDTH = 200`,
 `MAIN_WIDTH = 440`, `ROW_HEIGHT = 24`, `SIDEBAR_ROWS = 20`,
 `LIST_ROWS = 40`, `CRUMBS = ["Workspace", "Project", "src", "file.ts"]`,
 `COLLAPSED = 3`.
@@ -128,7 +128,10 @@ State: `actions`, `sync`, `depth` (the trail length, 1…4), `collapsed`,
    - `chrome-new`, `chrome-split`, `chrome-close` (`Pressable`, 44 × 24,
      `padding: 0`, centred) — each increments `actions`;
    - a 1 px `chrome-separator` div (height 20, border colour);
-   - `chrome-sync` (`Pressable`, 44 × 24) — increments `sync`.
+   - a 300 px `chrome-spacer` div;
+   - `chrome-sync` (`Pressable`, 44 × 24) — increments `sync`. The spacer is
+     what pushes the only trailing item past the viewport, so the three primary
+     actions stay reachable at rest and exactly one action needs the pan.
 2. **Body** `testId="chrome-body"`: 640 × 360, row flex.
    - `chrome-sidebar`: 200 × 360, `overflowY: "scroll"`, `onScroll` reads its
      offset. 20 rows of 24 px, `testId={`chrome-item-${index}`}`, `tabIndex={0}`,
@@ -210,7 +213,7 @@ The control row's `chrome-pan-end` calls
 | # | Mutation | Must fail with |
 | - | -------- | -------------- |
 | M1 | the status bar's height changed to 32 | "the status bar is 24 px tall" |
-| M2 | the list anchor read from the `onVisibleRange` payload instead of `getListScrollTop` | "the wheel anchors the list" (the payload lags a gesture) |
+| M2 | the list anchor read from `getScrollOffset` instead of `getListScrollTop` | "the list wheel anchors the list" (the offset is not the anchor: `line=0`) |
 | M3 | `chrome-pan-end` calls `scrollTo(…, 0, 0)` | "the toolbar pan reaches the far edge" |
 | M4 | the collapse rule ignores `collapsed` (shows every shown crumb) | "collapse hides the middle segment" (`src` still painted) |
 | M5 | a crumb's click does not change `depth` | "a crumb truncates the trail" |
@@ -250,8 +253,77 @@ Run each mutation with `--only app-chrome`, record the exact failure, revert.
 
 ## 8. Measured results
 
-_(Filled by the executor: counts, the pinned-status and overflow facts, every
-mutation proof with its exact failure text, and limits.)_
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `app-chrome` (headless) | 46 | pass — suite `80 → 81`, `2399 → 2445`, exit `0`, `chrome=verified` |
+| `live-app-chrome` | 19 | pass — live `31 → 32`, `548 → 567`, exit `0`, one screenshot |
+
+### 8.1 Facts that changed the plan
+
+- **The pan must cover the item's real layout x, not the row width.** The first
+  build used a 560 px row and `-180`; the trailing button's layout x was ~668
+  (the flex row overflowed its declared width because every item is
+  `flexShrink: 0`), so after the pan it was still past the viewport and the
+  click missed. A 720 px row and `-340` puts it at ~350.
+- **A spacer before the primary actions hid them.** The first order put the
+  300 px spacer between the trail and the actions, so `new`/`split`/`close`
+  started clipped too and a toolbar-action check had to pan first. Moving the
+  spacer after the separator keeps the primary actions visible at rest and
+  leaves exactly one trailing item to reveal — the realistic shape.
+- **`renderer.scrollTo` on the list id is not a live wheel target.** The live
+  host's `wheel(testId)` failed on `chrome-list` (a `virtual-list` with no
+  wrapper bounds). Every existing live scenario wheels a wrapper viewport
+  (`vtable-viewport`, `ms-viewport`); the probe now wraps the list in
+  `chrome-main-viewport`, and both hosts wheel that.
+- **Assert the chrome metrics against literals.** The first assertions compared
+  the painted heights to the same constants that lay the view out, so changing
+  `STATUS_HEIGHT` to 32 still passed. The toolbar/body/status checks now compare
+  against `36`/`360`/`24`, and the mutation fails.
+
+### 8.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| shell | toolbar 36 at the top; body 360; status 24 whose bottom edge is the shell's (`420`) |
+| pinned bar | a `-100` sidebar wheel and a `-240` list wheel each move their own scroller; the status `y` never moves |
+| independence | the sidebar ends at `-100` while the list anchors at line 10; neither moves the other |
+| toolbar overflow | the row is 720 in a 380 viewport; `sync` starts past the right edge and keeps painted bounds; a `-340` pan moves it by exactly `-340` and a click runs it (`sync=1`) |
+| breadcrumb collapse | collapsing hides `src` and keeps `Workspace` + `file.ts` with a `…`; expanding restores all four |
+| breadcrumb navigation | clicking `Project` truncates the trail to `trail=2` and drops the deeper crumbs; `crumb-0` takes native focus and Enter sets `trail=1` |
+| active pane | a sidebar click is `pane=sidebar sel=6`; a line click is `pane=main line=12` |
+| a11y | `Navigation:Trail`, `Status:Status` |
+
+### 8.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only app-chrome`, and reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | `STATUS_HEIGHT` 24 → 32 | `the body fills the space between the strips: expected 360 ± 1, got 352` |
+| M2 | the anchor read with `getScrollOffset` | `the list wheel anchors the list: … got "… line=0 …"` |
+| M3 | `pan end` calls `scrollTo(…, 0)` | `the toolbar pan reaches the far edge: expected -340, got 0` |
+| M4 | `trailOf` ignores `collapsed` | `collapse hides the middle segment: expected false, got true` |
+| M5 | `navigate` cannot shorten the trail | `a crumb truncates the trail to its depth: … trail=4` |
+| M6 | a line click does not set `pane` | `a line click makes the main pane active: … pane=sidebar` |
+
+Reverse proof (consumer wiring): the sidebar row calls `select(index + 100)` →
+`the sidebar selection reaches the bar: … sel=106`.
+
+### 8.4 Limits recorded
+
+- Toolbar overflow is a **scroller plus an explicit reveal**, not
+  measurement-driven collapse into a menu. A component that wants the latter has
+  `ref` + `renderer.getElementBounds` (measured by `docking-layout`) but must
+  handle the first-layout measurement and a re-render.
+- A `virtual-list` needs a wrapper to be a live wheel target.
+- The shell is fixed-size in the probe; a real app derives the body height from
+  the window (the split/`height: "100%"` chain rules from `workspace-panes`).
+- The probe does not measure a bottom bar over a *floating* overlay
+  (`toast-lifecycle` covers insets) or a native menu bar (none exists in
+  0.10.0; `command-palette` records the in-window alternative).
 
 ## 9. Acceptance
 

@@ -67,6 +67,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | grid | `grid-wide-table` | verified |
 | data-grid | `data-grid-virtual`, `data-grid-columns` | verified |
 | columns | `data-grid-columns`, `live-data-grid-columns` | verified |
+| chrome | `app-chrome`, `live-app-chrome` | verified |
 | layers | `nested-layer-dismiss` | verified |
 | scroller | `message-scroller` | verified |
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow` | verified |
@@ -75,14 +76,14 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | truncation | `text-truncation` | verified |
 | inspector | `property-panel`, `live-inspector` | verified |
 
-The suite is **80/80 green here** (exit `0`, `.artifacts/smoke-report.json`,
-2399 checks).
+The suite is **81/81 green here** (exit `0`, `.artifacts/smoke-report.json`,
+2445 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **31/31 green
-here** (548 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`) and is **32/32 green
+here** (567 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
-`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns` and `replace` are confirmed there too
+`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `chrome` and `replace` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -746,7 +747,7 @@ drives `Stepper` (derived status), `Timeline` (order, copy, current event),
 keyboard, clamp and the measured hiding mechanism), `ColorPicker` (swatch,
 normalised shorthand hex, invalid draft) and `NavigationMenu` (one panel,
 pointer and keyboard open, arrows, Escape, link select, outside press).
-The suite is `80/80` (2399 checks) and `tier2=verified`; live is `31/31` (548
+The suite is `81/81` (2445 checks) and `tier2=verified`; live is `32/32` (567
 checks). Consumer-path facts
 recorded in plan `330` §8, plan `344` §8 and plan `346` §8: the renderer needs
 **one root host
@@ -867,9 +868,9 @@ remaining live-only defect (see the Tabs row).
 | Keyboard navigation | todo | ? | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. **`live-focus` (plan `190`)** proves the modal's Tab/Shift-Tab containment and focus return in a real window, not only in `TestRenderer`. |
 | Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. |
 | Application menus | todo | unsupported (in-window only) | **The published 0.10.0 has no menu/tray API**: `@gpuix/native`'s `NativeRenderer` exposes only window controls (`setWindowTitle`, `activateWindow`, `minimizeWindow`, `zoomWindow`, `toggleFullscreen`), and no `menu`/`Menu`/`tray` symbol exists in the native or React types. An application menu must therefore be an **in-window** surface opened by a window key — the path `command-palette` measures end to end (`cmd-k`, Escape delivery, focus return). A true macOS menu bar would need a renderer API that is not in this version. |
-| Status bars | todo | ? | `div` + `<text>`. |
-| Toolbars | todo | ? | `div` + Button groups. |
-| Breadcrumb navigation | todo | ? | Breadcrumbs + navigation. |
+| Status bars | todo | yes (probe) | `div` + `<text>`. **`app-chrome` (plan `350`):** a 24 px `flexShrink: 0` bar at a 420 px shell's bottom edge stays exactly there while a 200 px sidebar scroller and a 440 px `<virtual-list>` scroll independently (`-100` and `-240`); the bar reports the active pane, the list line (`getListScrollTop` read in `onVisibleRange`), the selection, the action count and both offsets; `role="status"` is an AccessKit `Status`. **Live (`live-app-chrome`):** both wheels and the pinned `y` hold in a real window. |
+| Toolbars | todo | yes (probe) | `div` + Button groups. **`app-chrome`:** a 380 px `overflowX: "scroll"` toolbar over a 720 px item row holds a breadcrumb `Navigation`, three 44 px actions, a 1 px separator and a 300 px spacer. The trailing `sync` action starts past the viewport but **keeps painted bounds**; one `renderer.scrollTo(-340)` moves it by exactly `-340` and it then hit-tests and runs once. The primary actions stay visible at rest because the spacer follows them. Measured lesson: a flex row of `flexShrink: 0` items overflows its declared width, so a pan must cover the item's real layout x, not `viewport − rowWidth`. |
+| Breadcrumb navigation | todo | yes (probe) | Breadcrumbs + navigation. **`app-chrome`:** a four-segment trail (`role="navigation"`, AccessKit `Navigation` named `Trail`) collapses its **middle** from app state — `Workspace / … / file.ts`, `src` absent from the painted text — and expanding restores it; each crumb is a focusable `Link`, a click truncates the trail to that depth (`trail=2`, deeper crumbs unpainted), the root takes native focus and Enter activates it. The shipped component's collapse rule and separators are measured by `tier2-navigation` (plan `344`). |
 | Inspector panels | todo | partial (probe) | Property panels + panels. **`property-panel` (plan `348`):** an 860 × 440 frame composes a rendered preview with a 300 px inspector whose right edge matches the frame within 1 px; the inspector's `<virtual-list>` owns the editors, and an edit to `Opacity` resizes a bar outside the list exactly (40% → 48 px of 120). |
 | Property editors | todo | partial (probe) | Fieldset + inputs. **`property-panel` (plan `348`):** a native `<input>` inside a virtual row is controlled by the model; typing is a draft and Enter arrives as the field's **`onSubmit`** (not a key bubbled to the row); scrolling the row out of the window and back repaints the committed value, and a draft survives the same scroll. The probe does not claim that an off-window editor keeps native focus. |
 | File trees | todo | yes (probe) | Tree views + `<virtual-list>` — `virtualized-tree` proves the combination: 328 flattened rows, 16 px per depth inside a virtual row, expand/collapse from 8 to 48 rows, click/arrows with native focus, and focus surviving the window moving away. Hierarchical virtualization itself is ours; an off-window row is invisible to the accessibility tree (`a11y-tree`). |

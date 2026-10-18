@@ -134,7 +134,9 @@ const AppChromeProbe = () => {
         Option.match(Option.fromNullishOr(renderer?.getListScrollTop?.(id)), {
           onNone: () => {},
           onSome: (value) =>
-            setLine((current) => (current === (value[0] ?? 0) ? current : (value[0] ?? 0))),
+            setLine((current) =>
+              current === (value[0] ?? 0) ? current : (value[0] ?? 0),
+            ),
         }),
     });
   };
@@ -390,40 +392,40 @@ const AppChromeProbe = () => {
             testId="chrome-main"
             style={{ width: MAIN_WIDTH, height: BODY_HEIGHT }}
           >
-          <div
-            testId="chrome-main-viewport"
-            style={{ width: MAIN_WIDTH, height: BODY_HEIGHT }}
-          >
-            <virtual-list
-              testId="chrome-list"
-              ref={list}
-              estimatedItemHeight={ROW_HEIGHT}
-              onVisibleRange={syncLine}
+            <div
+              testId="chrome-main-viewport"
               style={{ width: MAIN_WIDTH, height: BODY_HEIGHT }}
             >
-              {Arr.map(Arr.range(0, LIST_ROWS - 1), (index) => (
-                <div
-                  key={index}
-                  testId={`chrome-line-${index}`}
-                  onClick={() => pickLine(index)}
-                  style={{
-                    height: ROW_HEIGHT,
-                    backgroundColor:
-                      line === index
-                        ? theme.colors.muted
-                        : theme.colors.background,
-                    hover: { backgroundColor: theme.colors.muted },
-                  }}
-                >
-                  <text
-                    style={{ fontSize: 11, color: theme.colors.foreground }}
+              <virtual-list
+                testId="chrome-list"
+                ref={list}
+                estimatedItemHeight={ROW_HEIGHT}
+                onVisibleRange={syncLine}
+                style={{ width: MAIN_WIDTH, height: BODY_HEIGHT }}
+              >
+                {Arr.map(Arr.range(0, LIST_ROWS - 1), (index) => (
+                  <div
+                    key={index}
+                    testId={`chrome-line-${index}`}
+                    onClick={() => pickLine(index)}
+                    style={{
+                      height: ROW_HEIGHT,
+                      backgroundColor:
+                        line === index
+                          ? theme.colors.muted
+                          : theme.colors.background,
+                      hover: { backgroundColor: theme.colors.muted },
+                    }}
                   >
-                    {`line ${index}`}
-                  </text>
-                </div>
-              ))}
-            </virtual-list>
-          </div>
+                    <text
+                      style={{ fontSize: 11, color: theme.colors.foreground }}
+                    >
+                      {`line ${index}`}
+                    </text>
+                  </div>
+                ))}
+              </virtual-list>
+            </div>
           </div>
         </div>
 
@@ -481,13 +483,11 @@ const AppChromeProbe = () => {
   );
 };
 
-const state = (ctx: Smoke.SmokeContext): string => read(ctx, "chrome-status-text");
+const state = (ctx: Smoke.SmokeContext): string =>
+  read(ctx, "chrome-status-text");
 
-const boundsOrFail = (
-  ctx: Smoke.SmokeContext,
-  testId: string,
-  label: string,
-) => ctx.expectSome(label, Option.fromNullishOr(ctx.host.bounds(testId)));
+const boundsOrFail = (ctx: Smoke.SmokeContext, testId: string, label: string) =>
+  ctx.expectSome(label, Option.fromNullishOr(ctx.host.bounds(testId)));
 
 const paints = (ctx: Smoke.SmokeContext, needle: string): boolean =>
   Arr.some(ctx.host.paintedText(), Str.includes(needle));
@@ -512,7 +512,8 @@ const scrollX = (ctx: Smoke.SmokeContext, testId: string): number =>
 
 export const appChromeScenario: PlaygroundScenario = {
   id: "app-chrome",
-  title: "Application chrome: toolbar, pinned status bar and a breadcrumb trail",
+  title:
+    "Application chrome: toolbar, pinned status bar and a breadcrumb trail",
   capability: "chrome",
   view: () => <AppChromeProbe />,
   steps: (ctx) =>
@@ -540,12 +541,7 @@ export const appChromeScenario: PlaygroundScenario = {
         shell.y,
         1,
       );
-      yield* ctx.expectNear(
-        "the toolbar is 36 px tall",
-        toolbar.height,
-        36,
-        1,
-      );
+      yield* ctx.expectNear("the toolbar is 36 px tall", toolbar.height, 36, 1);
       yield* ctx.expectNear(
         "the body starts under the toolbar",
         body.y,
