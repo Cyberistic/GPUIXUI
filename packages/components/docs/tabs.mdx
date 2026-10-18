@@ -102,6 +102,9 @@ the live tabs:
   the app changes the value.
 - If the consumer focuses another control in the same update, the tab set leaves
   that focus alone.
+- A tab keeps its declaration position when it is disabled and enabled again:
+  the registry updates the row in place instead of re-registering it, so arrow
+  movement still follows the authored order.
 
 ```tsx
 <Tabs defaultValue="general">
@@ -129,7 +132,7 @@ Every part takes the GPUix host props and **merges `style` last**.
 | `Tabs` | provider (no host element) | `value?: string`, `defaultValue?: string` (default `""`), `onValueChange?: (value: string) => void`, `orientation?: "horizontal" \| "vertical"` (default `"horizontal"`), `activation?: "automatic" \| "manual"` (default `"automatic"`) |
 | `TabsList` | `div` (`role="tablist"`) | `label?: string` (the list's accessible name) |
 | `TabsTrigger` | `div` (`role="tab"`) | `value: string` (required), `disabled?: boolean` (default `false`), `style?: StateStyle<{ active: boolean; disabled: boolean; focused: boolean; highlighted: boolean; orientation: TabsOrientation }>` |
-| `TabsContent` | `div` (`role="tabpanel"`) | `value: string` (required) |
+| `TabsContent` | `div` (`role="tabpanel"`) | `value: string` (required); an `aria-label` overrides the trigger's name |
 
 `autoFocus` sets the initial `focused` state and the roving highlight, so the
 trigger's ring is painted on the first commit — the runtime applies native focus
@@ -168,8 +171,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in
   `@gpuix/native@0.10.0`: `HostProps` exposes only `aria-label`,
   `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
-  `aria-level`. The panel is named by its value (`aria-label={value}`), and the
-  trigger→panel relationship is positional.
+  `aria-level`. A panel borrows its trigger's name instead — the same plain-text
+  label the trigger paints (plan 391) — so `<TabsTrigger value="profile">Profile</TabsTrigger>`
+  announces the panel as `Profile`, not `profile`. An explicit `aria-label` on
+  `TabsContent` wins; a composed trigger with no plain text, and a controlled
+  `value` whose trigger was removed, fall back to the value. The
+  trigger→panel relationship itself stays positional.
 - The list owns the keys because a key event on a focused trigger bubbles to the
   list — measured in the real renderer, the same behaviour `List` relies on.
 - Vertical tab sets put the rail in a column beside the panel; the axis is a
@@ -177,18 +184,21 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (23 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (28 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
 controlled contract, a press on the already-selected uncontrolled tab reporting
-nothing (plan 517), a panel
-whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
-focus ring, and four vertical-axis cases — Down/Up movement with wrap, Left/Right
-ignored, the row/column layout, and manual activation. Dynamic tabs: a tab that
-becomes disabled or is removed hands the tab stop and focus to a live tab, a
-disabled tab stops reporting itself as highlighted, the handover never changes
-the selection, and a consumer's same-update focus is never stolen. The vertical
+nothing (plan 517), a panel whose value matches nothing, a caller `ref`, a caller
+`onBlur` composed with the focus ring, and four vertical-axis cases — Down/Up
+movement with wrap, Left/Right ignored, the row/column layout, and manual
+activation. Dynamic tabs: a tab that becomes disabled or is removed hands the
+tab stop and focus to a live tab, a disabled tab stops reporting itself as
+highlighted, the handover never changes the selection, a consumer's same-update
+focus is never stolen, and a disable/enable round trip keeps the authored tab
+order. Panels are named by their triggers: the visible label, the caller's
+`aria-label` override, the value fallback for a composed trigger, and a label
+change renaming the panel without reordering the row (plan 564). The vertical
 guard is
 proven in both directions: inverting the axis mapping fails the movement and
 axis-isolation tests, inverting the layout fails the layout test, and forcing

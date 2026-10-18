@@ -191,12 +191,16 @@ retired once both branches are one
     - [x] A dropdown opened with `Space` stays open — plan 557; the trigger opened on key down, and the local `Button`'s key-up activation click then toggled it closed, because a real window renders between the two events. `simulateKeystrokes` batched them, so the suite missed it; the trigger now names its row from the keyboard activation click and the new native case drives `nativeSimulateKeyDown`/`nativeSimulateKeyUp` separately (Dropdown menu 51), three mutation proofs; docs, example, `COMPONENTS.md` and the inventory synced
     - [x] A refused non-collapsible accordion toggle reports nothing — plan 559; a single non-collapsible accordion returned the same state from `toggle`, but the renderer still called `onValueChange` with the unchanged value, unlike every other controlled component. The callback now returns before reporting when the state reference is unchanged; 1 native case (Accordion 23), mutation proof; docs, example, `COMPONENTS.md` and the inventory synced
     - [x] A pasted comma-separated tag list commits every token — plan 561; the field kept the last segment of a bulk change as the draft, so pasting `"a,b"` added only `"a"` and left `"b"` in the field although the docs promised both. The rule is now a pure `editDraft` that distinguishes a typed comma (empty tail) from a paste (non-empty tail); 4 pure cases, two mutation failures; docs, `COMPONENTS.md` and the inventory synced
-    - [ ] Tabs panels are named by their trigger — plan 564; the panel hard-codes
-      `aria-label={value}`, so a screen reader hears the internal value
-      (`profile`) instead of the visible label (`Profile`). The trigger's
-      `controlName` becomes the default panel name, a caller `aria-label` still
-      wins, and an unnamed/composed trigger falls back to the value; 4 native
-      cases, three mutation proofs; docs, `COMPONENTS.md` and the inventory synced
+    - [x] Tabs panels are named by their trigger — plan 564; measured: a
+      `tabpanel` announced `profile` (the internal value) instead of `Profile`
+      (the visible label), so a screen reader heard an opaque id for the only
+      region the tab set revealed. The panel now borrows the trigger's
+      plain-text name, a caller `aria-label` still wins, and an unnamed/composed
+      trigger or removed controlled tab falls back to the value. Registration
+      now updates a row in place, so a tab disabled and enabled again keeps its
+      authored position (it used to move to the end, and the next arrow key
+      skipped a neighbour). 5 native cases (Tabs 28, behaviour 744), three
+      mutation proofs; docs, `COMPONENTS.md` and the inventory synced
     - [x] A refused tag edit reports no change — plan 562; `TagInput` called `onValueChange` with the same list on every keystroke that had not completed a token, and for a duplicate, the `max` cap and an empty commit. Both reporting paths now return when the rule handed back the current list by reference, so a controlled consumer sees only real edits; 2 strengthened native cases (Tag / token input: 15, one known plan-540 binding failure), both fail on the old wiring; docs, `COMPONENTS.md` and the inventory synced
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121

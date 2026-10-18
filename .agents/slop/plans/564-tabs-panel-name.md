@@ -5,7 +5,7 @@
 | Phase | C/F (Tier 2 hardening) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `113`, `117`, `200`, `201`, `391`, `516` |
-| Status | planned |
+| Status | done — 5 native cases (Tabs 28, behaviour 744), three mutation proofs |
 | Blocker | none — assertions read the accessibility dump by role; no bounds or focus-event assertion, so the plan-540 binding defects stay out of scope |
 
 This plan is self-contained. A weaker executor must be able to run it without
@@ -47,7 +47,9 @@ Scope of this plan:
   `value`;
 - an explicit `aria-label` on `TabsContent` still wins;
 - a trigger whose plain text changes updates the panel name **without moving the
-  trigger's position in the registry** (a rename must not re-register);
+  trigger's position in the registry**, and a disabled/enabled round trip keeps
+  that position too (a registration cleanup must not remove and re-append a live
+  row);
 - native tests, docs, `COMPONENTS.md` and the inventory counts are synced.
 
 **Out of scope** (do not add): `aria-labelledby`/`aria-controls` (absent from
@@ -106,42 +108,34 @@ current.name === row.name
 Keep `Arr.map` (position-preserving) as it is. Do **not** rewrite `upsert` to
 filter and append.
 
-### 3.2 A name change is a rename, never a re-registration
+### 3.2 A row changes in place, never by re-registering
 
-A registration effect that depends on `name` would unregister (which filters the
-row out) then append it at the end, changing tab order when a label is edited.
-Instead:
+The old trigger effect listed `disabled` as a dependency, so toggling a tab's
+disabled state ran the registration cleanup (which filters the row out) and then
+appended it at the end. A tab disabled and re-enabled therefore moved to the end
+of the registry, and the next arrow key skipped a visible neighbour. Measured in
+the probe for this plan: a three-tab fixture produced `onValueChange("c")` where
+the authored order says `"b"`.
 
-- context gains `rename: (value: string, name: string | undefined) => void`;
-- the root implements it with `setRows`, returning the same array when the row is
-  absent or the name is unchanged:
+Split the two concerns:
 
-```ts
-const rename = useCallback((value: string, name: string | undefined) => {
-  setRows((current) =>
-    Arr.map(current, (row) =>
-      row.value === value && row.name !== name ? { ...row, name } : row,
-    ),
-  );
-}, []);
-```
+- **registration** owns the row's position: a layout effect depends only on
+  `[instance, register, value]`, registers `{ value, id, disabled: false,
+  name: Option.none() }`, and returns the removal cleanup. It re-runs only on
+  mount and on a changed value.
+- **update** owns every row field: a second layout effect depends on
+  `[disabled, instance, name, updateRow, value]` and upserts
+  `{ value, id: instance.id, disabled, name: Option.fromNullishOr(name) }`
+  through a root `updateRow` implemented as
+  `setRows((current) => upsert(current, row))`. `upsert` replaces the row at its
+  index, so the order never changes.
 
-  (`Arr.map` returns the same array only if no row changed — return `current`
-  explicitly when no edit is needed, the package's upsert convention.)
-- `TabsTrigger` keeps its existing registration effect deps and adds a second
-  layout effect after it:
+Registration runs first in the same commit, then update fills in the current
+disabled state and name; both are React state updates in one layout-effect
+flush. When a trigger unmounts, its registration cleanup removes the row.
 
-```ts
-useLayoutEffect(() => {
-  if (instance === undefined) return;
-  rename(value, name);
-}, [instance, name, rename, value]);
-```
-
-  Registration runs first in the same commit, so the row exists when the rename
-  runs. When the row is absent (the effect order ever changes), `rename` is a
-  no-op; the panel then falls back to `value` rather than inventing a row.
-- include `rename` in the context memo dependencies.
+The context exposes `register` and `updateRow`; include `updateRow` in the memo
+dependencies.
 
 ### 3.3 The panel resolves its name (`TabsContent`)
 
@@ -197,11 +191,11 @@ Do not use `Option.getOrThrow`; the fallback is `value` by design.
 
 | File | Change |
 | ---- | ------ |
-| `packages/components/src/tabs.tsx` | `TabRow.name`; `upsert` compares it; context `rename`; trigger's rename effect; `TabsContent` name resolution; `tabsMeta.limitations` |
-| `packages/components/src/behaviour/tabs.test.tsx` | four new native cases (§5.1) and the guarded-bug header |
+| `packages/components/src/tabs.tsx` | `TabRow.name`; `upsert` compares it; context `updateRow`; registration and update effects; `TabsContent` name resolution; `tabsMeta.limitations` |
+| `packages/components/src/behaviour/tabs.test.tsx` | five new native cases (§5.1) and the guarded-bug header |
 | `packages/components/docs/tabs.mdx` | accessibility bullet, API note, verification count |
 | `packages/components/examples/tabs.example.tsx` | no change expected — every trigger is plain text, so the example now demonstrates panel naming automatically; the all-example contract must still pass |
-| `COMPONENTS.md` | the Tabs row: panel naming, count 23 → 27 |
+| `COMPONENTS.md` | the Tabs row: panel naming, in-place updates, count 23 → 28 |
 | `TODO.md` | add and tick the Phase C hardening row (§7) |
 | `.agents/slop/plans/README.md` | index this plan as done with its measured counts |
 
@@ -231,17 +225,24 @@ No bounds and no focus assertion.
    `NamedTabs({ label })` with two plain triggers; render with `label="Profile"`,
    expect `"Profile"`, rerender with `label="Account"`, expect `"Account"` and
    the two `tab` names still in declaration order (`["Account", "Billing"]`).
-   This guards the rename path against the unregister/append reorder described
+   This guards the update path against the unregister/append reorder described
    in §3.2.
+5. **A disable/enable round trip keeps the authored order** — a three-tab
+   fixture focused on `a`; rerender with `b` disabled, then enabled again, focus
+   `a` and press Right. `onValueChange` must report `"b"` (the authored
+   neighbour), and the `b` panel must appear. On the old code it reports `"c"`,
+   measured.
 
-Expected: the suite grows from 23 to 27 cases; the five pre-existing plan-540
+Expected: the suite grows from 23 to 28 cases; the five pre-existing plan-540
 focus failures remain. Run the new cases by name so the verdict is unambiguous:
 
 ```sh
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx -t "panel"
 # 4 passed
+nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx -t "position"
+# 1 passed
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx
-# 22 passed, 5 failed (the pre-existing plan-540 focus cases)
+# 23 passed, 5 failed (the pre-existing plan-540 focus cases)
 ```
 
 If the fifth pre-existing failure count changes, stop and report; do not "fix" a
@@ -251,22 +252,24 @@ focus case in this plan.
 
 1. Restore `TabsContent`'s `aria-label={value}` (remove the name lookup) and
    confirm case 1 fails with `"profile"` and case 4 fails at its first
-   assertion. Case 3 passes (the fallback is the old behaviour) and case 2
-   passes (the caller's prop wins), which is the intended pin.
-2. Remove only the `rename` effect and confirm case 4 fails on the rerender
-   (`"Profile"` stays) while case 1 still passes. This proves the rename path,
-   not just the initial registration.
-3. Remove `name` from the registration object and confirm case 1 fails with
-   `"profile"` (no row ever carries a name).
+   assertion — measured: **2 failed, 4 passed**. Case 3 passes (the fallback is
+   the old behaviour) and case 2 passes (the caller's prop wins), which is the
+   intended pin.
+2. Remove only the update effect and confirm case 4 fails on the rerender
+   (`"Profile"` stays) while case 1 still passes — measured: **1 failed, 5
+   passed**. This proves the update path, not just the initial registration.
+3. Restore `HEAD`'s `tabs.tsx` and run case 5: it fails with
+   `onValueChange("c")` instead of `"b"` — measured: **1 failed**. This proves
+   the in-place registration rule, not only the panel naming.
 
 Record the measured case counts in the commit message.
 
 ### 5.3 Regression
 
-- the 18 passing tabs cases still pass unchanged;
+- the 23 non-focus tabs cases still pass unchanged;
 - the all-example native contract still passes with the unchanged example;
 - `nub run --filter @gpuixui/components test` (unit + inventory) passes after the
-  docs and `COMPONENTS.md` counts are updated to 27;
+  docs and `COMPONENTS.md` counts are updated to 28;
 - `nub run check`, `nub run lint`, `nub run test` pass.
 
 ## 6. Commands and expected results
@@ -277,8 +280,10 @@ Run from `workspaces/components`:
 cd packages/components
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx -t "panel"
 # 4 passed
+nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx -t "position"
+# 1 passed
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx
-# 22 passed, 5 failed — all five are the documented plan-540 focus cases
+# 23 passed, 5 failed — all five are the documented plan-540 focus cases
 cd ../..
 nub run --filter @gpuixui/components test
 # 421+ passed, 0 failed
@@ -304,19 +309,19 @@ Update both counts in the same commit as the tests.
     missing `aria-labelledby`/`aria-controls` fact.
   - API table: `TabsContent` row gains "`aria-label` overrides the trigger's
     name".
-  - `## Verification` line: `(27 tests)`, and name the four new cases in prose.
-- `COMPONENTS.md` Tabs row: state the panel-name rule and change
-  `23 native behaviour tests` to `27 native behaviour tests`; keep the
-  controlled-removed-tab limitation.
+  - `## Verification` line: `(28 tests)`, and name the five new cases in prose.
+- `COMPONENTS.md` Tabs row: state the panel-name rule and the in-place registry
+  update, and change `23 native behaviour tests` to `28 native behaviour tests`;
+  keep the controlled-removed-tab limitation.
 - `src/inventory.ts` `tabsMeta.limitations`: replace "the panel is named by its
   value" with the new rule and keep the positional-relationship fact.
 - `TODO.md` → Phase C → "Tier 2 hardening after the inventory closed": add and
   tick
-  `Tabs panels are named by their trigger — plan 564; 4 native cases
-  (Tabs 27, behaviour 742), three mutation proofs; docs, COMPONENTS.md and the
+  `Tabs panels are named by their trigger — plan 564; 5 native cases
+  (Tabs 28, behaviour 744), three mutation proofs; docs, COMPONENTS.md and the
   inventory synced`.
 - Plan index: add 564 after 562 with status
-  `done — 4 native cases (Tabs 27, behaviour 742), both-direction proof; docs,
+  `done — 5 native cases (Tabs 28, behaviour 744), three mutation proofs; docs,
   COMPONENTS.md and the inventory synced` (use the measured total; the suite
   still carries the plan-540 binding failures, so never claim a green full
   behaviour run).
@@ -329,9 +334,9 @@ Stop and report instead of improvising when:
   `"profile"` today, so a changed name should appear; if a different binding
   drops it, record the measurement — do not assert on `customProps` alone and
   call it announced);
-- the rename path reorders the triggers (case 4's order assertion fails) — that
-  means the implementation re-registered instead of renaming; fix §3.2, do not
-  relax the assertion;
+- the update path reorders the triggers (case 4's order assertion or case 5
+  fails) — that means the implementation re-registered instead of updating in
+  place; fix §3.2, do not relax the assertion;
 - `controlName`/`plainText` gives an unexpected name for the composed trigger
   (case 3) — do not add a second naming rule; record the outcome;
 - an existing tabs case fails for a reason other than the five known plan-540
@@ -344,7 +349,8 @@ Stop and report instead of improvising when:
   internal value (`profile`).
 - A caller's `aria-label` on `TabsContent` wins; a composed trigger or a removed
   controlled tab falls back to the value.
-- Editing a trigger's label renames its panel and leaves the tab order intact.
+- Editing a trigger's label renames its panel and leaves the tab order intact;
+  a disable/enable round trip keeps the authored order too.
 - Four new native cases pass; the 18 existing non-focus cases still pass; the
   unit, inventory and type gates pass.
 - `docs/tabs.mdx`, `COMPONENTS.md`, `TODO.md` and the plan index agree with the

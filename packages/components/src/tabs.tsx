@@ -68,11 +68,13 @@ import { selectsOnFocus, type TabsActivation } from "./tabs/logic.js";
 /** The two axes a tab list can run along. */
 export type TabsOrientation = "horizontal" | "vertical";
 
-/** One registered trigger: its value, native id and whether it accepts input. */
+/** One registered trigger: its value, native id, whether it accepts input, and
+ *  the name it paints (so its panel can be announced by the same label). */
 interface TabRow {
   readonly value: string;
   readonly id: number;
   readonly disabled: boolean;
+  readonly name: Option.Option<string>;
 }
 
 /** The rules a tab part follows; throws outside a {@link Tabs} root. */
@@ -84,6 +86,8 @@ interface TabsContextValue {
   readonly activation: TabsActivation;
   readonly rows: ReadonlyArray<TabRow>;
   readonly register: (row: TabRow) => () => void;
+  /** Change a registered trigger in place; a re-register would move it. */
+  readonly updateRow: (row: TabRow) => void;
   readonly select: (value: string) => void;
   readonly noteFocus: (value: string) => void;
   readonly focusRow: (row: TabRow, select: boolean) => void;
@@ -112,7 +116,9 @@ const upsert = (
     {
       onNone: () => Arr.append(rows, row),
       onSome: (current) =>
-        current.id === row.id && current.disabled === row.disabled
+        current.id === row.id &&
+        current.disabled === row.disabled &&
+        Option.getOrUndefined(current.name) === Option.getOrUndefined(row.name)
           ? rows
           : Arr.map(rows, (candidate) =>
               candidate.value === row.value ? row : candidate,
@@ -190,6 +196,11 @@ export const Tabs = ({
       setRows((current) =>
         Arr.filter(current, (candidate) => candidate.value !== row.value),
       );
+  }, []);
+
+  /** Update in place: a re-register would move the trigger to the end. */
+  const updateRow = useCallback((row: TabRow) => {
+    setRows((current) => upsert(current, row));
   }, []);
 
   const noteFocus = useCallback(
@@ -343,6 +354,7 @@ export const Tabs = ({
       activation,
       rows,
       register,
+      updateRow,
       select,
       noteFocus,
       focusRow,
@@ -362,6 +374,7 @@ export const Tabs = ({
       select,
       selected,
       tabbable,
+      updateRow,
     ],
   );
 
@@ -503,6 +516,7 @@ export const TabsTrigger = ({
     orientation,
     tabbable,
     register,
+    updateRow,
     select,
     noteFocus,
   } = useTabsContext();
@@ -516,10 +530,28 @@ export const TabsTrigger = ({
   }, []);
   const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
+  // Mount (and a changed value) owns the row's position. Every other change is
+  // an in-place update: letting registration's cleanup run would remove the row
+  // and the next register would append it at the end, reordering the tabs.
   useLayoutEffect(() => {
     if (instance === undefined) return;
-    return register({ value, id: instance.id, disabled });
-  }, [disabled, instance, register, value]);
+    return register({
+      value,
+      id: instance.id,
+      disabled: false,
+      name: Option.none(),
+    });
+  }, [instance, register, value]);
+
+  useLayoutEffect(() => {
+    if (instance === undefined) return;
+    updateRow({
+      value,
+      id: instance.id,
+      disabled,
+      name: Option.fromNullishOr(name),
+    });
+  }, [disabled, instance, name, updateRow, value]);
 
   useEffect(() => {
     // `autoFocus` focuses natively after React's effects, so `onFocus` never
@@ -616,15 +648,28 @@ export interface TabsContentProps extends Props {
 
 /** The panel for one tab. Renders nothing while another tab is selected. */
 export const TabsContent = ({ value, style, ...rest }: TabsContentProps) => {
-  const { selected } = useTabsContext();
+  const { rows, selected } = useTabsContext();
   const theme = useTheme();
 
   if (selected !== value) return null;
+  // 0.10.0 has no `aria-labelledby`, so the panel borrows the trigger's name —
+  // the same plain-text rule the trigger paints. The caller's `aria-label` wins,
+  // and a composed trigger or a removed tab falls back to the value.
+  const panelName = Option.getOrElse(
+    Option.firstSomeOf([
+      Option.fromNullishOr(rest["aria-label"]),
+      Option.flatMap(
+        Arr.findFirst(rows, (row) => row.value === value),
+        (row) => row.name,
+      ),
+    ]),
+    () => value,
+  );
   return (
     <div
       role="tabpanel"
-      aria-label={value}
       {...rest}
+      aria-label={panelName}
       style={mergeStyles(
         {
           display: "flex",
@@ -667,7 +712,7 @@ export const tabsMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no aria-orientation, aria-controls or aria-labelledby in 0.10.0; the panel is named by its value",
+    "no aria-orientation, aria-controls or aria-labelledby in 0.10.0; the panel borrows its trigger's plain-text name, falling back to the value for a composed trigger",
     "the trigger/panel relationship is positional, not semantic",
     "a controlled value that names a removed tab still renders its panel: the value is the app's",
   ],

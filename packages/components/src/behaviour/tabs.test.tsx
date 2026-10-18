@@ -9,7 +9,9 @@
  * caller `ref` on a trigger was discarded in favour of the internal one, and so
  * was a caller `onBlur`. A vertical tab set could move along the wrong axis,
  * stay laid out horizontally, react to Left/Right, or bypass manual activation.
- * Space selected on key down instead of on release.
+ * Space selected on key down instead of on release. The visible panel was named
+ * by its internal value (`profile`) instead of the tab's label (`Profile`), so a
+ * screen reader heard an opaque id for the only region the tab set revealed.
  */
 
 import * as Arr from "effect/Array";
@@ -19,6 +21,7 @@ import { useGpuix } from "@gpuix/react";
 import type { StateStyle } from "@gpuix/react/floating";
 import { createRef, useCallback, useLayoutEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { nodesWithRole } from "../internal/a11y.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -70,6 +73,26 @@ const Settings = ({
     </TabsContent>
     <TabsContent testId="panel-danger" value="danger">
       <text>Danger panel</text>
+    </TabsContent>
+  </Tabs>
+);
+
+/** A tab whose label the app can edit, to prove the panel name follows it. */
+const NamedTabs = ({ label }: { readonly label: string }) => (
+  <Tabs defaultValue="profile" testId="named-tabs">
+    <TabsList testId="named-list">
+      <TabsTrigger testId="named-profile" value="profile">
+        {label}
+      </TabsTrigger>
+      <TabsTrigger testId="named-billing" value="billing">
+        Billing
+      </TabsTrigger>
+    </TabsList>
+    <TabsContent testId="named-panel" value="profile">
+      <text>Profile panel</text>
+    </TabsContent>
+    <TabsContent testId="named-other" value="billing">
+      <text>Billing panel</text>
     </TabsContent>
   </Tabs>
 );
@@ -400,6 +423,130 @@ describe("Tabs", () => {
     );
 
     expect(tabs.renderer.findByTestId("panel-other")).toBeUndefined();
+
+    tabs.unmount();
+  });
+
+  it("names the panel by its trigger, not its value", () => {
+    const tabs = renderComponent(<Settings />);
+
+    expect(
+      Arr.map(nodesWithRole(tabs.renderer, "tabpanel"), (node) => node.name),
+    ).toEqual(["Profile"]);
+
+    tabs.unmount();
+  });
+
+  it("keeps the caller's panel name ahead of the trigger's", () => {
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile">
+            Profile
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent
+          testId="panel-profile"
+          value="profile"
+          aria-label="Account profile"
+        >
+          <text>Profile panel</text>
+        </TabsContent>
+      </Tabs>,
+    );
+
+    expect(
+      Arr.map(nodesWithRole(tabs.renderer, "tabpanel"), (node) => node.name),
+    ).toEqual(["Account profile"]);
+
+    tabs.unmount();
+  });
+
+  it("falls back to the value when the trigger has no plain-text name", () => {
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile">
+        <TabsList testId="list">
+          <TabsTrigger testId="tab-profile" value="profile">
+            <div>
+              <text>Profile</text>
+            </div>
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent testId="panel-profile" value="profile">
+          <text>Profile panel</text>
+        </TabsContent>
+      </Tabs>,
+    );
+
+    expect(
+      Arr.map(nodesWithRole(tabs.renderer, "tabpanel"), (node) => node.name),
+    ).toEqual(["profile"]);
+
+    tabs.unmount();
+  });
+
+  it("renames the panel when a trigger's label changes, keeping tab order", () => {
+    const tabs = renderComponent(<NamedTabs label="Profile" />);
+
+    expect(
+      Arr.map(nodesWithRole(tabs.renderer, "tabpanel"), (node) => node.name),
+    ).toEqual(["Profile"]);
+
+    tabs.rerender(<NamedTabs label="Account" />);
+
+    expect(
+      Arr.map(nodesWithRole(tabs.renderer, "tabpanel"), (node) => node.name),
+    ).toEqual(["Account"]);
+    expect(
+      Arr.map(nodesWithRole(tabs.renderer, "tab"), (node) => node.name),
+    ).toEqual(["Account", "Billing"]);
+
+    tabs.unmount();
+  });
+
+  it("keeps a tab's position when it is disabled and enabled again", () => {
+    const onValueChange = vi.fn();
+    const Dynamic = ({
+      disabled,
+    }: {
+      readonly disabled: ReadonlyArray<string>;
+    }) => (
+      <Tabs defaultValue="a" onValueChange={onValueChange} testId="order-tabs">
+        <TabsList testId="order-list">
+          {Arr.map(["a", "b", "c"], (value) => (
+            <TabsTrigger
+              key={value}
+              testId={`order-${value}`}
+              value={value}
+              disabled={Arr.contains(value)(disabled)}
+            >
+              {value.toUpperCase()}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {Arr.map(["a", "b", "c"], (value) => (
+          <TabsContent
+            key={value}
+            testId={`order-panel-${value}`}
+            value={value}
+          >
+            <text>{value}</text>
+          </TabsContent>
+        ))}
+      </Tabs>
+    );
+
+    const tabs = renderComponent(<Dynamic disabled={[]} />);
+    focusTab(tabs, "order-a");
+    tabs.rerender(<Dynamic disabled={["b"]} />);
+    tabs.rerender(<Dynamic disabled={[]} />);
+    focusTab(tabs, "order-a");
+    tabs.renderer.simulateKeystrokes("right");
+
+    // Registration must update in place: a re-register would append B after C,
+    // so the arrow would land on C instead.
+    expect(onValueChange.mock.calls).toEqual([["b"]]);
+    expect(tabs.renderer.findByTestId("order-panel-b")).toBeDefined();
 
     tabs.unmount();
   });
