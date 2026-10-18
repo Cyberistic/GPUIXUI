@@ -16,7 +16,9 @@ import {
   finishMotion,
   clickCentreOf,
   focusedTestId,
+  isShown,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
@@ -452,14 +454,16 @@ describe("CommandMenu", () => {
 
     palette.renderer.simulateKeystrokes("enter");
     await Promise.resolve();
+    finishMotion(palette);
     clickCentreOf(palette, "open-palette");
-    await Promise.resolve();
+    await until(() => isShown(palette, "command-open-file"));
 
     type(palette, "save");
     palette.renderer.simulateKeystrokes("enter");
     await Promise.resolve();
+    finishMotion(palette);
     clickCentreOf(palette, "open-palette");
-    await Promise.resolve();
+    await until(() => isShown(palette, "command-open-file"));
 
     const save = requireBounds(palette, "command-save");
     const open = requireBounds(palette, "command-open-file");
@@ -514,8 +518,9 @@ describe("CommandMenu", () => {
 
     expect(onRecentChange).toHaveBeenCalledWith(["open-file", "sidebar"]);
 
+    finishMotion(palette);
     clickCentreOf(palette, "open-palette");
-    await Promise.resolve();
+    await until(() => isShown(palette, "command-sidebar"));
 
     const sidebar = requireBounds(palette, "command-sidebar");
     const open = requireBounds(palette, "command-open-file");

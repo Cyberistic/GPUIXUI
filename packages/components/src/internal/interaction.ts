@@ -37,6 +37,10 @@ export const requireBounds = (
  * Complete a running enter/exit motion, then paint the result. GPUix keeps its
  * motion clock paused under the test renderer; the default 100 ms matches the
  * dialog/popover recipe (plan 525).
+ *
+ * Finish a closing overlay's exit **before** driving anything behind it: the
+ * exit ghost is inert but still painted, so a synthetic click aimed through it
+ * is a race, and the ghost still shows the content it closed with (plan 529).
  */
 export const finishMotion = (
   root: ComponentTestRoot,
@@ -46,6 +50,31 @@ export const finishMotion = (
   root.renderer.clockFastForward(milliseconds);
   root.renderer.dispatchNativeEvents();
   root.renderer.flush();
+};
+
+/** Whether the tree currently contains `testId`. */
+export const isShown = (root: ComponentTestRoot, testId: string): boolean =>
+  root.renderer.findByTestId(testId) !== undefined;
+
+/**
+ * Wait until `check` holds, at most `attempts * intervalMs` (~2 s by default).
+ *
+ * A fixed sleep or one `await Promise.resolve()` is a coin flip under load:
+ * React commits and the native tree update can lag a native event. Every caller
+ * keeps the assertion that follows, so a component that never reaches the state
+ * still fails. Test harness only; these suites are plain vitest, not Effect.
+ */
+export const until = async (
+  check: () => boolean,
+  {
+    attempts = 100,
+    intervalMs = 20,
+  }: { readonly attempts?: number; readonly intervalMs?: number } = {},
+): Promise<void> => {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (check()) return;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
 };
 
 /** Click the centre of `testId` through the runtime's real hit testing.

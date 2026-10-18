@@ -30,32 +30,15 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  isShown,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /** Wait for a component timer (real timers, kept short by the props). */
 const after = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Wait until the tree shows the expected state, at most ~2 s. React commits and
- * the native tree update can lag a timer under load, so a fixed sleep is a
- * coin flip; the assertion that follows is still what fails when it never
- * happens.
- */
-const until = async (check: () => boolean): Promise<void> => {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    if (check()) return;
-    await after(20);
-  }
-};
-
-/** Whether the tree currently contains `testId`. */
-const isShown = (
-  root: ReturnType<typeof renderComponent>,
-  testId: string,
-): boolean => root.renderer.findByTestId(testId) !== undefined;
 
 /** A two-item product nav, with an inert target far to the right. */
 const Workspace = ({

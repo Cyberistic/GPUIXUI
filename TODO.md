@@ -378,6 +378,13 @@ retired once both branches are one
       `theme-coverage.ts` registry held to the suites by `inventory.test.ts` so
       a new dark-only component or a stale entry fails (unit 404 → 405); docs,
       `COMPONENTS.md` and the inventory synced
+    - [x] Behaviour suites wait for the tree, not a microtask — plan 529. Under
+      eight CPU burners the command-menu reopen tests read the dialog's 100 ms
+      exit ghost (`no element with testId "command-open-file"`), because they
+      clicked behind a closing surface and flushed one microtask; 3 of 5 runs
+      failed. `until` / `isShown` are shared from `internal/interaction.ts`, the
+      two tests finish the exit and wait for the reopened row, and the suite is
+      green under load (21/21 five runs at eight burners; 708/708 full suite)
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook

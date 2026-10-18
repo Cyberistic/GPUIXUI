@@ -71,7 +71,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `@gpuixui/icons` | every component-owned fixed mark (close, clear, chevron, check, toast tone) — plan 324 |
-| `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
+| `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, motion settling, wait-for-state and the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
 | `src/perf/list.test.tsx` | the large-collection ceiling: 1,000 rows, a focus move and a re-render; `docs/performance.md` records the baseline and the remaining limit |
 | `src/list/row-state.ts` | the per-row bit-mask store behind `List`'s row-level subscriptions (plan 339) |
@@ -100,6 +100,12 @@ Intel Mac, where plan 140's locally built `darwin-x64` binding is installed.
 `@gpuix/native` resolves its binding eagerly, so on a host without one a behaviour
 file *fails to load* instead of skipping; that is why the default `test` run does
 not collect it (plan 117 §5a–§5c).
+
+A suite waits for the tree, never for a microtask: a native event's React commit
+can land later, so `internal/interaction.ts` exports `until`/`isShown`. A suite
+that closes an animated surface also calls `finishMotion` **before** driving
+anything behind it — the exit ghost is inert but still painted, and it still
+shows what it closed with (plan 529).
 
 ## Adding a component
 
