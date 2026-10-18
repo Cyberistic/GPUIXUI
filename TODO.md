@@ -1129,6 +1129,10 @@ painted the system fallback while the guarantee said the theme was good;
 `themeTypefaceFailures` is the fourth check, `themeFailures` composes it in
 colour → typeface → contrast → metric order, and every shipped set passes, so no
 family moves (plan 385)
+`[ ]` Hold the smallest field to a body line — `controlHeight.sm` was held to
+one label line while `fieldTextStyle` and `otpCellStyle` paint the body role in
+the same box, so a theme with a 30px body line returned `[]` from every check
+while a 26px content box clipped a small field (plan 386)
 
 ## Phase C — Tier 1–2 components
 

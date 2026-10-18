@@ -180,6 +180,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [383](./383-total-theme-check.md) | One total check for an edited theme | F | 071, 073, 358, 371, 380 | done |
 | [384](./384-content-box-fit.md) | A size that must fit must fit the content box | F | 353, 358, 360, 365, 372 | done |
 | [385](./385-typeface-contract.md) | The typeface half of an editable theme | F | 011, 051, 070, 324, 358, 371, 383 | done |
+| [386](./386-body-line-fit.md) | The smallest field must fit a body line | F | 011, 353, 358, 360, 367, 384 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1653,6 +1654,22 @@ order, because a malformed family belongs beside the malformed role and before
 the measurements painted with it. A name with spaces inside (`Helvetica Neue`)
 and the `.SystemUIFont` sentinel pass; every shipped identity theme, platform
 variant and recipe passes, so no family moves.
+
+386 closes the last fit rule the numeric contract stated for the wrong role. It
+held `controlHeight.sm` to one **label** line plus its two borders, but a field
+does not paint the label role: `fieldTextStyle` and `otpCellStyle` in
+`primitives` set the body size, leading and weight inside the same box, and
+`controlStyle` fixes that box at `controlHeight[size]` with its borders painted
+inside. A probe with `body.lineHeight` 30 returned `[]` from all four checks
+while the shipped 28px `sm` control leaves a 26px content box — a clipped line on
+every small input — because the `rowHeight` rule only reads the row, and 32
+clears 30. The label bound becomes the taller of the label and body lines, so one
+member carries one bound and the `at-least` rule keeps its place in
+`metricRules`. No shipped set moves: every platform compact control is 24px and
+the identity is 28, both above 20 + 2. The catalogue, design system, README and
+ledger now say both lines, and `body-line-fit.test.ts` proves the rule can fail,
+the content-box subtraction, the label/body maximum and the other checks'
+blindness to it.
 
 ### Reference adoption (block `200–299`)
 
