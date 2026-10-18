@@ -643,6 +643,7 @@ import {
   getTheme,
   platformRecipes,
 } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
 
 <ThemeProvider theme={getPlatformRecipeTheme("xp", "light")}>…</ThemeProvider>;
 
