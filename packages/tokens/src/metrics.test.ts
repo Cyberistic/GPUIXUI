@@ -15,7 +15,11 @@
 import { describe, expect, it } from "vitest";
 import { themeContrastFailures } from "./contrast.js";
 import type { ElevationShape } from "./elevation.js";
-import { compactFailures, ringlessFailures } from "./metrics.example.js";
+import {
+  compactFailures,
+  ringlessFailures,
+  stretchedFailures,
+} from "./metrics.example.js";
 import {
   metricGroups,
   themeMetricFailures,
@@ -92,6 +96,7 @@ describe("theme metric contract", () => {
     expect(themeMetricFailures(lightTheme)).toEqual([]);
     expect(compactFailures).toEqual([]);
     expect(ringlessFailures).toHaveLength(1);
+    expect(stretchedFailures).toHaveLength(1);
   });
 
   it("states the gap: a ringless theme passes the colour check", () => {
@@ -193,6 +198,54 @@ describe("theme metric contract", () => {
         rule: "within",
         actual: 1.5,
         bound: 1,
+      },
+    ]);
+  });
+
+  it("reports elevation geometry the renderer cannot paint", () => {
+    const broken = extendTheme(lightTheme, {
+      elevation: { md: [{ ...mdShape, offsetX: Number.NaN }] },
+    });
+    const failures = themeMetricFailures(broken);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.group).toBe("elevation");
+    expect(failures[0]?.member).toBe("md[0].offsetX");
+    expect(failures[0]?.rule).toBe("finite");
+    expect(failures[0]?.actual).toBeNaN();
+
+    // A negative offset or spread is a direction, not breakage: the shipped
+    // light level already ships a negative spread.
+    expect(
+      failuresOf({
+        elevation: {
+          md: [{ ...mdShape, offsetX: -4, offsetY: -2, spreadRadius: -8 }],
+        },
+      }),
+    ).toEqual([]);
+
+    // Infinite is finite-checked but not sign-checked: one failure, not two.
+    const infinite = failuresOf({
+      elevation: { md: [{ ...mdShape, blurRadius: Number.POSITIVE_INFINITY }] },
+    });
+    expect(infinite.map(({ member, rule }) => `${member}:${rule}`)).toEqual([
+      "md[0].blurRadius:finite",
+    ]);
+  });
+
+  it("reports a row shorter than the default control", () => {
+    // The ladder stays valid (sm 28 < md 40 < lg 44) and the row still fits a
+    // body line (20), so the only broken rule is the control it holds.
+    expect(
+      failuresOf({
+        density: { controlHeight: { md: 40, lg: 44 }, rowHeight: 32 },
+      }),
+    ).toEqual([
+      {
+        group: "density",
+        member: "rowHeight",
+        rule: "at-least",
+        actual: 32,
+        bound: 40,
       },
     ]);
   });

@@ -38,6 +38,7 @@ export type MetricRule =
   | "positive"
   | "non-negative"
   | "zero"
+  | "finite"
   | "increasing"
   | "non-decreasing"
   | "at-least"
@@ -86,6 +87,19 @@ const zero = (
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
   actual === 0 ? [] : [failure(group, member, "zero", actual, 0)];
+
+/**
+ * A value the renderer can paint. `NaN` and the infinities are numbers no
+ * `StyleDesc` accepts, so a shadow carrying one paints nothing — the same
+ * silent loss as a zero focus-ring spread, one metric group over. A negative
+ * offset or spread is a direction and stays valid; only finiteness is checked.
+ */
+const finite = (
+  group: MetricGroup,
+  member: string,
+  actual: number,
+): ReadonlyArray<MetricFailure> =>
+  Number.isFinite(actual) ? [] : [failure(group, member, "finite", actual, 0)];
 
 const atLeast = (
   group: MetricGroup,
@@ -151,7 +165,8 @@ const ladder = (
  *   only focus indicator the runtime can draw, so it may not be zero; `thin`
  *   may be zero in a borderless theme, so it is only non-negative.
  * - **density**: sizes and padding are ladders, the smallest control fits one
- *   label line plus its two borders, and a row fits one body line.
+ *   label line plus its two borders, and a row fits one body line and the
+ *   default `md` control it holds.
  * - **dimensions**: every surface metric is positive, each documented range has
  *   a minimum below its default, an adornment fits the smallest control and a
  *   chip fits in a field.
@@ -160,9 +175,9 @@ const ladder = (
  * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
  *   both the largest radius and half the largest control.
  * - **spacing**: a ladder.
- * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose alpha is a fraction
- *   and whose blur is non-negative. `overlay` is reserved and empty, so it is
- *   exempt.
+ * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose two offsets, blur and
+ *   spread are finite, whose blur is non-negative, and whose alpha is a
+ *   fraction. `overlay` is reserved and empty, so it is exempt.
  * - **motion**: `none` is zero and the timings are a ladder.
  *
  * The level is not a parameter: these rules are the same at every contrast
@@ -233,6 +248,12 @@ export function themeMetricFailures(
       "rowHeight",
       density.rowHeight,
       typography.body.lineHeight,
+    ),
+    ...atLeast(
+      "density",
+      "rowHeight",
+      density.rowHeight,
+      density.controlHeight.md,
     ),
     ...ladder(
       "iconSize",
@@ -331,10 +352,22 @@ export function themeMetricFailures(
       return shapes.length === 0
         ? [failure("elevation", level, "at-least", shapes.length, 1)]
         : shapes.flatMap((shape, index) => [
+            ...finite("elevation", `${level}[${index}].offsetX`, shape.offsetX),
+            ...finite("elevation", `${level}[${index}].offsetY`, shape.offsetY),
+            ...finite(
+              "elevation",
+              `${level}[${index}].blurRadius`,
+              shape.blurRadius,
+            ),
             ...nonNegative(
               "elevation",
               `${level}[${index}].blurRadius`,
               shape.blurRadius,
+            ),
+            ...finite(
+              "elevation",
+              `${level}[${index}].spreadRadius`,
+              shape.spreadRadius,
             ),
             ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
           ]);
