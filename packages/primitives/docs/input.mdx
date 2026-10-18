@@ -120,6 +120,14 @@ The callback's result merges after the field chrome, so it wins per property;
   025). The component forwards `readOnly`, drops the field from the tab order
   and guards its handlers; the accessibility difference is the limitation above.
 - No masks, formatting or prefix/suffix slots.
+- **Not a password field.** GPUix 0.10.0's `<input>` has no `type`, no
+  `secureTextEntry` and no masking surface (`InputProps` carries only `value`,
+  `placeholder`, `readOnly` and `theme`), so every character a user types is
+  painted and announced in clear. Do not collect a password, API key or token in
+  `Input`. Resolve a secret through the operating system's credential prompt
+  (keychain / password manager) or load it from configuration and pass it
+  programmatically; no `PasswordInput` will ship until the runtime provides a
+  masking surface (plan `389`).
 - No `aria-describedby`; help text is adjacent content, not associated.
 
 ## Verification

@@ -1203,6 +1203,14 @@ retired once both branches are one
       registry (`types` and `default` both point at source), and a guard decodes
       the manifest, checks the target exists and requires a component for every
       registry id; 2 tests, the missing-key direction proven (plan `388`).
+`[x]` `packages/primitives`: **`Input` did not say it cannot collect a
+      secret** — the page listed "no masks" as if a password variant were
+      merely absent, while 0.10.0's `InputProps` has no `type`,
+      `secureTextEntry` or masking surface, so a typed secret is painted and
+      announced in clear (playground plan `188` §9). The page now names the
+      consequence, forbids collecting passwords/API keys/tokens in `Input` and
+      points at an OS credential prompt or configuration; no `PasswordInput`
+      ships. Docs + inventory only, no behaviour change (plan `389`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
