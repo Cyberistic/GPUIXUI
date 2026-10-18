@@ -2,7 +2,11 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { components } from "@/component-meta/registry";
-import { LIVE_SCENES, SCENE_TEXT } from "../../../preview/scenes";
+import {
+  LIVE_SCENES,
+  SCENE_TEXT,
+  SCENE_TEXT_IS_SCENE_PROSE,
+} from "../../../preview/scenes";
 import { NO_LIVE_SCENE } from "./gaps";
 
 /**
@@ -71,11 +75,32 @@ describe("live scene table", () => {
   });
 
   /**
-   * The bug this guards (measured 2026-10-18): the command-menu scene passed
-   * `actions` but no children, so it mounted an empty dialog — and the check
-   * above still passed because `"Go to Components"` occurs in the actions
-   * array the palette never painted. `CommandMenu` renders the parts it is
-   * given; the data is not a default rendering.
+   * The bug this guards (measured 2026-10-18): four scenes asserted their own
+   * `<Text role="h3">` heading, so the smoke stayed green with the Icon,
+   * ScrollArea, Skeleton or Spinner missing. `tabs` asserted a string that the
+   * trigger list and the panel both render. The expectation must name text the
+   * component region paints; a component that paints none needs a written
+   * reason, and the set of exemptions is pinned.
+   */
+  it("looks for text the component paints, not the scene's own heading", () => {
+    const headings = [
+      ...viewSource.matchAll(/<Text role="h3">([^<]+)<\/Text>/g),
+    ].map((match) => match[1]);
+    const offenders = LIVE_SCENES.filter(
+      (scene) =>
+        headings.includes(SCENE_TEXT[scene]) &&
+        SCENE_TEXT_IS_SCENE_PROSE[scene] === undefined,
+    ).map((scene) => `${scene}: ${SCENE_TEXT[scene]}`);
+    expect(offenders).toEqual([]);
+    expect(Object.keys(SCENE_TEXT_IS_SCENE_PROSE)).toEqual(["skeleton"]);
+  });
+
+  /**
+   * The command-menu bug (plan 471): the scene passed `actions` but no
+   * children, so it mounted an empty dialog — and the check above still passed
+   * because `"Go to Components"` occurs in the actions array the palette never
+   * painted. `CommandMenu` renders the parts it is given; data is not a default
+   * rendering.
    */
   it("composes the command palette from its parts, not only its actions", () => {
     const scene = viewSource.slice(

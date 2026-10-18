@@ -33,14 +33,26 @@ export const isLiveScene = (value: string): value is LiveScene =>
  */
 export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   button: "Save changes",
-  tabs: "Notifications",
+  tabs: "Your name and avatar appear beside every comment you write.",
   "dropdown-menu": "Duplicate",
   dialog: "Delete this workspace?",
   popover: "Show columns",
   "command-menu": "Go to Components",
   "confirm-dialog": "Archive this project?",
-  icon: "Icon set",
-  "scroll-area": "Activity log",
+  icon: "Folder",
+  "scroll-area": "09:45  Saved layout",
   skeleton: "Loading profile",
-  spinner: "Saving changes",
+  spinner: "Writing 3 files…",
+};
+
+/**
+ * Scenes whose expectation is the scene's own prose because the component
+ * paints no text. A reason is mandatory; `scene-contract.test.ts` pins the set
+ * so an exemption is a deliberate act.
+ */
+export const SCENE_TEXT_IS_SCENE_PROSE: Readonly<
+  Partial<Record<LiveScene, string>>
+> = {
+  skeleton:
+    "Skeleton paints no text: the canvas plus three muted bars are the evidence.",
 };

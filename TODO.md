@@ -469,9 +469,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–471)
+## Docs site workstream (plans 410–472)
 
-`[~]` `[██████████]` 69/70
+`[~]` `[██████████]` 70/71
+
+`[x]` **A live scene looks for text its component paints (plan 472)** — four scenes asserted their own `<Text role="h3">` heading, so the surface smoke stayed green with the Icon, ScrollArea, Skeleton or Spinner missing; three now assert component-region text, `skeleton` keeps a written exception, and the guard names any scene that returns to its heading
 
 `[x]` **The command-menu live scene renders its parts (plan 471)** — the palette mounted an empty dialog because the scene passed `actions` and no children, and the contract guard passed on a string that lived in the actions array; the scene mounts `CommandMenuInput`/`List`/`Empty`, a new guard names the parts, and `smoke:preview` is green again (15 text nodes, was 2)
 
