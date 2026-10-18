@@ -27,7 +27,7 @@ stays a `devDependency` and nothing in `src/` imports it.
 | File | Change |
 | ---- | ------ |
 | `apps/docs/package.json` | Add exact devDependencies `@fumadocs-editor/core`, `@fumadocs-editor/ui`, `@fumadocs-editor/studio`; add script `"studio": "fumadocs-studio"`. |
-| `apps/docs/studio.config.ts` | **New.** `defineConfig({ root: "content/docs", components: [...fumadocsUiComponents, admonitionSpec], theme: "system" })`. |
+| `apps/docs/fumadocs-studio.config.ts` | **New.** `defineConfig({ root: "content/docs", components: [...fumadocsUiComponents, admonitionSpec], theme: "system" })`. |
 | `apps/docs/src/editor-roundtrip.test.ts` | **New guard.** Every `content/docs/**/*.mdx` file parses and serializes to the exact same bytes. |
 | `apps/docs/README.md` | Document the authoring command, the byte-for-byte contract, the experimental status, and that custom docs JSX is preserved verbatim until it earns a spec. |
 | `.agents/slop/plans/README.md` | Add this plan to the docs table. |
@@ -103,8 +103,8 @@ the boundary (same pattern as `content-references.test.ts`).
 ## 8. Progress
 
 - **Installed** `@fumadocs-editor/core@0.4.1`, `ui@0.5.1` and `studio@0.2.4`
-  as exact devDependencies; `studio.config.ts` opens `content/docs` with the
-  Fumadocs UI components and the admonition spec.
+  as exact devDependencies; `fumadocs-studio.config.ts` opens `content/docs` with
+  the Fumadocs UI components and the admonition spec.
 - **The guard passes for all 84 pages** (`src/editor-roundtrip.test.ts`, 3
   tests): byte-for-byte serialization, the non-empty tree assertion, and an
   edited-heading test that asserts only the edited line changes.
@@ -120,3 +120,9 @@ the boundary (same pattern as `content-references.test.ts`).
   host, reads `content/docs` and serves `200`; it was stopped after the check.
 - The `LICENSES/` row for the MIT dev-only dependency is recorded as a
   cross-team task in `TODO.md` (`LICENSES/` belongs to the licensing workstream).
+- **Gates on 2026-10-18 after the proof edits were reverted:** `docs` 43 files /
+  265 tests green (the repo-wide run later saw 44 / 271 with the concurrent
+  plans); `docs check-types`, `docs build`, `nub run check`, `nub run lint` and
+  `nub run test` all exit `0`. The first build attempt was killed by a duplicate
+  writer; the successful build ran with no other build active, and `dist`
+  contains no `fumadocs-editor`, `MdxEditor` or `tiptap` string.
