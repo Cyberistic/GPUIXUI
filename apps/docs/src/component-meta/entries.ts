@@ -629,6 +629,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "ours",
       sourcePath: "packages/primitives/src/components/NumberField.tsx",
       api: ["NumberFieldProps"],
+      liveScene: "number-field",
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/number-field.runtime.test.tsx",
@@ -652,6 +653,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "ours",
       sourcePath: "packages/primitives/src/components/OTPField.tsx",
       api: ["OTPFieldProps"],
+      liveScene: "otp-field",
       runtime: nativeSuite(
         "@gpuixui/primitives",
         "runtime/otp.runtime.test.tsx",
@@ -670,6 +672,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "ours",
     sourcePath: "packages/primitives/src/components/Toggle.tsx",
     api: ["ToggleProps"],
+    liveScene: "toggle",
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/toggle.runtime.test.tsx",
@@ -686,6 +689,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     gpuix: "ours",
     sourcePath: "packages/primitives/src/components/Rating.tsx",
     api: ["RatingProps"],
+    liveScene: "rating",
     runtime: nativeSuite(
       "@gpuixui/primitives",
       "runtime/rating.runtime.test.tsx",
@@ -1350,6 +1354,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         },
       ],
       pattern: "stateful",
+      liveScene: "accordion",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/accordion.test.tsx",
@@ -2071,6 +2076,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         },
       ],
       pattern: "stateful",
+      liveScene: "tag-input",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/tag-input.test.tsx",

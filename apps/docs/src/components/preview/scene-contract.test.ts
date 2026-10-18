@@ -266,13 +266,26 @@ describe("interaction records", () => {
     expect(gaps.toSorted()).toEqual([...NO_LIVE_SCENE.keys()].toSorted());
   });
 
-  it("never tell a reader a page with a scene cannot render it live", () => {
-    const denied = components.flatMap((entry) =>
-      entry.liveScene !== null &&
-      /cannot render (?:it|this component) live/i.test(pageBody(entry.slug))
-        ? [entry.slug]
-        : [],
-    );
+  /**
+   * The shipped bug this guards (measured 2026-10-18): `search-input.mdx` said
+   * "No live scene ships for this component yet" while search-input has shipped
+   * one since plan 493, and the earlier rule only looked for "cannot render it
+   * live". A record's own limitations can carry the same denial into the status
+   * block above the page, so both surfaces are read.
+   */
+  it("never tells a reader a page with a scene has none", () => {
+    const denial =
+      /(?:no live scene ships|cannot render (?:it|this component) live)/i;
+    const denied = components.flatMap((entry) => {
+      if (entry.liveScene === null) return [];
+      const surfaces = [
+        ...(denial.test(pageBody(entry.slug)) ? ["page"] : []),
+        ...(entry.limitations.some((line) => denial.test(line))
+          ? ["limitations"]
+          : []),
+      ];
+      return surfaces.length === 0 ? [] : [`${entry.slug}: ${surfaces}`];
+    });
     expect(denied).toEqual([]);
   });
 });

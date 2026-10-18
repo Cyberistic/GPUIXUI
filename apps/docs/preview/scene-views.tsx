@@ -12,6 +12,12 @@
  * scene (plan 484); its infinite-duration push never races a dismissal.
  */
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@gpuixui/components/accordion";
+import {
   Dialog,
   DialogClose,
   DialogContent,
@@ -77,6 +83,11 @@ import {
   TabsTrigger,
 } from "@gpuixui/components/tabs";
 import {
+  TagInput,
+  TagInputChip,
+  TagInputField,
+} from "@gpuixui/components/tag-input";
+import {
   ToastProvider,
   ToastViewport,
   useToast,
@@ -87,8 +98,11 @@ import {
   Button,
   Checkbox,
   Input,
+  NumberField,
+  OTPField,
   RadioGroup,
   RangeSlider,
+  Rating,
   ScrollArea,
   Select,
   Skeleton,
@@ -98,6 +112,7 @@ import {
   Switch,
   Text,
   TextArea,
+  Toggle,
   Tooltip,
   useTheme,
 } from "@gpuixui/primitives";
@@ -890,6 +905,120 @@ const TextAreaScene = (): ReactElement => {
   );
 };
 
+const AccordionScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Release settings</Text>
+    <Text role="caption" tone="muted">
+      The real Accordion, first section open, on the GPUix renderer.
+    </Text>
+    <Accordion type="single" collapsible={false} defaultValue="deployments">
+      <AccordionItem value="deployments">
+        <AccordionTrigger>Deployments</AccordionTrigger>
+        <AccordionContent>
+          <Text role="body">Email me when a deployment finishes.</Text>
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="billing">
+        <AccordionTrigger>Billing</AccordionTrigger>
+        <AccordionContent>
+          <Text role="body">Invoices are sent on the first of the month.</Text>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </Stack>
+);
+
+const NumberFieldScene = (): ReactElement => {
+  const [quantity, setQuantity] = useState(12);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Order</Text>
+      <Text role="caption" tone="muted">
+        The real NumberField at 12. Arrows step, PageUp pages.
+      </Text>
+      <NumberField
+        label="Quantity"
+        value={quantity}
+        onChange={setQuantity}
+        min={1}
+        max={99}
+        testId="scene-number"
+      />
+      {quantity === 12 ? <Text role="body">Quantity is 12</Text> : null}
+    </Stack>
+  );
+};
+
+const OTPFieldScene = (): ReactElement => {
+  const [code, setCode] = useState("482913");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Verify your email</Text>
+      <Text role="caption" tone="muted">
+        The real OTPField with a complete code. Type to edit a cell.
+      </Text>
+      <OTPField label="Verification code" value={code} onChange={setCode} />
+      {code.length === 6 ? <Text role="body">Six digits entered</Text> : null}
+    </Stack>
+  );
+};
+
+const RatingScene = (): ReactElement => {
+  const [rating, setRating] = useState(4);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Rate this release</Text>
+      <Text role="caption" tone="muted">
+        The real Rating at four of five. Arrows move the filled star.
+      </Text>
+      <Rating label="Rating" value={rating} onChange={setRating} />
+      {rating === 4 ? <Text role="body">Rated 4 of 5</Text> : null}
+    </Stack>
+  );
+};
+
+const TagInputScene = (): ReactElement => {
+  const [tags, setTags] = useState<ReadonlyArray<string>>([
+    "design",
+    "runtime",
+  ]);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Labels</Text>
+      <Text role="caption" tone="muted">
+        The real TagInput with two tokens. Type and press Enter to add one.
+      </Text>
+      <TagInput label="Labels" value={tags} onValueChange={setTags}>
+        {tags.map((tag) => (
+          <TagInputChip key={tag} value={tag} />
+        ))}
+        <TagInputField placeholder="Add a label" />
+      </TagInput>
+    </Stack>
+  );
+};
+
+const ToggleScene = (): ReactElement => {
+  const [bold, setBold] = useState(true);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Formatting</Text>
+      <Text role="caption" tone="muted">
+        The real Toggle, pressed. Activate it to turn bold off.
+      </Text>
+      <Toggle
+        label="Bold"
+        pressed={bold}
+        onPressedChange={setBold}
+        testId="scene-toggle"
+      >
+        Bold
+      </Toggle>
+      {bold ? <Text role="body">Bold is on</Text> : null}
+    </Stack>
+  );
+};
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -922,6 +1051,12 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "search-input": SearchInputScene,
     "text-input": TextInputScene,
     "text-area": TextAreaScene,
+    accordion: AccordionScene,
+    "number-field": NumberFieldScene,
+    "otp-field": OTPFieldScene,
+    rating: RatingScene,
+    "tag-input": TagInputScene,
+    toggle: ToggleScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

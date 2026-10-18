@@ -37,6 +37,12 @@ export const LIVE_SCENES = [
   "search-input",
   "text-input",
   "text-area",
+  "accordion",
+  "number-field",
+  "otp-field",
+  "rating",
+  "tag-input",
+  "toggle",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -81,6 +87,12 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "search-input": "Searching for grid",
   "text-input": "Typed ada",
   "text-area": "Draft saved",
+  accordion: "Email me when a deployment finishes.",
+  "number-field": "Quantity is 12",
+  "otp-field": "Six digits entered",
+  rating: "Rated 4 of 5",
+  "tag-input": "runtime",
+  toggle: "Bold is on",
 };
 
 /**

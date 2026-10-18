@@ -471,7 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–496)
 
-`[x]` `[██████████]` 97/97
+`[x]` `[██████████]` 98/98
+
+`[x]` **The remaining value and disclosure controls get live scenes (plan 497)**
+      — Accordions, Number fields, OTP fields, Ratings, Tag inputs and Toggles
+      render on the real wasm renderer (36 scenes total), and a page or record
+      can no longer deny a live scene it declares: the widened guard caught the
+      shipped `search-input` denial before it was fixed; six two-direction
+      proofs in plan 497 §4
 
 `[x]` **Skip navigation and the docs focus ring (plan 496)** — every page now
       leads with a `sr-only` skip link; its target carries `tabIndex={-1}` so
