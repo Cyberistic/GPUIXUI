@@ -62,7 +62,9 @@ the caller needs its own adjustment. `label` is the menu's accessible name.
 The highlighted row **is** the focused row. Every arrow move calls the renderer's
 `focusElement`, and every row that takes focus becomes the highlight, so a row
 can never look selected while Enter would activate a different one. A pointer
-hover does not move the highlight; clicked rows activate directly.
+hover does not highlight the row it is over; clicking activates. Hovering a
+submenu row opens that submenu and focuses its first row, as the submenu section
+describes.
 
 ## Keyboard
 
