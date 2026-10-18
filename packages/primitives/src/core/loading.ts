@@ -15,6 +15,7 @@
 import * as Arr from "effect/Array";
 import type { StyleDesc } from "@gpuix/react";
 import type { PrimitiveTheme, RadiusStep } from "./theme.js";
+import { usableLength } from "./value.js";
 
 /** How many steps a pulse visits before repeating. */
 export const PULSE_STEPS = 2;
@@ -30,6 +31,16 @@ export interface SkeletonSpec {
   readonly circle?: boolean;
 }
 
+/** A dimension the runtime can paint: a finite pixel length, a percentage, or the default. */
+const dimension = (
+  value: number | string | undefined,
+  fallback: number | string,
+): number | string => {
+  if (value === undefined) return fallback;
+  if (typeof value === "string") return value;
+  return Number.isFinite(value) && value >= 0 ? value : fallback;
+};
+
 /**
  * A placeholder block.
  *
@@ -37,14 +48,17 @@ export interface SkeletonSpec {
  * as absence. Height defaults to one line of body text, which is what a
  * one-line placeholder should occupy. `circle` takes that height as its width,
  * so a bare `<Skeleton circle />` is a square rather than a full-width pill.
+ * A pixel dimension that cannot be painted is the dimension's default; a
+ * percentage is the caller's own layout and passes through.
  */
 export const skeletonStyle = (
   spec: SkeletonSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
-  const height = spec.height ?? theme.typography.body.lineHeight;
+  const height = dimension(spec.height, theme.typography.body.lineHeight);
+  const width = dimension(spec.width, spec.circle === true ? height : "100%");
   return {
-    width: spec.width ?? (spec.circle === true ? height : "100%"),
+    width,
     height,
     flexShrink: 0,
     borderRadius:
@@ -112,16 +126,19 @@ export const spinnerDotStyle = (
   spec: SpinnerSpec,
   dot: SpinnerDot,
   theme: PrimitiveTheme,
-): StyleDesc => ({
-  width: spec.size,
-  height: spec.size,
-  flexShrink: 0,
-  borderRadius: theme.radius.full,
-  opacity: dot.opacity,
-  backgroundColor: dot.active
-    ? accentColor(spec.accent, theme)
-    : theme.colors.mutedForeground,
-});
+): StyleDesc => {
+  const side = usableLength(spec.size, theme.iconSize.md);
+  return {
+    width: side,
+    height: side,
+    flexShrink: 0,
+    borderRadius: theme.radius.full,
+    opacity: dot.opacity,
+    backgroundColor: dot.active
+      ? accentColor(spec.accent, theme)
+      : theme.colors.mutedForeground,
+  };
+};
 
 /**
  * Where the moving segment of an indeterminate bar starts, as a percentage of

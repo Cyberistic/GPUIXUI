@@ -97,6 +97,10 @@ export interface GridSpec {
   readonly grow?: boolean;
 }
 
+/** A track count must be a whole, positive number; a nonsense count is one. */
+const tracks = (count: number): number =>
+  Number.isFinite(count) ? Math.max(1, Math.floor(count)) : 1;
+
 /**
  * A fixed-size grid.
  *
@@ -107,10 +111,10 @@ export interface GridSpec {
 export const gridStyle = (spec: GridSpec, theme: PrimitiveTheme): StyleDesc => {
   const style: StyleDesc = {
     display: "grid",
-    gridTemplateColumns: Math.max(1, Math.floor(spec.columns)),
+    gridTemplateColumns: tracks(spec.columns),
   };
   if (spec.rows !== undefined) {
-    style.gridTemplateRows = Math.max(1, Math.floor(spec.rows));
+    style.gridTemplateRows = tracks(spec.rows);
   }
   if (spec.gap !== undefined) style.gap = theme.spacing[spec.gap];
   if (spec.grow === true) style.flexGrow = 1;

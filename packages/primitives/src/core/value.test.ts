@@ -20,12 +20,29 @@ import {
   normalizeSpan,
   pointerValue,
   stepValue,
+  usableLength,
   valueFraction,
   valueStep,
 } from "./value.js";
 
 const RANGE = { min: 0, max: 100, step: 1 } as const;
 const BOX = { x: 100, width: 200 } as const;
+
+describe("usableLength", () => {
+  it("keeps a finite, non-negative length, including zero", () => {
+    expect(usableLength(24, 20)).toBe(24);
+    expect(usableLength(0, 20)).toBe(0);
+  });
+
+  it("falls back for a length the runtime cannot paint", () => {
+    // The bug guarded (plan 371): a computed `NaN` reaches layout, the runtime
+    // drops the invalid length, and the mark paints at zero height.
+    expect(usableLength(Number.NaN, 20)).toBe(20);
+    expect(usableLength(Number.POSITIVE_INFINITY, 20)).toBe(20);
+    expect(usableLength(-8, 20)).toBe(20);
+    expect(usableLength(undefined, 20)).toBe(20);
+  });
+});
 
 describe("normalizeRange", () => {
   it("orders an inverted pair instead of painting backwards", () => {

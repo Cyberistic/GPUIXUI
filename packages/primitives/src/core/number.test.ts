@@ -15,6 +15,7 @@ import {
   decideNumberKey,
   draftApplies,
   formatNumber,
+  normalizeNumberRange,
   parseNumericText,
   stepNumber,
   type NumberDraft,
@@ -22,6 +23,40 @@ import {
 } from "./number.js";
 
 const RANGE: NumberRange = { min: 0, max: 100, step: 1 };
+
+describe("normalizeNumberRange", () => {
+  it("ignores a bound that is not a number, so the field stays usable", () => {
+    // The bug guarded (plan 371): a computed `min` of NaN was clamped into, so
+    // the field painted "NaN" and every step was suppressed by the no-op guard.
+    expect(
+      normalizeNumberRange({ min: Number.NaN, max: 9, step: 1 }),
+    ).toStrictEqual({
+      min: undefined,
+      max: 9,
+      step: 1,
+    });
+    expect(
+      normalizeNumberRange({ min: 1, max: Number.POSITIVE_INFINITY, step: 1 }),
+    ).toStrictEqual({ min: 1, max: undefined, step: 1 });
+  });
+
+  it("swaps an inverted pair, like every other value control", () => {
+    expect(normalizeNumberRange({ min: 100, max: 0, step: 1 })).toStrictEqual({
+      min: 0,
+      max: 100,
+      step: 1,
+    });
+  });
+
+  it("gives a step that cannot move the value a usable one", () => {
+    expect(normalizeNumberRange({ step: 0 }).step).toBe(1);
+    expect(normalizeNumberRange({ step: -2 }).step).toBe(1);
+    expect(normalizeNumberRange({ step: Number.POSITIVE_INFINITY }).step).toBe(
+      1,
+    );
+    expect(normalizeNumberRange({ step: Number.NaN }).step).toBe(1);
+  });
+});
 
 describe("parseNumericText", () => {
   it("reads decimal notation, including a leading dot and an exponent", () => {
@@ -58,6 +93,19 @@ describe("clampNumeric", () => {
     expect(clampNumeric(140, { step: 1, max: 100 })).toBe(100);
     expect(clampNumeric(-5, { step: 1 })).toBe(-5);
   });
+
+  it("ignores a bound it cannot read instead of clamping to NaN", () => {
+    expect(clampNumeric(5, { step: 1, min: Number.NaN })).toBe(5);
+    expect(clampNumeric(5, { step: 1, max: Number.NaN })).toBe(5);
+  });
+
+  it("clamps into the swapped range of an inverted pair", () => {
+    // The bug guarded (plan 371): `min=100 max=0` collapsed to `max`, so a
+    // field holding 150 painted 0 instead of its own upper bound.
+    const inverted = { step: 1, min: 100, max: 0 } as const;
+    expect(clampNumeric(150, inverted)).toBe(100);
+    expect(clampNumeric(-5, inverted)).toBe(0);
+  });
 });
 
 describe("formatNumber", () => {
@@ -84,6 +132,13 @@ describe("stepNumber", () => {
 
   it("treats a zero step as one, so the arrows never freeze", () => {
     expect(stepNumber(10, { step: 0 }, 1)).toBe(11);
+  });
+
+  it("treats an unreadable step as one instead of reporting Infinity", () => {
+    // The bug guarded (plan 371): an infinite step painted "Infinity" and
+    // reported it to the parent on the first ArrowUp.
+    expect(stepNumber(5, { step: Number.POSITIVE_INFINITY }, 1)).toBe(6);
+    expect(stepNumber(5, { step: Number.NaN }, 1)).toBe(6);
   });
 
   it("keeps a decimal step exact instead of binary noise", () => {

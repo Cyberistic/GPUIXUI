@@ -34,6 +34,22 @@ const finiteOr = (value: number, fallback: number): number =>
   Number.isFinite(value) ? value : fallback;
 
 /**
+ * A length the runtime can paint: finite and non-negative, else the fallback.
+ *
+ * A public pixel prop is caller data, not a proof — `NaN` from a computed size
+ * reaches layout as an invalid number, and the runtime drops it, so the mark
+ * paints at zero height or stretches to its parent. Zero is kept: an empty box
+ * is something a caller may ask for.
+ */
+export const usableLength = (
+  value: number | undefined,
+  fallback: number,
+): number =>
+  value !== undefined && Number.isFinite(value) && value >= 0
+    ? value
+    : fallback;
+
+/**
  * A range with finite, ordered bounds and a non-negative step.
  *
  * Total on purpose: a control must not throw because a caller passed `NaN`.

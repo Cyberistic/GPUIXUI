@@ -48,6 +48,7 @@ export {
   decideNumberKey,
   draftApplies,
   formatNumber,
+  normalizeNumberRange,
   parseNumericText,
   stepNumber,
 } from "./number.js";
@@ -99,6 +100,7 @@ export {
   normalizeSpan,
   pointerValue,
   stepValue,
+  usableLength,
   valueFraction,
   valueStep,
 } from "./value.js";

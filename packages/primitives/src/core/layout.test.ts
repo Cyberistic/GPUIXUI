@@ -80,6 +80,22 @@ describe("gridStyle", () => {
     expect(gridStyle({ columns: 0 }, testTheme).gridTemplateColumns).toBe(1);
     expect(gridStyle({ columns: 2.9 }, testTheme).gridTemplateColumns).toBe(2);
   });
+
+  it("reads a count that is not a number as one track", () => {
+    // The bug guarded (plan 371): `Math.max(1, NaN)` is NaN, so the grid asked
+    // the runtime for `NaN` tracks.
+    expect(
+      gridStyle({ columns: Number.NaN }, testTheme).gridTemplateColumns,
+    ).toBe(1);
+    expect(
+      gridStyle({ columns: Number.POSITIVE_INFINITY }, testTheme)
+        .gridTemplateColumns,
+    ).toBe(1);
+    expect(gridStyle({ columns: -3 }, testTheme).gridTemplateColumns).toBe(1);
+    expect(
+      gridStyle({ columns: 2, rows: Number.NaN }, testTheme).gridTemplateRows,
+    ).toBe(1);
+  });
 });
 
 describe("boxStyle", () => {

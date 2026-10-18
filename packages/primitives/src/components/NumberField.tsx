@@ -32,6 +32,7 @@ import {
   decideNumberKey,
   draftApplies,
   formatNumber,
+  normalizeNumberRange,
   parseNumericText,
   stepNumber,
   type NumberDraft,
@@ -103,16 +104,17 @@ export interface NumberFieldProps extends TriggerHandlers {
   readonly testId?: string;
 }
 
-/** The range a field was configured with. */
+/** The range a field was configured with, made total. */
 export const numberRange = (props: {
   readonly min?: number;
   readonly max?: number;
   readonly step?: number;
-}): NumberRange => ({
-  min: props.min,
-  max: props.max,
-  step: props.step ?? 1,
-});
+}): NumberRange =>
+  normalizeNumberRange({
+    min: props.min,
+    max: props.max,
+    step: props.step ?? 1,
+  });
 
 /** What the rendered field needs from the component that owns its state. */
 export interface NumberFieldHandlers {

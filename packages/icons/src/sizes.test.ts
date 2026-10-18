@@ -31,6 +31,17 @@ describe("icon sizes", () => {
     expect(iconPixels(37)).toBe(37);
   });
 
+  it("falls back to the default for a pixel count it cannot paint", () => {
+    // The bug guarded (plan 371): `size={NaN}` reached the runtime as an
+    // invalid length, which dropped the width and height — a 0-high icon that
+    // stretched across its parent.
+    expect(iconPixels(Number.NaN)).toBe(ICON_SIZES.md);
+    expect(iconPixels(Number.POSITIVE_INFINITY)).toBe(ICON_SIZES.md);
+    expect(iconPixels(-8)).toBe(ICON_SIZES.md);
+    // A zero-size mark is a deliberate request, not nonsense.
+    expect(iconPixels(0)).toBe(0);
+  });
+
   it("resolves a name to its declared pixels, not to a neighbour", () => {
     expect(iconPixels("xl")).toBe(ICON_SIZES.xl);
     expect(iconPixels("xs")).toBe(ICON_SIZES.xs);

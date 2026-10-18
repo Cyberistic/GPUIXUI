@@ -71,6 +71,19 @@ describe("skeletonStyle", () => {
     );
     expect(skeletonStyle({}, testTheme).width).toBe("100%");
   });
+
+  it("falls back to the dimension's default when a pixel length is unusable", () => {
+    // The bug guarded (plan 371): a `NaN` height reached the runtime, which
+    // dropped it, and the placeholder painted zero high.
+    const line = testTheme.typography.body.lineHeight;
+    expect(skeletonStyle({ height: Number.NaN }, testTheme).height).toBe(line);
+    expect(skeletonStyle({ width: Number.NaN }, testTheme).width).toBe("100%");
+    expect(skeletonStyle({ height: -8 }, testTheme).height).toBe(line);
+    // A percentage is the caller's own layout and passes through.
+    expect(
+      skeletonStyle({ width: "50%", height: "30%" }, testTheme),
+    ).toMatchObject({ width: "50%", height: "30%" });
+  });
 });
 
 describe("spinnerDots", () => {
@@ -124,6 +137,25 @@ describe("spinnerDots", () => {
         (s) => s.backgroundColor === testTheme.colors.mutedForeground,
       ),
     ).toBe(true);
+  });
+
+  it("paints a usable dot when the requested side cannot be painted", () => {
+    // The bug guarded (plan 371): a `NaN` side was dropped by the runtime, so
+    // every dot lost its width and the spinner painted a zero-high row.
+    const dot = { active: true, opacity: 1 } as const;
+    const fallback = testTheme.iconSize.md;
+    Arr.forEach([Number.NaN, Number.POSITIVE_INFINITY, -6], (size) => {
+      const style = spinnerDotStyle(
+        { size, accent: "primary" },
+        dot,
+        testTheme,
+      );
+      expect(style.width).toBe(fallback);
+      expect(style.height).toBe(fallback);
+    });
+    expect(
+      spinnerDotStyle({ size: 0, accent: "primary" }, dot, testTheme).width,
+    ).toBe(0);
   });
 });
 

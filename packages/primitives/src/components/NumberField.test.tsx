@@ -16,6 +16,7 @@ import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   renderNumberField,
+  numberRange,
   type NumberFieldHandlers,
   type NumberFieldProps,
 } from "./NumberField.js";
@@ -272,5 +273,29 @@ describe("NumberField styles", () => {
     expect(
       Option.getOrUndefined(hostStyleRecord(input))?.["boxShadow"],
     ).toBeUndefined();
+  });
+});
+
+describe("numberRange", () => {
+  it("is total: a bound or step it cannot use never reaches the field", () => {
+    // The bug guarded (plan 371): the raw props went to the paint, so
+    // `min={NaN}` painted "NaN", an inverted pair collapsed to `max`, and an
+    // infinite step reported Infinity on the first ArrowUp.
+    expect(numberRange({ min: Number.NaN, max: 9 })).toStrictEqual({
+      min: undefined,
+      max: 9,
+      step: 1,
+    });
+    expect(numberRange({ min: 100, max: 0 })).toStrictEqual({
+      min: 0,
+      max: 100,
+      step: 1,
+    });
+    expect(numberRange({ step: Number.POSITIVE_INFINITY }).step).toBe(1);
+    expect(numberRange({ min: 0, max: 10, step: 2 })).toStrictEqual({
+      min: 0,
+      max: 10,
+      step: 2,
+    });
   });
 });

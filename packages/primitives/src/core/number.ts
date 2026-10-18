@@ -33,10 +33,29 @@ export const parseNumericText = (text: string): Option.Option<number> => {
   return Number.isFinite(value) ? Option.some(value) : Option.none();
 };
 
+/**
+ * Bounds a field can act on: finite ends and a positive, finite step.
+ *
+ * A public form field takes numbers from a record or a computation, and `NaN`
+ * or `Infinity` there must not become a painted value. A bound that is not a
+ * number is treated as absent (the field is unbounded on that side), an
+ * inverted pair is swapped — the rule every slider and meter already follows —
+ * and a step that is not positive becomes 1.
+ */
+export const normalizeNumberRange = (range: NumberRange): NumberRange => {
+  const min = Number.isFinite(range.min) ? range.min : undefined;
+  const max = Number.isFinite(range.max) ? range.max : undefined;
+  const step = Number.isFinite(range.step) && range.step > 0 ? range.step : 1;
+  return min !== undefined && max !== undefined && min > max
+    ? { min: max, max: min, step }
+    : { min, max, step };
+};
+
 /** Clamp to whichever bounds exist; an absent bound does not constrain. */
 export const clampNumeric = (value: number, range: NumberRange): number => {
-  const aboveMin = range.min === undefined ? value : Math.max(range.min, value);
-  return range.max === undefined ? aboveMin : Math.min(range.max, aboveMin);
+  const { min, max } = normalizeNumberRange(range);
+  const aboveMin = min === undefined ? value : Math.max(min, value);
+  return max === undefined ? aboveMin : Math.min(max, aboveMin);
 };
 
 /** Fixed decimals, never a thousands separator. */
@@ -61,8 +80,10 @@ export const stepNumber = (
   value: number,
   range: NumberRange,
   steps: number,
-): number =>
-  exact(clampNumeric(value + steps * (range.step > 0 ? range.step : 1), range));
+): number => {
+  const { min, max, step } = normalizeNumberRange(range);
+  return exact(clampNumeric(value + steps * step, { min, max, step }));
+};
 
 /** A number field's in-progress text, and the two values it can belong to. */
 export interface NumberDraft {

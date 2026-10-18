@@ -12,6 +12,16 @@ export const ICON_SIZES = iconSize;
 
 export type IconSize = keyof typeof ICON_SIZES;
 
-/** Resolve a size name or a raw pixel count to the number of pixels to paint. */
+/**
+ * Resolve a size name or a raw pixel count to the number of pixels to paint.
+ *
+ * A pixel count is caller data: a computed `NaN` or a negative would reach
+ * layout as an unpaintable length, so it falls back to the scale's middle size.
+ * `0` is kept — an empty mark is something a caller may ask for.
+ */
 export const iconPixels = (size: IconSize | number): number =>
-  typeof size === "number" ? size : ICON_SIZES[size];
+  typeof size === "number"
+    ? Number.isFinite(size) && size >= 0
+      ? size
+      : ICON_SIZES.md
+    : ICON_SIZES[size];
