@@ -253,8 +253,13 @@ Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 runtime paints one shadow per element — no `inset` and no shadow list — so a
 level is a list a web renderer can composite, a shipped level carries at most
 one entry, and the entry the runtime paints is read with
-`elevationShadow(theme, level)` (`elevationShadows` resolves the whole list). A
-level is geometry plus an alpha; the tint is the single `shadow` role, so a
+`elevationShadow(theme, level)` (`elevationShadows` resolves the whole list).
+The level names are an order, not a label: the numeric contract holds each
+level's painted feather (`blurRadius`) to be no smaller than the level below it,
+so a copied theme cannot make a dialog sit closer to the surface than a resting
+card. Opacity stays a mode decision — a large shadow may be fainter and a flat
+theme may zero the feather at every level. A level is geometry plus an alpha;
+the tint is the single `shadow` role, so a
 brand retints every level by editing one value. Overlay layering uses the
 `overlay` scrim colour, a translucent wash a Dialog paints across the window.
 The scrim is held to the same 1.05:1 perceivability floor as every other painted

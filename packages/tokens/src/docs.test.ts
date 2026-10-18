@@ -95,6 +95,7 @@ import {
   type ElevationLevel,
 } from "./elevation.js";
 import * as Tokens from "./index.js";
+import { themeMetricFailures } from "./metrics.js";
 import { motion } from "./motion.js";
 import {
   getPlatformRecipeTheme,
@@ -124,6 +125,7 @@ import { shippedThemes } from "./shipped-themes.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import { typefaceRules } from "./typeface.js";
 import {
+  extendTheme,
   getPlatformTheme,
   getTheme,
   highContrastThemes,
@@ -490,6 +492,24 @@ describe("docs/tokens.md numeric tables", () => {
     expect(prose).toContain(
       "a level a consumer defines, `overlay` included, is held to the same rules",
     );
+  });
+
+  it("states the elevation feather ladder", () => {
+    const light = getTheme("light");
+    const edited = extendTheme(light, {
+      elevation: { lg: light.elevation.sm },
+    });
+    expect(themeMetricFailures(edited)).toEqual([
+      {
+        group: "elevation",
+        member: "lg[0].blurRadius",
+        rule: "non-decreasing",
+        actual: light.elevation.sm[0]?.blurRadius,
+        bound: light.elevation.md[0]?.blurRadius,
+      },
+    ]);
+    expect(markdownProse).toContain("the elevation feather");
+    expect(designSystem).toContain("painted feather (`blurRadius`)");
   });
 
   it("lists every motion level in milliseconds", () => {

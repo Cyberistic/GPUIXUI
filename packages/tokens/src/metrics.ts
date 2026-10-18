@@ -12,6 +12,7 @@
  * variant and recipe.
  */
 
+import type { Elevation } from "./elevation.js";
 import type { MotionEasing } from "./motion.js";
 import { controlSizes } from "./scale.js";
 import type { Theme } from "./theme.js";
@@ -246,6 +247,45 @@ const ascendingSizes = (
     .map((role) => [`${role}.fontSize`, typography[role].fontSize] as const);
 
 /**
+ * The elevation feather is the level's height. A level's first entry is the
+ * shadow the native runtime paints, so `sm` → `md` → `lg` may not get a smaller
+ * blur as it rises. Opacity is deliberately not a step: a fainter dialog shadow
+ * or a flat theme is a design, while a dialog that feathers less than a resting
+ * card makes "lg" a shallower level than "sm". A feather the range rules already
+ * reject — non-finite or negative — is not compared, so one bad level keeps one
+ * diagnostic instead of cascading into its neighbour.
+ */
+const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
+  const steps = (["sm", "md", "lg"] as const).flatMap((level) => {
+    const [shape] = elevation[level];
+    return shape === undefined ? [] : [[level, shape.blurRadius] as const];
+  });
+  return steps.flatMap(([level, blur], index) => {
+    const previous = steps[index - 1];
+    if (
+      previous === undefined ||
+      !Number.isFinite(blur) ||
+      !Number.isFinite(previous[1]) ||
+      blur < 0 ||
+      previous[1] < 0
+    ) {
+      return [];
+    }
+    return blur >= previous[1]
+      ? []
+      : [
+          failure(
+            "elevation",
+            `${level}[0].blurRadius`,
+            "non-decreasing",
+            blur,
+            previous[1],
+          ),
+        ];
+  });
+};
+
+/**
  * Every numeric rule a theme misses.
  *
  * - **typography**: a role needs a size, leading and weight, and a line box
@@ -275,9 +315,12 @@ const ascendingSizes = (
  * - **spacing**: a ladder.
  * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose two offsets, blur and
  *   spread are finite, whose blur is non-negative, and whose alpha is a
- *   fraction. `overlay` ships reserved and empty, and an empty level is exempt;
- *   a level a consumer defines — `overlay` included — is held to the same
- *   rules, because `elevationShadow` will paint it.
+ *   fraction, and each level's painted feather (`blurRadius`) is no smaller than
+ *   the level below it — a dialog that feathers less than a resting card makes
+ *   "lg" a shallower level than "sm". Opacity is not a step: a fainter large
+ *   level and a flat theme are designs. `overlay` ships reserved and empty, and
+ *   an empty level is exempt; a level a consumer defines — `overlay` included —
+ *   is held to the same rules, because `elevationShadow` will paint it.
  * - **motion**: `none` is zero, the timings are a finite non-decreasing ladder,
  *   and a cubic-bezier easing holds four finite control points with both x
  *   values inside `0…1` — the runtime rejects the whole transition otherwise. A
@@ -608,6 +651,7 @@ export function themeMetricFailures(
         ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
       ]);
     }),
+    ...featherLadder(elevation),
     ...zero("motion", "none", motion.none),
     ...(["step", "fast", "normal", "slow", "pulse"] as const).flatMap((level) =>
       finite("motion", level, motion[level]),

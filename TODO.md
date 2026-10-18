@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 155/210
+`[x]` `[███████░░░]` 156/211
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1168,6 +1168,14 @@ dimensions beside radii, density and motion, applied at both contrast levels and
 merged field by field; every shipped style omits them, so no resolved value
 moves, and `platform-extension.example.ts` is the complete copyable file
 (plan 389)
+`[x]` Hold the elevation levels to their ladder — `sm` → `md` → `lg` is an
+increasing height in the design system, but `themeMetricFailures` compared only
+one level's range, so a `lg` set to the `sm` feather (or a 0px feather) returned
+`[]` and a dialog sat closer to the surface than a resting card; the painted
+entry's `blurRadius` must now be non-decreasing, opacity stays a design (a
+fainter large shadow and a flat theme pass), every shipped set passes and no
+value moves, and both docs pages, the README and the ledger state the rule
+(plan 390)
 
 ## Phase C — Tier 1–2 components
 

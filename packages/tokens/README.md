@@ -477,7 +477,8 @@ than they are, invert a size ladder, name an icon or avatar size of zero, scroll
 an overlay in less than one row, ship a non-finite
 spacing step, radius, type size or dimension the renderer casts to a 32-bit
 float, ship a non-finite motion timing or a cubic-bezier easing the runtime
-cannot interpolate, leave the largest avatar a rounded square, or hand
+cannot interpolate, leave the largest avatar a rounded square, shrink a higher
+elevation level's feather below the level under it, or hand
 `elevationShadow` an alpha the colour helper cannot parse. The ladders are non-decreasing rather than
 strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ships
 `motion.fast === motion.step`; an empty elevation level is exempt (the shipped
