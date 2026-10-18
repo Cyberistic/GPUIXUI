@@ -175,6 +175,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [376](./376-design-system-elevation-truth.md) | The design-system's elevation paragraph | F | 315, 326, 337, 345, 352, 359, 375 | done |
 | [377](./377-design-system-figures.md) | The design-system's current scrim and wash-link figures | F | 062, 075, 087, 336, 375, 376 | done |
 | [380](./380-stored-theme-choice.md) | The persisted theme choice, resolved in one place | F | 051, 063, 067, 068, 096, 301, 304, 305, 311, 323, 373, 374 | done |
+| [381](./381-selected-row-step.md) | The selected row is a perceivable step from the hover wash | F | 016, 059, 081, 097, 309, 327, 342, 357, 380 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1568,6 +1569,22 @@ through the package's own guards and composes `getPlatformTheme` /
 `theme-choice.test.ts` holds every shipped combination to the three checks and
 proves both precedence rules and the three fallbacks. No token value, pair,
 floor, metric, platform style or recipe moves.
+
+381 closes the selection state the contract never compared with the state before
+it. A selectable `List` row paints `accent` under the pointer and `selected` once
+chosen, but the two roles are the **same fill** in the identity (light and dark,
+default and high contrast) and in macOS light, and within the 1.05:1 step floor
+on Windows light, macOS dark and XP light — so hovering one row looked like
+selecting another and clicking a hovered row changed nothing. `selected` is now
+a `step` pair against `accent` (`selectionStepPairs`, the same class plans 342
+and 357 publish for the filled and wash ladders), and eight shipped sets move
+`selected` one designed step; macOS light's `selectedForeground` moves with it
+because no step deep enough for the pair kept the old blue at 4.5:1. Linux
+light/dark, Windows dark, Aero light and the authored Contoso light style already
+cleared the floor or move one step inside their own family. No new role, no
+change to `accent`, and the consumer half — a selected row should not repaint
+with the unselected hover wash while the pointer is over it — is recorded
+cross-team.
 
 ### Reference adoption (block `200–299`)
 
