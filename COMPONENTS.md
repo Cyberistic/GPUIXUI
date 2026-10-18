@@ -326,10 +326,16 @@ README: a field mounted after the first render does not receive `autoFocus`
 (`runtime.focused()` was empty after the skeleton), so `autoFocus` is proven on
 the initial mount only (plan `064`).
 
-**Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
-active palette, and re-rendering with the dark palette repaints every asserted
+**Both themes (021/042/352):** every painted colour in the Tier 1 scene comes from
+the active palette, and re-rendering with the dark palette repaints every asserted
 role (plan 042 §8). Since plan 021 the palettes are the shipped `lightTheme` /
-`darkTheme` from `@gpuixui/tokens`, not test doubles.
+`darkTheme` from `@gpuixui/tokens`, not test doubles. Plan `352` adds the
+**both-theme matrix over all 31 public components**: each is mounted in its
+smallest honest shape under both palettes, every colour inside the case must be
+a palette value, and a case that paints anything must paint a *different* set in
+light than in dark — so a hard-coded literal or a component the provider never
+reached fails by case name. The plan names the four mutation directions that
+fail it.
 
 **No row is `done`** until the published-binary run lands and the docs site
 (docs-site workstream) has its page. The in-package docs page and the mounted

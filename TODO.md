@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 99/99
+`[x]` `[██████████]` 100/100
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -763,6 +763,19 @@ retired once both branches are one
       the chevron, ring, `SelectState.open` and list, and a disabled select is
       closed (a controlled parent is asked once). 5 runtime + 1 core test, three
       mutations fail by name (plan `346`).
+
+`[x]` `packages/primitives`: **the both-theme matrix over every component** —
+      MISSION asks for every component verified in both themes, but only a
+      seven-component dark scene and a three-component switch scene existed, so
+      19 of 31 public components had no both-themes evidence and nothing guarded
+      against a literal colour. `runtime/theme-matrix.runtime.test.tsx` mounts
+      each component in its smallest honest shape under `lightTheme` and
+      `darkTheme`: every colour inside the case must be a palette value, and a
+      case that paints must paint a *different* set in each palette. Four
+      mutation directions were measured — a `Spinner` literal, a `Skeleton`
+      literal equal to the light role, a `Text` with no colour, and a stray
+      component export — and each fails by name; offline 574, runtime 454
+      (plan `352`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open

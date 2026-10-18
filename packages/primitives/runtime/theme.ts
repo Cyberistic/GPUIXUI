@@ -11,7 +11,8 @@ import { expect } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as R from "effect/Record";
-import type { Runtime } from "../src/testing/index.js";
+import type { TestElement } from "@gpuix/react/testing";
+import { isWithin, type Runtime } from "../src/testing/index.js";
 
 /** The applied style of the element with `testId`, as the runtime holds it. */
 export const styleOf = (
@@ -47,13 +48,36 @@ export const rgbOf = (colour: string): string =>
 
 /** Every colour-shaped value the tree applied, in element order. */
 export const paintedColours = (runtime: Runtime): ReadonlyArray<string> =>
-  Arr.flatMap(runtime.all(), (element) =>
-    Arr.map(
-      Arr.filter(
-        R.values(element.style),
-        (value): value is string =>
-          typeof value === "string" && isColour(value),
-      ),
-      rgbOf,
+  Arr.flatMap(runtime.all(), coloursOf);
+
+/** The colour-shaped values one element applied. */
+const coloursOf = (element: TestElement): ReadonlyArray<string> =>
+  Arr.map(
+    Arr.filter(
+      R.values(element.style),
+      (value): value is string => typeof value === "string" && isColour(value),
     ),
+    rgbOf,
   );
+
+/**
+ * Every colour-shaped value `testId` and its descendants applied.
+ *
+ * `paintedColours` answers "does the frame use the palette?"; this answers it
+ * for **one case** in a matrix, so a foreign value names the component that
+ * painted it instead of the whole scene (plan `352`).
+ */
+export const subtreeColours = (
+  runtime: Runtime,
+  testId: string,
+): ReadonlyArray<string> =>
+  Option.match(runtime.element(testId), {
+    onNone: () => expect.fail(`the runtime retained no ${testId}`),
+    onSome: (root) =>
+      Arr.flatMap(
+        Arr.filter(runtime.all(), (element) =>
+          isWithin(runtime, element, root.id),
+        ),
+        coloursOf,
+      ),
+  });
