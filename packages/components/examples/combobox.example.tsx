@@ -2,10 +2,11 @@
  * Combobox example: assigning a reviewer and labelling a task.
  *
  * The single picker closes on select and shows one name; the multi picker stays
- * open and reports an ordered array; the project picker offers a create row for
- * a name that does not exist yet; the directory picker filters its own rows in
- * `onQueryChange`, which is the shape a server-backed search takes. The first
- * three share one option shape and the same ranking from `combobox/logic.ts`.
+ * open and reports an ordered array and groups its labels; the project picker
+ * offers a create row for a name that does not exist yet; the directory picker
+ * filters its own rows in `onQueryChange`, which is the shape a server-backed
+ * search takes. The first three share one option shape and the same ranking from
+ * `combobox/logic.ts`.
  */
 
 import { useState } from "react";
@@ -28,11 +29,32 @@ const reviewers: ReadonlyArray<ComboboxOption> = [
   { value: "alan", label: "Alan Turing", description: "Research" },
 ];
 
+/** The multi picker groups consecutive options under one heading. */
 const labels: ReadonlyArray<ComboboxOption> = [
-  { value: "calendar", label: "Calendar", description: "Scheduling" },
-  { value: "camera", label: "Camera", description: "Hardware" },
-  { value: "vacation", label: "Vacation", description: "Time off" },
-  { value: "desk", label: "Desk booking", description: "Workspace" },
+  {
+    value: "calendar",
+    label: "Calendar",
+    description: "Scheduling",
+    group: "Work",
+  },
+  {
+    value: "camera",
+    label: "Camera",
+    description: "Hardware",
+    group: "Work",
+  },
+  {
+    value: "vacation",
+    label: "Vacation",
+    description: "Time off",
+    group: "Personal",
+  },
+  {
+    value: "desk",
+    label: "Desk booking",
+    description: "Workspace",
+    group: "Personal",
+  },
 ];
 
 const initialProjects: ReadonlyArray<ComboboxOption> = [
@@ -228,10 +250,12 @@ export const ComboboxExample = () => {
             color: theme.colors.mutedForeground,
           }}
         >
-          Try “ca”: Calendar, Camera, then Vacation — prefix matches first. Type
-          a project that is not listed to create it: {project ?? "none"}. The
-          directory is filtered by this example, not the component: swap
-          searchDirectory for a request ({remote ?? "none"} selected).
+          Try “ca”: Calendar and Camera stay under Work while Vacation, a
+          substring match, stays under Personal; type “cam” and the Personal
+          heading disappears with its last match. Type a project that is not
+          listed to create it: {project ?? "none"}. The directory is filtered by
+          this example, not the component: swap searchDirectory for a request (
+          {remote ?? "none"} selected).
         </text>
       </div>
     </Card>

@@ -5,7 +5,9 @@
  * so typing `ca` highlighted `Vacation` above `Calendar`; a tie reordered the
  * caller's list, so the highlighted row jumped between renders; a blank query
  * filtered everything out instead of showing the full list; and toggling a
- * value that was already selected added it a second time.
+ * value that was already selected added it a second time. Grouping adds one
+ * more: a global sort pulled a later group's better match above an earlier
+ * group, splitting (or reordering) the sections the caller declared.
  */
 
 import { describe, expect, it } from "vitest";
@@ -14,8 +16,11 @@ import {
   canCreate,
   createValue,
   filterOptions,
+  groupOfOption,
   labelOf,
+  optionRuns,
   parseCreateValue,
+  rowRuns,
   selectedLabel,
   toggledSelection,
   visibleOptions,
@@ -85,6 +90,81 @@ describe("filterOptions", () => {
 
   it("is empty when nothing matches", () => {
     expect(filterOptions(catalogue, "zzz")).toEqual([]);
+  });
+});
+
+describe("grouping", () => {
+  const grouped: ReadonlyArray<ComboboxOption> = [
+    { value: "vacation", label: "Vacation", group: "Work" },
+    { value: "calendar", label: "Calendar", group: "Work" },
+    { value: "camera", label: "Camera roll", group: "Devices" },
+    { value: "desk", label: "Desk booking", group: "Devices" },
+  ];
+
+  it("treats an absent or blank group as ungrouped", () => {
+    expect(groupOfOption(option("a"))).toEqual(Option.none());
+    expect(groupOfOption({ ...option("a"), group: "   " })).toEqual(
+      Option.none(),
+    );
+    expect(groupOfOption({ ...option("a"), group: "Work" })).toEqual(
+      Option.some("Work"),
+    );
+  });
+
+  it("splits options into maximal contiguous runs and keeps their start", () => {
+    const runs = optionRuns([
+      { ...option("a", "Apple"), group: "Fruits" },
+      { ...option("b", "Banana"), group: "Fruits" },
+      { ...option("c", "Carrot"), group: "Vegetables" },
+      { ...option("d", "Date"), group: "Fruits" },
+    ]);
+
+    expect(runs.map((run) => Option.getOrUndefined(run.group))).toEqual([
+      "Fruits",
+      "Vegetables",
+      "Fruits",
+    ]);
+    expect(runs.map((run) => run.from)).toEqual([0, 2, 3]);
+    expect(runs.map((run) => values(run.options))).toEqual([
+      ["a", "b"],
+      ["c"],
+      ["d"],
+    ]);
+  });
+
+  it("ranks inside a run, so a better match in a later group cannot jump it", () => {
+    expect(values(filterOptions(grouped, "ca"))).toEqual([
+      "calendar",
+      "vacation",
+      "camera",
+    ]);
+  });
+
+  it("drops a group whose every option misses the query", () => {
+    expect(values(filterOptions(grouped, "desk"))).toEqual(["desk"]);
+  });
+
+  it("keeps declaration order for an empty query", () => {
+    expect(filterOptions(grouped, "")).toBe(grouped);
+  });
+
+  it("groups the rows and leaves the create row ungrouped", () => {
+    const runs = rowRuns(
+      ["vacation", "calendar", createValue("Design")],
+      (value) =>
+        value === "vacation" || value === "calendar"
+          ? Option.some("Work")
+          : Option.none(),
+    );
+
+    expect(runs.map((run) => Option.getOrUndefined(run.group))).toEqual([
+      "Work",
+      undefined,
+    ]);
+    expect(runs.map((run) => run.values)).toEqual([
+      ["vacation", "calendar"],
+      [createValue("Design")],
+    ]);
   });
 });
 

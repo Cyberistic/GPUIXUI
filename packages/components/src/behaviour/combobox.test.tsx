@@ -11,6 +11,11 @@
  * Pointer coverage: the suite originally drove every selection from the
  * keyboard, so a wrapper that ignored a clicked option, kept the popup open, or
  * let a disabled option through would have passed.
+ *
+ * Grouping (plan 395): a global sort could pull a later group's better match
+ * above an earlier group and split its heading; a missing heading hid the
+ * sections the caller declared; and a create row that inherited the previous
+ * group's heading looked like a real option of that group.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -44,6 +49,14 @@ const options: ReadonlyArray<ComboboxOption> = [
   { value: "camera", label: "Camera", description: "Hardware" },
   { value: "vacation", label: "Vacation", description: "Time off" },
   { value: "desk", label: "Desk booking", description: "Workspace" },
+];
+
+/** Two runs: the `Devices` prefix match must not jump ahead of `Work`. */
+const groupedOptions: ReadonlyArray<ComboboxOption> = [
+  { value: "vacation", label: "Vacation", group: "Work" },
+  { value: "calendar", label: "Calendar", group: "Work" },
+  { value: "camera", label: "Camera roll", group: "Devices" },
+  { value: "desk", label: "Desk booking", group: "Devices" },
 ];
 
 const Picker = ({
@@ -704,6 +717,104 @@ describe("Combobox", () => {
 
     expect(picker.renderer.getAllText()).toContain("No matches");
     expect(picker.renderer.getAllText()).not.toContain("Loading…");
+
+    picker.unmount();
+  });
+
+  it("renders one heading per contiguous group, in declaration order", async () => {
+    const picker = renderComponent(<Picker optionList={groupedOptions} />);
+    await open(picker);
+
+    const texts = picker.renderer.getAllText();
+    expect(Arr.filter(texts, (text) => text === "Work")).toHaveLength(1);
+    expect(Arr.filter(texts, (text) => text === "Devices")).toHaveLength(1);
+    expect(texts.indexOf("Work")).toBeLessThan(texts.indexOf("Vacation"));
+    expect(texts.indexOf("Vacation")).toBeLessThan(texts.indexOf("Devices"));
+    expect(texts.indexOf("Devices")).toBeLessThan(texts.indexOf("Camera roll"));
+
+    const groups = nodesWithRole(picker.renderer, "group");
+    expect(Arr.map(groups, (node) => node.name)).toEqual(["Work", "Devices"]);
+
+    picker.unmount();
+  });
+
+  it("ranks inside a group, so a later group cannot jump the declaration order", async () => {
+    const picker = renderComponent(<Picker optionList={groupedOptions} />);
+    await open(picker);
+
+    type(picker, "ca");
+    await settle();
+
+    const texts = picker.renderer.getAllText();
+    expect(texts.indexOf("Calendar")).toBeLessThan(texts.indexOf("Vacation"));
+    expect(texts.indexOf("Vacation")).toBeLessThan(
+      texts.indexOf("Camera roll"),
+    );
+    expect(texts).not.toContain("Desk booking");
+    expect(texts).toContain("Work");
+
+    picker.unmount();
+  });
+
+  it("drops the heading of a group whose every option misses the query", async () => {
+    const picker = renderComponent(<Picker optionList={groupedOptions} />);
+    await open(picker);
+
+    type(picker, "desk");
+    await settle();
+
+    const texts = picker.renderer.getAllText();
+    expect(texts).toContain("Desk booking");
+    expect(texts).not.toContain("Work");
+    expect(texts).toContain("Devices");
+
+    picker.unmount();
+  });
+
+  it("selects a grouped row by value and closes", async () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker optionList={groupedOptions} onValueChange={onValueChange} />,
+    );
+    await open(picker);
+
+    type(picker, "ca");
+    await settle();
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+
+    expect(onValueChange).toHaveBeenCalledWith("calendar");
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(picker.renderer.getAllText()).toContain("Calendar");
+
+    picker.unmount();
+  });
+
+  it("keeps the create row ungrouped and after the last match", async () => {
+    const onCreate = vi.fn();
+    const picker = renderComponent(
+      <Picker optionList={groupedOptions} onCreate={onCreate} />,
+    );
+    await open(picker);
+
+    type(picker, "ca");
+    await settle();
+
+    const texts = picker.renderer.getAllText();
+    expect(Arr.filter(texts, (text) => text === "Work")).toHaveLength(1);
+    expect(texts.indexOf("Camera roll")).toBeLessThan(
+      texts.indexOf("Create “ca”"),
+    );
+
+    // Calendar, Vacation, Camera roll, then the create row.
+    picker.renderer.simulateKeystrokes("down");
+    picker.renderer.simulateKeystrokes("down");
+    picker.renderer.simulateKeystrokes("down");
+    await settle();
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+
+    expect(onCreate).toHaveBeenCalledWith("ca");
 
     picker.unmount();
   });

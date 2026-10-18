@@ -123,15 +123,41 @@ predicate:
 | 2 | the label contains the query |
 | 3 | the description contains the query |
 
-Ties keep declaration order. Matching is case-insensitive and an empty query
-shows everything. Disabled options stay visible but cannot be selected by click,
-arrow or Enter.
+Ties keep declaration order. Ranking is scoped to a **group run** (see
+[Grouping](#grouping)), so a later group cannot jump above an earlier one.
+Matching is case-insensitive and an empty query shows everything. Disabled
+options stay visible but cannot be selected by click, arrow or Enter.
 
 > **Adapter note.** GPUix's `filter` is a predicate applied to `items`, so it can
 > only remove rows, never reorder them. The adapter therefore passes an
 > already-ranked `items` array with `filter={null}` and controls `inputValue`.
 > This is plan 116 §3's documented fallback; a predicate could not express the
 > ranking. `combobox.test.tsx` asserts the order.
+
+## Grouping
+
+Give consecutive options the same `group` and they render as one labelled
+section:
+
+```tsx
+const options: ReadonlyArray<ComboboxOption> = [
+  { value: "vacation", label: "Vacation", group: "Work" },
+  { value: "calendar", label: "Calendar", group: "Work" },
+  { value: "camera", label: "Camera roll", group: "Devices" },
+];
+```
+
+| Rule | Behaviour |
+| ---- | --------- |
+| Run | A heading covers a **contiguous** run of equal `group` values; an absent or blank group renders under no heading. |
+| Ranking | The ranking table applies **inside** each run, so a group's rows stay together and its heading never repeats. Run order is declaration order. |
+| Empty group | A run whose every option misses the query disappears with its heading. |
+| Create row | The synthetic create row is always ungrouped: it never inherits the preceding group's heading. |
+| Interleaved groups | Interleaving two groups (`A`, `B`, `A`) produces two `A` headings; declare a group's options together. |
+
+Each run is a `role="group"` named by its heading. GPUix's own `Group`/`Label`
+parts are plain `div`s, so the component supplies those semantics. Grouping is
+data, not a part: there is no `ComboboxGroup` to compose.
 
 ## Remote options
 
@@ -199,7 +225,7 @@ The trigger is a `button` node named by `label` (or its text) with a live
 ## API
 
 `ComboboxOption` is `{ value: string; label: string; description?: string;
-disabled?: boolean }`; `ComboboxSelection` is `string | null |
+group?: string; disabled?: boolean }`; `ComboboxSelection` is `string | null |
 ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 
 | Part | Renders | Props |
@@ -208,7 +234,7 @@ ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 | `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string`, `testId?: string` (default `"combobox-trigger"`) |
 | `ComboboxContent` | anchored popup | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
 | `ComboboxInput` | `input` | `placeholder?: string` (default `"Search…"`), `label?: string` (default `"Search options"`), `onChange?: (event: EventPayload) => void` |
-| `ComboboxList` | GPUix's listbox | `label?: string` (default `"Options"`), `itemStyle?: StateStyle<ComboboxItemState>` |
+| `ComboboxList` | GPUix's listbox: one labelled group per contiguous run, one row per visible option | `label?: string` (default `"Options"`), `itemStyle?: StateStyle<ComboboxItemState>` |
 | `ComboboxItem` | GPUix's option row | `value: string` (required), `style?: StateStyle<ComboboxItemState>` |
 | `ComboboxEmpty` | GPUix's empty slot | `children?: ReactNode` |
 
@@ -236,8 +262,9 @@ same shape for a row composed by hand.
 
 ## Limitations
 
-- No grouping headers in v1. Create-new is a synchronous caller callback
-  (`onCreate`), not a persistence layer.
+- Group headings follow contiguous runs of equal `group` values; a caller that
+  interleaves a group gets two headings. Create-new is a synchronous caller
+  callback (`onCreate`), not a persistence layer.
 - No built-in debounce or request cancellation: `onQueryChange` fires per edit
   and the caller owns the transport ([Remote options](#remote-options)).
 - No separate loading row: `loading` changes the empty slot only. Rows kept
@@ -252,7 +279,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (28 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (33 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
@@ -265,12 +292,16 @@ from the part, the create row: its position after the matches, its absence
 for an exact option, Enter and pointer selection with focus return, multiple
 selection without the sentinel, and a caller-supplied label — plus the reported
 query (including that a selection's label write is not reported), caller-owned
-filtering, a caller replacing the options for a query, and the loading empty
-state in both directions.
+filtering, a caller replacing the options for a query, the loading empty
+state in both directions, and the grouping contract: one heading per contiguous
+run in declaration order (with a named `role="group"`), in-run ranking that
+keeps a later group from jumping an earlier one, a heading disappearing with its
+last match, grouped rows selecting by value, and an ungrouped create row.
 
-`src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
-`toggledSelection`, `visibleOptions`, and the create rules (`canCreate` plus
-the synthetic value's round-trip).
+`src/combobox/logic.test.ts` covers the ranking table, `labelOf`, the run rule
+(`groupOfOption`, `optionRuns`, `rowRuns`, in-run ranking and disappearing
+groups), `toggledSelection`, `visibleOptions`, and the create rules (`canCreate`
+plus the synthetic value's round-trip).
 
 ```sh
 nub run --filter @gpuixui/components test

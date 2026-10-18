@@ -3,7 +3,9 @@
  *
  * The ranking is ours rather than the renderer's so the order is testable and
  * stable: an exact prefix beats a word prefix, which beats a substring, and
- * ties keep the order the caller declared.
+ * ties keep the order the caller declared. Ranking is scoped to a **group run**
+ * (consecutive options sharing `group`) so a group's heading never repeats,
+ * the same rule `CommandAction.group` documents for the command palette.
  */
 
 import * as Arr from "effect/Array";
@@ -16,12 +18,88 @@ export interface ComboboxOption {
   readonly value: string;
   readonly label: string;
   readonly description?: string;
+  /** Consecutive options sharing a group render under one heading. */
+  readonly group?: string;
   readonly disabled?: boolean;
 }
 
 /** The text shown for an option, falling back to its value. */
 export const labelOf = (option: ComboboxOption): string =>
   Str.isNonEmpty(option.label) ? option.label : option.value;
+
+/** The heading an option sits under; an absent or blank group is ungrouped. */
+export const groupOfOption = (option: ComboboxOption): Option.Option<string> =>
+  Option.filter(Option.fromNullishOr(option.group), (group) =>
+    Str.isNonEmpty(Str.trim(group)),
+  );
+
+/** One contiguous slice of options sharing a heading. */
+export interface ComboboxOptionRun {
+  readonly group: Option.Option<string>;
+  readonly options: ReadonlyArray<ComboboxOption>;
+  /** Declaration index of the run's first option; the ranking tie-break. */
+  readonly from: number;
+}
+
+/** One contiguous slice of row values sharing a heading. */
+export interface ComboboxRowRun {
+  readonly group: Option.Option<string>;
+  readonly values: ReadonlyArray<string>;
+}
+
+interface Run<A> {
+  readonly group: Option.Option<string>;
+  readonly items: ReadonlyArray<A>;
+  readonly from: number;
+}
+
+const sameGroup = (
+  left: Option.Option<string>,
+  right: Option.Option<string>,
+): boolean =>
+  Option.match(left, {
+    onNone: () => Option.isNone(right),
+    onSome: (name) => Option.exists(right, (candidate) => candidate === name),
+  });
+
+/** Split a sequence into maximal contiguous runs of equal group names. */
+const runsBy = <A>(
+  items: ReadonlyArray<A>,
+  groupOf: (item: A) => Option.Option<string>,
+): ReadonlyArray<Run<A>> =>
+  Arr.reduce(items, Arr.empty<Run<A>>(), (runs, item, index) => {
+    const group = groupOf(item);
+    return Option.match(Arr.last(runs), {
+      onNone: () => [{ group, items: [item], from: index }],
+      onSome: (run) =>
+        sameGroup(run.group, group)
+          ? Arr.append(Arr.dropRight(runs, 1), {
+              ...run,
+              items: Arr.append(run.items, item),
+            })
+          : Arr.append(runs, { group, items: [item], from: index }),
+    });
+  });
+
+/** The option runs, in declaration order. */
+export const optionRuns = (
+  options: ReadonlyArray<ComboboxOption>,
+): ReadonlyArray<ComboboxOptionRun> =>
+  Arr.map(runsBy(options, groupOfOption), (run) => ({
+    group: run.group,
+    options: run.items,
+    from: run.from,
+  }));
+
+/** The row runs, in display order; the create row is ungrouped. */
+export const rowRuns = (
+  values: ReadonlyArray<string>,
+  groupOf: (value: string) => Option.Option<string>,
+): ReadonlyArray<ComboboxRowRun> =>
+  Arr.map(runsBy(values, groupOf), (run) => ({
+    group: run.group,
+    values: run.items,
+  }));
 
 interface Ranked {
   readonly option: ComboboxOption;
@@ -51,9 +129,11 @@ const byRankThenDeclaration = Order.combine(
 );
 
 /**
- * The options to show for a query, best match first. An empty or blank query
- * returns every option in declaration order. Disabled options are kept, because
- * they stay visible and unselectable rather than disappearing.
+ * The options to show for a query, best match first **within each group run**.
+ * An empty or blank query returns every option in declaration order. A run
+ * whose options all fail the query disappears with its heading. Disabled
+ * options are kept, because they stay visible and unselectable rather than
+ * disappearing.
  */
 export const filterOptions = (
   options: ReadonlyArray<ComboboxOption>,
@@ -69,9 +149,19 @@ export const filterOptions = (
     }),
   );
 
-  return Arr.map(
-    Arr.sort(ranked, byRankThenDeclaration),
-    (entry) => entry.option,
+  return Arr.flatMap(optionRuns(options), (run) =>
+    Arr.map(
+      Arr.sort(
+        Arr.filter(
+          ranked,
+          (entry) =>
+            entry.index >= run.from &&
+            entry.index < run.from + Arr.length(run.options),
+        ),
+        byRankThenDeclaration,
+      ),
+      (entry) => entry.option,
+    ),
   );
 };
 

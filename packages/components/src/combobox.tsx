@@ -6,7 +6,9 @@
  * original order, so a predicate cannot express our ranking. The adapter therefore
  * feeds it an already-ranked `items` array (`filter={null}`) and controls
  * `inputValue`, which is the documented fallback plan 116 §3 allowed. Values are
- * the option `value`, never the displayed label.
+ * the option `value`, never the displayed label. `ComboboxOption.group` turns
+ * consecutive rows into a labelled section, ranked within the section so its
+ * heading never repeats (plan 395).
  *
  * Focus, the active row and Enter/arrow/Escape handling stay GPUix's: those are
  * proven in its own suite and reimplementing them here would be a second, worse
@@ -22,8 +24,10 @@ import {
   Combobox as HeadlessCombobox,
   ComboboxContent as HeadlessContent,
   ComboboxEmpty as HeadlessEmpty,
+  ComboboxGroup as HeadlessGroup,
   ComboboxInput as HeadlessInput,
   ComboboxItem as HeadlessItem,
+  ComboboxLabel as HeadlessLabel,
   ComboboxList as HeadlessList,
   ComboboxTrigger as HeadlessTrigger,
   type ComboboxItemState,
@@ -56,8 +60,10 @@ import {
 import {
   canCreate,
   createValue,
+  groupOfOption,
   labelOf,
   parseCreateValue,
+  rowRuns,
   visibleOptions,
   type ComboboxOption,
 } from "./combobox/logic.js";
@@ -85,6 +91,8 @@ export type ComboboxSelection = string | null | ReadonlyArray<string>;
 /** The rules a combobox part follows; throws outside a {@link Combobox}. */
 interface ComboboxContextValue {
   readonly options: ReadonlyArray<ComboboxOption>;
+  /** The values fed to the runtime, ranked; includes the create row. */
+  readonly rows: ReadonlyArray<string>;
   readonly selectedValues: ReadonlyArray<string>;
   readonly open: boolean;
   readonly disabled: boolean;
@@ -92,6 +100,8 @@ interface ComboboxContextValue {
   readonly loading: boolean;
   readonly labelFor: (value: string) => string;
   readonly isDisabled: (value: string) => boolean;
+  /** The heading a row sits under; ungrouped rows and the create row are none. */
+  readonly groupOf: (value: string) => Option.Option<string>;
   /** Report a user edit to `onQueryChange`; never called for a selection. */
   readonly noteQueryChange: (query: string) => void;
   readonly trigger: RefObject<PublicInstance | null>;
@@ -275,11 +285,14 @@ export const Combobox = ({
     <ComboboxContext.Provider
       value={{
         options,
+        rows: items,
         selectedValues,
         open,
         disabled,
         loading,
         labelFor,
+        groupOf: (value) =>
+          Option.flatMap(optionOf(options, value), groupOfOption),
         isDisabled: (value) =>
           Option.exists(
             optionOf(options, value),
@@ -581,13 +594,22 @@ export interface ComboboxListProps extends Omit<HeadlessListProps, "children"> {
   readonly itemStyle?: StateStyle<ComboboxItemState>;
 }
 
-/** The listbox: one {@link ComboboxItem} per visible option, in ranked order. */
+/**
+ * The listbox: one labelled group per contiguous run of options sharing a
+ * `group`, and one {@link ComboboxItem} per visible option inside it. Rendering
+ * the rows as nodes (rather than through the headless render prop) is what lets
+ * a heading sit between runs; item registration and highlight still come from
+ * the root context.
+ */
 export const ComboboxList = ({
   label = "Options",
   itemStyle,
   style,
   ...rest
 }: ComboboxListProps) => {
+  const theme = useTheme();
+  const { rows, groupOf } = useCombobox();
+
   return (
     <HeadlessList
       role="listbox"
@@ -595,7 +617,38 @@ export const ComboboxList = ({
       {...rest}
       style={mergeStyles({ display: "flex", flexDirection: "column" }, style)}
     >
-      {(item) => <ComboboxItem key={item} value={item} style={itemStyle} />}
+      {Arr.map(rowRuns(rows, groupOf), (run, index) => {
+        const group = Option.getOrUndefined(run.group);
+        return (
+          <HeadlessGroup
+            key={`${group ?? "ungrouped"}-${index}`}
+            {...(group === undefined
+              ? {}
+              : { role: "group", "aria-label": group })}
+            style={{ display: "flex", flexDirection: "column" }}
+          >
+            {group === undefined ? null : (
+              <HeadlessLabel
+                testId="combobox-group"
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                  paddingLeft: theme.spacing.md,
+                  paddingRight: theme.spacing.md,
+                  paddingTop: theme.spacing.xs,
+                  paddingBottom: theme.spacing.xs,
+                  userSelect: "none",
+                }}
+              >
+                {group}
+              </HeadlessLabel>
+            )}
+            {Arr.map(run.values, (value) => (
+              <ComboboxItem key={value} value={value} style={itemStyle} />
+            ))}
+          </HeadlessGroup>
+        );
+      })}
     </HeadlessList>
   );
 };
@@ -739,6 +792,7 @@ export const comboboxMeta = {
   limitations: [
     "GPUix's filter is order-preserving, so the adapter feeds it pre-ranked items and controls inputValue",
     "selection yields option values, never labels",
+    "a heading follows a contiguous run of equal `group` values: interleaving a group produces two headings",
     "no aria-activedescendant in 0.10.0: the highlighted row is visual while the input keeps focus",
     "no built-in debounce: onQueryChange fires per edit, so the caller debounces and cancels its own request",
     "no separate loading row: while loading with nothing shown, the empty slot says Loading… (stale rows stay visible)",

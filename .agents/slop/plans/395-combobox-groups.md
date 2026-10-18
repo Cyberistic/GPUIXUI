@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 completion) / F (consistency) |
 | Owner | components workstream |
 | Depends on | `110`, `116`, `138`, `200`, `201`, `302`, `323`, `328`, `340` |
-| Status | planned |
+| Status | done — `group` field, run-scoped ranking and labelled sections; 6 pure + 5 native cases, three mutation proofs; unit 389, behaviour 616 |
 | Number | First free number in the `300–399` block (last landed: `394`) |
 
 This plan is self-contained. A weaker executor can run every step without
@@ -355,10 +355,10 @@ condition fires.
 
 | # | Mutation | Must fail |
 | - | -------- | --------- |
-| M1 | `filterOptions` returns the global `Arr.sort(ranked, …)` order again | logic 4/5, native 2 |
-| M2 | remove the heading element from `ComboboxList` | native 1 |
-| M3 | group the create row under the preceding group | native 4 |
-| M4 | render `rows` flat (no `HeadlessGroup`) | native 1's group-node assertion (or the heading-order assertion if group nodes are unavailable) |
+| M1 | `filterOptions` returns the global `Arr.sort(ranked, …)` order again | logic 5, native 2 and 4 |
+| M2 | render no heading element in `ComboboxList` | native 1–4 |
+| M3 | split every row into its own run (`runsBy` never merges) | logic 2/5/8, native 1–4 |
+| M4 | put the create row before the ranked matches | native 4 and the two existing create cases |
 
 Record the exact failing assertion for each in §10.
 
@@ -394,5 +394,36 @@ Stop and report with evidence rather than improvising:
 
 ## 10. Measured facts after implementation
 
-_To be appended when the plan lands: suite counts, the heading/group-node
-measurement, and the four mutation results._
+Implemented on 2026-10-18.
+
+**Suites.** Unit **389** (383 before: +6 grouping cases in
+`src/combobox/logic.test.ts`, which now has 27 cases), behaviour **616** across
+49 files (611 before: +5 in `src/behaviour/combobox.test.tsx`, now 33). The
+inventory checks hold `COMPONENTS.md` and `docs/combobox.mdx` to that 33.
+
+**Group nodes.** `role="group"` and `aria-label` on the GPUix group `div` do
+reach the a11y dump: the native case reads exactly two nodes named `Work` and
+`Devices`, in order. No limitation was needed; the §9 fallback did not fire.
+
+**Rendering mode.** Passing `rows` as nodes to the headless `ComboboxList`
+(the second documented mode) keeps item registration intact: the existing
+keyboard, pointer, create and focus cases all still pass, and the grouped case
+selects `calendar` by value after typing `ca` and pressing Enter.
+
+**Ranking.** With `Work` (`Vacation` rank 2, `Calendar` rank 0) declared before
+`Devices` (`Camera roll` rank 0), query `ca` renders
+`Calendar → Vacation → Camera roll`. The old global sort rendered
+`Calendar → Camera roll → Vacation`, splitting the sections. The pure case and
+the native case fail on that mutation.
+
+**Mutations** (each applied alone, the named suites run, the file restored):
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | global `Arr.sort(ranked, …)` in `filterOptions` | exit 1 — logic `ranks inside a run …` fails; native `ranks inside a group …` and `keeps the create row ungrouped …` fail (2 of 33) |
+| M2 | no heading element rendered | exit 1 — all four grouping native cases fail |
+| M3 | every row its own run | exit 1 — 5 logic cases and 4 native cases fail (headings repeat; selection order breaks) |
+| M4 | create row prepended | exit 1 — 3 native cases fail, including the grouping create case |
+
+**Gates.** `nub run check-types`, `nub run test` (389), `nub run test:behaviour`
+(616), and the root `check`/`lint`/`test` gates pass on this host.
