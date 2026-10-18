@@ -82,6 +82,13 @@ only. The resolver therefore sends `"right"` for the public `"end"`; passed
 through verbatim it painted as `start` (measured, plan `365`). There is no RTL
 claim to make.
 
+A text run **shrinks to the width it is given** instead of keeping its
+max-content width: `minWidth` is `0`, so a long sentence in a bounded row wraps
+rather than painting past the row and pushing its sibling out (measured, plan
+`383`: a 439 px run in a 220 px row). A column already stretches its children, so
+nothing changes there; `truncate` gets the bounded width its ellipsis needs. A
+caller can raise the floor again with `style={{ minWidth: 120 }}`.
+
 ## Keyboard
 
 Not focusable. Selectable text is pointer-selectable when `selectable` is on;
@@ -110,7 +117,8 @@ available") when the removal is information the reader needs.
 
 `textStyle` reads `typography[role]`, the mono/sans family and the tone's colour
 role. `userSelect` defaults to `"none"` so chrome does not accept a text
-selection by accident; turn it on for content.
+selection by accident; turn it on for content. `minWidth: 0` is the containment
+rule above; it is a layout fact, not a colour or size token.
 
 `clamp` is a **height cap, not the runtime's `lineClamp`**: `maxHeight` is
 `clamp × typography[role].lineHeight` and `overflow` is `"hidden"`. The runtime
@@ -150,7 +158,9 @@ hard-coded pixel value.
 - `src/core/style.test.ts` — the clamp payload (`maxHeight`, `overflow`, no
   `lineClamp`) and the values it refuses.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
-  selectable; decoration resolves, and a caller's `style` wins (plan `377`).
+  selectable; every role removes the content floor and a caller's `minWidth`
+  wins (plan `383`); decoration resolves, and a caller's `style` wins (plan
+  `377`).
 - `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,
   both directions of the shared-layout regression, and the full string in the
   accessibility tree (plan `082`).
@@ -160,6 +170,9 @@ hard-coded pixel value.
 - `runtime/text-align.runtime.test.tsx` — `align="end"` is byte-identical to a
   manual `textAlign: "right"` frame and different from `align="start"` (plan
   `365`).
+- `runtime/text-overflow.runtime.test.tsx` — a 220 px row wraps a long sentence,
+  keeps its 40 px sibling inside, leaves a column's width alone, and truncates a
+  one-line run to the row's width (plan `383`).
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and each role's measured semantics match the
   table above: `h1`/`h2` are `Heading` nodes with level 1/2 and their text as

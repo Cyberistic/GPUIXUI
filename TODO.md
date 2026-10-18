@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 127/127
+`[x]` `[██████████]` 128/128
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1149,6 +1149,15 @@ retired once both branches are one
       measured after, the sibling moves 48 px, the row stays 16, a column gap is
       still 48, and a caller's `flexBasis` wins. The flexible form is unchanged;
       1 element + 4 runtime cases, both directions proven (plan `382`).
+`[x]` `packages/primitives`: **a `Text` in a row painted outside it** — the text
+      run kept CSS's automatic content floor and grew to its max-content width:
+      measured, a sentence in a 220 px row painted **439** px wide and pushed its
+      40 px sibling to `x 451…491`, entirely outside the row (the class D40 fixed
+      for controls, left unfixed for the standalone primitive). `textStyle` now
+      sets `minWidth: 0`, so the run wraps at the width it is given (`180` wide,
+      `54` high, sibling at `192…232`); a column is unchanged and `truncate` gets
+      the bounded width its ellipsis needs. 1 element + 3 runtime cases, both
+      directions proven (plan `383`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

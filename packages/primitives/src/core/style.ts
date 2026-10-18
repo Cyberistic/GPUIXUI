@@ -324,6 +324,11 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
       : theme.typography.sans,
     color: toneColor(theme, spec.tone),
     userSelect: spec.selectable === true ? "text" : "none",
+    // A text run is a flex item, and its automatic content floor keeps it at
+    // max-content width: a sentence in a bounded row painted 231 px past it and
+    // pushed its sibling out (measured, plan `383`). Removing the floor lets the
+    // run wrap at the width it is given; a column is unaffected.
+    minWidth: 0,
   };
   // The runtime maps `center`, `right` and `left`/`start`; `end` was in its
   // style type but implemented nowhere, so our `end` went nowhere at all

@@ -333,6 +333,21 @@ describe("type", () => {
     expect(numberIn(truncated, "maxHeight")).toStrictEqual(Option.none());
   });
 
+  it("may shrink below its own content width", () => {
+    // The bug guarded (plan 383): a text run kept CSS's automatic content floor,
+    // so a sentence in a bounded row painted past it and pushed its sibling out.
+    // Every role removes the floor; a caller can still raise it.
+    const roles = ["display", "h1", "body", "caption", "code"] as const;
+    expect(
+      Arr.map(roles, (role) =>
+        numberIn(renderText({ role }, testTheme), "minWidth"),
+      ),
+    ).toStrictEqual(Arr.map(roles, () => Option.some(0)));
+    expect(
+      numberIn(renderText({ style: { minWidth: 120 } }, testTheme), "minWidth"),
+    ).toStrictEqual(Option.some(120));
+  });
+
   it("paints the decoration it is given, and a caller's style still wins", () => {
     // The gap guarded (plan 377): the runtime paints underline and
     // line-through, but `Text` had no prop for either.
