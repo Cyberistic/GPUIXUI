@@ -68,6 +68,10 @@ presentation.
 `aria-description`, so the accessible name stays `"Workspace URL"` and the
 requirement is still announced. The marker itself carries `aria-label="Required"`.
 
+`autoFocus` sets the initial `focused` state, so the focus ring is painted on
+the first commit — the runtime applies native focus after React's effects and
+never dispatches `onFocus`.
+
 ## API
 
 Every part takes the GPUix host props and **merges `style` last**.
@@ -117,7 +121,7 @@ ring; an invalid one keeps the destructive border instead.
 
 ## Verification
 
-`src/behaviour/field.test.tsx` runs in the real GPUix renderer (6 tests): label,
+`src/behaviour/field.test.tsx` runs in the real GPUix renderer (7 tests): label,
 description and control rendering; the error replacing the description with
 `role="alert"`; the required marker and clean accessible name; the destructive
 border in both themes; typed text reaching `onChange`; and the disabled input

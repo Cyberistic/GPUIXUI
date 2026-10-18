@@ -15,7 +15,11 @@ import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button, IconButton } from "../internal/button.js";
-import { clickCentreOf, sizeOf } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  sizeOf,
+} from "../internal/interaction.js";
 import { controlHeight, darkTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -206,5 +210,42 @@ describe("IconButton", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
 
     button.unmount();
+  });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the ring and the state have to start truthful (plan 388).
+    const button = renderComponent(
+      <Button testId="button" autoFocus>
+        Save
+      </Button>,
+    );
+
+    expect(focusedTestId(button)).toEqual(Option.some("button"));
+    expect(
+      button.renderer.findByTestId("button")?.style.boxShadow,
+    ).toBeDefined();
+    button.unmount();
+
+    const disabled = renderComponent(
+      <Button testId="disabled" autoFocus disabled>
+        Save
+      </Button>,
+    );
+
+    expect(
+      disabled.renderer.findByTestId("disabled")?.style.boxShadow,
+    ).toBeUndefined();
+    disabled.unmount();
+
+    const icon = renderComponent(
+      <IconButton testId="icon" label="Close" autoFocus>
+        ✕
+      </IconButton>,
+    );
+
+    expect(focusedTestId(icon)).toEqual(Option.some("icon"));
+    expect(icon.renderer.findByTestId("icon")?.style.boxShadow).toBeDefined();
+    icon.unmount();
   });
 });

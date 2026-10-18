@@ -65,6 +65,7 @@ export const SearchInput = ({
   onClear,
   placeholder = "Search…",
   disabled = false,
+  autoFocus = false,
   style,
   onChange,
   onKeyDown,
@@ -78,7 +79,7 @@ export const SearchInput = ({
     defaultValue,
     onChange: onValueChange,
   });
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const input = useRef<PublicInstance | null>(null);
   const attach = useCallback((next: PublicInstance | null) => {
     input.current = next;
@@ -120,6 +121,7 @@ export const SearchInput = ({
         {...rest}
         ref={setInput}
         testId={rest.testId ?? "search-input"}
+        autoFocus={autoFocus && !disabled}
         value={value}
         placeholder={placeholder}
         readOnly={disabled}

@@ -165,4 +165,27 @@ describe("SearchInput", () => {
 
     search.unmount();
   });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the public `focused` state must still be true (plan 388).
+    const states: Array<boolean> = [];
+    const search = renderComponent(
+      <div style={{ width: 360, padding: 40 }}>
+        <SearchInput
+          testId="search"
+          autoFocus
+          style={(state) => {
+            states.push(state.focused);
+            return {};
+          }}
+        />
+      </div>,
+    );
+
+    expect(focusedTestId(search)).toEqual(Option.some("search"));
+    expect(states.at(-1)).toBe(true);
+
+    search.unmount();
+  });
 });

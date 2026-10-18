@@ -26,6 +26,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
@@ -423,6 +424,7 @@ export interface TabsTriggerState {
 export const TabsTrigger = ({
   value,
   disabled = false,
+  autoFocus = false,
   onClick,
   onKeyDown,
   onKeyUp,
@@ -442,7 +444,7 @@ export const TabsTrigger = ({
     select,
     noteFocus,
   } = useTabsContext();
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -456,6 +458,12 @@ export const TabsTrigger = ({
     if (instance === undefined) return;
     return register({ value, id: instance.id, disabled });
   }, [disabled, instance, register, value]);
+
+  useEffect(() => {
+    // `autoFocus` focuses natively after React's effects, so `onFocus` never
+    // runs; the roving highlight has to be told (plan 388).
+    if (autoFocus && !disabled) noteFocus(value);
+  }, [autoFocus, disabled, noteFocus, value]);
 
   const isSelected = selected === value;
   const isTabbable = Option.contains(tabbable, value);
@@ -473,6 +481,7 @@ export const TabsTrigger = ({
       aria-selected={isSelected}
       {...rest}
       ref={setElement}
+      autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : isTabbable ? 0 : -1}
       onFocus={(event) => {
         noteFocus(value);

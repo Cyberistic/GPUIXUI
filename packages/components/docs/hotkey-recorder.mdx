@@ -59,6 +59,10 @@ macOS keeps `ctrl` rather than being silently rewritten to `mod`.
 `style` last. When `testId` is given, the clear control is
 `${testId}-clear`.
 
+`autoFocus` sets the initial `focused` state, so the recorder's ring is painted
+on the first commit — the runtime applies native focus after React's effects and
+never dispatches `onFocus`.
+
 ## Theming
 
 The field uses `background`, `border`, `radius.md`, `controlHeight(theme, "md")`
@@ -90,7 +94,7 @@ no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (11 tests):
+`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (12 tests):
 the display, click-to-record, a real captured chord, Escape, the clear control
 by pointer and keyboard, Space starting on release, a captured Space not
 reopening the recorder, blur, disabled, and both themes.

@@ -98,6 +98,10 @@ pointer and key handlers) and **merges `style` last**.
 | `AccordionTrigger` | `div` (`role="button"`) | `style?: StateStyle<{ open: boolean; disabled: boolean; focused: boolean }>` |
 | `AccordionContent` | `div` | `animate?: boolean` (default `true`) |
 
+`autoFocus` sets the initial `focused` state, so the header's ring is painted on
+the first commit — the runtime applies native focus after React's effects and
+never dispatches `onFocus`.
+
 ## Theming
 
 Triggers use the `label` type role at `controlHeight(theme, "lg")`, with
@@ -135,7 +139,7 @@ has no `transform` — a rotation is not available.
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (20 tests):
 single mode closing the previous section, the non-collapsible no-op, the
 collapsible close, multiple mode keeping sections, the disabled section, Enter
 activation, Space on release, a held Enter toggling only once, the controlled

@@ -339,4 +339,15 @@ describe("InlineEdit", () => {
 
     edit.unmount();
   });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the display's ring must still be painted (plan 388).
+    const edit = renderComponent(<Harness host={{ autoFocus: true }} />);
+
+    expect(focusedTestId(edit)).toEqual(Option.some("name"));
+    expect(edit.renderer.findByTestId("name")?.style.boxShadow).toBeDefined();
+
+    edit.unmount();
+  });
 });

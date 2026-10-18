@@ -1012,4 +1012,27 @@ describe("List", () => {
 
     list.unmount();
   });
+
+  it("reflects autoFocus in the roving focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the roving state and the row's ring must still follow it (plan 388).
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" defaultValue="a">
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" autoFocus>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-b"));
+    expect(list.renderer.findByTestId("row-b")?.style.boxShadow).toBeDefined();
+    expect(
+      list.renderer.findByTestId("row-a")?.style.boxShadow,
+    ).toBeUndefined();
+
+    list.unmount();
+  });
 });

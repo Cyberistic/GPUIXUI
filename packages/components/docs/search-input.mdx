@@ -89,6 +89,10 @@ inner `<input>`.
 <SearchInput style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })} />
 ```
 
+`autoFocus` sets the initial `focused` state, so the ring is painted on the
+first commit — the runtime applies native focus after React's effects and never
+dispatches `onFocus`.
+
 ## Accessibility and limitations
 
 - The input carries the caller's `aria-label` (or the field's label); the clear
@@ -101,7 +105,7 @@ inner `<input>`.
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (9 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
 text, clearing and returning focus, clearing from the keyboard on Space
 release, Enter submitting, Escape clearing once, the controlled contract, and a

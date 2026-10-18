@@ -97,6 +97,10 @@ Every part takes the GPUix host props and **merges `style` last**.
 | `TabsTrigger` | `div` (`role="tab"`) | `value: string` (required), `disabled?: boolean` (default `false`), `style?: StateStyle<{ active: boolean; disabled: boolean; focused: boolean; highlighted: boolean; orientation: TabsOrientation }>` |
 | `TabsContent` | `div` (`role="tabpanel"`) | `value: string` (required) |
 
+`autoFocus` sets the initial `focused` state and the roving highlight, so the
+trigger's ring is painted on the first commit — the runtime applies native focus
+after React's effects and never dispatches `onFocus`.
+
 ## Theming
 
 The rail paints `colors.background`, a `borderWidth.thin` border in `colors.border`
@@ -134,7 +138,7 @@ after the trigger's own rules.
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (16 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (17 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the

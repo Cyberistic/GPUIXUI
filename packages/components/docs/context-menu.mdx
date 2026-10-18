@@ -120,6 +120,10 @@ and return focus to the sub-trigger; choosing a row (by keyboard or pointer)
 runs it once, closes both levels, and a pointer-opened menu leaves focus where
 the click put it. A press elsewhere closes both levels.
 
+`autoFocus` sets the initial `focused` state, so the trigger's ring is painted
+on the first commit — the runtime applies native focus after React's effects and
+never dispatches `onFocus`.
+
 ## API
 
 The trigger, surface and rows merge `style` last. The row parts share one prop set: `onSelect?: ()
@@ -178,7 +182,7 @@ a `MenuCheckboxItemState` (`{ checked, disabled, highlighted }`) and
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (20 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not

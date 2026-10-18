@@ -229,11 +229,12 @@ export const BreadcrumbLink = ({
   onKeyUp,
   onFocus,
   onBlur,
+  autoFocus = false,
   style,
   ...rest
 }: BreadcrumbLinkProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus);
 
   if (current) {
     return <BreadcrumbPage {...rest} style={style} />;
@@ -243,6 +244,7 @@ export const BreadcrumbLink = ({
     <div
       role="link"
       {...rest}
+      autoFocus={autoFocus}
       tabIndex={0}
       onClick={(event) => {
         onClick?.(event);

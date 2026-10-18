@@ -64,6 +64,10 @@ Tab reaches each link in order. `Enter` fires `onSelect` on press; `Space` fires
 it on release, so moving focus before letting go cancels the navigation. The
 current page and the ellipsis are not focusable.
 
+`autoFocus` sets the initial `focused` state, so the link's ring is painted on
+the first commit — the runtime applies native focus after React's effects and
+never dispatches `onFocus`.
+
 ## API
 
 Every part takes the GPUix host props and **merges `style` last**.
@@ -95,7 +99,7 @@ Links and separators use the `caption` type role; links are
 
 ## Verification
 
-`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (6 tests):
+`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (7 tests):
 the trail and its separator count, selecting a link but not the current page,
 Enter on press and Space on release, collapsing the middle while keeping both
 ends, and the ellipsis staying out of the tab order.

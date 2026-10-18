@@ -105,6 +105,10 @@ Which parts have a state, and which do not, is a measured line:
 - **no `children(state)`** — no landed part changes its markup by state, and the
   runtime's own `StateStyle` path is `style`; a part that genuinely needs
   different markup composes a different part.
+- **`autoFocus` is state.** The runtime applies native focus after React's
+  effects and never dispatches `onFocus`, so a part that paints a ring from
+  `focused` initialises that state from `autoFocus` (plan `388`); the two roving
+  parts (`TabsTrigger`, `ListItem`) also move their root's highlight.
 
 ## 4. Keyboard
 

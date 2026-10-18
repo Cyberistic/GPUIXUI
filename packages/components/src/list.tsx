@@ -32,6 +32,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -676,6 +677,7 @@ export const ListItem = ({
   value,
   textValue,
   disabled = false,
+  autoFocus = false,
   leading,
   trailing,
   children,
@@ -719,6 +721,12 @@ export const ListItem = ({
     });
   }, [disabled, instance, register, textValue, value]);
 
+  useEffect(() => {
+    // `autoFocus` focuses natively after React's effects, so `onFocus` never
+    // runs; the list's roving state has to be told (plan 388).
+    if (autoFocus && !disabled) noteFocus(value);
+  }, [autoFocus, disabled, noteFocus, value]);
+
   // Only this row's own bits: a focus move notifies every subscriber, but React
   // re-renders a row only when its snapshot actually changed (plan 339).
   const mask = useSyncExternalStore(rowMasks.subscribe, () =>
@@ -740,6 +748,7 @@ export const ListItem = ({
       {...(selectable ? { "aria-selected": isSelected } : {})}
       {...rest}
       ref={setElement}
+      autoFocus={autoFocus && !disabled}
       tabIndex={focusable ? (isTabbable ? 0 : -1) : undefined}
       onFocus={(event) => {
         noteFocus(value);

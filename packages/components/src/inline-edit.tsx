@@ -70,6 +70,7 @@ export const InlineEdit = ({
   editing: editingProp,
   defaultEditing = false,
   onEditingChange,
+  autoFocus = false,
   style,
   onClick,
   onChange,
@@ -90,7 +91,7 @@ export const InlineEdit = ({
     onChange: onEditingChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus);
   const [input, setInput] = useState<PublicInstance | undefined>(undefined);
   const display = useRef<PublicInstance | null>(null);
   // Enter can arrive twice (keyDown and submit); one finish per edit.
@@ -171,6 +172,7 @@ export const InlineEdit = ({
         tabIndex={disabled ? -1 : 0}
         {...rest}
         ref={setDisplay}
+        autoFocus={autoFocus && !disabled}
         onClick={(event) => {
           onClick?.(event);
           start();

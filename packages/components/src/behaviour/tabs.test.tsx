@@ -131,11 +131,11 @@ describe("Tabs", () => {
   it("starts an arrow move from the focused tab without a React focus event", () => {
     const tabs = renderComponent(<AutoFocusedTabs />);
 
-    // `autoFocus` sets native focus but never runs React's `onFocus` (plan 140).
+    // `autoFocus` sets native focus but never runs React's `onFocus` (plan 140);
+    // the focused state follows the prop instead (plan 388), so the ring is
+    // painted on the first commit.
     expect(focusedTestId(tabs)).toEqual(Option.some("tab-b"));
-    expect(
-      tabs.renderer.findByTestId("tab-b")?.style.boxShadow,
-    ).toBeUndefined();
+    expect(tabs.renderer.findByTestId("tab-b")?.style.boxShadow).toBeDefined();
 
     tabs.renderer.simulateKeystrokes("right");
 
@@ -431,6 +431,41 @@ describe("Tabs", () => {
     tabs.renderer.simulateKeystrokes("enter");
 
     expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
+
+    tabs.unmount();
+  });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the ring, `TabsTriggerState.focused` and the roving highlight must
+    // still follow it (plan 388).
+    const states: Array<boolean> = [];
+    const tabs = renderComponent(
+      <Tabs defaultValue="profile">
+        <TabsList>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger
+            testId="tab-danger"
+            value="danger"
+            autoFocus
+            style={(state) => {
+              states.push(state.focused);
+              return {};
+            }}
+          >
+            Danger
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile">Profile panel</TabsContent>
+        <TabsContent value="danger">Danger panel</TabsContent>
+      </Tabs>,
+    );
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
+    expect(states.at(-1)).toBe(true);
+    expect(
+      tabs.renderer.findByTestId("tab-danger")?.style.boxShadow,
+    ).toBeDefined();
 
     tabs.unmount();
   });

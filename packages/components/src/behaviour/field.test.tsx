@@ -7,9 +7,11 @@
  * and an input whose typing never reached `onChange`.
  */
 
+import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { nodesWithRole } from "../internal/a11y.js";
+import { focusedTestId } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { Field, FieldInput } from "../field.js";
 
@@ -128,6 +130,30 @@ describe("Field", () => {
     form.renderer.simulateKeystrokes("a");
 
     expect(onChange).not.toHaveBeenCalled();
+
+    form.unmount();
+  });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the public `focused` state must still be true (plan 388).
+    const states: Array<boolean> = [];
+    const form = renderComponent(
+      <Field label="Email">
+        <FieldInput
+          testId="email"
+          autoFocus
+          style={(state) => {
+            states.push(state.focused);
+            return {};
+          }}
+        />
+      </Field>,
+    );
+
+    expect(focusedTestId(form)).toEqual(Option.some("email"));
+    expect(states.at(-1)).toBe(true);
+    expect(form.renderer.findByTestId("email")?.style.boxShadow).toBeDefined();
 
     form.unmount();
   });

@@ -306,4 +306,34 @@ describe("Collapsible", () => {
     section.renderer.clockResume();
     section.unmount();
   });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the ring and `CollapsibleTriggerState.focused` must still be true
+    // (plan 388).
+    const states: Array<boolean> = [];
+    const section = renderComponent(
+      <Collapsible>
+        <CollapsibleTrigger
+          testId="trigger"
+          autoFocus
+          style={(state) => {
+            states.push(state.focused);
+            return {};
+          }}
+        >
+          Details
+        </CollapsibleTrigger>
+        <CollapsibleContent testId="content">body</CollapsibleContent>
+      </Collapsible>,
+    );
+
+    expect(focusedTestId(section)).toEqual(Option.some("trigger"));
+    expect(states.at(-1)).toBe(true);
+    expect(
+      section.renderer.findByTestId("trigger")?.style.boxShadow,
+    ).toBeDefined();
+
+    section.unmount();
+  });
 });

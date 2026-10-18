@@ -500,4 +500,36 @@ describe("Accordion", () => {
     faq.renderer.clockResume();
     faq.unmount();
   });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the ring and `AccordionTriggerState.focused` must still be true
+    // (plan 388).
+    const states: Array<boolean> = [];
+    const faq = renderComponent(
+      <Accordion type="single" collapsible>
+        <AccordionItem value="one">
+          <AccordionTrigger
+            testId="trigger-one"
+            autoFocus
+            style={(state) => {
+              states.push(state.focused);
+              return {};
+            }}
+          >
+            One
+          </AccordionTrigger>
+          <AccordionContent testId="content-one">body</AccordionContent>
+        </AccordionItem>
+      </Accordion>,
+    );
+
+    expect(focusedTestId(faq)).toEqual(Option.some("trigger-one"));
+    expect(states.at(-1)).toBe(true);
+    expect(
+      faq.renderer.findByTestId("trigger-one")?.style.boxShadow,
+    ).toBeDefined();
+
+    faq.unmount();
+  });
 });

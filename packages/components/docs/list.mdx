@@ -196,6 +196,10 @@ clears by toggling its last selected row.
 
 **Not built**: no drag reorder and no `aria-multiselectable` (see Accessibility).
 
+`autoFocus` on a row focuses it on mount and moves the list's roving state and
+ring to it — the runtime applies native focus after React's effects and never
+dispatches `onFocus`.
+
 ## API
 
 `List` and `ListItem` take the GPUix host props and merge `style` last.
@@ -285,7 +289,7 @@ is on.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (42 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (43 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and

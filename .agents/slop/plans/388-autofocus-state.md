@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) — a public state contract that lies on a documented host prop |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `117`, `200`, `201`, `305`, `332` |
-| Status | planned |
+| Status | done — 11 new native cases covering 12 parts (behaviour 578), 6 mutation proofs; Tabs' plan-367 characterisation flipped to the fixed behaviour |
 | Evidence | §1 — measured in the real `TestRenderer` on this host, 2026-10-18 |
 
 This plan is self-contained. Run every command; do not claim a test passed unless
@@ -115,7 +115,7 @@ loop. No timer, no renderer query.
 | change | `packages/components/src/hotkey-recorder.tsx` | `HotkeyRecorder`: same |
 | change | `packages/components/src/inline-edit.tsx` | the display branch: same |
 | change | `packages/components/src/list.tsx` | `ListItem`: same + `noteFocus` effect |
-| change | `packages/components/src/behaviour/{button,search-input,field,accordion,collapsible,tabs,breadcrumb,context-menu,hotkey-recorder,inline-edit,list}.test.tsx` | one `autoFocus` case each (§5) |
+| change | `packages/components/src/behaviour/{button,search-input,field,accordion,collapsible,tabs,breadcrumb,context-menu,hotkey-recorder,inline-edit,list}.test.tsx` | one `autoFocus` case each (§5); `tabs.test.tsx`'s plan-367 characterisation asserted **no** ring on the auto-focused tab and is flipped to the fixed behaviour |
 | change | `packages/components/docs/{search-input,field,accordion,collapsible,tabs,breadcrumb,context-menu,hotkey-recorder,inline-edit,list}.mdx` | one sentence in the focus section and the new suite count in the verification line |
 | change | `COMPONENTS.md` | the ten Tier 2 rows' native-test counts |
 | change | `docs/component-api.md` | one sentence in §3: `autoFocus` establishes the initial `focused` state |
@@ -221,7 +221,7 @@ nub run --filter @gpuixui/components test
 # expect: 38 files, 374 tests pass (inventory counts updated, still green)
 
 nub run --filter @gpuixui/components test:behaviour
-# expect: 47 files, 579 tests pass (567 + 12 new cases)
+# expect: 47 files, 578 tests pass (567 + 11 new cases covering 12 parts)
 ```
 
 Then at the repo root:
@@ -270,11 +270,40 @@ two roving roots.
 
 ## 9. Acceptance
 
-- [ ] All twelve parts forward `autoFocus` and start with a truthful `focused`
+- [x] All twelve parts forward `autoFocus` and start with a truthful `focused`
       state; `TabsTrigger` and `ListItem` also tell their root.
-- [ ] Twelve new native cases pass on this host; the behaviour suite is 579.
-- [ ] Every mutation in §7 fails its named case.
-- [ ] Docs pages and `COMPONENTS.md` state the new counts; the inventory check
+- [x] Eleven new native cases (covering twelve parts) pass on this host; the
+      behaviour suite is 578, and Tabs' plan-367 characterisation now asserts the
+      ring.
+- [x] Every mutation in §7 fails its named case.
+- [x] Docs pages and `COMPONENTS.md` state the new counts; the inventory check
       passes.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass at the repo root.
-- [ ] The plan index and `TODO.md` are updated in the same commit.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass at the repo root.
+- [x] The plan index and `TODO.md` are updated in the same commit.
+
+## 10. Measured results
+
+Ran 2026-10-18 on this host against the locally built `darwin-x64` 0.10.0 binding
+(ADR 0003):
+
+| Command | Result |
+| ----- | ------ |
+| `nub run --filter @gpuixui/components test:behaviour` | 578 passed (47 files); `-t autoFocus` 11/11 |
+| `nub run --filter @gpuixui/components test` | 374 passed (38 files) |
+| `nub run check-types` (components) | pass |
+| `nub run check` / `nub run lint` / `nub run test` (root) | pass |
+
+Mutation proofs (§7), each applied, run with `-t autoFocus`, reverted:
+
+| # | Mutation | Failing assertion |
+| - | -------- | ----------------- |
+| M1 | `internal/button.tsx`: `useState(false)` (both parts) | `reflects autoFocus in its focus state` — `boxShadow` undefined |
+| M2 | `search-input.tsx`: `useState(false)` | the same case — last `focused` is `false` |
+| M3 | `field.tsx`: `useState(false)` | the same case |
+| M4 | `accordion.tsx`: `useState(false)` | the same case |
+| M5 | `tabs.tsx`: `useState(false)` | the same case |
+| M6 | `list.tsx`: the `noteFocus` effect made a no-op | `reflects autoFocus in the roving focus state` — the auto-focused row has no ring |
+
+The full suite exposed one expected behaviour change: Tabs' plan-367 case
+asserted the old miss (`boxShadow` undefined on the auto-focused tab); it now
+asserts the ring, with the reason recorded on the line.

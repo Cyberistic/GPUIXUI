@@ -497,3 +497,31 @@ describe("ContextMenu radio groups", () => {
     row.unmount();
   });
 });
+
+describe("ContextMenu autoFocus", () => {
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the trigger's ring must still be painted (plan 388).
+    const row = renderComponent(
+      <ContextMenu>
+        <ContextMenuTrigger
+          testId="row"
+          autoFocus
+          style={{ width: 320, height: 120 }}
+        >
+          <text>Project</text>
+        </ContextMenuTrigger>
+        <ContextMenuContent testId="menu" label="Project actions">
+          <ContextMenuItem testId="open" onSelect={vi.fn()}>
+            Open
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>,
+    );
+
+    expect(focusedTestId(row)).toEqual(Option.some("row"));
+    expect(row.renderer.findByTestId("row")?.style.boxShadow).toBeDefined();
+
+    row.unmount();
+  });
+});

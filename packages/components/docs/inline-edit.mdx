@@ -45,6 +45,10 @@ A live window does **not** deliver React's `onBlur` for a native focus change
 the paths a real user takes. Blur still commits where the host delivers it; it is
 not the only way out.
 
+`autoFocus` sets the initial `focused` state, so the display's ring is painted
+on the first commit — the runtime applies native focus after React's effects and
+never dispatches `onFocus`.
+
 ## API
 
 | Prop | Type | Default | Notes |
@@ -94,7 +98,7 @@ states with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (14 tests):
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (15 tests):
 display mode, click-to-edit with focus, keyboard entry with Space starting on
 release, Enter commit with focus return, Escape discard, blur commit, an outside
 press that commits and restores the display, a press on another control that

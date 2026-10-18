@@ -197,6 +197,7 @@ export interface FieldInputState {
 export const FieldInput = ({
   invalid,
   disabled = false,
+  autoFocus = false,
   onFocus,
   onBlur,
   style,
@@ -205,9 +206,9 @@ export const FieldInput = ({
   const theme = useTheme();
   const field = useContext(FieldContext);
   const fieldsetDisabled = useFieldsetDisabled();
-  const [focused, setFocused] = useState(false);
   const isInvalid = invalid ?? field?.error !== undefined;
   const isDisabled = disabled || fieldsetDisabled;
+  const [focused, setFocused] = useState(autoFocus && !isDisabled);
   const state: FieldInputState = {
     disabled: isDisabled,
     focused,
@@ -223,6 +224,7 @@ export const FieldInput = ({
   return (
     <input
       {...rest}
+      autoFocus={autoFocus && !isDisabled}
       {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
       {...(field === undefined ? {} : { "aria-label": field.label })}
       {...(description === undefined

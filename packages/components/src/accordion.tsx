@@ -386,6 +386,7 @@ export const AccordionTrigger = ({
   onKeyUp,
   onFocus,
   onBlur,
+  autoFocus = false,
   style,
   children,
   ref,
@@ -395,7 +396,7 @@ export const AccordionTrigger = ({
   const { isOpen, toggle, registerTrigger, moveFrom, jumpTo } =
     useAccordionContext();
   const { value, disabled } = useAccordionItemContext();
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -445,6 +446,7 @@ export const AccordionTrigger = ({
       aria-expanded={open}
       {...rest}
       ref={setElement}
+      autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : 0}
       onClick={
         disabled

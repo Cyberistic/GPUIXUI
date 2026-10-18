@@ -140,6 +140,7 @@ export const Button = ({
   variant = "secondary",
   size = "md",
   disabled = false,
+  autoFocus = false,
   onClick,
   onKeyDown,
   onKeyUp,
@@ -149,13 +150,14 @@ export const Button = ({
   ...rest
 }: ButtonProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
 
   return (
     <div
       role="button"
       tabIndex={disabled ? -1 : 0}
       {...rest}
+      autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}
       onFocus={(event) => {
         setFocused(true);
@@ -185,6 +187,7 @@ export const IconButton = ({
   label,
   size = "md",
   disabled = false,
+  autoFocus = false,
   onClick,
   onKeyDown,
   onKeyUp,
@@ -194,7 +197,7 @@ export const IconButton = ({
   ...rest
 }: IconButtonProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const side = controlHeight(theme, size);
 
   return (
@@ -203,6 +206,7 @@ export const IconButton = ({
       aria-label={label}
       tabIndex={disabled ? -1 : 0}
       {...rest}
+      autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}
       onFocus={(event) => {
         setFocused(true);

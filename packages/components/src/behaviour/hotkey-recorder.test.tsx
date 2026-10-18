@@ -225,4 +225,25 @@ describe("HotkeyRecorder", () => {
     );
     light.unmount();
   });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the recorder's ring must still be painted (plan 388).
+    const recorder = renderComponent(
+      <HotkeyRecorder
+        testId="recorder"
+        label="Toggle command palette"
+        value={null}
+        autoFocus
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(focusedTestId(recorder)).toEqual(Option.some("recorder"));
+    expect(
+      recorder.renderer.findByTestId("recorder")?.style.boxShadow,
+    ).toBeDefined();
+
+    recorder.unmount();
+  });
 });

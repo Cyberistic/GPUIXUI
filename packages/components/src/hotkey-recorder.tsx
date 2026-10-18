@@ -65,6 +65,7 @@ export const HotkeyRecorder = ({
   onChange,
   placeholder = "Click to record",
   disabled = false,
+  autoFocus = false,
   style,
   testId,
   onClick,
@@ -75,7 +76,7 @@ export const HotkeyRecorder = ({
 }: HotkeyRecorderProps) => {
   const theme = useTheme();
   const [recording, setRecording] = useState(false);
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   // A press on the clear control must not also start recording on the root.
   const skipStart = useRef(false);
   // A key captured while recording must not start a new recording on release:
@@ -99,6 +100,7 @@ export const HotkeyRecorder = ({
       tabIndex={disabled ? -1 : 0}
       {...rest}
       testId={testId}
+      autoFocus={autoFocus && !disabled}
       onClick={(event) => {
         onClick?.(event);
         if (skipStart.current) {

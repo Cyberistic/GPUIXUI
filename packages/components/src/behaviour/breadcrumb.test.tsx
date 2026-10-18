@@ -7,8 +7,9 @@
  * link on key down instead of on release.
  */
 
+import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
-import { clickCentreOf } from "../internal/interaction.js";
+import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
   Breadcrumb,
@@ -150,6 +151,29 @@ describe("Breadcrumb", () => {
       0,
     );
     expect(trail.renderer.findByTestId("packages")).toBeUndefined();
+
+    trail.unmount();
+  });
+
+  it("reflects autoFocus in its focus state", () => {
+    // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+    // runs; the link's ring must still be painted (plan 388).
+    const trail = renderComponent(
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink testId="projects" autoFocus>
+              Projects
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>,
+    );
+
+    expect(focusedTestId(trail)).toEqual(Option.some("projects"));
+    expect(
+      trail.renderer.findByTestId("projects")?.style.boxShadow,
+    ).toBeDefined();
 
     trail.unmount();
   });

@@ -104,12 +104,13 @@ export const CollapsibleTrigger = ({
   onKeyUp,
   onFocus,
   onBlur,
+  autoFocus = false,
   style,
   ...rest
 }: CollapsibleTriggerProps) => {
   const theme = useTheme();
   const { open, setOpen } = useCollapsibleContext();
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus);
   const state: CollapsibleTriggerState = {
     open,
     closed: !open,
@@ -123,6 +124,7 @@ export const CollapsibleTrigger = ({
       role="button"
       aria-expanded={open}
       {...rest}
+      autoFocus={autoFocus}
       tabIndex={0}
       onClick={(event) => {
         onClick?.(event);

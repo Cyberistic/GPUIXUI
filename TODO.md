@@ -277,10 +277,12 @@ retired once both branches are one
     - [x] Navigation menu: leaving an open panel for another trigger switches
       panels — the pointer direction plan 387's probe found untested; 1 native
       test (Navigation Menu 20); docs and inventory synced
-    - [ ] `autoFocus` establishes the real focus state on every ring-owning
+    - [x] `autoFocus` establishes the real focus state on every ring-owning
       part — plan 388; measured: the runtime focuses after React's effects, so
       `onFocus` never runs and the ring plus the public `<Part>State.focused`
-      are wrong (owner: components)
+      were wrong. 12 parts seed `focused` from the prop and the two roving roots
+      are told; 11 new native tests (behaviour 578), 6 mutation proofs, docs and
+      inventory synced
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

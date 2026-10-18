@@ -188,6 +188,7 @@ export interface ContextMenuTriggerProps extends Props {
 /** The area whose right click — or Shift+F10 — opens the menu. */
 export const ContextMenuTrigger = ({
   disabled = false,
+  autoFocus = false,
   onAuxClick,
   onKeyDown,
   onFocus,
@@ -199,7 +200,7 @@ export const ContextMenuTrigger = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const { openAt, openFromKeyboard, setTrigger } = useContextMenuContext();
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -233,6 +234,7 @@ export const ContextMenuTrigger = ({
     <div
       {...rest}
       ref={setElement}
+      autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : 0}
       onAuxClick={(event: EventPayload) => {
         onAuxClick?.(event);
