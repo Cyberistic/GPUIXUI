@@ -1817,3 +1817,35 @@ Four facts a consumer has to know:
 The live scenario restores the window in an `Effect.ensuring`, so a failed check
 never leaves the next scenario maximised. The full live suite is a merge gate;
 this task ran `--only live-window`.
+
+## Paint and frame diagnostics (plan `527`)
+
+`getDebugFrameOverlayStats()` is the runtime's own paint counter. Until plan
+`527` no probe had measured it, so the only way to claim a component repainted
+was to inspect its readout — not to prove a frame happened. Two scenarios pin
+the contract:
+
+| Scenario | What it asserts |
+| -------- | --------------- |
+| `frame-stats` | two reads are equal (a read is free); `flush()` is exactly `+1` frame and `+1` sample; a click and a wheel repaint; `reset` keeps the lifetime count and leaves one sample whose timings are all equal; the ring stops at `1000`; the overlay adds no host nodes, changes no painted text and never intercepts a click; the cycle order is hidden → minimal → full |
+| `live-frames` | an idle window does not repaint across 300 ms; a click grows the count; a live reset clears the ring to its own sample; the live overlay changes no painted text and a click still activates underneath it |
+
+Host verbs: `paint` (offscreen only), `frameStats`, `resetFrameStats`,
+`overlayMode`, `setOverlayMode`, `cycleOverlayMode`; the live host has the same
+five minus `paint`, read from the renderer the runner owns.
+
+Three rules for a consumer or a future probe:
+
+- **A read is free; `flush` is one paint.** Reading the stats never paints, so
+  a delta around an action measures the action. `advance(0)` is *not* a paint —
+  it adds no frame in a settled tree.
+- **`frames` counts paints, not gestures.** A headless click cost 4 frames and a
+  native scroll wheel 2. Use it to answer "did anything repaint?", never "how
+  many gestures happened?".
+- **The overlay is paint-only.** It is drawn after layout: no host node, no
+  painted text, no input capture. A screenshot with `full` on still shows the
+  interaction underneath, which is why the live artifact is taken with it on.
+
+The 1005-paint loop in `frame-stats` fills the sample ring on purpose; it is the
+only way to prove the documented 1000-sample bound. The full live suite is a
+merge gate; this task ran `--only live-frames`.

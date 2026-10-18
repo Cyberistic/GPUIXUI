@@ -60,15 +60,26 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 85/91 plans-and-harness
 
-`[ ]` Probe the **paint/frame counters** (`getDebugFrameOverlayStats`,
-`resetDebugFrameOverlayStats`, `setDebugFrameOverlay`, and the `dispatch*`
-sample paths) — the last supported runtime surface with no contract. The
-reconnaissance in plan `526` §1 measured that the stats are structural, not
-timing noise: a reset leaves `frames` counting, `nativeSimulateScrollWheel`
-costs **two** paints (flush before and after) while `dispatchScrollWheel` costs
-**one** until the caller flushes, and the overlay cycles
-`hidden → minimal → full`. The read/reset themselves appear to cost a paint, so
-the probe must pin that before asserting deltas. Next free plan number `527`.
+`[x]` Probe the **paint/frame counters** per plan `527` — the last supported
+runtime surface with no contract: `frame-stats` (67 checks) and `live-frames`
+(29) over five new host verbs (`frameStats`, `resetFrameStats`, `overlayMode`,
+`setOverlayMode`, `cycleOverlayMode`) plus a forced `paint` offscreen. Measured:
+a **read is free**, `flush()` is **exactly `+1` frame and `+1` sample`, a state
+change and a native wheel paint (4 / 2 frames), `reset` keeps the lifetime count
+and clears the ring to **one** sample with `p90 = p99 = max = current`, the ring
+is bounded at **1000 samples** while `frames` keeps counting, the timings are
+ordered, and the overlay is **paint-only** (no host node, no painted text, no
+input capture). Live: an **idle window repainted 0 times in 300 ms**, a click
+grew the count (`3` frames), a live reset left `samples = 1`, and a click under
+the `full` overlay still activated. Suite `99 → 100` (`3455 → 3522`), exit `0`,
+`frames=verified`; live registry `48 → 49`; six mutation proofs and one reverse
+proof (plan `527` §6). The **full live suite was not run** (merge gate): the
+focused id is `live-frames`.
+
+`[ ]` **Cross-team:** the docs-site capability matrix
+      (`apps/docs/src/lib/capabilities.ts` + its test) must gain the `frames`
+      capability and the ids `frame-stats` + `live-frames`, or its gate stays
+      red against `COMPONENTS.md` (owner: `docs-site`; evidence: plan `527`)
 
 `[x]` Probe the **window as the layout root** per plan `526` — the desktop
       boundary every shell sits on: `window-layout` (27 checks) and `live-window`

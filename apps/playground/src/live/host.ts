@@ -71,6 +71,12 @@ const isUnpainted = (cause: unknown): boolean =>
   cause.code === "NotFound" &&
   cause.message === "Element has no painted bounds";
 
+/** A raw overlay mode decoded at the boundary; `None` for an undocumented value. */
+const decodeOverlayMode = (
+  raw: string,
+): Option.Option<Smoke.FrameOverlayMode> =>
+  Schema.decodeUnknownOption(Smoke.FrameOverlayMode)(raw);
+
 /** A `Smoke.AsyncSmokeHost` over a connected automation `App`. */
 export const createHost = (
   app: App,
@@ -82,6 +88,11 @@ export const createHost = (
     | "scrollToItem"
     | "getWindowSize"
     | "zoomWindow"
+    | "getDebugFrameOverlayStats"
+    | "resetDebugFrameOverlayStats"
+    | "getDebugFrameOverlay"
+    | "setDebugFrameOverlay"
+    | "cycleDebugFrameOverlay"
   >,
 ): Smoke.AsyncSmokeHost => ({
   text: (testId) => verb(`text ${testId}`, () => at(app, testId).textContent()),
@@ -127,6 +138,48 @@ export const createHost = (
       try: () => renderer.zoomWindow(),
       catch: (cause) => new Smoke.SmokeHostError({ verb: "zoomWindow", cause }),
     }),
+  frameStats: () =>
+    Effect.map(
+      Effect.try({
+        try: () => renderer.getDebugFrameOverlayStats(),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "frameStats", cause }),
+      }),
+      (raw) => Schema.decodeUnknownSync(Smoke.FrameStats)(raw),
+    ),
+  resetFrameStats: () =>
+    Effect.try({
+      try: () => renderer.resetDebugFrameOverlayStats(),
+      catch: (cause) =>
+        new Smoke.SmokeHostError({ verb: "resetFrameStats", cause }),
+    }),
+  overlayMode: () =>
+    Effect.map(
+      Effect.try({
+        try: () => renderer.getDebugFrameOverlay(),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "overlayMode", cause }),
+      }),
+      decodeOverlayMode,
+    ),
+  setOverlayMode: (mode) =>
+    Effect.map(
+      Effect.try({
+        try: () => renderer.setDebugFrameOverlay(mode),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "setOverlayMode", cause }),
+      }),
+      decodeOverlayMode,
+    ),
+  cycleOverlayMode: () =>
+    Effect.map(
+      Effect.try({
+        try: () => renderer.cycleDebugFrameOverlay(),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "cycleOverlayMode", cause }),
+      }),
+      decodeOverlayMode,
+    ),
   focused: () =>
     Effect.gen(function* () {
       const id = yield* Effect.try({

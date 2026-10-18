@@ -58,6 +58,7 @@ import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { queryBuilderScenario } from "../scenarios/query-builder.js";
 import { rootSingleChildScenario } from "../scenarios/root.js";
+import { frameStatsScenario } from "../scenarios/frame-stats.js";
 import { windowLayoutScenario } from "../scenarios/window-layout.js";
 import { notificationCentreScenario } from "../scenarios/notification-centre.js";
 import { wizardScenario } from "../scenarios/wizard.js";
@@ -5803,11 +5804,157 @@ const liveWindow: LiveScenario = {
     }),
 };
 
+const liveFrames: LiveScenario = {
+  id: "live-frames",
+  title: "Live paint counter: idle frames, reset and the debug overlay",
+  capability: "frames",
+  view: frameStatsScenario.view,
+  ready: "fs-paints",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const open = yield* ctx.host.frameStats();
+      yield* ctx.expectEqual(
+        "the live renderer reports painted frames",
+        open.frames > 0,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live renderer reports draw samples",
+        open.samples > 0,
+        true,
+      );
+
+      const reread = yield* ctx.host.frameStats();
+      yield* ctx.expectEqual(
+        "a live read does not paint",
+        reread.frames,
+        open.frames,
+      );
+
+      // The counter is a paint count, not a ticker: an idle window is not
+      // repainted. This runs before any overlay toggle, because toggling it
+      // leaves a few delayed repaints (measured, plan `527`).
+      yield* Effect.sleep("300 millis");
+      const idle = yield* ctx.host.frameStats();
+      yield* ctx.expectEqual(
+        "an idle window does not repaint",
+        idle.frames,
+        reread.frames,
+      );
+
+      yield* ctx.host.click("fs-counter");
+      yield* waitForText(ctx, "fs-paints", "paints 1");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live click repaints its counter",
+        yield* textOf(ctx, "fs-paints"),
+        "paints 1",
+      );
+      const clicked = yield* ctx.host.frameStats();
+      yield* ctx.expectEqual(
+        "a live click grows the frame count",
+        clicked.frames > idle.frames,
+        true,
+      );
+
+      yield* ctx.host.resetFrameStats();
+      const reset = yield* ctx.host.frameStats();
+      yield* ctx.expectEqual(
+        "a live reset keeps the lifetime count",
+        reset.frames >= clicked.frames,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "a live reset clears the ring to its own paint",
+        reset.samples,
+        1,
+      );
+      const current = yield* ctx.expectSome(
+        "a live reset reports the current draw",
+        reset.currentMs,
+      );
+      const p90 = yield* ctx.expectSome(
+        "a live reset reports a p90",
+        reset.p90Ms,
+      );
+      const p99 = yield* ctx.expectSome(
+        "a live reset reports a p99",
+        reset.p99Ms,
+      );
+      const max = yield* ctx.expectSome(
+        "a live reset reports a maximum",
+        reset.maxMs,
+      );
+      yield* ctx.expectEqual("a live reset collapses p90", p90, current);
+      yield* ctx.expectEqual("a live reset collapses p99", p99, current);
+      yield* ctx.expectEqual("a live reset collapses max", max, current);
+
+      const hidden = yield* ctx.expectSome(
+        "the live overlay starts hidden",
+        yield* ctx.host.overlayMode(),
+      );
+      yield* ctx.expectEqual(
+        "the live overlay starts hidden",
+        hidden,
+        "hidden",
+      );
+
+      const paintedBefore = Arr.join(yield* ctx.host.paintedText(), "|");
+      const full = yield* ctx.expectSome(
+        "set reports the live mode",
+        yield* ctx.host.setOverlayMode("full"),
+      );
+      yield* ctx.expectEqual("set returns the live mode", full, "full");
+      yield* ctx.expectEqual(
+        "the live overlay changes no painted text",
+        Arr.join(yield* ctx.host.paintedText(), "|"),
+        paintedBefore,
+      );
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveFrames.id}.png`);
+
+      yield* ctx.host.click("fs-counter");
+      yield* waitForText(ctx, "fs-paints", "paints 2");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live click under the overlay still activates",
+        yield* textOf(ctx, "fs-paints"),
+        "paints 2",
+      );
+
+      const cycled = [
+        yield* ctx.expectSome(
+          "the live cycle leaves full for hidden",
+          yield* ctx.host.cycleOverlayMode(),
+        ),
+        yield* ctx.expectSome(
+          "the live cycle leaves hidden for minimal",
+          yield* ctx.host.cycleOverlayMode(),
+        ),
+        yield* ctx.expectSome(
+          "the live cycle leaves minimal for full",
+          yield* ctx.host.cycleOverlayMode(),
+        ),
+      ];
+      yield* ctx.expectEqual(
+        "the live cycle order is hidden → minimal → full",
+        Arr.join(cycled, ","),
+        "hidden,minimal,full",
+      );
+
+      const final = yield* ctx.expectSome(
+        "the live overlay hides again",
+        yield* ctx.host.setOverlayMode("hidden"),
+      );
+      yield* ctx.expectEqual("the live overlay ends hidden", final, "hidden");
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
   rootProbe,
   liveWindow,
+  liveFrames,
   input,
   inputPayload,
   scroll,

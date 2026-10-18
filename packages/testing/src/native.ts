@@ -20,6 +20,8 @@ import {
   A11yTree,
   type Bounds,
   decodeHighlights,
+  FrameOverlayMode,
+  FrameStats,
   type Offset,
   type SmokeHost,
   StyleSnapshot,
@@ -94,6 +96,12 @@ export interface NativeRenderer {
   clockFastForward(deltaMs: number): number;
   getRetainedElementCount(): number;
   getSyntaxCacheStats(): ReadonlyArray<number>;
+  flush(): void;
+  getDebugFrameOverlayStats(): unknown;
+  resetDebugFrameOverlayStats(): void;
+  getDebugFrameOverlay(): string;
+  setDebugFrameOverlay(mode: string): string;
+  cycleDebugFrameOverlay(): string;
 }
 
 /** The element carrying `testId`, or `None` when the runtime holds no such node. */
@@ -401,5 +409,24 @@ export const createHost = (renderer: NativeRenderer): SmokeHost => ({
         ([hits, misses, documents]) =>
           new SyntaxCacheStats({ hits, misses, documents }),
       ),
+    ),
+  paint: () => renderer.flush(),
+  // A malformed stats record is a defect, not a scenario difference: the
+  // published `DebugFrameOverlayStats` shape is the contract the probe asserts.
+  frameStats: () =>
+    Schema.decodeUnknownSync(FrameStats)(renderer.getDebugFrameOverlayStats()),
+  resetFrameStats: () => renderer.resetDebugFrameOverlayStats(),
+  // A mode outside the published three is surfaced as `None`, never guessed.
+  overlayMode: () =>
+    Schema.decodeUnknownOption(FrameOverlayMode)(
+      renderer.getDebugFrameOverlay(),
+    ),
+  setOverlayMode: (mode) =>
+    Schema.decodeUnknownOption(FrameOverlayMode)(
+      renderer.setDebugFrameOverlay(mode),
+    ),
+  cycleOverlayMode: () =>
+    Schema.decodeUnknownOption(FrameOverlayMode)(
+      renderer.cycleDebugFrameOverlay(),
     ),
 });

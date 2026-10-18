@@ -13,12 +13,24 @@ import {
   type AsyncSmokeScenario,
   type Capability,
   type CheckResult,
+  FrameStats,
   type SmokeHost,
   type SmokeReport,
   type SmokeScenario,
   WindowSize,
   runScenarios,
 } from "./smoke.js";
+
+/** The inert frame report: no paints, no samples, no timings. */
+const emptyFrameStats = (): FrameStats =>
+  new FrameStats({
+    frames: 0,
+    samples: 0,
+    currentMs: Option.none(),
+    p90Ms: Option.none(),
+    p99Ms: Option.none(),
+    maxMs: Option.none(),
+  });
 
 /** A host that reports nothing; only tests that do not read the runtime use it. */
 export const nullHost: SmokeHost = {
@@ -27,6 +39,12 @@ export const nullHost: SmokeHost = {
   elementType: () => null,
   bounds: () => null,
   windowSize: () => new WindowSize({ width: 0, height: 0 }),
+  paint: () => {},
+  frameStats: emptyFrameStats,
+  resetFrameStats: () => {},
+  overlayMode: () => Option.some("hidden"),
+  setOverlayMode: () => Option.some("hidden"),
+  cycleOverlayMode: () => Option.some("hidden"),
   paintedStyle: () => null,
   a11y: () => null,
   highlights: () => [],
@@ -69,6 +87,11 @@ export const nullAsyncHost: AsyncSmokeHost = {
   bounds: () => Effect.succeed(null),
   windowSize: () => Effect.succeed(new WindowSize({ width: 0, height: 0 })),
   zoomWindow: () => Effect.void,
+  frameStats: () => Effect.succeed(emptyFrameStats()),
+  resetFrameStats: () => Effect.void,
+  overlayMode: () => Effect.succeed(Option.some("hidden")),
+  setOverlayMode: () => Effect.succeed(Option.some("hidden")),
+  cycleOverlayMode: () => Effect.succeed(Option.some("hidden")),
   focused: () => Effect.succeed(null),
   selectText: () => Effect.succeed(null),
   selectedText: () => Effect.succeed(null),

@@ -96,6 +96,15 @@ class FakeRenderer implements NativeRenderer {
   };
   retained = 0;
   syntax: ReadonlyArray<number> = [0, 0, 0];
+  frameReport: unknown = {
+    frames: 9,
+    samples: 4,
+    currentMs: 1,
+    p90Ms: 2,
+    p99Ms: 3,
+    maxMs: 4,
+  };
+  overlay = "minimal";
   readonly calls: Array<string> = [];
 
   findByTestId(testId: string): NativeElement | undefined {
@@ -224,6 +233,38 @@ class FakeRenderer implements NativeRenderer {
   getSyntaxCacheStats(): ReadonlyArray<number> {
     return this.syntax;
   }
+  getDebugFrameOverlayStats(): unknown {
+    return this.frameReport;
+  }
+  resetDebugFrameOverlayStats(): void {
+    this.calls.push("resetFrameStats");
+    this.frameReport = {
+      frames: 9,
+      samples: 1,
+      currentMs: 5,
+      p90Ms: 5,
+      p99Ms: 5,
+      maxMs: 5,
+    };
+  }
+  getDebugFrameOverlay(): string {
+    return this.overlay;
+  }
+  setDebugFrameOverlay(mode: string): string {
+    this.calls.push(`setOverlay:${mode}`);
+    this.overlay = mode;
+    return mode;
+  }
+  cycleDebugFrameOverlay(): string {
+    this.calls.push("cycleOverlay");
+    this.overlay =
+      this.overlay === "hidden"
+        ? "minimal"
+        : this.overlay === "minimal"
+          ? "full"
+          : "hidden";
+    return this.overlay;
+  }
 }
 
 const rendererOf = () => new FakeRenderer();
@@ -311,6 +352,41 @@ describe("bounds", () => {
   it("reports the renderer's window, not the root element's box", () => {
     const host = createHost(rendererOf());
     expect(host.windowSize()).toEqual({ width: 400, height: 300 });
+  });
+});
+
+describe("frames", () => {
+  it("decodes the renderer's paint counter at the boundary", () => {
+    const stats = createHost(rendererOf()).frameStats();
+    expect(stats.frames).toBe(9);
+    expect(stats.samples).toBe(4);
+    expect(stats.currentMs).toEqual(Option.some(1));
+    expect(stats.p90Ms).toEqual(Option.some(2));
+    expect(stats.p99Ms).toEqual(Option.some(3));
+    expect(stats.maxMs).toEqual(Option.some(4));
+  });
+
+  it("forwards the forced paint, the reset and the overlay verbs", () => {
+    const renderer = rendererOf();
+    const host = createHost(renderer);
+    host.paint();
+    host.resetFrameStats();
+    expect(host.frameStats().samples).toBe(1);
+    expect(host.overlayMode()).toEqual(Option.some("minimal"));
+    expect(host.setOverlayMode("full")).toEqual(Option.some("full"));
+    expect(host.cycleOverlayMode()).toEqual(Option.some("hidden"));
+    expect(renderer.calls).toEqual([
+      "flush",
+      "resetFrameStats",
+      "setOverlay:full",
+      "cycleOverlay",
+    ]);
+  });
+
+  it("surfaces an undocumented overlay mode as None instead of guessing", () => {
+    const renderer = rendererOf();
+    renderer.overlay = "chart";
+    expect(createHost(renderer).overlayMode()).toEqual(Option.none());
   });
 });
 

@@ -90,9 +90,26 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | qr | `qr-code` | verified |
 | media | `media-surface`, `live-media` | verified |
 | window | `window-layout`, `live-window` | verified |
+| frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **99/99 green here** (exit `0`, `.artifacts/smoke-report.json`,
-3455 checks).
+The suite is **100/100 green here** (exit `0`, `.artifacts/smoke-report.json`,
+3522 checks).
+
+**The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**
+`getDebugFrameOverlayStats()` counts **paints**, not frame-loop ticks — an idle
+live window did not repaint across 300 ms, while a click grew the count. A read
+is free (two consecutive reads are equal) and `flush()` is exactly one frame, so
+a test can prove a repaint instead of guessing with `advance(0)`
+(`advanceTime(0)` is not a paint). `resetDebugFrameOverlayStats()` clears only
+the **sample ring**: the lifetime `frames` count keeps growing, and the reset
+leaves one sample whose `p90`/`p99`/`max`/`current` all equal that paint. The
+ring is bounded at **1000 samples** while `frames` keeps counting. The timings
+are ordered (`p90 ≤ p99 ≤ max`, `current ≤ max`). The debug overlay (hidden →
+minimal → full → hidden) is a **paint-only** layer: it adds no retained host
+nodes, changes no painted text and never intercepts a click underneath it, so a
+screenshot with the overlay on still shows the live interaction. One gesture is
+**not** one frame — a headless click cost 4 frames and a native wheel 2 — so
+never use `frames` to count gestures.
 
 **The window is the layout root (plan `526`, `window-layout` + `live-window`):**
 `useWindowSize()` reports the window's paintable size exactly — `1280x800` under
@@ -126,10 +143,11 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**46/46 green** (929 checks); plans `525` and `526` added `live-input-payload`
-(12/12) and `live-window` (29/29) in focused runs, so the registry now lists
-**48**, and the **full live suite is a
-merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+**46/46 green** (929 checks); plans `525`, `526` and `527` added
+`live-input-payload` (12/12), `live-window` (29/29) and `live-frames` (29/29) in
+focused runs, so the registry now lists
+**49**, and the **full live suite is a
+merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `reorder` and `tree-reorder` are confirmed there too
 — the shell fills the window and navigates by click and

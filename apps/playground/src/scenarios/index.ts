@@ -32,6 +32,7 @@ import { searchReplaceScenario } from "./search-replace.js";
 import { replaceScenario } from "./replace.js";
 import { layoutScenario } from "./layout.js";
 import { layoutGridScenario } from "./layout-grid.js";
+import { frameStatsScenario } from "./frame-stats.js";
 import { windowLayoutScenario } from "./window-layout.js";
 import { rootSingleChildScenario, rootWrapperScenario } from "./root.js";
 import { textScenario } from "./text.js";
@@ -180,11 +181,13 @@ export const PROBE_CAPABILITIES = [
   "upload",
   "qr",
   "media",
+  "frames",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
 export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   windowLayoutScenario,
+  frameStatsScenario,
   layoutScenario,
   layoutGridScenario,
   rootSingleChildScenario,

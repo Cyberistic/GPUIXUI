@@ -81,6 +81,7 @@ export const CAPABILITIES = [
   "qr",
   "media",
   "window",
+  "frames",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -166,6 +167,27 @@ export interface Bounds {
 export class WindowSize extends Schema.Class<WindowSize>("WindowSize")({
   width: Schema.Number,
   height: Schema.Number,
+}) {}
+
+/** A debug-overlay mode the runtime documents. */
+export const FrameOverlayMode = Schema.Literals(["hidden", "minimal", "full"]);
+/** A debug-overlay mode the runtime documents. */
+export type FrameOverlayMode = typeof FrameOverlayMode.Type;
+
+/**
+ * The runtime's paint counter and its bounded sample ring.
+ *
+ * `frames` is lifetime and monotonic: `resetFrameStats` clears `samples` and
+ * the timings, never `frames`. The timings are `None` before the first sample
+ * and always `Some` afterwards (plan `527`).
+ */
+export class FrameStats extends Schema.Class<FrameStats>("FrameStats")({
+  frames: Schema.Int,
+  samples: Schema.Int,
+  currentMs: Schema.OptionFromNullOr(Schema.Number),
+  p90Ms: Schema.OptionFromNullOr(Schema.Number),
+  p99Ms: Schema.OptionFromNullOr(Schema.Number),
+  maxMs: Schema.OptionFromNullOr(Schema.Number),
 }) {}
 
 /** A scroll offset read back from the runtime. */
@@ -336,6 +358,34 @@ export interface SmokeHost {
    * reads this same value (plan `526`).
    */
   readonly windowSize: () => WindowSize;
+  /**
+   * Forces exactly one paint of the current tree.
+   *
+   * Offscreen only: a real window paints when the runtime decides to, so the
+   * live host has no such verb. One call is one frame (measured, plan `527`).
+   */
+  readonly paint: () => void;
+  /**
+   * The renderer's paint counter and its 1000-entry sample ring.
+   *
+   * A read never paints; `frames` counts paints, not frame-loop ticks.
+   */
+  readonly frameStats: () => FrameStats;
+  /** Clears the sample ring. The lifetime `frames` count keeps growing. */
+  readonly resetFrameStats: () => void;
+  /**
+   * The debug overlay's mode.
+   *
+   * `None` when the runtime reports a value the published docs do not list (a
+   * binding change, surfaced rather than guessed).
+   */
+  readonly overlayMode: () => Option.Option<FrameOverlayMode>;
+  /** Sets the overlay and returns the mode the runtime now reports. */
+  readonly setOverlayMode: (
+    mode: FrameOverlayMode,
+  ) => Option.Option<FrameOverlayMode>;
+  /** Cycles hidden → minimal → full → hidden; returns the new mode. */
+  readonly cycleOverlayMode: () => Option.Option<FrameOverlayMode>;
   /**
    * The style the runtime applied to `testId`, decoded; `null` when the id is
    * not painted. The adapter decodes the renderer's payload at this boundary,
@@ -541,6 +591,24 @@ export interface AsyncSmokeHost {
    * real resize reaches React.
    */
   readonly zoomWindow: () => Effect.Effect<void, SmokeHostError>;
+  /** The renderer's paint counter and sample ring, read from the runner's renderer. */
+  readonly frameStats: () => Effect.Effect<FrameStats, SmokeHostError>;
+  /** Clears the sample ring; the lifetime `frames` count keeps growing. */
+  readonly resetFrameStats: () => Effect.Effect<void, SmokeHostError>;
+  /** The debug overlay's mode (`None` for an undocumented value). */
+  readonly overlayMode: () => Effect.Effect<
+    Option.Option<FrameOverlayMode>,
+    SmokeHostError
+  >;
+  /** Sets the overlay and returns the mode the runtime now reports. */
+  readonly setOverlayMode: (
+    mode: FrameOverlayMode,
+  ) => Effect.Effect<Option.Option<FrameOverlayMode>, SmokeHostError>;
+  /** Cycles hidden → minimal → full → hidden; returns the new mode. */
+  readonly cycleOverlayMode: () => Effect.Effect<
+    Option.Option<FrameOverlayMode>,
+    SmokeHostError
+  >;
   /** The `testId` of the natively focused element, or `null` when none has focus. */
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   /**
