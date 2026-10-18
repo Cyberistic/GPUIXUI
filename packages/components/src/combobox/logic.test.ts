@@ -18,6 +18,7 @@ import {
   parseCreateValue,
   selectedLabel,
   toggledSelection,
+  visibleOptions,
   type ComboboxOption,
 } from "./logic.js";
 
@@ -84,6 +85,20 @@ describe("filterOptions", () => {
 
   it("is empty when nothing matches", () => {
     expect(filterOptions(catalogue, "zzz")).toEqual([]);
+  });
+});
+
+describe("visibleOptions", () => {
+  it("filters when the caller asks for filtering", () => {
+    expect(values(visibleOptions(catalogue, "ca", true))).toEqual([
+      "c1",
+      "c2",
+      "v1",
+    ]);
+  });
+
+  it("passes the caller's rows through untouched when filtering is off", () => {
+    expect(visibleOptions(catalogue, "zzz", false)).toEqual(catalogue);
   });
 });
 

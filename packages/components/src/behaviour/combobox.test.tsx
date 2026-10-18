@@ -15,6 +15,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import { useState } from "react";
 import {
   clickCentreOf,
   focusedTestId,
@@ -52,6 +53,10 @@ const Picker = ({
   triggerLabel = "Assign reviewer",
   onCreate,
   createLabel,
+  onQueryChange,
+  shouldFilter,
+  loading,
+  optionList,
 }: {
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
@@ -63,19 +68,26 @@ const Picker = ({
   readonly triggerLabel?: string;
   readonly onCreate?: (query: string) => void;
   readonly createLabel?: (query: string) => string;
+  readonly onQueryChange?: (query: string) => void;
+  readonly shouldFilter?: boolean;
+  readonly loading?: boolean;
+  readonly optionList?: ReadonlyArray<ComboboxOption>;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <Combobox
       onCreate={onCreate}
       createLabel={createLabel}
+      onQueryChange={onQueryChange}
+      shouldFilter={shouldFilter}
+      loading={loading}
       options={
         disabledCamera === true
-          ? options.map((option) =>
+          ? (optionList ?? options).map((option) =>
               option.value === "camera"
                 ? { ...option, disabled: true }
                 : option,
             )
-          : options
+          : (optionList ?? options)
       }
       multiple={multiple}
       onValueChange={onValueChange}
@@ -93,6 +105,47 @@ const Picker = ({
       </ComboboxContent>
     </Combobox>
   </div>
+);
+
+/** The directory a remote picker searches; the caller owns the filtering. */
+const directory: ReadonlyArray<ComboboxOption> = [
+  { value: "ada", label: "Ada Lovelace" },
+  { value: "grace", label: "Grace Hopper" },
+  { value: "vacation", label: "Vacation cover" },
+  { value: "alan", label: "Alan Turing" },
+];
+
+/** Filter the directory the way a server would, on every reported query. */
+const searchDirectory = (query: string): ReadonlyArray<ComboboxOption> => {
+  const needle = query.trim().toLowerCase();
+  return needle === ""
+    ? directory
+    : directory.filter((entry) => entry.label.toLowerCase().includes(needle));
+};
+
+/** A picker whose rows are the caller's search result, not the wrapper's. */
+const RemotePicker = ({
+  onQueryChange,
+}: {
+  readonly onQueryChange?: (query: string) => void;
+}) => {
+  const [rows, setRows] = useState<ReadonlyArray<ComboboxOption>>(directory);
+
+  return (
+    <Picker
+      optionList={rows}
+      shouldFilter={false}
+      onQueryChange={(query) => {
+        onQueryChange?.(query);
+        setRows(searchDirectory(query));
+      }}
+    />
+  );
+};
+
+/** Nothing to show yet: the empty slot is the loading message. */
+const LoadingPicker = ({ loading }: { readonly loading: boolean }) => (
+  <Picker optionList={[]} loading={loading} />
 );
 
 /** A trigger near the window centre, where a centred popup has room to sit. */
@@ -567,6 +620,67 @@ describe("Combobox", () => {
 
     expect(picker.renderer.getAllText()).toContain("Start “Design”");
     expect(picker.renderer.getAllText()).not.toContain("Create “Design”");
+
+    picker.unmount();
+  });
+
+  it("reports each typed query, not the label written on select", async () => {
+    const onQueryChange = vi.fn();
+    const picker = renderComponent(<Picker onQueryChange={onQueryChange} />);
+    await open(picker);
+
+    type(picker, "ca");
+    await settle();
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+
+    expect(onQueryChange.mock.calls).toEqual([[""], ["c"], ["ca"]]);
+
+    picker.unmount();
+  });
+
+  it("shows the caller's rows when filtering is off", async () => {
+    const picker = renderComponent(<Picker shouldFilter={false} />);
+    await open(picker);
+
+    type(picker, "zzz");
+    await settle();
+
+    const texts = picker.renderer.getAllText();
+    expect(texts).toContain("Calendar");
+    expect(texts).toContain("Desk booking");
+    expect(picker.renderer.findByTestId("combobox-empty")).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("lets a caller replace the options for a query", async () => {
+    const picker = renderComponent(<RemotePicker />);
+    await open(picker);
+
+    type(picker, "vac");
+    await settle();
+
+    const texts = picker.renderer.getAllText();
+    expect(texts).toContain("Vacation cover");
+    expect(texts).not.toContain("Calendar");
+    expect(texts).not.toContain("Ada Lovelace");
+
+    picker.unmount();
+  });
+
+  it("says Loading… instead of No matches while options are loading", async () => {
+    const picker = renderComponent(<LoadingPicker loading />);
+    await open(picker);
+
+    expect(picker.renderer.getAllText()).toContain("Loading…");
+    expect(picker.renderer.getAllText()).not.toContain("No matches");
+
+    picker.rerender(<LoadingPicker loading={false} />);
+    await settle();
+
+    expect(picker.renderer.getAllText()).toContain("No matches");
+    expect(picker.renderer.getAllText()).not.toContain("Loading…");
 
     picker.unmount();
   });

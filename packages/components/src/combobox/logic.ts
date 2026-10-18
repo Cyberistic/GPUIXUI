@@ -75,6 +75,17 @@ export const filterOptions = (
   );
 };
 
+/**
+ * The rows to feed the runtime. `filter` is `false` when the caller owns the
+ * search (remote options), so the caller's result is shown exactly as given.
+ */
+export const visibleOptions = (
+  options: ReadonlyArray<ComboboxOption>,
+  query: string,
+  filter: boolean,
+): ReadonlyArray<ComboboxOption> =>
+  filter ? filterOptions(options, query) : options;
+
 /** Add `value` to the selection, or remove it when it is already selected. */
 export const toggledSelection = (
   selected: ReadonlyArray<string>,

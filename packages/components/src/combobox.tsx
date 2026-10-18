@@ -30,6 +30,7 @@ import {
   type ComboboxListProps as HeadlessListProps,
   type ComboboxTriggerProps as HeadlessTriggerProps,
   type ComboboxValue,
+  type EventPayload,
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
@@ -56,8 +57,8 @@ import {
   canCreate,
   createValue,
   labelOf,
-  filterOptions,
   parseCreateValue,
+  visibleOptions,
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
@@ -87,8 +88,12 @@ interface ComboboxContextValue {
   readonly selectedValues: ReadonlyArray<string>;
   readonly open: boolean;
   readonly disabled: boolean;
+  /** Whether the caller is fetching the rows the empty slot would stand in for. */
+  readonly loading: boolean;
   readonly labelFor: (value: string) => string;
   readonly isDisabled: (value: string) => boolean;
+  /** Report a user edit to `onQueryChange`; never called for a selection. */
+  readonly noteQueryChange: (query: string) => void;
   readonly trigger: RefObject<PublicInstance | null>;
   readonly registerTrigger: (instance: PublicInstance | null) => void;
   /** An Escape press: close and return focus to the trigger. */
@@ -120,6 +125,19 @@ export interface ComboboxProps {
   /** Default `false`: one value and the popup closes on select. */
   readonly multiple?: boolean;
   readonly disabled?: boolean;
+  /**
+   * Called with the search text: `""` when the popup opens, then once per user
+   * edit. A selection's label write is never reported, so an async caller can
+   * fetch on every call without fetching its own answer.
+   */
+  readonly onQueryChange?: (query: string) => void;
+  /**
+   * Default `true`. `false` shows `options` exactly as given (membership and
+   * order), for a caller that filters remotely.
+   */
+  readonly shouldFilter?: boolean;
+  /** While nothing is shown, the default empty slot says `Loading…`. */
+  readonly loading?: boolean;
   /**
    * Offer a trailing "create" row when the trimmed query names no option. The
    * callback receives the trimmed query after the row is selected.
@@ -189,6 +207,9 @@ export const Combobox = ({
   onValueChange,
   multiple = false,
   disabled = false,
+  onQueryChange,
+  shouldFilter = true,
+  loading = false,
   onCreate,
   createLabel = defaultCreateLabel,
   children,
@@ -213,7 +234,7 @@ export const Combobox = ({
       ? []
       : [selected];
 
-  const visible = filterOptions(options, query);
+  const visible = visibleOptions(options, query, shouldFilter);
   const creatable =
     onCreate !== undefined && canCreate(options, Str.trim(query));
   const create = creatable
@@ -257,12 +278,14 @@ export const Combobox = ({
         selectedValues,
         open,
         disabled,
+        loading,
         labelFor,
         isDisabled: (value) =>
           Option.exists(
             optionOf(options, value),
             (option) => option.disabled === true,
           ),
+        noteQueryChange: (next) => onQueryChange?.(next),
         trigger,
         registerTrigger: (instance) => {
           trigger.current = instance;
@@ -319,6 +342,7 @@ export const Combobox = ({
           if (next) {
             restoreFocus.current = false;
             setQuery("");
+            onQueryChange?.("");
             setOpen(true);
             return;
           }
@@ -506,21 +530,30 @@ export interface ComboboxInputProps {
   readonly placeholder?: string;
   /** The field's accessible name. Default `"Search options"`. */
   readonly label?: string;
+  /** The host input's own change event, composed after `onQueryChange`. */
+  readonly onChange?: (event: EventPayload) => void;
 }
 
 /** The search field. Escape asks the root to return focus to the trigger. */
 export const ComboboxInput = ({
   placeholder = "Search…",
   label = "Search options",
+  onChange,
 }: ComboboxInputProps) => {
   const theme = useTheme();
-  const { noteEscape } = useCombobox();
+  const { noteEscape, noteQueryChange } = useCombobox();
 
   return (
     <HeadlessInput
       testId="combobox-input"
       placeholder={placeholder}
       aria-label={label}
+      onChange={(event) => {
+        // The host edit is the only signal that means "the user typed": the
+        // runtime also writes the selected label into the field on commit.
+        noteQueryChange(event.value ?? "");
+        onChange?.(event);
+      }}
       onKeyDown={(event) => {
         if (isDismiss(event)) noteEscape();
       }}
@@ -646,6 +679,7 @@ export interface ComboboxEmptyProps {
 /** GPUix's empty slot: shown only while no option matches the query. */
 export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
   const theme = useTheme();
+  const { loading } = useCombobox();
 
   return (
     <HeadlessEmpty testId="combobox-empty">
@@ -658,7 +692,7 @@ export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
             paddingBottom: theme.spacing.lg,
           }}
         >
-          No matches
+          {loading ? "Loading…" : "No matches"}
         </text>
       )}
     </HeadlessEmpty>
@@ -705,7 +739,8 @@ export const comboboxMeta = {
     "GPUix's filter is order-preserving, so the adapter feeds it pre-ranked items and controls inputValue",
     "selection yields option values, never labels",
     "no aria-activedescendant in 0.10.0: the highlighted row is visual while the input keeps focus",
-    "no async option loading; create-new is a synchronous caller callback",
+    "no built-in debounce: onQueryChange fires per edit, so the caller debounces and cancels its own request",
+    "no separate loading row: while loading with nothing shown, the empty slot says Loading… (stale rows stay visible)",
     'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',
   ],
   docs: "docs/combobox.mdx",

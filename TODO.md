@@ -455,6 +455,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
       a stable actions context, so one focus move repaints exactly the two rows
       that changed; the style-count test fails with all six fixture rows on the
       old code; List 39, behaviour 518 (owner: components)
+    - `[x]` Combobox async option loading: `onQueryChange`, `shouldFilter` and
+      `loading` close the last documented Combobox gap without adding a
+      transport — plan 340; 2 logic + 4 native tests (unit 356, behaviour 522),
+      both-direction proof
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

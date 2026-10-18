@@ -133,6 +133,50 @@ arrow or Enter.
 > This is plan 116 §3's documented fallback; a predicate could not express the
 > ranking. `combobox.test.tsx` asserts the order.
 
+## Remote options
+
+When the options come from a server, the wrapper must not filter them: the rows
+it would keep are exactly the ones the caller's search already discarded. Two
+props hand the search over, and one reports that rows are on their way.
+
+| Prop | Meaning |
+| ---- | ------- |
+| `onQueryChange?: (query: string) => void` | `""` when the popup opens, then once per edit the user types. The label a selection writes back into the field is **never** reported. |
+| `shouldFilter?: boolean` | Default `true`. `false` shows `options` exactly as given — membership and order — so the caller's result is not re-filtered or re-ranked. |
+| `loading?: boolean` | Default `false`. While no row is shown, the default `ComboboxEmpty` text reads `Loading…` instead of `No matches`. |
+
+```tsx
+const [rows, setRows] = useState(allPeople);
+const [pending, setPending] = useState(false);
+
+<Combobox
+  options={rows}
+  shouldFilter={false}
+  loading={pending}
+  onQueryChange={(query) => {
+    // The fetch belongs here, not in the component.
+    setRows(searchPeople(query));
+  }}
+  onValueChange={(value) => setPerson(typeof value === "string" ? value : null)}
+>
+  <ComboboxTrigger label="Assign reviewer" />
+  <ComboboxContent>
+    <ComboboxInput label="Search people" />
+    <ComboboxList label="People" />
+    <ComboboxEmpty />
+  </ComboboxContent>
+</Combobox>;
+```
+
+The component never fetches, debounces or cancels a request. `onQueryChange`
+fires once per edit, so a caller with a network round trip debounces it and
+drops stale responses itself. `loading` only changes the empty slot: a caller
+that keeps the previous rows visible while the next request is in flight gets
+no built-in indicator, and should render its own.
+
+The `examples/combobox.example.tsx` directory picker is this shape: the example
+filters a local array in `onQueryChange`, which is where a request would go.
+
 ## Keyboard
 
 | Key | Result |
@@ -172,8 +216,12 @@ same shape for a row composed by hand.
 
 ## Limitations
 
-- No async option loading, no grouping headers in v1. Create-new is a
-  synchronous caller callback (`onCreate`), not a loading or persistence layer.
+- No grouping headers in v1. Create-new is a synchronous caller callback
+  (`onCreate`), not a persistence layer.
+- No built-in debounce or request cancellation: `onQueryChange` fires per edit
+  and the caller owns the transport ([Remote options](#remote-options)).
+- No separate loading row: `loading` changes the empty slot only. Rows kept
+  visible from the previous query stay on screen until the caller replaces them.
 - The popup is an anchored layer, not a portal. The runtime snaps it inside the
   window but does not flip it, so the component opens it on the opposite side
   when snapping would cover the trigger; `align="center"` is measured from the
@@ -184,7 +232,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (23 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (27 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
@@ -192,13 +240,16 @@ add/remove with order, the disabled row, Escape restoring focus,
 prefix-before-substring ranking, both themes, the pointer path — selecting an
 option, toggling several while skipping a disabled one, closing on an outside
 press — a caller-supplied empty state, the trigger's placeholder/name coming
-from the part, and the create row: its position after the matches, its absence
+from the part, the create row: its position after the matches, its absence
 for an exact option, Enter and pointer selection with focus return, multiple
-selection without the sentinel, and a caller-supplied label.
+selection without the sentinel, and a caller-supplied label — plus the reported
+query (including that a selection's label write is not reported), caller-owned
+filtering, a caller replacing the options for a query, and the loading empty
+state in both directions.
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
-`toggledSelection`, and the create rules (`canCreate` plus the synthetic value's
-round-trip).
+`toggledSelection`, `visibleOptions`, and the create rules (`canCreate` plus
+the synthetic value's round-trip).
 
 ```sh
 nub run --filter @gpuixui/components test

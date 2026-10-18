@@ -3,8 +3,9 @@
  *
  * The single picker closes on select and shows one name; the multi picker stays
  * open and reports an ordered array; the project picker offers a create row for
- * a name that does not exist yet. All three use the same option shape and the
- * same ranking from `combobox/logic.ts`.
+ * a name that does not exist yet; the directory picker filters its own rows in
+ * `onQueryChange`, which is the shape a server-backed search takes. The first
+ * three share one option shape and the same ranking from `combobox/logic.ts`.
  */
 
 import { useState } from "react";
@@ -39,7 +40,22 @@ const initialProjects: ReadonlyArray<ComboboxOption> = [
   { value: "documentation", label: "Documentation" },
 ];
 
-/** One picker composed from the parts; all three cards use the same shape. */
+/** The directory a "remote" picker searches; the caller owns the filtering. */
+const directory: ReadonlyArray<ComboboxOption> = [
+  { value: "ada", label: "Ada Lovelace", description: "Engineering" },
+  { value: "grace", label: "Grace Hopper", description: "Compilers" },
+  { value: "alan", label: "Alan Turing", description: "Research" },
+];
+
+/** Stand-in for a server search: the component never fetches or debounces. */
+const searchDirectory = (query: string): ReadonlyArray<ComboboxOption> => {
+  const needle = query.trim().toLowerCase();
+  return needle === ""
+    ? directory
+    : directory.filter((entry) => entry.label.toLowerCase().includes(needle));
+};
+
+/** One picker composed from the parts; the first three cards share it. */
 const Picker = ({
   label,
   multiple,
@@ -76,6 +92,9 @@ export const ComboboxExample = () => {
   const [project, setProject] = useState<string | null>(null);
   const [projects, setProjects] =
     useState<ReadonlyArray<ComboboxOption>>(initialProjects);
+  const [remoteRows, setRemoteRows] =
+    useState<ReadonlyArray<ComboboxOption>>(directory);
+  const [remote, setRemote] = useState<string | null>(null);
 
   return (
     <Card style={{ maxWidth: 460 }}>
@@ -172,6 +191,37 @@ export const ComboboxExample = () => {
             }
           />
         </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.xs,
+          }}
+        >
+          <text
+            style={{
+              ...textStyle(theme, "label"),
+              color: theme.colors.foreground,
+            }}
+          >
+            Remote directory
+          </text>
+          <Combobox
+            options={remoteRows}
+            shouldFilter={false}
+            onQueryChange={(query) => setRemoteRows(searchDirectory(query))}
+            onValueChange={(value) =>
+              setRemote(typeof value === "string" ? value : null)
+            }
+          >
+            <ComboboxTrigger label="Remote directory" />
+            <ComboboxContent>
+              <ComboboxInput label="Search the directory" />
+              <ComboboxList label="Directory" />
+              <ComboboxEmpty />
+            </ComboboxContent>
+          </Combobox>
+        </div>
         <text
           style={{
             ...textStyle(theme, "caption"),
@@ -179,7 +229,9 @@ export const ComboboxExample = () => {
           }}
         >
           Try “ca”: Calendar, Camera, then Vacation — prefix matches first. Type
-          a project that is not listed to create it: {project ?? "none"}.
+          a project that is not listed to create it: {project ?? "none"}. The
+          directory is filtered by this example, not the component: swap
+          searchDirectory for a request ({remote ?? "none"} selected).
         </text>
       </div>
     </Card>
