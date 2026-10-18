@@ -165,6 +165,7 @@ export type {
 } from "./loading.js";
 
 export {
+  clippedFocusRingStyle,
   controlFocusStyle,
   controlStyle,
   fieldTextStyle,

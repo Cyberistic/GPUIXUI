@@ -9,6 +9,8 @@
  * so no shared edge has a double-rounded notch (measured: plan `078`). A
  * button's explicit `radius` still wins. The axis is `orientation`: a vertical
  * group stacks its buttons and stretches them to the group's width (plan `096`).
+ * The clip would also cut away a focused button's outer ring, so a button in an
+ * attached group paints its ring as an inset overlay (plan `344`).
  */
 
 import type { ReactElement, ReactNode } from "react";

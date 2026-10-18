@@ -44,6 +44,19 @@ buttons meet on a straight shared edge instead of two rounded corners with a
 notch between them. Pass `radius` to a single button when it needs a different
 shape; an explicit value wins over the group's.
 
+## Focus
+
+The clip is also why `attached` changes how focus is painted. The ring is a
+shadow spread 2 px **outside** the button (`focusRing`), and the group's box is
+exactly its buttons' union — measured, the first button's top, left and bottom
+edges sit on the group's edge, so the clip removed the ring on three sides and
+the next button covered the fourth. A button in an attached group therefore
+paints its ring as an **inset overlay**: an absolutely positioned child on the
+button's own edge, carrying `focusRing`'s width and colour. A keyboard user sees
+a ring inside the button instead of around it; the clip still supplies the
+rounded ends. In `separated` mode nothing is clipped and the button keeps the
+outer ring (plan `344`).
+
 ## Axis
 
 `orientation` picks the axis, the same prop the other groups take.
@@ -94,6 +107,9 @@ axis changes layout only, so neither the tokens nor the clip follow it.
 - The shape rule reaches `Button` children only (through `GroupShapeContext`); a
   `Toggle` or another control in the group keeps its own radius. A pressed set
   belongs in `ToggleGroup`, which owns that paint.
+- In `attached` mode the ring is drawn just **inside** the button, not around
+  it: the group's clip removes an outer ring. The width and colour still come
+  from `focusRing`.
 - The name must be passed as `label`; there is no automatic association with a
   heading.
 - No overflow behaviour: a group wider than its parent does not collapse into a
@@ -105,14 +121,20 @@ axis changes layout only, so neither the tokens nor the clip follow it.
   plus `role="group"`, the `label` → `aria-label` contract, the default row axis
   and the vertical column axis, and the caller's `style` still winning last.
 - `src/components/Button.test.tsx` — `radius` resolves to the theme step, and
-  defaults to `md` (plan `078`).
+  defaults to `md` (plan `078`); a clipped button anchors an inset ring overlay
+  and sets no shadow, while a standalone one keeps the outer ring (plan `344`).
 - `runtime/controls.runtime.test.tsx` — attached children are 0px apart and
   paint `borderRadius: 0` while the group paints `radius.md` with `overflow:
   hidden`; separated children keep `radius.md`; an explicit per-button `radius`
   wins; a labelled group is an accessibility `Group` with that name (plan
   `078`). A vertical attached group stacks with 0px between neighbours, paints
   every button at the group's width, and keeps the same square children and
-  clipped group box (plan `096`).
+  clipped group box (plan `096`). The focused button's box is flush with the
+  group's clip, its own shadow is absent, and one inset overlay paints
+  `focusRing`'s width and colour inside it; a separated group keeps the outer
+  ring (plan `344`).
+- `runtime/focus-ring.runtime.test.tsx` — the group-clipped button carries the
+  ring inside the control like every other focusable part (plan `344`).
 - `runtime/examples.runtime.test.tsx` — mounts the composed example and runs its
   stacked action.
 

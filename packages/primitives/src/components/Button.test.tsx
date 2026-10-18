@@ -14,10 +14,12 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { focusRing } from "@gpuixui/tokens";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton } from "./Button.js";
 import { keyEvent, clickEvent } from "./testing/event.js";
 import {
+  elementChildren,
   expectSome,
   hostHandler,
   hostProp,
@@ -254,5 +256,52 @@ describe("Button", () => {
     expect(
       hostProp(resting({ loading: true }), "aria-description"),
     ).toStrictEqual(Option.some("Loading"));
+  });
+
+  it("paints a clipped group's focus ring inside the button", () => {
+    // The bug guarded (plan 344): an attached ButtonGroup clips at its buttons'
+    // outer edge, so the ring — a shadow spread 2px *outside* the button — was
+    // cut away. A clipped button now anchors an inset overlay that carries the
+    // same `focusRing`, and sets no shadow of its own.
+    const focused = renderButton(
+      { children: "Save" },
+      testTheme,
+      { focused: true },
+      true,
+    );
+    const chrome = expectSome(hostStyleRecord(focused));
+    expect(chrome.boxShadow).toBeUndefined();
+    expect(chrome.position).toBe("relative");
+    const rings = Arr.filter(
+      elementChildren(focused),
+      (child) =>
+        Option.getOrUndefined(hostStyleRecord(child))?.position === "absolute",
+    );
+    expect(rings).toHaveLength(1);
+    const ring = expectSome(hostStyleRecord(expectSome(Arr.head(rings))));
+    expect(ring.boxShadow).toBeUndefined();
+    expect(ring.borderWidth).toBe(testTheme.borderWidth.strong);
+    expect(ring.borderColor).toBe(focusRing(testTheme).boxShadow.color);
+    expect(ring.position).toBe("absolute");
+  });
+
+  it("keeps the outer ring outside a group, and paints none at rest or disabled", () => {
+    // The other two directions of plan 344: a standalone button is unchanged,
+    // and neither a resting button in a group nor a disabled one paints a ring
+    // inside the clip (plan 332's rule reaches the overlay too).
+    const plain = renderButton({}, testTheme, { focused: true });
+    expect(
+      Option.getOrUndefined(hostStyleRecord(plain))?.boxShadow,
+    ).toStrictEqual(focusRing(testTheme).boxShadow);
+    expect(elementChildren(plain)).toHaveLength(0);
+
+    expect(
+      elementChildren(renderButton({}, testTheme, { focused: false }, true)),
+    ).toHaveLength(0);
+    expect(
+      elementChildren(
+        renderButton({ disabled: true }, testTheme, { focused: true }, true),
+      ),
+    ).toHaveLength(0);
   });
 });

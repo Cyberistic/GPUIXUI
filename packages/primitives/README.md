@@ -162,7 +162,7 @@ mistake.
 
 | Capability | GPUix 0.10.0 | Here |
 | ---------- | ------------ | ---- |
-| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too, and a **disabled** control paints none — native focus outlives a `disabled` prop change, so an inert control must not advertise the caret (plan 332) |
+| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too, and a **disabled** control paints none — native focus outlives a `disabled` prop change, so an inert control must not advertise the caret (plan 332). An **attached `ButtonGroup`** clips at its buttons' edge, so a button in one paints the same ring as an inset overlay on its own edge instead (plan 344) |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
@@ -200,7 +200,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **41 files, 536 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **41 files, 560 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), and a guard that every documented `theme.…` path and
@@ -219,7 +219,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **22 files, 349 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **23 files, 386 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -242,6 +242,8 @@ its name, description and painted focus ring (plan 073), an `OTPField` that
 is one roving tab stop instead of six (plan 076), and a decimal `NumberField`
 step that reports `0.3` instead of binary noise (plan 077), an attached
 button group whose buttons share one square-edged, clipped surface (plan 078),
+whose focused button paints its ring inside that clip rather than under it
+(plan 344),
 and a state-aware `style` callback whose `focused`/`checked`/`invalid` state
 repaints the mounted tree (plans 079, 080), a select trigger ringed on focus and
 while its list is open (plan 083), and a seventeen-control matrix that fails if

@@ -172,6 +172,31 @@ export const controlFocusStyle = (
 };
 
 /**
+ * The same focus ring, drawn **inside** a clipped surface.
+ *
+ * An attached `ButtonGroup` clips at its buttons' outer edge, so a ring painted
+ * outside a button is cut away by the group (plan `344`). This overlay covers
+ * the button and draws the ring as an inside border — the shadow helper cannot
+ * be reused directly, because a transparent element lets its shadow's interior
+ * show through as a filled block. The width and colour still come from
+ * `focusRing`, so the ring has one definition. Absolute, so it takes no layout
+ * space.
+ */
+export const clippedFocusRingStyle = (theme: PrimitiveTheme): StyleDesc => {
+  const ring = focusRing(theme).boxShadow;
+  return {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderWidth: ring.spreadRadius,
+    borderColor: ring.color,
+    pointerEvents: "none",
+  };
+};
+
+/**
  * What a text field adds over the shared control chrome.
  *
  * A field is not a button: its content starts at the left, it takes the body

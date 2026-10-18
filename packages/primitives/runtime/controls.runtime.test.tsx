@@ -18,6 +18,7 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
+import { focusRing } from "@gpuixui/tokens";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -31,6 +32,7 @@ import {
   a11yNode,
   a11yNodes,
   a11yValueOf,
+  isWithin,
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
@@ -400,6 +402,94 @@ it("stacks a vertical ButtonGroup into full-width rows", async () => {
       Option.map(runtime.element("g"), (element) => element.style["overflow"]),
     ),
   ).toBe("hidden");
+});
+
+it("paints an attached group's focus ring inside its clip", async () => {
+  // The bug guarded (plan 344): measured, an attached group's box is exactly
+  // its buttons' union, so the focused button's 2px ring spread lay outside the
+  // group's `overflow: hidden` clip on three sides and under the next sibling
+  // on the fourth — a keyboard user saw no focus at all. The ring is now an
+  // inset overlay drawn inside the button, from `focusRing`'s own width/colour.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ButtonGroup mode="attached" testId="g" label="Actions">
+        <Button testId="one">One</Button>
+        <Button testId="two">Two</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  const before = boundsOf(runtime, "one");
+  runtime.focusNext();
+  runtime.flush();
+  expect(runtime.focused()).toStrictEqual(Option.some("one"));
+  const group = boundsOf(runtime, "g");
+  const one = boundsOf(runtime, "one");
+  // The overlay takes no layout space: focusing moves nothing.
+  expect(one).toStrictEqual(before);
+  // The clip starts and ends exactly at the button — why an outer ring is cut.
+  expect([one.x, one.y, one.height]).toStrictEqual([
+    group.x,
+    group.y,
+    group.height,
+  ]);
+  const button = Option.getOrElse(runtime.element("one"), () =>
+    expect.fail("the focused button painted no element"),
+  );
+  expect(button.style.boxShadow).toBeUndefined();
+  const rings = Arr.filter(
+    runtime.all(),
+    (element) =>
+      element.id !== button.id &&
+      isWithin(runtime, element, button.id) &&
+      element.style.position === "absolute",
+  );
+  expect(rings).toHaveLength(1);
+  const ring = Option.getOrElse(Arr.head(rings), () =>
+    expect.fail("the group painted no ring inside the button"),
+  );
+  expect(ring.style.borderWidth).toBe(testTheme.borderWidth.strong);
+  expect(ring.style.borderColor).toBe(focusRing(testTheme).boxShadow.color);
+  const ringBounds = Option.getOrElse(runtime.boundsOfId(ring.id), () =>
+    expect.fail("the ring painted no box"),
+  );
+  // The ring's edge is the button's edge: the whole band is inside the clip.
+  expect(ringBounds.x).toBeCloseTo(one.x, 1);
+  expect(ringBounds.y).toBeCloseTo(one.y, 1);
+  expect(ringBounds.width).toBeCloseTo(one.width, 1);
+  expect(ringBounds.height).toBeCloseTo(one.height, 1);
+});
+
+it("keeps the outer ring for a separated group", async () => {
+  // The other direction of plan 344: a separated group does not clip, so the
+  // button keeps the one shared `focusRing` shadow and paints no overlay.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ButtonGroup mode="separated" testId="g" label="Actions">
+        <Button testId="one">One</Button>
+        <Button testId="two">Two</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  const button = Option.getOrElse(runtime.element("one"), () =>
+    expect.fail("the focused button painted no element"),
+  );
+  expect(button.style.boxShadow).toStrictEqual({
+    ...focusRing(testTheme).boxShadow,
+    inset: false,
+  });
+  expect(
+    Arr.filter(
+      runtime.all(),
+      (element) =>
+        element.id !== button.id &&
+        isWithin(runtime, element, button.id) &&
+        element.style.position === "absolute",
+    ),
+  ).toHaveLength(0);
 });
 
 it("squares the buttons of an attached group so a shared edge has no notch", async () => {

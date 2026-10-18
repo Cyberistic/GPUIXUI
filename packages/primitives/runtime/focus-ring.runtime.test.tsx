@@ -20,6 +20,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
 import { Button } from "../src/components/Button.js";
+import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { InfoTip } from "../src/components/InfoTip.js";
@@ -138,3 +139,38 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase.node] as const))(
     expect(isWithin(runtime, ring, root.id)).toBe(true);
   },
 );
+
+it("paints the ring inside a button that an attached group clips", async () => {
+  // Plan 344: the matrix's one ring is a shadow spread 2px outside the control,
+  // which an attached group's clip removes. A clipped button therefore paints
+  // its ring as an inset overlay — still `focusRing`'s width and colour, still
+  // exactly one ring, still inside the control (its band lies on the button's
+  // edge, where the clip cannot reach).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ButtonGroup mode="attached" label="Actions">
+        <Button testId="c">Save</Button>
+        <Button testId="other">Cancel</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  const root = Option.getOrElse(runtime.element("c"), () =>
+    expect.fail("the control painted no root element"),
+  );
+  expect(root.style.boxShadow).toBeUndefined();
+  const rings = Arr.filter(
+    runtime.all(),
+    (element) =>
+      element.style.position === "absolute" &&
+      element.style.borderColor === RING.color,
+  );
+  expect(rings).toHaveLength(1);
+  const ring = Option.getOrElse(Arr.head(rings), () =>
+    expect.fail("the clipped control painted no ring"),
+  );
+  expect(ring.style.borderWidth).toBe(testTheme.borderWidth.strong);
+  expect(isWithin(runtime, ring, root.id)).toBe(true);
+});

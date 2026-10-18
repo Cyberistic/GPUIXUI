@@ -125,7 +125,9 @@ button reports nothing, while hover still opens its tip.
   instead, which is the strongest truthful alternative.
 - Focus is drawn as a zero-offset shadow ring (`controlFocusStyle`), because the
   runtime has no `focusVisible`. A mouse click therefore shows the same ring as
-  Tab.
+  Tab. Inside an attached `ButtonGroup` the ring is painted as an inset overlay
+  on the button's own edge, because the group's clip would cut an outer ring
+  away (plan `344`).
 
 ## Theming
 
@@ -172,7 +174,8 @@ look. `ButtonState` is exported.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
   loading description, and the `radius` resolution with its `md` default; the
   slot handlers reach the host, focus/blur/keys compose, and a busy description
-  keeps `Loading` (plan 341).
+  keeps `Loading` (plan 341). A clipped button paints the ring as an inset
+  overlay and no shadow; a standalone one keeps the outer ring (plan 344).
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name; a button wired with `onClick`

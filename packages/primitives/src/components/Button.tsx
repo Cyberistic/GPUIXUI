@@ -9,9 +9,11 @@
  * Focus is the one interaction state the runtime forces on us — there is no
  * `focusVisible` (plan 020 §1.2) — so the component tracks focus and merges
  * `core/style.ts`'s ring while it holds it. A mouse press therefore shows the
- * ring too; that limitation is recorded in `COMPONENTS.md`. The `focused` flag
- * is React-local render state with no other reader, so `useState` is the right
- * tool; an Atom would make one button's highlight global state.
+ * ring too; that limitation is recorded in `COMPONENTS.md`. Inside an attached
+ * `ButtonGroup` the surface is clipped at the button's edge, so the ring is
+ * painted by an inset overlay instead of the outer shadow (plan 344). The
+ * `focused` flag is React-local render state with no other reader, so `useState`
+ * is the right tool; an Atom would make one button's highlight global state.
  *
  * The button is also a valid **slot trigger**: `Tooltip`'s `asChild` clones
  * host props onto its child, and a component boundary would otherwise drop
@@ -26,7 +28,11 @@ import { useState, type ReactElement, type ReactNode } from "react";
 import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
-import { controlFocusStyle, controlStyle } from "../core/style.js";
+import {
+  clippedFocusRingStyle,
+  controlFocusStyle,
+  controlStyle,
+} from "../core/style.js";
 import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
 import { useGroupShape } from "./group-shape.js";
@@ -106,6 +112,11 @@ export const renderButton = (
   props: ButtonProps,
   theme: PrimitiveTheme,
   focus: ButtonFocus,
+  /**
+   * The surrounding group clips its surface, so the ring moves inside the
+   * button where the clip cannot cut it away (plan `344`).
+   */
+  clipped = false,
 ): ReactElement => {
   const { variant = "primary", size = "md" } = props;
   const busy = isBusy(props);
@@ -141,6 +152,10 @@ export const renderButton = (
         activate(event);
       handler?.(event);
     };
+  const showRing = focus.focused && props.disabled !== true;
+  const chrome = clipped
+    ? mergeStyle(controlStyle(spec, theme), { position: "relative" })
+    : controlStyle(spec, theme);
   return (
     <div
       {...passiveTriggerHandlers(props)}
@@ -155,12 +170,9 @@ export const renderButton = (
       onKeyDown={onKey("down", props.onKeyDown)}
       onKeyUp={onKey("up", props.onKeyUp)}
       style={resolvePartStyle(
-        focus.focused
-          ? mergeStyle(
-              controlStyle(spec, theme),
-              controlFocusStyle(spec, theme),
-            )
-          : controlStyle(spec, theme),
+        !clipped && showRing
+          ? mergeStyle(chrome, controlFocusStyle(spec, theme))
+          : chrome,
         props.style,
         state,
       )}
@@ -172,6 +184,9 @@ export const renderButton = (
       )}
       {props.children}
       {props.trailing}
+      {clipped && showRing ? (
+        <div style={clippedFocusRingStyle(theme)} />
+      ) : null}
     </div>
   );
 };
@@ -189,5 +204,6 @@ export const Button = (props: ButtonProps): ReactElement => {
       onFocus: () => setFocused(true),
       onBlur: () => setFocused(false),
     },
+    Option.isSome(shape),
   );
 };

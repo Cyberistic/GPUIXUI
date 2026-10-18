@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 91/91
+`[x]` `[██████████]` 92/92
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -731,6 +731,15 @@ retired once both branches are one
       now paints a decorative `chevron-down`/`chevron-up`, muted and unnamed,
       with `pointerEvents: "none"`; 2 element-tree + 1 runtime test, both
       directions proven (plan `343`)
+
+`[x]` `packages/primitives`: **an attached `ButtonGroup` clipped its own focus
+      ring away** — measured: the group's box is exactly its buttons' union, so a
+      focused button's 2 px `focusRing` spread lay outside the group's clip on
+      three sides and under the next button on the fourth; a keyboard user saw no
+      focus. A button in an attached group now paints the same ring (width and
+      colour from `focusRing`) as an inset overlay on its own edge; a separated
+      group keeps the outer shadow. 1 core + 2 element-tree + 3 runtime tests
+      (offline 560, runtime 386), both directions proven (plan `344`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
