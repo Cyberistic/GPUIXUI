@@ -36,19 +36,19 @@ export const BreadcrumbExample = () => {
                 Projects
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator>›</BreadcrumbSeparator>
             <BreadcrumbItem>
               <BreadcrumbLink onSelect={() => setChosen("GPUIXUI")}>
                 GPUIXUI
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator>›</BreadcrumbSeparator>
             <BreadcrumbItem>
               <BreadcrumbLink onSelect={() => setChosen("packages")}>
                 packages
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator>›</BreadcrumbSeparator>
             <BreadcrumbItem>
               <BreadcrumbPage>components</BreadcrumbPage>
             </BreadcrumbItem>

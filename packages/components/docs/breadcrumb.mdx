@@ -23,11 +23,11 @@ import {
     <BreadcrumbItem>
       <BreadcrumbLink onSelect={() => go("Projects")}>Projects</BreadcrumbLink>
     </BreadcrumbItem>
-    <BreadcrumbSeparator />
+    <BreadcrumbSeparator>›</BreadcrumbSeparator>
     <BreadcrumbItem>
       <BreadcrumbLink onSelect={() => go("GPUIXUI")}>GPUIXUI</BreadcrumbLink>
     </BreadcrumbItem>
-    <BreadcrumbSeparator />
+    <BreadcrumbSeparator>›</BreadcrumbSeparator>
     <BreadcrumbItem>
       <BreadcrumbPage>components</BreadcrumbPage>
     </BreadcrumbItem>
@@ -44,7 +44,7 @@ import {
 | `BreadcrumbItem` | one `role="listitem"` |
 | `BreadcrumbLink` | a link (`role="link"`) with Enter/Space and `onSelect` |
 | `BreadcrumbPage` | the current page: plain text, no tab stop |
-| `BreadcrumbSeparator` | the glyph between entries; not focusable |
+| `BreadcrumbSeparator` | the glyph between entries (`children`, default `/`); not focusable |
 
 ## Collapse rule
 
@@ -52,7 +52,8 @@ import {
 and its end. When the trail fits, every entry renders. Otherwise the control
 keeps the first entry, an ellipsis, and the last `maxItems - 2` entries. A hidden
 entry takes its separator with it — the list pairs each separator with the item
-that follows it.
+that follows it — and the ellipsis keeps the separator authored before the first
+hidden entry, so a composed trail never falls back to `/` in the middle.
 
 `BreadcrumbList` reads its **direct** children to do this, which is why the parts
 are plain elements rather than wrappers: a custom component around an item is
@@ -74,12 +75,12 @@ Every part takes the GPUix host props and **merges `style` last**.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Breadcrumb` | `div` (`role="navigation"`) | `maxItems?: number` (clamped to at least 3), `separator?: ReactNode` (default `/`) |
+| `Breadcrumb` | `div` (`role="navigation"`) | `maxItems?: number` (clamped to at least 3), `separator?: ReactNode` (default `/`), `currentLabel?: string` (default `"Current page"`) |
 | `BreadcrumbList` | `div` (`role="list"`) | — |
 | `BreadcrumbItem` | `div` (`role="listitem"`) | — |
 | `BreadcrumbLink` | `div` (`role="link"`), or `text` when `current` | `onSelect?: () => void`, `current?: boolean` |
 | `BreadcrumbPage` | `text` | — |
-| `BreadcrumbSeparator` | `text` (`role="presentation"`) | — |
+| `BreadcrumbSeparator` | `text` (`role="presentation"`) | `children?: ReactNode` (default `/`) |
 
 ## Theming
 
@@ -93,18 +94,23 @@ Links and separators use the `caption` type role; links are
   `role="listitem"` on the entries.
 - A link names itself from its plain-text child, because 0.10.0 reports no name
   from contents; a composed link passes `aria-label`.
-- **No `aria-current`** in `@gpuix/native@0.10.0`: the current page is marked by
-  `BreadcrumbPage` (text, not a link) and by colour, not by an attribute.
+- **No `aria-current`** in `@gpuix/native@0.10.0`. The item holding the current
+  page (`BreadcrumbPage`, or `BreadcrumbLink current`) is described by
+  `currentLabel` (default `"Current page"`) through the supported
+  `aria-description` on its `role="listitem"`; an authored description wins. The
+  page itself stays plain text, so its name is unchanged.
 - The collapsing ellipsis is a text node with `aria-label="More"`; it is not a
   button and not in the tab order.
 - Separators are `role="presentation"`.
 
 ## Verification
 
-`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (7 tests):
-the trail and its separator count, selecting a link but not the current page,
-Enter on press and Space on release, collapsing the middle while keeping both
-ends, and the ellipsis staying out of the tab order.
+`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (12 tests):
+the trail and its separator count, an authored separator glyph, selecting a link
+but not the current page, Enter on press and Space on release, collapsing the
+middle while keeping both ends and the authored separator, the ellipsis staying
+out of the tab order, and the current item's description (`BreadcrumbPage` and
+`BreadcrumbLink current`, with a caller label and description).
 
 `src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8 and
 budgets 3–6.

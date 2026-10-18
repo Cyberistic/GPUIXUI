@@ -3,12 +3,15 @@
  *
  * The bugs these guard: a trail that dropped the current page when collapsed; a
  * separator left behind after its item was hidden; a current page that stayed in
- * the tab order; a link that only answered the mouse; and Space activating a
- * link on key down instead of on release.
+ * the tab order; a link that only answered the mouse; Space activating a link on
+ * key down instead of on release; an authored separator glyph that was replaced
+ * by `/`; a collapsed middle that used the fallback separator instead of the
+ * hidden entry's; and a current page announced by colour alone.
  */
 
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
+import { nodesWithRole } from "../internal/a11y.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
@@ -176,5 +179,133 @@ describe("Breadcrumb", () => {
     ).toBeDefined();
 
     trail.unmount();
+  });
+
+  it("paints an authored separator glyph", () => {
+    // The part used to render a literal `/` after spreading props, so the
+    // caller's child never reached the runtime.
+    const trail = renderComponent(
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink>Projects</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>›</BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbPage>components</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>,
+    );
+
+    expect(trail.renderer.getAllText()).toEqual([
+      "Projects",
+      "›",
+      "components",
+    ]);
+
+    trail.unmount();
+  });
+
+  it("keeps the hidden entry's separator at the collapsed ellipsis", () => {
+    // The ellipsis used the root fallback, so a collapsed authored trail read
+    // `Projects / … › components`.
+    const trail = renderComponent(
+      <Breadcrumb maxItems={3}>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink>Projects</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>›</BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbLink>GPUIXUI</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>›</BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbLink>packages</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator>›</BreadcrumbSeparator>
+          <BreadcrumbItem>
+            <BreadcrumbPage>components</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>,
+    );
+
+    expect(trail.renderer.getAllText()).toEqual([
+      "Projects",
+      "›",
+      "…",
+      "›",
+      "components",
+    ]);
+
+    trail.unmount();
+  });
+
+  it("describes the item that holds the current page", () => {
+    // 0.10.0 has no aria-current, so colour alone announced nothing; the item
+    // carries the supported description instead.
+    const trail = renderComponent(<Trail />);
+    const described = nodesWithRole(trail.renderer, "listitem").filter((node) =>
+      Option.isSome(node.description),
+    );
+
+    expect(described).toHaveLength(1);
+    expect(described[0]?.description).toEqual(Option.some("Current page"));
+
+    trail.unmount();
+  });
+
+  it("describes a current BreadcrumbLink", () => {
+    const asLink = renderComponent(
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink current>components</BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>,
+    );
+
+    expect(nodesWithRole(asLink.renderer, "listitem")[0]?.description).toEqual(
+      Option.some("Current page"),
+    );
+
+    asLink.unmount();
+  });
+
+  it("lets the caller own the current label and description", () => {
+    const custom = renderComponent(
+      <Breadcrumb currentLabel="Seite">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage>components</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>,
+    );
+
+    expect(nodesWithRole(custom.renderer, "listitem")[0]?.description).toEqual(
+      Option.some("Seite"),
+    );
+
+    custom.unmount();
+
+    const authored = renderComponent(
+      <Breadcrumb currentLabel="Seite">
+        <BreadcrumbList>
+          <BreadcrumbItem aria-description="You are here">
+            <BreadcrumbPage>components</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>,
+    );
+
+    expect(
+      nodesWithRole(authored.renderer, "listitem")[0]?.description,
+    ).toEqual(Option.some("You are here"));
+
+    authored.unmount();
   });
 });
