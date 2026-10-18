@@ -9,7 +9,9 @@ stop instead of one per row. `selectionMode="multiple"` keeps that keyboard mode
 and adds the desktop selection modifiers. In both modes, typing the first letters
 of a row jumps to it. A single or unselectable list can also pass `onActivate` to
 run a row action — open a file, load a record — without treating every selection
-change as an action.
+change as an action. A plain list with `onActivate` keeps the same roving tab
+stop and runs the focused row on `Enter`; without it the list is purely
+presentational.
 
 ```tsx
 import {
@@ -34,7 +36,7 @@ import {
 
 | `selectionMode` | Role | Tab stop | Keyboard |
 | --------------- | ---- | -------- | -------- |
-| `none` (default) | `list` / `listitem` | none — rows are not focusable | none |
+| `none` (default) | `list` / `listitem` | none; one roving row when `onActivate` is set | activation keys when `onActivate` is set |
 | `single` | `listbox` / `option` | exactly one row | see below |
 | `multiple` | `listbox` / `option` | exactly one row | see below |
 
@@ -53,6 +55,23 @@ import {
 
 A disabled row is skipped by the arrow keys, by `Home`/`End` and by clicks; it can
 never be selected.
+
+## Keyboard (plain, with `onActivate`)
+
+A `selectionMode="none"` list with `onActivate` is a list of actions: it takes one
+roving tab stop and the same navigation keys, but has no selection to change.
+
+| Key | Effect |
+| --- | ------ |
+| `↓` / `↑` | focus the next / previous enabled row, wrapping |
+| `Ctrl+N` / `Ctrl+P` | the desktop equivalents of `↓` / `↑` |
+| `Home` / `End` | focus the first / last enabled row |
+| `Enter` | run `onActivate` for the focused row |
+| `Space` | nothing — there is no selection to set |
+| Letter keys | jump by `textValue`, as in the selectable modes |
+
+A plain list **without** `onActivate` is presentational: no row is focusable and
+the list handles no keys.
 
 ## Keyboard (multiple mode)
 
@@ -119,6 +138,8 @@ Selection is state; activation is an action. Pass `onActivate` when a row must
 | `Enter` (single) | selects the focused row, then calls `onActivate` with its value |
 | `Space` (single) | selects only; it never activates |
 | click (single) | selects, then calls `onActivate` |
+| `Enter` (`selectionMode="none"` + `onActivate`) | calls `onActivate` for the focused row |
+| `Space` (`selectionMode="none"` + `onActivate`) | nothing; there is no selection to make |
 | click (`selectionMode="none"`) | calls `onActivate` immediately; there is no selection to make |
 | click or `Enter` on a disabled row | nothing |
 | any gesture on a `multiple` list | no activation; that variant does not accept the prop |
@@ -247,9 +268,8 @@ is on.
 - No drag reorder, no group headers, no nested rows.
 - Activation is a callback, not a link: there is no `href`, no navigation
   service and no role change, so an activatable row is not announced as a link.
-- Keyboard activation needs a selection mode. With `selectionMode="none"` the
-  rows are not focusable, so only a click can activate; use `single` when the
-  list must work from the keyboard.
+- A plain list without `onActivate` is presentational by design: its rows are not
+  focusable and it handles no keys. Add `onActivate` when the rows are actions.
 - A multiple list has no activation at all (the prop is rejected by the type),
   because a double gesture would run an action while building a range.
 - Type-ahead searches `textValue`, not the rendered `ListItemTitle`: the row is a
@@ -265,7 +285,7 @@ is on.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (39 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (42 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
@@ -277,11 +297,12 @@ height, the controlled list not moving its own selection, type-ahead jumping and
 cycling while skipping disabled and unlabelled rows, activation by `Enter` and by
 click (and not by `Space`, a disabled row, a plain list without the prop, or a
 held `Enter` repeating), the
-arrow key reaching the row that activates, and — in multiple mode —
-plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
-selecting every enabled row, and a disabled row never entering a selection. A
-focus move repaints exactly the two rows that changed, counted through the
-public `style` function.
+arrow key reaching the row that activates, a plain activatable list's single tab
+stop and its arrow/`Enter` path (with `Space` deliberately inert), and — in
+multiple mode — plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow`
+ranges, `Cmd`/`Ctrl`+A selecting every enabled row, and a disabled row never
+entering a selection. A focus move repaints exactly the two rows that changed,
+counted through the public `style` function.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

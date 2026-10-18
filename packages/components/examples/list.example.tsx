@@ -1,12 +1,15 @@
 /**
- * List example: a recent-files panel with single selection, and a reviewers
- * panel with multiple selection.
+ * List example: a recent-files panel with single selection, a reviewers panel
+ * with multiple selection, and a plain panel of actions.
  *
- * Both lists are **controlled** (`value` + `onValueChange`) because the header
- * shows the selection: the app owns the value, the list renders it. Drop the
- * pair and the list keeps its own state instead. The reviewers list also shows
- * the multiple-selection keys, including `Cmd`/`Ctrl`+A for every enabled row.
- * Typing a name jumps to that row because every row carries its `textValue`.
+ * The two selectable lists are **controlled** (`value` + `onValueChange`)
+ * because the header shows the selection: the app owns the value, the list
+ * renders it. Drop the pair and the list keeps its own state instead. The
+ * reviewers list also shows the multiple-selection keys, including `Cmd`/`Ctrl`+A
+ * for every enabled row. Typing a name jumps to that row because every row
+ * carries its `textValue`. The actions panel has no selection at all: its
+ * `onActivate` makes the rows focusable, so the arrows move the roving stop and
+ * `Enter` runs the row.
  */
 
 import * as Arr from "effect/Array";
@@ -88,6 +91,7 @@ export const ListExample = () => {
     "ada",
     "grace",
   ]);
+  const [ran, setRan] = useState("—");
 
   return (
     <div
@@ -168,6 +172,37 @@ export const ListExample = () => {
               <ListItemDescription>{reviewer.role}</ListItemDescription>
             </ListItem>
           ))}
+        </List>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick actions</CardTitle>
+          <CardDescription>
+            Last action: {ran} — arrows move, Enter runs, Space does nothing
+          </CardDescription>
+        </CardHeader>
+        <List
+          testId="quick-actions"
+          onActivate={(value) => setRan(value)}
+          style={{ padding: theme.spacing.md, paddingTop: 0 }}
+        >
+          {Arr.map(
+            [
+              { id: "refresh", label: "Refresh the workspace" },
+              { id: "reveal", label: "Reveal in Finder" },
+              { id: "copy", label: "Copy the path" },
+            ],
+            (action) => (
+              <ListItem
+                key={action.id}
+                value={action.id}
+                textValue={action.label}
+              >
+                <ListItemTitle>{action.label}</ListItemTitle>
+              </ListItem>
+            ),
+          )}
         </List>
       </Card>
     </div>

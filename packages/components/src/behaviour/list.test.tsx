@@ -15,8 +15,9 @@
  * Activation: Enter that selected but ran nothing; Space that ran the action it
  * should only select with; a click that did not run the row it selected; a plain
  * list click that ran nothing; a disabled row that activated anyway; an arrow
- * move that activated the old row instead of the reached one; and a held Enter
- * that activated once per repeat.
+ * move that activated the old row instead of the reached one; a held Enter that
+ * activated once per repeat; and a plain activatable list whose rows could not
+ * take focus, leaving its documented Enter path unreachable.
  *
  * A caller `ref` on a row was also discarded in favour of the internal one, and
  * so was a caller `onClick`.
@@ -936,6 +937,78 @@ describe("List", () => {
     expect(onValueChange).toHaveBeenLastCalledWith("c");
     expect(onActivate).toHaveBeenCalledTimes(1);
     expect(onActivate).toHaveBeenCalledWith("c");
+
+    list.unmount();
+  });
+
+  it("gives a plain activatable list one roving tab stop", () => {
+    const list = renderComponent(
+      <List testId="list" onActivate={() => undefined}>
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" disabled>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    expect(list.renderer.findByTestId("list")?.customProps?.role).toBe("list");
+    expect(list.renderer.findByTestId("row-a")?.customProps?.role).toBe(
+      "listitem",
+    );
+    expect(tabStop(list)).toEqual(["row-a"]);
+    expect(list.renderer.findByTestId("row-a")?.style.cursor).toBe("pointer");
+
+    list.unmount();
+  });
+
+  it("activates a plain list's reached row from the keyboard", () => {
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List testId="list" onActivate={onActivate}>
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" textValue="Beta" disabled>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c" textValue="Gamma">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("down");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-c"));
+
+    list.renderer.simulateKeystrokes("enter");
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onActivate).toHaveBeenCalledWith("c");
+
+    list.unmount();
+  });
+
+  it("never activates a plain row on Space", () => {
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List testId="list" onActivate={onActivate}>
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("space");
+
+    expect(onActivate).not.toHaveBeenCalled();
 
     list.unmount();
   });

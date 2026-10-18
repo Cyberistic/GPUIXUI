@@ -1,6 +1,8 @@
 /**
  * List and ListItem: a vertical collection of rows, optionally single- or
- * multi-selectable with a roving tab stop.
+ * multi-selectable with a roving tab stop. A plain list with `onActivate` takes
+ * the same roving stop and Enter activation; a presentational plain list has
+ * neither.
  *
  * This is the keyboard and selection foundation the menus and tabs reuse: the
  * item registry `internal/collection.ts` is shared, and the navigation rules live
@@ -86,6 +88,8 @@ interface Row {
 /** The rules a {@link ListItem} follows; throws when there is no list above it. */
 interface ListContextValue {
   readonly selectable: boolean;
+  /** Rows take one roving tab stop and the shared navigation keys. */
+  readonly focusable: boolean;
   readonly dense: boolean;
   /** The row's own paint state: active, selected and tab stop (plan 339). */
   readonly rowMasks: RowMasks;
@@ -276,7 +280,9 @@ export type ListProps =
  * model and adds the desktop modifiers: a plain click selects one row, Cmd/Ctrl
  * toggles, Shift extends the range from the anchor, and Shift+Arrow extends from
  * the keyboard. A disabled row is skipped by every path. A single or
- * `selectionMode="none"` list may also pass `onActivate` to run a row action.
+ * `selectionMode="none"` list may also pass `onActivate` to run a row action;
+ * a plain list with it keeps the same roving tab stop and Enter activation,
+ * while a plain list without it stays presentational.
  */
 export const List = (props: ListProps) => {
   const theme = useTheme();
@@ -297,6 +303,9 @@ export const List = (props: ListProps) => {
   } = props;
   const selectionMode = props.selectionMode ?? "none";
   const selectable = selectionMode !== "none";
+  // A plain list is still operable when it has a row action: it takes the same
+  // roving tab stop as a selectable list, without any selection state.
+  const focusable = selectable || onActivate !== undefined;
   const multiple = selectionMode === "multiple";
 
   const controlled = Option.fromNullishOr(controlledValues(props));
@@ -525,7 +534,7 @@ export const List = (props: ListProps) => {
   });
 
   const handleKeyDown = (event: EventPayload): void => {
-    if (!selectable) return;
+    if (!focusable) return;
     const extend = multiple && event.modifiers?.shift === true;
     pipe(
       typedChar(event),
@@ -535,10 +544,14 @@ export const List = (props: ListProps) => {
         onNone: () =>
           Match.value(event).pipe(
             Match.when(isEnter, () => {
+              // Enter is the row action; a selectable list also selects first.
               if (selectable) selectActive();
               activateActive();
             }),
-            Match.when(isActivation, selectActive),
+            // At this point the key is Space: it selects, never activates.
+            Match.when(isActivation, () => {
+              if (selectable) selectActive();
+            }),
             Match.when(isSelectAll, selectEveryRow),
             Match.when(isDown, () => moveBy(1, extend)),
             Match.when(isUp, () => moveBy(-1, extend)),
@@ -598,8 +611,8 @@ export const List = (props: ListProps) => {
   );
 
   const context = useMemo<ListContextValue>(
-    () => ({ selectable, dense, rowMasks, ...actions }),
-    [actions, dense, rowMasks, selectable],
+    () => ({ selectable, focusable, dense, rowMasks, ...actions }),
+    [actions, dense, focusable, rowMasks, selectable],
   );
 
   assertParts(listRoot, children);
@@ -673,8 +686,15 @@ export const ListItem = ({
   ...rest
 }: ListItemProps) => {
   const theme = useTheme();
-  const { selectable, dense, rowMasks, activate, noteFocus, register } =
-    useListContext();
+  const {
+    selectable,
+    focusable,
+    dense,
+    rowMasks,
+    activate,
+    noteFocus,
+    register,
+  } = useListContext();
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -720,7 +740,7 @@ export const ListItem = ({
       {...(selectable ? { "aria-selected": isSelected } : {})}
       {...rest}
       ref={setElement}
-      tabIndex={selectable ? (isTabbable ? 0 : -1) : undefined}
+      tabIndex={focusable ? (isTabbable ? 0 : -1) : undefined}
       onFocus={(event) => {
         noteFocus(value);
         onFocus?.(event);
@@ -746,7 +766,7 @@ export const ListItem = ({
             : theme.density.rowHeight + theme.spacing.md,
           borderRadius: theme.radius.sm,
           opacity: disabled ? 0.5 : 1,
-          ...(selectable
+          ...(focusable
             ? {
                 cursor: "pointer",
                 hover: { backgroundColor: theme.colors.accent },
@@ -868,7 +888,7 @@ export const listMeta = {
   limitations: [
     "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
     "type-ahead matches an explicit ListItem textValue, not rendered children",
-    "activation is a callback on single/none lists: no href or link role, and a multiple list has no activation",
+    "activation is a callback on single/none lists: no href or link role; a plain list without onActivate has no tab stop, and a multiple list has no activation",
     "no drag reorder or virtualisation",
   ],
   docs: "docs/list.mdx",
