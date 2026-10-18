@@ -69,7 +69,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       iterating and `--all` only at the end. `nub run check` and `nub run test`
       pass.
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` and `522` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, `521` and `523` were taken by components, and the next plan takes `524`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` and `522` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, `521` and `523` were taken by components, and the next plan takes `525`
+
+`[~]` Probe the **input payload contract** per plan `524` — the last unmeasured
+      fields of the event the library's handlers receive. Reconnaissance: a
+      double click is **not observable** (`clickCount` is always `1`, headless
+      and live, even for real press/release pairs 80 ms apart), `keyChar` is
+      absent on a plain `div` but carries `é`/`日`/`" "` on a text field, `cmd-a`
+      is consumed by the native editor before React's handler, and a synthetic
+      wheel always reports `precise=true`/`touchPhase=moved`. Adds `input-payload`
+      + `live-input-payload` and an optional `isHeld` host argument (§2); result
+      pending
 
 `[x]` Probe the **app root** per plan `522` — the rule every consumer's
       top-level tree sits on (surfaced by `components` plan `510`):
