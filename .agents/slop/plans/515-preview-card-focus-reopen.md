@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 completion) / F (consistency) |
 | Owner | components workstream |
 | Depends on | `110`, `112`, `317`, `323`, `325`, `326`, `386`, `388`, `393`, `394`, `398`, `399`, `514` |
-| Status | planned |
+| Status | done — measured: a dismissal from inside the card restored focus, the trigger's `onFocus` re-opened it, so the card never closed. The dismiss layer now marks the focus it restores and the trigger consumes the mark; 2 native cases (PreviewCard 15, behaviour 656), both-direction proof (both fail without the guard); docs, `COMPONENTS.md` and inventory synced |
 | Number | `515` — `100–514` are claimed across the worktrees; `515` is the next free number |
 
 This plan is self-contained. Facts marked **measured** were reproduced on this

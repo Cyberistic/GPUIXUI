@@ -338,9 +338,11 @@ retired once both branches are one
       focus ring while the tab stop moved off it. Focus now hands over to the
       tab stop without selecting; 5 native cases (Tabs 22, behaviour 647), four
       mutation proofs; docs, `COMPONENTS.md` and the inventory synced
-    - [~] Preview card: a restored focus must not re-open it — plan 515.
+    - [x] Preview card: a restored focus must not re-open it — plan 515.
       Measured after plan 514: Escape from inside the card returned focus to
       the trigger, whose focus handler re-opened the card, so it never closed.
+      The dismiss layer marks the restore and the trigger consumes the mark; 2
+      native cases (PreviewCard 15, behaviour 656), both-direction proof.
     - [x] Pagination never hides a single page behind an ellipsis — plan 513.
       Measured: a 7-page list was windowed although all seven numbers fit, and
       a gap of one page rendered `…` instead of the page (also a zero-page
