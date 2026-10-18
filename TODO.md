@@ -377,6 +377,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source. The Message Scroller behaviour port (MIT) needs its own `provenance.md` row (plan 206 credits it on the docs page) | licensing | pending |
+| `LICENSES/`: credit shadcn/ui AI Elements `chat` + `message` (MIT) for plan 207's behaviour port; both docs pages already credit it in prose | licensing | pending |
 
 ## Phase D — data and workspace components
 

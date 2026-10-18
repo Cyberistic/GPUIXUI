@@ -244,6 +244,11 @@ parts.
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |
 | Message scroller | `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerItem`, `MessageScrollerJumpToLatest` | — | plan 206 |
+
+### Tier 5 — specialised
+
+| Component | Parts | base-gpui guide | Source |
+| --------- | ----- | --------------- | ------ |
 | Message (AI message row) | `Message`, `MessageAvatar`, `MessageContent`, `MessageStreaming`, `MessageReasoning`, `MessageToolCalls`, `MessageSources`, `MessageAttachments`, `MessageActions` | `Message` (shape only) | plan 207 |
 | Chat (AI conversation) | `Chat`, `ChatMessages`, `ChatComposer`, `ChatEmpty` | `Chat` (shape only) | plan 207 |
 
