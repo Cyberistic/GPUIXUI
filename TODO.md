@@ -499,6 +499,15 @@ retired once both branches are one
       source agree again. Their local input stand-in passes
       `onChange: onValueChange` to the raw host, which stays correct.
 
+`[ ]` **components workstream — replace the local button stand-in.** With
+      `@gpuixui/primitives` on the same tree (this branch's merge), `Button` and
+      `IconButton` are real exports: delete `packages/components/src/internal/button.tsx`,
+      import the primitives, and keep the 9 behaviour tests passing. Primitives
+      now guarantees the activation path (`onClick` + `onActivate`), the variant
+      foreground tint and the required `label` (plans `085`, `086`) that the
+      stand-in re-derived locally. Owner: `components`; the path is outside this
+      workstream.
+
 `[ ]` **components workstream — the contract's Tier 1 parts table is missing four
       shipped parts.** `docs/component-api.md` §8's Tier 1 table has no row for
       `CheckboxGroup`, `ToggleGroup`, `IconButton` or `InfoTip`, all of which
@@ -829,7 +838,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
-| `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
+| `@gpuixui/primitives` exports in plan 110 §7 | primitives | **available on `agent/primitives`** — the package (including `IconButton`) is now on the same tree as `packages/components`, so deleting `src/internal/button.tsx` and importing the real parts is the components workstream's follow-up |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
