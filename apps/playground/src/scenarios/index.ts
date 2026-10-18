@@ -32,6 +32,7 @@ import { searchReplaceScenario } from "./search-replace.js";
 import { replaceScenario } from "./replace.js";
 import { layoutScenario } from "./layout.js";
 import { layoutGridScenario } from "./layout-grid.js";
+import { windowLayoutScenario } from "./window-layout.js";
 import { rootSingleChildScenario, rootWrapperScenario } from "./root.js";
 import { textScenario } from "./text.js";
 import { typographyScenario } from "./typography.js";
@@ -134,9 +135,10 @@ export const CORE_CAPABILITIES = [
   "tier2",
 ] as const;
 
-/** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`, `164`, `335`, `522`). */
+/** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`, `164`, `335`, `522`, `526`). */
 export const PROBE_CAPABILITIES = [
   "root",
+  "window",
   "table",
   "tree",
   "log",
@@ -182,6 +184,7 @@ export const PROBE_CAPABILITIES = [
 
 /** One view per capability, in the order the suite runs them. */
 export const scenarios: ReadonlyArray<PlaygroundScenario> = [
+  windowLayoutScenario,
   layoutScenario,
   layoutGridScenario,
   rootSingleChildScenario,

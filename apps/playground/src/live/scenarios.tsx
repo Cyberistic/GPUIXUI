@@ -58,6 +58,7 @@ import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { queryBuilderScenario } from "../scenarios/query-builder.js";
 import { rootSingleChildScenario } from "../scenarios/root.js";
+import { windowLayoutScenario } from "../scenarios/window-layout.js";
 import { notificationCentreScenario } from "../scenarios/notification-centre.js";
 import { wizardScenario } from "../scenarios/wizard.js";
 import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
@@ -161,6 +162,20 @@ const waitForText = (ctx: LiveContext, testId: string, needle: string) =>
       text !== null && Str.includes(needle)(text)
         ? Effect.void
         : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/** Waits up to three seconds for `testId`'s painted text to stop being `value`. */
+const waitForTextNot = (ctx: LiveContext, testId: string, value: string) =>
+  ctx.host.text(testId).pipe(
+    Effect.flatMap((text) =>
+      text !== null && text !== value ? Effect.void : Effect.fail("not yet"),
     ),
     Effect.retry(
       Schedule.spaced("50 millis").pipe(
@@ -5635,10 +5650,164 @@ const rootProbe: LiveScenario = {
     }),
 };
 
+/**
+ * The window as the layout root (plan `526`).
+ *
+ * `live-shell` proves the shell fills the window at its open size; this proves
+ * the other half — that a **real resize** reaches React and a window-sized
+ * overlay follows it. The window is zoomed, asserted, and restored in an
+ * `ensuring`, so a failed check cannot leave the next scenario maximised.
+ */
+const liveWindow: LiveScenario = {
+  id: "live-window",
+  title: "Live window: a real resize reaches the layout",
+  capability: "window",
+  view: windowLayoutScenario.view,
+  ready: "wl-size",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const open = yield* ctx.host.windowSize();
+      const openText = `${open.width}x${open.height}`;
+      yield* ctx.expectEqual(
+        "the hook reports the real window",
+        yield* textOf(ctx, "wl-size"),
+        openText,
+      );
+      yield* ctx.expectEqual(
+        "the live window opens at the runner's 1100x720",
+        openText,
+        "1100x720",
+      );
+      yield* ctx.expectEqual(
+        "the open window uses the compact layout",
+        yield* textOf(ctx, "wl-mode"),
+        "mode=compact",
+      );
+      yield* ctx.expectEqual(
+        "the live desktop insets are zero",
+        yield* textOf(ctx, "wl-insets"),
+        "safe=0,0,0,0 ime=0,0,0,0",
+      );
+      yield* ctx.expectEqual(
+        "the compact layout paints no sidebar",
+        (yield* ctx.host.bounds("wl-sidebar")) === null,
+        true,
+      );
+      const openVeil = yield* boxOf(ctx, "wl-veil");
+      yield* ctx.expectNear(
+        "the open veil is the window's width",
+        openVeil.width,
+        open.width,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the open veil is the window's height",
+        openVeil.height,
+        open.height,
+        1,
+      );
+
+      yield* Effect.gen(function* () {
+        yield* ctx.host.zoomWindow();
+        yield* waitForTextNot(ctx, "wl-size", openText);
+        yield* settle;
+
+        const zoomed = yield* ctx.host.windowSize();
+        const zoomedText = `${zoomed.width}x${zoomed.height}`;
+        yield* ctx.expectEqual(
+          "the hook observed the resize",
+          yield* textOf(ctx, "wl-size"),
+          zoomedText,
+        );
+        yield* ctx.expectEqual(
+          "the zoomed window is wider than the open one",
+          zoomed.width > open.width,
+          true,
+        );
+        yield* ctx.expectEqual(
+          "the wide layout shows the sidebar",
+          yield* textOf(ctx, "wl-mode"),
+          "mode=wide",
+        );
+        yield* ctx.expectEqual(
+          "the wide layout shows six actions",
+          yield* textOf(ctx, "wl-actions"),
+          "actions=6",
+        );
+
+        const sidebar = yield* boxOf(ctx, "wl-sidebar");
+        yield* ctx.expectNear(
+          "the zoomed sidebar is 240 wide",
+          sidebar.width,
+          240,
+          1,
+        );
+        yield* ctx.expectNear(
+          "the zoomed sidebar ends at the window's bottom",
+          sidebar.y + sidebar.height,
+          zoomed.height,
+          1,
+        );
+
+        const veil = yield* boxOf(ctx, "wl-veil");
+        yield* ctx.expectNear(
+          "the veil tracks the zoomed width",
+          veil.width,
+          zoomed.width,
+          1,
+        );
+        yield* ctx.expectNear(
+          "the veil tracks the zoomed height",
+          veil.height,
+          zoomed.height,
+          1,
+        );
+
+        yield* ctx.host.zoomWindow();
+        yield* waitForTextNot(ctx, "wl-size", zoomedText);
+        yield* settle;
+        yield* ctx.expectEqual(
+          "the window returns to its open size",
+          yield* textOf(ctx, "wl-size"),
+          openText,
+        );
+        yield* ctx.expectEqual(
+          "the restored layout is compact again",
+          yield* textOf(ctx, "wl-mode"),
+          "mode=compact",
+        );
+        yield* ctx.expectEqual(
+          "the restored layout hides the sidebar again",
+          (yield* ctx.host.bounds("wl-sidebar")) === null,
+          true,
+        );
+
+        yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveWindow.id}.png`);
+      }).pipe(
+        // Restore only while the window is not at its open size: two zoom calls
+        // toggle, so an unconditional restore would maximise a window a failed
+        // first call never zoomed. A restore that cannot even read the size is
+        // a defect: the harness cannot put the window back.
+        Effect.ensuring(
+          Effect.gen(function* () {
+            const now = yield* ctx.host.windowSize();
+            const resized =
+              now.width !== open.width || now.height !== open.height;
+            yield* Effect.when(
+              Effect.andThen(ctx.host.zoomWindow(), settle),
+              Effect.succeed(resized),
+            );
+          }).pipe(Effect.orDie),
+        ),
+      );
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
   rootProbe,
+  liveWindow,
   input,
   inputPayload,
   scroll,

@@ -1788,3 +1788,32 @@ narrower. Each deviation is deliberate and measured:
 Not proven here: the verdicts use a **locally-built** binding (ADR 0003), not the
 published binary; and detaching a tab into a new window is impossible (no
 multiple windows).
+
+## Window layout (plan `526`)
+
+Every desktop shell sits on the window, and until plan `526` no probe had
+measured that boundary. Two scenarios now do:
+
+| Scenario | What it asserts |
+| -------- | --------------- |
+| `window-layout` | the hook reports the runner's `1280x800`, the breakpoint is derived from it, the wide sidebar is `240` wide and ends at the window's bottom below the `36` px toolbar, the window-sized veil is `(0,0,1280,800)`, and the desktop insets are zero |
+| `live-window` | the same view in the real `1100x720` window: compact → no sidebar; `zoomWindow()` reaches React (`→ 1680x923`), the layout goes wide and the veil tracks the new size; a second call restores `1100x720` exactly |
+
+Four facts a consumer has to know:
+
+- **The hook is the window, not a container.** `useWindowSize()` reports the
+  paintable size; 0.10.0 has no container query and no `onLayout`, so a pane's
+  own width is a `ref` + `renderer.getElementBounds` read (the docking probe).
+- **A resize is a 100 ms poll**, not a native event (`intervalMs` is
+  configurable). A layout may lag a resize by a poll; it does not get a frame
+  callback.
+- **Desktop insets are zero** (`safeArea`/`ime`/`effective`), so a custom title
+  bar must reserve its own height rather than reading a safe area.
+- **Nothing drags the window.** The renderer exposes `zoomWindow`,
+  `toggleFullscreen`, `minimizeWindow`, `activateWindow` and `setWindowTitle`,
+  but no window-move API — a custom title bar can paint under the traffic
+  lights (`titlebarTransparent`, `trafficLightX/Y`) and cannot move the window.
+
+The live scenario restores the window in an `Effect.ensuring`, so a failed check
+never leaves the next scenario maximised. The full live suite is a merge gate;
+this task ran `--only live-window`.

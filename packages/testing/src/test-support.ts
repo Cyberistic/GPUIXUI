@@ -16,6 +16,7 @@ import {
   type SmokeHost,
   type SmokeReport,
   type SmokeScenario,
+  WindowSize,
   runScenarios,
 } from "./smoke.js";
 
@@ -25,6 +26,7 @@ export const nullHost: SmokeHost = {
   paintedText: () => [],
   elementType: () => null,
   bounds: () => null,
+  windowSize: () => new WindowSize({ width: 0, height: 0 }),
   paintedStyle: () => null,
   a11y: () => null,
   highlights: () => [],
@@ -65,6 +67,8 @@ export const nullAsyncHost: AsyncSmokeHost = {
   text: () => Effect.succeed(null),
   paintedText: () => Effect.succeed([]),
   bounds: () => Effect.succeed(null),
+  windowSize: () => Effect.succeed(new WindowSize({ width: 0, height: 0 })),
+  zoomWindow: () => Effect.void,
   focused: () => Effect.succeed(null),
   selectText: () => Effect.succeed(null),
   selectedText: () => Effect.succeed(null),

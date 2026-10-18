@@ -156,7 +156,7 @@ export const shellSelectionScenario: PlaygroundScenario = {
   view: () => <App list={scenarios} />,
   steps: (ctx) =>
     Effect.gen(function* () {
-      const first = yield* scenarioById(ctx, "layout-flex");
+      const first = yield* scenarioById(ctx, "window-layout");
       const text = yield* scenarioById(ctx, "text-native");
       const input = yield* scenarioById(ctx, "input-edit");
 

@@ -80,6 +80,7 @@ export const CAPABILITIES = [
   "upload",
   "qr",
   "media",
+  "window",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);
@@ -160,6 +161,12 @@ export interface Bounds {
   readonly width: number;
   readonly height: number;
 }
+
+/** The window's paintable size in logical pixels, as the runtime reports it. */
+export class WindowSize extends Schema.Class<WindowSize>("WindowSize")({
+  width: Schema.Number,
+  height: Schema.Number,
+}) {}
 
 /** A scroll offset read back from the runtime. */
 export interface Offset {
@@ -322,6 +329,13 @@ export interface SmokeHost {
    */
   readonly elementType: (testId: string) => string | null;
   readonly bounds: (testId: string) => Bounds | null;
+  /**
+   * The window's paintable size, as the runtime reports it.
+   *
+   * Never `null`: the renderer always has a window, and `useWindowSize()`
+   * reads this same value (plan `526`).
+   */
+  readonly windowSize: () => WindowSize;
   /**
    * The style the runtime applied to `testId`, decoded; `null` when the id is
    * not painted. The adapter decodes the renderer's payload at this boundary,
@@ -517,6 +531,16 @@ export interface AsyncSmokeHost {
   readonly bounds: (
     testId: string,
   ) => Effect.Effect<Bounds | null, SmokeHostError>;
+  /** The window's paintable size, read from the renderer the runner owns. */
+  readonly windowSize: () => Effect.Effect<WindowSize, SmokeHostError>;
+  /**
+   * Runs the platform zoom/maximize on the window the runner owns.
+   *
+   * A second call restores the previous size (measured on macOS: `1100x720 →
+   * 1680x923 → 1100x720`), which is how the live window probe proves that a
+   * real resize reaches React.
+   */
+  readonly zoomWindow: () => Effect.Effect<void, SmokeHostError>;
   /** The `testId` of the natively focused element, or `null` when none has focus. */
   readonly focused: () => Effect.Effect<string | null, SmokeHostError>;
   /**

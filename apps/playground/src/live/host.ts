@@ -80,6 +80,8 @@ export const createHost = (
     | "getPaintedHighlights"
     | "getListScrollTop"
     | "scrollToItem"
+    | "getWindowSize"
+    | "zoomWindow"
   >,
 ): Smoke.AsyncSmokeHost => ({
   text: (testId) => verb(`text ${testId}`, () => at(app, testId).textContent()),
@@ -109,6 +111,21 @@ export const createHost = (
             ),
           ),
       });
+    }),
+  windowSize: () =>
+    Effect.map(
+      Effect.try({
+        try: () => renderer.getWindowSize(),
+        catch: (cause) =>
+          new Smoke.SmokeHostError({ verb: "windowSize", cause }),
+      }),
+      (size) =>
+        new Smoke.WindowSize({ width: size.width, height: size.height }),
+    ),
+  zoomWindow: () =>
+    Effect.try({
+      try: () => renderer.zoomWindow(),
+      catch: (cause) => new Smoke.SmokeHostError({ verb: "zoomWindow", cause }),
     }),
   focused: () =>
     Effect.gen(function* () {

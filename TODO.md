@@ -58,7 +58,32 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 84/89 plans-and-harness
+`[x]` `[██████████]` 85/90 plans-and-harness
+
+`[x]` Probe the **window as the layout root** per plan `526` — the desktop
+      boundary every shell sits on: `window-layout` (27 checks) and `live-window`
+      (29) over a pure `window-layout-model.ts` (7 tests). `useWindowSize()`
+      reports the runner's window exactly (`1280x800` offscreen, `1100x720`
+      live), and a real `zoomWindow()` **reaches React** (`→ 1680x923`, one
+      render per change) within the hook's 100 ms poll; a second call restores
+      `1100x720` exactly. The wide layout's `240` px sidebar ends at the window's
+      bottom below the `36` px toolbar, the window-sized veil tracks both axes
+      across the resize, and the restored layout is compact again. Desktop
+      insets are **zero** and 0.10.0 has **no window-drag API** (window controls
+      exist; nothing starts a move), so a custom title bar can paint under the
+      traffic lights but cannot drag the window. Two host verbs added:
+      `windowSize` on both hosts and async `zoomWindow`. Suite `98 → 99`
+      (`3428 → 3455`), exit `0`; the focused live run is green and the **full
+      live suite was not run** (merge gate). Five mutation proofs (plan `526` §8).
+      Measured traps: a row's children are content-sized, so the sidebar needs
+      an explicit height; and asserting a painted metric against the model
+      constant it came from let the first mutation proof pass until the
+      assertion used literals.
+
+`[ ]` **Cross-team:** the docs-site capability matrix
+      (`apps/docs/src/lib/capabilities.ts` + its test) must gain the `window`
+      capability and the ids `window-layout` + `live-window`, or its gate stays
+      red against `COMPONENTS.md` (owner: `docs-site`; evidence: plan `526`)
 
 `[x]` Scope **live smoke verification** per plan `517`: `--only <id[,id]>`
       (repeatable) runs just those scenarios, `--all` runs the full suite,

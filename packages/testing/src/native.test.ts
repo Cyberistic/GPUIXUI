@@ -116,6 +116,9 @@ class FakeRenderer implements NativeRenderer {
   getElementBounds(id: number) {
     return this.painted.get(id) ?? null;
   }
+  getWindowSize(): { readonly width: number; readonly height: number } {
+    return { width: 400, height: 300 };
+  }
   getFocusedElementId(): number | null {
     return this.focusedId;
   }
@@ -303,6 +306,11 @@ describe("bounds", () => {
       "wheel:200,150:0:-100",
       "drop:200,150:/tmp/a.txt",
     ]);
+  });
+
+  it("reports the renderer's window, not the root element's box", () => {
+    const host = createHost(rendererOf());
+    expect(host.windowSize()).toEqual({ width: 400, height: 300 });
   });
 });
 

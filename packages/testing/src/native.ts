@@ -24,6 +24,7 @@ import {
   type SmokeHost,
   StyleSnapshot,
   SyntaxCacheStats,
+  WindowSize,
 } from "./smoke.js";
 
 /** The renderer's element shape, as much of it as the adapter reads. */
@@ -50,6 +51,8 @@ export interface NativeRenderer {
   getElement(id: number): NativeElement | undefined;
   getRoot(): NativeElement | undefined;
   getElementBounds(id: number): Bounds | null;
+  /** The window's paintable size; `useWindowSize()` reads this same value. */
+  getWindowSize(): { readonly width: number; readonly height: number };
   getFocusedElementId(): number | null;
   getAllText(): ReadonlyArray<string>;
   getPaintedText(): ReadonlyArray<string>;
@@ -235,6 +238,10 @@ export const createHost = (renderer: NativeRenderer): SmokeHost => ({
         boundsOf(renderer, element.id),
       ),
     ),
+  windowSize: () => {
+    const size = renderer.getWindowSize();
+    return new WindowSize({ width: size.width, height: size.height });
+  },
   // The runtime reports `style` as an untyped record; decoding it here is the
   // boundary. A value it reports with an unexpected type makes the decode fail,
   // which `StyleSnapshot` documents as a defect a scenario must see.
