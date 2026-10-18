@@ -121,6 +121,36 @@ describe("applyOtpInput", () => {
       focus: 1,
     });
   });
+
+  it("leaves the cell alone when the edit carries no usable character", () => {
+    // The bug guarded (plan 358): only an empty report is a deletion. A report
+    // whose characters all normalise away — a typed separator, or the runtime's
+    // accumulated "2-" for a hyphen typed into the cell holding "2" — used to
+    // take the deletion branch and erase the digit.
+    expect(applyOtpInput("12", 1, "2-", 6)).toStrictEqual({
+      value: "12",
+      focus: 1,
+    });
+    expect(applyOtpInput("12", 1, "-", 6)).toStrictEqual({
+      value: "12",
+      focus: 1,
+    });
+    expect(applyOtpInput("12", 1, "2 ", 6)).toStrictEqual({
+      value: "12",
+      focus: 1,
+    });
+    expect(applyOtpInput("12", 3, "-", 6)).toStrictEqual({
+      value: "12",
+      focus: 2,
+    });
+  });
+
+  it("still fills forward when a multi-character insert mixes separators in", () => {
+    expect(applyOtpInput("", 0, "123-456", 6)).toStrictEqual({
+      value: "123456",
+      focus: 5,
+    });
+  });
 });
 
 describe("decideOtpKey", () => {

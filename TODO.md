@@ -835,6 +835,14 @@ retired once both branches are one
       count, and `src/docs.test.ts` compares its API table to `IconProps` and its
       size table to `ICON_SIZES` — 23 offline tests, four failing directions
       measured (plan `357`).
+`[x]` `packages/primitives`: **a character the OTP field cannot accept erased
+      the digit already there** — measured, typing `-` into the filled cell that
+      held `2` (`defaultValue="12"`) reported `"1"`: the edit normalised to
+      nothing and `applyOtpInput` treated that like a deletion. Only an **empty**
+      host report deletes now; an edit carrying no letter or digit leaves the
+      cell, the code and the caret unchanged, while a pasted `123-456` still
+      fills all six. 3 new core cases + 1 runtime case, both directions proven
+      (plan `358`).
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open
       contract** — GPUix publishes `open`/`defaultOpen`/`onOpenChange` and
       `disableHoverableContent`, but `TooltipProps` exposed only `delay`, so a

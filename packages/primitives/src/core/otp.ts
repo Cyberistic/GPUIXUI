@@ -86,8 +86,10 @@ const withCell = (
  * A one-character edit replaces that cell and advances; a longer insert fills
  * forward from it, which is exactly what a pasted code needs. An empty edit
  * clears the cell and leaves focus there, because the user is deleting rather
- * than moving on. The code is contiguous: editing a cell beyond its end appends
- * at the end, so a gap can never exist in the value a caller receives.
+ * than moving on. An edit that carried only characters the field does not keep
+ * (a typed separator) is neither: the cell keeps what it held. The code is
+ * contiguous: editing a cell beyond its end appends at the end, so a gap can
+ * never exist in the value a caller receives.
  */
 export const applyOtpInput = (
   current: string,
@@ -110,8 +112,12 @@ export const applyOtpInput = (
       : text;
   const typed = normalizeOtp(edited, limit);
 
-  if (typed === "")
+  if (typed === "") {
+    // An empty host report is a deletion. A report that carried only characters
+    // the field refuses (a typed separator) is not: the cell keeps its digit.
+    if (Str.isNonEmpty(text)) return { value: join(cells), focus: start };
     return { value: join(withCell(cells, start, "")), focus: start };
+  }
 
   if (Str.length(typed) === 1) {
     return {

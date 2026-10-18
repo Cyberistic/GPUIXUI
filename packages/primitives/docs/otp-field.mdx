@@ -53,14 +53,18 @@ leaving a hole.
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |
 
 Only letters and digits are kept. A pasted `123-456` becomes `123456`, and a
-code longer than `length` is truncated rather than partially applied.
+code longer than `length` is truncated rather than partially applied. An edit
+that carries no letter or digit — a typed separator, a space — **leaves the cell
+as it was**, so a code a provider prints with hyphens can be typed without
+losing a digit (plan `358`).
 
 ## Keyboard
 
 | Key | Effect |
 | --- | ------ |
 | `Tab` | enters the field at the first empty cell (the last when the code is full) and leaves it from the focused cell |
-| any character | replaces the cell, then focus advances |
+| any letter or digit | replaces the cell, then focus advances |
+| a separator (`-`, space, …) | kept out of the code; the cell and the caret stay put |
 | `ArrowLeft` / `ArrowRight` | previous / next cell |
 | `Home` / `End` | first / last cell |
 | `Backspace` | deletes the current character; in an empty cell, clears the one before and moves there |

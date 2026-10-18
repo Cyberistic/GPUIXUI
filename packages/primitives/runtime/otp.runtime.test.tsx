@@ -150,6 +150,27 @@ it("deletes only one character when Backspace empties a filled cell", async () =
   expect(focusedId(runtime)).toBe("otp-cell-3");
 });
 
+it("keeps the digit when a character the field cannot keep is typed", async () => {
+  // The bug guarded (plan 358): a non-empty edit whose characters all normalise
+  // away (a typed separator, e.g. the "-" in a code a provider prints) took the
+  // same branch as a deletion, so typing it erased the cell's digit.
+  const field = recorder();
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      defaultValue="12"
+      onValueChange={field.onValueChange}
+    />,
+  );
+  runtime.click("otp-cell-2");
+  runtime.type("-");
+  expect(field.values).toStrictEqual([]);
+  // The cell still holds "2", so the next digit replaces it.
+  runtime.type("9");
+  expect(lastValue(field.values)).toBe("19");
+});
+
 it("exposes a named group of six named text inputs", async () => {
   const runtime = await mount(
     <OTPField testId="otp" label="Verification code" />,
