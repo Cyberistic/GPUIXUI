@@ -158,6 +158,7 @@ describe("soft status panel text", () => {
     });
     const reported = themeContrastFailures(edited).filter(
       (failure) =>
+        failure.wash === undefined &&
         failure.foreground === "mutedForeground" &&
         failure.background === "infoSoft",
     );

@@ -286,7 +286,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text, on the `disabled` fill, `background`, `card`, `popover`, the `muted` panel, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
 | invalid | a `destructive` edge on the `input` fill a field paints and on the `background` canvas a transparent field paints, held to the essential-boundary floor (3:1, 4.5:1 at AAA); the message itself uses `destructiveText`, not the fill |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused, on `background`, `card`, `popover`, the `muted` panel, `accent`, the `hover`/`active`/`selected` washes and the four soft status fills; an invalid control recolours it with `destructive` on the same surfaces except the canvas, which the invalid field edge already covers |
-| text selection | `selection` wash via `selectionColor`; body and secondary text keep their floors through the composited wash on every surface a glyph is selected on, including the four soft status fills (`xSoftForeground`), and the wash itself stays perceivable; content painted on a filled action uses `selectionOnFill`, a neutral 15% veil, because the accent-tinted wash cannot be seen on the accent fill itself (1.000:1 on `primary` in six shipped palettes); `userSelect: "none"` opts chrome out |
+| text selection | `selection` wash via `selectionColor`; body and secondary text keep their floors through the composited wash on every surface a glyph is selected on, including the four soft status fills (`xSoftForeground`, `foreground` and `mutedForeground`), and the wash itself stays perceivable; content painted on a filled action uses `selectionOnFill`, a neutral 15% veil, because the accent-tinted wash cannot be seen on the accent fill itself (1.000:1 on `primary` in six shipped palettes); `userSelect: "none"` opts chrome out |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair and designed edge through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on `background`, `card`, `popover`, the `muted` panel or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone`. The shipped Toast is the one exception: it paints its glyph and 3px bar with `xSoftForeground` on the `popover` card, so that pair is held at the secondary floor until the `components` migration to `xText` lands (plan 348) |
 
 Focus never changes layout: the ring is a shadow, painted outside the border box,
@@ -406,7 +406,7 @@ Colour is checked, not assumed. The token suite enforces:
 | status text (`xText`) on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes, the `accent`/`selected` row fills and the four soft status fills a link in a status panel sits on | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
-| text selection on a soft status fill (`xSoftForeground` over the wash on `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 7:1 | 7:1 |
+| text selection on a soft status fill (`xSoftForeground`, `foreground` and `mutedForeground` over the wash on `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 7:1 / 4.5:1 | 7:1 / 7:1 |
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
@@ -497,7 +497,8 @@ Not covered, deliberately:
 - accent-toned text under a text selection — at AAA no wash that stays
   perceivable keeps a link or status tone at 7:1 (high-contrast light's
   `primaryText` measures 6.75:1 on the `muted` panel and 5.48:1 on `active`), so
-  selection guarantees body and secondary text, not every tone;
+  selection guarantees body and secondary text, not every tone, on a plain
+  surface or a soft status fill;
 - forced-colours and OS-level high-contrast modes — the library ships an
   in-app high-contrast theme, but GPUix exposes no OS accessibility query to
   detect a system override automatically.

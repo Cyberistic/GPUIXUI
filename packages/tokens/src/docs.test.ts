@@ -568,7 +568,8 @@ describe("docs/tokens.md quoted figures", () => {
       "with `foreground`; `popover` with `popoverForeground`; `input` with " +
       "`inputForeground`; and `selected` with `selectedForeground` at the " +
       "secondary floor; a soft status surface carries its own tone with " +
-      "`xSoftForeground`.";
+      "`xSoftForeground`, its description with `foreground` and its caption " +
+      "with `mutedForeground`.";
     expect(markdownProse).toContain(sentence);
 
     const secondary =
@@ -581,7 +582,7 @@ describe("docs/tokens.md quoted figures", () => {
       "`selectionSurfaces` is the list of plain surfaces",
       "`selectionPairs` holds their body and secondary text pairs",
       "`selectionWashPairs` holds the wash itself",
-      "`selectionSoftPairs` measures the tone's text through the wash",
+      "`selectionSoftPairs` measures all three text roles a status panel carries",
       "`selectionSoftWashPairs` the wash's own perceivability",
     ].forEach((claim) => {
       expect(markdownProse, claim).toContain(claim);
@@ -1324,7 +1325,7 @@ describe("docs/design-system.md", () => {
       `| a Toast's tone glyph and bar (\`infoSoftForeground\`/\`successSoftForeground\`/\`warningSoftForeground\`/\`destructiveSoftForeground\` on \`popover\`, the shipped composition until \`components\` paints \`xText\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
-      `| text selection on a soft status fill (\`xSoftForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| text selection on a soft status fill (\`xSoftForeground\`, \`foreground\` and \`mutedForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 / ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.body}:1 / ${contrastFloors.high.secondary}:1 |`,
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

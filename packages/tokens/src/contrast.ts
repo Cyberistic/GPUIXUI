@@ -1020,16 +1020,21 @@ export const selectionFillPairs: readonly ContrastPair[] = [
 ];
 
 /**
- * The soft status surfaces a selected glyph is painted on. An Alert, Badge or
- * Toast is text a reader copies, and the wash composites over its fill, so the
- * tone's own foreground is held to the body floor like the plain surfaces.
+ * The text roles a soft status panel carries, through the selection wash: the
+ * tone's own foreground (its title), default body text (`AlertDescription`, the
+ * ghost dismiss control) and the quiet caption or supporting line. A reader
+ * copies any of the three and the wash composites over the fill, so each is
+ * held to its own floor. Accent-toned text is the one deliberate omission
+ * (plan 087): no wash that stays perceivable keeps a link at 7:1 at AAA.
  */
-export const selectionSoftPairs: readonly ContrastPair[] = [
-  ["infoSoftForeground", "infoSoft", "body"],
-  ["successSoftForeground", "successSoft", "body"],
-  ["warningSoftForeground", "warningSoft", "body"],
-  ["destructiveSoftForeground", "destructiveSoft", "body"],
-];
+export const selectionSoftPairs: readonly ContrastPair[] =
+  softSurfaceRoles.flatMap(
+    (background): ReadonlyArray<ContrastPair> => [
+      [`${background}Foreground`, background, "body"],
+      ["foreground", background, "body"],
+      ["mutedForeground", background, "secondary"],
+    ],
+  );
 
 /**
  * The surfaces the selection wash must stay visible on inside a soft status
@@ -1112,8 +1117,8 @@ const washVisibilityFailures = (
  * loading skeleton measured on every surface and row wash it fills, the designed edge around
  * each soft status surface measured on its own fill, the plain divider measured
  * on those fills, the selection wash and the
- * tone's own foreground on the four soft status surfaces a selected Alert,
- * Badge or Toast paints, the control edge measured
+ * tone's own foreground, the body and the caption on the four soft status
+ * surfaces a selected Alert, Badge or Toast paints, the control edge measured
  * on the fills a bordered control paints, the focus ring on the soft status fills
  * a toast's action button sits on, the `destructive` ring an invalid control
  * paints on those surfaces, and the functional boundary measured

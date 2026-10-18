@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 129/179
+`[x]` `[███████░░░]` 130/180
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -922,6 +922,15 @@ the largest control (18), but `components/avatar.tsx` paints the 40px
 `avatarSize.lg` disc with `full`, so a `full` of 18 or 19 satisfied the checker
 and still left the avatar a rounded square while both contracts returned `[]`;
 a third bound, `avatarSize.lg / 2`, sits beside the control bound (plan 361)
+`[x]` Hold a status panel's selected body and caption — plans 320 and 346 made
+`foreground` (an `AlertDescription`, a ghost dismiss control) and
+`mutedForeground` (a caption) first-class on the four soft fills, but the
+selection contract measured only the tone's `xSoftForeground` through the wash,
+so a reader who copied an alert's description had no pair behind it and an
+edited theme could erase it while `themeContrastFailures` returned `[]`;
+`selectionSoftPairs` grows 4 → 12, every shipped set passes (7.26:1 identity
+dark body and 4.78:1 Aero light caption at the tightest), so no colour moves,
+and accent-toned text stays the documented omission (plan 362)
 
 ## Phase C — Tier 1–2 components
 

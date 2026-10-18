@@ -21,6 +21,7 @@ import {
   getPlatformTheme,
   getTheme,
   selectionPairs,
+  selectionSoftPairs,
   selectionSoftWashPairs,
   selectionSurfaces,
   selectionWashPairs,
@@ -88,6 +89,11 @@ describe("selected secondary text", () => {
       "active",
       "accent",
       "selected",
+      // The caption on a status panel carries the same role through the same
+      // wash (plan 362).
+      ...selectionSoftPairs
+        .filter(([foreground]) => foreground === "mutedForeground")
+        .map(([, background]) => background),
     ]);
     expect(
       failures.every(
@@ -110,7 +116,7 @@ describe("selected secondary text", () => {
         foreground === "mutedForeground" && wash === "selection",
     );
 
-    expect(failures).toHaveLength(6);
+    expect(failures).toHaveLength(10);
     expect(
       failures.find(({ background }) => background === "active")?.ratio,
     ).toBeCloseTo(3.79, 2);

@@ -364,9 +364,10 @@ describe("themeContrastFailures", () => {
 
   it("reads the level a theme declares, not a laxer default", () => {
     // `#444444` clears 4.5:1 on every surface — including through the selection
-    // wash — but misses 7:1 on the pressed wash (6.70:1) and on all nine
-    // selected pairs, so only the declared high-contrast floors catch it.
-    expect(quietHighContrastFailures).toHaveLength(12);
+    // wash — but misses 7:1 on the pressed wash (6.70:1), on all nine selected
+    // pairs and on the four soft status fills a caption is selected on, so only
+    // the declared high-contrast floors catch it.
+    expect(quietHighContrastFailures).toHaveLength(16);
     expect(
       quietHighContrastFailures.every(
         ({ foreground, floor }) =>
@@ -384,7 +385,7 @@ describe("themeContrastFailures", () => {
     const selected = failures.filter(({ wash }) => wash === "selection");
 
     expect(plain).toHaveLength(14);
-    expect(selected).toHaveLength(9);
+    expect(selected).toHaveLength(13);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
     ).toBe(true);
@@ -527,7 +528,7 @@ describe("themeContrastFailures", () => {
     ]);
     expect(selectionPairs.length).toBe(18);
     expect(selectionWashPairs.length).toBe(9);
-    expect(selectionSoftPairs.length).toBe(4);
+    expect(selectionSoftPairs.length).toBe(12);
     expect(selectionSoftWashPairs.length).toBe(4);
     expect(selectionFillPairs).toHaveLength(3);
     expect(selectionFillWashPairs).toHaveLength(3);

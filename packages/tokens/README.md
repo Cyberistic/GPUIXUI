@@ -224,7 +224,11 @@ found identity light `successSoftForeground` at 5.83:1 through the wash and
 Windows dark's wash over `destructiveSoft` at 1.005:1 — an invisible highlight —
 so the four light soft foregrounds moved one family step darker, the dark ones
 one step lighter with a 20% identity wash, Windows dark's wash moved to 40%, and
-Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091). The focus ring is
+Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091). The panel's
+description and caption are measured through the same wash — `foreground` at the
+body floor and `mutedForeground` at the secondary floor on each soft fill,
+because an Alert's body and a Toast's caption are selected with it (plan 362);
+accent-toned text stays the documented omission. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught, and on the four soft
 status fills, because a toast's action button is focused while it sits on its own

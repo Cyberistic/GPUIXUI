@@ -1046,14 +1046,23 @@ contrast), so selected text keeps the body contrast on every surface a glyph can
 be selected on: `background`, `card`, `muted`, `hover`, `active` and `accent`
 with `foreground`; `popover` with `popoverForeground`; `input` with
 `inputForeground`; and `selected` with `selectedForeground` at the secondary
-floor; a soft status surface carries its own tone with `xSoftForeground`.
+floor; a soft status surface carries its own tone with `xSoftForeground`, its
+description with `foreground` and its caption with `mutedForeground`.
 Secondary text is held to the secondary floor through the same wash on all nine
 surfaces (`mutedForeground`), because a row description, a card caption or a
 message timestamp is selected with the body copy around it. The soft surfaces
-are held in both directions too: `selectionSoftPairs` measures the tone's text
-through the wash and `selectionSoftWashPairs` the wash's own perceivability, so
-a selected Alert, Badge or Toast keeps its body floor and still shows the
-highlight. The audit found two gaps: identity light `successSoftForeground`
+are held in both directions too: `selectionSoftPairs` measures all three text
+roles a status panel carries — the tone's `xSoftForeground`, the body
+`foreground` its description and ghost dismiss control paint, and the caption
+`mutedForeground` — through the wash, and `selectionSoftWashPairs` the wash's
+own perceivability, so a selected Alert, Badge or Toast keeps its body and
+secondary floors and still shows the highlight. Every shipped set passes: the
+identity dark body on `infoSoft` is **7.26:1** at the tightest and Aero light's
+caption on `destructiveSoft` **4.78:1**, so no colour moves. An accent-toned
+link is the one deliberate omission: no wash that stays perceivable keeps
+`primaryText` at 7:1 at AAA, and macOS light measures 4.32:1 through it on
+`infoSoft`, under the default secondary floor. The audit found two gaps:
+identity light `successSoftForeground`
 measured 5.83:1 through the wash, under the 7:1 body floor, and Windows dark's
 wash over `destructiveSoft` measured 1.005:1 — an invisible highlight. The four
 light soft foregrounds moved one family step darker, the dark ones one step
@@ -1284,10 +1293,10 @@ it paints, with both text roles each surface carries: the body role over
 `selectedForeground` over `selected`; and `mutedForeground` on all nine surfaces
 at the secondary floor — reported with `wash: "selection"`. `selectionPairs` is
 the text list. An Alert, Badge or Toast is measured the same way:
-`selectionSoftPairs` holds the tone's foreground through the wash and
-`selectionSoftWashPairs` the highlight's own perceivability on the four soft
-fills. The wash itself is compared with each surface it paints on, so a
-highlight that has become imperceptible is reported as well;
+`selectionSoftPairs` holds the tone's foreground, the body and the caption
+through the wash and `selectionSoftWashPairs` the highlight's own perceivability
+on the four soft fills. The wash itself is compared with each surface it paints
+on, so a highlight that has become imperceptible is reported as well;
 `selectionWashPairs` is that list.
 
 Every exported pair list is held to content uniqueness: a repeated
@@ -1725,7 +1734,11 @@ it from 323 to **333**. Plan `348` holds the soft tone foreground a Toast paints
 on its floating card — the four `xSoftForeground` roles on `popover` — taking it
 from 333 to **337**. Plan `357` publishes the generic wash ladder — `active` one
 perceivable step from `hover`, the ghost and outline press — taking it from 337
-to **338**.
+to **338**. Plan `362` adds a status panel's body (`foreground`) and caption
+(`mutedForeground`) to `selectionSoftPairs`, beside the plain `contrastPairs`
+list — the soft list grows from 4 to **12** and the plain count stays **338**;
+the tightest new pairs are **7.26:1** (identity dark, `infoSoft`) and
+**4.78:1** (Aero light, `destructiveSoft`), so no colour moves.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1917,10 +1930,15 @@ perceivability floor on each, because a highlight can be readable and still be
 invisible. Windows dark and both high-contrast sets already cleared the secondary
 floor through the wash; the other seven moved their secondary grey one step away
 from the canvas (plan `087`). The four soft status surfaces are measured the same
-way: `selectionSoftPairs` holds `xSoftForeground` to the body floor through the
-wash and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
+way: `selectionSoftPairs` holds the tone's `xSoftForeground`, the body
+`foreground` and the caption `mutedForeground` to their floors through the wash,
+and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 `successSoftForeground` measured 5.83:1 and Windows dark's wash over
-`destructiveSoft` 1.005:1 (plan `091`).
+`destructiveSoft` 1.005:1 (plan `091`). Every shipped set clears the two roles
+added in plan `362` — the identity dark body on `infoSoft` at **7.26:1** and Aero
+light's caption on `destructiveSoft` at **4.78:1** at the tightest — so a status
+panel now keeps its description and its caption selected on any platform, and
+accent-toned text stays the documented omission.
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
 over `background`, `card`, `muted`, `input`, `selected` and `popover` and holds
