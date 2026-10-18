@@ -267,10 +267,11 @@ running it.
   `active` **9.44:1** (`linux` dark default), matching the plan's baseline, and
   now pinned by a case so the prose cannot drift from the themes.
 - Two-direction proof, run and restored: with `...secondaryWashPairs` removed the
-  new file reported **3 failed | 1 passed (4)** — the pair list was missing both
+  new file reported **3 failed | 2 passed (5)** — the pair list was missing both
   washes, and `themeContrastFailures` returned `[]` for the erased label in the
-  light and AAA regressions; with the spread restored all **4** cases pass.
-- Green, run not assumed: **56 test files, 3670 tests** (3646 before the four new
+  light and AAA regressions, while the floor and pinned-figure cases still pass
+  because they read the palette; with the spread restored all **5** cases pass.
+- Green, run not assumed: **56 test files, 3671 tests** (3646 before the five new
   cases), `nub run check`, `nub run lint` and `nub run test`.
 - No token value, role, floor or platform style changes; the designed
   `secondaryHover`/`secondaryActive` family stays the migration target recorded

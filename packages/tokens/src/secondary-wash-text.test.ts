@@ -130,4 +130,28 @@ describe("the secondary control's label on the generic washes", () => {
     expect(failures[0]?.floor).toBe(contrastFloors.high.secondary);
     expect(failures[0]?.ratio).toBeCloseTo(1, 5);
   });
+
+  it("pins the tightest figures the catalogue quotes", () => {
+    const tightest = secondaryWashes.map((background) => {
+      const [themeLabel, ratio] = themes
+        .map(
+          ([label, theme]) =>
+            [
+              label,
+              contrastRatio(
+                theme.colors.secondaryForeground,
+                theme.colors[background],
+              ),
+            ] as const,
+        )
+        .reduce((worst, current) => (current[1] < worst[1] ? current : worst));
+
+      return [background, themeLabel, Number(ratio.toFixed(2))];
+    });
+
+    expect(tightest).toEqual([
+      ["hover", "darwin dark default", 10.42],
+      ["active", "linux dark default", 9.44],
+    ]);
+  });
 });
