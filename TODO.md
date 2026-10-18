@@ -665,6 +665,15 @@ retired once both branches are one
       and on the other side — or the roomier one — otherwise. 5 runtime tests,
       both directions proven.
 
+`[x]` `packages/primitives`: **`ScrollArea` never reported its absolute position**
+      — its only signal was `onScroll` deltas, and the component's own keyboard
+      path dispatches no `onScroll` at all (measured: PageDown moved the region
+      and produced 0 events), so a delta-accumulating consumer was wrong after
+      every key. `onScrollPositionChange` now reports the renderer's real,
+      clamped offset after wheel and keyboard moves and stays silent when
+      nothing moved; the inspector example's readout proves the chain in the
+      runtime (plan 337).
+
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
