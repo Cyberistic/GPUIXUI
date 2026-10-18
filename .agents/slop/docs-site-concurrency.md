@@ -149,3 +149,37 @@ server API rather than by killing its client.
 No session was deleted from this session — the server enforces a
 `loopback-secret` header the workstream does not own. The tree was committed
 only after `git log` showed the other turns' work landed.
+
+## 2026-10-18 04:00–05:00 — the turns now outlive every kill and race whole builds
+
+Measured while finishing plans 461–464:
+
+- A turn is still alive after both its `opencode run` client and every process
+  in this worktree are `SIGKILL`ed: within minutes a new client appears
+  (`opencode run --title swarm:docs-site`, parent the supervisor) and continues
+  the same queue. Killing the tree is not a lock; it only pauses a turn.
+- Both writers were running `vite build` / `vitest` at once. Concrete
+  consequences measured, not inferred:
+  - `nub run --filter docs smoke:build` failed with `FAIL /docs/components/drawer:
+    expected 200, got 500` and three 404 asset paths because the preview served a
+    `dist/` another turn was rebuilding; the same command exited `0` minutes
+    earlier and later on an idle tree.
+  - `nub run test` failed `packages/tokens` `react-consumer.test.ts` with
+    `Test timed out in 5000ms`; the same package passed 197/197 alone.
+- Work converged rather than conflicted: plans 461, 462 and the 463/464 truth
+  pass each landed with their evidence, and one turn committed **this** session's
+  in-flight plan-464 files inside `c96ab8e` with an accurate message. The 463/464
+  two-direction proofs were re-run by this session on the committed tree.
+- Plan numbering collided once: both sessions wrote a `463` (Tier 2 page truth
+  and preview-gap truth). The page-truth plan kept `463`; the preview-gap plan
+  became `464`.
+- The branch stayed pushable throughout: `origin/agent/docs-site` matched local
+  `HEAD` at every check because each turn pushed after committing.
+
+**Consequence for plan `022` §5:** a runner-pid check, a `pgrep`, and killing
+clients are all insufficient. The durable guard is a per-worktree advisory lock
+held by the turn (lease renewed by the server, released on exit) that a new turn
+must fail to acquire, plus a supervisor that refuses to start a workstream whose
+lock is held. Until that exists, expect duplicate writers; the work still
+converges, but only because every turn commits and re-reads `git log` before
+writing.
