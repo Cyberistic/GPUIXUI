@@ -177,7 +177,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [380](./380-stored-theme-choice.md) | The persisted theme choice, resolved in one place | F | 051, 063, 067, 068, 096, 301, 304, 305, 311, 323, 373, 374 | done |
 | [381](./381-selected-row-step.md) | The selected row is a perceivable step from the hover wash | F | 016, 059, 081, 097, 309, 327, 342, 357, 380 | done |
 | [382](./382-accent-fill-selection.md) | The accent family's text selection on its filled action | F | 097, 327, 344, 381 | done |
-| [383](./383-total-theme-check.md) | One total check for an edited theme | F | 071, 073, 358, 371, 380 | planned |
+| [383](./383-total-theme-check.md) | One total check for an edited theme | F | 071, 073, 358, 371, 380 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

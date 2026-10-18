@@ -215,9 +215,26 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-The guarantee has two more checks. `themeMetricFailures(theme)` holds the numbers
-(§ *Checking the numbers* below), and `themeColorFailures(theme)` holds every
-role to the six- or eight-digit hex form the colour helpers parse:
+That is one of three checks, and running it alone is not the guarantee: a zero
+`borderWidth.strong` (no focus ring) or a `shadow: "black"` tint passes it.
+`themeFailures(theme, contrast = theme.contrast)` composes all three and tags
+each entry with the `kind` that found it:
+
+```ts
+import { themeFailures } from "@gpuixui/tokens";
+
+themeFailures(brandTheme); // [] when every colour, pair and metric holds
+```
+
+The order is diagnostic — `color`, then `contrast`, then `metric` — and the
+payload is the same `ColorFailure`, `ContrastFailure` or `MetricFailure` the
+individual check returns. A runnable example lives in
+[`src/theme-check.example.ts`](./src/theme-check.example.ts).
+
+The other two checks are available on their own.
+`themeMetricFailures(theme)` holds the numbers (§ *Checking the numbers* below),
+and `themeColorFailures(theme)` holds every role to the six- or eight-digit hex
+form the colour helpers parse:
 
 ```ts
 import { themeColorFailures } from "@gpuixui/tokens";

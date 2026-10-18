@@ -499,10 +499,10 @@ preview changes" does not survive the merge (owner: `docs-site`; plans 420 and
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)
-`[ ]` Cross-team: `docs-site` calls `themeColorFailures(theme)` beside
-`themeContrastFailures` and `themeMetricFailures` on the Theming page, so the
-copy-and-own path it teaches holds an edited theme to all three checks, and
-`isHexColor` is named for a single stored role (owner: `docs-site`; plan 371)
+`[ ]` Cross-team: `docs-site` calls `themeFailures(theme)` on the Theming page,
+so the copy-and-own path it teaches holds an edited theme to the colour, contrast
+and metric checks in one assertion instead of two of the three, and `isHexColor`
+is named for a single stored role (owner: `docs-site`; plans 371 and 383)
 `[x]` Expose `textRoles` and guard it against the `Typography` interface
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input
@@ -1104,6 +1104,12 @@ from `filledControlFamilies` the label measured **4.140:1** on macOS light and
 **4.430:1** on Linux dark through the veil, under the 4.5:1 floor, so the two
 accent foregrounds move one designed step and the two lists publish eight pairs
 (plan 382)
+`[x]` Ship one total check for an edited theme — the guarantee is three checks
+(colour format, contrast, metrics) and each is total over its own domain, but a
+consumer running the contrast check alone accepted a theme with no focus ring or
+an opaque `shadow` tint; `themeFailures(theme, contrast)` composes all three into
+one tagged list, the docs and README teach one assertion, and the docs-site
+interlock now names it (plan 383)
 
 ## Phase C — Tier 1–2 components
 

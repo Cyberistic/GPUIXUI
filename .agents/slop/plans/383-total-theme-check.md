@@ -1,6 +1,11 @@
 # Plan 383: one total check for an edited theme
 
-> **Status (2026-10-18).** Planned. No role, theme, metric or pair changes.
+> **Status (2026-10-18).** Done. `themeFailures` and `ThemeFailure` ship in
+> `src/theme-check.ts`; `theme-check.test.ts` is 28 cases (20 shipped sets plus
+> 8 contract cases); the focused suite fails before the module exists and passes
+> after. No role, theme, metric or pair changes. The documented type-size
+> example was completed too (`bodyStrong` moves with `body`) because the new
+> total check reported it.
 
 ## Why
 

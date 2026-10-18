@@ -630,13 +630,14 @@ treated as omitted in every group, so a partial config spread cannot erase a
 role, a metric or a shadow level. Nothing mutates the base, so a theme can be
 created once at startup and shared.
 
-Verify an edited theme with `themeContrastFailures(theme)` — it checks at the
-level the theme declares, so a high-contrast theme needs no second argument. An
-empty array is the library's guarantee, and a non-empty one names every pair that
-needs fixing. Run `themeMetricFailures(theme)` beside it for the numbers and
-`themeColorFailures(theme)` for the six- or eight-digit hex form the colour
-helpers parse; the three checks are the format, contrast and metric parts of
-the same editable-theme guarantee.
+Verify an edited theme with `themeFailures(theme)`: it composes the colour
+format, contrast and numeric metric checks, checks contrast at the level the
+theme declares, and tags every entry with the `kind` that found it. An empty
+array is the library's guarantee, and a non-empty one names every pair, role or
+metric that needs fixing. The three parts are available on their own —
+`themeColorFailures`, `themeContrastFailures` and `themeMetricFailures` — but a
+consumer that runs only one has not run the guarantee: a zero focus-ring spread
+or an unparseable `shadow` tint passes the contrast check alone.
 
 A brand may change any value but should not remove roles: every component
 expects the full role set. A brand that needs a different structure should add

@@ -120,6 +120,7 @@ missing here is not public.
 | `ThemeColors` | The 66 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `contrast` or `metric`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
 | `ThemeProviderProps` | Props for `ThemeProvider`. |
@@ -1254,9 +1255,16 @@ export const brandTheme = createTheme({
 });
 
 export const scoped = extendTheme(darkTheme, {
-  typography: { body: { fontSize: 15 } },
+  typography: {
+    body: { fontSize: 15 },
+    bodyStrong: { fontSize: 15 },
+  },
 });
 ```
+
+`bodyStrong` moves with `body`: it is the weight variant of the same size, so a
+body size bump that leaves it behind inverts the contract's "emphasis is never
+smaller than body" rule. `themeFailures` reports it.
 
 A brand that changes `primary` sets the whole family — `primaryForeground`,
 `primaryHover`, `primaryActive` and `primaryText` — because an inherited state
@@ -1330,7 +1338,9 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones:
+the same floors as the shipped ones. The guarantee is three checks — colour
+format, contrast and numeric metrics — and [`themeFailures`](#one-check) runs
+all three in one call; the sections below explain each one it composes.
 
 ```ts
 import { themeContrastFailures } from "@gpuixui/tokens";
@@ -1458,8 +1468,9 @@ This is a check for a consumer's own test suite, not a runtime validator.
 A theme is more than its colours. `themeMetricFailures(theme)` holds the numbers
 a component paints with — typography, spacing, radius, density, component
 dimensions, elevation, motion, border widths, icon sizes and avatar sizes — to
-the invariants those components rely on, and it is the check to run beside the
-colour one when a copied platform style or brand theme changes a metric:
+the invariants those components rely on; it is the metric check
+[`themeFailures`](#one-check) composes, and the one to run beside the colour
+check when a copied platform style or brand theme changes a metric:
 
 ```ts
 import { themeMetricFailures } from "@gpuixui/tokens";
@@ -1558,6 +1569,44 @@ No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
 application that owns that boundary; `isHexColor` and `themeColorFailures` close
 the format half of that guard, not the shape half.
+
+#### One check
+
+Running one of the three checks is not the guarantee. A copied theme whose only
+defect is a zero `borderWidth.strong` — the focus ring's spread, and the only
+focus indicator the runtime can draw — or a `shadow: "black"` tint, which makes
+every elevation level fully opaque, returns `[]` from `themeContrastFailures`
+while being unusable. `themeFailures(theme, contrast = theme.contrast)` composes
+all three and tags each entry with the check that found it:
+
+```ts
+import { extendTheme, getTheme, themeFailures } from "@gpuixui/tokens";
+
+const theme = extendTheme(getTheme("dark"), {
+  colors: { shadow: "black" },
+  borderWidth: { strong: 0 },
+});
+
+themeFailures(theme); // [ { kind: "color", … }, { kind: "metric", … } ]
+```
+
+The order is diagnostic: `color` first, so a malformed role is named before the
+`NaN` ratios it causes, then `contrast`, then `metric`. A `ThemeFailure` is the
+underlying `ColorFailure`, `ContrastFailure` or `MetricFailure` — the same
+payload the individual check returns — plus its `kind`. The `contrast` argument
+defaults to the level the theme declares and reaches the contrast half unchanged,
+so `themeFailures(theme, "high")` asks a stricter question of a theme that does
+not claim AAA floors. A consumer's test is one assertion:
+
+```ts
+import { themeFailures } from "@gpuixui/tokens";
+
+expect(themeFailures(brandTheme)).toEqual([]);
+```
+
+Every shipped identity theme, platform variant and recipe returns `[]`. The
+executed example is
+[`src/theme-check.example.ts`](../packages/tokens/src/theme-check.example.ts).
 
 The role and shadow sets behind the shipped themes are exported as
 `lightColors`, `darkColors`, `highContrastLightColors`,
