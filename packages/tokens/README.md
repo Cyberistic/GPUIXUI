@@ -440,8 +440,9 @@ edit path can clip a type role by shortening its leading, invert one of the two
 type ladders (`proseLadder` / `codeLadder`), flatten `bodyStrong` onto `body`'s
 weight, name a font weight outside the `1…1000` range the text system can
 select or a non-finite one, shrink the smallest control below one label line,
-invert a size ladder, name an icon or avatar size of zero, scroll an overlay in
-less than one row, ship a non-finite
+fit an icon, a field adornment or a chip into a content box shorter or narrower
+than they are, invert a size ladder, name an icon or avatar size of zero, scroll
+an overlay in less than one row, ship a non-finite
 spacing step, radius, type size or dimension the renderer casts to a 32-bit
 float, ship a non-finite motion timing or a cubic-bezier easing the runtime
 cannot interpolate, leave the largest avatar a rounded square, or hand

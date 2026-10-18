@@ -320,21 +320,22 @@ describe("theme metric contract", () => {
     ]);
   });
 
-  it("reports an icon larger than the smallest control", () => {
+  it("reports a control that cannot fit the default icon", () => {
     // The icon ladder must still step, so the size is raised with its larger
-    // neighbours; only the fit against the smallest control is broken.
+    // neighbours; the control's content box is two borders shorter than its
+    // height, so a 23px icon does not fit a 24px control.
     expect(
       failuresOf({
-        density: { controlHeight: { sm: 20 } },
-        iconSize: { md: 21, lg: 22, xl: 24 },
+        density: { controlHeight: { sm: 24 } },
+        iconSize: { md: 23, lg: 24, xl: 25 },
       }),
     ).toEqual([
       {
-        group: "iconSize",
-        member: "md",
-        rule: "at-most",
-        actual: 21,
-        bound: 20,
+        group: "density",
+        member: "controlHeight.sm",
+        rule: "at-least",
+        actual: 24,
+        bound: 25,
       },
     ]);
   });

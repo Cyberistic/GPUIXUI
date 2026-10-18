@@ -258,12 +258,13 @@ const ascendingSizes = (
  *   only focus indicator the runtime can draw, so it may not be zero; `thin`
  *   may be zero in a borderless theme, so it is only non-negative.
  * - **density**: sizes and padding are ladders, the smallest control fits one
- *   label line plus its two borders, and a row fits one body line and the
- *   default `md` control it holds.
+ *   label line, the default icon and a field adornment plus its two borders, and
+ *   a row fits one body line and the default `md` control it holds.
  * - **dimensions**: every surface metric is positive, each documented range has
- *   a minimum below its default, an adornment fits the smallest control, a chip
- *   fits in a field, and the overlay scroll height fits one row — a list
- *   viewport shorter than a row clips every option.
+ *   a minimum below its default, a chip fits in the field's content box — its
+ *   minimum width less the field's two borders and horizontal padding — and the
+ *   overlay scroll height fits one row, because a list viewport shorter than a
+ *   row clips every option.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark — and the default icon fits the smallest
  *   control.
@@ -400,6 +401,20 @@ export function themeMetricFailures(
       density.controlHeight.sm,
       typography.label.lineHeight + 2 * borderWidth.thin,
     ),
+    // A control paints its two borders inside its height, so a glyph or a
+    // field adornment equal to the height overflows the content box.
+    ...atLeast(
+      "density",
+      "controlHeight.sm",
+      density.controlHeight.sm,
+      iconSize.md + 2 * borderWidth.thin,
+    ),
+    ...atLeast(
+      "density",
+      "controlHeight.sm",
+      density.controlHeight.sm,
+      dimensions.fieldAdornmentSize + 2 * borderWidth.thin,
+    ),
     ...atLeast(
       "density",
       "rowHeight",
@@ -426,7 +441,6 @@ export function themeMetricFailures(
       "non-decreasing",
       "positive",
     ),
-    ...atMost("iconSize", "md", iconSize.md, density.controlHeight.sm),
     ...finiteMembers(
       "avatarSize",
       (["xs", "sm", "md", "lg"] as const).map(
@@ -551,17 +565,15 @@ export function themeMetricFailures(
       ],
       "increasing",
     ),
-    ...atMost(
+    // The chip sits inside the field's content box: the field's two borders
+    // and its horizontal control padding are inside `fieldMinWidth`.
+    ...atLeast(
       "dimensions",
-      "fieldAdornmentSize",
-      dimensions.fieldAdornmentSize,
-      density.controlHeight.sm,
-    ),
-    ...atMost(
-      "dimensions",
-      "chipMinWidth",
-      dimensions.chipMinWidth,
+      "fieldMinWidth",
       dimensions.fieldMinWidth,
+      dimensions.chipMinWidth +
+        2 * density.controlPaddingX.md +
+        2 * borderWidth.thin,
     ),
     ...(["sm", "md", "lg", "overlay"] as const).flatMap((level) => {
       const shapes = elevation[level];

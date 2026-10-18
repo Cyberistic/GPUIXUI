@@ -1487,16 +1487,20 @@ ladders (`proseLadder` and `codeLadder`) must not be inverted — a role below
 another may not render larger — and `bodyStrong`, the weight variant of `body`,
 may not shrink below it and must stay heavier, because an emphasis role the
 reader cannot distinguish from body text is not emphasis; the smallest control
-must fit one `label` line plus its two borders; a row must fit one `body` line
-and the default `md` control it holds; `radius.none` must be square; `radius.full`
+must fit one `label` line, the default `iconSize.md` and a field adornment, each
+plus its two borders — the borders are painted inside the height, so a glyph
+equal to the outer metric overflows the content box; a row must fit one `body`
+line and the default `md` control it holds; `radius.none` must be square; `radius.full`
 must round the largest radius and half of the taller of the largest control and
 the largest avatar — a 40px avatar painted at a smaller radius is a rounded
 square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
 `avatarSize`, `controlHeight`, `controlPaddingX` and the motion timings — must
 not step backwards, and `iconSize` and `avatarSize` must also stay above zero,
 because a named size that paints a 0×0 icon or avatar is not a size; a timing
-must also be finite; an icon and a field adornment must fit the smallest
-control; a chip must fit in a field; an
+must also be finite; a chip must fit inside the field's content box — the
+minimum width less the field's two borders and its `controlPaddingX.md` padding —
+because a chip equal to the outer width has no room for the chrome painted
+inside it; an
 overlay's `overlayMaxHeight` must fit one `density.rowHeight`, because a list
 viewport shorter than a row clips every option; a cubic-bezier easing must be
 four finite control points with both x values inside `0…1`, because the runtime

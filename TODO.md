@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 148/200
+`[x]` `[███████░░░]` 149/201
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1110,6 +1110,16 @@ consumer running the contrast check alone accepted a theme with no focus ring or
 an opaque `shadow` tint; `themeFailures(theme, contrast)` composes all three into
 one tagged list, the docs and README teach one assertion, and the docs-site
 interlock now names it (plan 383)
+`[x]` Hold the three fit rules to the content box — an icon, a field adornment
+and a chip were compared to the **outer** metric (`iconSize.md ≤
+controlHeight.sm`, `fieldAdornmentSize ≤ controlHeight.sm`, `chipMinWidth ≤
+fieldMinWidth`), so an adornment or icon equal to the control height (a 24px
+glyph in a 22px content box) and a chip equal to the field width (80px in a
+68px content box at `fieldMinWidth: 90`) returned `[]` while the chrome painted
+inside the box overflowed it; the three rules now subtract the control's or
+field's two borders and, for the chip, the field's horizontal
+`controlPaddingX.md` padding, every shipped set still fits (16 in 24/28/32; 80
+in 200) so no value moves, and four new cases fail without the bounds (plan 384)
 
 ## Phase C — Tier 1–2 components
 
