@@ -164,6 +164,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [365](./365-overlay-scroll-height.md) | The overlay list must fit a row | F | 353, 360 | done |
 | [366](./366-status-selection.md) | The status label through a text selection | F | 083, 087, 354, 362 | done |
 | [367](./367-type-scale-contract.md) | The type scale must stay a scale | F | 058, 059, 358, 360 | done |
+| [368](./368-finite-metrics.md) | Every numeric metric must be paint | F | 358, 360, 364, 367 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1380,6 +1381,19 @@ test and the contract read them, and the contract holds each ladder
 `non-decreasing` in size plus `bodyStrong` no smaller than `body` and heavier
 than it. Every shipped theme, platform variant and recipe shares the identity
 type scale, so no value moves.
+
+368 closes the same rule one group over: the `finite` rule shipped for elevation
+geometry (plan 360) and completed for motion (plan 364) covered two of the ten
+groups, so the other eight accepted `Infinity`. A ladder's last step has no
+successor and a standalone metric has no comparison, so a probe on the shipped
+light theme returned `[]` for `spacing["5xl"]`, `radius.full`,
+`borderWidth.strong`, `iconSize.xl`, `density.rowHeight`, `dimensions.toastWidth`
+and an infinite display size. The renderer does not guard them: `renderer.rs`
+casts each length to `f32` unchecked, and the runtime's own theme metrics
+document the result — invalid Taffy geometry it paints as nothing, with no
+error. One `finiteMembers` pass now walks every numeric member of the other
+eight groups, built from the same `textRoles`, `controlSizes` and step lists the
+ladders use. Every shipped set is finite, so no value moves.
 
 ### Reference adoption (block `200–299`)
 
