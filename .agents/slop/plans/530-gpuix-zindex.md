@@ -87,13 +87,20 @@ Without `zIndex`, the click lands on `[3]`; with `zIndex: 2` on id 2 it lands on
 `[2]`. That is paint order and GPUI's hit order in one measurement.
 
 **Smoke** — `nub apps/playground/dist/smoke/run.js --only layout-flex`:
-`1/1 scenarios passed · capabilities: layout=verified`. The installed artifact
-hash was identical before and after the run (`e8064859…`). That check matters:
+`1/1 scenarios passed · capabilities: layout=verified`; and
+`--only input-edit` on an isolated package copy: `1/1 · input=verified`
+(51 ms). The installed artifact hash was identical before and after the
+layout run (`e8064859…`). That check matters:
 `apps/playground/node_modules/@gpuix/native` resolves into the machine-wide nub
-cache, where a concurrent workstream build replaced the binary mid-session.
+cache, where a concurrent workstream build replaced the binary mid-session. The
+`input-edit` run therefore used a private copy of the package with the same
+`e8064859…` binary, linked into `apps/playground/node_modules` for the run and
+restored afterwards. `--list` is not a supported flag; the runner ignores it
+and executes the whole suite, so the registry list is not a cheap probe.
 
-**Rust** — `cargo test --release --locked --lib -- retained_tree` in the scratch
-tree: `27 passed; 0 failed` (242 filtered out), including
+**Rust** — `cargo test --release --locked --target x86_64-apple-darwin --lib --
+retained_tree` in the scratch tree: `27 passed; 0 failed` (242 filtered out),
+including
 `z_index_orders_positioned_siblings_above_in_flow`,
 `no_z_index_leaves_the_paint_order_alone` and
 `z_index_hit_order_is_reverse_paint_order`.
