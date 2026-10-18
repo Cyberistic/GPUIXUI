@@ -73,6 +73,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       Enter can share one React batch, so the commit must be a functional update.
       Gives the Key-value / Property panel / Inspector panel / Property editor
       rows their first runtime evidence. §9
+`[~]` Probe **resizable columns inside the virtualized data grid** per plan `349`:
+      `data-grid-columns` + `live-data-grid-columns` — a header-cell handle drags
+      per-column width state; header and virtual rows stay aligned, the content
+      width and pan maximum follow, the anchor and selection survive a resize,
+      and Home/End/arrows clamp. Closes the `Resizable columns` row that plan
+      `130` only measured on plain rows.
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
 `[x]` **The native smoke suite is green on this host** (44/44 when the blocker closed; **74/74** today) — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and one screenshot per scenario. Two-direction proof recorded (plan `140` §4, plan `150` §4, plans `151`–`187` §7/§8/§9/§10: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
 `[x]` Probe the modal contract per plan `155`: `modal-focus-trap` — component code moves native focus (`renderer.focusElement`), Tab wraps inside the surface (`focusNextWithin`/`focusPreviousWithin`), focus returns to the trigger, and a nested popover's Escape closes only the popover — 19/19 green (fails with exit `1` when the Tab trap or the focus return is removed)
