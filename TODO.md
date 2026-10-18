@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 207/273
+`[x]` `[████████░░]` 208/274
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1701,6 +1701,19 @@ stayed green; the reference's floor snippet also took its order from the
 `contrastFloors` object literal. `contrastPairClasses` is the index, the type
 derives from it, the ledger and the reference enumerate it, and a class with a
 floor but no pair is reported; no colour, pair or floor moves (plan 543)
+`[x]` Measure every quoted tightest figure on every shipped set — the catalogue
+calls the ratios beside each contract list "the tightest shipped pair", "the
+weakest shipped set" and "the weakest the shipped themes produce", but
+`docs.test.ts` derived them from **ten** of the twenty-four sets (identity and
+platform variants at the default contrast, recipes in light only), so both AAA
+identity sets, all six AAA platform variants and the four remaining recipe sets
+were unmeasured while every case stayed green; `quotedSets` now derives from
+`shippedThemes` with a label that carries ` high` at AAA, an extent case fails on
+any narrower list, the alpha-hover figures narrow explicitly to the light
+composition their sentences name, and the Verification paragraph names both
+owners (`figures.ts`/`figures.test.ts` for the sixteen-entry table and
+`docs.test.ts` for the quoted figures). A probe over all 24 sets finds every
+quoted minimum unchanged, so no document value or colour moves (plan 544)
 
 ## Phase C — Tier 1–2 components
 

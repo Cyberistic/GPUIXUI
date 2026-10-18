@@ -3221,23 +3221,28 @@ set, the solid fills clear the surface floor on every chip surface, the public
 checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
-`packages/tokens/src/figures.test.ts` holds every figure this page states in the
-present tense to the themes it ships: it derives the ratio from `shippedThemes`
-with the checker's own measurement and asserts both the figure and the set the
-sentence names, so a palette edit and a sentence cannot drift apart. It found
-three: the Toast's tone margin rounds to 11.98:1 (the page said 11.97), the
-disabled panel action measures 5.148:1 identity dark and 7.310:1 AAA dark after
-plan `520` moved `disabledForeground`, and the value groove's tightest surface
-pair is Linux light `track` on the `active` wash at 1.050:1 — the page had named
-identity dark's `selected` fill, the tightest pair *within that one fill*, which
-is what `docs.test.ts` measured before plan `536` (plan `536`). Plan `537`
-extends the same table to the text hierarchy: a tier's figure is a ratio of
-ratios, so `tierSurfaces`, `deriveTierFigure` and `tierMinimum` measure it on
-the surfaces both roles are painted on — the rule `themeTextTierFailures` uses —
-and the seven minima above are pinned with the set and surface each sentence
-names. It found two: the panel action's 1.542:1 step is high-contrast dark
-rather than identity dark (1.877:1), and the design system still quoted plan
-392's 1.440:1 for the hint after plan `527` moved it to 1.157:1.
+`packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
+state — `documentedFigures` and `documentedTierFigures`, **sixteen** entries
+across this page, the design system, the README and the ledger — and
+`packages/tokens/src/figures.test.ts` derives each one from `shippedThemes` with
+the checker's own measurement and asserts both the figure and the set (and
+surface) the sentence names. The quoted tightest figures beside each contract
+list are derived by `docs.test.ts` over the same twenty-four shipped sets, so
+both suites read one enumeration and a palette edit and a sentence cannot drift
+apart. It found three: the Toast's tone margin rounds to 11.98:1 (the page said
+11.97), the disabled panel action measures 5.148:1 identity dark and 7.310:1 AAA
+dark after plan `520` moved `disabledForeground`, and the value groove's
+tightest surface pair is Linux light `track` on the `active` wash at 1.050:1 —
+the page had named identity dark's `selected` fill, the tightest pair *within
+that one fill*, which is what `docs.test.ts` measured before plan `536`
+(plan `536`). Plan `537` extends the same table to the text hierarchy: a tier's
+figure is a ratio of ratios, so `tierSurfaces`, `deriveTierFigure` and
+`tierMinimum` measure it on the surfaces both roles are painted on — the rule
+`themeTextTierFailures` uses — and the seven minima above are pinned with the set
+and surface each sentence names. It found two: the panel action's 1.542:1 step is
+high-contrast dark rather than identity dark (1.877:1), and the design system
+still quoted plan 392's 1.440:1 for the hint after plan `527` moved it to
+1.157:1.
 
 ## Limitations and future work
 

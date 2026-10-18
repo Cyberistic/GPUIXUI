@@ -138,7 +138,11 @@ import {
   elevationShadow,
   type BoxShadow,
 } from "./elevation.js";
-import { tierSurfaces } from "./figures.js";
+import {
+  documentedFigures,
+  documentedTierFigures,
+  tierSurfaces,
+} from "./figures.js";
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
@@ -173,7 +177,7 @@ import {
   radius,
   spacing,
 } from "./scale.js";
-import { shippedThemes } from "./shipped-themes.js";
+import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
 import { brandTheme } from "./brand-theme.example.js";
 import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
@@ -1273,24 +1277,61 @@ describe("docs/tokens.md quoted tightest figures", () => {
     aero: "Aero",
   };
 
-  const quotedSets: ReadonlyArray<readonly [string, Theme]> = [
-    ...themeModes.map((mode): readonly [string, Theme] => [
-      `identity ${mode}`,
-      getTheme(mode),
-    ]),
-    ...themeModes.flatMap((mode) =>
-      platformNames
-        .filter((platform) => platform !== "default")
-        .map((platform): readonly [string, Theme] => [
-          `${platformLabels[platform]} ${mode}`,
-          getPlatformTheme(platform, mode),
-        ]),
-    ),
-    ...platformRecipeNames.map((recipe): readonly [string, Theme] => [
-      `${recipeLabels[recipe]} light`,
-      getPlatformRecipeTheme(recipe, "light"),
-    ]),
-  ];
+  /**
+   * The label the page uses for a shipped set. A sentence names a provenance
+   * ("Linux dark", "Aero light", "identity light"), never a `Theme.name`, and a
+   * AAA set adds ` high` — the one thing its default-contrast twin cannot say,
+   * so no two sets share a label.
+   */
+  const quotedLabel = (shipped: ShippedTheme): string => {
+    const { theme } = shipped;
+    const contrast = theme.contrast === "high" ? " high" : "";
+    return shipped.source === "identity"
+      ? `identity ${theme.mode}${contrast}`
+      : shipped.source === "platform"
+        ? `${platformLabels[shipped.platform]} ${theme.mode}${contrast}`
+        : `${recipeLabels[shipped.recipe]} ${theme.mode}${contrast}`;
+  };
+
+  /**
+   * Every shipped set, with the label its sentence uses. The list was ten sets
+   * — the identity and platform variants at the default contrast and the
+   * recipes in light only — while every sentence it holds is a superlative over
+   * the package, so fourteen shipped sets, the AAA pairs included, were
+   * unmeasured (plan 544).
+   */
+  const quotedSets: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+    (shipped): readonly [string, Theme] => [
+      quotedLabel(shipped),
+      shipped.theme,
+    ],
+  );
+
+  it("measures a quoted figure on every shipped set", () => {
+    expect(quotedSets).toHaveLength(shippedThemes.length);
+    expect(new Set(quotedSets.map(([label]) => label)).size).toBe(
+      shippedThemes.length,
+    );
+  });
+
+  it("names both suites that hold its figures, and the table's size", () => {
+    const start = markdownProse.indexOf(
+      "`packages/tokens/src/figures.ts` holds the ratios",
+    );
+    const paragraph = markdownProse.slice(
+      start,
+      markdownProse.indexOf("It found three", start),
+    );
+    const entries = documentedFigures.length + documentedTierFigures.length;
+
+    expect(paragraph).toContain("`documentedFigures`");
+    expect(paragraph).toContain("`documentedTierFigures`");
+    expect(paragraph).toContain(`**${countWord(entries)}**`);
+    expect(paragraph).toContain("`docs.test.ts`");
+    expect(paragraph).not.toContain(
+      "holds every figure this page states in the present tense",
+    );
+  });
 
   const tightest = (
     foreground: keyof ThemeColors,
@@ -1456,33 +1497,11 @@ describe("docs/tokens.md quoted tightest figures", () => {
   });
 
   it("quotes the status label the selection wash can erase", () => {
-    const shipped: ReadonlyArray<readonly [string, Theme]> = [
-      ...themeModes.flatMap((mode) =>
-        (["default", "high"] as const).map(
-          (contrast): readonly [string, Theme] => [
-            `identity ${mode} ${contrast}`,
-            getTheme(mode, contrast),
-          ],
-        ),
-      ),
-      ...platformNames
-        .filter((platform) => platform !== "default")
-        .flatMap((platform) =>
-          themeModes.map((mode): readonly [string, Theme] => [
-            `${platformLabels[platform]} ${mode}`,
-            getPlatformTheme(platform, mode),
-          ]),
-        ),
-      ...platformRecipeNames.map((recipe): readonly [string, Theme] => [
-        `${recipeLabels[recipe]} light`,
-        getPlatformRecipeTheme(recipe, "light"),
-      ]),
-    ];
     const tightest = (
       contrast: "default" | "high",
     ): readonly [string, number] => {
       let worst: readonly [string, number] = ["", Number.POSITIVE_INFINITY];
-      shipped
+      quotedSets
         .filter(([, theme]) => theme.contrast === contrast)
         .forEach(([label, theme]) => {
           statusTones.forEach((tone) => {
@@ -1492,10 +1511,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
                 compositeOver(theme.colors.selection, theme.colors[surface]),
               );
               if (ratio < worst[1]) {
-                worst = [
-                  `${label.replace(" default", "")} ${tone}Text on ${surface}`,
-                  ratio,
-                ];
+                worst = [`${label} ${tone}Text on ${surface}`, ratio];
               }
             });
           });
@@ -1549,12 +1565,18 @@ describe("docs/tokens.md quoted tightest figures", () => {
 
   it("quotes the worst alpha-hover label ratios plan 338 records", () => {
     const surfaces = ["background", "card", "popover", "muted"] as const;
+    // The sentences name the light composition the consumers paint — a 50%
+    // primary on a dark card is a different measurement, not this figure — so
+    // this is a specific-subset claim, not a superlative over the package.
+    const consumerSets = quotedSets.filter(
+      ([, theme]) => theme.mode === "light" && theme.contrast === "default",
+    );
     const worstAlpha = (
       foreground: keyof ThemeColors,
       fill: keyof ThemeColors,
       opacity: number,
     ): readonly [string, string, number] =>
-      quotedSets
+      consumerSets
         .flatMap(([label, theme]) =>
           surfaces.map(
             (surface) =>
