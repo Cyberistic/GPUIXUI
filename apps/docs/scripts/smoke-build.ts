@@ -9,6 +9,12 @@
  * sitemap. A page that throws during SSR or a layout that loses its `<h1>` is
  * invisible to the MDX guards and fatal here.
  *
+ * Since plan 510 every page must also carry the document head the site claims:
+ * a description, `og:title`/`og:url`/an absolute `og:image`, a Twitter card, an
+ * icon, an apple-touch icon and a light/dark `theme-color`; the brand assets
+ * those tags name must resolve to an image. A head without them used to pass,
+ * because a missing tag is not a broken link.
+ *
  *   nub scripts/smoke-build.ts [--base-url <url>] [--port <n>] [--no-build]
  *
  * Exit `0` pass, `1` the site is broken, `2` the check could not run (build or
@@ -39,6 +45,7 @@ interface Problem {
 interface Fetched {
   readonly status: number;
   readonly body: string;
+  readonly contentType: string | null;
 }
 
 const usage =
@@ -97,7 +104,11 @@ const request = async (url: string): Promise<Fetched | null> => {
     const response = await fetch(url, {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
-    return { status: response.status, body: await response.text() };
+    return {
+      status: response.status,
+      body: await response.text(),
+      contentType: response.headers.get("content-type"),
+    };
   } catch {
     return null;
   }
@@ -126,6 +137,57 @@ const canonical = (html: string): string | null => {
     return tag.match(/\bhref="([^"]+)"/)?.[1] ?? null;
   }
   return null;
+};
+
+/** One attribute of a start tag, or `null` when the tag does not carry it. */
+const attribute = (tag: string, name: string): string | null =>
+  tag.match(new RegExp(`\\b${name}="([^"]*)"`))?.[1] ?? null;
+
+const metaTags = (html: string): ReadonlyArray<string> =>
+  [...html.matchAll(/<meta\b[^>]*>/g)].map((match) => match[0]);
+
+/** The `content` of the first `<meta name|property="key">`, if any. */
+const metaContent = (
+  html: string,
+  attributeName: "name" | "property",
+  key: string,
+): string | null => {
+  const tag = metaTags(html).find(
+    (entry) => attribute(entry, attributeName) === key,
+  );
+  return tag === undefined ? null : attribute(tag, "content");
+};
+
+/** Every `<meta name="key">` tag, so a duplicate or a missing one is visible. */
+const metaEntries = (
+  html: string,
+  attributeName: "name" | "property",
+  key: string,
+): ReadonlyArray<{
+  readonly content: string | null;
+  readonly media: string | null;
+}> =>
+  metaTags(html).flatMap((tag) =>
+    attribute(tag, attributeName) === key
+      ? [
+          {
+            content: attribute(tag, "content"),
+            media: attribute(tag, "media"),
+          },
+        ]
+      : [],
+  );
+
+/** The `href` of a `<link rel="…">`, optionally narrowed by its `type`. */
+const linkHref = (html: string, rel: string, type?: string): string | null => {
+  const tag = [...html.matchAll(/<link\b[^>]*>/g)]
+    .map((match) => match[0])
+    .find(
+      (entry) =>
+        attribute(entry, "rel") === rel &&
+        (type === undefined || attribute(entry, "type") === type),
+    );
+  return tag === undefined ? null : attribute(tag, "href");
 };
 
 const internalTargets = (html: string): ReadonlyArray<string> =>
@@ -241,6 +303,57 @@ const auditPage = (
     }
   }
 
+  // The document head (plan 510). A missing tag is not a broken link, so none
+  // of these failures used to surface on the crawl.
+  const description = metaContent(page.body, "name", "description");
+  if (description === null || description.trim() === "")
+    fail("no meta description");
+
+  const ogTitle = metaContent(page.body, "property", "og:title");
+  if (ogTitle === null || ogTitle.trim() === "") fail("no og:title");
+
+  const ogUrl = metaContent(page.body, "property", "og:url");
+  if (ogUrl === null) {
+    fail("no og:url");
+  } else {
+    try {
+      const actual = new URL(ogUrl).pathname;
+      if (actual !== path) fail(`og:url ${actual}, expected ${path}`);
+    } catch {
+      fail(`og:url is not absolute: ${ogUrl}`);
+    }
+  }
+
+  const ogImage = metaContent(page.body, "property", "og:image");
+  if (ogImage === null) {
+    fail("no og:image");
+  } else {
+    try {
+      new URL(ogImage);
+    } catch {
+      fail(`og:image is not absolute: ${ogImage}`);
+    }
+  }
+
+  const twitterCard = metaContent(page.body, "name", "twitter:card");
+  if (twitterCard !== "summary_large_image")
+    fail(`twitter:card is ${twitterCard ?? "missing"}`);
+
+  if (linkHref(page.body, "icon", "image/svg+xml") === null)
+    fail("no svg rel=icon");
+  if (linkHref(page.body, "apple-touch-icon") === null)
+    fail("no rel=apple-touch-icon");
+
+  const themeColors = metaEntries(page.body, "name", "theme-color");
+  if (themeColors.length !== 2) {
+    fail(`expected two theme-color metas, found ${themeColors.length}`);
+  }
+  for (const entry of themeColors) {
+    if (entry.media === null) fail("theme-color has no media query");
+    if (!/^#[0-9a-f]{6}$/i.test(entry.content ?? ""))
+      fail(`theme-color ${entry.content ?? "missing"} is not #rrggbb`);
+  }
+
   return problems;
 };
 
@@ -317,6 +430,70 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
   const linkProblems = await auditLinks(baseUrl, targets);
   problems.push(...linkProblems);
   console.log(`smoke: links ${targets.length} checked`);
+
+  // The brand assets the head names (plan 510). The crawl reaches an icon
+  // through `href`, but `og:image` rides in a meta `content`, so without this
+  // a renamed card would still share a 404.
+  const cards = new Set(
+    pages.flatMap(({ page }) => {
+      const value = metaContent(page.body, "property", "og:image");
+      return value === null ? [] : [value];
+    }),
+  );
+  if (cards.size > 1) {
+    problems.push({
+      where: "/head",
+      what: `og:image differs across pages: ${[...cards].join(", ")}`,
+    });
+  }
+  const brandTargets = [
+    ...new Map(
+      pages
+        .flatMap(({ path, page }) =>
+          [
+            metaContent(page.body, "property", "og:image"),
+            linkHref(page.body, "icon"),
+            linkHref(page.body, "apple-touch-icon"),
+          ].flatMap((value) => {
+            if (value === null) return [];
+            try {
+              return [{ path: new URL(value, baseUrl).pathname, source: path }];
+            } catch {
+              return [];
+            }
+          }),
+        )
+        .map((target) => [target.path, target] as const),
+    ).values(),
+  ];
+  const brandProblems = await mapLimit(
+    brandTargets,
+    CONCURRENCY,
+    async (target) => {
+      const response = await request(baseUrl + target.path);
+      if (response === null)
+        return [
+          { where: target.path, what: `${target.source}: request failed` },
+        ];
+      if (response.status !== 200)
+        return [
+          {
+            where: target.path,
+            what: `${target.source}: expected 200, got ${response.status}`,
+          },
+        ];
+      return response.contentType?.startsWith("image/") === true
+        ? []
+        : [
+            {
+              where: target.path,
+              what: `${target.source}: content-type ${response.contentType ?? "missing"} is not an image`,
+            },
+          ];
+    },
+  ).then((groups) => groups.flat());
+  problems.push(...brandProblems);
+  console.log(`smoke: brand ${brandTargets.length} assets checked`);
 
   const ids = new Map(
     pages.map(({ path, page }) => [path, elementIds(page.body)] as const),

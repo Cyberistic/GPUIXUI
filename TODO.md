@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–509)
+## Docs site workstream (plans 410–499, plus 500–510)
 
-`[x]` `[██████████]` 110/110
+`[x]` `[██████████]` 111/111
+
+`[x]` **Every page ships the brand head (plan 510)** — the site had no favicon,
+      no `og:image`, no `twitter:card` and no `theme-color`, and
+      `public/brand/README.md` promised assets that did not exist. A generated
+      64×64 mark, a 180×180 apple-touch icon and a 1200×630 card now ship and are
+      named once in `src/lib/site-head.ts`; the two scheme-scoped `theme-color`
+      tags render in `<head>` because TanStack keeps one meta per name; and
+      `smoke:build` fails by name on a lost tag or a 404 asset (90 pages, 3
+      assets). Six two-direction proofs in plan 510 §4.
 
 `[x]` **The platform toggle is proved by operating it (plan 509)** — the
       switcher is one radio group (one tab stop, arrows move and apply), and

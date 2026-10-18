@@ -5,6 +5,22 @@ The docs shell never imports the native renderer; the one real GPUix surface is
 an isolated, opt-in WebAssembly document under `/gpuix-preview/` (tier L, plan
 455). See `MISSION.md`, plan `410-docs-site.md`, and `docs/preview-strategy.md`.
 
+## Brand and document head
+
+The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the
+title, description, OpenGraph/Twitter tags, the icon links and the social card's
+declared size; `src/routes/__root.tsx` merges it into every route, and the two
+scheme-scoped `theme-color` tags are rendered directly in `<head>` because
+TanStack keys meta tags by name and would keep only one of them.
+
+The assets live in `public/brand/` (see its `README.md` for the mark, the
+1200×630 card and how the PNGs were rasterized). `src/lib/site-head.test.ts`
+proves each path exists, the card's real pixel size and that the browser-chrome
+colours are the library palettes; `smoke:build` proves the built pages carry the
+tags and serve each asset. A page without a description, `og:title`, `og:url`, an
+absolute `og:image`, a Twitter card, an icon or a light/dark `theme-color` fails
+the crawl by name (plan 510).
+
 ## Stack
 
 Fumadocs + TanStack Start (SSR), built with Vite, Tailwind 4 and
@@ -66,7 +82,10 @@ The unit suite reads the source tree. `smoke:build` reads the **production
 build**: it builds, serves the worker with `vite preview` on a free loopback
 port, and crawls the result (plan 439). It fails when a page does not render,
 loses its title, `<h1>`, `<main>` landmark, `lang` or canonical link, skips a
-heading level (plan 499); when an internal link or asset 404s; when a
+heading level (plan 499); when the document head loses its description,
+`og:title`/`og:url`/an absolute `og:image`, its Twitter card, its icon or its
+light/dark `theme-color`, or names a brand asset that does not answer as an
+image (plan 510); when an internal link or asset 404s; when a
 `#fragment` link has no element with that id on the page it names (plan 501);
 when `/api/search` stops answering; when an unknown slug is not 404; or when
 `robots.txt` loses its sitemap. The fragment check compares the **ids the page
