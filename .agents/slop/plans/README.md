@@ -202,6 +202,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [504](./504-solid-status-chip-selection.md) | The solid status chip and the panel action on the inverse selection veil | F | 344, 382, 394, 399 | done |
 | [505](./505-elevation-tint-aaa-dark.md) | The elevation tint on the AAA dark canvas | F | 085, 099, 345, 371, 390, 393 | done |
 | [506](./506-selected-row-title-selection.md) | The selected row's title through the text-selection wash | F | 081, 087, 312, 363, 381, 387, 391 | done |
+| [507](./507-dialog-face-on-scrim.md) | The dialog's face on the scrim | F | 099, 359, 375, 395, 505, 506 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2052,6 +2053,27 @@ titles now measure 7.144 / 7.389 / 7.164:1, every wash stays perceivable
 (1.264 / 1.125 / 1.136:1, and 1.071:1 on the Windows soft fill), and Linux dark
 keeps a 1.216:1 step past its accent wash. No light or high-contrast value moves,
 and the plain `contrastPairs` count stays 394.
+
+Plan `507` measures the element the modal scrim carries. Plans `099`, `359`, `375`
+and `395` hold the scrim against everything it covers, but nothing measured the
+dialog painted **on** it: `components/dialog.tsx` paints `popover` at :181 and the
+scrim at :248, so a theme whose `overlay` composites to its own `popover` ships a
+dialog with no face and only a 1px edge while all six checks return `[]`. The
+elevation contract does not cover it either — plan `505` measures each level over
+the four page surfaces, and a dialog's shadow lands on the scrim: on the identity
+dark scrim (`#060709`) the `lg` tint paints **1.0353:1**, and no black tint can
+clear the floor (pure black reaches **1.0421:1**). `dialogSurfacePairs` composites
+`overlay` over the six page layout surfaces (`background`, `card`, `muted`,
+`input`, `selected`, `popover`) and holds `popover` to the 1.05:1 `surface` floor.
+Every shipped set clears it (tightest 1.2100:1, identity dark on `selected`), so no
+colour moves. The content fills behind the scrim are deliberately not face pairs:
+their band is narrow enough that macOS dark's face meets the scrim over a
+`primary` action at **1.0213:1**, where the dialog's `border` carries the
+silhouette at 1.4954:1, and no `popover` value leaves the band — lightening the
+face to `#343436` fails five existing pairs, and raising the scrim to 70% clears
+`primary` (1.0775:1) but collapses `destructive` (1.0185:1). The documents now say
+what the measurements support: a modal is separated by its scrim, its face on the
+layout and its edge, not by its shadow.
 
 ## How to use a plan
 
