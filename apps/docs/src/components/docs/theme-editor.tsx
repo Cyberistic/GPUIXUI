@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Theme, ThemeMode } from "@gpuixui/tokens";
 import {
+  decodeState,
   defaultState,
   editableRoles,
-  parseState,
   resolveTheme,
   themeSource,
   toCssVars,
@@ -62,7 +62,7 @@ export function ThemeEditor() {
       new URLSearchParams(window.location.search).get(URL_PARAM) ??
       localStorage.getItem(STORAGE_KEY);
     if (raw === null) return;
-    const parsed = parseState(JSON.parse(raw));
+    const parsed = decodeState(raw);
     if (parsed !== undefined) setState(parsed);
   }, []);
 

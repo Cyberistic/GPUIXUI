@@ -156,6 +156,15 @@ export const parseState = (value: unknown): EditorState | undefined => {
   return { light: record.light, dark: record.dark };
 };
 
+/** Parse a persisted JSON string, falling back to `undefined` on bad input. */
+export const decodeState = (raw: string): EditorState | undefined => {
+  try {
+    return parseState(JSON.parse(raw));
+  } catch {
+    return undefined;
+  }
+};
+
 const colorLines = (colors: Record<EditableRole, string>): string =>
   editableRoles
     .map((role) => `      ${role}: ${JSON.stringify(colors[role])},`)

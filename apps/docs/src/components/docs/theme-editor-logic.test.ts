@@ -2,6 +2,7 @@ import { createTheme, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import {
   cssFontStack,
+  decodeState,
   defaultState,
   editableRoles,
   editsFromTheme,
@@ -91,5 +92,12 @@ describe("theme-editor persistence boundary", () => {
       dark: { ...defaultState().dark, radiusMd: Number.NaN },
     };
     expect(parseState(missingRole)).toBeUndefined();
+  });
+
+  it("decodes a persisted JSON string, and rejects malformed JSON", () => {
+    const state = defaultState();
+    expect(decodeState(JSON.stringify(state))).toEqual(state);
+    expect(decodeState("not json")).toBeUndefined();
+    expect(decodeState('{"light":{}}')).toBeUndefined();
   });
 });
