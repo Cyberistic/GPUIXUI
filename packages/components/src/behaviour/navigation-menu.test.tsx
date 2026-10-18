@@ -32,6 +32,25 @@ import { renderComponent } from "../internal/test-root.js";
 const after = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Wait until the tree shows the expected state, at most ~2 s. React commits and
+ * the native tree update can lag a timer under load, so a fixed sleep is a
+ * coin flip; the assertion that follows is still what fails when it never
+ * happens.
+ */
+const until = async (check: () => boolean): Promise<void> => {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (check()) return;
+    await after(20);
+  }
+};
+
+/** Whether the tree currently contains `testId`. */
+const isShown = (
+  root: ReturnType<typeof renderComponent>,
+  testId: string,
+): boolean => root.renderer.findByTestId(testId) !== undefined;
+
 /** A two-item product nav, with an inert target far to the right. */
 const Workspace = ({
   value,
@@ -268,7 +287,7 @@ describe("NavigationMenu", () => {
     hoverCentreOf(nav, "trigger-platform");
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
-    await after(50);
+    await until(() => isShown(nav, "panel-platform"));
 
     expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
     expect(
@@ -283,11 +302,11 @@ describe("NavigationMenu", () => {
     const nav = renderComponent(<Workspace openDelay={20} closeDelay={20} />);
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(50);
+    await until(() => isShown(nav, "panel-platform"));
     expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
 
     hoverCentreOf(nav, "trigger-pricing");
-    await after(50);
+    await until(() => isShown(nav, "panel-pricing"));
 
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
     expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
@@ -299,14 +318,14 @@ describe("NavigationMenu", () => {
     const nav = renderComponent(<Workspace openDelay={20} closeDelay={40} />);
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(50);
+    await until(() => isShown(nav, "panel-platform"));
     hoverCentreOf(nav, "panel-platform");
     await after(60);
 
     expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
 
     hoverCentreOf(nav, "elsewhere");
-    await after(60);
+    await until(() => !isShown(nav, "panel-platform"));
 
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
@@ -319,7 +338,7 @@ describe("NavigationMenu", () => {
     );
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(50);
+    await after(150);
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
     clickCentreOf(nav, "trigger-platform");
@@ -334,7 +353,7 @@ describe("NavigationMenu", () => {
     );
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(50);
+    await after(150);
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
 
     clickCentreOf(nav, "trigger-platform");
@@ -347,7 +366,7 @@ describe("NavigationMenu", () => {
     const nav = renderComponent(<Workspace openDelay={20} closeDelay={60} />);
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(40);
+    await until(() => isShown(nav, "panel-platform"));
     expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
 
     hoverCentreOf(nav, "elsewhere");
@@ -357,7 +376,7 @@ describe("NavigationMenu", () => {
     nav.renderer.simulateKeystrokes("enter");
     expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
 
-    await after(90);
+    await after(120);
 
     expect(nav.renderer.findByTestId("panel-pricing")).toBeDefined();
 
@@ -376,7 +395,9 @@ describe("NavigationMenu", () => {
     );
 
     hoverCentreOf(nav, "trigger-platform");
-    await after(50);
+    await until(() => onValueChange.mock.calls.length > 0);
+    // Give a stray second timer time to fire before counting.
+    await after(150);
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith("platform");

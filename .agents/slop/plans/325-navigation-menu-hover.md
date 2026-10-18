@@ -307,6 +307,26 @@ Landed 2026-10-18.
   `nub run --filter @gpuixui/components test` (308) and
   `nub run --filter @gpuixui/components test:behaviour` (43 files, 458 tests).
 
+### Load robustness (measured 2026-10-18 04:20, follow-up)
+
+With five other workstreams running GPUix suites on the same host, the hover
+tests flaked: three consecutive runs of this file reported `2 failed`, `17
+passed`, `7 failed`, with a different first failure each time. The cause is the
+fixed `after(50)` after a 20 ms timer: React's commit and the native tree update
+can land after the sleep when the machine is saturated, so the panel is not yet
+readable.
+
+The suite now waits for the state instead of a wall-clock guess:
+
+- `until(check)` polls every 20 ms for up to ~2 s; the assertion that follows is
+  still what fails when the state never arrives.
+- Positive assertions use `until`; negative ones keep a single longer sleep
+  (150 ms against a 20 ms timer), because "it never opened" cannot be polled.
+- The identity test waits 120 ms against its 60 ms close delay.
+
+Two consecutive runs then passed 17/17 under the same load. The test count is
+unchanged (17 native); this is a test-only change.
+
 ## 7. Acceptance
 
 - Hover opens a panel after `openDelay` and closes it after `closeDelay` once
