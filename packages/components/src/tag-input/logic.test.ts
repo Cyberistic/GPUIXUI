@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { addTokens, removeToken, splitDraft } from "./logic.js";
+import { addTokens, editDraft, removeToken, splitDraft } from "./logic.js";
 
 describe("splitDraft", () => {
   it("trims and drops empty tokens", () => {
@@ -19,6 +19,25 @@ describe("splitDraft", () => {
 
   it("returns nothing for an empty draft", () => {
     expect(splitDraft("")).toEqual([]);
+  });
+});
+
+describe("editDraft", () => {
+  it("keeps a single typed segment as the draft", () => {
+    expect(editDraft("des")).toEqual({ add: [], draft: "des" });
+  });
+
+  it("commits before a typed comma and keeps the tail empty", () => {
+    expect(editDraft("a,")).toEqual({ add: ["a"], draft: "" });
+  });
+
+  it("commits every token in a pasted list", () => {
+    expect(editDraft("a,b")).toEqual({ add: ["a", "b"], draft: "" });
+    expect(editDraft(" a , b ")).toEqual({ add: ["a", "b"], draft: "" });
+  });
+
+  it("does not add whitespace-only tokens from a paste", () => {
+    expect(editDraft(" , ,a")).toEqual({ add: ["a"], draft: "" });
   });
 });
 

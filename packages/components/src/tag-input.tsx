@@ -6,9 +6,10 @@
  * keyboard wiring has nothing to decide beyond which rule to call.
  *
  * A typed comma arrives through `onChange` (0.10.0 has no `preventDefault`), so
- * the field treats any comma-containing edit as a batch: everything before the
- * last comma is committed and the remainder stays the draft. Pasting `"a,b"`
- * therefore adds two tokens, and typing `","` adds the one before it.
+ * the field treats a comma-containing edit as a batch and the pure rule in
+ * `tag-input/logic.ts` decides how much of it is complete. Pasting `"a,b"`
+ * therefore adds two tokens, and typing `","` commits the one before it while
+ * the rest stays the draft.
  */
 
 import type { EventPayload, InputProps, Props } from "@gpuix/react";
@@ -18,9 +19,6 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
-import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
-import * as Str from "effect/String";
 import {
   createContext,
   useContext,
@@ -37,7 +35,12 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { stateDescription } from "./internal/state-description.js";
-import { addTokens, removeToken, splitDraft } from "./tag-input/logic.js";
+import {
+  addTokens,
+  editDraft,
+  removeToken,
+  splitDraft,
+} from "./tag-input/logic.js";
 import {
   controlHeight,
   focusRing,
@@ -112,24 +115,17 @@ export const TagInput = ({
     setDraft("");
   };
 
-  const editDraft = (text: string): void => {
-    const segments = Str.split(",")(text);
-    if (Arr.length(segments) < 2) {
-      setDraft(text);
-      return;
-    }
-    const last = Option.getOrElse(Arr.last(segments), () => "");
-    add(
-      splitDraft(Arr.join(Arr.take(segments, Arr.length(segments) - 1), ",")),
-    );
-    setDraft(last);
+  const editDraftValue = (text: string): void => {
+    const edited = editDraft(text);
+    add(edited.add);
+    setDraft(edited.draft);
   };
 
   const context: TagInputContextValue = {
     tokens: value,
     draft,
     disabled,
-    editDraft,
+    editDraft: editDraftValue,
     addDraft: commit,
     remove: (token) => onValueChange(removeToken(value, token)),
     setFocused,

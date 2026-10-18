@@ -38,6 +38,11 @@ The runnable build is `examples/tag-input.example.tsx`, registered in
 | The chip's clear control | removes that token |
 | Whitespace-only input | never becomes a token |
 
+A pasted list arrives as one `onChange` carrying every comma-separated token, so
+the whole list commits at once. A comma the user types is a different shape — it
+has an empty tail — so everything before it commits and the field stays ready for
+the next token.
+
 Removal is the chip control. **Backspace on an empty field is not wired**: the
 installed `@gpuix/native@0.10.0` emits no `keyDown` for Backspace or Delete in
 the test renderer, so the component cannot promise (or test) that gesture. The

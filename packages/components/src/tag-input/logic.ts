@@ -25,6 +25,32 @@ export const splitDraft = (draft: string): ReadonlyArray<string> =>
     return token === "" ? Result.failVoid : Result.succeed(token);
   });
 
+/** What one field edit contributes: tokens to add, and the remaining draft. */
+export interface DraftEdit {
+  readonly add: ReadonlyArray<string>;
+  readonly draft: string;
+}
+
+/**
+ * One `onChange` value: a single segment is still being typed, an empty tail is
+ * a typed comma, and a non-empty tail after a comma is a bulk insert (paste),
+ * where every segment is already complete.
+ */
+export const editDraft = (text: string): DraftEdit => {
+  const segments = Str.split(",")(text);
+  if (Arr.length(segments) === 1) return { add: [], draft: text };
+  const tail = Option.getOrElse(Arr.last(segments), () => "");
+  if (tail === "") {
+    return {
+      add: splitDraft(
+        Arr.join(Arr.take(segments, Arr.length(segments) - 1), ","),
+      ),
+      draft: "",
+    };
+  }
+  return { add: splitDraft(text), draft: "" };
+};
+
 /** Append the tokens that pass the rules; a refused addition leaves the list. */
 export const addTokens = (
   current: ReadonlyArray<string>,

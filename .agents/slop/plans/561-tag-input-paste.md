@@ -185,3 +185,12 @@ Stop and report rather than loosening a test if:
 - `TagInput` uses the pure rule; all 15 native tag cases keep their status.
 - Unit suite, `nub run check` and `nub run lint` pass.
 - Docs, `COMPONENTS.md`, `TODO.md` and the plan index record the fix.
+
+## 9. Observed (2026-10-19)
+
+- New pure cases: `14 passed` in `logic.test.ts` (10 existing + 4 new).
+- Mutation (old commit-then-keep-tail branch): `2 failed` — the `"a,b"` case
+  reported `{ add: ["a"], draft: "b" }`, and `" , ,a"` reported
+  `{ add: [], draft: "a" }`.
+- The native typed-comma and Enter cases still pass; no native case count
+  changed.
