@@ -32,7 +32,7 @@ The runnable build is `examples/inline-edit.example.tsx`, registered in
 | `Tab` in the input | commit the draft; focus moves on |
 | A press outside the field | commit the draft; the display takes focus back when the press did not land on another control |
 | Blur | commit the draft, leave focus where the user put it |
-| `Escape` | discard the draft, return to display, focus the display |
+| `Escape` | discard the draft, return to display, focus the display; the key is claimed, so an enclosing dialog stays open |
 | Commit with an unchanged draft | nothing is called |
 | Empty text | a valid value; it clears the field (it is not "cancel") |
 
@@ -98,15 +98,16 @@ states with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (16 tests):
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (17 tests):
 display mode, click-to-edit with focus, keyboard entry with Space starting on
 release, Enter commit with focus return, Escape discard, blur commit, an outside
 press that commits and restores the display, a press on another control that
 keeps its focus, a `Tab` commit, an inside press that must not commit, the
-unchanged/disabled guards, a controlled edit state, and the caller's display
+unchanged/disabled guards, a controlled edit state, the caller's display
 (`onClick`/`onKeyDown`) and field (`onChange`/`onSubmit`/`onFocus`/`onBlur`/
 `onMouseDownOutside`) handlers composing with the swap and the commit contract,
-and a disabled display that paints neither a hover fill nor a ring.
+a disabled display that paints neither a hover fill nor a ring, and an Escape
+that cancels the edit without closing the dialog around it.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

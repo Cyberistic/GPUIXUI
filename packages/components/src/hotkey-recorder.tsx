@@ -4,7 +4,8 @@
  * The accelerator grammar and the platform glyphs are shared with
  * `KeyboardShortcuts` (`shortcut/accelerator.ts`); capture is
  * `hotkey/logic.ts`. This component only owns the recording state and the
- * display.
+ * display. Escape stops a recording and claims the key, so an enclosing dialog
+ * stays open (plan 514).
  *
  * 0.10.0's test renderer emits no key event for Backspace or Delete, so
  * clearing is a real control next to the recorder rather than a key the docs
@@ -118,6 +119,9 @@ export const HotkeyRecorder = ({
           // a second recording.
           consumed.current = true;
           if (isDismiss(event)) {
+            // One Escape stops the recording and must not also close the
+            // dialog around the recorder (plan 514).
+            claimEvent(event);
             setRecording(false);
             return;
           }

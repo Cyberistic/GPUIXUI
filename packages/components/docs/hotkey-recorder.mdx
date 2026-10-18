@@ -34,7 +34,7 @@ The runnable build is `examples/hotkey-recorder.example.tsx`, registered in
 | Click, `Enter` or `Space` while idle | starts listening ("Press keys…") |
 | A key with a modifier | captures and reports the chord, stops listening |
 | A modifier-only press (`Shift`, `Cmd`…) | ignored; still listening |
-| `Escape` while listening | cancels and keeps the bound value |
+| `Escape` while listening | cancels and keeps the bound value; the key is claimed, so an enclosing dialog stays open |
 | Focus leaves | cancels; a half-finished chord is never committed |
 | The clear control | clears the binding (`null`) |
 | `disabled` | out of the tab order, inert, no clear control |
@@ -94,10 +94,11 @@ no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (12 tests):
-the display, click-to-record, a real captured chord, Escape, the clear control
-by pointer and keyboard, Space starting on release, a captured Space not
-reopening the recorder, blur, disabled, and both themes.
+`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (13 tests):
+the display, click-to-record, a real captured chord, Escape, a recording Escape
+that leaves its dialog open, the clear control by pointer and keyboard, Space
+starting on release, a captured Space not reopening the recorder, blur,
+disabled, and both themes.
 
 `src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
 modifier, modifier-only presses, Enter/Space normalisation, case, order and a

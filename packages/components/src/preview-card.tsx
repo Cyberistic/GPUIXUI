@@ -144,7 +144,9 @@ export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
       }}
       onKeyDown={(event: EventPayload) => {
         rest.onKeyDown?.(event);
-        if (isDismiss(event) && open) setOpen(false);
+        // Offer the key to the stack rather than closing locally, so the card's
+        // layer claims it and an enclosing dialog stays open (plan 514).
+        if (isDismiss(event) && open) dismissTopLayer(event);
       }}
     />
   );

@@ -5,12 +5,14 @@
  * commits, a clear control that also starts recording, blur that leaves the
  * recorder listening, a disabled recorder that can be activated, Space starting
  * a recording on key down instead of on release, a captured Space reopening the
- * recorder on its key-up, and a keyboard-cleared value starting one instead.
+ * recorder on its key-up, a keyboard-cleared value starting one instead, and an
+ * Escape that stopped the recording and closed the dialog around it (plan 514).
  */
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { HotkeyRecorder } from "../hotkey-recorder.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -43,6 +45,19 @@ const Harness = ({
         Elsewhere
       </div>
     </div>
+  );
+};
+
+/** A recorder inside an open dialog. */
+const InDialog = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent label="Settings" testId="dialog">
+        <DialogTitle>Settings</DialogTitle>
+        <Harness initial="ctrl+k" />
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -91,6 +106,23 @@ describe("HotkeyRecorder", () => {
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
 
     recorder.unmount();
+  });
+
+  it("keeps a dialog open for the Escape that stops recording", () => {
+    // Before plan 514 the recorder stopped and the dialog closed on one Escape.
+    const nested = renderComponent(<InDialog />);
+    clickCentreOf(nested, "recorder");
+    expect(nested.renderer.getAllText()).toContain("Press keys…");
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.getAllText()).not.toContain("Press keys…");
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("clears through the clear control without starting a recording", () => {

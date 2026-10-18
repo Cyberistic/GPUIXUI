@@ -6,17 +6,20 @@
  * pointer leaves; focus that does not open it; Escape or an outside press that
  * closes the wrong layer; an unnamed surface; a controlled card that opens on
  * its own; a centre-aligned card 180 px off its trigger; a card at the window's
- * bottom edge covering the trigger instead of flipping above it; and a disabled
- * trigger that opened on hover and on focus.
+ * bottom edge covering the trigger instead of flipping above it; a disabled
+ * trigger that opened on hover and on focus; and an Escape that closed the card
+ * and the dialog around it (plan 514).
  */
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import { useState } from "react";
 import {
   PreviewCard,
   PreviewCardContent,
   PreviewCardTrigger,
 } from "../preview-card.js";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { Button } from "../internal/button.js";
 import {
   focusedTestId,
@@ -91,6 +94,19 @@ const Workspace = ({
     </div>
   </div>
 );
+
+/** The same card inside an open dialog. */
+const WorkspaceInDialog = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent label="Files" testId="dialog">
+        <DialogTitle>Files</DialogTitle>
+        <Workspace />
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 describe("PreviewCard", () => {
   it("renders only the trigger until it is opened", () => {
@@ -176,6 +192,26 @@ describe("PreviewCard", () => {
     expect(focusedTestId(card)).toEqual(Option.some("trigger"));
 
     card.unmount();
+  });
+
+  it("keeps a dialog open for the Escape that closes the card", () => {
+    // Before plan 514 the trigger closed the card locally and the enclosing
+    // dialog closed on the same Escape.
+    const nested = renderComponent(<WorkspaceInDialog />);
+    nested.renderer.focusElement(
+      nested.renderer.findByTestId("trigger")?.id ?? -1,
+    );
+    expect(nested.renderer.findByTestId("preview")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("preview")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("closes on an outside press", async () => {

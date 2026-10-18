@@ -4,7 +4,8 @@
  * GPUix has no contenteditable, so the honest implementation swaps a `<text>`
  * display for a real `<input>`. The commit contract is one rule: Enter, `Tab` or
  * a press outside the field commits, Escape cancels, and an unchanged draft
- * calls nothing. Blur still commits where the host delivers it, but a live
+ * calls nothing. Escape claims the key, so an enclosing dialog stays open
+ * (plan 514). Blur still commits where the host delivers it, but a live
  * window does not run React's `onBlur` for a native focus change (plan 379), so
  * the outside press and `Tab` are the paths a real user takes.
  *
@@ -23,6 +24,7 @@ import {
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
+import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss, isEnter, isTab } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -154,6 +156,7 @@ export const InlineEdit = ({
     onKeyDown?.(event);
     if (isDismiss(event)) {
       cancel();
+      claimEvent(event);
     } else if (isEnter(event)) {
       commit();
     } else if (isTab(event)) {

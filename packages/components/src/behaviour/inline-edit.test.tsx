@@ -7,13 +7,15 @@
  * a controlled edit state the component overrides; Space starting the edit
  * on key down instead of on release; an edit that stays open when the user
  * leaves the field, because a live window does not deliver React's `onBlur` for
- * a native focus change (plan 379); and a disabled display that painted a ring
- * from `autoFocus` and a hover fill (plan 394).
+ * a native focus change (plan 379); a disabled display that painted a ring
+ * from `autoFocus` and a hover fill (plan 394); and an Escape that cancelled
+ * the edit and closed the dialog around it (plan 514).
  */
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { InlineEdit, type InlineEditProps } from "../inline-edit.js";
 import {
   clickCentreOf,
@@ -63,6 +65,19 @@ const Harness = ({
 /** Enter edit mode by clicking the display. */
 const startEditing = (root: ComponentTestRoot): void => {
   clickCentreOf(root, "name");
+};
+
+/** A rename control inside an open dialog. */
+const InDialog = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent label="Settings" testId="dialog">
+        <DialogTitle>Settings</DialogTitle>
+        <Harness initial="Docs" />
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 /** Type every character as a real key press on whatever has focus. */
@@ -147,6 +162,23 @@ describe("InlineEdit", () => {
     expect(focusedTestId(edit)).toEqual(Option.some("name"));
 
     edit.unmount();
+  });
+
+  it("keeps a dialog open for the Escape that cancels the edit", () => {
+    // Before plan 514 the cancel and the dialog close both ran on one Escape.
+    const nested = renderComponent(<InDialog />);
+    startEditing(nested);
+    expect(nested.renderer.findByType("input")).toHaveLength(1);
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByType("input")).toHaveLength(0);
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("commits a changed draft on blur", () => {

@@ -5,8 +5,9 @@
  * answering; Shift+Enter sending instead of adding a newline; a Stop control
  * that sends the draft; Escape that stops an idle conversation; an error with
  * no visible message or no way to retry; an Attach control rendered without a
- * handler; a transcript that does not follow an appended row; and an empty
- * state the caller cannot place.
+ * handler; a transcript that does not follow an appended row; an empty state the
+ * caller cannot place; and an Escape that stopped the request and closed the
+ * dialog around the conversation (plan 514).
  */
 
 import { useState } from "react";
@@ -14,6 +15,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Button } from "../internal/button.js";
 import type { ChatStatus as Status } from "../chat/logic.js";
 import { Chat, ChatComposer, ChatEmpty, ChatMessages } from "../chat.js";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { Message, MessageContent } from "../message.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { clickCentreOf } from "../internal/interaction.js";
@@ -92,6 +94,28 @@ const Harness = ({
     </Chat>
   </div>
 );
+
+/** A streaming conversation inside an open dialog. */
+const ChatInDialog = ({ onStop }: { readonly onStop?: () => void }) => {
+  const [open, setOpen] = useState(true);
+  const [status, setStatus] = useState<Status>(streaming);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent label="Assistant" testId="dialog">
+        <DialogTitle>Assistant</DialogTitle>
+        <Chat
+          label="Assistant"
+          status={status}
+          onStatusChange={setStatus}
+          onSubmit={() => undefined}
+          onStop={onStop}
+        >
+          <ChatComposer label="Message" testId="composer" />
+        </Chat>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 describe("Chat", () => {
   it("submits a trimmed draft once on Enter and clears it", () => {
@@ -216,6 +240,23 @@ describe("Chat", () => {
     expect(onSubmit).not.toHaveBeenCalled();
 
     chat.unmount();
+  });
+
+  it("keeps a dialog open for the Escape that stops the request", () => {
+    // Before plan 514 the stop and the dialog close both ran on one Escape.
+    const onStop = vi.fn();
+    const nested = renderComponent(<ChatInDialog onStop={onStop} />);
+    focusComposer(nested);
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(onStop).toHaveBeenCalledTimes(1);
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("renders Attach only when the caller wires it, and runs it once", () => {

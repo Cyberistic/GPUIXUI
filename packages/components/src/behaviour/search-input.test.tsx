@@ -7,14 +7,16 @@
  * (plan 394); clearing that forgot to give focus back to
  * the field; Enter that submitted nothing; Escape that swallowed the key on an
  * empty field; a clear control that fired on Space key down instead of release;
- * a controlled field that changed its own display when the consumer said no; and
- * a caller `ref` that the internal focus ref silently replaced.
+ * a controlled field that changed its own display when the consumer said no; a
+ * caller `ref` that the internal ref silently replaced; and an Escape that
+ * cleared the field and closed the dialog around it (plan 514).
  */
 
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
 import * as Option from "effect/Option";
-import { createRef } from "react";
+import { createRef, useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -51,6 +53,19 @@ const Search = ({
 const type = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId("search")?.id ?? -1);
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
+};
+
+/** A search field inside an open dialog. */
+const InDialog = ({ defaultValue }: { readonly defaultValue?: string }) => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent label="Search" testId="dialog">
+        <DialogTitle>Search</DialogTitle>
+        <SearchInput testId="search" defaultValue={defaultValue} />
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 describe("SearchInput", () => {
@@ -136,6 +151,38 @@ describe("SearchInput", () => {
     expect(onClear).toHaveBeenCalledTimes(1);
 
     search.unmount();
+  });
+
+  it("keeps a dialog open for the Escape that clears it", () => {
+    // Before plan 514 a non-empty field cleared and the enclosing dialog closed
+    // on the same press, because the field handled Escape without claiming it.
+    const nested = renderComponent(<InDialog defaultValue="abc" />);
+    nested.renderer.focusElement(
+      nested.renderer.findByTestId("search")?.id ?? -1,
+    );
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("search-clear")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
+  });
+
+  it("leaves Escape to a dialog when there is nothing to clear", () => {
+    const nested = renderComponent(<InDialog />);
+    nested.renderer.focusElement(
+      nested.renderer.findByTestId("search")?.id ?? -1,
+    );
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("keeps a controlled field where the consumer put it", () => {

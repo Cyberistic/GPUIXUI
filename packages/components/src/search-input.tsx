@@ -3,7 +3,9 @@
  *
  * The field owns the text in uncontrolled mode and reports every edit; Enter
  * submits and Escape clears. `Enter` reaches the component as the input's
- * `submit` event — measured in 0.10.0 — while Escape arrives as `keyDown`.
+ * `submit` event — measured in 0.10.0 — while Escape arrives as `keyDown`. A
+ * clear claims that key, so an enclosing dialog stays open; an empty field
+ * leaves Escape to the dialog (plan 514).
  *
  * There is no debounce: the component reports keystrokes as they happen, and a
  * consumer that queries on each one debounces its own effect.
@@ -20,6 +22,7 @@ import { Icon } from "@gpuixui/icons";
 import { useCallback, useRef, useState } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
+import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -131,7 +134,9 @@ export const SearchInput = ({
         }}
         onKeyDown={(event: EventPayload) => {
           onKeyDown?.(event);
-          if (isDismiss(event)) clear();
+          if (!isDismiss(event) || disabled || value === "") return;
+          clear();
+          claimEvent(event);
         }}
         onSubmit={() => {
           if (!disabled) onSubmit?.(value);

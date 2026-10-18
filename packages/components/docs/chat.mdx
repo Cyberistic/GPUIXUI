@@ -72,7 +72,8 @@ move to through `onStatusChange`; the app may ignore it.
 
 - **Enter** sends a trimmed, non-empty draft and clears it.
 - **Shift+Enter** inserts a newline and never sends.
-- **Escape** stops while `submitting` or `streaming`; otherwise it is passed on.
+- **Escape** stops while `submitting` or `streaming`, claiming the key so a chat
+  inside a dialog does not close it; otherwise it is passed on.
 - While work is in flight, **Stop replaces Send**; a second Enter cannot submit.
 - `error` shows the message in a `role="alert"` row and enables Send again
   (retry).
@@ -133,10 +134,10 @@ A custom theme changes all of it with no code change.
 ## Verification
 
 `src/chat/logic.test.ts` covers every transition and identity row.
-`src/behaviour/chat.test.tsx` runs in the real GPUix renderer (9 tests): it
+`src/behaviour/chat.test.tsx` runs in the real GPUix renderer (10 tests): it
 types and sends, proves Shift+Enter does not submit, stops a stream, refuses a
-second submit, retries after an error, stops on Escape, attaches, follows an
-appended row and renders the empty slot.
+second submit, retries after an error, stops on Escape, stops without closing an
+enclosing dialog, attaches, follows an appended row and renders the empty slot.
 
 ## Credit
 

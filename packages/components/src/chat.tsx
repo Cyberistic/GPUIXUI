@@ -7,7 +7,8 @@
  * follow only while the reader is pinned — the pin rule is not reimplemented
  * here. `ChatComposer` is a real `<textarea>`: Enter sends, Shift+Enter stays a
  * newline, Escape stops while work is in flight, and Stop replaces Send while a
- * request is running.
+ * request is running. The stopping Escape is claimed, so a chat inside a dialog
+ * does not close the dialog too (plan 514).
  *
  * 0.10.0 has no attachments picker on an input, so `onAttach` is the caller's
  * control and the component only renders the trigger. There is no `aria-live`:
@@ -28,6 +29,7 @@ import {
 import { EmptyState } from "./empty-state.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
+import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss } from "./internal/key.js";
 import {
   assertParts,
@@ -278,7 +280,10 @@ export const ChatComposer = ({
             send();
           }}
           onKeyDown={(event: EventPayload) => {
-            if (isDismiss(event) && canStop(status)) stop();
+            if (isDismiss(event) && canStop(status)) {
+              claimEvent(event);
+              stop();
+            }
             onKeyDown?.(event);
           }}
           style={mergeStyles(
