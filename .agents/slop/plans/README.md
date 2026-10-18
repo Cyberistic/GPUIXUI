@@ -200,8 +200,9 @@ probe takes `522`; the components workstream then took `523`, the `tw`
 workstream landed `524` on master first, and this workstream's input payload
 contract was renumbered from its own `524` to `525` to keep one plan per number;
 `526` is the window-layout probe (`useWindowSize` and a real resize), and `527`
-was this workstream's next free number (the paint/frame counters), so the next
-playground plan takes `528`.
+was this workstream's next free number (the paint/frame counters), so this
+workstream took `528` (the playground's scenario filter); the next playground
+plan takes `529`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -306,6 +307,7 @@ playground plan takes `528`.
 | [525](./525-input-payload-contract.md) | The input payload contract: click counts, key chars and repeat | B→F | 100, 140, 160, 163, 188, 343, 387 | **landed** — `input-payload` (39 checks) + `live-input-payload` (12) + the optional `isHeld` host argument, six mutation proofs; reconnaissance measured `clickCount` **always 1** (headless and live, including real press/release pairs), `keyChar` absent on a plain `div` but carrying `é`/`日`/`" "` on a text field, `cmd-a` consumed by the native editor before React, and a synthetic wheel always `precise=true`/`phase=moved`. headless suite `97 → 98` (`3389 → 3428`), exit `0`; the live twin is `12/12` green and the registry lists 47 live scenarios — the **full live suite is a merge gate and was not run**, so no total is claimed. D64 records the contract (§8) |
 | [526](./526-window-layout.md) | The window as the layout root: `useWindowSize`, a real resize and the overlay that follows it | B→F | 100, 110, 120, 140, 182, 197, 350 | **landed** — `window-layout` (27 checks) and `live-window` (29) over a pure `window-layout-model.ts` (7 tests): the hook reports the runner's window exactly (`1280x800` offscreen, `1100x720` live), `zoomWindow()` reaches React (`→ 1680x923`) within the 100 ms poll and restores exactly, the wide sidebar ends at the window's bottom, and the veil tracks a live resize. Desktop insets are zero and **no window-drag API exists**. Two host verbs (`windowSize`, async `zoomWindow`); suite `98 → 99` (`3428 → 3455`), exit `0`; five mutation proofs (§8) |
 | [527](./527-paint-frame-counters.md) | The paint/frame counters: `frames`, the sample ring and the debug overlay | B→F | 100, 110, 120, 140, 182, 197, 302 | **landed** — `frame-stats` (67 checks) + `live-frames` (29) over five host verbs and a forced offscreen `paint`. Measured: a read is free, `flush()` is exactly `+1` frame/`+1` sample, a click and a native wheel paint (4 / 2 frames headless; 3 live), `reset` keeps the lifetime count and leaves one sample with all timings equal, the ring caps at **1000**, the overlay is **paint-only** (no host node, no painted text, no input capture), and an idle live window repaints 0 times in 300 ms. Suite `99 → 100` (`3455 → 3522`), exit `0`, `frames=verified`; live registry `48 → 49`; six mutation + one reverse proof (§6/§8) |
+| [528](./528-playground-scenario-filter.md) | The playground finds its scenarios: a filter over the registry | F | 120, 151, 182, 188, 189, 345, 526 | **landed** — a pure `filterScenarios` rule (8 unit tests), the sidebar filtered by id/title/capability with the stage and highlight following the derived current and `selected` preserved, `Escape` owned by the sidebar; `shell-filter` (16 checks) + `live-shell-filter` (13), suite `100 → 101` (`3522 → 3538`), live `49 → 50` (`999 → 1012`), exit `0`; six mutation proofs (§5) and the measured ESM-cycle note (§8) |
 
 Cross-cutting records:
 

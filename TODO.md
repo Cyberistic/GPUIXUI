@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 85/91 plans-and-harness
+`[x]` `[██████████]` 86/91 plans-and-harness
 
 `[x]` Probe the **paint/frame counters** per plan `527` — the last supported
 runtime surface with no contract: `frame-stats` (67 checks) and `live-frames`
@@ -80,6 +80,19 @@ focused id is `live-frames`.
       (`apps/docs/src/lib/capabilities.ts` + its test) must gain the `frames`
       capability and the ids `frame-stats` + `live-frames`, or its gate stays
       red against `COMPONENTS.md` (owner: `docs-site`; evidence: plan `527`)
+
+`[x]` Add a **scenario filter to the playground shell** per plan `528`: a pure
+      `filterScenarios` rule (id, title or capability, case-insensitive and
+      trimmed) with 8 unit tests; the sidebar is the filtered view while the
+      stage and the painted highlight follow the derived current, and
+      `selected` survives a transient filter; `Escape` belongs to the sidebar,
+      so it clears from the field **and** from a focused row. `shell-filter`
+      (16 checks) and `live-shell-filter` (13) drive typing, the count, the
+      hidden pick, the case-insensitive match, the empty state and the clear;
+      six mutation proofs (plan `528` §5). Suite `100 → 101`
+      (`3522 → 3538` checks), live `49 → 50` (`999 → 1012`), exit `0`; focused
+      ids run: `shell-filter`, `shell-navigation`, `shell-selection`,
+      `live-shell-filter`, `live-shell`, then the full headless and live suites.
 
 `[x]` Probe the **window as the layout root** per plan `526` — the desktop
       boundary every shell sits on: `window-layout` (27 checks) and `live-window`
@@ -453,7 +466,7 @@ focused id is `live-frames`.
       be a live wheel target, and chrome metrics must be asserted against
       literals, not the layout constants.
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
-`[x]` **The native smoke suite is green on this host** (44/44 when the blocker closed; **97/97** today) — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and one screenshot per scenario. Two-direction proof recorded (plan `140` §4, plan `150` §4, plans `151`–`187` §7/§8/§9/§10: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
+`[x]` **The native smoke suite is green on this host** (44/44 when the blocker closed; **101/101, 3538 checks** today, 2026-10-18) — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and one screenshot per scenario. Two-direction proof recorded (plan `140` §4, plan `150` §4, plans `151`–`187` §7/§8/§9/§10: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
 `[x]` Probe the modal contract per plan `155`: `modal-focus-trap` — component code moves native focus (`renderer.focusElement`), Tab wraps inside the surface (`focusNextWithin`/`focusPreviousWithin`), focus returns to the trigger, and a nested popover's Escape closes only the popover — 19/19 green (fails with exit `1` when the Tab trap or the focus return is removed)
 `[x]` Probe floating placement per plan `156`: `floating-placement` — `side`/`sideOffset`/`align="start"` are exact; **`align="center"` is off by half the panel** and `fit="snap"` clamps inside the window without flipping, so a bottom-side menu can cover its trigger — 20/20 green (fails with exit `1` when the layer ignores `side`)
 `[x]` Probe native motion per plan `157`: `motion-collapse` — the paused motion clock makes a 200 ms width tween exact (96 px of 240 at 80 ms), the inner pane keeps its 240 px width (outer clipping, no reflow), and `AnimatePresence` retains the leaving toast until the native exit settles; `onMotionComplete` needs `dispatchNativeEvents` — 21/21 green (fails with exit `1` when the mid-tween expectation is a jump value)
@@ -509,7 +522,7 @@ focused id is `live-frames`.
 `[ ]` **packages/docking** (owner: docking): implement the contract plan `184` measured — a recursive layout tree, 48 px edge drop zones from the surface rectangle, right/bottom-secondary and left/top-primary splits, prune/collapse of emptied groups, `key={node.id}` on every split, `Region`/`TabList`/`TabPanel` semantics, and app-owned JSON restore. The playground's `docking-layout` is the acceptance evidence.
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)
 `[ ]` Cross-team: `motion.div`'s published `MotionDivProps` omits `testId`, `role` and the `aria-*` props, so an animated surface cannot be addressed in a smoke test or given an accessible role through the typed API. Add a typed motion wrapper (published `HostProps` + `motion`) in `@gpuixui/components` and use it for Collapsible/sidebar/toast surfaces (owner: `components`; evidence: plan `157` §8)
-`[ ]` **Promote the playground workstream to the integration branch**: `origin/master` still carries only the `apps/playground/README.md` placeholder — none of the 143 commits ahead (plans `100`–`182`, `packages/testing`, the playground, ADR 0001–0003) are on it. `agent/playground` is a **fast-forward** of `origin/master` (0 behind), so the promotion is conflict-free; the workstream's own instruction is *never push to master*, so an owner/supervisor performs the merge
+`[ ]` **Promote the playground workstream to the integration branch**: `origin/master` still carries only the `apps/playground/README.md` placeholder — none of the 144 commits ahead (plans `100`–`182` + `518`–`528`, `packages/testing`, the playground, ADR 0001–0003) are on it. `agent/playground` is a **fast-forward** of `origin/master` (0 behind), so the promotion is conflict-free; the workstream's own instruction is *never push to master*, so an owner/supervisor performs the merge. **The merge/release gate is green (2026-10-18):** headless `101/101` (`3538` checks, `137` s) and live `50/50` (`1012` checks, `555` s), both exit `0`, on the locally built `0.10.0` binding; `nub run check` and `nub run test` pass.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
