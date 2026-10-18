@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 211/276
+`[x]` `[████████░░]` 212/276
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1742,6 +1742,13 @@ pairs and `filledControl` helper while its three fills were never measured
 against a panel; `stateFillRoles` now derives from the index, the test derives
 its expectation from the index too, and the catalogue names that owner
 (plan 547)
+`[x]` Make the soft-status contract own the tones it derives from — the solid
+fill, the `xText` roles, the chip edge and the selection list all derived from
+`statusTones`, but the soft fill was retyped by hand in six places
+(`softSurfaceRoles`, `trackSurfaces`, `softBorderPairs`, the body-text literals,
+`selectionSoftWashPairs` and `contentFillSurfaces`), so a fifth tone's Alert
+tint skipped about ten lists while every check returned `[]`; all six now derive
+from the tone index and a new guard takes its expectation from it (plan 548)
 
 ## Phase C — Tier 1–2 components
 

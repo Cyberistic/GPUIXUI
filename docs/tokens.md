@@ -339,7 +339,9 @@ panel is the sidebar and settings-group surface, and it is the composition that
 forced the list: the platform light variants change it and inherit the tints, so
 a status badge sat at 1.023:1 on Linux light, 1.036:1 on macOS light and 1.043:1
 on Windows light until plan `300` moved the four light tints one small step
-deeper.
+deeper. Every soft-fill list is derived from the tone index (`statusTones`): a
+fifth status family joins its tint's surface, text, edge, ring, inactive, track,
+scrim and selection pairs from that one edit.
 
 Because the solid role is a fill, it is held like one: `statusFillPairs`
 measures each of the four solid fills on the eight surfaces a status chip sits

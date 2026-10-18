@@ -2628,6 +2628,21 @@ The list now derives from the family index, the suite's expectation derives
 from it too, and the catalogue names the owner. No colour, pair, floor, metric,
 theme, platform style or recipe value moves; 131 files / 5641 tests pass.
 
+Plan `548` closes the same class one index over. The solid status fills, the
+`xText` roles, the chip edge and the selection list all derived from
+`statusTones`, but the **soft** fill was retyped by hand in six places:
+`softSurfaceRoles`, `trackSurfaces`, `softBorderPairs`, the soft body-text
+literals in `contrastPairs`, `selectionSoftWashPairs` and
+`contentFillSurfaces`. A fifth tone added to the index therefore joined the
+solid, text and chip lists automatically and skipped about ten soft lists — its
+Alert tint, text over the selection wash, edge, ring, inactive label, groove,
+scrim and dialog face. A probe added a fifth `neutral` family, made its tint the
+canvas, and the checker returned no soft pair; with the six lists derived from
+the tone index the same probe reports every one, and the new
+`soft-surface-index.test.ts` derives its expectation from the index too. No
+colour, pair, floor, metric, theme, platform style or recipe value moves; 132
+files / 5649 tests pass.
+
 ## How to use a plan
 
 1. Read it fully before starting. Do not skim the STOP conditions.

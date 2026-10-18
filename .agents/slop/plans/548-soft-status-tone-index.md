@@ -300,19 +300,18 @@ state and the candidates re-checked.
    `git diff` shows only the plan's intended files.
 6. **The documentation guard can fail:** delete the new sentence from
    `docs/tokens.md` → the new `docs.test.ts` case fails. Restore it.
-7. **The index guard can fail:** temporarily replace `softSurfaceRoles` with
-   the old four-name array and add a `neutral` tone only to `statusTones` (no
-   palette edit is needed for this step; it only has to type-check far enough
-   to run the test, so instead delete one name — `"warningSoft"` — from the
-   hand array) → `soft-surface-index.test.ts` fails every case for `warning`.
-   Restore.
+7. **The index guard can fail:** the fifth-tone probe in §4.3-4.4 is the
+   can-fail evidence for `soft-surface-index.test.ts`: with the pre-fix
+   hand-typed lists the first case fails, and with the derivation it passes for
+   five tones. A hand-list revert cannot drop a derived member, so no third
+   probe is needed.
 8. **Derived lists keep their shape:** `state-fill-surfaces.test.ts`,
    `track-contrast.test.ts`, `selection-soft.test.ts`, `overlay-scrim.test.ts`,
    `dialog-scrim.test.ts` and full suite → green, with every pair count
    unchanged (404 plain pairs, 26 selection, 10 wash, 4 soft wash, 18 scrim,
    18 dialog-face).
 9. **Full suite + gates:** `nub run --filter @gpuixui/tokens test` → 132 files /
-   (5641 + the new cases) tests pass; `nub run check`; `nub run test`.
+   5649 tests pass; `nub run check`; `nub run test`.
 
 ## 5. Commands and expected results
 

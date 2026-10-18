@@ -19,6 +19,7 @@ import {
   filledControlFamilies,
   statusTones,
   type FilledControlFamily,
+  type StatusTone,
 } from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
@@ -65,12 +66,10 @@ export type ContrastPair = readonly [
   ContrastPairClass,
 ];
 
-const softSurfaceRoles = [
-  "infoSoft",
-  "successSoft",
-  "warningSoft",
-  "destructiveSoft",
-] as const;
+/** Every status family's soft fill, in the tone index's order. */
+const softSurfaceRoles: ReadonlyArray<`${StatusTone}Soft`> = statusTones.map(
+  (tone): `${StatusTone}Soft` => `${tone}Soft`,
+);
 
 /**
  * The base surfaces a soft status panel can occupy. The quiet panel is the
@@ -146,10 +145,7 @@ const trackSurfaces = [
   "active",
   "accent",
   "selected",
-  "infoSoft",
-  "successSoft",
-  "warningSoft",
-  "destructiveSoft",
+  ...softSurfaceRoles,
 ] as const;
 
 /** The track measured against every surface it is painted on. */
@@ -176,12 +172,9 @@ export const trackMarkPairs: readonly ContrastPair[] = [
  * on its own fill, so the divider floor applies: 1.05:1 by default and 3:1 at
  * high contrast, where the 30% mixture it replaced measured 1.12:1.
  */
-const softBorderPairs: readonly ContrastPair[] = [
-  ["infoSoftBorder", "infoSoft", "divider"],
-  ["successSoftBorder", "successSoft", "divider"],
-  ["warningSoftBorder", "warningSoft", "divider"],
-  ["destructiveSoftBorder", "destructiveSoft", "divider"],
-];
+const softBorderPairs: readonly ContrastPair[] = statusTones.map(
+  (tone): ContrastPair => [`${tone}SoftBorder`, `${tone}Soft`, "divider"],
+);
 
 /**
  * The surfaces a status chip occupies — soft or solid. A Badge sits on the
@@ -960,10 +953,9 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["successForeground", "success", "secondary"],
   ["warningForeground", "warning", "secondary"],
   ["infoForeground", "info", "secondary"],
-  ["infoSoftForeground", "infoSoft", "body"],
-  ["successSoftForeground", "successSoft", "body"],
-  ["warningSoftForeground", "warningSoft", "body"],
-  ["destructiveSoftForeground", "destructiveSoft", "body"],
+  ...softSurfaceRoles.map(
+    (role): ContrastPair => [`${role}Foreground`, role, "body"],
+  ),
   ["infoText", "background", "secondary"],
   ["infoText", "card", "secondary"],
   ["infoText", "popover", "secondary"],
@@ -1570,12 +1562,8 @@ export const selectionSoftPairs: readonly ContrastPair[] =
  * surface. A highlight that disappears on a dark destructive tint is still a
  * failed selection, so each fill is compared with the composited wash.
  */
-export const selectionSoftWashPairs: readonly ContrastPair[] = [
-  ["selection", "infoSoft", "surface"],
-  ["selection", "successSoft", "surface"],
-  ["selection", "warningSoft", "surface"],
-  ["selection", "destructiveSoft", "surface"],
-];
+export const selectionSoftWashPairs: readonly ContrastPair[] =
+  softSurfaceRoles.map((role): ContrastPair => ["selection", role, "surface"]);
 
 /**
  * The page layout a modal covers: the canvas, a card, the quiet panel, the
@@ -1606,14 +1594,9 @@ const contentFillSurfaces = [
   "secondary",
   "accent",
   "destructive",
-  "info",
-  "success",
-  "warning",
+  ...statusTones.filter((tone) => tone !== "destructive"),
   "softAction",
-  "infoSoft",
-  "successSoft",
-  "warningSoft",
-  "destructiveSoft",
+  ...softSurfaceRoles,
 ] as const;
 
 /**

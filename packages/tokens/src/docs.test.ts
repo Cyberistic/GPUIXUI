@@ -2682,6 +2682,12 @@ describe("docs/design-system.md", () => {
     expect(designSystem).toContain("statusFillPairs");
   });
 
+  it("states that the soft-fill lists derive from the tone index", () => {
+    expect(markdown).toContain(
+      "Every soft-fill list is derived from the tone index (`statusTones`)",
+    );
+  });
+
   it("names every surface default body text is measured on", () => {
     const surfaces = contrastPairs
       .filter(
