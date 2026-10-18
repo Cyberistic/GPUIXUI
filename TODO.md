@@ -58,9 +58,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 70/74 plans-and-harness
+`[x]` `[██████████]` 70/75 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`349` written and indexed for the playground workstream; the next plan takes `350` (the components and tokens workstreams hold `300`–`329`)
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350` written and indexed for the playground workstream; the next plan takes `351` (the components and tokens workstreams hold `300`–`329`)
 `[x]` Probe the **inspector / property panel** per plan `348`: `property-panel`
       + `live-inspector` — a 300 px inspector whose `<virtual-list>` rows own
       native editors: Enter arrives as the field's `onSubmit` (not a bubbled
@@ -85,6 +85,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       click to the next cell, and the automation click uses the unclipped
       centre (pan a clipped handle first). Closes the `Resizable columns` row
       that plan `130` only measured on plain rows.
+`[~]` Probe **application chrome** per plan `350`: `app-chrome` +
+      `live-app-chrome` — a 36 px toolbar over a two-pane body over a 24 px
+      status bar; the panes scroll independently while the bar stays pinned; a
+      clipped toolbar action is revealed by one `scrollTo` and then runs; the
+      breadcrumb collapses its middle from app state and each crumb is a
+      focusable `Link` that activates on Enter. Answers the Status bars /
+      Toolbars / Breadcrumb navigation rows.
 `[x]` **Blocker B1 fixed**: the `darwin-x64` GPUix 0.10.0 binding builds from source with `gpui_macos/runtime_shaders` (the `xcrun metal` step is optional) and loads — plan `140`, ADR 0003
 `[x]` **The native smoke suite is green on this host** (44/44 when the blocker closed; **74/74** today) — `nub run --filter playground build && nub apps/playground/dist/smoke/run.js` exits `0`, writes `smoke-report.json` and one screenshot per scenario. Two-direction proof recorded (plan `140` §4, plan `150` §4, plans `151`–`187` §7/§8/§9/§10: exit `1` when a check is broken). Every capability in `COMPONENTS.md` is now `verified 0.10.0`
 `[x]` Probe the modal contract per plan `155`: `modal-focus-trap` — component code moves native focus (`renderer.focusElement`), Tab wraps inside the surface (`focusNextWithin`/`focusPreviousWithin`), focus returns to the trigger, and a nested popover's Escape closes only the popover — 19/19 green (fails with exit `1` when the Tab trap or the focus return is removed)
