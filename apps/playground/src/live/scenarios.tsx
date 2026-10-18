@@ -33,6 +33,7 @@ import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
+import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
 import { replaceScenario } from "../scenarios/replace.js";
 import { tier2DialogScenario } from "../scenarios/tier2-dialog.js";
 import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
@@ -2064,6 +2065,136 @@ const replace: LiveScenario = {
     }),
 };
 
+const restore: LiveScenario = {
+  id: "live-restore",
+  title: "Live restore: workspace layout, tabs and a virtual-list anchor",
+  capability: "workspace",
+  view: workspaceRestoreScenario.view,
+  ready: "wr-live",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const paintedRow = (row: number) =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.contains(lines, `row ${row}`),
+        );
+
+      // 1. The window mounts the shipped probe at its defaults.
+      yield* ctx.expectContains(
+        "the workspace starts at its defaults",
+        yield* textOf(ctx, "wr-live"),
+        "split=320 tabsA=one,two tabsB=none active=one",
+      );
+      yield* ctx.expectContains(
+        "nothing is saved yet",
+        yield* textOf(ctx, "wr-saved"),
+        "saved=false",
+      );
+      yield* ctx.expectNear(
+        "the painted split starts at 320",
+        yield* widthOf(ctx, "wr-pane-a"),
+        320,
+        2,
+      );
+
+      // 2. A paced live drag resizes, and the painted box agrees.
+      yield* ctx.host.drag("wr-divider", 80, 0, 6);
+      yield* settle;
+      yield* waitForText(ctx, "wr-live", "split=400");
+      yield* ctx.expectNear(
+        "the painted split follows the drag",
+        yield* widthOf(ctx, "wr-pane-a"),
+        400,
+        2,
+      );
+
+      // 3. A tab activation and a deep scroll are both part of the snapshot.
+      yield* ctx.host.click("wr-tab-two");
+      yield* settle;
+      yield* waitForText(ctx, "wr-live", "active=two");
+      yield* ctx.host.scrollToItem("wr-list", 120, 16);
+      yield* settle;
+      yield* waitForAnchor(ctx, "wr-list", "120,16");
+      yield* ctx.host.click("wr-row-120");
+      yield* settle;
+      yield* waitForFocus(ctx, "wr-row-120");
+      yield* ctx.expectEqual(
+        "a live row takes native focus",
+        yield* focusedOf(ctx),
+        "wr-row-120",
+      );
+
+      // 4. The app-owned snapshot holds all four facts.
+      yield* ctx.host.click("wr-save");
+      yield* settle;
+      const saved = yield* awaitedTextOf(ctx, "wr-saved", "anchor=120,16");
+      yield* ctx.expectContains(
+        "the snapshot holds the split",
+        saved,
+        "split=400",
+      );
+      yield* ctx.expectContains(
+        "the snapshot holds the active tab",
+        saved,
+        "active=two",
+      );
+
+      // 5. A reset is a real restart: the layout and the anchor are gone.
+      yield* ctx.host.click("wr-reset");
+      yield* settle;
+      yield* waitForText(ctx, "wr-live", "split=320");
+      yield* waitForAnchor(ctx, "wr-list", "0,0");
+      yield* ctx.expectEqual(
+        "a reset empties the window",
+        yield* paintedRow(120),
+        false,
+      );
+
+      // 6. Restore re-applies the split, the tab and the exact anchor.
+      yield* ctx.host.click("wr-restore");
+      yield* settle;
+      yield* waitForText(ctx, "wr-live", "active=two");
+      yield* waitForAnchor(ctx, "wr-list", "120,16");
+      yield* ctx.expectContains(
+        "the restored split comes from the snapshot",
+        yield* textOf(ctx, "wr-live"),
+        "split=400",
+      );
+      yield* ctx.expectNear(
+        "the restored pane is painted at 400",
+        yield* widthOf(ctx, "wr-pane-a"),
+        400,
+        2,
+      );
+      yield* ctx.expectEqual(
+        "the restored row is painted",
+        yield* paintedRow(120),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the first row stays out of the window",
+        yield* paintedRow(0),
+        false,
+      );
+
+      // 7. Native focus is not part of the snapshot, and the list still works.
+      yield* ctx.expectEqual(
+        "native focus is not restored",
+        (yield* focusedOf(ctx)) === "wr-row-120",
+        false,
+      );
+      yield* ctx.host.click("wr-row-121");
+      yield* settle;
+      yield* waitForFocus(ctx, "wr-row-121");
+      yield* ctx.expectEqual(
+        "the restored list accepts input",
+        yield* focusedOf(ctx),
+        "wr-row-121",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${restore.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -2082,6 +2213,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   highlights,
   preview,
   scroller,
+  restore,
   tier2Dialog,
   tier2Menu,
   tier2Toast,

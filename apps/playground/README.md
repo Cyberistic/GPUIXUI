@@ -795,7 +795,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 60-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 69-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -819,6 +819,7 @@ live pass is citable evidence rather than a second log format.
 | `live-preview` | the **first live hover** scenario: a real mouse move over the trigger opens the card (`open=true`), the pointer reaches the card body and the fire-time presence check keeps it open past the 200 ms grace close (`closes=0`), a control inside the hover-opened card clicks, leaving closes through the last hovered child (`reason=action`), a re-enter inside the delay cancels, and a final leave closes from the trigger (`closes=2`). The card enter and trigger leave arrive in **one batch** live, so the `prev`/`last` readout collapses them — the append-only log keeps both |
 | `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
 | `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
+| `live-restore` | the shipped `workspace-restore` probe in a window: a paced divider drag paints 320 → 400, a tab activation makes `active=two`, `scrollToItem(120, 16)` anchors the list, and save → reset → restore re-applies the split, the tab and the anchor exactly (`[120,16]`, row 120 painted, row 0 absent). Native focus is **not** restored, and a click on row 121 focuses the restored list |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).
