@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 140/140
+`[x]` `[████████████]` 141/141
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1396,6 +1396,17 @@ retired once both branches are one
       trigger (documented on both pages). 2 element + 4 scoped runtime cases, both
       directions proven, plus the `scrollTrigger` composed example (plan `399b`;
       offline 722 → 724).
+
+`[x]` `packages/primitives`: **a selection row's visible description reached no
+      assistive technology** — `CheckboxGroup` and `RadioGroup` painted
+      `option.description` as a caption but the row published only its name, so
+      a screen reader heard "Email" and never "A digest.". Both pages recorded
+      this as a runtime limit because 0.10.0 has no `aria-describedby`, although
+      it exposes the string form `aria-description`, which the package already
+      uses for tooltips. The description is now the row's `aria-description`
+      (trimmed; blank absent) in both groups; 4 element-tree cases and a scoped
+      two-group runtime file prove it, both directions measured (plan `500`;
+      offline 724 → 728, scoped live 2/2).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

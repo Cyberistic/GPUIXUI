@@ -18,6 +18,10 @@ import type { SelectionState } from "./selection.js";
 export interface CheckboxGroupOption {
   readonly value: string;
   readonly label: string;
+  /**
+   * Visible supporting text, also published as the row's `aria-description`.
+   * A blank description is absent.
+   */
   readonly description?: string;
   readonly disabled?: boolean;
 }

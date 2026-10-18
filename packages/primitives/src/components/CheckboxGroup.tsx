@@ -195,6 +195,7 @@ const renderRow = (
       key={key}
       role="checkbox"
       aria-label={ariaName(label)}
+      aria-description={ariaName(description)}
       aria-valuetext={selectionValueText(state)}
       tabIndex={disabled ? undefined : 0}
       testId={testId}

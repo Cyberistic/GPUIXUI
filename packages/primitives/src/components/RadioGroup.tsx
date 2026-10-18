@@ -52,6 +52,10 @@ import { Text } from "./Text.js";
 export interface RadioOption {
   readonly value: string;
   readonly label: string;
+  /**
+   * Visible supporting text, also published as the option's
+   * `aria-description`. A blank description is absent.
+   */
   readonly description?: string;
   readonly disabled?: boolean;
 }
@@ -235,6 +239,7 @@ export const renderRadioGroup = (
             ref={handlers.registerItem(index)}
             role="radio"
             aria-label={ariaName(option.label)}
+            aria-description={ariaName(option.description)}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
             testId={

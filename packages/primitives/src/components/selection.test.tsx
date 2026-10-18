@@ -278,6 +278,43 @@ describe("RadioGroup", () => {
     expect(hostProp(option, "aria-label")).toStrictEqual(Option.none());
   });
 
+  it("publishes an option description as its accessible description", () => {
+    // The bug this guards (plan 500): the caption was painted but the row
+    // published no aria-description, because the docs mistook the unsupported
+    // `aria-describedby` for the supported `aria-description`.
+    const element = renderRadioGroup(
+      {
+        options: [
+          { value: "alpha", label: "Alpha", description: "Every Monday." },
+        ],
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const option = expectSome(Arr.head(elementChildren(element)));
+    expect(expectSome(hostProp(option, "aria-description"))).toBe(
+      "Every Monday.",
+    );
+  });
+
+  it("publishes a blank option description as absent", () => {
+    const element = renderRadioGroup(
+      {
+        options: [{ value: "alpha", label: "Alpha", description: "   " }],
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const option = expectSome(Arr.head(elementChildren(element)));
+    expect(hostProp(option, "aria-description")).toStrictEqual(Option.none());
+  });
+
   it("moves focus to the option an arrow lands on", () => {
     // The bug guarded: arrows moved the selection and the tab stop while native
     // focus stayed on the old radio, so the platform's "selection follows
@@ -529,6 +566,27 @@ describe("CheckboxGroup", () => {
     });
     expect(hostProp(element, "aria-label")).toStrictEqual(Option.none());
     expect(hostProp(row(element, 0), "aria-label")).toStrictEqual(
+      Option.none(),
+    );
+  });
+
+  it("names each row with its label and describes it with the option text", () => {
+    // Plan 500: the visible caption was the only place the description lived,
+    // so a screen reader heard the label alone.
+    const element = render();
+    expect(expectSome(hostProp(row(element, 0), "aria-description"))).toBe(
+      "A digest.",
+    );
+    expect(hostProp(row(element, 1), "aria-description")).toStrictEqual(
+      Option.none(),
+    );
+  });
+
+  it("publishes a blank option description as absent", () => {
+    const element = render({
+      options: [{ value: "email", label: "Email", description: "   " }],
+    });
+    expect(hostProp(row(element, 0), "aria-description")).toStrictEqual(
       Option.none(),
     );
   });

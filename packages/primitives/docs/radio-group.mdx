@@ -45,7 +45,8 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `testId` | `string` | — | names the group; options become `${testId}-${value}` |
 
 `RadioOption` is `{ value, label, description?, disabled? }`. `description` is a
-caption beside the name, not an accessible description.
+caption beside the name **and** the option's `aria-description`, so the visible
+hint is also announced. A blank description is absent.
 
 `invalid` is the same failed-validation paint as `Checkbox`, `Switch` and the
 fields: an **empty** circle's border takes `colors.destructive`; a chosen one
@@ -154,7 +155,6 @@ the option row:
 
 - Options are data: no compound `RadioGroupItem`, no rich child content.
 - No type-ahead selection.
-- A `description` is not associated with the option for assistive technology.
 - A long option label **wraps** inside the row rather than widening it, so the
   text stays inside the group in **both** orientations (plans `368`, `380`).
 
@@ -175,8 +175,11 @@ the option row:
   asks the group to move focus to the option it landed on; an `invalid` group
   paints the empty circles destructive and leaves the chosen one on its accent;
   every enabled row declares the wash, a disabled option declares none, the
-  caller's `optionStyle` wins last (plan 355), and a horizontal group's rows
-  carry the content-floor removal that lets them shrink (plan 380).
+  caller's `optionStyle` wins last (plan 355), a horizontal group's rows
+  carry the content-floor removal that lets them shrink (plan 380), and an
+  option description becomes the row's `aria-description` (plan 500).
+- `runtime/option-description.runtime.test.tsx` — both groups' descriptions in
+  the real accessibility tree, and a blank one staying absent (plan 500).
 - `runtime/row-feedback.runtime.test.tsx` — the same row contract in the real
   renderer, plus a vertical row painting at the group's width so the wash covers
   the hit area (plan 355).

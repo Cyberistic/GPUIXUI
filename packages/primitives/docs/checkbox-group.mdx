@@ -111,8 +111,9 @@ order. A press that changes nothing does not call `onValueChange`.
   can outlive the prop change — a form that disables while saving leaves the
   keyboard where it was — so a disabled row is inert to both the pointer and the
   keys and paints no focus ring (plan 332).
-- `option.description` is painted as visible supporting text, not wired as
-  `aria-describedby` (unsupported).
+- `option.description` is the row's `aria-description`, so the visible hint is
+  announced with the name. GPUix has no `aria-describedby`, but it exposes the
+  string form; a blank description is absent (plan 500).
 
 ## Theming
 
@@ -211,7 +212,8 @@ the row that owns the hit area, the tab stop and the accessible name:
 - `src/components/selection.test.tsx` — the group/row roles, `aria-valuetext`,
   tab stops, the error border and the focus ring at the render seam; the row's
   hover/active wash, absent on a disabled row, and the caller's `rowStyle`
-  winning last (plan 355).
+  winning last (plan 355); an option description becomes the row's
+  `aria-description`, and a blank one stays absent (plan 500).
 - `runtime/checkbox-group.runtime.test.tsx` — a hit-tested press anywhere on the
   row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
   value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a
@@ -220,6 +222,9 @@ the row that owns the hit area, the tab stop and the accessible name:
   `RadioGroup` row declares the theme's hover/active wash in the real renderer,
   a disabled row declares neither, and a vertical row's painted width equals the
   group's, so the wash covers the hit area (plan 355).
+- `runtime/option-description.runtime.test.tsx` — both selection groups'
+  descriptions in the real accessibility tree, with an absent and a blank
+  description staying absent (plan 500).
 - `runtime/disabled.runtime.test.tsx` — the cross-control "disabled after focus"
   matrix: every control acts while enabled, focus survives the disable, nothing
   acts afterwards, and no disabled control paints a ring (plan 332).
