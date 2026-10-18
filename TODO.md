@@ -473,6 +473,12 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[x]` `[██████████]` 95/95
 
+`[~]` **The hydrated-preview smoke covers every preview page (plan 495)** — it
+      checks five URLs today while 49 component pages carry a labelled preview,
+      so a page could paint light previews on a dark page and still pass the
+      release gate; the smoke will visit every preview page in both modes from
+      one Chrome session, with the page list derived from the MDX tree
+
 `[x]` **The preview counts stop being remembered (plan 494)** — the document's
       scene total and both documents' gesture total are now digits derived from
       `LIVE_SCENES` and `SCENE_GESTURE` by `preview-gaps.test.ts`, and the
