@@ -38,8 +38,10 @@ import {
 </Chat>;
 ```
 
-The runnable build is `examples/chat.example.tsx`, which the native playground
-mounts: it simulates a stream, can fail mid-reply, and retries from the alert.
+The runnable build is `examples/chat.example.tsx`, registered in
+`examples/index.ts` and mounted by the package's native example suite
+(`src/behaviour/examples.test.tsx`): it simulates a stream, can fail mid-reply,
+and retries from the alert.
 
 ## Status
 

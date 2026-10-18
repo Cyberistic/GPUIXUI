@@ -478,8 +478,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
     - `[x]` Each toast card is the status region, named by its own message — plan
       370; card `role="status"` + viewport group (Toast 14, behaviour 530), the
       strengthened case fails on the old shape
-    - `[ ]` Docs truth: the example pointer names the package's own registry and
-      native example suite, not another app's catalogue — plan 371
+    - `[x]` Docs truth: the example pointer names the package's own registry and
+      native example suite, not another app's catalogue — plan 371; 19 pointers
+      across 17 pages, no docs page mentions the playground
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

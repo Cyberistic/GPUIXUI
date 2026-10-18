@@ -32,8 +32,10 @@ import {
 </Message>;
 ```
 
-The runnable build is `examples/message.example.tsx`, which the native playground
-mounts: it streams a reply, fails a tool call and reports the Retry intent.
+The runnable build is `examples/message.example.tsx`, registered in
+`examples/index.ts` and mounted by the package's native example suite
+(`src/behaviour/examples.test.tsx`): it streams a reply, fails a tool call and
+reports the Retry intent.
 
 ## Variants
 

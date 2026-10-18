@@ -34,8 +34,10 @@ import {
 The viewport needs a **bounded height**, either its own `height` or a flex parent
 with a bounded height. Without one there is nothing to scroll.
 
-The runnable build is `examples/message-scroller.example.tsx`, which the native
-playground mounts. It appends rows and streams a reply token by token.
+The runnable build is `examples/message-scroller.example.tsx`, registered in
+`examples/index.ts` and mounted by the package's native example suite
+(`src/behaviour/examples.test.tsx`). It appends rows and streams a reply token by
+token.
 
 ## Behaviour
 

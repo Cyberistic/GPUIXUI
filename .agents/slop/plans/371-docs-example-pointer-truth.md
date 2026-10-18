@@ -3,7 +3,9 @@
 **Phase.** F — integration and polish (docs truth).
 **Workstream.** components (`packages/components`).
 **Depends on.** 110, 117, 330, 333, 335, 337, 347 (playground evidence).
-**Status.** planned 2026-10-18.
+**Status.** done 2026-10-18 — 19 occurrences across 17 pages now name
+`examples/index.ts` and `src/behaviour/examples.test.tsx`; no page names another
+app's catalogue.
 
 ## 1. Why this plan exists
 
@@ -100,4 +102,15 @@ unaffected (no test count changes).
 
 ## 7. Result
 
-_To be filled after execution._
+Executed on this host, 2026-10-18.
+
+- `grep -rn "playground" packages/components/docs` returns **no** matches; the
+  claim no longer depends on another app.
+- 19 pointers across 17 pages now read "registered in `examples/index.ts` and
+  mounted by the package's native example suite
+  (`src/behaviour/examples.test.tsx`)".
+- `nub run check` passes; the inventory test still holds each docs page to its
+  registered example and the example suite still mounts all 41 entries, so the
+  new sentence is the verifiable one.
+- The playground's own docs-truth row can be closed on its side (plan `347`
+  still mounts the interactive catalogue; the wording no longer waits on it).

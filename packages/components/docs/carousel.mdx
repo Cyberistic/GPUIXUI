@@ -36,8 +36,9 @@ import {
 </Carousel>;
 ```
 
-The runnable build is `examples/carousel.example.tsx`, which the native
-playground mounts.
+The runnable build is `examples/carousel.example.tsx`, registered in
+`examples/index.ts` and mounted by the package's native example suite
+(`src/behaviour/examples.test.tsx`).
 
 **Declare slides directly inside `CarouselTrack`.** The track reads its direct
 children to number them; wrapping them in a component or a fragment gives every

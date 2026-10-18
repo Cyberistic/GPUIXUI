@@ -19,8 +19,9 @@ const [name, setName] = useState("Untitled workspace");
 <InlineEdit label="Workspace name" value={name} onCommit={setName} />;
 ```
 
-The runnable build is `examples/inline-edit.example.tsx`, which the native
-playground mounts.
+The runnable build is `examples/inline-edit.example.tsx`, registered in
+`examples/index.ts` and mounted by the package's native example suite
+(`src/behaviour/examples.test.tsx`).
 
 ## The commit contract
 

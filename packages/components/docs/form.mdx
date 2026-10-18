@@ -46,8 +46,10 @@ const Signup = Schema.Struct({
 </Form>;
 ```
 
-The runnable build is `examples/form.example.tsx`, which the native playground
-mounts. It uses the package's local button stand-in, which is replaced when
+The runnable build is `examples/form.example.tsx`, registered in
+`examples/index.ts` and mounted by the package's native example suite
+(`src/behaviour/examples.test.tsx`). It uses the package's local button stand-in,
+which is replaced when
 `@gpuixui/primitives`' theme provider and `@gpuixui/tokens/react` become one
 (`TODO.md` → Interlocks).
 
