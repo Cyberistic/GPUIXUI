@@ -53,6 +53,7 @@ export const CAPABILITIES = [
   "toast",
   "grid",
   "data-grid",
+  "columns",
   "layers",
   "scroller",
   "scale",

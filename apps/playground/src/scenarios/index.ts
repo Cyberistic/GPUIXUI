@@ -58,6 +58,7 @@ import { floatScenario } from "./float.js";
 import { previewScenario } from "./preview.js";
 import { gridScenario } from "./grid.js";
 import { dataGridScenario } from "./data-grid.js";
+import { dataGridColumnsScenario } from "./data-grid-columns.js";
 import { propertyPanelScenario } from "./property-panel.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
@@ -135,6 +136,7 @@ export const PROBE_CAPABILITIES = [
   "preview",
   "grid",
   "data-grid",
+  "columns",
   "scroller",
   "scale",
   "replace",
@@ -182,6 +184,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   previewScenario,
   gridScenario,
   dataGridScenario,
+  dataGridColumnsScenario,
   propertyPanelScenario,
   shortcutScenario,
   themeColorRolesScenario,

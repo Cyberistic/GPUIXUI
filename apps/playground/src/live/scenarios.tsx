@@ -46,6 +46,7 @@ import { EMAIL_MESSAGE, tier2FormsScenario } from "../scenarios/tier2-forms.js";
 import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
 import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
+import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -3286,6 +3287,97 @@ const inspector: LiveScenario = {
     }),
 };
 
+const dataGridColumns: LiveScenario = {
+  id: "live-data-grid-columns",
+  title: "Live data grid: a header drag resizes the rows, the pan and the anchor",
+  capability: "columns",
+  view: dataGridColumnsScenario.view,
+  ready: "columns-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The grid mounts at its default widths.
+      const pan = yield* boxOf(ctx, "columns-pan");
+      const frozen = yield* boxOf(ctx, "columns-frozen-head");
+      yield* ctx.expectNear(
+        "the pan starts after the frozen column",
+        pan.x,
+        frozen.x + 150,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the pan is the viewport width",
+        pan.width,
+        360,
+        1,
+      );
+      yield* ctx.expectContains(
+        "the grid starts at its default widths",
+        yield* textOf(ctx, "columns-state"),
+        "name=200 status=120 size=90 notes=150 content=560",
+      );
+
+      // 2. A paced real drag grows the name column; the body follows.
+      yield* ctx.host.drag("columns-handle-name", 40, 0);
+      yield* settle;
+      yield* waitForText(ctx, "columns-state", "name=240");
+      yield* ctx.expectNear(
+        "a live drag grows the header",
+        yield* widthOf(ctx, "columns-head-name"),
+        240,
+        1,
+      );
+      const grownStatus = yield* boxOf(ctx, "columns-head-status");
+      const bodyStatus = yield* boxOf(ctx, "columns-cell-0-status");
+      yield* ctx.expectNear(
+        "the live body follows the resized header",
+        bodyStatus.x,
+        grownStatus.x,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live body shares the resized width",
+        bodyStatus.width,
+        grownStatus.width,
+        1,
+      );
+
+      // 3. Reset, then a real click and arrow resize the keyboard path.
+      yield* ctx.host.click("columns-reset");
+      yield* settle;
+      yield* waitForText(ctx, "columns-state", "content=560");
+      yield* ctx.host.click("columns-handle-name");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live click focuses the resize handle",
+        yield* focusedOf(ctx),
+        "columns-handle-name",
+      );
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "columns-state", "name=216");
+
+      // 4. A live pan, then the header and the body still align.
+      yield* ctx.host.click("columns-reset");
+      yield* settle;
+      yield* waitForText(ctx, "columns-state", "content=560");
+      yield* ctx.host.click("columns-pan-end");
+      yield* settle;
+      yield* waitForText(ctx, "columns-state", "x=-200");
+      const offset = yield* offsetOf(ctx, "columns-pan");
+      yield* ctx.expectNear("a live pan reaches the far edge", offset.x, -200, 1);
+      const pannedStatus = yield* boxOf(ctx, "columns-head-status");
+      const pannedBody = yield* boxOf(ctx, "columns-cell-0-status");
+      yield* ctx.expectNear(
+        "a panned live header aligns with its body",
+        pannedBody.x,
+        pannedStatus.x,
+        1,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${dataGridColumns.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -3318,4 +3410,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Flow,
   replace,
   inspector,
+  dataGridColumns,
 ];
