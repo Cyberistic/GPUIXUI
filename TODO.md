@@ -765,6 +765,13 @@ retired once both branches are one
       mutations fail by name (plan `346`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
+`[ ]` `packages/primitives`: `Tooltip` is the one overlay wrapper that still hides
+      the runtime's controlled open contract — GPUix publishes
+      `open`/`defaultOpen`/`onOpenChange` and `disableHoverableContent`, but
+      `TooltipProps` exposes only `delay`. Plan `346` fixed the same class on
+      `Select`; a controlled tip (a one-time hint, a tour) needs the same
+      `useControlState` wiring plus a measurement pass while closed. Not a
+      defect: no page claims it works.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
