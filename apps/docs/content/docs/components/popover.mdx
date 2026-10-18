@@ -1,0 +1,122 @@
+---
+title: Popover
+description: A floating panel anchored to the control that opened it.
+---
+
+`Popover` floats a surface next to its trigger without making the rest of the
+window modal. Positioning is GPUix's own anchored layer; the component owns the
+open state, the dismissal rules and the measured placement correction.
+
+<ComponentPreview name="popover-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Popover" />
+
+<ComponentSource name="popover" file="packages/components/src/popover.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@gpuixui/components/popover";
+
+<Popover>
+  <PopoverTrigger variant="secondary">Columns</PopoverTrigger>
+  <PopoverContent side="bottom" align="start">
+    <ColumnToggles />
+  </PopoverContent>
+</Popover>;
+```
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Popover` | open state and the positioning root the anchored layer measures |
+| `PopoverTrigger` | a button that toggles the popover, with `aria-expanded` |
+| `PopoverContent` | the floating surface, rendered only while open |
+
+`PopoverContent` accepts `side`, `align`, `sideOffset`, `collisionPadding` and
+`alignOffset`. The trigger is an ordinary button, so it takes the button
+`variant` and `size`.
+
+## Placement
+
+| Prop | Type | Default | Meaning |
+| ---- | ---- | ------- | ------- |
+| `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` | preferred side |
+| `align` | `"start" \| "center" \| "end"` | `"start"` | alignment along that side |
+| `sideOffset` | `number` | `6` | gap between trigger and surface |
+| `collisionPadding` | `number` | `8` | margin kept from the window edge |
+| `alignOffset` | `number` | `0` | extra shift after the centre correction |
+
+0.10.0 snaps a surface inside the window but does not continuously flip it, and
+its `center` alignment centres on the trigger's containing block. The component
+therefore flips a snapped surface back off its trigger and converts
+`align="center"` into a measured centre.
+
+## Dismissal
+
+| Action | Result |
+| ------ | ------ |
+| `Escape` | closes and returns focus to the trigger |
+| `Tab` | closes and lets focus move on — a popover is not modal |
+| press outside | closes without moving focus; the press already gave it |
+| press inside | does nothing |
+| click the trigger while open | closes it |
+
+The popover shares the dismiss stack with `Dialog`, so pressing outside both
+closes the popover first and leaves the dialog open. The trigger records whether
+it was open at mouse-down, which stops a press from closing and immediately
+re-opening the surface on the following click.
+
+## Keyboard
+
+Focus moves into the surface on open, so keys reach its content without a click.
+The surface is a tab stop but not a trap: `Tab` leaves and closes it. The trigger
+is an ordinary button — `Enter` and `Space` toggle it.
+
+## API reference
+
+### Popover
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `open` | `boolean` | uncontrolled |
+| `defaultOpen` | `boolean` | `false` |
+| `onOpenChange` | `(open: boolean) => void` | none |
+
+### PopoverContent
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` |
+| `align` | `"start" \| "center" \| "end"` | `"start"` |
+| `sideOffset` | `number` | `6` |
+| `collisionPadding` | `number` | `8` |
+| `alignOffset` | `number` | `0` |
+
+## Accessibility and limitations
+
+- `aria-expanded` is on the trigger.
+- **No `aria-haspopup`, `aria-controls` or `aria-labelledby`** in
+  `@gpuix/native@0.10.0`; the link between trigger and surface is positional,
+  not semantic.
+- Positioning is the runtime's anchored layer: no arrow, no custom anchor
+  element, no backdrop.
+- It does not do continuous collision-aware placement while the window resizes.
+  Keep a popover short; for a form that must block the window, use **Dialog**.
+- `align="center"` cannot centre a surface that would leave the window; the
+  snap margin wins at the edges.
+- An outside press hands focus to whatever was pressed, so focus is not restored
+  to the trigger on that path. Escape is the keyboard path that restores it.
+
+## Related
+
+- **Dialog** — a modal surface when the window itself must be blocked.
+- **Dropdown menu** — a list of actions anchored to a trigger.
+- **Preview card** — a passive floating surface for richer content.

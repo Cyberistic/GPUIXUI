@@ -1,0 +1,416 @@
+/*
+ * Browser previews for the native components.
+ *
+ * GPUixUI renders through GPUix, not the DOM. These rules reproduce the
+ * library's measured geometry and palette so a reader can see the shape of a
+ * component; the shipping component is the native one, shown in the Code tab.
+ * Scoped under `.gx-demo` so nothing leaks into the docs chrome.
+ */
+
+.gx-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 180px;
+  padding: 40px 24px;
+  position: relative;
+  overflow: hidden;
+  color-scheme: dark;
+  background-color: #11141a;
+  background-image:
+    radial-gradient(
+      720px 220px at 50% 0%,
+      rgba(167, 169, 255, 0.07),
+      transparent 65%
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.014) 0 1px,
+      transparent 1px 3px
+    );
+  color: #eef1f5;
+  font-family: var(--font-sans);
+}
+
+.gx-demo-column {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.gx-demo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.gx-demo-label {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7c8595;
+}
+
+/* ---- button: mirrors primitives/core/style.ts ---- */
+.gx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s,
+    opacity 0.15s;
+}
+
+.gx-btn:focus-visible {
+  outline: 2px solid #a7a9ff;
+  outline-offset: 2px;
+}
+
+.gx-btn-sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.gx-btn-lg {
+  height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
+.gx-btn-primary {
+  background: #a7a9ff;
+  color: #11141a;
+}
+
+.gx-btn-primary:hover {
+  background: #b9bbff;
+}
+
+.gx-btn-secondary {
+  background: #2a303b;
+  color: #eef1f5;
+}
+
+.gx-btn-secondary:hover {
+  background: #343b48;
+}
+
+.gx-btn-outline {
+  border-color: #2a303b;
+  background: transparent;
+  color: #eef1f5;
+}
+
+.gx-btn-outline:hover {
+  background: #222730;
+  border-color: #3f4754;
+}
+
+.gx-btn-ghost {
+  background: transparent;
+  color: #eef1f5;
+}
+
+.gx-btn-ghost:hover {
+  background: #222730;
+}
+
+.gx-btn-destructive {
+  background: #ff6b6b;
+  color: #1a0606;
+}
+
+.gx-btn-destructive:hover {
+  background: #ff8585;
+}
+
+.gx-btn-link {
+  height: auto;
+  padding: 0;
+  background: none;
+  color: #a7a9ff;
+  text-decoration: none;
+}
+
+.gx-btn-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gx-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gx-btn-square {
+  width: 34px;
+  padding: 0;
+}
+
+.gx-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: gx-spin 0.7s linear infinite;
+}
+
+@keyframes gx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- dialog: mirrors components/src/dialog.tsx ---- */
+.gx-demo-dialog {
+  min-height: 340px;
+}
+
+.gx-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(3, 4, 5, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.gx-dialog {
+  position: relative;
+  width: min(400px, 100%);
+  padding: 22px;
+  border: 1px solid #2a303b;
+  border-radius: 14px;
+  background: #222730;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.gx-dialog-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-dialog-desc {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #a1a9b7;
+}
+
+.gx-dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #a1a9b7;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gx-dialog-close:hover {
+  background: #2a303b;
+  color: #eef1f5;
+}
+
+.gx-field {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid #2a303b;
+  border-radius: 7px;
+  background: #191d25;
+  color: #eef1f5;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  outline: none;
+}
+
+.gx-field:focus {
+  border-color: #a7a9ff;
+  box-shadow: 0 0 0 2px rgba(134, 179, 0, 0.35);
+}
+
+.gx-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* ---- popover: mirrors components/src/popover.tsx ---- */
+.gx-demo-popover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 340px;
+}
+
+.gx-popover-anchor {
+  position: relative;
+}
+
+.gx-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 2;
+  width: 260px;
+  padding: 14px;
+  border: 1px solid #2a303b;
+  border-radius: 10px;
+  background: #222730;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+}
+
+.gx-popover-title {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gx-popover-body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #a1a9b7;
+}
+
+.gx-popover-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #2a303b;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #7c8595;
+}
+
+.gx-popover-meta b {
+  color: #a7a9ff;
+  font-weight: 600;
+}
+
+/* ---- tabs: mirrors components/src/tabs.tsx ---- */
+.gx-demo-tabs {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  min-height: 240px;
+}
+
+.gx-tabs-list {
+  display: flex;
+  gap: 2px;
+  padding: 10px 12px 0;
+  border-bottom: 1px solid #2a303b;
+}
+
+.gx-tab {
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #a1a9b7;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gx-tab:hover {
+  color: #eef1f5;
+}
+
+.gx-tab[aria-selected="true"] {
+  border-bottom-color: #a7a9ff;
+  color: #eef1f5;
+}
+
+.gx-tab:focus-visible {
+  outline: 2px solid #a7a9ff;
+  outline-offset: -2px;
+}
+
+.gx-tab-panel {
+  padding: 18px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e1e5ec;
+}
+
+.gx-tab-panel b {
+  color: #eef1f5;
+}
+
+.gx-tab-panel code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #2a303b;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #a7a9ff;
+}
+
+/* ---- install / source blocks ---- */
+.gx-install-note {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.gx-source {
+  margin: 1rem 0;
+}
+
+@media (max-width: 640px) {
+  .gx-demo {
+    padding: 28px 16px;
+  }
+
+  .gx-popover {
+    width: min(260px, calc(100vw - 80px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-btn,
+  .gx-spinner {
+    transition: none;
+    animation: none;
+  }
+}

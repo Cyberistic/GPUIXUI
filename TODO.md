@@ -39,15 +39,18 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[███░░░░░░░]` 2/7
+`[x]` `[████░░░░░░]` 4/8
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[ ]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
-`[~]` Land the docs shell and document that component in Fumadocs — the shell
-is deployed at <https://gpuixui.sudokw.com>; component pages are still pending
+`[x]` Land the docs shell and the component page pattern in Fumadocs — the
+sectioned sidebar (Getting Started / Components / Contributing), the reusable
+Preview/Code template, the `nub` install block, the "On this page" TOC, the
+previous/next pager, and the Button, Dialog, Popover and Tabs pages are deployed
+under <https://gpuixui.sudokw.com/docs>
 `[x]` Land the marketing landing page at `/` (plan 434) — Hunter License
 identity, stacked-native deck hero, library grid, proof, attribution
 `[x]` Deploy the Fumadocs app (landing + getting started) to

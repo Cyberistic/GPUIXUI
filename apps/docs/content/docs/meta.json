@@ -1,4 +1,13 @@
 {
-  "title": "GPUixUI",
-  "pages": ["index", "getting-started"]
+  "title": "Docs",
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "installation",
+    "theming",
+    "dark-mode",
+    "components",
+    "---Contributing---",
+    "contributing"
+  ]
 }

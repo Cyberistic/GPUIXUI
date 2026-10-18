@@ -1,0 +1,102 @@
+---
+title: Installation
+description: Run the workspace, add a package with nub, and render a native GPUixUI component.
+---
+
+GPUixUI is developed as a set of private workspace packages in the
+[GPUIXUI repository](https://github.com/Cyberistic/GPUIXUI). The packages are
+not published to a registry yet, so you consume them from the workspace rather
+than from npm.
+
+## Requirements
+
+- **Node.js 24.18.0** — pinned in `.node-version`.
+- **[`nub`](https://nub.dev)** — the package manager and task runner pinned in
+  the root `package.json`.
+
+A bare old `node` on your PATH will fail the engines check. Use `nub`, or the
+Node shim inside a project directory.
+
+## Install the workspace
+
+```sh
+git clone https://github.com/Cyberistic/GPUIXUI.git
+cd GPUIXUI
+nub install
+```
+
+`nub install` links every workspace package, so a new consumer resolves
+`@gpuixui/primitives`, `@gpuixui/components` and `@gpuixui/tokens` from source.
+
+## Add a package
+
+Every component page has the same install block. It adds the owning package
+with the workspace protocol — the version a private package can actually
+resolve:
+
+```sh
+nub add @gpuixui/primitives@workspace:*
+nub add @gpuixui/components@workspace:*
+```
+
+Run `nub install` after editing a manifest by hand. A published registry is not
+part of this phase; the pages say `workspace:*` instead of inventing a version.
+
+## Render your first component
+
+Components expect a GPUix window and a theme. Supply the theme once, near the
+root of the window:
+
+```tsx
+import { Button } from "@gpuixui/primitives";
+import { darkTheme, lightTheme } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+const theme = isDark ? darkTheme : lightTheme;
+
+<ThemeProvider theme={theme}>
+  <Button variant="primary" onActivate={save}>
+    Save changes
+  </Button>
+</ThemeProvider>;
+```
+
+Components read semantic roles such as `colors.primary` and `spacing.md` from
+the theme, so switching the provider's theme restyles the subtree without
+changing component code.
+
+<Callout type="info" title="The provider owns the mode">
+  GPUix exposes no OS appearance query. Your application decides light or dark
+  and passes the resolved theme; there is no hidden `prefers-color-scheme`.
+</Callout>
+
+## Run the playground
+
+The playground is the working native surface for the library:
+
+```sh
+nub run dev:playground
+```
+
+## Run the checks
+
+```sh
+nub run check                                  # tests-can-fail, lint, format, types
+nub run test                                   # unit tests
+nub run --filter @gpuixui/components test:behaviour
+```
+
+The behaviour suites run in the real GPUix renderer. They are the only proof
+that an interaction works; a browser preview on this site is documentation, not
+verification.
+
+## Work on this site
+
+```sh
+nub run dev:docs
+```
+
+The docs app lives in `apps/docs`; pages are MDX files under
+`apps/docs/content/docs` and navigation is declared in the `meta.json` beside
+them. The landing page is a separate route at `/` and is not part of the docs
+tree.

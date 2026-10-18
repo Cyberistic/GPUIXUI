@@ -1,0 +1,143 @@
+---
+title: Theming
+description: Semantic colour roles, typography, spacing, radius and density — one theme shape for light, dark and high contrast.
+---
+
+A GPUixUI theme is plain data. Components never carry a colour literal; they read
+a semantic role such as `colors.primary`, `spacing.md` or `radius.md` from the
+nearest `ThemeProvider`. Switching the provider restyles the subtree without
+touching component code.
+
+```tsx
+import { ThemeProvider } from "@gpuixui/tokens/react";
+import { darkTheme } from "@gpuixui/tokens";
+
+<ThemeProvider theme={darkTheme}>
+  <App />
+</ThemeProvider>;
+```
+
+<Callout type="info" title="No OS appearance query">
+  GPUix 0.10.0 exposes no appearance API. The application owns the mode and
+  passes a resolved theme; there is no hidden `prefers-color-scheme` in the
+  library.
+</Callout>
+
+## Theme shape
+
+Every theme has the same fields:
+
+| Field | What it decides |
+| ----- | --------------- |
+| `colors` | 47 semantic roles: surfaces, text, actions, status, borders, focus |
+| `typography` | display, headings, body, label, caption, code and the font families |
+| `spacing` | the spacing scale components use for gaps and padding |
+| `radius` | `sm` through `xl` and `full` |
+| `density` | control heights and horizontal padding for `sm`, `md` and `lg` |
+| `elevation` | the shadow steps (`sm`, `md`, `lg`) |
+| `borderWidth` | thin and strong boundaries |
+| `iconSize` | the icon sizes paired with each type role |
+
+## Colour roles
+
+Roles describe intent, not a ramp shade. There are 47 of them; the families that
+matter most on a page are:
+
+| Role | Light | Dark | Use |
+| ---- | ----- | ---- | --- |
+| `background` | `#F6F8FA` | `#11141A` | window and application canvas |
+| `foreground` | `#191D25` | `#EEF1F5` | default text |
+| `card` | `#FFFFFF` | `#191D25` | raised content surface |
+| `popover` | `#FFFFFF` | `#222730` | menus, popovers and dialogs |
+| `primary` | `#5F4BDB` | `#A7A9FF` | primary action |
+| `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
+| `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
+| `mutedForeground` | `#545D6C` | `#A1A9B7` | secondary text |
+| `accent` | `#EEF0FF` | `#2E2370` | tinted emphasis surface |
+| `destructive` | `#CC3439` | `#FF6B6B` | destructive action |
+| `border` | `#E1E5EC` | `#2A303B` | decorative borders |
+| `borderStrong` | `#848E9E` | `#6B7484` | essential control boundaries |
+| `ring` | `#7567F2` | `#A7A9FF` | focus ring |
+
+The full catalogue, including the four status families and their soft pairs, is
+in [`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md).
+`colorRoles` exports the ordered list, so a docs table or a theme editor can
+enumerate it instead of copying names.
+
+<Callout type="warn" title="The site accent is not the token accent">
+  This documentation site uses the landing's Hunter License green for its own
+  chrome. Component previews use the real iris tokens above. The site identity
+  and the library's default `primary` are deliberately separate until the brand
+  token lands.
+</Callout>
+
+## Built-in themes
+
+Four themes ship, and `getTheme` selects one by mode and contrast:
+
+```tsx
+import { getTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("dark"); // darkTheme
+const accessible = getTheme("dark", "high"); // high-contrast dark
+```
+
+| Theme | Export |
+| ----- | ------ |
+| Light | `lightTheme`, `themes.light` |
+| Dark | `darkTheme`, `themes.dark` |
+| High-contrast light | `highContrastLightTheme`, `highContrastThemes.light` |
+| High-contrast dark | `highContrastDarkTheme`, `highContrastThemes.dark` |
+
+## Override a theme
+
+`extendTheme` merges overrides into a base theme without mutating it;
+`createTheme` starts from a built-in mode.
+
+```tsx
+import { createTheme } from "@gpuixui/tokens";
+
+export const acme = createTheme({
+  mode: "dark",
+  name: "Acme",
+  colors: { primary: "#7C5CFF", ring: "#9B8CFF" },
+  radius: { md: 8 },
+  density: "compact",
+});
+```
+
+Only what changes is written. Every other role is inherited, so a brand cannot
+accidentally drop a role a component reads.
+
+## Density
+
+Density changes control geometry, never type. `compact` is for toolbars and
+data-dense desktop surfaces; `comfortable` is the default.
+
+```tsx
+const compact = createTheme({ mode: "dark", density: "compact" });
+```
+
+## Platform typography
+
+`platformTheme` keeps the colours, scales and mode, and swaps only the type
+families for one platform. It is the hook for the macOS/Windows/Linux looks.
+
+```tsx
+import { platformTheme, themes } from "@gpuixui/tokens";
+
+const windows = platformTheme(themes.dark, "win32");
+```
+
+## Read the theme
+
+`useTheme` returns the nearest theme, or the light theme when no provider
+exists. Components use it internally; an application can use it for its own
+layout without duplicating a colour.
+
+```tsx
+import { useTheme } from "@gpuixui/tokens/react";
+
+const theme = useTheme();
+const muted = theme.colors.mutedForeground;
+```

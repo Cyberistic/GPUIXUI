@@ -8,8 +8,9 @@ import {
   DocsPage,
   DocsTitle,
 } from "fumadocs-ui/layouts/docs/page";
-import defaultMdxComponents from "fumadocs-ui/mdx";
 import { Suspense, use } from "react";
+import { mdxComponents } from "@/components/mdx";
+import { CopyPage } from "@/components/docs/copy-page";
 import { baseOptions } from "./layout.shared";
 import { docs, source } from "./source";
 
@@ -35,10 +36,13 @@ function Content({ path }: { path: string }) {
 
   return (
     <DocsPage id={`page-${path}`} toc={toc}>
-      <DocsTitle>{page.title}</DocsTitle>
+      <div className="flex items-start justify-between gap-4">
+        <DocsTitle>{page.title}</DocsTitle>
+        <CopyPage path={path} />
+      </div>
       <DocsDescription>{page.description}</DocsDescription>
       <DocsBody>
-        <MDX components={defaultMdxComponents} />
+        <MDX components={mdxComponents} />
       </DocsBody>
     </DocsPage>
   );

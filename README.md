@@ -19,10 +19,18 @@ The design tokens and theming layer (light, dark, high-contrast, density) is
 landed. Tier 1, data presentation, workspace and specialised components are
 tracked in `TODO.md`.
 
+The docs site follows shadcn/ui's anatomy: a sectioned sidebar (Getting Started,
+Components, Contributing), a reusable component page with Preview/Code tabs, a
+`nub` install block, Usage, Composition and API reference, plus the "On this
+page" table of contents and the previous/next pager. Button, Dialog, Popover and
+Tabs are the pattern pages; their previews are labelled browser renderings of
+the native components, and the Code tab plus **Component source** show the real
+implementation.
+
 ## Layout
 
 ```
-apps/docs          Fumadocs documentation + showcase
+apps/docs          Fumadocs docs: landing at `/`, documentation under `/docs`
 apps/playground    Native GPUix playground and smoke tests
 packages/config    Shared TypeScript and tooling configuration
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources
