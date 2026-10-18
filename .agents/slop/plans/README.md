@@ -210,6 +210,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [512](./512-panel-action-selection.md) | The panel action's label through the text-selection wash | F | 091, 362, 394, 506, 510, 387 | done |
 | [513](./513-selection-veil-pointer-states.md) | The inverse veil's pointer-state gap and its stale rationale | F | 344, 382, 504, 506, 510, 387 | done |
 | [514](./514-disabled-panel-action.md) | The disabled action inside a status panel | F | 306, 307, 392, 394, 397, 500, 502, 512, 513 | done |
+| [516](./516-ring-on-value-groove.md) | The focus ring on the value groove | F | 086, 093, 332, 342, 347, 354, 384, 503 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2177,6 +2178,22 @@ surfaces they share (2.156:1 at the tightest, high-contrast light on
 `successSoft`), so a copied theme cannot make a disabled action look enabled.
 The ghost state was already covered by `inactiveSoftPairs`. The consumer
 migration is a cross-team row; no colour, floor or type moves.
+
+Plan `516` measures the one surface a focused slider paints its ring on but the
+contract never named. The thumb is centred on the rail, so the focus shadow's
+left and right arcs land on the groove plan 503 introduced as `track` (the
+`primitives` migration from `muted` is already a cross-team row). Identity light
+`ring` (`#7567F2`) measured **2.983:1** on the light groove, under the 3:1
+boundary floor, while every other shipped set passed; the pair is invisible to
+`themeContrastFailures` because `ringSurfaces` stops at the plain surfaces, the
+washes and the soft fills. `ringTrackPairs` adds `ring` on `track` as a
+boundary pair (395 → **396**), and the identity light ring moves one ramp step to
+`iris[700]` `#4C39B5` (7.24:1 on the groove; every existing ring pair gains
+contrast). `iris[700]` rather than `iris[600]` keeps the ring distinct from
+`primary`, because the known `primitives` clipped inset ring paints `ring` on
+the primary fill and a ring equal to it is invisible there. The invalid slider
+keeps the accent ring, so the groove is deliberately not an `invalidRingPairs`
+surface. No other role, floor, type, metric or platform value moves.
 
 ## How to use a plan
 
