@@ -872,20 +872,25 @@ retired once both branches are one
       the painted value reports nothing; the blur commit is disabled-guarded; and
       `onKeyUp` is wired. 2 element + 3 runtime tests, five mutations fail by
       name (offline 603 → 605, runtime 584 → 587; plan `362`).
-`[ ]` `packages/primitives`: **`Select` paints an orphan heading for an empty
-      option group** — `renderSelect` renders every group's `SelectLabel`
-      unconditionally, while `selectRowCounts` already excludes an empty group
-      from the row/height model, so the list is taller than its own placement
-      estimate; `docs/select.mdx` and the inventory both promise "an empty group
-      paints nothing". Guard the group branch, then prove it in the element tree
-      and the runtime (next plan, `363`).
-`[ ]` `packages/primitives`: **a labelled `Separator` applies the caller's
-      `style` to both rule halves, not the control** — `style` is merged into the
-      shared rule object, which is spread onto two children, so a container
-      property (`marginTop`, `gap`, padding) never reaches the root that
-      `docs/separator.mdx` documents as "merged last". Merge the caller's style
-      into the root and keep the rule's own look on the halves (next plan,
-      `364`).
+`[x]` `packages/primitives`: **`Select` painted an orphan heading for an empty
+      option group** — `renderSelect` rendered every group's `SelectLabel`
+      unconditionally, while `selectRowCounts` already excluded an empty group
+      from the row/height model, so the list was a caption row taller than its
+      own placement estimate; `docs/select.mdx` and the inventory both promise
+      "an empty group paints nothing". The group branch now resolves its rows
+      first and paints nothing for an empty group; 1 element + 1 runtime test,
+      both directions measured (offline 605 → 606, runtime 587 → 588; plan
+      `363`).
+`[x]` `packages/primitives`: **a labelled `Separator` applied the caller's
+      `style` to both rule halves, not the control** — measured: `style` was
+      merged into the shared rule object and spread onto the two rules, so
+      `<Separator label="Advanced" style={{ marginTop: 40 }} />` left a 40 px
+      band above each half while the control stayed put (the root carried no
+      `marginTop`), and `gap`/padding never reached it at all. The root now takes
+      the caller's style merged last, the rules keep the themed look, and the
+      plain separator is unchanged; the docs state the trade (recolour the rule
+      through a bordered `Box`). 1 element + 1 runtime case, both directions
+      measured (offline 606 → 607, runtime 588 → 589; plan `364`).
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts
       were unguarded** — `Icon` was the one renderer without a `style` prop, so
       an icon beside text could not be nudged onto a baseline without a `Box`
