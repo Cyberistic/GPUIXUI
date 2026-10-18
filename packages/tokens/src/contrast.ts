@@ -1204,53 +1204,31 @@ const washVisibilityFailures = (
   });
 
 /**
- * Every documented pair a theme misses — text, status, secondary text and status
- * text on the state washes, selection, surface and divider — including the
- * selection wash measured over the surfaces a selected glyph paints on, the
- * four status roles through that wash (`selectionStatusPairs`, plan 366), the
- * inverse `selectionOnFill` veil for content painted on a filled action, the
- * secondary text and the wash's own perceivability on those surfaces, the
- * loading skeleton measured on every surface and row wash it fills, the designed edge around
- * each soft status surface measured on its own fill, the plain divider measured
- * on those fills, the selection wash and the
- * tone's own foreground, the body and the caption on the four soft status
- * surfaces a selected Alert, Badge or Toast paints, the control edge measured
- * on the fills a bordered control paints, the focus ring on the soft status fills
- * a toast's action button sits on, the `destructive` ring an invalid control
- * paints on those surfaces, and the functional boundary measured
- * on the quiet panel, the state washes and the soft status fills a bounded
- * control sits on, the inactive label on the nine surfaces a disabled control
- * paints, the disabled control's own edge and the divider on the quiet panel,
- * and the modal scrim composited over the surfaces a window shows — the base
- * layout, the four filled actions and the four soft status panels it covers
- * (reported with `wash: "overlay"`; the AAA dark scrim was 1.000:1 on its
- * own canvas). It also measures every interactive fill — the two washes, the
- * accent and selected fills and the three filled families at rest, hover and
- * press — against the canvas, card, popover and quiet panel it paints on,
- * because the identity light panel was the same value as its `hover`,
- * `secondary`, `accent` and `selected` fills. It also holds each filled
- * family's hover and press to one perceivable step from the fill before it
- * (`pairClass: "step"`), so an edited theme cannot flatten a state; the generic
- * `hover`/`active` ladder is reported the same way (`active` from `hover`), as
- * is the selection step a selectable row makes from its hover wash (`selected`
- * from `accent`). It
- * measures
- * a row's own default text on the washes it paints, secondary text on the
- * `input` fill a time picker's separator and clear control paint, and the field
- * edge on its `input`
- * fill, so a selected list title, a menu row or a time field cannot lose its
- * label or its chrome on the surface it paints. Content painted on a filled
- * action uses `selectionOnFill`, a neutral veil measured on `primary`,
- * `secondary` and `destructive`, because the accent-tinted `selection` wash is
- * invisible on the accent fill itself. It also holds a solid role
- * painted as a graphic — a progress segment,
- * a slider fill, a thumb's ring, a rating star, a combobox check or a timeline
- * dot (`markPairs`) — to the 3:1 mark floor (4.5:1 at AAA), because the 1.05:1
- * an interactive fill's wash needs cannot keep a bar or a glyph visible. The
- * level
- * defaults to the one the theme declares, so a high-contrast theme is checked
- * against its own floors. An empty array is the library's guarantee; a consumer
- * test asserts exactly that:
+ * Every documented pair a theme misses.
+ *
+ * The check is the union of the published pair lists, so it is total over the
+ * compositions the library documents rather than a curated sample:
+ *
+ * - `contrastPairs` — body and secondary text on the plain surfaces, the field,
+ *   the row washes and the soft status fills; the control boundary, focus ring
+ *   and dividers; the inactive label; the marks and the value track; every
+ *   interactive fill against the panel it paints on; and the state steps of the
+ *   filled families, the generic washes and the selected row.
+ * - `selectionPairs`, `selectionStatusPairs`, `selectionWashPairs`,
+ *   `selectionSoftPairs` and `selectionSoftWashPairs` — text, status text and
+ *   the wash's own perceivability through the composited `selection` colour.
+ * - `selectionFillPairs` and `selectionFillWashPairs` — the inverse
+ *   `selectionOnFill` veil on every filled family; the list derives from
+ *   `filledControlFamilies`, so `accent` is included.
+ * - `overlayWashPairs` — the modal scrim composited over every surface a window
+ *   shows.
+ *
+ * A missed pair is returned with both roles, the class whose floor it missed,
+ * the floor and the measured ratio; a pair through a wash also names the wash.
+ * The level defaults to the one the theme declares, so a high-contrast theme is
+ * checked against its own floors. An empty array is the library's guarantee,
+ * and a role whose value the token maths cannot parse is reported as `NaN` by
+ * this check and by {@link themeColorFailures}.
  *
  * @example
  * ```ts

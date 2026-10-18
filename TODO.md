@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 156/211
+`[x]` `[███████░░░]` 157/212
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1176,6 +1176,14 @@ entry's `blurRadius` must now be non-decreasing, opacity stays a design (a
 fainter large shadow and a flat theme pass), every shipped set passes and no
 value moves, and both docs pages, the README and the ledger state the rule
 (plan 390)
+`[x]` Hold the published contrast reference to the contract it describes —
+`themeContrastFailures`' JSDoc restated surfaces and families instead of naming
+its lists and had gone false twice: "the nine surfaces a disabled control paints"
+after `inactiveSurfaces` grew to thirteen, and the inverse veil "measured on
+`primary`, `secondary` and `destructive`" after plan 382 added `accent`; the
+paragraph now names the nine lists it applies plus `filledControlFamilies` and
+`themeColorFailures`, states no count, and `contrast-reference.test.ts` fails if
+a list loses its name, a family literal returns or a count is restated (plan 391)
 
 ## Phase C — Tier 1–2 components
 
