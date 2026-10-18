@@ -892,6 +892,18 @@ retired once both branches are one
       source agree again. Their local input stand-in passes
       `onChange: onValueChange` to the raw host, which stays correct.
 
+`[ ]` **components workstream — two promises in the shared API contract are not
+      shipped.** `docs/component-api.md` §2 says a `value` plus a
+      `defaultValue` produces a warning, and §4 says `defaultPrevented` is
+      respected. The one controlled/uncontrolled rule
+      (`packages/primitives/src/core/state.ts`, 14 parts) emits no warning, and
+      `packages/primitives/src/core/keyboard.ts` records the measured runtime
+      fact: 0.10.0's `EventPayload` has no `defaultPrevented` and no way to
+      prevent a default (plan `020` §1.3, plan `030` §3.4 correction). Correct
+      the contract text — the capability cannot be added — and either implement
+      the warning in the one rule or drop the promise. Evidence: docs-site's
+      plan `482` and its TODO row.
+
 `[ ]` **components workstream — replace the local button stand-in.** With
       `@gpuixui/primitives` on the same tree (this branch's merge), `Button` and
       `IconButton` are real exports: delete `packages/components/src/internal/button.tsx`,

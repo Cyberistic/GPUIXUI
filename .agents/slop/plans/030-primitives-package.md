@@ -33,8 +33,8 @@ is the layer that turns it into a *system*:
 
 - **one place** where a semantic decision ("primary, medium, invalid") becomes a
   concrete `StyleDesc`;
-- **one place** where keyboard behaviour lives (Enter/Space/Arrow/Escape,
-  roving tabindex, `defaultPrevented`);
+- **one place** where keyboard behaviour lives (Enter/Space/Arrow/Escape and
+  roving tabindex);
 - **one place** where size metrics and variants are defined, so a Button, an
   Input and a Select cannot drift apart.
 
@@ -247,7 +247,13 @@ export const decideMenuMove: (index: number, count: number, key: string) => numb
 
 Modelled on the reference `buttonProps` behaviour in the unreleased GPUix `main`:
 Enter activates on key **down**, Space on key **up**, a held key does not
-repeat, `defaultPrevented` wins. Tests state each rule and fail if it flips.
+repeat. Tests state each rule and fail if it flips.
+
+**Correction (2026-10-18):** published 0.10.0's `EventPayload` carries no
+`defaultPrevented` and offers no way to prevent the platform default (plan `020`
+§1.3), so the shipped `core/keyboard.ts` does not — and cannot — let a caller
+cancel an activation. Plan `200`'s contract table repeats the claim; the
+capability limit is the truth. Do not add the field.
 
 ### 3.5 Components — one responsibility each
 
@@ -320,7 +326,7 @@ Tests live beside the code as `src/**/*.test.ts`, run with
 | ----- | ---------- |
 | `style.test.ts` | a variant that resolves to an empty/identical style; a theme value that is ignored (change the fixture, assert the output changes — this is the anti-tautology test) |
 | `variants.test.ts` | a declared variant missing from the registry, or two variants collapsing to the same spec |
-| `keyboard.test.ts` | Enter activating on key **up**, Space activating on key **down**, a held key activating, or `defaultPrevented` being ignored — each is a real bug in the reference implementation's history |
+| `keyboard.test.ts` | Enter activating on key **up**, Space activating on key **down**, or a held key activating — each is a real bug in the reference implementation's history. (`defaultPrevented` is not a rule: 0.10.0 cannot report it — see §3.4's correction.) |
 | `state.test.ts` | controlled mode writing internal state; uncontrolled mode not updating; `onChange` firing when the value did not change |
 | `contract.test.ts` | unknown props accepted without decode; a negative `Progress` value or `>100` leaking through instead of clamping |
 | `theme.test.ts` | a theme literal leaking outside `metrics.ts` (assert by scanning the source), or density changing colour |
