@@ -100,7 +100,8 @@ renderer (the browser's GPU backend) and exports one document per scene:
   Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers,
   Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches, Radio groups,
   Sliders, Range sliders, Search inputs, Text inputs, Text areas, Accordions,
-  Number fields, OTP fields, Ratings, Tag inputs and Toggles. 14 of
+  Number fields, OTP fields, Ratings, Tag inputs, Toggles, Lists,
+  Collapsible sections, Pagination, Time pickers and Carousels. 19 of
   those document state only a gesture produces — an open overlay, an opened
   list, a checked control, a value a key reaches or text a reader types — so
   `preview/scenes.ts` declares the gesture that produces it
@@ -109,7 +110,7 @@ renderer (the browser's GPU backend) and exports one document per scene:
   renderer installs on the page, typing through the same keyboard/IME path a
   keyboard uses. Every delivered page now has a live scene or an
   illustration; `scene-contract.test.ts` fails on a new gap instead of shipping
-  it silently (plans 458, 486, 492 and 493).
+  it silently (plans 458, 486, 492, 493 and 508).
 - `vite.preview.config.ts` builds it to `public/gpuix-preview/` (gitignored,
   ~20 MB). `build` and `dev` run `build:preview` first. The published browser
   entry uses Bun's `with { type: "file" }`, so the config names the two

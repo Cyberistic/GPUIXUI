@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches, Radio groups, Sliders, Range sliders, Search inputs, Text inputs, Text areas, Accordions, Number fields, OTP fields, Ratings, Tag inputs, Toggles); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches, Radio groups, Sliders, Range sliders, Search inputs, Text inputs, Text areas, Accordions, Number fields, OTP fields, Ratings, Tag inputs, Toggles, Lists, Collapsible sections, Pagination, Time pickers, Carousels); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -199,33 +199,35 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **36 scenes ship today** — Button, Tabs, Dropdown menu,
+  blank frame. **41 scenes ship today** — Button, Tabs, Dropdown menu,
   Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
   containers, Skeleton, Loading indicators, Drawer, Navigation menu, Mention
   input, Preview card, Toast, Tooltip, Context menu, Date picker, Combobox,
   Hotkey input, Select, Checkbox, Switch, Radio group, Slider, Range slider,
   Search input, Text input, Text area, Accordion, Number field, OTP field,
-  Rating, Tag input and Toggle — chosen because a still cannot prove
+  Rating, Tag input, Toggle, List, Collapsible, Pagination, Time picker and
+  Carousel — chosen because a still cannot prove
   the point: an open overlay and its focus entry, a grouped palette, real SVG
   markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a transient
   message, an opened list, a checked control, a value a key reaches, typed text,
   an opened section, a bounded number, a completed code, a rating, a token set,
-  a pressed toggle, or a surface only a pointer or a key opens. The Toast scene pushes one toast with an
+  a pressed toggle, a selected row, an opened disclosure, a moved page window,
+  an arrow-committed time, or a surface only a pointer or a key opens. The Toast scene pushes one toast with an
   infinite duration: a default five-second toast would race the smoke check, and
   an infinite one is the component's documented way to keep a message until it
   is dismissed (`ToastInput.duration`).
 
 ## Gestures are proved, not implied
 
-14 scenes document state only a gesture produces: a component that owns its
+19 scenes document state only a gesture produces: a component that owns its
 open state and exposes no `defaultOpen`, a list that opens on a click, controls
-whose checked paint is not text, a value a key moves and a field a reader types
-into. They are not opened by a prop: the smoke drives the same gesture a reader
-performs through the automation surface the renderer installs
-(`globalThis.gpuix` in the preview document), and `smoke:preview` asserts the
-scene's text is **absent before** the gesture and **present after** it. A prop
-that quietly opened, checked or filled the surface would fail that first
-assertion, and a broken gesture fails the second.
+whose checked paint is not text, a value a key moves, a row a reader selects and
+a field a reader types into. They are not opened by a prop: the smoke drives the
+same gesture a reader performs through the automation surface the renderer
+installs (`globalThis.gpuix` in the preview document), and `smoke:preview`
+asserts the scene's text is **absent before** the gesture and **present after**
+it. A prop that quietly opened, checked or filled the surface would fail that
+first assertion, and a broken gesture fails the second.
 
 | Scene | Gesture the smoke drives | What it proves |
 | ----- | ------------------------ | -------------- |
@@ -243,6 +245,11 @@ assertion, and a broken gesture fails the second.
 | Search inputs | type into the field | every edit reaches the caller |
 | Text inputs | type into the field | the typed value reaches the caller |
 | Text areas | type into the field | the typed draft reaches the caller |
+| Lists / list items | click a row by its label | the row paints selected and the caller sees the value |
+| Collapsible sections | click the trigger | the content is mounted only in the open state |
+| Pagination | press next three times | the current page and its window move |
+| Time pickers | click the hour field, press Up | an arrow key commits a new value |
+| Carousels | press the next control | the active slide replaces the first |
 
 Typing goes through the renderer's own keyboard/IME path (`Locator.fill`), which
 is the same path a reader's keyboard takes. A typed character arrives without a
@@ -258,6 +265,14 @@ No page lacks both a live scene and an illustration. The table this section used
 to carry is the same set `apps/docs/src/components/preview/gaps.ts` declares —
 empty since plan 486 — and `preview-gaps.test.ts` fails when the document and the
 code disagree.
+
+**Message scroller is the one stateful page without a live scene.** Its
+documented state is pinned follow after a scroll away from the tail and a new
+arrival; the scene grammar has no wheel step and the viewport has no initial
+offset, so a scene would be a frame that never leaves the tail. The native suite
+proves the rule set; the exception is pinned in
+`apps/docs/src/components/preview/gaps.ts` and compared with the registry in
+both directions.
 
 ### Pages with neither a live scene nor an illustration
 

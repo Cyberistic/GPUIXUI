@@ -43,6 +43,11 @@ export const LIVE_SCENES = [
   "rating",
   "tag-input",
   "toggle",
+  "list",
+  "collapsible",
+  "pagination",
+  "time-picker",
+  "carousel",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -93,6 +98,11 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   rating: "Rated 4 of 5",
   "tag-input": "runtime",
   toggle: "Bold is on",
+  list: "Weekly report opened",
+  collapsible: "Only failed runs are reported.",
+  pagination: "Showing results 31–40",
+  "time-picker": "Reminder at 10:30",
+  carousel: "Pricing details on screen",
 };
 
 /**
@@ -141,6 +151,18 @@ export const SCENE_GESTURE: Readonly<
   "search-input": [{ kind: "fill", testId: "scene-search", text: "grid" }],
   "text-input": [{ kind: "fill", testId: "scene-name", text: "ada" }],
   "text-area": [{ kind: "fill", testId: "scene-note", text: "ship it" }],
+  list: [{ kind: "click-text", text: "Weekly report", within: "scene-list" }],
+  collapsible: [{ kind: "click", testId: "scene-collapsible-trigger" }],
+  pagination: [
+    { kind: "click", testId: "scene-pagination-next" },
+    { kind: "click", testId: "scene-pagination-next" },
+    { kind: "click", testId: "scene-pagination-next" },
+  ],
+  "time-picker": [
+    { kind: "click", testId: "scene-time-hours" },
+    { kind: "press", testId: "scene-time-hours", keys: "up" },
+  ],
+  carousel: [{ kind: "click", testId: "scene-carousel-next" }],
 };
 
 /**
@@ -162,6 +184,11 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   "search-input": "Type a search term into the field.",
   "text-input": "Type a name into the field.",
   "text-area": "Type a note into the field.",
+  list: "Click the weekly report to open it.",
+  collapsible: "Open the advanced section.",
+  pagination: "Press next three times to reach page four.",
+  "time-picker": "Click the hour field, then press Up.",
+  carousel: "Press the next control to see the second slide.",
 };
 
 /**

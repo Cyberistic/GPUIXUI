@@ -9,7 +9,7 @@ import {
   SCENE_TEXT,
   SCENE_TEXT_IS_SCENE_PROSE,
 } from "../../../preview/scenes";
-import { NO_LIVE_SCENE } from "./gaps";
+import { NO_LIVE_SCENE, STATEFUL_NO_LIVE_SCENE } from "./gaps";
 
 /**
  * Guards the live-scene contract (plan 456) at the two points it can drift
@@ -156,11 +156,16 @@ describe("gesture scenes", () => {
   /**
    * Targets the component itself renders, so the id cannot occur in the scene
    * source. `DatePickerCalendar` owns one `date-day-<iso>` cell per day; the
-   * scene's `today="2026-10-17"` is what puts the 21st in that month. Pinned, so
-   * a stale exemption fails like a stale expectation.
+   * scene's `today="2026-10-17"` is what puts the 21st in that month. The time
+   * picker derives `<testId>-hours` / `-minutes` for its segment inputs from the
+   * `testId` the scene hands the root. Pinned, so a stale exemption fails like a
+   * stale expectation.
    */
   const componentOwnedTargets: ReadonlyMap<string, readonly string[]> = new Map(
-    [["date-picker", ["date-day-2026-10-21"]]],
+    [
+      ["date-picker", ["date-day-2026-10-21"]],
+      ["time-picker", ["scene-time-hours"]],
+    ],
   );
 
   it("targets a test id the scene really renders", () => {
@@ -287,6 +292,32 @@ describe("interaction records", () => {
       return surfaces.length === 0 ? [] : [`${entry.slug}: ${surfaces}`];
     });
     expect(denied).toEqual([]);
+  });
+});
+
+describe("stateful records", () => {
+  /**
+   * The bug this guards (plan 508): six of the 21 `stateful` records had no live
+   * scene, so their pages showed a rest illustration and no proof of the state
+   * the page is about. A scene that is not possible yet needs a written reason,
+   * and the reason list is compared with the registry in both directions.
+   */
+  const statefulWithoutScene = components.filter(
+    (entry) => entry.pattern === "stateful" && entry.liveScene === null,
+  );
+
+  it("give every stateful record a live scene or a measured reason", () => {
+    const missing = statefulWithoutScene.map((entry) => entry.slug);
+    expect(missing.toSorted()).toEqual(
+      [...STATEFUL_NO_LIVE_SCENE.keys()].toSorted(),
+    );
+  });
+
+  it("write a reason for every stateful exception", () => {
+    const empty = [...STATEFUL_NO_LIVE_SCENE].flatMap(([slug, reason]) =>
+      reason.trim().length === 0 ? [slug] : [],
+    );
+    expect(empty).toEqual([]);
   });
 });
 

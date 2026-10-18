@@ -798,6 +798,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         },
       ],
       pattern: "stateful",
+      liveScene: "list",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/list.test.tsx",
@@ -1397,6 +1398,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         },
       ],
       pattern: "stateful",
+      liveScene: "collapsible",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/collapsible.test.tsx",
@@ -1508,6 +1510,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         },
       ],
       pattern: "stateful",
+      liveScene: "pagination",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/pagination.test.tsx",
@@ -1698,6 +1701,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         },
       ],
       pattern: "stateful",
+      liveScene: "time-picker",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/time-picker.test.tsx",
@@ -2210,6 +2214,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       },
     ],
     pattern: "stateful",
+    liveScene: "carousel",
     runtime: nativeSuite(
       "@gpuixui/components",
       "src/behaviour/carousel.test.tsx",

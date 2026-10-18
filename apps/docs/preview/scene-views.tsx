@@ -138,6 +138,29 @@ import {
 } from "@gpuixui/components/date-picker";
 import { HotkeyRecorder } from "@gpuixui/components/hotkey-recorder";
 import { SearchInput } from "@gpuixui/components/search-input";
+import {
+  Carousel,
+  CarouselControl,
+  CarouselSlide,
+  CarouselTrack,
+} from "@gpuixui/components/carousel";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@gpuixui/components/collapsible";
+import { List, ListItem, ListItemTitle } from "@gpuixui/components/list";
+import {
+  Pagination,
+  PaginationList,
+  PaginationNext,
+  PaginationPrevious,
+} from "@gpuixui/components/pagination";
+import {
+  TimePicker,
+  TimePickerSegment,
+  TimePickerSeparator,
+} from "@gpuixui/components/time-picker";
 import { Duration } from "effect";
 import { useEffect, useState, type ReactElement } from "react";
 import type { LiveScene } from "./scenes";
@@ -1019,6 +1042,134 @@ const ToggleScene = (): ReactElement => {
   );
 };
 
+const ListScene = (): ReactElement => {
+  const [opened, setOpened] = useState<string | null>(null);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Saved views</Text>
+      <Text role="caption" tone="muted">
+        The real List, with row selection. Click a view to open it.
+      </Text>
+      <List
+        selectionMode="single"
+        aria-label="Saved views"
+        testId="scene-list"
+        onValueChange={setOpened}
+      >
+        <ListItem value="weekly" textValue="Weekly report">
+          <ListItemTitle>Weekly report</ListItemTitle>
+        </ListItem>
+        <ListItem value="blockers" textValue="Open blockers">
+          <ListItemTitle>Open blockers</ListItemTitle>
+        </ListItem>
+        <ListItem value="releases" textValue="Release notes">
+          <ListItemTitle>Release notes</ListItemTitle>
+        </ListItem>
+      </List>
+      {opened === "weekly" ? (
+        <Text role="body">Weekly report opened</Text>
+      ) : null}
+    </Stack>
+  );
+};
+
+const CollapsibleScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Notification rules</Text>
+    <Text role="caption" tone="muted">
+      The real Collapsible. Its content does not exist while closed.
+    </Text>
+    <Collapsible>
+      <CollapsibleTrigger testId="scene-collapsible-trigger">
+        Advanced settings
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <Text role="body">Only failed runs are reported.</Text>
+      </CollapsibleContent>
+    </Collapsible>
+  </Stack>
+);
+
+const PaginationScene = (): ReactElement => {
+  const [page, setPage] = useState(1);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Search results</Text>
+      <Text role="caption" tone="muted">
+        The real Pagination. Its window is derived from the page.
+      </Text>
+      <Pagination
+        page={page}
+        pageCount={5}
+        onPageChange={setPage}
+        testId="scene-pagination"
+      >
+        <PaginationPrevious testId="scene-pagination-previous" />
+        <PaginationList />
+        <PaginationNext testId="scene-pagination-next" />
+      </Pagination>
+      {page === 4 ? <Text role="body">Showing results 31–40</Text> : null}
+    </Stack>
+  );
+};
+
+const TimePickerScene = (): ReactElement => {
+  const [time, setTime] = useState<string | null>("09:30");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Daily reminder</Text>
+      <Text role="caption" tone="muted">
+        The real TimePicker. Its arrows commit a new time.
+      </Text>
+      <TimePicker
+        label="Reminder"
+        value={time}
+        onValueChange={setTime}
+        testId="scene-time"
+      >
+        <TimePickerSegment segment="hours" />
+        <TimePickerSeparator />
+        <TimePickerSegment segment="minutes" />
+      </TimePicker>
+      {time === "10:30" ? <Text role="body">Reminder at 10:30</Text> : null}
+    </Stack>
+  );
+};
+
+const CarouselScene = (): ReactElement => {
+  const [index, setIndex] = useState(0);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">What changed</Text>
+      <Text role="caption" tone="muted">
+        The real Carousel. Slides stay mounted; only the active one is
+        displayed.
+      </Text>
+      <Carousel
+        label="Release notes"
+        value={index}
+        onValueChange={setIndex}
+        testId="scene-carousel"
+      >
+        <CarouselTrack>
+          <CarouselSlide>
+            <Text role="body">A new colour picker and a stepper.</Text>
+          </CarouselSlide>
+          <CarouselSlide>
+            <Text role="body">Keyboard shortcuts in every menu.</Text>
+          </CarouselSlide>
+        </CarouselTrack>
+        <CarouselControl
+          direction="previous"
+          testId="scene-carousel-previous"
+        />
+        <CarouselControl direction="next" testId="scene-carousel-next" />
+      </Carousel>
+      {index === 1 ? <Text role="body">Pricing details on screen</Text> : null}
+    </Stack>
+  );
+};
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -1057,6 +1208,11 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     rating: RatingScene,
     "tag-input": TagInputScene,
     toggle: ToggleScene,
+    list: ListScene,
+    collapsible: CollapsibleScene,
+    pagination: PaginationScene,
+    "time-picker": TimePickerScene,
+    carousel: CarouselScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */
