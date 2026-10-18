@@ -69,7 +69,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (61/61 green); -> 2 on a host with no binding
+# -> 0 here (66/66 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -884,10 +884,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **61/61 green** here (`exit 0`):
+The suite is **66/66 green** here (`exit 0`):
 
 ```
-61/61 scenarios passed · capabilities: layout=verified text=verified
+66/66 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -896,7 +896,7 @@ theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
 toast=verified grid=verified layers=verified scroller=verified
-scale=verified
+scale=verified tier2=verified replace=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -930,6 +930,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | components | the shipped `@gpuixui/primitives` mount and behave in the runtime through the token theme: click/Enter-down/Space-up activation, a focus ring that the component merges and drops, controlled `Input` edits plus `onSubmit`, `Checkbox`/`Switch` state on `aria-valuetext`, the themed `Select` commit/dismiss, `Slider` arrow steps, `Progress`/`Meter` value text, a painted `Skeleton`, and a hover `Tooltip`. `simulateKeystrokes("space")` delivers no key up, so the harness now exposes `keyDown`/`keyUp` (plan `168`) |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
+| search and replace | an `<input>`/`<textarea>` value is **painted but never washed** (`matchCount=0`), while a `<text>` sibling under the same query washes — so a replace bar needs a rendered preview or a context list. A document mutation re-washes and recounts; replacing one of five matches leaves the cursor at the same index (now the next match); replace-all clears the count; a **count-preserving** rewrite (`error` → `ERROR`) moves the washes with **no** `onHighlight` event; a longer/shorter replacement shifts downstream offsets by exactly `+1`/`-2`; `<code>` re-highlights by prop. A component-set value repaints an editor, but the **caret moves to the end** of the rewritten sentence, and there is no `setSelection` to put it back |
 | shell | a flex child needs `minHeight: 0` to scroll; without `overflowY` the list is not a scroll container and its last row is unreachable. **Selection:** clicking an entry mounts its view and paints the accent active state; Enter (down) and Space (up) switch entries; the light palette repaints the shell and keeps the selection. **Harness:** each scenario mounts under a keyed Fragment, or consecutive `<App>` scenarios share Shell state and the sidebar scroll offset |
 | toast | `position: "absolute"` + `right`/`bottom` is exact and bottom-anchored; the viewport's `pointerEvents: "none"` lets a control under its strip take the click (the cards do not need `auto`); paint order covers the app; `role="status"` is an AccessKit `Status`; a toast does not steal focus; a per-toast JS timer is real time and its frozen exit needs a dispatched frame first; removal is a `bounds` check, not painted text |
 | chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
@@ -1026,7 +1027,7 @@ narrower. Each deviation is deliberate and measured:
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
   the pinned-grid probe, the collapsible-height probe, the nested-layer probe
   and the variable-row-height probe pass in real GPUix 0.10.0 on this host
-  (61/61), with a written report and screenshots. The **message-scroller** probe
+  (66/66), with a written report and screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history. The
