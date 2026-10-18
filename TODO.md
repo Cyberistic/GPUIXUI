@@ -119,6 +119,27 @@ and `applyPlatformStyle` applied an undefined `contosoStyle`; the snippet guard
 now reads every non-test module, both providers are imported, the deprecated
 bridge is a complete block, and the apply example uses `platformStyles.win32`
 (plan 356)
+`[x]` Publish the generic wash ladder in the public contrast contract — a ghost
+or outline control's press was measured only as `active` on a surface, so an
+edited theme whose `active` equalled `hover` returned `[]` while the press had
+no visible change; `washStepPairs` holds it to the same 1.05:1 `step` floor as
+the filled families, every shipped set passes (1.059:1 at the tightest) and the
+contract grows 337 → 338 (plan 357)
+`[ ]` Cross-team: `components` moves the secondary Button off the mixed
+`secondary` → `hover` → `active` ladder — `internal/button.tsx` rests on
+`secondary` and hovers to `hover`, and the pair is under the 1.05:1 step floor in
+23 of 24 shipped sets and the *same value* in 19 (identity light and both AAA
+sets, macOS light and dark, Linux dark, Windows dark, the XP/Aero dark halves
+and the `default` variants), so the shipped secondary control has no hover state
+there; use `secondaryHover`/`secondaryActive`, the designed family plan 097
+shipped and plan 334 already holds the label on (plan 357; owner: `components`)
+`[ ]` Cross-team: `components` moves a selectable `List` row's press off the
+neutral `active` wash — `list.tsx` hovers to `accent` and presses to `active`,
+which measure **1.004:1** in identity dark and the `default` dark half and
+**1.019:1** in the XP light recipe, under the 1.05:1 step floor, so a pressed row
+changes hue but not luminance; use `accentActive`, the designed pressed accent
+plan 327 shipped and the family steps already measure (plan 357; owner:
+`components`)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

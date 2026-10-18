@@ -1499,6 +1499,11 @@ with no fill behind it and measured 1.99:1 on Linux dark. The `disabled` fill
 stays near the panel by design, so a disabled control's shape is carried by its
 `border` edge — held to the divider floor on `disabled`, and on the `muted` panel
 a settings sidebar divides (plan `306`).
+A step is measured too: each filled family's `xHover` is held one 1.05:1 step
+from its `x` and its `xActive` from its `xHover` (`stateStepPairs`), and the
+generic `hover`/`active` ladder that a ghost or outline control paints is held
+the same way (`washStepPairs`, `active` from `hover`). Every shipped set clears
+both ladders, so the floors guard an edited theme rather than a shipped value.
 The boundary is also measured on the `muted` panel,
 the four washes and the four soft status fills, because an unchecked checkbox or
 a field keeps its `borderStrong` edge while the row moves or inside an Alert.
@@ -1663,7 +1668,9 @@ indicator's groove — `track` on the four base surfaces and the persistent
 `accent`/`selected` fills, with the four progress fills as marks on it — taking
 it from 323 to **333**. Plan `348` holds the soft tone foreground a Toast paints
 on its floating card — the four `xSoftForeground` roles on `popover` — taking it
-from 333 to **337**.
+from 333 to **337**. Plan `357` publishes the generic wash ladder — `active` one
+perceivable step from `hover`, the ghost and outline press — taking it from 337
+to **338**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1770,6 +1777,19 @@ pointer state is not text. The shipped themes were already held to it by
 `filled-states.test.ts`, which iterates them; the pairs publish the rule, so an
 edited theme whose hover equals its fill is reported with `pairClass: "step"`
 instead of returning `[]`.
+
+The generic washes are a ladder too. A ghost or outline control paints no fill at
+rest, the `hover` wash under the pointer and the `active` wash while pressed, and
+the shipped secondary control still paints that pair while it migrates to the
+designed family. `washStepPairs` holds `active` to 1.05:1 from `hover` under the
+same `step` class, so an edited theme that sets them equal is reported instead of
+returning `[]`. Every shipped set already clears the floor — identity dark is
+tightest at **1.059:1** — so no colour moves. The audit also found two shipped
+compositions on the *wrong* role pair: a secondary control whose `hover` is its
+own resting `secondary` fill (the same value in 19 of the 24 shipped sets), and a
+selectable row that presses to the neutral `active` while it hovers to `accent`
+(1.004:1 in identity dark). Both use a designed family instead — `secondaryHover`
+and `accentActive` — and are recorded in `TODO.md` rather than blessed as pairs.
 
 A solid role painted as a **mark** is held to 3:1 (4.5:1 at AAA) instead: a
 progress segment and a slider fill sit on the `track` groove, a slider thumb rings

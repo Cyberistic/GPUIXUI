@@ -245,7 +245,7 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 333 to **${contrastPairs.length}**`,
+      `taking it from 337 to **${contrastPairs.length}**`,
     );
   });
 
@@ -999,6 +999,9 @@ describe("docs/tokens.md contrast contract", () => {
     expect(markdownProse).toContain(
       "`stateStepPairs` holds `xHover` to 1.05:1 from `x`",
     );
+    expect(markdownProse).toContain(
+      "`washStepPairs` holds `active` to 1.05:1 from `hover`",
+    );
   });
 
   it("states the mark floor and why a status fill is not a mark", () => {
@@ -1316,7 +1319,7 @@ describe("docs/design-system.md", () => {
       `| brand-toned text (\`primaryText\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\` washes, the \`accent\`/\`selected\` row fills and the four soft status fills a link in a status panel sits on | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| filled-control state steps (\`xHover\` from \`x\`, \`xActive\` from \`xHover\`, for \`primary\`/\`secondary\`/\`destructive\`/\`accent\`) | ${contrastFloors.default.step}:1 | ${contrastFloors.high.step}:1 |`,
+      `| state steps (\`xHover\` from \`x\` and \`xActive\` from \`xHover\` for \`primary\`/\`secondary\`/\`destructive\`/\`accent\`, and the generic wash's \`active\` from \`hover\`) | ${contrastFloors.default.step}:1 | ${contrastFloors.high.step}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| a Toast's tone glyph and bar (\`infoSoftForeground\`/\`successSoftForeground\`/\`warningSoftForeground\`/\`destructiveSoftForeground\` on \`popover\`, the shipped composition until \`components\` paints \`xText\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
@@ -1425,7 +1428,7 @@ describe("docs/design-system.md", () => {
       boundary: "| focus ring (",
       mark: "| graphic marks (",
       surface: "| interactive fills and washes (",
-      step: "| filled-control state steps (",
+      step: "| state steps (",
       divider: "| decorative dividers (",
     };
 

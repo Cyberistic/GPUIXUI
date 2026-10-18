@@ -328,7 +328,9 @@ until plan 309 moved the light panel one step toward the card and the two light
 accents one step deeper. Each filled family also walks `x` → `xHover` →
 `xActive`, and a step that is not perceivable is not a state: `stateStepPairs`
 holds every `xHover` to 1.05:1 from its `x` and every `xActive` from its
-`xHover`, under the `step` class, at both contrast levels.
+`xHover`, under the `step` class, at both contrast levels. The generic washes are
+one ladder too: `washStepPairs` holds `active` to 1.05:1 from `hover`, so a ghost
+or outline control whose press equals its hover is reported.
 A field's pointer edges are both measured on its own `input` fill:
 `borderStrong` under the pointer and `ring` while pressed
 (`fieldPressedEdgePairs`). The focus shadow still sits on the surface behind the
