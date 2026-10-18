@@ -4,7 +4,9 @@
  * The app owns the ISO day; the picker owns the popover, the month grid, its
  * keyboard and the bounds. `min`/`max` make out-of-window days unchosen, and
  * `clearable` returns the field to "no date" without a second control. The
- * second field is the same parts with the caller's compact display labels.
+ * header's month label opens a 12-month chooser, so a distant month is two
+ * presses instead of a dozen. The second field is the same parts with the
+ * caller's compact display labels.
  */
 
 import { useState } from "react";
@@ -35,6 +37,10 @@ const COMPACT: Partial<CalendarLabels> = {
     "Dec",
   ],
   weekdays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+  previousYear: "Prev year",
+  nextYear: "Next year",
+  chooseMonth: "Pick month",
+  showDays: "Pick day",
 };
 
 /** One labelled date field over the picker parts. */
@@ -118,8 +124,10 @@ export const DatePickerExample = () => {
           }}
         >
           Only 17 October–31 December 2026 is selectable; arrows clamp to the
-          window. Enter selects, Clear returns the field to no date. The second
-          field takes its month and weekday headings from the app.
+          window. Enter selects, Clear returns the field to no date. The
+          header's month name opens the month chooser and its chevrons then step
+          years. The second field takes its month and weekday headings from the
+          app.
         </text>
       </div>
     </Card>

@@ -182,6 +182,7 @@ retired once both branches are one
     - [x] Six records corrected from `gpuixSupport: "yes"` to `partial` where the runtime lacks the ARIA surface or a keyboard path
   - Tier 2 hardening after the inventory closed (plans 120+)
     - [x] Combobox `debounce`: one query per burst, never one the user abandoned — plan 541; the optional window collapses a burst of edits into its last query while opening stays immediate and a close drops a pending report; 2 native tests (Combobox 41, behaviour 658), both-direction proof; example, docs and `COMPONENTS.md` synced
+    - [x] Date picker month chooser and year stepping — plan 546; the month label opens a 12-month chooser for the viewed year, the header then steps years, a choice keeps the day-of-month (clamped to a shorter month) and never writes the value, an out-of-bounds month and a wholly out-of-bounds year are inert, and the chooser is its own roving grid; 6 pure + 8 native tests (DatePicker 31, calendar 30), both-direction proof (the 8 native cases fail on the old header), docs, example, `COMPONENTS.md` and the inventory synced
     - [x] Form and multi-step form re-check after an edit (`revalidate`) — plan 397; 5 pure + 7 native tests, both-direction proof (unit 395, behaviour 626); docs, examples, `COMPONENTS.md` and inventory synced
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121

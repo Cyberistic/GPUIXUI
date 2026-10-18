@@ -59,6 +59,23 @@ selects that day and closes, so the grid has no dead cells.
 Browsing months changes the **view**, not the value. Only Enter, Space or a click
 selects.
 
+## Choosing a month
+
+The header's month label is a control: pressing it opens a **12-month chooser**
+for the viewed year. In the chooser the header's chevrons step **years**, the
+label becomes the year and returns to the day grid. Choosing a month moves the
+view to it and keeps the focused day-of-month (31 January → 28 February in a
+common year), then returns to the grid. **The chooser never writes the value**:
+only Enter, Space or a click on a day does.
+
+- The viewed month is marked; the chooser is a roving grid of one tab stop.
+- A month with no day inside `min`/`max` is muted, leaves the tab order, is named
+  `, unavailable`, and does not navigate.
+- A year whose every month is outside the bounds disables its year chevron, so a
+  press never enters an empty year.
+- The chooser shows **one year at a time**; there is no decade list. Step years
+  with its chevrons; `PageUp`/`PageDown` on a day still step one month.
+
 ## Bounds
 
 `min` and `max` are **inclusive** ISO days. A bound that is absent or malformed
@@ -84,6 +101,9 @@ is ignored, exactly like a malformed `value`.
   of stepping onto an unavailable day.
 - The previous/next month controls disable at the bound's month, so a visible
   month always contains a selectable day.
+- In the month chooser a month outside the bounds is inert and named as
+  unavailable, and a year chevron whose entire year is outside the bounds is
+  disabled.
 - Bounds constrain **choosing**, not a controlled `value`: a value outside the
   bounds is displayed as the consumer supplied it.
 - `min` after `max` makes no day selectable — the grid is visible and inert. That
@@ -110,8 +130,9 @@ owns `null` as the "no date" state.
 ## Labels
 
 Every string the calendar paints can come from the caller: month names, weekday
-headings, the suffix on a day that cannot be chosen, the previous/next month
-control names and the `Clear` text. The defaults are English.
+headings, the suffix on a day that cannot be chosen, the previous/next month and
+year control names, the month-chooser control, its back control and the `Clear`
+text. The defaults are English.
 
 ```tsx
 <DatePicker
@@ -121,6 +142,10 @@ control names and the `Clear` text. The defaults are English.
     unavailable: "nicht verfügbar",
     previousMonth: "Vorheriger Monat",
     nextMonth: "Nächster Monat",
+    previousYear: "Vorheriges Jahr",
+    nextYear: "Nächstes Jahr",
+    chooseMonth: "Monat wählen",
+    showDays: "Tage anzeigen",
     clear: "Löschen",
   }}
 >
@@ -159,11 +184,22 @@ adjacent-month day is a real cell but never adds a second tab stop. A no-value
 open therefore lands on today — or on the first selectable day when today is out
 of range — never on the month's first day.
 
+In the month chooser the focused month is its one tab stop:
+
+| Key | Result |
+| ---- | ------ |
+| `ArrowLeft` / `ArrowRight` | previous/next available month, without crossing into another year |
+| `ArrowUp` / `ArrowDown` | three available months back/forward |
+| `Home` / `End` | the first/last available month |
+| `Enter` / `Space` | chooses the month, keeps the day-of-month and returns to the grid |
+| `Escape` | closes the popover — the chooser adds no second dismiss layer |
+
 ## API
 
 `CalendarLabels` is `{ months: ReadonlyArray<string>; weekdays:
 ReadonlyArray<string>; unavailable: string; previousMonth: string;
-nextMonth: string; clear: string }`. Every part merges `style` last where it takes one.
+nextMonth: string; previousYear: string; nextYear: string; chooseMonth: string;
+showDays: string; clear: string }`. Every part merges `style` last where it takes one.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
@@ -179,7 +215,9 @@ The trigger paints `colors.background`, a `borderWidth.thin` border in
 `colors.border` and `radius.md`. The selected day is `colors.primary` on
 `colors.primaryForeground`; today keeps a `colors.primary` outline; hover uses
 `colors.hover`; an unavailable day uses `colors.mutedForeground` and no hover; the
-focus ring is `colors.ring`.
+focus ring is `colors.ring`. The month chooser reuses those roles: the viewed
+month is `colors.primary`, an unavailable month is `colors.mutedForeground`, and
+its focused cell paints the same ring.
 
 ## Accessibility and limitations
 
@@ -189,6 +227,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - The grid is `role="grid"` with `role="row"` and `role="gridcell"`; a cell's
   `aria-label` is the full day (`"17 October 2026"`) and the chosen cell carries
   `aria-selected`. An unavailable day's name ends in `, unavailable`.
+- The month chooser is a second `role="grid"` named `Choose month`; a cell's
+  `aria-label` is `"October 2026"`, the viewed month carries `aria-selected`, and
+  the same unavailable suffix applies. The year chevrons are ordinary buttons
+  named `Previous year`/`Next year`.
 - **No `aria-current`** in `@gpuix/native@0.10.0`: today is marked by a border,
   not by an attribute.
 - **No `aria-disabled`** in `@gpuix/native@0.10.0`: an unavailable day leaves the
@@ -196,9 +238,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   disabled state.
 - **`min` after `max`** makes the grid inert (see Bounds) rather than throwing.
 - **Labels are the caller's.** The defaults are English; `labels` supplies the
-  month names, weekday headings, unavailable suffix and the three control names.
-  There is no locale lookup and no `Intl` call, and the display *shape* is fixed
-  (see Labels).
+  month names, weekday headings, unavailable suffix, the two month controls, the
+  two year controls, the chooser's open/back names and `Clear`. There is no
+  locale lookup and no `Intl` call, and the display *shape* is fixed (see Labels).
+- **The chooser shows one year at a time.** There is no decade list, so an
+  arbitrarily distant year takes one press per year.
 - **No range selection** in v1.
 - **No time of day.** A day and a time are separate values; compose **Time
   picker** beside this control when a form needs both. Folding them together
@@ -210,16 +254,18 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/date-picker/calendar.test.ts` (24 tests) covers leap February, a mid-week
+`src/date-picker/calendar.test.ts` (30 tests) covers leap February, a mid-week
 month start under both week starts, a month start on the week start, the 42-cell
 shape of real days, adjacent-day neighbours and continuity, uniqueness and month
 membership, year-crossing month arithmetic, the last day of a month without
 `Date`, day identity, labels, ISO parsing (including `2026-02-30`), inclusive
 bounds, malformed bounds, clamping, month browse limits, `min` after `max`, the
-English defaults, a partial label merge, caller month/day names and a rotated
-caller weekday list.
+English defaults, a partial label merge, caller month/day names, a rotated
+caller weekday list, month availability from an interior day, year availability
+in both directions, keeping the day-of-month when a shorter month is chosen, and
+keyboard month stepping without a year wrap.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (23 tests): open + day focus,
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (31 tests): open + day focus,
 a no-value open on today, a no-value open clamped to `min`, selection
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 PageDown browsing without changing the value, Escape focus-return, the
@@ -227,8 +273,13 @@ next-month control, choosing an adjacent-month day, the muted adjacent paint,
 an out-of-bounds adjacent day, both themes, a disabled trigger, an unavailable
 day, arrow clamping, the month-control bound, the clear action and its visibility
 rules, the trigger's own placeholder/name, an empty surface when the calendar part
-is not composed, the caller's labels in the trigger/header/controls, and a
-partial label object keeping the remaining defaults.
+is not composed, the caller's labels in the trigger/header/controls, a partial
+label object keeping the remaining defaults, the month chooser opening and
+marking the viewed month, a choice that moves the view without writing the value,
+a shorter month clamping the day, a year step in both directions, an unavailable
+month and year stepper staying inert under the bounds, the year label returning
+to the grid, keyboard month movement and selection, and the chooser's own label
+names.
 
 ```sh
 nub run --filter @gpuixui/components test

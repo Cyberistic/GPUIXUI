@@ -9,6 +9,11 @@
  * landing on an unavailable day; the month controls browsing past the bound's
  * month; `min` after `max` still allowing a selection; and a calendar that only
  * spoke English, because its labels were constants rather than the caller's.
+ *
+ * Plan 546 adds the month chooser: a month is available only when one of its
+ * days is inside the bounds, a year stepper must not enter a year with no
+ * available month, a chosen month keeps the day-of-month (clamped to the month's
+ * length), and keyboard month movement must not wrap into another year.
  */
 
 import { describe, expect, it } from "vitest";
@@ -19,18 +24,26 @@ import {
   addMonths,
   boundsOf,
   canBrowseMonth,
+  canBrowseYear,
   clampToBounds,
+  dayInMonth,
   defaultCalendarLabels,
   formatDayLabel,
   formatIsoDay,
   formatMonthLabel,
+  formatYearLabel,
   isAvailable,
+  isMonthAvailable,
   isSameDay,
+  isYearAvailable,
   lastDayOfMonth,
   monthGrid,
+  nearestAvailableMonth,
   parseIsoDay,
   resolveCalendarLabels,
   startOfMonth,
+  startOfYear,
+  stepMonth,
   unbounded,
   weekdayLabels,
   type CalendarCell,
@@ -195,6 +208,10 @@ describe("caller labels", () => {
     expect(labels.unavailable).toBe("unavailable");
     expect(labels.previousMonth).toBe("Previous month");
     expect(labels.nextMonth).toBe("Next month");
+    expect(labels.previousYear).toBe("Previous year");
+    expect(labels.nextYear).toBe("Next year");
+    expect(labels.chooseMonth).toBe("Choose month");
+    expect(labels.showDays).toBe("Show days");
     expect(labels.clear).toBe("Clear");
     expect(labels.months).toBe(defaultCalendarLabels.months);
   });
@@ -318,5 +335,89 @@ describe("day bounds", () => {
     expect(Option.isSome(inverted.min)).toBe(true);
     expect(Option.isSome(inverted.max)).toBe(true);
     expect(isAvailable(day("2026-06-15"), inverted)).toBe(false);
+  });
+});
+
+describe("month chooser", () => {
+  it("marks a month available when an interior day is inside the bounds", () => {
+    const bounds = boundsOf("2026-03-10", "2026-03-20");
+    expect(isMonthAvailable(day("2026-03-01"), bounds)).toBe(true);
+    expect(isMonthAvailable(day("2026-02-01"), bounds)).toBe(false);
+    expect(isMonthAvailable(day("2026-04-01"), bounds)).toBe(false);
+    expect(isMonthAvailable(day("2026-04-01"), unbounded)).toBe(true);
+  });
+
+  it("browses a year that only touches the bounds, in both directions", () => {
+    const narrow = boundsOf("2026-03-10", "2026-07-20");
+    expect(isYearAvailable(day("2026-01-01"), narrow)).toBe(true);
+    expect(isYearAvailable(day("2025-01-01"), narrow)).toBe(false);
+    expect(isYearAvailable(day("2027-01-01"), narrow)).toBe(false);
+    expect(canBrowseYear(day("2026-05-01"), -1, narrow)).toBe(false);
+    expect(canBrowseYear(day("2026-05-01"), 1, narrow)).toBe(false);
+
+    const wide = boundsOf("2024-12-31", "2026-01-01");
+    expect(isYearAvailable(day("2025-01-01"), wide)).toBe(true);
+    expect(canBrowseYear(day("2025-05-01"), -1, wide)).toBe(true);
+    expect(canBrowseYear(day("2025-05-01"), 1, wide)).toBe(true);
+    expect(canBrowseYear(day("2026-05-01"), 1, wide)).toBe(false);
+    expect(canBrowseYear(day("2026-05-01"), -1, unbounded)).toBe(true);
+  });
+
+  it("keeps the day of the month and clamps it into the chosen month", () => {
+    expect(
+      formatIsoDay(dayInMonth(day("2026-10-17"), day("2026-04-01"), unbounded)),
+    ).toBe("2026-04-17");
+    expect(
+      formatIsoDay(dayInMonth(day("2026-01-31"), day("2026-02-01"), unbounded)),
+    ).toBe("2026-02-28");
+    expect(
+      formatIsoDay(dayInMonth(day("2024-01-31"), day("2024-02-01"), unbounded)),
+    ).toBe("2024-02-29");
+    expect(
+      formatIsoDay(dayInMonth(day("2026-01-31"), day("2026-04-01"), unbounded)),
+    ).toBe("2026-04-30");
+    expect(
+      formatIsoDay(
+        dayInMonth(
+          day("2026-10-17"),
+          day("2026-01-01"),
+          boundsOf("2026-02-10", "2026-03-03"),
+        ),
+      ),
+    ).toBe("2026-02-10");
+  });
+
+  it("steps over unavailable months and never wraps the year", () => {
+    const sparse = Arr.makeBy(12, (index) => index === 1 || index === 3);
+    expect(stepMonth(1, 1, sparse)).toBe(3);
+    expect(stepMonth(3, -1, sparse)).toBe(1);
+    expect(stepMonth(3, 3, sparse)).toBe(3);
+    expect(stepMonth(11, 1, sparse)).toBe(11);
+    expect(stepMonth(0, -1, sparse)).toBe(0);
+    expect(nearestAvailableMonth(0, sparse)).toBe(1);
+    expect(nearestAvailableMonth(2, sparse)).toBe(3);
+    expect(nearestAvailableMonth(11, sparse)).toBe(3);
+    expect(
+      nearestAvailableMonth(
+        5,
+        Arr.makeBy(12, () => false),
+      ),
+    ).toBe(5);
+    expect(
+      nearestAvailableMonth(
+        3,
+        Arr.makeBy(12, () => true),
+      ),
+    ).toBe(3);
+  });
+
+  it("prefers the later month on a tie", () => {
+    const available = Arr.makeBy(12, (index) => index === 2 || index === 4);
+    expect(nearestAvailableMonth(3, available)).toBe(4);
+  });
+
+  it("formats the year and starts it on 1 January", () => {
+    expect(formatYearLabel(day("2026-10-17"))).toBe("2026");
+    expect(formatIsoDay(startOfYear(day("2026-10-17")))).toBe("2026-01-01");
   });
 });

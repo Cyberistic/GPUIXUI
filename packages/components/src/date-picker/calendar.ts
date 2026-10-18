@@ -34,6 +34,14 @@ export interface CalendarLabels {
   readonly previousMonth: string;
   /** The next-month control's accessible name. */
   readonly nextMonth: string;
+  /** The chooser's previous-year control name. */
+  readonly previousYear: string;
+  /** The chooser's next-year control name. */
+  readonly nextYear: string;
+  /** The month grid's name, and the day header's month-chooser control. */
+  readonly chooseMonth: string;
+  /** The chooser's control that returns to the day grid. */
+  readonly showDays: string;
   /** The clear control's text. */
   readonly clear: string;
 }
@@ -71,6 +79,10 @@ export const defaultCalendarLabels: CalendarLabels = {
   unavailable: "unavailable",
   previousMonth: "Previous month",
   nextMonth: "Next month",
+  previousYear: "Previous year",
+  nextYear: "Next year",
+  chooseMonth: "Choose month",
+  showDays: "Show days",
   clear: "Clear",
 };
 
@@ -87,6 +99,10 @@ export const resolveCalendarLabels = (
   previousMonth:
     overrides?.previousMonth ?? defaultCalendarLabels.previousMonth,
   nextMonth: overrides?.nextMonth ?? defaultCalendarLabels.nextMonth,
+  previousYear: overrides?.previousYear ?? defaultCalendarLabels.previousYear,
+  nextYear: overrides?.nextYear ?? defaultCalendarLabels.nextYear,
+  chooseMonth: overrides?.chooseMonth ?? defaultCalendarLabels.chooseMonth,
+  showDays: overrides?.showDays ?? defaultCalendarLabels.showDays,
   clear: overrides?.clear ?? defaultCalendarLabels.clear,
 });
 
@@ -111,6 +127,10 @@ export const formatMonthLabel = (
   return `${month} ${parts.year}`;
 };
 
+/** `"2026"`, the chooser header's label. */
+export const formatYearLabel = (value: DateTime.Utc): string =>
+  String(DateTime.toPartsUtc(value).year);
+
 /** `"17 October 2026"`, the accessible name of a day button. */
 export const formatDayLabel = (
   value: DateTime.Utc,
@@ -123,6 +143,10 @@ export const formatDayLabel = (
 /** The first moment of the month, in UTC. */
 export const startOfMonth = (value: DateTime.Utc): DateTime.Utc =>
   DateTime.startOf("month")(value);
+
+/** The first moment of the year, in UTC. */
+export const startOfYear = (value: DateTime.Utc): DateTime.Utc =>
+  DateTime.startOf("year")(value);
 
 /** Add calendar months to the first of a month; day one never overflows. */
 export const addMonths = (value: DateTime.Utc, amount: number): DateTime.Utc =>
@@ -231,6 +255,48 @@ export const isAvailable = (day: DateTime.Utc, bounds: DayBounds): boolean => {
   );
 };
 
+/** Whether any day of `value`'s month lies inside the bounds. */
+export const isMonthAvailable = (
+  value: DateTime.Utc,
+  bounds: DayBounds,
+): boolean => {
+  const first = startOfMonth(value);
+  const last = lastDayOfMonth(value);
+  return (
+    Option.match(bounds.min, {
+      onNone: () => true,
+      onSome: (min) =>
+        DateTime.toEpochMillis(last) >= DateTime.toEpochMillis(min),
+    }) &&
+    Option.match(bounds.max, {
+      onNone: () => true,
+      onSome: (max) =>
+        DateTime.toEpochMillis(first) <= DateTime.toEpochMillis(max),
+    })
+  );
+};
+
+/** Whether any day of `value`'s year lies inside the bounds. */
+export const isYearAvailable = (
+  value: DateTime.Utc,
+  bounds: DayBounds,
+): boolean => {
+  const first = startOfYear(value);
+  const last = lastDayOfMonth(addMonths(first, 11));
+  return (
+    Option.match(bounds.min, {
+      onNone: () => true,
+      onSome: (min) =>
+        DateTime.toEpochMillis(last) >= DateTime.toEpochMillis(min),
+    }) &&
+    Option.match(bounds.max, {
+      onNone: () => true,
+      onSome: (max) =>
+        DateTime.toEpochMillis(first) <= DateTime.toEpochMillis(max),
+    })
+  );
+};
+
 /** `day` moved inside the bounds; an unbounded side returns it unchanged. */
 export const clampToBounds = (
   day: DateTime.Utc,
@@ -269,5 +335,64 @@ export const canBrowseMonth = (
       }),
     ),
     Match.exhaustive,
+  );
+};
+
+/** The day to focus after the chooser picks `month`: `from`'s day-of-month,
+ *  clamped to the month's length and then to the bounds. */
+export const dayInMonth = (
+  from: DateTime.Utc,
+  month: DateTime.Utc,
+  bounds: DayBounds,
+): DateTime.Utc => {
+  const lastDay = DateTime.toPartsUtc(lastDayOfMonth(month)).day;
+  const day = Math.min(DateTime.toPartsUtc(from).day, lastDay);
+  return clampToBounds(addDays(startOfMonth(month), day - 1), bounds);
+};
+
+/** Whether stepping `direction` year from `viewMonth` lands inside the bounds. */
+export const canBrowseYear = (
+  viewMonth: DateTime.Utc,
+  direction: -1 | 1,
+  bounds: DayBounds,
+): boolean => isYearAvailable(addMonths(viewMonth, direction * 12), bounds);
+
+/** The indices of the months that can be chosen, January first. */
+const availableMonthIndices = (
+  available: ReadonlyArray<boolean>,
+): ReadonlyArray<number> =>
+  Arr.filter(Arr.range(0, 11), (index) => available[index] === true);
+
+/** The next available month from `from` by `step`; `from` when the step leaves
+ *  the year. Never wraps: the chooser shows one year. */
+export const stepMonth = (
+  from: number,
+  step: number,
+  available: ReadonlyArray<boolean>,
+): number => {
+  const indices = availableMonthIndices(available);
+  return step > 0
+    ? Option.getOrElse(
+        Arr.findFirst(indices, (index) => index >= from + step),
+        () => from,
+      )
+    : Option.getOrElse(
+        Arr.findLast(indices, (index) => index <= from + step),
+        () => from,
+      );
+};
+
+/** The available month nearest `from`, preferring a later month on a tie. */
+export const nearestAvailableMonth = (
+  from: number,
+  available: ReadonlyArray<boolean>,
+): number => {
+  const indices = availableMonthIndices(available);
+  return Option.getOrElse(
+    Option.firstSomeOf([
+      Arr.findFirst(indices, (index) => index >= from),
+      Arr.findLast(indices, (index) => index <= from),
+    ]),
+    () => from,
   );
 };

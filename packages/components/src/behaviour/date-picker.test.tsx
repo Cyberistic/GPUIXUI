@@ -11,6 +11,12 @@
  * the bound; a picked day that cannot be cleared from the surface; Clear
  * appearing without a value or without `clearable`; and the labels: a calendar
  * that only spoke English, or a partial `labels` object that wiped the defaults.
+ *
+ * Plan 546 adds the month chooser, so these cases also guard: the month label
+ * not opening a chooser; a chooser choice writing the value instead of only the
+ * view; a 31st disappearing when the chosen month is shorter; a year stepper
+ * entering a year with no available month; a chooser month outside the bounds
+ * still navigating; and keyboard movement wrapping into another year.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -19,6 +25,7 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  isShown,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
@@ -505,6 +512,174 @@ describe("DatePicker", () => {
     expect(picker.renderer.getAllText()).toContain("Sun");
     expect(picker.renderer.getAllText()).toContain("Dismiss");
     expect(picker.renderer.getAllText()).not.toContain("Clear");
+
+    picker.unmount();
+  });
+
+  it("opens a month chooser from the header", () => {
+    const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
+
+    open(picker);
+    clickCentreOf(picker, "date-month");
+
+    expect(isShown(picker, "date-month-0")).toBe(true);
+    expect(isShown(picker, "date-month-11")).toBe(true);
+    expect(isShown(picker, "date-day-2026-10-17")).toBe(false);
+    expect(
+      picker.renderer.findByTestId("date-month-9")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(focusedTestId(picker)).toEqual(Option.some("date-month-9"));
+
+    picker.unmount();
+  });
+
+  it("chooses a month without changing the value and keeps the day", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-17" onValueChange={onValueChange} />,
+    );
+
+    open(picker);
+    clickCentreOf(picker, "date-month");
+    clickCentreOf(picker, "date-month-3");
+
+    expect(isShown(picker, "date-day-2026-04-17")).toBe(true);
+    expect(picker.renderer.getAllText()).toContain("April 2026");
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-04-17"));
+
+    picker.unmount();
+  });
+
+  it("clamps the day when the chosen month is shorter", () => {
+    const picker = renderComponent(<Picker defaultValue="2026-01-31" />);
+
+    open(picker);
+    clickCentreOf(picker, "date-month");
+    clickCentreOf(picker, "date-month-1");
+
+    expect(isShown(picker, "date-day-2026-02-28")).toBe(true);
+    expect(picker.renderer.getAllText()).toContain("31 January 2026");
+
+    picker.unmount();
+  });
+
+  it("steps years from the chooser", () => {
+    const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
+
+    open(picker);
+    clickCentreOf(picker, "date-month");
+    clickCentreOf(picker, "date-prev-year");
+    clickCentreOf(picker, "date-month-0");
+
+    expect(isShown(picker, "date-day-2025-01-17")).toBe(true);
+
+    clickCentreOf(picker, "date-month");
+    clickCentreOf(picker, "date-next-year");
+    clickCentreOf(picker, "date-next-year");
+    clickCentreOf(picker, "date-month-0");
+
+    expect(isShown(picker, "date-day-2027-01-17")).toBe(true);
+
+    picker.unmount();
+  });
+
+  it("keeps unavailable months and years inert", () => {
+    const picker = renderComponent(
+      <Picker min="2026-03-10" max="2026-08-20" />,
+    );
+
+    open(picker);
+    clickCentreOf(picker, "date-month");
+
+    expect(
+      picker.renderer.findByTestId("date-month-0")?.customProps?.["aria-label"],
+    ).toBe("January 2026, unavailable");
+    expect(
+      picker.renderer.findByTestId("date-prev-year")?.customProps?.tabIndex,
+    ).toBe(-1);
+    expect(
+      picker.renderer.findByTestId("date-next-year")?.customProps?.tabIndex,
+    ).toBe(-1);
+
+    clickCentreOf(picker, "date-month-0");
+
+    expect(isShown(picker, "date-month-0")).toBe(true);
+
+    picker.unmount();
+  });
+
+  it("returns to the day grid from the year label", () => {
+    const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
+
+    open(picker);
+    clickCentreOf(picker, "date-month");
+    clickCentreOf(picker, "date-month");
+
+    expect(isShown(picker, "date-day-2026-10-17")).toBe(true);
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+
+    picker.unmount();
+  });
+
+  it("moves and selects a month from the keyboard", () => {
+    const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
+
+    open(picker);
+    clickCentreOf(picker, "date-month");
+
+    picker.renderer.simulateKeystrokes("right");
+    expect(focusedTestId(picker)).toEqual(Option.some("date-month-10"));
+
+    picker.renderer.simulateKeystrokes("down");
+    expect(focusedTestId(picker)).toEqual(Option.some("date-month-10"));
+
+    picker.renderer.simulateKeystrokes("home");
+    expect(focusedTestId(picker)).toEqual(Option.some("date-month-0"));
+
+    picker.renderer.simulateKeystrokes("end");
+    expect(focusedTestId(picker)).toEqual(Option.some("date-month-11"));
+
+    picker.renderer.simulateKeystrokes("enter");
+
+    expect(isShown(picker, "date-day-2026-12-17")).toBe(true);
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-12-17"));
+
+    picker.unmount();
+  });
+
+  it("names the chooser controls from the caller's labels", () => {
+    const picker = renderComponent(
+      <Picker
+        defaultValue="2026-10-17"
+        labels={{
+          previousYear: "Prošla godina",
+          nextYear: "Sledeća godina",
+          chooseMonth: "Izaberi mesec",
+          showDays: "Prikaži dane",
+        }}
+      />,
+    );
+
+    open(picker);
+
+    expect(
+      picker.renderer.findByTestId("date-month")?.customProps,
+    ).toMatchObject({ "aria-label": "Izaberi mesec" });
+
+    clickCentreOf(picker, "date-month");
+
+    expect(
+      picker.renderer.findByTestId("date-prev-year")?.customProps,
+    ).toMatchObject({ "aria-label": "Prošla godina" });
+    expect(
+      picker.renderer.findByTestId("date-next-year")?.customProps,
+    ).toMatchObject({ "aria-label": "Sledeća godina" });
+    expect(
+      picker.renderer.findByTestId("date-month")?.customProps,
+    ).toMatchObject({ "aria-label": "Prikaži dane" });
 
     picker.unmount();
   });

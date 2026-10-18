@@ -5,7 +5,7 @@
 | Phase | C/F (Tier 2 completeness) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `112`, `117`, `119`, `127`, `303`, `323`, `368`, `375`, `396` |
-| Status | planned |
+| Status | done |
 | Blocker | none — every assertion below avoids the two plan-540 binding defects (no position, no focus-event assertion) |
 
 This plan is self-contained. A weaker executor must be able to run it without
@@ -323,16 +323,28 @@ in the commit message.
 Run from `workspaces/components`:
 
 ```sh
-nub run --filter @gpuixui/components test                         # 411 + new unit cases, 0 failures
-nub run --filter @gpuixui/components test:behaviour -- src/behaviour/date-picker.test.tsx
+nub run --filter @gpuixui/components test                         # 417 passed (411 + 6 new)
+nub run --filter @gpuixui/components test:behaviour src/behaviour/date-picker.test.tsx
                                                                   # 31 passed
 nub run --filter @gpuixui/components check-types                   # exit 0
 nub run check                                                      # check:tests + lint + fmt + types, exit 0
-nub run --filter @gpuixui/components test:perf                     # unaffected, 1 passed
+nub run --filter @gpuixui/components test:perf                     # measured red on this host, see below
 ```
+
+Measured on 2026-10-19: `test:perf` fails at
+`src/perf/list.test.tsx:60` (`focusedTestId` reads `row-0` after a focus move,
+expected `row-1`). The perf suite imports only `List`, imports nothing the date
+picker touches, and the known plan-540 binding defect is the missing focus
+delivery for a programmatic move — so this is pre-existing and unrelated to plan
+546. It is recorded rather than skipped: the perf suite is not part of the
+package gate, and the binding owner has the classification in plan 540 §5.
 
 Also re-run the package's inventory test (inside `test`): the updated
 `COMPONENTS.md` and docs counts must match the suite, or it fails by name.
+
+The both-direction proof measured here: with `src/date-picker.tsx` restored to
+its pre-546 content, exactly the 8 new native cases fail and the 23 existing
+ones pass; with the change, 31 pass.
 
 ## 7. Docs, inventory and TODO
 

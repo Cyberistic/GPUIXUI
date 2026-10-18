@@ -13,12 +13,14 @@
  *
  * The root owns the value, the bounds and the open state; `DatePickerTrigger`,
  * `DatePickerContent` and `DatePickerCalendar` are the caller's parts. The
- * calendar keeps its own view month and focused day — those reset on open and
- * are not the component's value.
+ * calendar keeps its own view month, focused day and whether it shows the day
+ * grid or the month chooser — those reset on open and are not the component's
+ * value.
  *
  * Known scope, recorded in the docs: display labels default to English and are
- * the caller's (`labels`), never a locale lookup; no time of day is in this
- * control — that is the separate TimePicker.
+ * the caller's (`labels`), never a locale lookup; the month chooser shows one
+ * year at a time; no time of day is in this control — that is the separate
+ * TimePicker.
  */
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
@@ -42,17 +44,24 @@ import {
   addMonths,
   boundsOf,
   canBrowseMonth,
+  canBrowseYear,
   clampToBounds,
+  dayInMonth,
   formatDayLabel,
   formatIsoDay,
   formatMonthLabel,
+  formatYearLabel,
   isAvailable,
+  isMonthAvailable,
   isSameDay,
   lastDayOfMonth,
   monthGrid,
+  nearestAvailableMonth,
   parseIsoDay,
   resolveCalendarLabels,
   startOfMonth,
+  startOfYear,
+  stepMonth,
   weekdayLabels,
   type CalendarLabels,
   type DayBounds,
@@ -412,8 +421,12 @@ export const DatePickerCalendar = ({
   const [active, setActive] = useState<Option.Option<DateTime.Utc>>(() =>
     Option.some(anchor),
   );
+  const [mode, setMode] = useState<"days" | "months">("days");
+  const [monthFocus, setMonthFocus] = useState(0);
   const cellIds = useRef<Record<string, number>>({});
+  const monthIds = useRef<Record<number, number>>({});
   const pendingFocus = useRef(false);
+  const pendingMonthFocus = useRef(false);
   const wasOpen = useRef(false);
 
   /** Focus the active cell after the month it lives in has rendered. */
@@ -431,6 +444,7 @@ export const DatePickerCalendar = ({
     wasOpen.current = true;
     setViewMonth(startOfMonth(anchor));
     setActive(Option.some(anchor));
+    setMode("days");
     pendingFocus.current = true;
     // `open` is the trigger; the anchor is stable while it is open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -449,12 +463,28 @@ export const DatePickerCalendar = ({
     renderer?.focusElement?.(id);
   });
 
+  useLayoutEffect(() => {
+    if (!pendingMonthFocus.current) return;
+    const id = monthIds.current[monthFocus];
+    if (id === undefined) return;
+    pendingMonthFocus.current = false;
+    renderer?.focusElement?.(id);
+  });
+
   const attachCell = (iso: string) => (instance: PublicInstance | null) => {
     if (instance === null) {
       delete cellIds.current[iso];
       return;
     }
     cellIds.current[iso] = instance.id;
+  };
+
+  const attachMonth = (index: number) => (instance: PublicInstance | null) => {
+    if (instance === null) {
+      delete monthIds.current[index];
+      return;
+    }
+    monthIds.current[index] = instance.id;
   };
 
   const moveDays = (delta: number): void => {
@@ -483,6 +513,76 @@ export const DatePickerCalendar = ({
     focusActive(clampToBounds(addDays(startOfMonth(target), day - 1), bounds));
   };
 
+  /** The month at a chooser index; the range is always 0–11. */
+  const monthAt = (index: number): DateTime.Utc =>
+    addMonths(startOfYear(viewMonth), index);
+  const availableMonths = Arr.map(Arr.range(0, 11), (index) =>
+    isMonthAvailable(monthAt(index), bounds),
+  );
+  const viewMonthIndex = DateTime.toPartsUtc(viewMonth).month - 1;
+
+  /** Point the chooser at the viewed month and focus it once it has rendered. */
+  const openMonths = (): void => {
+    setMonthFocus(nearestAvailableMonth(viewMonthIndex, availableMonths));
+    pendingMonthFocus.current = true;
+    setMode("months");
+  };
+
+  /** A chooser choice moves the view and the focused day, never the value. */
+  const chooseMonth = (index: number): void => {
+    if (availableMonths[index] !== true) return;
+    const from = Option.getOrElse(active, () => startOfMonth(viewMonth));
+    focusActive(dayInMonth(from, monthAt(index), bounds));
+    setMode("days");
+  };
+
+  const stepYear = (direction: -1 | 1): void => {
+    const next = addMonths(viewMonth, direction * 12);
+    const nextAvailable = Arr.map(Arr.range(0, 11), (index) =>
+      isMonthAvailable(addMonths(startOfYear(next), index), bounds),
+    );
+    setViewMonth(next);
+    setMonthFocus(nearestAvailableMonth(monthFocus, nextAvailable));
+    pendingMonthFocus.current = true;
+  };
+
+  const moveMonthFocus = (index: number): void => {
+    setMonthFocus(index);
+    const id = monthIds.current[index];
+    if (id !== undefined) renderer?.focusElement?.(id);
+  };
+
+  /** Leave the chooser with focus back on the day grid. */
+  const backToDays = (): void => {
+    pendingFocus.current = true;
+    setMode("days");
+  };
+
+  const handleMonthKeyDown = (event: EventPayload): void => {
+    Match.value(event).pipe(
+      Match.when(isLeft, () =>
+        moveMonthFocus(stepMonth(monthFocus, -1, availableMonths)),
+      ),
+      Match.when(isRight, () =>
+        moveMonthFocus(stepMonth(monthFocus, 1, availableMonths)),
+      ),
+      Match.when(isUp, () =>
+        moveMonthFocus(stepMonth(monthFocus, -3, availableMonths)),
+      ),
+      Match.when(isDown, () =>
+        moveMonthFocus(stepMonth(monthFocus, 3, availableMonths)),
+      ),
+      Match.when(isFirst, () =>
+        moveMonthFocus(nearestAvailableMonth(0, availableMonths)),
+      ),
+      Match.when(isLast, () =>
+        moveMonthFocus(nearestAvailableMonth(11, availableMonths)),
+      ),
+      Match.when(isActivation, () => chooseMonth(monthFocus)),
+      Match.orElse(() => undefined),
+    );
+  };
+
   const handleKeyDown = (event: EventPayload): void => {
     Match.value(event).pipe(
       Match.when(isLeft, () => moveDays(-1)),
@@ -507,6 +607,8 @@ export const DatePickerCalendar = ({
   };
 
   const grid = monthGrid(viewMonth, weekStartsOn);
+  // Three cells span the seven-column day grid so the chooser keeps its width.
+  const monthCell = (CELL * 7 - theme.spacing["2xs"] * 2) / 3;
   const tabbable = clampToBounds(
     Option.getOrElse(
       Option.filter(active, (day) => isSameDay(startOfMonth(day), viewMonth)),
@@ -526,132 +628,244 @@ export const DatePickerCalendar = ({
           gap: theme.spacing.md,
         }}
       >
-        <IconButton
-          label={labels.previousMonth}
-          size="sm"
-          testId="date-prev"
-          disabled={!canBrowseMonth(viewMonth, -1, bounds)}
-          onClick={() => setViewMonth(addMonths(viewMonth, -1))}
-        >
-          <Icon
-            name="chevron-left"
-            color={theme.colors.mutedForeground}
+        {mode === "months" ? (
+          <IconButton
+            label={labels.previousYear}
             size="sm"
-          />
-        </IconButton>
-        <text
+            testId="date-prev-year"
+            disabled={!canBrowseYear(viewMonth, -1, bounds)}
+            onClick={() => stepYear(-1)}
+          >
+            <Icon
+              name="chevron-left"
+              color={theme.colors.mutedForeground}
+              size="sm"
+            />
+          </IconButton>
+        ) : (
+          <IconButton
+            label={labels.previousMonth}
+            size="sm"
+            testId="date-prev"
+            disabled={!canBrowseMonth(viewMonth, -1, bounds)}
+            onClick={() => setViewMonth(addMonths(viewMonth, -1))}
+          >
+            <Icon
+              name="chevron-left"
+              color={theme.colors.mutedForeground}
+              size="sm"
+            />
+          </IconButton>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
           testId="date-month"
+          aria-label={mode === "months" ? labels.showDays : labels.chooseMonth}
+          onClick={() => (mode === "months" ? backToDays() : openMonths())}
+        >
+          {mode === "months"
+            ? formatYearLabel(viewMonth)
+            : formatMonthLabel(viewMonth, labels)}
+        </Button>
+        {mode === "months" ? (
+          <IconButton
+            label={labels.nextYear}
+            size="sm"
+            testId="date-next-year"
+            disabled={!canBrowseYear(viewMonth, 1, bounds)}
+            onClick={() => stepYear(1)}
+          >
+            <Icon
+              name="chevron-right"
+              color={theme.colors.mutedForeground}
+              size="sm"
+            />
+          </IconButton>
+        ) : (
+          <IconButton
+            label={labels.nextMonth}
+            size="sm"
+            testId="date-next"
+            disabled={!canBrowseMonth(viewMonth, 1, bounds)}
+            onClick={() => setViewMonth(addMonths(viewMonth, 1))}
+          >
+            <Icon
+              name="chevron-right"
+              color={theme.colors.mutedForeground}
+              size="sm"
+            />
+          </IconButton>
+        )}
+      </div>
+      {mode === "months" ? (
+        <div
+          role="grid"
+          aria-label={labels.chooseMonth}
+          onKeyDown={handleMonthKeyDown}
           style={{
-            ...textStyle(theme, "label"),
-            color: theme.colors.foreground,
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing["2xs"],
           }}
         >
-          {formatMonthLabel(viewMonth, labels)}
-        </text>
-        <IconButton
-          label={labels.nextMonth}
-          size="sm"
-          testId="date-next"
-          disabled={!canBrowseMonth(viewMonth, 1, bounds)}
-          onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-        >
-          <Icon
-            name="chevron-right"
-            color={theme.colors.mutedForeground}
-            size="sm"
-          />
-        </IconButton>
-      </div>
-      <div
-        role="grid"
-        aria-label={label}
-        onKeyDown={handleKeyDown}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-        }}
-      >
-        <div role="row" style={{ display: "flex", flexDirection: "row" }}>
-          {Arr.map(weekdayLabels(weekStartsOn, labels), (name, index) => (
-            <text
-              key={index}
-              aria-label={name}
+          {Arr.map(Arr.range(0, 3), (row) => (
+            <div
+              key={row}
+              role="row"
               style={{
-                ...textStyle(theme, "caption"),
-                width: CELL,
-                textAlign: "center",
-                color: theme.colors.mutedForeground,
+                display: "flex",
+                flexDirection: "row",
+                gap: theme.spacing["2xs"],
               }}
             >
-              {name}
-            </text>
+              {Arr.map(Arr.range(0, 2), (column) => {
+                const index = row * 3 + column;
+                const month = monthAt(index);
+                const available = availableMonths[index] === true;
+                const isSelected = index === viewMonthIndex;
+                const name = Option.getOrElse(
+                  Arr.get(labels.months, index),
+                  () => String(index + 1),
+                );
+                return (
+                  <div
+                    key={index}
+                    role="gridcell"
+                    aria-label={
+                      available
+                        ? formatMonthLabel(month, labels)
+                        : `${formatMonthLabel(month, labels)}, ${labels.unavailable}`
+                    }
+                    aria-selected={isSelected}
+                    tabIndex={index === monthFocus ? 0 : -1}
+                    ref={attachMonth(index)}
+                    testId={`date-month-${index}`}
+                    onClick={available ? () => chooseMonth(index) : undefined}
+                    onFocus={() => setMonthFocus(index)}
+                    style={{
+                      ...textStyle(theme, "caption"),
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: monthCell,
+                      height: CELL,
+                      borderRadius: theme.radius.sm,
+                      backgroundColor: isSelected
+                        ? theme.colors.primary
+                        : undefined,
+                      color: isSelected
+                        ? theme.colors.primaryForeground
+                        : available
+                          ? theme.colors.foreground
+                          : theme.colors.mutedForeground,
+                      cursor: available ? "pointer" : "not-allowed",
+                      hover:
+                        isSelected || !available
+                          ? undefined
+                          : { backgroundColor: theme.colors.hover },
+                      ...(index === monthFocus ? focusRing(theme) : {}),
+                    }}
+                  >
+                    {name}
+                  </div>
+                );
+              })}
+            </div>
           ))}
         </div>
-        {Arr.map(grid, (week, weekIndex) => (
-          <div
-            key={weekIndex}
-            role="row"
-            style={{ display: "flex", flexDirection: "row" }}
-          >
-            {Arr.map(week, ({ day, inMonth }) => {
-              const iso = formatIsoDay(day);
-              const available = isAvailable(day, bounds);
-              const isSelected = Option.contains(selectedIso, iso);
-              const isToday = isSameDay(day, todayDay);
-              return (
-                <div
-                  key={iso}
-                  role="gridcell"
-                  aria-label={
-                    available
-                      ? formatDayLabel(day, labels)
-                      : `${formatDayLabel(day, labels)}, ${labels.unavailable}`
-                  }
-                  aria-selected={isSelected}
-                  tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
-                  ref={attachCell(iso)}
-                  testId={`date-day-${iso}`}
-                  onClick={available ? () => choose(day) : undefined}
-                  onFocus={() => setActive(Option.some(day))}
-                  style={{
-                    ...textStyle(theme, "caption"),
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: CELL,
-                    height: CELL,
-                    borderRadius: theme.radius.sm,
-                    backgroundColor: isSelected
-                      ? theme.colors.primary
-                      : undefined,
-                    // The adjacent days are real choices, painted muted rather
-                    // than disabled: the grid has no dead cells.
-                    color: isSelected
-                      ? theme.colors.primaryForeground
-                      : available && inMonth
-                        ? theme.colors.foreground
-                        : theme.colors.mutedForeground,
-                    borderWidth: isToday ? theme.borderWidth.thin : undefined,
-                    borderColor: isToday ? theme.colors.primary : undefined,
-                    cursor: available ? "pointer" : "not-allowed",
-                    hover:
-                      isSelected || !available
-                        ? undefined
-                        : { backgroundColor: theme.colors.hover },
-                    ...(iso ===
-                    formatIsoDay(Option.getOrElse(active, () => tabbable))
-                      ? focusRing(theme)
-                      : {}),
-                  }}
-                >
-                  {DateTime.toPartsUtc(day).day}
-                </div>
-              );
-            })}
+      ) : (
+        <div
+          role="grid"
+          aria-label={label}
+          onKeyDown={handleKeyDown}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing["2xs"],
+          }}
+        >
+          <div role="row" style={{ display: "flex", flexDirection: "row" }}>
+            {Arr.map(weekdayLabels(weekStartsOn, labels), (name, index) => (
+              <text
+                key={index}
+                aria-label={name}
+                style={{
+                  ...textStyle(theme, "caption"),
+                  width: CELL,
+                  textAlign: "center",
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                {name}
+              </text>
+            ))}
           </div>
-        ))}
-      </div>
+          {Arr.map(grid, (week, weekIndex) => (
+            <div
+              key={weekIndex}
+              role="row"
+              style={{ display: "flex", flexDirection: "row" }}
+            >
+              {Arr.map(week, ({ day, inMonth }) => {
+                const iso = formatIsoDay(day);
+                const available = isAvailable(day, bounds);
+                const isSelected = Option.contains(selectedIso, iso);
+                const isToday = isSameDay(day, todayDay);
+                return (
+                  <div
+                    key={iso}
+                    role="gridcell"
+                    aria-label={
+                      available
+                        ? formatDayLabel(day, labels)
+                        : `${formatDayLabel(day, labels)}, ${labels.unavailable}`
+                    }
+                    aria-selected={isSelected}
+                    tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
+                    ref={attachCell(iso)}
+                    testId={`date-day-${iso}`}
+                    onClick={available ? () => choose(day) : undefined}
+                    onFocus={() => setActive(Option.some(day))}
+                    style={{
+                      ...textStyle(theme, "caption"),
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: CELL,
+                      height: CELL,
+                      borderRadius: theme.radius.sm,
+                      backgroundColor: isSelected
+                        ? theme.colors.primary
+                        : undefined,
+                      // The adjacent days are real choices, painted muted rather
+                      // than disabled: the grid has no dead cells.
+                      color: isSelected
+                        ? theme.colors.primaryForeground
+                        : available && inMonth
+                          ? theme.colors.foreground
+                          : theme.colors.mutedForeground,
+                      borderWidth: isToday ? theme.borderWidth.thin : undefined,
+                      borderColor: isToday ? theme.colors.primary : undefined,
+                      cursor: available ? "pointer" : "not-allowed",
+                      hover:
+                        isSelected || !available
+                          ? undefined
+                          : { backgroundColor: theme.colors.hover },
+                      ...(iso ===
+                      formatIsoDay(Option.getOrElse(active, () => tabbable))
+                        ? focusRing(theme)
+                        : {}),
+                    }}
+                  >
+                    {DateTime.toPartsUtc(day).day}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
       {clearable && Option.isSome(selectedDay) ? (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button variant="ghost" size="sm" testId="date-clear" onClick={clear}>
@@ -699,6 +913,7 @@ export const datePickerMeta = {
     "0.10.0 has no aria-current, so today is marked by a border only",
     "0.10.0 has no aria-disabled: an unavailable day leaves the tab order and its accessible name ends in ', unavailable'",
     "a min after max makes no day selectable; the grid is visible and inert rather than throwing from render",
+    "the month chooser shows one year at a time: there is no decade list, so a distant year costs one press per year",
   ],
   docs: "docs/date-picker.mdx",
   example: "examples/date-picker.example.tsx",
