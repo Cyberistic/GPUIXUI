@@ -38,6 +38,7 @@ import { messageMeta } from "./message.js";
 import { messageScrollerMeta } from "./message-scroller.js";
 import { multiStepFormMeta } from "./multi-step-form.js";
 import { navigationMenuMeta } from "./navigation-menu.js";
+import { notificationCentreMeta } from "./notification-centre.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
 import { previewCardMeta } from "./preview-card.js";
@@ -100,6 +101,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   messageScrollerMeta,
   multiStepFormMeta,
   navigationMenuMeta,
+  notificationCentreMeta,
   paginationMeta,
   popoverMeta,
   previewCardMeta,

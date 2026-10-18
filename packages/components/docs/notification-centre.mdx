@@ -1,0 +1,161 @@
+---
+title: Notification centre
+description: A bell-shaped inbox with a derived unread count, grouped rows and app-owned read state.
+---
+
+`NotificationCentre` is the durable half of feedback: a trigger that carries the
+unread count, and a non-modal panel that lists notifications newest-first. It is
+not a toast — a toast is transient, a notification stays until it is read.
+
+## Usage
+
+```tsx
+import {
+  NotificationCentre,
+  NotificationCentreClear,
+  NotificationCentreContent,
+  NotificationCentreHeader,
+  NotificationCentreList,
+  NotificationCentreMarkAll,
+  NotificationCentreTitle,
+  NotificationCentreTrigger,
+} from "@gpuixui/components";
+
+<NotificationCentre
+  notifications={items}
+  onRead={(id) => markRead(id)}
+  onMarkAllRead={() => markAllRead()}
+  onClear={() => clear()}
+>
+  <NotificationCentreTrigger>Inbox</NotificationCentreTrigger>
+  <NotificationCentreContent>
+    <NotificationCentreHeader>
+      <NotificationCentreTitle />
+      <NotificationCentreMarkAll>Mark all</NotificationCentreMarkAll>
+      <NotificationCentreClear />
+    </NotificationCentreHeader>
+    <NotificationCentreList />
+  </NotificationCentreContent>
+</NotificationCentre>;
+```
+
+The runnable build is `examples/notification-centre.example.tsx`, registered in
+`examples/index.ts` and mounted by the package's native example suite
+(`src/behaviour/examples.test.tsx`).
+
+## The read model
+
+The caller owns the data. The component never stores a notification, a read flag
+or an unread count:
+
+- `unreadCount` is derived from `read !== true` on every render.
+- A row press, or `Enter` on the active row, calls `onRead(id)`. Call it twice
+  and the second request is idempotent only if your data says so — the
+  component reports what happened, it does not toggle.
+- Opening the panel never marks anything read, so the count cannot drift from a
+  glance at the inbox.
+- `onMarkAllRead` and `onClear` are requests; omit either handler and its
+  control is not rendered. That is deliberate: a dead button is worse than no
+  button.
+- Closing and reopening changes nothing, because the flags live in the caller.
+
+## Groups
+
+Supply the notifications **newest first**; the component preserves your order.
+A group is a **contiguous** run of items with the same `group` label:
+
+```ts
+[
+  { id: "a", title: "Deploy finished", group: "Today" },
+  { id: "b", title: "Review requested", group: "Today" },
+  { id: "c", title: "Invite accepted", group: "Earlier" },
+];
+```
+
+`Today` is painted once before `a`, `Earlier` once before `c`. An item with no
+`group` gets no heading. A group label repeated after another run gets its own
+heading, so a filtered list never renames a section.
+
+## Keyboard
+
+The panel is focused when it opens. `ArrowDown` / `ArrowUp` move the active row
+over notifications only — headings are skipped and the ends clamp. `Enter`
+requests a read for the active row. `Escape` closes the panel and returns focus
+to the trigger. The panel is **non-modal**, so `Tab` leaves it rather than
+trapping focus.
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `NotificationCentre` | the positioning root; owns open state and the derived rows | `notifications`, `onRead?`, `onMarkAllRead?`, `onClear?`, `open?`, `defaultOpen?`, `onOpenChange?`, `label?`, `empty?`, children |
+| `NotificationCentreTrigger` | the button, its label and the derived badge | Button props, `children?` (visible label only), `showBadge?` |
+| `NotificationCentreContent` | the anchored, non-modal panel, `role="region"` | `label?`, `side?` (default `bottom`), `align?` (default `end`), `sideOffset?`, `alignOffset?`, `collisionPadding?`, `autoFocus?`, children |
+| `NotificationCentreHeader` | the title/actions row | children |
+| `NotificationCentreTitle` | the panel heading | children (defaults to the root `label`) |
+| `NotificationCentreMarkAll` | a ghost button bound to `onMarkAllRead` | Button props except `variant`/`size`; renders only with a handler |
+| `NotificationCentreClear` | a ghost button bound to `onClear` | Button props except `variant`/`size`; renders only with a handler |
+| `NotificationCentreList` | grouped rows, a scrolling viewport, or the empty state | `emptyTitle?`, `emptyDescription?`, host props |
+
+`notifications` is the only required prop. A row's data is `{ id, title,
+description?, timestamp?, group?, read? }`; an absent `read` means unread.
+
+### Trigger naming
+
+The trigger's accessible name is `"{label}, {n} unread"` (default
+`Notifications, 3 unread`), and `aria-expanded` follows the panel. The badge is
+hidden at zero, but the name still says `0 unread`, so the count is never a
+colour-only signal. `children` replaces the visible label (use it for a bell
+glyph); the badge and the name still follow the data.
+
+### Row naming
+
+0.10.0 reports no accessible name from a text child, so each row is named
+`"{title}, unread"` or `"{title}, read"`. The unread dot is decorative; the name
+carries the state.
+
+## Placement
+
+The panel uses the shared measured placement rule: `side="bottom"`,
+`align="end"`, an 8 px side offset and an 8 px collision margin. A surface that
+would snap over its trigger flips once per open, and `align="center"` is
+corrected from the measured panel — the same rule as Popover, Dropdown menu and
+Preview card.
+
+## Theming
+
+The panel uses `popover`/`popoverForeground`, `border`, `radius.lg` and the
+medium elevation. The badge is the theme's `primary`; the active row is
+`accent`, with the token focus ring; group headings and metadata use
+`mutedForeground`. A custom theme restyles the whole centre with no code change.
+
+## Limitations
+
+- **Every row renders.** The published `<virtual-list>` host takes `itemCount`
+  and requires the app to window its own children (0.10.0 ships no wrapper), so
+  v1 uses a plain scrolling viewport. For a typical inbox (tens to low hundreds
+  of rows) that is the honest choice; a later plan can add windowing without
+  changing the API.
+- **No bell icon in v1.** `@gpuixui/icons` has no `bell`, so the trigger is a
+  text button with the badge. Pass a custom child when the icon set gains one;
+  no icon was copied into this package.
+- **No `aria-live` in 0.10.0**, so an arrival while the panel is closed is not
+  announced. The trigger's accessible name carries the count.
+- **Non-modal**: no focus trap and no `aria-modal`; `Tab` leaves the panel.
+- **No `aria-activedescendant`**, so the active row is a painted accent fill and
+  ring; native focus follows it through `focusElement` on a best-effort basis.
+- State is app-owned: a remount resets nothing you persist, and nothing you do
+  not persist.
+- No per-notification actions menu, bulk selection or toast bridge in v1. The
+  centre is durable; a toast is transient.
+
+## Verification
+
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (12 tests):
+closed by default with the derived count in the trigger's name, open and named
+by a press, opening that marks nothing read, contiguous grouping in the
+caller's order, unread dots and row names, one read request from a press with
+the panel staying open and the dot clearing on the next data update, mark-all
+and clear, Escape and an outside press, arrow movement skipping headings with
+Enter reading the reached row, and the light theme's roles. The pure grouping
+and count rules live in `src/notification-centre/model.test.ts` (5 tests).

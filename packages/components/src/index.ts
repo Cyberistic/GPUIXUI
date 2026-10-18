@@ -38,6 +38,7 @@ export * from "./message.js";
 export * from "./message-scroller.js";
 export * from "./multi-step-form.js";
 export * from "./navigation-menu.js";
+export * from "./notification-centre.js";
 export * from "./pagination.js";
 export * from "./popover.js";
 export * from "./preview-card.js";

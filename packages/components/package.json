@@ -39,6 +39,7 @@
     "./message-scroller": "./src/message-scroller.tsx",
     "./multi-step-form": "./src/multi-step-form.tsx",
     "./navigation-menu": "./src/navigation-menu.tsx",
+    "./notification-centre": "./src/notification-centre.tsx",
     "./pagination": "./src/pagination.tsx",
     "./popover": "./src/popover.tsx",
     "./preview-card": "./src/preview-card.tsx",
