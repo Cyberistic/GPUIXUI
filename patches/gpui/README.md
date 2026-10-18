@@ -97,6 +97,14 @@ Check without modifying a checkout:
 sh patches/gpui/check.sh /path/to/zed
 ```
 
+The playground's local binding build fetches this fork at the GPUix gitlink and
+applies the patch behind a flag (plan 538):
+
+```sh
+sh apps/playground/scripts/build-native-binding.sh                 # baseline, no transform
+GPUIX_TRANSFORM=1 sh apps/playground/scripts/build-native-binding.sh
+```
+
 ## Verification (2026-10-18)
 
 Environment: macOS 15.8.1, `x86_64-apple-darwin`, Command Line Tools only,
