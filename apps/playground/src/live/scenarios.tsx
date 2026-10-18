@@ -57,6 +57,10 @@ import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { gridScenario } from "../scenarios/grid.js";
+import {
+  declaredStylesScenario,
+  textTruncationScenario,
+} from "../scenarios/styles.js";
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { mediaScenario } from "../scenarios/media.js";
@@ -4694,6 +4698,288 @@ const grid: LiveScenario = {
     }),
 };
 
+/** Hovers `testId` and asserts the width the declaration applies. */
+const hoverWidth = (
+  ctx: LiveContext,
+  testId: string,
+  expected: number,
+  label: string,
+) =>
+  Effect.gen(function* () {
+    yield* ctx.host.hover(testId);
+    yield* settle;
+    yield* waitForBounds(
+      ctx,
+      testId,
+      (box) => Math.abs(box.width - expected) <= 1,
+    );
+    yield* ctx.expectNear(label, yield* widthOf(ctx, testId), expected, 1);
+  });
+
+const liveStates: LiveScenario = {
+  id: "live-states",
+  title: "Live declared styles: hover and active applied by real pointer input",
+  capability: "states",
+  view: declaredStylesScenario.view,
+  ready: "styles-root",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The authored widths.
+      yield* ctx.expectNear(
+        "the live button starts at its authored width",
+        yield* widthOf(ctx, "styles-button"),
+        100,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live parent starts at its authored width",
+        yield* widthOf(ctx, "styles-parent"),
+        400,
+        1,
+      );
+
+      // 2. A real pointer applies the declared hover.
+      yield* hoverWidth(
+        ctx,
+        "styles-button",
+        140,
+        "a live hover applies the declared width",
+      );
+
+      // 3. Hover is per element: the parent and the child are measured alone.
+      yield* hoverWidth(
+        ctx,
+        "styles-parent",
+        420,
+        "a live hover on the parent applies its own width",
+      );
+      yield* ctx.expectNear(
+        "the live parent's hover leaves the child alone",
+        yield* widthOf(ctx, "styles-child"),
+        100,
+        1,
+      );
+      yield* hoverWidth(
+        ctx,
+        "styles-child",
+        120,
+        "a live hover on the child applies its own width",
+      );
+      yield* ctx.expectNear(
+        "a live child hover cancels the parent's",
+        yield* widthOf(ctx, "styles-parent"),
+        400,
+        1,
+      );
+      yield* ctx.host.hover("styles-away");
+      yield* settle;
+      yield* waitForBounds(
+        ctx,
+        "styles-parent",
+        (box) => Math.abs(box.width - 400) <= 1,
+      );
+      yield* ctx.expectNear(
+        "leaving reverts the live parent",
+        yield* widthOf(ctx, "styles-parent"),
+        400,
+        1,
+      );
+      yield* ctx.expectNear(
+        "leaving reverts the live child",
+        yield* widthOf(ctx, "styles-child"),
+        100,
+        1,
+      );
+
+      // 4. A real press applies `active`; it does not enter hover.
+      const base = yield* boxOf(ctx, "styles-button");
+      const centre = {
+        x: base.x + base.width / 2,
+        y: base.y + base.height / 2,
+      };
+      yield* ctx.host.pressWindow(centre.x, centre.y);
+      yield* settle;
+      yield* waitForBounds(
+        ctx,
+        "styles-button",
+        (box) => Math.abs(box.width - 180) <= 1,
+      );
+      yield* ctx.expectNear(
+        "a live press applies the active width",
+        yield* widthOf(ctx, "styles-button"),
+        180,
+        1,
+      );
+      yield* ctx.host.releasePointer(centre.x, centre.y);
+      yield* settle;
+      yield* waitForBounds(
+        ctx,
+        "styles-button",
+        (box) => Math.abs(box.width - 100) <= 1,
+      );
+      yield* ctx.expectNear(
+        "a live press at a point does not set hover",
+        yield* widthOf(ctx, "styles-button"),
+        100,
+        1,
+      );
+
+      // 5. Leaving after a release reverts to the authored width.
+      yield* hoverWidth(
+        ctx,
+        "styles-button",
+        140,
+        "a live move over the button re-applies hover",
+      );
+      yield* ctx.host.hover("styles-away");
+      yield* settle;
+      yield* waitForBounds(
+        ctx,
+        "styles-button",
+        (box) => Math.abs(box.width - 100) <= 1,
+      );
+      yield* ctx.expectNear(
+        "leaving after a live release reverts",
+        yield* widthOf(ctx, "styles-button"),
+        100,
+        1,
+      );
+
+      // 6. A held pointer outside the element keeps `active`.
+      const held = yield* boxOf(ctx, "styles-button");
+      yield* ctx.host.pressWindow(
+        held.x + held.width / 2,
+        held.y + held.height / 2,
+      );
+      yield* settle;
+      yield* waitForBounds(
+        ctx,
+        "styles-button",
+        (box) => Math.abs(box.width - 180) <= 1,
+      );
+      yield* ctx.host.movePointer(20, 300);
+      yield* settle;
+      yield* ctx.expectNear(
+        "a live held pointer outside keeps the active width",
+        yield* widthOf(ctx, "styles-button"),
+        180,
+        1,
+      );
+      yield* ctx.host.releasePointer(20, 300);
+      yield* settle;
+      yield* waitForBounds(
+        ctx,
+        "styles-button",
+        (box) => Math.abs(box.width - 100) <= 1,
+      );
+      yield* ctx.expectNear(
+        "releasing outside clears the live active width",
+        yield* widthOf(ctx, "styles-button"),
+        100,
+        1,
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${declaredStylesScenario.id}.png`,
+      );
+    }),
+};
+
+/** The painted height of a truncation sample's text run. */
+const sampleHeight = (ctx: LiveContext, testId: string) =>
+  Effect.map(boxOf(ctx, `${testId}-text`), (box) => box.height);
+
+const liveTruncation: LiveScenario = {
+  id: "live-truncation",
+  title: "Live text truncation: ellipsis, nowrap and line clamp",
+  capability: "truncation",
+  view: textTruncationScenario.view,
+  ready: "truncation-root",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const line = yield* sampleHeight(ctx, "trunc-line");
+      const nowrap = yield* sampleHeight(ctx, "nowrap");
+      const wrap = yield* sampleHeight(ctx, "wrap");
+      yield* ctx.expectNear(
+        "the live ellipsis sample is one line tall",
+        line,
+        nowrap,
+        1,
+      );
+      yield* ctx.expectNear(
+        "live ellipsis-start is one line tall",
+        yield* sampleHeight(ctx, "trunc-start"),
+        nowrap,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "live nowrap overflows instead of wrapping",
+        nowrap < wrap,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live unclamped sample wraps past eight lines",
+        wrap > line * 8,
+        true,
+      );
+      yield* ctx.expectNear(
+        "live lineClamp 2 clamps to two lines",
+        yield* sampleHeight(ctx, "clamp-2"),
+        line * 2,
+        1,
+      );
+      yield* ctx.expectNear(
+        "live lineClamp 3 clamps to three lines",
+        yield* sampleHeight(ctx, "clamp-3"),
+        line * 3,
+        1,
+      );
+      yield* ctx.expectNear(
+        "live lineClamp is inherited from the box",
+        yield* sampleHeight(ctx, "clamp-box"),
+        line * 2,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live clamp is a real clamp, not a clip",
+        (yield* sampleHeight(ctx, "clamp-2")) < wrap,
+        true,
+      );
+      const repeatedClamp = yield* sampleHeight(ctx, "repeat-clamp");
+      yield* ctx.expectNear(
+        "identical live strings share one layout regardless of lineClamp",
+        repeatedClamp,
+        yield* sampleHeight(ctx, "repeat-plain"),
+        0,
+      );
+      yield* ctx.expectEqual(
+        "the shared live layout is the unclamped one",
+        repeatedClamp > line * 4,
+        true,
+      );
+
+      const painted = yield* ctx.host.paintedText();
+      const truncated = yield* ctx.expectSome(
+        "the live truncated sample reports its full source string",
+        Arr.findFirst(painted, (run) => Str.startsWith("trunc-line ")(run)),
+      );
+      yield* ctx.expectEqual(
+        "the live painted text carries no ellipsis glyph",
+        Arr.some(painted, Str.endsWith("…")),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the live truncated run is the source prefix",
+        Str.startsWith("trunc-line one two three")(truncated),
+        true,
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${textTruncationScenario.id}.png`,
+      );
+    }),
+};
+
 const columnConfig: LiveScenario = {
   id: "live-column-config",
   title: "Live data grid: hide, show and reorder columns in a window",
@@ -7149,6 +7435,8 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   inspector,
   dataGridColumns,
   grid,
+  liveStates,
+  liveTruncation,
   columnConfig,
   cropArea,
   appChrome,

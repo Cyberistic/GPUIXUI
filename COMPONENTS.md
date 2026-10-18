@@ -79,8 +79,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | scroller | `message-scroller` | verified |
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
-| states | `declared-styles` | verified |
-| truncation | `text-truncation` | verified |
+| states | `declared-styles`, `live-states` | verified |
+| truncation | `text-truncation`, `live-truncation` | verified |
 | inspector | `property-panel`, `live-inspector` | verified |
 | editor | `multi-pane-editor`, `live-editor` | verified |
 | data-toolbar | `data-toolbar`, `live-data-toolbar` | verified |
@@ -99,8 +99,9 @@ The suite is **101/101 green here** (exit `0`, `.artifacts/smoke-report.json`,
 (`live-report.json`, **1133 checks**, exit `0`) in the 2026-10-19 merge gate,
 which included the plan `532` terminal twin, the plan `534` variable-row twin
 and the plan `535`/`536` pointer twins. Focused additions since then — plan
-`554`'s select/combobox/tooltip and plan `556`'s grid — bring the live registry
-to **57**; no full-suite total is claimed for them. Both `host` lines carry the
+`554`'s select/combobox/tooltip, plan `556`'s grid and plan `557`'s
+states/truncation — bring the live registry to **59**; no full-suite total is
+claimed for them. Both `host` lines carry the
 pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
 and a borderless size — is what every geometry check now asserts.
 
@@ -153,9 +154,9 @@ a trackpad from a line wheel in a test.
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
 **53/53 green** (1133 checks) on the release-tag binding; focused additions
-bring the registry to **57** (`live-select`/`live-combobox`/`live-tooltip` and
-`live-grid`), and the **full live suite is a merge/release gate** rather than a
-per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+bring the registry to **59** (`live-select`/`live-combobox`/`live-tooltip`,
+`live-grid` and `live-states`/`live-truncation`), and the **full live suite is a
+merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `reorder` and `tree-reorder` are confirmed there too
 — the shell fills the window and navigates by click and
@@ -332,6 +333,17 @@ in one run). Consequences: a probe must give every clamp case a distinct string
 (this one uses eighteen distinct strings and a deliberate `repeat-*` pair to
 prove the sharing), and a UI cannot rely on the same label clamping one way in a
 table cell and another way in a tooltip at the same width.
+
+**Both transfer to a real window (`live-states` / `live-truncation`, plan
+`557`).** A real `hover` applies the declared width (`100 → 140`) and leaving
+reverts it; hover stays **per element** (parent `420` / child `100`, then parent
+`400` / child `120`); a real press applies `active` (`180`) without entering
+hover, and a held pointer outside the element keeps it until release. Text
+geometry is identical in a window: `textOverflow`/`nowrap` are one line,
+`lineClamp` is exact (`2 × 26 = 52`, `3 × 26 = 78`) and inherited, and the
+shared `(string, width)` layout still makes the repeated clamp sample lay out
+unclamped. The authored-style report and the ellipsis glyph remain headless-only
+— the live tree carries no `style`, and neither harness reports the glyph.
 
 `nested-layer-dismiss` is the runtime verdict for the overlay **dismiss stack**,and it contradicts the shipped implementation. One key event reaches a nested
 layer and its enclosing layer with **a separate payload copy each**

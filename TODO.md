@@ -58,7 +58,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 94/96 plans-and-harness
+`[x]` `[██████████]` 95/96 plans-and-harness
+
+`[x]` Prove **declared hover/active and text truncation in a real window** per
+      plan `557`: `live-states` (32 checks) drives the shipped
+      `declared-styles` view — a real hover applies `100 → 140`, hover is per
+      element (parent `420` / child `100`, then parent `400` / child `120`),
+      leaving reverts both, a press applies `active` `180` without hover, a
+      release returns `100`, and a held pointer outside keeps `180` until
+      release. `live-truncation` (23) proves the geometry in a window:
+      ellipsis/nowrap one line, the unclamped sample past eight lines,
+      `lineClamp` exact and inherited (`52`/`78`), the shared `(string, width)`
+      layout still unclamped, and painted text the source run with no `…`.
+      **2/2**, exit `0`, three consecutive runs; live registry `57 → 59`,
+      headless stays `101`; four mutation proofs (plan `557` §9). `paintedStyle`
+      stays headless: the live tree has no `style`. Focused ids:
+      `live-states,live-truncation`.
 
 `[x]` Prove the **pinned, windowed data grid in a real window** per plan `556`:
       `live-grid` reuses the `grid-wide-table` view in the real 1100×720 window —

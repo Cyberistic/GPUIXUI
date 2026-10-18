@@ -21,6 +21,11 @@
  *   therefore uses a distinct string, and `repeat-*` proves the sharing.
  *
  * The `cursor` shape has no observation channel and is not probed here.
+ *
+ * The live twins (`live-states`, `live-truncation`, plan `557`) repeat the
+ * pointer and geometry halves in a real window. The authored-style report and
+ * the ellipsis glyph stay headless: the live tree carries no `style` and the
+ * painted report is the source run in both harnesses.
  */
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
