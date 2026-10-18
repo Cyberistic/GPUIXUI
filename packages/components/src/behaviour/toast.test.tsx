@@ -14,6 +14,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Duration } from "effect";
 import * as Option from "effect/Option";
+import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
 import {
   boundsOf,
@@ -131,15 +132,19 @@ const toastY = (root: ComponentTestRoot, testId: string): number =>
   }).y;
 
 describe("Toast", () => {
-  it("shows a pushed toast and exposes the viewport as a status region", async () => {
+  it("exposes a pushed toast's message as the status region", async () => {
     const page = renderComponent(<Harness />);
     expect(
       page.renderer.findByTestId("toast-viewport")?.customProps?.role,
-    ).toBe("status");
+    ).toBe("group");
 
     clickCentreOf(page, "push");
     await settle();
 
+    const statuses = nodesWithRole(page.renderer, "status");
+    expect(statuses.map((node) => node.name)).toEqual([
+      "Saved changes: 3 files",
+    ]);
     expect(page.renderer.getAllText()).toContain("Saved changes");
     expect(page.renderer.getAllText()).toContain("3 files");
     expect(page.renderer.findByType("svg")).toHaveLength(2);

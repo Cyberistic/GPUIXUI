@@ -3,7 +3,8 @@
 **Phase.** F — integration and polish (accessibility).
 **Workstream.** components (`packages/components`).
 **Depends on.** 110, 115, 117, 123, 124, 322, 183 (playground evidence).
-**Status.** planned 2026-10-18.
+**Status.** done 2026-10-18 — the toast case now asserts the card's status name;
+it fails on the old viewport-status shape (Toast 14, behaviour 530).
 
 ## 1. Why this plan exists
 
@@ -151,4 +152,16 @@ Expected: behaviour 530 (unchanged), unit unchanged, `check` exit `0`.
 
 ## 7. Result
 
-_To be filled after execution._
+Executed on this host, 2026-10-18.
+
+- Probe (deleted): before the change the only status node was the viewport,
+  named `Notifications`; the message text sat in two unattached `label` nodes.
+- `src/behaviour/toast.test.tsx`: **14/14 green**; the card's `role="status"` is
+  named `Saved changes: 3 files` and the viewport reports `group`. With the
+  viewport/card roles restored to the old shape the strengthened case fails
+  (`expected 'status' to be 'group'`) and 13 pass.
+- The suite count is unchanged (14): the first case was strengthened, not added,
+  so the docs' stated count stays true.
+- Docs and inventory state the per-card status and the named group. The runtime
+  still cannot announce a live region; the accessible name is the strongest
+  signal 0.10.0 exposes.

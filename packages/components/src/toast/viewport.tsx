@@ -78,8 +78,17 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
     })),
   );
 
+  // The card is the status region and its message is the accessible name:
+  // 0.10.0 has no live region, so a named status node is the strongest signal.
+  const accessibleName = Option.match(toast.description, {
+    onNone: () => toast.title,
+    onSome: (description) => `${toast.title}: ${description}`,
+  });
+
   return (
     <div
+      role="status"
+      aria-label={accessibleName}
       testId={`toast-${toast.id}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
@@ -201,7 +210,7 @@ export const ToastViewport = ({
 
   return (
     <div
-      role="status"
+      role="group"
       aria-label="Notifications"
       testId="toast-viewport"
       {...rest}

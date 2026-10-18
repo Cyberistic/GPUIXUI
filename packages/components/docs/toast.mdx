@@ -34,7 +34,7 @@ toast.push({
 | ---- | -------------- |
 | `ToastProvider` | the `ManagedRuntime`, the store, the React subscription — the package's **only** `runtime.run*` boundary |
 | `useToast()` | `{ toasts, push, dismiss, dismissAll, pause, resume, actionFor }`; throws outside the provider |
-| `ToastViewport` | the bottom-right stack; `role="status"` |
+| `ToastViewport` | the bottom-right stack; `role="group"` named Notifications, with each card its own status |
 
 Render the viewport **last** in the app root: GPUix has no `zIndex`, so overlays
 stack in paint order. The viewport is `pointerEvents: "none"` and each card turns
@@ -110,10 +110,13 @@ palette Alert and Badge use). Width is 380px.
 
 ## Accessibility and limitations
 
-- The viewport is `role="status"` with `aria-label="Notifications"`; each card's
-  dismiss control is a labelled button.
-- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.10.0`; a status
-  region is the supported announcement.
+- Each card is a `role="status"` region whose accessible name is its message
+  (`title: description`), so the content that changed is the status content; the
+  viewport is a `role="group"` named `Notifications`. Each card's dismiss control
+  is a labelled button.
+- **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.10.0`; a named
+  status region is the supported announcement, and the runtime exposes no
+  live-region concept beyond it.
 - **No progress indicator** for the remaining time; the store knows the deadline
   but the card does not animate it.
 - Hovering a card pauses its clock, and so does keyboard focus on either of its
@@ -133,8 +136,9 @@ palette Alert and Badge use). Width is 380px.
   `TestClock` auto-dismiss, the stale-timer regression, custom durations,
   rejected input, pause/resume with the remaining time, and action decoding
   (present, absent, empty label).
-`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (14 tests): push,
-stacking order, dismissing one card, `dismissAll`, the page staying clickable
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (14 tests): push
+and the card's status name, stacking order, dismissing one card, `dismissAll`,
+the page staying clickable
 through the viewport, both themes, the queue still working after a dismiss,
 hover pausing a card's auto-dismiss, focus pausing it, focus holding through the
 pointer leaving, the action running once and dismissing, no control for an
