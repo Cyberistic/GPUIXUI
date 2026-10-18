@@ -131,14 +131,14 @@ it("paints the high-contrast dark palette and repaints on a switch", async () =>
 it("a density override moves control heights and leaves colour alone", async () => {
   const runtime = await openWindow();
   const expectMetrics = (density: Density): void => {
-    expect(heightOf(runtime, "button")).toBe(density.controlHeight.md);
-    // A native `<input>` reports its content box: the runtime draws the border
-    // inside the declared height, so the paint is two thin borders shorter.
-    // Measured here; the contract is still the density metric.
-    expect(heightOf(runtime, "input")).toBe(
-      density.controlHeight.md - 2 * lightTheme.borderWidth.thin,
-    );
+    // NumberField still follows density (the pre-slice controls do).
     expect(heightOf(runtime, "number")).toBe(density.controlHeight.md);
+    // The shadcn slice is fixed (plan 370): a Button is `h-9` (36), and a
+    // native `<input>` reports its content box, two thin borders shorter.
+    expect(heightOf(runtime, "button")).toBe(36);
+    expect(heightOf(runtime, "input")).toBe(
+      36 - 2 * lightTheme.borderWidth.thin,
+    );
     // A selection box is icon-sized by design; density must not stretch it.
     expect(heightOf(runtime, "checkbox")).toBe(lightTheme.iconSize.md);
   };

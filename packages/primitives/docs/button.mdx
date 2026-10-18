@@ -25,19 +25,28 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `variant` | Rest | Hover / press |
 | --------- | ---- | ------------- |
 | `primary` (default) | `primary` fill, `primaryForeground` text | fill at 90% / 80% alpha |
-| `secondary` | `secondary` fill | alpha wash |
-| `outline` | border only | hover wash |
-| `ghost` | no chrome | hover wash |
-| `destructive` | `destructive` fill | alpha wash |
-| `link` | text in the primary role | underline + hover wash |
+| `secondary` | `secondary` fill | 80% fill / 80% alpha press |
+| `outline` | `background` fill + border | accent wash |
+| `ghost` | no chrome | accent wash + accent text |
+| `destructive` | `destructive` fill, `destructiveForeground` text | 90% fill / 80% alpha press |
+| `link` | text in the primary role | underline on hover |
+
+The shape of each variant — filled, bordered, or text-only — is shadcn's
+`cva` table (`BUTTON_VARIANTS`); the colours are the variant registry's roles,
+so the destructive label is `destructiveForeground`, not shadcn's literal
+`text-white`.
 
 ## Sizes and states
 
 | `size` | Height | Horizontal padding |
 | ------ | ------ | ------------------ |
-| `sm` | `density.controlHeight.sm` | `density.controlPaddingX.sm` |
-| `md` (default) | `density.controlHeight.md` | `density.controlPaddingX.md` |
-| `lg` | `density.controlHeight.lg` | `density.controlPaddingX.lg` |
+| `sm` | 32 (`h-8`) | 12 (`px-3`) |
+| `md` (default) | 36 (`h-9`) | 16 (`px-4`) |
+| `lg` | 40 (`h-10`) | 24 (`px-6`) |
+
+These are shadcn's new-york-v4 values (`BUTTON_SIZES`), not the density
+presets. `square` takes the icon table: `size-8` / `size-9` / `size-10` for
+sm / md / lg.
 
 - `square` — equal width and height, no horizontal padding: an icon-only button.
 - `radius` — the corner radius on the theme's scale (`none`, `sm`, `md`, `lg`,
@@ -54,7 +63,7 @@ import { Button, Stack } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `variant` | `ButtonVariant` | `"primary"` | the paint from `core/variants.ts` |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | the recipe's 32/36/40 and its padding |
 | `square` | `boolean` | `false` | icon-only geometry |
 | `radius` | `RadiusStep` | `"md"` | corner radius; an attached `ButtonGroup` supplies `"none"` |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
@@ -123,17 +132,21 @@ button reports nothing, while hover still opens its tip.
 - `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.
-- Focus is drawn as a zero-offset shadow ring (`controlFocusStyle`), because the
-  runtime has no `focusVisible`. A mouse click therefore shows the same ring as
-  Tab. Inside an attached `ButtonGroup` the ring is painted as an inset overlay
-  on the button's own edge, because the group's clip would cut an outer ring
-  away (plan `344`).
+- Focus is the recipe's `focus-visible:ring-[3px] ring-ring/50` — a zero-offset
+  shadow spread 3 px in the ring role at half alpha — because the runtime has no
+  `focusVisible`. A mouse click therefore shows the same ring as Tab. Inside an
+  attached `ButtonGroup` the ring is painted as an inset overlay on the button's
+  own edge, with the same recipe ring, because the group's clip would cut an
+  outer ring away (plans `344`, `370`).
 
 ## Theming
 
-`controlStyle` resolves fill, text, border, radius, hover, active, disabled and
-focus from the theme; `buttonVariants` maps each variant to colour **roles**,
-never colours. Size and padding come from `density`.
+`buttonRecipeStyle` resolves base + size + variant through `@gpuixui/tw`; the
+theme layers the fill, text, border, press state and cursor over it, and
+`buttonVariants` maps each variant to colour **roles**, never colours. The
+recipe's focus/invalid/disabled buckets are applied from the component's state.
+Size and padding are the recipe's, so a `Button` **does not follow density**
+(plan `370`; the presets are unchanged for the rest of the library).
 
 ## Style by state
 

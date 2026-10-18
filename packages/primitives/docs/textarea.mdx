@@ -37,10 +37,13 @@ const notes = "Description";
 
 Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly`,
 `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`,
-`aria-description`, `style`, `testId`.
+`aria-description`, `style`, `testId`. `size` has no effect in the shadcn slice
+(one recipe size) and `fullWidth` is implied by the recipe's `w-full`.
 
-Its height is rows, not a control height, so the component re-bases vertical
-padding to the density's horizontal padding step to keep the text inset square.
+Its padding, radius, type and paint come from the same new-york-v4 recipe as
+`Input` (`px-3 py-1 rounded-md text-sm`, plan `370`). Its **height** comes from
+`minRows`/`maxRows` instead of the recipe's single-line `h-9`, so a textarea can
+show more than one line — the one deliberate deviation from the class string.
 
 ## Keyboard
 

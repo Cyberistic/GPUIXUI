@@ -156,5 +156,8 @@ it("keeps density out of the theme switch", async () => {
     expect.fail("the runtime painted no button"),
   ).height;
   expect(darkHeight).toBe(lightHeight);
-  expect(darkHeight).toBe(lightTheme.density.controlHeight.md);
+  // The button is pinned to shadcn's `h-9` since plan 370; the theme switch
+  // must still not move it (density would, which is why this is not the
+  // density metric any more).
+  expect(darkHeight).toBe(36);
 });

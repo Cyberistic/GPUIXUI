@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 107/107
+`[x]` `[██████████]` 108/108
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -994,6 +994,32 @@ retired once both branches are one
       vertical group already stretches), so they share the width and their
       labels truncate; the group case fails in the old direction and without the
       flag (plan `369`).
+`[x]` `packages/primitives`: **the first shadcn conformance slice** — Input,
+      TextArea and Button resolved their chrome from the invented `comfortable`
+      density (32 high / 10 horizontal, label 13/18) while the new-york-v4
+      recipes say `h-9 px-3 py-1 rounded-md text-sm` (36/12/4/6, 14/20) and
+      `h-9 px-4 py-2` (36/16/8; sm 32/12, lg 40/24, icon 36). They now consume
+      `@gpuixui/tw`'s verbatim class strings through `core/recipes.ts`; the
+      tokens keep the paint (the destructive label is `destructiveForeground`,
+      not the literal white), the recipe's focus/invalid/disabled buckets are
+      applied from the component state, TextArea keeps rows for its height, and
+      the density presets are untouched. A 10-case compiler-consumption test and
+      a runtime size-table case fail against the old chrome (offline 626,
+      runtime 610; plan `370`).
+`[ ]` `packages/primitives`: **the rest of the control family joins the shadcn
+      slice** — Select's trigger, NumberField, OTPField, Toggle/ToggleGroup and
+      the selection controls still read density (32 px) beside the now-36 px
+      Input/Button; wire their recipes as the next slice (plan `370` §1).
+`[ ]` **tokens workstream**: `docs/tokens.md` §Density and
+      `docs/design-system.md` §6 still say density moves every control; since
+      plan `370` pins Input/TextArea/Button to the shadcn recipes (36 px fields;
+      32/36/40 buttons), those two paragraphs need the one-line exception (the
+      presets themselves are unchanged).
+`[ ]` **packages/tw** (cross-team): a colour-only ring in its own bucket
+      (`aria-invalid:ring-destructive/20`) is dropped because the width lives in
+      the focus bucket (`focus-visible:ring-[3px]`), so an invalid field has no
+      soft destructive halo; record the colour on the bucket so a resolver can
+      combine it with a width from another bucket (plan `370` §5.1).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

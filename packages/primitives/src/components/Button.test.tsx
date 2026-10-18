@@ -14,7 +14,7 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { focusRing } from "@gpuixui/tokens";
+import { buttonRecipeRing } from "../core/recipes.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton } from "./Button.js";
 import { keyEvent, clickEvent } from "./testing/event.js";
@@ -91,18 +91,15 @@ describe("Button", () => {
       { focused: false },
       { shrink: true },
     );
-    expect(hostStyleRecord(grouped)).toStrictEqual(
-      Option.some(
-        expect.objectContaining({
-          flexShrink: 1,
-          minWidth: 0,
-        }),
-      ),
-    );
+    expect(expectSome(hostStyleRecord(grouped))).toMatchObject({
+      flexShrink: 1,
+      minWidth: 0,
+    });
+    // The recipe's `shrink-0` is the standalone rule; the group overrides it.
     expect(
       Option.getOrUndefined(hostStyleRecord(resting({ children: "Save" })))
         ?.flexShrink,
-    ).toBeUndefined();
+    ).toBe(0);
   });
 
   it("activates on Enter key down, never on key up", () => {
@@ -302,9 +299,10 @@ describe("Button", () => {
 
   it("paints a clipped group's focus ring inside the button", () => {
     // The bug guarded (plan 344): an attached ButtonGroup clips at its buttons'
-    // outer edge, so the ring — a shadow spread 2px *outside* the button — was
-    // cut away. A clipped button now anchors an inset overlay that carries the
-    // same `focusRing`, and sets no shadow of its own.
+    // outer edge, so the outer ring shadow was cut away. A clipped button
+    // anchors an inset overlay that carries the same ring, and sets no shadow
+    // of its own. Since plan 370 the ring is the recipe's (3px), not the
+    // token 2px `focusRing`, so inside and outside a group match.
     const focused = renderButton(
       { children: "Save" },
       testTheme,
@@ -322,8 +320,8 @@ describe("Button", () => {
     expect(rings).toHaveLength(1);
     const ring = expectSome(hostStyleRecord(expectSome(Arr.head(rings))));
     expect(ring.boxShadow).toBeUndefined();
-    expect(ring.borderWidth).toBe(testTheme.borderWidth.strong);
-    expect(ring.borderColor).toBe(focusRing(testTheme).boxShadow.color);
+    expect(ring.borderWidth).toBe(buttonRecipeRing(testTheme)?.spreadRadius);
+    expect(ring.borderColor).toBe(buttonRecipeRing(testTheme)?.color);
     expect(ring.position).toBe("absolute");
   });
 
@@ -334,7 +332,7 @@ describe("Button", () => {
     const plain = renderButton({}, testTheme, { focused: true });
     expect(
       Option.getOrUndefined(hostStyleRecord(plain))?.boxShadow,
-    ).toStrictEqual(focusRing(testTheme).boxShadow);
+    ).toStrictEqual(buttonRecipeRing(testTheme));
     expect(elementChildren(plain)).toHaveLength(0);
 
     expect(

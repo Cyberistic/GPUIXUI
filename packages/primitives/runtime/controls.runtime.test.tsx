@@ -18,11 +18,12 @@ import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
-import { focusRing } from "@gpuixui/tokens";
+import { buttonRecipeRing } from "../src/core/recipes.js";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { IconButton } from "../src/components/IconButton.js";
+import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Stack } from "../src/components/Stack.js";
@@ -310,7 +311,40 @@ it("tints the icon with the variant's foreground and paints a square box", async
   expect(icon.style["width"]).toBe(testTheme.iconSize.lg);
   const bounds = boundsOf(runtime, "ib");
   expect(bounds.width).toBe(bounds.height);
-  expect(bounds.height).toBe(testTheme.density.controlHeight.lg);
+  // shadcn's icon-lg is `size-10` (plan 370), not the density metric.
+  expect(bounds.height).toBe(40);
+});
+
+it("paints the shadcn recipe's size table", async () => {
+  // Plan 370: the primitive consumes the new-york-v4 geometry rather than the
+  // density presets — `h-9`, `h-8`, `h-10`, `size-9`, and a field's `h-9`.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row" gap="sm">
+        <Button testId="md">Default</Button>
+        <Button testId="sm" size="sm">
+          Small
+        </Button>
+        <Button testId="lg" size="lg">
+          Large
+        </Button>
+        <Button testId="icon" square>
+          +
+        </Button>
+        <Input testId="field" label="Name" />
+      </Stack>
+    </Surface>,
+  );
+  expect(boundsOf(runtime, "md").height).toBe(36);
+  expect(boundsOf(runtime, "sm").height).toBe(32);
+  expect(boundsOf(runtime, "lg").height).toBe(40);
+  expect(boundsOf(runtime, "icon").height).toBe(36);
+  expect(boundsOf(runtime, "icon").width).toBe(36);
+  // A native `<input>` reports its content box: two thin borders inside 36.
+  expect(boundsOf(runtime, "field").height).toBe(
+    36 - 2 * testTheme.borderWidth.thin,
+  );
 });
 
 it("paints one spinner instead of an icon while loading, and refuses activation", async () => {
@@ -409,7 +443,7 @@ it("paints an attached group's focus ring inside its clip", async () => {
   // its buttons' union, so the focused button's 2px ring spread lay outside the
   // group's `overflow: hidden` clip on three sides and under the next sibling
   // on the fourth — a keyboard user saw no focus at all. The ring is now an
-  // inset overlay drawn inside the button, from `focusRing`'s own width/colour.
+  // inset overlay drawn inside the button, from the recipe ring's width/colour.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -448,8 +482,11 @@ it("paints an attached group's focus ring inside its clip", async () => {
   const ring = Option.getOrElse(Arr.head(rings), () =>
     expect.fail("the group painted no ring inside the button"),
   );
-  expect(ring.style.borderWidth).toBe(testTheme.borderWidth.strong);
-  expect(ring.style.borderColor).toBe(focusRing(testTheme).boxShadow.color);
+  // The clipped overlay carries the recipe's ring (plan 370): `ring-[3px]`.
+  expect(ring.style.borderWidth).toBe(
+    buttonRecipeRing(testTheme)?.spreadRadius,
+  );
+  expect(ring.style.borderColor).toBe(buttonRecipeRing(testTheme)?.color);
   const ringBounds = Option.getOrElse(runtime.boundsOfId(ring.id), () =>
     expect.fail("the ring painted no box"),
   );
@@ -462,7 +499,7 @@ it("paints an attached group's focus ring inside its clip", async () => {
 
 it("keeps the outer ring for a separated group", async () => {
   // The other direction of plan 344: a separated group does not clip, so the
-  // button keeps the one shared `focusRing` shadow and paints no overlay.
+  // button keeps the one shared recipe ring shadow and paints no overlay.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -478,7 +515,7 @@ it("keeps the outer ring for a separated group", async () => {
     expect.fail("the focused button painted no element"),
   );
   expect(button.style.boxShadow).toStrictEqual({
-    ...focusRing(testTheme).boxShadow,
+    ...buttonRecipeRing(testTheme),
     inset: false,
   });
   expect(

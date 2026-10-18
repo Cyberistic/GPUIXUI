@@ -37,7 +37,11 @@ export type TextAreaProps = Omit<FieldProps, "onSubmit"> & {
   readonly maxRows?: number;
 };
 
-/** A textarea's height is rows, not a control height, so it re-bases padding. */
+/**
+ * A textarea's height is rows, not a control height: the shared recipe supplies
+ * the single-line `h-9`, so the one deviation from the class string is dropping
+ * its height and letting `minRows`/`maxRows` own the box (plan `370`).
+ */
 export const renderTextArea = (
   props: TextAreaProps,
   theme: PrimitiveTheme,
@@ -46,18 +50,12 @@ export const renderTextArea = (
   onValueChange: (value: string) => void,
 ): ReactElement => {
   const host = fieldHostProps(props, theme, state, focus, onValueChange);
-  const vertical = theme.density.controlPaddingX[props.size ?? "md"];
   const chrome = fieldChrome(
     { ...props, style: undefined },
     theme,
     focus.focused,
   );
-  const base: StyleDesc = {
-    ...chrome,
-    height: undefined,
-    paddingTop: vertical,
-    paddingBottom: vertical,
-  };
+  const base: StyleDesc = { ...chrome, height: undefined };
   const fieldState: FieldState = {
     disabled: props.disabled === true,
     focused: focus.focused,

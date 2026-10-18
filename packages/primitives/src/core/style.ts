@@ -24,6 +24,7 @@ import type {
   RadiusStep,
   SpaceStep,
   TextRole,
+  ThemeShadow,
 } from "./theme.js";
 import { fieldVariant } from "./variants.js";
 
@@ -182,19 +183,18 @@ export const controlFocusStyle = (
  * `focusRing`, so the ring has one definition. Absolute, so it takes no layout
  * space.
  */
-export const clippedFocusRingStyle = (theme: PrimitiveTheme): StyleDesc => {
-  const ring = focusRing(theme).boxShadow;
-  return {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    borderWidth: ring.spreadRadius,
-    borderColor: ring.color,
-    pointerEvents: "none",
-  };
-};
+export const clippedFocusRingStyle = (
+  ring: ThemeShadow | undefined,
+): StyleDesc => ({
+  position: "absolute",
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+  borderWidth: ring?.spreadRadius ?? 0,
+  borderColor: ring?.color,
+  pointerEvents: "none",
+});
 
 /**
  * A fixed-height control's label: one line, clipped with an ellipsis.

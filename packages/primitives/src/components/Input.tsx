@@ -10,17 +10,11 @@
 import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import type { ValueState } from "../core/state.js";
-import {
-  controlFocusStyle,
-  controlStyle,
-  fieldTextStyle,
-  nativeTextTheme,
-} from "../core/style.js";
+import { fieldRecipeStyle } from "../core/recipes.js";
+import { nativeTextTheme } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { fieldVariant } from "../core/variants.js";
 import {
   composeHandler,
-  mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -79,24 +73,35 @@ export interface FieldProps extends TriggerHandlers {
   readonly testId?: string;
 }
 
-/** The chrome a field element draws, shared by the input and the textarea. */
+/**
+ * The chrome a field element draws, shared by the input and the textarea.
+ *
+ * The new-york-v4 recipe (plan `370`) supplies the geometry, radius and type;
+ * the theme supplies the fill, text colour and the hover/press boundary. The
+ * recipe's focus/invalid/disabled buckets are applied here because 0.10.0 has no
+ * `focusVisible` style property (plan `524`).
+ */
 export const fieldChrome = (
-  { size = "md", invalid, disabled, fullWidth, style }: FieldProps,
+  { invalid, disabled, style }: FieldProps,
   theme: PrimitiveTheme,
   focused: boolean,
-): StyleDesc => {
-  const spec = { variant: fieldVariant, size, invalid, disabled, fullWidth };
-  const base = mergeStyle(
-    mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)),
-    disabled === true ? { cursor: "not-allowed" } : undefined,
+): StyleDesc =>
+  resolvePartStyle(
+    fieldRecipeStyle(
+      {
+        focused,
+        invalid: invalid === true,
+        disabled: disabled === true,
+      },
+      theme,
+    ),
+    style,
+    {
+      disabled: disabled === true,
+      focused,
+      invalid: invalid === true,
+    },
   );
-  const ring = focused ? controlFocusStyle(spec, theme) : {};
-  return resolvePartStyle(mergeStyle(base, ring), style, {
-    disabled: disabled === true,
-    focused,
-    invalid: invalid === true,
-  });
-};
 
 /**
  * The props an `<input>`/`<textarea>` shares, from the spec and its state.

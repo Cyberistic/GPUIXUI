@@ -19,6 +19,7 @@ import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
+import { buttonRecipeRing } from "../src/core/recipes.js";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -44,18 +45,46 @@ import { Surface, openWindow, testTheme } from "./fixture.js";
 /** The shadow `focusRing` becomes after the runtime's `inset` normalisation. */
 const RING = { ...focusRing(testTheme).boxShadow, inset: false };
 
+/**
+ * The shadcn recipe's focus ring (plan 370): `ring-[3px] ring-ring/50`.
+ *
+ * Button, Input and TextArea take their focus from the recipe's bucket, because
+ * 0.10.0 has no `focusVisible`; the rest of the controls keep the token ring.
+ */
+const RECIPE_RING = {
+  ...Option.getOrElse(
+    Option.fromNullishOr(buttonRecipeRing(testTheme)),
+    () => focusRing(testTheme).boxShadow,
+  ),
+  inset: false,
+};
+
 interface FocusCase {
   readonly name: string;
   readonly node: () => ReactElement;
+  /** The exact shadow this control paints while focused. */
+  readonly ring?: typeof RING;
 }
 
 const CASES: ReadonlyArray<FocusCase> = [
-  { name: "Button", node: () => <Button testId="c">Save</Button> },
+  {
+    name: "Button",
+    node: () => <Button testId="c">Save</Button>,
+    ring: RECIPE_RING,
+  },
   { name: "Toggle", node: () => <Toggle testId="c">Bold</Toggle> },
   { name: "Checkbox", node: () => <Checkbox testId="c" label="Accept" /> },
   { name: "Switch", node: () => <Switch testId="c" label="On" /> },
-  { name: "Input", node: () => <Input testId="c" label="Name" /> },
-  { name: "TextArea", node: () => <TextArea testId="c" label="Notes" /> },
+  {
+    name: "Input",
+    node: () => <Input testId="c" label="Name" />,
+    ring: RECIPE_RING,
+  },
+  {
+    name: "TextArea",
+    node: () => <TextArea testId="c" label="Notes" />,
+    ring: RECIPE_RING,
+  },
   { name: "NumberField", node: () => <NumberField testId="c" label="Count" /> },
   { name: "OTPField", node: () => <OTPField testId="c" label="Code" /> },
   {
@@ -120,11 +149,11 @@ const CASES: ReadonlyArray<FocusCase> = [
 const ringsOf = (runtime: Runtime): ReadonlyArray<TestElement> =>
   Arr.filter(runtime.all(), (element) => element.style.boxShadow !== undefined);
 
-it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase.node] as const))(
+it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase] as const))(
   "%s paints exactly one focus ring, inside the control",
-  async (_name, node) => {
+  async (_name, testCase) => {
     const runtime = await openWindow();
-    runtime.render(<Surface>{node()}</Surface>);
+    runtime.render(<Surface>{testCase.node()}</Surface>);
     runtime.focusNext();
     runtime.flush();
     const root = Option.getOrElse(runtime.element("c"), () =>
@@ -135,17 +164,17 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase.node] as const))(
     const ring = Option.getOrElse(Arr.head(rings), () =>
       expect.fail("the control painted no ring"),
     );
-    expect(ring.style.boxShadow).toStrictEqual(RING);
+    expect(ring.style.boxShadow).toStrictEqual(testCase.ring ?? RING);
     expect(isWithin(runtime, ring, root.id)).toBe(true);
   },
 );
 
 it("paints the ring inside a button that an attached group clips", async () => {
-  // Plan 344: the matrix's one ring is a shadow spread 2px outside the control,
+  // Plan 344: the matrix's one ring is a shadow spread outside the control,
   // which an attached group's clip removes. A clipped button therefore paints
-  // its ring as an inset overlay — still `focusRing`'s width and colour, still
-  // exactly one ring, still inside the control (its band lies on the button's
-  // edge, where the clip cannot reach).
+  // its ring as an inset overlay — the recipe's width and colour since plan 370,
+  // still exactly one ring, still inside the control (its band lies on the
+  // button's edge, where the clip cannot reach).
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -165,12 +194,12 @@ it("paints the ring inside a button that an attached group clips", async () => {
     runtime.all(),
     (element) =>
       element.style.position === "absolute" &&
-      element.style.borderColor === RING.color,
+      element.style.borderColor === RECIPE_RING.color,
   );
   expect(rings).toHaveLength(1);
   const ring = Option.getOrElse(Arr.head(rings), () =>
     expect.fail("the clipped control painted no ring"),
   );
-  expect(ring.style.borderWidth).toBe(testTheme.borderWidth.strong);
+  expect(ring.style.borderWidth).toBe(RECIPE_RING.spreadRadius);
   expect(isWithin(runtime, ring, root.id)).toBe(true);
 });
