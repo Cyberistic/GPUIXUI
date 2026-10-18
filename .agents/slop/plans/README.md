@@ -29,6 +29,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | `200–299` | reference adoption and gap sequencing |
 | `300–399` | free |
 | `400–499` | docs site |
+| `500–599` | tokens and theming overflow (this workstream) |
 
 ## The plan set
 
@@ -194,6 +195,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [397](./397-status-panel-action-scope.md) | The panel action's scope: a tinted panel, not a floating card | F | 348, 362, 392, 394, 395, 396 | done |
 | [398](./398-theme-check-index.md) | The check count and the composition suites' subset | F | 071, 358–364, 371, 383, 385, 392, 396 | done |
 | [399](./399-solid-status-fill.md) | The solid status fill and its one call | F | 014, 057, 071, 083, 090, 300, 308, 309, 314, 332, 347, 371, 383, 387, 388, 394, 398 | done |
+| [500](./500-text-hierarchy-surface-body-roles.md) | The text hierarchy on each surface's own body role | F | 059, 071, 315, 319, 371, 383, 387, 388, 391, 392, 398 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1899,6 +1901,21 @@ set already clears the floor — the tightest is **1.262:1** (XP light `warning`
 on `selected`) — so no colour moves. The documents now state the distinction the
 mark series assumed: a solid fill is a fill on the eight chip surfaces, a dot or
 label is `xText`.
+
+Plan `500` closes the hierarchy's last blind spot. `textTiers` compared secondary
+text with `foreground`, but a card, a menu/dialog and a field paint their **own**
+body role — `cardForeground`, `popoverForeground`, `inputForeground` — and those
+roles were never the brighter side of a tier. A copied theme that set one of
+them to `mutedForeground` rendered every card value, menu label or field entry
+at secondary strength while all five checks returned `[]`: identity light's
+secondary text measures **9.671:1** on a card and on a field, so the 7:1 body
+floor cannot see the inversion. The three tiers are now in `textTiers`, the
+surfaces derive from `contrastPairs` (one card, four popover surfaces — the
+popover and the three row washes it shares — and the five surfaces typed text is
+documented on), and every shipped set clears the step at **1.274:1** (high
+contrast light), so no colour, pair, floor or metric moves. `selectedForeground`
+is deliberately not a body tier: it is the secondary-strength tint an inherited
+label keeps inside a selected row, whose title is `foreground`.
 
 ## How to use a plan
 
