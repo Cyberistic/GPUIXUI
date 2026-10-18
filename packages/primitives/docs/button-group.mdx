@@ -115,6 +115,10 @@ axis changes layout only, so neither the tokens nor the clip follow it.
   heading.
 - No overflow behaviour: a group wider than its parent does not collapse into a
   menu.
+- A **horizontal** group given a width shares it between its buttons: they
+  shrink and their labels clip to one line, so a button is never pushed outside
+  the group (plan `369`). A vertical group stretches its buttons instead, and a
+  group whose own width is not constrained still hugs its buttons.
 
 ## Verification
 

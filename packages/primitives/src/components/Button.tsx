@@ -37,10 +37,11 @@ import {
   controlFocusStyle,
   controlLabelStyle,
   controlStyle,
+  shrinkLayoutStyle,
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
 import { buttonVariants, type ButtonVariant } from "../core/variants.js";
-import { useGroupShape } from "./group-shape.js";
+import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
   composeHandler,
   mergeStyle,
@@ -118,11 +119,13 @@ export const renderButton = (
   theme: PrimitiveTheme,
   focus: ButtonFocus,
   /**
-   * The surrounding group clips its surface, so the ring moves inside the
-   * button where the clip cannot cut it away (plan `344`).
+   * The surrounding group's contract: `clipped` moves the ring inside the
+   * button where the group's clip cannot cut it away (plan `344`); `shrink`
+   * lets a horizontal group share its width between its buttons (plan `369`).
    */
-  clipped = false,
+  group: { readonly clipped?: boolean; readonly shrink?: boolean } = {},
 ): ReactElement => {
+  const clipped = group.clipped === true;
   const { variant = "primary", size = "md" } = props;
   const busy = isBusy(props);
   const spec = {
@@ -158,9 +161,12 @@ export const renderButton = (
       handler?.(event);
     };
   const showRing = focus.focused && props.disabled !== true;
-  const chrome = clipped
-    ? mergeStyle(controlStyle(spec, theme), { position: "relative" })
-    : controlStyle(spec, theme);
+  const chrome = mergeStyle(
+    clipped
+      ? mergeStyle(controlStyle(spec, theme), { position: "relative" })
+      : controlStyle(spec, theme),
+    group.shrink === true ? shrinkLayoutStyle : undefined,
+  );
   return (
     <div
       {...passiveTriggerHandlers(props)}
@@ -203,14 +209,19 @@ export const Button = (props: ButtonProps): ReactElement => {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
   const shape = useGroupShape();
+  const group: GroupShape | undefined = Option.getOrUndefined(shape);
   return renderButton(
-    { ...props, radius: props.radius ?? Option.getOrUndefined(shape) },
+    {
+      ...props,
+      radius:
+        props.radius ?? Option.getOrUndefined(group?.radius ?? Option.none()),
+    },
     theme,
     {
       focused,
       onFocus: () => setFocused(true),
       onBlur: () => setFocused(false),
     },
-    Option.isSome(shape),
+    { clipped: group?.clipped === true, shrink: group?.shrink === true },
   );
 };

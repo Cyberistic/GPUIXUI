@@ -80,6 +80,31 @@ describe("Button", () => {
     });
   });
 
+  it("shrinks only when a horizontal group asks it to", () => {
+    // Plan 369: a group given a width shares it between its buttons, so the
+    // second button is not pushed outside the group. A standalone button keeps
+    // its intrinsic width, so the flag must come from the context, not the
+    // button itself.
+    const grouped = renderButton(
+      { children: "Save" },
+      testTheme,
+      { focused: false },
+      { shrink: true },
+    );
+    expect(hostStyleRecord(grouped)).toStrictEqual(
+      Option.some(
+        expect.objectContaining({
+          flexShrink: 1,
+          minWidth: 0,
+        }),
+      ),
+    );
+    expect(
+      Option.getOrUndefined(hostStyleRecord(resting({ children: "Save" })))
+        ?.flexShrink,
+    ).toBeUndefined();
+  });
+
   it("activates on Enter key down, never on key up", () => {
     const onActivate = vi.fn();
     const onClick = vi.fn();
@@ -284,7 +309,7 @@ describe("Button", () => {
       { children: "Save" },
       testTheme,
       { focused: true },
-      true,
+      { clipped: true },
     );
     const chrome = expectSome(hostStyleRecord(focused));
     expect(chrome.boxShadow).toBeUndefined();
@@ -313,11 +338,18 @@ describe("Button", () => {
     expect(elementChildren(plain)).toHaveLength(0);
 
     expect(
-      elementChildren(renderButton({}, testTheme, { focused: false }, true)),
+      elementChildren(
+        renderButton({}, testTheme, { focused: false }, { clipped: true }),
+      ),
     ).toHaveLength(0);
     expect(
       elementChildren(
-        renderButton({ disabled: true }, testTheme, { focused: true }, true),
+        renderButton(
+          { disabled: true },
+          testTheme,
+          { focused: true },
+          { clipped: true },
+        ),
       ),
     ).toHaveLength(0);
   });

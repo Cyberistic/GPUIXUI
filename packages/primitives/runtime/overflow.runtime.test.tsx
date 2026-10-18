@@ -18,6 +18,7 @@ import * as Option from "effect/Option";
 import type { ReactNode } from "react";
 import type { TestElement } from "@gpuix/react/testing";
 import { Button } from "../src/components/Button.js";
+import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { Label } from "../src/components/Label.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
@@ -160,6 +161,54 @@ it.each(cases)("contains its own label: $name", async ({ control, open }) => {
   const runtime = await open();
   expect(painted(runtime, LONG)).not.toHaveLength(0);
   expect(escapes(runtime, control, LONG)).toStrictEqual([]);
+});
+
+it("shares a constrained group's width between its buttons", async () => {
+  // Plan 369: measured, a 220 px attached group left its first button 401 px
+  // wide and the second at x 413…463 — outside the group and clipped away. Both
+  // buttons now share the width, and the long label truncates (plan 368).
+  const runtime = await mount(
+    <ButtonGroup testId="group" mode="attached" style={{ width: FRAME }}>
+      <Button testId="first" variant="primary">
+        {LONG}
+      </Button>
+      <Button testId="second" variant="secondary">
+        Save
+      </Button>
+    </ButtonGroup>,
+  );
+  const group = boundsOf(runtime, "group");
+  for (const id of ["first", "second"]) {
+    const button = boundsOf(runtime, id);
+    expect(button.x).toBeGreaterThanOrEqual(group.x);
+    expect(button.x + button.width).toBeLessThanOrEqual(group.x + group.width);
+  }
+  expect(escapes(runtime, "group", LONG)).toStrictEqual([]);
+});
+
+it("keeps a vertical group stretched instead of shrinking it", async () => {
+  const runtime = await mount(
+    <ButtonGroup
+      testId="group"
+      mode="attached"
+      orientation="vertical"
+      style={{ width: FRAME }}
+    >
+      <Button testId="first" variant="primary">
+        {LONG}
+      </Button>
+      <Button testId="second" variant="secondary">
+        Save
+      </Button>
+    </ButtonGroup>,
+  );
+  const group = boundsOf(runtime, "group");
+  const first = boundsOf(runtime, "first");
+  const second = boundsOf(runtime, "second");
+  expect(first.width).toBeCloseTo(group.width, 0);
+  expect(second.width).toBeCloseTo(group.width, 0);
+  expect(second.y).toBeGreaterThanOrEqual(first.y + first.height);
+  expect(escapes(runtime, "group", LONG)).toStrictEqual([]);
 });
 
 it("keeps a long select value and its chevron inside the trigger", async () => {

@@ -17,7 +17,7 @@ import type { ReactElement, ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { GroupShapeContext } from "./group-shape.js";
+import { GroupShapeContext, type GroupShape } from "./group-shape.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -88,14 +88,16 @@ export const renderButtonGroup = (
 /** Related actions: one row by default, one column when vertical. */
 export const ButtonGroup = (props: ButtonGroupProps): ReactElement => {
   const theme = useTheme();
+  const attached = props.mode !== "separated";
+  const shape: GroupShape = {
+    radius: attached ? Option.some("none" as const) : Option.none(),
+    clipped: attached,
+    // A vertical group already stretches each button to its width; shrinking on
+    // the column's main axis would squash their height instead (plan `369`).
+    shrink: (props.orientation ?? "horizontal") === "horizontal",
+  };
   return (
-    <GroupShapeContext.Provider
-      value={
-        props.mode === "separated"
-          ? Option.none()
-          : Option.some("none" as const)
-      }
-    >
+    <GroupShapeContext.Provider value={Option.some(shape)}>
       {renderButtonGroup(props, theme)}
     </GroupShapeContext.Provider>
   );

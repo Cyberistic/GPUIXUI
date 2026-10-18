@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 106/106
+`[x]` `[██████████]` 107/107
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -986,6 +986,14 @@ retired once both branches are one
       capped to the window; `runtime/overflow.runtime.test.tsx` holds the class
       in 9 cases and each surface fails by name without its fix (offline 615,
       runtime 600; plan `368`).
+`[x]` `packages/primitives`: **a horizontal `ButtonGroup` pushed its buttons out
+      of itself** — measured: a 220 px attached group left the first button
+      401 px wide and the second at `x 413…463`, entirely outside the group and
+      clipped away (a separated group painted both outside). The group now asks
+      its buttons to shrink through `GroupShapeContext` (horizontal only; a
+      vertical group already stretches), so they share the width and their
+      labels truncate; the group case fails in the old direction and without the
+      flag (plan `369`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
