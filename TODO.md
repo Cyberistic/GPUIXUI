@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 177/230
+`[x]` `[███████░░░]` 178/231
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1400,6 +1400,14 @@ and **2.795:1** on its quiet panel, under the 4.5:1 mark floor, while every
 check returned `[]`. `nativeFieldTheme(theme)` returns the prop from the accent,
 which `markPairs` already holds on the `input` fill and the four `Surface` tones,
 so no role is duplicated and a copied style follows its own accent (plan 511)
+`[x]` Hold the panel action's label through the text-selection wash — plan 394
+moved a ghost action to `softActionForeground` but `selectionSoftPairs` still
+measured only the `foreground` its description paints, so identity light with
+`softActionForeground: "#444444"` measured 7.35:1 at rest and **5.685:1**
+through the wash on `destructiveSoft` while every check returned `[]`; the four
+soft fills join the list (12 → 16), every shipped set clears 8.667:1 at the
+tightest so no colour moves, and the stale `softAction` JSDoc that still
+recommended the canvas washes is corrected (plan 512)
 `[ ]` Cross-team: `primitives` passes `nativeFieldTheme(theme)` to every native
 `<input>`/`<textarea>` it renders, so a field's caret follows the theme instead
 of the runtime's built-in dark value (owner: `primitives`; plan 511)

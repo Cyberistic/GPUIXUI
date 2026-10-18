@@ -409,7 +409,7 @@ under the pointer and the four soft status fills a status panel provides, and
 Alert is the same defect one surface over. Default body text
 is checked on the canvas, card, the `muted` panel, `popover`, the
 `hover`/`active`/`accent`/`selected` washes and the four soft status fills an
-Alert's description and ghost dismiss control paint, so an avatar's initials on
+Alert's description paints, so an avatar's initials on
 the quiet panel, a date picker's month header on its floating surface, a selected
 row's title and an Alert's body are held to the body floor. Typed text (`inputForeground`) is
 checked on the `input` fill and on the four `Surface` tones a transparent field

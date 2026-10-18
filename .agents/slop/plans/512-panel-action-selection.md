@@ -5,7 +5,7 @@ on:** 091 and 362 (text selection inside a soft status surface), 394 (the
 `softAction` family), 506 and 510 (the last selection-wash fixes), 387
 (`shippedThemes`).
 
-**Status:** planned.
+**Status:** done.
 
 ## 1. The defect
 

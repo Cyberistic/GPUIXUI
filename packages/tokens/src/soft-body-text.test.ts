@@ -1,12 +1,13 @@
 /**
  * Guards the defect plan 320 fixes: default body text (`foreground`) was
  * measured on the plain surfaces and the row washes, but not on the four soft
- * status fills. An Alert's description (`components/alert.tsx:181`) and its
- * ghost dismiss control (`internal/button.tsx:84`) paint `foreground` inside
- * the tone-tinted root (`toneSurface`, i.e. `xSoft`), so an edited theme could
- * erase the description while `themeContrastFailures` returned `[]`. The
- * role-level completeness guard could not see it: `foreground` is measured
- * somewhere.
+ * status fills. An Alert's description (`components/alert.tsx:181`) paints
+ * `foreground` inside the tone-tinted root (`toneSurface`, i.e. `xSoft`), so an
+ * edited theme could erase the description while `themeContrastFailures`
+ * returned `[]`. The role-level completeness guard could not see it:
+ * `foreground` is measured somewhere. A ghost action's label is a different
+ * role (`softActionForeground`, plan `394`) and is measured by the panel-action
+ * lists; plan `512` holds it through the selection wash.
  *
  * Every shipped identity, platform and recipe set clears the body floor on all
  * four fills, so no colour moves. The pairs exist so a brand theme or copied

@@ -579,7 +579,7 @@ describe("themeContrastFailures", () => {
     expect(selectionPairs.length).toBe(20);
     expect(selectionStatusPairs).toHaveLength(36);
     expect(selectionWashPairs.length).toBe(9);
-    expect(selectionSoftPairs.length).toBe(12);
+    expect(selectionSoftPairs.length).toBe(16);
     expect(selectionSoftWashPairs.length).toBe(4);
     expect(selectionFillPairs).toHaveLength(8);
     expect(selectionFillWashPairs).toHaveLength(8);

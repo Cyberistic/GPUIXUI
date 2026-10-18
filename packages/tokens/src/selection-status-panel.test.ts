@@ -1,17 +1,25 @@
 /**
- * Guards the gap plan 362 closes: a status panel carries three text roles — the
- * tone's own foreground, the body an `AlertDescription` or ghost dismiss control
- * paints, and the quiet caption plan 346 added — and the selection contract
- * measured only the tone's foreground through the wash. A reader copies an
- * Alert's description or a Toast's caption, so an edited theme whose wash,
- * accent or soft tint made either unreadable returned `[]` from
- * `themeContrastFailures` while the same edit on a plain surface was reported.
+ * Guards the gap plan 362 closes: a status panel carries text roles — the tone's
+ * own foreground, the body an `AlertDescription` paints, and the quiet caption
+ * plan 346 added — and the selection contract measured only the tone's
+ * foreground through the wash. A reader copies an Alert's description or a
+ * Toast's caption, so an edited theme whose wash, accent or soft tint made
+ * either unreadable returned `[]` from `themeContrastFailures` while the same
+ * edit on a plain surface was reported.
+ *
+ * Plan 394 later moved the ghost dismiss control's label to
+ * `softActionForeground`; plan 362 could not have named that fourth role, so a
+ * theme whose label was readable at rest could lose the body floor through the
+ * wash while every check returned `[]`. Identity light with
+ * `softActionForeground: "#444444"` measures 7.347–7.556:1 at rest and
+ * 5.685–5.847:1 through the wash (plan 512).
  *
  * `primaryText` stays out on purpose: plan 087 documents that accent-toned text
  * under a wash is not guaranteed at AAA, and this suite records the measured
  * reason (macOS light measures 4.32:1 through the wash on `infoSoft`, under the
  * 4.5:1 secondary floor).
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
 import {
@@ -27,6 +35,7 @@ import {
   platformRecipeNames,
   selectionSoftPairs,
   themeContrastFailures,
+  themeFailures,
   themeModes,
   type PlatformName,
   type PlatformRecipeName,
@@ -115,8 +124,8 @@ describe("text selection in a status panel", () => {
     expect(failures).toEqual([]);
   });
 
-  it("is the three text roles on the four soft fills", () => {
-    expect(selectionSoftPairs).toHaveLength(12);
+  it("is the four text roles on the four soft fills", () => {
+    expect(selectionSoftPairs).toHaveLength(16);
     expect(
       selectionSoftPairs.map(([foreground, background, pairClass]) => [
         foreground,
@@ -127,9 +136,59 @@ describe("text selection in a status panel", () => {
       softFills.flatMap((fill) => [
         [`${fill}Foreground`, fill, "body"],
         ["foreground", fill, "body"],
+        ["softActionForeground", fill, "body"],
         ["mutedForeground", fill, "secondary"],
       ]),
     );
+  });
+
+  it("reports the panel action's label a theme loses through the wash", () => {
+    const faded = extendTheme(getTheme("light"), {
+      colors: { softActionForeground: "#444444" },
+    });
+
+    softFills.forEach((fill) => {
+      expect(
+        contrastRatio(faded.colors.softActionForeground, faded.colors[fill]),
+        `${fill} at rest`,
+      ).toBeGreaterThanOrEqual(contrastFloors.default.body);
+    });
+
+    const failures = themeContrastFailures(faded).filter(
+      ({ foreground, wash }) =>
+        foreground === "softActionForeground" && wash === "selection",
+    );
+
+    expect(failures.map(({ background }) => background)).toEqual(softFills);
+    expect(
+      failures.every(
+        ({ pairClass, floor }) =>
+          pairClass === "body" && floor === contrastFloors.default.body,
+      ),
+    ).toBe(true);
+    expect(
+      failures.find(({ background }) => background === "destructiveSoft")
+        ?.ratio,
+    ).toBeCloseTo(5.69, 1);
+    expect(
+      themeFailures(faded).some(
+        (failure) =>
+          failure.kind === "contrast" &&
+          failure.foreground === "softActionForeground",
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps the ghost action on the designed washes in the public JSDoc", () => {
+    // check-tests-ok: a documentation guard reads the source module as text.
+    const styles = readFileSync(new URL("./styles.ts", import.meta.url), "utf8")
+      .replace(/\s*\*\s*/g, " ")
+      .replace(/\s+/g, " ");
+
+    expect(styles).toContain(
+      "paints `softActionHover` and `softActionActive` on the panel",
+    );
+    expect(styles).not.toContain("uses `hover` and `active` on the panel");
   });
 
   it("quotes the tightest shipped body and caption", () => {

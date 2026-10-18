@@ -15,8 +15,8 @@
  * Plan 312 extends the same role to the row washes: a selected list row's title
  * is `foreground` on `selected` (`ListItemTitle` overrides the row's inherited
  * `selectedForeground`) and a hovered selectable row paints `foreground` on
- * `accent`. Plan 320 adds the four soft status fills an Alert's description and
- * ghost dismiss control paint.
+ * `accent`. Plan 320 adds the four soft status fills an Alert's description
+ * paints.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";

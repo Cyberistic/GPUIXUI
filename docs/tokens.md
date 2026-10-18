@@ -1210,18 +1210,19 @@ with `foreground`; `popover` with `popoverForeground`; `input` with
 `inputForeground`; and `selected` with both of the roles a selected row
 paints — its title `foreground` at the body floor and its inherited label
 `selectedForeground` at the secondary floor; a soft status surface carries its
-own tone with `xSoftForeground`, its
-description with `foreground` and its caption with `mutedForeground`. A card
+own tone with `xSoftForeground`, its description with `foreground`, its panel
+action with `softActionForeground` and its caption with `mutedForeground`. A card
 carries two text roles — the default `foreground` a `CardTitle` paints and its
 own `cardForeground`, which a context menu trigger sets on its `card` fill — so
 both are measured through the wash.
 Secondary text is held to the secondary floor through the same wash on all nine
 surfaces (`mutedForeground`), because a row description, a card caption or a
 message timestamp is selected with the body copy around it. The soft surfaces
-are held in both directions too: `selectionSoftPairs` measures all three text
+are held in both directions too: `selectionSoftPairs` measures all four text
 roles a status panel carries — the tone's `xSoftForeground`, the body
-`foreground` its description and ghost dismiss control paint, and the caption
-`mutedForeground` — through the wash, and `selectionSoftWashPairs` the wash's
+`foreground` its description paints, the panel action's
+`softActionForeground`, and the caption `mutedForeground` — through the wash,
+and `selectionSoftWashPairs` the wash's
 own perceivability, so a selected Alert or Badge keeps its body and
 secondary floors and still shows the highlight. Every shipped set passes: the
 identity dark body on `infoSoft` is **8.14:1** at the tightest and Aero light's
@@ -1565,9 +1566,9 @@ inherited `selectedForeground`. The four status labels join it through
 because `xText` is the role a status label, icon or dot paints on the four washes
 a row uses, and a selectable row's label is dragged over with the copy around
 it. An Alert or Badge is measured the same way:
-`selectionSoftPairs` holds the tone's foreground, the body and the caption
-through the wash and `selectionSoftWashPairs` the highlight's own perceivability
-on the four soft fills. An unavailable label is measured too:
+`selectionSoftPairs` holds the tone's foreground, the body, the panel action's
+label and the caption through the wash, and `selectionSoftWashPairs` the
+highlight's own perceivability on the four soft fills. An unavailable label is measured too:
 `selectionInactivePairs` holds `disabledForeground` through the same wash on the
 thirteen `inactiveSurfaces` it paints on, at the `inactive` floor, because
 `selectionColor` inherits into that text. The wash itself is compared with each
@@ -2309,7 +2310,7 @@ soft fills. Palette edits must keep it green.
 
 Default body text is measured on `background`, `card`, the `muted` panel,
 `popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft
-status fills an Alert's description and ghost dismiss control paint
+status fills an Alert's description paints
 (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is
 `inputForeground` on the `input` fill and on the four `Surface` tones a
 transparent field can sit on (`background`, `card`, `popover`, `muted`), the same
@@ -2511,6 +2512,17 @@ the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
 `#B0B0B0` — while staying 1.455 / 1.69 / 1.643:1 below `mutedForeground` at the
 tightest. Every shipped set passes (3.177:1 Aero light, 4.722:1 AAA dark), no
 `contrastPairs` entry moves, and `contrastPairs` stays **394**.
+Plan `512` holds the panel action's label through the same wash. Plan `394` gave
+a ghost action inside a tone-tinted panel its own role, `softActionForeground`,
+but `selectionSoftPairs` still measured the body `foreground` the description
+paints, not the action's label; identity light with `softActionForeground:
+"#444444"` measured 7.347–7.556:1 at rest and **5.685–5.847:1** through the wash,
+under the 7:1 body floor, while `themeContrastFailures` returned `[]`. The four
+soft fills join the list for the panel action — 12 → **16** pairs — and every
+shipped set clears them (8.667:1 at the tightest, identity dark on `infoSoft`),
+so no colour moves, no `contrastPairs` entry moves, and `contrastPairs` stays
+**394**. The same audit corrected `softAction`'s JSDoc, which still described a
+ghost action as painting the canvas `hover`/`active` washes plan `394` replaced.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2691,13 +2703,17 @@ invisible. Windows dark and both high-contrast sets already cleared the secondar
 floor through the wash; the other seven moved their secondary grey one step away
 from the canvas (plan `087`). The four soft status surfaces are measured the same
 way: `selectionSoftPairs` holds the tone's `xSoftForeground`, the body
-`foreground` and the caption `mutedForeground` to their floors through the wash,
+`foreground`, the panel action's `softActionForeground` and the caption
+`mutedForeground` to their floors through the wash,
 and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 `successSoftForeground` measured 5.83:1 and Windows dark's wash over
 `destructiveSoft` 1.005:1 (plan `091`). Every shipped set clears the two roles
 added in plan `362` — the identity dark body on `infoSoft` at **8.14:1** and Aero
-light's caption on `destructiveSoft` at **4.78:1** at the tightest — so a status
-panel now keeps its description and its caption selected on any platform, and
+light's caption on `destructiveSoft` at **4.78:1** at the tightest — and the
+ghost action's label plan `394` moved off `foreground` joins them in plan `512`:
+every shipped set clears **8.667:1** (identity dark on `infoSoft`), so no colour
+moves. A status panel now keeps its description, its action and its caption
+selected on any platform, and
 accent-toned text stays the documented omission. The card's own
 `cardForeground` is measured beside the default `foreground` (plan `363`), so a
 theme whose card text is readable at rest cannot lose it under the wash — the

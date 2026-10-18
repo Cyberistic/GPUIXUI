@@ -982,8 +982,8 @@ describe("docs/tokens.md quoted figures", () => {
       "`inputForeground`; and `selected` with both of the roles a selected row " +
       "paints — its title `foreground` at the body floor and its inherited label " +
       "`selectedForeground` at the secondary floor; a soft status surface carries its own tone with " +
-      "`xSoftForeground`, its description with `foreground` and its caption " +
-      "with `mutedForeground`.";
+      "`xSoftForeground`, its description with `foreground`, its panel action with " +
+      "`softActionForeground` and its caption with `mutedForeground`.";
     expect(markdownProse).toContain(sentence);
 
     const secondary =
@@ -996,7 +996,7 @@ describe("docs/tokens.md quoted figures", () => {
       "`selectionSurfaces` is the list of plain surfaces",
       "`selectionPairs` holds each surface's body and secondary text pairs",
       "`selectionWashPairs` holds the wash itself",
-      "`selectionSoftPairs` measures all three text roles a status panel carries",
+      "`selectionSoftPairs` measures all four text roles a status panel carries",
       "`selectionSoftWashPairs` the wash's own perceivability",
     ].forEach((claim) => {
       expect(markdownProse, claim).toContain(claim);
@@ -1927,7 +1927,7 @@ describe("docs/tokens.md contrast surfaces", () => {
 
   it("states where default body text is measured", () => {
     const sentence =
-      "Default body text is measured on `background`, `card`, the `muted` panel, `popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills an Alert's description and ghost dismiss control paint (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is `inputForeground` on the `input` fill and on the four `Surface` tones a transparent field can sit on (`background`, `card`, `popover`, `muted`), the same set the placeholder is measured on. The placeholder is held to the same secondary floor on the `input` fill and on all four `Surface` tones a transparent field can sit on (`background`, `card`, `muted`, `popover`); a field on a row wash and a disabled field are deliberately out of scope — the latter reads `disabledForeground`, which plan `306` measures — and identity dark `#7C8595` measured 4.03:1 on the quiet panel and the floating surface until plan `317` moved it to `#858F9F`. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. The row washes are not either: a selectable list row paints `accent` on hover and `selected` when selected, and its title is `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides the `selectedForeground` the row inherits. Every pair clears the body floor with margin in every shipped set, so no value moves; the pairs exist so an edited theme cannot break them silently.";
+      "Default body text is measured on `background`, `card`, the `muted` panel, `popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills an Alert's description paints (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is `inputForeground` on the `input` fill and on the four `Surface` tones a transparent field can sit on (`background`, `card`, `popover`, `muted`), the same set the placeholder is measured on. The placeholder is held to the same secondary floor on the `input` fill and on all four `Surface` tones a transparent field can sit on (`background`, `card`, `muted`, `popover`); a field on a row wash and a disabled field are deliberately out of scope — the latter reads `disabledForeground`, which plan `306` measures — and identity dark `#7C8595` measured 4.03:1 on the quiet panel and the floating surface until plan `317` moved it to `#858F9F`. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. The row washes are not either: a selectable list row paints `accent` on hover and `selected` when selected, and its title is `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides the `selectedForeground` the row inherits. Every pair clears the body floor with margin in every shipped set, so no value moves; the pairs exist so an edited theme cannot break them silently.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -2159,7 +2159,7 @@ describe("docs/design-system.md", () => {
       `| a Toast's tone glyph and bar (\`infoSoftForeground\`/\`successSoftForeground\`/\`warningSoftForeground\`/\`destructiveSoftForeground\` on \`popover\`, the shipped composition until \`components\` paints \`xText\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`, a card's own \`cardForeground\` on \`card\` and a selected row's title \`foreground\` on \`selected\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
-      `| text selection on a soft status fill (\`xSoftForeground\`, \`foreground\` and \`mutedForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 / ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.body}:1 / ${contrastFloors.high.secondary}:1 |`,
+      `| text selection on a soft status fill (\`xSoftForeground\`, \`foreground\`, \`softActionForeground\` and \`mutedForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 / ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.body}:1 / ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a selected row's inherited label (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a status label (\`xText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,

@@ -1381,17 +1381,19 @@ export const selectionFillPairs: readonly ContrastPair[] =
 
 /**
  * The text roles a soft status panel carries, through the selection wash: the
- * tone's own foreground (its title), default body text (`AlertDescription`, the
- * ghost dismiss control) and the quiet caption or supporting line. A reader
- * copies any of the three and the wash composites over the fill, so each is
- * held to its own floor. Accent-toned text is the one deliberate omission
- * (plan 087): no wash that stays perceivable keeps a link at 7:1 at AAA.
+ * tone's own foreground (its title), default body text (`AlertDescription`), the
+ * panel action's label (`softActionForeground`, a ghost dismiss control since
+ * plan `394`) and the quiet caption or supporting line. A reader copies any of
+ * them and the wash composites over the fill, so each is held to its own floor.
+ * Accent-toned text is the one deliberate omission (plan 087): no wash that
+ * stays perceivable keeps a link at 7:1 at AAA.
  */
 export const selectionSoftPairs: readonly ContrastPair[] =
   softSurfaceRoles.flatMap(
     (background): ReadonlyArray<ContrastPair> => [
       [`${background}Foreground`, background, "body"],
       ["foreground", background, "body"],
+      ["softActionForeground", background, "body"],
       ["mutedForeground", background, "secondary"],
     ],
   );
