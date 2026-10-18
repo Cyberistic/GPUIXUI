@@ -11,8 +11,18 @@ import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import type { ValueState } from "../core/state.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { fieldChrome, fieldHostProps, type FieldProps } from "./Input.js";
-import { useControlState, useFocus, type FocusState } from "./internal.js";
+import {
+  fieldChrome,
+  fieldHostProps,
+  type FieldProps,
+  type FieldState,
+} from "./Input.js";
+import {
+  resolvePartStyle,
+  useControlState,
+  useFocus,
+  type FocusState,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /**
@@ -37,16 +47,26 @@ export const renderTextArea = (
 ): ReactElement => {
   const host = fieldHostProps(props, theme, state, focus, onValueChange);
   const vertical = theme.density.controlPaddingX[props.size ?? "md"];
-  const style: StyleDesc = {
-    ...fieldChrome(props, theme, focus.focused),
+  const chrome = fieldChrome(
+    { ...props, style: undefined },
+    theme,
+    focus.focused,
+  );
+  const base: StyleDesc = {
+    ...chrome,
     height: undefined,
     paddingTop: vertical,
     paddingBottom: vertical,
   };
+  const fieldState: FieldState = {
+    disabled: props.disabled === true,
+    focused: focus.focused,
+    invalid: props.invalid === true,
+  };
   return (
     <textarea
       {...host}
-      style={style}
+      style={resolvePartStyle(base, props.style, fieldState)}
       minRows={props.minRows}
       maxRows={props.maxRows}
     />

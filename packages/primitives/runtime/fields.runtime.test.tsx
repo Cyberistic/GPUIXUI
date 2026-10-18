@@ -271,6 +271,27 @@ it("sizes a TextArea by rows, as the runtime's own height control", async () => 
   expect(four).toBeGreaterThan(two);
 });
 
+it("honours a caller's height over a TextArea's rows", async () => {
+  // The bug guarded (plan 097): the row re-base ran *after* the caller's style
+  // was resolved, so `style={{ height: 120 }}` silently painted a one-row
+  // field. The same rule is guarded offline for every part; this measures it in
+  // a real frame. The inset is the runtime's own box model, so the assertion is
+  // that the painted height follows the requested one, not an exact pixel.
+  const heightOf = async (height: number): Promise<number> => {
+    const runtime = await openWindow();
+    runtime.render(
+      <Surface>
+        <TextArea testId="area" style={{ height }} />
+      </Surface>,
+    );
+    return boundsOf(runtime, "area").height;
+  };
+  const short = await heightOf(60);
+  const tall = await heightOf(120);
+  expect(tall - short).toBeGreaterThanOrEqual(59);
+  expect(tall - short).toBeLessThanOrEqual(61);
+});
+
 it("edits a TextArea across lines", async () => {
   const runtime = await openWindow();
   const field = recorder();

@@ -48,11 +48,11 @@ export const renderProgress = (
   step: number,
 ): ReactElement => {
   const spec: ProgressSpec = { value, tone, size };
-  const track = mergeStyle(progressTrackStyle(spec, theme), {
-    ...style,
+  const row = mergeStyle(progressTrackStyle(spec, theme), {
     display: "flex",
     flexDirection: "row",
   });
+  const track = mergeStyle(row, style);
   const determinate = value !== undefined;
   const percent = determinate ? progressPercent(value) : 0;
   const fill = determinate
