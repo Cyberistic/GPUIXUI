@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 131/131
+`[x]` `[██████████]` 132/132
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1229,6 +1229,13 @@ retired once both branches are one
       `src/runtime-hygiene.test.ts` fails by file name when a runtime suite has
       no header comment or is `__`-prefixed. Both new guards proven in both
       directions (plan `390`).
+`[x]` `COMPONENTS.md`: **the Tier 1 inventory said `wip` with no reason, and its
+      evidence preamble claimed a provenance plan `529` disproved** — every row
+      meets the stated `done` bar, but the native evidence comes from a binding
+      built from `references/gpuix` `main`, not the published 0.10.0 tag, so
+      flipping the rows would turn a provenance gap into a completion claim. The
+      table now says exactly that, and the preamble records the artifact's real
+      source with the re-run condition (plan `529`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,

@@ -22,9 +22,14 @@ citing a capability here**: it separates the published 0.10.0 surface from the
 features documented on `references/gpuix` `main`, which is ahead of the release.
 
 **Measured native evidence** is separate, and it is what a `done` row needs. It
-comes from the native smoke suite in this repo, run **on this host** against the
-pinned `@gpuix/native@0.10.0` built from the pinned source with
-`gpui_macos/runtime_shaders` (ADR 0003). Reproduce it with:
+comes from the native smoke suite in this repo, run **on this host** against a
+`@gpuix/native@0.10.0` built from source with `gpui_macos/runtime_shaders`
+(ADR 0003). **Provenance caveat (plan `529`):** that artifact is compiled from
+the `references/gpuix` **`main`** tree, not the published 0.10.0 release tag
+(`9fcd6288…`), so a verdict read from it describes GPUix's current source, not
+necessarily what a consumer installs. Plan `529` records the measured deltas.
+The Tier 1 rows below stay `wip` until their suite is re-run on a published-tag
+build. Reproduce it with:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js
@@ -172,6 +177,15 @@ carries an evidenced limitation. The capability evidence lives in
 ---
 
 ## Tier 1 — foundational
+
+**Why every row below is `wip`:** each one has code, a behaviour test, a mounted
+example, a docs page (in-package and on the docs site) and a measured runtime
+interaction — the `done` bar above. The status stays `wip` for one reason: the
+native evidence was produced against a locally built binding derived from
+`references/gpuix` `main`, and plan `529` proved that artifact is not the
+published 0.10.0 source. Flipping the rows to `done` before the suite is re-run
+on a published-tag build would turn a provenance gap into a completion claim.
+Re-run `test:runtime` on that build, then move the rows.
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
