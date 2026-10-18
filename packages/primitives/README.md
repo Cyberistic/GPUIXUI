@@ -85,6 +85,35 @@ and `CheckboxState.indeterminate`. `resolvePartStyle` in `components/internal.ts
 is the single merge point; the type and resolver are the published ones, not a
 local copy.
 
+## The component API contract
+
+The package follows the accepted Tier 1–2 contract in `docs/component-api.md`
+(ADR `0004`, plan `200`). Every Tier 1 row is one part, so the rules that need
+enforcement here are the ones that hold across the set:
+
+- `src/contract.test.ts` holds the Tier 1 parts table — one record per public
+  component with its page and the state types its `style` props accept.
+  It fails by name when an export is unrecorded, a recorded part is not a
+  component, a `render*`/`*Parts` implementation seam reaches the package root,
+  an advertised state type has no declaration, a page omits its state type or a
+  required section, or a component emits an ARIA prop 0.10.0 does not map.
+- `src/callback-names.test.ts` holds the one value callback name (§2).
+- `src/components/state-style.test.tsx` proves each state callback receives its
+  part's state at runtime (§3).
+
+Deviations, kept deliberate:
+
+- `Input`, `TextArea` and `NumberField` share one `FieldState`: they paint the
+  same field chrome, so a second name would be a copy of it.
+- The data-driven groups (`CheckboxGroup`, `RadioGroup`, `ToggleGroup`,
+  `Rating`, `OTPField`) take their options as data instead of compound children
+  (D16, D25, D27); a compound API would move the group's own roving and
+  select-all rules into a context per child.
+- `IconButton` takes `StateStyle<ButtonState>` because it **is** a `Button`; it
+  owns no second state.
+- No Tier 1 parent hosts child parts, so §1's typed-by-position rule has nothing
+  to narrow here.
+
 ## Components
 
 **Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`

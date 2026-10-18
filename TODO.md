@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 62/63
+`[~]` `[██████████]` 63/64
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -457,6 +457,7 @@ retired once both branches are one
       (enabled: the next Tab lands inside it; disabled: the next Tab lands on the
       element after it) in 32 cases; both mutations of a `Checkbox` guard fail the
       matrix as they should (plan `089`); `isWithin` is now a harness helper.
+| `[x]` | `packages/primitives`: **the contract** — the accepted Tier 1–2 API spec (`docs/component-api.md`, ADR `0004`) had no Tier 1 record and no guard. `src/contract.test.ts` now holds the parts table (one record per public component: page and state types) and proves export completeness, no `render*`/`*Parts` seam in the root, a real declaration for every advertised state type, the page's state name and required sections, and the verified ARIA subset only. Five mutations failed it; the one real deviation was `IconButton`'s two public renderer seams, now module-level. 7 tests (plan `090`) |
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
@@ -497,6 +498,14 @@ retired once both branches are one
       control, text fields included (plan `088`), so the import contract and the
       source agree again. Their local input stand-in passes
       `onChange: onValueChange` to the raw host, which stays correct.
+
+`[ ]` **components workstream — the contract's Tier 1 parts table is missing four
+      shipped parts.** `docs/component-api.md` §8's Tier 1 table has no row for
+      `CheckboxGroup`, `ToggleGroup`, `IconButton` or `InfoTip`, all of which
+      shipped in this package (plans `065`, `056`, `086`, `073`) and are in the
+      primitives parts table (`src/contract.test.ts`, plan `090`). Add the rows so
+      the accepted contract and both packages agree; the doc is outside this
+      workstream's paths.
 
 `[ ]` **components workstream**: plan `201` §2.3 tells the thin context to call
       `useControllableState` from `@gpuix/react/floating`, but that function is

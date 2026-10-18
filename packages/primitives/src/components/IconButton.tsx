@@ -38,7 +38,7 @@ export interface IconButtonProps extends Omit<
 }
 
 /** The tint and icon size a variant and control size resolve to. Pure. */
-export const iconButtonParts = (
+const iconButtonParts = (
   { variant = "primary", size = "md" }: IconButtonProps,
   theme: PrimitiveTheme,
 ): { readonly color: string; readonly size: IconSize } => ({

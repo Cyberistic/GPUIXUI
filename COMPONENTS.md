@@ -238,6 +238,18 @@ next Tab lands inside it; disabled, the next Tab lands on the element after it.
 32 cases; both failure directions were measured (a `Checkbox` that kept its stop
 fails the disabled half, one that dropped it fails the enabled half).
 
+**API contract (090):** `src/contract.test.ts` is the Tier 1 half of the accepted
+Tier 1–2 contract (`docs/component-api.md`, ADR `0004`). It records one part per
+public component — page and the state types its `style` props accept — and
+fails by name for an unrecorded export, a recorded part that is not a component,
+a `render*`/`*Parts` seam in the package root, an undeclared state type, a page
+missing its state name or a required section, and any ARIA prop outside the
+verified 0.10.0 subset. Five deliberate mutations failed it (a dropped table row,
+a re-exported `renderIconButton`, a deleted `## Keyboard`, a renamed
+`ButtonState`, an added `aria-checked`); the fixes were one demoted `IconButton`
+seam and this record. The four shipped parts missing from the contract doc's own
+Tier 1 table are a cross-team `TODO.md` row.
+
 **Both themes (021/042):** every painted colour in the Tier 1 scene comes from the
 active palette, and re-rendering with the dark palette repaints every asserted
 role (plan 042 §8). Since plan 021 the palettes are the shipped `lightTheme` /

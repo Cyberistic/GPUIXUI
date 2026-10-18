@@ -28,7 +28,7 @@ export type { LabelProps, LabelState } from "./Label.js";
 export { Button } from "./Button.js";
 export type { ButtonFocus, ButtonProps, ButtonState } from "./Button.js";
 
-export { IconButton, iconButtonParts, renderIconButton } from "./IconButton.js";
+export { IconButton } from "./IconButton.js";
 export type { IconButtonProps } from "./IconButton.js";
 
 export { ButtonGroup, BUTTON_GROUP_MODES } from "./ButtonGroup.js";
