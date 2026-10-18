@@ -16,6 +16,7 @@
  * read.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { colorRoles, isHexColor } from "./color.js";
 import {
   contrastRatio,
@@ -24,36 +25,9 @@ import {
 } from "./contrast.js";
 import { elevationShadow } from "./elevation.js";
 import { themeMetricFailures } from "./metrics.js";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
-import {
-  extendTheme,
-  getPlatformTheme,
-  getTheme,
-  themeModes,
-  type Theme,
-} from "./theme.js";
+import { extendTheme, getTheme, type Theme } from "./theme.js";
 
-const shippedThemes = (): ReadonlyArray<Theme> => [
-  ...themeModes.flatMap((mode) => [getTheme(mode), getTheme(mode, "high")]),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) =>
-      themeModes.flatMap((mode) => [
-        getPlatformTheme(platform, mode),
-        getPlatformTheme(platform, mode, "high"),
-      ]),
-    ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.flatMap((mode) => [
-      getPlatformRecipeTheme(recipe, mode),
-      getPlatformRecipeTheme(recipe, mode, "high"),
-    ]),
-  ),
-];
+const shipped: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 describe("isHexColor", () => {
   it("accepts only the six- and eight-digit hex form the helpers parse", () => {
@@ -79,7 +53,7 @@ describe("isHexColor", () => {
 
 describe("themeColorFailures", () => {
   it("clears every shipped identity, platform and recipe theme", () => {
-    const themes = shippedThemes();
+    const themes = shipped;
     expect(themes).toHaveLength(24);
     themes.forEach((theme) => {
       expect(themeColorFailures(theme), theme.name).toEqual([]);

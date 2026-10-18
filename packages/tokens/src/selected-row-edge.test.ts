@@ -15,45 +15,20 @@
  * `accentHover`/`accentActive` pairs stay out of the verification paragraph.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformRecipeTheme,
-  getPlatformTheme,
   getTheme,
-  platformNames,
-  platformRecipeNames,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type Theme,
 } from "./index.js";
 
-const realPlatforms = platformNames.filter((name) => name !== "default");
-
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.flatMap(
-      (contrast): ReadonlyArray<readonly [string, Theme]> => [
-        [`identity ${mode} ${contrast}`, getTheme(mode, contrast)],
-        ...realPlatforms.map((platform): readonly [string, Theme] => [
-          `${platform} ${mode} ${contrast}`,
-          getPlatformTheme(platform, mode, contrast),
-        ]),
-      ],
-    ),
-  ),
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.flatMap((contrast) =>
-      platformRecipeNames.map((recipe): readonly [string, Theme] => [
-        `${recipe} ${mode} ${contrast}`,
-        getPlatformRecipeTheme(recipe, mode, contrast),
-      ]),
-    ),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const rowFills = ["hover", "active", "accent", "selected"] as const;
 
@@ -139,11 +114,11 @@ describe("the control edge on the selected row fill", () => {
     const [highLabel, highRatio] = worst("high");
 
     expect([defaultLabel, Number(defaultRatio.toFixed(3))]).toEqual([
-      "win32 light default",
+      "Light · Windows",
       1.081,
     ]);
     expect([highLabel, Number(highRatio.toFixed(3))]).toEqual([
-      "identity dark high",
+      "High contrast dark",
       4.762,
     ]);
   });

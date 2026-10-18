@@ -1,10 +1,15 @@
 # Plan 388: every "every shipped set" suite enumerates the one shipped set
 
-> **Status.** Planned. Plan 387 shipped `shippedThemes` and moved the three
-> largest lists (`contrast`, `theme-check`, `metrics`). This plan finishes the
-> migration: every suite whose guard case claims "every shipped set" or "every
-> shipped theme" reads the same enumeration instead of rebuilding a hand-typed
-> matrix.
+> **Status (2026-10-18).** Done. Sixty-five suites now map `shippedThemes`
+> instead of building their own matrix, and `shipped-themes.test.ts` guards the
+> rule with a real-tree scan plus two synthetic sources. The guard failed on the
+> pre-migration tree (listing every claiming suite) and passes now. The only
+> semantic edits are the three the plan names: `motion.test.ts` claims the level
+> shape rather than identity equality, `ring-soft.test.ts` filters on
+> `theme.contrast`, and the `filled-control` alpha figures keep their values
+> under the 24-set matrix. The full tokens suite is 94 files / 4603 tests green;
+> `check-types`, `lint` and `fmt` pass. No colour, role, pair, floor, metric,
+> platform style, recipe or theme value moves.
 
 ## Why
 

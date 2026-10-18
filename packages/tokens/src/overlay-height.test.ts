@@ -10,52 +10,14 @@
  * number: a list item is a row, and a denser theme lowers the floor.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { themeMetricFailures } from "./metrics.js";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
-import {
-  extendTheme,
-  getPlatformTheme,
-  getTheme,
-  lightTheme,
-  themeContrasts,
-  themeModes,
-  type Theme,
-} from "./theme.js";
+import { extendTheme, lightTheme, type Theme } from "./theme.js";
 
 /** Every shipped set: identity, platform variant and recipe. */
-const shipped: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map(
-      (contrast) => [`${mode}/${contrast}`, getTheme(mode, contrast)] as const,
-    ),
-  ),
-  ...platformNames.flatMap((platform) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map(
-        (mode) =>
-          [
-            `${platform}/${contrast}/${mode}`,
-            getPlatformTheme(platform, mode, contrast),
-          ] as const,
-      ),
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map(
-        (mode) =>
-          [
-            `recipe:${recipe}/${contrast}/${mode}`,
-            getPlatformRecipeTheme(recipe, mode, contrast),
-          ] as const,
-      ),
-    ),
-  ),
-];
+const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 describe("overlay scroll height", () => {
   it("reports a viewport shorter than one row", () => {

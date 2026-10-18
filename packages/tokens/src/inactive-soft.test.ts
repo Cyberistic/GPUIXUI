@@ -7,40 +7,23 @@
  * theme could erase it while `themeContrastFailures` stayed silent.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
-  highContrastThemes,
   inactiveSoftPairs,
   inactiveSurfaces,
   lightTheme,
-  platformNames,
   statusTones,
   themeContrastFailures,
-  themeModes,
-  themes,
   type Theme,
 } from "./index.js";
 
 const shipped: ReadonlyArray<{
   readonly label: string;
   readonly theme: Theme;
-}> = [
-  ...themeModes.flatMap((mode) => [
-    { label: `${mode} default`, theme: themes[mode] },
-    { label: `${mode} high contrast`, theme: highContrastThemes[mode] },
-  ]),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) =>
-      themeModes.map((mode) => ({
-        label: `${platform} ${mode}`,
-        theme: getPlatformTheme(platform, mode),
-      })),
-    ),
-];
+}> = shippedThemes.map(({ theme }) => ({ label: theme.name, theme }));
 
 const softFills = statusTones.map((tone) => `${tone}Soft` as const);
 

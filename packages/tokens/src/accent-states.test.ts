@@ -13,19 +13,17 @@
  * edge on the new fills, and a public checker that reports an unreadable step.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { toggleOnPaints } from "./accent-states.example.js";
 import { colorRoles } from "./color.js";
 import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
 import {
-  getPlatformRecipeTheme,
-  getPlatformTheme,
   platformNames,
   platformRecipeNames,
   platformRecipes,
   platformStyles,
   themes,
   themeContrastFailures,
-  themeContrasts,
   themeModes,
   getTheme,
   extendTheme,
@@ -46,26 +44,7 @@ const steps = (theme: Theme): readonly [string, string, string] => [
 const shipped: ReadonlyArray<{
   readonly label: string;
   readonly theme: Theme;
-}> = [
-  ...themeContrasts.flatMap((contrast) =>
-    themeModes.map((mode) => ({
-      label: `identity ${mode} ${contrast}`,
-      theme: getTheme(mode, contrast),
-    })),
-  ),
-  ...realPlatforms.flatMap((platform) =>
-    themeModes.map((mode) => ({
-      label: `${platform} ${mode}`,
-      theme: getPlatformTheme(platform, mode),
-    })),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map((mode) => ({
-      label: `${recipe} ${mode}`,
-      theme: getPlatformRecipeTheme(recipe, mode),
-    })),
-  ),
-];
+}> = shippedThemes.map(({ theme }) => ({ label: theme.name, theme }));
 
 /** WCAG relative luminance, derived from the public ratio against black. */
 const luminance = (color: string): number =>

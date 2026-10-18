@@ -10,50 +10,23 @@
  * it still clears every surface pair. `stateStepPairs` publishes the step.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { filledControlFamilies } from "./styles.js";
 import {
   contrastFloors,
   stateStepPairs,
   themeContrastFailures,
 } from "./contrast.js";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
-import {
-  extendTheme,
-  getPlatformTheme,
-  getTheme,
-  themeContrasts,
-  themeModes,
-  type Theme,
-} from "./theme.js";
+import { extendTheme, getTheme, type Theme } from "./theme.js";
 
-const realPlatforms = platformNames.filter(
-  (platform) => platform !== "default",
-);
-
-const shippedThemes: ReadonlyArray<Theme> = [
-  ...themeContrasts.flatMap((contrast) =>
-    themeModes.map((mode) => getTheme(mode, contrast)),
-  ),
-  ...realPlatforms.flatMap((platform) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map((mode) => getPlatformTheme(platform, mode, contrast)),
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map((mode) => getPlatformRecipeTheme(recipe, mode)),
-  ),
-];
+const themes: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 const stepFailures = (theme: Theme) =>
   themeContrastFailures(theme).filter(({ pairClass }) => pairClass === "step");
 
 describe("filled state steps", () => {
   it("holds every shipped theme to a perceivable step", () => {
-    shippedThemes.forEach((theme) => {
+    themes.forEach((theme) => {
       expect(stepFailures(theme), theme.name).toEqual([]);
     });
   });

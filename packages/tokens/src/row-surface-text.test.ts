@@ -17,49 +17,24 @@
  * returned `[]`. All shipped sets pass, so no colour moves.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
-  getPlatformRecipeTheme,
   getTheme,
   lightColors,
-  platformNames,
-  platformRecipeNames,
   statusTones,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type ContrastPair,
   type Theme,
 } from "./index.js";
 import type { ThemeColors } from "./color.js";
 
-const realPlatforms = platformNames.filter((name) => name !== "default");
-
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.flatMap(
-      (contrast): ReadonlyArray<readonly [string, Theme]> => [
-        [`identity ${mode} ${contrast}`, getTheme(mode, contrast)],
-        ...realPlatforms.map((platform): readonly [string, Theme] => [
-          `${platform} ${mode} ${contrast}`,
-          getPlatformTheme(platform, mode, contrast),
-        ]),
-      ],
-    ),
-  ),
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.flatMap((contrast) =>
-      platformRecipeNames.map((recipe): readonly [string, Theme] => [
-        `${recipe} ${mode} ${contrast}`,
-        getPlatformRecipeTheme(recipe, mode, contrast),
-      ]),
-    ),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const pairsOf = (
   foreground: keyof ThemeColors,

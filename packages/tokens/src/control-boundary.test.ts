@@ -8,6 +8,7 @@
  * high-contrast dark, under 3:1 / 4.5:1, while the suite stayed green.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
@@ -17,8 +18,6 @@ import {
   getTheme,
   lightTheme,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -32,18 +31,8 @@ const boundarySurfaces = [
   "selected",
 ] as const;
 
-const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
-  (mode) =>
-    themeContrasts.flatMap((contrast) => [
-      [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-      ...platforms.map(
-        (platform) =>
-          [
-            `${platform} ${mode} ${contrast}`,
-            getPlatformTheme(platform, mode, contrast),
-          ] as const,
-      ),
-    ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
 );
 
 const boundaryPairs = contrastPairs.filter(

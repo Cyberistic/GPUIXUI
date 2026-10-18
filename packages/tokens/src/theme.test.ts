@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { accessibleDarkTheme, resolveTheme } from "./high-contrast.example.js";
 import { alpha, densityPresets, type ElevationShape } from "./index.js";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   createTheme,
   darkTheme,
@@ -241,14 +242,8 @@ describe("createTheme", () => {
 describe("theme completeness", () => {
   it("gives every shipped theme the same groups", () => {
     const reference = Object.keys(lightTheme).toSorted();
-    (
-      [
-        ["dark", darkTheme],
-        ["high-contrast light", highContrastLightTheme],
-        ["high-contrast dark", highContrastDarkTheme],
-      ] as const
-    ).forEach(([label, theme]) => {
-      expect(Object.keys(theme).toSorted(), label).toEqual(reference);
+    shippedThemes.forEach(({ theme }) => {
+      expect(Object.keys(theme).toSorted(), theme.name).toEqual(reference);
     });
     expect(reference).toContain("motion");
   });

@@ -13,12 +13,12 @@
  * file proves both directions fail without the fix.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   compositeOver,
   contrastFloors,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
   getTheme,
   selectionPairs,
   selectionSoftPairs,
@@ -26,23 +26,12 @@ import {
   selectionSurfaces,
   selectionWashPairs,
   themeContrastFailures,
-  themeModes,
   type Theme,
 } from "./index.js";
 
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", getTheme("light")],
-  ["dark", getTheme("dark")],
-  ["high-contrast light", getTheme("light", "high")],
-  ["high-contrast dark", getTheme("dark", "high")],
-  ...(["darwin", "linux", "win32"] as const).flatMap(
-    (platform): ReadonlyArray<readonly [string, Theme]> =>
-      themeModes.map((mode) => [
-        `${platform} ${mode}`,
-        getPlatformTheme(platform, mode),
-      ]),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const measureSelected = (
   theme: Theme,

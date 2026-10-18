@@ -6,37 +6,25 @@
  * decorative divider — and a copied platform style could not edit it.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   alpha,
   compositeOver,
   contrastFloors,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
   getTheme,
-  platformNames,
   statusTone,
   statusTones,
   themeContrastFailures,
   type Theme,
 } from "./index.js";
 
-const shippedThemes = (): ReadonlyArray<Theme> => [
-  getTheme("light"),
-  getTheme("dark"),
-  getTheme("light", "high"),
-  getTheme("dark", "high"),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) => [
-      getPlatformTheme(platform, "light"),
-      getPlatformTheme(platform, "dark"),
-    ]),
-];
+const shipped: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 describe("soft status edge", () => {
   it("clears the divider floor on its own fill in every shipped theme", () => {
-    shippedThemes().forEach((theme) => {
+    shipped.forEach((theme) => {
       statusTones.forEach((tone) => {
         const edge = theme.colors[`${tone}SoftBorder`];
         const fill = theme.colors[`${tone}Soft`];
@@ -63,7 +51,7 @@ describe("soft status edge", () => {
   });
 
   it("is the role statusTone returns, opaque enough to measure", () => {
-    shippedThemes().forEach((theme) => {
+    shipped.forEach((theme) => {
       statusTones.forEach((tone) => {
         const edge = statusTone(theme, tone).border;
         expect(edge).toBe(theme.colors[`${tone}SoftBorder`]);

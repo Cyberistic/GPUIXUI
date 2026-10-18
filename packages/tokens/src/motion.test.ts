@@ -7,16 +7,10 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { panelTransition, stepInterval } from "./motion.example.js";
 import { motionTransition, type MotionLevel } from "./motion.js";
-import {
-  darkTheme,
-  extendTheme,
-  highContrastDarkTheme,
-  highContrastLightTheme,
-  lightTheme,
-  type Theme,
-} from "./theme.js";
+import { extendTheme, lightTheme, type Theme } from "./theme.js";
 
 const levels: ReadonlyArray<MotionLevel> = [
   "none",
@@ -27,12 +21,9 @@ const levels: ReadonlyArray<MotionLevel> = [
   "pulse",
 ];
 
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", lightTheme],
-  ["dark", darkTheme],
-  ["high-contrast light", highContrastLightTheme],
-  ["high-contrast dark", highContrastDarkTheme],
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 describe("motion levels", () => {
   it("are whole milliseconds", () => {
@@ -56,9 +47,9 @@ describe("motion levels", () => {
     expect(lightTheme.motion.slow).toBeLessThan(lightTheme.motion.pulse);
   });
 
-  it("is shared by every shipped theme", () => {
+  it("carries every level on every shipped theme", () => {
     themes.forEach(([label, theme]) => {
-      expect(theme.motion, label).toEqual(lightTheme.motion);
+      expect(Object.keys(theme.motion), label).toEqual([...levels, "ease"]);
     });
   });
 });

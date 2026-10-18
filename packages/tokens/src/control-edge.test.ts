@@ -10,33 +10,22 @@
  * exactly while pressed, while every suite stayed green.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
   getTheme,
   themeContrastFailures,
-  themeModes,
   type Theme,
 } from "./index.js";
 
 const controlFills = ["secondary", "hover", "active", "accent"] as const;
 
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", getTheme("light")],
-  ["dark", getTheme("dark")],
-  ["high-contrast light", getTheme("light", "high")],
-  ["high-contrast dark", getTheme("dark", "high")],
-  ...(["darwin", "linux", "win32"] as const).flatMap(
-    (platform): ReadonlyArray<readonly [string, Theme]> =>
-      themeModes.map((mode) => [
-        `${platform} ${mode}`,
-        getPlatformTheme(platform, mode),
-      ]),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const controlEdgePairs = contrastPairs.filter(
   ([foreground, background]) =>

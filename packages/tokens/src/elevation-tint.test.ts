@@ -8,37 +8,19 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   elevationShadow,
   elevationShadows,
   type ElevationLevel,
 } from "./elevation.js";
-import { platformNames } from "./platforms.js";
-import {
-  extendTheme,
-  getPlatformTheme,
-  getTheme,
-  themes,
-  type Theme,
-} from "./theme.js";
+import { extendTheme, getPlatformTheme, themes, type Theme } from "./theme.js";
 
 const levels: readonly ElevationLevel[] = ["sm", "md", "lg"];
 
-const variant = (label: string, theme: Theme): readonly [string, Theme] => [
-  label,
-  theme,
-];
-
-const shipped: ReadonlyArray<readonly [string, Theme]> = [
-  variant("light", getTheme("light")),
-  variant("dark", getTheme("dark")),
-  variant("high-contrast light", getTheme("light", "high")),
-  variant("high-contrast dark", getTheme("dark", "high")),
-  ...platformNames.flatMap((platform) => [
-    variant(`${platform} light`, getPlatformTheme(platform, "light")),
-    variant(`${platform} dark`, getPlatformTheme(platform, "dark")),
-  ]),
-];
+const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 /** The hex each level painted before the tint moved into the role. */
 const painted: ReadonlyArray<readonly [string, Theme, readonly string[]]> = [

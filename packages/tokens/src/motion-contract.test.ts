@@ -15,54 +15,20 @@
  * is constrained by `MotionEasing`, so neither is a numeric failure.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { undriveableFailures } from "./metrics.example.js";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
 import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
-import {
   extendTheme,
-  getPlatformTheme,
-  getTheme,
   lightTheme,
-  themeContrasts,
-  themeModes,
   type Theme,
   type ThemeOverrides,
 } from "./theme.js";
 
 /** Every shipped set: identity, platform variant and recipe, with AAA recipes. */
-const shipped: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map(
-      (contrast) => [`${mode}/${contrast}`, getTheme(mode, contrast)] as const,
-    ),
-  ),
-  ...platformNames.flatMap((platform) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map(
-        (mode) =>
-          [
-            `${platform}/${contrast}/${mode}`,
-            getPlatformTheme(platform, mode, contrast),
-          ] as const,
-      ),
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map(
-        (mode) =>
-          [
-            `recipe:${recipe}/${contrast}/${mode}`,
-            getPlatformRecipeTheme(recipe, mode, contrast),
-          ] as const,
-      ),
-    ),
-  ),
-];
+const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const failuresOf = (overrides: ThemeOverrides): ReadonlyArray<MetricFailure> =>
   themeMetricFailures(extendTheme(lightTheme, overrides));

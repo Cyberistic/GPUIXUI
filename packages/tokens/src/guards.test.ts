@@ -33,6 +33,7 @@ import {
   themeModes,
   themes,
 } from "./index.js";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   resolveControlSize,
   resolveStatusTone,
@@ -59,7 +60,9 @@ describe("isPlatformName", () => {
 
 describe("isThemeMode", () => {
   it("accepts the mode of every shipped theme", () => {
-    themeModes.forEach((mode) => expect(isThemeMode(mode), mode).toBe(true));
+    shippedThemes.forEach(({ theme }) =>
+      expect(isThemeMode(theme.mode), theme.name).toBe(true),
+    );
   });
 
   it("rejects casing, whitespace and non-strings", () => {

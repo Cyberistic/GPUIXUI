@@ -12,21 +12,10 @@
  * the identity group.
  */
 import { describe, expect, it } from "vitest";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
+import { shippedThemes } from "./shipped-themes.js";
 import { controlHeight } from "./styles.js";
 import { dimensions } from "./scale.js";
-import {
-  extendTheme,
-  getPlatformTheme,
-  getTheme,
-  lightTheme,
-  themeContrasts,
-  themeModes,
-} from "./theme.js";
+import { extendTheme, lightTheme } from "./theme.js";
 
 describe("component dimensions", () => {
   it("ships a positive whole-pixel metric for every dimension", () => {
@@ -50,32 +39,10 @@ describe("component dimensions", () => {
     );
   });
 
-  it("gives every shipped theme the same group", () => {
-    themeModes.forEach((mode) =>
-      themeContrasts.forEach((contrast) => {
-        const theme = getTheme(mode, contrast);
-        expect(theme.dimensions, `${mode} ${contrast}`).toEqual(dimensions);
-      }),
-    );
-  });
-
-  it("keeps every platform variant and recipe on the identity dimensions", () => {
-    platformNames.forEach((platform) =>
-      themeModes.forEach((mode) => {
-        expect(
-          getPlatformTheme(platform, mode).dimensions,
-          `${platform} ${mode}`,
-        ).toEqual(dimensions);
-      }),
-    );
-    platformRecipeNames.forEach((recipe) =>
-      themeModes.forEach((mode) => {
-        expect(
-          getPlatformRecipeTheme(recipe, mode).dimensions,
-          `${recipe} ${mode}`,
-        ).toEqual(dimensions);
-      }),
-    );
+  it("gives every shipped theme the identity dimensions", () => {
+    shippedThemes.forEach(({ theme }) => {
+      expect(theme.dimensions, theme.name).toEqual(dimensions);
+    });
   });
 
   it("merges one metric without losing the rest", () => {

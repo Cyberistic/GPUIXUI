@@ -15,53 +15,27 @@
  * of a toggle that is on — which had been left as an alpha composite.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { contrastFloors, contrastPairs, contrastRatio } from "./contrast.js";
 import {
   getPlatformRecipeTheme,
   platformRecipeNames,
 } from "./platform-recipes.js";
 import { platformNames, platformStyles } from "./platforms.js";
-import {
-  getPlatformTheme,
-  getTheme,
-  themeContrasts,
-  themeModes,
-  type Theme,
-} from "./theme.js";
+import { getTheme, themeModes, type Theme } from "./theme.js";
 
 const families = ["primary", "secondary", "destructive", "accent"] as const;
 
 const modes = themeModes;
 
-const contrasts = themeContrasts;
-
 const realPlatforms = platformNames.filter(
   (platform) => platform !== "default",
 );
 
-const themes: ReadonlyArray<{ readonly label: string; readonly theme: Theme }> =
-  [
-    ...contrasts.flatMap((contrast) =>
-      modes.map((mode) => ({
-        label: `${contrast} ${mode}`,
-        theme: getTheme(mode, contrast),
-      })),
-    ),
-    ...realPlatforms.flatMap((platform) =>
-      contrasts.flatMap((contrast) =>
-        modes.map((mode) => ({
-          label: `${platform} ${contrast} ${mode}`,
-          theme: getPlatformTheme(platform, mode, contrast),
-        })),
-      ),
-    ),
-    ...platformRecipeNames.flatMap((recipe) =>
-      modes.map((mode) => ({
-        label: `${recipe} ${mode}`,
-        theme: getPlatformRecipeTheme(recipe, mode),
-      })),
-    ),
-  ];
+const themes: ReadonlyArray<{
+  readonly label: string;
+  readonly theme: Theme;
+}> = shippedThemes.map(({ theme }) => ({ label: theme.name, theme }));
 
 /** WCAG relative luminance, derived from the public ratio against black. */
 const luminance = (color: string): number =>

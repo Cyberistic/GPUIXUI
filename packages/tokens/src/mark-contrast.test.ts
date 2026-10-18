@@ -17,6 +17,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { quietMarkFailures } from "./contrast.example.js";
 import {
   colorRoles,
@@ -24,42 +25,20 @@ import {
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformRecipeTheme,
-  getPlatformTheme,
   getTheme,
   markPairs,
   markRoles,
-  platformNames,
-  platformRecipeNames,
   themeContrastFailures,
   themeContrasts,
-  themeModes,
   type ContrastPairClass,
+  type Theme,
 } from "./index.js";
 
 const markSurfaces = ["background", "card", "popover", "muted"] as const;
 
 /** Every shipped colour set: identity, the real platform variants and recipes. */
-const variants = themeModes.flatMap((mode) =>
-  themeContrasts.flatMap((contrast) => [
-    [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-    ...platformNames
-      .filter((platform) => platform !== "default")
-      .map(
-        (platform) =>
-          [
-            `${platform} ${mode} ${contrast}`,
-            getPlatformTheme(platform, mode, contrast),
-          ] as const,
-      ),
-    ...platformRecipeNames.map(
-      (recipe) =>
-        [
-          `${recipe} ${mode} ${contrast}`,
-          getPlatformRecipeTheme(recipe, mode, contrast),
-        ] as const,
-    ),
-  ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
 );
 
 const markClassPairs = contrastPairs.filter(

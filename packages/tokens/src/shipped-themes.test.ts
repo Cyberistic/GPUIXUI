@@ -9,7 +9,13 @@
  * the public resolvers, so the set and its provenance are one edit at the owner.
  */
 
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import {
+  caseSource,
+  fullSetClaimOffenders,
+  type SuiteSource,
+} from "./full-set-claims.js";
 import { isPlatformName, platformNames } from "./platforms.js";
 import {
   isPlatformRecipeName,
@@ -123,5 +129,53 @@ describe("shipped-themes example", () => {
     expect(
       shippedThemeLabels.some((label) => label.includes("(recipe: ")),
     ).toBe(true);
+  });
+});
+
+/*
+ * `node:fs` is used deliberately, as in `docs.test.ts`: these cases read the
+ * tree's own test sources, and the tokens package ships zero runtime
+ * dependencies by design.
+ */
+
+/** Every suite beside this one, with its source. */
+const suiteSources = (): ReadonlyArray<SuiteSource> =>
+  readdirSync(new URL(".", import.meta.url))
+    .filter(
+      (file) => file.endsWith(".test.ts") && file !== "shipped-themes.test.ts",
+    )
+    .map((file) => ({
+      file,
+      source: readFileSync(new URL(file, import.meta.url), "utf8"),
+    }));
+
+/** A fixture case that claims the full shipped set. */
+const claim = "keeps every shipped theme above its floor";
+
+describe("full-set claims", () => {
+  it("reads the enumeration in every suite that claims it", () => {
+    expect(fullSetClaimOffenders(suiteSources())).toEqual([]);
+  });
+
+  it("reports a claim that rebuilds its own matrix", () => {
+    expect(
+      fullSetClaimOffenders([
+        { file: "sample.test.ts", source: caseSource(claim) },
+      ]),
+    ).toEqual(["sample.test.ts"]);
+  });
+
+  it("accepts a claim that reads the enumeration", () => {
+    expect(
+      fullSetClaimOffenders([
+        {
+          file: "sample.test.ts",
+          source: caseSource(
+            claim,
+            'import { shippedThemes } from "./shipped-themes.js";\n',
+          ),
+        },
+      ]),
+    ).toEqual([]);
   });
 });

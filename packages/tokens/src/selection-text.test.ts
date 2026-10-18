@@ -9,17 +9,16 @@
  * the wash lightened the surface white text already sits on.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   compositeOver,
   contrastFloors,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
   getTheme,
   selectionPairs,
   selectionSurfaces,
   themeContrastFailures,
-  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -35,19 +34,9 @@ const surfaces = [
   "selected",
 ] as const;
 
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", getTheme("light")],
-  ["dark", getTheme("dark")],
-  ["high-contrast light", getTheme("light", "high")],
-  ["high-contrast dark", getTheme("dark", "high")],
-  ...(["darwin", "linux", "win32"] as const).flatMap(
-    (platform): ReadonlyArray<readonly [string, Theme]> =>
-      themeModes.map((mode) => [
-        `${platform} ${mode}`,
-        getPlatformTheme(platform, mode),
-      ]),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const measure = (
   theme: Theme,
@@ -113,8 +102,10 @@ describe("the selection wash on painted surfaces", () => {
   });
 
   it("keeps selected text readable on a row that is already painted", () => {
-    const namedDark = themes.filter(([label]) =>
-      ["high-contrast dark", "linux dark", "win32 dark"].includes(label),
+    const namedDark = themes.filter(([, theme]) =>
+      ["High contrast dark", "Dark · Linux", "Dark · Windows"].includes(
+        theme.name,
+      ),
     );
     expect(namedDark).toHaveLength(3);
 

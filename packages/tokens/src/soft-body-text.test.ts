@@ -13,19 +13,14 @@
  * platform style that darkens a soft fill is caught.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformRecipeTheme,
-  getPlatformTheme,
   getTheme,
-  platformNames,
-  platformRecipeNames,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -41,25 +36,9 @@ const bodyTextPairs = contrastPairs.filter(
     foreground === "foreground" && pairClass === "body",
 );
 
-const shippedThemes: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map(
-      (contrast) => [`${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-    ),
-  ),
-  ...platformNames.flatMap((platform) =>
-    themeModes.map(
-      (mode) =>
-        [`${platform} ${mode}`, getPlatformTheme(platform, mode)] as const,
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map(
-      (mode) =>
-        [`${recipe} ${mode}`, getPlatformRecipeTheme(recipe, mode)] as const,
-    ),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 describe("default body text on the soft status fills", () => {
   it("measures foreground on every soft status fill", () => {
@@ -73,7 +52,7 @@ describe("default body text on the soft status fills", () => {
   });
 
   it("clears the body floor on every shipped set", () => {
-    shippedThemes.forEach(([label, theme]) => {
+    themes.forEach(([label, theme]) => {
       const floor = contrastFloors[theme.contrast].body;
       softSurfaces.forEach((surface) => {
         expect(

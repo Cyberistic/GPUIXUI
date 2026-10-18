@@ -8,19 +8,17 @@
  * while the suite stayed green because the pair was absent.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
   getPlatformTheme,
-  getTheme,
   highContrastLightTheme,
   lightTheme,
   statusTones,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -28,18 +26,8 @@ const platforms = ["darwin", "linux", "win32"] as const;
 
 const washes = ["hover", "active", "accent", "selected"] as const;
 
-const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
-  (mode) =>
-    themeContrasts.flatMap((contrast) => [
-      [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-      ...platforms.map(
-        (platform) =>
-          [
-            `${platform} ${mode} ${contrast}`,
-            getPlatformTheme(platform, mode, contrast),
-          ] as const,
-      ),
-    ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
 );
 
 const statusPairs = contrastPairs.filter(([foreground]) =>

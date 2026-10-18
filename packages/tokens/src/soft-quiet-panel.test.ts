@@ -5,33 +5,21 @@
  * pastel tints — shipped a status badge at 1.023–1.049:1 against a sidebar.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
-  darkTheme,
   extendTheme,
   getPlatformTheme,
-  highContrastDarkTheme,
-  highContrastLightTheme,
   lightTheme,
   themeContrastFailures,
-  themeModes,
   type Theme,
 } from "./index.js";
 
-const shipped: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", lightTheme],
-  ["dark", darkTheme],
-  ["high-contrast light", highContrastLightTheme],
-  ["high-contrast dark", highContrastDarkTheme],
-  ...(["darwin", "linux", "win32"] as const).flatMap((platform) =>
-    themeModes.map(
-      (mode) =>
-        [`${platform} ${mode}`, getPlatformTheme(platform, mode)] as const,
-    ),
-  ),
-];
+const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const tones = [
   ["infoSoft", "infoSoftForeground", "infoSoftBorder"],

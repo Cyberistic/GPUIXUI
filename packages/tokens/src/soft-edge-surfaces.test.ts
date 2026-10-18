@@ -8,17 +8,15 @@
  * at all.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastRatio,
   extendTheme,
   getPlatformTheme,
-  platformNames,
   softBorderSurfacePairs,
   statusTones,
   themeContrastFailures,
-  themes,
-  highContrastThemes,
   type Theme,
 } from "./index.js";
 
@@ -33,16 +31,7 @@ const chipSurfaces = [
   "selected",
 ] as const;
 
-const shippedThemes = (): ReadonlyArray<Theme> => [
-  ...Object.values(themes),
-  ...Object.values(highContrastThemes),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) => [
-      getPlatformTheme(platform, "light"),
-      getPlatformTheme(platform, "dark"),
-    ]),
-];
+const shipped: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 describe("soft status edge on the surfaces a chip sits on", () => {
   it("measures every tone on the eight chip surfaces", () => {
@@ -62,7 +51,7 @@ describe("soft status edge on the surfaces a chip sits on", () => {
   });
 
   it("clears the divider floor on every shipped surface", () => {
-    shippedThemes().forEach((theme) => {
+    shipped.forEach((theme) => {
       softBorderSurfacePairs.forEach(([foreground, background]) => {
         expect(
           contrastRatio(theme.colors[foreground], theme.colors[background]),

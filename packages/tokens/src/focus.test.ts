@@ -10,23 +10,14 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { focusExample } from "./focus-ring.example.js";
 import { focusRing } from "./styles.js";
-import {
-  darkTheme,
-  extendTheme,
-  highContrastDarkTheme,
-  highContrastLightTheme,
-  lightTheme,
-  type Theme,
-} from "./theme.js";
+import { darkTheme, extendTheme, lightTheme, type Theme } from "./theme.js";
 
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", lightTheme],
-  ["dark", darkTheme],
-  ["high-contrast light", highContrastLightTheme],
-  ["high-contrast dark", highContrastDarkTheme],
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const hex = /^#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?$/;
 

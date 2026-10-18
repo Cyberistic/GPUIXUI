@@ -8,13 +8,13 @@
  * sidebar could have no visible shape at all.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastRatio,
   extendTheme,
   getPlatformTheme,
   highContrastThemes,
-  platformNames,
   stateFillRoles,
   stateFillSurfacePairs,
   stateFillSurfaces,
@@ -23,16 +23,7 @@ import {
   type Theme,
 } from "./index.js";
 
-const shippedThemes = (): ReadonlyArray<Theme> => [
-  ...Object.values(themes),
-  ...Object.values(highContrastThemes),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) => [
-      getPlatformTheme(platform, "light"),
-      getPlatformTheme(platform, "dark"),
-    ]),
-];
+const shipped: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 describe("interactive fills on the surfaces they paint on", () => {
   it("measures every fill on the four surfaces it paints on", () => {
@@ -71,7 +62,7 @@ describe("interactive fills on the surfaces they paint on", () => {
   });
 
   it("clears the surface floor on every shipped theme", () => {
-    shippedThemes().forEach((theme) => {
+    shipped.forEach((theme) => {
       stateFillSurfacePairs.forEach(([foreground, background]) => {
         expect(
           contrastRatio(theme.colors[foreground], theme.colors[background]),

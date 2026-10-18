@@ -11,23 +11,11 @@
  * Every case below fails without the four-level loop in `metrics.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { themeContrastFailures } from "./contrast.js";
 import { elevationShadow, type ElevationShape } from "./elevation.js";
 import { themeMetricFailures } from "./metrics.js";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
-import {
-  extendTheme,
-  getPlatformTheme,
-  getTheme,
-  lightTheme,
-  themeContrasts,
-  themeModes,
-  type Theme,
-} from "./theme.js";
+import { extendTheme, lightTheme, type Theme } from "./theme.js";
 
 /** A complete level, so one field varies at a time. */
 const shape: ElevationShape = {
@@ -43,28 +31,9 @@ const withOverlay = (overlays: ReadonlyArray<ElevationShape>) =>
   extendTheme(lightTheme, { elevation: { overlay: [...overlays] } });
 
 /** Every shipped set: identity, platform variant and recipe, in both modes. */
-const shipped: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map(
-      (contrast) => [`${mode}/${contrast}`, getTheme(mode, contrast)] as const,
-    ),
-  ),
-  ...platformNames.flatMap((platform) =>
-    themeModes.map(
-      (mode) =>
-        [`${platform}/${mode}`, getPlatformTheme(platform, mode)] as const,
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map(
-      (mode) =>
-        [
-          `recipe:${recipe}/${mode}`,
-          getPlatformRecipeTheme(recipe, mode),
-        ] as const,
-    ),
-  ),
-];
+const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 describe("a defined overlay elevation level", () => {
   it("reports a non-finite offset before the renderer sees it", () => {

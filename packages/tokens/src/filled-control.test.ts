@@ -15,63 +15,21 @@
  * directions: the designed trio passes, the alpha composite fails.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { alpha } from "./color.js";
 import { compositeOver, contrastFloors, contrastRatio } from "./contrast.js";
 import { filledControlPaints } from "./filled-control.example.js";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
 import {
   filledControl,
   filledControlFamilies,
   type FilledControlFamily,
 } from "./styles.js";
-import {
-  darkTheme,
-  getPlatformTheme,
-  getTheme,
-  lightTheme,
-  themeContrasts,
-  themeModes,
-  type Theme,
-} from "./theme.js";
-
-const platformLabels: Readonly<Record<string, string>> = {
-  darwin: "macOS",
-  linux: "Linux",
-  win32: "Windows",
-};
-
-const recipeLabels: Readonly<Record<string, string>> = {
-  xp: "XP",
-  aero: "Aero",
-};
+import { darkTheme, lightTheme, type Theme } from "./theme.js";
 
 /** Every shipped colour set, labelled the way the reference names it. */
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map((contrast): readonly [string, Theme] => [
-      contrast === "high" ? `identity ${mode} high` : `identity ${mode}`,
-      getTheme(mode, contrast),
-    ]),
-  ),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) =>
-      themeModes.map((mode): readonly [string, Theme] => [
-        `${platformLabels[platform] ?? platform} ${mode}`,
-        getPlatformTheme(platform, mode),
-      ]),
-    ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map((mode): readonly [string, Theme] => [
-      `${recipeLabels[recipe] ?? recipe} ${mode}`,
-      getPlatformRecipeTheme(recipe, mode),
-    ]),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const surfaces = ["background", "card", "popover", "muted"] as const;
 
@@ -171,12 +129,12 @@ describe("the alpha composite the consumers still paint", () => {
 
   it("quotes the worst label each consumer produces", () => {
     const quoted = [
-      ["primary", 0.5, "Linux light", "card", 2.06],
-      ["destructive", 0.5, "identity light", "card", 2.24],
-      ["primary", 0.9, "macOS light", "card", 4.02],
-      ["primary", 0.8, "Linux light", "card", 3.4],
-      ["destructive", 0.9, "identity light", "card", 4.43],
-      ["destructive", 0.8, "identity light", "card", 3.75],
+      ["primary", 0.5, "Light · Linux", "card", 2.06],
+      ["destructive", 0.5, "Light", "card", 2.24],
+      ["primary", 0.9, "Light · macOS", "card", 4.02],
+      ["primary", 0.8, "Light · Linux", "card", 3.4],
+      ["destructive", 0.9, "Light", "card", 4.43],
+      ["destructive", 0.8, "Light", "card", 3.75],
     ] as const;
 
     quoted.forEach(([family, opacity, label, surface, value]) => {

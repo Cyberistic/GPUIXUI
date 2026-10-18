@@ -12,75 +12,27 @@
  * is selected on.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   compositeOver,
   contrastFloors,
   contrastRatio,
   extendTheme,
   getPlatformRecipeTheme,
-  getPlatformTheme,
-  getTheme,
   lightTheme,
-  platformNames,
-  platformRecipeNames,
   selectionStatusPairs,
   selectionSurfaces,
   statusTones,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
-  type PlatformName,
-  type PlatformRecipeName,
   type Theme,
 } from "./index.js";
-
-const platformLabels: Readonly<Record<PlatformName, string>> = {
-  darwin: "macOS",
-  linux: "Linux",
-  win32: "Windows",
-  default: "Default",
-};
-
-const recipeLabels: Readonly<Record<PlatformRecipeName, string>> = {
-  xp: "XP",
-  aero: "Aero",
-};
 
 type Case = readonly [string, Theme];
 
 /** Every shipped set, so a platform's own wash is measured on its own canvas. */
-const shipped: ReadonlyArray<Case> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map(
-      (contrast): Case => [
-        `identity ${mode} ${contrast}`,
-        getTheme(mode, contrast),
-      ],
-    ),
-  ),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) =>
-      themeModes.flatMap((mode) =>
-        themeContrasts.map(
-          (contrast): Case => [
-            `${platformLabels[platform]} ${mode} ${contrast}`,
-            getPlatformTheme(platform, mode, contrast),
-          ],
-        ),
-      ),
-    ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.flatMap((mode) =>
-      themeContrasts.map(
-        (contrast): Case => [
-          `${recipeLabels[recipe]} ${mode} ${contrast}`,
-          getPlatformRecipeTheme(recipe, mode, contrast),
-        ],
-      ),
-    ),
-  ),
-];
+const shipped: ReadonlyArray<Case> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 /** The ratio a status label paints through the selection wash. */
 const washedRatio = (
@@ -130,11 +82,11 @@ describe("status text through a text selection", () => {
     };
 
     const defaultWorst = tightest("default");
-    expect(defaultWorst[0]).toBe("XP light default infoText on selected");
+    expect(defaultWorst[0]).toBe("Light · Windows XP infoText on selected");
     expect(Number(defaultWorst[1].toFixed(3))).toBe(4.584);
 
     const highWorst = tightest("high");
-    expect(highWorst[0]).toBe("identity light high warningText on active");
+    expect(highWorst[0]).toBe("High contrast light warningText on active");
     expect(Number(highWorst[1].toFixed(3))).toBe(7.37);
   });
 

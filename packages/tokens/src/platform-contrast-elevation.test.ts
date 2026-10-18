@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { alpha } from "./color.js";
 import { themeContrastFailures } from "./contrast.js";
 import { elevationShadow, type ElevationShape } from "./elevation.js";
@@ -24,7 +25,6 @@ import {
   getTheme,
   highContrastLightTheme,
   lightTheme,
-  themeContrasts,
   themeModes,
   type Theme,
 } from "./theme.js";
@@ -49,30 +49,9 @@ const elevationKey = (elevation: Theme["elevation"]): string =>
     .join("|");
 
 /** Every shipped style theme: the identity, three variants and two recipes. */
-const shippedThemes = (): ReadonlyArray<readonly [string, Theme]> => [
-  ...modes.flatMap((mode) =>
-    themeContrasts.map((contrast): readonly [string, Theme] => [
-      `identity ${mode} ${contrast}`,
-      getTheme(mode, contrast),
-    ]),
-  ),
-  ...realVariants.flatMap((platform) =>
-    modes.flatMap((mode) =>
-      themeContrasts.map((contrast): readonly [string, Theme] => [
-        `${platform} ${mode} ${contrast}`,
-        getPlatformTheme(platform, mode, contrast),
-      ]),
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    modes.flatMap((mode) =>
-      themeContrasts.map((contrast): readonly [string, Theme] => [
-        `${recipe} ${mode} ${contrast}`,
-        getPlatformRecipeTheme(recipe, mode, contrast),
-      ]),
-    ),
-  ),
-];
+const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 describe("high-contrast platform elevation", () => {
   it("gives every high-contrast variant its platform's elevation", () => {
@@ -136,14 +115,12 @@ describe("high-contrast platform elevation", () => {
   });
 
   it("keeps the high-contrast colour set and the contrast contract", () => {
-    const high = shippedThemes().filter(
-      ([, theme]) => theme.contrast === "high",
-    );
+    const high = shipped.filter(([, theme]) => theme.contrast === "high");
     expect(high).toHaveLength(12);
     high.forEach(([label, theme]) => {
       expect(theme.colors, label).toEqual(getTheme(theme.mode, "high").colors);
     });
-    shippedThemes().forEach(([label, theme]) => {
+    shipped.forEach(([label, theme]) => {
       expect(themeContrastFailures(theme), label).toEqual([]);
     });
   });

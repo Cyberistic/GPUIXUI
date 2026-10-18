@@ -7,6 +7,7 @@
  * highlight.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   compositeOver,
   contrastFloors,
@@ -14,24 +15,12 @@ import {
   extendTheme,
   getPlatformTheme,
   getTheme,
-  platformNames,
   statusTones,
   themeContrastFailures,
   type Theme,
 } from "./index.js";
 
-const shippedThemes = (): ReadonlyArray<Theme> => [
-  getTheme("light"),
-  getTheme("dark"),
-  getTheme("light", "high"),
-  getTheme("dark", "high"),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) => [
-      getPlatformTheme(platform, "light"),
-      getPlatformTheme(platform, "dark"),
-    ]),
-];
+const shipped: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 const washed = (
   theme: Theme,
@@ -40,7 +29,7 @@ const washed = (
 
 describe("selection inside a soft status surface", () => {
   it("keeps the tone's text at the body floor and the wash visible", () => {
-    shippedThemes().forEach((theme) => {
+    shipped.forEach((theme) => {
       const floors = contrastFloors[theme.contrast];
       statusTones.forEach((tone) => {
         const paint = washed(theme, tone);

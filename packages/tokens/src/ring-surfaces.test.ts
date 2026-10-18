@@ -9,14 +9,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
   getTheme,
-  platformNames,
   themeContrastFailures,
   type Theme,
   type ThemeContrast,
@@ -33,36 +32,10 @@ const ringSurfaces = [
   "selected",
 ] as const;
 
-const variant = (
-  label: string,
-  theme: Theme,
-  contrast: ThemeContrast,
-): readonly [string, Theme, ThemeContrast] => [label, theme, contrast];
-
-const shipped: ReadonlyArray<readonly [string, Theme, ThemeContrast]> = [
-  variant("light", getTheme("light"), "default"),
-  variant("dark", getTheme("dark"), "default"),
-  variant("high-contrast light", getTheme("light", "high"), "high"),
-  variant("high-contrast dark", getTheme("dark", "high"), "high"),
-  ...platformNames.flatMap((platform) => [
-    variant(
-      `${platform} light`,
-      getPlatformTheme(platform, "light"),
-      "default",
-    ),
-    variant(`${platform} dark`, getPlatformTheme(platform, "dark"), "default"),
-    variant(
-      `${platform} high-contrast light`,
-      getPlatformTheme(platform, "light", "high"),
-      "high",
-    ),
-    variant(
-      `${platform} high-contrast dark`,
-      getPlatformTheme(platform, "dark", "high"),
-      "high",
-    ),
-  ]),
-];
+const shipped: ReadonlyArray<readonly [string, Theme, ThemeContrast]> =
+  shippedThemes.map(
+    ({ theme }) => [theme.name, theme, theme.contrast] as const,
+  );
 
 describe("the focus ring", () => {
   it("keeps the ring visible on every shipped surface", () => {

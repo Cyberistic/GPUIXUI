@@ -22,55 +22,26 @@
  * transient pointer washes and the filled families' hover/press steps stay out.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   compositeOver,
   contrastFloors,
   contrastRatio,
-  darkTheme,
   extendTheme,
-  getPlatformRecipeTheme,
   getPlatformTheme,
   highContrastDarkTheme,
-  highContrastLightTheme,
   lightTheme,
   overlaySurfaces,
   overlayWashPairs,
-  platformNames,
-  platformRecipeNames,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type Theme,
   type ThemeColors,
 } from "./index.js";
 
 /** Every shipped colour set: identity, platform variants and recipes. */
-const shipped: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", lightTheme],
-  ["dark", darkTheme],
-  ["high-contrast light", highContrastLightTheme],
-  ["high-contrast dark", highContrastDarkTheme],
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.flatMap((contrast) => [
-      ...platformNames
-        .filter((platform) => platform !== "default")
-        .map(
-          (platform) =>
-            [
-              `${platform} ${mode} ${contrast}`,
-              getPlatformTheme(platform, mode, contrast),
-            ] as const,
-        ),
-      ...platformRecipeNames.map(
-        (recipe) =>
-          [
-            `${recipe} ${mode} ${contrast}`,
-            getPlatformRecipeTheme(recipe, mode, contrast),
-          ] as const,
-      ),
-    ]),
-  ),
-];
+const shipped: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 /** The persistent surfaces plan 375 adds to the scrim contract. */
 const persistentSurfaces = [

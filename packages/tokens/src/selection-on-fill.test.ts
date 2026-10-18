@@ -22,47 +22,24 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   compositeOver,
   contrastFloors,
   contrastRatio,
   extendTheme,
   filledControlFamilies,
-  getPlatformRecipeTheme,
-  getPlatformTheme,
   getTheme,
-  platformRecipeNames,
   selectionFillPairs,
   selectionFillWashPairs,
   selectionStyle,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type Theme,
 } from "./index.js";
 import { filledContentStyle } from "./selection.example.js";
 
-const platforms = ["darwin", "linux", "win32"] as const;
-
-const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
-  (mode) =>
-    themeContrasts.flatMap((contrast) => [
-      [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-      ...platforms.map(
-        (platform) =>
-          [
-            `${platform} ${mode} ${contrast}`,
-            getPlatformTheme(platform, mode, contrast),
-          ] as const,
-      ),
-      ...platformRecipeNames.map(
-        (recipe) =>
-          [
-            `${recipe} ${mode} ${contrast}`,
-            getPlatformRecipeTheme(recipe, mode, contrast),
-          ] as const,
-      ),
-    ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
 );
 
 describe("the selection veil on a filled action", () => {
@@ -122,12 +99,12 @@ describe("the selection veil on a filled action", () => {
 
     expect(invisible).toEqual(
       [
-        "aero light default",
-        "darwin dark default",
-        "darwin light default",
-        "identity dark default",
-        "linux light default",
-        "win32 light default",
+        "Light · Windows 7",
+        "Dark · macOS",
+        "Light · macOS",
+        "Dark",
+        "Light · Linux",
+        "Light · Windows",
       ].toSorted(),
     );
   });

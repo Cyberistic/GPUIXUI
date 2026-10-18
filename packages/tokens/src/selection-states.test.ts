@@ -14,6 +14,7 @@
  * deeper fill.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import { lightColors } from "./color.js";
 import {
   contrastFloors,
@@ -25,48 +26,19 @@ import {
   selectionStepPairs,
   themeColorFailures,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   themeMetricFailures,
   type Theme,
 } from "./index.js";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
+import { getPlatformRecipeTheme } from "./platform-recipes.js";
 import {
   resolveAuthoredPlatformStyle,
   resolveEditedPlatformTheme,
 } from "./platform-styles.example.js";
 
-const realPlatforms = platformNames.filter(
-  (platform) => platform !== "default",
-);
-
 const shipped: ReadonlyArray<{
   readonly label: string;
   readonly theme: Theme;
-}> = [
-  ...themeContrasts.flatMap((contrast) =>
-    themeModes.map((mode) => ({
-      label: `identity ${mode} ${contrast}`,
-      theme: getTheme(mode, contrast),
-    })),
-  ),
-  ...realPlatforms.flatMap((platform) =>
-    themeModes.map((mode) => ({
-      label: `${platform} ${mode}`,
-      theme: getPlatformTheme(platform, mode),
-    })),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map((mode) => ({
-      label: `${recipe} ${mode}`,
-      theme: getPlatformRecipeTheme(recipe, mode),
-    })),
-  ),
-];
+}> = shippedThemes.map(({ theme }) => ({ label: theme.name, theme }));
 
 const step = (theme: Theme): number =>
   contrastRatio(theme.colors.selected, theme.colors.accent);

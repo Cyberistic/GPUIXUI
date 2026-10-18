@@ -10,43 +10,26 @@
  * cannot carry. `inactive` is the floor, `border` on `disabled` is the edge.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   darkTheme,
   extendTheme,
-  getPlatformTheme,
   highContrastDarkTheme,
   highContrastLightTheme,
-  highContrastThemes,
   inactivePairs,
   inactiveSurfaces,
   lightTheme,
-  platformNames,
   themeContrastFailures,
-  themeModes,
-  themes,
   type Theme,
 } from "./index.js";
 
 const shipped: ReadonlyArray<{
   readonly label: string;
   readonly theme: Theme;
-}> = [
-  ...themeModes.flatMap((mode) => [
-    { label: `${mode} default`, theme: themes[mode] },
-    { label: `${mode} high contrast`, theme: highContrastThemes[mode] },
-  ]),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) =>
-      themeModes.map((mode) => ({
-        label: `${platform} ${mode}`,
-        theme: getPlatformTheme(platform, mode),
-      })),
-    ),
-];
+}> = shippedThemes.map(({ theme }) => ({ label: theme.name, theme }));
 
 describe("inactive state", () => {
   it("holds every shipped set to the inactive floor", () => {

@@ -8,6 +8,7 @@
  * fill while `themeContrastFailures` returned `[]`.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastRatio,
@@ -21,7 +22,6 @@ import {
   softPanelTextPairs,
   statusTones,
   themeContrastFailures,
-  themeContrasts,
   themeModes,
   type PlatformName,
   type PlatformRecipeName,
@@ -51,38 +51,9 @@ const recipeLabels: Readonly<Record<PlatformRecipeName, string>> = {
 
 type Case = readonly [string, Theme];
 
-const shipped: ReadonlyArray<Case> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map(
-      (contrast): Case => [
-        `identity ${mode} ${contrast}`,
-        getTheme(mode, contrast),
-      ],
-    ),
-  ),
-  ...platformNames
-    .filter((platform) => platform !== "default")
-    .flatMap((platform) =>
-      themeModes.flatMap((mode) =>
-        themeContrasts.map(
-          (contrast): Case => [
-            `${platformLabels[platform]} ${mode} ${contrast}`,
-            getPlatformTheme(platform, mode, contrast),
-          ],
-        ),
-      ),
-    ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.flatMap((mode) =>
-      themeContrasts.map(
-        (contrast): Case => [
-          `${recipeLabels[recipe]} ${mode} ${contrast}`,
-          getPlatformRecipeTheme(recipe, mode, contrast),
-        ],
-      ),
-    ),
-  ),
-];
+const shipped: ReadonlyArray<Case> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 const quotedSets: ReadonlyArray<Case> = [
   ...themeModes.map((mode): Case => [`identity ${mode}`, getTheme(mode)]),

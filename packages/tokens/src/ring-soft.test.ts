@@ -10,21 +10,17 @@
  * control lose its only focus indicator there.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
   getTheme,
   ringSoftPairs,
   themeContrastFailures,
-  themeContrasts,
-  themeModes,
   type Theme,
 } from "./index.js";
-
-const platforms = ["darwin", "linux", "win32"] as const;
 
 const softFills = [
   "infoSoft",
@@ -33,18 +29,8 @@ const softFills = [
   "destructiveSoft",
 ] as const;
 
-const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
-  (mode) =>
-    themeContrasts.flatMap((contrast) => [
-      [`identity ${mode} ${contrast}`, getTheme(mode, contrast)] as const,
-      ...platforms.map(
-        (platform) =>
-          [
-            `${platform} ${mode} ${contrast}`,
-            getPlatformTheme(platform, mode, contrast),
-          ] as const,
-      ),
-    ]),
+const variants: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
 );
 
 const softPairs = contrastPairs.filter(
@@ -72,7 +58,7 @@ describe("the focus ring on a soft status surface", () => {
 
   it("holds the high-contrast ring to 4.5:1 on the soft fills", () => {
     variants
-      .filter(([label]) => label.includes(" high"))
+      .filter(([, theme]) => theme.contrast === "high")
       .forEach(([label, theme]) => {
         softFills.forEach((fill) => {
           expect(

@@ -19,15 +19,14 @@
  * ghost dismiss control paint.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastPairs,
   contrastRatio,
   extendTheme,
-  getPlatformTheme,
   getTheme,
   themeContrastFailures,
-  themeModes,
   type Theme,
 } from "./index.js";
 
@@ -36,19 +35,9 @@ const bodyTextPairs = contrastPairs.filter(
     foreground === "foreground" && pairClass === "body",
 );
 
-const themes: ReadonlyArray<readonly [string, Theme]> = [
-  ["light", getTheme("light")],
-  ["dark", getTheme("dark")],
-  ["high-contrast light", getTheme("light", "high")],
-  ["high-contrast dark", getTheme("dark", "high")],
-  ...(["darwin", "linux", "win32"] as const).flatMap(
-    (platform): ReadonlyArray<readonly [string, Theme]> =>
-      themeModes.map((mode) => [
-        `${platform} ${mode}`,
-        getPlatformTheme(platform, mode),
-      ]),
-  ),
-];
+const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
+  ({ theme }) => [theme.name, theme] as const,
+);
 
 describe("default body text surfaces", () => {
   it("measures every surface foreground is painted on", () => {

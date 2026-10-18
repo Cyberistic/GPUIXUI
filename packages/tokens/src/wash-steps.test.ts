@@ -11,6 +11,7 @@
  * `washStepPairs` publishes the step.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
   contrastRatio,
@@ -19,39 +20,13 @@ import {
 } from "./contrast.js";
 import { quietPressFailures, quietPressTheme } from "./contrast.example.js";
 import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
-import {
   extendTheme,
-  getPlatformTheme,
   getTheme,
-  themeContrasts,
-  themeModes,
   type Theme,
   type ThemeContrast,
 } from "./theme.js";
 
-const realPlatforms = platformNames.filter(
-  (platform) => platform !== "default",
-);
-
-const shippedThemes: ReadonlyArray<Theme> = [
-  ...themeContrasts.flatMap((contrast) =>
-    themeModes.map((mode) => getTheme(mode, contrast)),
-  ),
-  ...realPlatforms.flatMap((platform) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map((mode) => getPlatformTheme(platform, mode, contrast)),
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map((mode) => getPlatformRecipeTheme(recipe, mode, contrast)),
-    ),
-  ),
-];
+const themes: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 const pressFailures = (theme: Theme) =>
   themeContrastFailures(theme).filter(
@@ -66,8 +41,8 @@ const collapsePress = (contrast: ThemeContrast): Theme => {
 
 describe("generic wash steps", () => {
   it("holds every shipped theme's press to a perceivable step", () => {
-    expect(shippedThemes).toHaveLength(24);
-    shippedThemes.forEach((theme) => {
+    expect(themes).toHaveLength(24);
+    themes.forEach((theme) => {
       expect(
         contrastRatio(theme.colors.hover, theme.colors.active),
         theme.name,

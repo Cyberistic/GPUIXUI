@@ -10,19 +10,14 @@
  * the library's guarantee said it was good.
  */
 import { describe, expect, it } from "vitest";
+import { shippedThemes } from "./shipped-themes.js";
 import {
   extendTheme,
-  getPlatformRecipeTheme,
-  getPlatformTheme,
   getTheme,
-  platformNames,
-  platformRecipeNames,
   themeColorFailures,
   themeContrastFailures,
-  themeContrasts,
   themeFailures,
   themeMetricFailures,
-  themeModes,
   themeTypefaceFailures,
   typefaceRoles,
   typefaceRules,
@@ -38,35 +33,10 @@ import {
 const families = (sans: string, mono = typography.mono): Theme =>
   extendTheme(getTheme("light"), { typography: { sans, mono } });
 
-const realPlatforms = platformNames.filter(
-  (platform) => platform !== "default",
-);
-
 const shipped: ReadonlyArray<{
   readonly label: string;
   readonly theme: Theme;
-}> = [
-  ...themeContrasts.flatMap((contrast) =>
-    themeModes.map((mode) => ({
-      label: `identity ${mode} ${contrast}`,
-      theme: getTheme(mode, contrast),
-    })),
-  ),
-  ...realPlatforms.flatMap((platform) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map((mode) => ({
-        label: `${platform} ${mode} ${contrast}`,
-        theme: getPlatformTheme(platform, mode, contrast),
-      })),
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map((mode) => ({
-      label: `${recipe} ${mode}`,
-      theme: getPlatformRecipeTheme(recipe, mode),
-    })),
-  ),
-];
+}> = shippedThemes.map(({ theme }) => ({ label: theme.name, theme }));
 
 describe("themeTypefaceFailures", () => {
   it("reports a CSS stack as a single-family failure", () => {
