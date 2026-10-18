@@ -67,6 +67,7 @@ import { queryBuilderScenario } from "./query-builder.js";
 import { notificationCentreScenario } from "./notification-centre.js";
 import { cropScenario } from "./crop.js";
 import { wizardScenario } from "./wizard.js";
+import { gridCellEditingScenario } from "./grid-editor.js";
 import { propertyPanelScenario } from "./property-panel.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
@@ -161,6 +162,7 @@ export const PROBE_CAPABILITIES = [
   "notification",
   "crop",
   "wizard",
+  "cell-editing",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -209,6 +211,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   notificationCentreScenario,
   cropScenario,
   wizardScenario,
+  gridCellEditingScenario,
   propertyPanelScenario,
   shortcutScenario,
   themeColorRolesScenario,

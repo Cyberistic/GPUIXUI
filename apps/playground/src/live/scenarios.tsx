@@ -55,6 +55,7 @@ import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { queryBuilderScenario } from "../scenarios/query-builder.js";
 import { notificationCentreScenario } from "../scenarios/notification-centre.js";
 import { wizardScenario } from "../scenarios/wizard.js";
+import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -4443,6 +4444,192 @@ const notificationCentre: LiveScenario = {
     }),
 };
 
+const gridCellEditing: LiveScenario = {
+  id: "live-grid-cell-editing",
+  title: "Live editable grid: commit, leave-commit and a row menu",
+  capability: "cell-editing",
+  view: gridCellEditingScenario.view,
+  ready: "ge-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectContains(
+        "the live grid starts idle",
+        yield* textOf(ctx, "ge-state"),
+        "editing=none draft=- commits=0 rows=60",
+      );
+
+      // 1. A cell press selects the row; a second mounts the native editor.
+      yield* ctx.host.click("ge-cell-0");
+      yield* settle;
+      yield* ctx.host.click("ge-cell-0");
+      yield* ctx.host.waitFor("ge-editor-0");
+      yield* settle;
+      yield* waitForFocus(ctx, "ge-editor-0");
+      yield* ctx.expectEqual(
+        "a live click focuses the mounted editor",
+        yield* focusedOf(ctx),
+        "ge-editor-0",
+      );
+      yield* waitForText(ctx, "ge-state", "editing=0");
+
+      // 2. Typing is a draft and Enter commits it.
+      yield* ctx.host.key("cmd-a");
+      yield* ctx.host.key("b e t a");
+      yield* settle;
+      yield* waitForText(ctx, "ge-state", "draft=beta");
+      yield* ctx.expectContains(
+        "live typing is a draft",
+        yield* textOf(ctx, "ge-state"),
+        "commits=0",
+      );
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "ge-state", "editing=none");
+      yield* ctx.expectContains(
+        "live Enter commits the draft",
+        yield* textOf(ctx, "ge-state"),
+        "editing=none draft=- commits=1",
+      );
+      yield* ctx.expectContains(
+        "the live commit is the last action",
+        yield* textOf(ctx, "ge-state"),
+        "last=commit",
+      );
+      yield* ctx.expectEqual(
+        "the committed text repaints the live row",
+        yield* textOf(ctx, "ge-value-0"),
+        "beta",
+      );
+
+      // 3. A second edit ends when its row leaves the window.
+      yield* ctx.host.click("ge-cell-0");
+      yield* settle;
+      yield* ctx.host.click("ge-cell-0");
+      yield* ctx.host.waitFor("ge-editor-0");
+      yield* settle;
+      yield* waitForFocus(ctx, "ge-editor-0");
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* waitForText(ctx, "ge-state", "draft=betax");
+      // The app-owned jump is the measured route: a programmatic
+      // `scrollToItem` fires no range event live (plan `338` §9), so the
+      // component mirrors its anchor and applies the leave rule itself.
+      yield* ctx.host.click("ge-jump");
+      yield* settle;
+      yield* waitForText(ctx, "ge-state", "editing=none");
+      yield* ctx.expectContains(
+        "leaving the live window commits the edit",
+        yield* textOf(ctx, "ge-state"),
+        "editing=none draft=- commits=2",
+      );
+      yield* ctx.expectContains(
+        "the live leave is the last action",
+        yield* textOf(ctx, "ge-state"),
+        "last=leave",
+      );
+      yield* ctx.expectEqual(
+        "the left row is no longer painted live",
+        Option.isNone(Option.fromNullishOr(yield* ctx.host.bounds("ge-row-0"))),
+        true,
+      );
+      yield* ctx.host.click("ge-top");
+      yield* settle;
+      yield* waitForText(ctx, "ge-value-0", "betax");
+      yield* ctx.expectEqual(
+        "the leave-commit survived the scroll back",
+        yield* textOf(ctx, "ge-value-0"),
+        "betax",
+      );
+
+      // 4. The row menu opens at its action, takes focus and returns it.
+      yield* ctx.host.click("ge-menu-2");
+      yield* ctx.host.waitFor("ge-menu-panel");
+      yield* settle;
+      yield* waitForFocus(ctx, "ge-menu-panel");
+      const action = yield* ctx.host.bounds("ge-menu-2");
+      const panel = yield* ctx.host.bounds("ge-menu-panel");
+      const place = yield* ctx.expectSome(
+        "the live menu is painted under its action",
+        Option.all([Option.fromNullishOr(action), Option.fromNullishOr(panel)]),
+      );
+      yield* ctx.expectNear(
+        "the live menu opens at its action's left edge",
+        place[1].x,
+        place[0].x,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live menu opens below its action",
+        place[1].y,
+        place[0].y + place[0].height,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live menu owns native focus",
+        yield* focusedOf(ctx),
+        "ge-menu-panel",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForFocus(ctx, "ge-menu-2");
+      yield* ctx.expectContains(
+        "live Escape closes the menu",
+        yield* textOf(ctx, "ge-state"),
+        "panel=none",
+      );
+      yield* ctx.expectContains(
+        "the live menu records the Escape",
+        yield* textOf(ctx, "ge-state"),
+        "last=escape",
+      );
+      yield* ctx.expectEqual(
+        "live Escape returns focus to the row action",
+        yield* focusedOf(ctx),
+        "ge-menu-2",
+      );
+
+      // 5. A menu action opens that row's editor.
+      yield* ctx.host.click("ge-menu-2");
+      yield* ctx.host.waitFor("ge-menu-panel");
+      yield* settle;
+      yield* ctx.host.click("ge-menu-rename");
+      yield* ctx.host.waitFor("ge-editor-2");
+      yield* settle;
+      yield* waitForText(ctx, "ge-state", "editing=2");
+      yield* ctx.expectContains(
+        "live Rename starts that row's edit",
+        yield* textOf(ctx, "ge-state"),
+        "editing=2 draft=item-02",
+      );
+      yield* ctx.expectContains(
+        "the live rename closes the menu",
+        yield* textOf(ctx, "ge-state"),
+        "panel=none",
+      );
+      yield* ctx.expectContains(
+        "the live rename is the last action",
+        yield* textOf(ctx, "ge-state"),
+        "last=rename",
+      );
+      yield* waitForFocus(ctx, "ge-editor-2");
+      yield* ctx.expectEqual(
+        "live Rename focuses the editor",
+        yield* focusedOf(ctx),
+        "ge-editor-2",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "ge-state", "editing=none");
+      yield* ctx.expectContains(
+        "live Escape in the editor cancels",
+        yield* textOf(ctx, "ge-state"),
+        "last=cancel",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${gridCellEditing.id}.png`);
+    }),
+};
+
 const wizard: LiveScenario = {
   id: "live-wizard",
   title: "Live multi-step form: focus, validation, review and submit",
@@ -4581,4 +4768,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   queryBuilder,
   notificationCentre,
   wizard,
+  gridCellEditing,
 ];
