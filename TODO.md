@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 142/193
+`[x]` `[███████░░░]` 142/194
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -913,6 +913,13 @@ so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is
 `main`; `agent/tokens-theme` is the union); this agent was instructed not to push
 `main`
+`[ ]` Cross-team: `components`, `docs-site`, `playground` and `primitives`
+retire the interlock rows in their own `TODO.md` that still call shipped token
+work pending — the avatar diameter scale (`avatarSize`, plan 054), the designed
+`primaryHover`/`destructiveHover` roles (plan 055), `alpha` and the `info`
+family (plan 014) and the `@gpuixui/tokens` JSX-runtime shim (plan 061 removed
+the package's only JSX). All five are on this branch; the stale rows invite the
+next agent to redo work that exists (owner: those workstreams)
 `[x]` Close the numeric contract's last two ungoverned members — a probe on the
 shipped light theme found `themeMetricFailures` returning `[]` for
 `elevation.md[0].offsetX = NaN` (while `elevationShadow` handed the renderer an
