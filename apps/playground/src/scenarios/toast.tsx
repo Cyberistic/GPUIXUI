@@ -504,6 +504,15 @@ export const toastScenario: PlaygroundScenario = {
         readout(ctx),
         "behind=0",
       );
+      // A click dismissal is synchronous, so the frozen exit is asserted here:
+      // the card is still laid out at elapsed 0 and leaves only when the clock
+      // moves. A timer-driven exit is not a reliable place for this check — the
+      // timer, the clock and AnimatePresence's own re-render can interleave.
+      yield* ctx.expectEqual(
+        "the dismissed card is still laid out while its exit is frozen",
+        Option.isSome(Option.fromNullishOr(ctx.host.bounds("toast-4"))),
+        true,
+      );
       ctx.host.fastForwardMotion(EXIT_MS);
       yield* ctx.expectEqual(
         "the dismissed card left the tree after its exit",
@@ -591,13 +600,28 @@ export const toastScenario: PlaygroundScenario = {
       );
 
       ctx.host.click("toast-show");
-      // Pause the motion clock before the short timer can fire: under load the
-      // 250 ms timer may beat the first fast-forward, and then the exit is
-      // already over by the time the card is asserted.
+      // Name both cards before the timer starts. The frozen-exit assertion is
+      // about id 7, so a push that did not land (or an id that shifted) must
+      // fail here, not at an assertion about a card that never existed.
+      yield* ctx.expectContains(
+        "the long toast is queued before the short one",
+        readout(ctx),
+        "count=1",
+      );
+      yield* bounds(ctx, "toast-6");
+      // Freeze the motion clock before the short timer starts, then paint the
+      // short card: a motion element's first painted frame is the from-style its
+      // exit animates out of, so the paint must happen before the 250 ms timer
+      // can remove the card.
       ctx.host.pauseMotion();
       ctx.host.click("toast-show-short");
-      // Register the exit watcher before the real timer can remove the card.
-      ctx.host.fastForwardMotion(0);
+      const shortCard = yield* bounds(ctx, "toast-7");
+      yield* ctx.expectNear(
+        "the short card owns the bottom inset before its timer runs",
+        insets(frame, shortCard).bottom,
+        INSET,
+        1,
+      );
       yield* awaitReadout(ctx, "toast-readout", "dismissed=Short");
       yield* ctx.expectContains(
         "the short toast's timer fired",
@@ -609,17 +633,12 @@ export const toastScenario: PlaygroundScenario = {
         readout(ctx),
         "count=1",
       );
-      yield* ctx.expectEqual(
-        "the short toast is still laid out while its exit is frozen",
-        Option.isSome(Option.fromNullishOr(ctx.host.bounds("toast-7"))),
-        true,
-      );
       yield* ctx.expectSome(
         "the long toast survived its sibling's timer",
         Option.fromNullishOr(ctx.host.bounds("toast-6")),
       );
-      // A timer-driven exit is only registered on a dispatched frame, so apply
-      // one before moving the frozen motion clock past the exit's start.
+      // Move the frozen clock past the exit in two steps: the zero dispatch
+      // settles any frame the timer queued, then the jump finishes the tween.
       ctx.host.fastForwardMotion(0);
       ctx.host.fastForwardMotion(EXIT_MS + 1);
       yield* ctx.expectEqual(
