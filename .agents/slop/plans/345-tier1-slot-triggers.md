@@ -557,18 +557,18 @@ If `test:runtime` cannot load the binding, STOP: report the host, do not skip.
 
 ## 11. Acceptance
 
-- [ ] Every single-root focusable Tier 1 control accepts `TriggerHandlers` +
+- [x] Every single-root focusable Tier 1 control accepts `TriggerHandlers` +
       `aria-description` and forwards them to its focusable host.
-- [ ] A `Tooltip` around `Checkbox`, `Switch`, `Slider` and `Select` opens on
+- [x] A `Tooltip` around `Checkbox`, `Switch`, `Slider` and `Select` opens on
       hover and on focus in the real runtime, with the description on the
       control's a11y node. `Tooltip.style` sizes the hugging root so a Slider (or
       any full-width child) keeps its width; the page states the caveat.
-- [ ] A `Tooltip` around `Input`, `TextArea` and `NumberField` opens on focus
+- [x] A `Tooltip` around `Input`, `TextArea` and `NumberField` opens on focus
       and carries the description; the page states the measured no-hover limit.
-- [ ] Roving composites are documented non-triggers with the reason.
-- [ ] `tooltip.mdx`, the seven component pages, `COMPONENTS.md`, `TODO.md`,
+- [x] Roving composites are documented non-triggers with the reason.
+- [x] `tooltip.mdx`, the seven component pages, `COMPONENTS.md`, `TODO.md`,
       `PLAN.md` and the plan index agree.
-- [ ] Offline and runtime suites, `nub run check`, `nub run lint`,
+- [x] Offline and runtime suites, `nub run check`, `nub run lint`,
       `nub run test` are green.
 
 ## 12. Execution log (2026-10-18, this host)
