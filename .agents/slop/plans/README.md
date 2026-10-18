@@ -116,6 +116,7 @@ workstream declares in its own section below.
 | [340](./340-combobox-async-options.md) | Combobox async options: expose the query, let the caller filter, show loading | C/F | 110, 116, 138, 302, 323, 328, 338 | done — `onQueryChange` / `shouldFilter` / `loading`; 2 logic + 4 native tests (unit 356, behaviour 522), both-direction proof |
 | [365](./365-carousel-hiding.md) | Carousel hides inactive slides in the real runtime (`display: none` is a no-op in 0.10.0) | F | 110, 117, 315, 326, 338 | done — `visibility: hidden` + a collapsed box keeps the slide mounted and its state; 3 new painted/bounds/hit-test cases (Carousel 12, behaviour 525); 6 of 12 fail on the old `display` code |
 | [366](./366-dismiss-stack-event-identity.md) | One Escape closes one overlay: the dismiss stack uses the field claim, not payload identity | F | 110, 112, 114, 117, 131, 187, 326 | done — the runtime hands each handler a payload copy, so consumption moved to the shared field claim; unit copy case + 1 native nested-dismiss case (Dialog 14, behaviour 526); both fail on the `WeakSet` |
+| [367](./367-tabs-arrow-origin.md) | Tabs: the arrow origin is the natively focused tab, not the last React focus event | F | 110, 113, 117, 321, 334, 344/345 | planned — measured: `autoFocus` and a live click never run `onFocus`, so an arrow starts from the selected tab |
 
 Interlocks this workstream depends on and does not own:
 
