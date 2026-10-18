@@ -32,3 +32,18 @@ export interface FocusReturnState {
  */
 export const shouldReturnFocus = (state: FocusReturnState): boolean =>
   state.wasOpen && !state.open && state.dismissedByEscape;
+
+/** What the observer knows when a palette close also changed the route. */
+export interface DestinationFocusState {
+  readonly wasOpen: boolean;
+  readonly open: boolean;
+  readonly dismissedByEscape: boolean;
+  readonly pathChanged: boolean;
+}
+
+/**
+ * A chosen result is a client-side navigation, so focus belongs at the start of
+ * the page that opened, not on the old trigger and never on `<body>`.
+ */
+export const shouldFocusDestination = (state: DestinationFocusState): boolean =>
+  state.wasOpen && !state.open && !state.dismissedByEscape && state.pathChanged;

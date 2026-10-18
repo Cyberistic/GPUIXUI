@@ -200,13 +200,35 @@ const checkSearch = async (
   if (!closed) {
     problems.push("choosing a result left the palette open");
   }
+  const landed = await session.waitFor(
+    `document.activeElement !== null && document.activeElement.id === "nd-page"`,
+    5_000,
+  );
+  if (!landed) {
+    const active = String(
+      await session.evaluate(
+        `document.activeElement === null
+          ? "none"
+          : document.activeElement.tagName.toLowerCase() +
+            (document.activeElement.id === "" ? "" : "#" + document.activeElement.id)`,
+      ),
+    );
+    problems.push(
+      `choosing a result left focus on ${active}, expected the destination page`,
+    );
+  }
 
-  // 4. An unknown query has a real empty state, not an empty list.
+  // 4. An unknown query has a real empty state, not an empty list. Reload the
+  //    page first so the opener is the body, which is the case the fallback
+  //    below must cover.
+  await session.navigate(new URL(PAGE, baseUrl).href);
   const hydratedAgain = await session.waitFor(
-    "document.documentElement !== null && document.documentElement.dataset.platform !== undefined",
+    `location.pathname === ${JSON.stringify(PAGE)} &&
+      document.documentElement !== null &&
+      document.documentElement.dataset.platform !== undefined`,
   );
   if (!hydratedAgain) {
-    throw new SetupError(`${RESULT} did not hydrate`);
+    throw new SetupError(`${PAGE} did not hydrate again`);
   }
   const reopened = await openPalette(session, problems);
   if (!reopened.open) return problems;

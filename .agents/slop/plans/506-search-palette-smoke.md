@@ -21,12 +21,14 @@ free number is `506` (`README.md` records the same rule for 500–505).
    ```text
    open ⌘K  -> dialog[role=dialog] = 1, activeElement = INPUT[aria-label="Search"]
    Escape   -> dialog = 0, activeElement = BODY
+   choose   -> pathname = /docs/installation, activeElement = BODY
    ```
 
    Root cause: Fumadocs renders a **controlled** Radix `Dialog` (no
    `DialogTrigger`). Radix restores focus to its trigger only when it owns one,
    so a `⌘K` open — and a pointer open — closes onto `<body>`. A keyboard user
-   loses their place in the page.
+   loses their place: on Escape they are back at the document start, and on a
+   chosen result they are nowhere near the page they asked for.
 
 This plan fixes (2) and adds the gate that would have caught both.
 
@@ -77,7 +79,13 @@ A component that renders nothing and mounts an effect:
   target if it is an `HTMLElement` and still connected, else the first visible
   `data-search-full`/`data-search` trigger. Restore asynchronously
   (`queueMicrotask`) so Radix has finished its own close work.
-- return a cleanup that removes both listeners and disconnects the observer.
+- when the close was **not** an Escape and the pathname changed, focus the
+  destination's `#nd-page` (the skip-link target both docs layouts already
+  expose, `#main-content` as the fallback). The route may render a frame after
+  the dialog leaves, so poll for up to 750 ms. A result on the same page (an
+  anchor) does not move focus.
+- return a cleanup that removes both listeners, disconnects the observer and
+  clears any pending destination timer.
 
 Mount it once in `src/routes/__root.tsx`, inside `RootProvider`, before
 `PlatformProvider`.
@@ -97,8 +105,10 @@ result):
 2. **A query lists a real page.** `type("installation")`; wait until the dialog
    contains an option whose text includes `Installation`; assert at least one
    `[role="option"]`.
-3. **Enter navigates.** Press `Enter` (the first option is already selected);
-   assert `location.pathname === "/docs/installation"` and the dialog closed.
+3. **Enter navigates, and focus follows.** Press `Enter` (the first option is
+   already selected); assert `location.pathname === "/docs/installation"`, the
+   dialog closed, and `document.activeElement.id === "nd-page"` — the new page's
+   start, not `<body>` and not the old trigger.
 4. **An unknown query shows the empty state.** Reopen with ⌘K, type
    `"zzzzzz"`; assert `[role="option"]` count is `0` and the dialog text
    contains `No results found`.
@@ -137,15 +147,22 @@ Unit (`src/search/focus.test.ts`):
   and ctrl+other are false. **Can fail:** changing the predicate to `key === "k"`
   makes the first assertion fail.
 - `shouldReturnFocus`: true only for the full Escape state; false when the
-  palette is still open, when it was never open, when it closed by selection,
-  and when the target is disconnected. **Can fail:** returning `true`
-  unconditionally fails the three negative cases.
+  palette is still open, when it was never open, and when it closed by
+  selection. **Can fail:** returning `true` unconditionally fails the three
+  negative cases.
+- `shouldFocusDestination`: true only for a chosen result that changed the
+  pathname; false for an Escape dismissal, a same-page result and a palette that
+  was never open. **Can fail:** dropping the `pathChanged` term fails the third
+  case.
 
 Browser:
-- **Fix direction:** with `<SearchFocusRestore />` mounted, check 5 passes.
-- **Regression direction:** remove the component from `__root.tsx`, rebuild,
-  run `smoke:search` → exit `1`, naming Escape focus (`activeElement` is
-  `body`). Record the exact line in this plan.
+- **Fix direction:** with `<SearchFocusRestore />` mounted, checks 3 and 5 pass.
+- **Regression direction (Escape):** remove the component from `__root.tsx`,
+  rebuild, run `smoke:search` → exit `1`, naming Escape focus (`activeElement`
+  is `body`).
+- **Regression direction (selection):** keep the component but drop the
+  `focusDestination` call, rebuild, run → exit `1` at check 3 ("left focus on
+  body, expected the destination page").
 - **Non-vacuity direction:** change the palette selector in the smoke to
   `[role="dialog"] input[type="search"]` (absent) and run → exit `1` at "the
   palette did not open". Record it.
@@ -166,8 +183,8 @@ Browser:
 - `nub run smoke:search` exits `0` on the production build, and `1` when the
   focus restore is removed.
 - The palette opens by ⌘K, lists the real Installation page, navigates with
-  Enter, shows "No results found" for an unknown query, and returns focus to
-  the search trigger on Escape.
+  Enter and focuses the destination page, shows "No results found" for an
+  unknown query, and returns focus to the search trigger on Escape.
 - `nub run test`, `check-types`, `lint`, `nub run check` green.
 - `README.md`, `contributing.mdx`, the plan index and `TODO.md` updated; the
   two-direction outputs recorded in §7.
@@ -188,12 +205,12 @@ Measured on the production build in headless Chrome:
 | --- | --- |
 | `nub scripts/smoke-search.ts` (fix in place) | `smoke: search palette checked` / `smoke: ok`, exit `0` |
 | `<SearchFocusRestore />` removed from `__root.tsx`, rebuilt | `FAIL /docs/components/button: Escape left focus on body, expected the search trigger`, exit `1` |
+| `focusDestination` call dropped, rebuilt | `FAIL /docs/components/button: choosing a result left focus on body, expected the destination page`, exit `1` |
 | palette selector changed to `input[type="search"]` (absent), `--no-build` | `FAIL /docs/components/button: the ⌘K shortcut did not open the search palette`, exit `1` |
 
-The fix direction and both regression directions were measured, not reasoned.
-
-Unit: `src/search/focus.test.ts` (8 assertions) is part of
-`nub run --filter docs test` — 60 files / 408 tests, all pass. `check-types`
+The fix direction and all three regression directions were measured, not
+reasoned. Unit: `src/search/focus.test.ts` (12 assertions) is part of
+`nub run --filter docs test` — 60 files / 412 tests, all pass. `check-types`
 passes. One caveat recorded while measuring: choosing a result closes the
 palette on the frame after the route changes, so the smoke waits for the close
 rather than reading it once; that is navigation, not a defect.

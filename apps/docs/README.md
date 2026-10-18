@@ -202,15 +202,17 @@ or the server was missing — never a pass.
 `smoke:build` proves the index answers over HTTP; `smoke:search` drives the
 palette itself in headless Chrome (plan 506). It opens the dialog with the real
 ⌘K shortcut, proves the field takes focus, types `installation` and finds the
-Installation page, presses Enter and lands on it, reopens and types an unknown
-query to get the "No results found" state, then dismisses with Escape and
-proves focus is back on the visible search trigger rather than `<body>`.
+Installation page, presses Enter and lands on it with focus on the destination
+page's start, reopens and types an unknown query to get the "No results found"
+state, then dismisses with Escape and proves focus is back on the visible
+search trigger rather than `<body>`.
 
-That last assertion guards a measured defect: Fumadocs opens a **controlled**
-Radix dialog, so it has no trigger to restore to. `src/search/search-focus.tsx`
-remembers the opener (or the trigger) and moves focus back only when Escape
-dismissed the palette — choosing a result navigates, so focus is not pulled
-back. `src/search/focus.test.ts` pins the decision rules.
+The two focus assertions guard measured defects: Fumadocs opens a
+**controlled** Radix dialog, so it has no trigger to restore to and both close
+paths left focus on `<body>`. `src/search/search-focus.tsx` remembers the
+opener (or the trigger), moves focus back when Escape dismissed the palette and
+into the new page when a result was chosen. `src/search/focus.test.ts` pins the
+decision rules.
 
 ```sh
 nub run --filter docs smoke:search
@@ -281,8 +283,8 @@ index.
 
 The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 ⌘K shortcut opens and focuses it, typing lists the Installation page, Enter
-navigates, an unknown query shows the empty state, and Escape closes it with
-focus returned to the search trigger.
+navigates and focuses the destination page, an unknown query shows the empty
+state, and Escape closes it with focus returned to the search trigger.
 
 Generated prop-table rows (`#type-table-…`) are **not** returned as results
 (plan 479): every table repeats `aria-label`, `style` and `children`, so those
