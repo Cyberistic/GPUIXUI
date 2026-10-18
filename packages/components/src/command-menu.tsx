@@ -368,6 +368,7 @@ export interface CommandMenuItemProps extends Omit<Props, "children"> {
 export const CommandMenuItem = ({
   action,
   style,
+  onClick,
   ...rest
 }: CommandMenuItemProps) => {
   const theme = useTheme();
@@ -379,8 +380,11 @@ export const CommandMenuItem = ({
       role="option"
       aria-selected={highlighted}
       testId={`command-${action.id}`}
-      onClick={() => run(action)}
       {...rest}
+      onClick={(event) => {
+        onClick?.(event);
+        run(action);
+      }}
       style={mergeStyles(
         menuRowStyle(theme, "default", highlighted, action.disabled === true),
         style,

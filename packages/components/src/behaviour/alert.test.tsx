@@ -229,4 +229,21 @@ describe("Alert", () => {
 
     alert.unmount();
   });
+
+  it("composes the caller's click with the dismiss handler", () => {
+    const onDismiss = vi.fn();
+    const onClick = vi.fn();
+    const alert = renderComponent(
+      <Alert testId="alert">
+        <AlertDismiss onDismiss={onDismiss} onClick={onClick} />
+      </Alert>,
+    );
+
+    clickCentreOf(alert, "alert-dismiss");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+
+    alert.unmount();
+  });
 });

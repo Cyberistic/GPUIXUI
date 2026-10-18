@@ -256,6 +256,7 @@ export const CarouselControl = ({
   direction,
   label,
   disabled = false,
+  onClick,
   ...rest
 }: CarouselControlProps) => {
   const theme = useTheme();
@@ -269,7 +270,10 @@ export const CarouselControl = ({
       {...rest}
       aria-label={name}
       disabled={disabled || count === 0 || (atEdge && !loop)}
-      onClick={() => step(direction === "next" ? 1 : -1)}
+      onClick={(event) => {
+        onClick?.(event);
+        step(direction === "next" ? 1 : -1);
+      }}
     >
       <Icon
         name={direction === "next" ? "chevron-right" : "chevron-left"}

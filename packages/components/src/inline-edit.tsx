@@ -64,6 +64,9 @@ export const InlineEdit = ({
   defaultEditing = false,
   onEditingChange,
   style,
+  onClick,
+  onChange,
+  onSubmit,
   onKeyDown,
   onFocus,
   onBlur,
@@ -147,8 +150,12 @@ export const InlineEdit = ({
         tabIndex={disabled ? -1 : 0}
         {...rest}
         ref={setDisplay}
-        onClick={start}
+        onClick={(event) => {
+          onClick?.(event);
+          start();
+        }}
         onKeyDown={(event: EventPayload) => {
+          onKeyDown?.(event);
           if (isActivation(event)) start();
         }}
         onFocus={(event) => {
@@ -198,10 +205,23 @@ export const InlineEdit = ({
       ref={attachInput}
       value={draft}
       readOnly={disabled}
-      onChange={(event) => setDraft(event.value ?? "")}
+      onChange={(event) => {
+        onChange?.(event);
+        setDraft(event.value ?? "");
+      }}
       onKeyDown={handleInputKeyDown}
-      onSubmit={() => commit()}
-      onBlur={() => finish(true, false)}
+      onSubmit={(event) => {
+        onSubmit?.(event);
+        commit();
+      }}
+      onFocus={(event) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        onBlur?.(event);
+        finish(true, false);
+      }}
       style={mergeStyles(
         {
           ...textStyle(theme, "body"),

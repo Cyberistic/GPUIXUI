@@ -408,7 +408,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 `[ ]` `[░░░░░░░░░░]` 0/3
 
-`[ ]` Consistency, keyboard, themes, composability pass
+`[~]` Consistency, keyboard, themes, composability pass
+  - [x] Caller handler composition on interactive parts — plan 331: a part that
+    accepts a host handler composes it with its own action (Pagination,
+    CommandMenu, Carousel, Alert, InlineEdit, MentionInput); nine native cases,
+    both-direction proof
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
 

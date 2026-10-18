@@ -81,10 +81,12 @@ states with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (10 tests):
 display mode, click-to-edit with focus, keyboard entry, Enter commit with focus
-return, Escape discard, blur commit, the unchanged/disabled guards, and a
-controlled edit state.
+return, Escape discard, blur commit, the unchanged/disabled guards, a controlled
+edit state, and the caller's display (`onClick`/`onKeyDown`) and field
+(`onChange`/`onSubmit`/`onFocus`/`onBlur`) handlers composing with the swap and
+the commit contract.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

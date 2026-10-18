@@ -28,10 +28,12 @@ const Gallery = ({
   value,
   onValueChange,
   loop = false,
+  onControlClick,
 }: {
   readonly value: number;
   readonly onValueChange?: (value: number) => void;
   readonly loop?: boolean;
+  readonly onControlClick?: () => void;
 }) => (
   <div style={{ width: 480 }}>
     <Carousel
@@ -53,8 +55,16 @@ const Gallery = ({
         </CarouselSlide>
       </CarouselTrack>
       <div style={{ display: "flex", gap: 8 }}>
-        <CarouselControl direction="previous" testId="prev" />
-        <CarouselControl direction="next" testId="next" />
+        <CarouselControl
+          direction="previous"
+          testId="prev"
+          onClick={onControlClick}
+        />
+        <CarouselControl
+          direction="next"
+          testId="next"
+          onClick={onControlClick}
+        />
       </div>
     </Carousel>
   </div>
@@ -242,5 +252,24 @@ describe("Carousel", () => {
     expect(light.renderer.findByTestId("carousel")).toBeDefined();
     expect(light.renderer.findByTestId("slide-0")?.style.display).toBe("flex");
     light.unmount();
+  });
+
+  it("composes the caller's control handler with the step", () => {
+    const onControlClick = vi.fn();
+    const onValueChange = vi.fn();
+    const gallery = renderComponent(
+      <Gallery
+        value={0}
+        onValueChange={onValueChange}
+        onControlClick={onControlClick}
+      />,
+    );
+
+    clickCentreOf(gallery, "next");
+
+    expect(onControlClick).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith(1);
+
+    gallery.unmount();
   });
 });

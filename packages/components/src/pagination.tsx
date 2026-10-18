@@ -122,6 +122,7 @@ export type PaginationPreviousProps = Props;
 /** The previous-page control; it leaves the tab order on the first page. */
 export const PaginationPrevious = ({
   style,
+  onClick,
   ...rest
 }: PaginationPreviousProps) => {
   const theme = useTheme();
@@ -133,8 +134,11 @@ export const PaginationPrevious = ({
       size="sm"
       aria-label="Previous page"
       disabled={current <= 1}
-      onClick={() => onPageChange(current - 1)}
       {...rest}
+      onClick={(event) => {
+        onClick?.(event);
+        onPageChange(current - 1);
+      }}
       style={mergeStyles(
         {
           paddingLeft: theme.spacing.sm,
@@ -157,7 +161,11 @@ export const PaginationPrevious = ({
 export type PaginationNextProps = Props;
 
 /** The next-page control; it leaves the tab order on the last page. */
-export const PaginationNext = ({ style, ...rest }: PaginationNextProps) => {
+export const PaginationNext = ({
+  style,
+  onClick,
+  ...rest
+}: PaginationNextProps) => {
   const theme = useTheme();
   const { current, pageCount, onPageChange } = usePagination();
 
@@ -167,8 +175,11 @@ export const PaginationNext = ({ style, ...rest }: PaginationNextProps) => {
       size="sm"
       aria-label="Next page"
       disabled={current >= pageCount}
-      onClick={() => onPageChange(current + 1)}
       {...rest}
+      onClick={(event) => {
+        onClick?.(event);
+        onPageChange(current + 1);
+      }}
       style={mergeStyles(
         {
           paddingLeft: theme.spacing.sm,
@@ -240,6 +251,7 @@ export interface PaginationItemState {
 export const PaginationItem = ({
   page,
   style,
+  onClick,
   ...rest
 }: PaginationItemProps) => {
   const theme = useTheme();
@@ -254,8 +266,11 @@ export const PaginationItem = ({
       size="sm"
       aria-label={`Page ${page}`}
       aria-selected={isCurrent}
-      onClick={isCurrent ? undefined : () => onPageChange(page)}
       {...rest}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!isCurrent) onPageChange(page);
+      }}
       style={mergeStyles(
         {
           height,

@@ -22,6 +22,7 @@ import {
   CommandMenu,
   CommandMenuEmpty,
   CommandMenuInput,
+  CommandMenuItem,
   CommandMenuList,
   type CommandAction,
 } from "../command-menu.js";
@@ -514,6 +515,35 @@ describe("CommandMenu", () => {
     const sidebar = requireBounds(palette, "command-sidebar");
     const open = requireBounds(palette, "command-open-file");
     expect(sidebar.y).toBeLessThan(open.y);
+
+    palette.unmount();
+  });
+
+  it("composes the caller's click with the command it runs", () => {
+    const perform = vi.fn();
+    const onClick = vi.fn();
+    const action: CommandAction = {
+      id: "open-file",
+      label: "Open file",
+      perform: () => perform("open-file"),
+    };
+    // A caller-composed list is a wrapper under the root; `CommandMenuItem` is
+    // the exported row for exactly this case.
+    const CustomList = () => (
+      <div>
+        <CommandMenuItem action={action} onClick={onClick} />
+      </div>
+    );
+    const palette = renderComponent(
+      <CommandMenu open onOpenChange={() => undefined} actions={[action]}>
+        <CustomList />
+      </CommandMenu>,
+    );
+
+    clickCentreOf(palette, "command-open-file");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(perform).toHaveBeenCalledWith("open-file");
 
     palette.unmount();
   });

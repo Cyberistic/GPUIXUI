@@ -43,6 +43,14 @@ history. No landed component currently deviates.
   (measured with `tsc`, plan 304 §2). The check therefore runs at render, where
   `element.type` is still the component reference. Never match `React.Children`
   by string.
+- **Host handlers compose.** A part that accepts a host `onX` prop and needs the
+  same event calls the caller's handler exactly once and then runs its own
+  action. Never spread `...rest` after an internal handler (that silently
+  replaces the part's action) and never install an internal handler after
+  `...rest` without forwarding (that silently drops the caller's). A handler the
+  prop type deliberately omits is the component's own callback, not a host
+  handler — that is how `MentionInput`/`TagInputField` own `onChange` and
+  `MenuSubTrigger` owns `onSelect`.
 - The root part owns the controlled-state props; a part never duplicates them.
 
 ## 2. Controlled and uncontrolled — one rule, one place

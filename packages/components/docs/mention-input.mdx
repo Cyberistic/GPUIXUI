@@ -105,9 +105,11 @@ see [Theming](/docs/theming).
 ## Verification
 
 `src/mention/logic.test.ts` (12 pure tests) covers query detection, replacement
-and ranking. `src/behaviour/mention-input.test.tsx` (9 native tests) covers
+and ranking. `src/behaviour/mention-input.test.tsx` (11 native tests) covers
 opening, narrowing, arrow movement, Enter insertion, row presses, Escape,
-no-match closing, the two callbacks firing once, and a disabled field.
+no-match closing, the two callbacks firing once, a disabled field, and the
+caller's `onKeyDown`/`onFocus`/`onBlur` and row handlers composing with the
+component's own action.
 
 ```sh
 nub run --filter @gpuixui/components test

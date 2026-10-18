@@ -141,6 +141,44 @@ describe("Pagination", () => {
     pager.unmount();
   });
 
+  it("composes the caller's click with every page change", () => {
+    const onClick = vi.fn();
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={5} pageCount={10} onPageChange={onPageChange}>
+        <PaginationPrevious testId="prev" onClick={onClick} />
+        <PaginationItem page={4} testId="page-4" onClick={onClick} />
+        <PaginationNext testId="next" onClick={onClick} />
+      </Pagination>,
+    );
+
+    clickCentreOf(pager, "prev");
+    clickCentreOf(pager, "page-4");
+    clickCentreOf(pager, "next");
+
+    expect(onClick).toHaveBeenCalledTimes(3);
+    expect(onPageChange.mock.calls).toEqual([[4], [4], [6]]);
+
+    pager.unmount();
+  });
+
+  it("still reports a click on the current page", () => {
+    const onClick = vi.fn();
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={5} pageCount={10} onPageChange={onPageChange}>
+        <PaginationItem page={5} testId="page-5" onClick={onClick} />
+      </Pagination>,
+    );
+
+    clickCentreOf(pager, "page-5");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onPageChange).not.toHaveBeenCalled();
+
+    pager.unmount();
+  });
+
   it("renders nothing when there are no pages", () => {
     const pager = renderComponent(
       <Pager testId="pager" page={1} pageCount={0} onPageChange={vi.fn()} />,

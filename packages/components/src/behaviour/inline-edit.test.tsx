@@ -10,7 +10,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
-import { InlineEdit } from "../inline-edit.js";
+import { InlineEdit, type InlineEditProps } from "../inline-edit.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -22,15 +22,18 @@ const Harness = ({
   initial = "",
   onCommit,
   disabled = false,
+  host,
 }: {
   readonly initial?: string;
   readonly onCommit?: (value: string) => void;
   readonly disabled?: boolean;
+  readonly host?: Partial<InlineEditProps>;
 }) => {
   const [value, setValue] = useState(initial);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <InlineEdit
+        {...host}
         testId="name"
         label="Workspace name"
         value={value}
@@ -177,6 +180,66 @@ describe("InlineEdit", () => {
 
     expect(onEditingChange).toHaveBeenCalledWith(true);
     expect(edit.renderer.findByType("input")).toHaveLength(1);
+
+    edit.unmount();
+  });
+
+  it("composes the caller's display handlers", () => {
+    const onClick = vi.fn();
+    const onKeyDown = vi.fn();
+
+    const clicked = renderComponent(
+      <Harness initial="Docs" host={{ onClick, onKeyDown }} />,
+    );
+    clickCentreOf(clicked, "name");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(clicked.renderer.findByType("input")).toHaveLength(1);
+    clicked.unmount();
+
+    const keyed = renderComponent(
+      <Harness initial="Docs" host={{ onClick, onKeyDown }} />,
+    );
+    keyed.renderer.focusElement(keyed.renderer.findByTestId("name")?.id ?? -1);
+    keyed.renderer.simulateKeystrokes("enter");
+
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(keyed.renderer.findByType("input")).toHaveLength(1);
+    keyed.unmount();
+  });
+
+  it("composes the caller's field handlers", () => {
+    const onChange = vi.fn();
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    const onSubmit = vi.fn();
+    const onCommit = vi.fn();
+    const edit = renderComponent(
+      <Harness
+        onCommit={onCommit}
+        host={{ onChange, onFocus, onBlur, onSubmit }}
+      />,
+    );
+
+    startEditing(edit);
+    expect(onFocus).toHaveBeenCalled();
+    onBlur.mockClear();
+
+    type(edit, "ok");
+    expect(onChange).toHaveBeenCalled();
+
+    edit.renderer.focusElement(
+      edit.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    expect(onCommit).toHaveBeenCalledWith("ok");
+
+    clickCentreOf(edit, "name");
+    type(edit, "!");
+    edit.renderer.simulateKeystrokes("enter");
+
+    expect(onSubmit).toHaveBeenCalled();
+    expect(onCommit).toHaveBeenLastCalledWith("ok!");
 
     edit.unmount();
   });

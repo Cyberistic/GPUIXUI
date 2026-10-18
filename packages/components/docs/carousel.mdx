@@ -94,10 +94,11 @@ the frame with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (9 tests):
 every slide mounted and one displayed, control stepping, edge clamping, loop
 wrapping, arrows and Home/End, a controlled carousel, region naming and disabled
-edges, and a style callback receiving `{ active, index }` in both themes.
+edges, a style callback receiving `{ active, index }` in both themes, and a
+caller's control `onClick` composing with the step.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

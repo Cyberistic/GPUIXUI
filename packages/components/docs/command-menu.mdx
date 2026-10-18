@@ -148,16 +148,17 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (20 tests):
 focus landing on the input, typing filtering the list while focus stays put,
 ArrowDown + Enter running the second match and closing, a clicked row, the empty
 label, a custom filter, a disabled action refusing to run, Escape closing, a
 non-contiguous query matching initials, ranking deciding the default `Enter`
 target, group order surviving ranking, an empty query keeping declaration order,
 a caller-supplied empty state, the input's placeholder/name coming from the
-part, and recents: a run command shown first on reopen, recency order without a
-duplicate row, `defaultRecent`, normal ranking while a query is typed, and a
-controlled list that reports without moving.
+part, a caller-composed row running its `onClick` before the action, and recents:
+a run command shown first on reopen, recency order without a duplicate row,
+`defaultRecent`, normal ranking while a query is typed, and a controlled list
+that reports without moving.
 
 `src/command-menu/logic.test.ts` covers recording (front insert, dedupe, cap,
 head no-op) and the empty-query ordering (recent group, declaration order,

@@ -104,6 +104,7 @@ workstream declares in its own section below.
 | [328](./328-combobox-create-new.md) | Combobox "create new option": one trailing row over the typed query | C/F | 116, 138, 302, 323 | done — 6 logic + 6 native tests (Combobox 23, behaviour 487); both-direction proof |
 | [329](./329-command-menu-recents.md) | Command menu recent commands: session memory with a controlled escape hatch | C/F | 114, 133, 200, 201, 301 | done — 7 logic + 5 native tests (CommandMenu 19, behaviour 492); both-direction proof |
 | [330](./330-example-registry.md) | The example registry: complete it, then prove every example renders | C/F | 110, 117, 300–329 | done — 17 of 41 examples were unregistered; registry now 41/41 and one native test mounts them all (unit 332, behaviour 493); both-direction proof |
+| [331](./331-caller-handler-composition.md) | Caller handler composition on interactive parts (Phase F consistency) | F | 110, 117, 200, 201, 300–330 | done — nine native cases across Pagination, CommandMenu, Carousel, Alert, InlineEdit and MentionInput (eight fail without the fix; one pins the current-page no-op); behaviour 502, unit 332; both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

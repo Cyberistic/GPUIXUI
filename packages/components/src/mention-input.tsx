@@ -114,6 +114,9 @@ export const MentionInput = ({
   disabled = false,
   children,
   testId,
+  onKeyDown,
+  onFocus,
+  onBlur,
   ...rest
 }: MentionInputProps) => {
   const theme = useTheme();
@@ -205,6 +208,7 @@ export const MentionInput = ({
               select(visible[active] ?? "");
             }}
             onKeyDown={(event: EventPayload) => {
+              onKeyDown?.(event);
               if (disabled || Option.isNone(open) || visible.length === 0)
                 return;
               if (isDown(event)) {
@@ -215,8 +219,14 @@ export const MentionInput = ({
                 setDismissed(true);
               }
             }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
+            onFocus={(event) => {
+              onFocus?.(event);
+              setFocused(true);
+            }}
+            onBlur={(event) => {
+              onBlur?.(event);
+              setFocused(false);
+            }}
             style={{
               ...textStyle(theme, "body"),
               flexGrow: 1,
@@ -327,6 +337,8 @@ export const MentionInputItem = ({
   value,
   label,
   style,
+  onMouseDown,
+  onKeyDown,
   ...rest
 }: MentionInputItemProps) => {
   const theme = useTheme();
@@ -339,8 +351,12 @@ export const MentionInputItem = ({
       aria-selected={highlighted}
       tabIndex={0}
       {...rest}
-      onMouseDown={() => select(value)}
+      onMouseDown={(event) => {
+        onMouseDown?.(event);
+        select(value);
+      }}
       onKeyDown={(event: EventPayload) => {
+        onKeyDown?.(event);
         if (isActivation(event)) select(value);
       }}
       style={mergeStyles(

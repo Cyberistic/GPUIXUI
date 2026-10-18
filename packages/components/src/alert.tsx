@@ -198,6 +198,7 @@ export interface AlertDismissProps extends Omit<Props, "children"> {
 export const AlertDismiss = ({
   onDismiss,
   label = "Dismiss",
+  onClick,
   ...rest
 }: AlertDismissProps) => {
   const { foreground } = useAlert();
@@ -208,7 +209,10 @@ export const AlertDismiss = ({
       size="sm"
       label={label}
       testId="alert-dismiss"
-      onClick={onDismiss}
+      onClick={(event) => {
+        onClick?.(event);
+        onDismiss();
+      }}
     >
       <Icon name="x" color={foreground} size="sm" />
     </IconButton>

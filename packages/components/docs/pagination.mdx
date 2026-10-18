@@ -98,11 +98,13 @@ and a caption type role.
 
 ## Verification
 
-`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (10 tests):
+`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (12 tests):
 disabled edges, the page number (not index) reported, the current page no-op,
 Previous/Next stepping, the ellipsis not being a tab stop, Enter activation,
-`pageCount: 0`, the current fill in both themes, the composed part order, and an
-item outside the list reading the root's page.
+`pageCount: 0`, the current fill in both themes, the composed part order, an
+item outside the list reading the root's page, and a caller `onClick` composing
+with each page change (including a click on the current page, which reports the
+caller and changes nothing).
 
 `src/pagination/logic.test.ts` covers the window table above, including clamping,
 wide siblings and unique ascending pages.

@@ -14,6 +14,8 @@ import {
   MentionInput,
   MentionInputItem,
   MentionInputList,
+  type MentionInputItemProps,
+  type MentionInputProps,
 } from "../mention-input.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { nodesWithRole } from "../internal/a11y.js";
@@ -28,16 +30,21 @@ const Harness = ({
   disabled = false,
   onValueChange,
   onMention,
+  host,
+  row,
 }: {
   readonly initial?: string;
   readonly disabled?: boolean;
   readonly onValueChange?: (value: string) => void;
   readonly onMention?: (value: string) => void;
+  readonly host?: Partial<MentionInputProps>;
+  readonly row?: Partial<MentionInputItemProps>;
 }) => {
   const [text, setText] = useState(initial);
   return (
     <div style={{ width: 360 }}>
       <MentionInput
+        {...host}
         testId="mention"
         label="Comment"
         value={text}
@@ -49,11 +56,14 @@ const Harness = ({
         onMention={onMention}
       >
         <MentionInputList>
-          <MentionInputItem testId="row-ana" value="ana" />
+          <MentionInputItem {...row} testId="row-ana" value="ana" />
           <MentionInputItem testId="row-anna" value="anna" />
           <MentionInputItem testId="row-joan" value="joan" />
         </MentionInputList>
       </MentionInput>
+      <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
+        Elsewhere
+      </div>
     </div>
   );
 };
@@ -198,5 +208,57 @@ describe("MentionInput", () => {
     expect(mention.renderer.findByTestId("row-ana")).toBeUndefined();
 
     mention.unmount();
+  });
+
+  it("composes the caller's field handlers", () => {
+    const onKeyDown = vi.fn();
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    const mention = renderComponent(
+      <Harness host={{ onKeyDown, onFocus, onBlur }} />,
+    );
+
+    type(mention, "@");
+
+    expect(onFocus).toHaveBeenCalled();
+    expect(onKeyDown).toHaveBeenCalled();
+    expect(mention.renderer.findByTestId("row-ana")).toBeDefined();
+
+    mention.renderer.focusElement(
+      mention.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+    expect(onBlur).toHaveBeenCalledTimes(1);
+
+    mention.unmount();
+  });
+
+  it("composes the caller's row handlers", () => {
+    const onMouseDown = vi.fn();
+    const onKeyDown = vi.fn();
+    const onMention = vi.fn();
+
+    const pressed = renderComponent(
+      <Harness row={{ onMouseDown, onKeyDown }} onMention={onMention} />,
+    );
+    type(pressed, "@an");
+    clickCentreOf(pressed, "row-ana");
+
+    expect(onMouseDown).toHaveBeenCalledTimes(1);
+    expect(onMention).toHaveBeenCalledWith("ana");
+    pressed.unmount();
+
+    onMention.mockClear();
+    const keyed = renderComponent(
+      <Harness row={{ onMouseDown, onKeyDown }} onMention={onMention} />,
+    );
+    type(keyed, "@an");
+    keyed.renderer.focusElement(
+      keyed.renderer.findByTestId("row-ana")?.id ?? -1,
+    );
+    keyed.renderer.simulateKeystrokes("enter");
+
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(onMention).toHaveBeenCalledWith("ana");
+    keyed.unmount();
   });
 });
