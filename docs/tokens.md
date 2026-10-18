@@ -498,10 +498,10 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 
 **High contrast wins over resemblance.** `getPlatformTheme(platform, mode,
 "high")` applies the families, radii, density, motion and each platform's
-elevation levels to the high-contrast colour set, because a platform accent must
-not drop the AAA floors. Elevation carries no colour of its own — a level is
-geometry plus an alpha over the theme's `shadow` tint (plan `085`) — so the AAA
-tint stays while the platform's depth applies (plan `345`).
+elevation levels on top of the high-contrast colour set, because a platform
+accent must not drop the AAA floors. Elevation carries no colour of its own — a
+level is geometry plus an alpha over the theme's `shadow` tint (plan `085`) — so
+the AAA tint stays while the platform's depth applies (plan `345`).
 
 To ship your own look, copy a style file and edit it, or extend the resolved
 theme — no component source changes:
