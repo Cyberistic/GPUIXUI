@@ -58,7 +58,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 95/96 plans-and-harness
+`[x]` `[██████████]` 96/96 plans-and-harness
+
+`[x]` Prove the **nested-layer dismiss stack in a real window** per plan `558`:
+      `live-layers` (41 checks) mounts the shipped `nested-layer-dismiss` view in
+      the 1100×720 window — a real click opens the parent, a row opens a focused
+      submenu, an inside press activates once while the parent's outside handler
+      sees it with coordinates, one key reaches two handlers as **two payload
+      objects** (`keyObjects=2`), and one Escape or outside press closes exactly
+      one layer. **The first live run disproved the claim's lifetime**: with a
+      microtask reset both layers closed on one Escape, because a window
+      delivers the nested handler and its parent across a microtask. The probe
+      now clears the claim on the next **task**; the headless two-press
+      separation moved from `yieldNow` to `1 ms`. **1/1**, exit `0`, three
+      consecutive runs; live registry `59 → 60`, headless stays `101`; two
+      mutation proofs (inverted containment, skipped claim). Focused id:
+      `live-layers`. Cross-team guidance recorded on the `dismiss-layer` row.
 
 `[x]` Prove **declared hover/active and text truncation in a real window** per
       plan `557`: `live-states` (32 checks) drives the shipped
@@ -677,7 +692,7 @@ focused id is `live-frames`.
 `[x]` Probe the **native cost model** per plan `302`: `scale-cost` — `SmokeHost` gains `retainedElements` and a schema-decoded `syntaxCache`; a virtual list retains **3 host nodes per row** (2,000 rows = 6,012, 100 rows = 312; the 1,900-row delta is exactly 5,700) even though it paints ~15, a jump neither leaks nor recycles, two identical `<code>` blocks cost one miss + one hit, a **theme switch reparses nothing**, idle frames do nothing, and each source edit costs exactly one miss + one hit + one document. 36 checks; suite `60 → 61`, exit `0`; three two-direction proofs (M1 theme-dependent code: `expected 2, got 3`; M2 a wrong per-row constant: `expected 3800, got 5700`; M3 a two-number tuple: the adapter test fails). Adds the `scale` capability
 `[ ]` Cross-team: fold the `scale-cost` numbers into `COMPONENTS.md` — `Virtualized lists`/`Virtualized tables` retain **3 host nodes per row** (paint is windowed, retention is not), and `Syntax highlighting` reparses only when the document key changes (a theme switch costs nothing) (owner: `components`; evidence: plan `302` §2)
 `[ ]` Cross-team: `@gpuixui/primitives` must **not** add a `PasswordInput` — 0.10.0 has no masking surface (no `type`/`secureTextEntry`), and a typed secret is announced and painted in clear; document the limitation and the OS-prompt alternative on the `Input` docs page (owner: `primitives`; evidence: plan `188` §9)
-`[ ]` **Cross-team (defect):** `@gpuixui/components` `internal/dismiss-layer.ts` keys event consumption on `WeakSet<EventPayload>` identity; 0.10.0 delivers **a separate payload object per handler** (measured), so one Escape closes every open overlay. Replace it with the field claim `internal/event-claim.ts` already implements (one shared claim module), and keep `menu/sub.tsx`'s `insideSurface` containment — it is measured working (owner: `components`; evidence: plan `187` §9)
+`[ ]` **Cross-team (defect):** `@gpuixui/components` `internal/dismiss-layer.ts` keys event consumption on `WeakSet<EventPayload>` identity; 0.10.0 delivers **a separate payload object per handler** (measured), so one Escape closes every open overlay. Replace it with the field claim `internal/event-claim.ts` already implements (one shared claim module), and keep `menu/sub.tsx`'s `insideSurface` containment — it is measured working (owner: `components`; evidence: plan `187` §9) — **live correction (plan `558`):** the field claim must be cleared on the next **task**, not a microtask. A real window delivers the two handlers of one propagation across a microtask, so the microtask reset closed both layers and both outside presses; with `setTimeout(…, 0)` one press closes one layer. `live-layers` (41 checks) is the guard. Do **not** use a `WeakSet` or a microtask claim.
 `[x]` Probe the command surface per plan `176`: `command-palette` — a window shortcut opens a non-modal overlay, the field keeps focus while arrows move a visual row, letters/arrows/Escape reach both the field and the app-level handler while Enter and Backspace do not, `cmd-k` does not type, `onSubmit` commits and returns focus, the scrim is a hit-testable sibling under the surface; adds the `command` capability — 58 checks, suite `44 → 45`, three two-direction proofs recorded. `Application menus` is recorded as in-window only: 0.10.0 has no menu API
 `[x]` Probe the remaining Tier 1 controls natively per plan `169`: `RadioGroup` arrow selection/wrap, `Rating` clamp/clear, `NumberField` step/clamp, `OTPField` focus advance and Backspace — 38/38 green, two-direction proofs recorded
 `[x]` Probe the shipped Tier 1 primitives natively per plan `168`: mount `@gpuixui/primitives` (`Button`, `Toggle`, `Input`, `Checkbox`, `Switch`, `Select`, `Slider`, `Progress`, `Meter`, `Skeleton`, `Tooltip`) through the tokens theme and add the `components` capability — 36/36 green, two-direction proofs recorded

@@ -21,6 +21,7 @@ import * as Str from "effect/String";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { contextMenuScenario } from "../scenarios/context-menu.js";
+import { nestedLayerScenario } from "../scenarios/layers.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
 import { inputScenario } from "../scenarios/input.js";
@@ -4980,6 +4981,150 @@ const liveTruncation: LiveScenario = {
     }),
 };
 
+/** Waits for `needle`, then asserts it is in the layers readout. */
+const expectLayer = (ctx: LiveContext, needle: string, label: string) =>
+  Effect.gen(function* () {
+    yield* waitForText(ctx, "layers-readout", needle);
+    yield* ctx.expectContains(
+      label,
+      yield* textOf(ctx, "layers-readout"),
+      needle,
+    );
+  });
+
+const liveLayers: LiveScenario = {
+  id: "live-layers",
+  title:
+    "Live nested layers: payload copies, one Escape per layer and the submenu press",
+  capability: "layers",
+  view: nestedLayerScenario.view,
+  ready: "layers-root",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The trigger opens the parent layer.
+      yield* ctx.host.click("layers-trigger");
+      yield* settle;
+      yield* expectLayer(
+        ctx,
+        "parent=1",
+        "a live click opens the parent layer",
+      );
+
+      // 2. The row opens the submenu, which sits second on the stack.
+      yield* ctx.host.click("layers-row-more");
+      yield* settle;
+      yield* expectLayer(ctx, "sub=1", "a live row opens the submenu");
+      yield* expectLayer(ctx, "depth=2", "both live layers are on the stack");
+
+      // 3. A press inside the submenu activates its row and reaches the
+      // parent's outside handler with coordinates; the containment guard keeps
+      // the submenu open long enough to activate.
+      yield* ctx.host.click("layers-sub-a");
+      yield* settle;
+      yield* expectLayer(
+        ctx,
+        "last=activate",
+        "a live submenu press activates its row",
+      );
+      yield* expectLayer(
+        ctx,
+        "subClicks=1",
+        "the live submenu row ran exactly once",
+      );
+      yield* expectLayer(
+        ctx,
+        "outsideParent=1",
+        "the live press reached the parent's outside handler",
+      );
+      yield* expectLayer(
+        ctx,
+        "outsideSub=0",
+        "the live inside press is not outside the submenu",
+      );
+      yield* expectLayer(
+        ctx,
+        "coords=yes",
+        "the live outside payload carries coordinates",
+      );
+
+      // 4. One live Escape closes only the submenu, and the next the parent.
+      yield* ctx.host.click("layers-trigger");
+      yield* settle;
+      yield* ctx.host.click("layers-row-more");
+      yield* settle;
+      yield* expectLayer(ctx, "depth=2", "the live layers reopened");
+      yield* ctx.expectEqual(
+        "the live submenu holds focus after its row opens it",
+        yield* focusedOf(ctx),
+        "layers-sub",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* expectLayer(
+        ctx,
+        "last=sub-escape",
+        "one live Escape closes the submenu",
+      );
+      yield* expectLayer(ctx, "sub=0", "the live submenu closed");
+      yield* expectLayer(ctx, "parent=1", "the live parent stayed open");
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* expectLayer(
+        ctx,
+        "last=parent-escape",
+        "the second live Escape closes the parent",
+      );
+      yield* expectLayer(ctx, "parent=0", "the live parent closed");
+
+      // 5. One live key reaches two handlers as two payload objects.
+      yield* ctx.host.click("layers-trigger");
+      yield* settle;
+      yield* ctx.host.click("layers-identity-inner");
+      yield* settle;
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* expectLayer(
+        ctx,
+        "keyHandlers=2",
+        "the live key reached the inner and enclosing handler",
+      );
+      yield* expectLayer(
+        ctx,
+        "keyObjects=2",
+        "the live runtime delivers a separate payload copy per handler",
+      );
+
+      // 6. The dismiss stack holds both layers, and outside presses pop one
+      // each. The live runner settles between them, which is one task.
+      yield* ctx.host.click("layers-row-more");
+      yield* settle;
+      yield* expectLayer(ctx, "depth=2", "the live stack holds both layers");
+      yield* ctx.host.clickWindow(520, 640);
+      yield* settle;
+      yield* expectLayer(
+        ctx,
+        "sub=0",
+        "a live outside press closes the topmost layer",
+      );
+      yield* expectLayer(
+        ctx,
+        "parent=1",
+        "the first live outside press leaves the parent open",
+      );
+      yield* ctx.host.clickWindow(520, 640);
+      yield* settle;
+      yield* expectLayer(
+        ctx,
+        "parent=0",
+        "the second live outside press closes the parent",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${nestedLayerScenario.id}.png`,
+      );
+    }),
+};
+
 const columnConfig: LiveScenario = {
   id: "live-column-config",
   title: "Live data grid: hide, show and reorder columns in a window",
@@ -7437,6 +7582,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   grid,
   liveStates,
   liveTruncation,
+  liveLayers,
   columnConfig,
   cropArea,
   appChrome,

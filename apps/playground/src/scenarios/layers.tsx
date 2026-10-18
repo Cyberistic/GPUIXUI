@@ -14,7 +14,11 @@
  * which handlers see a key or a press, whether they share the payload object,
  * and whether one Escape closes one layer under a topmost-only stack.
  *
- * Measured facts: plan `187` §8.
+ * Measured facts: plan `187` §8, and in a real window by `live-layers` (plan
+ * `558`). The claim must live one **task**: a window delivers the nested
+ * handler and its parent across a microtask, so a microtask reset closed both
+ * layers on one Escape. The live twin also proves the payload copies, the
+ * containment guard and the focus the submenu takes.
  */
 import { useCallback, useRef, useState } from "react";
 import { Effect } from "effect";
@@ -113,8 +117,11 @@ const LayerProbe = () => {
   /**
    * The field-based claim from `event-claim.ts`: the runtime delivers a
    * separate payload copy per handler, so object identity cannot dedupe an
-   * event across layers. A claim is one synchronous propagation and is cleared
-   * in a microtask, so a later event with the same fields is a new event.
+   * event across layers. A claim is one propagation and is cleared on the next
+   * **task**, not a microtask: a real window delivers a nested layer's handler
+   * and its parent's across a microtask, so a microtask reset let both close
+   * their layer (measured, plan `558`). An OS input event is one task, so two
+   * presses in one task are a synthetic artefact, not two user events.
    */
   const claim = useRef<Option.Option<string>>(Option.none());
   const releaseParent = useRef<Option.Option<() => void>>(Option.none());
@@ -129,9 +136,9 @@ const LayerProbe = () => {
 
   const claimEvent = (event: EventPayload): void => {
     claim.current = Option.some(claimOf(event));
-    queueMicrotask(() => {
+    setTimeout(() => {
       claim.current = Option.none();
-    });
+    }, 0);
   };
 
   /** Consumes a claim another handler made for the same propagation. */
@@ -597,7 +604,8 @@ export const nestedLayerScenario: PlaygroundScenario = {
         read(ctx, READOUT),
         "parent=1",
       );
-      yield* Effect.yieldNow;
+      // A claim lives one task, so the second press needs a task boundary.
+      yield* Effect.sleep("1 millis");
       ctx.host.clickWindow(OUTSIDE_POINT.x, OUTSIDE_POINT.y);
       yield* ctx.expectContains(
         "the second outside press closed the parent",

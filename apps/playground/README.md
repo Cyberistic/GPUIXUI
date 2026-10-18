@@ -1294,6 +1294,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-grid` | the pinned, windowed grid in a window: a real wheel moves the body ten rows with the frozen column aligned, a `deltaX` wheel over the body is swallowed, the component pan reaches `-360` and the last viewport at `-1700` with header/body alignment, an off-window column has no painted bounds, and six Rights plus three Downs pan and align the reveal — 53 checks (plan `556`). Every child of a live scroller reports a moved box whatever its `position`, so `sticky` stays a headless claim; a scroller's own box moves with its scroll and must be cached first |
 | `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` without hover, a release returns `100`, and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
+| `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
 | `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and `Down`/`Enter` move and select while skipping the disabled row — 18 checks. A live key must follow the click's React commit (`settle`), or it moves from the previous active row |
 | `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 15 checks. Whether a click runs React's `onFocus` is window-state dependent (plan `390`), so the old click-then-arrow limit is no longer asserted; the Tabs fix remains a robustness task |
 | `live-tier2-choice` | Popover opens below its trigger and Escape restores focus, a live editor types/submits/clears, a Combobox ranks and selects, the DatePicker month grid picks a day and clears, and both TimePicker segments compose one value — 13 checks |
@@ -1837,10 +1838,11 @@ narrower. Each deviation is deliberate and measured:
   The **real-window** suite (`smoke:live`) ran in full at **53/53** on
   2026-10-19 (1133 checks, exit `0`, the merge gate) — the plan `532` terminal
   twin, the plan `534` variable-row twin and the plan `535`/`536` pointer twins
-  are all included. The registry is now **59**: the plan `554` select, combobox
-  and tooltip twins, the plan `556` `live-grid` twin and the plan `557`
-  `live-states`/`live-truncation` twins join them, each with a focused run and
-  no full-suite total claimed after the addition. The full suite is a **merge/release gate** —
+  are all included. The registry is now **60**: the plan `554` select, combobox
+  and tooltip twins, the plan `556` `live-grid` twin, the plan `557`
+  `live-states`/`live-truncation` twins and the plan `558` `live-layers` twin
+  join them, each with a focused run and no full-suite total claimed after the
+  addition. The full suite is a **merge/release gate** —
   layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table

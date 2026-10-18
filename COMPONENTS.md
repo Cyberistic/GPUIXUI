@@ -75,7 +75,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | columns | `data-grid-columns`, `live-data-grid-columns` | verified |
 | column-config | `column-config`, `live-column-config` | verified |
 | chrome | `app-chrome`, `live-app-chrome` | verified |
-| layers | `nested-layer-dismiss` | verified |
+| layers | `nested-layer-dismiss`, `live-layers` | verified |
 | scroller | `message-scroller` | verified |
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
@@ -99,9 +99,9 @@ The suite is **101/101 green here** (exit `0`, `.artifacts/smoke-report.json`,
 (`live-report.json`, **1133 checks**, exit `0`) in the 2026-10-19 merge gate,
 which included the plan `532` terminal twin, the plan `534` variable-row twin
 and the plan `535`/`536` pointer twins. Focused additions since then — plan
-`554`'s select/combobox/tooltip, plan `556`'s grid and plan `557`'s
-states/truncation — bring the live registry to **59**; no full-suite total is
-claimed for them. Both `host` lines carry the
+`554`'s select/combobox/tooltip, plan `556`'s grid, plan `557`'s
+states/truncation and plan `558`'s layers — bring the live registry to **60**;
+no full-suite total is claimed for them. Both `host` lines carry the
 pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
 and a borderless size — is what every geometry check now asserts.
 
@@ -154,9 +154,9 @@ a trackpad from a line wheel in a test.
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
 **53/53 green** (1133 checks) on the release-tag binding; focused additions
-bring the registry to **59** (`live-select`/`live-combobox`/`live-tooltip`,
-`live-grid` and `live-states`/`live-truncation`), and the **full live suite is a
-merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+bring the registry to **60** (`live-select`/`live-combobox`/`live-tooltip`,
+`live-grid`, `live-states`/`live-truncation` and `live-layers`), and the **full
+live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `reorder` and `tree-reorder` are confirmed there too
 — the shell fills the window and navigates by click and
@@ -350,7 +350,10 @@ layer and its enclosing layer with **a separate payload copy each**
 (`keyHandlers=2`, `keyObjects=2`), so `internal/dismiss-layer.ts`'s
 `WeakSet<EventPayload>` cannot dedupe: one Escape closed **both** layers
 (measured, `last=parent-escape`). The field claim in `internal/event-claim.ts`
-is the correct model — with it, one Escape closes the submenu
+is the correct model **in principle**, but its lifetime was wrong for a window:
+with a **microtask** reset, a real window still closed both layers, because it
+delivers the nested handler and the parent's across a microtask (measured,
+plan `558`). Cleared on the next **task**, one Escape closes the submenu
 (`last=sub-escape`, parent still open) and the second closes the parent. A press
 inside the submenu **does** fire the parent surface's `onMouseDownOutside`
 (`outsideParent=1`) and not the submenu's own (`outsideSub=0`), and the payload
@@ -358,9 +361,14 @@ carries `x`/`y`, so `menu/sub.tsx`'s bounds containment is load-bearing: with it
 the row activates (`subClicks=1`), without it the submenu closes on the press and
 the row never activates. A row-derived `<anchored position>` is exact inside the
 parent layer (±1 px); a raw `<anchored side align>` anchors to the **parent's**
-box, not the trigger's. Two identical outside presses in one synchronous tick
-are indistinguishable (the claim's microtask reset needs a task boundary); a real
-second click has one.
+box, not the trigger's. **Live (`live-layers`, plan `558`):** a real click opens
+the parent, a real row opens the submenu which takes focus, the inside press
+reaches the parent's outside handler with coordinates and activates once, one
+`key` still reaches two handlers as two payload **objects**, and one Escape or
+outside press closes exactly one layer once the claim lives a task. Two
+identical outside presses in one task are one claim (a synthetic artefact); a
+real second click is a new task, so the headless probe waits `1 ms` between
+them.
 
 `roving-focus` measures the keyboard model a menu, tab strip, radio group or
 data grid needs. `renderer.focusElement` focuses a row that was never clicked,
