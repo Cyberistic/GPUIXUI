@@ -469,9 +469,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–484)
+## Docs site workstream (plans 410–485)
 
-`[x]` `[██████████]` 82/83
+`[x]` `[██████████]` 83/84
+
+`[x]` **The patterns index names the real blocker (plan 485)** — it said the
+      confirmation flow and command palette appear "once the components they
+      compose are implemented", but those components are `done` and native-
+      tested; the page now names the missing composed example and
+      `packages/docking`, and a wording-class guard fails on the old sentence
 
 `[x]` **Toast gets a live scene (plan 484)** — the gap reason said a scene
       would race the toast's own dismissal, but `ToastInput.duration` accepts

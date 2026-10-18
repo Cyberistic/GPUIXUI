@@ -112,6 +112,17 @@ const stalePlaygroundClaims = [
   /\bwill host\b/i,
 ];
 
+/**
+ * The patterns index said the confirmation flow and the command palette appear
+ * "once the components they compose are implemented and proven" (plan 427).
+ * Both are `done` rows with native suites, so the blocker is one composed
+ * example, not the components (plan 485).
+ */
+const stalePatternClaims = [
+  /once the components they compose are implemented/i,
+  /components? (?:are|is) not (?:yet )?implemented/i,
+];
+
 describe("prose truth", () => {
   it("scans the content tree, so a missing directory cannot pass vacuously", () => {
     expect(pages.length).toBeGreaterThan(10);
@@ -152,6 +163,15 @@ describe("prose truth", () => {
         )
       : [];
     expect(stale).toEqual([]);
+  });
+
+  it("does not call a shipped pattern component the blocker", () => {
+    const page = pages.find(({ path }) => path === "patterns/index.mdx");
+    expect(page).toBeDefined();
+    const found = stalePatternClaims.filter((claim) =>
+      claim.test(page?.body ?? ""),
+    );
+    expect(found).toEqual([]);
   });
 
   it("names only playground commands the root package defines", () => {

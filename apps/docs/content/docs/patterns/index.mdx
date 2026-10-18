@@ -19,6 +19,13 @@ has not been launched natively.
 
 ## Still to come
 
-A confirmation flow, a command palette and an inspector workspace appear once
-the components they compose are implemented and proven. A pattern is never
-assembled from browser imitations and presented as working native behaviour.
+The confirmation flow and the command palette have every component they need —
+`ConfirmDialog`, `CommandMenu`, `Dialog`, the form parts and the toast system
+are implemented and native-tested. They wait on one **runnable composed example**
+(`ConfirmDialog` + a form + `Toast`; `CommandMenu` + `Dialog`), because a pattern
+page is never assembled from separate component demos.
+
+An inspector workspace waits on `packages/docking`, which does not exist yet.
+
+A pattern is never assembled from browser imitations and presented as working
+native behaviour.
