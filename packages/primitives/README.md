@@ -158,7 +158,8 @@ Deviations, kept deliberate:
 **Theming** `ThemeProvider`
 
 Every component is themed by a resolver in `core/style.ts` (`controlStyle`,
-`surfaceStyle`, `textStyle`, `ruleStyle`, `progress*Style`) or `core/selection.ts`;
+`surfaceStyle`, `textStyle`, `ruleStyle`, `progress*Style`), `core/selection.ts`,
+or the shadcn recipes in `core/recipes.ts` (the field family and the button);
 none paints a literal and none scripts hover or press
 (GPUIx applies `style.hover`/`style.active` natively).
 

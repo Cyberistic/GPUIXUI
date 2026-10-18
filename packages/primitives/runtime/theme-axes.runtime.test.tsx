@@ -38,6 +38,7 @@ import { Separator } from "../src/components/Separator.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { Text } from "../src/components/Text.js";
+import { Toggle } from "../src/components/Toggle.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
 import type { PrimitiveTheme } from "../src/core/theme.js";
 import type { Runtime } from "../src/testing/index.js";
@@ -60,6 +61,7 @@ const densityScene = (density: Density) => (
         </Button>
         <Input testId="input" placeholder="Name" />
         <NumberField label="Count" defaultValue={3} testId="number" />
+        <Toggle testId="toggle">Bold</Toggle>
         <Checkbox checked label="Enable" testId="checkbox" />
       </Stack>
     </Box>
@@ -131,11 +133,13 @@ it("paints the high-contrast dark palette and repaints on a switch", async () =>
 it("a density override moves control heights and leaves colour alone", async () => {
   const runtime = await openWindow();
   const expectMetrics = (density: Density): void => {
-    // NumberField still follows density (the pre-slice controls do).
-    expect(heightOf(runtime, "number")).toBe(density.controlHeight.md);
-    // The shadcn slice is fixed (plan 370): a Button is `h-9` (36), and a
-    // native `<input>` reports its content box, two thin borders shorter.
+    // Toggle still follows density, so the axis itself is still proven.
+    expect(heightOf(runtime, "toggle")).toBe(density.controlHeight.md);
+    // The field family is fixed (plans 370, 372): a Button is `h-9` (36), a
+    // NumberField's row is 36, and a native `<input>` reports its content box,
+    // two thin borders shorter.
     expect(heightOf(runtime, "button")).toBe(36);
+    expect(heightOf(runtime, "number")).toBe(36);
     expect(heightOf(runtime, "input")).toBe(
       36 - 2 * lightTheme.borderWidth.thin,
     );

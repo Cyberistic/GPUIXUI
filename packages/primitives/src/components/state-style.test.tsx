@@ -74,7 +74,6 @@ import {
   type ToggleGroupState,
   type ToggleItemState,
 } from "./ToggleGroup.js";
-import { fieldVariant } from "../core/variants.js";
 import type { FocusState, StateStyle } from "./internal.js";
 import {
   elementChildren,
@@ -803,12 +802,7 @@ describe("per-item style", () => {
 
   it("Select's trigger takes a style over the runtime's trigger state", () => {
     const record = recorder<SelectTriggerState>();
-    const paint = selectTriggerPartStyle(
-      { variant: fieldVariant, size: "md" },
-      testTheme,
-      false,
-      record.style,
-    );
+    const paint = selectTriggerPartStyle({}, testTheme, false, record.style);
     const style = paint({ open: true, disabled: false, placeholder: false });
     expect(lastState(record.seen)).toStrictEqual({
       open: true,

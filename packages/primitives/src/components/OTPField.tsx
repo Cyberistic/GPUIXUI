@@ -40,7 +40,8 @@ import {
   otpTabStop,
   type OtpEdit,
 } from "../core/otp.js";
-import { nativeTextTheme, otpCellStyle, otpGroupStyle } from "../core/style.js";
+import { otpCellStyle } from "../core/recipes.js";
+import { nativeTextTheme, otpGroupStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -175,7 +176,6 @@ export const renderOtpField = (
           style={resolvePartStyle(
             otpCellStyle(
               {
-                size: props.size ?? "md",
                 invalid: props.invalid,
                 disabled: props.disabled,
                 focused: Option.exists(

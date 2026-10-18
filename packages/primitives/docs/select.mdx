@@ -112,8 +112,8 @@ plan `346`). An uncontrolled select closes itself; a controlled parent receives
 | `placeholder` | `string` | none | shown before a choice |
 | `disabled` | `boolean` | `false` | refuses opening, closes an open list, and leaves the tab order |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | trigger height and padding |
-| `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: a field is one height (`h-9`, 36 px) |
+| `fullWidth` | `boolean` | `false` | the trigger takes the field recipe's `w-full`; the list matches its measured width |
 | `side` | `FloatingSide` | auto — below, flipped above when it does not fit; any requested side flips when it cannot fit | preferred side the list opens on |
 | `label` | `string` | none | accessible name for the select |
 | `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
@@ -194,8 +194,8 @@ honest claim. The value is announced through `aria-valuetext` — the runtime
 exposes no other value channel — and the visible text inside the trigger is not
 itself the accessible value.
 
-Focus is **visible**: the trigger paints `focusRing(theme)` while focused or
-open, the same ring every other field paints. The runtime has no `focusVisible`,
+Focus is **visible**: the trigger paints the field recipe's 3 px ring while
+focused or open, the same ring `Input` paints. The runtime has no `focusVisible`,
 so a mouse-opened trigger shows it too.
 
 **Slot trigger:** the trigger forwards a `Tooltip`'s handlers and
@@ -206,16 +206,22 @@ so the list still opens on Enter, Space and the arrows (measured, plan `345`).
 ## Theming
 
 `selectTriggerStyle`, `selectContentStyle` and `selectItemStyle` resolve the
-trigger (`controlStyle`), the list (`surfaceStyle` with `popover` +
-`radius.md` + `elevation.overlay`) and the item states (`selected`, `hover`,
+trigger (the field recipe: **36 high, 12 horizontal, 4 vertical, 6 radius,
+14/20**, plan `372`), the list (`surfaceStyle` with `popover` + `radius.md` +
+`elevation.overlay`) and the item states (`selected`, `hover`,
 `disabledForeground`). The list is one spacing step inset and **at least the
 trigger's measured width**.
+
+The trigger is a field, so it hugs its value unless `fullWidth` asks for the
+recipe's `w-full`; `size` no longer moves it. The option rows are not inputs and
+keep their own metric (`density.controlHeight.sm`, 28) until `select.tsx`'s item
+string joins `@gpuixui/tw` — a recorded follow-up, not a second field recipe.
 
 The width is a number, not a percentage: `minWidth: "100%"` resolves against the
 anchored layer, so it painted a 57 px list under a 900 px field (measured, plan
 `062` §0). The wrapper measures the trigger through the renderer after mount and
-again when the list opens or `size`/`fullWidth` change. Rendered as an element
-tree (no renderer), the list hugs its labels.
+again when the list opens or `fullWidth` changes. Rendered as an element tree
+(no renderer), the list hugs its labels.
 
 ## Placement
 
@@ -395,8 +401,8 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   heading row at the estimate's caption height, and paints the exact estimated
   height; Enter/Down/Enter commits the first grouped option (the heading is
   skipped), and a click on an option in the second group commits it. **Focus
-  (083):** Tab lands on `sel-trigger`, whose painted `boxShadow` equals
-  `focusRing(theme)`; Tab past it clears the ring; Enter opens the list with
+  (083):** Tab lands on `sel-trigger`, whose painted `boxShadow` equals the
+  field recipe's 3 px ring (plan `372`); Tab past it clears the ring; Enter opens the list with
   focus inside it and the trigger keeps the ring; Escape and a committed option
   both return focus to the ringed trigger; a disabled select is skipped by Tab
   and paints no ring. Before the fix every focused trigger painted `undefined`.

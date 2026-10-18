@@ -55,7 +55,7 @@ max={0}` collapsed to `0` for a value of `150`, and `step={Infinity}` painted
 | `min` / `max` | `number` | none | bound the value; absent or non-finite means unbounded, an inverted pair is swapped |
 | `step` | `number` | `1` | arrow step; a non-finite or non-positive step is `1` |
 | `precision` | `number` | `0` | decimals shown on commit |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: a field is one height (`h-9`, 36 px) |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert; a pending draft is not committed on blur |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
@@ -123,10 +123,13 @@ the caller's handler.
 
 ## Theming
 
-The field uses the shared field chrome (`colors.input`, `colors.border`,
-`colors.inputForeground`), the `controlFocusStyle` ring on the **wrapper**, and
-`colors.mutedForeground` icons in the spin column. Height and padding come from
-`density`; nothing names a literal.
+The field uses the shared field recipe (`INPUT_BASE` from `@gpuixui/tw`, plan
+`372`): **36 high, 12 horizontal padding, 6 radius, 14/20 type**, with the
+recipe's focus ring on the **wrapper** and its invalid/disabled buckets. The
+theme supplies the paint (`colors.input`, `colors.border`,
+`colors.inputForeground`), the stepper column keeps `paddingRight: 0` so it owns
+the right edge, and its icons are `colors.mutedForeground`. A field does not
+follow `density` and `size` no longer moves it.
 
 
 ## Style by state

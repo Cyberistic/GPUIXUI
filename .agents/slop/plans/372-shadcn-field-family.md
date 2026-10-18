@@ -327,7 +327,7 @@ Implemented.
 - Docs, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D42 and the plan index record the
   slice.
 
-Measured: offline **45 files / 655 tests**, runtime **32 files / 613 tests**;
+Measured: offline **45 files / 653 tests**, runtime **32 files / 608 tests**;
 `nub run check`, `nub run lint` and `nub run test` pass.
 
 ## 8. Acceptance

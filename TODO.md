@@ -1006,20 +1006,42 @@ retired once both branches are one
       the density presets are untouched. A 10-case compiler-consumption test and
       a runtime size-table case fail against the old chrome (offline 626,
       runtime 610; plan `370`).
-`[ ]` `packages/primitives`: **the rest of the control family joins the shadcn
-      slice** — Select's trigger, NumberField, OTPField, Toggle/ToggleGroup and
-      the selection controls still read density (32 px) beside the now-36 px
-      Input/Button; wire their recipes as the next slice (plan `370` §1).
+`[x]` `packages/primitives`: **the field family joins the shadcn slice** —
+      measured (2026-10-18): plan `370` pinned `Input`/`TextArea` to the 36 px
+      recipe while `Select`'s trigger, `NumberField` and `OTPField`'s cells
+      still resolved `comfortable` (32 px, 13/18), so one form painted two field
+      heights. All three now consume `INPUT_BASE` through `fieldRecipeStyle`:
+      36 px, 12/4 padding, radius 6, 14/20, the recipe's 3 px focus ring and its
+      invalid/disabled buckets. OTP cells are square 36 × 36; `NumberField`
+      keeps `paddingRight: 0` for its steppers; the select hugs unless
+      `fullWidth`; `fieldTextStyle` and the OTP `controlStyle` copy are deleted.
+      New element table + recipe cases + runtime heights, and the density proof
+      moved to `Toggle`; both directions proven (offline 653, runtime 608; plan
+      `372`).
+`[ ]` `packages/primitives`: **the toggle and selection families join the shadcn
+      slice** — `Toggle`/`ToggleGroup` and `Checkbox`/`CheckboxGroup`/`Switch`/
+      `RadioGroup` still read the invented `comfortable` metrics and the icon
+      size scale. Their recipes (`toggle.tsx`'s `toggleVariants`, `checkbox.tsx`,
+      `switch.tsx`, `radio-group.tsx`'s item, `select.tsx`'s item) are **not** in
+      `@gpuixui/tw`; add the constants there first (see the `packages/tw` row),
+      then consume them from `core/recipes.ts` (plan `372` §1).
 `[ ]` **tokens workstream**: `docs/tokens.md` §Density and
-      `docs/design-system.md` §6 still say density moves every control; since
-      plan `370` pins Input/TextArea/Button to the shadcn recipes (36 px fields;
-      32/36/40 buttons), those two paragraphs need the one-line exception (the
-      presets themselves are unchanged).
+      `docs/design-system.md` §6 still say density moves every control; plans
+      `370`–`372` pin the field family (36 px, one size) and Button (32/36/40)
+      to the shadcn recipes, so those two paragraphs need the one-line exception
+      (the presets themselves are unchanged, and the density proof is `Toggle`).
 `[ ]` **packages/tw** (cross-team): a colour-only ring in its own bucket
       (`aria-invalid:ring-destructive/20`) is dropped because the width lives in
       the focus bucket (`focus-visible:ring-[3px]`), so an invalid field has no
       soft destructive halo; record the colour on the bucket so a resolver can
       combine it with a width from another bucket (plan `370` §5.1).
+`[ ]` **packages/tw** (cross-team): add the recipes the toggle and selection
+      families need, verbatim from `references/ui`'s new-york-v4 registry, with
+      `upstream.test.ts` coverage — `select.tsx`'s trigger and item,
+      `toggle.tsx`'s `toggleVariants`, `checkbox.tsx`, `switch.tsx` and
+      `radio-group.tsx`'s item. `primitives` cannot wire those surfaces without
+      them and must not copy class strings (plan `372` §1; the primitives
+      follow-up row above consumes them).
 `[x]` `packages/primitives` + `packages/icons`: **a nonsense number reached the
       paint** — measured (2026-10-18): `NumberField min={NaN}` painted the string
       `"NaN"` and swallowed every step (the painted value was NaN, so the no-op

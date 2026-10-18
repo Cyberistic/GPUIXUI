@@ -19,7 +19,7 @@ import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
-import { buttonRecipeRing } from "../src/core/recipes.js";
+import { buttonRecipeRing, fieldRecipeRing } from "../src/core/recipes.js";
 import { Button } from "../src/components/Button.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -48,16 +48,20 @@ const RING = { ...focusRing(testTheme).boxShadow, inset: false };
 /**
  * The shadcn recipe's focus ring (plan 370): `ring-[3px] ring-ring/50`.
  *
- * Button, Input and TextArea take their focus from the recipe's bucket, because
- * 0.10.0 has no `focusVisible`; the rest of the controls keep the token ring.
+ * The button and field recipes both declare the same ring but are separate
+ * sources, so the matrix keeps two constants: a change in either is visible by
+ * the cases it fails (plan 372).
  */
-const RECIPE_RING = {
+const recipeRing = (ring: ReturnType<typeof buttonRecipeRing>) => ({
   ...Option.getOrElse(
-    Option.fromNullishOr(buttonRecipeRing(testTheme)),
+    Option.fromNullishOr(ring),
     () => focusRing(testTheme).boxShadow,
   ),
   inset: false,
-};
+});
+
+const BUTTON_RING = recipeRing(buttonRecipeRing(testTheme));
+const FIELD_RING = recipeRing(fieldRecipeRing(testTheme));
 
 interface FocusCase {
   readonly name: string;
@@ -70,7 +74,7 @@ const CASES: ReadonlyArray<FocusCase> = [
   {
     name: "Button",
     node: () => <Button testId="c">Save</Button>,
-    ring: RECIPE_RING,
+    ring: BUTTON_RING,
   },
   { name: "Toggle", node: () => <Toggle testId="c">Bold</Toggle> },
   { name: "Checkbox", node: () => <Checkbox testId="c" label="Accept" /> },
@@ -78,15 +82,23 @@ const CASES: ReadonlyArray<FocusCase> = [
   {
     name: "Input",
     node: () => <Input testId="c" label="Name" />,
-    ring: RECIPE_RING,
+    ring: FIELD_RING,
   },
   {
     name: "TextArea",
     node: () => <TextArea testId="c" label="Notes" />,
-    ring: RECIPE_RING,
+    ring: FIELD_RING,
   },
-  { name: "NumberField", node: () => <NumberField testId="c" label="Count" /> },
-  { name: "OTPField", node: () => <OTPField testId="c" label="Code" /> },
+  {
+    name: "NumberField",
+    node: () => <NumberField testId="c" label="Count" />,
+    ring: FIELD_RING,
+  },
+  {
+    name: "OTPField",
+    node: () => <OTPField testId="c" label="Code" />,
+    ring: FIELD_RING,
+  },
   {
     name: "Select",
     node: () => (
@@ -96,6 +108,7 @@ const CASES: ReadonlyArray<FocusCase> = [
         options={[{ value: "a", label: "Apple" }]}
       />
     ),
+    ring: FIELD_RING,
   },
   { name: "Rating", node: () => <Rating testId="c" label="Score" /> },
   {
@@ -194,12 +207,12 @@ it("paints the ring inside a button that an attached group clips", async () => {
     runtime.all(),
     (element) =>
       element.style.position === "absolute" &&
-      element.style.borderColor === RECIPE_RING.color,
+      element.style.borderColor === BUTTON_RING.color,
   );
   expect(rings).toHaveLength(1);
   const ring = Option.getOrElse(Arr.head(rings), () =>
     expect.fail("the clipped control painted no ring"),
   );
-  expect(ring.style.borderWidth).toBe(RECIPE_RING.spreadRadius);
+  expect(ring.style.borderWidth).toBe(BUTTON_RING.spreadRadius);
   expect(isWithin(runtime, ring, root.id)).toBe(true);
 });

@@ -38,10 +38,8 @@ import {
   type NumberDraft,
   type NumberRange,
 } from "../core/number.js";
+import { fieldRecipeStyle, fieldRowStyle } from "../core/recipes.js";
 import {
-  controlFocusStyle,
-  controlStyle,
-  fieldTextStyle,
   nativeTextTheme,
   numberInputStyle,
   numberStepperColumnStyle,
@@ -49,7 +47,6 @@ import {
 } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { fieldVariant } from "../core/variants.js";
 import type { FieldState } from "./Input.js";
 import {
   composeHandler,
@@ -142,18 +139,21 @@ export const renderNumberField = (
    * reported a *smaller* `100` (measured, plan `362`).
    */
   const current = clampNumeric(state.current, range);
-  const spec = {
-    variant: fieldVariant,
-    size: props.size ?? "md",
-    invalid: props.invalid,
-    disabled: props.disabled,
-  };
   const chrome = resolvePartStyle(
     mergeStyle(
-      mergeStyle(mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)), {
-        paddingRight: 0,
-      }),
-      focus.focused ? controlFocusStyle(spec, theme) : {},
+      mergeStyle(
+        fieldRecipeStyle(
+          {
+            focused: focus.focused,
+            invalid: props.invalid === true,
+            disabled,
+          },
+          theme,
+        ),
+        fieldRowStyle,
+      ),
+      // The stepper column owns the field's right edge.
+      { paddingRight: 0 },
     ),
     props.style,
     {

@@ -15,9 +15,8 @@ import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { initValueState, type ValueState } from "../core/state.js";
-import { controlFocusStyle } from "../core/style.js";
+import { fieldRecipeStyle } from "../core/recipes.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import { fieldVariant } from "../core/variants.js";
 import {
   renderSelect,
   selectContentStyle,
@@ -95,24 +94,32 @@ describe("Select", () => {
 
   it("gives an invalid trigger the destructive border", () => {
     const trigger = selectTriggerStyle(
-      { variant: fieldVariant, size: "md", invalid: true },
+      { invalid: true },
       testTheme,
-    )({ open: false, disabled: false, placeholder: false, focused: false });
+    )({
+      open: false,
+      disabled: false,
+      placeholder: false,
+      focused: false,
+    });
     expect(trigger.borderColor).toBe(testTheme.colors.destructive);
   });
 
-  it("rings the trigger while it holds focus or its list is open", () => {
+  it("rings the trigger with the field recipe while it holds focus or its list is open", () => {
     // The bug guarded (plan 083): the trigger took native focus and painted no
-    // ring, so a keyboard user could not see which control they were on.
-    const spec = { variant: fieldVariant, size: "md" as const };
-    const paint = selectTriggerStyle(spec, testTheme);
+    // ring, so a keyboard user could not see which control they were on. Since
+    // plan 372 it is a field, so it paints the same recipe ring as `Input`.
+    const paint = selectTriggerStyle({}, testTheme);
     const resting = {
       open: false,
       disabled: false,
       placeholder: false,
       focused: false,
     };
-    const ring = controlFocusStyle(spec, testTheme);
+    const ring = fieldRecipeStyle(
+      { focused: true, invalid: false, disabled: false },
+      testTheme,
+    );
     expect(paint({ ...resting, focused: true }).boxShadow).toStrictEqual(
       ring.boxShadow,
     );

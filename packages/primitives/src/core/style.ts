@@ -26,7 +26,6 @@ import type {
   TextRole,
   ThemeShadow,
 } from "./theme.js";
-import { fieldVariant } from "./variants.js";
 
 /**
  * A colour reference into the theme, or nothing at all.
@@ -227,22 +226,6 @@ export const shrinkLayoutStyle: StyleDesc = {
   flexShrink: 1,
   minWidth: 0,
 };
-
-/**
- * What a text field adds over the shared control chrome.
- *
- * A field is not a button: its content starts at the left, it takes the body
- * type rather than the label type, and its text is selectable because it is
- * the user's content.
- */
-export const fieldTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
-  justifyContent: "flex-start",
-  fontSize: theme.typography.body.fontSize,
-  lineHeight: theme.typography.body.lineHeight,
-  fontWeight: theme.typography.body.fontWeight,
-  cursor: "text",
-  userSelect: "text",
-});
 
 /**
  * The native text theme for an `<input>`/`<textarea>`/`<code>` element.
@@ -764,53 +747,5 @@ export const otpGroupStyle = (theme: PrimitiveTheme): StyleDesc => ({
   gap: theme.spacing.sm,
 });
 
-export interface OtpCellSpec {
-  readonly size: ControlSize;
-  readonly invalid?: boolean;
-  readonly disabled?: boolean;
-  readonly focused?: boolean;
-}
-
-/**
- * One cell.
- *
- * It is a real `<input>`, so the cell's own surface is the field: the shared
- * control chrome resolves to one square per cell (equal width and height from
- * the density scale), the body type centres the character, and the focus ring
- * lands on the cell the caret is in rather than on the wrapper.
- */
-export const otpCellStyle = (
-  spec: OtpCellSpec,
-  theme: PrimitiveTheme,
-): StyleDesc => {
-  const control = controlStyle(
-    {
-      variant: fieldVariant,
-      size: spec.size,
-      square: true,
-      invalid: spec.invalid,
-      disabled: spec.disabled,
-    },
-    theme,
-  );
-  return {
-    ...control,
-    justifyContent: "center",
-    textAlign: "center",
-    fontSize: theme.typography.body.fontSize,
-    lineHeight: theme.typography.body.lineHeight,
-    fontWeight: theme.typography.body.fontWeight,
-    cursor: spec.disabled === true ? "not-allowed" : "text",
-    ...(spec.focused === true
-      ? controlFocusStyle(
-          {
-            variant: fieldVariant,
-            size: spec.size,
-            invalid: spec.invalid,
-            disabled: spec.disabled,
-          },
-          theme,
-        )
-      : {}),
-  };
-};
+// The cell itself is a square field, so its chrome lives with the field
+// recipe (`core/recipes.ts`) rather than with the density-driven controls.

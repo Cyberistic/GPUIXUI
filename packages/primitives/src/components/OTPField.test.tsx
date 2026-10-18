@@ -12,9 +12,9 @@
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import { fieldRecipeStyle } from "../core/recipes.js";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
-import type { ControlSize } from "../core/theme.js";
 import {
   otpCellLabel,
   renderOtpField,
@@ -178,13 +178,19 @@ describe("OTPField", () => {
     });
   });
 
-  it("is a row of equal square cells at the size's control height", () => {
-    const size: ControlSize = "md";
-    const element = render({ length: 2, size }, "1");
-    const input = cell(element, 0);
-    const style = expectSome(hostStyleRecord(input));
-    expect(style["width"]).toBe(testTheme.density.controlHeight[size]);
-    expect(style["height"]).toBe(testTheme.density.controlHeight[size]);
+  it("is a row of equal square field cells at the recipe's height", () => {
+    // The bug guarded (plan 372): the cell resolved `controlStyle`'s density
+    // height (32) while `Input` beside it painted the recipe's 36, so a code
+    // step sat 4 px short in its own form. A cell is the field's square.
+    const side = fieldRecipeStyle(
+      { focused: false, invalid: false, disabled: false },
+      testTheme,
+    ).height;
+    const element = render({ length: 2, size: "lg" }, "1");
+    const style = expectSome(hostStyleRecord(cell(element, 0)));
+    expect(style["width"]).toBe(side);
+    expect(style["height"]).toBe(side);
+    expect(style["paddingLeft"]).toBe(0);
   });
 
   it("is read-only, out of the tab order and inert when disabled", () => {

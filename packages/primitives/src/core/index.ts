@@ -59,9 +59,14 @@ export { clampRating, decideRating, ratingTabStop } from "./rating.js";
 export {
   buttonRecipeRing,
   buttonRecipeStyle,
+  fieldRecipeRing,
   fieldRecipeStyle,
+  fieldRowStyle,
+  otpCellStyle,
+  squareFieldRecipeStyle,
   type ButtonRecipeSpec,
   type FieldRecipeState,
+  type OtpCellSpec,
 } from "./recipes.js";
 
 export { isSelectGroup, selectOptions, selectRowCounts } from "./select.js";
@@ -181,12 +186,10 @@ export {
   controlFocusStyle,
   controlLabelStyle,
   controlStyle,
-  fieldTextStyle,
   nativeTextTheme,
   numberInputStyle,
   numberStepperColumnStyle,
   numberStepperStyle,
-  otpCellStyle,
   otpGroupStyle,
   progressFillStyle,
   progressPercent,
@@ -211,7 +214,6 @@ export {
 export type {
   ControlSpec,
   ControlVariant,
-  OtpCellSpec,
   ProgressSpec,
   ProgressTone,
   RatingStarSpec,

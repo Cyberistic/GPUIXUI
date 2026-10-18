@@ -18,11 +18,13 @@ import { useState, type ReactElement } from "react";
 import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { focusRing } from "@gpuixui/tokens";
+import { fieldRecipeRing } from "../src/core/recipes.js";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
+import { NumberField } from "../src/components/NumberField.js";
+import { OTPField } from "../src/components/OTPField.js";
 import { Spacer } from "../src/components/Separator.js";
 import {
   Select,
@@ -328,6 +330,36 @@ it("honours a caller's height over a TextArea's rows", async () => {
   expect(tall - short).toBeLessThanOrEqual(61);
 });
 
+it("paints the whole field family at the recipe's one height", async () => {
+  // The bug guarded (plan 372): plan 370 pinned `Input` to the 36 px recipe
+  // while `Select`, `NumberField` and `OTPField` still resolved the 32 px
+  // density metric, so one form painted two field heights. A native `<input>`
+  // reports its content box (the two thin borders inside 36); the row
+  // containers report the authored box.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="sm">
+        <Input testId="field" label="Name" />
+        <NumberField testId="number" label="Count" defaultValue={3} />
+        <Select
+          testId="select"
+          label="Fruit"
+          options={[{ value: "a", label: "Apple" }]}
+        />
+        <OTPField testId="otp" label="Code" length={2} />
+      </Stack>
+    </Surface>,
+  );
+  const content = 36 - 2 * testTheme.borderWidth.thin;
+  expect(boundsOf(runtime, "field").height).toBe(content);
+  expect(boundsOf(runtime, "number").height).toBe(36);
+  expect(boundsOf(runtime, "select-trigger").height).toBe(36);
+  const cell = boundsOf(runtime, "otp-cell-1");
+  expect(cell.height).toBe(content);
+  expect(cell.width).toBe(content);
+});
+
 it("edits a TextArea across lines", async () => {
   const runtime = await openWindow();
   const field = recorder();
@@ -455,8 +487,18 @@ const selectProps = {
   ],
 } as const;
 
-/** The ring the runtime paints for `focusRing`, with its explicit `inset`. */
-const FOCUS_RING = { ...focusRing(testTheme).boxShadow, inset: false };
+/**
+ * The ring the runtime paints for the field recipe (plan 372).
+ *
+ * The select's trigger is a field, so it rings like `Input`, not with the
+ * token's 2 px ring.
+ */
+const FOCUS_RING = {
+  ...Option.getOrElse(Option.fromNullishOr(fieldRecipeRing(testTheme)), () =>
+    expect.fail("the field recipe declared no focus ring"),
+  ),
+  inset: false,
+};
 
 /** The painted shadow of an element, as the runtime reports it. */
 const shadowOf = (runtime: Runtime, testId: string) =>

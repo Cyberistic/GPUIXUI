@@ -43,7 +43,7 @@ leaving a hole.
 | `defaultValue` | `string` | — | initial code when uncontrolled |
 | `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |
 | `onComplete` | `(value: string) => void` | — | fires after an edit that leaves the code full, with the new code |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | cell height and width, from the density scale |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: every cell is the field's square (`h-9`, 36 × 36) |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
 | `label` | `string` | none | group name; each cell is named `<label> digit N` |
@@ -104,11 +104,13 @@ and does not delete a second character.
 
 ## Theming
 
-Cells use the shared field chrome (`colors.input`, `colors.border`,
-`colors.inputForeground`) via `otpCellStyle`, the destructive role when
-`invalid`, and `controlFocusStyle`'s ring on the focused cell only. Cell size
-comes from `density.controlHeight[size]`; the row gap is the `sm` spacing step.
-No literal colour, size or radius is named.
+Cells use the shared field recipe via `otpCellStyle` (plan `372`): the recipe's
+**36 high, 6 radius, 14/20 type**, made square with no horizontal padding so the
+digit centres, plus the recipe's focus/invalid/disabled buckets — the ring lands
+on the focused cell only. The theme supplies the paint (`colors.input`,
+`colors.border`, `colors.inputForeground`) and the destructive role when
+`invalid`; the row gap is the `sm` spacing step. A cell does not follow
+`density`, and `size` no longer moves it.
 
 ## Style by state
 

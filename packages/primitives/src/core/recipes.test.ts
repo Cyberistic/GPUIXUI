@@ -26,6 +26,8 @@ import {
   buttonRecipeRing,
   buttonRecipeStyle,
   fieldRecipeStyle,
+  fieldRowStyle,
+  squareFieldRecipeStyle,
 } from "./recipes.js";
 import { testTheme } from "./testing/theme.fixture.js";
 
@@ -117,6 +119,59 @@ describe("the Input recipe", () => {
       testTheme,
     );
     expect(style.boxShadow).toStrictEqual(compilerInput.style.boxShadow);
+  });
+});
+
+describe("the square field (an OTP cell)", () => {
+  it("is the field's height, as wide as it is high", () => {
+    // The bug guarded (plan 372): `otpCellStyle` resolved `controlStyle`'s
+    // density square (32 at `md`, 13/18 type) beside a 36-high Input.
+    const style = squareFieldRecipeStyle(resting, testTheme);
+    expect(style.height).toBe(36);
+    expect(style.width).toBe(36);
+    expect(style.minWidth).toBe(36);
+    expect(style.paddingLeft).toBe(0);
+    expect(style.paddingRight).toBe(0);
+    expect(style.borderRadius).toBe(compilerInput.style.borderRadius);
+    expect(style.fontSize).toBe(compilerInput.style.fontSize);
+    expect(style.lineHeight).toBe(compilerInput.style.lineHeight);
+    expect(style.justifyContent).toBe("center");
+    expect(style.textAlign).toBe("center");
+  });
+
+  it("keeps the field's focus, invalid and disabled buckets", () => {
+    const focused = squareFieldRecipeStyle(
+      { ...resting, focused: true },
+      testTheme,
+    );
+    expect(focused.boxShadow).toStrictEqual(compilerInput.focus.boxShadow);
+
+    const invalid = squareFieldRecipeStyle(
+      { ...resting, invalid: true },
+      testTheme,
+    );
+    expect(invalid.borderColor).toBe(testTheme.colors.destructive);
+
+    const disabled = squareFieldRecipeStyle(
+      { ...resting, disabled: true },
+      testTheme,
+    );
+    expect(disabled.opacity).toBe(0.5);
+    expect(disabled.pointerEvents).toBe("none");
+    expect(disabled.boxShadow).toBeUndefined();
+  });
+});
+
+describe("a field-shaped row", () => {
+  it("supplies the row layout a flat recipe box has no use for", () => {
+    // A `Select` trigger and a `NumberField` carry the field's chrome but are
+    // rows, not native inputs; the recipe describes a flat box.
+    expect(fieldRowStyle).toStrictEqual({
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      minWidth: 0,
+    });
   });
 });
 

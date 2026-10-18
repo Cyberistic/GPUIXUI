@@ -85,7 +85,9 @@ py-1 rounded-md text-sm`, i.e. **36 high, 12 horizontal, 4 vertical, 6 radius,
 14/20** — and the focus/invalid/disabled buckets. The theme supplies the paint:
 the `input` fill and `inputForeground`, the hover/press boundary, and
 `nativeTextTheme` for the caret and selection. A field therefore **does not
-follow density**; the presets are unchanged for the rest of the library.
+follow density**, and neither does the rest of the field family (`TextArea`,
+`Select`'s trigger, `NumberField`, `OTPField` — plan `372`); the presets still
+move the other controls, and `size` no longer moves a field.
 
 
 ## Style by state

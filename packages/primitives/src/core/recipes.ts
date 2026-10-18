@@ -45,6 +45,13 @@ export interface FieldRecipeState {
   readonly disabled: boolean;
 }
 
+/** What an OTP cell needs from the field: its size is the recipe's height. */
+export interface OtpCellSpec {
+  readonly invalid?: boolean;
+  readonly disabled?: boolean;
+  readonly focused?: boolean;
+}
+
 /** What a button's recipe needs beyond the theme. */
 export interface ButtonRecipeSpec {
   readonly variant: ButtonVariant;
@@ -129,6 +136,70 @@ export const fieldRecipeStyle = (
     ? inert(mergeTwStyle(withInvalid, recipe.disabled))
     : withInvalid;
 };
+
+/**
+ * The layout a field-shaped row adds over the recipe's flat box.
+ *
+ * A native `<input>`/`<textarea>` is the field; a `Select` trigger and a
+ * `NumberField` are rows that carry the field's chrome, so they need the row
+ * layout the browser would have given them.
+ */
+export const fieldRowStyle: StyleDesc = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  minWidth: 0,
+};
+
+/**
+ * A square field: an OTP digit.
+ *
+ * The recipe is a full-width field; a cell is as wide as it is high, with no
+ * horizontal padding, and centres its character. shadcn's `input-otp` slot is
+ * `size-9`, which is the same `h-9` the field recipe already resolves.
+ */
+export const squareFieldRecipeStyle = (
+  state: FieldRecipeState,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const base = fieldRecipeStyle(state, theme);
+  return typeof base.height === "number"
+    ? {
+        ...base,
+        width: base.height,
+        minWidth: base.height,
+        paddingLeft: 0,
+        paddingRight: 0,
+        justifyContent: "center",
+        textAlign: "center",
+      }
+    : base;
+};
+
+/** One OTP cell: a square field whose digit is centred. */
+export const otpCellStyle = (
+  spec: OtpCellSpec,
+  theme: PrimitiveTheme,
+): StyleDesc =>
+  squareFieldRecipeStyle(
+    {
+      focused: spec.focused === true,
+      invalid: spec.invalid === true,
+      disabled: spec.disabled === true,
+    },
+    theme,
+  );
+
+/**
+ * The ring a field's focus bucket paints.
+ *
+ * Exported so the tests (and any consumer painting the same ring inside a clip)
+ * read the recipe's own shape rather than restating `ring-[3px] ring-ring/50`.
+ */
+export const fieldRecipeRing = (
+  theme: PrimitiveTheme,
+): ThemeShadow | undefined =>
+  classesToStyle(FIELD_CLASSES, theme).focus.boxShadow;
 
 /** The paint a variant contributes over the recipe's shape. */
 const variantPaint = (

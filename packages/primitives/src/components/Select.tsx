@@ -71,16 +71,10 @@ import {
   type SelectOption,
   type SelectOptionGroup,
 } from "../core/select.js";
-import {
-  controlFocusStyle,
-  controlLabelStyle,
-  controlStyle,
-  surfaceStyle,
-  type ControlSpec,
-} from "../core/style.js";
+import { controlLabelStyle, surfaceStyle } from "../core/style.js";
+import { fieldRecipeStyle, fieldRowStyle } from "../core/recipes.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { fieldVariant } from "../core/variants.js";
 import {
   availableOn,
   decideHorizontalSide,
@@ -93,7 +87,6 @@ import {
 } from "../core/floating.js";
 import {
   composeHandler,
-  mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -188,28 +181,43 @@ export const renderSelectIndicator = (
   />
 );
 
-/** The trigger is the field chrome with the value pushed to the far edge. */
+/** What the trigger's chrome reads from the select's props. */
+export interface SelectTriggerSpec {
+  readonly invalid?: boolean;
+  readonly fullWidth?: boolean;
+}
+
+/**
+ * The trigger is the field chrome with the value pushed to the far edge.
+ *
+ * The field recipe is `w-full` (a browser form default); a select hugs its
+ * value unless the consumer asks the root for `fullWidth`, so the trigger
+ * clears that one property. The list's rows keep their own metrics — they are
+ * not input fields (plan `372`).
+ */
 export const selectTriggerStyle =
   (
-    spec: ControlSpec,
+    spec: SelectTriggerSpec,
     theme: PrimitiveTheme,
   ): ((state: SelectTriggerState) => StyleDesc) =>
-  (state) => {
-    const resolved = { ...spec, disabled: state.disabled };
-    const active = state.disabled !== true && (state.focused || state.open);
-    return mergeStyle(
-      mergeStyle(
-        controlStyle(resolved, theme),
-        active ? controlFocusStyle(resolved, theme) : undefined,
-      ),
-      { justifyContent: "space-between" },
-    );
-  };
+  (state) => ({
+    ...fieldRecipeStyle(
+      {
+        focused: state.focused || state.open,
+        invalid: spec.invalid === true,
+        disabled: state.disabled,
+      },
+      theme,
+    ),
+    ...fieldRowStyle,
+    width: spec.fullWidth === true ? "100%" : undefined,
+    justifyContent: "space-between",
+  });
 
 /** The trigger's paint with a caller's contribution merged last. */
 export const selectTriggerPartStyle =
   (
-    spec: ControlSpec,
+    spec: SelectTriggerSpec,
     theme: PrimitiveTheme,
     focused: boolean,
     style?: StateStyle<SelectTriggerState>,
@@ -413,7 +421,6 @@ export const renderSelect = (
     placeholder,
     disabled,
     invalid,
-    size = "md",
     fullWidth,
     label,
     style,
@@ -440,7 +447,7 @@ export const renderSelect = (
   handlers: SelectHandlers,
   placement: SelectPlacement = { collisionPadding: FLOATING_MARGIN },
 ): ReactElement => {
-  const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
+  const spec: SelectTriggerSpec = { invalid, fullWidth };
   const slot: TriggerHandlers = {
     onMouseEnter,
     onMouseLeave,
