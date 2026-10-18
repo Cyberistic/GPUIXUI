@@ -452,16 +452,13 @@ export function platformTheme(base: Theme, platform: PlatformName): Theme {
 }
 
 /**
- * The palette an applied platform colour set is written over. A theme that
- * already declares the default level keeps its own colours, edits included. A
- * base at another level is replaced as a set, because a platform palette is
- * designed at the default floors and the roles a style does not name must not
- * stay behind from a palette the caller asked to leave (plan 373).
+ * The theme a requested level is built on. A base that already carries the
+ * level is kept as it is — a consumer's edits, a brand's name and a style's
+ * unnamed roles survive — and otherwise the identity at that level supplies the
+ * palette, its name and the opacity its `shadow` tint was designed with.
  */
-const appliedPalette = (base: Theme): ThemeColors =>
-  base.contrast === "default"
-    ? base.colors
-    : getTheme(base.mode, "default").colors;
+const levelIdentity = (base: Theme, level: ThemeContrast): Theme =>
+  base.contrast === level ? base : getTheme(base.mode, level);
 
 /**
  * A style level's geometry with the base theme's opacity. An alpha is designed
@@ -481,8 +478,8 @@ const withBaseAlpha = (
 
 /**
  * Every level a style defines, its geometry kept and its alpha taken from the
- * base theme. `mergeDefined` drops an omitted level, so a style that names no
- * elevation still inherits the base's.
+ * palette's own level. `mergeDefined` drops an omitted level, so a style that
+ * names no elevation still inherits the palette's.
  */
 const platformElevation = (
   base: Elevation,
@@ -503,16 +500,20 @@ const platformOverrides = (
   contrast: ThemeContrast,
 ): ThemeOverrides => {
   const { label, sans, mono } = style.types;
-  // A level carries no colour: its alpha is designed against the base's
-  // `shadow` tint, so a platform lends the geometry at high contrast and the
-  // AAA set keeps the opacity that tint was designed with (plan 505). At
-  // default contrast the style's own tint, geometry and alpha all apply.
-  const elevation =
-    contrast === "high"
-      ? platformElevation(base.elevation, style.elevation[base.mode])
-      : style.elevation[base.mode];
-  const structural: ThemeOverrides = {
-    name: `${base.name} · ${label}`,
+  const styleColors = style.colors[base.mode];
+  const appliesColors = Object.values(styleColors).some(
+    (color) => color !== undefined,
+  );
+  // One decision, four consequences: the level decides the palette, and the
+  // palette decides the name, the declaration and the elevation opacity. A high
+  // request always builds the AAA palette; a default request builds the default
+  // palette when the style contributes colours (plan 373); a shape-only style
+  // changes no colour, so the base's level is kept (plan 301).
+  const level =
+    contrast === "high" ? "high" : appliesColors ? "default" : base.contrast;
+  const palette = levelIdentity(base, level);
+  return {
+    name: `${palette.name} · ${label}`,
     typography: { sans, mono, ...style.structure.typography },
     spacing: style.structure.spacing,
     radius: style.structure.radius,
@@ -522,44 +523,51 @@ const platformOverrides = (
     iconSize: style.structure.iconSize,
     avatarSize: style.structure.avatarSize,
     dimensions: style.structure.dimensions,
-  };
-  if (contrast === "high") {
-    return { ...structural, elevation };
-  }
-  const colors = style.colors[base.mode];
-  const appliesColors = Object.values(colors).some(
-    (color) => color !== undefined,
-  );
-  return {
-    ...structural,
-    elevation,
-    colors: appliesColors ? { ...appliedPalette(base), ...colors } : colors,
-    // The declaration follows the palette: a defined platform colour is an
-    // override designed at the default floors, while an undefined one inherits
-    // the base role and leaves the base's level alone.
-    contrast: appliesColors ? "default" : base.contrast,
+    // A high-contrast palette keeps the opacity its tint was designed with: a
+    // dark platform's 0.4–0.8 over the AAA dark set's light tint would paint a
+    // near-white halo (plan 505). The style still lends its geometry, and a
+    // level it does not name stays the palette's.
+    elevation:
+      level === "high"
+        ? mergeDefined(
+            palette.elevation,
+            platformElevation(palette.elevation, style.elevation[base.mode]),
+          )
+        : style.elevation[base.mode],
+    // AAA floors win over a style's colours, which are designed at the default
+    // level. A same-level base keeps its own palette, edits included.
+    colors:
+      level === "high"
+        ? palette === base
+          ? undefined
+          : palette.colors
+        : { ...palette.colors, ...styleColors },
+    contrast: palette === base ? undefined : level,
   };
 };
 
 /**
  * Apply any platform style — shipped or copied and edited — to a base theme.
  *
- * The contrast level defaults to the one the base declares, so applying a
- * copied style to a high-contrast theme keeps the AAA palette. At `"high"` the
- * families and shape are applied — radii, density, motion and the platform's
- * elevation geometry — while the base keeps its colour set and the opacity its
- * `shadow` tint was designed with, because a platform accent must not drop those
- * floors. The result
- * declares the level of the palette it carries:
- * naming `"default"` on an AAA base applies the platform colours and returns a
- * `default` theme, while a style with no colour overrides keeps the base's
- * level. Naming `"default"` on a base at another level replaces the palette as a
- * set: the roles the style does not name come from the default-level identity of
- * the same mode, so the returned theme is held to the floors it declares and
- * `themeContrastFailures` returns `[]` for every shipped style. A base that
- * already declares the level keeps its own colours, so a consumer's edits and a
- * style's unnamed roles are untouched. The result is a normal {@link Theme}, so
- * it composes through {@link extendTheme} like any other.
+ * The requested level decides the palette, the name, the declaration and the
+ * elevation opacity, so the result always carries the level it claims:
+ *
+ * - `"high"` builds the AAA palette of the base's mode. A platform's colours are
+ *   designed at the default floors, so they never repaint it; the AAA `shadow`
+ *   tint and the opacity designed against it stay, while the platform lends its
+ *   geometry — radii, density, motion and its elevation shapes.
+ * - `"default"` builds the default palette when the style contributes colours,
+ *   taking the roles it does not name from the default-level identity of the
+ *   same mode, so the result is a whole palette rather than half an AAA one
+ *   (plan 373).
+ * - Omitting the argument, or naming the level the base already declares, keeps
+ *   the base's palette, name and edits, so a style still overrides only what it
+ *   names.
+ *
+ * A style with no colour overrides changes no colour, so a default request keeps
+ * the base's level (plan 301); its name says so, because the name follows the
+ * palette. The result is a normal {@link Theme}, so it composes through
+ * {@link extendTheme} like any other.
  *
  * @example
  * ```ts

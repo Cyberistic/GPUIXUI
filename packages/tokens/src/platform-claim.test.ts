@@ -10,6 +10,14 @@
  * Plan 323 closes the same claim one input shape over: a colour key set to
  * `undefined` is not a colour override, so it must not downgrade an AAA theme's
  * declaration while the palette still inherits the AAA roles.
+ *
+ * Plan 541 makes the requested level total. Before it, a `"high"` request on a
+ * default base applied only shape and returned a `default` theme: the caller
+ * asked for the accessibility level and the result declared the other one, with
+ * no diagnostic. A request now supplies the palette it names — `"high"` builds
+ * the AAA set, whose tint keeps the opacity designed against it — so the
+ * declaration is still true for the palette the theme carries, and the case
+ * below proves the AAA floors hold rather than that high was refused.
  */
 import { describe, expect, it } from "vitest";
 import { themeContrastFailures } from "./contrast.js";
@@ -37,12 +45,15 @@ describe("applied platform style contrast", () => {
     expect(themeContrastFailures(dropped, "high").length).toBeGreaterThan(0);
   });
 
-  it("cannot claim high when only shape was applied", () => {
+  it("builds the AAA palette for a high request instead of refusing it", () => {
     const raised = applyPlatformStyle(lightTheme, platformStyles.linux, "high");
 
-    expect(raised.contrast).toBe("default");
-    expect(raised.colors).toEqual(lightTheme.colors);
+    // Plan 541: the request supplies the palette, so the theme carries the
+    // level it declares instead of silently returning the base's palette.
+    expect(raised.contrast).toBe("high");
+    expect(raised.colors).toEqual(getTheme("light", "high").colors);
     expect(themeContrastFailures(raised)).toEqual([]);
+    expect(themeContrastFailures(raised, "high")).toEqual([]);
   });
 
   it("keeps the base's declaration on the default call", () => {
