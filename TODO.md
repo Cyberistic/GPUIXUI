@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 205/271
+`[x]` `[███████░░░]` 206/272
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1673,6 +1673,15 @@ role is opaque, because `elevationShadow` writes the level's alpha into the
 hides the window; the seventh check makes the guarantee seven, the docs' "third
 check" ordinal is gone, and the README no longer claims the composition suites
 run three separate checks (plan 540)
+`[x]` Make the requested contrast level total — `applyPlatformStyle(base, style,
+"high")` on a default base returned a `default` theme (the caller asked for the
+accessibility level and got the other one, while `themeContrastFailures(result,
+"high")` reported 180 pairs), a default request on an AAA base returned the
+default palette under the name "High contrast light · macOS", and a shape-only
+style kept the AAA palette while painting the style's default-level alpha
+(`#FFFFFFA6`, the near-white halo plan 505 forbids). The level now decides the
+palette, and the palette decides the name, the declaration and the elevation
+opacity; no shipped theme moves (plan 541)
 
 ## Phase C — Tier 1–2 components
 

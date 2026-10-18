@@ -791,7 +791,10 @@ High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
 applies the families and shape — radii, density, motion, type roles, spacing,
 borders, icon/avatar sizes, component dimensions and the platform's elevation
 geometry — while the AAA colour set, and the opacity its `shadow` tint was
-designed with, stays, because a platform accent must not drop those floors.
+designed with, stays, because a platform accent must not drop those floors. A
+`"high"` request on a default base builds that same AAA palette, so the requested
+level is the level the result carries; a style's colours are designed at the
+default floors and never repaint it.
 Elevation carries no colour of its own: a level is geometry plus an alpha over
 the theme's `shadow` tint, so the AAA tint stays while the platform's depth
 applies (plans 345 and 505). To ship your own look, copy a style file and apply
@@ -827,17 +830,21 @@ Runnable examples live in
 [`src/platforms.example.ts`](./src/platforms.example.ts) and
 [`src/platform-styles.example.ts`](./src/platform-styles.example.ts).
 
-The applied theme declares the level of the palette it carries (plan 301):
-`applyPlatformStyle(highBase, style)` keeps the AAA palette and the `high` claim,
-while naming `"default"` applies the platform colours and returns a `default`
-theme, and a style with no colour overrides keeps the base's level. A colour key
-set to `undefined` is not an override: the role inherits and the level stays with
-the base (plan 323). Naming `"default"` on a base at another level replaces the
-palette as a set: the roles the style does not name come from the default-level
-identity of the same mode, so the applied theme is held to the floors it declares
-and `themeContrastFailures` returns `[]` for every shipped style. A base that
-already declares the level keeps its own colours, so this is not a rewrite of a
-consumer's edits (plan 373).
+The applied theme carries the level it declares (plans 301 and 541): a requested
+level decides the palette, and the palette decides the name, the declaration and
+the elevation's opacity. `"high"` always builds the AAA set — a style's colours
+are designed at the default floors and never repaint it, and the AAA tint keeps
+the opacity designed against it — while `"default"` builds the default palette
+when the style contributes colours, the roles it does not name coming from the
+default-level identity of the same mode, so the theme is held to the floors it
+declares and `themeContrastFailures` returns `[]` for every shipped style
+(plan 373). A same-level base keeps its own colours, edits included, and
+`applyPlatformStyle(highBase, style)` therefore keeps the AAA palette and the
+`high` claim. A shape-only style changes no colour, so it keeps the base's level.
+A colour key set to `undefined` is not an override either: the role inherits and
+the level stays with the base (plan 323). The result's name always names the
+palette it carries, because a preview prints it. A runnable example lives in
+[`src/applied-level.example.ts`](./src/applied-level.example.ts).
 
 A style is an override set over the base it is applied to, so it names the
 canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their

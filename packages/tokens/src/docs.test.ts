@@ -2812,3 +2812,31 @@ describe("docs/design-system.md interaction states", () => {
     );
   });
 });
+
+describe("the applied level's documents", () => {
+  /** The front door wraps its prose too, so the assertion is the sentence. */
+  const readmeProse = readmeSource.replace(/\s+/g, " ");
+
+  it("states that a requested level supplies its palette", () => {
+    expect(markdownProse).toContain(
+      'A `"high"` request on any other base builds the same AAA palette',
+    );
+    expect(designSystem).toContain("A requested level decides the palette");
+    expect(readmeProse).toContain("a requested level decides the palette");
+  });
+
+  it("no longer says a high request stays at the default level", () => {
+    [markdownProse, designSystem, readmeProse].forEach((document) => {
+      expect(document).not.toContain("so the theme stays `default`");
+      expect(document).not.toContain(
+        "Asking for a level replaces the palette as a set",
+      );
+    });
+  });
+
+  it("states the name and elevation consequences", () => {
+    expect(markdownProse).toContain("The name always follows the palette");
+    expect(markdownProse).toContain("the elevation's opacity");
+    expect(designSystem).toContain("the palette decides the name");
+  });
+});

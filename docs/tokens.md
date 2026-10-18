@@ -694,20 +694,30 @@ the caller asks it to:
 applyPlatformStyle(getTheme("dark", "high"), contosoStyle); // keeps the AAA palette
 ```
 
-The result declares the level of the palette it carries, the way every theme
-does. Naming `"default"` on a high-contrast base applies the platform colours, so
-the returned theme declares `default` — the AAA palette is no longer there.
-Naming `"high"` on a default base applies only families, shape and elevation
-levels, so the theme stays `default`; a style with no colour overrides keeps the
-base's level because it changes no colour. A colour key set to `undefined` is
-not an override either: the role inherits and the declaration stays with the base
-(plan `323`). A style overrides only the roles it names, and the roles it does
-not name belong to the palette it is written over: naming `"default"` on a base
-at another level replaces the palette as a set, taking the unnamed roles from the
-default-level identity of the same mode. The result is a whole palette rather
-than half of one, so `themeContrastFailures` returns `[]` for every shipped style
-applied this way; a base that already declares the level keeps its own colours,
-edits included, so a style still overrides only what it names (plan `373`).
+A `"high"` request on any other base builds the same AAA palette, so a contrast
+toggle cannot return a theme below the level it asked for.
+
+The result carries the level it declares, and the level is decided once. A
+`"high"` request always builds the AAA palette of the base's mode — a style's
+colours are designed at the default floors, so they never repaint it, while the
+platform still contributes its geometry and the AAA `shadow` tint keeps the
+opacity designed against it. A `"default"` request builds the default palette
+when the style contributes colours, taking the roles it does not name from the
+default-level identity of the same mode, so the result is a whole palette rather
+than half of one (plan `373`). Omitting the argument, or naming the level the
+base already declares, keeps the base's palette: a consumer's edits and a style's
+unnamed roles survive, and the result keeps the base's name. The name always
+follows the palette — a rebased palette brings the identity's name, because the
+result is that identity at the requested level — and so does the elevation's
+opacity, because a dark platform's 0.4–0.8 over the AAA dark set's light tint
+would paint a near-white halo (plan `505`). A style with no colour overrides
+changes no colour, so it keeps the base's level (plan `301`); that is the one
+request that is not honoured, and the theme's name says so. A colour key set to
+`undefined` is not an override either: the role inherits and the declaration
+stays with the base (plan `323`). A runnable example lives in
+[`applied-level.example.ts`](../packages/tokens/src/applied-level.example.ts):
+it resolves a high request on a default theme, a same-level brand base and the
+shipped resolver, and asserts the level each carries.
 
 ### Authoring a platform style
 

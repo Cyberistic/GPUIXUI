@@ -163,8 +163,10 @@ system and the platform looks are variants of it, never four design systems. At
 high contrast the families and shape apply — each platform's radii, density,
 motion and elevation geometry — while the AAA colour set, the `shadow` tint
 included, and the opacity that tint was designed with win over platform
-resemblance. The docs toggle and a native build call
-the same function.
+resemblance. A high request on a default theme builds that AAA palette too, so
+the requested level is the level the result carries; a platform's colours are
+designed at the default floors and never repaint it. The docs toggle and a native
+build call the same function.
 
 Two **recipes** ship beside those variants: Windows XP (Luna) and Windows 7
 (Aero), in `platformRecipes`. A recipe is an edition of a platform, not a fifth
@@ -823,15 +825,17 @@ theme, role or pair changes.
 
 A theme carries its contrast level the way it carries its mode: `extendTheme`
 keeps the base's declaration and `applyPlatformStyle` and
-`themeContrastFailures` default to it, so the short call is the safe one. An
-applied style declares the level of the palette it ends with: asking for the
-platform's default colours on an AAA base returns a `default` theme, because the
-AAA palette is gone, while a style with no colour overrides keeps the base's
-level. A declaration is a claim; `themeContrastFailures` is what proves it.
-Asking for a level replaces the palette as a set, so the roles a style does not
-name come from the identity at that level — a forced default palette is whole,
-not half of one — while a base already at that level keeps its own colours,
-edits included.
+`themeContrastFailures` default to it, so the short call is the safe one. A
+requested level decides the palette, and the palette decides the name, the
+declaration and the elevation's opacity: `"high"` always builds the AAA set — a
+platform's colours are designed at the default floors and never repaint it, and
+the AAA tint keeps the opacity designed against it — while `"default"` builds the
+default palette when the style contributes colours, the roles it does not name
+coming from the identity at that level. A shape-only style changes no colour, so
+it keeps the base's level, and a base already at the requested level keeps its
+own colours, edits included. A forced default palette is whole, not half of one,
+and the theme's name always names the palette it carries. A declaration is a
+claim; `themeContrastFailures` is what proves it.
 
 A style is also an override set over the base it is applied to, so it names the
 canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their
