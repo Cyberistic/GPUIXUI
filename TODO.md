@@ -469,9 +469,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–488)
+## Docs site workstream (plans 410–489)
 
-`[x]` `[██████████]` 89/89
+`[x]` `[██████████]` 90/90
+
+`[x]` **The License page names the real record (plan 489)** — it had said "none
+      is written yet" while `LICENSES/README.md` and `LICENSES/base-gpui.md`
+      (MIT, commit `64b2233`) existed; it now lists what is recorded, keeps
+      `inventory.md`/`provenance.md`/`NOTICE` honestly owed, and
+      `license-page.test.ts` compares the page to the directory in both
+      directions (five proofs)
 
 `[x]` **Extension instructions reach the site (plan 488)** — `/docs/extending`
       documents the primitives `core/` layer: every real module and what it

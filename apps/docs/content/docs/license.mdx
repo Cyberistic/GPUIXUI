@@ -5,19 +5,38 @@ description: Licences and provenance for the library and its references.
 
 GPUIXUI reimplements behaviour from other projects and may reuse source where
 the licence permits it. Every reference and every adapted implementation is
-verified and recorded before release; the licence inventory is written while the
-code is written, not after.
+recorded before release; the licence inventory is written while the code is
+written, not after.
 
-Three files must exist before release; none is written yet (the inventory starts
-in Phase A, because a licence inventory written after the code is a rewrite):
+## How a licence is verified
 
-- `LICENSES/inventory.md` — one row per dependency and reference.
-- `LICENSES/provenance.md` — one row per adapted implementation.
-- `LICENSES/NOTICE` — the notices the package must redistribute.
+Read the licence file in the reference clone at the recorded commit. A README
+badge is not evidence, and a project's website is not evidence. `LICENSES/README.md`
+states the rule and what each file must answer.
 
-`LICENSES/README.md` records what each file must answer and the evidence rule
-(a licence is verified by reading it in the reference clone, never a README
-badge).
+## Recorded today
 
-The library's own identity — package name, logo and wordmark — is original. No
-third-party logos or trademarks are copied into it.
+| File | What it records |
+| ---- | --------------- |
+| `LICENSES/README.md` | the questions a release inventory must answer, the file layout and the evidence rule |
+| `LICENSES/base-gpui.md` | `base-gpui` — **MIT**, read at commit `64b2233`; we take the compound-part contract as a design reference and copy no source, no crate and no trademark |
+
+## Still owed before release
+
+The inventory and the notices are a release requirement, and they are not
+written yet:
+
+- `LICENSES/inventory.md` — one row per dependency and reference: name,
+  version or commit, licence, use and obligations.
+- `LICENSES/provenance.md` — one row per adapted implementation: source,
+  commit, what changed and the licence.
+- `LICENSES/NOTICE` — the notices the published package must redistribute.
+
+Until those land, this page names only what a record actually states. It does
+not repeat a licence from a project's website.
+
+## Identity
+
+The library's own package name, logo and wordmark are original. No third-party
+logos or trademarks are copied into them, and no icon set is vendored under a
+name that misrepresents its licence.
