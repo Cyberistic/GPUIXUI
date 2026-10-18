@@ -147,6 +147,16 @@ describe("packages/tokens/README.md", () => {
     );
   });
 
+  it("separates the mark floor from the interactive-fill floor", () => {
+    expect(readme).toContain(
+      "A solid role painted as a mark — a progress segment, slider fill, " +
+        "thumb ring, rating star or timeline dot — is held to " +
+        `${contrastFloors.default.mark}:1 ` +
+        `(${contrastFloors.high.mark}:1 at AAA) by \`markPairs\`, not to the ` +
+        `${contrastFloors.default.surface}:1 an interactive fill's wash needs`,
+    );
+  });
+
   it("states the soft status edge is a measured role", () => {
     expect(readme).toContain(
       "Each soft status surface has a designed edge (`xSoftBorder`) held to the divider floor on that surface",

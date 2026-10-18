@@ -1208,8 +1208,8 @@ check and the test suite both read:
 ```ts
 import { contrastFloors } from "@gpuixui/tokens";
 
-contrastFloors.default; // { body: 7, secondary: 4.5, inactive: 3, boundary: 3, surface: 1.05, divider: 1.05 }
-contrastFloors.high; // { body: 7, secondary: 7, inactive: 4.5, boundary: 4.5, surface: 1.05, divider: 3 }
+contrastFloors.default; // { body: 7, secondary: 4.5, inactive: 3, boundary: 3, mark: 3, surface: 1.05, divider: 1.05 }
+contrastFloors.high; // { body: 7, secondary: 7, inactive: 4.5, boundary: 4.5, mark: 4.5, surface: 1.05, divider: 3 }
 ```
 
 The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).
@@ -1488,7 +1488,10 @@ taking it from 261 to **262**. Plan `325` adds the invalid field edge
 (`destructive` on the `input` fill and on the `background` canvas a transparent
 field paints), taking it from 262 to **264**. Plan `327` adds the accent family's
 designed hover and press to the fill, on-colour and control-edge contracts,
-taking it from 264 to **276**.
+taking it from 264 to **276**. Plan `332` adds the graphic-mark pairs — the
+brand, success and destructive fills as bars and glyphs on `background`, `card`,
+`popover` and `muted`, and the slider thumb's ring on its `input` fill — taking
+it from 276 to **290**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1544,6 +1547,15 @@ becomes a designed step between the 850 panel and the 800 press (`#262C36`) and
 the AAA dark accent lightens to `#251B5C`, so a selected row is perceivable on
 the AAA panel and popover. Light mode therefore layers canvas → quiet panel →
 card, a deliberate decision rather than an accident.
+
+A solid role painted as a **mark** is held to 3:1 (4.5:1 at AAA) instead: a
+progress segment and a slider fill sit on the `muted` track, a slider thumb rings
+its own `input` fill, and a rating star, combobox check or timeline dot sits on
+the panel it paints on — `markRoles` is the role list and `markPairs` the pairs.
+A fill's 1.05:1 is a wash's floor: it says a hover is visible, not that a 4px bar
+is. A status indicator is not a mark: the solid `warning` is **1.78:1** on the
+light canvas, so a status dot uses `xText`, which the status-text pairs already
+measure.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and
@@ -1606,7 +1618,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`327` closed.
+plans `076`–`332` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

@@ -354,6 +354,7 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
 | focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) | 3:1 | 4.5:1 |
+| graphic marks (`primary`/`success`/`destructive` on `background`/`card`/`popover`/`muted`, and `primary`/`destructive` on the `input` fill a slider thumb rings) | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
@@ -386,6 +387,16 @@ visible shape until plan `306`. Every disabled control in the component packages
 reaches the state through `opacity: 0.5`, which composites the label with
 whatever is behind it (a disabled primary action measures 2.25:1 on the light
 canvas); the designed pair is what a control should paint instead.
+
+A fill is not automatically a surface. A solid role painted as a bar, a glyph or
+a dot — a progress segment, a slider fill, a slider thumb's ring, a rating star,
+a combobox check, a timeline dot — is a **mark**, held to 3:1 (4.5:1 at AAA).
+The 1.05:1 floor plan `309` gives an interactive fill is a wash's floor: it says
+a hover is visible, not that a 4px bar is. Status marks are `xText`, never the
+solid status fill, because the light `warning` fill is **1.78:1** on the canvas;
+the avatar's presence dot and the timeline's pending dot are two shipped marks
+the ledger records for the components workstream to move onto the designed role.
+
 It can fail: a palette edit that reduces contrast fails the gate. The same check
 is public: `themeContrastFailures(theme)` returns every pair an edited theme
 misses, so a brand theme or copied platform style can be held to these floors in

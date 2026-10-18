@@ -200,6 +200,7 @@ describe("contrastFloors", () => {
         secondary: 4.5,
         inactive: 3,
         boundary: 3,
+        mark: 3,
         surface: 1.05,
         divider: 1.05,
       },
@@ -208,6 +209,7 @@ describe("contrastFloors", () => {
         secondary: 7,
         inactive: 4.5,
         boundary: 4.5,
+        mark: 4.5,
         surface: 1.05,
         divider: 3,
       },
@@ -345,7 +347,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(276);
+    expect(contrastPairs.length).toBe(290);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(

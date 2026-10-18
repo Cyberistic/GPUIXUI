@@ -195,13 +195,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 264 to **${contrastPairs.length}**`,
+      `taking it from 276 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`327` closed");
+    expect(prose).toContain("plans `076`–`332` closed");
   });
 });
 
@@ -682,6 +682,18 @@ describe("docs/tokens.md contrast contract", () => {
     expect(markdown).toContain(line("default"));
     expect(markdown).toContain(line("high"));
   });
+
+  it("states the mark floor and why a status fill is not a mark", () => {
+    expect(markdownProse).toContain(
+      "A solid role painted as a **mark** is held to " +
+        `${contrastFloors.default.mark}:1 ` +
+        `(${contrastFloors.high.mark}:1 at AAA) instead:`,
+    );
+    expect(markdownProse).toContain(
+      "A status indicator is not a mark: the solid `warning` is **1.78:1** on " +
+        "the light canvas, so a status dot uses `xText`",
+    );
+  });
 });
 
 describe("docs/tokens.md theme contract", () => {
@@ -950,6 +962,7 @@ describe("docs/design-system.md", () => {
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
+      `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, and \`primary\`/\`destructive\` on the \`input\` fill a slider thumb rings) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
@@ -959,6 +972,19 @@ describe("docs/design-system.md", () => {
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
     });
+  });
+
+  it("states the mark floor beside the fill floor", () => {
+    expect(designSystem).toContain(
+      "A fill is not automatically a surface. A solid role painted as a bar, " +
+        "a glyph or a dot — a progress segment, a slider fill, a slider " +
+        "thumb's ring, a rating star, a combobox check, a timeline dot — is a " +
+        `**mark**, held to ${contrastFloors.default.mark}:1 ` +
+        `(${contrastFloors.high.mark}:1 at AAA).`,
+    );
+    expect(designSystem).toContain(
+      "Status marks are `xText`, never the solid status fill",
+    );
   });
 
   it("names every interactive fill and the surfaces it is held against", () => {

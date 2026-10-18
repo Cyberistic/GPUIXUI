@@ -55,6 +55,7 @@ const floorRow = (contrast: keyof typeof contrastFloors): string => {
     floors.secondary,
     floors.inactive,
     floors.boundary,
+    floors.mark,
     floors.surface,
     floors.divider,
   ]

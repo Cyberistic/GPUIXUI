@@ -19,6 +19,13 @@ export type ContrastPairClass =
   /** An inactive label: dimmed but readable (a design floor, not a WCAG one). */
   | "inactive"
   | "boundary"
+  /**
+   * A solid role painted as a glyph, a bar or a dot rather than behind text.
+   * WCAG's non-text requirement (3:1, 4.5:1 at AAA) is the same number the
+   * boundary class uses; the separate name records the intent, so a fill's
+   * 1.05:1 wash floor cannot be mistaken for a mark's floor.
+   */
+  | "mark"
   /** One surface must be perceivable against another (`xSoft` on a canvas). */
   | "surface"
   /** A decorative border (`border`) must stay visible on its surface. */
@@ -209,6 +216,29 @@ export const stateFillSurfacePairs: readonly ContrastPair[] =
       (background): ContrastPair => [fill, background, "surface"],
     ),
   );
+
+/**
+ * The solid roles painted as marks, and the surfaces they sit on. A progress
+ * segment (`primitives/src/core/style.ts` `progressFillStyle`) and a slider fill
+ * paint over the `muted` track; a slider thumb rings its own `input` fill with
+ * the same role; a rating star and a combobox check are glyphs on the surface
+ * they sit on; a timeline's current dot is a `primary` dot on the canvas, card,
+ * popover or quiet panel. A mark is the information, so a fill that matches its
+ * surface is a failed state, not a subtle one.
+ */
+const markSurfaces = ["background", "card", "popover", "muted"] as const;
+
+/** The solid roles the library paints as a mark. */
+export const markRoles = ["primary", "success", "destructive"] as const;
+
+/** Every mark on every surface it can sit on, plus the thumb's own fill. */
+export const markPairs: readonly ContrastPair[] = [
+  ...markRoles.flatMap((role) =>
+    markSurfaces.map((background): ContrastPair => [role, background, "mark"]),
+  ),
+  ["primary", "input", "mark"],
+  ["destructive", "input", "mark"],
+];
 
 /**
  * The surfaces an inactive label paints on, beyond the soft status fills: its
@@ -498,6 +528,13 @@ const softBodyPairs: readonly ContrastPair[] = softSurfaceRoles.map(
  * is held to the surface floor on the canvas, a card, a popover and the quiet
  * `muted` panel it paints on, because a fill that matches its panel is not a
  * state.
+ *
+ * A solid role painted as a **mark** — a progress segment, a slider fill, a
+ * slider thumb's ring, a rating star, a combobox check or a timeline dot — is a
+ * graphic, not a wash, and is held to the `mark` floor instead: 3:1, and 4.5:1
+ * at AAA. The solid status roles are deliberately absent from that list: a
+ * status indicator is `xText`, which the status pairs already measure, because
+ * the light `warning` fill is 1.78:1 on the canvas.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ...bodyTextPairs,
@@ -570,6 +607,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...invalidEdgePairs,
   ...controlFillPairs,
   ...stateFillSurfacePairs,
+  ...markPairs,
 ];
 
 /** WCAG floors by contrast level and pair class. */
@@ -581,6 +619,7 @@ export const contrastFloors: Readonly<
     secondary: 4.5,
     inactive: 3,
     boundary: 3,
+    mark: 3,
     surface: 1.05,
     divider: 1.05,
   },
@@ -589,6 +628,7 @@ export const contrastFloors: Readonly<
     secondary: 7,
     inactive: 4.5,
     boundary: 4.5,
+    mark: 4.5,
     surface: 1.05,
     divider: 3,
   },
@@ -853,7 +893,11 @@ const washVisibilityFailures = (
  * `secondary`, `accent` and `selected` fills. It measures a row's own default
  * text on the washes it paints and the field edge on its `input` fill, so a
  * selected list title or a menu row cannot lose its label on its own state
- * fill. The level
+ * fill. It also holds a solid role painted as a graphic — a progress segment,
+ * a slider fill, a thumb's ring, a rating star, a combobox check or a timeline
+ * dot (`markPairs`) — to the 3:1 mark floor (4.5:1 at AAA), because the 1.05:1
+ * an interactive fill's wash needs cannot keep a bar or a glyph visible. The
+ * level
  * defaults to the one the theme declares, so a high-contrast theme is checked
  * against its own floors. An empty array is the library's guarantee; a consumer
  * test asserts exactly that:

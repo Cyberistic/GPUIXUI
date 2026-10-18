@@ -220,7 +220,10 @@ tint; every shipped variant already clears that floor, so the pairs are a
 guarantee rather than a fix (plan 093). The modal scrim is measured the same way:
 `overlay` composited over the four base surfaces and held to 1.05:1, which caught
 the AAA dark theme's black veil painting **1.000:1** on its pure black canvas and
-turned it into a light one (plan 099). Default body text
+turned it into a light one (plan 099). A solid role painted as a mark — a
+progress segment, slider fill, thumb ring, rating star or timeline dot — is held
+to 3:1 (4.5:1 at AAA) by `markPairs`, not to the 1.05:1 an interactive fill's
+wash needs (plan 332). Default body text
 is checked on the canvas, card, the `muted` panel, `popover`, the
 `hover`/`active`/`accent`/`selected` washes and the four soft status fills an
 Alert's description and ghost dismiss control paint, so an avatar's initials on

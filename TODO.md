@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 99/128
+`[x]` `[████████░░]` 100/133
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -222,6 +222,34 @@ identity iris wash while moving the rest of the family to Contoso blue, so a
 copied theme selected text in the wrong hue while `themeContrastFailures`
 returned `[]`; the wash is now the Contoso primary at the identity's alpha and a
 regression case holds it away from the base (plan 331)
+`[x]` Separate a fill from a mark — a solid role painted as a progress segment,
+slider fill, slider thumb's ring, rating star, combobox check or timeline dot
+was measured only at the 1.05:1 interactive-fill floor, so a theme could collapse
+`primary`/`success`/`destructive` into the surface behind a bar or glyph while
+the checker returned `[]`; `mark` is a 3:1 (4.5:1 at AAA) pair class with
+fourteen pairs (276 → 290), every shipped set already passes, and
+`mark-contrast.test.ts` states the erased-mark regressions (plan 332)
+`[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
+fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
+`card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the
+"away" dot is effectively invisible; use `statusTone(...).text` (`xText`), which
+the status-text contract already measures on `card` (plan 332; owner:
+`components`)
+`[ ]` Cross-team: `components` moves the Timeline upcoming dot off `muted` —
+`timeline.tsx` `dotFill` paints `muted` on the canvas, **1.036:1** in the
+identity light theme and 1.014:1 on Aero light, so a pending event has no dot;
+use `borderStrong`, the 3:1 functional boundary, or `mutedForeground` for the
+secondary floor (plan 332; owner: `components`)
+`[ ]` Cross-team: `components` uses `primaryText` for the Accordion trigger's
+hover label — `accordion.tsx:474` sets `color: primary` on hover, and the fill
+role measures 4.21:1 on the macOS light canvas and 3.82:1 on a card, under the
+4.5:1 secondary floor; `primaryText` is held on the six surfaces a link paints
+(plan 332; owner: `components`)
+`[ ]` Cross-team: `components` moves the Toast icon and 3px tone bar off
+`xSoftForeground` — `toast/viewport.tsx` paints `palette.fg`, the soft-surface
+foreground designed for its own tint, on the `popover` card; use
+`statusTone(...).text` (`xText`), which the status-text contract measures on
+`popover` (plan 332; owner: `components`)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
