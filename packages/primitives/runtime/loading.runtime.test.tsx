@@ -221,6 +221,21 @@ it("pulses a Skeleton's opacity between both of its states", async () => {
   ).toBe(true);
 });
 
+it("paints a bare circle Skeleton as a square", async () => {
+  // The bug guarded (plan 330): `circle` only changed the radius, so the default
+  // `100%` width painted a 100% × line-height ellipse.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Skeleton testId="sk" circle />
+    </Surface>,
+  );
+  const box = Option.getOrElse(runtime.bounds("sk"), () =>
+    expect.fail("the Skeleton painted no box"),
+  );
+  expect(box.width).toBe(box.height);
+});
+
 it("moves a Spinner's lit dot instead of rotating it", async () => {
   const runtime = await openWindow();
   runtime.render(

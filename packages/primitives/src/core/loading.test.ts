@@ -58,6 +58,19 @@ describe("skeletonStyle", () => {
       testTheme.radius.full,
     );
   });
+
+  it("makes a circle as wide as it is tall", () => {
+    // The bug guarded (plan 330): `circle` only changed the radius, so the
+    // default `100%` width painted a pill.
+    const circle = skeletonStyle({ circle: true }, testTheme);
+    expect(circle.width).toBe(circle.height);
+    expect(circle.width).toBe(testTheme.typography.body.lineHeight);
+    // an explicit width still wins, and a plain block stays full width
+    expect(skeletonStyle({ circle: true, width: 40 }, testTheme).width).toBe(
+      40,
+    );
+    expect(skeletonStyle({}, testTheme).width).toBe("100%");
+  });
 });
 
 describe("spinnerDots", () => {

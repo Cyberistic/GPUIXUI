@@ -35,28 +35,33 @@ export interface SkeletonSpec {
  *
  * It paints the skeleton role, never the surface it stands in for, so it reads
  * as absence. Height defaults to one line of body text, which is what a
- * one-line placeholder should occupy.
+ * one-line placeholder should occupy. `circle` takes that height as its width,
+ * so a bare `<Skeleton circle />` is a square rather than a full-width pill.
  */
 export const skeletonStyle = (
   spec: SkeletonSpec,
   theme: PrimitiveTheme,
-): StyleDesc => ({
-  width: spec.width ?? "100%",
-  height: spec.height ?? theme.typography.body.lineHeight,
-  flexShrink: 0,
-  borderRadius:
-    spec.circle === true
-      ? theme.radius.full
-      : theme.radius[spec.radius ?? "sm"],
-  backgroundColor: theme.colors.skeleton,
-});
+): StyleDesc => {
+  const height = spec.height ?? theme.typography.body.lineHeight;
+  return {
+    width: spec.width ?? (spec.circle === true ? height : "100%"),
+    height,
+    flexShrink: 0,
+    borderRadius:
+      spec.circle === true
+        ? theme.radius.full
+        : theme.radius[spec.radius ?? "sm"],
+    backgroundColor: theme.colors.skeleton,
+  };
+};
 
 /**
  * The opacity a pulse paints at this step.
  *
- * Two states rather than a sine: the runtime interpolates nothing on its own, so
- * a value between them would only be painted if the component computed it, and
- * the eye reads the alternation as motion.
+ * Two states rather than a sine: the pulse is a discrete interval, because a
+ * looping animation has no `repeat` (plan 329), so a value between them would
+ * only be painted if the component computed it — and the eye reads the
+ * alternation as motion.
  */
 export const pulseOpacity = (step: number, dim = 0.6, full = 1): number =>
   step % PULSE_STEPS === 0 ? full : dim;

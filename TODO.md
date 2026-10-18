@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 78/78
+`[x]` `[██████████]` 79/79
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -592,6 +592,12 @@ retired once both branches are one
       `motion.div` sliding `left` 2 → 12 over 200 ms `easeOut`, resting exactly
       where the layout painter put it (dx 3/13, dy 2 at `md`); 2 core +
       1 element-tree + 2 runtime tests, both directions proven (plan `329`)
+`[x]` `packages/primitives`: **`Skeleton circle` painted a pill** — the `circle`
+      prop only changed the radius, so the default `width: "100%"` made a bare
+      `<Skeleton circle />` a 100 % × line-height ellipse; the docs' avatar
+      example hid it by passing both numbers. A circle now takes its height as
+      its width, an explicit `width` still wins, and a plain skeleton stays
+      `100%`; 1 core + 1 runtime test, both directions proven (plan `330`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

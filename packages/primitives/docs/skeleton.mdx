@@ -25,14 +25,18 @@ An avatar placeholder:
 <Skeleton width={32} height={32} circle />
 ```
 
+`circle` already makes the block as wide as it is tall, so a bare
+`<Skeleton circle />` is a square at the body line height; pass `width` and
+`height` for a larger avatar.
+
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `width` | `number \| string` | `"100%"` | the block's width |
+| `width` | `number \| string` | `"100%"`, or the height when `circle` | the block's width |
 | `height` | `number \| string` | body line height | the block's height |
 | `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
-| `circle` | `boolean` | `false` | full radius; an avatar or icon placeholder |
+| `circle` | `boolean` | `false` | full radius and a square default; an avatar or icon placeholder |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
@@ -65,9 +69,11 @@ skeleton.
 
 ## Verification
 
-- `src/core/loading.test.ts` — the two pulse states and the block geometry.
+- `src/core/loading.test.ts` — the two pulse states and the block geometry; a
+  circle is as wide as it is tall, an explicit width wins, and a plain block
+  stays `100%` (plan `330`).
 - `runtime/loading.runtime.test.tsx` — opacity samples take both `1` and `0.6`
-  in the real renderer.
+  in the real renderer, and a bare circle paints a square box.
 
 ```sh
 nub run --filter @gpuixui/primitives test
