@@ -2,7 +2,7 @@
  * Accordion example: a five-question FAQ in single, non-collapsible mode.
  *
  * One answer is always visible, so the page never looks empty; pressing the open
- * question again is deliberately a no-op.
+ * question again is deliberately a no-op that reports no change.
  */
 
 import {

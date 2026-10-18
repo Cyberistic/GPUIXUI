@@ -144,9 +144,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (22 tests):
-single mode closing the previous section, the non-collapsible no-op, the
-collapsible close, multiple mode keeping sections, the disabled section, Enter
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (23 tests):
+single mode closing the previous section, the non-collapsible no-op (silent in a
+controlled accordion), the collapsible close, multiple mode keeping sections, the disabled section, Enter
 activation, Space on release, a held Enter toggling only once, the controlled
 contract including the `null` close, arrow / `Home` / `End` movement between
 headers (wrapping past a disabled one, without opening it), a caller header

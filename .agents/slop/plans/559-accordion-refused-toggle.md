@@ -164,3 +164,15 @@ Stop and report rather than changing the test if:
 - The unit suite, `nub run check` and `nub run lint` pass; the behaviour suite
   has exactly the same 55 pre-existing binding failures.
 - Docs, `COMPONENTS.md`, `TODO.md` and the plan index record the fix.
+
+## 9. Observed (2026-10-19)
+
+- New case on the fixed source: `1 passed`.
+- Mutation (guard deleted): `1 failed` — `expected "vi.fn()" to not be called at
+  all, but actually been called 1 times`.
+- Accordion suite: `22 passed | 1 failed (23)`; the failure is the pre-existing
+  plan-540 binding case (`returns focus to the header when a close starts inside
+  its body`), unchanged.
+- Logic suite: 15/15.
+- Full behaviour suite after both plan 557 and 559: `684 passed | 55 failed
+  (739)` — exactly the plan-540 binding set.

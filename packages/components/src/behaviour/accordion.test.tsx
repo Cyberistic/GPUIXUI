@@ -359,6 +359,20 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
+  it("does not report a refused non-collapsible toggle", () => {
+    const onValueChange = vi.fn();
+    const faq = renderComponent(
+      <Faq value="one" onValueChange={onValueChange} />,
+    );
+
+    clickCentreOf(faq, "trigger-one");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(isHidden(faq, "content-one")).toBe(false);
+
+    faq.unmount();
+  });
+
   it("reports null when a controlled collapsible closes", () => {
     const onValueChange = vi.fn();
     const faq = renderComponent(

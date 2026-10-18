@@ -259,6 +259,9 @@ const SingleAccordion = ({
   const toggleItem = useCallback(
     (item: string): void => {
       const next = toggle(current, item);
+      // A non-collapsible accordion refuses to close its only open section;
+      // `toggle` returns the same state, so there is nothing to report or store.
+      if (next === current) return;
       if (value === undefined) setState(next);
       onValueChange?.(
         next.type === "single" ? Option.getOrNull(next.open) : null,
