@@ -14,8 +14,9 @@ example, a docs page and an inventory record checked against `COMPONENTS.md`.
 The last batch closed the twelve gap rows from plan 205 (Drawer, Navigation Menu,
 Preview Card, Timeline, Countdown, Keyboard shortcuts, Carousel, Inline edit,
 Tag input, Mention input, Hotkey recorder, Color picker) — `nub run --filter
-@gpuixui/components test:behaviour` covers them in 458 tests. Navigation Menu
-also opens on hover through the shared hover-travel policy.
+@gpuixui/components test:behaviour` covers them in 460 tests. Navigation Menu
+also opens on hover through the shared hover-travel policy; the behaviour harness
+tears down each root after a test, so a failed assertion no longer cascades.
 The design tokens and theming layer (light, dark, high-contrast, density) is
 landed. Tier 1, data presentation, workspace and specialised components are
 tracked in `TODO.md`.

@@ -22,6 +22,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/behaviour/**/*.test.tsx"],
+    // Unmount whatever root a test left behind, so one failing assertion cannot
+    // cascade into "a root is still mounted" for every later test (plan 326).
+    setupFiles: ["./src/behaviour/setup.ts"],
     // The renderer paints through one retained tree; a second worker would race
     // on the window and on the native module.
     pool: "forks",

@@ -34,7 +34,16 @@ export interface ComponentTestRoot {
  * nothing. Measured on this host, 2026-10-17 — a theme test that held two roots
  * read `backgroundColor: undefined` for the first.
  */
-let mounted = false;
+let mounted: ComponentTestRoot | null = null;
+
+/**
+ * Tear down whatever root is mounted, if any. The behaviour suite registers this
+ * as an `afterEach`, so an assertion that throws after rendering cannot leak its
+ * window into the next test (plan 326). Safe when nothing is mounted.
+ */
+export const unmountComponentRoot = (): void => {
+  mounted?.unmount();
+};
 
 /**
  * Render `node` in the native GPUix test renderer under one theme. Throws when a
@@ -47,7 +56,7 @@ export const renderComponent = (
   node: ReactNode,
   theme: TestTheme = "dark",
 ): ComponentTestRoot => {
-  if (mounted) {
+  if (mounted !== null) {
     throw new Error(
       "renderComponent: a root is still mounted. The native renderer paints one window, so unmount() the previous root before rendering the next.",
     );
@@ -61,13 +70,14 @@ export const renderComponent = (
   };
 
   render(node);
-  mounted = true;
-  return {
+  const handle: ComponentTestRoot = {
     renderer: root.renderer,
     rerender: render,
     unmount: () => {
-      mounted = false;
+      if (mounted === handle) mounted = null;
       root.unmount();
     },
   };
+  mounted = handle;
+  return handle;
 };
