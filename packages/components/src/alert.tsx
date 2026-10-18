@@ -256,7 +256,7 @@ export const alertMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "the dismiss control is this package's local button until @gpuixui/primitives lands",
+    "the dismiss control is this package's local button: primitives' Button reads a second theme context, so adoption waits on one provider",
   ],
   docs: "docs/alert.mdx",
   example: "examples/alert.example.tsx",

@@ -4,8 +4,10 @@ description: A person or entity, as a picture with an initials fallback.
 ---
 
 `Avatar` identifies a person, team or service. Given `src` it shows the picture;
-without one — or before the picture paints — it shows deterministic initials, so
-the layout never shifts and a missing image never leaves a blank hole.
+without one it shows deterministic initials derived from `name`, so nothing about
+the layout depends on the name and a person without a photo is never blank. When
+`src` is set the picture is what paints — the runtime reports no image-load
+failure, so a missing file leaves the disc empty (see **Limitations**).
 
 ## Usage
 

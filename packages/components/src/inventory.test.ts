@@ -11,6 +11,10 @@
  * "Verification" line states a count the suite does not have (plan 333). It is
  * the automated form of plan 117 §1.
  *
+ * The `documented API` block guards the plan 337 drift: a parts table naming a
+ * part the package does not export, a landed component still listed as planned,
+ * and a page that drops its limitations section.
+ *
  * The date picker landed in plan 119, so every Tier 2 row now has a record.
  * `node:fs` is used here only because this is a test-time repository check —
  * plan 117 §3 authorises it, and nothing in the component runtime imports it.
@@ -22,6 +26,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
 import { examples } from "../examples/index.js";
 import { inventory, type ComponentMeta } from "./inventory.js";
@@ -324,6 +329,101 @@ describe("component API contract", () => {
       inventory,
       (meta) => !markdown.includes(`| ${meta.name} |`),
     ).map((meta) => meta.name);
+
+    expect(missing).toEqual([]);
+  });
+});
+
+describe("documented API", () => {
+  const contract = (): string =>
+    readFileSync(
+      fileURLToPath(new URL("docs/component-api.md", repoRoot)),
+      "utf8",
+    );
+
+  /** `markdown` from `mark` to the next `## ` heading; `""` when absent. */
+  const section = (markdown: string, mark: string): string => {
+    const start = markdown.indexOf(mark);
+    if (start < 0) return "";
+    const end = markdown.indexOf("\n## ", start + mark.length);
+    return end < 0 ? markdown.slice(start) : markdown.slice(start, end);
+  };
+
+  /** The body rows of every table in `markdown`, as trimmed cells. */
+  const tableRows = (markdown: string): ReadonlyArray<ReadonlyArray<string>> =>
+    Arr.filterMap(markdown.split("\n"), (line) => {
+      if (!line.startsWith("|")) return Result.failVoid;
+      const cells = Arr.map(line.split("|").slice(1, -1), (cell) =>
+        cell.trim(),
+      );
+      const first = cells[0] ?? "";
+      return cells.length < 2 ||
+        first === "" ||
+        first === "Component" ||
+        first.startsWith("---")
+        ? Result.failVoid
+        : Result.succeed(cells);
+    });
+
+  /** The part identifiers in a `Parts` cell; a wildcard is not an export. */
+  const partsOf = (cell: string): ReadonlyArray<string> =>
+    Arr.filterMap(Arr.fromIterable(cell.matchAll(/`([^`]+)`/g)), (match) => {
+      const name = match[1] ?? "";
+      return /^[A-Za-z][A-Za-z0-9]*$/.test(name)
+        ? Result.succeed(name)
+        : Result.failVoid;
+    });
+
+  it("exports every part the parts tables name", async () => {
+    // The root namespace is the arbiter because `exports.test.ts` holds every
+    // public module to `src/index.ts`, so anything a module exports is here.
+    const publicApi: Record<string, unknown> = await import("./index.js");
+    const rows = tableRows(section(contract(), "## 8. Parts by component"));
+
+    const problems = Arr.flatMap(rows, (cells) => {
+      const [name, parts = ""] = cells;
+      if (name === undefined) return [];
+      const meta = Arr.findFirst(inventory, (entry) => entry.name === name);
+      return Option.match(meta, {
+        onNone: () => [],
+        onSome: (found) =>
+          Arr.map(
+            Arr.filter(partsOf(parts), (part) => !(part in publicApi)),
+            (part) => `${found.name}: documents ${part}, which is not exported`,
+          ),
+      });
+    });
+
+    expect(problems).toEqual([]);
+  });
+
+  it("does not plan a component that has landed", () => {
+    // The block is bold text, not a heading; it ends at the next `## ` section.
+    const planned = Arr.map(
+      tableRows(section(contract(), "Planned Tier 2 additions")),
+      (cells) => cells[0] ?? "",
+    );
+    const landed = Arr.filter(
+      Arr.filter(inventory, (meta) => meta.status === "done"),
+      (meta) => Arr.some(planned, (name) => name === meta.name),
+    ).map((meta) => `${meta.name}: listed as planned and in the inventory`);
+
+    expect(landed).toEqual([]);
+  });
+
+  it("gives every implemented component a limitations heading", () => {
+    const LIMITATIONS = /^##+ .*[Ll]imitation/m;
+    const missing = Arr.filterMap(inventory, (meta) => {
+      const page = readFileSync(
+        fileURLToPath(new URL(meta.docs, packageRoot)),
+        "utf8",
+      );
+      return LIMITATIONS.test(page)
+        ? Result.failVoid
+        : Result.succeed(
+            `${meta.name}: ${meta.docs} has no limitations section`,
+          );
+    });
 
     expect(missing).toEqual([]);
   });

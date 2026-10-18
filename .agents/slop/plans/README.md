@@ -110,6 +110,7 @@ workstream declares in its own section below.
 | [334](./334-activation-sweep.md) | The remaining button-shaped parts activate Space on release | F | 110, 117, 200, 201, 332, 333 | done — 9 native tests (behaviour 517), both-direction proof (8 fail without the fix); the recorder's clear control claims its key, fixing a latent keyboard bug |
 | [335](./335-docs-verification-truth.md) | Docs truth: every docs page states its real native-test count | F | 117, 139, 330–333 | done — 14 pages normalised (3 had no verification section), check tightened from "pages that state a count" to all 41; unit 335, behaviour 517; both-direction proof |
 | [336](./336-documented-subpath-exports.md) | Packaging truth: every documented subpath import resolves | F | 110, 115, 117, 330, 335 | done — `docs/field.mdx`'s `@gpuixui/components/validation/logic` mapped to a missing `.tsx`; explicit export + a resolution/index check (unit 337); both-direction proof |
+| [337](./337-component-api-truth.md) | Component API truth: the documented parts are the exported parts | F | 200, 304, 305, 330, 333, 335, 336 | done — the §8 "planned" rows named three landed components, the Avatar opening claim contradicted its limitations, and five "until primitives lands" notes were stale; 3 new contract checks (unit 340), both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

@@ -380,7 +380,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
-| `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
+| `@gpuixui/primitives` exports in plan 110 §7 | primitives | **package landed** (19 Tier 1 components + `Button`/`Input`/`Spinner`). The components' `internal/button.tsx`, the `FieldInput` host input and the `…` busy glyph stay until primitives' `ThemeProvider` and `@gpuixui/tokens/react` are one provider — two contexts would make every consumer wrap both. Owner of the unification: cross-package decision, not components |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending — the registry is complete and every entry is render-proven in this package (plan 330); mounting still belongs to `apps/playground` |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
@@ -435,8 +435,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `@gpuixui/components/validation/logic` import pointed at a missing `.tsx`,
     so `exports` now names the `.ts` module; 2 new checks, unit 337
     both-direction proof
+  - [x] Component API truth (`packages/components`): the §8 parts tables are
+    checked against the package's exports, a landed component can no longer sit
+    in a "planned" table, and every page keeps a limitations heading — plan 337;
+    the Avatar page's opening claim contradicted its own limitations, and five
+    "until primitives lands" notes were stale (the package landed; the real
+    blocker is two theme providers); unit 340, both-direction proof
 `[ ]` Performance and packaging
-`[ ]` Docs truth pass against the implementation
+`[ ]` Docs truth pass against the implementation (docs-site pages still owned by
+the docs-site workstream; the `packages/components` half is plan 337)
 
 ## Phase G — release readiness
 

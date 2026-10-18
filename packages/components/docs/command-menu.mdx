@@ -138,13 +138,13 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 - **No `aria-activedescendant` or `aria-controls`** in 0.10.0: the relationship
   between the input and the highlighted row is visual only for assistive
   technology.
-- The `<input>` is the host element until `@gpuixui/primitives` lands; it is the
-  documented stand-in, not a styled wrapper.
+- The `<input>` is the GPUix host element. `@gpuixui/primitives` now ships its own
+  `Input`, but primitives read a second theme context, so the stand-in is
+  replaced when that provider and `@gpuixui/tokens/react` are one (`TODO.md` →
+  Interlocks).
 - Ranking is **per group**, not global: a group's heading stays where the caller
   declared it even when another group holds the best match. Recents are session
   state unless the app owns and persists `recent`; there is no per-query history.
-- No `aria-activedescendant`: the highlight is visible but the input does not
-  point assistive technology at the active row.
 
 ## Verification
 

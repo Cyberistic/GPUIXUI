@@ -464,7 +464,7 @@ export const commandMenuMeta = {
   gpuixSupport: "partial",
   limitations: [
     "ranking is per group, not global, so a group's heading never repeats; a custom filter opts out and keeps declaration order",
-    "the input is the GPUix <input> host element until @gpuixui/primitives lands",
+    "the input is the GPUix <input> host element: primitives' Input reads a second theme context, so adoption waits on one provider",
     "the active row is highlighted, not focused, so typing keeps working; screen readers get aria-selected but no aria-activedescendant",
   ],
   docs: "docs/command-menu.mdx",

@@ -288,7 +288,7 @@ export const fieldMeta = {
   gpuixSupport: "partial",
   limitations: [
     "no aria-describedby in 0.10.0: the message is an aria-description, not an id reference",
-    "the control is the GPUix <input> host element until @gpuixui/primitives lands",
+    "the control is the GPUix <input> host element: primitives' Input reads a second theme context, so adoption waits on one provider",
     "not a form library: the caller owns the value and when validation runs",
   ],
   docs: "docs/field.mdx",

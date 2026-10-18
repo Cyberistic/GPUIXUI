@@ -241,7 +241,7 @@ parts.
 | Confirmation dialogs | `ConfirmDialog` (composes the Dialog parts) | `AlertDialogRoot`/`Trigger`/`Popup` | plan 112 |
 | Popovers | `Popover`, `PopoverTrigger`, `PopoverContent` | `PopoverRoot`/`Trigger`/`Popup`/`Arrow`/`Close`/`Portal`/`Positioner`/`Viewport`/`Backdrop`/`Title`/`Description` | plan 112 |
 | Dropdown menus | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuGroup`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent` | `MenuRoot` + 18 parts | plan 114 |
-| Context menus | `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent` + the `ContextMenu*` item parts | `ContextMenuRoot`/`Trigger` | plan 114 |
+| Context menus | `ContextMenu`, `ContextMenuTrigger`, `ContextMenuContent`, `ContextMenuItem`, `ContextMenuCheckboxItem`, `ContextMenuGroup`, `ContextMenuLabel`, `ContextMenuSeparator`, `ContextMenuSub`, `ContextMenuSubTrigger`, `ContextMenuSubContent` | `ContextMenuRoot`/`Trigger` | plan 114 |
 | Command menus | `CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty` | — | plan 114, 301 |
 | Tabs | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `TabsRoot`/`List`/`Tab`/`Panel`/`Indicator` | plan 113 |
 | Accordions | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent` | `AccordionRoot`/`Header`/`Item`/`Trigger`/`Panel` | plan 113 |
@@ -281,15 +281,6 @@ said "the same for `TimePicker`" predated the measured reason it is a field: the
 runtime has no `aria-valuenow`, so a popup spinbutton could not announce its
 value. The field root, its two segments, the separator and the clear control are
 the honest parts.
-
-**Planned Tier 2 additions** (not implemented; the parts are fixed here so the
-implementation cannot invent a shape):
-
-| Component | Parts | Source |
-| --------- | ----- | ------ |
-| Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | plan 205 |
-| Countdown | `Countdown` | plan 205 |
-| Inline edit | `InlineEdit` | plan 205 |
 
 ## 9. Landed deviations and migration
 

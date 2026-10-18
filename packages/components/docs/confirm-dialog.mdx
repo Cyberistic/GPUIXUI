@@ -63,8 +63,9 @@ description are unchanged: the wording, not the colour, carries the consequence.
 - The dialog's accessible name is `title`; the description is the body text.
 - No `aria-modal`/`aria-labelledby` in `@gpuix/native@0.10.0` — the same
   limitation as **Dialog**, with the evidence on that page.
-- The busy indicator is a `…` text glyph, not a spinner: no `Spinner` primitive
-  exists yet.
+- The busy indicator is a `…` text glyph: `@gpuixui/primitives` now ships a
+  `Spinner`, but primitives read a second theme context, so it is adopted when
+  that provider and `@gpuixui/tokens/react` are one (`TODO.md` → Interlocks).
 - There is no built-in async runner. The caller owns the promise, the loading
   flag and the close; that is deliberate, so a failed save is never hidden by a
   dialog that closed itself.

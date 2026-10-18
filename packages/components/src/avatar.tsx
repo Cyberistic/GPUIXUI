@@ -147,7 +147,7 @@ export const avatarMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "no image loading or error state in v1: the initials fallback is what shows until the picture paints",
+    "no image loading or error state: with src set the picture is what paints, and a missing file leaves the disc empty because the runtime reports no load failure",
   ],
   docs: "docs/avatar.mdx",
   example: "examples/avatar.example.tsx",

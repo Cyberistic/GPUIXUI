@@ -122,9 +122,10 @@ this is a code guarantee rather than a behaviour-suite assertion.)
 - **The live-region announcement itself cannot be verified here.** The test
   renderer exposes the accessibility tree (the suite asserts `role="alert"`), but
   a real screen reader's announcement needs a real window.
-- The dismiss control is this package's local stand-in for
-  `@gpuixui/primitives`' `IconButton` (`TODO.md` → Interlocks); it is replaced when
-  that package lands.
+- The dismiss control is this package's local button stand-in.
+  `@gpuixui/primitives` now ships its own `Button`, but primitives read a second
+  theme context, so the stand-in is replaced when that provider and
+  `@gpuixui/tokens/react` are one (`TODO.md` → Interlocks).
 - No automatic timeout: an alert stays until the state changes or the user
   dismisses it. That is deliberate — a message that vanishes on its own is a
   toast.

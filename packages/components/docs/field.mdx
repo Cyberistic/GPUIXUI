@@ -96,8 +96,10 @@ ring; an invalid one keeps the destructive border instead.
   `@gpuix/native@0.10.0`: the association is a description, and the validity is
   carried by colour and the alert message. This is a real limitation for screen
   readers, not a styling choice.
-- The control is the GPUix `<input>` host element until `@gpuixui/primitives`
-  lands; `FieldInput` is the stand-in.
+- The control is the GPUix `<input>` host element. `@gpuixui/primitives` now
+  ships its own `Input`, but primitives read a second theme context, so
+  `FieldInput` stays a stand-in until that provider and `@gpuixui/tokens/react`
+  are one (`TODO.md` → Interlocks).
 - `Field` is not a form library: it owns no value, no submit, no cross-field
   rules and no async validation.
 
