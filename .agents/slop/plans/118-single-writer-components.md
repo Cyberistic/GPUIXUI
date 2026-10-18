@@ -232,3 +232,43 @@ renumbered its own plan to `515` and landed the remaining fix
 (`0638ccf`). The permanent fix is still plan `022` §5 — a pinned session and a
 hard live-session gate. Until then, the pragmatic rule above stands: on a second
 writer, touch only `.agents/slop/` and report.
+
+### Recurrence, 2026-10-18 19:36–20:05 (plan 525)
+
+The pair recurred during the plan-525 motion slice, and this time the §5 query
+was **wrong**, not merely advisory:
+
+| Session | Created | Role |
+| ------- | ------- | ---- |
+| `ses_eb0657795fferKVGQBWrc7P05k` | 18:21:30 | previous turn, still writing plan 525 |
+| `ses_eb02154a2ffeBtp5JI9fVusloa` | 19:35:55 | this turn (`run-components.sh`) |
+
+- The §5 query (`time_idle is null`) printed **only this turn** while the other
+  turn was actively writing: its `time_idle` stayed set to a stale timestamp
+  (19:41:51) even as `time_updated` advanced past 19:44 and it authored the
+  plan-525 tests at 19:40–19:41, then the commit at 20:05. **`time_idle is null`
+  undercounts a live writer.** Use `time_updated` recency instead, e.g.
+
+  ```sh
+  sqlite3 ~/.local/share/opencode/opencode.db \
+    "select id, datetime(time_updated/1000,'unixepoch','localtime')
+       from session_v2
+      where directory like '%/workspaces/components'
+        and time_updated > (strftime('%s','now') - 300) * 1000;"
+  ```
+
+  (a writer that updated within the last five minutes), and check `ps` for the
+  runner. A session that has `time_idle` set but a recent `time_updated` is
+  still writing.
+- The collision was observed: this turn's first popover edit (moving the motion
+  wrapper inside the anchored host) was replaced by the other turn's own version
+  of the same fix within two minutes, and the files' mtimes advanced while this
+  turn was reading them.
+- Resolution this time: this turn stopped writing, watched the other turn finish
+  plan 525 (`46682a3`, pushed), verified it independently (unit 404, behaviour
+  694) and only then claimed the next plan (`526`, `34e77f5f`). No work was
+  lost. A hung live-run child of the other turn was ended after 6 minutes; the
+  turn then resumed, recorded the live result in plan 525 and committed.
+- The permanent fix is still plan `022` §5. The added requirement from this
+  recurrence: the liveness gate must be `time_updated`-based, not
+  `time_idle`-based.

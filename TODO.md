@@ -541,6 +541,15 @@ stays `2` and the condition **cannot** be met by agent discipline; it needs plan
 022 §5's pinned-session fix (coordinator, `scripts/`). Component code stays
 paused on a green, pushed `HEAD`; plan 118 carries the measurement.
 
+**Recurred 2026-10-18 19:36–20:05** during the plan-525 motion slice
+(`ses_eb065779…` still writing while `ses_eb02154a…` read the tree). The §5
+check is **not sufficient**: the older session had `time_idle` set to a stale
+timestamp while `time_updated` kept advancing, so `time_idle is null` printed
+`1`. Liveness must be measured by recent `time_updated` (and the runner pid).
+The older turn finished and pushed plan 525; this turn verified it and then
+claimed plan 526. Details and the corrected query are in plan 118's recurrence
+section.
+
 ## Interlocks (cross-workstream dependencies)
 
 Work that this workstream needs but does not own. Another agent owns each row.
@@ -548,7 +557,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Need | Owner | Status |
 | ---- | ----- | ------ |
 | `@gpuixui/tokens` roles in plan 110 §6 | tokens-theme | **resolved** — the workstream is merged into `agent/components`; `internal/theme.ts` is the seam over it |
-| Serialise writers per worktree: a second live session writes `packages/components` alongside the supervisor's; root cause in plan `022` (primitives), this worktree's measurement in plan `118` | repo tooling (`scripts/`) | **resolved in this worktree** 2026-10-17 (the stale turn stood down; the tree has read one writer since); the permanent `scripts/` fix (plan 022 §5) is still pending |
+| Serialise writers per worktree: a second live session writes `packages/components` alongside the supervisor's; root cause in plan `022` (primitives), this worktree's measurement in plan `118` | repo tooling (`scripts/`) | **recurred 2026-10-18** (plan 525 turn); the `time_idle is null` gate undercounts — use recent `time_updated` (plan 118's recurrence section). Permanent `scripts/` fix (plan 022 §5) pending |
 | Decide the GPUix version: stay on 0.10.0 and implement dismiss layers/focus locally, or ship a release that includes `Dialog`/`Button`/`DismissableLayer` (0.10.0 is the latest published) | owner / playground | pending |
 | Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) | tokens-theme | **resolved** — landed on `main`; `internal/theme.ts` consumes `statusTone` (plan 157) |
 | `alpha(color, amount)` helper | tokens-theme | **resolved** — landed on `main`; the local `withAlpha` is deleted (plan 157) |
