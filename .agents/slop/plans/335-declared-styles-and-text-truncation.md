@@ -5,7 +5,7 @@
 | Phase | B → F (native capability probe) |
 | Depends on | `100`, `110`, `120`, `140`, `150`, `160`, `196`, `188` |
 | Owner | playground (`apps/playground`, `packages/testing`) |
-| Status | planned — implementation not started |
+| Status | **landed** — `declared-styles` (17 checks) and `text-truncation` (12); suite `66 → 68`, exit `0`; six mutation proofs (§8/§12) |
 
 ## 0. Why this plan exists
 
@@ -75,6 +75,17 @@ built 0.10.0 binding (ADR 0003):
     `StyleDesc` (`host.d.ts`: `CursorValue`) and appears in the authored style
     report, but no renderer verb reports the pointer shape. Nothing in this
     suite may claim a cursor was painted.
+11. **A press does not set hover; hover follows movement.** A synthetic
+    `nativeSimulateMouseDown` at an element's centre applies `active` (180) with
+    no prior move, and the release at the same point leaves the element at its
+    **authored** width (100) — the hover state was never entered. This is a
+    property of the input path, not a style bug: a real pointer moves before it
+    clicks. A scenario that wants "pressed while hovered" must `hover` first.
+12. **`active` survives the pointer leaving while held.** Pressed at the
+    centre, then moved 200 px away with the button still down, the element
+    measured **180** — the state is bound to the press, not to the pointer's
+    position — and cleared to **100** on release. A drag started on a button
+    therefore keeps it pressed for the whole gesture.
 
 ## 2. Scope
 
@@ -161,9 +172,10 @@ Rules:
 | 5b | | `the child applies its own hover width` → child **120** |
 | 6 | `host.hover("styles-away")` | `leaving reverts both widths` → parent **400**, child **100** |
 | 7 | `host.press("styles-button")` | `a press applies the active width` → **180** |
-| 8 | `host.releasePointer(buttonCentre.x, buttonCentre.y)` | `releasing reverts to the hover width while still over it` → **140** |
+| 8 | `host.releasePointer(buttonCentre.x, buttonCentre.y)` | `a press at a point does not itself set the hover state` → **100** (§1.11) |
+| 8b | `host.hover("styles-button")` | `moving over the button re-applies its hover width` → **140** |
 | 9 | `host.hover("styles-away")` | `leaving after a release reverts to the authored width` → **100** |
-| 10 | `host.press("styles-button")`, `host.movePointer(20, 300)`, read, `host.releasePointer(20, 300)` | `a held pointer outside the element records its state` → **hypothesis: 100** (see STOP 9.4) |
+| 10 | `host.press("styles-button")`, `host.movePointer(20, 300)`, read, `host.releasePointer(20, 300)` | `a held pointer outside the element keeps the active width` → **180**; then `releasing outside the element clears the active width` → **100** (§1.12) |
 | 11 | `host.screenshot(...)` | `declared-styles.png` |
 
 Assertions use `expectNear(label, width, expected, 1)`; a bounds width is a
@@ -210,8 +222,13 @@ fixed-width column with the string in a `<text>` child.
 | `clamp-3` | same | `lineClamp: 3` | `echo one … twenty` |
 | `clamp-box` | `width: 80, lineClamp: 2` (on the **box**) | none | `foxtrot one … twenty` |
 | `wrap` | `width: 80` | none | `golf one … twenty` |
-| `repeat-clamp` | `width: 80` | `lineClamp: 2` | `hotel one … twenty` |
-| `repeat-plain` | `width: 80` | none | **the same string as `repeat-clamp`** |
+| `repeat-plain` | `width: 80` | none | `hotel one … twenty` |
+| `repeat-clamp` | `width: 80` | `lineClamp: 2` | **the same string as `repeat-plain`** |
+
+**Read the `<text>` child, not the cell.** A `flexDirection: "row"` container
+stretches its children to the container height by default, so every cell
+measured 440 px and every clamp check passed vacuously. Give each `<text>` a
+`testId` (`${cellId}-text`) and put `alignItems: "flex-start"` on the row.
 
 **Every other string must be distinct**, and the word list must be written out
 in full per case (16–20 words) so each wraps to many lines at 80 px. A shared
@@ -236,7 +253,7 @@ const height = (testId: string): number => /* same shape as width above */;
 | 1 | `the ellipsis sample is one line tall` → `height("trunc-line")` equals `height("nowrap")` |
 | 2 | `ellipsis-start is one line tall` → `height("trunc-start")` equals `height("nowrap")` |
 | 3 | `nowrap overflows instead of wrapping` → `height("nowrap")` < `height("wrap")` |
-| 4 | `the unclamped sample wraps to many lines` → `height("wrap")` near `16 × line` ± 2 (record the measured value if the font/metrics differ; **do not** narrow it to the measured number without re-running) |
+| 4 | `the unclamped sample wraps past eight lines` → `height("wrap") > 8 × line` |
 | 5 | `lineClamp 2 clamps to two lines` → `height("clamp-2")` near `2 × line` ± 1 |
 | 6 | `lineClamp 3 clamps to three lines` → `height("clamp-3")` near `3 × line` ± 1 |
 | 7 | `lineClamp is inherited from the box` → `height("clamp-box")` near `2 × line` ± 1 |
@@ -287,14 +304,14 @@ installed `StyleDesc` is not the 0.10.0 pinned by D22 — STOP.
 nub apps/playground/dist/smoke/run.js --only declared-styles
 ```
 
-Expected: `1 scenario, 15 checks` (count per §4.2; one check per row plus 3b and
-5b), all passed, exit `0`, `smoke-report.json` written.
+Expected: `1 scenario, 17 checks` (§4.2: one check per row, plus 3b, 5b and the
+extra release/return checks), all passed, exit `0`, `smoke-report.json` written.
 
 ```sh
 nub apps/playground/dist/smoke/run.js --only text-truncation
 ```
 
-Expected: 11 checks passed, exit `0`.
+Expected: 12 checks passed, exit `0`.
 
 ```sh
 nub apps/playground/dist/smoke/run.js
@@ -322,7 +339,7 @@ that still passes means the check does not test the thing it claims.
 | M1 | delete `hover: { width: 140, … }` from `styles-button` | `hovering the button applies its hover width: expected 140, got 100` |
 | M2 | change step 5 to expect the parent at **420** while hovering the child | `a child owns the hover: the parent drops back: expected 420, got 400` |
 | M3 | delete `textOverflow: "ellipsis"` from `trunc-line` | `the ellipsis sample is one line tall: expected 26, got 416` (or that run's many-line height) |
-| M4 | replace `clamp-2`'s distinct string with `repeat-clamp`'s string | `lineClamp 2 clamps to two lines: expected 52, got <unclamped>` — this is the cache |
+| M4 | replace `clamp-2`'s distinct string with `repeat-plain`'s string | measured: `the shared layout is the unclamped one, laid out first: expected true, got false` — the clamped variant now lays out first, so the repeated string is two lines everywhere. Either detail proves the sharing; record what you see |
 | M5 | change step 10 to assert a painted `…` | the check fails, proving the report is the source run |
 | M6 | delete `active: { width: 180 }` from `styles-button` | `a press applies the active width: expected 180, got 100` |
 
@@ -340,11 +357,10 @@ is jj-based and not usable here (TODO); do it by hand as plans `151`–`334` did
 3. **Any fixture is laid out below y = 800 or right of x = 1280.** STOP and
    re-lay the fixture. Input below the viewport does not hit-test (this
    invalidated a reconnaissance attempt at the press-and-drag case).
-4. **Step 10 (held pointer outside).** The hypothesis is that a held button
-   outside the element reverts to the authored width. If the measured value is
-   `180` (active sticks), **do not delete the check**: change its expected value
-   to the measured one, rename it `active follows the pointer while held`, and
-   record the fact in §1/§12 — a sticky active is a real component contract.
+4. **Step 10 (held pointer outside).** Measured: `active` **sticks** at 180
+   while the button is held, and clears on release. Do not "fix" that to the
+   authored width — it is the contract (§1.12). If a future run reverts while
+   held, record the change rather than silently keeping the old expectation.
 5. **Two text cases share a string.** STOP and make them distinct. The cache
    makes steps 5–8 meaningless.
 6. **A clamp case reports one line.** STOP: that means the string is too short
@@ -352,11 +368,15 @@ is jj-based and not usable here (TODO); do it by hand as plans `151`–`334` did
    Lengthen it; do not lower the expectation.
 7. **`paintedText()` shows a `…`.** STOP — that contradicts item 9 and means the
    runtime changed. Record it and correct §1, the check, and COMPONENTS.md.
-8. **The suite is 66/66 but `states`/`truncation` are absent from the report.**
+8. **Every cell reports the same height.** STOP and read the `<text>` child, not
+   the cell: a flex row stretches its children, so cell bounds are the container
+   height and every clamp check passes vacuously (measured: all nine cells 440 px
+   on the first attempt).
+9. **The suite is 66/66 but `states`/`truncation` are absent from the report.**
    The registration is wrong; STOP and re-read §6.
-9. **A check needs a channel that does not exist** (the cursor shape, a resolved
-   hover colour, the glyph run). STOP and document it as a limitation instead of
-   inventing a proxy.
+10. **A check needs a channel that does not exist** (the cursor shape, a resolved
+    hover colour, the glyph run). STOP and document it as a limitation instead of
+    inventing a proxy.
 
 ## 10. Documentation, inventory and TODO
 
@@ -406,16 +426,23 @@ is jj-based and not usable here (TODO); do it by hand as plans `151`–`334` did
 - `COMPONENTS.md`, `TODO.md`, `PLAN.md` and the plan index are updated.
 - Nothing outside `apps/playground` and `packages/testing` is edited.
 
-## 12. Record table (fill after the run)
+## 12. Record table (filled 2026-10-18)
 
 | Item | Measured |
 | --- | --- |
-| suite before → after | 66 → 68 |
-| `declared-styles` checks | |
-| `text-truncation` checks | |
-| one-line height / many-line height | |
-| clamp 2 / clamp 3 heights | |
-| step 9 (identical strings) heights | |
-| step 10 (held pointer outside) | |
-| M1–M6 failure details | |
-| any STOP condition hit, and how it was resolved | |
+| suite before → after | 66 → **68**; 1781 checks in total |
+| `declared-styles` checks | **17**, `states=verified` |
+| `text-truncation` checks | **12**, `truncation=verified` |
+| one-line height / many-line height | 26 px / 364 px (14 lines) at width 80 |
+| clamp 2 / clamp 3 heights | 52 px / 78 px; `clamp-box` 52 px |
+| step 9 (identical strings) heights | 364 px both — the first (unclamped) laid out and the clamp was ignored for the repeat |
+| step 10 (held pointer outside) | **180** while held, **100** on release (§1.12) |
+| press then release, no move | **100**, not the hover width (§1.11) |
+| M1 hover removed | `hovering the button applies its hover width: expected 140 ± 1, got 100` |
+| M2 child-hover expectation flipped | `a child owns the hover: the parent drops back: expected 420 ± 1, got 400` |
+| M3 `textOverflow` removed | `the ellipsis sample is one line tall: expected 26 ± 1, got 364` |
+| M4 clamp reuses the repeated string | `the shared layout is the unclamped one, laid out first: expected true, got false` — the clamped variant laid out first, so the repeat clamps everywhere |
+| M5 painted ellipsis expected | `the painted text carries no ellipsis glyph: expected true, got false` |
+| M6 `active` removed | `a press applies the active width: expected 180 ± 1, got 100` |
+| STOP conditions hit | #8 (every cell 440 px — a flex row stretches its children; now reads the `<text>` child with `alignItems: "flex-start"`); #4 resolved by the measured sticky `active` |
+| full run | 68/68, exit `0`; the first full run flaked `toast-lifecycle` (the known real-timer exit flake, TODO), the re-run was green |

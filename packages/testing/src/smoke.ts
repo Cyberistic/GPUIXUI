@@ -57,6 +57,8 @@ export const CAPABILITIES = [
   "scale",
   "tier2",
   "replace",
+  "states",
+  "truncation",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);

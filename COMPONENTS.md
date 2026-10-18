@@ -67,8 +67,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | scroller | `message-scroller` | verified |
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
+| states | `declared-styles` | verified |
+| truncation | `text-truncation` | verified |
 
-The suite is **66/66 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **68/68 green here** (exit `0`, `.artifacts/smoke-report.json`,
+1781 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **20/20 green
@@ -180,8 +183,57 @@ mounted under an `overflow: "hidden"` motion container, measure the content
 div, animate the container's height, and re-measure on open and on a width
 change (a fixed-height probe cannot measure text rewrap while collapsed).
 
-`nested-layer-dismiss` is the runtime verdict for the overlay **dismiss stack**,
-and it contradicts the shipped implementation. One key event reaches a nested
+`declared-styles` and `text-truncation` (plan `335`) measure the two style
+families every interactive component and every truncating label relies on, and
+both change how a component must be written.
+
+**Hover and active are real.** A 100 px control with `hover: { width: 140 }`
+measured 100 → **140** on pointer entry and back to **100** on leave; with
+`active: { width: 180 }` it measured **180** between the press and the release.
+The state is applied by the runtime, so plan `020` §2.3's "declare it, never
+script it" rule is sound. Three properties matter:
+
+- **Hover is per element and does not bubble.** A 400 px parent with
+  `hover: { width: 420 }` around a 100 px child with `hover: { width: 120 }`
+  measured **420 / 100** with the pointer over the parent, and **400 / 120** with
+  the pointer over the child: the child's hover **cancels** the parent's. A row,
+  menu item or card that wants a whole-row highlight cannot rely on its own
+  `hover` while the pointer is over a hoverable child; the hover style has to be
+  on that child too (or the row has to track the pointer in JS, which the rule
+  above forbids for the ordinary case).
+- **The style report is the authored style.** While hovered, the runtime still
+  reported the authored `backgroundColor` and `width`, with the hover values
+  nested under `hover`/`active`. `paintedStyle` therefore cannot observe a
+  hover that only changes colour — a hover assertion must use a layout property,
+  as this probe does.
+- **A press does not enter hover, and `active` outlives the pointer.** A
+  synthetic press at a point applies `active` with no prior move, and the release
+  leaves the element at its authored width because hover was never entered;
+  `hover` must be sent first. Pressed and then moved 200 px away with the button
+  still down, the element **stayed active** (180) and cleared only on release —
+  a drag that starts on a button keeps it pressed for the whole gesture.
+
+**Text truncation is geometry, not text.** `textOverflow: "ellipsis"` and
+`"ellipsis-start"` both collapse a long string to **one line** (26 px against
+364 px wrapped) and inherit from an ancestor `div`; `whiteSpace: "nowrap"` alone
+also gives one line, so the two are indistinguishable from bounds — and
+`getPaintedText()` reports the **full source run**, never the ellipsis glyph. A
+truncation test must assert the line count; the glyph needs pixels, which this
+suite does not read (D24). `lineClamp` clamps exactly (`lineClamp: 2` → 52 px,
+`3` → 78 px) and inherits from the box, with no fixed container height needed.
+
+The one trap: **the text layout is shared per `(string, width)` and the key
+ignores `lineClamp`.** The same string at the same width cannot clamp
+differently in one process — the first variant laid out wins and the other
+reports the same line count (measured: a clamped repeat laid out after an
+unclamped one measured the unclamped 364 px). `textOverflow` and `whiteSpace`
+**are** part of the key (the same string painted 26 px and 598 px side by side
+in one run). Consequences: a probe must give every clamp case a distinct string
+(this one uses eighteen distinct strings and a deliberate `repeat-*` pair to
+prove the sharing), and a UI cannot rely on the same label clamping one way in a
+table cell and another way in a tooltip at the same width.
+
+`nested-layer-dismiss` is the runtime verdict for the overlay **dismiss stack**,and it contradicts the shipped implementation. One key event reaches a nested
 layer and its enclosing layer with **a separate payload copy each**
 (`keyHandlers=2`, `keyObjects=2`), so `internal/dismiss-layer.ts`'s
 `WeakSet<EventPayload>` cannot dedupe: one Escape closed **both** layers
@@ -579,7 +631,7 @@ carries an evidenced limitation. The capability evidence lives in
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
-| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. |
+| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Truncation (`text-truncation`, plan `335`):** `truncate` is measured — `textOverflow: "ellipsis"` collapses to **one line** (26 px against 364 px wrapped), and the truncated string is still reported in full by `getPaintedText()`, so the ellipsis glyph itself is not assertable. `clamp` is measured — `lineClamp` clips to exactly N lines (2 → 52 px, 3 → 78 px) and works on a width-constrained box with no fixed height. **Caveat:** the runtime shares text layout per `(string, width)` and the key ignores `lineClamp`, so two identical strings at one width clamp together (first laid out wins); and `whiteSpace: "nowrap"` alone has the same geometry as `ellipsis`. |
 | Icons | wip | yes | [icon](packages/icons/docs/icon.mdx) · icons | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. |
 | Separators | wip | yes | [separator](packages/primitives/docs/separator.mdx) · layout | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
 | Spacers | wip | yes | [spacer](packages/primitives/docs/spacer.mdx) · layout | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |

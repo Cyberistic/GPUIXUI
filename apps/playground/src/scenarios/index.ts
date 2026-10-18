@@ -80,6 +80,7 @@ import { scaleCostScenario } from "./scale.js";
 import { tier2DialogScenario } from "./tier2-dialog.js";
 import { tier2MenuScenario } from "./tier2-menu.js";
 import { tier2ToastScenario } from "./tier2-toast.js";
+import { declaredStylesScenario, textTruncationScenario } from "./styles.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -104,7 +105,7 @@ export const CORE_CAPABILITIES = [
   "tier2",
 ] as const;
 
-/** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`, `164`). */
+/** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`, `164`, `335`). */
 export const PROBE_CAPABILITIES = [
   "table",
   "tree",
@@ -125,6 +126,8 @@ export const PROBE_CAPABILITIES = [
   "scroller",
   "scale",
   "replace",
+  "states",
+  "truncation",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -195,6 +198,8 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tier2DialogScenario,
   tier2MenuScenario,
   tier2ToastScenario,
+  declaredStylesScenario,
+  textTruncationScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);
