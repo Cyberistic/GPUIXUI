@@ -5,6 +5,14 @@
 
 **Depends on:** `100`, `140`, `176`, `189`, `190`, `344`.
 
+> **Amended 2026-10-18 (plan `390`).** The click part of this finding is
+> **window/host-state dependent**: the same clean code measured
+> `innerFocus=0 outerFocus=0` at 15:03/15:10 and `innerFocus=1 outerFocus=1` from
+> 15:25 on this host, and the click-then-arrow result moved with it. Key delivery
+> and the `autoFocus` distinction held in every state. The live suite now asserts
+> that a click focuses the child and keeps the counters in the readout only; see
+> plan `390` §6 for the measurements and the corrected Tabs/InlineEdit rows.
+
 ## 1. Why this plan exists
 
 Plan `344`'s live Tier 2 catalogue surfaced a difference the offscreen

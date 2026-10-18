@@ -50,6 +50,7 @@ import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
+import { commandPaletteScenario } from "../scenarios/command-palette.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { queryBuilderScenario } from "../scenarios/query-builder.js";
@@ -2093,10 +2094,10 @@ const keyRouting: LiveScenario = {
         yield* textOf(ctx, "key-routing-readout"),
         "window=3",
       );
-      yield* ctx.expectContains(
-        "a live click focuses natively without running React's onFocus",
-        yield* textOf(ctx, "key-routing-readout"),
-        "innerFocus=0 outerFocus=0",
+      yield* ctx.expectEqual(
+        "clicking the child focuses it",
+        yield* focusedOf(ctx),
+        "key-inner",
       );
 
       yield* ctx.host.key("cmd-k");
@@ -2114,6 +2115,298 @@ const keyRouting: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${keyRouting.id}.png`);
+    }),
+};
+
+/** Waits for the palette readout, then asserts it — a timed-out wait never passes. */
+const paletteReadoutHas = (ctx: LiveContext, label: string, needle: string) =>
+  Effect.gen(function* () {
+    yield* waitForText(ctx, "palette-readout", needle);
+    yield* ctx.expectContains(
+      label,
+      yield* textOf(ctx, "palette-readout"),
+      needle,
+    );
+  });
+
+const commandPalette: LiveScenario = {
+  id: "live-command-palette",
+  title:
+    "Live command palette: the window chord, one focus owner and dismissal",
+  capability: "command",
+  view: commandPaletteScenario.view,
+  ready: "palette-page",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* paletteReadoutHas(ctx, "the palette starts closed", "open=false");
+
+      // 1. The window chord, with nothing focused yet.
+      yield* ctx.host.key("cmd-k");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "the window shortcut opens the palette with nothing focused",
+        "open=true",
+      );
+      yield* paletteReadoutHas(
+        ctx,
+        "the shortcut records its reason",
+        "last=cmd-k",
+      );
+      yield* paletteReadoutHas(ctx, "the shortcut resets the query", "query=-");
+      yield* waitForFocus(ctx, "palette-input");
+      yield* ctx.expectContains(
+        "the app-level handler receives the chord",
+        yield* textOf(ctx, "palette-readout"),
+        "window=k",
+      );
+      yield* ctx.expectEqual(
+        "opening the palette focuses its input",
+        yield* focusedOf(ctx),
+        "palette-input",
+      );
+      const veil = yield* boxOf(ctx, "palette-veil");
+      yield* ctx.expectNear(
+        "the veil is the window wide",
+        veil.width,
+        WINDOW.width,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the veil is the window tall",
+        veil.height,
+        WINDOW.height,
+        2,
+      );
+
+      // 2. Typing filters, and the window handler still sees the keys.
+      yield* ctx.host.key("s");
+      yield* ctx.host.key("e");
+      yield* ctx.host.key("t");
+      yield* settle;
+      yield* paletteReadoutHas(ctx, "typing filters the palette", "query=set");
+      yield* ctx.expectContains(
+        "the app-level handler sees typing in the field",
+        yield* textOf(ctx, "palette-readout"),
+        "window=t",
+      );
+      yield* ctx.expectEqual(
+        "the filter leaves exactly the matching command",
+        yield* textOf(ctx, "palette-list"),
+        "Open settings",
+      );
+      yield* ctx.expectEqual(
+        "a filtered-out command is not painted",
+        Str.includes("New file")(Arr.join(yield* ctx.host.paintedText(), "\n")),
+        false,
+      );
+
+      // 3. No match: the empty state, and Enter commits nothing.
+      yield* ctx.host.key("z");
+      yield* settle;
+      yield* waitForText(ctx, "palette-empty", "No commands");
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Enter with no match leaves the palette open",
+        yield* textOf(ctx, "palette-readout"),
+        "open=true",
+      );
+      yield* ctx.expectContains(
+        "Enter with no match commits nothing",
+        yield* textOf(ctx, "palette-readout"),
+        "committed=none",
+      );
+
+      // 4. A fresh open resets the query (no live Backspace dependency).
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* paletteReadoutHas(ctx, "Escape closes the palette", "open=false");
+      yield* paletteReadoutHas(ctx, "Escape is recorded", "last=escape");
+      yield* ctx.host.key("cmd-k");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "the chord reopens the palette",
+        "open=true",
+      );
+      yield* paletteReadoutHas(ctx, "a fresh open resets the query", "query=-");
+
+      // 5. Arrows move the active row, not focus.
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "ArrowDown moves the active row",
+        "active=1",
+      );
+      yield* paletteReadoutHas(
+        ctx,
+        "the arrow is delivered as key down",
+        "input=d:down",
+      );
+      yield* ctx.expectEqual(
+        "the arrows keep focus in the input",
+        yield* focusedOf(ctx),
+        "palette-input",
+      );
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "ArrowDown wraps to the first row",
+        "active=0",
+      );
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "ArrowUp wraps to the last row",
+        "active=2",
+      );
+
+      // 6. Commit: Enter arrives as the field's own submit.
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "Enter commits the active command",
+        "committed=Toggle sidebar",
+      );
+      yield* paletteReadoutHas(
+        ctx,
+        "committing closes the palette",
+        "open=false",
+      );
+      yield* paletteReadoutHas(
+        ctx,
+        "the commit reason is recorded",
+        "last=commit:toggle-sidebar",
+      );
+      yield* ctx.expectEqual(
+        "the closed palette is unmounted",
+        Option.isNone(
+          Option.fromNullishOr(yield* ctx.host.bounds("palette-list")),
+        ),
+        true,
+      );
+
+      // 7. The click path, then Escape returns focus to the trigger.
+      yield* ctx.host.click("palette-trigger");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "the trigger click opens the palette",
+        "open=true",
+      );
+      yield* paletteReadoutHas(
+        ctx,
+        "the trigger click records its reason",
+        "last=button",
+      );
+      yield* waitForFocus(ctx, "palette-input");
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "the second Escape closes the palette",
+        "open=false",
+      );
+      yield* ctx.expectContains(
+        "the window handler also sees Escape",
+        yield* textOf(ctx, "palette-readout"),
+        "window=escape",
+      );
+      yield* waitForFocus(ctx, "palette-trigger");
+      yield* ctx.expectEqual(
+        "Escape returns focus to the trigger",
+        yield* focusedOf(ctx),
+        "palette-trigger",
+      );
+
+      // 8. A chord while typing must not type.
+      yield* ctx.host.key("cmd-k");
+      yield* settle;
+      yield* paletteReadoutHas(ctx, "the chord reopens it", "open=true");
+      yield* ctx.host.key("o");
+      yield* ctx.host.key("cmd-k");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "a chord does not type into the field",
+        "query=o",
+      );
+      yield* ctx.expectContains(
+        "the window handler sees a chord while the field is focused",
+        yield* textOf(ctx, "palette-readout"),
+        "window=k",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "the chord-opened palette closes on Escape",
+        "open=false",
+      );
+      yield* waitForFocus(ctx, "palette-trigger");
+      yield* ctx.expectEqual(
+        "the second Escape returns focus to the trigger",
+        yield* focusedOf(ctx),
+        "palette-trigger",
+      );
+
+      // 9. The veil takes an outside press; the surface does not.
+      yield* ctx.host.click("palette-trigger");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "the palette is open before the outside press",
+        "open=true",
+      );
+      yield* ctx.host.click("palette-veil");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "an outside press dismisses the palette",
+        "open=false",
+      );
+      yield* paletteReadoutHas(
+        ctx,
+        "the outside dismissal is recorded",
+        "last=outside",
+      );
+      yield* ctx.expectEqual(
+        "the dismissed overlay is unmounted",
+        Option.isNone(
+          Option.fromNullishOr(yield* ctx.host.bounds("palette-veil")),
+        ),
+        true,
+      );
+
+      // 10. A row click lands above the veil.
+      yield* ctx.host.click("palette-trigger");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "the palette is open before the row click",
+        "open=true",
+      );
+      yield* ctx.host.click("palette-item-new-file");
+      yield* settle;
+      yield* paletteReadoutHas(
+        ctx,
+        "a row click lands above the veil",
+        "committed=New file",
+      );
+      yield* paletteReadoutHas(
+        ctx,
+        "the row click closes the palette",
+        "open=false",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${commandPalette.id}.png`);
     }),
 };
 
@@ -2239,18 +2532,6 @@ const tier2Navigation: LiveScenario = {
         true,
       );
 
-      yield* ctx.host.key("right");
-      yield* settle;
-      // Measured: a live click focuses the trigger natively but does not run
-      // React's `onFocus`, so the tab's roving `active` is still empty and the
-      // arrow starts from the first enabled tab. The headless suite clicks and
-      // asserts the next tab, so the difference is real. Recorded as a
-      // components defect alongside the missing key bubbling.
-      yield* ctx.expectContains(
-        "an arrow after a live click restarts at the first tab (measured limit)",
-        yield* textOf(ctx, "tier2-navigation-readout"),
-        "tab=overview",
-      );
       yield* ctx.host.click("tab-settings");
       yield* settle;
       yield* waitForText(ctx, "tier2-navigation-readout", "tab=settings");
@@ -4757,6 +5038,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Forms,
   tier2Editing,
   tier2Flow,
+  commandPalette,
   replace,
   inspector,
   dataGridColumns,

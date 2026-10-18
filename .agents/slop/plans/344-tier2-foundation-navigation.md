@@ -269,16 +269,22 @@ failures turned out to have different causes:
    With a `settle` after the click (the runner's own rule) `Down` moves focus,
    skips the disabled row and `Enter` selects — the headless contract holds in a
    window. `live-tier2-foundation` gained those three checks.
-2. **Tabs is a real component issue.** A live click focuses a trigger natively
-   but does **not** run React's `onFocus` (plan `345` measured the same on two
-   plain divs: `innerFocus=0`, `outerFocus=0` after clicks). `Tabs` sets its
-   roving `active` only in `onFocus`, so after a click an arrow starts from the
-   first enabled tab. The headless suite focuses the trigger explicitly, so it
-   never covered click-then-arrow.
+2. **Tabs was a real component issue in the state measured that day.** A live
+   click focused a trigger natively but did **not** run React's `onFocus` (plan
+   `345` measured `innerFocus=0`, `outerFocus=0` after clicks). `Tabs` sets its
+   roving `active` only in `onFocus`, so after a click an arrow started from the
+   first enabled tab. **Amended 2026-10-18 by plan `390`:** the click's
+   `onFocus` delivery is window/host-state dependent — the same clean code later
+   read `innerFocus=1` and the arrow started from the clicked tab — so the live
+   scenario no longer asserts this characterization; setting `active` on click
+   remains the robust fix and the cross-team row is a re-verify. The headless
+   suite focuses the trigger explicitly, so it never covered click-then-arrow.
 
-The live scenario asserts the measured Tabs behaviour as a characterization
-check; it must be flipped to the expected next-tab assertion when `Tabs` sets
-`active` on click. Recorded in `TODO.md` and the `Tabs` row of `COMPONENTS.md`.
+The live scenario asserted the measured Tabs behaviour as a characterization
+check; plan `390` removed it because the measurement flips with window state.
+The expected-next-tab assertion still belongs to `components` (set `active` on
+click, then add a headless click-then-arrow test). Recorded in `TODO.md` and the
+`Tabs` row of `COMPONENTS.md`.
 Plan `345` also established the positive rule: a key reaches the focused
 element, bubbles through every ancestor, and then reaches the window handler —
 so an ancestor handler is a valid component path.

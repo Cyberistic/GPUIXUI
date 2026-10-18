@@ -3,10 +3,14 @@
  *
  * Plan `344` found that the live window behaves differently from the offscreen
  * `TestRenderer`: a focused List row received a key while the List root's
- * `onKeyDown` never ran, and a live click focused a tab without running React's
- * `onFocus`. This probe isolates the rule with three independent handlers on one
- * tree — the focused child, its ancestor, and the app-level window handler — so
- * a component author can choose a path that works.
+ * `onKeyDown` never ran. This probe isolates the rule with three independent
+ * handlers on one tree — the focused child, its ancestor, and the app-level
+ * window handler — so a component author can choose a path that works.
+ *
+ * Plan `390` corrected the companion observation: React's `onFocus` for a live
+ * click is **window-state dependent** (measured `0` and `1` for the same code on
+ * the same host), so the scenario asserts focus movement and key delivery, not
+ * the counter. `autoFocus` still does not dispatch `onFocus` in either state.
  *
  * The counters are the observation: a readout, never a screenshot. Focus is
  * read from the renderer the runner owns (`AsyncSmokeHost.focused`), not from

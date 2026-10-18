@@ -51,7 +51,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | docking | `docking-layout` | verified |
 | float | `float-tab`, `live-float` | verified |
 | preview | `preview-card`, `live-preview` | verified |
-| command | `command-palette` | verified |
+| command | `command-palette`, `live-command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse`, `collapsible-height`, `live-motion` | verified |
@@ -88,17 +88,22 @@ The suite is **90/90 green here** (exit `0`, `.artifacts/smoke-report.json`,
 3088 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **40/40 green
-here** (762 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`) and is **41/41 green
+here** (839 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
-`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `chrome`, `replace`, `editor`, `data-toolbar`, `query` and `cell-editing` are confirmed there too
+`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command` and `cell-editing` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
 `onScroll` delta, a paced divider drag resizes a live split (`320 → 400`), a
 paced tab drag onto a pane edge splits it (`panel-1=notes@notes`), a virtual
 row is hit-testable and its list scrolls while keeping the selection, and the
-**shipped** `Button`/`Toggle` run (`live-primitives`). **`live-focus` (plan
+**shipped** `Button`/`Toggle` run (`live-primitives`). **`live-command-palette`
+(plan `389`)** drives the Tier 4 command surface end to end: `cmd-k` opens it
+with nothing focused, the veil is the full window, typing filters while the
+window handler still sees the keys, arrows move the row and keep focus in the
+input, Enter commits through `onSubmit`, and Escape, a veil press and a row
+click dismiss with the recorded reason. **`live-focus` (plan
 `190`)** proves focus in the window: it enters the modal, Tab walks
 `a → b → open-popover → close` and wraps back to the content, Shift-Tab is the
 reverse, Escape returns focus to the trigger, and a nested popover's Escape
@@ -491,6 +496,17 @@ an unmatched query paints `No commands` and Enter commits nothing. The
 limitation: there is no `aria-activedescendant`, so the visual selection is
 not announced as focus — `aria-selected` is the only AT-visible form.
 
+**Live (`live-command-palette`, plan `389`):** the whole path holds in a real
+window. `cmd-k` opens the palette with **nothing focused** (`last=cmd-k`,
+`window=k`), the veil paints at the window's exact size, typing filters while the
+window handler still receives each letter, arrows move the row while native
+focus stays in the input, Enter commits through the field's `onSubmit`, and
+Escape, the veil press and a row click each close it with `last=escape`,
+`last=outside` and `commit:new-file`. The first open (by `cmd-k`) had no prior
+focus owner, so no focus return is expected there; a click-opened palette
+returns focus to its trigger. The live pass cannot see colour or the a11y dump
+(plan `197`), so those stay headless.
+
 `workspace-panes` is the runtime verdict for a **tabbed panel body** and the
 composition it lives in. The decisive finding: **`display: "none"` is a no-op**
 — the binding applies `display` only for `"flex"`/`"grid"`, so a pane hidden that
@@ -785,16 +801,21 @@ glyphs, carousel, colour and navigation; live `27 → 29`, checks `458 → 506`,
 exit `0`, two screenshots. **Measured live facts (plan `347` §8.2):** a swapped
 native editor only takes text from a **coordinate click** — the automation
 locator resolves the pre-swap node for a `testId` that changes element type; and
-React's `onBlur` does **not** run for a native focus change in a window, so
-`InlineEdit`'s blur-commit is headless-only while Enter and Escape work live.
+React's `onBlur` was measured **not** to run for a native focus change in a
+window on 2026-10-18, so `InlineEdit`'s blur-commit is headless-only — but see
+the plan-390 note below: the sibling `onFocus` count is window-state dependent,
+so the blur claim is a **re-verify**.
 They also measured the
-live focus rule (plan `345`):
+live focus rule (plan `345`, corrected by plan `390`):
 a key reaches the focused element, bubbles through every ancestor and then the
-window handler; `autoFocus` and a click focus natively **without running React's
-`onFocus`**. `live-key-routing` isolates it (23 checks), including a live
-`cmd-k` chord, and wires `useWindowKey` into the live runner, so app-level
-shortcuts now have live coverage too. The Tabs arrow after a click is the one
-remaining live-only defect (see the Tabs row).
+window handler; `autoFocus` focuses natively without running React's `onFocus`.
+A **click's** `onFocus` delivery is window-state dependent — the same code read
+`innerFocus=0` and `innerFocus=1` on this host hours apart — so the live suite
+asserts that the click focuses the child, not the counter. `live-key-routing`
+isolates the delivery (22 checks), including a live `cmd-k` chord, and wires
+`useWindowKey` into the live runner, so app-level shortcuts now have live
+coverage too. React's `onBlur` for a live focus change is likely the same
+question; the `InlineEdit` blur commit needs re-verification (cross-team row).
 
 ## Tier 2 — composition and feedback
 
@@ -814,7 +835,7 @@ remaining live-only defect (see the Tabs row).
 | Dropdown menus | done | partial | anchored `FloatingLayer` surface with a shared row/highlight core; keyboard opens (`Enter`/`Space`, `ArrowDown`, `ArrowUp`) land on the first/last enabled row, arrow/Home/End wrap and skip disabled rows, Enter activates and restores focus, checkbox and destructive rows; type-ahead jumps by a case-insensitive 500 ms prefix, cycles on a repeated letter and skips disabled rows; one level of submenus opens by click, hover, `Enter`/`Space` or `ArrowRight`, positions at the row's right edge, keeps arrows and type-ahead inside, runs a pointer-clicked row once, closes one level on `Escape`/`ArrowLeft` and both on an outside press; the root surface flips off its trigger when snapping would cover it and `align="center"` is measured rather than the runtime's containing-block centre; 35 native behaviour tests, both themes. No deeper nesting is tested, submenus only open right and have no `aria-haspopup` in 0.10.0, and the checkbox row uses `aria-selected` instead of `aria-checked` |
 | Context menus | done | partial | pointer-positioned `anchored` surface over the shared rows and submenu parts; 17 native behaviour tests (right click opens, lands within 12px of the pointer, select runs once, second right click moves it, `Shift+F10` opens at the trigger's bottom-left with focus in the menu, Escape returns focus, type-ahead jumps to a row, submenus open on `ArrowRight` and close one level on `Escape`/`ArrowLeft`, a pointer-clicked submenu row runs once). 0.10.0 has no `onContextMenu` — `onAuxClick` + `isRightClick`; no `aria-haspopup` and no portal |
 | Command menus | done | partial | compound parts (`CommandMenu`, `CommandMenuInput`, `CommandMenuList`, `CommandMenuItem`, `CommandMenuEmpty`) over a dialog-hosted searchable palette composing Dialog and `menu/logic.ts`; default matching is a case-insensitive subsequence (initials match) ranked within each declared group so headings never repeat, with a custom `filter` keeping declaration order; input keeps focus while the highlight moves; 14 native behaviour tests + 12 fuzzy logic tests. Per-group rather than global ranking, no recent-command memory, `aria-activedescendant` unavailable, input is the host element until primitives lands |
-| Tabs | done | partial | roving tab stop on the selected trigger, arrow wrap skipping disabled tabs, Home/End, automatic and manual activation, and both axes (`orientation` switches Down/Up movement and the row/column layout); caller `ref` and `onBlur` are composed with the internal ones; 14 native behaviour tests, both themes. **Live (plans `344`, `345`):** a click focuses a trigger natively but does **not** run React's `onFocus` (`live-key-routing` measured `innerFocus=0 outerFocus=0` on plain divs), and `Tabs` sets `active` only in `onFocus`, so an arrow after a click restarts at the first enabled tab. The headless suite focuses explicitly and misses the path. A key itself does bubble through every ancestor, so the fix is to set `active` on click. 0.10.0 has no `aria-orientation`/`aria-controls`, so the panel is named by its value |
+| Tabs | done | partial | roving tab stop on the selected trigger, arrow wrap skipping disabled tabs, Home/End, automatic and manual activation, and both axes (`orientation` switches Down/Up movement and the row/column layout); caller `ref` and `onBlur` are composed with the internal ones; 14 native behaviour tests, both themes. **Live (plans `344`, `345`, `390`):** a click focuses a trigger natively. Whether React's `onFocus` also runs is **window/host-state dependent** — the same clean code measured `innerFocus=0` at 15:03/15:10 and `innerFocus=1` from 15:25 on this host, and the click-then-arrow result followed it (`tab=overview` vs `tab=settings`). `Tabs` sets `active` only in `onFocus`, so **set `active` in the click handler as well** (the same `focusRow` path `List` uses); the live suite no longer asserts the old defect, and the cross-team row is a re-verify. The headless suite focuses explicitly and does not cover click-then-arrow. 0.10.0 has no `aria-orientation`/`aria-controls`, so the panel is named by its value |
 | Accordions | done | yes | single (with `collapsible`) and multiple modes over a tagged-union state; divider order, disabled sections, glyph indicator; arrows/Home/End move focus between enabled headers (wrapping, without toggling), caller `ref` composed on the header; 13 native behaviour tests + 15 transition tests. No height animation; no `transform` for a rotating chevron |
 | Collapsible sections | done | partial | trigger with `aria-expanded`, content unmounts while closed; 4 native behaviour tests. Mounts instantly: 0.10.0's motion needs a numeric height and an auto-height reveal needs a measured first paint |
 | Breadcrumbs | done | partial | declarative trail with `maxItems` collapsing the middle (first + … + tail), separators follow their item; 5 native behaviour tests + 7 collapse tests. No `aria-current` in 0.10.0, so the current page is text and colour |
@@ -874,7 +895,7 @@ remaining live-only defect (see the Tabs row).
 | Workspace layouts | todo | yes (probe) | Composition + persistence. **Measured (`workspace-restore`)**: a keyed remount loses the layout; app-owned JSON restores split width, tab lists, active tab and the virtual-list anchor exactly. No renderer storage, and native focus is not restored. **Composition (`workspace-panes`)**: a hidden pane keeps its own state and anchor; a resized pane re-windows its list (`5 → 2` painted rows at `240 → 180`) and keeps the anchor; a nested scroller needs the `pointerEvents: "auto"` wheel guard. **Live (`live-restore`, plan `339`):** the same layout, tab and anchor survive in a real window, and the painted pane width (400) agrees with the snapshot within 2 px. |
 | Persistent panel state | todo | yes (probe) | App-owned serialisation; no renderer storage. The format `workspace-restore` measured: `{ split, tabsA, tabsB, active, anchorIndex, anchorOffset }`, decoded with `Schema` at the boundary; persist `getListScrollTop`'s index/offset (never `getScrollOffset`, which saturates) and apply it with `scrollToItem(listId, index, offset)` on mount. **Recursive layouts (`docking-layout`)**: the tree owns every split size; `encodeDock`/`decodeDock` are the JSON boundary (`Schema.fromJsonString`), and a restore is a **keyed remount** so each `SplitPane` re-reads `initial` — the live instance's state is not mutated. A corrupt snapshot decodes to `None` and is reported, never thrown. **The anchor is live-readable** (`live-table`, plan `197`) **and the restore is proven in a real window** (`live-restore`, plan `339`): a paced drag paints the split 320 → 400, save → reset → restore re-applies the split, the active tab and the anchor `[120,16]` exactly, row 120 paints and row 0 does not, native focus is **not** restored, and the restored list still takes a click. |
 | Keyboard navigation | todo | yes (probe) | Real native focus handles (verified); `roving-focus` measured programmatic focus between passive rows, key delivery after the move, and focus surviving a virtual window scroll. The roving-tabindex model is ours. **`live-focus` (plan `190`)** proves the modal's Tab/Shift-Tab containment and focus return in a real window, not only in `TestRenderer`. |
-| Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. |
+| Command palette | todo | partial (probe) | `<input>` + `FloatingLayer` + `<virtual-list>`. Variant merged here: Spotlight (adabraka `spotlight`). **Measured (`command-palette`, plan `176`):** a non-modal overlay keeps **one** focus owner — the input stays focused while arrows move a visual active row (no `aria-activedescendant`; the row's only AT form is `aria-selected` on a `ListBoxOption`, inside a `Dialog`) — arrows arrive as key **down** and Enter as `onSubmit`; the app-level window handler sees letters, arrows and Escape while the field is focused but **not Enter or Backspace**, so commit/dismiss must stay in the field and the window handler is a chord layer only; `cmd-k` reaches it without typing; the scrim is a **sibling** under the surface, so row clicks land above it and a veil click dismisses; focus is captured in the open handler and restored to the trigger on close. **Live (plan `389`):** the same path runs in a real window — `cmd-k` with nothing focused, a window-sized veil, typing while the window handler sees every letter, arrows that keep focus in the input, `onSubmit` commit, Escape/veil/row dismissal and the focus return from a click-opened palette. 50 headless checks, 80 live checks. |
 | Application menus | todo | unsupported (in-window only) | **The published 0.10.0 has no menu/tray API**: `@gpuix/native`'s `NativeRenderer` exposes only window controls (`setWindowTitle`, `activateWindow`, `minimizeWindow`, `zoomWindow`, `toggleFullscreen`), and no `menu`/`Menu`/`tray` symbol exists in the native or React types. An application menu must therefore be an **in-window** surface opened by a window key — the path `command-palette` measures end to end (`cmd-k`, Escape delivery, focus return). A true macOS menu bar would need a renderer API that is not in this version. |
 | Status bars | todo | yes (probe) | `div` + `<text>`. **`app-chrome` (plan `350`):** a 24 px `flexShrink: 0` bar at a 420 px shell's bottom edge stays exactly there while a 200 px sidebar scroller and a 440 px `<virtual-list>` scroll independently (`-100` and `-240`); the bar reports the active pane, the list line (`getListScrollTop` read in `onVisibleRange`), the selection, the action count and both offsets; `role="status"` is an AccessKit `Status`. **Live (`live-app-chrome`):** both wheels and the pinned `y` hold in a real window. |
 | Toolbars | todo | yes (probe) | `div` + Button groups. **`app-chrome`:** a 380 px `overflowX: "scroll"` toolbar over a 720 px item row holds a breadcrumb `Navigation`, three 44 px actions, a 1 px separator and a 300 px spacer. The trailing `sync` action starts past the viewport but **keeps painted bounds**; one `renderer.scrollTo(-340)` moves it by exactly `-340` and it then hit-tests and runs once. The primary actions stay visible at rest because the spacer follows them. Measured lesson: a flex row of `flexShrink: 0` items overflows its declared width, so a pan must cover the item's real layout x, not `viewport − rowWidth`. |
