@@ -1,10 +1,5 @@
 import { themeColors } from "./docs-theme";
-import {
-  BRAND_ASSETS,
-  MANIFEST_PATH,
-  SITE_DESCRIPTION,
-  SITE_NAME,
-} from "./site-head";
+import { BRAND_ASSETS, SITE_DESCRIPTION, SITE_NAME } from "./site-head";
 
 /**
  * The install metadata document (plan 516).
@@ -73,5 +68,3 @@ export const manifest = (): SiteManifest => ({
 /** The document body a handler returns; a trailing newline keeps diffs clean. */
 export const renderManifest = (): string =>
   `${JSON.stringify(manifest(), null, 2)}\n`;
-
-export { MANIFEST_PATH };
