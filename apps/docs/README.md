@@ -21,6 +21,7 @@ nub run --filter docs test          # registry, IA, search, theme and preview te
 nub run --filter docs smoke:build   # build, serve and crawl the production output
 nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
 nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
+nub run --filter docs smoke:keyboard # skip link, focus ring and Enter in a real browser
 nub run --filter docs smoke:responsive # 390 px: no sideways scroll and no clipped column
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run --filter docs api:values    # regenerate the generated Values API index
@@ -238,10 +239,17 @@ props types a component documents are indexed too, so `ButtonProps` and
 name, so `DialogTitle` reaches Dialogs (plan 481). A props type also **names its
 component**: `componentSymbols` strips the `Props` suffix and scores the stem
 like a title, so `Spinner` reaches the *Loading indicators* page first even
-though that title never contains the word (plan 500). A blank query returns
-`[]`, and one page is listed once. `src/lib/search.test.ts` guards all five
-rules (plans 431 and 500), and `smoke:build` asserts the `Spinner` symbol
-against the production index.
+though that title never contains the word (plan 500). The generated token
+catalogue is indexed the same way (plan 504): every colour role, type role,
+scale token and platform family has a document derived from `@gpuixui/tokens`,
+so `destructiveSoft` reaches the colour table and `spacing.md` reaches the scale
+table instead of returning nothing or component prose. An exact, distinctive
+token name (camelCase or dotted) is promoted like a component title; a plain word
+such as `input` or `label` is not, so the component page keeps the first result,
+and a pasted theme value finds the role that owns it. A blank query returns
+`[]`, and one page is listed once. `src/lib/search.test.ts` and
+`src/lib/token-search.test.ts` guard these rules, and `smoke:build` asserts the
+`Spinner` symbol and a token role against the production index.
 
 Generated prop-table rows (`#type-table-…`) are **not** returned as results
 (plan 479): every table repeats `aria-label`, `style` and `children`, so those

@@ -1,84 +1,10 @@
+import { darkTheme, lightTheme } from "@gpuixui/tokens";
 import {
-  darkTheme,
-  elevationShadow,
-  lightTheme,
-  type ElevationLevel,
-  type Theme,
-} from "@gpuixui/tokens";
-
-interface TokenRow {
-  readonly name: string;
-  readonly value: string;
-}
-
-interface ScaleGroup {
-  readonly id: string;
-  readonly title: string;
-  readonly rows: ReadonlyArray<TokenRow>;
-}
-
-const px = (value: number): string => `${value}px`;
-
-const numericRows = (
-  entries: ReadonlyArray<readonly [string, number]>,
-): ReadonlyArray<TokenRow> =>
-  entries.map(([name, value]) => ({ name, value: px(value) }));
-
-const controlSizes = ["sm", "md", "lg"] as const;
-
-const densityRows = (theme: Theme): ReadonlyArray<TokenRow> => [
-  ...controlSizes.map((size) => ({
-    name: `controlHeight.${size}`,
-    value: px(theme.density.controlHeight[size]),
-  })),
-  ...controlSizes.map((size) => ({
-    name: `controlPaddingX.${size}`,
-    value: px(theme.density.controlPaddingX[size]),
-  })),
-  { name: "rowHeight", value: px(theme.density.rowHeight) },
-];
-
-const scaleGroups = (theme: Theme): ReadonlyArray<ScaleGroup> => [
-  {
-    id: "spacing",
-    title: "Spacing",
-    rows: numericRows(Object.entries(theme.spacing)),
-  },
-  {
-    id: "radius",
-    title: "Radius",
-    rows: numericRows(Object.entries(theme.radius)),
-  },
-  {
-    id: "borderWidth",
-    title: "Border width",
-    rows: numericRows(Object.entries(theme.borderWidth)),
-  },
-  {
-    id: "iconSize",
-    title: "Icon size",
-    rows: numericRows(Object.entries(theme.iconSize)),
-  },
-  {
-    id: "density",
-    title: `Density (${theme.density.name})`,
-    rows: densityRows(theme),
-  },
-];
-
-const elevationLevels = [
-  "sm",
-  "md",
-  "lg",
-  "overlay",
-] as const satisfies ReadonlyArray<ElevationLevel>;
-
-const shadow = (theme: Theme, level: ElevationLevel): string => {
-  const value = elevationShadow(theme, level);
-  if (value === undefined) return "none (reserved)";
-  const { offsetX, offsetY, blurRadius, spreadRadius, color } = value;
-  return `${offsetX}px ${offsetY}px ${blurRadius}px ${spreadRadius}px ${color}`;
-};
+  elevationLevels,
+  scaleGroups,
+  shadow,
+  type ScaleGroup,
+} from "@/lib/token-catalogue";
 
 const cell = "py-1.5 pr-4 font-mono text-xs";
 const head = "py-2 pr-4 text-left font-medium";

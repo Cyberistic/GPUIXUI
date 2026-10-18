@@ -1,29 +1,5 @@
-import {
-  platformTypes,
-  typography,
-  type PlatformName,
-  type TextRole,
-} from "@gpuixui/tokens";
-
-const textRoles: ReadonlyArray<TextRole> = [
-  "display",
-  "h1",
-  "h2",
-  "h3",
-  "body",
-  "bodyStrong",
-  "label",
-  "caption",
-  "code",
-  "codeBlock",
-];
-
-const platforms: ReadonlyArray<PlatformName> = [
-  "darwin",
-  "linux",
-  "win32",
-  "default",
-];
+import { platformTypes, typography } from "@gpuixui/tokens";
+import { platformNames, textRoles } from "@/lib/token-catalogue";
 
 const mono = "font-mono text-xs";
 
@@ -96,7 +72,7 @@ export function PlatformTypes() {
           </tr>
         </thead>
         <tbody>
-          {platforms.map((platform) => {
+          {platformNames.map((platform) => {
             const type = platformTypes[platform];
             return (
               <tr

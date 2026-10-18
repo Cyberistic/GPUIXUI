@@ -379,6 +379,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "an exported symbol that is not the record's title",
     },
+    {
+      query: "destructiveSoft",
+      expected: "/docs/theming",
+      first: true,
+      what: "a token role from the generated token index",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(
