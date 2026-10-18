@@ -11,8 +11,9 @@ import { windowsPlatformStyle } from "../windows.js";
  * shadow, radial/conic gradient or clip-path, so the layers are solid tinted
  * surfaces, not translucency. Windows 7 shipped no dark mode: the dark half
  * carries the Windows dark palette and is documented as an interpretation. The
- * values are held to `themeContrastFailures` in both modes by
- * `platform-recipes.test.ts`.
+ * link is a step darker so it keeps the secondary floor through the selection
+ * wash (plan 528). The values are held to `themeContrastFailures` in both modes
+ * by `platform-recipes.test.ts`.
  */
 export const aeroPlatformRecipe = {
   types: { label: "Windows 7", sans: systemUiFont, mono: "Consolas" },
@@ -45,7 +46,7 @@ export const aeroPlatformRecipe = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#0F55A3",
       primaryActive: "#0B478A",
-      primaryText: "#0F55A3",
+      primaryText: "#0C4A8C",
       accent: "#D8EAFB",
       accentForeground: "#0B478A",
       accentHover: "#CFE5FA",

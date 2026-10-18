@@ -30,7 +30,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * to inheritance, so applying this style over another platform's theme cannot
  * keep that platform's tint (plan 374); both Windows recipes share this dark
  * set, so they inherit the fix. The hint clears the secondary floor on the row
- * washes a field inside a row paints (plan 527).
+ * washes a field inside a row paints (plan 527). The light link is a step darker
+ * so it keeps the secondary floor through the selection wash (plan 528).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -60,7 +61,7 @@ export const windowsPlatformStyle = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#005BA1",
       primaryActive: "#004E8C",
-      primaryText: "#005BA1",
+      primaryText: "#004F8A",
       accent: "#DCEBF8",
       accentForeground: "#004A8F",
       accentHover: "#CFE3F5",

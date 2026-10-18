@@ -14,10 +14,12 @@
  * `softActionForeground: "#444444"` measures 7.347–7.556:1 at rest and
  * 5.685–5.847:1 through the wash (plan 512).
  *
- * `primaryText` stays out on purpose: plan 087 documents that accent-toned text
- * under a wash is not guaranteed at AAA, and this suite records the measured
- * reason (macOS light measures 4.32:1 through the wash on `infoSoft`, under the
- * 4.5:1 secondary floor).
+ * `primaryText` was out on purpose until plan 528: plan 087 documented that
+ * accent-toned text under a wash was not guaranteed at AAA, with macOS light at
+ * 4.32:1 through the wash on `infoSoft` — under the default secondary floor.
+ * Plan 528 measured the role on all thirteen surfaces, moved seven values and
+ * closed the omission (`selectionLinkPairs`), so the suite now asserts the link
+ * is covered here too.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -33,6 +35,7 @@ import {
   lightTheme,
   platformNames,
   platformRecipeNames,
+  selectionLinkPairs,
   selectionSoftPairs,
   themeContrastFailures,
   themeFailures,
@@ -259,10 +262,10 @@ describe("text selection in a status panel", () => {
     ]);
   });
 
-  it("leaves accent-toned text out, with its measured reason", () => {
+  it("covers the accent-toned link, since plan 528 closed the omission", () => {
     expect(
-      selectionSoftPairs.some(([foreground]) => foreground === "primaryText"),
-    ).toBe(false);
+      selectionLinkPairs.some(([foreground]) => foreground === "primaryText"),
+    ).toBe(true);
 
     const macosLight = getPlatformTheme("darwin", "light");
     const washedLink = contrastRatio(
@@ -270,7 +273,6 @@ describe("text selection in a status panel", () => {
       washed(macosLight, "infoSoft"),
     );
 
-    expect(Number(washedLink.toFixed(2))).toBe(4.32);
-    expect(washedLink).toBeLessThan(contrastFloors.default.secondary);
+    expect(washedLink).toBeGreaterThanOrEqual(contrastFloors.default.secondary);
   });
 });

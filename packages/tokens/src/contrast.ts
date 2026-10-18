@@ -1389,6 +1389,32 @@ export const selectionStatusPairs: readonly ContrastPair[] =
   );
 
 /**
+ * The brand-toned link a reader selects with the copy around it. `primaryText`
+ * is a text role — plan `082` split it from the `primary` fill for exactly that
+ * reason — and a link in a paragraph, a list row or an Alert's description is
+ * dragged over like the text beside it. The wash is composited over the nine
+ * `selectionSurfaces` and the four soft status fills plan `346` already holds
+ * the role on at rest, so a copied theme cannot erase a selected link while the
+ * checker returns `[]`.
+ *
+ * The audit found the omission hiding twelve failing shipped sets: the AAA light
+ * link measured **5.376:1** through the wash on `destructiveSoft` under its 7:1
+ * floor, macOS dark **3.708:1** on `selected`, Windows light 3.995:1, XP light
+ * 4.378:1, Aero light 4.022:1, macOS light 4.106:1 on `active` and Linux dark
+ * 4.485:1 on `selected`, all under 4.5:1. Seven values move inside their own
+ * families and every shipped set clears its floor (4.729:1 at the tightest,
+ * Windows dark; 7.484:1 at AAA).
+ */
+export const selectionLinkPairs: readonly ContrastPair[] = [
+  ...selectionSurfaces.map(
+    (background): ContrastPair => ["primaryText", background, "secondary"],
+  ),
+  ...softSurfaceRoles.map(
+    (background): ContrastPair => ["primaryText", background, "secondary"],
+  ),
+];
+
+/**
  * The unavailable label a reader selects with the copy around it. `inactive` is
  * a design floor rather than a WCAG one (1.4.3 exempts inactive components),
  * but the point of a disabled control is that a reader can find out what is
@@ -1510,8 +1536,8 @@ export const selectionFillInactivePairs: readonly ContrastPair[] = [
  * panel action's label (`softActionForeground`, a ghost dismiss control since
  * plan `394`) and the quiet caption or supporting line. A reader copies any of
  * them and the wash composites over the fill, so each is held to its own floor.
- * Accent-toned text is the one deliberate omission (plan 087): no wash that
- * stays perceivable keeps a link at 7:1 at AAA.
+ * The brand-toned link is measured separately by `selectionLinkPairs`, on these
+ * four fills and the nine selection surfaces (plan `528`).
  */
 export const selectionSoftPairs: readonly ContrastPair[] =
   softSurfaceRoles.flatMap(
@@ -1782,7 +1808,9 @@ const elevationFailures = (
  *   the wash's own perceivability through the composited `selection` colour. A
  *   menu row's `popoverForeground` on the three washes it paints and a selected
  *   row's inherited `selectedForeground` on `hover`, `active` and `accent` are
- *   part of the same list.
+ *   part of the same list. `selectionLinkPairs` holds the brand-toned link
+ *   through the same wash on the same surfaces, because `primaryText` is text a
+ *   reader selects.
  * - `selectionInactivePairs` — the unavailable label through the same wash, on
  *   `inactiveSurfaces`; the floor is the library's own inactive design floor,
  *   because a disabled control is still read.
@@ -1858,6 +1886,7 @@ export function themeContrastFailures(
     ...pairFailures,
     ...textOverWashFailures(selectionPairs, "selection", theme, floors),
     ...textOverWashFailures(selectionStatusPairs, "selection", theme, floors),
+    ...textOverWashFailures(selectionLinkPairs, "selection", theme, floors),
     ...textOverWashFailures(selectionInactivePairs, "selection", theme, floors),
     ...washVisibilityFailures(selectionWashPairs, "selection", theme, floors),
     ...textOverWashFailures(selectionSoftPairs, "selection", theme, floors),

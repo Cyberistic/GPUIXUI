@@ -35,7 +35,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * identity's (82%) so the floating face separates from every content fill a
  * dialog can open over; the shipped `primary` patch measured 1.021:1 under the
  * identity scrim (plan 526). The hint clears the secondary floor on the row
- * washes a field inside a row paints (plan 527).
+ * washes a field inside a row paints (plan 527). The link is a step deeper in
+ * light and a step lighter in dark so it keeps the secondary floor through the
+ * selection wash (plan 528).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -65,7 +67,7 @@ export const macosPlatformStyle = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#0063CC",
       primaryActive: "#004C99",
-      primaryText: "#0055B3",
+      primaryText: "#004A9A",
       accent: "#D9EAFD",
       accentForeground: "#004A9E",
       accentHover: "#CBE2FC",
@@ -102,7 +104,7 @@ export const macosPlatformStyle = {
       primaryForeground: "#000000",
       primaryHover: "#409CFF",
       primaryActive: "#64B5FF",
-      primaryText: "#64B5FF",
+      primaryText: "#96CDFF",
       accent: "#1C3A57",
       accentForeground: "#A8D4FF",
       accentHover: "#284F73",

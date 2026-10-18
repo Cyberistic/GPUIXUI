@@ -192,6 +192,7 @@ import {
   selectionFillPairs,
   selectionFillInactivePairs,
   selectionFillWashPairs,
+  selectionLinkPairs,
   selectionPairs,
   selectionSoftPairs,
   selectionSoftWashPairs,
@@ -271,6 +272,7 @@ const publishedPairLists: ReadonlyArray<
   ["trackMarkPairs", trackMarkPairs],
   ["selectionPairs", selectionPairs],
   ["selectionStatusPairs", selectionStatusPairs],
+  ["selectionLinkPairs", selectionLinkPairs],
   ["selectionWashPairs", selectionWashPairs],
   ["selectionSoftPairs", selectionSoftPairs],
   ["selectionSoftWashPairs", selectionSoftWashPairs],
@@ -472,6 +474,10 @@ describe("themeContrastFailures", () => {
         foreground,
         background,
       ]),
+      ...selectionLinkPairs.map(([foreground, background]) => [
+        foreground,
+        background,
+      ]),
       ...selectionSoftPairs.map(([foreground, background]) => [
         foreground,
         background,
@@ -600,6 +606,7 @@ describe("themeContrastFailures", () => {
     // row's title, and the same nine at secondary strength.
     expect(selectionPairs.length).toBe(26);
     expect(selectionStatusPairs).toHaveLength(36);
+    expect(selectionLinkPairs).toHaveLength(13);
     expect(selectionWashPairs.length).toBe(10);
     expect(selectionSoftPairs.length).toBe(16);
     expect(selectionSoftWashPairs.length).toBe(4);
@@ -900,6 +907,7 @@ describe("contract completeness", () => {
       ...contrastPairs,
       ...selectionPairs,
       ...selectionStatusPairs,
+      ...selectionLinkPairs,
       ...selectionWashPairs,
       ...selectionSoftPairs,
       ...selectionSoftWashPairs,

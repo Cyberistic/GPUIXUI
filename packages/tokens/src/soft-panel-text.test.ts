@@ -110,7 +110,7 @@ describe("soft status panel text", () => {
   it("quotes the weakest shipped caption and link", () => {
     const quoted = [
       ["mutedForeground", "destructiveSoft", "Aero light", 6.61],
-      ["primaryText", "destructiveSoft", "Windows light", 5.26],
+      ["primaryText", "destructiveSoft", "identity light", 6.19],
     ] as const;
 
     quoted.forEach(([foreground, background, label, value]) => {
@@ -151,6 +151,7 @@ describe("soft status panel text", () => {
     });
     const reported = themeContrastFailures(edited).filter(
       (failure) =>
+        failure.wash === undefined &&
         failure.foreground === "primaryText" &&
         failure.background === "warningSoft",
     );

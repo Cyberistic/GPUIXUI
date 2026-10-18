@@ -535,19 +535,58 @@ describe("docs/design-system.md current figures", () => {
     );
   });
 
-  it("quotes the AAA wash-link cost", () => {
-    const aaa = getTheme("light", "high").colors;
-    const washed = (surface: "muted" | "active"): number =>
-      contrastRatio(
-        aaa.primaryText,
-        compositeOver(aaa.selection, aaa[surface]),
-      );
-    const muted = washed("muted").toFixed(2);
-    const active = washed("active").toFixed(2);
+  it("quotes the washed link's tightest pairs", () => {
+    const surfaces = [
+      "background",
+      "card",
+      "muted",
+      "hover",
+      "active",
+      "accent",
+      "popover",
+      "input",
+      "selected",
+      "infoSoft",
+      "successSoft",
+      "warningSoft",
+      "destructiveSoft",
+    ] as const;
 
-    expect([muted, active]).toEqual(["6.75", "5.48"]);
+    const tightest = (contrast: "default" | "high") =>
+      scrimSets
+        .filter(([, theme]) => theme.contrast === contrast)
+        .flatMap(([label, theme]) =>
+          surfaces.map((surface) => ({
+            label,
+            surface,
+            ratio: contrastRatio(
+              theme.colors.primaryText,
+              compositeOver(theme.colors.selection, theme.colors[surface]),
+            ),
+          })),
+        )
+        .reduce((worst, current) =>
+          current.ratio < worst.ratio ? current : worst,
+        );
+
+    const fallback = tightest("default");
+    const high = tightest("high");
+
+    expect([
+      fallback.label,
+      fallback.surface,
+      fallback.ratio.toFixed(3),
+    ]).toEqual(["Windows dark", "selected", "4.729"]);
+    expect([high.label, high.surface, high.ratio.toFixed(3)]).toEqual([
+      "high-contrast light",
+      "destructiveSoft",
+      "7.484",
+    ]);
     expect(designSystem).toContain(
-      `does not clear 7:1 through the AAA light wash (${muted}:1 on the \`muted\` panel and ${active}:1 on \`active\`)`,
+      `tightest **${fallback.ratio.toFixed(3)}:1** (${fallback.label}, on \`${fallback.surface}\`)`,
+    );
+    expect(designSystem).toContain(
+      `**${high.ratio.toFixed(3)}:1** at AAA (${high.label}, on \`${high.surface}\`)`,
     );
   });
 
@@ -1237,14 +1276,14 @@ describe("docs/tokens.md quoted tightest figures", () => {
 
   it("quotes the row-text and status ratios the shipped themes produce", () => {
     const quoted = [
-      ["primaryText", "selected", "macOS dark", 4.58],
+      ["primaryText", "selected", "Linux dark", 5.68],
       ["foreground", "selected", "Linux dark", 8.44],
       ["popoverForeground", "selected", "Linux dark", 8.98],
       ["selectedForeground", "active", "macOS light", 6.22],
       ["selectedForeground", "accent", "macOS light", 6.93],
       ["successText", "muted", "Aero light", 7.68],
       ["mutedForeground", "destructiveSoft", "Aero light", 6.61],
-      ["primaryText", "destructiveSoft", "Windows light", 5.26],
+      ["primaryText", "destructiveSoft", "identity light", 6.19],
     ] as const;
 
     quoted.forEach(([foreground, background, label, value]) => {
@@ -2290,6 +2329,7 @@ describe("docs/design-system.md", () => {
       `| text selection of a menu row's label (\`popoverForeground\` over the composited \`selection\` wash on \`hover\`/\`active\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a status label (\`xText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection of brand-toned text (\`primaryText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`, the \`disabled\` fill and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| text selection on an opaque filled surface (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\`/\`infoForeground\`/\`successForeground\`/\`warningForeground\`/\`softActionForeground\` over the composited \`selectionOnFill\` veil, on each fill's resting value) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection veil on an opaque filled surface (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`/\`accent\`/\`info\`/\`success\`/\`warning\`/\`softAction\`, on each fill's resting value) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

@@ -113,7 +113,7 @@ export interface ThemeColors {
   readonly primaryHover: string;
   /** Primary action background while pressed. */
   readonly primaryActive: string;
-  /** Brand-toned text, links and icons on plain surfaces. */
+  /** Brand-toned text, links and icons on plain surfaces, row fills and through a text selection. */
   readonly primaryText: string;
   /** Secondary action background. */
   readonly secondary: string;
@@ -507,7 +507,9 @@ export const darkColors = {
  * inherited label is iris 950, so it keeps 7:1 through the selection wash on the
  * pressed row a reader drags across (plan 525). The hint is a step darker so it
  * clears the AAA secondary floor on the row washes a field inside a row paints
- * (plan 527).
+ * (plan 527). The link is a deeper iris step so it keeps 7:1 through the
+ * selection wash on a soft status panel, which the 800 step misses at 5.376:1
+ * (plan 528).
  */
 export const highContrastLightColors = {
   background: "#FFFFFF",
@@ -520,7 +522,9 @@ export const highContrastLightColors = {
   primaryForeground: "#FFFFFF",
   primaryHover: palette.iris[900],
   primaryActive: palette.iris[950],
-  primaryText: palette.iris[800],
+  // The AAA light link keeps the 7:1 secondary floor through the selection
+  // wash on a soft status fill; the 800 step measures 5.376:1 there (plan 528).
+  primaryText: "#241C5C",
   secondary: "#E8E8E8",
   secondaryForeground: "#000000",
   secondaryHover: "#D6D6D6",

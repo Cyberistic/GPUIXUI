@@ -14,7 +14,8 @@ import { windowsPlatformStyle } from "../windows.js";
  * so the Luna click is perceivable (plan 381). The groove is the era's darker
  * beige and the progress mark is XP's own Luna green, because the inherited
  * identity green cannot keep a segment at the mark floor on a rail that clears
- * the pressed wash (plan 503). The values are held to
+ * the pressed wash (plan 503). The link is a step darker so it keeps the
+ * secondary floor through the selection wash (plan 528). The values are held to
  * `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
  */
 export const xpPlatformRecipe = {
@@ -48,7 +49,7 @@ export const xpPlatformRecipe = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#0046BD",
       primaryActive: "#003A9C",
-      primaryText: "#0046BD",
+      primaryText: "#003FA8",
       accent: "#C6DAFA",
       accentForeground: "#003C74",
       accentHover: "#BDD4F9",

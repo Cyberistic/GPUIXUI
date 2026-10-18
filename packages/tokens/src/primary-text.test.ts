@@ -108,7 +108,8 @@ describe("brand-toned text", () => {
       colors: { primaryText: "#0A84FF" },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ foreground }) => foreground === "primaryText",
+      ({ foreground, wash }) =>
+        foreground === "primaryText" && wash === undefined,
     );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual([

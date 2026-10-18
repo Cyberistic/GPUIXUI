@@ -29,7 +29,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * 1.216:1 step past its accent wash; the wash itself cannot soften further — at
  * the alpha the title needs it measures 1.052:1 on the fill (plan 506). The hint
  * clears the secondary floor on the row washes a field inside a row paints
- * (plan 527).
+ * (plan 527). The dark link is a step lighter so it keeps the secondary floor
+ * through the selection wash (plan 528).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -96,7 +97,7 @@ export const linuxPlatformStyle = {
       primaryForeground: "#000000",
       primaryHover: "#99C1F1",
       primaryActive: "#A9CCF5",
-      primaryText: "#99C1F1",
+      primaryText: "#A5CBF5",
       accent: "#1B3A5C",
       accentForeground: "#B4D5F7",
       accentHover: "#20446C",
