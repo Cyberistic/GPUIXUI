@@ -22,7 +22,13 @@
  * has to accumulate deltas (and never drifts when the runtime clamps).
  */
 
-import { useRef, type ReactElement, type ReactNode, type Ref } from "react";
+import {
+  useImperativeHandle,
+  useRef,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+} from "react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { focusRing } from "@gpuixui/tokens";
@@ -45,7 +51,25 @@ export interface ScrollPosition {
   readonly y: number;
 }
 
+/** Imperative controls on a scroll region, from its `ref`. */
+export interface ScrollAreaHandle {
+  /** The viewport host element, for measuring with the renderer. */
+  readonly element: PublicInstance | null;
+  /**
+   * Scroll to an absolute offset — the runtime clamps it — and report the
+   * result through `onScrollPositionChange`. An omitted axis keeps its current
+   * offset. `renderer.scrollTo` called by hand dispatches no event, so use this
+   * when the region must move from code.
+   */
+  readonly scrollTo: (target: Partial<ScrollPosition>) => void;
+}
+
 export interface ScrollAreaProps extends ScrollSpec {
+  /**
+   * The imperative handle: `scrollTo`/`element`. A method call reports its own
+   * position, which a raw `renderer.scrollTo` cannot.
+   */
+  readonly ref?: Ref<ScrollAreaHandle>;
   /**
    * Names the region **and** makes it a keyboard scroll stop. Without a label a
    * `region` would be an unnamed focus target, so the area stays inert.
@@ -146,6 +170,31 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
     props.onScroll?.(event);
     reportPosition();
   };
+
+  /** Move the region from code, then report where it landed. */
+  const scrollTo = (target: Partial<ScrollPosition>): void => {
+    const id = root.current?.id;
+    if (id === undefined) return;
+    const current = Option.getOrUndefined(
+      Option.map(
+        Option.fromNullishOr(renderer?.getScrollOffset?.(id)),
+        (values) => ({ x: values[0] ?? 0, y: values[1] ?? 0 }),
+      ),
+    );
+    renderer?.scrollTo?.(
+      id,
+      target.x ?? current?.x ?? 0,
+      target.y ?? current?.y ?? 0,
+    );
+    reportPosition();
+  };
+
+  useImperativeHandle(props.ref, () => ({
+    get element() {
+      return root.current;
+    },
+    scrollTo,
+  }));
 
   const onKeyDown = (event: EventPayload): void => {
     if (props.label === undefined) return;

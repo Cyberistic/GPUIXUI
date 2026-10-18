@@ -42,6 +42,7 @@ layout silently would be the worse default.
 | `style` | `StateStyle<ScrollAreaState>` | — | merged last; put the bounded size here; an object or a state callback |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
+| `ref` | `Ref<ScrollAreaHandle>` | none | `element` for measuring and `scrollTo`, which reports the position it lands on |
 
 ## Scroll position
 
@@ -53,6 +54,9 @@ it reports where the region actually is — including a clamped `End` — and st
 silent when the position did not change.
 
 ```tsx
+import { useState } from "react";
+import { ScrollArea } from "@gpuixui/primitives";
+
 const [atTop, setAtTop] = useState(true);
 
 <ScrollArea
@@ -68,17 +72,28 @@ const [atTop, setAtTop] = useState(true);
 is `0` at the left and negative to the right. The initial position is `{0, 0}`
 and is not reported — the callback is a change signal, like `onValueChange`.
 
-**To move the region** use its host `ref` and the renderer:
+**To move the region** use its handle — `scrollTo` reports the position it lands
+on, which a raw `renderer.scrollTo` cannot:
 
 ```tsx
-const area = useRef<PublicInstance | null>(null);
-const { renderer } = useGpuix();
+import { useRef } from "react";
+import { ScrollArea, type ScrollAreaHandle } from "@gpuixui/primitives";
 
-renderer.scrollTo?.(area.current.id, 0, 0); // back to the top
+const area = useRef<ScrollAreaHandle | null>(null);
+
+<ScrollArea ref={area} label="Activity" style={{ height: 240 }}>
+  {rows}
+</ScrollArea>;
+
+// Inside a handler: back to the top. The runtime clamps either axis.
+area.current?.scrollTo({ y: 0 });
 ```
 
-There is no controlled position prop on purpose: "the caller set it again" and
-"the user moved it" would need a state machine the primitive does not own.
+The handle is `{ element, scrollTo }`: `element` is the viewport host for
+`renderer.getElementBounds`, and an omitted axis in `scrollTo` keeps its current
+offset. There is no controlled position prop on purpose: "the caller set it
+again" and "the user moved it" would need a state machine the primitive does not
+own.
 
 ## Keyboard
 
@@ -131,9 +146,9 @@ property; returning `{}` keeps the default look. The state type is exported.
   (`scrollbarColor`/`scrollbarWidth` exist only on the unreleased `main`).
 - **No fade mask** at the edges.
 - **No controlled scroll position.** `onScrollPositionChange` reports where the
-  region is; moving it is the host ref plus `renderer.scrollTo` (above). A
-  controlled `scrollPosition` prop would have to tell "set again" from "user
-  moved", so it is not offered.
+  region is, and the `ref` handle's `scrollTo` moves it; a controlled
+  `scrollPosition` prop would have to tell "set again" from "user moved", so it
+  is not offered.
 - **A component-performed scroll emits no `onScroll`.** The arrow/page/Home/End
   moves go through the renderer, which dispatches no scroll event; use
   `onScrollPositionChange` for the position and `onScroll` only for pointer

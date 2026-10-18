@@ -11,6 +11,7 @@
  * against the theme's own spacing step rather than a magic pixel.
  */
 
+import { createRef } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -18,7 +19,10 @@ import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { Label } from "../src/components/Label.js";
-import { ScrollArea } from "../src/components/ScrollArea.js";
+import {
+  ScrollArea,
+  type ScrollAreaHandle,
+} from "../src/components/ScrollArea.js";
 import { Separator, Spacer } from "../src/components/Separator.js";
 import { Grid, Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
@@ -367,6 +371,44 @@ it("reports a position for an unlabelled area", async () => {
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
   expect(positions).toStrictEqual([{ x: 0, y: -100 }]);
+});
+
+it("moves a ScrollArea through its handle and reports where it landed", async () => {
+  const runtime = await openWindow();
+  const positions: Array<{ readonly x: number; readonly y: number }> = [];
+  const area = createRef<ScrollAreaHandle>();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        axis="both"
+        label="Properties"
+        style={{ height: 120, width: 300 }}
+        testId="s"
+        ref={area}
+        onScrollPositionChange={(position) => positions.push(position)}
+      >
+        <Box tone="card" style={{ width: 600, height: 600 }} testId="tall" />
+      </ScrollArea>
+    </Surface>,
+  );
+  const handle = Option.getOrElse(Option.fromNullishOr(area.current), () =>
+    expect.fail("the ScrollArea exposed no handle"),
+  );
+  expect(handle.element?.id).toBe(
+    Option.getOrUndefined(runtime.element("s"))?.id,
+  );
+  handle.scrollTo({ y: -100 });
+  expect(offsetOf(runtime)).toStrictEqual({ x: 0, y: -100 });
+  // An omitted axis keeps its current offset; the runtime clamps the rest.
+  handle.scrollTo({ x: -20 });
+  expect(offsetOf(runtime)).toStrictEqual({ x: -20, y: -100 });
+  handle.scrollTo({ y: -100000 });
+  expect(offsetOf(runtime)).toStrictEqual({ x: -20, y: -480 });
+  expect(positions).toStrictEqual([
+    { x: 0, y: -100 },
+    { x: -20, y: -100 },
+    { x: -20, y: -480 },
+  ]);
 });
 
 it("keeps an Input's arrow keys when the field is inside the region", async () => {

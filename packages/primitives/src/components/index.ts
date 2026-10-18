@@ -18,6 +18,7 @@ export type { SeparatorProps, SpacerProps } from "./Separator.js";
 
 export { ScrollArea } from "./ScrollArea.js";
 export type {
+  ScrollAreaHandle,
   ScrollAreaProps,
   ScrollAreaState,
   ScrollPosition,

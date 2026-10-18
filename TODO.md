@@ -671,7 +671,8 @@ retired once both branches are one
       and produced 0 events), so a delta-accumulating consumer was wrong after
       every key. `onScrollPositionChange` now reports the renderer's real,
       clamped offset after wheel and keyboard moves and stays silent when
-      nothing moved; the inspector example's readout proves the chain in the
+      nothing moved; a `ref` handle's `scrollTo` moves the region and reports the
+      clamped result; the inspector example's readout proves the chain in the
       runtime (plan 337).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)

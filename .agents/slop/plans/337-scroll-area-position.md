@@ -70,8 +70,32 @@ phase facts live only there.
 The callback is a **report**, not a controlled value: there is no
 `scrollPosition` prop. A controlled scroll position would have to distinguish
 "the caller set it again" from "the user moved", which is a state machine the
-primitive does not need; a consumer that wants to move the region uses the host
-`ref`'s id with the renderer, which this plan documents.
+primitive does not need.
+
+### 2b. The handle (amended during implementation)
+
+The first draft told the caller to move the region through its host `ref` and
+`renderer.scrollTo`, and the docs snippet exposed the flaw: **no primitive
+exposes a public `ref`**, so that advice did not compile and the region could not
+be moved from code at all. A `ScrollArea` that reports a position but cannot be
+sent to one is half a primitive, and a raw `renderer.scrollTo` dispatches no
+event — so the position state would drift immediately after the caller's own
+move.
+
+`ScrollArea` therefore takes a `ref` of `ScrollAreaHandle`:
+
+```ts
+export interface ScrollAreaHandle {
+  readonly element: PublicInstance | null; // for renderer.getElementBounds
+  readonly scrollTo: (target: Partial<ScrollPosition>) => void;
+}
+```
+
+`scrollTo` reads the current offset, fills an omitted axis from it, calls
+`renderer.scrollTo` (the runtime clamps), then `reportPosition()` — so a
+programmatic move and a user move are reported the same way. It is the library's
+first `useImperativeHandle`; it is the React API for exactly this, and the
+alternative (a controlled position prop) is the state machine rejected above.
 
 ## 2. The rule
 
@@ -133,8 +157,8 @@ primitive does not need; a consumer that wants to move the region uses the host
 
 | Path | Action |
 | ---- | ------ |
-| `packages/primitives/src/components/ScrollArea.tsx` | `ScrollPosition`, `onScrollPositionChange`, the reporter, the composed `onScroll`, the keyboard report; update the header and the `onScroll` docstring |
-| `packages/primitives/src/components/index.ts` | export the `ScrollPosition` type |
+| `packages/primitives/src/components/ScrollArea.tsx` | `ScrollPosition`, `ScrollAreaHandle`, `onScrollPositionChange`, the reporter, the composed `onScroll`, the keyboard report and the `ref` handle; update the header and the `onScroll` docstring |
+| `packages/primitives/src/components/index.ts` | export the `ScrollPosition` and `ScrollAreaHandle` types |
 | `packages/primitives/examples/layout.example.tsx` | the inspector footer gains a live position readout driven by the callback |
 | `packages/primitives/examples/index.ts` | no change (the `layout` entry already exists) |
 | `packages/primitives/src/components/ScrollArea.test.tsx` | the pure renderer still forwards the caller's `onScroll`; the callback is not a host prop |
@@ -158,7 +182,7 @@ Run from the worktree root unless stated.
 | ------- | -------- |
 | `nub run --filter @gpuixui/primitives test -- src/components/ScrollArea.test.tsx` | the new element-tree case and the existing region cases pass |
 | `nub run --filter @gpuixui/primitives test` | all offline tests pass (baseline: 41 files / 543 tests) |
-| `nub run --filter @gpuixui/primitives test:runtime -- runtime/layout.runtime.test.tsx runtime/examples.runtime.test.tsx` | the five new cases pass; every existing scroll case stays green |
+| `nub run --filter @gpuixui/primitives test:runtime -- runtime/layout.runtime.test.tsx runtime/examples.runtime.test.tsx` | the six new cases pass; every existing scroll case stays green |
 | `nub run --filter @gpuixui/primitives test:runtime` | all runtime tests pass (baseline: 22 files / 358 tests) |
 | `nub run --filter @gpuixui/primitives check-types` | exit 0 |
 | `nub run check` | exit 0 (`check:tests`, lint, format, types) |
@@ -194,17 +218,22 @@ helper (600 px of content in a 120 px viewport) is reused.
 4. **"reports a position for an unlabelled area"** — an inert container still
    scrolls and still reports on the wheel; the callback must not be tied to the
    keyboard contract.
+5. **"moves a ScrollArea through its handle and reports where it landed"** — a
+   `ref` of `ScrollAreaHandle` is populated on mount, `handle.element.id` equals
+   the viewport's id, `scrollTo({ y })` moves the region and reports it,
+   `scrollTo({ x })` keeps the omitted `y`, and an over-large target reports the
+   runtime's clamp (`-480`). This is the §2b amendment.
 
 ### 5.2 The element tree (`src/components/ScrollArea.test.tsx`)
 
-5. **"forwards the caller's `onScroll` to the viewport"** — `renderScrollArea`
+6. **"forwards the caller's `onScroll` to the viewport"** — `renderScrollArea`
    with an `onScroll`; assert `hostHandler(area, "onScroll")` is present and
    invoking it reaches the caller. `onScrollPositionChange` must **not** appear
    as a host prop (the wrapper owns it, the host has no such event).
 
 ### 5.3 The composed example (`runtime/examples.runtime.test.tsx`)
 
-6. **"the inspector's readout follows a wheel scroll"** — mount the `layout`
+7. **"the inspector's readout follows a wheel scroll"** — mount the `layout`
    example, assert the footer reads `0 px` (or the chosen top label), wheel the
    property list, and assert the readout changed to the scrolled distance. This
    proves the whole chain in a real composition: wheel → renderer offset →
@@ -212,12 +241,14 @@ helper (600 px of content in a 120 px viewport) is reused.
 
 ### 5.4 Two-direction proof (required before "done")
 
-- Run cases 1–6 against the **unmodified** tree first; record the failing
+- Run cases 1–7 against the **unmodified** tree first; record the failing
   assertions in §7.
 - Restore the pass-through `onScroll` (no report) → case 1 fails.
 - Remove only the keyboard `report()` → case 2 fails.
 - Remove the "changed" guard → case 3 fails.
 - Tie the reporter to `label !== undefined` → case 4 fails.
+- Remove `reportPosition()` from the handle's `scrollTo` → case 5 fails.
+- Pass `null` to `useImperativeHandle` → case 5 fails with "exposed no handle".
 - Restore; every suite is green.
 - `nub run check`, `nub run lint` and `nub run test` pass.
 
@@ -248,7 +279,10 @@ the handler, as measured in §0), PageDown on the 120 px / 600 px scene reports
 End reports the runtime's clamped `{x: 0, y: -480}` — not the computed target.
 A wheel in the direction that cannot move the region, and `Home` at the top,
 report nothing. An unlabelled area reports `{x: 0, y: -100}` too, because the
-reporter is not tied to the keyboard contract.
+reporter is not tied to the keyboard contract. The `ref` handle moves the region
+and reports it: `scrollTo({ y: -100 })` → `{0, -100}`, `scrollTo({ x: -20 })`
+keeps the omitted `y` → `{-20, -100}`, and `scrollTo({ y: -100000 })` reports
+the clamped `{-20, -480}`. `handle.element.id` is the painted viewport's id.
 
 **Measured before (each mutation of the fixed tree):**
 
@@ -258,6 +292,8 @@ reporter is not tied to the keyboard contract.
 | `reportPosition()` removed after `scrollTo` | keyboard case: `expected [] to strictly equal [{0,-66},{0,0},{0,-480}]` |
 | the "changed" guard removed | immobile case: `expected [{0,0},{0,0}] to strictly equal []` — the no-op wheel does dispatch an event, so the guard is what keeps the callback a change signal |
 | the reporter gated on `label !== undefined` | unlabelled case: `expected [] to strictly equal [{0,-100}]` |
+| `reportPosition()` removed from the handle's `scrollTo` | handle case: `expected [] to strictly equal [{0,-100},{-20,-100},{-20,-480}]` |
+| `useImperativeHandle(null, …)` | handle case: `the ScrollArea exposed no handle` |
 
 The example's readout is the composed proof: the wheel moves the property list,
 `onScrollPositionChange` updates caller state and the footer repaints the
@@ -273,7 +309,7 @@ temporary `onChange={() => {}}` in `layout.example.tsx` was reported by file and
 line before being removed.
 
 **After:** offline **41 files / 544 tests** (543 + 1 element-tree case), runtime
-**22 files / 363 tests** (358 + 5). `nub run check`, `nub run lint` and
+**22 files / 364 tests** (358 + 6). `nub run check`, `nub run lint` and
 `nub run test` pass.
 
 ## 8. Acceptance
@@ -284,6 +320,8 @@ line before being removed.
       including a clamped `End` (`-480`).
 - [x] An attempt that did not move the region reports nothing.
 - [x] An unlabelled area reports its wheel position.
+- [x] The `ref` handle moves the region and reports the clamped result, and an
+      omitted axis keeps its offset.
 - [x] The example's readout follows a real scroll in the composed screen.
 - [x] Docs, `README.md`, `COMPONENTS.md`, the capability reference, `TODO.md`
       and the plan index record it.
