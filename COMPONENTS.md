@@ -214,8 +214,8 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 (valid/invalid `Input` and `TextArea`) and `otp.runtime` (every cell).
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (**612 tests
-in 32 files** at plan `374`; 610 at plan `373`; 608 in 32 files at plan `372`; 607 at plans `370`–`371`; 602 at plan `369`; 600 at plan `368`; 591 at plan `366`; 590 at plan `365`; 589 at plan `364`; 587 at plan `362`; 584 at plan `361`; 553 in 28 files at plan `360`; 552 at plan `359`; 537 at plan `358`; 536 at plan `357`; 535 at plan `356`; 534 at plan `355`; 529 at plan `354`; 457 at plan `353`; 454 at plan `352`; 403 at plan `346`; 398 at plan `345`; 386 at plan `344`; 383 at plan 343; 382 at plan 342; 381 at plan 341; 375 at plan 340; 371 at plan 339; 368 at plan 338; 364 at plan 337; 358 at plan 336; 353 at plan 335; 349 at plan 334; 319 at plan 331; 316 at plan 330; 315 at plan 329; 313 at plan 328; 311 at plan 327; 307 at plan 098; 304 at plan 097; 303 at plan 096; 301 at plan 095; 300 at plan 094; 295 at plan 093; 265 at plan 092; 264 at plan 091; 263 at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (**613 tests
+in 32 files** at plan `375`; 612 at plan `374`; 610 at plan `373`; 608 in 32 files at plan `372`; 607 at plans `370`–`371`; 602 at plan `369`; 600 at plan `368`; 591 at plan `366`; 590 at plan `365`; 589 at plan `364`; 587 at plan `362`; 584 at plan `361`; 553 in 28 files at plan `360`; 552 at plan `359`; 537 at plan `358`; 536 at plan `357`; 535 at plan `356`; 534 at plan `355`; 529 at plan `354`; 457 at plan `353`; 454 at plan `352`; 403 at plan `346`; 398 at plan `345`; 386 at plan `344`; 383 at plan 343; 382 at plan 342; 381 at plan 341; 375 at plan 340; 371 at plan 339; 368 at plan 338; 364 at plan 337; 358 at plan 336; 353 at plan 335; 349 at plan 334; 319 at plan 331; 316 at plan 330; 315 at plan 329; 313 at plan 328; 311 at plan 327; 307 at plan 098; 304 at plan 097; 303 at plan 096; 301 at plan 095; 300 at plan 094; 295 at plan 093; 265 at plan 092; 264 at plan 091; 263 at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
 175 at plan 073; 172 at plan 072, 167 at plan 071 and 165 at plan 070, including plan 069's
 three Select scroll tests and plan 070's rating validation; 161 after plan 068's long-list cap;
 160 after plan 067's tooltip placement;
@@ -229,15 +229,15 @@ binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan
 §12, plan 057 §8, plan 058 §8, plan 059 §8, plan 060 §6, plan 061 §6, plan 062
 §6, plan 065 §6, plan 066 §6, plan 067 §6, plan 068 §6, plan 069 §6, plan 070 §6,
 plan 072 §6, plan 073 §6, plan 076 §7, plan 077 §7, plan 078 §7, plan 079 §8,
-plan 080 §8, plan 081 §8, plan 082 §6, plan 083 §6, plan 084 §6, plan 085 §6, plan 086 §6, plan 087 §6, plan 091 §7, plan 092 §7, plan 093 §7, plan 094 §7, plan 095 §7, plan 096 §7, plan 097 §7, plan 098 §7, plan 328 §8, plan 329 §8, plan 330 §8, plan 331 §8, plan 332 §8, plan 334 §8, plan 335 §7, plan 336 §7, plan 337 §7, plan 338 §7, plan 339 §7, plan 340 §8, plan 341 §8, plan 342 §5, plan 344 §7, plan 345 §8, plan 346 §7, plan 353 §6, plan 357 §7, plan 362 §7, plan 364 §7, plan 365 §7, plan 366 §7, plan 367 §2, plan 372 §7 and plan 374 §7. The examples suite mounts every
+plan 080 §8, plan 081 §8, plan 082 §6, plan 083 §6, plan 084 §6, plan 085 §6, plan 086 §6, plan 087 §6, plan 091 §7, plan 092 §7, plan 093 §7, plan 094 §7, plan 095 §7, plan 096 §7, plan 097 §7, plan 098 §7, plan 328 §8, plan 329 §8, plan 330 §8, plan 331 §8, plan 332 §8, plan 334 §8, plan 335 §7, plan 336 §7, plan 337 §7, plan 338 §7, plan 339 §7, plan 340 §8, plan 341 §8, plan 342 §5, plan 344 §7, plan 345 §8, plan 346 §7, plan 353 §6, plan 357 §7, plan 362 §7, plan 364 §7, plan 365 §7, plan 366 §7, plan 367 §2, plan 372 §7, plan 374 §7 and plan 375 §7. The examples suite mounts every
 example in `packages/primitives/examples/` (plan 047).
 
 **Focus matrix (084):** `runtime/focus-ring.runtime.test.tsx` holds every
-focusable Tier 1 control — Button, Toggle, Checkbox, Switch, Input, TextArea,
+focusable Tier 1 control — Button, IconButton, Toggle, Checkbox, Switch, Input, TextArea,
 NumberField, OTPField, Select, Rating, ToggleGroup, RadioGroup, CheckboxGroup,
 Slider, RangeSlider, InfoTip and ScrollArea — to one invariant: focusing it
-paints **exactly one** `focusRing`, of the exact value, inside the control. 17
-cases; the matrix fails when a control paints none (plan 083's bug) or two. A
+paints **exactly one** `focusRing`, of the exact value, inside the control. 18
+cases (the icon button joins in plan `375`); the matrix fails when a control paints none (plan 083's bug) or two. A
 separate case proves an attached `ButtonGroup`'s button carries the same ring
 inside its clip, as an inset overlay (plan `344`).
 
