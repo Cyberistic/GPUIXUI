@@ -33,6 +33,11 @@ import { awaitReadout } from "./await-readout.js";
 const CARD_WIDTH = 380;
 /** The shipped viewport insets by `theme.spacing.xl`, which tokens define as 16. */
 const INSET = 16;
+/**
+ * Long enough that the pre-timer reads are safe on a loaded host, short enough
+ * that the bounded wait still observes a real timer.
+ */
+const SHORT_MS = 600;
 
 const painted = (ctx: Smoke.SmokeContext, testId: string) =>
   Option.fromNullishOr(ctx.host.bounds(testId));
@@ -101,7 +106,7 @@ const ToastProbeBody = () => {
         testId="toast-push-short"
         label="Push short"
         onClick={() =>
-          toasts.push({ title: "Short", duration: Duration.millis(300) })
+          toasts.push({ title: "Short", duration: Duration.millis(SHORT_MS) })
         }
       />
       <Action
@@ -257,22 +262,47 @@ export const tier2ToastScenario: PlaygroundScenario = {
         "count=2",
       );
 
-      // A duration is a real JS timer; wait for the frame, then assert.
+      // The shipped viewport maps the queue straight to cards: no motion
+      // wrapper, no exit tween. Freeze the clock anyway, so the timer is proven
+      // to be real JS time and the removal to need no motion frame.
+      const frozenAt = ctx.host.pauseMotion();
       ctx.host.click("toast-push-short");
       yield* ctx.expectContains(
-        "the short toast joined the stack",
+        "the short toast joined the stack before its timer",
         read(ctx, "tier2-toast-readout"),
         "count=3",
       );
+      yield* ctx.expectSome(
+        "the short card is painted before its timer",
+        painted(ctx, "toast-5"),
+      );
+
+      // No fastForwardMotion: the wait itself proves the timer is real time.
       yield* awaitReadout(ctx, "tier2-toast-readout", "count=2");
+      yield* ctx.expectContains(
+        "the timer removed exactly one card",
+        read(ctx, "tier2-toast-readout"),
+        "count=2",
+      );
       yield* ctx.expectEqual(
-        "the short toast dismissed itself",
+        "the shipped viewport keeps no leaving card at the frozen clock",
         Option.isNone(painted(ctx, "toast-5")),
         true,
       );
-      yield* ctx.expectSome(
-        "the long toasts survived the timer",
+      const survivor = yield* ctx.expectSome(
+        "the long toast survived its sibling's timer",
         painted(ctx, "toast-4"),
+      );
+      yield* ctx.expectNear(
+        "the survivor reflows to the bottom inset without motion time",
+        frame.y + frame.height - (survivor.y + survivor.height),
+        INSET,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the timer path never advanced the motion clock",
+        ctx.host.fastForwardMotion(0),
+        frozenAt,
       );
     }),
 };
