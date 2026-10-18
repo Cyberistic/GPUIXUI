@@ -473,6 +473,11 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[x]` `[██████████]` 102/102
 
+`[~]` **The site is usable at a phone width (plan 502)** — `smoke:responsive`
+      proves six page shapes do not scroll sideways at 390 px and that the
+      mobile sidebar opens and navigates; the property was last checked by hand
+      in plan 410, before 86 of the 90 pages landed.
+
 `[x]` **A fragment link lands on a heading (plan 501)** — plan 438 stripped the
       fragment before resolving a link, so a renamed heading silently broke
       every generated `/docs/components/<slug>#api-reference` link; the
