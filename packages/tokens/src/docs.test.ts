@@ -843,6 +843,23 @@ describe("docs/tokens.md numeric tables", () => {
     expect(designSystem).toContain("painted feather (`blurRadius`)");
   });
 
+  it("states the border-width ladder", () => {
+    const edited = extendTheme(getTheme("light"), {
+      borderWidth: { thin: 1, strong: 0.5 },
+    });
+    expect(themeMetricFailures(edited)).toEqual([
+      {
+        group: "borderWidth",
+        member: "strong",
+        rule: "at-least",
+        actual: 0.5,
+        bound: 1,
+      },
+    ]);
+    expect(markdownProse).toContain("the two border widths");
+    expect(designSystem).toContain("at least `thin`");
+  });
+
   it("lists every motion level in milliseconds", () => {
     motionLevels.forEach((level) => {
       expect(markdown, `motion.${level}`).toContain(

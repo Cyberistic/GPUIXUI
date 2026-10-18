@@ -23,6 +23,10 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 starts a new session before the previous one closes (evidence:
 `.agents/slop/blockers/2026-10-17-concurrent-tokens-writers.md`; the guard is
 planned in `primitives` plan 022, `022-swarm-single-writer.md`)
+`[ ]` Cross-team: `scripts/verify-two-directions.sh` is written against `jj`
+(`jj workspace root`, `jj diff`, `jj restore`) while PLAN.md D1 pins git, so
+the mandated both-directions check cannot run on these worktrees; give it a git
+implementation (owner: repo tooling; found while landing plan 550)
 
 ---
 
@@ -50,7 +54,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 213/276
+`[x]` `[████████░░]` 215/281
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1756,6 +1760,14 @@ literal pairs, so a fifth family's label on `background`/`card`/`popover`/`muted
 and the four row washes would have shipped unmeasured; `statusTextSurfaces` is
 the public surface index now, the pairs derive from it and the tone index, and a
 new guard takes its expectation from the index (plan 549)
+`[x]` Hold the strong border to the thin one — `borderWidth.strong` is the
+spread of the only focus indicator (GPUix 0.10.0 has no `outline*`) and `thin`
+is a decorative divider, but `themeMetricFailures` held each on its own, so a
+copied theme with `thin: 1, strong: 0.5` returned `[]` from all seven checks
+while every focus ring painted a sub-pixel spread thinner than a border;
+`strong` is now at least `thin` (equality stays a design), every shipped set
+already passes, so no value moves, and the catalogue, design system, README and
+ledger state the rule (plan 550)
 
 ## Phase C — Tier 1–2 components
 

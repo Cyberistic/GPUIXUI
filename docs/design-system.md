@@ -266,6 +266,12 @@ Two border roles:
   against the canvas, the `muted` panel, the `hover`/`active`/`accent`/
   `selected` washes a row paints and the four soft status fills a tone-tinted
   Alert paints, so a checkbox or field is perceivable without relying on fill alone.
+  The numeric contract holds `borderWidth.strong` at least `thin`: the focus
+  ring may match the default border but never be thinner than a divider, or the
+  only focus indicator is less prominent than the decoration it surrounds.
+  The numeric contract holds `borderWidth.strong` at least `thin`: the focus
+  ring may match the default border but never be thinner than a divider, or the
+  only focus indicator is less prominent than the decoration it surrounds.
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 `md` for menus and popovers, `lg` for dialogs and the command palette. The

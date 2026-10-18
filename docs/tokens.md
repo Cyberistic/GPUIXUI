@@ -1947,8 +1947,11 @@ line and the default `md` control it holds; `radius.none` must be square; `radiu
 must round the largest radius and half of the taller of the largest control and
 the largest avatar — a 40px avatar painted at a smaller radius is a rounded
 square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
-`avatarSize`, `controlHeight`, `controlPaddingX`, the motion timings and the
-elevation feather — must not step backwards, and `iconSize`, `avatarSize` and a
+`avatarSize`, `controlHeight`, `controlPaddingX`, the two border widths, the
+motion timings and the
+elevation feather — must not step backwards; `borderWidth.strong` is the focus
+ring's spread, so it may equal the default border but never be thinner than a
+divider, and `iconSize`, `avatarSize` and a
 control's horizontal padding must also stay above zero, because a named size
 that paints a 0×0 icon or avatar is not a size and a control with no inset
 paints its label on its own border; a control's padding is a padding before it

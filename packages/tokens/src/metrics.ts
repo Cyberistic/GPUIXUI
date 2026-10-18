@@ -396,8 +396,10 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   `bodyStrong` is the weight variant of `body`: it may not shrink below it and
  *   must stay heavier, or emphasis is indistinguishable from body text.
  * - **borderWidth**: `strong` is the focus ring's spread, and the ring is the
- *   only focus indicator the runtime can draw, so it may not be zero; `thin`
- *   may be zero in a borderless theme, so it is only non-negative.
+ *   only focus indicator the runtime can draw, so it may not be zero and may
+ *   not be thinner than `thin` — a ring below a decorative border has inverted
+ *   the two roles and can round away; `thin` may be zero in a borderless
+ *   theme, so it is only non-negative.
  * - **density**: sizes and padding are ladders, a control's horizontal padding
  *   stays positive and is no tighter than the theme's own hairline
  *   (`spacing["2xs"]`), because it is the inset between the label and the
@@ -516,6 +518,13 @@ export function themeMetricFailures(
     ...finiteGroup("borderWidth", borderWidth),
     ...nonNegative("borderWidth", "thin", borderWidth.thin),
     ...positive("borderWidth", "strong", borderWidth.strong),
+    // `strong` is the emphasis border and the spread of the only focus
+    // indicator the runtime paints, so it may equal the default border but
+    // never be thinner than it. A value at or below zero is already the
+    // `positive` rule's diagnostic, so the order is not compared twice.
+    ...(borderWidth.strong <= 0
+      ? []
+      : atLeast("borderWidth", "strong", borderWidth.strong, borderWidth.thin)),
     ...finiteGroup("density", density),
     ...ladder(
       "density",
