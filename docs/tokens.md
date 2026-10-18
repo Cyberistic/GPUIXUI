@@ -1137,11 +1137,15 @@ Content painted on a **filled action** uses `selectionOnFill` instead of
 composites to **1.000:1** — an invisible highlight on the one surface a user
 message is painted on (identity dark, macOS light and dark, Linux light, Windows
 light and Aero light). The neutral 15% veil steps away from the fill in both
-modes: `selectionFillPairs` holds each family's own foreground through it, at
-6.10:1 at the tightest — above the 4.5:1 the on-colour role already has — and
-`selectionFillWashPairs` holds the veil itself at 1.105:1 at the tightest, above
-the 1.05:1 perceivability floor. `selectionStyle(theme, "fill")` applies it to a
-subtree, and `filledContentStyle` in the example is the copyable version:
+modes: `selectionFillPairs` holds one text pair per filled family —
+`primary`, `secondary`, `destructive` and `accent`, derived from
+`filledControlFamilies` — at **4.827:1** at the tightest (macOS dark,
+`accentForeground` on `accent`), above the 4.5:1 the on-colour role already has,
+and `selectionFillWashPairs` holds the veil itself at **1.075:1** at the
+tightest (identity dark high, `selectionOnFill` on `primary`), above the 1.05:1
+perceivability floor.
+`selectionStyle(theme, "fill")` applies it to a subtree, and
+`filledContentStyle` in the example is the copyable version:
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";
@@ -1156,8 +1160,13 @@ import { selectionStyle } from "@gpuixui/tokens";
 </div>;
 ```
 
-The six pairs join the checker and are reported with `wash: "selectionOnFill"`;
-every shipped set already clears them, so no colour moves.
+The eight pairs join the checker and are reported with
+`wash: "selectionOnFill"`. Plan `344` measured the three families that existed
+in its pair list; plan `382` derives both lists from `filledControlFamilies`, so
+the fourth family (`accent`) is covered too. Its label measured **4.140:1** on
+macOS light and **4.430:1** on Linux dark through the veil, so the two accent
+foregrounds move one designed step (`#0055B3` → `#004A9E` and `#A8CBF0` →
+`#B4D5F7`); every other shipped set already cleared the floor.
 
 ### Native text fields
 
@@ -1864,7 +1873,9 @@ each `xActive` from its `xHover` — taking it from 306 to **314**. Plan `343`
 holds the field's pressed edge — `ring` on the `input` fill — taking it from 314
 to **315**. Plan `344` adds the inverse selection veil for content painted on a
 filled action — `selectionOnFill` on `primary`/`secondary`/`destructive` — as six
-wash pairs beside the plain `contrastPairs` list. Plan `346` holds a status
+wash pairs beside the plain `contrastPairs` list; plan `382` derives both fill
+lists from `filledControlFamilies`, so the fourth family (`accent`) brings the
+selection-contract total to **eight** pairs. Plan `346` holds a status
 panel's caption and link — `mutedForeground` and `primaryText` on the four soft
 status fills — taking it from 315 to **323**. Plan `347` adds the value
 indicator's groove — `track` on the four base surfaces and the persistent
@@ -1933,6 +1944,15 @@ step (plus the authored Contoso light style), and macOS light's
 `selectedForeground` moves with its deeper fill because no step that cleared the
 pair kept the old blue at 4.5:1. The measurement is in `selection-states.test.ts`, and the pair
 is part of the plain contract — taking it from 338 to **339** (plan `381`).
+
+The filled-family selection veil is derived from the same index that defines
+the families, so no family can ship without one. The audit that made the lists
+`filledControlFamilies.map(…)` found the fourth family's label below its floor
+through the veil — **4.140:1** on macOS light and **4.430:1** on Linux dark,
+under the 4.5:1 the on-colour role has — while the empty pair list meant
+`themeContrastFailures` returned `[]`. The macOS light and Linux dark accent
+foregrounds move one designed step, and the wash and text lists now publish
+**eight** pairs between them (plan `382`; `selection-on-fill.test.ts`).
 
 The two shipped consumers have not migrated their **brand** families, and the
 cost is the label rather than the fill. `components/internal/button.tsx` still

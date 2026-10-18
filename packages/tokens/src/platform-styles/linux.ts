@@ -21,7 +21,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * composites (plan 097). The light quiet panel is a step toward the card, so a
  * sidebar wash and a neutral filled control stay perceivable on it (plan 309),
  * and the pressed neutral step sits one designed step below the divider so an
- * outlined control keeps its edge while pressed (plan 318).
+ * outlined control keeps its edge while pressed (plan 318). The dark accent
+ * foreground is a step lighter, so selecting the label on the accent fill keeps
+ * its floor through the inverse veil (plan 382).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -88,7 +90,7 @@ export const linuxPlatformStyle = {
       primaryActive: "#A9CCF5",
       primaryText: "#99C1F1",
       accent: "#1B3A5C",
-      accentForeground: "#A8CBF0",
+      accentForeground: "#B4D5F7",
       accentHover: "#20446C",
       accentActive: "#264C77",
       ring: "#78AEED",

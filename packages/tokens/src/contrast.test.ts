@@ -132,7 +132,10 @@
  * composites to 1.000:1 in seven shipped sets. `selectionFillPairs` and
  * `selectionFillWashPairs` hold the neutral `selectionOnFill` veil on
  * `primary`, `secondary` and `destructive`; every shipped set clears the
- * floors, so no colour moves.
+ * floors, so no colour moves. Plan 382 derives both lists from
+ * `filledControlFamilies`, which also covers `accent`, and moves the macOS
+ * light and Linux dark accent foregrounds one step so the fourth family clears
+ * the veil.
  *
  * Plan 346 closes the two text roles a status panel was never measured for: a
  * caption (`mutedForeground`) and a link or action (`primaryText`). The four
@@ -542,12 +545,13 @@ describe("themeContrastFailures", () => {
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(12);
     expect(selectionSoftWashPairs.length).toBe(4);
-    expect(selectionFillPairs).toHaveLength(3);
-    expect(selectionFillWashPairs).toHaveLength(3);
+    expect(selectionFillPairs).toHaveLength(4);
+    expect(selectionFillWashPairs).toHaveLength(4);
     expect(selectionFillWashPairs.map(([, fill]) => fill)).toEqual([
       "primary",
       "secondary",
       "destructive",
+      "accent",
     ]);
     expect(overlayWashPairs.length).toBe(14);
   });

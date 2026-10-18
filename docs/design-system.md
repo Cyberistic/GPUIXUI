@@ -442,8 +442,8 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection of a status label (`xText` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
-| text selection on a filled action (`primaryForeground`/`secondaryForeground`/`destructiveForeground` over the composited `selectionOnFill` veil) | 4.5:1 | 7:1 |
-| text selection veil on a filled action (`selectionOnFill` over `primary`/`secondary`/`destructive`) | 1.05:1 | 1.05:1 |
+| text selection on a filled action (`primaryForeground`/`secondaryForeground`/`destructiveForeground`/`accentForeground` over the composited `selectionOnFill` veil) | 4.5:1 | 7:1 |
+| text selection veil on a filled action (`selectionOnFill` over `primary`/`secondary`/`destructive`/`accent`) | 1.05:1 | 1.05:1 |
 | focus ring (`ring`) on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, the `destructive` ring an invalid control paints on the same surfaces, essential boundaries (`borderStrong`) on `background`/`card`/`popover`/`muted` and the `input` fill a field sits on, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) and the field's pressed edge (`ring` on `input`) | 3:1 | 4.5:1 |
 | graphic marks (`primary`/`success`/`destructive` on `background`/`card`/`popover`/`muted`, `primary` and `destructive` on the `input` fill a slider thumb rings, and `primary` on the `hover` wash a highlighted combobox option paints its check on) | 3:1 | 4.5:1 |
 | value indicator groove (`track`) on `background`/`card`/`popover`/`muted` and the `accent`/`selected` fills | 1.05:1 | 1.05:1 |

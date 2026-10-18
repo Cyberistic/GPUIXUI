@@ -1074,23 +1074,23 @@ export const selectionWashPairs: readonly ContrastPair[] =
 
 /**
  * Content painted on a filled action — a user message bubble on `primary`, a
- * neutral filled surface, a destructive one — uses the inverse veil rather than
- * the accent-tinted `selection`, which is invisible on the accent fill itself.
- * The veil is held to the perceivability floor on each fill, and each family's
- * own foreground to the floor it already has on that fill.
+ * neutral filled surface, a destructive one, or a brand-toned toggle — uses the
+ * inverse veil rather than the accent-tinted `selection`, which is invisible on
+ * the accent fill itself. Both lists derive from `filledControlFamilies`, so a
+ * fifth family cannot ship with no selection pair: the veil is held to the
+ * perceivability floor on each fill, and each family's own foreground to the
+ * floor it already has on that fill.
  */
-export const selectionFillWashPairs: readonly ContrastPair[] = [
-  ["selectionOnFill", "primary", "surface"],
-  ["selectionOnFill", "secondary", "surface"],
-  ["selectionOnFill", "destructive", "surface"],
-];
+export const selectionFillWashPairs: readonly ContrastPair[] =
+  filledControlFamilies.map(
+    (fill): ContrastPair => ["selectionOnFill", fill, "surface"],
+  );
 
 /** The family foreground through the inverse veil, at the on-colour floor. */
-export const selectionFillPairs: readonly ContrastPair[] = [
-  ["primaryForeground", "primary", "secondary"],
-  ["secondaryForeground", "secondary", "secondary"],
-  ["destructiveForeground", "destructive", "secondary"],
-];
+export const selectionFillPairs: readonly ContrastPair[] =
+  filledControlFamilies.map(
+    (fill): ContrastPair => [`${fill}Foreground`, fill, "secondary"],
+  );
 
 /**
  * The text roles a soft status panel carries, through the selection wash: the

@@ -8,10 +8,17 @@
  * status fills, but never on a filled action.
  *
  * `selectionOnFill` is the neutral 15% veil for content painted on a filled
- * action. `selectionFillWashPairs` holds it to the perceivability floor on
- * `primary`, `secondary` and `destructive`, and `selectionFillPairs` holds each
- * family's own foreground through it to the floor that foreground already has on
- * its fill.
+ * action. `selectionFillWashPairs` holds it to the perceivability floor on every
+ * shipped filled family, and `selectionFillPairs` holds each family's own
+ * foreground through it to the floor that foreground already has on its fill.
+ *
+ * Plan 382 guards the fourth family: the package ships `primary`, `secondary`,
+ * `destructive` and `accent` (`filledControlFamilies`), but both lists named
+ * three. Selecting the label on an accent fill measured **4.140:1** on macOS
+ * light and **4.430:1** on Linux dark through the veil — under the 4.5:1 the
+ * on-colour role has — while `themeContrastFailures` returned `[]`. Both lists
+ * now derive from the family index, and the two foregrounds move one designed
+ * step.
  */
 
 import { describe, expect, it } from "vitest";
@@ -20,6 +27,7 @@ import {
   contrastFloors,
   contrastRatio,
   extendTheme,
+  filledControlFamilies,
   getPlatformRecipeTheme,
   getPlatformTheme,
   getTheme,
@@ -57,8 +65,6 @@ const variants: ReadonlyArray<readonly [string, Theme]> = themeModes.flatMap(
     ]),
 );
 
-const fills = ["primary", "secondary", "destructive"] as const;
-
 describe("the selection veil on a filled action", () => {
   it("publishes one wash and one text pair per filled family", () => {
     expect(
@@ -67,12 +73,12 @@ describe("the selection veil on a filled action", () => {
         fill,
         pairClass,
       ]),
-    ).toEqual(fills.map((fill) => ["selectionOnFill", fill, "surface"]));
-    expect(selectionFillPairs.map(([role, fill]) => [role, fill])).toEqual([
-      ["primaryForeground", "primary"],
-      ["secondaryForeground", "secondary"],
-      ["destructiveForeground", "destructive"],
-    ]);
+    ).toEqual(
+      filledControlFamilies.map((fill) => ["selectionOnFill", fill, "surface"]),
+    );
+    expect(selectionFillPairs.map(([role, fill]) => [role, fill])).toEqual(
+      filledControlFamilies.map((fill) => [`${fill}Foreground`, fill]),
+    );
     expect(
       selectionFillPairs.every(([, , pairClass]) => pairClass === "secondary"),
     ).toBe(true);
@@ -80,23 +86,14 @@ describe("the selection veil on a filled action", () => {
 
   it("keeps every shipped set's veil and family text at their floors", () => {
     const failures = variants.flatMap(([label, theme]) =>
-      fills.flatMap((fill) => {
+      filledControlFamilies.flatMap((fill) => {
         const painted = compositeOver(
           theme.colors.selectionOnFill,
           theme.colors[fill],
         );
         const floors = contrastFloors[theme.contrast];
         const wash = contrastRatio(painted, theme.colors[fill]);
-        const text = contrastRatio(
-          theme.colors[
-            fill === "primary"
-              ? "primaryForeground"
-              : fill === "secondary"
-                ? "secondaryForeground"
-                : "destructiveForeground"
-          ],
-          painted,
-        );
+        const text = contrastRatio(theme.colors[`${fill}Foreground`], painted);
         return wash >= floors.surface && text >= floors.secondary
           ? []
           : [
@@ -162,6 +159,52 @@ describe("the selection veil on a filled action", () => {
         ratio: 1,
       },
     ]);
+  });
+
+  it("reports an edited theme whose veil matches its accent fill", () => {
+    const base = getTheme("dark");
+    const regressed = extendTheme(base, {
+      colors: { selectionOnFill: base.colors.accent },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ wash, background, pairClass }) =>
+        wash === "selectionOnFill" &&
+        background === "accent" &&
+        pairClass === "surface",
+    );
+
+    expect(
+      failures.map(({ foreground, pairClass, floor, ratio }) => ({
+        foreground,
+        pairClass,
+        floor,
+        ratio,
+      })),
+    ).toEqual([
+      {
+        foreground: "selectionOnFill",
+        pairClass: "surface",
+        floor: contrastFloors.default.surface,
+        ratio: 1,
+      },
+    ]);
+  });
+
+  it("reports an accent foreground that vanishes through the veil", () => {
+    const base = getTheme("light");
+    const regressed = extendTheme(base, {
+      colors: { accentForeground: base.colors.accent },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ wash, foreground, background }) =>
+        wash === "selectionOnFill" &&
+        foreground === "accentForeground" &&
+        background === "accent",
+    );
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.pairClass).toBe("secondary");
+    expect(failures[0]?.floor).toBe(contrastFloors.default.secondary);
   });
 
   it("reports an opaque veil that erases the family label", () => {

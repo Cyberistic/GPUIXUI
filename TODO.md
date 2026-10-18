@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 147/199
+`[x]` `[███████░░░]` 148/200
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1097,6 +1097,13 @@ the click changed nothing; `selectionStepPairs` publishes the step, eight shippe
 sets move `selected` one designed step, macOS light's `selectedForeground` moves
 with its deeper fill, every shipped set and both executed examples still pass
 all three checks, and the consumer composition is cross-team (plan 381)
+`[x]` Hold the accent family's text selection on its filled action — both
+fill-selection lists were hand-typed with three of the four shipped families, so
+selecting the label on an `accent` fill was unmeasured; with `accent` derived
+from `filledControlFamilies` the label measured **4.140:1** on macOS light and
+**4.430:1** on Linux dark through the veil, under the 4.5:1 floor, so the two
+accent foregrounds move one designed step and the two lists publish eight pairs
+(plan 382)
 
 ## Phase C — Tier 1–2 components
 

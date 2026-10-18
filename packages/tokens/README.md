@@ -486,8 +486,9 @@ custom element that paints its own fixed wash (`#7C86FF59`) and placeholder
 does not reach a native field. Content painted on a filled action uses
 `selectionStyle(theme, "fill")`: the accent-tinted wash composites to 1.000:1 on
 `primary` in six shipped palettes, so `selectionOnFill` is a neutral 15% veil.
-`selectionFillPairs` and `selectionFillWashPairs` hold each family's foreground
-and the veil itself to their floors. A runnable example lives in
+`selectionFillPairs` and `selectionFillWashPairs` hold all four filled families'
+(`primary`, `secondary`, `destructive`, `accent`) foregrounds and the veil itself
+to their floors. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts).
 
 ```tsx

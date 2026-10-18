@@ -176,6 +176,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [377](./377-design-system-figures.md) | The design-system's current scrim and wash-link figures | F | 062, 075, 087, 336, 375, 376 | done |
 | [380](./380-stored-theme-choice.md) | The persisted theme choice, resolved in one place | F | 051, 063, 067, 068, 096, 301, 304, 305, 311, 323, 373, 374 | done |
 | [381](./381-selected-row-step.md) | The selected row is a perceivable step from the hover wash | F | 016, 059, 081, 097, 309, 327, 342, 357, 380 | done |
+| [382](./382-accent-fill-selection.md) | The accent family's text selection on its filled action | F | 097, 327, 344, 381 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1585,6 +1586,21 @@ cleared the floor or move one step inside their own family. No new role, no
 change to `accent`, and the consumer half — a selected row should not repaint
 with the unselected hover wash while the pointer is over it — is recorded
 cross-team.
+
+382 closes the fourth filled family in the inverse-selection contract. The
+package ships `primary`, `secondary`, `destructive` and `accent`
+(`filledControlFamilies`), but `selectionFillPairs` and `selectionFillWashPairs`
+were hand-typed with three names, so selecting the label on an accent fill was
+unmeasured. Deriving both lists from the family index found a real shipped
+defect: the accent foreground through the neutral veil measured **4.140:1** on
+macOS light and **4.430:1** on Linux dark, under the 4.5:1 the on-colour role
+has, while `themeContrastFailures` returned `[]`. The two accent foregrounds
+move one designed step (`#0055B3` → `#004A9E`, `#A8CBF0` → `#B4D5F7`), both
+lists publish four pairs each, and every other shipped set already cleared the
+floor. The corrected tightest figures — 4.827:1 text (macOS dark) and 1.075:1
+veil (identity dark high) — replace the stale 6.10:1 and 1.105:1 the page had
+quoted without a test; the new case derives both from the shipped sets. No new
+role.
 
 ### Reference adoption (block `200–299`)
 

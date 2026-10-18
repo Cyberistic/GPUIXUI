@@ -29,7 +29,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * style over another platform's theme cannot keep that platform's tint (plan
  * 374). The selected row is a step past the accent wash a selectable row hovers
  * with, and its readable text step moves with it — no deeper selection keeps
- * the old blue at 4.5:1 (plan 381).
+ * the old blue at 4.5:1 (plan 381). The accent's own foreground is that same
+ * readable step, so selecting the label on the pale accent fill keeps its floor
+ * through the inverse veil (plan 382).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -61,7 +63,7 @@ export const macosPlatformStyle = {
       primaryActive: "#004C99",
       primaryText: "#0055B3",
       accent: "#D9EAFD",
-      accentForeground: "#0055B3",
+      accentForeground: "#004A9E",
       accentHover: "#CBE2FC",
       accentActive: "#BFD9F8",
       ring: "#0071E3",
