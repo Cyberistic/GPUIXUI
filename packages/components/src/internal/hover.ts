@@ -1,5 +1,6 @@
 /**
- * The hover-travel rule shared by `PreviewCard` and `NavigationMenu`.
+ * The hover-travel rule shared by `PreviewCard`, `NavigationMenu` and the menu
+ * submenus.
  *
  * The runtime delivers the incoming surface's `mouseEnter` before the outgoing
  * surface's `mouseLeave`, so a leave must not close while the other surface
