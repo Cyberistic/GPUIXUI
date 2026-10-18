@@ -37,6 +37,24 @@ import {
   DropdownMenuTrigger,
 } from "@gpuixui/components/dropdown-menu";
 import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@gpuixui/components/drawer";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@gpuixui/components/navigation-menu";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -407,6 +425,61 @@ const SpinnerScene = (): ReactElement => {
   );
 };
 
+/**
+ * The drawer's surface exists only while open, so the scene mounts it open with
+ * the public `defaultOpen` (plan 476). The veil covers the scene, which is what
+ * a real drawer does; the panel's own description is the assertion.
+ */
+const DrawerScene = (): ReactElement => (
+  <Drawer defaultOpen>
+    <DrawerTrigger>Filters</DrawerTrigger>
+    <DrawerContent side="right" size="md" label="Filters">
+      <DrawerHeader>
+        <DrawerTitle>Filters</DrawerTitle>
+        <DrawerDescription>
+          Narrow the result set, then apply.
+        </DrawerDescription>
+      </DrawerHeader>
+      <DrawerFooter>
+        <DrawerClose>Cancel</DrawerClose>
+      </DrawerFooter>
+    </DrawerContent>
+  </Drawer>
+);
+
+/**
+ * One panel open at mount through the controlled `value` (plan 476), so the
+ * surface proves the real anchored panel and its links, not a trigger row.
+ */
+const NavigationMenuScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Product navigation</Text>
+    <NavigationMenu label="Product" value="platform">
+      <NavigationMenuList>
+        <NavigationMenuItem value="platform">
+          <NavigationMenuTrigger>Platform</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <NavigationMenuLink onSelect={() => undefined}>
+              Overview
+            </NavigationMenuLink>
+            <NavigationMenuLink onSelect={() => undefined}>
+              Runtime
+            </NavigationMenuLink>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem value="pricing">
+          <NavigationMenuTrigger>Pricing</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <NavigationMenuLink onSelect={() => undefined}>
+              Plans
+            </NavigationMenuLink>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
+  </Stack>
+);
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -420,6 +493,8 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "scroll-area": ScrollAreaScene,
     skeleton: SkeletonScene,
     spinner: SpinnerScene,
+    drawer: DrawerScene,
+    "navigation-menu": NavigationMenuScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

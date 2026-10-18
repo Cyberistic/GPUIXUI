@@ -18,6 +18,8 @@ export const LIVE_SCENES = [
   "scroll-area",
   "skeleton",
   "spinner",
+  "drawer",
+  "navigation-menu",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -43,6 +45,8 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "scroll-area": "09:45  Saved layout",
   skeleton: "Loading profile",
   spinner: "Writing 3 files…",
+  drawer: "Narrow the result set, then apply.",
+  "navigation-menu": "Runtime",
 };
 
 /**

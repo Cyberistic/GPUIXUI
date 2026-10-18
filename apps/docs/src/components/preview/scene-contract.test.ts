@@ -35,6 +35,8 @@ const interactionScenes = new Map([
   ["popover", "popover"],
   ["command-menu", "command-menu"],
   ["confirm-dialog", "confirm-dialog"],
+  ["drawer", "drawer"],
+  ["navigation-menu", "navigation-menu"],
 ]);
 
 const pagesDirectory = new URL(

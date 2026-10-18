@@ -471,7 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–473)
 
-`[~]` `[██████████]` 73/74
+`[~]` `[██████████]` 74/75
+
+`[x]` **Drawer and Navigation menu get live scenes (plan 476)** — both ship the open prop their gap reason denied (`Drawer.defaultOpen`, `NavigationMenu.value`), so the two pages now render the real open surface on GPUix's wasm renderer; the gap set falls from nine to seven and the document, the code and the records agree
 
 `[x]` **A live scene's canvas must be sized (plan 475)** — the scene loop accepted a `ready` flag on a 1×1 frame, and the plan-474 run measured `dropdown-menu ready — 1x1 canvas` passing; every scene now waits for a canvas larger than 1×1, and a forced threshold fails the first scene with `timeout`
 

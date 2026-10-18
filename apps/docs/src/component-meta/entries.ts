@@ -1349,6 +1349,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/navigation-menu.tsx",
       api: ["NavigationMenuProps", "NavigationMenuLinkProps"],
+      liveScene: "navigation-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/navigation-menu.test.tsx",
@@ -1394,6 +1395,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/drawer.tsx",
       api: ["DrawerProps", "DrawerContentProps"],
+      liveScene: "drawer",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/drawer.test.tsx",
