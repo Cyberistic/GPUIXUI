@@ -20,6 +20,7 @@ export {
   type TwMotion,
 } from "./motion.js";
 export { resolveUtility, type Utility } from "./utilities.js";
+export { unsupportedClasses, unsupportedReason } from "./unsupported.js";
 export {
   BUTTON_BASE,
   BUTTON_SIZES,
