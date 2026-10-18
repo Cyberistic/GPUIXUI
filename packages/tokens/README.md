@@ -593,12 +593,13 @@ carry the Windows dark palette, because neither Windows version shipped a dark
 mode.
 
 High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
-applies the families and shape — radii, density, motion and the platform's
-elevation levels — while the AAA colour set stays, because a platform accent must
-not drop those floors. Elevation carries no colour of its own: a level is
-geometry plus an alpha over the theme's `shadow` tint, so the AAA tint stays
-while the platform's depth applies (plan 345). To ship your own look, copy a style
-file and apply it, or extend the resolved theme:
+applies the families and shape — radii, density, motion, type roles, spacing,
+borders, icon/avatar sizes, component dimensions and the platform's elevation
+levels — while the AAA colour set stays, because a platform accent must not drop
+those floors. Elevation carries no colour of its own: a level is geometry plus an
+alpha over the theme's `shadow` tint, so the AAA tint stays while the platform's
+depth applies (plan 345). To ship your own look, copy a style file and apply it,
+or extend the resolved theme:
 
 ```ts
 import {
@@ -608,13 +609,20 @@ import {
   getTheme,
 } from "@gpuixui/tokens";
 
-// A copied `PlatformStyle` with edited values.
+// A copied `PlatformStyle` with edited values. Its `structure` owns the
+// numeric scales — type roles, spacing, borders, icon/avatar sizes and
+// component dimensions — beside radii, density and motion.
 const contoso = applyPlatformStyle(getTheme("dark"), contosoStyle);
 const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
   colors: { primary: "#005A9E" },
   radius: { md: 3 },
 });
 ```
+
+A style's `structure` group names type roles but never families: `types` owns
+`sans` and `mono`, so a copied file cannot name two UI faces. The
+`platform-extension.example.ts` example names every numeric group and is applied
+in both modes, so the shape is compiled and held to `themeFailures`, not sketched.
 
 Runnable examples live in
 [`src/platforms.example.ts`](./src/platforms.example.ts) and

@@ -462,10 +462,15 @@ const platformOverrides = (
   const { label, sans, mono } = style.types;
   const structural: ThemeOverrides = {
     name: `${base.name} · ${label}`,
-    typography: { sans, mono },
+    typography: { sans, mono, ...style.structure.typography },
+    spacing: style.structure.spacing,
     radius: style.structure.radius,
     density: style.structure.density,
     motion: style.structure.motion,
+    borderWidth: style.structure.borderWidth,
+    iconSize: style.structure.iconSize,
+    avatarSize: style.structure.avatarSize,
+    dimensions: style.structure.dimensions,
     // A level is geometry plus an alpha over the base's `shadow` tint (plan
     // 085), so it carries no colour: the platform's depth applies at every
     // contrast level while an AAA base keeps its own tint.

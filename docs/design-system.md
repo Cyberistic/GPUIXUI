@@ -622,7 +622,11 @@ canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their
 dark `skeleton`, and every shipped base and style pair is applied and held to all
 four checks (`platform-composition.test.ts`, plan `374`). A style applied over
 another platform's theme therefore keeps its own canvas's tint rather than the
-previous one's.
+previous one's. A platform style also carries the **numeric scales** — type
+roles, spacing, border widths, icon and avatar sizes and component dimensions —
+so copying a style file owns the whole look, not only its palette. The shipped
+styles name none of them, so their resolved values are the identity's; the
+`platform-extension.example.ts` file is a complete copyable example.
 
 Overrides merge by group; typography merges field by field, density metrics size
 by size, motion timing by timing and easing by easing; elevation levels are

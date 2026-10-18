@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 154/209
+`[x]` `[███████░░░]` 155/210
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -452,9 +452,23 @@ secondary floor (plan 332; owner: `components`)
 `accent` — `menu/item.tsx:286` paints `theme.colors.accent` on the menu's
 `popover` (1.11–1.39:1) and on the `hover`/`active` row fill (1.00–1.08:1),
 under the 3:1 mark floor, so a checked item has no visible check; `accent` is a
-wash, not a glyph. Use `popoverForeground` — the row's own text role, already
-measured on `popover`/`hover`/`active`/`selected` — as `ComboboxItem` already
-does with `primary` (plan 339; owner: `components`)
+wash, not a glyph. `menu/radio.tsx:168` repeats it for `MenuRadioItem`'s selected
+dot, which is a 6px `spacing.sm` circle in the same role on the same surfaces, so
+a chosen radio option has no visible mark. Use `popoverForeground` — the row's
+own text role, already measured on `popover`/`hover`/`active`/`selected` — or
+`primaryText` when the mark should stay brand-toned; both clear the mark floor
+where `accent` does not (plan 339; owner: `components`; radio found while
+auditing plan 389)
+`[ ]` Cross-team: `components` gives the ColorPicker's selected swatch a visible
+ring — `color-picker.tsx:161` paints the selection ring in `theme.colors.foreground`
+on the swatch's own fill, and the six default swatches are `primary`, `secondary`,
+`accent`, `muted`, `destructive` and `foreground`, so the ring measures
+**1.000:1** on the `foreground` swatch in every theme and 1.56–2.98:1 on
+`primary`/`destructive` in most sets, under the 3:1 mark floor. A ring that must
+contrast with arbitrary content needs two tones — e.g. a `background` inner ring
+plus a `borderStrong`/`foreground` outer ring — or a `primaryForeground` check
+glyph on the swatch; no single palette role can guarantee contrast with a
+user-supplied colour (plan 389 audit; owner: `components`)
 `[ ]` Cross-team: `components` uses `primaryText` for the Accordion trigger's
 hover label — `accordion.tsx:474` sets `color: primary` on hover, and the fill
 role measures 4.21:1 on the macOS light canvas and 3.82:1 on a card, under the
@@ -1148,6 +1162,12 @@ future recipe or platform could be silently omitted. Every full-set claim now
 maps the enumeration and labels a set with `theme.name`, and a guard in
 `shipped-themes.test.ts` fails a claiming suite that rebuilds its own list
 (plan 388)
+`[x]` Let a copied platform style own its whole look — `PlatformStyle.structure`
+now carries type roles, spacing, border widths, icon/avatar sizes and component
+dimensions beside radii, density and motion, applied at both contrast levels and
+merged field by field; every shipped style omits them, so no resolved value
+moves, and `platform-extension.example.ts` is the complete copyable file
+(plan 389)
 
 ## Phase C — Tier 1–2 components
 

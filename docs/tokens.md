@@ -107,7 +107,7 @@ missing here is not public.
 | `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
 | `PlatformShippedTheme` | A styled platform set in `shippedThemes`, with the variant it came from. |
 | `PlatformStyle` | Editable platform data: types, structure, colours and elevation. |
-| `PlatformStyleStructure` | Radii, density and motion shared by both modes. |
+| `PlatformStyleStructure` | Radii, density, motion, type roles, spacing, borders, icon/avatar sizes and component dimensions shared by both modes. |
 | `PlatformType` | The label and sans/mono families of one platform. |
 | `PlatformVariant` | A platform that carries its own style: `darwin`, `linux` or `win32`. |
 | `Radius` | The corner-radius scale. |
@@ -619,11 +619,24 @@ interface PlatformStyle {
     radius?: Partial<Radius>;
     density?: DensityName;
     motion?: Partial<Omit<Motion, "ease">>;
+    typography?: Partial<Record<TextRole, Partial<TextStyle>>>;
+    spacing?: Partial<Spacing>;
+    borderWidth?: Partial<BorderWidth>;
+    iconSize?: Partial<IconSize>;
+    avatarSize?: Partial<AvatarSize>;
+    dimensions?: Partial<Dimensions>;
   };
   colors: Record<ThemeMode, Partial<ThemeColors>>;
   elevation: Record<ThemeMode, Partial<Elevation>>;
 }
 ```
+
+A style owns its **whole look**, not only its colours: the type scale exists
+beside the families, and spacing, borders, icon/avatar sizes and component
+dimensions travel with radii, density and motion. Families live in `types`
+(never in `typography`, so a style cannot name two UI faces), and each group
+merges field by field exactly like `extendTheme`. These groups are structural:
+they apply at both contrast levels, because they are geometry, not colour.
 
 A complete file authored from scratch lives in
 [`src/platform-styles.example.ts`](../packages/tokens/src/platform-styles.example.ts)
@@ -638,6 +651,14 @@ hover and press; that is the lavender Contoso toggle plan `330` fixed. The
 drag-selection wash follows the accent too: `selection` is the accent at the
 identity's alpha for the mode, because a copied style that keeps the identity
 wash selects text in another hue (plan `331`).
+
+A second complete file,
+[`src/platform-extension.example.ts`](../packages/tokens/src/platform-extension.example.ts)
+(`contosoDensityPlatformStyle`), names every numeric group — type roles,
+spacing, borders, icon and avatar sizes and component dimensions — so the
+copy-and-own path is shown for geometry as well as colour. It is applied in both
+modes and held to `themeFailures`, because a copied style is still an edited
+theme.
 
 `applyPlatformStyle(getTheme(mode), contosoPlatformStyle)` is the same call the
 shipped variants use, so a copied file cannot take a path the library does not

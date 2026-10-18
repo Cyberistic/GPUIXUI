@@ -7,8 +7,17 @@
 import type { ThemeColors } from "./color.js";
 import type { Elevation } from "./elevation.js";
 import type { Motion } from "./motion.js";
-import type { DensityName, Radius } from "./scale.js";
+import type {
+  AvatarSize,
+  BorderWidth,
+  DensityName,
+  Dimensions,
+  IconSize,
+  Radius,
+  Spacing,
+} from "./scale.js";
 import type { ThemeMode } from "./theme.js";
+import type { TextStyle, TextRole } from "./typography.js";
 
 /** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
 export const systemUiFont = ".SystemUIFont";
@@ -48,6 +57,24 @@ export interface PlatformStyleStructure {
   readonly density?: DensityName;
   /** Transition timings; easings are shared. */
   readonly motion?: Partial<Omit<Motion, "ease">>;
+  /**
+   * Type roles — size, leading and weight. Families stay in `types`, so a style
+   * cannot name two different UI faces. Omitted roles inherit the identity.
+   */
+  readonly typography?: Partial<Record<TextRole, Partial<TextStyle>>>;
+  /** Spacing steps. Omitted steps inherit the identity. */
+  readonly spacing?: Partial<Spacing>;
+  /** Border thicknesses. Omitted widths inherit the identity. */
+  readonly borderWidth?: Partial<BorderWidth>;
+  /** Named icon sizes. Omitted sizes inherit the identity. */
+  readonly iconSize?: Partial<IconSize>;
+  /** Avatar diameters. Omitted sizes inherit the identity. */
+  readonly avatarSize?: Partial<AvatarSize>;
+  /**
+   * Overlay, field, chip, toast and preview-card metrics. Omitted metrics
+   * inherit the identity.
+   */
+  readonly dimensions?: Partial<Dimensions>;
 }
 
 /**
