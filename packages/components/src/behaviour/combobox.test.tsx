@@ -21,6 +21,10 @@
  * one Escape or one backdrop press closed the popup **and** the dialog around
  * it, and pressing the trigger closed the popup only for the click that follows
  * to re-open it.
+ *
+ * Trigger surface (plan 565): the trigger took native focus but painted no focus
+ * ring, so a keyboard user saw nothing; and its literal style overwrote the
+ * caller's, so `style` never reached the runtime.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -34,7 +38,7 @@ import {
   focusedTestId,
   requireBounds,
 } from "../internal/interaction.js";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import { darkTheme, focusRing, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -274,6 +278,29 @@ const open = async (root: ComponentTestRoot): Promise<void> => {
 const type = (root: ComponentTestRoot, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
+
+/** A closed combobox with an auto-focused, optionally styled or disabled trigger. */
+const TriggerPicker = ({
+  triggerStyle,
+  autoFocus,
+  disabled,
+}: {
+  readonly triggerStyle?: { readonly backgroundColor: string };
+  readonly autoFocus?: boolean;
+  readonly disabled?: boolean;
+}) => (
+  <Combobox options={options} disabled={disabled}>
+    <ComboboxTrigger
+      label="Assign reviewer"
+      autoFocus={autoFocus}
+      {...(triggerStyle === undefined ? {} : { style: triggerStyle })}
+    />
+    <ComboboxContent>
+      <ComboboxInput label="Search reviewers" />
+      <ComboboxList label="Reviewers" />
+    </ComboboxContent>
+  </Combobox>
+);
 
 describe("Combobox", () => {
   it("opens the popup and focuses the search input", async () => {
@@ -1103,6 +1130,66 @@ describe("Combobox", () => {
     expect(
       picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
     ).toBeDefined();
+
+    picker.unmount();
+  });
+
+  /**
+   * The trigger's own surface (plan 565). The bugs these guard, measured: an
+   * `autoFocus` trigger was the focused element (id 4) but reported no
+   * `boxShadow`, so keyboard focus on the closed control was invisible; and a
+   * caller `style={{ backgroundColor: "#FF0000" }}` was overwritten by the
+   * component's literal style (`#11141A`).
+   */
+  it("paints the token focus ring on an auto-focused trigger, in both themes", () => {
+    const assertTheme = (theme: TestTheme): void => {
+      const palette = theme === "dark" ? darkTheme : lightTheme;
+      const picker = renderComponent(<TriggerPicker autoFocus />, theme);
+
+      expect(
+        picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow,
+      ).toEqual(focusRing(palette).boxShadow);
+
+      picker.unmount();
+    };
+
+    assertTheme("dark");
+    assertTheme("light");
+  });
+
+  it("gives the ring up while the popup's search field holds focus", async () => {
+    const picker = renderComponent(<TriggerPicker autoFocus />);
+    await open(picker);
+
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow,
+    ).toBeUndefined();
+    expect(
+      picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
+    ).toEqual(focusRing(darkTheme).boxShadow);
+
+    picker.unmount();
+  });
+
+  it("merges the caller's style over the trigger's base", () => {
+    const picker = renderComponent(
+      <TriggerPicker triggerStyle={{ backgroundColor: "#FF0000" }} />,
+    );
+    const trigger = picker.renderer.findByTestId("combobox-trigger");
+
+    expect(trigger?.style.backgroundColor).toBe("#FF0000");
+    expect(trigger?.style.borderRadius).toBe(darkTheme.radius.md);
+
+    picker.unmount();
+  });
+
+  it("paints no ring on a disabled trigger that asks for focus", () => {
+    const picker = renderComponent(<TriggerPicker autoFocus disabled />);
+
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow,
+    ).toBeUndefined();
 
     picker.unmount();
   });

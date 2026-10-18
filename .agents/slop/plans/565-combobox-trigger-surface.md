@@ -5,7 +5,7 @@
 | Phase | C/F (Tier 2 hardening) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `116`, `117`, `388`, `394`, `516`, `522`, `523`, `527` |
-| Status | planned |
+| Status | done — 4 native cases (Combobox 45), four mutation proofs |
 | Blocker | none — the assertions read the authored `style` the renderer reports (plan `150`) and `autoFocus` seeds the focus state (plan `388`), so the plan-540 binding defects (focus events, box conventions) are out of scope |
 
 This plan is self-contained. A weaker executor must be able to run it without

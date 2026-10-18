@@ -505,17 +505,30 @@ export interface ComboboxTriggerProps extends Omit<
   readonly testId?: string;
 }
 
-/** The closed control: the selected labels, the caret and `aria-expanded`. */
+/**
+ * The closed control: the selected labels, the caret and `aria-expanded`. It
+ * paints the token focus ring while it holds focus, and gives it up while the
+ * popup is open because the search field owns focus then. A caller `style`
+ * merges last (plan 565).
+ */
 export const ComboboxTrigger = ({
   placeholder = "Select…",
   label,
   testId = "combobox-trigger",
+  autoFocus = false,
+  onFocus,
+  onBlur,
   onKeyDown,
+  style,
   ...rest
 }: ComboboxTriggerProps) => {
   const theme = useTheme();
   const { selectedValues, open, disabled, labelFor, registerTrigger } =
     useCombobox();
+  // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+  // runs on mount and the ring would be computed from a stale state (plan 388).
+  // A disabled trigger is never focused or ringed (plans 394, 527).
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   const display =
     selectedValues.length === 0
       ? placeholder
@@ -532,36 +545,49 @@ export const ComboboxTrigger = ({
       ref={registerTrigger}
       testId={testId}
       disabled={disabled}
+      autoFocus={autoFocus && !disabled}
       {...rest}
       {...stateDescription(disabled, rest["aria-description"])}
+      onFocus={(event) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         // Escape closes the open popup as one surface, like the search field.
         if (isDismiss(event)) dismissTopLayer(event);
       }}
-      style={{
-        ...textStyle(theme, "label"),
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: theme.spacing.md,
-        width: "100%",
-        height: controlHeight(theme, "md"),
-        paddingLeft: theme.spacing.md,
-        paddingRight: theme.spacing.md,
-        backgroundColor: theme.colors.background,
-        color:
-          selectedValues.length === 0
-            ? theme.colors.mutedForeground
-            : theme.colors.foreground,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.borderStrong,
-        borderRadius: theme.radius.md,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
-      }}
+      style={mergeStyles(
+        {
+          ...textStyle(theme, "label"),
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: theme.spacing.md,
+          width: "100%",
+          height: controlHeight(theme, "md"),
+          paddingLeft: theme.spacing.md,
+          paddingRight: theme.spacing.md,
+          backgroundColor: theme.colors.background,
+          color:
+            selectedValues.length === 0
+              ? theme.colors.mutedForeground
+              : theme.colors.foreground,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.borderStrong,
+          borderRadius: theme.radius.md,
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+          hover: disabled ? undefined : { backgroundColor: theme.colors.hover },
+          ...(focused && !disabled && !open ? focusRing(theme) : {}),
+        },
+        style,
+      )}
     >
       <text
         style={{

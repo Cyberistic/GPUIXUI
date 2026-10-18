@@ -226,9 +226,11 @@ The popup closes one layer per event: inside a dialog, the first Escape or
 outside press closes the popup and leaves the dialog open.
 
 The search input keeps focus and paints the token focus ring while it holds it
-(plan 523); the highlighted row is visual. The field stays fixed at the top of
-the popup and only the list scrolls, so the highlighted option is scrolled into
-the list's viewport as the arrows move it (plan 535). **No
+(plan 523); the highlighted row is visual. The trigger paints the same token
+ring while it holds focus on the closed control, and gives it up while the popup
+is open — exactly one ring is visible at a time (plan 565). The field stays fixed
+at the top of the popup and only the list scrolls, so the highlighted option is
+scrolled into the list's viewport as the arrows move it (plan 535). **No
 `aria-activedescendant`** exists in 0.10.0, so assistive technology does not get
 the input→row relationship; `aria-selected` on the rows is the supported signal.
 
@@ -245,7 +247,7 @@ ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `Combobox` | GPUix's headless combobox root | `options: ReadonlyArray<ComboboxOption>` (required), `value?: string \| ReadonlyArray<string>`, `defaultValue?: string \| ReadonlyArray<string>`, `onValueChange?: (value: ComboboxSelection) => void`, `multiple?: boolean` (default `false`), `disabled?: boolean`, `onQueryChange?: (query: string) => void`, `debounce?: number` (default `0`), `shouldFilter?: boolean` (default `true`), `loading?: boolean`, `onCreate?: (query: string) => void`, `createLabel?: (query: string) => string` |
-| `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string`, `testId?: string` (default `"combobox-trigger"`) |
+| `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string`, `testId?: string` (default `"combobox-trigger"`), plus the host props it accepts (`style`, `autoFocus`, focus/key handlers and `aria-*`) |
 | `ComboboxContent` | anchored popup | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
 | `ComboboxInput` | `input` | `placeholder?: string` (default `"Search…"`), `label?: string` (default `"Search options"`), `onChange?: (event: EventPayload) => void` |
 | `ComboboxList` | GPUix's listbox: one labelled group per contiguous run, one row per visible option | `label?: string` (default `"Options"`), `testId?: string` (default `"combobox-list"`), `itemStyle?: StateStyle<ComboboxItemState>` |
@@ -256,7 +258,10 @@ ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in
 `colors.borderStrong`, `radius.md`, `controlHeight(theme, "md")` and
-`colors.mutedForeground` for the placeholder. The popup paints
+`colors.mutedForeground` for the placeholder. It also paints `focusRing(theme)`
+while it holds focus (unless it is disabled or the popup is open), and a caller
+`style` merges **last**, so it can override any of those values without losing
+the rest. The popup paints
 `colors.popover`, `radius.md`, the `md` elevation, a `maxHeight` of 280 with
 scrolling, and rows highlight with `colors.hover`. The selected check is
 `colors.primary`.
@@ -299,9 +304,12 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (41 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (45 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
-reopen), a centred popup and a near-bottom popup that opens above its
+reopen), the trigger's own ring (auto-focused in both themes; given up while the
+popup's field holds focus), a caller `style` merging over the trigger's base, a
+disabled trigger painting no ring, a centred popup and a near-bottom popup that
+opens above its
 trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi

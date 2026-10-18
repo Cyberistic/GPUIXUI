@@ -202,7 +202,7 @@ retired once both branches are one
       skipped a neighbour). 5 native cases (Tabs 28, behaviour 744), three
       mutation proofs; docs, `COMPONENTS.md` and the inventory synced
     - [x] A refused tag edit reports no change — plan 562; `TagInput` called `onValueChange` with the same list on every keystroke that had not completed a token, and for a duplicate, the `max` cap and an empty commit. Both reporting paths now return when the rule handed back the current list by reference, so a controlled consumer sees only real edits; 2 strengthened native cases (Tag / token input: 15, one known plan-540 binding failure), both fail on the old wiring; docs, `COMPONENTS.md` and the inventory synced
-    - [~] The combobox trigger paints focus and keeps the caller's style — plan
+    - [x] The combobox trigger paints focus and keeps the caller's style — plan
       565; measured: an `autoFocus` trigger was the focused element yet painted
       no ring, and a caller `style` was overwritten. The trigger now seeds
       `focused`, paints the token ring unless disabled or open, and merges the
