@@ -222,6 +222,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [525](./525-row-text-selection.md) | The row's own text through a text selection | F | 071, 081, 087, 312, 316, 363, 506, 510 | done |
 | [526](./526-dialog-face-on-content.md) | The dialog's face over the content a window shows | F | 099, 359, 371, 375, 383, 395, 507, 508, 509, 525 | done |
 | [527](./527-field-text-row-washes.md) | The field's typed text and hint on the row washes | F | 071, 081, 087, 306, 315, 317, 319, 392, 500, 506 | done |
+| [528](./528-link-through-text-selection.md) | The link through a text selection | F | 071, 081, 082, 087, 314, 346, 351, 362, 366, 377, 391, 500, 506, 510, 525, 527 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2356,6 +2357,24 @@ checks returned `[]`. `inputForeground` and `placeholder` join the four washes
 `#D1D1D1`), every shipped set passes (4.651:1 at the tightest, Linux dark on
 `active`; 7.113:1 at AAA), and the hint stays 1.157:1 below `mutedForeground` at
 the tightest.
+
+Plan `528` closes the last text role the selection contract excluded. The
+reference called an accent-toned link under a text selection “the one deliberate
+omission”, on the reasoning that no visible wash keeps a link at 7:1 at AAA —
+which plan `366` had already disproved for the four status tones. `primaryText`
+is a text role, and a link in a paragraph, list row or Alert is selected with the
+copy around it. The audit found twelve of the twenty-four shipped sets below
+their floor through the wash: the AAA light link measured **5.376:1** on
+`destructiveSoft` under 7:1, macOS dark **3.708:1** on `selected`, Windows light
+3.995:1, XP light 4.378:1, Aero light 4.022:1, macOS light 4.106:1 and Linux
+dark 4.485:1 under 4.5:1, while every check returned `[]`. `selectionLinkPairs`
+adds thirteen pairs (the nine surfaces plus the four soft status fills), seven
+values move one designed step inside their own families (AAA light `#3B2C8F` →
+`#241C5C`, macOS `#0055B3` → `#004A9A` in light and `#64B5FF` → `#96CDFF` in
+dark, Linux dark `#99C1F1` → `#A5CBF5`, Windows light `#005BA1` → `#004F8A`, XP
+`#0046BD` → `#003FA8`, Aero `#0F55A3` → `#0C4A8C`), every shipped set passes
+(4.729:1 at the tightest, Windows dark; 7.484:1 at AAA) and `contrastPairs`
+stays **404**.
 
 ## How to use a plan
 
