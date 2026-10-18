@@ -130,6 +130,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [331](./331-authored-selection-wash.md) | The authored example's selection wash stays on the identity iris | F | 069, 330 | done |
 | [332](./332-mark-contrast.md) | The fill as a mark: a graphic needs more than 1.05:1 | F | 057, 082, 097, 309, 314 | done |
 | [333](./333-tokens-suite-timeout-budget.md) | The tokens suite must not fail its own gate | F | 061, 311, 332 | done |
+| [334](./334-secondary-wash-text.md) | The secondary control's label on the washes it paints | F | 097, 309, 318, 332 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -915,6 +916,17 @@ carries a `vitest.config.ts` with an explicit 20 s budget: headroom for a loaded
 worker, still short enough to fail a hung subprocess. No test, token, theme,
 platform style, recipe or document value changes; the proof is three consecutive
 green full-suite runs after the two failing runs before it.
+
+334 closes the composition plan 097's designed family left behind in the
+consumer. The shipped secondary Button (`components/internal/button.tsx` on
+`master`) keeps `secondaryForeground` while its fill becomes the generic
+`hover`/`active` wash, not the designed `secondaryHover`/`secondaryActive`; the
+contract measured the label only on the designed family, so an edited wash could
+erase a neutral button's label mid-interaction while `themeContrastFailures`
+returned `[]`. The two pairs join the `secondary` class (290 → 292); every
+shipped set already clears its floor (10.42:1 and 9.44:1 at the tightest), so no
+colour moves. The designed family stays the target for the consumer migration
+recorded cross-team; the pair guards what ships in the meantime.
 
 ### Reference adoption (block `200–299`)
 

@@ -1,0 +1,133 @@
+/**
+ * Guards the gap plan 334 closed. The shipped secondary Button
+ * (`components/internal/button.tsx`) keeps `secondaryForeground` while its fill
+ * steps onto the generic `hover` and `active` washes, not the designed
+ * `secondaryHover`/`secondaryActive` family plan 097 added. `contrastPairs`
+ * measured the label only on the designed family, so a copied platform style or
+ * brand theme could retint a wash until a neutral button's label disappeared
+ * mid-interaction while `themeContrastFailures` returned `[]`.
+ *
+ * The two pairs are a guard, not a palette fix: every shipped set already
+ * clears the 4.5:1 secondary floor (10.42:1 on `hover` and 9.44:1 on `active`
+ * at the tightest), so no colour moves. The designed family remains the target
+ * for the cross-team consumer migration.
+ */
+import { describe, expect, it } from "vitest";
+import {
+  contrastFloors,
+  contrastPairs,
+  contrastRatio,
+  extendTheme,
+  getPlatformRecipeTheme,
+  getPlatformTheme,
+  getTheme,
+  platformNames,
+  platformRecipeNames,
+  themeContrastFailures,
+  themeContrasts,
+  themeModes,
+  type Theme,
+} from "./index.js";
+
+const realPlatforms = platformNames.filter((name) => name !== "default");
+
+const themes: ReadonlyArray<readonly [string, Theme]> = [
+  ...themeModes.flatMap((mode) =>
+    themeContrasts.flatMap(
+      (contrast): ReadonlyArray<readonly [string, Theme]> => [
+        [`identity ${mode} ${contrast}`, getTheme(mode, contrast)],
+        ...realPlatforms.map((platform): readonly [string, Theme] => [
+          `${platform} ${mode} ${contrast}`,
+          getPlatformTheme(platform, mode, contrast),
+        ]),
+      ],
+    ),
+  ),
+  ...themeModes.flatMap((mode) =>
+    themeContrasts.flatMap((contrast) =>
+      platformRecipeNames.map((recipe): readonly [string, Theme] => [
+        `${recipe} ${mode} ${contrast}`,
+        getPlatformRecipeTheme(recipe, mode, contrast),
+      ]),
+    ),
+  ),
+];
+
+const secondaryWashes = ["hover", "active"] as const;
+
+const secondaryForegroundPairs = contrastPairs.filter(
+  ([foreground]) => foreground === "secondaryForeground",
+);
+
+describe("the secondary control's label on the generic washes", () => {
+  it("names every fill the label paints on, once each", () => {
+    expect(
+      secondaryForegroundPairs.map(([, background, pairClass]) => [
+        background,
+        pairClass,
+      ]),
+    ).toEqual([
+      ["secondary", "secondary"],
+      ["secondaryHover", "secondary"],
+      ["secondaryActive", "secondary"],
+      ["hover", "secondary"],
+      ["active", "secondary"],
+    ]);
+  });
+
+  it("keeps every shipped theme above its declared secondary floor", () => {
+    const failures = themes.flatMap(([label, theme]) =>
+      secondaryWashes.flatMap((background) => {
+        const floor = contrastFloors[theme.contrast].secondary;
+        const ratio = contrastRatio(
+          theme.colors.secondaryForeground,
+          theme.colors[background],
+        );
+        return ratio >= floor
+          ? []
+          : [
+              `${label}: secondaryForeground on ${background} at ${ratio} < ${floor}`,
+            ];
+      }),
+    );
+
+    expect(failures).toEqual([]);
+  });
+
+  it("reports a label erased on an edited light wash", () => {
+    const light = getTheme("light");
+
+    secondaryWashes.forEach((background) => {
+      const regressed = extendTheme(light, {
+        colors: { secondaryForeground: light.colors[background] },
+      });
+      const failures = themeContrastFailures(regressed).filter(
+        (failure) =>
+          failure.foreground === "secondaryForeground" &&
+          failure.background === background,
+      );
+
+      expect(failures, background).toHaveLength(1);
+      expect(failures[0]?.pairClass, background).toBe("secondary");
+      expect(failures[0]?.floor, background).toBe(
+        contrastFloors.default.secondary,
+      );
+      expect(failures[0]?.ratio, background).toBeCloseTo(1, 5);
+    });
+  });
+
+  it("checks the AAA theme at the level it declares", () => {
+    const accessible = getTheme("dark", "high");
+    const regressed = extendTheme(accessible, {
+      colors: { secondaryForeground: accessible.colors.hover },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ foreground, background }) =>
+        foreground === "secondaryForeground" && background === "hover",
+    );
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.floor).toBe(contrastFloors.high.secondary);
+    expect(failures[0]?.ratio).toBeCloseTo(1, 5);
+  });
+});

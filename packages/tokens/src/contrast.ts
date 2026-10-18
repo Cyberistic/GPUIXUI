@@ -487,6 +487,18 @@ const softBodyPairs: readonly ContrastPair[] = softSurfaceRoles.map(
 );
 
 /**
+ * The generic washes the shipped secondary control still paints behind its
+ * label. `components/internal/button.tsx` keeps `secondaryForeground` while the
+ * fill becomes `hover` or `active`; the designed family is `secondaryHover` /
+ * `secondaryActive`, and the consumer migration is recorded cross-team, but a
+ * label on screen needs a pair until it lands.
+ */
+const secondaryWashPairs: readonly ContrastPair[] = [
+  ["secondaryForeground", "hover", "secondary"],
+  ["secondaryForeground", "active", "secondary"],
+];
+
+/**
  * Every documented pair — text, status, surface and divider — including
  * secondary text and status text on the state washes, a status label or dot on
  * the quiet `muted` panel, brand-toned text on the plain surfaces, the washes a
@@ -522,7 +534,9 @@ const softBodyPairs: readonly ContrastPair[] = softSurfaceRoles.map(
  * The filled families — `primary`, `secondary`, `destructive` and `accent` —
  * are measured at rest, hover and pressed. The neutral
  * fill's `secondaryHover`/`secondaryActive` steps are designed roles, not the
- * generic `hover`/`active` washes a ghost or outline control paints. Every
+ * generic `hover`/`active` washes a ghost or outline control paints; the shipped
+ * secondary Button still paints those washes behind its `secondaryForeground`
+ * label, so both pairs are measured too. Every
  * interactive fill — the washes, the accent and selected fills and the three
  * filled families at rest, hover and press — is a surface in its own right and
  * is held to the surface floor on the canvas, a card, a popover and the quiet
@@ -551,6 +565,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["secondaryForeground", "secondary", "secondary"],
   ["secondaryForeground", "secondaryHover", "secondary"],
   ["secondaryForeground", "secondaryActive", "secondary"],
+  ...secondaryWashPairs,
   ["accentForeground", "accentHover", "secondary"],
   ["accentForeground", "accentActive", "secondary"],
   ["primaryForeground", "primary", "secondary"],

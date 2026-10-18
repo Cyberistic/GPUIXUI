@@ -1491,7 +1491,9 @@ designed hover and press to the fill, on-colour and control-edge contracts,
 taking it from 264 to **276**. Plan `332` adds the graphic-mark pairs — the
 brand, success and destructive fills as bars and glyphs on `background`, `card`,
 `popover` and `muted`, and the slider thumb's ring on its `input` fill — taking
-it from 276 to **290**.
+it from 276 to **290**. Plan `334` adds the secondary control's label on the
+generic `hover`/`active` washes the shipped Button paints, taking it from 290 to
+**292**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1510,7 +1512,13 @@ is held to the secondary floor on all three steps in every shipped theme, and
 `filled-states.test.ts` proves the direction follows the mode — darker in light,
 lighter in dark. The outlined neutral family keeps its `border` edge on all three
 steps, so a press changes the fill without erasing the edge: the
-divider contract covers `secondary`, `secondaryHover` and `secondaryActive`.
+divider contract covers `secondary`, `secondaryHover` and `secondaryActive`. A
+consumer that has not migrated still paints the generic washes: the shipped
+secondary Button in `components` keeps `secondaryForeground` while the fill
+becomes `hover` or `active`, so both pairs are measured as well. They clear the
+secondary floor in every shipped set — **10.42:1** on `hover` (macOS dark) and
+**9.44:1** on `active` (Linux dark) at the tightest — and the designed family
+remains the preferred state (plan `334`).
 
 The accent family completes the matrix (plan `327`). A toggle that is on paints
 `accent` with `accentForeground`; before `accentHover` and `accentActive`
@@ -1618,7 +1626,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`332` closed.
+plans `076`–`334` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

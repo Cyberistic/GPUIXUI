@@ -306,6 +306,13 @@ Linux light `accent` 1.001:1 on the panel. The light panel now sits one step
 toward the card and the two light accents and the AAA dark accent move one
 designed step; no text, edge, ring, selection or tint pair changes.
 
+The designed family is the preferred state, but the contract also guards the
+composition that ships today: the secondary Button still keeps
+`secondaryForeground` while its fill becomes the generic `hover` or `active`
+wash, so both pairs are held to the secondary floor (plan `334`). A migrated
+consumer paints `secondaryHover`/`secondaryActive` and the extra pairs are
+simply no longer exercised.
+
 An inactive control is not an opacity composite. It paints the `disabled` fill
 with `disabledForeground` on it and its `border` edge around it: the label keeps a
 readable dim (3:1, 4.5:1 at AAA) and the edge keeps the shape, because the fill
