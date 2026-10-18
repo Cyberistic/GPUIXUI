@@ -151,6 +151,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [352](./352-boundary-row-surfaces.md) | The boundary row omits the surfaces the contract measures | F | 084, 092, 325, 340, 343, 351 | done |
 | [353](./353-component-dimensions.md) | Component dimensions: the surface metrics components still hardcode | B | 010, 011, 056–062, 089, 096, 321 | done |
 | [354](./354-interaction-state-table.md) | The interaction-state table names the surfaces the contract measures | F | 346, 351, 352 | done |
+| [355](./355-documented-snippets.md) | The documented snippets nothing compiles | F | 056, 066, 324, 350 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1173,6 +1174,21 @@ disabled, selected, hover, pressed and status rows used aliases ("canvas",
 "quiet panel") or omitted surfaces the checker measures. Every state row now
 names its roles, and nine derived cases hold each row to the pair list that
 enforces it. No colour, pair or floor moves; every shipped set already passed.
+
+355 closes the last unguarded documentation surface: the fenced `ts`/`tsx`
+snippets in `docs/tokens.md` and the package README are what a reader copies,
+and nothing checked them against the package. Plan 350 made every
+`*.example.ts` run, but a snippet has no suite behind it. The audit found the
+defect that proves the gap: the platform-recipe snippet rendered
+`<ThemeProvider>` without importing it from `@gpuixui/tokens/react`, so a
+reader who copied it got `Cannot find name 'ThemeProvider'` while every gate
+stayed green. `snippets.test.ts` now checks that every named import is a real
+export, every `theme.colors.*` names a shipped role, every `theme.<group>.*`
+names a member of the shipped scale, and every public function, component or
+type a copyable block uses is imported by that block. A block with no package
+import is a contextual continuation (an expression or a shape sketch), not a
+module, so the import rule applies only to blocks that present themselves as
+one. No token value, pair or floor changes.
 
 ### Reference adoption (block `200–299`)
 
