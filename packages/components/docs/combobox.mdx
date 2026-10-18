@@ -108,8 +108,8 @@ to the selection once and keeps the popup open. The synthetic row never reaches
 `onValueChange`: the callback sees the query, never an internal value.
 
 Creation is synchronous. `onCreate` is the caller's cue to append the option (or
-persist it); async loading of the list itself remains the caller's concern and is
-not handled by the component.
+persist it). Rows fetched remotely are a separate concern: see
+[Remote options](#remote-options).
 
 ## Ranking
 
