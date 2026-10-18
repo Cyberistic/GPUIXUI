@@ -241,10 +241,20 @@ export const createHost = (
       app.call("clearSelection", {}).then(() => undefined),
     ),
   click: (testId) => verb(`click ${testId}`, () => at(app, testId).click()),
-  clickWindow: (x, y) =>
+  clickWindow: (x, y, modifiers) =>
     verb(`clickWindow ${x},${y}`, () =>
-      app.mouse.click({ x, y }).then(() => undefined),
+      app.mouse
+        .click({ x, y }, modifiers === undefined ? undefined : { modifiers })
+        .then(() => undefined),
     ),
+  pressWindow: (x, y) =>
+    verb(`pressWindow ${x},${y}`, () => app.mouse.down({ x, y })),
+  movePointer: (x, y) =>
+    verb(`movePointer ${x},${y}`, () =>
+      app.mouse.move({ x, y }, { pressedButton: 0 }),
+    ),
+  releasePointer: (x, y) =>
+    verb(`releasePointer ${x},${y}`, () => app.mouse.up({ x, y })),
   rightClick: (testId) =>
     verb(`rightClick ${testId}`, () =>
       app.mouse.click(at(app, testId), { button: 2 }),

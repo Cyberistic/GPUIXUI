@@ -58,7 +58,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[██████████]` 90/95 plans-and-harness
+`[x]` `[██████████]` 91/96 plans-and-harness
+
+`[x]` Prove the **live pointer gesture** per plan `536`: `AsyncSmokeHost` gains
+      `pressWindow`/`movePointer`/`releasePointer` (and a modifier on
+      `clickWindow`) over the automation protocol's `mouse.down/move/up`, and
+      `live-pointer-entry` extends to the pointer-selection half — a
+      press-move-release selects `abcdef` and typing replaces it, a plain click
+      clears the selection, and `shift`-click extends. **22 checks**, 1/1 exit
+      `0`; live registry stays `53` (same id, up from 14 checks). Three mutation
+      proofs: a press at the right edge gives `got "abcdefz"`, a move without
+      `pressedButton: 0` gives `got "zabcdef"`, and a click without `shift`
+      gives `got "abcdefs"` (all exit `1`). Closes plan `535`'s "not claimed"
+      line; measured that the live key verb types **lowercase**. Focused id run:
+      `live-pointer-entry`; `check`/`lint`/`test` green.
 
 `[x]` Prove **variable row heights in a real window** per plan `534`: the last
       interaction family whose evidence was headless-only. `live-variable-rows`

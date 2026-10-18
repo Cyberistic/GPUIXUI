@@ -633,6 +633,29 @@ export interface AsyncSmokeHost {
   readonly clickWindow: (
     x: number,
     y: number,
+    modifiers?: string,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /**
+   * Presses the primary button at window coordinates.
+   *
+   * The whole-gesture `drag` and `selectText` verbs release before a scenario
+   * can read anything between the press and the release; the three halves let a
+   * probe inspect the gesture itself (the native editor's drag selection needs
+   * the down, the held move and the up apart).
+   */
+  readonly pressWindow: (
+    x: number,
+    y: number,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /** Moves the pointer to window coordinates with the primary button held. */
+  readonly movePointer: (
+    x: number,
+    y: number,
+  ) => Effect.Effect<void, SmokeHostError>;
+  /** Releases the primary button at window coordinates. */
+  readonly releasePointer: (
+    x: number,
+    y: number,
   ) => Effect.Effect<void, SmokeHostError>;
   /** Right-clicks `testId`'s centre, delivering `onAuxClick` with `isRightClick`. */
   readonly rightClick: (testId: string) => Effect.Effect<void, SmokeHostError>;

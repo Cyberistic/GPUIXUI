@@ -500,7 +500,7 @@ const inputPayload: LiveScenario = {
 
 const pointerEntry: LiveScenario = {
   id: "live-pointer-entry",
-  title: "Live pointer entry: where a click puts the caret",
+  title: "Live pointer entry: caret placement and drag selection",
   capability: "input",
   view: pointerEntryScenario.view,
   ready: "pointer-field",
@@ -539,6 +539,48 @@ const pointerEntry: LiveScenario = {
         "a live left-edge click prepends",
         Str.startsWith("1")(yield* textOf(ctx, "pointer-field-readout")),
         true,
+      );
+
+      // A press-move-release selects the run; typing replaces it. A later
+      // plain click clears it, and shift-click extends from the first caret.
+      const drag = yield* boxOf(ctx, "pointer-drag-field");
+      const dragMid = drag.y + drag.height / 2;
+      yield* ctx.host.pressWindow(drag.x + 3, dragMid);
+      yield* settle;
+      yield* ctx.host.movePointer(drag.x + 120, dragMid);
+      yield* settle;
+      yield* ctx.host.releasePointer(drag.x + 120, dragMid);
+      yield* settle;
+      yield* ctx.host.key("z");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live drag selects the whole run",
+        yield* textOf(ctx, "pointer-drag-field-readout"),
+        "z",
+      );
+
+      yield* ctx.host.clickWindow(drag.x + drag.width - 4, dragMid);
+      yield* settle;
+      yield* ctx.host.key("y");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a plain live click clears the drag selection",
+        yield* textOf(ctx, "pointer-drag-field-readout"),
+        "zy",
+      );
+
+      const shiftField = yield* boxOf(ctx, "pointer-shift-field");
+      const shiftMid = shiftField.y + shiftField.height / 2;
+      yield* ctx.host.clickWindow(shiftField.x + 3, shiftMid);
+      yield* settle;
+      yield* ctx.host.clickWindow(shiftField.x + 120, shiftMid, "shift");
+      yield* settle;
+      yield* ctx.host.key("s");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "shift-click extends the live selection",
+        yield* textOf(ctx, "pointer-shift-field-readout"),
+        "s",
       );
 
       // A textarea takes a newline and Up returns to the previous line.
