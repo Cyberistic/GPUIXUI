@@ -237,6 +237,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [540](./540-colour-role-opacity-form.md) | The alpha form of a colour role | F | 371, 383, 398, 505, 508, 509 | done |
 | [541](./541-applied-level-palette-name-elevation.md) | The applied theme's level, name, palette and elevation agree | F | 073, 301, 323, 373, 505 | done |
 | [542](./542-shareable-choice-density-rule.md) | The shareable choice's density rule | F | 380, 529, 534 | done |
+| [543](./543-contrast-floor-class-index.md) | The contrast contract's floor classes have no owner | F | 071, 303, 313, 326, 351, 372, 519 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2538,6 +2539,19 @@ is never true for `Light · macOS`, so it exercised `win32` twelve times and nev
 the compact preset that makes the rule matter. The case now derives each axis
 from `shippedThemes`, the writer gains a canonical-stability case, and a prose
 guard fails if the false sentence returns. No colour, metric or pair moves.
+
+Plan `543` gives the contrast contract's floor classes an owner. `ContrastPairClass`
+was the last exported domain union without an ordered index, while every sibling
+(`colorRoles`, `metricRules`, `motionLevels`, `themeChecks`, …) had gained one for
+the same reason. The cost was concrete: `inventory.test.ts` rebuilt the ledger's
+floor table from eight named fields in a fixed order, so a ninth class would have
+forced a floor at both levels and a design-system row (both compile-enforced)
+while `COMPONENTS.md` kept publishing an eight-value table and the guard stayed
+green — and the reference's floor snippet took its order from the
+`contrastFloors` object literal, a second owner. `contrastPairClasses` is the
+ordered list, `ContrastPairClass` derives from it, and the ledger, the reference
+and the design system enumerate it; a class with a floor but no pair is reported.
+No colour, pair, floor or metric moves.
 
 ## How to use a plan
 
