@@ -153,6 +153,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [354](./354-interaction-state-table.md) | The interaction-state table names the surfaces the contract measures | F | 346, 351, 352 | done |
 | [355](./355-documented-snippets.md) | The documented snippets nothing compiles | F | 056, 066, 324, 350 | done |
 | [356](./356-jsdoc-example-guard.md) | The source JSDoc examples are unguarded | F | 324, 350, 355 | done |
+| [357](./357-wash-state-steps.md) | The generic wash ladder's press | F | 071, 097, 306, 309, 334, 342, 354, 356 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1202,6 +1203,22 @@ prefix, and applies the same import, role and scale-member checks it runs on the
 docs; the two providers are imported, the deprecated `platformTheme` bridge is a
 complete block, and the apply example uses `platformStyles.win32` so it runs.
 No token value, pair or floor changes.
+
+357 closes the generic counterpart of plan 342's ladder. 342 published the
+filled families' `x` → `xHover` → `xActive` step; the generic `hover` → `active`
+pair — what a ghost or outline control paints, and what the shipped secondary
+Button still paints (plan 334 holds its label there) — was measured only as two
+washes against surfaces, so a theme whose `active` equalled `hover` returned
+`[]` while the press had no visible state. `washStepPairs` holds it to the same
+1.05:1 `step` floor at both contrast levels; every shipped set already clears it
+(identity dark is tightest at 1.059:1), so no colour moves and the contract grows
+337 → 338. The same audit found two shipped compositions on the wrong role pair
+and recorded them cross-team rather than blessing them: a secondary control whose
+resting `secondary` fill and hover `hover` fill are the same value in 19 of the
+24 sets (the pair is under the floor in 23), and a selectable row that hovers to
+`accent` and presses to `active`, measuring 1.004:1 in identity dark. The
+designed `secondaryHover`/`secondaryActive` and `accentActive` families already
+exist and are measured.
 
 ### Reference adoption (block `200–299`)
 
