@@ -137,6 +137,7 @@ import {
   elevationShadow,
   type BoxShadow,
 } from "./elevation.js";
+import { tierSurfaces } from "./figures.js";
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
@@ -328,6 +329,25 @@ describe("docs/tokens.md contract counts", () => {
     expect(prose).toContain(
       `the ${countWord(softBorderSurfacePairs.length / statusTones.length)}-surface chip edge`,
     );
+  });
+
+  it("states the shared-surface count of every tier", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+    const shared = (
+      dimmer: keyof ThemeColors,
+      brighter: keyof ThemeColors,
+    ): number => tierSurfaces([dimmer, brighter]).length;
+
+    [
+      `${countWord(shared("mutedForeground", "foreground"))} shared surfaces for secondary text below body copy`,
+      `${countWord(shared("mutedForeground", "cardForeground"))} \`card\` for \`cardForeground\``,
+      `${countWord(shared("mutedForeground", "popoverForeground"))} for \`popoverForeground\``,
+      `the ${countWord(shared("mutedForeground", "inputForeground"))} surfaces typed text is documented on for \`inputForeground\``,
+      `${countWord(shared("disabledForeground", "mutedForeground"))} for the inactive label below secondary text`,
+      `${countWord(shared("placeholder", "mutedForeground"))} for a hint and a caption`,
+      `${countWord(shared("disabledForeground", "softActionForeground"))} for the disabled panel-action label below the enabled one`,
+      `${countWord(shared("disabledForeground", "softActionForeground"))} surfaces the two labels share`,
+    ].forEach((phrase) => expect(prose, phrase).toContain(phrase));
   });
 
   it("ends the pair-count history at the contract's shipped size", () => {

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 202/268
+`[x]` `[███████░░░]` 203/269
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1644,6 +1644,13 @@ design system. `figures.ts` gains `tierSurfaces`, `deriveTierFigure` and
 each sentence names, the design-system summary is rebuilt from the tier groups,
 and a case proves the table and `themeTextTierFailures` compare the same
 surfaces (plan 537)
+
+`[x]` Derive the tier paragraph's surface counts — the seven counts ("twelve
+shared surfaces", "one `card`", "four for `popoverForeground`", …) and the panel
+action's "five surfaces the two labels share" were prose no test measured, so a
+surface joining both roles' pairs could leave the paragraph quoting the old set
+while every tier figure still passed; the two numerals take the paragraph's word
+style and one case derives all eight phrases through `tierSurfaces` (plan 538)
 
 ## Phase C — Tier 1–2 components
 

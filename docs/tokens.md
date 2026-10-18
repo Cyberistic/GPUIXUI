@@ -2105,11 +2105,11 @@ const flattened = extendTheme(identity, {
 themeTextTierFailures(flattened); // a failure per surface the tiers share
 ```
 
-The surfaces are derived from `contrastPairs`, not retyped: 12 shared surfaces
+The surfaces are derived from `contrastPairs`, not retyped: twelve shared surfaces
 for secondary text below body copy, one `card` for `cardForeground`, four for
 `popoverForeground` (`popover` and the three row washes it shares), the nine
 surfaces typed text is documented on for `inputForeground` (`muted`,
-`background`, `card`, `popover`, `input` and the four row washes), 12 for the
+`background`, `card`, `popover`, `input` and the four row washes), twelve for the
 inactive label below secondary text (every surface `inactivePairs` measures
 except the `disabled` fill, which carries no secondary text), nine for a hint and
 a caption, and five for the disabled panel-action label below the enabled one
