@@ -22,6 +22,9 @@ import {
 } from "@gpuixui/components/dialog";
 import {
   CommandMenu,
+  CommandMenuEmpty,
+  CommandMenuInput,
+  CommandMenuList,
   type CommandAction,
 } from "@gpuixui/components/command-menu";
 import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
@@ -246,11 +249,11 @@ const CommandMenuScene = (): ReactElement => {
         The palette opens with the scene, so the grouped commands and their
         shortcuts are visible without a pointer.
       </Text>
-      <CommandMenu
-        open={open}
-        onOpenChange={setOpen}
-        actions={commandActions}
-      />
+      <CommandMenu open={open} onOpenChange={setOpen} actions={commandActions}>
+        <CommandMenuInput />
+        <CommandMenuList />
+        <CommandMenuEmpty />
+      </CommandMenu>
     </Stack>
   );
 };

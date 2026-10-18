@@ -69,6 +69,26 @@ describe("live scene table", () => {
     ).map((scene) => `${scene}: ${SCENE_TEXT[scene]}`);
     expect(stale).toEqual([]);
   });
+
+  /**
+   * The bug this guards (measured 2026-10-18): the command-menu scene passed
+   * `actions` but no children, so it mounted an empty dialog — and the check
+   * above still passed because `"Go to Components"` occurs in the actions
+   * array the palette never painted. `CommandMenu` renders the parts it is
+   * given; the data is not a default rendering.
+   */
+  it("composes the command palette from its parts, not only its actions", () => {
+    const scene = viewSource.slice(
+      viewSource.indexOf("const CommandMenuScene"),
+      viewSource.indexOf("const ConfirmDialogScene"),
+    );
+    const missing = [
+      "<CommandMenuInput",
+      "<CommandMenuList",
+      "<CommandMenuEmpty",
+    ].filter((part) => !scene.includes(part));
+    expect(missing).toEqual([]);
+  });
 });
 
 describe("interaction records", () => {

@@ -469,9 +469,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–470)
+## Docs site workstream (plans 410–471)
 
-`[~]` `[██████████]` 68/69
+`[~]` `[██████████]` 69/70
+
+`[x]` **The command-menu live scene renders its parts (plan 471)** — the palette mounted an empty dialog because the scene passed `actions` and no children, and the contract guard passed on a string that lived in the actions array; the scene mounts `CommandMenuInput`/`List`/`Empty`, a new guard names the parts, and `smoke:preview` is green again (15 text nodes, was 2)
 
 `[x]` **The Contributing page names every docs check (plan 470)** — six commands with what each proves and its exit codes (`2` is never a pass), the Studio authoring command, and a guard that reads `apps/docs/package.json` so the next smoke cannot ship undocumented
 
