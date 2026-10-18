@@ -95,8 +95,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | frames | `frame-stats`, `live-frames` | verified |
 
 The suite is **101/101 green here** (exit `0`, `.artifacts/smoke-report.json`,
-**3536 checks**) on the release-tag binding; the report's `host` line carries the
-pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
+**3536 checks**) and the live suite is **50/50** (`live-report.json`, **1014
+checks**, exit `0`) on the release-tag binding; both `host` lines carry the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
 and a borderless size — is what every geometry check now asserts.
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**

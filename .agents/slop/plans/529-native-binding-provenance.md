@@ -368,9 +368,15 @@ the cause is measured and systematic):
 
 ### 6.5 Results after the triage
 
-The full headless suite is **101/101 (3536 checks), exit `0`** on the release-tag
-binding. The report's host line reads
-`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+The full headless suite is **101/101 (3536 checks), exit `0`** and the full live
+suite is **50/50 (1014 checks), exit `0`**, both on the release-tag binding. The
+reports' host lines read
+`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`
+and `gpuix live window darwin-x64 …`. Live moved `1012 → 1014` checks and 13
+scenarios needed the same box triage (e.g. the centred dialog's content centre
+is `+16` in the window's 1100×720, the drawer's content edge `+23`, the status
+bar `22`); `live-table-sort` now clicks its row **before** the sort, because a
+row's recorded box is stale after the sort's scroll reset.
 
 Two checks were removed rather than rewritten, both for measured reasons:
 

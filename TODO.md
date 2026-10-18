@@ -71,11 +71,11 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       corrected (ADR 0003 amendment, plan `140`, `COMPONENTS.md`). The measured
       deltas are §6.5 of the plan — the big one is the 0.10.0 bounds box
       (content origin + borderless size, and stale after an ancestor scroll).
-`[ ]` **Re-baseline the LIVE suite** on the release-tag binding (plan `529` §5):
-      the headless suite is green, but every live geometry check was measured on
-      the main-derived binding and is expected to move with the same box
-      contract. Run `nub apps/playground/dist/live/run.js --all`, triage, and
-      record the totals. Until then no live total is claimed for 0.10.0.
+`[x]` **Re-baseline the LIVE suite** on the release-tag binding (plan `529` §5):
+      **50/50 (1014 checks), exit `0`**, host label carries the pins. 13
+      scenarios needed the same box triage; `live-table-sort` clicks its row
+      before the sort because the row's recorded box is stale after the scroll
+      reset.
 
 `[x]` Probe the **paint/frame counters** per plan `527` — the last supported
 runtime surface with no contract: `frame-stats` (67 checks) and `live-frames`

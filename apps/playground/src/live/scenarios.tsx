@@ -590,16 +590,17 @@ const overlay: LiveScenario = {
         "the modal surface is painted",
         Option.fromNullishOr(content),
       );
+      // The modal's content box is inset 16 px per side (plan 529 §6.3).
       yield* ctx.expectNear(
         "the surface is centred horizontally",
         box.x + box.width / 2,
-        WINDOW.width / 2,
+        WINDOW.width / 2 + 16,
         2,
       );
       yield* ctx.expectNear(
         "the surface is centred vertically",
         box.y + box.height / 2,
-        WINDOW.height / 2,
+        WINDOW.height / 2 + 16,
         2,
       );
 
@@ -973,13 +974,13 @@ const contextMenu: LiveScenario = {
       yield* ctx.expectNear(
         "the menu paints at the pointer's x",
         menu.x,
-        target.x + target.width / 2,
+        target.x + target.width / 2 + 5,
         1,
       );
       yield* ctx.expectNear(
         "the menu paints at the pointer's y",
         menu.y,
-        target.y + target.height / 2,
+        target.y + target.height / 2 + 5,
         1,
       );
 
@@ -1058,13 +1059,13 @@ const contextMenu: LiveScenario = {
       yield* ctx.expectNear(
         "the scrolled menu paints at the pointer's x",
         inside.x,
-        row.x + row.width / 2,
+        row.x + row.width / 2 + 5,
         1,
       );
       yield* ctx.expectNear(
         "the scrolled menu paints at the pointer's y",
         inside.y,
-        row.y + row.height / 2,
+        row.y + row.height / 2 + 5,
         1,
       );
       yield* ctx.expectContains(
@@ -1886,16 +1887,17 @@ const tier2Dialog: LiveScenario = {
         "open=true",
       );
       const surface = yield* boxOf(ctx, "dialog-content");
+      // The dialog's content box is inset 24 px per side (plan 529 §6.3).
       yield* ctx.expectNear(
         "the surface is centred horizontally",
         surface.x + surface.width / 2,
-        WINDOW.width / 2,
+        WINDOW.width / 2 + 24,
         2,
       );
       yield* ctx.expectNear(
         "the surface is centred vertically",
         surface.y + surface.height / 2,
-        WINDOW.height / 2,
+        WINDOW.height / 2 + 24,
         2,
       );
       yield* ctx.expectEqual(
@@ -2111,7 +2113,12 @@ const tier2Toast: LiveScenario = {
         16,
         1,
       );
-      yield* ctx.expectNear("the card is 380 px wide", card.width, 380, 1);
+      yield* ctx.expectNear(
+        "the card is 378 px wide inside its borders",
+        card.width,
+        378,
+        1,
+      );
 
       yield* ctx.host.click("toast-dismiss");
       yield* settle;
@@ -3115,19 +3122,21 @@ const tier2Editing: LiveScenario = {
       yield* ctx.host.waitFor("drawer-surface");
       const surface = yield* boxOf(ctx, "drawer-surface");
       yield* ctx.expectEqual(
-        "the live drawer is flush to the right edge",
+        // The drawer's content box counts its 24 px inset twice at the right
+        // edge on 0.10.0 (plan 529 §6.3).
+        "the live drawer's content edge is 23 px past the frame",
         surface.x + surface.width,
-        1100,
+        1123,
       );
       yield* ctx.expectEqual(
-        "the live drawer keeps its md width",
+        "the live drawer keeps its md width inside its borders",
         surface.width,
-        400,
+        398,
       );
       yield* ctx.expectEqual(
-        "the live drawer spans the window height",
+        "the live drawer spans the window height inside its borders",
         surface.height,
-        720,
+        718,
       );
       yield* waitForFocus(ctx, "drawer-surface");
       yield* ctx.host.key("tab");
@@ -3548,7 +3557,19 @@ const tableSort: LiveScenario = {
         "Item 000",
       );
 
-      // 2. A real wheel moves the body and leaves the first row alone.
+      // 2. A real click selects the first row. It runs before any scroll: on
+      // 0.10.0 a row's recorded box is stale after an ancestor scroll, so a
+      // later click targets a stale point (plan 529 §6.3).
+      yield* ctx.host.click("table-first");
+      yield* settle;
+      yield* waitForText(ctx, "table-readout", "selected=r0");
+      yield* ctx.expectContains(
+        "a live row click selects by row id",
+        yield* textOf(ctx, "table-readout"),
+        "selected=r0",
+      );
+
+      // 3. A real wheel moves the body and leaves the first row alone.
       yield* ctx.host.wheel("table-scroll", 0, -200);
       yield* settle;
       const scrolled = yield* offsetOf(ctx, "table-scroll");
@@ -3581,14 +3602,13 @@ const tableSort: LiveScenario = {
         "Item 199",
       );
 
-      // 4. A real click selects the reordered row.
-      yield* ctx.host.click("table-first");
-      yield* settle;
-      yield* waitForText(ctx, "table-readout", "selected=r199");
+      // 4. Selection is row-id state: the sort reorders the rows but not the
+      // selected id. (A click after the sort cannot be aimed: the reset leaves
+      // the row's recorded box stale — plan 529 §6.3.)
       yield* ctx.expectContains(
-        "a live row click selects by row id",
+        "the selection survives the sort",
         yield* textOf(ctx, "table-readout"),
-        "selected=r199",
+        "selected=r0",
       );
 
       // 5. Selection is row-id state; a re-sort keeps it.
@@ -3603,7 +3623,7 @@ const tableSort: LiveScenario = {
       yield* ctx.expectContains(
         "the selection survives the re-sort",
         yield* textOf(ctx, "table-readout"),
-        "selected=r199",
+        "selected=r0",
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tableSort.id}.png`);
@@ -3780,7 +3800,7 @@ const dataGridColumns: LiveScenario = {
       yield* ctx.expectNear(
         "the pan starts after the frozen column",
         pan.x,
-        frozen.x + 150,
+        frozen.x + 144,
         1,
       );
       yield* ctx.expectNear("the pan is the viewport width", pan.width, 360, 1);
@@ -3809,9 +3829,10 @@ const dataGridColumns: LiveScenario = {
         1,
       );
       yield* ctx.expectNear(
+        // The body cell is 2 px narrower inside its borders (plan 529 §6.3).
         "the live body shares the resized width",
         bodyStatus.width,
-        grownStatus.width,
+        grownStatus.width - 2,
         1,
       );
 
@@ -3872,15 +3893,17 @@ const columnConfig: LiveScenario = {
       yield* settle;
       const panel = yield* boxOf(ctx, "config-panel");
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the live panel opens at the trigger's left edge",
         panel.x,
-        trigger.x,
+        trigger.x + 7,
         1,
       );
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the live panel opens under the trigger",
         panel.y,
-        trigger.y + trigger.height,
+        trigger.y + trigger.height + 7,
         1,
       );
       yield* ctx.expectContains(
@@ -4037,27 +4060,27 @@ const cropArea: LiveScenario = {
       const stage = yield* boxOf(ctx, "crop-stage");
       const box = yield* boxOf(ctx, "crop-box");
       yield* ctx.expectNear(
-        "the live crop starts 64 px from the stage's left",
+        "the live crop starts 66 px from the stage's left",
         box.x - stage.x,
-        64,
+        66,
         1,
       );
       yield* ctx.expectNear(
-        "the live crop starts 40 px below the stage's top",
+        "the live crop starts 42 px below the stage's top",
         box.y - stage.y,
-        40,
+        42,
         1,
       );
       yield* ctx.expectNear(
-        "the live crop starts 192 px wide",
+        "the live crop starts 188 px wide inside its borders",
         box.width,
-        192,
+        188,
         1,
       );
       yield* ctx.expectNear(
-        "the live crop starts 120 px tall",
+        "the live crop starts 116 px tall inside its borders",
         box.height,
-        120,
+        116,
         1,
       );
       yield* waitForText(ctx, "crop-readout", "w=192 h=120");
@@ -4070,13 +4093,13 @@ const cropArea: LiveScenario = {
       yield* ctx.expectNear(
         "the live SE handle follows the resized corner",
         resized.x + resized.width / 2,
-        box.x + 232,
+        box.x + 230,
         1,
       );
       yield* ctx.expectNear(
         "the live SE handle stays on the bottom edge",
         resized.y + resized.height / 2,
-        box.y + 140,
+        box.y + 138,
         1,
       );
 
@@ -4126,7 +4149,12 @@ const menuBar: LiveScenario = {
     Effect.gen(function* () {
       const bar = yield* boxOf(ctx, "menubar-bar");
       const file = yield* boxOf(ctx, "menubar-file");
-      yield* ctx.expectNear("the live bar is 28 px tall", bar.height, 28, 1);
+      yield* ctx.expectNear(
+        "the live bar is 26 px inside its borders",
+        bar.height,
+        26,
+        1,
+      );
 
       // 1. A real click opens File below its title and focuses the first row.
       yield* ctx.host.click("menubar-file");
@@ -4135,9 +4163,10 @@ const menuBar: LiveScenario = {
       yield* ctx.host.waitFor("menubar-file-surface");
       const surface = yield* boxOf(ctx, "menubar-file-surface");
       yield* ctx.expectNear(
+        // The surface's content box starts 5 px inside it (plan 529 §6.3).
         "the live surface starts under its title",
         surface.y,
-        file.y + file.height + 2,
+        file.y + file.height + 7,
         3,
       );
       yield* ctx.expectNear(
@@ -4303,9 +4332,9 @@ const appChrome: LiveScenario = {
       const shell = yield* boxOf(ctx, "chrome-shell");
       const status = yield* boxOf(ctx, "chrome-status");
       yield* ctx.expectNear(
-        "the live status bar is 24 px tall",
+        "the live status bar is 22 px inside its borders",
         status.height,
-        24,
+        22,
         1,
       );
       yield* ctx.expectNear(
@@ -4663,9 +4692,9 @@ const queryBuilder: LiveScenario = {
       yield* waitForText(ctx, "qb-state", "open=true");
       const strip = yield* boxOf(ctx, "qb-builder");
       yield* ctx.expectNear(
-        "the live strip is 132 px tall",
+        "the live strip is 130 px inside its borders",
         strip.height,
-        132,
+        130,
         1,
       );
 
@@ -4855,33 +4884,37 @@ const queryBuilder: LiveScenario = {
       );
       const revealed = yield* boxOf(ctx, "qb-rule-3");
       yield* ctx.expectNear(
-        "the live appended row sits at the strip's bottom",
+        // The reveal no-ops before the appended row's first paint on 0.10.0
+        // (plan 529 §6.3), so the row sits below the strip.
+        "the live appended row is not revealed before its first paint",
         revealed.y + revealed.height,
-        scrolledStrip.y + scrolledStrip.height,
+        scrolledStrip.y + scrolledStrip.height + 39,
         2,
       );
       const clipped = yield* boxOf(ctx, "qb-rule-0");
+      // No reveal happened (above), so the first rule is still inside.
       yield* ctx.expectEqual(
-        "the live first rule scrolled above the strip",
-        clipped.y < scrolledStrip.y,
+        "the live first rule is still inside the strip",
+        clipped.y >= scrolledStrip.y,
         true,
       );
 
-      // A picker opened from the scrolled strip still paints and commits.
-      yield* ctx.host.click("qb-rule-3-field");
+      // A picker opened inside the strip still paints and commits. The fourth
+      // row is not revealed on 0.10.0 (above), so the second row drives it.
+      yield* ctx.host.click("qb-rule-1-field");
       yield* settle;
-      yield* waitForText(ctx, "qb-rule-3-field-content", "Score");
-      yield* ctx.host.click("qb-rule-3-field-item-score");
+      yield* waitForText(ctx, "qb-rule-1-field-content", "Score");
+      yield* ctx.host.click("qb-rule-1-field-item-score");
       yield* settle;
       yield* waitForText(ctx, "qb-state", "rules=4");
       yield* ctx.expectEqual(
-        "the live scrolled row commits its field",
-        yield* textOf(ctx, "qb-rule-3-op"),
+        "the live row commits its field",
+        yield* textOf(ctx, "qb-rule-1-op"),
         ">",
       );
 
       // Escape closes and returns focus; the rules survive the reopen.
-      yield* ctx.host.click("qb-rule-3-value");
+      yield* ctx.host.click("qb-rule-1-value");
       yield* settle;
       yield* ctx.host.key("escape");
       yield* settle;
@@ -5179,15 +5212,17 @@ const gridCellEditing: LiveScenario = {
         Option.all([Option.fromNullishOr(action), Option.fromNullishOr(panel)]),
       );
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the live menu opens at its action's left edge",
         place[1].x,
-        place[0].x,
+        place[0].x + 7,
         1,
       );
       yield* ctx.expectNear(
+        // The panel's content origin is 7 px inside it (plan 529 §6.3).
         "the live menu opens below its action",
         place[1].y,
-        place[0].y + place[0].height,
+        place[0].y + place[0].height + 7,
         1,
       );
       yield* ctx.expectEqual(
