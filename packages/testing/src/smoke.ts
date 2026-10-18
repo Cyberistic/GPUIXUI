@@ -320,8 +320,10 @@ export interface SmokeHost {
    */
   readonly highlights: () => ReadonlyArray<HighlightMatch>;
   readonly focused: () => string | null;
-  readonly click: (testId: string) => void;
-  readonly clickWindow: (x: number, y: number) => void;
+  /** Clicks `testId`'s centre; `modifiers` use the runtime's `"shift"` syntax. */
+  readonly click: (testId: string, modifiers?: string) => void;
+  /** Clicks window coordinates, with optional held modifiers. */
+  readonly clickWindow: (x: number, y: number, modifiers?: string) => void;
   /**
    * Presses the primary button at `testId`'s centre.
    *
@@ -329,6 +331,8 @@ export interface SmokeHost {
    * mid-gesture; an edge hold needs the down, the held moves and the up apart.
    */
   readonly press: (testId: string) => void;
+  /** Presses the primary button at window coordinates (a drag's first half). */
+  readonly pressWindow: (x: number, y: number) => void;
   /** Moves the pointer to window coordinates with the primary button held. */
   readonly movePointer: (x: number, y: number) => void;
   /** Releases the primary button at window coordinates. */

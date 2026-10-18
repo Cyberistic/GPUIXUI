@@ -182,9 +182,24 @@ nub apps/playground/dist/live/run.js       # exit 0; live stays 22/22
 
 Record the exact strings in §8.
 
-## 8. Result (filled in after the run)
+## 8. Result (measured 2026-10-18)
 
-_(executor records the M-strings and final counts)_
+`--only pointer-text-entry`: **22 checks, exit `0`**. Full suite: **72/72
+scenarios, 1973 checks**, exit `0`. `packages/testing`: 52 tests (the new
+adapter test covers modifier forwarding and `pressWindow`). Three mutation
+proofs:
+
+| Mutation | Measured failure | Exit |
+| -------- | ---------------- | ---- |
+| M1: middle click moved to `x + 3` | `a middle click puts the caret inside the run: expected true, got false` | 1 |
+| M2: the drag replaced by a plain click | `a drag selects the whole run: expected "Z", got "Zabcdef"` | 1 |
+| M3: the shift-click made plain | `shift-click extends the selection: expected "S", got "abcdefS"` | 1 |
+
+One detail worth keeping: removing the whole drag (not just the selection) also
+removes the focus, so the keystroke goes to the previously focused field. The
+recorded M2 mutation keeps the click and drops only the selection, isolating the
+claim. Live is unchanged at 22/22 (no live scenario; the native editor is the
+same engine in a window).
 
 ## 9. STOP conditions
 

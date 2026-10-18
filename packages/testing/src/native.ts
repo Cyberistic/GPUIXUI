@@ -60,7 +60,12 @@ export interface NativeRenderer {
   simulateKeystrokes(keystrokes: string): void;
   nativeSimulateKeyDown(id: number, key: string, held?: boolean): void;
   nativeSimulateKeyUp(id: number, key: string): void;
-  nativeSimulateClick(x: number, y: number, button?: number): void;
+  nativeSimulateClick(
+    x: number,
+    y: number,
+    button?: number,
+    modifiers?: string,
+  ): void;
   nativeSimulateMouseDown(x: number, y: number): void;
   nativeSimulateMouseMove(x: number, y: number, pressedButton?: number): void;
   nativeSimulateMouseUp(x: number, y: number): void;
@@ -255,15 +260,17 @@ export const createHost = (renderer: NativeRenderer): SmokeHost => ({
         Option.fromNullishOr(element.testId),
       ),
     ),
-  click: (testId) =>
+  click: (testId, modifiers) =>
     withCenter(renderer, testId, (point) =>
-      renderer.nativeSimulateClick(point.x, point.y),
+      renderer.nativeSimulateClick(point.x, point.y, 0, modifiers),
     ),
-  clickWindow: (x, y) => renderer.nativeSimulateClick(x, y),
+  clickWindow: (x, y, modifiers) =>
+    renderer.nativeSimulateClick(x, y, 0, modifiers),
   press: (testId) =>
     withCenter(renderer, testId, (point) =>
       renderer.nativeSimulateMouseDown(point.x, point.y),
     ),
+  pressWindow: (x, y) => renderer.nativeSimulateMouseDown(x, y),
   movePointer: (x, y) => renderer.nativeSimulateMouseMove(x, y, 0),
   releasePointer: (x, y) => renderer.nativeSimulateMouseUp(x, y),
   rightClick: (testId) =>

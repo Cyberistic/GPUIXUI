@@ -32,6 +32,7 @@ export const nullHost: SmokeHost = {
   click: () => {},
   clickWindow: () => {},
   press: () => {},
+  pressWindow: () => {},
   movePointer: () => {},
   releasePointer: () => {},
   rightClick: () => {},

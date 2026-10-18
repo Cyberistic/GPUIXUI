@@ -142,8 +142,14 @@ class FakeRenderer implements NativeRenderer {
   nativeSimulateKeyUp(id: number, key: string): void {
     this.calls.push(`keyUp:${id}:${key}`);
   }
-  nativeSimulateClick(x: number, y: number, button = 0): void {
-    this.calls.push(`click:${x},${y}:${button}`);
+  nativeSimulateClick(
+    x: number,
+    y: number,
+    button = 0,
+    modifiers?: string,
+  ): void {
+    const held = modifiers === undefined ? "" : `:${modifiers}`;
+    this.calls.push(`click:${x},${y}:${button}${held}`);
   }
   nativeSimulateMouseDown(x: number, y: number): void {
     this.calls.push(`down:${x},${y}`);
@@ -259,6 +265,19 @@ describe("bounds", () => {
     host.click("layer");
     expect(renderer.calls).toEqual(["click:200,150:0"]);
     expect(host.bounds("layer")).toBeNull();
+  });
+
+  it("forwards held modifiers and presses window coordinates", () => {
+    const renderer = rendererOf();
+    const host = createHost(renderer);
+    host.click("layer", "shift");
+    host.clickWindow(12, 34, "cmd-shift");
+    host.pressWindow(56, 78);
+    expect(renderer.calls).toEqual([
+      "click:200,150:0:shift",
+      "click:12,34:0:cmd-shift",
+      "down:56,78",
+    ]);
   });
 
   it("simulates nothing for a test id the runtime does not hold", () => {
