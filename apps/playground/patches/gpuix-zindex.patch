@@ -42,7 +42,7 @@ index ac0c500..76cf1bd 100644
          el = if overflow_x_only {
              el.child(gpui::div().flex_none().child(child))
 diff --git a/packages/native/src/retained_tree.rs b/packages/native/src/retained_tree.rs
-index ee95967..54eae9e 100644
+index ee95967..a600a2a 100644
 --- a/packages/native/src/retained_tree.rs
 +++ b/packages/native/src/retained_tree.rs
 @@ -6,6 +6,7 @@
@@ -61,9 +61,9 @@ index ee95967..54eae9e 100644
 +    ///
 +    /// In-flow children keep their tree order and paint first; `absolute` and
 +    /// `fixed` children paint after them, stable-sorted by `zIndex` (unset is
-+    /// 0). A positioned child that declares no `zIndex` leaves the order
-+    /// untouched, so existing trees paint exactly as they did and nothing pays
-+    /// for a sort it does not use.
++    /// 0). While no positioned child declares a `zIndex`, the tree order comes
++    /// back untouched, so existing trees paint exactly as they did and nothing
++    /// pays for a sort it does not use.
 +    ///
 +    /// Layout is unaffected: only out-of-flow children move, and their position
 +    /// comes from their insets, not their index.
