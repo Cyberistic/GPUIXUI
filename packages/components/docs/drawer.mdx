@@ -1,0 +1,133 @@
+---
+title: Drawer
+description: A modal panel anchored to a window edge.
+---
+
+`Drawer` is a dialog that opens from an edge: filters on the right, navigation on
+the left, a details sheet at the bottom. It shares Dialog's rules — a window veil,
+the topmost dismiss layer, focus in and back, and a Tab trap — and differs only in
+where the surface sits.
+
+## Usage
+
+```tsx
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@gpuixui/components";
+
+<Drawer>
+  <DrawerTrigger>Filters</DrawerTrigger>
+  <DrawerContent side="right" size="md" label="Filters">
+    <DrawerHeader>
+      <DrawerTitle>Filters</DrawerTitle>
+      <DrawerDescription>Narrow the result set.</DrawerDescription>
+    </DrawerHeader>
+    <DrawerFooter>
+      <DrawerClose>Cancel</DrawerClose>
+    </DrawerFooter>
+  </DrawerContent>
+</Drawer>;
+```
+
+The runnable build is `examples/drawer.example.tsx`, which the native playground
+mounts.
+
+## Sides and sizes
+
+| `side` | Surface |
+| ------ | ------- |
+| `"right"` (default) | full-height column at the right edge |
+| `"left"` | full-height column at the left edge |
+| `"bottom"` | full-width sheet at the bottom |
+
+`size` is `"sm" | "md" | "lg"`: 320 / 400 / 560 px wide for left and right, and
+240 / 320 / 420 px tall for the bottom sheet. A surface never exceeds the window.
+The numbers are layout constants — tokens carry no drawer-size role — and are
+capped by the window size.
+
+## Dismissal and focus
+
+- The trigger opens and closes the drawer and reports `aria-expanded`.
+- Focus moves into the surface; `Tab` and `Shift+Tab` wrap inside it.
+- `Escape` closes and returns focus to the trigger; an outside press closes.
+- `dismissible={false}` ignores both Escape and an outside press.
+- A drawer opened inside a dialog pushes its own layer, so one Escape closes
+  the drawer first (the shared dismiss stack, plan 112).
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Drawer` | nothing; owns open state and the dismiss layer | `open?`, `defaultOpen?`, `onOpenChange?`, `dismissible?`, children |
+| `DrawerTrigger` | button | `onClick`, button props |
+| `DrawerClose` | button | `onClick`, button props |
+| `DrawerContent` | veil + `role="dialog"` surface | `side?`, `size?`, `label` (required), `showClose?`, `initialFocus?`, children |
+| `DrawerHeader` | heading block | children |
+| `DrawerTitle` | level-2 heading | text props |
+| `DrawerDescription` | muted copy | text props |
+| `DrawerFooter` | right-aligned actions | children |
+
+`DrawerContent` renders nothing while the drawer is closed.
+
+## Theming
+
+The surface uses `popover` / `popoverForeground`, `border`, `radius` and the
+largest elevation; the veil is `overlay`; spacing and sizes come from the theme's
+scale (widths are the documented constants). A custom theme changes the drawer
+with no code change — see [Theming](/docs/theming).
+
+## Accessibility
+
+- `DrawerContent` is a `dialog` named by the required `label`; `0.10.0` has no
+  `aria-modal` or `aria-labelledby`, and its title is a heading, not the dialog's
+  accessible name.
+- Focus enters the surface and returns to the opener. `initialFocus` can put it
+  on a specific control after the surface takes focus.
+- A disabled `dismissible={false}` drawer cannot be escaped by keyboard or
+  pointer; make sure such a drawer has a visible close control.
+
+## Limitations
+
+- **No swipe-to-dismiss**: `0.10.0` has no drag host feature.
+- **No slide animation**: `motion` has no transform; animating width or left
+  would reflow the content, so the surface mounts in place.
+- **No portal**: the veil is an `<anchored>` element at window coordinates, as in
+  Dialog. A drawer mounted inside a scrolled container is still painted at the
+  window origin, not inside that container.
+- Sizes are layout constants, not tokens.
+- The close control is a text glyph until an icon set lands.
+
+## Verification
+
+`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (10 tests): open
+lifecycle, dialog naming and `aria-expanded`, full-window veil, focus in/return,
+backdrop dismissal, the Tab trap, all three sides and sizes, both themes, an
+uninterruptible drawer, and a controlled drawer that stays closed.
+
+The four modal rules were extracted from Dialog into `internal/modal.ts` with no
+behaviour change; Dialog and Confirmation dialog keep their own suites as the
+guard (18 tests).
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
+x64, or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Dialog** — the centred modal.
+- **Confirmation dialog** — a destructive decision.
+- **Popover** — a non-modal anchored panel.

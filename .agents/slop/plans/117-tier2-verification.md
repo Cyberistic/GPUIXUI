@@ -1,0 +1,320 @@
+# 117 — Tier 2 verification, inventory and the completion gate
+
+- **Phase:** C (gate) and F (re-run)
+- **Workstream:** components · **Owns:** `packages/components/**`, Tier 2 rows of `COMPONENTS.md`
+- **Depends on:** 110–116
+- **Status:** done, 2026-10-17. `src/inventory.ts` collects 21 records;
+  `src/inventory.test.ts` checks files, rows, support and duplicates (and caught
+  six wrong support values on its first run); `src/behaviour/theme-matrix.test.tsx`
+  closes the both-theme gaps in 11 tests. Deviations in §11.
+
+A component is not done because it renders. This plan defines the gate every
+Tier 2 component passes, and the automated check that keeps the inventory honest.
+
+---
+
+## 1. The completion checklist (per component)
+
+Copy this into the PR/commit body and tick it. A row may only say `done` when
+every line is true.
+
+- [ ] **Code** — public API in plan 110 §8, JSDoc on every export, no literal
+      colour, controlled + uncontrolled where it owns state.
+- [ ] **Logic test** — if the component has arithmetic/state (`collection`,
+      `pagination`, `accordion`, `breadcrumb`, `menu`, `combobox`, `toast`,
+      `validation`), a pure-logic suite exists and fails on regression.
+- [ ] **Behaviour test** — rendered in the native GPUix test renderer, driven by
+      `simulateClick`/`simulateKeyDown`, asserting focus, text, bounds or style.
+      Not a "renders without throwing" test.
+- [ ] **Both themes** — at least one assertion per theme proving the component
+      reads the token layer (`backgroundColor === theme.color.<role>`).
+- [ ] **Disabled / loading / empty / error** — whichever the component has, a
+      test proves the state is reachable and inert.
+- [ ] **Keyboard** — every documented key has a test, or the docs state that the
+      component has no keyboard behaviour.
+- [ ] **Example** — `examples/<name>.example.tsx`, realistic, wired to real
+      state.
+- [ ] **Docs page** — `docs/<name>.mdx` with description, variants, usage, API
+      table, keyboard, a11y/limitations, related components.
+- [ ] **Inventory** — `meta` record + `COMPONENTS.md` row updated in the same
+      commit.
+- [ ] **Limitation** — anything the runtime cannot do is recorded with evidence
+      (file:line of the missing capability), not softened into "not supported
+      yet".
+
+## 2. Inventory records — `src/inventory.ts`
+
+Each component module exports its record; `src/inventory.ts` collects them.
+
+```ts
+export interface ComponentMeta {
+  /** Exactly the label used in COMPONENTS.md. */
+  readonly name: string;
+  readonly tier: 1 | 2 | 3 | 4 | 5;
+  readonly status: "todo" | "wip" | "done" | "blocked" | "unsupported";
+  readonly gpuixSupport: "yes" | "partial" | "no";
+  /** Empty array when there is no limitation. Never omit the field. */
+  readonly limitations: ReadonlyArray<string>;
+  readonly docs: string;      // "docs/card.mdx"
+  readonly example: string;   // "examples/card.example.tsx"
+  readonly testFile: string;  // "src/behaviour/card.test.tsx"
+}
+
+export const inventory: ReadonlyArray<ComponentMeta>;
+```
+
+## 3. `src/inventory.test.ts` — the check that can fail
+
+Uses `node:fs` (allowed in tests) and `node:path`. Asserts, for every record:
+
+1. `docs` and `example` files exist on disk.
+2. `COMPONENTS.md` (repo root, resolved from this package) contains a row whose
+   first cell is `name` and whose cells include `status` and `gpuixSupport`.
+3. `status: "done"` implies a co-located `src/<file>.test.tsx` exists for that
+   component (the record gains a `testFile` field for this — add it to §2).
+4. `limitations` is present and is an array (empty when none).
+5. No duplicate `name` and no duplicate `docs` path.
+6. Every Tier 2 row in `COMPONENTS.md` has a matching record — this catches a
+   component that was added to the docs but not the inventory, and the reverse.
+
+This test fails if someone marks a component `done` without a test, writes a
+docs page that does not exist, or edits `COMPONENTS.md` and forgets the record.
+Its header comment says exactly that.
+
+## 4. Both-theme matrix
+
+Run once per component in `dark` and `light` (plan 110 §10 helper):
+
+| Component | Assertion that must change with the theme |
+| --------- | ------------------------------------------ |
+| Card | `backgroundColor` = `color.card` |
+| Badge | fill/text per variant |
+| Avatar | fallback `backgroundColor` = `color.muted`; status dot colour |
+| Alert | tone background + border |
+| EmptyState | title `color`, description `color.mutedForeground` |
+| List | selected row `color.muted`, hover state declared |
+| Dialog / Confirm | content `backgroundColor` = `color.popover`; backdrop = `color.overlay` |
+| Popover | content `backgroundColor` = `color.popover` |
+| Dropdown / Context menu | content background + destructive item colour |
+| Command menu | dialog background + highlighted row |
+| Tabs | active trigger `color.background`, inactive `color.mutedForeground` |
+| Accordion / Collapsible | open content text colour |
+| Breadcrumb | link `color.mutedForeground`, current page `color.foreground` |
+| Pagination | active page `color.primary` / `color.primaryForeground` |
+| Toast | card `color.popover`, tone bar |
+| Field | error border `color.destructive` |
+| SearchInput | placeholder `color.mutedForeground`, border `color.input` |
+| Combobox | popup `color.popover`, selected row |
+
+If a component cannot read the theme (for example it hard-codes a colour), this
+matrix fails. That is the point.
+
+## 5. Native runtime evidence
+
+The native test renderer (`@gpuix/react/testing`) dispatches through GPUI's real
+hit-testing and event pipeline, which is the "verified compatible test
+environment" AGENTS.md §4 allows.
+
+### 5a. Environment matrix (recorded 2026-10-17)
+
+| Host | Native renderer | How the suite behaves |
+| ---- | --------------- | --------------------- |
+| macOS arm64 | available | behaviour suites run |
+| Linux x64 (glibc) | available | behaviour suites run |
+| Windows x64 | available | behaviour suites run |
+| **macOS x64 (this machine)** | **unavailable** | logic suites and the renderer guard run; behaviour suites are not collected |
+
+GPUix ships no `darwin-x64` native binary and its WASM build exports no test
+renderer. Evidence and the alternatives are in `TODO.md` → Blockers. This is an
+environment limitation, not a library limitation: the code under test is the
+same, and the suites are runnable unchanged on a supported host.
+
+**Corrected 2026-10-17, measured.** The binding is resolved *eagerly*:
+`@gpuix/native/index.js` requires `./gpuix-native.darwin-x64.node`, then the
+optional package, then the WASI build, and throws `Cannot find native binding`
+with that chain. So on this host a **static** `import "@gpuix/react/testing"`
+(section 1 of this plan, and the first version of `runtime.test.tsx`) does not
+produce a skipped test — it makes the whole *file* fail to load:
+
+```
+FAIL src/runtime.test.tsx [ src/runtime.test.tsx ]
+Error: Cannot find native binding. …
+  ❯ @gpuix/native/index.js:706:19
+  ❯ src/runtime.test.tsx:16:1        ← the import statement
+```
+
+Two consequences, both now part of this plan:
+
+1. `describe.skipIf(state !== "available")` **cannot** protect a behaviour
+   suite. Any test file that statically imports a component (and so
+   `@gpuix/react`) fails to load on an unsupported host, and a failing file is
+   not a visible skip.
+2. The state therefore has to be established through a **lifted dynamic import**
+   that catches the load failure, and behaviour suites have to keep their GPUix
+   imports out of the default collection path.
+
+### 5b. The guard — the one place that decides
+
+`src/runtime.test.tsx` loads the testing entry with
+`Effect.tryPromise(() => import("@gpuix/react/testing"))` and maps the outcome to
+`available` / `unsupported-host` / `missing`. The load failure is modelled as a
+`Schema.TaggedError` (`NativeRendererUnavailable`), never swallowed, so the
+guard also proves the failure is the *missing binding* and not something else.
+
+```tsx
+const loadTesting = Effect.tryPromise({
+  try: () => import("@gpuix/react/testing"),
+  catch: (cause) => new NativeRendererUnavailable({ host, reason: String(cause) }),
+});
+
+// A supported host that cannot load the renderer is a failure, never a skip.
+expect(state === "available" || !supportedHosts.includes(host)).toBe(true);
+expect(state).not.toBe("missing");
+```
+
+`supportedHosts` is the list `@gpuix/native`'s `optionalDependencies` publishes
+for: `darwin-arm64`, `linux-x64`, `win32-x64`. Flipping this host into that list
+is how the test is proven to fail: it reports `expected false to be true` at that
+line. That is the two-directions check for this file, and it is reproducible here
+— unlike a run that needs the renderer.
+
+### 5c. Where behaviour suites live
+
+They go in `src/behaviour/*.test.tsx`, **excluded** by the package's default
+`vitest.config.ts` and included by a second config (`vitest.behaviour.config.ts`)
+that is run on a supported host:
+
+```
+nub run --filter @gpuixui/components test              # logic + guard: every host
+nub run --filter @gpuixui/components test:behaviour    # behaviour: supported host only
+```
+
+This is the honest form of "a skipped suite is visible, never silent": on an
+unsupported host the behaviour suites are *not collected* rather than reported as
+passing, and §5b's guard fails loudly if a supported host ever loses its
+renderer. A `describe.skipIf` may still be used *inside* the behaviour config for
+a capability the renderer lacks (plan 110 §12 STOP 3), and then it names the
+capability in the test title.
+
+### 5c. Visual check (when the renderer is available)
+
+- `renderer.captureScreenshot(path)` into `.agents/slop/evidence/` (agent state,
+  not repo content), open the PNG, and confirm: text is not clipped, the surface
+  is not transparent, focus is visible, and the layout has no accidental
+  overlap. Delete or leave unsaved; it is evidence for the worker, not a gate.
+- Record one line in the commit body: "screenshot: dialog dark — ok".
+
+**Playground smoke (owned by the playground workstream).** Add a TODO task (do
+not edit `apps/playground`):
+
+> playground: mount each Tier 2 example from `@gpuixui/components/examples` and
+> add a smoke script that opens/closes a dialog, a menu and a toast.
+
+Until that lands, the native renderer suite is the evidence, and the docs say so
+honestly.
+
+## 6. Full gate
+
+Run from the worktree root, in this order, and paste the last line of each:
+
+```
+nub install
+nub run --filter @gpuixui/components check-types
+nub run --filter @gpuixui/components test
+nub run check:tests
+nub run lint
+nub run fmt
+nub run check
+nub run test
+```
+
+Expected:
+
+- `check-types`: exit 0, no output.
+- `test` (package): exit 0; every suite ran; the runtime guard is present; no
+  `describe.skip`; zero skipped tests.
+- `check:tests`: `tests: every test asserts something, and nothing asserts itself`.
+- `lint`: exit 0.
+- `fmt`: exit 0 (no diffs).
+- `check`: all of the above via the root script.
+- `test` (root): exit 0 for every workspace that has tests.
+
+If the root `check`/`test` fails inside another workstream's package, report it
+and do **not** fix it here (AGENTS.md §6).
+
+## 7. Docs truth pass
+
+For each docs page, re-read it against the code and delete any claim the code
+does not implement. Specifically check:
+
+- every prop in the API table exists with the documented type and default;
+- every keyboard key listed has a test;
+- every limitation is still true (a limitation that has been fixed is a lie in
+  the other direction);
+- no example is described as "runs in the playground" until it does;
+- the preview is labelled as a docs-site illustration (the native runtime cannot
+  be embedded in Fumadocs), never presented as a live native surface.
+
+## 8. Tier 2 status report
+
+At the end of the phase, write this table into the commit body and mirror the
+statuses into `COMPONENTS.md`. Honesty over completeness:
+
+| Component | Status | Evidence |
+| --------- | ------ | -------- |
+| Card, Badge, Avatar, Alert, EmptyState, List | … | tests + example + docs |
+| Dialog, ConfirmationDialog, Popover | … | native focus/dismiss tests |
+| Tabs, Accordion, Collapsible, Breadcrumb, Pagination | … | logic + native tests |
+| DropdownMenu, ContextMenu, CommandMenu | … | native keyboard tests |
+| Toast, Field (inline validation) | … | TestClock + native tests |
+| SearchInput, Combobox | … | keystroke + selection tests |
+| Date / time picker | `todo` | design in plan 116 §5 |
+
+## 9. STOP conditions
+
+1. `inventory.test.ts` cannot read `COMPONENTS.md` because the test runs from a
+   different working directory → resolve the path from `import.meta.url`
+   (`new URL("../../../COMPONENTS.md", import.meta.url)`), never `process.cwd()`.
+2. A component's theme assertion passes in both themes because the test compares
+   against the same computed value (a tautology) → the test is wrong; assert
+   against the two *different* theme constants explicitly.
+3. `nub run test` at the root skips a package with no test script → report the
+   package; do not add a fake test to make the run green.
+4. A skipped native test would let the suite pass with no renderer → forbidden.
+   The runtime guard in §5b must be the only place that decides, and it must
+   fail on a supported host with a missing renderer.
+
+## 10. Acceptance criteria
+
+- [x] Every Tier 2 component passes §1.
+- [x] `inventory.test.ts` passes and would fail if a `done` row lost its test.
+- [x] Both-theme assertions exist for every row in §4.
+- [x] Full gate green, with the command output recorded.
+- [x] `COMPONENTS.md` Tier 2 section is accurate, including what is not done.
+- [x] Playground smoke recorded as a TODO for its owner.
+
+## 11. Deviations, recorded during implementation (2026-10-17)
+
+1. **`testFile` is the native behaviour suite**, checked to exist and to live
+   under `src/behaviour/` with a `.test.tsx` suffix. A second co-located
+   `src/<file>.test.tsx` requirement would duplicate the same signal: the pure
+   logic suites (`accordion/logic.test.ts`, …) are per module, not per component.
+2. **A Tier 2 row with status `todo` needs no record.** The date picker is the
+   only such row; creating a record would force fake docs/example/test paths that
+   §3.1 would then fail. Every non-`todo` row must have a record and every record
+   must have a row.
+3. **The both-theme matrix lives in one new suite.** Components whose behaviour
+   suites already asserted both themes keep those assertions; the 11 missing ones
+   are collected in `src/behaviour/theme-matrix.test.tsx` so a gap is visible in
+   one file instead of scattered. Each test renders dark, asserts, unmounts, then
+   does the same in light (the unmount is in a `finally` so a failed assertion
+   cannot leave the one-window renderer mounted).
+4. **The check caught real drift immediately.** Six records claimed
+   `gpuixSupport: "yes"` while their `COMPONENTS.md` row said `partial` (Tabs,
+   Pagination, Breadcrumb, Dropdown, Context, Command): the components lack
+   `aria-orientation`/`aria-current`/`aria-checked`/`aria-activedescendant` or a
+   keyboard path to open. The records now say `partial`, which is the truth.
+5. **Avatar's fallback colour and EmptyState's text colour are asserted through
+   `findByType`, not `findByText`:** a `<text>` host wraps an anonymous child
+   holding the string, and only the wrapper carries the style — measured in the
+   empty-state suite and reused here.

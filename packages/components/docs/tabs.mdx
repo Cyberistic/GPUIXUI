@@ -1,0 +1,143 @@
+---
+title: Tabs
+description: A roving-focus tab list and the panels it switches.
+---
+
+`Tabs` switches between panels that share one region. Selection lives in the tab
+set, focus lives on a trigger, and the two move together unless `activation` says
+otherwise.
+
+```tsx
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@gpuixui/components/tabs";
+
+<Tabs defaultValue="profile">
+  <TabsList label="Account">
+    <TabsTrigger value="profile">Profile</TabsTrigger>
+    <TabsTrigger value="notifications">Notifications</TabsTrigger>
+  </TabsList>
+  <TabsContent value="profile">…</TabsContent>
+  <TabsContent value="notifications">…</TabsContent>
+</Tabs>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Tabs` | the selected value, the trigger registry, the tab stop |
+| `TabsList` | `role="tablist"`, the arrow/Home/End keys, the rail |
+| `TabsTrigger` | one `role="tab"`, `aria-selected`, its own focus |
+| `TabsContent` | one `role="tabpanel"`, mounted only while selected |
+
+Only the selected trigger is in the tab order; every other trigger is `-1`.
+Arrow keys move focus *and* the selection in `automatic` mode; in `manual` mode
+they only move focus, and Enter/Space selects. Disabled triggers are skipped by
+every key and cannot be clicked.
+
+## Orientation
+
+`orientation` defaults to `"horizontal"`. A vertical set puts the rail in a
+column beside the panel and maps the arrow keys to the axis — `Down`/`Up`
+instead of `Right`/`Left`. Home/End, wrapping, disabled skipping, manual
+activation and the controlled rule are identical on both axes.
+
+```tsx
+<Tabs defaultValue="general" orientation="vertical">
+  <TabsList label="Workspace sections">
+    <TabsTrigger value="general">General</TabsTrigger>
+    <TabsTrigger value="members" disabled>
+      Members
+    </TabsTrigger>
+    <TabsTrigger value="billing">Billing</TabsTrigger>
+  </TabsList>
+  <TabsContent value="general">…</TabsContent>
+  <TabsContent value="billing">…</TabsContent>
+</Tabs>
+```
+
+`examples/tabs.example.tsx` exports both shapes: the horizontal account settings
+and the vertical workspace settings.
+
+## Keyboard
+
+| Key | Result |
+| ---- | ------ |
+| `ArrowRight` / `ArrowLeft` (horizontal) | next/previous enabled tab, wrapping |
+| `ArrowDown` / `ArrowUp` (vertical) | next/previous enabled tab, wrapping |
+| `Home` / `End` | first/last enabled tab |
+| `Enter` / `Space` | select the focused tab (the only way in `manual`) |
+
+## Controlled and uncontrolled
+
+```tsx
+<Tabs defaultValue="profile">…</Tabs>;                     // remembers
+<Tabs value={tab} onValueChange={setTab}>…</Tabs>;         // app remembers
+```
+
+A controlled tab set reports a click or key but does not switch its panel until
+the consumer re-renders with the new `value` — the classic contract, tested.
+
+## Theming
+
+The rail paints `colors.background`, a `borderWidth.thin` border in `colors.border`
+and `radius.md`. The selected trigger takes `colors.card` with
+`colors.foreground`; unselected triggers use `colors.mutedForeground` and hover
+with `colors.hover`. Trigger height is `controlHeight(theme, "md")`.
+
+## Style by state
+
+`style` takes a `StyleDesc` or a function of `TabsTriggerState`
+(`{ active, disabled, focused, highlighted, orientation }`); the result merges
+after the trigger's own rules.
+
+```tsx
+<TabsTrigger
+  value="profile"
+  style={(state) => ({ opacity: state.disabled ? 0.4 : 1 })}
+/>
+```
+
+## Accessibility and limitations
+
+- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
+  exposed; the roving tab index is the single-stop pattern. Give the list a
+  `label` so the tab set has a name.
+- **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in
+  `@gpuix/native@0.10.0`: `HostProps` exposes only `aria-label`,
+  `aria-description`, `aria-expanded`, `aria-selected`, `aria-valuetext` and
+  `aria-level`. The panel is named by its value (`aria-label={value}`), and the
+  trigger→panel relationship is positional.
+- The list owns the keys because a key event on a focused trigger bubbles to the
+  list — measured in the real renderer, the same behaviour `List` relies on.
+- Vertical tab sets put the rail in a column beside the panel; the axis is a
+  layout and keyboard choice, not an ARIA attribute (unavailable, below).
+
+## Verification
+
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (14 tests): click
+switching, the active theme role in both themes, arrow wrap with a disabled tab,
+manual activation waiting for Enter, Home/End, the controlled contract, a panel
+whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
+focus ring, and four vertical-axis cases — Down/Up movement with wrap, Left/Right
+ignored, the row/column layout, and manual activation. The vertical guard is
+proven in both directions: inverting the axis mapping fails the movement and
+axis-isolation tests, inverting the layout fails the layout test, and forcing
+`selectsOnFocus` to `true` fails the manual test.
+
+A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler
+runs exactly once.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Accordion** — stacked sections with more than one open.
+- **List** — the same collection arithmetic for selectable rows.
+- **Breadcrumb** — orientation through a hierarchy rather than across peers.

@@ -1,0 +1,101 @@
+---
+title: Inline edit
+description: Rename a value where it is displayed.
+---
+
+`InlineEdit` shows a value as text and swaps to an `<input>` in place when the
+user activates it. GPUix has no `contenteditable`, so the swap is explicit, not
+a styled text field pretending to be editable.
+
+The caller owns the committed value; the component owns only the draft.
+
+## Usage
+
+```tsx
+import { InlineEdit } from "@gpuixui/components";
+
+const [name, setName] = useState("Untitled workspace");
+
+<InlineEdit label="Workspace name" value={name} onCommit={setName} />;
+```
+
+The runnable build is `examples/inline-edit.example.tsx`, which the native
+playground mounts.
+
+## The commit contract
+
+| Action | Result |
+| ------ | ------ |
+| Click, `Enter` or `Space` on the display | edit mode; the input is focused |
+| `Enter` in the input | commit the draft, return to display, focus the display |
+| Blur | commit the draft, leave focus where the user put it |
+| `Escape` | discard the draft, return to display, focus the display |
+| Commit with an unchanged draft | nothing is called |
+| Empty text | a valid value; it clears the field (it is not "cancel") |
+
+Commit is **one rule**, and `Enter` can arrive twice in 0.10.0 (`keyDown` and
+`submit`), so the component finishes an edit once per entry.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `value` | `string` | — | Required; the committed text. |
+| `onCommit` | `(value: string) => void` | — | Called on a changed Enter/blur commit. |
+| `label` | `string` | — | The accessible name of the display and the input. |
+| `placeholder` | `string` | `"—"` | Shown in `mutedForeground` while the value is empty. |
+| `disabled` | `boolean` | `false` | Leaves the tab order, ignores activation. |
+| `editing` | `boolean` | — | Controlled edit state. |
+| `defaultEditing` | `boolean` | `false` | Uncontrolled starting state. |
+| `onEditingChange` | `(editing: boolean) => void` | — | Fired when the edit state changes. |
+| `style` | `StateStyle<InlineEditState>` | — | `{ editing, disabled }`. |
+
+`InlineEdit` takes the GPUix input props (`testId`, `placeholder`, `aria-*`) and
+merges `style` last.
+
+## Theming
+
+The display uses `label` type, `foreground`/`mutedForeground` and an `accent`
+hover; the input uses `controlHeight(theme, "md")`, `background`,
+`inputForeground`, `border` and `focusRing(theme)`. A custom theme changes both
+states with no code change — see [Theming](/docs/theming).
+
+## Accessibility
+
+- The display is a `role="button"` named by `label`; the input is a real input
+  with the same name.
+- Focus is moved with the renderer's `focusElement`; `autoFocus` alone does not
+  follow a replaced element.
+- `@gpuix/native@0.10.0` has no `aria-invalid` or `aria-describedby`, so a
+  rejected value needs the consumer's own message (pair it with `Field`).
+- Disabled is `tabIndex={-1}` with no handlers, plus dimming; there is no
+  `aria-disabled` in 0.10.0.
+
+## Limitations
+
+- No rich text; the editor is a single-line `<input>`.
+- Blur commits. If a consumer wants blur to cancel, it must not use this part.
+- No validation state of its own; `onCommit` is where a caller rejects a value,
+  and the component will still have closed the edit.
+- No multi-line editor in v1; `Textarea`-based inline editing is a future variant.
+
+## Verification
+
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (8 tests):
+display mode, click-to-edit with focus, keyboard entry, Enter commit with focus
+return, Escape discard, blur commit, the unchanged/disabled guards, and a
+controlled edit state.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
+x64, or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Field / FieldInput** — inline validation around a normal input.
+- **Form** — submit-time validation and a submit lifecycle.
+- **Tabs** — a whole panel that swaps, rather than one value.

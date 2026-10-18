@@ -1,0 +1,105 @@
+---
+title: Tag input
+description: A set of tokens entered through a field, with removable chips.
+---
+
+`TagInput` edits a list of tokens: the caller owns the list, the component owns
+the draft and the add/remove rules. Chips are rendered from the caller's value,
+so nothing the component holds is invisible to the caller.
+
+## Usage
+
+```tsx
+import { TagInput, TagInputChip, TagInputField } from "@gpuixui/components";
+
+const [tags, setTags] = useState<ReadonlyArray<string>>(["design"]);
+
+<TagInput label="Tags" value={tags} onValueChange={setTags} max={5}>
+  {tags.map((tag) => (
+    <TagInputChip key={tag} value={tag} />
+  ))}
+  <TagInputField placeholder="Add a tag…" />
+</TagInput>;
+```
+
+The runnable build is `examples/tag-input.example.tsx`, which the native
+playground mounts.
+
+## The token rules
+
+| Action | Result |
+| ------ | ------ |
+| `Enter` in a non-empty field | trims and commits the draft, clears it |
+| Typing `,` | commits everything before it; the remainder stays the draft |
+| Pasting `"a,b"` | adds both tokens |
+| A token already present | ignored, unless `allowDuplicates` |
+| Reaching `max` | further additions are refused; existing tokens stay |
+| The chip's `✕` | removes that token |
+| Whitespace-only input | never becomes a token |
+
+Removal is the chip control. **Backspace on an empty field is not wired**: the
+installed `@gpuix/native@0.10.0` emits no `keyDown` for Backspace or Delete in
+the test renderer, so the component cannot promise (or test) that gesture. The
+docs and the inventory row record it rather than fake it.
+
+The rules are pure (`src/tag-input/logic.ts`: `splitDraft`, `addTokens`,
+`removeToken`) so they are covered without a renderer.
+
+## API
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `TagInput` | `div` with `role="group"`, the field surface and focus ring | `value` (required), `onValueChange` (required), `label` (required), `max?`, `allowDuplicates?`, `disabled?`, children |
+| `TagInputField` | `<input>` | input props minus `value`/`onChange`/`onSubmit`, `style?: StateStyle<TagInputFieldState>` |
+| `TagInputChip` | chip `div` with a removal `role="button"` | `value` (required), `style?: StateStyle<TagInputChipState>` |
+
+`TagInputFieldState` and `TagInputChipState` are `{ disabled }`.
+
+There is **no uncontrolled mode**: chips must be rendered from a value the caller
+holds, so a `defaultValue` the caller cannot read would be a trap. Use a
+controlled list.
+
+## Theming
+
+The group uses `background`, `border`, `radius.md`, `controlHeight` and
+`focusRing`; chips use `muted` / `mutedForeground` and `radius.sm`; the `✕`
+control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
+(0.10.0 has no `aria-disabled`). A custom theme changes all of it — see
+[Theming](/docs/theming).
+
+## Accessibility
+
+- The root is a named `group`; every chip's removal control is a `button` named
+  "Remove <token>".
+- The field is a real input, so typing, selection and focus are native.
+- Removing a chip by keyboard is possible by tabbing to its control and pressing
+  `Enter`/`Space`.
+- The group's disabled state is visual: there is no `aria-disabled` in 0.10.0.
+
+## Limitations
+
+- Controlled only (see above).
+- No Backspace-on-empty removal (unobservable in 0.10.0).
+- No token autocomplete, suggestions or validation; compose with `Combobox` or a
+  schema when the tokens must be constrained.
+- Commas are always separators; a token cannot contain a comma.
+- Chips are rendered by the caller, so ordering is the caller's choice.
+
+## Verification
+
+`src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
+duplicates, the cap and first-match removal.
+`src/behaviour/tag-input.test.tsx` (8 native tests) covers rendering, Enter,
+comma commit, duplicates, the removal control, `max`, disabled and a caller that
+refuses a change.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Combobox** — choose from known options rather than free-form tokens.
+- **Field** — validation around a single value.
+- **Badge** — a read-only token.

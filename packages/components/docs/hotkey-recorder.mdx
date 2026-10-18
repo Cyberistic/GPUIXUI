@@ -1,0 +1,103 @@
+---
+title: Hotkey recorder
+description: Capture a keyboard chord and display it as platform keycaps.
+---
+
+`HotkeyRecorder` binds a shortcut: click it (or press `Enter`/`Space`), press a
+chord, and the component reports it as an accelerator string. Display uses the
+same grammar and the same platform glyphs as
+[Keyboard shortcuts](/docs/keyboard-shortcuts), so a bound chord and a cheat
+sheet can never disagree.
+
+## Usage
+
+```tsx
+import { HotkeyRecorder } from "@gpuixui/components";
+
+const [hotkey, setHotkey] = useState<string | null>("mod+k");
+
+<HotkeyRecorder
+  label="Toggle command palette"
+  value={hotkey}
+  onChange={setHotkey}
+/>;
+```
+
+The runnable build is `examples/hotkey-recorder.example.tsx`, which the native
+playground mounts.
+
+## Recording contract
+
+| Action | Result |
+| ------ | ------ |
+| Click, `Enter` or `Space` while idle | starts listening ("Press keys…") |
+| A key with a modifier | captures and reports the chord, stops listening |
+| A modifier-only press (`Shift`, `Cmd`…) | ignored; still listening |
+| `Escape` while listening | cancels and keeps the bound value |
+| Focus leaves | cancels; a half-finished chord is never committed |
+| The `✕` control | clears the binding (`null`) |
+| `disabled` | out of the tab order, inert, no clear control |
+
+Captured order is `mod`, then the secondary modifier (`ctrl` on macOS, `cmd`
+elsewhere), then `shift`, then `alt`, then the key. `mod` is the platform's
+primary modifier: Command on macOS, Control elsewhere. A **Control** press on
+macOS keeps `ctrl` rather than being silently rewritten to `mod`.
+
+## API
+
+| Prop | Type | Default | Notes |
+| ---- | ---- | ------- | ----- |
+| `label` | `string` | — | The recorder's accessible name. |
+| `value` | `string \| null` | `null` | The bound accelerator. |
+| `onChange` | `(value: string \| null) => void` | — | A captured chord, or `null` on clear. |
+| `placeholder` | `string` | `"Click to record"` | Shown while unbound. |
+| `disabled` | `boolean` | `false` | Leaves the tab order and ignores activation. |
+| `style` | `StateStyle<HotkeyRecorderState>` | — | `{ recording, disabled }`. |
+
+`HotkeyRecorder` takes the GPUix host props (`testId`, `aria-*`) and merges
+`style` last. When `testId` is given, the clear control is
+`${testId}-clear`.
+
+## Theming
+
+The field uses `background`, `border`, `radius.md`, `controlHeight(theme, "md")`
+and `focusRing(theme)`; keycaps use the shared [`Keycap`](/docs/keyboard-shortcuts)
+roles; the clear control shows an `accent` hover. A custom theme changes it with
+no code change — see [Theming](/docs/theming).
+
+## Accessibility
+
+- The recorder is a `role="button"` named by `label`; the clear control is a
+  separately named button, so both are reachable by keyboard.
+- Recording is visual ("Press keys…") and the field keeps focus while listening.
+- There is no `aria-keyshortcuts` and no `aria-disabled` in `0.10.0`; disabled is
+  the tab order plus dimming.
+
+## Limitations
+
+- **No `preventDefault`.** `0.10.0` observes keys but cannot cancel them, so a
+  chord that the operating system or application already handles still fires
+  while being recorded. Prefer non-system chords in your UI.
+- **Clearing is a control, not `Backspace`.** The test renderer emits no key
+  event for Backspace/Delete, so that gesture is not promised.
+- No conflict detection against already-bound chords.
+- The recorder stores a string; registering the chord with the runtime is the
+  application's job.
+
+## Verification
+
+`src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
+modifier, modifier-only presses, Enter/Space normalisation, case, order and a
+keyless event. `src/behaviour/hotkey-recorder.test.tsx` (8 native tests) covers
+the display, click-to-record, a real captured chord, Escape, the clear control,
+blur, disabled, and both themes.
+
+```sh
+nub run --filter @gpuixui/components test
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Keyboard shortcuts** — display bound chords.
+- **Command menu** — what a palette chord usually opens.

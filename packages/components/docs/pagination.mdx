@@ -1,0 +1,118 @@
+---
+title: Pagination
+description: Previous/next controls around a stable-width page window.
+---
+
+`Pagination` is controlled: the app owns the page, the control renders the
+window the app's page implies. The arithmetic lives in `pagination/logic.ts` so
+the width does not jump as the user pages.
+
+```tsx
+import {
+  Pagination,
+  PaginationList,
+  PaginationNext,
+  PaginationPrevious,
+} from "@gpuixui/components/pagination";
+
+const [page, setPage] = useState(1);
+
+<Pagination page={page} pageCount={9} onPageChange={setPage}>
+  <PaginationPrevious />
+  <PaginationList />
+  <PaginationNext />
+</Pagination>;
+```
+
+## Anatomy
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Pagination` | the `role="navigation"` root, its name, the clamped page and the window |
+| `PaginationPrevious` | the "‹ Prev" control; leaves the tab order on the first page |
+| `PaginationList` | the page window: page buttons and the ellipses for gaps |
+| `PaginationItem` | one page number; the current page is primary and non-pressable |
+| `PaginationNext` | the "Next ›" control; leaves the tab order on the last page |
+| `PaginationEllipsis` | the non-focusable `…` that stands in for omitted pages |
+
+The root derives the window once, so a caller never re-implements the stable-width
+rule. The parts are still composable: add a `PaginationItem` beside the list for a
+"jump to page" shortcut, or put your page-size control between the numbered
+window and `PaginationNext`.
+
+
+## Window rule
+
+| Input | Result |
+| ----- | ------ |
+| `pageCount <= 0` | nothing rendered |
+| a list that fits (`siblingCount + 5` or fewer pages) | every page |
+| page 1 of 10 | `1 2 3 4 5 … 10` |
+| page 5 of 10 | `1 … 4 5 6 … 10` |
+| page 10 of 10 | `1 … 6 7 8 9 10` |
+
+`siblingCount` widens the window around the current page (default 1).
+`showEdges={false}` drops the first and last page and renders only the siblings.
+An out-of-range `page` is clamped; an ellipsis replaces a gap of two or more,
+while a gap of one renders the page itself.
+
+## Layout and states
+
+The root lays the parts out in a row. The current page is a button with
+`aria-selected` and the primary fill; pressing it does nothing. Previous and Next
+leave the tab order at the ends instead of merely looking disabled.
+
+## Keyboard
+
+Tab moves through the enabled buttons only. Enter and Space activate the focused
+button, through the shared button primitive.
+
+## Theming
+
+Page buttons are `controlHeight(theme, "sm")` square, `radius.sm`; the current
+page paints `colors.primary` with `colors.primaryForeground`, others are ghost
+buttons with `colors.mutedForeground`. The ellipsis uses `colors.mutedForeground`
+and a caption type role.
+
+## Style by state
+
+`PaginationItem.style` takes a `StyleDesc` or a function of
+`PaginationItemState` (`{ active }`), where `active` is the current page.
+
+```tsx
+<PaginationItem
+  page={3}
+  style={(state) => ({ opacity: state.active ? 1 : 0.8 })}
+/>
+```
+
+## Accessibility and limitations
+
+- `role="navigation"` and a name on the root; `aria-label="Page N"` on every page
+  button; `aria-label="More pages"` on each ellipsis.
+- **No `aria-current="page"`** in 0.10.0 (`HostProps`): the current page carries
+  the supported `aria-selected` instead, plus the primary fill.
+- The control is controlled-only by design: the result set and the page usually
+  live together, and a second uncontrolled copy would drift.
+- No page-size selector; put one beside the control when needed.
+
+## Verification
+
+`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (10 tests):
+disabled edges, the page number (not index) reported, the current page no-op,
+Previous/Next stepping, the ellipsis not being a tab stop, Enter activation,
+`pageCount: 0`, the current fill in both themes, the composed part order, and an
+item outside the list reading the root's page.
+
+`src/pagination/logic.test.ts` covers the window table above, including clamping,
+wide siblings and unique ascending pages.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Related
+
+- **Breadcrumb** — position in a hierarchy rather than a result set.
+- **List** — the rows being paged.
+- **Data toolbar** — page size and filters belong there.

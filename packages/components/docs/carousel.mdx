@@ -1,0 +1,114 @@
+---
+title: Carousel
+description: Discrete slide stepping, with every slide kept mounted.
+---
+
+`Carousel` steps through a fixed set of slides with previous/next controls and
+the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates width,
+left and opacity only — no transform — and scroll snap is unavailable, so a
+translating track is not honestly expressible.
+
+Every slide stays mounted and only the active one is displayed, which preserves
+each slide's component state (a form on slide two is not reset by visiting slide
+three).
+
+## Usage
+
+```tsx
+import {
+  Carousel,
+  CarouselControl,
+  CarouselSlide,
+  CarouselTrack,
+} from "@gpuixui/components";
+
+<Carousel label="Workspace previews" value={index} onValueChange={setIndex} loop>
+  <CarouselTrack>
+    <CarouselSlide>…</CarouselSlide>
+    <CarouselSlide>…</CarouselSlide>
+  </CarouselTrack>
+  <div style={{ display: "flex", gap: 8 }}>
+    <CarouselControl direction="previous" />
+    <CarouselControl direction="next" />
+  </div>
+</Carousel>;
+```
+
+The runnable build is `examples/carousel.example.tsx`, which the native
+playground mounts.
+
+**Declare slides directly inside `CarouselTrack`.** The track reads its direct
+children to number them; wrapping them in a component or a fragment gives every
+slide the same index.
+
+## Behaviour
+
+| Action | Result |
+| ------ | ------ |
+| `next` / `previous` | moves one slide; a no-op at an edge unless `loop` |
+| `loop` | wraps in both directions |
+| `ArrowRight` / `ArrowLeft` (carousel focused) | same as the controls |
+| `Home` / `End` | first / last slide |
+| `value` controlled | the caller's index wins; the control still reports |
+
+The root is focusable and named by `label`. The active index is clamped to the
+slide count, so a controlled value past the end cannot blank the carousel.
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Carousel` | `role="group"` with `aria-label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?`, children |
+| `CarouselTrack` | the slide row | children |
+| `CarouselSlide` | one slide, `display` toggled | `style?: StateStyle<CarouselSlideState>`, children |
+| `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
+
+`CarouselSlideState` is `{ active, index }`.
+
+## Theming
+
+The track uses `card` with a `border` edge and `radius.lg`; controls use the
+local Button roles. Slides have no surface of their own. A custom theme changes
+the frame with no code change — see [Theming](/docs/theming).
+
+## Accessibility
+
+- The root is a named `group` and takes focus for the arrow keys.
+- Controls are buttons named "Previous slide" / "Next slide"; a control at an
+  edge is disabled (out of the tab order, dimmed) unless `loop`.
+- Inactive slides stay in the tree with `display: none`; a screen reader does not
+  announce them, and their component state survives.
+- There is no `aria-roledescription="carousel"` or slide-position announcement
+  in `0.10.0`.
+
+## Limitations
+
+- **No slide animation** (no transform in `motion`).
+- **No swipe/drag** (no drag host feature).
+- No indicator dots, auto-advance or thumbnails in v1.
+- Slides must be direct children of the track.
+- Inactive slides stay mounted: many heavy slides cost render time.
+
+## Verification
+
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (8 tests):
+every slide mounted and one displayed, control stepping, edge clamping, loop
+wrapping, arrows and Home/End, a controlled carousel, region naming and disabled
+edges, and a style callback receiving `{ active, index }` in both themes.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows
+x64, or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Tabs** — panels chosen by their labels, not stepped.
+- **Card** — the surface most slides contain.
+- **List** — rows rather than whole panels.

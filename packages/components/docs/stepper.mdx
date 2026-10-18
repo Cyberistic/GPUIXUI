@@ -1,0 +1,122 @@
+---
+title: Stepper
+description: A read-only indicator of progress through named steps.
+---
+
+`Stepper` shows where a workflow is in a sequence: a number marker, the step's
+name and an optional description per step. It is an **indicator**, not a control.
+
+- It holds no state and takes no callback.
+- It derives each step's status from the one `value` you pass.
+- No step is clickable. Moving between steps is the workflow's job; a stepper
+  with arbitrary jump targets needs a validation and disabled policy the API
+  cannot invent.
+
+## Anatomy
+
+```
+┌ Stepper ────────────────────────────────────────────────┐
+│ ① Account        ② Billing        ③ Review              │
+│   Email…           Card…             Check…             │
+└─────────────────────────────────────────────────────────┘
+   ① complete       ② current        ③ upcoming
+```
+
+`Stepper` is the list. Every entry is a `StepperStep` with a 1-based `value`
+matching the root's scale.
+
+## Usage
+
+```tsx
+import { Stepper, StepperStep } from "@gpuixui/components";
+
+<Stepper value={2} label="Checkout">
+  <StepperStep value={1} label="Account" description="Email and password" />
+  <StepperStep value={2} label="Billing" description="Card and address" />
+  <StepperStep value={3} label="Review" />
+</Stepper>;
+```
+
+The runnable build is `examples/stepper.example.tsx`, which the native playground
+mounts.
+
+## Statuses
+
+The status is derived from `value` — there is no `status` prop to contradict it:
+
+| A step's `value` | Status | Marker | Label |
+| ---------------- | ------ | ------ | ----- |
+| `< value` | `complete` | `secondary` fill, `secondaryForeground` number | `foreground` |
+| `= value` | `current` | `primary` fill, `primaryForeground` number | `foreground` |
+| `> value` | `upcoming` | `muted` fill, `mutedForeground` number | `mutedForeground` |
+
+`StepperStepState` is the public state object: `{ status }`. Pass a function to
+`style` to read it:
+
+```tsx
+<StepperStep
+  value={2}
+  label="Billing"
+  style={(state) => ({ opacity: state.status === "current" ? 1 : 0.6 })}
+/>
+```
+
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
+merges `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Stepper` | `div` with `role="list"` | `value: number` (required), `orientation?: "horizontal" \| "vertical"`, `label?: string`, `children` |
+| `StepperStep` | `div` with `role="listitem"` | `value: number` (required), `label: string` (required), `description?: string`, `style?: StateStyle<StepperStepState>` |
+
+## Orientation
+
+`horizontal` (default) lays the steps in a row and distributes the space;
+`vertical` stacks them in a column for a sidebar. The marker size, gaps and type
+come from the theme's density and spacing, not from the orientation.
+
+## Theming
+
+The markers and labels use `colors.primary`, `secondary`, `muted`, their
+foregrounds, and `spacing.*`; the marker is `controlHeight(theme, "md")` round.
+A custom theme changes the whole indicator with no code change — see
+`docs/tokens.md`.
+
+## Accessibility
+
+- The root is a named list when `label` is given; every step is a `listitem`
+  named by its `label`.
+- `@gpuix/native@0.10.0` has no `aria-current`, so the current step carries
+  `aria-selected` — the same substitution Pagination uses.
+- The number marker is visual; the step's accessible name does not include it, so
+  a screen reader hears "Billing", not "2 Billing".
+
+## Limitations
+
+- Display-only: there is no step click, disabled policy or `onValueChange`.
+- No connector line between steps; the runtime has no pseudo-elements and the
+  contract fixes two parts.
+- No `aria-current` in 0.10.0.
+
+## Verification
+
+`src/behaviour/stepper.test.tsx` runs in the real GPUix renderer (8 tests): step
+order with labels and descriptions, derived statuses in both themes, the selected
+current step, label colours per status, both orientations, list naming, a consumer
+`style` winning, and `style` callbacks receiving the status.
+
+```sh
+nub run --filter @gpuixui/components test:behaviour
+```
+
+It needs a host with a GPUix native binding — macOS arm64, Linux x64, Windows x64,
+or this Intel Mac, where plan 140's locally built `darwin-x64` binding is
+installed.
+
+## Related
+
+- **Tabs** — switchable panels, not progress.
+- **Breadcrumbs** — where you are, not how far through.
+- **Pagination** — moving through pages of one step.
