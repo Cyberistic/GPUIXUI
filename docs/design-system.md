@@ -462,6 +462,16 @@ is public: `themeContrastFailures(theme)` returns every pair an edited theme
 misses, so a brand theme or copied platform style can be held to these floors in
 its own test suite.
 
+The floors are the colour half. `themeMetricFailures` is the numeric half: an
+edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
+the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
+shrink the smallest control below one label line plus its borders, round a
+"square" corner, invert a named size ladder, ship a zero-width surface metric or
+hand `elevationShadow` an alpha the colour helper cannot parse — each of which
+returned `[]` from the colour check. Every shipped theme, platform variant and
+recipe passes, so the checker exists for the theme a consumer edits, not to
+change a value.
+
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
 the identity metrics, the shipped role count, the theme surfaces, the type
 summary, and the spacing, density, radius, icon and avatar scales — to the same

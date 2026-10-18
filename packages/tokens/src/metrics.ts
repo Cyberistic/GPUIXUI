@@ -1,0 +1,351 @@
+/**
+ * The numeric half of the theme contract.
+ *
+ * {@link themeContrastFailures} holds an edited theme's colours to the floors
+ * the shipped sets pass; this module holds its metrics — type, spacing, radii,
+ * density, dimensions, elevation, motion, borders, icons and avatars — to the
+ * invariants the components rely on. A rule is here because a value that breaks
+ * it makes a metric or a control unusable, not because it is a house style.
+ *
+ * Every rule is a pure predicate over a `Theme`, so the check a consumer runs in
+ * their suite is the one this package runs on every shipped theme, platform
+ * variant and recipe.
+ */
+
+import { controlSizes } from "./scale.js";
+import type { Theme } from "./theme.js";
+import { textRoles } from "./typography.js";
+
+/** The ordered index of metric groups the contract governs. */
+export const metricGroups = [
+  "typography",
+  "borderWidth",
+  "density",
+  "dimensions",
+  "iconSize",
+  "avatarSize",
+  "radius",
+  "spacing",
+  "elevation",
+  "motion",
+] as const;
+
+/** A group of theme metrics the contract governs. */
+export type MetricGroup = (typeof metricGroups)[number];
+
+/** The rule a metric missed. */
+export type MetricRule =
+  | "positive"
+  | "non-negative"
+  | "zero"
+  | "increasing"
+  | "non-decreasing"
+  | "at-least"
+  | "at-most"
+  | "within";
+
+/** One metric that misses a rule in a theme. */
+export interface MetricFailure {
+  /** The theme group the governed member belongs to. */
+  readonly group: MetricGroup;
+  /** The member, dotted the way the documentation names it — `controlHeight.sm`. */
+  readonly member: string;
+  /** The rule the value broke. */
+  readonly rule: MetricRule;
+  /** The value measured. */
+  readonly actual: number;
+  /** The value it was compared with. */
+  readonly bound: number;
+}
+
+const failure = (
+  group: MetricGroup,
+  member: string,
+  rule: MetricRule,
+  actual: number,
+  bound: number,
+): MetricFailure => ({ group, member, rule, actual, bound });
+
+const positive = (
+  group: MetricGroup,
+  member: string,
+  actual: number,
+): ReadonlyArray<MetricFailure> =>
+  actual > 0 ? [] : [failure(group, member, "positive", actual, 0)];
+
+const nonNegative = (
+  group: MetricGroup,
+  member: string,
+  actual: number,
+): ReadonlyArray<MetricFailure> =>
+  actual >= 0 ? [] : [failure(group, member, "non-negative", actual, 0)];
+
+const zero = (
+  group: MetricGroup,
+  member: string,
+  actual: number,
+): ReadonlyArray<MetricFailure> =>
+  actual === 0 ? [] : [failure(group, member, "zero", actual, 0)];
+
+const atLeast = (
+  group: MetricGroup,
+  member: string,
+  actual: number,
+  bound: number,
+): ReadonlyArray<MetricFailure> =>
+  actual >= bound ? [] : [failure(group, member, "at-least", actual, bound)];
+
+const atMost = (
+  group: MetricGroup,
+  member: string,
+  actual: number,
+  bound: number,
+): ReadonlyArray<MetricFailure> =>
+  actual <= bound ? [] : [failure(group, member, "at-most", actual, bound)];
+
+/**
+ * An elevation alpha is a fraction, and `alpha()` falls back to the tint
+ * unchanged on a value it cannot parse, so a `NaN` or an out-of-range alpha
+ * would paint an opaque shadow.
+ */
+const fraction = (
+  group: MetricGroup,
+  member: string,
+  actual: number,
+): ReadonlyArray<MetricFailure> =>
+  Number.isFinite(actual) && actual >= 0 && actual <= 1
+    ? []
+    : [failure(group, member, "within", actual, 1)];
+
+/**
+ * A ladder of named steps. Every step must be a non-negative number and, from
+ * the second on, step past the one before it — or reach it, for a
+ * `non-decreasing` ladder, because several shipped styles share a step (Linux
+ * and Windows ship `radius.lg === radius.xl`; Windows ships
+ * `motion.fast === motion.step`).
+ */
+const ladder = (
+  group: MetricGroup,
+  steps: ReadonlyArray<readonly [string, number]>,
+  rule: "increasing" | "non-decreasing",
+): ReadonlyArray<MetricFailure> =>
+  steps.flatMap(([member, value], index) => {
+    const previous = steps[index - 1];
+    if (previous === undefined) {
+      return nonNegative(group, member, value);
+    }
+    const ok =
+      rule === "increasing" ? value > previous[1] : value >= previous[1];
+    return [
+      ...nonNegative(group, member, value),
+      ...(ok ? [] : [failure(group, member, rule, value, previous[1])]),
+    ];
+  });
+
+/**
+ * Every numeric rule a theme misses.
+ *
+ * - **typography**: a role needs a size and leading, and a line box shorter
+ *   than its type clips the glyphs.
+ * - **borderWidth**: `strong` is the focus ring's spread, and the ring is the
+ *   only focus indicator the runtime can draw, so it may not be zero; `thin`
+ *   may be zero in a borderless theme, so it is only non-negative.
+ * - **density**: sizes and padding are ladders, the smallest control fits one
+ *   label line plus its two borders, and a row fits one body line.
+ * - **dimensions**: every surface metric is positive, each documented range has
+ *   a minimum below its default, an adornment fits the smallest control and a
+ *   chip fits in a field.
+ * - **iconSize**, **avatarSize**: named ladders, and the default icon fits the
+ *   smallest control.
+ * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
+ *   both the largest radius and half the largest control.
+ * - **spacing**: a ladder.
+ * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose alpha is a fraction
+ *   and whose blur is non-negative. `overlay` is reserved and empty, so it is
+ *   exempt.
+ * - **motion**: `none` is zero and the timings are a ladder.
+ *
+ * The level is not a parameter: these rules are the same at every contrast
+ * setting, because they describe shapes, not colour.
+ *
+ * @example
+ * ```ts
+ * import { extendTheme, getTheme, themeMetricFailures } from "@gpuixui/tokens";
+ *
+ * const ringless = extendTheme(getTheme("dark"), {
+ *   borderWidth: { strong: 0 },
+ * });
+ * themeMetricFailures(ringless); // [{ group: "borderWidth", member: "strong", … }]
+ * ```
+ */
+export function themeMetricFailures(
+  theme: Theme,
+): ReadonlyArray<MetricFailure> {
+  const {
+    typography,
+    borderWidth,
+    density,
+    dimensions,
+    iconSize,
+    avatarSize,
+    radius,
+    spacing,
+    elevation,
+    motion,
+  } = theme;
+  return [
+    ...textRoles.flatMap((role) => [
+      ...positive("typography", `${role}.fontSize`, typography[role].fontSize),
+      ...atLeast(
+        "typography",
+        `${role}.lineHeight`,
+        typography[role].lineHeight,
+        typography[role].fontSize,
+      ),
+    ]),
+    ...nonNegative("borderWidth", "thin", borderWidth.thin),
+    ...positive("borderWidth", "strong", borderWidth.strong),
+    ...ladder(
+      "density",
+      controlSizes.map(
+        (size) =>
+          [`controlHeight.${size}`, density.controlHeight[size]] as const,
+      ),
+      "non-decreasing",
+    ),
+    ...ladder(
+      "density",
+      controlSizes.map(
+        (size) =>
+          [`controlPaddingX.${size}`, density.controlPaddingX[size]] as const,
+      ),
+      "non-decreasing",
+    ),
+    ...positive("density", "rowHeight", density.rowHeight),
+    ...atLeast(
+      "density",
+      "controlHeight.sm",
+      density.controlHeight.sm,
+      typography.label.lineHeight + 2 * borderWidth.thin,
+    ),
+    ...atLeast(
+      "density",
+      "rowHeight",
+      density.rowHeight,
+      typography.body.lineHeight,
+    ),
+    ...ladder(
+      "iconSize",
+      (["xs", "sm", "md", "lg", "xl"] as const).map(
+        (size) => [size, iconSize[size]] as const,
+      ),
+      "non-decreasing",
+    ),
+    ...atMost("iconSize", "md", iconSize.md, density.controlHeight.sm),
+    ...ladder(
+      "avatarSize",
+      (["xs", "sm", "md", "lg"] as const).map(
+        (size) => [size, avatarSize[size]] as const,
+      ),
+      "non-decreasing",
+    ),
+    ...zero("radius", "none", radius.none),
+    ...ladder(
+      "radius",
+      (["sm", "md", "lg", "xl"] as const).map(
+        (step) => [step, radius[step]] as const,
+      ),
+      "non-decreasing",
+    ),
+    ...atLeast("radius", "full", radius.full, radius.xl),
+    ...atLeast("radius", "full", radius.full, density.controlHeight.lg / 2),
+    ...ladder(
+      "spacing",
+      (
+        [
+          "2xs",
+          "xs",
+          "sm",
+          "md",
+          "lg",
+          "xl",
+          "2xl",
+          "3xl",
+          "4xl",
+          "5xl",
+        ] as const
+      ).map((step) => [step, spacing[step]] as const),
+      "non-decreasing",
+    ),
+    ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
+    ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),
+    ...positive("dimensions", "overlayMaxHeight", dimensions.overlayMaxHeight),
+    ...positive("dimensions", "fieldMinWidth", dimensions.fieldMinWidth),
+    ...positive(
+      "dimensions",
+      "fieldAdornmentSize",
+      dimensions.fieldAdornmentSize,
+    ),
+    ...positive("dimensions", "chipMinWidth", dimensions.chipMinWidth),
+    ...positive("dimensions", "toastWidth", dimensions.toastWidth),
+    ...positive(
+      "dimensions",
+      "previewCardMinWidth",
+      dimensions.previewCardMinWidth,
+    ),
+    ...positive(
+      "dimensions",
+      "previewCardMaxWidth",
+      dimensions.previewCardMaxWidth,
+    ),
+    ...ladder(
+      "dimensions",
+      [
+        ["overlayMinWidth", dimensions.overlayMinWidth],
+        ["overlayWidth", dimensions.overlayWidth],
+      ],
+      "increasing",
+    ),
+    ...ladder(
+      "dimensions",
+      [
+        ["previewCardMinWidth", dimensions.previewCardMinWidth],
+        ["previewCardMaxWidth", dimensions.previewCardMaxWidth],
+      ],
+      "increasing",
+    ),
+    ...atMost(
+      "dimensions",
+      "fieldAdornmentSize",
+      dimensions.fieldAdornmentSize,
+      density.controlHeight.sm,
+    ),
+    ...atMost(
+      "dimensions",
+      "chipMinWidth",
+      dimensions.chipMinWidth,
+      dimensions.fieldMinWidth,
+    ),
+    ...(["sm", "md", "lg"] as const).flatMap((level) => {
+      const shapes = elevation[level];
+      return shapes.length === 0
+        ? [failure("elevation", level, "at-least", shapes.length, 1)]
+        : shapes.flatMap((shape, index) => [
+            ...nonNegative(
+              "elevation",
+              `${level}[${index}].blurRadius`,
+              shape.blurRadius,
+            ),
+            ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
+          ]);
+    }),
+    ...zero("motion", "none", motion.none),
+    ...ladder(
+      "motion",
+      (["step", "fast", "normal", "slow", "pulse"] as const).map(
+        (level) => [level, motion[level]] as const,
+      ),
+      "non-decreasing",
+    ),
+  ];
+}

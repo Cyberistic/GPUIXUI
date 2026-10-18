@@ -29,6 +29,7 @@ import {
   selectionWashPairs,
 } from "./contrast.js";
 import { motion } from "./motion.js";
+import { metricGroups } from "./metrics.js";
 import { platformNames, platformTypes } from "./platforms.js";
 import { textRoles } from "./typography.js";
 
@@ -145,5 +146,16 @@ describe("COMPONENTS.md design-system rows", () => {
     platformNames.forEach((platform) => {
       expect(platforms, platform).toContain(platformTypes[platform].label);
     });
+  });
+
+  it("names the metric groups the numeric contract governs", () => {
+    const metrics = row("Theme metric check");
+    expect(metrics).toContain(`${metricGroups.length} groups`);
+    metricGroups.forEach((group) => {
+      expect(metrics, group).toContain(`\`${group}\``);
+    });
+    expect(metrics).toContain("`themeMetricFailures(theme)`");
+    expect(metrics).toContain("only focus indicator");
+    expect(metrics).toContain("**Theme contrast check**");
   });
 });

@@ -88,6 +88,9 @@ missing here is not public.
 | `FocusRing` | `{ boxShadow }` for the focus ring. |
 | `FontWeight` | `400`, `500`, `600` or `700`. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
+| `MetricFailure` | One metric a theme misses, with its group, rule and values. |
+| `MetricGroup` | A group of theme metrics from `metricGroups`. |
+| `MetricRule` | The rule a metric is held to: positive, ladder, fit or fraction. |
 | `Motion` | Six timing levels and four easing phases. |
 | `MotionEasing` | A cubic-bezier control-point tuple. |
 | `MotionEasings` | The `standard`, `enter`, `exit` and `linear` curves. |
@@ -1342,6 +1345,46 @@ contrastFloors.high; // { body: 7, secondary: 7, inactive: 4.5, boundary: 4.5, m
 
 The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).
 This is a check for a consumer's own test suite, not a runtime validator.
+
+#### Numeric metrics
+
+A theme is more than its colours. `themeMetricFailures(theme)` holds the numbers
+a component paints with — typography, spacing, radius, density, component
+dimensions, elevation, motion, border widths, icon sizes and avatar sizes — to
+the invariants those components rely on, and it is the check to run beside the
+colour one when a copied platform style or brand theme changes a metric:
+
+```ts
+import { themeMetricFailures } from "@gpuixui/tokens";
+
+themeMetricFailures(brandTheme); // [] when every metric is usable
+```
+
+The rules are breakage tests, not a house style. `borderWidth.strong` is the
+focus ring's spread, and that zero-blur shadow is the only focus indicator the
+runtime can draw, so a zero ring removes focus entirely — while
+`themeContrastFailures` still returns `[]`, because the ring's colour is fine. A
+type role's leading must not be shorter than its size; the smallest control must
+fit one `label` line plus its two borders; a row must fit one `body` line;
+`radius.none` must be square; `radius.full` must round the largest radius and
+half the largest control; every named ladder — `spacing`, `radius`, `iconSize`,
+`avatarSize`, `controlHeight`, `controlPaddingX` and the motion timings — must
+not step backwards; an icon and a field adornment must fit the smallest control;
+a chip must fit in a field; and an elevation level must hold a shadow whose alpha
+is a fraction, because `alpha()` falls back to the opaque tint on a value it
+cannot parse. Two ladders are deliberately non-decreasing rather than strict:
+Linux and Windows ship `radius.lg === radius.xl`, and Windows ships
+`motion.fast === motion.step`. `elevation.overlay` is exempt because it is
+reserved and empty. Every shipped theme, platform variant and recipe passes, so
+the check moves no value; it guards the next edit.
+
+`metricGroups` is the ordered index of the ten governed groups, so a
+documentation table or a settings row iterates it instead of retyping the names.
+A failure is a `MetricFailure`: the `MetricGroup`, the dotted `member`
+(`controlHeight.sm`), the `MetricRule` it broke and both numbers — the `actual`
+value and the `bound` it missed. A `MetricRule` is one of `positive`,
+`non-negative`, `zero`, `increasing`, `non-decreasing`, `at-least`, `at-most` or
+`within`.
 
 No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the

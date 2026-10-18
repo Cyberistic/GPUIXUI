@@ -348,6 +348,35 @@ a disabled control paints its `border` edge, measured on `disabled` and on the
 A runnable example
 lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 
+### Checking the numbers
+
+The colour check is half the contract. `themeMetricFailures(theme)` holds the
+numbers a theme paints with — typography, spacing, radius, density, component
+dimensions, elevation, motion, border widths, icon sizes and avatar sizes — to
+the invariants the components rely on, and returns a `MetricFailure` per missed
+rule: the `MetricGroup`, the dotted member, the `MetricRule` and both numbers.
+
+```ts
+import { extendTheme, getTheme, themeMetricFailures } from "@gpuixui/tokens";
+
+const ringless = extendTheme(getTheme("dark"), {
+  borderWidth: { strong: 0 },
+});
+themeMetricFailures(ringless); // one borderWidth/strong failure
+```
+
+That case is why the check exists: `focusRing` spreads by `borderWidth.strong`,
+and that shadow is the only focus indicator GPUix 0.10.0 can draw, so a zero
+ring removed focus while `themeContrastFailures` still returned `[]`. The same
+edit path can clip a type role by shortening its leading, shrink the smallest
+control below one label line, invert a size ladder, or hand `elevationShadow` an
+alpha the colour helper cannot parse. The ladders are non-decreasing rather than
+strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ships
+`motion.fast === motion.step`; `elevation.overlay` is exempt because it is
+reserved and empty. Every shipped theme, platform variant and recipe passes.
+`metricGroups` is the ordered index a settings row iterates. A runnable example
+lives in [`src/metrics.example.ts`](./src/metrics.example.ts).
+
 ## Status tones
 
 The four status families — `info`, `success`, `warning` and `destructive` — each

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 125/175
+`[x]` `[███████░░░]` 126/176
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -125,6 +125,13 @@ edited theme whose `active` equalled `hover` returned `[]` while the press had
 no visible change; `washStepPairs` holds it to the same 1.05:1 `step` floor as
 the filled families, every shipped set passes (1.059:1 at the tightest) and the
 contract grows 337 → 338 (plan 357)
+`[x]` Ship the numeric half of the theme contract — `themeMetricFailures` and
+`metricGroups` hold an edited theme's typography, spacing, radii, density,
+component dimensions, elevation, motion, border, icon and avatar metrics to the
+invariants the components rely on; a zero `borderWidth.strong` removed the focus
+ring, a shortened leading clipped text and an inverted ladder changed what a
+name means, all while `themeContrastFailures` returned `[]`. Every shipped
+theme, platform variant and recipe passes, so no value moves (plan 358)
 `[ ]` Cross-team: `components` moves the secondary Button off the mixed
 `secondary` → `hover` → `active` ladder — `internal/button.tsx` rests on
 `secondary` and hovers to `hover`, and the pair is under the 1.05:1 step floor in
