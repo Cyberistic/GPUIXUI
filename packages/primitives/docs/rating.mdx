@@ -62,6 +62,9 @@ The group holds **one tab stop** — on the current rating, or on the first star
 when unrated — and an arrow moves the selection and native focus together, so
 the ring is always on the star the value came from.
 
+Clearing moves native focus to the first star — the group's tab stop when it is
+unrated — so the ring and the keyboard are always on the same star (plan `334`).
+
 ## Hover preview
 
 While the pointer is over an interactive rating, the stars paint the value a
@@ -172,8 +175,10 @@ each star:
   paints the empty stars' icons `destructive` and leaves the chosen ones
   `primary` (plan `070`); a real pointer over star 4 previews 1–4, leaving
   restores the value, a downward preview follows the pointer, an invalid preview
-  keeps the brand role and disabled/readOnly never preview (plan `094`).
-  Measured 2026-10-17 (plan 054 §9, plan 070 §6) and 2026-10-18 (plan 094 §7).
+  keeps the brand role and disabled/readOnly never preview (plan `094`); and
+  Delete through the focused star leaves native focus **and** the ring on
+  star 1, the tab stop (plan `334`).
+  Measured 2026-10-17 (plan 054 §9, plan 070 §6) and 2026-10-18 (plans 094, 334).
 
 ```sh
 nub run --filter @gpuixui/primitives test

@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 82/82
+`[x]` `[██████████]` 83/83
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -625,6 +625,13 @@ retired once both branches are one
       and `@gpuixui/tokens` import in both packages' docs, READMEs, examples and
       source (file references are exempt by extension); the guard reported
       exactly the four false claims before the fix (plan `333`)
+`[x]` `packages/primitives`: **`Rating`'s clear painted its ring on a star that
+      did not hold focus** — measured: Delete from star 4 cleared the value and
+      moved the ring to star 1 (the tab stop), but `onMove(0)` looked for a star
+      "0", found none and never moved native focus, so the ring and the keyboard
+      named different stars. One `ratingTabStop` target now drives both the
+      native call and the paint; 1 runtime test, both directions proven
+      (plan `334`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

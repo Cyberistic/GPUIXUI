@@ -249,11 +249,15 @@ export const Rating = (props: RatingProps): ReactElement => {
       onSelect: state.set,
       onMove: (value) => {
         state.set(value);
-        Option.match(Option.fromNullishOr(itemIds.current.get(value)), {
+        // A rating has no star 0: a clear lands on the tab stop, star 1.
+        // Resolve one target for the native call and the paint so the ring
+        // and the keyboard can never name different stars (plan 334).
+        const target = ratingTabStop(value, ratingMax(props.max));
+        Option.match(Option.fromNullishOr(itemIds.current.get(target)), {
           onNone: () => {},
           onSome: (id) => renderer?.focusElement?.(id),
         });
-        setFocusedIndex(Option.some(value === 0 ? 1 : value));
+        setFocusedIndex(Option.some(target));
       },
       registerItem: (index) => (instance) => {
         if (instance === null) itemIds.current.delete(index);

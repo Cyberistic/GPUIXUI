@@ -139,6 +139,43 @@ it("clears the rating with Delete", async () => {
   ]);
 });
 
+it("moves native focus to the tab stop when Delete clears the rating", async () => {
+  // The bug guarded (plan 334): Delete cleared the value and painted the ring on
+  // star 1, but `onMove(0)` looked for a star "0", found none, and never moved
+  // native focus — so the ring and the keyboard were on different stars.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={4} />
+    </Surface>,
+  );
+  runtime.click("ra-star-4");
+  runtime.flush();
+  expect(runtime.focused()).toStrictEqual(Option.some("ra-star-4"));
+  const focusedId = Option.getOrElse(
+    Option.fromNullishOr(runtime.renderer.getFocusedElementId()),
+    () => expect.fail("the clicked star took no native focus"),
+  );
+  // Delete through the focused element, as the keyboard would deliver it.
+  runtime.renderer.nativeSimulateKeyDown(focusedId, "delete");
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  expect(runtime.focused()).toStrictEqual(Option.some("ra-star-1"));
+  expect(checkedStars(runtime)).toStrictEqual([
+    "unchecked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+  ]);
+  const ringed = (label: string): boolean =>
+    Option.isSome(
+      Option.fromNullishOr(byLabel(runtime, label).style["boxShadow"]),
+    );
+  expect(ringed("1 of 5")).toBe(true);
+  expect(ringed("4 of 5")).toBe(false);
+});
+
 it("paints the brand role on filled stars and the muted role on empty ones", async () => {
   const runtime = await openWindow();
   runtime.render(

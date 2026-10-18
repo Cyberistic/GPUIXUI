@@ -219,13 +219,14 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **22 files, 348 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **22 files, 349 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
 the paint (plan 055), a tooltip measured against its trigger in a column and a
-row and flipped below at the window's top edge (plans 060, 067), a radio group's failed validation measured on the circles (plan
+row and flipped below at the window's top edge (plans 060, 067), a Rating's
+clear leaving native focus and the ring on the same star (plan 334), a radio group's failed validation measured on the circles (plan
 061), a select's list measured against its trigger's width and — at the window's
 bottom edge — opened above the trigger instead of over it, a long list capped and
 scrolled with the keyboard highlight kept in view (plans 062, 066, 068, 069), a
