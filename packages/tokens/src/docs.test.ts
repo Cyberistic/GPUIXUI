@@ -131,7 +131,12 @@ import {
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
-import { motion, skeletonPulseOpacity } from "./motion.js";
+import {
+  motion,
+  motionLevels,
+  motionPhases,
+  skeletonPulseOpacity,
+} from "./motion.js";
 import {
   getPlatformRecipeTheme,
   isPlatformRecipeName,
@@ -342,8 +347,8 @@ const typeRow = (name: string): string => {
   return line ?? "";
 };
 
-const timingLevels = Object.keys(motion).filter((key) => key !== "ease");
-const easingPhases = Object.keys(motion.ease);
+const timingLevels = motionLevels;
+const easingPhases = motionPhases;
 const documentedWeight = /`(\d{2,4})`/g;
 
 describe("docs/tokens.md type index", () => {
@@ -747,12 +752,9 @@ describe("docs/tokens.md numeric tables", () => {
   });
 
   it("lists every motion level in milliseconds", () => {
-    Object.entries(motion).forEach(([level, value]) => {
-      if (typeof value !== "number") {
-        return;
-      }
+    motionLevels.forEach((level) => {
       expect(markdown, `motion.${level}`).toContain(
-        `| \`${level}\` | ${value} |`,
+        `| \`${level}\` | ${motion[level]} |`,
       );
     });
   });

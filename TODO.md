@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 183/245
+`[x]` `[███████░░░]` 184/246
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1445,6 +1445,11 @@ the public `FontWeight` JSDoc named a `700` no role uses and
 `docs/design-system.md` said “The four weights” while the catalogue said three;
 a new guard holds both sentences and a stale literal, and the executed font
 manifest is the copyable list a bundler loads (plan 518)
+`[x]` Ship `motionLevels` and `motionPhases` as the ordered owners of the motion
+scale, derive `MotionLevel`/`MotionPhase` from them, and move the two docs
+suites off `Object.keys(motion)` — a `string[]` that would adopt a new field
+before the documents did; a completeness guard fails a timing or phase added
+without the index (plan 519)
 `[ ]` Cross-team: `components` reads `theme.dimensions.keycapSize` for the
 keycap's `minWidth` and `height` instead of the 20px literals in
 `keyboard-shortcuts.tsx` (owner: `components`; plan 517)

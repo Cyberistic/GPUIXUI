@@ -32,6 +32,12 @@ export interface MotionEasings {
   readonly linear: MotionEasing;
 }
 
+/** The easing phases the library ships, in documentation order. */
+export const motionPhases = ["standard", "enter", "exit", "linear"] as const;
+
+/** An easing phase. */
+export type MotionPhase = (typeof motionPhases)[number];
+
 /** Motion timings in milliseconds, and the easings they run on. */
 export interface Motion {
   /** `0` — a theme that removes motion. */
@@ -49,6 +55,19 @@ export interface Motion {
   /** Easings by phase. */
   readonly ease: MotionEasings;
 }
+
+/** The motion timings the library ships, in documentation order. */
+export const motionLevels = [
+  "none",
+  "step",
+  "fast",
+  "normal",
+  "slow",
+  "pulse",
+] as const;
+
+/** A duration level. `ease` is not a duration. */
+export type MotionLevel = (typeof motionLevels)[number];
 
 /** Default motion. */
 export const motion: Motion = {
@@ -76,12 +95,6 @@ export const motion: Motion = {
  * a theme token: every theme pulses the same way.
  */
 export const skeletonPulseOpacity = 0.6;
-
-/** A duration level. `ease` is not a duration. */
-export type MotionLevel = Exclude<keyof Motion, "ease">;
-
-/** An easing phase. */
-export type MotionPhase = keyof MotionEasings;
 
 /** A transition for the runtime's `MotionProps.transition`. */
 export interface MotionTransition {

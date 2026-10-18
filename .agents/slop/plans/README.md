@@ -213,6 +213,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [516](./516-ring-on-value-groove.md) | The focus ring on the value groove | F | 086, 093, 332, 342, 347, 354, 384, 503 | done |
 | [517](./517-keycap-surface-metric.md) | The keycap surface a theme cannot own or check | F | 011, 353, 358, 360, 367, 384, 386 | done |
 | [518](./518-shipped-weight-claims.md) | The shipped weight set, in one index and two last claims | F | 011, 367, 370, 387, 391, 396 | done |
+| [519](./519-motion-scale-indexes.md) | The motion scale's ordered indexes | F | 019, 064, 096, 305, 364, 372, 387, 518 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2222,6 +2223,17 @@ The JSDoc, the design-system sentence and the catalogue now name the same
 derived list, `font-weights.example.ts` is the font manifest a bundler copies,
 and `font-weights.test.ts` fails on both pre-fix sentences and on a stale
 literal. No colour, pair, floor, metric or shipped weight moves.
+
+Plan `519` closes the last scale without an ordered index. `MotionLevel` and
+`MotionPhase` were key-only types (`Exclude<keyof Motion, "ease">`,
+`keyof MotionEasings`), so `docs.test.ts` and `inventory.test.ts` derived the
+levels with `Object.keys(motion)` — a `string[]` that would silently adopt a new
+field — and `motion-contract.test.ts` retyped five of the six levels by hand.
+`motionLevels` and `motionPhases` are the ordered owners, the two types derive
+from them, the two documentation suites read them, and `motion-index.test.ts`
+fails when a timing or phase is added without the index. `motion-levels.example.ts`
+is the table a docs site or a settings row copies. No timing, easing, colour,
+pair, floor or metric moves.
 
 ## How to use a plan
 

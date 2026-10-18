@@ -102,8 +102,8 @@ missing here is not public.
 | `Motion` | Six timing levels and four easing phases. |
 | `MotionEasing` | A cubic-bezier control-point tuple. |
 | `MotionEasings` | The `standard`, `enter`, `exit` and `linear` curves. |
-| `MotionLevel` | A timing level name, `none` to `pulse`. |
-| `MotionPhase` | `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
+| `MotionLevel` | A timing level from `motionLevels`, `none` to `pulse`. |
+| `MotionPhase` | An easing phase from `motionPhases`: `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
 | `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
@@ -1089,6 +1089,10 @@ Timings are **milliseconds** in the tokens; the runtime's transition takes
 | `normal` | 200 | `enter` / `exit` | menus, dropdowns, combobox lists |
 | `slow` | 320 | `enter` / `exit` | dialogs, panel expansion, accordions |
 | `pulse` | 700 | `linear` | a skeleton's half cycle |
+
+`motionLevels` lists the six levels in this order and `motionPhases` the four
+easing phases, so a table or a settings row iterates the index instead of
+`Object.keys(motion)`.
 
 Easings are named per phase: `standard` (`easeInOut`), `enter` (`easeOut`),
 `exit` (`easeIn`) and `linear`. The runtime also takes a cubic-bezier tuple, so

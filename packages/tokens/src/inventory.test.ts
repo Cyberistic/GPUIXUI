@@ -30,7 +30,7 @@ import {
   selectionStatusPairs,
   selectionWashPairs,
 } from "./contrast.js";
-import { motion } from "./motion.js";
+import { motionLevels, motionPhases } from "./motion.js";
 import { metricGroups } from "./metrics.js";
 import { platformNames, platformTypes } from "./platforms.js";
 import { typefaceRules } from "./typeface.js";
@@ -131,11 +131,10 @@ describe("COMPONENTS.md design-system rows", () => {
 
   it("names every motion level and easing it claims", () => {
     const motionRow = row("Motion tokens");
-    const levels = Object.keys(motion).filter((key) => key !== "ease");
-    levels.forEach((level) => {
+    motionLevels.forEach((level) => {
       expect(motionRow, level).toContain(`\`${level}\``);
     });
-    Object.keys(motion.ease).forEach((phase) => {
+    motionPhases.forEach((phase) => {
       expect(motionRow, phase).toContain(phase);
     });
   });
