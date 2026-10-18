@@ -579,7 +579,10 @@ measured 1.99:1 on Linux dark until plan 306. The `disabled` fill is allowed to
 sit near the panel — no neutral clears both a white card and the quiet panel — so
 a disabled control paints its `border` edge, measured on `disabled` and on the
 `muted` panel a settings sidebar divides. A disabled control is not an
-`opacity: 0.5` composite; it paints the designed pair and the edge.
+`opacity: 0.5` composite; it paints the designed pair and the edge — the dim
+measures **1.468:1** at worst (Linux light, a card), and
+[`src/disabled-state.example.ts`](./src/disabled-state.example.ts) returns the
+three properties.
 `selectionInactivePairs` holds that label through the text-selection wash on the
 same thirteen surfaces, because `selectionColor` inherits into it: the previous
 light `#6E7787` measured **2.586:1** on Windows light's `selected` fill and the

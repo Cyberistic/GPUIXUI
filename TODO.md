@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 203/269
+`[x]` `[███████░░░]` 204/270
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -821,9 +821,12 @@ now share one Contoso primary family, the authored style names the whole family,
 and both are held to `themeContrastFailures` in both modes (plan 310)
 `[ ]` Cross-team: `primitives` and `components` replace `opacity: 0.5` disabled
 dimming with the designed `disabled` / `disabledForeground` pair plus the
-`border` edge — an alpha composite makes the label's readability depend on the
-surface behind it (a disabled primary action measures 2.25:1 on the light canvas)
-and the `Select` item already paints the role (plan 306; owner: those
+`border` edge — GPUI composites an element and its children as one group, so the
+label dims with its own fill: a filled primary action's label measures
+**1.575:1** on the identity light canvas and **1.468:1** at worst (Linux light, a
+card), a disabled field's typed text **3.273:1** on the macOS light `input`
+fill, and the `Select` item already paints the role; copy the three properties
+from `src/disabled-state.example.ts` (plans 306 and 539; owner: those
 workstreams)
 `[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
@@ -1651,6 +1654,17 @@ action's "five surfaces the two labels share" were prose no test measured, so a
 surface joining both roles' pairs could leave the paragraph quoting the old set
 while every tier figure still passed; the two numerals take the paragraph's word
 style and one case derives all eight phrases through `tierSurfaces` (plan 538)
+
+`[x]` Correct the disabled dim's documented figure — both pages quoted
+**2.25:1** for a filled primary action at 50% opacity and `docs/tokens.md`
+claimed a disabled field "reads `disabledForeground`", while GPUI composites an
+element and its children as one group (the label dims with its own fill), so the
+composition measures **1.575:1** on the identity light canvas and **1.468:1** at
+worst (Linux light, a card), and a dimmed field's typed text **3.273:1** on the
+macOS light `input` fill; the three figures join `figures.ts` through a new
+`"dim"` kind, `src/disabled-state.example.ts` ships the three roles a control
+paints instead, and `disabled-state.test.ts` holds the brand dim below the
+inactive floor in all 24 shipped sets (plan 539)
 
 ## Phase C — Tier 1–2 components
 

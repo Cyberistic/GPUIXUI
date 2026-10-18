@@ -1,4 +1,4 @@
-import type { ThemeColors } from "./color.js";
+import { alpha, type ThemeColors } from "./color.js";
 import {
   compositeOver,
   contrastPairs,
@@ -41,7 +41,19 @@ export type FigureKind =
   /** The foreground through the composited `selection` wash. */
   | "selection"
   /** The `overlay` wash composited over the background, held to the background. */
-  | "overlay";
+  | "overlay"
+  /**
+   * A control an author dimmed with `opacity`, composited the way GPUI paints
+   * it: "this element and its children, composited together as one group"
+   * (`references/gpui-ce/crates/gpui/src/styled.rs`, which GPUix reaches through
+   * `StyleDesc.opacity`). The pair's foreground is the label and its background
+   * the fill; {@link DocumentedFigure.panel} is the surface the control sits on,
+   * because a dim takes its colour from behind the control.
+   */
+  | "dim";
+
+/** The opacity the shipped consumers dim a disabled control with. */
+export const disabledDimOpacity = 0.5;
 
 /** A document a figure is quoted in. */
 export type FigureDocument =
@@ -87,6 +99,11 @@ export interface DocumentedFigure {
   readonly claim: FigureClaim;
   /** The shipped set the sentence names. */
   readonly provenance: ShippedThemeProvenance;
+  /**
+   * The surface a `"dim"` composition sits on. Omitted for every other kind,
+   * whose pair already names its background.
+   */
+  readonly panel?: keyof ThemeColors;
   /** The precision the sentence quotes. */
   readonly decimals: number;
   /** The sentence, with `{figure}` where the derived ratio belongs. */
@@ -140,6 +157,7 @@ const measure = (
   kind: FigureKind,
   [foreground, background]: ContrastPair,
   colors: ThemeColors,
+  panel: keyof ThemeColors | undefined,
 ): number => {
   switch (kind) {
     case "plain":
@@ -153,13 +171,30 @@ const measure = (
       const painted = compositeOver(colors[foreground], colors[background]);
       return contrastRatio(painted, colors[background]);
     }
+    case "dim": {
+      if (panel === undefined) {
+        return Number.NaN;
+      }
+      // One group: the fill composites onto the panel first, then the label
+      // composites onto the fill. A dimmed label is measured against its own
+      // dimmed fill, not against the panel.
+      const fill = compositeOver(
+        alpha(colors[background], disabledDimOpacity),
+        colors[panel],
+      );
+      const label = compositeOver(
+        alpha(colors[foreground], disabledDimOpacity),
+        fill,
+      );
+      return contrastRatio(label, fill);
+    }
   }
 };
 
 /** The lowest ratio one set measures across the entry's pairs. */
 const within = (entry: DocumentedFigure, colors: ThemeColors): number =>
   entry.pairs
-    .map((pair) => measure(entry.kind, pair, colors))
+    .map((pair) => measure(entry.kind, pair, colors, entry.panel))
     .reduce((best, current) => (current < best ? current : best));
 
 /** The result of deriving a documented figure. */
@@ -388,6 +423,65 @@ const inactivePanelActionFigures: ReadonlyArray<DocumentedFigure> = [
 ];
 
 /**
+ * The disabled dim the consumer packages still paint, the composition the
+ * documents quote. GPUI composites an element and its children as one group, so
+ * the label is dimmed with the fill it sits on: the primary label measures
+ * **1.575:1** on the identity light canvas and **1.468:1** at worst (Linux
+ * light, a card), and a dimmed field's typed text **3.273:1** on macOS light's
+ * `input` fill. Plan 306 quoted 2.25:1 for the light canvas, which no
+ * composition in the current palette produces; the figures are derived here so
+ * the pages cannot drift again.
+ */
+const disabledDimFigures: ReadonlyArray<DocumentedFigure> = [
+  {
+    document: "docs/design-system.md",
+    name: "the disabled primary action, dimmed on the identity light canvas",
+    pairs: [["primaryForeground", "primary", "secondary"]],
+    kind: "dim",
+    panel: "background",
+    claim: "value",
+    provenance: identityTheme("light", "default"),
+    decimals: 3,
+    sentence:
+      "A filled primary action at 50% opacity measures **{figure}:1** on the identity light canvas",
+  },
+  {
+    document: "docs/design-system.md",
+    name: "the disabled primary action, dimmed on the worst shipped card",
+    pairs: [["primaryForeground", "primary", "secondary"]],
+    kind: "dim",
+    panel: "card",
+    claim: "tightest",
+    provenance: platformTheme("linux", "light", "default"),
+    decimals: 3,
+    sentence: "the primary label measures **{figure}:1** on a Linux light card",
+  },
+  {
+    document: "docs/tokens.md",
+    name: "the disabled field's typed text, dimmed on its input fill",
+    pairs: [["inputForeground", "input", "body"]],
+    kind: "dim",
+    panel: "input",
+    claim: "tightest",
+    provenance: platformTheme("darwin", "light", "default"),
+    decimals: 3,
+    sentence:
+      "the shipped primitives still dim the field at 50%, which measures **{figure}:1** on the macOS light `input` fill",
+  },
+  {
+    document: "packages/tokens/README.md",
+    name: "the disabled dim's worst shipped card",
+    pairs: [["primaryForeground", "primary", "secondary"]],
+    kind: "dim",
+    panel: "card",
+    claim: "tightest",
+    provenance: platformTheme("linux", "light", "default"),
+    decimals: 3,
+    sentence: "the dim measures **{figure}:1** at worst (Linux light, a card)",
+  },
+];
+
+/**
  * The value groove: the tightest surface pair across the whole list, and the
  * persistent row fill the sentence names beside it.
  */
@@ -420,6 +514,7 @@ const trackSelectedFigure: DocumentedFigure = {
 export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   toastToneFigure,
   ...inactivePanelActionFigures,
+  ...disabledDimFigures,
   trackSurfaceFigure,
   trackSelectedFigure,
 ];

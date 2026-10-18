@@ -489,7 +489,9 @@ with `disabledForeground` on it and its `border` edge around it: the label keeps
 readable dim (3:1, 4.5:1 at AAA) and the edge keeps the shape, because the fill
 is allowed to sit within the panel's own value — no neutral clears a white card
 and the quiet panel at once. A filled primary action at 50% opacity measures
-2.25:1 on the light canvas, which is the state a designed pair replaces.
+**1.575:1** on the identity light canvas, which is the state a designed pair
+replaces: GPUI composites an element and its children as one group, so the label
+is dimmed with the fill it sits on, not only the fill.
 
 A row's metadata keeps its `mutedForeground` role on every wash the row paints —
 `hover` and `active` for pointer state, `accent` where a selectable row hovers,
@@ -617,9 +619,12 @@ item painted its label straight onto the menu's `popover` at **1.99:1** on Linux
 dark, the designed pair measured 2.09:1, and `disabled` was exactly the value of
 `muted` and `hover` — a disabled control with neither a readable label nor a
 visible shape until plan `306`. Every disabled control in the component packages
-reaches the state through `opacity: 0.5`, which composites the label with
-whatever is behind it (a disabled primary action measures 2.25:1 on the light
-canvas); the designed pair is what a control should paint instead.
+still reaches the state through `opacity: 0.5`, which composites the label with
+the dimmed fill and that fill with the panel behind it — the primary label
+measures **1.468:1** on a Linux light card, under the 3:1 floor — while the
+designed pair is what a control should paint instead:
+[`src/disabled-state.example.ts`](../packages/tokens/src/disabled-state.example.ts)
+returns the three roles.
 
 The label is read while it is selected, too. `selectionColor` inherits into a
 disabled control's text, and the accent-tinted wash composites over the surface

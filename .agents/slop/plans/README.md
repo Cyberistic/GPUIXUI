@@ -233,6 +233,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [536](./536-present-tense-figures.md) | The catalogue's present-tense figures | F | 336, 348, 377, 503, 514, 520 | done |
 | [537](./537-tier-figures.md) | The tier figures the two documents quote | F | 392, 500, 510, 520, 527, 536 | done |
 | [538](./538-tier-surface-counts.md) | The tier paragraph's surface counts | F | 392, 500, 527, 537 | done |
+| [539](./539-disabled-dim-figure.md) | The disabled dim's documented figure | F | 306, 336, 537, 538 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2477,6 +2478,19 @@ minimum every plan-537 figure still passes while the count is stale. The two
 numerals become the paragraph's own word style (`twelve`) and one case derives
 all eight phrases — seven tier counts and the panel action's "five surfaces the
 two labels share" — through `tierSurfaces`.
+
+Plan `539` corrects the last disabled-state claims the documents state in the
+present tense. Both pages quoted **2.25:1** for a filled primary action at 50%
+opacity; GPUI composites an element and its children as one group
+(`references/gpui-ce/crates/gpui/src/styled.rs`, GPUix passes `StyleDesc.opacity`
+straight to it), so the label is dimmed with its own fill — **1.575:1** on the
+identity light canvas and **1.468:1** at worst (Linux light, a card). The same
+audit found `docs/tokens.md` claiming a disabled field "reads
+`disabledForeground`": the shipped primitives dim the field at 50%, which
+measures **3.273:1** on the macOS light `input` fill. The three figures join the
+`figures.ts` table through a new `"dim"` kind and are derived from
+`shippedThemes`, and `src/disabled-state.example.ts` ships the three roles a
+control paints instead. No colour, pair, floor or check moves.
 
 ## How to use a plan
 
