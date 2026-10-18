@@ -192,6 +192,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [395](./395-scrim-over-panel-action.md) | The scrim over the panel action | F | 099, 359, 375, 394 | done |
 | [396](./396-type-index-claims.md) | The type index's counts, its weight claim and the colour-format count | F | 324, 370, 394, 395 | done |
 | [397](./397-status-panel-action-scope.md) | The panel action's scope: a tinted panel, not a floating card | F | 348, 362, 392, 394, 395, 396 | done |
+| [398](./398-theme-check-index.md) | The check count and the composition suites' subset | F | 071, 358–364, 371, 383, 385, 392, 396 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1863,6 +1864,21 @@ sets, identity at exactly 1) and proves the canvas family clears the same
 floors; a `docs.test.ts` guard fails if the stale phrase returns to the
 reference, the design system, the README or the package's public JSDoc. No
 colour, pair or count moves.
+
+Plan `398` closes the same class of gap one layer inside the package: three
+composition suites ran a hand-built subset of `themeFailures` and called it the
+guarantee — `applied-palette` and `theme-choice` ran contrast, metric and colour
+(3 of 5, missing typeface and hierarchy), `platform-composition` ran four
+(missing hierarchy) — so a composed theme whose only defect was a CSS family
+stack or an inverted text tier passed while the suite's title said “all checks”.
+`themeChecks` indexes the five kinds, `ThemeFailureKind` derives from it and
+`ThemeFailure` is a mapped type over it, so the three suites now call the total
+check and a future sixth check reaches them. The documents and test titles build
+the count from `themeChecks.length`; `docs/tokens.md` no longer calls four checks
+the guarantee. A `docs.test.ts` case fails on “all three checks” / “all four
+checks”, and a `theme-check.test.ts` case fails if the composition emits a kind
+outside the index or in a different order. No colour, pair, floor or metric
+moves.
 
 ## How to use a plan
 
