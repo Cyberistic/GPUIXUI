@@ -155,9 +155,17 @@ Record the exact failure messages in §8.
   - `timeline.mdx` without `<include>` → failed with
     `timeline: Source has no <include>`.
 - `nub run --filter docs test`: 42 files / 262 tests green (measured at
-  `359455f`, after plans 465, 468 and 469 had landed); `check-types`, `build`,
+  `359455f`, after plans 465, 468 and 469 had landed); `check-types`,
   `nub run check`, `nub run lint` and `nub run fmt` green.
-- **Plan 469 corrected this plan's guard before it reached a gate.** The first
+- **The build is not verified by this session.** The first attempt failed while
+  `d402174`/`56212d1` carried a stray `<Unclosed>` tag in `theming.mdx` (left by
+  plan 467's round-trip proof, committed by accident); `1b6724f` restored the
+  page to its exact pre-467 bytes and the tests re-passed. Two later build
+  attempts after that fix reached the SSR chunk pass and were **terminated by
+  the host** (`exit 143`) with a load average around 108, so they prove nothing
+  either way. `fumadocs-mdx` + `tsc` (`check-types`) parse every page; a clean
+  `nub run --filter docs build` on a quiet host remains the outstanding check.
+- Plan 469 corrected this plan's guard before it reached a gate. The first
   version tested the fence with `/^```(tsx|ts)\b/m`; `scripts/check-tests.ts`
   read the leading slash as division and the backticks as template delimiters,
   so `nub run check:tests` rejected the block. The fence is now tested line by
