@@ -77,7 +77,7 @@ missing here is not public.
 | `BorderWidth` | Divider and focus-ring thickness. |
 | `BoxShadow` | The runtime's five-field shadow; `elevationShadow` returns one. |
 | `ColorFailure` | A colour role whose value is not a hex colour the token helpers parse. |
-| `ContrastFailure` | One documented pair a theme misses, with its floor and ratio, plus the wash or the opacity when the pair is composited. |
+| `ContrastFailure` | One documented pair a theme misses, with its floor and ratio, plus the wash, the opacity or the elevation `level` when the pair is composited. |
 | `ContrastPair` | A `[foreground, background, pairClass]` contract row. |
 | `ContrastPairClass` | The floor class a pair is held to. |
 | `ControlSize` | `"sm"`, `"md"` or `"lg"`, derived from `controlSizes`. |
@@ -87,7 +87,7 @@ missing here is not public.
 | `Dimensions` | Fixed surface metrics: overlay, field, toast and preview-card sizes. |
 | `DirectionFailure` | An interaction ladder step that moves toward the canvas, with both luminances. |
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
-| `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`. |
+| `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`, derived from `elevationLevels`. |
 | `ElevationShape` | A level's geometry plus the alpha applied to `shadow`. |
 | `FilledControlFamily` | A filled control family from `filledControlFamilies`. |
 | `FilledControlStyle` | The resting, hover and pressed fills and the one foreground. |
