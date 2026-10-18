@@ -207,6 +207,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [509](./509-elevation-persistent-surfaces.md) | The elevation shadow over the persistent selected row and the field a drop-up opens over | F | 085, 099, 359, 505, 507 | done |
 | [510](./510-inactive-label-selection-wash.md) | The unavailable label through the text-selection wash | F | 306, 087, 091, 362, 366, 392, 506 | done |
 | [511](./511-native-field-caret.md) | The native field's caret is the accent | F | 337, 332, 315–319, 350, 387 | done |
+| [512](./512-panel-action-selection.md) | The panel action's label through the text-selection wash | F | 091, 362, 394, 506, 510, 387 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
