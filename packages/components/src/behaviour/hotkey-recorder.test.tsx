@@ -2,8 +2,9 @@
  * HotkeyRecorder behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a captured chord with the wrong modifiers, Escape that
- * commits, a clear control that also starts recording, blur that leaves the
- * recorder listening, a disabled recorder that can be activated, Space starting
+ * commits, a clear control that also starts recording, a recording that
+ * outlives the field because the runtime delivers no blur, a disabled recorder
+ * that can be activated, Space starting
  * a recording on key down instead of on release, a captured Space reopening the
  * recorder on its key-up, a keyboard-cleared value starting one instead, and an
  * Escape that stopped the recording and closed the dialog around it (plan 514).
@@ -217,14 +218,29 @@ describe("HotkeyRecorder", () => {
     recorder.unmount();
   });
 
-  it("cancels recording when focus leaves", () => {
+  it("cancels recording when a press lands outside the field", () => {
     const onChange = vi.fn();
     const recorder = renderComponent(<Harness onChange={onChange} />);
 
     clickCentreOf(recorder, "recorder");
-    recorder.renderer.focusElement(
-      recorder.renderer.findByTestId("elsewhere")?.id ?? -1,
-    );
+    expect(recorder.renderer.getAllText()).toContain("Press keys…");
+
+    clickCentreOf(recorder, "elsewhere");
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    recorder.unmount();
+  });
+
+  it("cancels recording on Tab", () => {
+    const onChange = vi.fn();
+    const recorder = renderComponent(<Harness onChange={onChange} />);
+
+    clickCentreOf(recorder, "recorder");
+    expect(recorder.renderer.getAllText()).toContain("Press keys…");
+
+    recorder.renderer.simulateKeystrokes("tab");
 
     expect(onChange).not.toHaveBeenCalled();
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");

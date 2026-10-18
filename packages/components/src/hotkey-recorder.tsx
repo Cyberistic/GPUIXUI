@@ -5,7 +5,9 @@
  * `KeyboardShortcuts` (`shortcut/accelerator.ts`); capture is
  * `hotkey/logic.ts`. This component only owns the recording state and the
  * display. Escape stops a recording and claims the key, so an enclosing dialog
- * stays open (plan 514).
+ * stays open (plan 514). `Tab` and a press outside the field also stop it —
+ * 0.10.0 delivers no React `blur` for a native focus change — and neither
+ * claims the key, so moving focus away still works.
  *
  * 0.10.0's test renderer emits no key event for Backspace or Delete, so
  * clearing is a real control next to the recorder rather than a key the docs
@@ -24,7 +26,7 @@ import { useRef, useState } from "react";
 import { acceleratorOf } from "./hotkey/logic.js";
 import { activationHandlers } from "./internal/activate.js";
 import { claimEvent, isEventClaimed } from "./internal/event-claim.js";
-import { isDismiss, isEnter, isSpaceRelease } from "./internal/key.js";
+import { isDismiss, isEnter, isSpaceRelease, isTab } from "./internal/key.js";
 import { stateDescription } from "./internal/state-description.js";
 import { Keycap } from "./keyboard-shortcuts.js";
 import { formatAccelerator } from "./shortcut/accelerator.js";
@@ -74,6 +76,7 @@ export const HotkeyRecorder = ({
   onKeyDown,
   onKeyUp,
   onBlur,
+  onMouseDownOutside,
   ...rest
 }: HotkeyRecorderProps) => {
   const theme = useTheme();
@@ -105,6 +108,10 @@ export const HotkeyRecorder = ({
       {...stateDescription(disabled, rest["aria-description"])}
       testId={testId}
       autoFocus={autoFocus && !disabled}
+      onMouseDownOutside={(event) => {
+        onMouseDownOutside?.(event);
+        setRecording(false);
+      }}
       onClick={(event) => {
         onClick?.(event);
         if (skipStart.current) {
@@ -118,6 +125,10 @@ export const HotkeyRecorder = ({
         onKeyDown?.(event);
         if (disabled || isEventClaimed(event)) return;
         if (recording) {
+          if (isTab(event)) {
+            setRecording(false);
+            return;
+          }
           // This key is the capture (or the cancel): its key-up must not start
           // a second recording.
           consumed.current = true;
@@ -255,6 +266,7 @@ export const hotkeyRecorderMeta = {
   limitations: [
     "0.10.0 observes keys but cannot preventDefault, so a captured system chord still reaches the system",
     "clearing is a control, not Backspace: the test renderer emits no key event for Backspace/Delete",
+    "a recording is cancelled by Escape, Tab or a press outside the field: 0.10.0 delivers no React blur for a native focus change",
     "mod is the platform's primary modifier; a secondary modifier keeps its own token",
   ],
   docs: "docs/hotkey-recorder.mdx",

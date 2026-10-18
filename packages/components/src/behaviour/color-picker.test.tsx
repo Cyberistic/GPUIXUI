@@ -2,8 +2,9 @@
  * ColorPicker behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a swatch grid that ignores the theme, a shorthand hex
- * that is not expanded on commit, an invalid draft that commits anyway, a blur
- * that keeps invalid text, a disabled picker that still changes, and a style
+ * that is not expanded on commit, an invalid draft that commits anyway, an
+ * invalid draft that survives because the runtime delivers no blur, a disabled
+ * picker that still changes, and a style
  * callback that cannot see validity.
  */
 
@@ -137,25 +138,32 @@ describe("ColorPicker", () => {
     picker.unmount();
   });
 
-  it("commits a valid draft on blur and reverts an invalid one", () => {
+  it("commits a valid draft when a press lands outside the field", () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(<Harness onValueChange={onValueChange} />);
 
     typeHex(picker, "#123456");
-    picker.renderer.focusElement(
-      picker.renderer.findByTestId("elsewhere")?.id ?? -1,
-    );
+    clickCentreOf(picker, "elsewhere");
     expect(onValueChange).toHaveBeenCalledWith("#123456");
 
     picker.unmount();
 
     const invalid = renderComponent(<Harness onValueChange={onValueChange} />);
     typeHex(invalid, "nope");
-    invalid.renderer.focusElement(
-      invalid.renderer.findByTestId("elsewhere")?.id ?? -1,
-    );
+    clickCentreOf(invalid, "elsewhere");
     expect(hexValue(invalid)).toBe("#000000");
     invalid.unmount();
+  });
+
+  it("commits a valid draft on Tab", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Harness onValueChange={onValueChange} />);
+
+    typeHex(picker, "#123456");
+    picker.renderer.simulateKeystrokes("tab");
+
+    expect(onValueChange).toHaveBeenCalledWith("#123456");
+    picker.unmount();
   });
 
   it("is inert when disabled", () => {

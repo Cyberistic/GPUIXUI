@@ -42,9 +42,11 @@ The runnable build is `examples/color-picker.example.tsx`, registered in
 - The public value is always lowercase `#rrggbb`.
 - Typed input accepts `#abc`, `abc`, `#AABBCC` and `AABBCC`, and normalises on
   commit; `#abcd` and `#aabbccdd` are refused (no alpha in v1).
-- A commit happens on `Enter` or blur. An invalid draft is marked with a
-  `destructive` border and `aria-description="Invalid hex colour"`, and blur
-  reverts it to the committed value.
+- A commit happens on `Enter`, `Tab`, a press outside the picker, or `blur`. An
+  invalid draft is marked with a `destructive` border and
+  `aria-description="Invalid hex colour"`, and any of those exits reverts it to
+  the committed value — `0.10.0` delivers no React `blur` for a native focus
+  change, so the observable signals are `Enter`, `Tab` and an outside press.
 - A swatch press commits immediately.
 - Default swatches are six theme colours (`primary`, `secondary`, `accent`,
   `muted`, `destructive`, `foreground`), so a custom theme changes them.
@@ -99,10 +101,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (9 tests):
+`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (10 tests):
 the parts, the theme swatches, a swatch press and selection, the swatch focus
-ring, a typed shorthand, an invalid draft, blur commit/revert, disabled, and a
-style callback in both themes.
+ring, a typed shorthand, an invalid draft, commit and revert on `Tab` and on an
+outside press, disabled, and a style callback in both themes.
 
 `src/color/hex.test.ts` (8 pure tests) covers shorthand, case, a missing hash,
 alpha refusal, invalid input and equivalence.

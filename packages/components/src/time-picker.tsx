@@ -12,7 +12,9 @@
  * `00..23`, minutes `00..59`); `minuteStep` only changes the arrow-key step.
  * Arrow keys add minutes through one clock function, so hours and minutes cannot
  * disagree at the hour or midnight boundary. Emptying a segment clears the
- * whole value; blur pads both segments. Disabled is `readOnly` on both inputs
+ * whole value; the untouched segment pads when the other is edited, and leaving
+ * the field (`Tab` or a press outside) pads both, because 0.10.0 delivers no
+ * React `blur` for a native focus change. Disabled is `readOnly` on both inputs
  * because 0.10.0 has no `aria-disabled`; the segments announce `Disabled`
  * through `aria-description` (plan 516).
  *
@@ -37,6 +39,7 @@ import {
 } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
+import { isTab } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -53,6 +56,7 @@ import {
   normalizeStep,
   padSegment,
   parseIsoTime,
+  parseSegment,
   type TimeOfDay,
 } from "./time-picker/time.js";
 import {
@@ -176,6 +180,22 @@ export const TimePicker = ({
 
   const emit = (next: string | null): void => setSelected(next);
 
+  /**
+   * Pad the segment the edit is not in. The value is already canonical, so this
+   * only makes the painted text agree with it; a blank segment stays blank.
+   */
+  const padUntouched = (segment: TimeSegment): void => {
+    const other = segment === "hours" ? minutesText : hoursText;
+    Option.match(parseSegment(other, segment === "hours" ? 59 : 23), {
+      onNone: () => undefined,
+      onSome: (value) => {
+        const padded = padSegment(value);
+        if (segment === "hours") setMinutesText(padded);
+        else setHoursText(padded);
+      },
+    });
+  };
+
   const edit = (segment: TimeSegment, raw: string): void => {
     const digits = digitsOf(raw);
     if (digits === "") {
@@ -189,6 +209,7 @@ export const TimePicker = ({
     const text = Number(digits) > max ? padSegment(clamped) : digits;
     const nextHours = segment === "hours" ? text : hoursText;
     const nextMinutes = segment === "minutes" ? text : minutesText;
+    padUntouched(segment);
     if (segment === "hours") setHoursText(text);
     else setMinutesText(text);
     emit(Option.getOrNull(composeIsoTime(nextHours, nextMinutes)));
@@ -207,6 +228,10 @@ export const TimePicker = ({
 
   const handleKeyDown = (segment: TimeSegment, event: EventPayload): void => {
     if (disabled) return;
+    if (isTab(event)) {
+      normalize();
+      return;
+    }
     Match.value(event.key).pipe(
       Match.when("up", () => shift(segment === "hours" ? 60 : step)),
       Match.when("down", () => shift(segment === "hours" ? -60 : -step)),
@@ -263,6 +288,7 @@ export const TimePicker = ({
         aria-label={groupLabel}
         {...stateDescription(disabled)}
         testId={testId}
+        onMouseDownOutside={normalize}
         style={{
           display: "flex",
           flexDirection: "row",
@@ -299,7 +325,7 @@ export interface TimePickerSegmentState {
   readonly focused: boolean;
 }
 
-/** One labelled segment. Typing clamps, arrows step and blur pads. */
+/** One labelled segment. Typing clamps, arrows step and leaving the field pads. */
 export const TimePickerSegment = ({
   segment,
   style,
@@ -458,6 +484,7 @@ export const timePickerMeta = {
     "two labelled text segments instead of a spinbutton: 0.10.0 has no aria-valuenow",
     "minuteStep affects the arrow keys only; typed minutes accept 00..59",
     "disabled is readOnly plus dimming: 0.10.0 has no aria-disabled, so the segments announce Disabled through aria-description",
+    "padding runs on the other segment's edit, on Tab and on an outside press: 0.10.0 delivers no React blur for a native focus change",
     "no seconds and no timezone: the value is a time of day, not an instant",
   ],
   docs: "docs/time-picker.mdx",

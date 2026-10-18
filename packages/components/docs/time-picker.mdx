@@ -68,11 +68,14 @@ announce its value. A text input announces its value natively.
   text and the value never disagree.
 - Typing one segment composes a complete value with the other segment read as
   `0`, so typing `9` in hours reports `09:00`. The untouched segment stays blank
-  until blur, which keeps the second keystroke predictable.
+  until the edit ends, which keeps the second keystroke predictable.
 - Backspacing a segment to empty clears the whole time (`null` and both segments
   empty). A half-erased time is not a value.
-- Blur pads both segments to two digits (`9` becomes `09`) and fills a blank
-  segment with `00`.
+- Editing one segment pads the other as soon as it has a digit (`9` becomes
+  `09`). `Tab` and a press outside the field pad both and fill a blank segment
+  with `00`. Leaving the field is **not** a `blur`: `@gpuix/native@0.10.0`
+  delivers no React focus/blur for a native focus change, so the observable
+  signals are the edit, `Tab` and an outside press.
 
 ## Keyboard
 
@@ -180,9 +183,10 @@ and a round-trip of all 1440 minutes, hour carry in both directions, midnight
 wrapping, day wrap, strict and clamping segment parsers, padding, step
 normalisation, the last-two-digits rule and segment composition.
 
-`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (13 tests): typed hours reaching
+`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (14 tests): typed hours reaching
 `onValueChange`, typed minutes completing the value, out-of-range clamping,
-arrow carry and midnight wrap, `minuteStep`, blur padding, the clear rules and
+arrow carry and midnight wrap, `minuteStep`, padding on the other segment's
+edit, on `Tab` and on an outside press, the clear rules and
 the disabled state (read-only, out of the tab order and inert to arrows),
 clearing from the keyboard on Space release, the clear control's focus ring, the
 controlled contract, the segments laid out where the caller put them, and no

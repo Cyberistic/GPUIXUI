@@ -7,6 +7,10 @@
  * not faked. The strongest honest picker is a keyboard-reachable swatch grid, a
  * HEX field that normalises what it is given, and a preview of the current
  * value. Alpha, HSL/RGB fields and an eyedropper are not in v1.
+ *
+ * 0.10.0 delivers no React `blur` for a native focus change, so a typed HEX
+ * commits on `Enter`, `Tab` or a press outside the picker, and an invalid draft
+ * reverts on the same signals.
  */
 
 import type { EventPayload, Props } from "@gpuix/react";
@@ -19,7 +23,7 @@ import * as Option from "effect/Option";
 import { useLayoutEffect, useState } from "react";
 import { normalizeHex, sameHex } from "./color/hex.js";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation } from "./internal/key.js";
+import { isActivation, isTab } from "./internal/key.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
@@ -74,6 +78,7 @@ export const ColorPicker = ({
   disabled = false,
   style,
   testId,
+  onMouseDownOutside,
   ...rest
 }: ColorPickerProps) => {
   const theme = useTheme();
@@ -118,6 +123,10 @@ export const ColorPicker = ({
       {...rest}
       {...stateDescription(disabled, rest["aria-description"])}
       testId={testId}
+      onMouseDownOutside={(event) => {
+        onMouseDownOutside?.(event);
+        if (!disabled) commit();
+      }}
       style={mergeStyles(
         {
           display: "flex",
@@ -209,6 +218,9 @@ export const ColorPicker = ({
           readOnly={disabled}
           onSubmit={() => commit()}
           onChange={(event) => setDraft(event.value ?? "")}
+          onKeyDown={(event) => {
+            if (!disabled && isTab(event)) commit();
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => {
             setFocused(false);
@@ -242,7 +254,7 @@ export const colorPickerMeta = {
   limitations: [
     "no saturation/value square: 0.10.0 supports two-stop linear gradients only and no radial gradient",
     "swatches plus HEX entry only; no alpha, HSL/RGB fields or eyedropper",
-    "the HEX field is validated on commit; an invalid draft is marked destructive and reverted on blur",
+    "the HEX field commits on Enter, Tab or a press outside; an invalid draft is marked destructive and reverted when the edit ends",
   ],
   docs: "docs/color-picker.mdx",
   example: "examples/color-picker.example.tsx",

@@ -280,3 +280,47 @@ nub run check && nub run lint && nub run test
 - `nub run check`, `nub run lint`, `nub run test` pass; the native suite is
   737 / 55 with the failures classified as pre-existing binding cases.
 - Committed on `agent/components` and pushed.
+
+## 9. Outcome (measured 2026-10-19)
+
+**Implemented as planned.** `padUntouched` runs at the top of `TimePicker.edit`
+and pads only a non-empty, parseable untouched segment; `normalize` runs on
+`Tab` and on the group's `onMouseDownOutside`. `ColorPicker.commit` runs on
+`Tab` (input `onKeyDown`) and on the root's `onMouseDownOutside` (composed with
+the caller's handler). `HotkeyRecorder` clears `recording` on `Tab` (before the
+capture branch marks the key consumed, and without claiming the event) and on
+the root's `onMouseDownOutside`.
+
+**Focused native runs.** The three suites are 36 passed / 3 failed; the three
+failures are exactly the pre-existing plan-540 binding focus-ring cases
+(`ColorPicker` swatch, `TimePicker` clear, `HotkeyRecorder` clear), untouched by
+this plan. Every case this plan adds or keeps passes.
+
+**Mutation proofs.** Reverting each change fails exactly its case:
+
+| Mutation | Case that fails |
+| -------- | --------------- |
+| no `padUntouched(segment)` | “completes the value from the minute segment” (`'9'` vs `'09'`) |
+| no `onMouseDownOutside={normalize}` | “pads both segments when a press lands outside the field” |
+| no `Tab` branch in `handleKeyDown` | “pads both segments on Tab” |
+| no `commit()` on ColorPicker's outside press | “commits a valid draft when a press lands outside the field” |
+| no cancel on HotkeyRecorder's outside press | “cancels recording when a press lands outside the field” |
+| no cancel on HotkeyRecorder's `Tab` | “cancels recording on Tab” |
+
+**Full suite.** `nubx vitest run --config vitest.behaviour.config.ts`:
+737 tests, 682 passed, 55 failed — the plan-540 binding failures only
+(19 files; `List` 14, `Message scroller` 9, `Preview card` 7, `Tabs` 5, and the
+rest as catalogued in plan 540). Before this plan it was 734 / 59. `nub run
+--filter @gpuixui/components test` is 41 files / 417 tests green, so the
+inventory counts and docs lines agree.
+
+**Harness note.** `simulateKeystrokes("tab")` did not reach an `<input>` that
+the case had focused through `renderer.focusElement`; the time-picker Tab case
+sends `nativeSimulateKeyDown(hours.id, "tab")`, which is how the runtime
+delivers a key to a focused element. The color-picker case accepted
+`simulateKeystrokes("tab")` unchanged. This is the harness's own focus target,
+not a runtime difference; both paths reach `onKeyDown` and both cases pass.
+
+**Value stability.** The existing value assertions still hold: padding rewrites
+only the painted digits, and `composeIsoTime` reports the same `HH:mm` before and
+after (`typeIn(hours, "9")` then `typeIn(minutes, "45")` still reports `09:45`).

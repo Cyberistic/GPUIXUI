@@ -3,8 +3,9 @@
  *
  * The bugs these guard: typing that never reached `onValueChange`; an hour typed
  * without a value on the minute side; text and value disagreeing after an
- * out-of-range digit; arrow keys that stopped at the hour or at midnight; blur
- * that left a one-digit segment; a clear control on an empty or non-clearable
+ * out-of-range digit; arrow keys that stopped at the hour or at midnight; a
+ * one-digit segment that stayed unpadded because the runtime delivers no React
+ * blur; a clear control on an empty or non-clearable
  * field, or one that fired on Space key down instead of release; a controlled
  * field that changed itself when the consumer said no; and a disabled field
  * whose arrow keys still shifted the time (plan 394).
@@ -68,6 +69,9 @@ const Time = ({
       )}
       {showClear ? <TimePickerClear /> : null}
     </TimePicker>
+    <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
+      Elsewhere
+    </div>
   </div>
 );
 
@@ -183,14 +187,26 @@ describe("TimePicker", () => {
     time.unmount();
   });
 
-  it("pads both segments when focus leaves the field", () => {
+  it("pads both segments when a press lands outside the field", () => {
     const time = renderComponent(<Time />);
 
     typeIn(time, "hours", "9");
     expect(segmentValue(time, "hours")).toBe("9");
 
-    const minutes = time.renderer.findByTestId("time-minutes");
-    time.renderer.focusElement(minutes?.id ?? -1);
+    clickCentreOf(time, "elsewhere");
+
+    expect(segmentValue(time, "hours")).toBe("09");
+    expect(segmentValue(time, "minutes")).toBe("00");
+
+    time.unmount();
+  });
+
+  it("pads both segments on Tab", () => {
+    const time = renderComponent(<Time />);
+
+    typeIn(time, "hours", "9");
+    const hours = time.renderer.findByTestId("time-hours");
+    time.renderer.nativeSimulateKeyDown(hours?.id ?? -1, "tab");
 
     expect(segmentValue(time, "hours")).toBe("09");
     expect(segmentValue(time, "minutes")).toBe("00");

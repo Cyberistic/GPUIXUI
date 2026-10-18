@@ -35,7 +35,7 @@ The runnable build is `examples/hotkey-recorder.example.tsx`, registered in
 | A key with a modifier | captures and reports the chord, stops listening |
 | A modifier-only press (`Shift`, `Cmd`…) | ignored; still listening |
 | `Escape` while listening | cancels and keeps the bound value; the key is claimed, so an enclosing dialog stays open |
-| Focus leaves | cancels; a half-finished chord is never committed |
+| `Tab` / a press outside while listening | cancels and keeps the bound value; neither claims the key, so focus moves normally |
 | The clear control | clears the binding (`null`) |
 | `disabled` | out of the tab order, inert, no clear control |
 
@@ -99,11 +99,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (14 tests):
+`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (15 tests):
 the display, click-to-record, a real captured chord, Escape, a recording Escape
 that leaves its dialog open, the clear control by pointer and keyboard, the
 clear control's focus ring, Space starting on release, a captured Space not
-reopening the recorder, blur, disabled, and both themes.
+reopening the recorder, cancellation on `Tab` and on an outside press, disabled,
+and both themes.
 
 `src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
 modifier, modifier-only presses, Enter/Space normalisation, case, order and a
