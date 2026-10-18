@@ -454,6 +454,20 @@ The limit is the one `a11y-tree` records: the accessibility tree follows the
 painted window, so a virtualized file tree must treat "painted" as the window
 **plus** the focused row.
 
+In a real window (`live-tree`, plan `559`) the same path holds: a real click
+expands `dir-0` to 48 rows and keeps it selected, the child label indents 16 px
+inside the virtual row, the painted window stays smaller than the flattened
+tree, a second click collapses it, and a second directory expands. A real
+`-800` wheel moves the list anchor and unpaints the rows above the window; an
+exact `scrollToItem(25)` anchors `[25, 0, 260]` and paints `dir-3/file-24`; a
+click focuses that row, `Down`/`Up` move native focus and the selection; and at
+the top a click collapses the open directory, `Right` re-opens it, `Right` again
+focuses its first child, `Left` returns to the parent and `Left` again collapses
+it. **One measured composition fact:** the 280 px wrapper is a flex child in a
+340 px column, so the live viewport resolves to **260** — the list anchor reports
+the flex-resolved height, not the declared one. `vtree-viewport` is the painted
+box and wheel target because a `<virtual-list>` has no bounds live.
+
 ## Scroll into view (plan `166`)
 
 `scroll-into-view` drives a 200-row `<virtual-list>` with Home/End and arrows.
@@ -1257,7 +1271,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 101-scenario headless suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 101-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 61 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1304,6 +1319,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-key-routing` | the three key paths in one tree: the focused element, **every** ancestor (focusable or not) and the app-level window handler all receive a key (`inner=1 middle=1 outer=1 window=1`); `autoFocus` focuses natively **without running React's `onFocus`**; delivery follows focus; and `cmd-k` reaches the window handler with `modifiers.cmd` — 22 checks. A **click's** `onFocus` count is window-state dependent (measured `0` and `1` on the same host) and is printed, not asserted |
 | `live-command-palette` | the shipped command surface in a window: `cmd-k` opens it with **nothing focused**, the veil is the window (1100 × 720), typing filters while the window handler sees each letter, arrows move the row and keep focus in the input, Enter commits through `onSubmit`, Escape/veil/row clicks dismiss with their reason, and a click-opened palette returns focus to its trigger — 80 checks |
 | `live-reorder` | the reorder probe in a window: a paced `drag` from row 0 by `+80` px lands the row at **index 2** (boundary 3), the moved row paints two rows below `bravo`, the drop is not an activation, a real click on a handle focuses it and activates without reordering, the keyboard lift/up/drop moves the row to index 1 and keeps native focus, and a keyboard cancel leaves the order and removes the indicator — 19 checks |
+| `live-tree` | the virtualized tree in a window: a real click expands `dir-0` to 48 rows and keeps it selected, a child indents 16 px inside a virtual row, the painted window is smaller than the flattened tree, a second click collapses it, a real `-800` wheel moves the anchor and unpaints the rows above, `scrollToItem(25)` anchors `[25, 0, 260]` and paints `dir-3/file-24`, a click and `Down`/`Up` move native focus and the selection, and `Right` expands/walks while `Left` returns to the parent and collapses — 44 checks (plan `559`). The list anchor reports the **flex-resolved** 260 px viewport, not the declared 280 |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).

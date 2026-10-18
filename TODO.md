@@ -60,6 +60,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 96/96 plans-and-harness
 
+`[x]` Prove the **virtualized tree in a real window** per plan `559`: the last
+      Tier 3 interaction probe with headless-only evidence. `live-tree` (44
+      checks) reuses the 48-row flattened tree in the real 1100×720 window — a
+      real click expands `dir-0` 8 → 48 rows and collapses it, the child still
+      indents 16 px inside a virtual row, a real `-800` wheel moves the list
+      anchor and unpaints the rows above, `scrollToItem(25)` anchors
+      `[25, 0, 260]` and paints `dir-3/file-24`, a click focuses that row and
+      Down/Up move native focus and the selection, and at the top Right expands
+      and walks to the first child while Left returns to the parent and
+      collapses. **1/1**, exit `0`, two consecutive runs; live registry
+      `60 → 61`, headless stays **101/101 (3536 checks)**; three mutation proofs
+      (removed toggle, no-op roving move, 16 → 8 indent). Measured: the anchor
+      reports the **flex-resolved 260 px** viewport, not the wrapper's declared
+      280; `vtree-viewport` is the live wheel/box target because a
+      `<virtual-list>` has no painted bounds live. `nub run check`, `lint` and
+      `test` green (playground 408 tests). Focused ids run: `live-tree`,
+      `virtualized-tree`, `live-input`. Closes the tree row's live gap.
+
 `[x]` Prove the **nested-layer dismiss stack in a real window** per plan `558`:
       `live-layers` (41 checks) mounts the shipped `nested-layer-dismiss` view in
       the 1100×720 window — a real click opens the parent, a row opens a focused

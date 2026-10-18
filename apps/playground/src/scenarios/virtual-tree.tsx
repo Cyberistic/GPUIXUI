@@ -177,7 +177,7 @@ const TreeProbe = () => {
       <Readout testId="vtree-readout">
         {`selected=${selected} visible=${visible.length} open=${expanded.length}`}
       </Readout>
-      <div style={{ display: "flex", height: 280 }}>
+      <div testId="vtree-viewport" style={{ display: "flex", height: 280 }}>
         <virtual-list testId="vtree-list" style={{ flexGrow: 1, minHeight: 0 }}>
           {Arr.map(visible, (node) => (
             <div

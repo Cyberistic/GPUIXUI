@@ -8,7 +8,8 @@
  * highlights and virtual-list anchors *are* asserted: the runner owns the
  * renderer, so it reads them there even where the automation protocol has no
  * verb (plans `190`, `191`, `197`). The terminal twin (plan `532`) also proves
- * that real keystrokes reach a focused text grid.
+ * that real keystrokes reach a focused text grid, and the tree twin (plan
+ * `559`) that a real wheel, click and arrows drive a changing virtual window.
  *
  * Each scenario provides its own view, which the runner mounts in the real
  * window under a keyed `Fragment` — the live twin of plan `182`'s isolation.
@@ -79,6 +80,7 @@ import { wizardScenario } from "../scenarios/wizard.js";
 import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
 import { listReorderScenario } from "../scenarios/reorder.js";
 import { treeReorderScenario } from "../scenarios/tree-reorder.js";
+import { virtualizedTreeScenario } from "../scenarios/virtual-tree.js";
 import { terminalScenario } from "../scenarios/terminal.js";
 import { fieldOf } from "../scenarios/probes.js";
 import { KeyRoutingView } from "./key-routing.js";
@@ -6870,6 +6872,248 @@ const treeReorder: LiveScenario = {
 };
 
 /**
+ * The virtualized tree in a real window (plan `559`).
+ *
+ * `virtualized-tree` proves the geometry headless: a flattened 8 × 40 tree
+ * indents by depth, toggles 8 ↔ 48 rows and moves a roving index. This twin
+ * proves the path a file tree actually takes in a window: a real click toggles
+ * a directory and focuses it, a real wheel re-windows the changing row count
+ * and moves the list anchor, and clicks plus arrows move **native** focus row
+ * by row — including a keyboard expand and collapse.
+ *
+ * The painted window is read from `paintedText`, the anchor from
+ * `listScrollTop` (plan `197`) and the wheel from `vtree-viewport`, because a
+ * `<virtual-list>` has no painted bounds live (plans `350`, `532`, `534`).
+ */
+const liveTree: LiveScenario = {
+  id: "live-tree",
+  title: "Live virtualized tree: expansion, a real wheel and roving focus",
+  capability: "tree",
+  view: virtualizedTreeScenario.view,
+  ready: "vtree-node-dir-0",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const readout = () => textOf(ctx, "vtree-readout");
+      const painted = (label: string) =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.some(lines, (line) => Str.includes(label)(line)),
+        );
+      const anchorIndex = () =>
+        Effect.gen(function* () {
+          const anchor = yield* ctx.expectSome(
+            "the live tree reports an anchor",
+            Option.fromNullishOr(yield* ctx.host.listScrollTop("vtree-list")),
+          );
+          return anchor[0];
+        });
+
+      // 1. The tree starts collapsed.
+      yield* ctx.expectContains(
+        "the live tree starts collapsed",
+        yield* readout(),
+        "selected=dir-0 visible=8 open=0",
+      );
+
+      // 2. A real click expands the first directory.
+      yield* ctx.host.click("vtree-node-dir-0");
+      yield* settle;
+      yield* waitForText(ctx, "vtree-readout", "visible=48");
+      yield* ctx.expectContains(
+        "a real click expands a directory",
+        yield* readout(),
+        "visible=48 open=1",
+      );
+      yield* ctx.expectContains(
+        "the expanded directory stays selected",
+        yield* readout(),
+        "selected=dir-0",
+      );
+
+      const directory = yield* boxOf(ctx, "vtree-label-dir-0");
+      const child = yield* boxOf(ctx, "vtree-label-dir-0/file-0");
+      yield* ctx.expectNear(
+        "a live virtual row still indents its child",
+        child.x - directory.x,
+        16,
+        1,
+      );
+
+      const labels = Arr.filter(yield* ctx.host.paintedText(), (line) =>
+        Str.startsWith("dir-")(line),
+      );
+      yield* ctx.expectEqual(
+        "the live painted window is smaller than the flattened tree",
+        Arr.length(labels) < 48,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the last live child is below the window",
+        yield* painted("dir-0/file-39"),
+        false,
+      );
+
+      // 3. A second click collapses it again.
+      yield* ctx.host.click("vtree-node-dir-0");
+      yield* settle;
+      yield* waitForText(ctx, "vtree-readout", "visible=8");
+      yield* ctx.expectContains(
+        "a second real click collapses the directory",
+        yield* readout(),
+        "visible=8 open=0",
+      );
+      yield* ctx.expectEqual(
+        "the collapsed live child is no longer painted",
+        yield* painted("dir-0/file-0"),
+        false,
+      );
+
+      // 4. Another directory expands, and a real wheel re-windows the tree.
+      yield* ctx.host.click("vtree-node-dir-3");
+      yield* settle;
+      yield* waitForText(ctx, "vtree-readout", "visible=48");
+      yield* ctx.expectContains(
+        "a second directory expands",
+        yield* readout(),
+        "selected=dir-3 visible=48 open=1",
+      );
+
+      yield* ctx.host.wheel("vtree-viewport", 0, -800);
+      yield* settle;
+      const scrolled = yield* anchorIndex();
+      yield* ctx.expectEqual(
+        "a real wheel moves the live list",
+        scrolled > 0,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the wheel unpaints the rows above the window",
+        yield* painted("dir-0"),
+        false,
+      );
+
+      // 5. An exact jump anchors the list and paints the row.
+      yield* ctx.host.scrollToItem("vtree-list", 25);
+      yield* settle;
+      const jumped = yield* ctx.expectSome(
+        "the jumped live tree reports an anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("vtree-list")),
+      );
+      yield* ctx.expectEqual("the live jump anchors row 25", jumped[0], 25);
+      yield* ctx.expectEqual("the live jump lands at offset 0", jumped[1], 0);
+      yield* ctx.expectEqual(
+        "the live jump reports the flex-resolved viewport",
+        jumped[2],
+        260,
+      );
+      yield* ctx.expectEqual(
+        "the jumped live row is painted",
+        yield* painted("dir-3/file-24"),
+        true,
+      );
+
+      // 6. A click focuses a row and the arrows rove natively.
+      yield* ctx.host.click("vtree-node-dir-3/file-24");
+      yield* settle;
+      yield* waitForFocus(ctx, "vtree-node-dir-3/file-24");
+      yield* ctx.expectEqual(
+        "a real click on a child focuses it",
+        yield* focusedOf(ctx),
+        "vtree-node-dir-3/file-24",
+      );
+      yield* ctx.expectContains(
+        "the clicked child is the selection",
+        yield* readout(),
+        "selected=dir-3/file-24",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Down moves native focus to the next child",
+        yield* focusedOf(ctx),
+        "vtree-node-dir-3/file-25",
+      );
+      yield* ctx.expectContains(
+        "Down moves the selection with it",
+        yield* readout(),
+        "selected=dir-3/file-25",
+      );
+
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Up moves native focus back",
+        yield* focusedOf(ctx),
+        "vtree-node-dir-3/file-24",
+      );
+
+      // 7. Keyboard expand, walk and collapse at the top of the tree.
+      yield* ctx.host.scrollToItem("vtree-list", 0);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a jump back to the head anchors at row 0",
+        yield* anchorIndex(),
+        0,
+      );
+      yield* ctx.host.click("vtree-node-dir-3");
+      yield* settle;
+      yield* waitForText(ctx, "vtree-readout", "visible=8");
+      yield* ctx.expectContains(
+        "a real click collapses the open directory",
+        yield* readout(),
+        "visible=8 open=0",
+      );
+
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "vtree-readout", "visible=48");
+      yield* ctx.expectContains(
+        "Right expands a collapsed directory",
+        yield* readout(),
+        "visible=48 open=1",
+      );
+
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForFocus(ctx, "vtree-node-dir-3/file-0");
+      yield* ctx.expectEqual(
+        "Right then focuses the first child",
+        yield* focusedOf(ctx),
+        "vtree-node-dir-3/file-0",
+      );
+      yield* ctx.expectContains(
+        "the first child is the selection",
+        yield* readout(),
+        "selected=dir-3/file-0",
+      );
+
+      yield* ctx.host.key("left");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Left on a child moves to its parent",
+        yield* focusedOf(ctx),
+        "vtree-node-dir-3",
+      );
+
+      yield* ctx.host.key("left");
+      yield* settle;
+      yield* waitForText(ctx, "vtree-readout", "visible=8");
+      yield* ctx.expectContains(
+        "Left on an open directory collapses it",
+        yield* readout(),
+        "visible=8 open=0",
+      );
+      yield* ctx.expectEqual(
+        "the keyboard-collapsed children are unpainted",
+        yield* painted("dir-3/file-0"),
+        false,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTree.id}.png`);
+    }),
+};
+
+/**
  * The waveform seek in a real window (plan `520`).
  *
  * The headless probe measures what only a renderer report can: the a11y value,
@@ -7595,6 +7839,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   gridCellEditing,
   reorder,
   treeReorder,
+  liveTree,
   media,
   terminal,
 ];
