@@ -1,15 +1,18 @@
 /**
- * Carousel example: a three-panel gallery with previous/next controls.
+ * Carousel example: a three-panel gallery with previous/next controls and
+ * indicator dots.
  *
  * The slides stay mounted; only the active one is painted, so the others keep
  * their state without taking layout space. Arrow keys work while the carousel
- * has focus, and Home/End jump to the ends.
+ * has focus, Home/End jump to the ends, and a dot jumps straight to its slide
+ * (press, Enter or Space).
  */
 
 import { useState } from "react";
 import {
   Carousel,
   CarouselControl,
+  CarouselIndicators,
   CarouselSlide,
   CarouselTrack,
 } from "../src/carousel.js";
@@ -47,6 +50,7 @@ export const CarouselExample = () => {
             {slide("Timeline", "Scrub through history.")}
           </CarouselSlide>
         </CarouselTrack>
+        <CarouselIndicators />
         <div style={{ display: "flex", gap: 8 }}>
           <CarouselControl direction="previous" />
           <CarouselControl direction="next" />

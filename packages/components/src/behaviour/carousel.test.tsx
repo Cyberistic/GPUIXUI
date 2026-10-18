@@ -4,8 +4,9 @@
  * The bugs these guard: every slide painted at once (the runtime ignores
  * `display: "none"` — plan 365), an inactive slide taking the active slide's
  * click, a step that runs past the last slide, loop ignored, arrow keys that do
- * not move, a controlled carousel that moves on its own, and a style callback
- * that cannot see the active slide.
+ * not move, a controlled carousel that moves on its own, a style callback that
+ * cannot see the active slide, and a slide that could only be reached by
+ * repeated stepping (the indicator dots).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -15,6 +16,7 @@ import { useState } from "react";
 import {
   Carousel,
   CarouselControl,
+  CarouselIndicators,
   CarouselSlide,
   CarouselTrack,
 } from "../carousel.js";
@@ -99,6 +101,43 @@ const StatefulGallery = ({
       }}
     />
   );
+};
+
+/** A controlled gallery with one indicator per slide and no text controls. */
+const IndicatorGallery = ({
+  value,
+  onValueChange,
+}: {
+  readonly value: number;
+  readonly onValueChange?: (value: number) => void;
+}) => (
+  <div style={{ width: 480 }}>
+    <Carousel
+      testId="carousel"
+      label="Screenshots"
+      value={value}
+      onValueChange={onValueChange}
+    >
+      <CarouselTrack testId="track">
+        <CarouselSlide testId="slide-0">
+          <text>One</text>
+        </CarouselSlide>
+        <CarouselSlide testId="slide-1">
+          <text>Two</text>
+        </CarouselSlide>
+        <CarouselSlide testId="slide-2">
+          <text>Three</text>
+        </CarouselSlide>
+      </CarouselTrack>
+      <CarouselIndicators testId="indicators" />
+    </Carousel>
+  </div>
+);
+
+/** The indicators over their own state, for press and keyboard paths. */
+const StatefulIndicators = ({ initial = 0 }: { readonly initial?: number }) => {
+  const [value, setValue] = useState(initial);
+  return <IndicatorGallery value={value} onValueChange={setValue} />;
 };
 
 /** The slide labels the renderer actually painted. */
@@ -376,6 +415,65 @@ describe("Carousel", () => {
 
     expect(onControlClick).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith(1);
+
+    gallery.unmount();
+  });
+
+  it("renders one named indicator per slide and marks the active one", () => {
+    const gallery = renderComponent(<IndicatorGallery value={1} />);
+
+    const first = gallery.renderer.findByTestId("carousel-indicator-0");
+    const second = gallery.renderer.findByTestId("carousel-indicator-1");
+    const third = gallery.renderer.findByTestId("carousel-indicator-2");
+
+    expect(first?.customProps).toMatchObject({
+      role: "button",
+      "aria-label": "Go to slide 1",
+      "aria-selected": false,
+    });
+    expect(second?.customProps?.["aria-selected"]).toBe(true);
+    expect(third?.customProps?.["aria-label"]).toBe("Go to slide 3");
+    expect(second?.style.width).toBe(18);
+    expect(second?.style.backgroundColor).toBe(darkTheme.colors.primary);
+    expect(first?.style.width).toBe(8);
+    expect(first?.style.backgroundColor).toBe(darkTheme.colors.border);
+
+    gallery.unmount();
+  });
+
+  it("jumps to the slide an indicator is pressed on", () => {
+    const gallery = renderComponent(<StatefulIndicators />);
+
+    clickCentreOf(gallery, "carousel-indicator-2");
+
+    expect(paintedSlides(gallery)).toEqual(["Three"]);
+    expect(
+      gallery.renderer.findByTestId("carousel-indicator-2")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+
+    gallery.unmount();
+  });
+
+  it("activates a focused indicator on Enter and Space", () => {
+    const gallery = renderComponent(<StatefulIndicators />);
+
+    gallery.renderer.focusElement(
+      gallery.renderer.findByTestId("carousel-indicator-1")?.id ?? -1,
+    );
+
+    expect(focusedTestId(gallery)).toEqual(Option.some("carousel-indicator-1"));
+
+    gallery.renderer.simulateKeystrokes("enter");
+
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
+
+    const last = gallery.renderer.findByTestId("carousel-indicator-2");
+    gallery.renderer.focusElement(last?.id ?? -1);
+    gallery.renderer.nativeSimulateKeyUp(last?.id ?? -1, "space");
+
+    expect(paintedSlides(gallery)).toEqual(["Three"]);
 
     gallery.unmount();
   });

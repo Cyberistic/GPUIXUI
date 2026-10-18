@@ -263,7 +263,7 @@ parts.
 | Preview Card | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` | `PreviewCardRoot`/`Trigger`/`Popup` (shape only) | plan 317 |
 | Color picker | `ColorPicker` (swatches + HEX; one part) | — | plan 318 |
 | Hotkey-recorder input | `HotkeyRecorder` | — | plan 316 |
-| Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl` | — | plan 315 |
+| Carousel | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl`, `CarouselIndicators` | — | plan 315/374 |
 | Drawer | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` | `DialogRoot`/`Trigger`/`Popup`/`Backdrop`/`Title`/`Description`/`Close`/`Portal`/`Viewport` (shape only) | plan 309 |
 | Tag / token input | `TagInput`, `TagInputField`, `TagInputChip` | — | plan 314 |
 | Keyboard shortcuts / keycap display | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut`, `Keycap` | — | plan 310 |

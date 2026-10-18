@@ -9,7 +9,8 @@
  * component state (a form on slide two is not reset by visiting slide three).
  *
  * The root owns the active index; the track reports its slide count, so the
- * controls and the arrow keys share one clamp and one loop rule.
+ * controls, the indicator dots and the arrow keys share one clamp and one loop
+ * rule.
  */
 
 import type { EventPayload, Props } from "@gpuix/react";
@@ -19,6 +20,7 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import * as Arr from "effect/Array";
 import {
   Children,
   createContext,
@@ -27,6 +29,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { activationHandlers } from "./internal/activate.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { isFirst, isLast, isLeft, isRight } from "./internal/key.js";
@@ -310,19 +313,100 @@ export const CarouselControl = ({
   );
 };
 
+/** {@link CarouselIndicators} props. */
+export interface CarouselIndicatorsProps extends Omit<Props, "children"> {
+  /** The group's accessible name. Default `"Choose slide"`. */
+  readonly label?: string;
+  /** A style for every dot, or a function of its state. */
+  readonly indicatorStyle?: StateStyle<CarouselIndicatorState>;
+}
+
+/** What a dot draws: whether it is the active slide and its index. */
+export interface CarouselIndicatorState {
+  readonly active: boolean;
+  readonly index: number;
+}
+
+/**
+ * One pressable dot per slide. The active dot is wider and uses `primary`; the
+ * dots share the root's `goTo`, including its clamp and controlled value.
+ */
+export const CarouselIndicators = ({
+  label = "Choose slide",
+  indicatorStyle,
+  style,
+  onKeyDown,
+  onKeyUp,
+  ...rest
+}: CarouselIndicatorsProps) => {
+  const theme = useTheme();
+  const { active, count, goTo } = useCarousel();
+  const indexes = count === 0 ? Arr.empty<number>() : Arr.range(0, count - 1);
+
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      {...rest}
+      onKeyDown={onKeyDown}
+      onKeyUp={onKeyUp}
+      style={mergeStyles(
+        {
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: theme.spacing.sm,
+        },
+        style,
+      )}
+    >
+      {Arr.map(indexes, (index) => {
+        const isActive = index === active;
+        const state: CarouselIndicatorState = { active: isActive, index };
+        return (
+          <div
+            key={index}
+            role="button"
+            aria-label={`Go to slide ${index + 1}`}
+            aria-selected={isActive}
+            tabIndex={0}
+            testId={`carousel-indicator-${index}`}
+            {...activationHandlers(() => goTo(index))}
+            onClick={() => goTo(index)}
+            style={mergeStyles(
+              {
+                width: isActive ? 18 : 8,
+                height: 8,
+                borderRadius: theme.radius.full,
+                backgroundColor: isActive
+                  ? theme.colors.primary
+                  : theme.colors.border,
+                cursor: "pointer",
+              },
+              resolveStyle(indicatorStyle, state),
+            )}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
 /** Every part, so a misplaced sibling is named. */
 const carouselParts: ReadonlyArray<PartComponent> = [
   Carousel,
   CarouselTrack,
   CarouselSlide,
   CarouselControl,
+  CarouselIndicators,
 ];
 
 const carouselRoot: PartsContract = {
   parent: "Carousel",
   family: carouselParts,
-  accepts: [CarouselTrack, CarouselControl],
-  hint: "Put CarouselTrack and CarouselControl directly inside Carousel.",
+  accepts: [CarouselTrack, CarouselControl, CarouselIndicators],
+  hint: "Put CarouselTrack, CarouselControl and CarouselIndicators directly inside Carousel.",
 };
 
 const carouselTrack: PartsContract = {
@@ -341,7 +425,7 @@ export const carouselMeta = {
   limitations: [
     "discrete stepping only: motion has no transform and scroll snap is unavailable",
     "no swipe gesture (no drag host feature) and no slide animation",
-    "no indicator dots or auto-advance in v1",
+    "no auto-advance or thumbnails",
     "inactive slides stay mounted and are hidden with visibility: hidden and a collapsed box",
   ],
   docs: "docs/carousel.mdx",

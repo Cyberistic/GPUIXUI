@@ -3,8 +3,8 @@ title: Carousel
 description: Discrete slide stepping, with every slide kept mounted.
 ---
 
-`Carousel` steps through a fixed set of slides with previous/next controls and
-the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates width,
+`Carousel` steps through a fixed set of slides with previous/next controls,
+indicator dots and the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates width,
 left and opacity only — no transform — and scroll snap is unavailable, so a
 translating track is not honestly expressible.
 
@@ -20,6 +20,7 @@ taking no layout space and staying outside the tab order. GPUix 0.10.0 ignores
 import {
   Carousel,
   CarouselControl,
+  CarouselIndicators,
   CarouselSlide,
   CarouselTrack,
 } from "@gpuixui/components";
@@ -29,6 +30,7 @@ import {
     <CarouselSlide>…</CarouselSlide>
     <CarouselSlide>…</CarouselSlide>
   </CarouselTrack>
+  <CarouselIndicators />
   <div style={{ display: "flex", gap: 8 }}>
     <CarouselControl direction="previous" />
     <CarouselControl direction="next" />
@@ -49,6 +51,7 @@ slide the same index.
 | Action | Result |
 | ------ | ------ |
 | `next` / `previous` | moves one slide; a no-op at an edge unless `loop` |
+| indicator press, or `Enter`/`Space` on a focused dot | jumps to that slide |
 | `loop` | wraps in both directions |
 | `ArrowRight` / `ArrowLeft` (carousel focused) | same as the controls |
 | `Home` / `End` | first / last slide |
@@ -68,13 +71,16 @@ merges `style` last.
 | `CarouselTrack` | the slide row | children |
 | `CarouselSlide` | one slide, inactive ones hidden with `visibility` and a collapsed box | `style?: StateStyle<CarouselSlideState>`, children |
 | `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
+| `CarouselIndicators` | `role="group"`, one button per slide | `label?` (default "Choose slide"), `indicatorStyle?: StateStyle<CarouselIndicatorState>` |
 
-`CarouselSlideState` is `{ active, index }`.
+`CarouselSlideState` is `{ active, index }`; `CarouselIndicatorState` is the same
+shape.
 
 ## Theming
 
 The track uses `card` with a `border` edge and `radius.lg`; controls use the
-local Button roles. Slides have no surface of their own. A custom theme changes
+local Button roles. The active dot is an 18×8 `primary` pill; the others are
+8×8 `border` dots. Slides have no surface of their own. A custom theme changes
 the frame with no code change — see [Theming](/docs/theming).
 
 ## Accessibility
@@ -82,6 +88,8 @@ the frame with no code change — see [Theming](/docs/theming).
 - The root is a named `group` and takes focus for the arrow keys.
 - Controls are buttons named "Previous slide" / "Next slide"; a control at an
   edge is disabled (out of the tab order, dimmed) unless `loop`.
+- Each indicator is a button named "Go to slide N"; the active one carries
+  `aria-selected`. Every dot is a tab stop, and `Enter`/`Space` jump to it.
 - Inactive slides stay in the tree (their state survives) but are
   `visibility: hidden` with no layout box: they paint nothing, take no click and
   leave the native tab order.
@@ -92,19 +100,20 @@ the frame with no code change — see [Theming](/docs/theming).
 
 - **No slide animation** (no transform in `motion`).
 - **No swipe/drag** (no drag host feature).
-- No indicator dots, auto-advance or thumbnails in v1.
+- No auto-advance or thumbnails.
 - Slides must be direct children of the track.
 - Inactive slides stay mounted and are still reconciled: many heavy slides cost
   render time even though only one paints.
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (12 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (15 tests):
 exactly one slide painted, an inactive slide with no layout box, the active slide
 taking a click the inactive one used to take, a hidden slide keeping its state
 across a step, control stepping, edge clamping, loop wrapping, arrows and
-Home/End, a controlled carousel, region naming and disabled edges, and a style
-callback receiving `{ active, index }` in both themes.
+Home/End, a controlled carousel, region naming and disabled edges, one named
+indicator per slide with the active one marked (press and `Enter`/`Space` both
+jump), and a style callback receiving `{ active, index }` in both themes.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

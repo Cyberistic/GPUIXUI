@@ -123,6 +123,7 @@ workstream declares in its own section below.
 | [371](./371-docs-example-pointer-truth.md) | Docs truth: the example pointer names what this package verifies, not another app | F | 110, 117, 330, 333, 335, 337, 347 | done — 19 pointers across 17 pages now name `examples/index.ts` + `src/behaviour/examples.test.tsx`; no docs page mentions the playground |
 | [372](./372-collapsible-height-animation.md) | Collapsible/Accordion: keep the body mounted and reveal it from a measurement | F | 110, 111, 113, 117, 186, 326, 327 | done — the clip left the closed body in the tab order (§2); the shared `internal/reveal.tsx` hides with `visibility`, measures once, then tweens. Collapsible 10 + Accordion 19 native tests; 5 mutation proofs |
 | [373](./373-list-plain-activation.md) | List: a plain list with `onActivate` must be reachable and activatable from the keyboard | F | 110, 111, 117, 130, 134, 332, 338, 339 | done — a plain activatable list takes one roving tab stop; arrows/Home/End/type-ahead move focus and Enter runs the reached row while Space does nothing; 3 native tests (List 42, behaviour 542), both-direction proof |
+| [374](./374-carousel-indicators.md) | Carousel indicator dots: one named, pressable dot per slide | F | 110, 117, 315, 323, 365 | done — one named dot per slide, active marked and pressable (press, Enter or Space), `StateStyle<CarouselIndicatorState>`; 3 native tests (Carousel 15, behaviour 545), both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 
