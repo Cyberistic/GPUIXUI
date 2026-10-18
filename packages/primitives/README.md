@@ -317,7 +317,9 @@ group activates the value's stale tab stop instead of the focused item
 (plan 354), and a pointer-feedback matrix over fifteen controls that requires a
 pointer-owned gesture to change something on hover and on press — and requires a
 disabled control to change nothing in either state — with `Rating`'s preview
-recorded as the one exception (plan 361).
+recorded as the one exception (plan 361), and a number field that paints and
+announces the bound of a supplied out-of-range value, steps from it, commits
+nothing while disabled, and forwards the caller's `onKeyUp` (plan 362).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

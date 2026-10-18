@@ -182,6 +182,31 @@ describe("NumberField", () => {
     expect(onValue).toHaveBeenCalledTimes(2);
   });
 
+  it("steps from the bound when the supplied value is outside it", () => {
+    // Plan 362: the value came from the parent, so the field painted it raw and
+    // stepped from it — the first ArrowDown reported the bound again and the
+    // first ArrowUp reported a *smaller* number. Every step now starts at the
+    // bounded value the field paints.
+    const onValue = vi.fn();
+    const { up, down } = partsOf(
+      render({ max: 100 }, 150, "100", idle, { onValue }),
+    );
+    expectSome(hostHandler(up, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledTimes(0);
+    expectSome(hostHandler(down, "onClick"))(keyEvent("click"));
+    expect(onValue).toHaveBeenCalledWith(99);
+  });
+
+  it("forwards the caller's key-up to the input", () => {
+    // Plan 362: `passiveTriggerHandlers` omits key handlers because each control
+    // composes them, and this field wired only `onKeyDown` — the caller's
+    // `onKeyUp` stopped at the component boundary.
+    const onKeyUp = vi.fn();
+    const { input } = partsOf(render({ onKeyUp }, 5, "5"));
+    expectSome(hostHandler(input, "onKeyUp"))(keyEvent("up"));
+    expect(onKeyUp).toHaveBeenCalledTimes(1);
+  });
+
   it("is one tab stop: the spin buttons are presentation", () => {
     const { up, down } = partsOf(render({}, 50, "50"));
     expect(expectSome(hostProp(up, "role"))).toBe("presentation");

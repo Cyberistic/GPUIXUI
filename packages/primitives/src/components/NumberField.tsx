@@ -14,6 +14,12 @@
  * component handler sees them (measured, plan 338), so the field neither steps
  * on them nor offers a bound jump. Enter arrives as the host's `submit`
  * (measured, plan 339): the draft commits there, then the caller's `onSubmit`.
+ *
+ * **The bound is the field's, not the edit's.** A supplied `value` goes through
+ * the same `clampNumeric` as typed text, so a record loaded with `150` under
+ * `max={100}` paints `100` and steps from it (plan `362`). A **disabled** field
+ * is inert on every path, including the blur commit, and a caller's `onKeyUp`
+ * reaches the input like every sibling's.
  */
 
 import { useRef, useState, type ReactElement } from "react";
@@ -127,6 +133,13 @@ export const renderNumberField = (
 ): ReactElement => {
   const range = numberRange(props);
   const disabled = props.disabled === true;
+  /**
+   * The value the field *acts* on is the bounded one, whether it was typed or
+   * supplied: a controlled `value={150}` under `max={100}` must step from
+   * `100`. Reading the raw value disabled the up stepper while `ArrowUp`
+   * reported a *smaller* `100` (measured, plan `362`).
+   */
+  const current = clampNumeric(state.current, range);
   const spec = {
     variant: fieldVariant,
     size: props.size ?? "md",
@@ -147,8 +160,8 @@ export const renderNumberField = (
       invalid: props.invalid === true,
     },
   );
-  const atMin = props.min !== undefined && state.current <= props.min;
-  const atMax = props.max !== undefined && state.current >= props.max;
+  const atMin = props.min !== undefined && current <= props.min;
+  const atMax = props.max !== undefined && current >= props.max;
   const stepButton = (
     direction: 1 | -1,
     name: "chevron-up" | "chevron-down",
@@ -158,7 +171,7 @@ export const renderNumberField = (
       role="presentation"
       onClick={() => {
         if (disabled || blocked) return;
-        handlers.onValue(stepNumber(state.current, range, direction));
+        handlers.onValue(stepNumber(current, range, direction));
       }}
       style={numberStepperStyle({ disabled: disabled || blocked }, theme)}
     >
@@ -196,12 +209,13 @@ export const renderNumberField = (
             props.onKeyDown?.(event);
             return;
           }
-          Option.match(decideNumberKey(state.current, range, event.key ?? ""), {
+          Option.match(decideNumberKey(current, range, event.key ?? ""), {
             onNone: () => {},
             onSome: handlers.onValue,
           });
           props.onKeyDown?.(event);
         }}
+        onKeyUp={props.onKeyUp}
         onSubmit={(event: EventPayload) => {
           if (disabled) return;
           handlers.onCommit();
@@ -210,7 +224,10 @@ export const renderNumberField = (
         onFocus={composeHandler(focus.onFocus, props.onFocus)}
         onBlur={(event: EventPayload) => {
           focus.onBlur();
-          handlers.onCommit();
+          // A disabled field is inert on every path (plan 362): the draft is
+          // committed by a commit, not by losing a caret a disabled field no
+          // longer owns.
+          if (!disabled) handlers.onCommit();
           props.onBlur?.(event);
         }}
       />
@@ -245,7 +262,11 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   // only while the value is still the one it belongs to, so an external change
   // (a reset, a reloaded record) is not hidden behind stale text — and a value
   // supplied after mount shows even though the field mounted untouched.
-  const current = state.value.current;
+  //
+  // The displayed (and stepped) value is the bounded one: a record loaded with
+  // `value={150}` under `max={100}` paints `100`, because a field must not show
+  // a number it would refuse to accept (plan `362`).
+  const current = clampNumeric(state.value.current, range);
   const showValue = touched || state.value.mode === "controlled";
   const text = Option.match(
     Option.filter(draft, (candidate) => draftApplies(candidate, current)),
@@ -278,13 +299,20 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       Option.match(parseNumericText(text), {
         onNone: () => setDraft(Option.none()),
         onSome: (parsed) => {
-          state.set(clampNumeric(parsed, range));
+          const value = clampNumeric(parsed, range);
+          // Report against the value the field paints, not the parent's raw
+          // one: an out-of-range supplied value has already been normalised on
+          // screen, so committing it must not wake the parent (plan 362).
+          if (!Object.is(value, current)) state.set(value);
           setDraft(Option.none());
         },
       }),
     onValue: (next) => {
       setTouched(true);
-      state.set(clampNumeric(next, range));
+      const value = clampNumeric(next, range);
+      // Stepping past a bound is a no-op on the painted value; it must not
+      // report the bound as a change from the raw supplied value (plan 362).
+      if (!Object.is(value, current)) state.set(value);
       setDraft(Option.none());
       focusInput();
     },

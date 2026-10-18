@@ -27,6 +27,16 @@ way a native number field does — it does not start with a zero to delete. A
 `value` supplied after mount shows immediately (plan `326`), so a form can load
 its record without remounting the field.
 
+## Bounds
+
+`min` and `max` bound **the field, not the edit**: a supplied `value` goes
+through the same clamp as typed text, so a record loaded with `150` under
+`max={100}` paints `100`, announces `100`, and steps from `100`. The steppers and
+the arrow keys agree with the paint — before plan `362` the field painted `150`
+while `ArrowUp` reported a *smaller* `100`, and the first `ArrowDown` only
+reached the bound. A step or a commit that lands on the value already painted
+reports nothing, so a bound never looks like a change.
+
 ## Variants, sizes and states
 
 | Prop | Type | Default | Consequence |
@@ -39,7 +49,7 @@ its record without remounting the field.
 | `step` | `number` | `1` | arrow step |
 | `precision` | `number` | `0` | decimals shown on commit |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
-| `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
+| `disabled` | `boolean` | `false` | read-only, out of the tab order, inert; a pending draft is not committed on blur |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
 | `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
@@ -86,6 +96,10 @@ The spin buttons are pointer affordances, **not tab stops**: the field is one
 tab stop and Up/Down are the keyboard path, as in a native spinner. A click on a
 stepper returns focus to the input so the next arrow works.
 
+A caller's `onKeyDown` **and** `onKeyUp` reach the input, like every other
+control in the package; the field's own step rule runs first on key down, then
+the caller's handler.
+
 ## Accessibility
 
 - The input is a `TextInput` with the name from `label`; the steppers are
@@ -94,8 +108,8 @@ stepper returns focus to the input so the next arrow works.
 - The value is the native input's text, which the runtime exposes to AccessKit.
   There is no `aria-valuenow`/`min`/`max` in GPUix 0.10.0.
 - A disabled field is `readOnly`, out of the tab order and paints the disabled
-  chrome; assistive technology hears read-only, which is the honest state (the
-  host has no `disabled` prop).
+  chrome; it commits no pending draft on blur; assistive technology hears
+  read-only, which is the honest state (the host has no `disabled` prop).
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description` to
   its inner input, so the tip opens on keyboard focus. A text host receives no
   `onMouseEnter`, so hover cannot open it (measured, plan `345`).
@@ -145,8 +159,9 @@ after the wrapper's chrome:
   stepping, the caret keys left unhandled, and an exact decimal step (plans
   `077`, `338`).
 - `src/components/NumberField.test.tsx` — the draft value, the delivered key
-  contract, submit-then-caller ordering, the raw edit report, steppers as
-  presentation, one tab stop, disabled/invalid.
+  contract (down and up), submit-then-caller ordering, the raw edit report,
+  steppers as presentation, one tab stop, steps from the bound of an
+  out-of-range state, disabled/invalid.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a decimal step reports `0.3` (not binary noise);
@@ -154,8 +169,11 @@ after the wrapper's chrome:
   `338`); `Enter` commits the draft to `1.50` and calls `onSubmit` once, and a
   disabled field does neither (plan `339`); a hit-tested stepper press steps and
   refocuses; the chrome ring paints from mount with `autoFocus`; a disabled field
-  refuses text, keys and clicks. Measured 2026-10-17 (plans 054 §9, 064 §6 and
-  077 §7) and 2026-10-18 (plans `338`, `339`).
+  refuses text, keys and clicks. **Plan `362`:** a supplied `150` under `max=100`
+  paints and announces `100`, `ArrowUp` reports nothing and `ArrowDown` reports
+  `99`; an enabled field commits its draft on blur while a field disabled after
+  the same edit reports nothing. Measured 2026-10-17 (plans 054 §9, 064 §6 and
+  077 §7) and 2026-10-18 (plans `338`, `339`, `362`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

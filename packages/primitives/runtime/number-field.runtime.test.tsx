@@ -16,7 +16,12 @@ import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, type Bounds, type Runtime } from "../src/testing/index.js";
+import {
+  a11yNode,
+  a11yValueOf,
+  type Bounds,
+  type Runtime,
+} from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
@@ -374,4 +379,88 @@ it("shows a value supplied after mount", async () => {
   render(42);
   runtime.type("7");
   expect(lastValue(field.values)).toBe(427);
+});
+
+it("paints and announces the bound of an out-of-range supplied value", async () => {
+  // The bug guarded (plan 362): only typed text went through `clampNumeric`, so
+  // a record loaded with 150 under max=100 painted and announced "150", and the
+  // first ArrowUp reported a *smaller* 100 while the up stepper was disabled.
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Amount"
+      value={150}
+      max={100}
+      autoFocus
+      onValueChange={field.onValueChange}
+    />,
+  );
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { role: "TextInput", label: "Amount" }),
+    ),
+  ).toBe("100");
+  runtime.keyDown("nf", "up");
+  runtime.flush();
+  expect(field.values).toStrictEqual([]);
+  runtime.keyDown("nf", "down");
+  runtime.flush();
+  expect(field.values).toStrictEqual([99]);
+});
+
+it("commits the draft when focus leaves an enabled field", async () => {
+  // The control direction for the disabled case below: a deferring controlled
+  // parent sees the blur commit, so its absence there is the guard, not a dead
+  // commit path. Measured before: [12, 12].
+  const field = recorder();
+  const runtime = await mount(
+    <Stack direction="row">
+      <NumberField
+        testId="nf"
+        label="Quantity"
+        autoFocus
+        value={1}
+        onValueChange={field.onValueChange}
+      />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  runtime.type("2");
+  expect(field.values).toStrictEqual([12]);
+  runtime.focusNext();
+  runtime.flush();
+  expect(field.values).toStrictEqual([12, 12]);
+});
+
+it("does not commit its draft once the field is disabled", async () => {
+  // The bug guarded (plan 362): `onBlur` committed unconditionally, so a field
+  // disabled while an edit was pending reported the draft again when focus
+  // moved — a "disabled" control changing a value. Measured before: [12, 12].
+  const field = recorder();
+  const runtime = await openWindow();
+  const render = (disabled: boolean): void =>
+    runtime.render(
+      <Surface>
+        <Stack direction="row">
+          <NumberField
+            testId="nf"
+            label="Quantity"
+            autoFocus
+            disabled={disabled}
+            value={1}
+            onValueChange={field.onValueChange}
+          />
+          <Button testId="after">After</Button>
+        </Stack>
+      </Surface>,
+    );
+  render(false);
+  runtime.type("2");
+  expect(field.values).toStrictEqual([12]);
+  render(true);
+  runtime.flush();
+  runtime.focusNext();
+  runtime.flush();
+  expect(field.values).toStrictEqual([12]);
 });
