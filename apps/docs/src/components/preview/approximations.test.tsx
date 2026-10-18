@@ -34,7 +34,9 @@ function ComponentPreviewWithTheme({
   return Preview === undefined ? null : <Preview theme={theme} />;
 }
 
-describe("tier-A previews", () => {
+// Each test renders every preview to static markup (up to 72 surfaces); the
+// 5s default expires under the workspace-wide run.
+describe("tier-A previews", { timeout: 30_000 }, () => {
   it("are all labelled as browser approximations", () => {
     previews.forEach(([slug]) => {
       expect(
@@ -161,7 +163,7 @@ const documentedStates: ReadonlyArray<readonly [string, readonly string[]]> = [
   ],
 ];
 
-describe("preview state coverage", () => {
+describe("preview state coverage", { timeout: 30_000 }, () => {
   it("shows every state its component page documents", () => {
     documentedStates.forEach(([slug, phrases]) => {
       const html = rendered(slug, "darwin");
