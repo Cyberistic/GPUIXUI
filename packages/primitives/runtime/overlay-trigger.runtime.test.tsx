@@ -16,7 +16,14 @@
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
+import { Checkbox } from "../src/components/Checkbox.js";
 import { IconButton } from "../src/components/IconButton.js";
+import { Input } from "../src/components/Input.js";
+import { NumberField } from "../src/components/NumberField.js";
+import { Select } from "../src/components/Select.js";
+import { Slider } from "../src/components/Slider.js";
+import { Switch } from "../src/components/Switch.js";
+import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNode } from "../src/testing/index.js";
@@ -124,4 +131,244 @@ it("announces a Tooltip as a Button trigger's description", async () => {
     () => expect.fail("the Button produced no accessibility node"),
   );
   expect(trigger.aria?.description).toBe(TIP);
+});
+
+/**
+ * The rest of the single-root Tier 1 controls (plan 345).
+ *
+ * The button family above is content-sized, so the tooltip's hugging root is
+ * invisible. A `Slider`'s track is always 100 % wide, so it needs an explicit
+ * root width — measured: without it the wrapper paints 16 × 32 px and the drag
+ * has nowhere to go.
+ */
+const SLIDER_ROOT = { width: 320 } as const;
+
+it("opens a Tooltip on hover when its trigger is a Checkbox", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Checkbox testId="target" label="Agree" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is a Checkbox", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Checkbox testId="target" label="Agree" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on hover when its trigger is a Switch", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Switch testId="target" label="Pause" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is a Switch", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Switch testId="target" label="Pause" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on hover when its trigger is a Slider, and keeps the drag", async () => {
+  const runtime = await openWindow();
+  const values: number[] = [];
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip" style={SLIDER_ROOT}>
+        <Slider
+          testId="target"
+          label="Volume"
+          onValueChange={(next) => values.push(next)}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+  const box = Option.getOrElse(runtime.bounds("target"), () =>
+    expect.fail("the slider painted no box"),
+  );
+  expect(box.width).toBe(SLIDER_ROOT.width);
+  runtime.clickAt(box.x + box.width * 0.75, box.y + box.height / 2);
+  expect(values.at(-1)).toBeGreaterThan(60);
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is a Slider", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip" style={SLIDER_ROOT}>
+        <Slider testId="target" label="Volume" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on hover when its trigger is a Select", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Select
+          testId="target"
+          label="Region"
+          options={[{ value: "eu", label: "Europe" }]}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target-trigger");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is a Select", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Select
+          testId="target"
+          label="Region"
+          options={[{ value: "eu", label: "Europe" }]}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target-trigger");
+  expect(tipPainted(runtime.allText())).toBe(true);
+  // The slot must not have taken the trigger's own click: the list still opens.
+  runtime.click("target-trigger");
+  expect(runtime.allText()).toContain("Europe");
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is an Input", async () => {
+  // A native `<input>` receives no `onMouseEnter` (measured, plan 345 §0), so
+  // focus is the only path — but it must work, and the field must keep typing.
+  const runtime = await openWindow();
+  const values: string[] = [];
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Input
+          testId="target"
+          label="Email"
+          onValueChange={(next) => values.push(next)}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+  runtime.type("a");
+  expect(values.at(-1)).toBe("a");
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is a TextArea", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <TextArea testId="target" label="Notes" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is a NumberField", async () => {
+  const runtime = await openWindow();
+  const values: number[] = [];
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <NumberField
+          testId="target"
+          label="Quantity"
+          onValueChange={(next) => values.push(next)}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  expect(
+    Option.exists(
+      runtime.focusedElement(),
+      (element) => element.type === "input",
+    ),
+  ).toBe(true);
+  expect(tipPainted(runtime.allText())).toBe(true);
+  runtime.type("7");
+  expect(values.at(-1)).toBe(7);
+});
+
+it("carries the tip as the description of the controls it wraps", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP}>
+        <Checkbox testId="check" label="Agree" />
+      </Tooltip>
+      <Tooltip content={TIP}>
+        <Switch testId="switch" label="Pause" />
+      </Tooltip>
+      <Tooltip content={TIP} style={SLIDER_ROOT}>
+        <Slider testId="slider" label="Volume" />
+      </Tooltip>
+      <Tooltip content={TIP}>
+        <Input testId="input" label="Email" />
+      </Tooltip>
+      <Tooltip content={TIP}>
+        <Select
+          testId="select"
+          label="Region"
+          options={[{ value: "eu", label: "Europe" }]}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  const dump = runtime.a11y();
+  const description = (role: string, label: string) =>
+    Option.flatMap(a11yNode(dump, { role, label }), (node) =>
+      Option.fromNullishOr(node.aria?.description),
+    );
+  expect(Option.getOrUndefined(description("CheckBox", "Agree"))).toBe(TIP);
+  expect(Option.getOrUndefined(description("Switch", "Pause"))).toBe(TIP);
+  expect(Option.getOrUndefined(description("Slider", "Volume"))).toBe(TIP);
+  expect(Option.getOrUndefined(description("TextInput", "Email"))).toBe(TIP);
+  expect(Option.getOrUndefined(description("ComboBox", "Region"))).toBe(TIP);
 });

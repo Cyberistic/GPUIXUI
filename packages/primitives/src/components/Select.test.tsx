@@ -9,7 +9,7 @@
  * option value because the label mapping was dropped.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
@@ -35,7 +35,13 @@ import {
   tooltipHeight,
   tooltipStyle,
 } from "./Tooltip.js";
-import { elementChildren, elementProp, expectSome } from "./testing/element.js";
+import {
+  elementChildren,
+  elementHandler,
+  elementProp,
+  expectSome,
+} from "./testing/element.js";
+import { clickEvent, keyEvent } from "./testing/event.js";
 
 const rest = { selected: false, highlighted: false, disabled: false };
 
@@ -470,5 +476,34 @@ describe("Tooltip", () => {
       Option.none(),
     );
     expect(elementProp(tip, "aria-label")).toStrictEqual(Option.none());
+  });
+});
+
+describe("Select as a slot trigger", () => {
+  it("forwards a slot's handlers and description to its trigger", () => {
+    // Plan 345: the tooltip's cloned props stopped at the Select boundary, so a
+    // tip around a select never opened. GPUix's SelectTrigger composes the key
+    // handler itself, so the wrapper passes the slot's through unchanged.
+    const onMouseEnter = vi.fn();
+    const onKeyDown = vi.fn();
+    const element = renderSelect(
+      {
+        options: [{ value: "eu", label: "Europe" }],
+        onMouseEnter,
+        onKeyDown,
+        "aria-description": "A hint",
+      },
+      testTheme,
+      valueState("eu"),
+      false,
+      noFocus,
+      handlers,
+    );
+    const trigger = childAt(element, 0);
+    expectSome(elementHandler(trigger, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(elementHandler(trigger, "onKeyDown"))(keyEvent("escape"));
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(expectSome(elementProp(trigger, "aria-description"))).toBe("A hint");
   });
 });

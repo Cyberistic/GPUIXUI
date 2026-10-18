@@ -42,6 +42,7 @@ its record without remounting the field.
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
+| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on mount; the ring paints from mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
@@ -95,6 +96,9 @@ stepper returns focus to the input so the next arrow works.
 - A disabled field is `readOnly`, out of the tab order and paints the disabled
   chrome; assistive technology hears read-only, which is the honest state (the
   host has no `disabled` prop).
+- **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description` to
+  its inner input, so the tip opens on keyboard focus. A text host receives no
+  `onMouseEnter`, so hover cannot open it (measured, plan `345`).
 
 ## Theming
 

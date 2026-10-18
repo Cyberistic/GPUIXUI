@@ -32,6 +32,7 @@ import { Switch } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
+| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<SwitchState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
@@ -54,6 +55,8 @@ import { Switch } from "@gpuixui/primitives";
 - A visible `Label` beside the switch is painted text: it is **not clickable
   and not associated** with the control. The switch is still named through
   `label`, but the pair is two accessibility nodes, not one row.
+- **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
+  tip opens on hover and on keyboard focus.
 
 ## Theming
 

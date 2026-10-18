@@ -79,6 +79,21 @@ export const hostHandler = (
     Schema.decodeUnknownOption(HostHandler)(value),
   );
 
+/**
+ * A named event handler on any element, host **or component**.
+ *
+ * A wrapper's slot props can land on a GPUix part that is itself a component —
+ * `SelectTrigger`, for example — so the handler has to be read with
+ * `elementProp` rather than `hostProp`.
+ */
+export const elementHandler = (
+  element: ReactElement,
+  name: string,
+): Option.Option<(event: EventPayload) => void> =>
+  Option.flatMap(elementProp(element, name), (value) =>
+    Schema.decodeUnknownOption(HostHandler)(value),
+  );
+
 const StyleRecord = Schema.Record(Schema.String, Schema.Unknown);
 
 /** One property of a host element's resolved `style` prop, still unknown. */

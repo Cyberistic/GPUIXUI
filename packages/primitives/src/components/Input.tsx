@@ -19,12 +19,15 @@ import {
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
 import {
+  composeHandler,
   mergeStyle,
+  passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -36,7 +39,7 @@ export interface FieldState {
 }
 
 /** Props shared by `Input` and `TextArea`. */
-export interface FieldProps {
+export interface FieldProps extends TriggerHandlers {
   /** Controlled text. Omit it to let the field hold its own draft. */
   readonly value?: string;
   /** Initial text when uncontrolled. */
@@ -65,6 +68,12 @@ export interface FieldProps {
   readonly fullWidth?: boolean;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
+  /**
+   * Extra description announced after the name. A slot (a `Tooltip`) writes the
+   * tip here. A text host receives no `onMouseEnter` in 0.10.0, so a field's
+   * tooltip opens on keyboard focus only (plan `345`).
+   */
+  readonly "aria-description"?: string;
   /** An object, or a callback over this field's public state. */
   readonly style?: StateStyle<FieldState>;
   readonly testId?: string;
@@ -103,6 +112,7 @@ export const fieldHostProps = (
   focus: FocusState,
   onValueChange: (value: string) => void,
 ) => ({
+  ...passiveTriggerHandlers(props),
   value: state.current,
   placeholder: props.placeholder,
   readOnly: props.readOnly === true || props.disabled === true,
@@ -111,12 +121,15 @@ export const fieldHostProps = (
   theme: nativeTextTheme(theme),
   testId: props.testId,
   "aria-label": props.label,
+  "aria-description": props["aria-description"],
   onChange: (event: EventPayload) => {
     if (props.disabled !== true) onValueChange(event.value ?? "");
   },
   onSubmit: props.disabled === true ? undefined : props.onSubmit,
-  onFocus: focus.onFocus,
-  onBlur: focus.onBlur,
+  onFocus: composeHandler(focus.onFocus, props.onFocus),
+  onBlur: composeHandler(focus.onBlur, props.onBlur),
+  onKeyDown: props.onKeyDown,
+  onKeyUp: props.onKeyUp,
 });
 
 export const renderInput = (

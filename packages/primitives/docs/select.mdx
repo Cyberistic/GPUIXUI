@@ -78,6 +78,7 @@ indicator does not change the combobox's name or add an `Image` node.
 | `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
 | `side` | `FloatingSide` | auto — below, flipped above when it does not fit; any requested side flips when it cannot fit | preferred side the list opens on |
 | `label` | `string` | none | accessible name for the select |
+| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | merged last on the visible trigger; an object or a state callback |
 | `testId` | `string` | — | names the select; the visible trigger becomes `${testId}-trigger`, the indicator `${testId}-chevron` |
@@ -156,6 +157,11 @@ itself the accessible value.
 Focus is **visible**: the trigger paints `focusRing(theme)` while focused or
 open, the same ring every other field paints. The runtime has no `focusVisible`,
 so a mouse-opened trigger shows it too.
+
+**Slot trigger:** the trigger forwards a `Tooltip`'s handlers and
+`aria-description`, so a tip opens on hover and on keyboard focus. GPUix's
+`SelectTrigger` composes the injected key handler with its own open/move rule,
+so the list still opens on Enter, Space and the arrows (measured, plan `345`).
 
 ## Theming
 

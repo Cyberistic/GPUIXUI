@@ -21,11 +21,14 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  composeHandler,
+  passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -37,7 +40,7 @@ export interface SwitchState {
   readonly invalid: boolean;
 }
 
-export interface SwitchProps {
+export interface SwitchProps extends TriggerHandlers {
   /** Controlled. Omit to let the switch hold its own state. */
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
@@ -53,6 +56,8 @@ export interface SwitchProps {
    * a hit area and not associated (no `aria-labelledby`).
    */
   readonly label?: string;
+  /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
+  readonly "aria-description"?: string;
   /** An object, or a callback over this switch's public state. */
   readonly style?: StateStyle<SwitchState>;
   readonly testId?: string;
@@ -84,10 +89,11 @@ export const renderSwitch = (
     onValueChange(!state.current);
   };
   const onKey =
-    (phase: "down" | "up") =>
+    (phase: "down" | "up", handler?: (event: EventPayload) => void) =>
     (event: EventPayload): void => {
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
+      handler?.(event);
     };
   const partState: SwitchState = {
     checked: state.current,
@@ -97,16 +103,18 @@ export const renderSwitch = (
   };
   return (
     <div
+      {...passiveTriggerHandlers(props)}
       role="switch"
       aria-label={props.label}
+      aria-description={props["aria-description"]}
       aria-valuetext={state.current ? "checked" : "unchecked"}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onClick={toggle}
-      onKeyDown={onKey("down")}
-      onKeyUp={onKey("up")}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
+      onKeyDown={onKey("down", props.onKeyDown)}
+      onKeyUp={onKey("up", props.onKeyUp)}
+      onFocus={composeHandler(focus.onFocus, props.onFocus)}
+      onBlur={composeHandler(focus.onBlur, props.onBlur)}
       style={resolvePartStyle(
         switchTrackStyle(spec, theme),
         props.style,

@@ -23,7 +23,7 @@ import {
   type SliderHandlers,
 } from "./Slider.js";
 import type { FocusState } from "./internal.js";
-import { keyEvent } from "./testing/event.js";
+import { clickEvent, keyEvent } from "./testing/event.js";
 import {
   elementChildren,
   elementProp,
@@ -299,5 +299,35 @@ describe("slider prop surface", () => {
     );
     expect(elementProp(element, "value")).toStrictEqual(Option.none());
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("10");
+  });
+});
+
+describe("slider as a slot trigger", () => {
+  it("forwards a slot's handlers and description, and keeps its drag", () => {
+    // Plan 345: the tooltip's cloned props stopped at the component boundary.
+    // The drag handlers are the slider's own, so the slot's must be composed,
+    // not spread over them — a `passiveTriggerHandlers` spread would erase the
+    // gesture.
+    const onMouseEnter = vi.fn();
+    const onMouseDown = vi.fn();
+    const onKeyDown = vi.fn();
+    const onValueChange = vi.fn();
+    const onPointerDown = vi.fn();
+    const element = renderSlider(
+      { onMouseEnter, onMouseDown, onKeyDown, "aria-description": "A hint" },
+      testTheme,
+      valueOf(50),
+      idle,
+      { ...sliderHandlers(onValueChange), onPointerDown },
+    );
+    expectSome(hostHandler(element, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(element, "onMouseDown"))(clickEvent);
+    expect(onMouseDown).toHaveBeenCalledTimes(1);
+    expect(onPointerDown).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("right"));
+    expect(onValueChange).toHaveBeenCalledWith(51);
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(expectSome(hostProp(element, "aria-description"))).toBe("A hint");
   });
 });

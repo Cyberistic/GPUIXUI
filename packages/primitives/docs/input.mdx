@@ -44,6 +44,7 @@ const email = "Contact email";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `label` | `string` | none | accessible name; pair with a visible `Label` |
+| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<FieldState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
@@ -55,7 +56,8 @@ const email = "Contact email";
 | Enter | reaches `onSubmit` with the runtime event |
 | Tab | moves focus with the runtime's own order |
 
-There is no `onKeyDown` prop; a shortcut belongs to the application's window key
+`onKeyDown`/`onKeyUp` are forwarded to the native host (a slot uses Escape to
+dismiss a tooltip). An application shortcut still belongs to the window key
 handler, not to a field.
 
 ## Accessibility
@@ -63,6 +65,9 @@ handler, not to a field.
 - The native element is announced as `TextInput`.
 - The name comes from `label`; there is no `aria-labelledby`, so a visible
   `Label` is not associated by reference.
+- **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`.
+  GPUix's `<input>` host receives no `onMouseEnter`, so the tip opens on
+  keyboard focus only (measured, plan `345`).
 - `invalid` is a border colour, not an announced error. Put the message in a
   `Text role="caption" tone="destructive"` beside the field.
 - `readOnly` remains focusable and selectable, which is the platform contract.

@@ -36,8 +36,8 @@ const notes = "Description";
 | `maxRows` | `number` | runtime default | rows after which the field scrolls |
 
 Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly`,
-`disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `style`,
-`testId`.
+`disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`,
+`aria-description`, `style`, `testId`.
 
 Its height is rows, not a control height, so the component re-bases vertical
 padding to the density's horizontal padding step to keep the text inset square.
@@ -60,6 +60,9 @@ mean.
 - The name comes from `label`; there is no `aria-labelledby`.
 - `invalid` is visual; put the message beside the field in words.
 - As with `Input`, there is no `aria-describedby`.
+- **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so
+  the tip opens on keyboard focus. A `<textarea>` host receives no
+  `onMouseEnter`, so hover cannot open it (measured, plan `345`).
 
 ## Theming
 

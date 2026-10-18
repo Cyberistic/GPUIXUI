@@ -83,12 +83,15 @@ import {
   type VerticalSide,
 } from "../core/floating.js";
 import {
+  composeHandler,
   mergeStyle,
+  passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -107,7 +110,7 @@ export interface SelectState {
   readonly invalid: boolean;
 }
 
-export interface SelectProps {
+export interface SelectProps extends TriggerHandlers {
   /**
    * Choices in paint order. A group paints a heading and its options; the
    * heading is not selectable, and option values stay unique across groups.
@@ -132,6 +135,8 @@ export interface SelectProps {
   readonly side?: FloatingSide;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
+  /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
+  readonly "aria-description"?: string;
   /** An object, or a callback over the select's public state. */
   readonly style?: StateStyle<SelectState>;
   /**
@@ -384,6 +389,19 @@ export const renderSelect = (
     style,
     triggerStyle,
     testId,
+    onMouseEnter,
+    onMouseLeave,
+    onMouseMove,
+    onMouseDown,
+    onMouseUp,
+    onMouseDownOutside,
+    onAuxClick,
+    onScroll,
+    onFocus,
+    onBlur,
+    onKeyDown,
+    onKeyUp,
+    "aria-description": description,
   }: SelectProps,
   theme: PrimitiveTheme,
   state: ValueState<string>,
@@ -393,6 +411,20 @@ export const renderSelect = (
   placement: SelectPlacement = { collisionPadding: FLOATING_MARGIN },
 ): ReactElement => {
   const spec: ControlSpec = { variant: fieldVariant, size, invalid, fullWidth };
+  const slot: TriggerHandlers = {
+    onMouseEnter,
+    onMouseLeave,
+    onMouseMove,
+    onMouseDown,
+    onMouseUp,
+    onMouseDownOutside,
+    onAuxClick,
+    onScroll,
+    onFocus,
+    onBlur,
+    onKeyDown,
+    onKeyUp,
+  };
   const flat = selectOptions(options);
   const selected = state.current === "" ? undefined : state.current;
   const selectedLabel = Option.getOrElse(
@@ -451,15 +483,19 @@ export const renderSelect = (
       )}
     >
       <SelectTrigger
+        {...passiveTriggerHandlers(slot)}
         ref={handlers.registerTrigger}
         role="combobox"
         aria-label={label}
+        aria-description={description}
         aria-expanded={open}
         aria-valuetext={selectedLabel ?? placeholder}
         disabled={disabled}
         testId={testId === undefined ? undefined : `${testId}-trigger`}
-        onFocus={focus.onFocus}
-        onBlur={focus.onBlur}
+        onFocus={composeHandler(focus.onFocus, onFocus)}
+        onBlur={composeHandler(focus.onBlur, onBlur)}
+        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
         style={selectTriggerPartStyle(spec, theme, focus.focused, triggerStyle)}
       >
         <SelectValue placeholder={placeholder} />

@@ -21,11 +21,14 @@ import {
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import {
+  composeHandler,
+  passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -39,7 +42,7 @@ export interface CheckboxState {
   readonly invalid: boolean;
 }
 
-export interface CheckboxProps {
+export interface CheckboxProps extends TriggerHandlers {
   /** Controlled. Omit to let the checkbox hold its own state. */
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
@@ -58,6 +61,8 @@ export interface CheckboxProps {
    * a labelled row.
    */
   readonly label?: string;
+  /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
+  readonly "aria-description"?: string;
   /** An object, or a callback over this checkbox's public state. */
   readonly style?: StateStyle<CheckboxState>;
   readonly testId?: string;
@@ -105,10 +110,11 @@ export const renderCheckbox = (
     onValueChange(!state.current);
   };
   const onKey =
-    (phase: "down" | "up") =>
+    (phase: "down" | "up", handler?: (event: EventPayload) => void) =>
     (event: EventPayload): void => {
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
+      handler?.(event);
     };
   const box = selectionBoxStyle(spec, theme);
   const partState: CheckboxState = {
@@ -120,16 +126,18 @@ export const renderCheckbox = (
   };
   return (
     <div
+      {...passiveTriggerHandlers(props)}
       role="checkbox"
       aria-label={props.label}
+      aria-description={props["aria-description"]}
       aria-valuetext={selectionValueText(current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
       onClick={toggle}
-      onKeyDown={onKey("down")}
-      onKeyUp={onKey("up")}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
+      onKeyDown={onKey("down", props.onKeyDown)}
+      onKeyUp={onKey("up", props.onKeyUp)}
+      onFocus={composeHandler(focus.onFocus, props.onFocus)}
+      onBlur={composeHandler(focus.onBlur, props.onBlur)}
       style={resolvePartStyle(box, props.style, partState)}
     >
       {current === "unchecked" ? null : (

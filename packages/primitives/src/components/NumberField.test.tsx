@@ -20,7 +20,12 @@ import {
   type NumberFieldProps,
 } from "./NumberField.js";
 import type { FocusState } from "./internal.js";
-import { changeEvent, keyEvent, submitEvent } from "./testing/event.js";
+import {
+  changeEvent,
+  clickEvent,
+  keyEvent,
+  submitEvent,
+} from "./testing/event.js";
 import {
   elementChildren,
   expectSome,
@@ -207,6 +212,30 @@ describe("NumberField", () => {
     expectSome(hostHandler(input, "onChange"))(changeEvent("99"));
     expect(onValue).toHaveBeenCalledTimes(0);
     expect(onTextChange).toHaveBeenCalledTimes(0);
+  });
+
+  it("forwards a slot's handlers and description to its input", () => {
+    // Plan 345: a Tooltip around a NumberField dropped its cloned props at the
+    // component boundary, so the tip never opened and no description reached AT.
+    // The host is the inner input: the wrapper div is chrome and is not focusable.
+    const onMouseEnter = vi.fn();
+    const onKeyDown = vi.fn();
+    const onValue = vi.fn();
+    const { input } = partsOf(
+      render(
+        { onMouseEnter, onKeyDown, "aria-description": "A hint" },
+        12,
+        "12",
+        idle,
+        { onValue },
+      ),
+    );
+    expectSome(hostHandler(input, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("up"));
+    expect(onValue).toHaveBeenCalledWith(13);
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(expectSome(hostProp(input, "aria-description"))).toBe("A hint");
   });
 });
 

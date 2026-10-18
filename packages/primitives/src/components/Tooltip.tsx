@@ -54,6 +54,7 @@ import {
 } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
@@ -77,6 +78,13 @@ export interface TooltipProps {
   readonly align?: FloatingAlign;
   /** Milliseconds before the tip opens on hover. Defaults to the provider's. */
   readonly delay?: number;
+  /**
+   * Merged over the root's hugging style. The root hugs its trigger so the tip
+   * anchors to it (plan 060), which collapses a child that asks for
+   * `width: "100%"` — a Slider, or a `fullWidth` field. Give the root a width
+   * here for those (measured, plan 345 §2.2).
+   */
+  readonly style?: StyleDesc;
   readonly testId?: string;
 }
 
@@ -144,7 +152,15 @@ export interface TooltipHandlers {
  * painted and made a `tooltip` node, but is not given an invented name.
  */
 export const renderTooltip = (
-  { content, children, side, align = "start", delay, testId }: TooltipProps,
+  {
+    content,
+    children,
+    side,
+    align = "start",
+    delay,
+    style,
+    testId,
+  }: TooltipProps,
   theme: PrimitiveTheme,
   handlers: TooltipHandlers = {},
 ): ReactElement => {
@@ -153,7 +169,7 @@ export const renderTooltip = (
   return (
     <GpuixTooltip
       delayDuration={delay}
-      style={tooltipRootStyle}
+      style={mergeStyle(tooltipRootStyle, style)}
       ref={handlers.ref}
       onOpenChange={handlers.onOpenChange}
     >

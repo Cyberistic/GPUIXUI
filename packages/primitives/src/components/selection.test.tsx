@@ -33,7 +33,7 @@ import {
 } from "./CheckboxGroup.js";
 import { renderSwitch } from "./Switch.js";
 import type { FocusState } from "./internal.js";
-import { keyEvent } from "./testing/event.js";
+import { clickEvent, keyEvent } from "./testing/event.js";
 import {
   elementChildren,
   elementProp,
@@ -514,5 +514,48 @@ describe("CheckboxGroup", () => {
     // The enabled neighbour still reports, so the case above is not vacuous.
     expectSome(hostHandler(row(element, 0), "onKeyDown"))(keyEvent("enter"));
     expect(onToggle).toHaveBeenCalledWith("email");
+  });
+});
+
+describe("selection controls as slot triggers", () => {
+  it("forwards a slot's handlers and description to a Checkbox", () => {
+    // Plan 345: `Tooltip`'s asChild clones handlers onto the child; a component
+    // that does not declare them drops the tip entirely. The control's own
+    // activation must still run alongside the slot's Escape handler.
+    const onMouseEnter = vi.fn();
+    const onKeyDown = vi.fn();
+    const onValueChange = vi.fn();
+    const box = renderCheckbox(
+      { onMouseEnter, onKeyDown, "aria-description": "A hint" },
+      testTheme,
+      checked(false),
+      idle,
+      onValueChange,
+    );
+    expectSome(hostHandler(box, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(box, "onKeyDown"))(keyEvent("enter"));
+    expect(onValueChange).toHaveBeenCalledWith(true);
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(expectSome(hostProp(box, "aria-description"))).toBe("A hint");
+  });
+
+  it("forwards a slot's handlers and description to a Switch", () => {
+    const onMouseEnter = vi.fn();
+    const onKeyDown = vi.fn();
+    const onValueChange = vi.fn();
+    const element = renderSwitch(
+      { onMouseEnter, onKeyDown, "aria-description": "A hint" },
+      testTheme,
+      checked(false),
+      idle,
+      onValueChange,
+    );
+    expectSome(hostHandler(element, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
+    expect(onValueChange).toHaveBeenCalledWith(true);
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(expectSome(hostProp(element, "aria-description"))).toBe("A hint");
   });
 });

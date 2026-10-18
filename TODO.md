@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 92/92
+`[x]` `[██████████]` 93/93
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -740,6 +740,18 @@ retired once both branches are one
       colour from `focusRing`) as an inset overlay on its own edge; a separated
       group keeps the outer shadow. 1 core + 2 element-tree + 3 runtime tests
       (offline 560, runtime 386), both directions proven (plan `344`)
+
+`[x]` `packages/primitives`: **only the button family could be a tooltip
+      trigger.** Measured (2026-10-18): a `Tooltip` around `Input`, `Checkbox`,
+      `Switch`, `Slider` or `Select` painted no tip on hover or focus because
+      the component boundary dropped the slot's cloned handlers, and no
+      `aria-description` reached the control. Every single-root focusable
+      control now forwards `TriggerHandlers` + `aria-description`; text hosts
+      (`<input>`/`<textarea>`) still receive no `onMouseEnter` (measured), so a
+      field's tip opens on keyboard focus only. The roving composites stay
+      documented non-triggers, and `Tooltip.style` sizes the hugging root so a
+      full-width child (a Slider) keeps its width. 7 element + 12 runtime cases,
+      both directions proven (plan `345`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

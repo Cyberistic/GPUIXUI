@@ -17,7 +17,7 @@ import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderInput } from "./Input.js";
 import { renderTextArea } from "./TextArea.js";
 import type { FocusState } from "./internal.js";
-import { changeEvent } from "./testing/event.js";
+import { changeEvent, clickEvent, keyEvent } from "./testing/event.js";
 import {
   expectSome,
   hostHandler,
@@ -219,5 +219,39 @@ describe("TextArea", () => {
     const field = renderInput({}, testTheme, draft(""), idle, vi.fn());
     expect(heightOf(area)).toStrictEqual(Option.none());
     expect(Option.isSome(heightOf(field))).toBe(true);
+  });
+
+  it("forwards a slot's handlers and description to an Input", () => {
+    // The bug guarded (plan 345): `Tooltip`'s `asChild` clones its handlers onto
+    // the child, and a component boundary drops props it does not declare, so a
+    // tooltip around an Input never opened and its text never reached AT.
+    const onMouseEnter = vi.fn();
+    const onKeyDown = vi.fn();
+    const field = renderInput(
+      { onMouseEnter, onKeyDown, "aria-description": "A hint" },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expectSome(hostHandler(field, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(field, "onKeyDown"))(keyEvent("escape"));
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(expectSome(hostProp(field, "aria-description"))).toBe("A hint");
+  });
+
+  it("forwards a slot's handlers and description to a TextArea", () => {
+    const onMouseEnter = vi.fn();
+    const area = renderTextArea(
+      { onMouseEnter, "aria-description": "A hint" },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    expectSome(hostHandler(area, "onMouseEnter"))(clickEvent);
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expect(expectSome(hostProp(area, "aria-description"))).toBe("A hint");
   });
 });

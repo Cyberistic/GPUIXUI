@@ -21,9 +21,42 @@ import { Button, Tooltip } from "@gpuixui/primitives";
 
 The child must be a single **focusable element with a role and a name**.
 `Tooltip`'s trigger clones its child with the hover, focus, key and description
-props the runtime's slot injects. `Button`, `IconButton` and `Toggle` accept
-that contract (plan `341`), and a raw host element accepts it directly. A
-component that drops those props will not open the tip — this package's `Box`
+props the runtime's slot injects. Every single-root focusable Tier 1 control
+accepts that contract:
+
+| Trigger | Hover | Keyboard focus |
+| ------- | ----- | -------------- |
+| `Button`, `IconButton`, `Toggle` | yes | yes |
+| `Checkbox`, `Switch`, `Slider`, `Select` | yes | yes |
+| `Input`, `TextArea`, `NumberField` | **no** (text host) | yes |
+| `InfoTip` | yes | yes |
+| `RangeSlider`, `OTPField`, `Rating`, `CheckboxGroup`, `ToggleGroup` | no | no |
+
+A native `<input>`/`<textarea>` host receives no `onMouseEnter` in GPUix 0.10.0
+(measured, plan `345` §0), so a field's tip opens on keyboard focus only — never
+on hover. The roving composites (`RangeSlider`, `OTPField`, `Rating`,
+`CheckboxGroup`, `ToggleGroup`) have no single focusable root, so they are not
+triggers; put the tip on a label, an `InfoTip`, or a wrapper `div` with a role
+and a name.
+
+### Full-width triggers
+
+The root hugs its trigger so the tip anchors to it (plan `060`), which means a
+child asking for `width: "100%"` has nothing definite to resolve against.
+`Slider`'s track is always 100 % wide, so it needs an explicit root width;
+measured, a Slider inside a `Tooltip` without one paints a 16 × 32 px track. The
+same applies to `fullWidth` `Input`/`Select`/`Button`:
+
+```tsx
+<Tooltip content="Alert volume" style={{ width: 320 }}>
+  <Slider label="Volume" defaultValue={40} />
+</Tooltip>;
+```
+
+`style` is merged over the root's hugging style. It sizes the **anchor**, so the
+child and the tip stay aligned.
+
+A component that drops those props will not open the tip — this package's `Box`
 is a container with no event props, and the data-driven groups do not implement
 the contract, so use a raw styled `div` or `InfoTip` for a non-button trigger.
 A bare focus stop with no role produces no accessibility node at all.
@@ -81,6 +114,7 @@ would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip pain
 | `side` | `FloatingSide` | auto — above, flipped below when it does not fit; a `left`/`right` side flips when it cannot fit | preferred placement on both axes |
 | `align` | `FloatingAlign` | `"start"` | alignment against the trigger; `center` is measured exact — see Placement |
 | `delay` | `number` | provider default | hover delay in milliseconds |
+| `style` | `StyleDesc` | — | merged over the hugging root; a full-width trigger needs a width here |
 | `testId` | `string` | — | locator on the **tip** |
 
 ## Keyboard
@@ -114,8 +148,15 @@ dismisses it. A click dismisses it.
 ## Limitations
 
 - The trigger must be a focusable element that forwards the slot contract
-  (above); `Button`, `IconButton` and `Toggle` do, `Box` and the data-driven
-  groups do not.
+  (above). Every single-root control does; `Box` and the roving composites do
+  not, and a text host cannot open on hover.
+- **A native text host has no hover.** GPUix 0.10.0 delivers `onMouseEnter` to a
+  `div` but not to an `<input>`/`<textarea>` (measured, plan `345` §0), so a
+  field's tip is keyboard-only. Nothing in this wrapper can change that.
+- **The root hugs, so full-width children need `style`.** A child with
+  `width: "100%"` resolves against the hugging root and collapses; a `Slider`
+  without an explicit root width paints 16 px. `style` on `Tooltip` supplies the
+  width (see Full-width triggers).
 - **A `center` tip measures once.** The runtime has no layout callback, so the
   tip's box is known only after its first layout; the offset is applied in a
   layout effect before paint, so there is no visible jump. A tip whose size
@@ -173,7 +214,11 @@ dismisses it. A click dismisses it.
 - `runtime/overlay-trigger.runtime.test.tsx` — the documented composition, a
   `Button` trigger: hover and focus open the tip, click closes it, and the
   trigger's `aria-description` carries the text; `IconButton` and `Toggle` open
-  on hover too (plan `341`).
+  on hover too (plan `341`). **Plan `345`:** `Checkbox`, `Switch`, `Slider` and
+  `Select` open on hover and focus; `Input`, `TextArea` and `NumberField` open
+  on focus (their host has no hover); each carries the tip as its description;
+  the Slider's drag and the Select's own click still work inside the wrapper,
+  and its track is the explicit `style` width.
 
 ```sh
 nub run --filter @gpuixui/primitives test

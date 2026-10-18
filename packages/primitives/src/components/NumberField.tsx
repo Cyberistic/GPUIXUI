@@ -45,16 +45,19 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
 import type { FieldState } from "./Input.js";
 import {
+  composeHandler,
   mergeStyle,
+  passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-export interface NumberFieldProps {
+export interface NumberFieldProps extends TriggerHandlers {
   /** Controlled value. Omit to let the field hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -79,6 +82,12 @@ export interface NumberFieldProps {
   readonly invalid?: boolean;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
+  /**
+   * Extra description announced after the name. A slot (a `Tooltip`) writes the
+   * tip here. The inner text host receives no `onMouseEnter` in 0.10.0, so the
+   * tip opens on keyboard focus only (plan `345`).
+   */
+  readonly "aria-description"?: string;
   readonly placeholder?: string;
   readonly autoFocus?: boolean;
   /** Overrides the display text; the value still parses with `core/number.ts`. */
@@ -167,6 +176,7 @@ export const renderNumberField = (
   return (
     <div testId={props.testId} style={chrome}>
       <input
+        {...passiveTriggerHandlers(props)}
         ref={handlers.registerInput}
         value={text}
         placeholder={props.placeholder}
@@ -175,27 +185,33 @@ export const renderNumberField = (
         tabIndex={disabled ? -1 : undefined}
         theme={nativeTextTheme(theme)}
         aria-label={props.label}
+        aria-description={props["aria-description"]}
         style={numberInputStyle()}
         onChange={(event: EventPayload) => {
           if (disabled) return;
           handlers.onTextChange(event.value ?? "");
         }}
         onKeyDown={(event: EventPayload) => {
-          if (disabled) return;
+          if (disabled) {
+            props.onKeyDown?.(event);
+            return;
+          }
           Option.match(decideNumberKey(state.current, range, event.key ?? ""), {
             onNone: () => {},
             onSome: handlers.onValue,
           });
+          props.onKeyDown?.(event);
         }}
         onSubmit={(event: EventPayload) => {
           if (disabled) return;
           handlers.onCommit();
           props.onSubmit?.(event);
         }}
-        onFocus={focus.onFocus}
-        onBlur={() => {
+        onFocus={composeHandler(focus.onFocus, props.onFocus)}
+        onBlur={(event: EventPayload) => {
           focus.onBlur();
           handlers.onCommit();
+          props.onBlur?.(event);
         }}
       />
       <div style={numberStepperColumnStyle(theme)}>

@@ -52,11 +52,13 @@ import {
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  composeHandler,
   resolvePartStyle,
   useControlState,
   useFocus,
   type FocusState,
   type StateStyle,
+  type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -85,7 +87,7 @@ export interface RangeSliderThumbState extends SliderThumbState {
 }
 
 /** A single value on a track. */
-export interface SliderProps {
+export interface SliderProps extends TriggerHandlers {
   /** Controlled value. Omit to let the slider hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
@@ -105,6 +107,8 @@ export interface SliderProps {
   readonly label?: string;
   /** How the value is announced. Defaults to `String(value)`. */
   readonly formatValue?: (value: number) => string;
+  /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
+  readonly "aria-description"?: string;
   /** An object, or a callback over the slider's public state. */
   readonly style?: StateStyle<SliderState>;
   /** An object, or a callback over the thumb's own state. Merged last. */
@@ -180,21 +184,39 @@ export const renderSlider = (
       ref={handlers.registerTrack}
       role="slider"
       aria-label={props.label}
+      aria-description={props["aria-description"]}
       aria-valuetext={sliderValueText(value, props.formatValue)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}
-      onMouseDown={handlers.onPointerDown}
-      onMouseMove={handlers.onPointerMove}
-      onMouseUp={handlers.onPointerUp}
-      onKeyDown={(event) => {
-        if (props.disabled === true) return;
-        Option.match(decideValueKey(value, range, event.key ?? ""), {
-          onNone: () => {},
-          onSome: handlers.onValueChange,
-        });
+      onMouseEnter={props.onMouseEnter}
+      onMouseLeave={props.onMouseLeave}
+      onMouseDown={(event) => {
+        props.onMouseDown?.(event);
+        handlers.onPointerDown(event);
       }}
-      onFocus={focus.onFocus}
-      onBlur={focus.onBlur}
+      onMouseMove={(event) => {
+        props.onMouseMove?.(event);
+        handlers.onPointerMove(event);
+      }}
+      onMouseUp={(event) => {
+        props.onMouseUp?.(event);
+        handlers.onPointerUp();
+      }}
+      onMouseDownOutside={props.onMouseDownOutside}
+      onAuxClick={props.onAuxClick}
+      onScroll={props.onScroll}
+      onKeyDown={(event) => {
+        if (props.disabled !== true) {
+          Option.match(decideValueKey(value, range, event.key ?? ""), {
+            onNone: () => {},
+            onSome: handlers.onValueChange,
+          });
+        }
+        props.onKeyDown?.(event);
+      }}
+      onKeyUp={props.onKeyUp}
+      onFocus={composeHandler(focus.onFocus, props.onFocus)}
+      onBlur={composeHandler(focus.onBlur, props.onBlur)}
       style={resolvePartStyle(sliderTrackStyle(spec, theme), props.style, {
         disabled: props.disabled === true,
         invalid: props.invalid === true,

@@ -43,6 +43,7 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
+| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<CheckboxState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
@@ -70,6 +71,8 @@ clearing.
   associated** — GPUix has no `aria-labelledby` and a sibling `<text>` is not
   part of the interactive element. Use `CheckboxGroup` when a clickable labelled
   row is needed.
+- **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
+  tip opens on hover and on keyboard focus.
 
 ## Theming
 

@@ -44,6 +44,7 @@ Omit `value` to let the slider own its state (`defaultValue` sets the start).
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name |
 | `formatValue` | `(value: number) => string` | `String` | the announced text |
+| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<SliderState>` | — | merged last, on the track; an object or a state callback |
 | `thumbStyle` | `StateStyle<SliderThumbState>` | — | merged last on the thumb; an object or a state callback |
 | `testId` | `string` | — | names the track; the thumb becomes `${testId}-thumb` |
@@ -75,6 +76,10 @@ slider is a single tab stop, and the focus ring is painted on the thumb.
   when the number alone is ambiguous (`"62%"`, `"$40"`).
 - A disabled slider has no tab stop, so it is skipped rather than announced as
   a control that cannot be used.
+- **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
+  tip opens on hover and on keyboard focus. The track is always 100 % wide, so a
+  `Tooltip` around it needs `style={{ width: … }}` on the tooltip root — the root
+  otherwise hugs and the slider collapses (measured, plan `345`).
 
 ## Theming
 
