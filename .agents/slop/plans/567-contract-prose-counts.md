@@ -30,6 +30,8 @@ Measured on the branch (2026-10-19), with whitespace normalised:
 | `docs/design-system.md:668` | `all six checks returned \`[]\`` | stale |
 | `docs/tokens.md:2331` | `one of the seven checks` | correct number, no owner |
 | `docs/tokens.md:2356` | `the three format checks first` | correct number, no owner |
+| `docs/tokens.md:1734` | `runs all seven in one call` | correct number, no owner |
+| `docs/tokens.md:2340` | `composes all seven and tags` | correct number, no owner |
 | `docs/tokens.md:2836` | `eight shipped sets move` | correct subset, retyped total noun |
 | `docs/tokens.md:2657` | `four shipped sets had …` | correct subset, retyped total noun |
 | `docs/tokens.md:2977` | `twelve of the twenty-four shipped sets` | total retyped |
@@ -75,7 +77,9 @@ One owner per count, and prose may not restate either total.
 1. **Checks:** the only spoken count is the derived sentence
    `The guarantee is <countWord(themeChecks.length)> checks — …`, which
    `docs.test.ts` already holds verbatim. Every other mention is count-free
-   ("every check", "those checks", "the format checks").
+   ("every check", "those checks", "the format checks", "all of them"). The
+   README keeps its own derived sentences (`one of ${count} checks`,
+   `composes all ${count}`), which `readme.test.ts` already holds.
 2. **Shipped sets:** the two documents never state the total. Subset claims say
    "eight sets", not "eight shipped sets"; the README keeps the one derived
    total (`readme.test.ts`).
@@ -105,6 +109,8 @@ Replace each stale count with count-free prose (keep line wrapping tidy):
 | 1915 | `while all six checks returned \`[]\`` | `while every check returned \`[]\`` |
 | 2331 | `Running one of the seven checks is not the guarantee.` | `Running one of those checks is not the guarantee.` |
 | 2356 | `The order is diagnostic: the three format checks first` | `The order is diagnostic: the format checks first` |
+| 1734 | `runs all seven in one call` | `runs all of them in one call` |
+| 2340 | `composes all seven and tags` | `composes all of them and tags` |
 | 2938 | `while all six checks` | `while every check` |
 | 2948 | `while all six checks returned \`[]\`` | `while every check returned \`[]\`` |
 | 2657 | `four\nshipped sets had` | `four\nsets had` |
@@ -144,16 +150,24 @@ describe("contract prose counts", () => {
   // A count is owned by an index: `themeChecks` for the guarantee's size,
   // `shippedThemes` for the enumeration it runs over. Anything else in these
   // two documents is a hand-typed copy that can drift.
-  const checkCount =
-    /\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|\d+)\s+(?:format\s+)?checks?\b/;
-  const shippedSetCount =
-    /\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|twenty-one|twenty-two|twenty-three|twenty-four|twenty-five|\d+)\s+shipped sets\b/;
+  const numbers =
+    "zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|twenty-one|twenty-two|twenty-three|twenty-four|twenty-five|\\d+";
+  const checkCount = new RegExp(
+    `\\b(?:${numbers})\\s+(?:format\\s+)?checks?\\b`,
+  );
+  const shippedSetCount = new RegExp(`\\b(?:${numbers})\\s+shipped sets\\b`);
+  // "runs all seven in one call" is the count again, one verb away.
+  const allChecks = new RegExp(
+    `\\ball (?:${numbers})\\b(?= (?:in one call|and tags))`,
+  );
 
   it("states the guarantee's size only from the index", () => {
     const guarantee = `The guarantee is ${countWord(themeChecks.length)} checks — `;
     expect(markdownProse).toContain(guarantee);
     [markdownProse, designSystem].forEach((document) => {
-      expect(document.split(guarantee).join("")).not.toMatch(checkCount);
+      const prose = document.split(guarantee).join("");
+      expect(prose).not.toMatch(checkCount);
+      expect(prose).not.toMatch(allChecks);
     });
   });
 
@@ -168,6 +182,8 @@ describe("contract prose counts", () => {
     expect(checkCount.test("while every check returned")).toBe(false);
     expect(shippedSetCount.test("All 24 shipped sets are hex")).toBe(true);
     expect(shippedSetCount.test("Every shipped set is hex")).toBe(false);
+    expect(allChecks.test("composes all seven and tags")).toBe(true);
+    expect(allChecks.test("composes all of them and tags")).toBe(false);
   });
 });
 ```

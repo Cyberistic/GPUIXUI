@@ -2074,12 +2074,18 @@ describe("contract prose counts", () => {
     `\\b(?:${numbers})\\s+(?:format\\s+)?checks?\\b`,
   );
   const shippedSetCount = new RegExp(`\\b(?:${numbers})\\s+shipped sets\\b`);
+  // "runs all seven in one call" is the count again, one verb away.
+  const allChecks = new RegExp(
+    `\\ball (?:${numbers})\\b(?= (?:in one call|and tags))`,
+  );
 
   it("states the guarantee's size only from the index", () => {
     const guarantee = `The guarantee is ${countWord(themeChecks.length)} checks — `;
     expect(markdownProse).toContain(guarantee);
     [markdownProse, designSystem].forEach((document) => {
-      expect(document.split(guarantee).join("")).not.toMatch(checkCount);
+      const prose = document.split(guarantee).join("");
+      expect(prose).not.toMatch(checkCount);
+      expect(prose).not.toMatch(allChecks);
     });
   });
 
@@ -2094,6 +2100,8 @@ describe("contract prose counts", () => {
     expect(checkCount.test("while every check returned")).toBe(false);
     expect(shippedSetCount.test("All 24 shipped sets are hex")).toBe(true);
     expect(shippedSetCount.test("Every shipped set is hex")).toBe(false);
+    expect(allChecks.test("composes all seven and tags")).toBe(true);
+    expect(allChecks.test("composes all of them and tags")).toBe(false);
   });
 });
 

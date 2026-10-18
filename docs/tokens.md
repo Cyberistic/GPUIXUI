@@ -1731,7 +1731,7 @@ An edited theme — a copied platform style or a brand palette — can be held t
 the same floors as the shipped ones. The guarantee is seven checks — colour
 format, role opacity, typeface form, contrast, text hierarchy, interaction
 direction and numeric metrics — and
-[`themeFailures`](#one-check) runs all seven in one call; the sections below
+[`themeFailures`](#one-check) runs all of them in one call; the sections below
 explain each one it composes.
 
 ```ts
@@ -2337,7 +2337,7 @@ every elevation level fully opaque, a translucent `shadow` tint whose byte
 stack, which silently paints the system face, a `disabledForeground` raised
 to body strength or a light pointer ladder that lightens on hover returns `[]`
 from `themeContrastFailures` while being unusable.
-`themeFailures(theme, contrast = theme.contrast)` composes all seven and tags
+`themeFailures(theme, contrast = theme.contrast)` composes all of them and tags
 each entry with the check that found it:
 
 ```ts
