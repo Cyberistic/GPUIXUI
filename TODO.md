@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 95/95
+`[x]` `[██████████]` 96/96
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -775,6 +775,15 @@ retired once both branches are one
       is closed, and `disableHoverableContent` is exposed. 6 runtime + 2 element
       tests; dropping `open`, `onOpenChange`, `disableHoverableContent` or the
       measurement each fail by name (plan `347`).
+`[x]` `packages/primitives` + `packages/icons`: **both manifests hid their
+      runtime `effect` import** — `core/selection.ts` maps with `effect/Array`
+      and `registry.ts` builds the icon set with `effect/Record`, but `effect`
+      was declared only in `devDependencies`, so an installed consumer got no
+      `effect` and the first import failed (the docs-site workstream found the
+      primitives half while deriving dependency lists, plan 428). `effect` is now
+      a `dependency` of both, and `src/package-manifest.test.ts` scans every
+      shipped import of both packages and fails by package, module and file;
+      three mutation directions proven, offline 573 tests (plan `348`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

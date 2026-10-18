@@ -196,6 +196,9 @@ importers:
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.5
     devDependencies:
       '@gpuix/react':
         specifier: 'catalog:'
@@ -206,9 +209,6 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.5
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -227,6 +227,9 @@ importers:
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.5
     devDependencies:
       '@effect/platform-node':
         specifier: 'catalog:'
@@ -240,9 +243,6 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.5
       react:
         specifier: 'catalog:'
         version: 19.3.1

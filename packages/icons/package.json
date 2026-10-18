@@ -15,7 +15,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@gpuixui/tokens": "workspace:*"
+    "@gpuixui/tokens": "workspace:*",
+    "effect": "catalog:"
   },
   "peerDependencies": {
     "@gpuix/react": "catalog:",
@@ -25,7 +26,6 @@
     "@gpuix/react": "catalog:",
     "@gpuixui/config": "workspace:*",
     "@types/react": "catalog:",
-    "effect": "catalog:",
     "react": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
