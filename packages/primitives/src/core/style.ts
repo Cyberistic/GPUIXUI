@@ -123,6 +123,9 @@ export const controlStyle = (
     paddingLeft: padding,
     paddingRight: padding,
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
+    // A control's label is chrome, not content: the runtime's root default is
+    // selectable and only an explicit `"none"` opts out (measured, plan `386`).
+    userSelect: "none",
   };
 
   if (spec.disabled === true) {

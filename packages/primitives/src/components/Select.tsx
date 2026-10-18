@@ -197,7 +197,9 @@ export interface SelectTriggerSpec {
  * The field recipe is `w-full` (a browser form default); a select hugs its
  * value unless the consumer asks the root for `fullWidth`, so the trigger
  * clears that one property. The list's rows keep their own metrics — they are
- * not input fields (plan `372`).
+ * not input fields (plan `372`). The recipe's text cursor and selectable text
+ * belong to a native `<input>`, so the trigger overrides both: it is chrome
+ * (plan `386`).
  */
 export const selectTriggerStyle =
   (
@@ -216,6 +218,12 @@ export const selectTriggerStyle =
     ...fieldRowStyle,
     width: spec.fullWidth === true ? "100%" : undefined,
     justifyContent: "space-between",
+    // The field paint is written for a native `<input>`, so it declares a text
+    // cursor and selectable text. A select is button-shaped chrome: it takes a
+    // pointer click, and its value must not be dragged out of it (measured,
+    // plan `386`).
+    userSelect: "none",
+    cursor: state.disabled ? "not-allowed" : "pointer",
   });
 
 /** The trigger's paint with a caller's contribution merged last. */
@@ -302,6 +310,9 @@ export const selectItemStyle =
             ? theme.colors.hover
             : undefined,
     cursor: state.disabled === true ? "not-allowed" : "pointer",
+    // An option is chrome: a drag across the list must not start a text
+    // selection (measured, plan `386`).
+    userSelect: "none",
   });
 
 /**
@@ -326,6 +337,8 @@ export const selectHeadingStyle = (theme: PrimitiveTheme): StyleDesc => ({
   overflow: "hidden",
   whiteSpace: "nowrap",
   textOverflow: "ellipsis",
+  // A group caption is chrome, not content (plan `386`).
+  userSelect: "none",
 });
 
 /**

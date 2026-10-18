@@ -143,6 +143,15 @@ describe("controlStyle", () => {
     expect(style.active?.backgroundColor).toBe(style.backgroundColor);
   });
 
+  it("keeps the label out of a text selection, enabled or disabled", () => {
+    // Plan 386: the runtime's root is selectable and only an explicit `none`
+    // opts out, so a drag across a toggle used to select its label.
+    expect(controlStyle(spec(), testTheme).userSelect).toBe("none");
+    expect(controlStyle(spec({ disabled: true }), testTheme).userSelect).toBe(
+      "none",
+    );
+  });
+
   it("switches the border and the ring to the destructive role when invalid", () => {
     expect(controlStyle(spec({ invalid: true }), testTheme).borderColor).toBe(
       testTheme.colors.destructive,

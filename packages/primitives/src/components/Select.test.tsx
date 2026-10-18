@@ -113,6 +113,25 @@ describe("Select", () => {
     expect(trigger.borderColor).toBe(testTheme.colors.destructive);
   });
 
+  it("is chrome: a pointer cursor and no text selection", () => {
+    // The bug guarded (plan 386): the trigger wore the field recipe's text
+    // cursor and selectable text, so a drag across a select highlighted its
+    // value, and the open list's options and headings were selectable too.
+    const paint = selectTriggerStyle({}, testTheme);
+    const resting = {
+      open: false,
+      disabled: false,
+      placeholder: false,
+      focused: false,
+    };
+    expect(paint(resting).userSelect).toBe("none");
+    expect(paint(resting).cursor).toBe("pointer");
+    expect(paint({ ...resting, disabled: true }).userSelect).toBe("none");
+    expect(paint({ ...resting, disabled: true }).cursor).toBe("not-allowed");
+    expect(selectItemStyle(testTheme)(rest).userSelect).toBe("none");
+    expect(selectHeadingStyle(testTheme).userSelect).toBe("none");
+  });
+
   it("rings the trigger with the field recipe while it holds focus or its list is open", () => {
     // The bug guarded (plan 083): the trigger took native focus and painted no
     // ring, so a keyboard user could not see which control they were on. Since

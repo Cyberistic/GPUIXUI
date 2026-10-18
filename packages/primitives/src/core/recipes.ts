@@ -242,10 +242,12 @@ export const buttonRecipeStyle = (
     ].join(" "),
     theme,
   );
-  const base = mergeTwStyle(
-    recipe.style,
-    variantPaint(buttonVariants[variant], theme, disabled === true),
-  );
+  const base = mergeTwStyle(recipe.style, {
+    ...variantPaint(buttonVariants[variant], theme, disabled === true),
+    // A button's label is chrome: the runtime's root default is selectable
+    // and only an explicit `"none"` opts out (measured, plan `386`).
+    userSelect: "none" as const,
+  });
   const resolved =
     radius === undefined
       ? base

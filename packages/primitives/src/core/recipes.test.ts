@@ -268,6 +268,13 @@ describe("the Button recipe", () => {
     expect(disabled.cursor).toBe("not-allowed");
   });
 
+  it("keeps the label out of a text selection", () => {
+    // Plan 386: the runtime's root is selectable, so chrome has to opt out.
+    expect(chrome("primary", "md").userSelect).toBe("none");
+    expect(chrome("primary", "sm", { square: true }).userSelect).toBe("none");
+    expect(chrome("primary", "md", { disabled: true }).userSelect).toBe("none");
+  });
+
   it("lets an explicit radius and full width win over the recipe", () => {
     expect(chrome("primary", "md", { radius: "lg" }).borderRadius).toBe(
       testTheme.radius.lg,
