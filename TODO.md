@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 171/227
+`[x]` `[███████░░░]` 172/228
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1343,6 +1343,16 @@ level's geometry while the AAA opacity stays with its tint, so a dark
 platform's 0.4–0.8 never paints a near-white halo over the light AAA set. Every
 shipped set passes (1.061:1 identity dark at the tightest); the AAA dark set
 moves from 1.000:1 to 1.207:1 and the branch's three gates are green (plan 505)
+`[x]` Hold a selected row's title through the text-selection wash — plan `312`
+established that `ListItemTitle` paints `foreground` on `selected` while the
+inherited label keeps `selectedForeground`, but only the second was measured
+through the wash, so identity dark **6.480:1**, Linux dark 6.648:1 and the
+Windows palette 6.908:1 sat under the 7:1 body floor while the checker returned
+`[]`; `selectionPairs` gains `foreground` on `selected` (19 → 20), the identity
+wash moves to 14%, the Windows/XP/Aero wash to 33% (its soft `destructiveSoft`
+highlight still clears 1.071:1) and Linux dark's selected fill one step to
+`#27476A`, so the titles measure 7.144 / 7.389 / 7.164:1 with every wash
+perceivable and no light or high-contrast value moving (plan 506)
 
 ## Phase C — Tier 1–2 components
 

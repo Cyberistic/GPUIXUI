@@ -248,7 +248,7 @@ A runnable example lives in
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
 | `placeholder` | `#66707F` | `#858F9F` | a hint the consumer renders on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
-| `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
+| `selection` | `#7567F23D` | `#A7A9FF24` | text selection wash (24% light, 14% dark; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
@@ -1198,12 +1198,14 @@ import { selectionStyle } from "@gpuixui/tokens";
 Both selection properties inherit down the tree, so an application sets the wash
 once on its root; chrome that must not be selectable — a toolbar, a tab strip,
 window controls — sets `userSelect: "none"` on its own subtree. The wash is
-translucent (24% in the light default theme, 20% in dark and 30% at high
+translucent (24% in the light default theme, 14% in dark and 30% at high
 contrast), so selected text keeps the body contrast on every surface a glyph can
 be selected on: `background`, `card`, `muted`, `hover`, `active` and `accent`
 with `foreground`; `popover` with `popoverForeground`; `input` with
-`inputForeground`; and `selected` with `selectedForeground` at the secondary
-floor; a soft status surface carries its own tone with `xSoftForeground`, its
+`inputForeground`; and `selected` with both of the roles a selected row
+paints — its title `foreground` at the body floor and its inherited label
+`selectedForeground` at the secondary floor; a soft status surface carries its
+own tone with `xSoftForeground`, its
 description with `foreground` and its caption with `mutedForeground`. A card
 carries two text roles — the default `foreground` a `CardTitle` paints and its
 own `cardForeground`, which a context menu trigger sets on its `card` fill — so
@@ -1217,7 +1219,7 @@ roles a status panel carries — the tone's `xSoftForeground`, the body
 `mutedForeground` — through the wash, and `selectionSoftWashPairs` the wash's
 own perceivability, so a selected Alert or Badge keeps its body and
 secondary floors and still shows the highlight. Every shipped set passes: the
-identity dark body on `infoSoft` is **7.26:1** at the tightest and Aero light's
+identity dark body on `infoSoft` is **8.14:1** at the tightest and Aero light's
 caption on `destructiveSoft` **4.78:1**, so no colour moves. Status text is held
 through the same wash on the same nine surfaces (`selectionStatusPairs`), because
 `xText` is the role plan 083 gave a status label, icon or dot in a row and a
@@ -1237,10 +1239,16 @@ wash over `destructiveSoft` measured 1.005:1 — an invisible highlight. The fou
 light soft foregrounds moved one family step darker, the dark ones one step
 lighter with a 20% identity wash, Windows dark's wash moved to 40%, and Linux
 dark's soft destructive fill moved to `#3A0B0D` so its light-accent wash stays
-visible. `selectionSurfaces` is the list of plain surfaces, `selectionPairs`
-holds their body and secondary text pairs, and `selectionWashPairs` holds the
-wash itself to the 1.05:1 perceivability floor on each surface, so a highlight
-that is technically readable but invisible fails the check too.
+visible. Plan `506` later lowered the identity wash to 14% and the Windows one
+to 33% so a selected row's title keeps 7:1 through it, and darkened Linux
+dark's selected fill one step (`#2B4F76` → `#27476A`) because its wash had no
+alpha window left. `selectionSurfaces` is the list of plain surfaces,
+`selectionPairs` holds each surface's body and secondary text pairs, a card's
+second text role
+(`cardForeground` beside `foreground`) and a selected row's title (`foreground`)
+beside its inherited label, and `selectionWashPairs` holds the wash itself to the
+1.05:1 perceivability floor on each surface, so a highlight that is technically
+readable but invisible fails the check too.
 
 ```tsx
 import { selectionStyle } from "@gpuixui/tokens";
@@ -1517,10 +1525,13 @@ pair class, the floor and the measured ratio. The selection wash is measured as
 it paints, with both text roles each surface carries: the body role over
 `compositeOver(selection, background)`, `card`, `muted`, `hover`, `active` and
 `accent`; `popoverForeground` over `popover`; `inputForeground` over `input`; and
-`selectedForeground` over `selected`; and `mutedForeground` on all nine surfaces
+`selectedForeground` beside the row's title `foreground` over `selected`, at the
+secondary and body floors; and `mutedForeground` on all nine surfaces
 at the secondary floor — reported with `wash: "selection"`. `selectionPairs` is
 the text list; it names both of a card's text roles, the default `foreground` and
-`cardForeground`. The four status labels join it through `selectionStatusPairs`,
+`cardForeground`, and both of a selected row's, the title `foreground` and the
+inherited `selectedForeground`. The four status labels join it through
+`selectionStatusPairs`,
 because `xText` is the role a status label, icon or dot paints on the four washes
 a row uses, and a selectable row's label is dragged over with the copy around
 it. An Alert or Badge is measured the same way:
@@ -2177,7 +2188,7 @@ ship as an unreadable link: the audit found macOS light at 4.21:1 on its
 canvas and 3.44:1 on the pressed wash, macOS dark at 2.84:1 on `active`, and
 high-contrast dark at 6.94:1 under its 7:1 floor. The two row fills were added
 by plan `314`; the tightest shipped pair is `primaryText` on `selected` at
-**4.53:1** (Linux dark), and the soft fills are tightest at
+**4.58:1** (macOS dark), and the soft fills are tightest at
 `primaryText` on `destructiveSoft` at **5.26:1** (Windows light), so no value
 moves.
 Every platform variant is checked on its own canvas, not the identity's, so a
@@ -2247,8 +2258,8 @@ fills — and a selected row under the pointer keeps its inherited
 secondary floor, matching `selectedForeground` on `selected`. The `accent` fill
 is the one a selectable `ListItem` paints on hover, so it is a composition the
 list API invites, not a spare surface. The tightest shipped values are
-`foreground` on `selected` at **7.47:1** (Linux dark),
-`popoverForeground` on `selected` at **7.95:1** (Linux dark),
+`foreground` on `selected` at **8.44:1** (Linux dark),
+`popoverForeground` on `selected` at **8.98:1** (Linux dark),
 `selectedForeground` on `active` at **6.22:1** (macOS light) and
 `selectedForeground` on `accent` at **6.93:1** (macOS light), so no colour moves.
 A text field's edge is `border` on its own `input` fill, measured at the divider
@@ -2304,12 +2315,14 @@ perceivable step from `hover`, the ghost and outline press — taking it from 33
 to **338**. Plan `362` adds a status panel's body (`foreground`) and caption
 (`mutedForeground`) to `selectionSoftPairs`, beside the plain `contrastPairs`
 list — the soft list grows from 4 to **12** and the plain count stays **338**;
-the tightest new pairs are **7.26:1** (identity dark, `infoSoft`) and
-**4.78:1** (Aero light, `destructiveSoft`), so no colour moves. Plan `363` adds
+the tightest new pairs were **7.26:1** (identity dark, `infoSoft`) and
+**4.78:1** (Aero light, `destructiveSoft`); plan `506`'s weaker identity wash
+lifts the body figure to **8.14:1**, so no colour moves. Plan `363` adds
 the card's own `cardForeground` to `selectionPairs` (18 → 19) beside the default
 `foreground`, because the two are apart in both Windows recipes and only the
 default role was measured through the wash; Windows dark is the tightest at
-**9.07:1**, so no colour moves and the plain `contrastPairs` count stays **338**.
+**9.65:1** after plan `506` weakened its wash (9.07:1 before), so no colour
+moves and the plain `contrastPairs` count stays **338**.
 Plan `366` adds the four status text roles through the selection wash on the
 nine surfaces — `selectionStatusPairs`, 36 pairs — because `xText` is the role a
 status label in a selectable row paints and the label is dragged over with the
@@ -2575,14 +2588,14 @@ way: `selectionSoftPairs` holds the tone's `xSoftForeground`, the body
 and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 `successSoftForeground` measured 5.83:1 and Windows dark's wash over
 `destructiveSoft` 1.005:1 (plan `091`). Every shipped set clears the two roles
-added in plan `362` — the identity dark body on `infoSoft` at **7.26:1** and Aero
+added in plan `362` — the identity dark body on `infoSoft` at **8.14:1** and Aero
 light's caption on `destructiveSoft` at **4.78:1** at the tightest — so a status
 panel now keeps its description and its caption selected on any platform, and
 accent-toned text stays the documented omission. The card's own
 `cardForeground` is measured beside the default `foreground` (plan `363`), so a
 theme whose card text is readable at rest cannot lose it under the wash — the
 two roles are already apart in both Windows recipes, and Windows dark is the
-tightest at **9.07:1**, so no colour moves.
+tightest at **9.65:1**, so no colour moves.
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
 over `background`, `card`, `muted`, `input`, `selected`, `popover`, the

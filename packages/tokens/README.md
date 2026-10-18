@@ -344,7 +344,9 @@ status roles one half-step, and the AAA tightest is 7.370:1 (identity light high
 wash itself to 1.05:1 against each surface, so a highlight cannot be made
 invisible to satisfy a text floor. A card's own `cardForeground` is measured
 beside the default `foreground`, because both Windows recipes ship the two apart
-(plan 363). High-contrast dark shipped at 6.48:1 on `hover`
+(plan 363), and a selected row's title (`foreground`) is measured beside its
+inherited `selectedForeground`, because the title is the brighter of the two
+roles (plan 506). High-contrast dark shipped at 6.48:1 on `hover`
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
 `active`, until plan 081 darkened the three wash bases. An Alert or Badge
 is measured the same way: the tone's `xSoftForeground` is held to the body floor
@@ -353,7 +355,9 @@ found identity light `successSoftForeground` at 5.83:1 through the wash and
 Windows dark's wash over `destructiveSoft` at 1.005:1 — an invisible highlight —
 so the four light soft foregrounds moved one family step darker, the dark ones
 one step lighter with a 20% identity wash, Windows dark's wash moved to 40%, and
-Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091). The panel's
+Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091); plan 506 later
+lowered the identity wash to 14% and the Windows one to 33% so a selected row's
+title keeps 7:1 through it, and darkened Linux dark's selected fill one step. The panel's
 description and caption are measured through the same wash — `foreground` at the
 body floor and `mutedForeground` at the secondary floor on each soft fill,
 because an Alert's body and caption are selected with it (plan 362);
