@@ -288,7 +288,7 @@ describe("themeContrastFailures", () => {
     const plain = failures.filter(({ wash }) => wash === undefined);
     const selected = failures.filter(({ wash }) => wash === "selection");
 
-    expect(plain).toHaveLength(13);
+    expect(plain).toHaveLength(14);
     expect(selected).toHaveLength(9);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
@@ -310,11 +310,14 @@ describe("themeContrastFailures", () => {
         "destructiveSoft",
         "successSoft",
         "warningSoft",
+        "track",
       ].toSorted(),
     );
     expect(
-      failures.every(
-        ({ pairClass, floor }) => pairClass === "secondary" && floor === 4.5,
+      failures.every(({ background, pairClass, floor }) =>
+        background === "track"
+          ? pairClass === "mark" && floor === 3
+          : pairClass === "secondary" && floor === 4.5,
       ),
     ).toBe(true);
     expect(failures.every(({ ratio }) => ratio < 4.5)).toBe(true);
@@ -386,7 +389,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(323);
+    expect(contrastPairs.length).toBe(333);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(stateStepPairs).toHaveLength(8);
     expect(new Set(stateStepPairs).size).toBe(8);

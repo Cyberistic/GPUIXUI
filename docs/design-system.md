@@ -93,7 +93,7 @@ Dark mode is designed, not inverted:
 | destructive | `#CC3439`, white text | `#FF6B6B`, near-black red text |
 | shadow | graphite tint | black tint |
 
-Both themes expose exactly the same 65 roles; the type system and the colour
+Both themes expose exactly the same 66 roles; the type system and the colour
 test enforce it. On-colour text switches with the surface — primary text is not
 always white. Warning is amber in both modes with near-black text because white
 on amber cannot reach 4.5:1.
@@ -346,6 +346,12 @@ A row's metadata keeps its `mutedForeground` role on every wash the row paints �
 `hover` and `active` for pointer state, `accent` where a selectable row hovers,
 and `selected` when it is selected. That is why the secondary floor covers the
 washes, not only the plain surfaces: a description is read while the row moves.
+A value indicator's unfilled groove is `track`, not `muted`: identity dark's
+`muted` equals its `popover` and every platform dark style's equals its card, so
+a track painted with it vanished on the surface it sat on — and an indeterminate
+progress bar, which is only its track, painted nothing at all. The role is
+measured on the four base surfaces and the persistent `accent`/`selected` row
+fills, and its four progress fills are marks against it (plan `347`).
 A bordered control keeps its `border` edge on the fill it paints, so the divider
 floor covers `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`,
 `accent`, `accentHover` and `accentActive`; a state fill never takes the

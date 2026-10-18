@@ -63,6 +63,7 @@ export const macosPlatformStyle = {
       selected: "#D9EAFD",
       selectedForeground: "#0055B3",
       placeholder: "#6E6E73",
+      track: "#DADADF",
       shadow: "#000000",
     },
     dark: {
@@ -78,6 +79,7 @@ export const macosPlatformStyle = {
       hover: "#3A3A3C",
       active: "#404042",
       skeleton: "#525254",
+      track: "#242426",
       secondary: "#3A3A3C",
       secondaryForeground: "#F5F5F7",
       secondaryHover: "#434345",

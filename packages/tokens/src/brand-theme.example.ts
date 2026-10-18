@@ -10,6 +10,11 @@ import { createTheme, darkTheme } from "./index.js";
  * base theme's hue running the states, and the inherited dark foreground
  * measured 4.243:1 on this fill — under the floor the package teaches (plans
  * 082, 097 and 098).
+ *
+ * The groove moves with it too (plan 347). A progress segment paints `primary`
+ * on `track`, so a brand that lightens its primary in dark mode needs a groove
+ * dark enough to keep the mark at 3:1; the identity groove leaves this fill at
+ * 2.67:1. `#2A2A3A` is the brand's own neutral step.
  */
 export const brandTheme = createTheme({
   mode: "dark",
@@ -21,6 +26,7 @@ export const brandTheme = createTheme({
     primaryActive: "#A28CFF",
     primaryText: "#C9BDFF",
     ring: "#9B8CFF",
+    track: "#2A2A3A",
   },
   radius: { md: 8 },
   density: "compact",

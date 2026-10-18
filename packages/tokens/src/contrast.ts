@@ -97,6 +97,43 @@ const surfacePairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The surfaces a value indicator's unfilled groove sits on. A progress bar,
+ * meter or slider rail can be placed on the four base surfaces, a selectable
+ * row's persistent `accent` fill and a selected row's `selected` fill. The
+ * momentary `hover`/`active` washes are deliberately absent: the filled part of
+ * the indicator still carries the value while the pointer is down, and the XP
+ * light palette has no track that clears both the 1.05:1 wash floor and the
+ * 3:1 mark floor at once.
+ */
+const trackSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+  "accent",
+  "selected",
+] as const;
+
+/** The track measured against every surface it is painted on. */
+export const trackSurfacePairs: readonly ContrastPair[] = trackSurfaces.map(
+  (background): ContrastPair => ["track", background, "surface"],
+);
+
+/**
+ * The filled part of a value indicator is a mark, not a wash: a progress
+ * segment that matches its groove is a bar with no value. The four
+ * `PROGRESS_TONES` in `primitives` are `primary`, `success`, `destructive` and
+ * `muted` (which paints `mutedForeground`), so all four are held to the mark
+ * floor on the track.
+ */
+export const trackMarkPairs: readonly ContrastPair[] = [
+  ["primary", "track", "mark"],
+  ["success", "track", "mark"],
+  ["destructive", "track", "mark"],
+  ["mutedForeground", "track", "mark"],
+];
+
+/**
  * The designed edge around each soft status surface. It is a decorative border
  * on its own fill, so the divider floor applies: 1.05:1 by default and 3:1 at
  * high contrast, where the 30% mixture it replaced measured 1.12:1.
@@ -656,6 +693,12 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * at AAA. The solid status roles are deliberately absent from that list: a
  * status indicator is `xText`, which the status pairs already measure, because
  * the light `warning` fill is 1.78:1 on the canvas.
+ *
+ * The unfilled groove of a progress bar, meter or slider rail is `track`: a
+ * surface role cannot carry it, because the quiet panel is the same value as the
+ * card in every platform dark style. Its surface pairs and the four fills
+ * painted on it (`trackSurfacePairs`, `trackMarkPairs`) keep an indeterminate
+ * progress bar visible on a dark card and give a slider's unfilled span a shape.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ...bodyTextPairs,
@@ -720,6 +763,8 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...secondaryTextPairs,
   ...fieldSecondaryPairs,
   ...surfacePairs,
+  ...trackSurfacePairs,
+  ...trackMarkPairs,
   ...softBorderPairs,
   ...softBorderSurfacePairs,
   ...softDividerPairs,

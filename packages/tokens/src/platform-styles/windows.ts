@@ -61,6 +61,7 @@ export const windowsPlatformStyle = {
       selected: "#CCE8FF",
       selectedForeground: "#003A6B",
       placeholder: "#6B6B6B",
+      track: "#D8D8D8",
       shadow: "#000000",
     },
     dark: {
@@ -76,6 +77,7 @@ export const windowsPlatformStyle = {
       hover: "#383838",
       active: "#454545",
       skeleton: "#525252",
+      track: "#262626",
       secondary: "#383838",
       secondaryForeground: "#FFFFFF",
       secondaryHover: "#424242",

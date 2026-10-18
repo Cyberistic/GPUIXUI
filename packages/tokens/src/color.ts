@@ -227,6 +227,13 @@ export interface ThemeColors {
   /** Loading placeholder, held to the perceivability floor on every surface and row wash it fills. */
   readonly skeleton: string;
   /**
+   * The unfilled groove of a value indicator — a progress bar, meter or slider
+   * rail. A surface role cannot carry this: the quiet panel is the same value
+   * as the card in every platform dark style, so a track painted with `muted`
+   * disappears on the surface it sits on.
+   */
+  readonly track: string;
+  /**
    * Scrollbar thumb tint. Reserved in GPUix 0.10.0: the platform paints the
    * scrollbar and exposes no tint.
    */
@@ -320,6 +327,7 @@ export const lightColors = {
   disabled: palette.neutral[100],
   disabledForeground: "#6E7787",
   skeleton: palette.neutral[300],
+  track: "#DBDFE5",
   scrollbar: palette.neutral[300],
   shadow: "#191D25",
 } satisfies ThemeColors;
@@ -408,6 +416,7 @@ export const darkColors = {
   disabled: palette.neutral[850],
   disabledForeground: palette.neutral[400],
   skeleton: palette.neutral[700],
+  track: "#323945",
   scrollbar: palette.neutral[700],
   shadow: "#000000",
 } satisfies ThemeColors;
@@ -483,6 +492,7 @@ export const highContrastLightColors = {
   disabled: "#E8E8E8",
   disabledForeground: "#5A5A5A",
   skeleton: "#B0B0B0",
+  track: "#C6C8CD",
   scrollbar: "#9A9A9A",
   shadow: "#000000",
 } satisfies ThemeColors;
@@ -563,6 +573,7 @@ export const highContrastDarkColors = {
   disabled: "#2E2E2E",
   disabledForeground: "#A9A9A9",
   skeleton: "#565656",
+  track: "#3A3A3A",
   scrollbar: "#8A8A8A",
   shadow: "#000000",
 } satisfies ThemeColors;
@@ -677,6 +688,7 @@ export const colorRoles = [
   "disabled",
   "disabledForeground",
   "skeleton",
+  "track",
   "scrollbar",
   "shadow",
 ] as const satisfies readonly (keyof ThemeColors)[];

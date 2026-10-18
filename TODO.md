@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 114/149
+`[x]` `[████████░░]` 115/150
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -314,6 +314,11 @@ fill but not the four soft status fills an Alert's description can carry a
 caption or a link on, so an edited theme could erase either while the checker
 returned `[]`; every shipped set passes (6.61:1 and 5.26:1 at the tightest), so
 no colour moves and the contract grows 315 → 323 (plan 346)
+`[x]` Ship the value indicator's track — `track` is a role of its own, measured
+on the four base surfaces and the persistent `accent`/`selected` fills, with the
+four progress fills as marks on it, because `muted` equals the card and popover
+in every platform dark style and an indeterminate progress bar painted nothing
+on a dark card; the contract grows 323 → 333 (plan 347)
 `[ ]` Cross-team: `components` applies `selectionStyle(theme, "fill")` — or
 `theme.colors.selectionOnFill` — to the user `Message` bubble in `message.tsx`
 `bubble()`, which paints body text on `primary`; the accent-tinted `selection`
@@ -746,6 +751,12 @@ under the 3:1 mark floor. The indicator already carries its motion in per-dot
 lit dot and the trail, or take an explicit tone the caller passes; a spinner on a
 plain surface keeps `primary` (plan 332's mark pairs). `IconButton` inherits the
 same paint through `Button`. Owner: `primitives`; found while auditing plan 345.
+`[ ]` Cross-team: `primitives` paints the value indicator's groove with
+`theme.colors.track` — `progressTrackStyle` and `sliderRailStyle` still use
+`muted`, a surface role; identity dark's `muted` is its `popover` and every
+platform dark style's is its card and popover, all at 1.000:1, so an
+indeterminate `Progress` (only a track, zero-width fill) paints nothing on a
+dark card. The role and its contract ship in plan 347 (owner: `primitives`)
 `[ ]` Cross-team: `components` gives the neutral Badge, the Stepper's upcoming
 marker and the TagInput chip a visible fill — `badge.tsx`, `stepper.tsx` and
 `tag-input.tsx` paint `muted` behind `mutedForeground`, but `muted` is a surface

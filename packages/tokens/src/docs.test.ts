@@ -211,13 +211,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 315 to **${contrastPairs.length}**`,
+      `taking it from 323 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`346` closed");
+    expect(prose).toContain("plans `076`–`347` closed");
   });
 });
 
@@ -818,6 +818,39 @@ describe("docs/tokens.md quoted tightest figures", () => {
         `${value.toFixed(2)}:1** (${label}, ${surface})`,
       );
     });
+  });
+
+  it("quotes the weakest value groove and the mark it carries", () => {
+    const [surfaceLabel, surfaceRatio] = tightest("track", "selected");
+    const [markLabel, markRatio] = tightest("success", "track");
+
+    expect([surfaceLabel, Number(surfaceRatio.toFixed(2))]).toEqual([
+      "XP light",
+      1.06,
+    ]);
+    expect([markLabel, Number(markRatio.toFixed(2))]).toEqual([
+      "Aero light",
+      3.15,
+    ]);
+    expect(markdownProse).toContain(
+      `${surfaceLabel} \`track\` on its \`selected\` fill at **1.06:1**`,
+    );
+    expect(markdownProse).toContain(
+      `${markLabel} \`success\` on the groove at **3.15:1**`,
+    );
+  });
+
+  it("quotes the invisible track the audit found", () => {
+    const identityDark = getTheme("dark");
+    const macOSDark = getPlatformTheme("darwin", "dark");
+
+    expect(
+      contrastRatio(identityDark.colors.muted, identityDark.colors.popover),
+    ).toBe(1);
+    expect(contrastRatio(macOSDark.colors.muted, macOSDark.colors.card)).toBe(
+      1,
+    );
+    expect(markdownProse).toContain("all at **1.000:1**");
   });
 
   it("quotes the ceiling a translucent fill cannot pass", () => {

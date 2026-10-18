@@ -143,6 +143,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [344](./344-selection-on-fill.md) | The selection veil for content on a filled action | F | 069, 071, 081, 087, 091, 099, 343 | done |
 | [345](./345-contrast-platform-elevation.md) | A high-contrast platform variant keeps its elevation | F | 063, 073, 085, 301, 311, 323 | done |
 | [346](./346-soft-panel-text.md) | The caption and link inside a status panel | F | 071, 076, 082, 088, 307, 320, 339 | done |
+| [347](./347-value-track-role.md) | The value indicator's track | F | 071, 076, 300, 309, 332, 338 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1112,6 +1113,22 @@ secondary floor (315 → 323); every shipped set already passes (6.61:1 and
 5.26:1 at the tightest), so no colour moves, and
 `soft-panel-text.test.ts` states the erased-caption and erased-link
 regressions.
+
+347 closes the last painted state a value indicator has: its unfilled groove.
+`Progress`, `Meter` and `Slider` painted it with `muted`, a surface role.
+Identity dark's `muted` is its `popover`, and every platform dark style's
+`muted` is its card and popover — all at 1.000:1 — so an indeterminate progress
+bar, which is only its track because the fill is zero-width, painted nothing on
+a dark card, and a slider's unfilled span had no shape. `muted` cannot become a
+fill (plan 309 tuned it as the panel ladder), `border` is a line role (the
+primary mark measures 1.43:1 on the AAA divider) and `active` is a pressed wash
+(2.84:1 on macOS dark), so `track` is a designed neutral step in every palette
+(65 → 66 roles). `trackSurfacePairs` holds it on the four base surfaces and the
+persistent `accent`/`selected` fills; `trackMarkPairs` holds the four
+`PROGRESS_TONES` to the mark floor on it (323 → 333). Every shipped set already
+passes (1.06:1 and 3.15:1 at the tightest), so no existing colour moves; the
+brand example gains its own groove because its lighter primary measured 2.67:1
+on the identity one, and the `primitives` migration is a cross-team row.
 
 ### Reference adoption (block `200–299`)
 

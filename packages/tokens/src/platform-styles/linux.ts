@@ -61,6 +61,7 @@ export const linuxPlatformStyle = {
       selected: "#D7E6F9",
       selectedForeground: "#0F3D77",
       placeholder: "#6A6865",
+      track: "#DAD8D6",
       shadow: "#000000",
     },
     dark: {
@@ -76,6 +77,7 @@ export const linuxPlatformStyle = {
       hover: "#3A3A3A",
       active: "#464646",
       skeleton: "#585858",
+      track: "#2A2A2A",
       secondary: "#3A3A3A",
       secondaryForeground: "#FFFFFF",
       secondaryHover: "#434343",

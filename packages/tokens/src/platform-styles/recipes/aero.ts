@@ -56,6 +56,7 @@ export const aeroPlatformRecipe = {
       selectedForeground: "#0B3A6B",
       placeholder: "#5B6B80",
       skeleton: "#BDCFE4",
+      track: "#CED8E5",
       shadow: "#0B1F33",
     },
     dark: windowsPlatformStyle.colors.dark,

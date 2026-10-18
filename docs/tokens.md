@@ -107,7 +107,7 @@ missing here is not public.
 | `TextStyle` | Font size, line height and weight for one role. |
 | `TextStyleProperties` | A resolved role for `StyleDesc`, family included. |
 | `Theme` | A complete resolved theme. |
-| `ThemeColors` | The 65 semantic colour roles. |
+| `ThemeColors` | The 66 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
@@ -130,7 +130,7 @@ control is hovered or pressed, the generic `hover`/`active` washes on a ghost or
 outline control, and `accent` for an outline toggle that is on — so the divider
 is held to its floor on those fills too, not only on the plain surfaces.
 
-There are 65 roles. The four status families — `info`, `success`, `warning` and
+There are 66 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
 a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
 edge (`xSoftBorder`) for alerts, badges and toasts, and a text role (`xText`) for
@@ -141,7 +141,10 @@ status labels, icons and indicator dots drawn on `background`, `card` or
 component never composites an alpha fill over whatever surface sits behind it.
 The generic `hover` and `active` roles are different: they are the washes a ghost
 or outline control paints, not the fill of a filled control. `info` is blue, not
-iris, so it can never be confused with `primary`.
+iris, so it can never be confused with `primary`. The unfilled groove of a value
+indicator — a progress bar, meter or slider rail — is `track`, a role of its
+own: a surface role cannot carry it, because the quiet panel equals the card in
+every platform dark style.
 
 The same fill-versus-text split applies to the brand action. `primary` is a
 surface: it carries `primaryForeground`, and it is measured only as a fill.
@@ -218,6 +221,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#6E7787` | `#A1A9B7` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#3D4552` | loading placeholder |
+| `track` | `#DBDFE5` | `#323945` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#191D25` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
@@ -339,7 +343,7 @@ does the same for a status label and an indicator dot on a plain surface.
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 65 roles and the same type, spacing, radius, density, border
+`Theme` — the same 66 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -424,6 +428,7 @@ carries, so it cannot claim another.
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#5A5A5A` | `#A9A9A9` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
+| `track` | `#C6C8CD` | `#3A3A3A` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#000000` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
@@ -1597,7 +1602,10 @@ to **315**. Plan `344` adds the inverse selection veil for content painted on a
 filled action — `selectionOnFill` on `primary`/`secondary`/`destructive` — as six
 wash pairs beside the plain `contrastPairs` list. Plan `346` holds a status
 panel's caption and link — `mutedForeground` and `primaryText` on the four soft
-status fills — taking it from 315 to **323**.
+status fills — taking it from 315 to **323**. Plan `347` adds the value
+indicator's groove — `track` on the four base surfaces and the persistent
+`accent`/`selected` fills, with the four progress fills as marks on it — taking
+it from 323 to **333**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1706,7 +1714,7 @@ edited theme whose hover equals its fill is reported with `pairClass: "step"`
 instead of returning `[]`.
 
 A solid role painted as a **mark** is held to 3:1 (4.5:1 at AAA) instead: a
-progress segment and a slider fill sit on the `muted` track, a slider thumb rings
+progress segment and a slider fill sit on the `track` groove, a slider thumb rings
 its own `input` fill, and a rating star, combobox check or timeline dot sits on
 the panel it paints on — a selected combobox option's check also sits on the
 `hover` wash the row highlights with, so it is measured there too — `markRoles`
@@ -1715,6 +1723,27 @@ A fill's 1.05:1 is a wash's floor: it says a hover is visible, not that a 4px ba
 is. A status indicator is not a mark: the solid `warning` is **1.78:1** on the
 light canvas, so a status dot uses `xText`, which the status-text pairs already
 measure.
+
+A value indicator's unfilled groove is a role of its own (plan `347`).
+`Progress`, `Meter` and `Slider` painted it with `muted` — a surface role:
+identity dark's `muted` is its `popover`, and every platform dark style's
+`muted` is its `card` and `popover`, all at **1.000:1**. An indeterminate
+progress bar is *only* its track (the fill is zero-width), so it painted nothing
+on a dark card, and a slider's unfilled span had no shape. `muted` cannot become
+a fill — plan `309` tuned it as the panel ladder — `border` is a line role
+(`primary` measures 1.432:1 on the AAA divider) and `active` is a pressed wash
+(`primary` measures 2.84:1 on macOS dark), so `track` is a designed neutral step
+in each palette: `#DBDFE5` light and `#323945` dark in the identity, one value
+per platform style, and `#C6C8CD`/`#3A3A3A` at high contrast. It is measured on
+the four base surfaces and the persistent `accent`/`selected` row fills at
+1.05:1 (`trackSurfacePairs`), and `primary`, `success`, `destructive` and
+`mutedForeground` — the four `PROGRESS_TONES` — on the groove at the mark floor
+(`trackMarkPairs`). The momentary `hover`/`active` washes are out of scope: the
+filled part still carries the value while the pointer is down, and XP light has
+no track that clears both the 1.05:1 wash floor and the 3:1 mark floor at once.
+The tightest shipped pairs are XP light `track` on its `selected` fill at
+**1.06:1** and Aero light `success` on the groove at **3.15:1**. `primitives`
+still paints `muted`; the migration is recorded in `TODO.md`.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and
@@ -1782,7 +1811,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`346` closed.
+plans `076`–`347` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

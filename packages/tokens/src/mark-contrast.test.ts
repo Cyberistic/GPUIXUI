@@ -76,6 +76,9 @@ describe("the mark contract", () => {
         (role) => `${role} on input`,
       ),
       "primary on hover",
+      ...(
+        ["primary", "success", "destructive", "mutedForeground"] as const
+      ).map((role) => `${role} on track`),
     ].toSorted();
 
     expect(
@@ -136,6 +139,7 @@ describe("the mark contract", () => {
       "input",
       "muted",
       "popover",
+      "track",
     ]);
     expect(failures[0]).toMatchObject({
       foreground: "primary",
@@ -150,7 +154,15 @@ describe("the mark contract", () => {
         .filter(({ pairClass }) => pairClass === "mark")
         .map(({ background }) => background)
         .toSorted(),
-    ).toEqual(["background", "card", "hover", "input", "muted", "popover"]);
+    ).toEqual([
+      "background",
+      "card",
+      "hover",
+      "input",
+      "muted",
+      "popover",
+      "track",
+    ]);
   });
 
   it("reports a success segment that vanishes into its track", () => {

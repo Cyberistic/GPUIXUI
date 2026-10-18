@@ -55,6 +55,7 @@ export const xpPlatformRecipe = {
       selectedForeground: "#003C74",
       placeholder: "#6B6555",
       skeleton: "#CFC8AE",
+      track: "#E6E2D1",
       shadow: "#000000",
     },
     dark: windowsPlatformStyle.colors.dark,

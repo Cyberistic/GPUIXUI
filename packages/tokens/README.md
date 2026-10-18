@@ -177,7 +177,7 @@ const size = isControlSize(storedSize) ? storedSize : "md";
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 65 roles, so no component changes.
+essential boundaries. It reuses the same 66 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";
@@ -235,7 +235,13 @@ the AAA dark theme's black veil painting **1.000:1** on its pure black canvas an
 turned it into a light one (plan 099). A solid role painted as a mark — a
 progress segment, slider fill, thumb ring, rating star or timeline dot — is held
 to 3:1 (4.5:1 at AAA) by `markPairs`, not to the 1.05:1 an interactive fill's
-wash needs (plan 332). Default body text
+wash needs (plan 332). The groove those value indicators sit in is `track`, a
+role of its own: identity dark's `muted` is its `popover` and every platform
+dark style's `muted` is its card and popover, all at 1.000:1, so an
+indeterminate progress bar drawn with the surface role painted nothing.
+`trackSurfacePairs` holds it to 1.05:1 on the four base surfaces and the
+persistent `accent`/`selected` fills, and `trackMarkPairs` holds the four
+progress fills to the mark floor on it (plan 347). Default body text
 is checked on the canvas, card, the `muted` panel, `popover`, the
 `hover`/`active`/`accent`/`selected` washes and the four soft status fills an
 Alert's description and ghost dismiss control paint, so an avatar's initials on
