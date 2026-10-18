@@ -5,7 +5,7 @@
 | Phase | C/F (Tier 2 hardening) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `115`, `117`, `388`, `516`, `522` |
-| Status | done — 2 native cases (Field 9), both-direction proof (1 fails on the old condition, the pin fails with `autoFocus` added) |
+| Status | done — 2 native cases (Field 9), both-direction proof (the focused case fails on the old condition; the pin fails with `autoFocus` added) |
 | Blocker | none — the assertion reads the authored `style` the renderer reports (plan `150`), and focus is seeded from `autoFocus` (plan `388`), so the plan-540 binding defects (focus events, box conventions) are out of scope |
 
 This plan is self-contained. A weaker executor must be able to run it without
@@ -148,10 +148,11 @@ the neutral `autoFocus` ring case) are unchanged.
 
 ### 5.2 Both directions (AGENTS §3)
 
-1. Revert only the ring line to `focused && !isInvalid && !isDisabled`; the new
-   case 1 must fail in both themes with `boxShadow` `undefined` while the border
-   assertion still passes, and case 2 must keep passing. Record that in the
-   commit message.
+1. Revert only the ring line to `focused && !isInvalid && !isDisabled`; case 1 must
+   fail on the first theme it asserts (dark) with `boxShadow` `undefined` while
+   its border assertion still passes. The gate is theme-independent, so one
+   observed failure covers both palettes. Case 2 must keep passing. Record that
+   in the commit message.
 2. Restore the fix; case 1 passes, case 2 passes.
 3. For the pin, add `autoFocus` to case 2's field and confirm case 2 fails — that
    is what makes it a pin rather than a duplicate.
