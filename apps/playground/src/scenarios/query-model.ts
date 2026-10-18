@@ -62,17 +62,23 @@ export interface Row {
 }
 
 /** The enum values for `status`, in cycle order. */
-export const STATUSES: ReadonlyArray<string> = [
-  "active",
-  "paused",
-  "archived",
-];
+export const STATUSES: ReadonlyArray<string> = ["active", "paused", "archived"];
 
 /** The enum values for `owner`, in cycle order. */
-export const OWNERS: ReadonlyArray<string> = ["Ada", "Grace", "Linus", "Margaret"];
+export const OWNERS: ReadonlyArray<string> = [
+  "Ada",
+  "Grace",
+  "Linus",
+  "Margaret",
+];
 
 /** Every field, in the order the field picker shows them. */
-export const FIELDS: ReadonlyArray<Field> = ["name", "status", "owner", "score"];
+export const FIELDS: ReadonlyArray<Field> = [
+  "name",
+  "status",
+  "owner",
+  "score",
+];
 
 /** The kind of control a field needs. */
 export const kindOf = (field: Field): FieldKind =>
@@ -174,11 +180,7 @@ const textMatches = (
   );
 };
 
-const enumMatches = (
-  rowValue: string,
-  op: Operator,
-  value: string,
-): boolean =>
+const enumMatches = (rowValue: string, op: Operator, value: string): boolean =>
   Match.value(op).pipe(
     Match.when("is", () => rowValue === value),
     Match.when("isNot", () => rowValue !== value),

@@ -164,7 +164,9 @@ const Picker = ({
             value={option.value}
             testId={`${testId}-item-${option.value}`}
           >
-            <text style={{ fontSize: 11, color: theme.colors.popoverForeground }}>
+            <text
+              style={{ fontSize: 11, color: theme.colors.popoverForeground }}
+            >
               {option.label}
             </text>
           </SelectItem>
@@ -181,14 +183,18 @@ const QueryBuilderProbe = () => {
   const toggle = useRef<PublicInstance | null>(null);
   const valueNodes = useRef(new Map<string, PublicInstance | null>());
   const [open, setOpen] = useState(false);
-  const [rules, setRules] = useState<ReadonlyArray<ReturnType<typeof defaultRule>>>(
-    [defaultRule(1, "status")],
-  );
+  const [rules, setRules] = useState<
+    ReadonlyArray<ReturnType<typeof defaultRule>>
+  >([defaultRule(1, "status")]);
   const [nextKey, setNextKey] = useState(2);
   const [match, setMatch] = useState<Combinator>("all");
-  const [selected, setSelected] = useState<Option.Option<number>>(Option.none());
+  const [selected, setSelected] = useState<Option.Option<number>>(
+    Option.none(),
+  );
   const [anchor, setAnchor] = useState(0);
-  const [focusRule, setFocusRule] = useState<Option.Option<number>>(Option.none());
+  const [focusRule, setFocusRule] = useState<Option.Option<number>>(
+    Option.none(),
+  );
 
   const visible = filterRows(INITIAL_ROWS, match, rules);
   const matched = Arr.length(visible);
@@ -217,7 +223,9 @@ const QueryBuilderProbe = () => {
 
   const changeRule = (
     index: number,
-    change: (rule: ReturnType<typeof defaultRule>) => ReturnType<typeof defaultRule>,
+    change: (
+      rule: ReturnType<typeof defaultRule>,
+    ) => ReturnType<typeof defaultRule>,
   ): void => {
     setRules((current) =>
       Arr.map(current, (rule, at) => (at === index ? change(rule) : rule)),
@@ -244,7 +252,9 @@ const QueryBuilderProbe = () => {
       onNone: () => {},
       onSome: (index) => {
         Option.match(
-          Option.fromNullishOr(valueNodes.current.get(`qb-rule-${index}-value`)),
+          Option.fromNullishOr(
+            valueNodes.current.get(`qb-rule-${index}-value`),
+          ),
           {
             onNone: () => {},
             onSome: (node) => {
@@ -331,7 +341,12 @@ const QueryBuilderProbe = () => {
           backgroundColor: theme.colors.muted,
         }}
       >
-        <Pressable testId="qb-toggle" ref={toggle} onClick={() => setOpen(!open)} style={button}>
+        <Pressable
+          testId="qb-toggle"
+          ref={toggle}
+          onClick={() => setOpen(!open)}
+          style={button}
+        >
           <text style={{ fontSize: 11, color: theme.colors.foreground }}>
             {`filters (${completeCount(rules)})`}
           </text>
@@ -362,7 +377,10 @@ const QueryBuilderProbe = () => {
             clear
           </text>
         </Pressable>
-        <text testId="qb-matched" style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
+        <text
+          testId="qb-matched"
+          style={{ fontSize: 11, color: theme.colors.mutedForeground }}
+        >
           {`matched=${matched}`}
         </text>
       </div>
@@ -440,7 +458,9 @@ const QueryBuilderProbe = () => {
                         width={FIELD_WIDTH}
                         onChange={(next) => {
                           if (isField(next)) {
-                            changeRule(index, (current) => retype(current, next));
+                            changeRule(index, (current) =>
+                              retype(current, next),
+                            );
                           }
                         }}
                       />
@@ -453,7 +473,10 @@ const QueryBuilderProbe = () => {
                         width={OPERATOR_WIDTH}
                         onChange={(next) => {
                           if (isOperator(next)) {
-                            changeRule(index, (current) => ({ ...current, op: next }));
+                            changeRule(index, (current) => ({
+                              ...current,
+                              op: next,
+                            }));
                           }
                         }}
                       />
@@ -512,7 +535,12 @@ const QueryBuilderProbe = () => {
                         onClick={() => remove(index)}
                         style={button}
                       >
-                        <text style={{ fontSize: 11, color: theme.colors.foreground }}>
+                        <text
+                          style={{
+                            fontSize: 11,
+                            color: theme.colors.foreground,
+                          }}
+                        >
                           x
                         </text>
                       </Pressable>
@@ -522,7 +550,10 @@ const QueryBuilderProbe = () => {
             })}
           </div>
         ) : (
-          <text testId="qb-closed" style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
+          <text
+            testId="qb-closed"
+            style={{ fontSize: 11, color: theme.colors.mutedForeground }}
+          >
             filters closed
           </text>
         )}
@@ -557,7 +588,10 @@ const QueryBuilderProbe = () => {
         ))}
       </div>
 
-      <div testId="qb-viewport" style={{ width: FRAME_WIDTH, height: VIEWPORT_HEIGHT }}>
+      <div
+        testId="qb-viewport"
+        style={{ width: FRAME_WIDTH, height: VIEWPORT_HEIGHT }}
+      >
         {matched === 0 ? (
           <div
             testId="qb-empty"
@@ -612,7 +646,9 @@ const QueryBuilderProbe = () => {
                       paddingLeft: 8,
                     }}
                   >
-                    <text style={{ fontSize: 12, color: theme.colors.foreground }}>
+                    <text
+                      style={{ fontSize: 12, color: theme.colors.foreground }}
+                    >
                       {cell(row, column.id)}
                     </text>
                   </div>
@@ -752,10 +788,7 @@ export const queryBuilderScenario: PlaygroundScenario = {
         stateField(ctx, "open"),
         "true",
       );
-      yield* ctx.expectSome(
-        "the rule row paints",
-        box(ctx, "qb-rule-0"),
-      );
+      yield* ctx.expectSome("the rule row paints", box(ctx, "qb-rule-0"));
       const first = yield* ctx.expectSome(
         "the first result row paints",
         box(ctx, "qb-row-0"),
@@ -846,7 +879,10 @@ export const queryBuilderScenario: PlaygroundScenario = {
       );
       yield* ctx.expectEqual(
         "the appended rule takes focus",
-        Option.getOrElse(Option.fromNullishOr(ctx.host.focused()), () => "none"),
+        Option.getOrElse(
+          Option.fromNullishOr(ctx.host.focused()),
+          () => "none",
+        ),
         "qb-rule-1-value",
       );
       yield* ctx.expectEqual(
@@ -1020,7 +1056,10 @@ export const queryBuilderScenario: PlaygroundScenario = {
       );
       yield* ctx.expectEqual(
         "the added rule takes focus",
-        Option.getOrElse(Option.fromNullishOr(ctx.host.focused()), () => "none"),
+        Option.getOrElse(
+          Option.fromNullishOr(ctx.host.focused()),
+          () => "none",
+        ),
         "qb-rule-0-value",
       );
       ctx.host.click("qb-rule-0-value");
@@ -1143,7 +1182,10 @@ export const queryBuilderScenario: PlaygroundScenario = {
       );
       yield* ctx.expectEqual(
         "escape returns focus to the toggle",
-        Option.getOrElse(Option.fromNullishOr(ctx.host.focused()), () => "none"),
+        Option.getOrElse(
+          Option.fromNullishOr(ctx.host.focused()),
+          () => "none",
+        ),
         "qb-toggle",
       );
       ctx.host.click("qb-toggle");

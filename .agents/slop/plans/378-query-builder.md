@@ -1,6 +1,6 @@
 # 378 — Tier 5 feasibility: a filter-rule builder over a virtualized table
 
-**Status:** planned 2026-10-18 · **Phase:** D/E · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D/E · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `152`, `158`, `159`, `166`, `188`,
@@ -341,12 +341,90 @@ Run each with `--only query-builder`, record the exact failure, revert.
 
 ## 9. Measured results
 
-_Filled in by the executor after the run._
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
 
 | Scenario | Checks | Result |
 | -------- | ------ | ------ |
-| `query-builder` (headless) | — | — |
-| `live-query-builder` | — | — |
+| `query-builder` (headless) | 83 | pass — suite `83 → 84`, `2561 → 2644`, exit `0`, `query=verified` |
+| `live-query-builder` | 41 | pass — live `34 → 35`, `610 → 651`, exit `0`, one screenshot |
+| `query-model.test.ts` | 19 | pass — `nub run --filter playground test` is `161` tests across 17 files |
+
+### 9.1 Facts that changed the plan
+
+- **A `Select` opened from the scrolled strip is not clipped.** The decisive
+  unknown resolved cleanly: `SelectContent`'s `<anchored>` painted its content
+  and every item **past** the `overflowY: "scroll"` strip, and an item click
+  committed (`score`, operator → `>`). This is the same route plan `164`
+  measured for a pointer-positioned `<anchored>` and plan `187` for a row-derived
+  one; no portal is needed (and 0.10.0 has none).
+- **Three `add` clicks in one frame coalesce live, and the reveal misses.** The
+  first live run failed `the live appended row sits at the strip's bottom`
+  (`221` against `181`): with the three clicks sent back to back React committed
+  one array append, one effect ran, and `scrollIntoView` was called before the
+  new rows had native layout. Headless the same sequence passes. The live step
+  now settles between clicks, exactly as a human clicks; the reveal itself is
+  `scrollIntoView` on the appended value control, never a `scrollTo` formula.
+  A batched programmatic append in a real app needs the same deferral.
+- **A clipped rule row keeps painted bounds.** Scrolled out of the 132 px strip,
+  `qb-rule-0` still reports a box with `y < strip.y` — the rule plan `173`
+  measured for a clipped tab. The check therefore asserts geometry, not absence.
+- **A rule `Group` needs `aria-id` to be addressable.** `role` + `aria-label`
+  gave the right AccessKit role and name, but the dump lookup is keyed by the
+  authored `aria-id` (the plan-344 fact), so the row authors it.
+- **A non-numeric value is complete but matches nothing.** `Number.parseFloat`
+  failing is a UI validity concern; the predicate cannot guess, so `score > abc`
+  renders the empty state with `complete=1`. Recorded rather than hidden.
+- **The rule model is cheap to test and expensive to get wrong.** The fixture's
+  cycle choice matters: `status` cycles 3 and `owner` 4, so the `Ada ∧ paused`
+  intersection is 10 rows (a 3/3 pair would have made the owner rule redundant).
+
+### 9.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| geometry | frame `780`; toolbar `40`; strip `132` even while closed; rule `40`; result row `28`; viewport `360` |
+| a11y | `Toolbar:Query`, `Group:Filters`, `Group:Rule 1` |
+| operators | name → `contains`/`is`/`is not`; status/owner → `is`/`is not`; score → `>`/`>=`/`<`/`<=` |
+| counts | paused 40; `item 1` 31; `is item 1` 1; `> 80` 19; `>= 80` 20; `< 10` 20; Ada 30; not Ada 90; paused ∧ text 12; paused ∨ text 59 |
+| reset | a field change clears operator and value; an incomplete rule is ignored by `all` **and** `any`; a rule edit clears the selection and the anchor |
+| append | `add` → `rules+1`, the row is revealed inside the strip and its value control takes native focus; a clipped row keeps bounds |
+| pickers | a picker opened from a scrolled row paints past the clip; items are hit-testable; choosing commits and closes |
+| dismissal | Escape from a rule input closes the strip and focuses `qb-toggle`; reopening keeps the rules |
+| empty | zero matches paints `No matching rows`; no result row paints |
+
+### 9.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only query-builder`, and reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | the enum value choice keeps the old value | `choosing a status narrows the rows` |
+| M2 | a field change keeps the old operator/value | `re-typing a rule resets its operator` |
+| M3 | `any` evaluates like `all` | `any widens the result` |
+| M4 | an incomplete rule is included under `any` | `an incomplete rule is ignored under any` |
+| M5 | the appended rule is not focused | `the appended rule takes focus` |
+| M6 | the appended rule is not revealed | `the appended row sits at the strip's bottom` |
+| M7 | a rule edit keeps the selection | `a rule edit clears the selection` |
+| M8 | zero matches still renders rows | `the empty state paints when nothing matches` |
+| M9 | `gte` uses a strict comparison | `gte includes the bound` |
+| M10 | Escape does not return focus | `escape returns focus to the toggle` |
+
+Reverse proof (consumer wiring): the remove button's `onClick` removed →
+`remove drops the rule` fails.
+
+### 9.4 Limits recorded
+
+- The strip is inline; an overlay-panel shell is `tier2-choice`'s `Popover`, and
+  the probe does not duplicate that contract.
+- Rules combine with one `all`/`any` switch; there are no nested groups, no
+  drag reordering and no persisted rule set (workspace restore is `339`).
+- Operators are the four numeric comparisons plus text/enum equality; the probe
+  does not invent `startsWith`, ranges or date comparisons.
+- Cells are fixed widths and the result list does not pan; column resize is
+  `349`, horizontal pan is `338`/`185`.
+- The model's `key` is React identity only; test ids use the rule's position, so
+  removing a rule relabels the rows below it (the intended list behaviour).
 
 ## 10. Acceptance
 
@@ -354,5 +432,5 @@ _Filled in by the executor after the run._
   capability literal, the live twin, the README section, the inventory rows and
   the plan-index row.
 - Headless `84/84`, live `35/35`, exit `0`; all three gates exit `0`.
-- Ten mutation proofs and one reverse proof recorded in §9.
+- Ten mutation proofs and one reverse proof recorded in §9.3.
 - No package changed; any defect is a `TODO.md` task with its own plan number.

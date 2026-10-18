@@ -74,7 +74,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (83/83 green); -> 2 on a host with no binding
+# -> 0 here (84/84 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -611,7 +611,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `34/34`.
+exact, and focus/Escape and the close button hold. The live suite is `35/35`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -748,6 +748,44 @@ re-render shrinks the set, but it does **not** report that through
 Limits: the toolbar fits its width (overflow is `app-chrome`'s scroller +
 reveal); columns are fixed widths (`data-grid-columns` owns resize); the view
 uses segmented controls, not menus; no view state is persisted.
+
+## Query builders (plan `378`)
+
+`query-builder` is the composition the Tier 5 row **Advanced filtering / query
+builders** never had: a rule list over a virtualized table. 83 checks; live twin
+`live-query-builder` (41 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| geometry | a 780 px frame, a 40 px toolbar and a 132 px rule strip; the strip paints even while closed, so its height is assertable |
+| rule row | 40 px: field `Select`, operator `Select`, value control and a remove button; `Group:Rule 1` to assistive technology |
+| field kinds | `name` starts on `contains`, `status`/`owner` on `is`, `score` on `>`; the operator picker offers only that kind's subset |
+| re-typing | a field change resets the operator **and** clears the value — a stale `contains` never reaches a number |
+| completeness | an empty value is incomplete and is ignored by **both** `all` and `any` (an unfinished row never widens a query) |
+| status | `status is paused` → 40 rows; the first paused row sits at the viewport top and row 0 is unpainted |
+| text | `name contains item 1` is case-insensitive → 31; `is item 1` → 1; `is zzz` → 0 |
+| number | `> 80` → 19, `>= 80` → 20, `< 10` → 20; a non-numeric value matches nothing and is still "complete" |
+| enum | `owner is Ada` → 30; `is not Ada` → 90 |
+| combinator | paused **and** `item 1` → 12; **any** → 59; the summary reads `status is paused and name contains item 1` and flips its joiner |
+| append | `add` appends a rule, reveals it in the strip and **focuses its value control** (the effect runs after the commit; the node does not exist in the handler) |
+| scrolled strip | four rules: the appended row's bottom edge equals the strip's, and the first rule keeps painted bounds above it (`y < strip.y`) |
+| pickers in a scroller | a field `Select` opened from the scrolled strip paints its content and its items **past the clip** and commits; the content is not clipped by `overflowY: scroll` |
+| dismissal | Escape from a rule input closes the strip and returns focus to the toggle; reopening keeps all four rules |
+| empty state | zero matches paints `No matching rows` in place of the list |
+| reset | a rule edit clears the selection and returns the anchor to 0; the first match paints at the top |
+| a11y | `Toolbar:Query`, `Group:Filters` |
+
+**Live lesson:** three `add` clicks sent back to back coalesce into one commit,
+and the reveal then runs before the new rows are laid out — the appended row
+stayed at the strip's bottom edge (`221` against `181` expected). The live step
+settles between clicks, as a human would; `scrollIntoView` is the reveal, not a
+`scrollTo` formula.
+
+Limits: the builder is inline (an overlay panel is `tier2-choice`'s `Popover`),
+rules are AND/OR without nesting or groups, operators are the four numeric
+comparisons plus text/enum equality, and no rule set is persisted. `Select`
+content is anchored to its trigger's row, not portalled (0.10.0 has no
+`createPortal`).
 
 ## Multi-pane editor (plan `376`)
 
@@ -1121,10 +1159,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **83/83 green** here (`exit 0`, 2561 checks):
+The suite is **84/84 green** here (`exit 0`, 2644 checks):
 
 ```
-83/83 scenarios passed · capabilities: layout=verified text=verified
+84/84 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1136,7 +1174,7 @@ toast=verified grid=verified data-grid=verified columns=verified
 chrome=verified
 layers=verified scroller=verified scale=verified tier2=verified
 replace=verified grid-layout=verified typography=verified
-inspector=verified editor=verified data-toolbar=verified
+inspector=verified editor=verified data-toolbar=verified query=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1245,6 +1283,9 @@ src/scenarios/data-grid-columns.tsx header-drag column resize over the virtual b
 src/scenarios/app-chrome.tsx toolbar, pinned status bar and a breadcrumb trail
 src/scenarios/multi-pane-editor.tsx two tabbed panes with scrolling code and a live split
 src/scenarios/data-toolbar.tsx a data toolbar over a virtual table, with derived cards
+src/scenarios/query-model.ts the pure filter rules: operators, completeness, predicate, summary
+src/scenarios/query-model.test.ts the pure rule tests (counts, bounds, combinators)
+src/scenarios/query-builder.tsx a rule strip of native Selects over a virtualized result
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1291,8 +1332,9 @@ narrower. Each deviation is deliberate and measured:
   (`data-grid-columns`, plan `349`) and the **Tier 2 catalogue**
   (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
-  `tier2-flow`; plans `330`, `344`, `346`, `347`)
-  pass in real GPUix 0.10.0 on this host (83/83), with a written report and
+  `tier2-flow`; plans `330`, `344`, `346`, `347`) and the **query-builder
+  probe** (`query-builder`, plan `378`)
+  pass in real GPUix 0.10.0 on this host (84/84), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1300,12 +1342,13 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 34/34 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 35/35 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
   **message scroller**, the **Tier 2 choice and form families**, the
-  **multi-pane editor** and the **data toolbar** — including the modal's
+  **multi-pane editor**, the **data toolbar** and the **query builder** —
+  including the modal's
   Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
   with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
   frame (plan `192`), a pointer-placed menu in a scrolled container (plan

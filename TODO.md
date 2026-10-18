@@ -58,14 +58,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 73/77 plans-and-harness
+`[x]` `[██████████]` 74/78 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`377` written and indexed for the playground workstream; the next plan takes `378` (`351`–`375` are held by the components and tokens workstreams)
-`[~]` Plan `378`: probe a **filter-rule builder** (Tier 5 Advanced filtering / query
-      builders) over a virtualized table — a pure rule model with unit tests, a
-      scrolled strip of native `Select` rows, append focus/reveal, `all`/`any`,
-      numeric bounds, the empty state and a live twin. Plan:
-      `.agents/slop/plans/378-query-builder.md`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378` written and indexed for the playground workstream; the next plan takes `379` (`351`–`375` are held by the components and tokens workstreams)
+`[x]` Probe the **filter-rule builder** per plan `378`: `query-builder` (83 checks)
+      and `live-query-builder` (41): a 40 px `Toolbar:Query` over a 132 px
+      `Group:Filters` strip of 40 px rule rows, each three native `Select`s and a
+      remove control, over a 120-row `<virtual-list>`. `status is paused` → 40
+      rows, `name contains item 1` → 31 (12 under `all`, 59 under `any`), score
+      `> 80` → 19 / `>= 80` → 20, `owner is Ada` → 30 / `is not` → 90; a field
+      change resets the operator and value; an incomplete rule is ignored by
+      both combinators; `add` reveals and **focuses** the appended row; a picker
+      opened from the scrolled strip paints past the clip and commits; Escape
+      closes and returns focus; zero matches paint the empty state; a rule edit
+      resets the anchor and clears the selection. Suite `83 → 84`
+      (`2561 → 2644`), live `34 → 35` (`610 → 651`), exit `0`,
+      `query=verified`; ten mutation + one reverse proof. Measured: three
+      `add` clicks sent in one frame coalesce, so the live step settles between
+      them before the reveal lands
 `[x]` Probe the **data toolbar and statistic cards** per plan `377`:
       `data-toolbar` (61 checks) and `live-data-toolbar` (24): a 40 px
       `role="toolbar"` over a 60-row `<virtual-list>`, with a native search,

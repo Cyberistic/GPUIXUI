@@ -3736,7 +3736,8 @@ const multiPaneEditor: LiveScenario = {
 
 const queryBuilder: LiveScenario = {
   id: "live-query-builder",
-  title: "Live query builder: rules, combinators, append focus and the empty state",
+  title:
+    "Live query builder: rules, combinators, append focus and the empty state",
   capability: "query",
   view: queryBuilderScenario.view,
   ready: "qb-state",
@@ -3753,7 +3754,12 @@ const queryBuilder: LiveScenario = {
       yield* settle;
       yield* waitForText(ctx, "qb-state", "open=true");
       const strip = yield* boxOf(ctx, "qb-builder");
-      yield* ctx.expectNear("the live strip is 132 px tall", strip.height, 132, 1);
+      yield* ctx.expectNear(
+        "the live strip is 132 px tall",
+        strip.height,
+        132,
+        1,
+      );
 
       // A real Select choice narrows the table.
       yield* ctx.host.click("qb-rule-0-value");
@@ -3794,7 +3800,8 @@ const queryBuilder: LiveScenario = {
       const appended = yield* boxOf(ctx, "qb-rule-1");
       yield* ctx.expectEqual(
         "the live appended rule paints inside the strip",
-        appended.y >= strip.y && appended.y + appended.height <= strip.y + 132 + 1,
+        appended.y >= strip.y &&
+          appended.y + appended.height <= strip.y + 132 + 1,
         true,
       );
 

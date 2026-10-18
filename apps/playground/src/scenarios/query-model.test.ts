@@ -38,17 +38,23 @@ const rule = (
 
 const some = (value: string): Option.Option<string> => Option.some(value);
 
-const count = (
-  combinator: "all" | "any",
-  rules: ReadonlyArray<Rule>,
-): number => Arr.length(filterRows(INITIAL_ROWS, combinator, rules));
+const count = (combinator: "all" | "any", rules: ReadonlyArray<Rule>): number =>
+  Arr.length(filterRows(INITIAL_ROWS, combinator, rules));
 
 describe("defaultRule and retype", () => {
   it("starts each field kind on its own operator, with no value", () => {
-    expect(defaultRule(1, "name")).toEqual(rule(1, "name", "contains", Option.none()));
-    expect(defaultRule(1, "status")).toEqual(rule(1, "status", "is", Option.none()));
-    expect(defaultRule(1, "owner")).toEqual(rule(1, "owner", "is", Option.none()));
-    expect(defaultRule(1, "score")).toEqual(rule(1, "score", "gt", Option.none()));
+    expect(defaultRule(1, "name")).toEqual(
+      rule(1, "name", "contains", Option.none()),
+    );
+    expect(defaultRule(1, "status")).toEqual(
+      rule(1, "status", "is", Option.none()),
+    );
+    expect(defaultRule(1, "owner")).toEqual(
+      rule(1, "owner", "is", Option.none()),
+    );
+    expect(defaultRule(1, "score")).toEqual(
+      rule(1, "score", "gt", Option.none()),
+    );
   });
 
   it("offers only the operators a field kind can apply", () => {
@@ -59,7 +65,9 @@ describe("defaultRule and retype", () => {
 
   it("resets operator and value when the field changes, keeping the key", () => {
     const typed = rule(7, "name", "isNot", some("Item 1"));
-    expect(retype(typed, "score")).toEqual(rule(7, "score", "gt", Option.none()));
+    expect(retype(typed, "score")).toEqual(
+      rule(7, "score", "gt", Option.none()),
+    );
   });
 
   it("offers enum options only for enum fields", () => {
@@ -95,15 +103,27 @@ describe("matchesRule", () => {
   const item = rowAt(10); // Item 10, paused, Linus, score 10
 
   it("matches text case-insensitively for contains and is", () => {
-    expect(matchesRule(item, rule(1, "name", "contains", some("ITEM 1")))).toBe(true);
-    expect(matchesRule(item, rule(1, "name", "is", some("item 10")))).toBe(true);
-    expect(matchesRule(item, rule(1, "name", "is", some("item 1")))).toBe(false);
+    expect(matchesRule(item, rule(1, "name", "contains", some("ITEM 1")))).toBe(
+      true,
+    );
+    expect(matchesRule(item, rule(1, "name", "is", some("item 10")))).toBe(
+      true,
+    );
+    expect(matchesRule(item, rule(1, "name", "is", some("item 1")))).toBe(
+      false,
+    );
   });
 
   it("inverts with isNot for text and enum values", () => {
-    expect(matchesRule(item, rule(1, "name", "isNot", some("item 10")))).toBe(false);
-    expect(matchesRule(item, rule(1, "status", "isNot", some("paused")))).toBe(false);
-    expect(matchesRule(item, rule(1, "status", "isNot", some("active")))).toBe(true);
+    expect(matchesRule(item, rule(1, "name", "isNot", some("item 10")))).toBe(
+      false,
+    );
+    expect(matchesRule(item, rule(1, "status", "isNot", some("paused")))).toBe(
+      false,
+    );
+    expect(matchesRule(item, rule(1, "status", "isNot", some("active")))).toBe(
+      true,
+    );
   });
 
   it("keeps a numeric bound out of gt and inside gte", () => {
@@ -115,11 +135,15 @@ describe("matchesRule", () => {
   });
 
   it("matches nothing for a non-numeric value", () => {
-    expect(matchesRule(rowAt(50), rule(1, "score", "gt", some("abc")))).toBe(false);
+    expect(matchesRule(rowAt(50), rule(1, "score", "gt", some("abc")))).toBe(
+      false,
+    );
   });
 
   it("keeps every row for an incomplete rule", () => {
-    expect(matchesRule(item, rule(1, "status", "is", Option.none()))).toBe(true);
+    expect(matchesRule(item, rule(1, "status", "is", Option.none()))).toBe(
+      true,
+    );
   });
 });
 
@@ -131,7 +155,9 @@ describe("filterRows over the fixture", () => {
   });
 
   it("matches text by substring and exactly", () => {
-    expect(count("all", [rule(1, "name", "contains", some("item 1"))])).toBe(31);
+    expect(count("all", [rule(1, "name", "contains", some("item 1"))])).toBe(
+      31,
+    );
     expect(count("all", [rule(1, "name", "is", some("item 1"))])).toBe(1);
     expect(count("all", [rule(1, "name", "is", some("zzz"))])).toBe(0);
   });
@@ -171,9 +197,12 @@ describe("filterRows over the fixture", () => {
   it("preserves the source order", () => {
     expect(
       Arr.map(
-        Arr.take(filterRows(INITIAL_ROWS, "all", [
-          rule(1, "score", "gte", some("80")),
-        ]), 3),
+        Arr.take(
+          filterRows(INITIAL_ROWS, "all", [
+            rule(1, "score", "gte", some("80")),
+          ]),
+          3,
+        ),
         (row) => row.id,
       ),
     ).toEqual([80, 81, 82]);
@@ -203,9 +232,9 @@ describe("summarize", () => {
   });
 
   it("leaves an incomplete rule out and keeps source order", () => {
-    expect(summarize("all", [paused, rule(2, "owner", "is", Option.none()), name])).toBe(
-      "status is paused and name contains item 1",
-    );
+    expect(
+      summarize("all", [paused, rule(2, "owner", "is", Option.none()), name]),
+    ).toBe("status is paused and name contains item 1");
   });
 
   it("says none when nothing is complete", () => {
