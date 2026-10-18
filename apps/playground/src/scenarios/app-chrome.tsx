@@ -543,7 +543,7 @@ export const appChromeScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the toolbar is 36 px tall",
         toolbar.height,
-        TOOLBAR_HEIGHT,
+        36,
         1,
       );
       yield* ctx.expectNear(
@@ -555,13 +555,13 @@ export const appChromeScenario: PlaygroundScenario = {
       yield* ctx.expectNear(
         "the body fills the space between the strips",
         body.height,
-        BODY_HEIGHT,
+        360,
         1,
       );
       yield* ctx.expectNear(
         "the status bar is 24 px tall",
         status.height,
-        STATUS_HEIGHT,
+        24,
         1,
       );
       yield* ctx.expectNear(
