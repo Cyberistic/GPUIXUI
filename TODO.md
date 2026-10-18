@@ -231,6 +231,10 @@ retired once both branches are one
     - [x] Command menu recent commands: front-inserted, deduped, capped, shown
       first only on an empty query — plan 329; 7 logic + 5 native tests,
       both-direction proof (behaviour 492)
+    - [x] Example registry completeness and native render coverage: 17 of 41
+      examples were unregistered and none had ever been rendered — plan 330;
+      1 inventory assertion + 1 native suite mounting all 41, both-direction
+      proof (unit 332, behaviour 493)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
@@ -378,7 +382,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
-| Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
+| Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending — the registry is complete and every entry is render-proven in this package (plan 330); mounting still belongs to `apps/playground` |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |

@@ -103,6 +103,7 @@ workstream declares in its own section below.
 | [327](./327-behaviour-timing.md) | Behaviour-suite timing robustness under a loaded host | F | 110, 117, 325, 326 | done — condition-based waits in `preview-card` (8/8 ×3), 20 s native budget; both-direction proof 5/8 fail without hover wiring |
 | [328](./328-combobox-create-new.md) | Combobox "create new option": one trailing row over the typed query | C/F | 116, 138, 302, 323 | done — 6 logic + 6 native tests (Combobox 23, behaviour 487); both-direction proof |
 | [329](./329-command-menu-recents.md) | Command menu recent commands: session memory with a controlled escape hatch | C/F | 114, 133, 200, 201, 301 | done — 7 logic + 5 native tests (CommandMenu 19, behaviour 492); both-direction proof |
+| [330](./330-example-registry.md) | The example registry: complete it, then prove every example renders | C/F | 110, 117, 300–329 | done — 17 of 41 examples were unregistered; registry now 41/41 and one native test mounts them all (unit 332, behaviour 493); both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 

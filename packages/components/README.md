@@ -72,6 +72,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `@gpuixui/icons` | every component-owned fixed mark (close, clear, chevron, check, toast tone) — plan 324 |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
+| `examples/index.ts` | the example registry (`id → example`) the native playground and `packages/testing` iterate; the id is the module's basename, with a page at `docs/<id>.mdx` (plan 330) |
 
 ## Commands
 
@@ -105,4 +106,7 @@ not collect it (plan 117 §5a–§5c).
    behaviour suite in `src/behaviour/<name>.test.tsx` that renders through
    `internal/test-root.tsx` — real clicks, keys, focus, text and bounds.
 6. Ship an example (`examples/<name>.example.tsx`), a docs page
-   (`docs/<name>.mdx`) and an inventory record, in the same commit.
+   (`docs/<name>.mdx`) and an inventory record, in the same commit. Register the
+   example in `examples/index.ts` under the module's basename: the inventory
+   suite rejects an unregistered module, and `src/behaviour/examples.test.tsx`
+   mounts every registered entry in the real renderer.

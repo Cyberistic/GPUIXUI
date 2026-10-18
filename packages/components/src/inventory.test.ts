@@ -15,11 +15,14 @@
  * plan 117 §3 authorises it, and nothing in the component runtime imports it.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import { describe, expect, it } from "vitest";
+import { examples } from "../examples/index.js";
 import { inventory, type ComponentMeta } from "./inventory.js";
 
 const packageRoot = new URL("../", import.meta.url);
@@ -82,6 +85,19 @@ const tierRows = (tier: number): ReadonlyArray<Row> => {
 const duplicates = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.filter(values, (value, index) => values.indexOf(value) !== index);
 
+/** The basenames of the example modules on disk, without the suffix. */
+const exampleModules = (): ReadonlyArray<string> =>
+  Arr.sort(
+    Arr.map(
+      Arr.filter(
+        readdirSync(fileURLToPath(new URL("examples/", packageRoot))),
+        (file) => file.endsWith(".example.tsx"),
+      ),
+      (file) => file.slice(0, -".example.tsx".length),
+    ),
+    Order.String,
+  );
+
 describe("inventory", () => {
   it("names files that exist", () => {
     const problems = Arr.flatMap(inventory, (meta) =>
@@ -90,6 +106,38 @@ describe("inventory", () => {
         (path) => !fileExists(path),
       ).map((path) => `${meta.name}: missing ${path}`),
     );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("registers every example, with a page and a record for each entry", () => {
+    const registered = R.keys(examples);
+    const modules = exampleModules();
+    const problems = [
+      ...Arr.map(
+        Arr.filter(modules, (id) => !R.has(examples, id)),
+        (id) => `${id}: example module is not registered`,
+      ),
+      ...Arr.map(
+        Arr.filter(registered, (id) => !Arr.contains(modules, id)),
+        (id) => `${id}: registry entry has no example module`,
+      ),
+      ...Arr.map(
+        Arr.filter(registered, (id) => !fileExists(`docs/${id}.mdx`)),
+        (id) => `${id}: registry entry has no docs page`,
+      ),
+      ...Arr.map(
+        Arr.filter(
+          registered,
+          (id) =>
+            !Arr.some(
+              inventory,
+              (meta) => meta.example === `examples/${id}.example.tsx`,
+            ),
+        ),
+        (id) => `${id}: no inventory record names this example`,
+      ),
+    ];
 
     expect(problems).toEqual([]);
   });
