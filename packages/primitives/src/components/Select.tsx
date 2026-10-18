@@ -20,6 +20,13 @@
  * box and the list's measured width move it to the other side when it cannot fit
  * (measured, plan 335).
  *
+ * The open state is the wrapper's, not the runtime's private copy: `open`,
+ * `defaultOpen` and `onOpenChange` follow the package's one controlled rule
+ * (`core/state.ts`), and a select that becomes **disabled** is closed — a menu
+ * the user cannot choose from and the runtime will not commit is worse than no
+ * menu (measured, plan 346). The chevron, the trigger ring, the root style
+ * callback and the list all read that one value.
+ *
  * The options are data rather than compound children because the trigger needs
  * their labels; the `SelectItem` composition below is the shadcn escape hatch
  * for anything the data shape cannot express.
@@ -57,6 +64,7 @@ import {
 } from "@gpuix/react/select";
 import {
   isSelectGroup,
+  selectOpen,
   selectOptions,
   selectRowCounts,
   type SelectEntry,
@@ -120,6 +128,12 @@ export interface SelectProps extends TriggerHandlers {
   readonly value?: string;
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string) => void;
+  /** Controlled open state. Omit to let the select hold its own. */
+  readonly open?: boolean;
+  /** Initial open state when uncontrolled. Defaults to closed. */
+  readonly defaultOpen?: boolean;
+  /** Called when the select asks to open or close. */
+  readonly onOpenChange?: (open: boolean) => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
   /** Validation failed: the trigger's border takes the destructive role. */
@@ -468,6 +482,7 @@ export const renderSelect = (
     <GpuixSelect
       items={items}
       value={selected}
+      open={open}
       onValueChange={handlers.onValueChange}
       onOpenChange={handlers.onOpenChange}
       disabled={disabled}
@@ -556,8 +571,6 @@ export const Select = (props: SelectProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
   const viewport = useWindowSize();
-  const [open, setOpen] = useState(false);
-  const focus = useFocus();
   const [triggerBox, setTriggerBox] = useState<TriggerBox | undefined>(
     undefined,
   );
@@ -565,6 +578,19 @@ export const Select = (props: SelectProps): ReactElement => {
   const trigger = useRef<number | null>(null);
   const content = useRef<number | null>(null);
   const items = useRef<Map<string, number>>(new Map());
+  const focus = useFocus();
+  const openState = useControlState(
+    props.open,
+    props.defaultOpen ?? false,
+    props.onOpenChange,
+  );
+  // A disabled select is closed. The request also reaches a controlled parent,
+  // so its state can agree with what the field paints (plan 346).
+  useEffect(() => {
+    if (props.disabled === true && openState.value.current)
+      openState.set(false);
+  }, [props.disabled, openState.value.current]);
+  const open = selectOpen(openState.value.current, props.disabled === true);
   const state = useControlState(
     props.value,
     props.defaultValue ?? "",
@@ -672,7 +698,7 @@ export const Select = (props: SelectProps): ReactElement => {
     open,
     focus,
     {
-      onOpenChange: setOpen,
+      onOpenChange: openState.set,
       onValueChange: state.set,
       registerTrigger: (instance) => {
         trigger.current = instance?.id ?? null;

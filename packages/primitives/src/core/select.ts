@@ -49,6 +49,19 @@ export interface SelectRowCounts {
 }
 
 /**
+ * Whether the select paints its list.
+ *
+ * A disabled select is closed even when its controlled `open` still says
+ * otherwise: the runtime refuses every choice and dismissal path once disabled,
+ * so a painted list would be a dead menu (measured, plan 346). The wrapper's
+ * effect asks a controlled parent to agree, but paint does not wait for it.
+ */
+export const selectOpen = (
+  requestedOpen: boolean,
+  disabled: boolean,
+): boolean => requestedOpen && !disabled;
+
+/**
  * The row counts the height estimate needs.
  *
  * An empty group paints no heading, so it counts as nothing rather than leaving

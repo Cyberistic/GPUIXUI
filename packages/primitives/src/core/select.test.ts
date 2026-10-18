@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import {
   isSelectGroup,
+  selectOpen,
   selectOptions,
   selectRowCounts,
   type SelectEntry,
@@ -68,5 +69,15 @@ describe("select entries", () => {
     expect(
       Arr.filter(selectOptions(grouped), (option) => option.disabled === true),
     ).toStrictEqual([{ value: "ap-east", label: "Asia East", disabled: true }]);
+  });
+});
+
+describe("select open state", () => {
+  it("closes a disabled select whatever the requested open says", () => {
+    // The bug guarded (plan 346): disabling a select while its controlled
+    // `open` stayed true painted a list the runtime refused to choose from.
+    expect(selectOpen(true, true)).toBe(false);
+    expect(selectOpen(true, false)).toBe(true);
+    expect(selectOpen(false, false)).toBe(false);
   });
 });

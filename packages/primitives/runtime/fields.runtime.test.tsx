@@ -14,6 +14,7 @@
  */
 
 import { expect, it } from "vitest";
+import { useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
@@ -618,6 +619,130 @@ it("marks the chosen option selected and reports it as the combobox value", asyn
   expect(
     ariaOf(runtime, { role: "ListBoxOption", label: "Apple" })?.selected,
   ).toBe(false);
+});
+
+/** A select whose open state lives in the parent, as a consumer would wire it. */
+const ControlledSelect = ({
+  onRequest,
+}: {
+  readonly onRequest: (open: boolean) => void;
+}): ReactElement => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Select
+      {...selectProps}
+      open={open}
+      onOpenChange={(next) => {
+        onRequest(next);
+        setOpen(next);
+      }}
+    />
+  );
+};
+
+it("follows a controlled open state through the trigger", async () => {
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  runtime.render(
+    <Surface>
+      <ControlledSelect onRequest={(next) => requests.push(next)} />
+    </Surface>,
+  );
+  expect(runtime.allText()).not.toContain("Pear");
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  expect(runtime.allText()).toContain("Pear");
+  runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "escape");
+  runtime.flush();
+  expect(runtime.allText()).not.toContain("Pear");
+  expect(requests).toStrictEqual([true, false]);
+});
+
+it("lets a controlled open prop decide, not the runtime's request", async () => {
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  const view = (open: boolean) => (
+    <Surface>
+      <Select
+        {...selectProps}
+        open={open}
+        onOpenChange={(next) => requests.push(next)}
+      />
+    </Surface>
+  );
+  runtime.render(view(false));
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  // The runtime asked to open; the parent did not supply `open`, so nothing
+  // changed — the controlled rule, not a rendered request.
+  expect(runtime.allText()).not.toContain("Pear");
+  expect(requests).toStrictEqual([true]);
+  runtime.render(view(true));
+  expect(runtime.allText()).toContain("Pear");
+});
+
+it("opens on defaultOpen and closes on Escape", async () => {
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  runtime.render(
+    <Surface>
+      <Select
+        {...selectProps}
+        defaultOpen
+        onOpenChange={(next) => requests.push(next)}
+      />
+    </Surface>,
+  );
+  expect(runtime.allText()).toContain("Pear");
+  runtime.focusNext();
+  runtime.keyDown("sel-trigger", "escape");
+  runtime.flush();
+  expect(runtime.allText()).not.toContain("Pear");
+  expect(requests).toStrictEqual([false]);
+});
+
+it("closes the list when the select becomes disabled while open", async () => {
+  // The bug guarded (plan 346): a select disabled during a save kept its list
+  // painted, and the runtime refuses every choice on a disabled select — a dead
+  // menu the pointer path that opened it cannot dismiss.
+  const runtime = await openWindow();
+  const field = recorder();
+  const requests: boolean[] = [];
+  const view = (disabled: boolean) => (
+    <Surface>
+      <Select
+        {...selectProps}
+        disabled={disabled}
+        onValueChange={field.onValueChange}
+        onOpenChange={(next) => requests.push(next)}
+      />
+    </Surface>
+  );
+  runtime.render(view(false));
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  expect(runtime.allText()).toContain("Pear");
+  runtime.render(view(true));
+  expect(runtime.allText()).not.toContain("Pear");
+  expect(Option.isSome(runtime.element("sel-trigger"))).toBe(true);
+  expect(field.values).toStrictEqual([]);
+  expect(requests).toStrictEqual([true, false]);
+});
+
+it("closes a disabled select whose controlled open still says open", async () => {
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  runtime.render(
+    <Surface>
+      <Select
+        {...selectProps}
+        open
+        disabled
+        onOpenChange={(next) => requests.push(next)}
+      />
+    </Surface>,
+  );
+  expect(runtime.allText()).not.toContain("Pear");
+  // The parent owns `open`, so the wrapper asks rather than silently rewriting
+  // it; the paint already follows the disabled rule.
+  expect(requests).toStrictEqual([false]);
 });
 
 /** Two named groups: the shape a long region picker needs. */
