@@ -329,7 +329,7 @@ Cross-cutting records:
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
-| [515](./515-focused-live-smoke.md) | Focused live smoke: `--only`/`--all`, no accidental full runs | infra | `110`, `120` | done — focused `live-input` 1/1; `nub run check` + `nub run test` pass |
+| [517](./517-focused-live-smoke.md) | Focused live smoke: `--only`/`--all`, no accidental full runs | infra | `110`, `120` | done — focused `live-input` 1/1; `nub run check` + `nub run test` pass |
 
 ## How to use a plan
 

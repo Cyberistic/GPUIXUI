@@ -60,7 +60,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 82/87 plans-and-harness
 
-`[x]` Scope **live smoke verification** per plan `515`: `--only <id[,id]>`
+`[x]` Scope **live smoke verification** per plan `517`: `--only <id[,id]>`
       (repeatable) runs just those scenarios, `--all` runs the full suite,
       `--list` prints the ids without a window, and a bare command, unknown id
       or unknown flag exits `2` before the native import. A focused
